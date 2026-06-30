@@ -1,0 +1,52 @@
+# ============================================================
+# CamelTv 测试自动化平台 — 统一依赖（Python 3.12+）
+# 独立 venv: test-platform/.venv
+# ============================================================
+
+# --- 核心 / CLI / 配置 ---
+pydantic>=2.6
+pyyaml>=6.0
+httpx>=0.27
+rich>=13.7
+python-dotenv>=1.0
+jinja2>=3.1
+click>=8.1
+jsonschema>=4.21
+
+# --- Web 后端 ---
+fastapi>=0.110
+uvicorn[standard]>=0.27
+
+# --- Swagger/OpenAPI 解析 ---
+openapi-spec-validator>=0.7
+prance>=23.0
+
+# --- 测试数据工厂 ---
+faker>=24.0
+SQLAlchemy>=2.0
+pymysql>=1.1            # MySQL 驱动
+psycopg2-binary>=2.9    # Postgres 驱动
+
+# --- 接口 Diff 比对器 ---
+deepdiff>=6.7
+
+# --- 流量监控器 + Mock 录制 ---
+mitmproxy>=10.2
+
+# --- 环境健康检查 ---
+redis>=5.0
+pika>=1.3              # RabbitMQ
+kafka-python>=2.0      # Kafka
+
+# --- 日志聚合（ELK）---
+elasticsearch>=8.12
+
+# --- 报告聚合 ---
+junitparser>=3.1
+streamlit>=1.32
+pandas>=2.2
+
+# --- 测试框架 ---
+pytest>=8.0
+pytest-html>=4.1
+playwright>=1.48

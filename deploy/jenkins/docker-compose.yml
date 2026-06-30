@@ -1,0 +1,43 @@
+# CamelTv 体育平台 — Jenkins CI/CD 一键部署
+# 用法: docker compose up -d → 浏览器打开 http://localhost:8080
+#
+# 包含:
+#   - Jenkins Controller (Blue Ocean UI + 推荐插件)
+#   - Docker-in-Docker (用于 Pipeline 中构建镜像)
+
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cameltv-jenkins
+    ports:
+      - "8080:8080"     # Jenkins Web UI
+      - "50000:50000"   # Agent 通信
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false -Xmx2g
+      - CASC_JENKINS_CONFIG=/var/jenkins_home/casc.yaml
+      - DOCKER_HOST=tcp://dind:2375
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - ./casc.yaml:/var/jenkins_home/casc.yaml:ro     # CasC 配置
+      - ../../:/workspace                               # 挂载项目源码
+    depends_on:
+      - dind
+    restart: unless-stopped
+
+  # Docker-in-Docker — 让 Jenkins Pipeline 可构建镜像
+  dind:
+    image: docker:dind
+    container_name: cameltv-jenkins-dind
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=
+    volumes:
+      - jenkins_dind:/var/lib/docker
+    command: ["dockerd", "--host=tcp://0.0.0.0:2375", "--host=unix:///var/run/docker.sock"]
+    restart: unless-stopped
+
+volumes:
+  jenkins_home:
+  jenkins_dind:

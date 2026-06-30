@@ -1,0 +1,36 @@
+# Jenkins Configuration as Code (CasC)
+# 首次启动自动加载，跳过安装向导。修改后 docker compose restart jenkins 生效。
+
+jenkins:
+  systemMessage: "CamelTv 体育平台 CI/CD — 自动化构建服务"
+  numExecutors: 4
+  quietPeriod: 5
+  scmCheckoutRetryCount: 2
+
+  # ── 安全 ──
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "cameltv123"
+        - id: "developer"
+          password: "dev123"
+
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+  # ── 禁用 Agent → Master 安全警告 ──
+  disabledAdministrativeMonitors:
+    - "hudson.diagnosis.TooManyJobsButNoMaster"
+    - "jenkins.diagnostics.SecurityIsReachableMonitor"
+
+# ── 全局工具 ──
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "/usr/bin/git"
+
+# ── 注：全局环境变量已在 Dockerfile 中通过 ENV 设置 ──

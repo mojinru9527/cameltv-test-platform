@@ -1,0 +1,22 @@
+{
+  "name": "cameltv-ui-automation",
+  "version": "1.0.0",
+  "description": "CamelTv UI automation with midscene.js — AI-driven visual testing",
+  "private": true,
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:test": "npx playwright test --env=test",
+    "test:prod": "npx playwright test --env=prod",
+    "report": "npx playwright show-report",
+    "capture": "npx playwright test --reporter=json"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.48.0",
+    "@midscene/web": "^0.20.0",
+    "dotenv": "^16.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

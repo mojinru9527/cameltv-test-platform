@@ -1,0 +1,43 @@
+# Environment & secrets
+.env
+*.env
+.env.*
+!*.env.example
+*.pem
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.egg
+
+# Node
+node_modules/
+dist/
+.cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+deploy/jenkins/jenkins_home/
+deploy/jenkins/jenkins_dind/
+
+# Test caches
+.pytest_cache/
+coverage/
+
+# Logs
+*.log
+logs/

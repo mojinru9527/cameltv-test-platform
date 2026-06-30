@@ -1,0 +1,27 @@
+# 数据工厂规则示例：造用户 + 关联订单（外键自动对齐）
+# 用法: tp datafactory --site camel1 --env test1 --rule tools/data_factory/examples/user.yaml --count 50
+locale: zh_CN
+db: app_db            # 关联 env.yaml 里的 DB 名；--output db 时灌入该库
+table: t_user
+count: 50
+parent_key: id
+
+fields:
+  username: {type: str, length: 8}
+  phone:    {type: phone}
+  id_card:  {type: id_card}
+  email:    {type: email}
+  balance:  {type: int, min: 0, max: 9999}     # 骆驼币余额
+  status:   {type: enum, values: [active, frozen]}
+
+constraints:
+  - "balance >= 0"                              # 跨字段/取值约束，不满足重抽
+
+relations:
+  - table: t_order
+    per_parent: 1-3                             # 每个用户带 1~3 条订单
+    fk: user_id
+    fields:
+      amount:   {type: int, min: 1, max: 500}
+      pay_type: {type: enum, values: [fiat, crypto]}
+      status:   {type: enum, values: [paid, failed, pending]}

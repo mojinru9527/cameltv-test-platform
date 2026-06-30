@@ -1,0 +1,42 @@
+# 构建上下文为 test-platform 根（api-server 与 web-ui 共用）。
+# 排除大体积 / 平台相关 / 敏感文件，避免拖慢构建或泄入镜像。
+
+# Python 独立 venv（Windows 二进制，不能进 Linux 镜像）
+.venv/
+venv/
+
+# 前端依赖与构建产物（镜像内重新 npm install / build）
+web-ui/node_modules/
+web-ui/dist/
+
+# 敏感凭据（镜像通过 env_file 在运行时注入，不打进镜像层）
+.env
+**/.env
+
+# 运行产物
+data/recordings/
+data/reports/
+data/stubs/
+*.sqlite
+*.sqlite3
+*.db
+
+# WireMock 运行时挂载（compose 用 volume 挂载，不进镜像）
+docker/wiremock/__files/
+docker/wiremock/mappings/
+
+# Python 缓存 / 测试产物
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mitmproxy/
+
+# 文档 / 测试资产（运行时通过 volume 挂载 tests/，无需打进镜像）
+tests/
+*.md
+
+# IDE / VCS
+.idea/
+.vscode/
+.git/

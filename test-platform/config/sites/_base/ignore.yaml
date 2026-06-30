@@ -1,0 +1,15 @@
+# 共享 Diff 忽略规则 + 容差（站点可在 site.yaml 追加）
+# 路径语法为 DeepDiff 的 root[...] 形式
+ignore_paths:
+  - "root['data']['traceId']"
+  - "root['traceId']"
+  - "root['timestamp']"
+  - "root['data']['timestamp']"
+  - "root['serverTime']"
+  - "root['data']['id']"          # 自增 ID 必然不同
+  - "root['requestId']"
+
+tolerance:
+  float_abs: 0.01                 # 浮点绝对误差容忍
+  array_unordered: true           # 数组无序比对
+  ignore_type_str_num: true       # "1" 与 1 视为相等

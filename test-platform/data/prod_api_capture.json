@@ -1,0 +1,27 @@
+[
+  {
+    "method": "POST",
+    "url": "https://api.cameltv.live/account-service/login/anonymous/web?appCode=D04B29D6B957CD44DC5F9894189380B8",
+    "post_data": "{\"appCode\":\"D04B29D6B957CD44DC5F9894189380B8\"}"
+  },
+  {
+    "method": "GET",
+    "url": "https://api.cameltv.live/account-service/ee/client/general",
+    "post_data": null
+  },
+  {
+    "method": "GET",
+    "url": "https://api.cameltv.live/camel-service/ee/sports_live/home_match?day=20260615",
+    "post_data": null
+  },
+  {
+    "method": "POST",
+    "url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+    "post_data": "{\"displayPlatform\":\"PC\"}"
+  },
+  {
+    "method": "POST",
+    "url": "https://api.cameltv.live/account-service/ee/ads/activity/read",
+    "post_data": "{\"readActivityIds\":[471]}"
+  }
+]

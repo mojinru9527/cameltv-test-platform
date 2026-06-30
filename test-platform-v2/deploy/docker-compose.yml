@@ -1,0 +1,46 @@
+# CamelTv 测试平台 v2 — 一键部署（前端 + 后端）
+# 用法: docker-compose up -d  → 访问 http://localhost
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: cameltv-tp-backend
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-please-change-me-in-production}
+      - DATABASE_URL=sqlite:////data/platform.db
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+      - ELK_BASE_URL=${ELK_BASE_URL:-}
+      - ELK_INDEX=${ELK_INDEX:-*}
+    volumes:
+      - tp-data:/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: cameltv-tp-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  tp-data:
+    driver: local

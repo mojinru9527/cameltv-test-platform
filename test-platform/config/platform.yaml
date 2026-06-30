@@ -1,0 +1,7 @@
+# 全局平台配置
+default_proxy: "${UPSTREAM_PROXY}"   # 访问站点的上游代理；各环境可在 env.yaml 覆盖
+concurrency: 8                        # 并发探活/回放数
+recordings_dir: data/recordings
+reports_dir: data/reports
+stubs_dir: data/stubs
+db_path: data/platform.sqlite        # 报告聚合 sqlite

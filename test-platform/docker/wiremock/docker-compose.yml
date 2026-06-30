@@ -1,0 +1,12 @@
+# WireMock 容器。由 `tp mock up --site <site>` 注入环境变量后启动。
+# 也可手动: MOCK_MAPPINGS=... MOCK_PORT=8080 docker compose up -d
+services:
+  wiremock:
+    image: wiremock/wiremock:3.5.4
+    container_name: camel-wiremock
+    ports:
+      - "${MOCK_PORT:-8080}:8080"
+    volumes:
+      - "${MOCK_MAPPINGS:-./mappings}:/home/wiremock/mappings"
+      - "${MOCK_FILES:-./__files}:/home/wiremock/__files"
+    command: ["--global-response-templating", "--verbose"]

@@ -1,0 +1,508 @@
+import { useCallback, useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import { createReport, deleteReport, fetchReport, fetchReports } from '@/api/report'
+import { fetchPlans } from '@/api/testplan'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
+import {
+  Plus,
+  Search,
+  Eye,
+  Trash2,
+  CheckCircle2,
+  XCircle,
+  MinusCircle,
+  StopCircle,
+  Clock,
+  Loader2,
+} from '@/lib/icons'
+
+// ── Status config ──
+const STATUS_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  pass: { label: 'pass', icon: CheckCircle2, color: 'text-green-500', variant: 'default' },
+  fail: { label: 'fail', icon: XCircle, color: 'text-red-500', variant: 'destructive' },
+  skip: { label: 'skip', icon: MinusCircle, color: 'text-yellow-500', variant: 'secondary' },
+  block: { label: 'block', icon: StopCircle, color: 'text-muted-foreground', variant: 'outline' },
+  pending: { label: 'pending', icon: Clock, color: 'text-muted-foreground', variant: 'outline' },
+}
+
+const PRIORITY_CONFIG: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
+  P0: 'destructive',
+  P1: 'secondary',
+  P2: 'default',
+  P3: 'outline',
+}
+
+// ── Zod schemas ──
+const reportSchema = z.object({
+  plan_id: z.coerce.number({ invalid_type_error: '请选择计划' }),
+  name: z.string().min(1, '请输入报告名称'),
+  description: z.string().optional(),
+})
+
+type ReportFormData = z.infer<typeof reportSchema>
+
+// ── Pagination ──
+function Pagination({
+  page,
+  pageSize,
+  total,
+  onChange,
+}: {
+  page: number
+  pageSize: number
+  total: number
+  onChange: (p: number) => void
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  return (
+    <div className="flex items-center justify-between pt-4 text-sm text-muted-foreground">
+      <span>共 {total} 条</span>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page <= 1}
+          onClick={() => onChange(page - 1)}
+        >
+          上一页
+        </Button>
+        <span>{page} / {totalPages}</span>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page >= totalPages}
+          onClick={() => onChange(page + 1)}
+        >
+          下一页
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+export default function ReportPage() {
+  const [data, setData] = useState({ total: 0, items: [] as any[], page: 1, page_size: 20 })
+  const [loading, setLoading] = useState(false)
+  const [keyword, setKeyword] = useState('')
+  const [createOpen, setCreateOpen] = useState(false)
+  const [detailId, setDetailId] = useState<number | null>(null)
+  const [detail, setDetail] = useState<any>(null)
+  const [creating, setCreating] = useState(false)
+  const [plans, setPlans] = useState<any[]>([])
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+  } = useForm<ReportFormData>({
+    resolver: zodResolver(reportSchema),
+  })
+  const watchPlanId = watch('plan_id')
+
+  const load = useCallback(async (page = 1) => {
+    setLoading(true)
+    try {
+      const params: any = { page, page_size: 20 }
+      if (keyword) params.keyword = keyword
+      const r: any = await fetchReports(params)
+      setData(r)
+    } finally { setLoading(false) }
+  }, [keyword])
+
+  useEffect(() => { load() }, [load])
+
+  const loadPlans = async () => {
+    try {
+      const r: any = await fetchPlans({ page_size: 200 })
+      setPlans(r.items || [])
+    } catch { /* */ }
+  }
+
+  const openCreate = () => {
+    loadPlans()
+    reset({ plan_id: undefined as any, name: '', description: '' })
+    setCreateOpen(true)
+  }
+
+  const doCreate = async (v: ReportFormData) => {
+    setCreating(true)
+    try {
+      await createReport({ plan_id: v.plan_id, name: v.name, description: v.description })
+      toast.success('报告已生成')
+      setCreateOpen(false)
+      load()
+    } finally { setCreating(false) }
+  }
+
+  const doDelete = async (id: number) => {
+    await deleteReport(id)
+    toast.success('已删除')
+    load()
+  }
+
+  const openDetail = async (id: number) => {
+    setDetailId(id)
+    try {
+      const r: any = await fetchReport(id)
+      setDetail(r)
+    } catch { /* */ }
+  }
+
+  const handleSearch = () => {
+    load()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') load()
+  }
+
+  // detail content parsing
+  const content = detail?.content
+  const dStats = content?.stats || {}
+  const dCases = content?.cases || []
+  const dTotal = dStats.total || 0
+  const dPassRate = dTotal > 0 ? Math.round(((dStats.pass_ || 0) / dTotal) * 100) : 0
+
+  const statItems = [
+    { key: 'pass', color: '#52c41a', value: dStats.pass_ || 0 },
+    { key: 'fail', color: '#ff4d4f', value: dStats.fail || 0 },
+    { key: 'skip', color: '#faad14', value: dStats.skip || 0 },
+    { key: 'block', color: '#d9d9d9', value: dStats.block || 0 },
+    { key: 'pending', color: '#1890ff', value: dStats.pending || 0 },
+  ]
+
+  return (
+    <div>
+      <h4 className="font-heading text-lg font-medium mb-4">报告中心</h4>
+
+      {/* Search bar */}
+      <Card size="sm" className="mb-4">
+        <CardContent>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Input
+              placeholder="搜索报告名称"
+              className="w-[220px]"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <Button variant="outline" size="sm" onClick={handleSearch} data-icon="inline-start">
+              <Search />
+              搜索
+            </Button>
+            <Button size="sm" onClick={openCreate} data-icon="inline-start">
+              <Plus />
+              生成报告
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <div className="rounded-xl border bg-card text-sm">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[150px]">编号</TableHead>
+              <TableHead>名称</TableHead>
+              <TableHead className="w-[160px]">关联计划</TableHead>
+              <TableHead className="w-[170px]">创建时间</TableHead>
+              <TableHead className="w-[120px]">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  <Loader2 className="inline-block size-4 animate-spin mr-2" />
+                  加载中...
+                </TableCell>
+              </TableRow>
+            ) : data.items.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  暂无数据
+                </TableCell>
+              </TableRow>
+            ) : (
+              data.items.map((r: any) => (
+                <TableRow key={r.id}>
+                  <TableCell className="max-w-[150px] truncate">{r.report_id}</TableCell>
+                  <TableCell className="truncate">{r.name}</TableCell>
+                  <TableCell className="max-w-[160px] truncate">
+                    {r.plan_name || <span className="text-muted-foreground">—</span>}
+                  </TableCell>
+                  <TableCell>{r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button size="sm" variant="outline" onClick={() => openDetail(r.id)} data-icon="inline-start">
+                        <Eye />
+                        查看
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="destructive" data-icon="inline-start">
+                            <Trash2 />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>确定删除？</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              将删除报告「{r.name}」，此操作不可撤销。
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>取消</AlertDialogCancel>
+                            <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
+                              删除
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Pagination
+        page={data.page}
+        pageSize={data.page_size}
+        total={data.total}
+        onChange={(p) => load(p)}
+      />
+
+      {/* Create Dialog */}
+      <Dialog open={createOpen} onOpenChange={(open) => { if (!open) setCreateOpen(false) }}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>生成报告</DialogTitle>
+            <DialogDescription>选择测试计划并填写报告信息</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(doCreate)} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5" data-invalid={!!errors.plan_id} aria-invalid={!!errors.plan_id}>
+              <label className="text-sm font-medium">选择计划</label>
+              <Select
+                value={watchPlanId ? String(watchPlanId) : undefined}
+                onValueChange={(v) => setValue('plan_id', Number(v), { shouldValidate: true })}
+              >
+                <SelectTrigger className={cn(errors.plan_id && 'border-destructive')}>
+                  <SelectValue placeholder="选择测试计划" />
+                </SelectTrigger>
+                <SelectContent>
+                  {plans.map((p: any) => (
+                    <SelectItem key={p.id} value={String(p.id)}>
+                      {p.plan_id || ''} {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.plan_id && <span className="text-xs text-destructive">{errors.plan_id.message}</span>}
+            </div>
+            <div className="flex flex-col gap-1.5" data-invalid={!!errors.name} aria-invalid={!!errors.name}>
+              <label className="text-sm font-medium">报告名称</label>
+              <Input
+                placeholder="如：v1.0 回归测试报告"
+                {...register('name')}
+                className={cn(errors.name && 'border-destructive')}
+              />
+              {errors.name && <span className="text-xs text-destructive">{errors.name.message}</span>}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">备注</label>
+              <Textarea placeholder="可选" rows={2} {...register('description')} />
+            </div>
+          </form>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>取消</Button>
+            <Button disabled={creating} onClick={() => handleSubmit(doCreate)()} data-icon="inline-start">
+              {creating && <Loader2 className="animate-spin" />}
+              生成
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Sheet */}
+      <Sheet open={detailId !== null} onOpenChange={(open) => { if (!open) { setDetailId(null); setDetail(null) } }}>
+        <SheetContent side="right" className="w-[820px] sm:max-w-[820px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>报告: {detail?.name || ''}</SheetTitle>
+            <SheetDescription>查看报告详细信息</SheetDescription>
+          </SheetHeader>
+
+          {detail && content ? (
+            <div className="py-4 flex flex-col gap-4">
+              {/* Descriptions */}
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs text-muted-foreground">编号</dt>
+                  <dd>{detail.report_id}</dd>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs text-muted-foreground">关联计划</dt>
+                  <dd>{detail.plan_name}</dd>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs text-muted-foreground">生成时间</dt>
+                  <dd>{detail.created_at ? new Date(detail.created_at).toLocaleString() : '-'}</dd>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <dt className="text-xs text-muted-foreground">快照时间</dt>
+                  <dd>{content.generated_at ? new Date(content.generated_at).toLocaleString() : '-'}</dd>
+                </div>
+                {detail.description && (
+                  <div className="flex flex-col gap-0.5 col-span-2">
+                    <dt className="text-xs text-muted-foreground">备注</dt>
+                    <dd>{detail.description}</dd>
+                  </div>
+                )}
+              </dl>
+
+              {/* Stats grid */}
+              <div className="grid grid-cols-10 gap-2">
+                {/* Total count */}
+                <div className="col-span-2">
+                  <Card size="sm" className="text-center">
+                    <CardContent className="py-2 px-2">
+                      <div className="text-xs text-muted-foreground">总用例</div>
+                      <div className="text-2xl font-bold">{dStats.total || 0}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+                {/* Pass rate */}
+                <div className="col-span-2">
+                  <Card size="sm">
+                    <CardContent className="py-2 px-3">
+                      <Progress value={dPassRate} className="h-2" />
+                      <div className="text-xs text-muted-foreground mt-1 text-center">{dPassRate}% 通过率</div>
+                    </CardContent>
+                  </Card>
+                </div>
+                {/* Status counts */}
+                {statItems.map((item) => (
+                  <div key={item.key} className="col-span-1">
+                    <Card size="sm" className="text-center">
+                      <CardContent className="py-2 px-1">
+                        <div className="text-lg font-bold" style={{ color: item.color }}>{item.value}</div>
+                        <div className="text-[10px] text-muted-foreground">{item.key}</div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+
+              {/* Case List */}
+              <Card size="sm">
+                <CardHeader>
+                  <CardTitle>用例明细 ({dCases.length})</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-xl border bg-card text-sm -mx-[var(--card-spacing)]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>标题</TableHead>
+                          <TableHead className="w-[100px]">模块</TableHead>
+                          <TableHead className="w-[80px]">结果</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {dCases.map((c: any) => {
+                          const st = STATUS_CONFIG[c.last_status] || STATUS_CONFIG.pending
+                          const StatusIcon = st.icon
+                          return (
+                            <TableRow key={c.case_id}>
+                              <TableCell className="truncate">
+                                <div className="flex items-center gap-1.5">
+                                  <Badge variant={PRIORITY_CONFIG[c.priority] || 'default'} className="shrink-0">
+                                    {c.priority}
+                                  </Badge>
+                                  <span className="text-xs text-muted-foreground shrink-0">{c.case_id_code}</span>
+                                  <span className="truncate">{c.title}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="max-w-[100px] truncate">{c.module}</TableCell>
+                              <TableCell>
+                                <Badge variant={st.variant}>
+                                  <StatusIcon className={cn('size-3', st.color)} />
+                                  <span className="ml-0.5">{st.label}</span>
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-muted-foreground py-4">
+              <Loader2 className="size-4 animate-spin" />
+              加载中...
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </div>
+  )
+}

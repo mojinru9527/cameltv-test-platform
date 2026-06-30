@@ -1,0 +1,70 @@
+# ============================================================
+# 测试环境（内网直连）
+# 已知测试域名: camel-g5-test5 / g3-test3 / g3-test1 / g1-test5 / g2-test5
+# 均为 *.elelive.cn 子域名，需内网访问
+# ============================================================
+name: test
+kind: test
+
+# 测试环境入口域名（主测试节点）
+base_url: "https://g3-test3.elelive.cn"
+
+# 代理策略：内网直连，不需要代理
+proxy: ""
+vpn_required: false
+proxy_strategy: direct
+
+# 期望版本（>=14.0.0）
+expect_version: ">=14.0.0"
+
+# 认证 — 从 .env 注入
+auth_token: "${CAMELTV_TEST_AUTH_TOKEN}"
+
+# ============================================================
+# 依赖服务 — 填入真实内网地址后取消注释
+# ============================================================
+dbs:
+  # 示例 — 替换为真实内网地址
+  # - name: main
+  #   type: mysql
+  #   dsn: "mysql+pymysql://${CAMELTV_TEST_DB_USER}:${CAMELTV_TEST_DB_PWD}@10.x.x.x:3306/cameltv"
+
+redis:
+  # - name: cache
+  #   host: 10.x.x.x
+  #   port: 6379
+  #   password: "${CAMELTV_TEST_REDIS_PWD}"
+
+mqs:
+  # - name: main
+  #   type: rabbitmq
+  #   url: "amqp://${CAMELTV_TEST_MQ_USER}:${CAMELTV_TEST_MQ_PWD}@10.x.x.x:5672/"
+
+# 健康检查端点 — envcheck 会并发探活
+https:
+  - name: g3-test3-health
+    url: "https://g3-test3.elelive.cn/api/health"
+  - name: g3-test1-health
+    url: "https://g3-test1.elelive.cn/api/health"
+  - name: g1-test5-health
+    url: "https://g1-test5.elelive.cn/api/health"
+  - name: g2-test5-health
+    url: "https://g2-test5.elelive.cn/api/health"
+  - name: g3-test3-swagger
+    url: "https://g3-test3.elelive.cn/v3/api-docs"
+  - name: g3-test3-swagger-v2
+    url: "https://g3-test3.elelive.cn/v2/api-docs"
+
+preset_data:
+  # - db: main
+  #   table: categories
+  #   min_rows: 1
+
+# ============================================================
+# ELK 日志（内网访问）
+# 凭据: ELASTIC_URL / ELASTIC_API_KEY 在 .env
+# ============================================================
+elk:
+  index: "cameltv-test-*"
+  trace_field: "traceId"
+  time_field: "@timestamp"

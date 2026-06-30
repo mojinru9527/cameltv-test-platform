@@ -1,0 +1,146 @@
+openapi: "3.0.3"
+info:
+  title: CamelTv API (Real Production)
+  description: 骆驼体育预测平台 — 基于 api.cameltv.live 真实抓取。
+    ⚠️ API 网关统一返回 HTTP 200，业务状态码在 response body 的 `status` 字段。
+  version: "14.0.0"
+servers:
+  - url: https://g3-test3.elelive.cn
+    description: 测试环境（内网直连）
+  - url: https://api.cameltv.live
+    description: 正式环境（vpn07 tun 模式）
+
+tags:
+  - name: Auth
+  - name: Client
+  - name: Sports
+  - name: Ads
+
+paths:
+  /account-service/login/anonymous/web:
+    post:
+      tags: [Auth]
+      summary: Web 端匿名登录
+      description: 需先访问 www.camel1.tv 获取前端 cookie（NEXT_LOCALE 等），否则返回 400
+      parameters:
+        - name: appCode
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "D04B29D6B957CD44DC5F9894189380B8"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                appCode: {type: string, example: "D04B29D6B957CD44DC5F9894189380B8"}
+              required: [appCode]
+      responses:
+        "200":
+          description: OK — 返回 userId/userSig（写入 cookie auth）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: integer, example: 200}
+                  data:
+                    type: object
+                    properties:
+                      userId: {type: string}
+                      userSig: {type: string}
+                    required: [userId, userSig]
+                required: [status, data]
+
+  /account-service/ee/client/general:
+    get:
+      tags: [Client]
+      summary: 客户端通用配置（无鉴权）
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: integer, example: 200}
+                  data: {type: object}
+                required: [status, data]
+
+  /camel-service/ee/sports_live/home_match:
+    get:
+      tags: [Sports]
+      summary: 首页赛事数据（无鉴权）
+      parameters:
+        - name: day
+          in: query
+          required: true
+          schema: {type: string, example: "20260615"}
+          description: 日期 YYYYMMDD
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: integer, example: 200}
+                  data: {type: object}
+                required: [status, data]
+
+  /account-service/ee/ads/activity/get:
+    post:
+      tags: [Ads]
+      summary: 获取活动广告（需登录后 cookie）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayPlatform: {type: string, example: "PC"}
+              required: [displayPlatform]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: integer, example: 200}
+                  data: {type: array}
+                required: [status, data]
+
+  /account-service/ee/ads/activity/read:
+    post:
+      tags: [Ads]
+      summary: 标记已读活动（需登录后 cookie）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                readActivityIds:
+                  type: array
+                  items: {type: integer}
+                  example: [393]
+              required: [readActivityIds]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: {type: integer, example: 200}
+                required: [status]
