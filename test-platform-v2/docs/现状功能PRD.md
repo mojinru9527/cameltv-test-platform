@@ -1,3 +1,13 @@
+---
+title: "测试平台 v2 现状功能 PRD"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["PRD", "现状", "功能清单", "基线"]
+related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/改进任务backlog.md"]
+---
+
 # CamelTv 测试平台 v2 —— 现状功能 PRD（As-Built）
 
 > 文档性质：**现状反向 PRD**——逆向梳理平台「当前已实现」的功能，逐模块给出目标 / 用户故事 / 功能点 / 字段 / 状态机 / 业务规则 / 接口 / 成熟度标注。

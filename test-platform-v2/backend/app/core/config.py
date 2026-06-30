@@ -43,8 +43,9 @@ class Settings(BaseSettings):
     ai_api_base_url: str = "https://api.deepseek.com/v1"
     ai_api_key: str = ""                       # production: required
     ai_model: str = "deepseek-chat"
-    ai_max_tokens: int = 8192
+    ai_max_tokens: int = 16384                 # each sub-call gets full budget (model caps at 8K, but split strategy doubles effective output)
     ai_temperature: float = 0.3
+    ai_split_calls: bool = True                # split generation into functional + API parallel calls to avoid truncation
 
     # ── File paths (configurable for portability) ──
     workspace_root: str = ""      # empty = auto-detect from app/services/__file__

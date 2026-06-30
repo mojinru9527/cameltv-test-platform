@@ -1,3 +1,13 @@
+---
+title: "CamelTv 测试平台后端"
+owner: "backend-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["backend", "fastapi", "sqlalchemy", "sqlite", "python"]
+related: ["test-platform-v2/frontend/README.md", "test-platform-v2/backend/CLAUDE.md"]
+---
+
 # cameltv-test-backend
 
 CamelTv test platform backend, built with FastAPI, SQLAlchemy, and SQLite by default.

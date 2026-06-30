@@ -56,7 +56,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-blue-800 to-blue-600">
+    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
       <Card className="w-[380px] shadow-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">CamelTv 测试平台</CardTitle>

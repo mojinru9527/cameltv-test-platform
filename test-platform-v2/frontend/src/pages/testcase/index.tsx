@@ -34,6 +34,10 @@ import {
 } from '@/components/ui/table'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import DomainTree from '@/components/DomainTree'
+import Pagination from '@/components/Pagination'
+import PageHeader from '@/components/PageHeader'
+import EmptyState from '@/components/EmptyState'
+import { SkeletonText } from '@/components/ui/skeleton'
 
 import { Search, RotateCcw, Plus, Edit, Trash2 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
@@ -180,7 +184,7 @@ export default function TestCasePage() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight">用例服务</h2>
+      <PageHeader title="用例服务" />
 
       {/* Top Tabs */}
       <div className="flex items-center gap-2">
@@ -341,14 +345,14 @@ export default function TestCasePage() {
               <TableBody>
                 {loading && data.items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      加载中...
+                    <TableCell colSpan={7} className="py-8">
+                      <SkeletonText lines={4} />
                     </TableCell>
                   </TableRow>
                 ) : data.items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                      暂无数据
+                    <TableCell colSpan={7} className="py-8">
+                      <EmptyState title="暂无测试用例" description="点击「新建用例」开始创建" className="py-0" />
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -420,32 +424,12 @@ export default function TestCasePage() {
           </div>
 
           {/* Pagination */}
-          {data.total > 0 && (
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>共 {data.total} 条</span>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={data.page <= 1}
-                  onClick={() => load(data.page - 1)}
-                >
-                  上一页
-                </Button>
-                <span className="tabular-nums">
-                  {data.page} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={data.page >= totalPages}
-                  onClick={() => load(data.page + 1)}
-                >
-                  下一页
-                </Button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            page={data.page}
+            totalPages={totalPages}
+            total={data.total}
+            onChange={(p) => load(p)}
+          />
         </div>
       </div>
 

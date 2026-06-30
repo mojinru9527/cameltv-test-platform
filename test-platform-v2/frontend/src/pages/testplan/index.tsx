@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import {
   Select,
@@ -25,17 +24,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 
 import { Search, RotateCcw, Plus, Edit, Trash2 } from '@/lib/icons'
+import DataTable, { type DataTableColumn } from '@/components/DataTable'
+import PageHeader from '@/components/PageHeader'
 import { deletePlan, fetchPlans } from '@/api/testplan'
 import PlanDrawer from './PlanDrawer'
 
@@ -89,13 +82,77 @@ export default function TestPlanPage() {
 
   const totalPages = Math.ceil(data.total / data.page_size)
 
+  // ── DataTable column definitions ──
+  const planColumns: DataTableColumn<any>[] = [
+    { key: 'name', header: '名称', className: 'max-w-0 truncate', render: (r) => (
+      <span className="font-medium text-foreground hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/testplan/${r.id}`) }}>
+        {r.plan_id ? <span className="text-muted-foreground mr-1.5 text-xs">{r.plan_id}</span> : null}
+        {r.name}
+      </span>
+    )},
+    { key: 'progress', header: '进度', headerClassName: 'w-[200px]', render: (r) => {
+      const s = r.stats || {}
+      const rate = s.total > 0 ? Math.round(((s.pass_ || 0) / s.total) * 100) : 0
+      return (
+        <div className="flex items-center gap-2">
+          <Progress value={rate} className="flex-1 h-2" />
+          <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+            {s.pass_ || 0}/{s.total || 0}
+          </span>
+        </div>
+      )
+    }},
+    { key: 'status', header: '状态', headerClassName: 'w-[80px]', render: (r) => (
+      <Badge variant={STATUS_MAP[r.status]?.variant || 'outline'} className={STATUS_MAP[r.status]?.className}>
+        {STATUS_MAP[r.status]?.label || r.status}
+      </Badge>
+    )},
+    { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', className: 'text-muted-foreground', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
+    { key: 'actions', header: '操作', headerClassName: 'w-[140px]', render: (r) => (
+      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)}>
+          <Edit className="size-3" />
+        </Button>
+        <AlertDialog open={deleteTarget === r.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
+          <AlertDialogTrigger asChild>
+            <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
+              <Trash2 className="size-3" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent size="sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>确定删除？</AlertDialogTitle>
+              <AlertDialogDescription>此操作不可撤销。</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>删除</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    )},
+  ]
+
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight">测试计划</h2>
+      <PageHeader title="测试计划" />
 
-      {/* Filter Card */}
-      <Card size="sm">
-        <CardContent className="pt-[var(--card-spacing)]">
+      <DataTable
+        columns={planColumns}
+        data={data.items}
+        rowKey={(r) => r.id}
+        loading={loading}
+        loadingRows={4}
+        emptyState={{ title: '暂无测试计划', description: '点击「新建计划」开始创建' }}
+        pagination={{
+          page: data.page,
+          totalPages,
+          total: data.total,
+          onChange: (p) => load(p),
+        }}
+        onRowClick={(r) => navigate(`/testplan/${r.id}`)}
+        toolbar={
           <div className="flex flex-wrap items-center gap-2">
             <Select value={status || undefined} onValueChange={(v) => { setStatus(v || ''); load() }}>
               <SelectTrigger className="w-[120px]" size="sm">
@@ -135,124 +192,8 @@ export default function TestPlanPage() {
               新建计划
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>名称</TableHead>
-              <TableHead className="w-[200px]">进度</TableHead>
-              <TableHead className="w-[80px]">状态</TableHead>
-              <TableHead className="w-[170px]">创建时间</TableHead>
-              <TableHead className="w-[140px]">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading && data.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  加载中...
-                </TableCell>
-              </TableRow>
-            ) : data.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.items.map((r: any) => {
-                const s = r.stats || {}
-                const rate = s.total > 0 ? Math.round(((s.pass_ || 0) / s.total) * 100) : 0
-                return (
-                  <TableRow key={r.id} className="cursor-pointer" onClick={() => navigate(`/testplan/${r.id}`)}>
-                    <TableCell className="max-w-0 truncate">
-                      <span className="font-medium text-foreground hover:underline cursor-pointer"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/testplan/${r.id}`) }}>
-                        {r.plan_id ? (
-                          <span className="text-muted-foreground mr-1.5 text-xs">{r.plan_id}</span>
-                        ) : null}
-                        {r.name}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Progress value={rate} className="flex-1 h-2" />
-                        <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
-                          {s.pass_ || 0}/{s.total || 0}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={STATUS_MAP[r.status]?.variant || 'outline'} className={STATUS_MAP[r.status]?.className}>
-                        {STATUS_MAP[r.status]?.label || r.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {r.created_at ? new Date(r.created_at).toLocaleString() : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                        <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)}>
-                          <Edit className="size-3" />
-                        </Button>
-                        <AlertDialog open={deleteTarget === r.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
-                          <AlertDialogTrigger asChild>
-                            <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
-                              <Trash2 className="size-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent size="sm">
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>确定删除？</AlertDialogTitle>
-                              <AlertDialogDescription>此操作不可撤销。</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>取消</AlertDialogCancel>
-                              <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>删除</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      {data.total > 0 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>共 {data.total} 条</span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.page <= 1}
-              onClick={() => load(data.page - 1)}
-            >
-              上一页
-            </Button>
-            <span className="tabular-nums">
-              {data.page} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.page >= totalPages}
-              onClick={() => load(data.page + 1)}
-            >
-              下一页
-            </Button>
-          </div>
-        </div>
-      )}
+        }
+      />
 
       <PlanDrawer
         open={drawer}

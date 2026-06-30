@@ -167,6 +167,7 @@ def run_seed() -> None:
                 "nickname": "超级管理员",
                 "email": "admin@cameltv.local",
                 "status": 1,
+                "must_change_password": settings.admin_password == "" or settings.admin_password == "admin123",
             },
             username=settings.admin_username,
         )
@@ -203,8 +204,12 @@ def run_seed() -> None:
 
         db.commit()
         if created_admin:
-            print(f"[seed] 初始管理员：{settings.admin_username} / {settings.effective_admin_password}")
+            print(f"[seed] 初始管理员已创建：{settings.admin_username}")
+            if settings.admin_password and settings.admin_password != "admin123":
+                print("[seed] 管理员使用自定义密码")
+            else:
+                print("[seed] 管理员使用默认密码，首次登录需修改")
         if created_tester:
-            print("[seed] 测试用户：tester / tester123")
+            print("[seed] 测试用户已创建：tester")
     finally:
         db.close()

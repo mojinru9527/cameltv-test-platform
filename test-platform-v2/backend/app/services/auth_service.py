@@ -37,4 +37,5 @@ def login(db: Session, username: str, password: str) -> LoginOut:
         user=UserBrief.model_validate(user),
         projects=[ProjectBrief.model_validate(p) for p in projects],
         permissions=codes,
+        must_change_password=user.must_change_password,
     )

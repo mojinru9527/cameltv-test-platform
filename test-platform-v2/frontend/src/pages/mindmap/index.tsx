@@ -14,27 +14,15 @@ export default function MindmapPage() {
   const [loading, setLoading] = useState(false)
   const [markmapReady, setMarkmapReady] = useState(false)
 
-  // Load markmap library on mount
+  // Load markmap library on mount (CDN only)
   useEffect(() => {
-    const loadMarkmap = async () => {
-      try {
-        const { Markmap } = await import('markmap-view')
-        const { Transformer } = await import('markmap-lib')
-        ;(window as any).__Markmap = Markmap
-        ;(window as any).__Transformer = new Transformer()
-        setMarkmapReady(true)
-      } catch {
-        // Fallback: load from CDN
-        const script = document.createElement('script')
-        script.src = 'https://cdn.jsdelivr.net/npm/markmap-autoloader@0.17'
-        script.onload = () => {
-          setMarkmapReady(true)
-          setTimeout(() => loadMindmap(), 500)
-        }
-        document.head.appendChild(script)
-      }
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/markmap-autoloader@0.17'
+    script.onload = () => {
+      setMarkmapReady(true)
+      setTimeout(() => loadMindmap(), 500)
     }
-    loadMarkmap()
+    document.head.appendChild(script)
   }, [])
 
   // Build markdown from cases and render

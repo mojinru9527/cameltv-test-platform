@@ -34,12 +34,19 @@ export {
   MinusCircle,
   Clock,
   Calendar,
+  FileCheck,
+  ShieldCheck,
+  Percent,
   // UI
   ChevronDown,
   ChevronRight,
   ChevronLeft,
   MoreHorizontal,
   ArrowLeft,
+  ArrowUp,
+  ArrowDown,
+  EyeOff,
+  Columns2,
   User,
   Users,
   Shield,
@@ -75,6 +82,10 @@ export {
   GitBranch,
   Share2,
   Sparkles,
+  Layers,
+  RefreshCw,
+  FlaskConical,
+  TestTube2,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"

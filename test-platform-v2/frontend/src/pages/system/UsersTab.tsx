@@ -10,13 +10,13 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,15 +28,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { Plus, Loader2 } from '@/lib/icons'
 
 // ── Zod schema ──
@@ -136,6 +129,50 @@ export default function UsersTab() {
     )
   }
 
+  // ── DataTable column definitions ──
+  const userColumns: DataTableColumn<any>[] = [
+    { key: 'id', header: 'ID', headerClassName: 'w-[50px]', render: (u) => u.id },
+    { key: 'username', header: '用户名', render: (u) => u.username },
+    { key: 'nickname', header: '昵称', render: (u) => u.nickname || '-' },
+    { key: 'email', header: '邮箱', render: (u) => u.email || '-' },
+    { key: 'status', header: '状态', headerClassName: 'w-[60px]', render: (u) => (
+      <Badge variant={u.status ? 'default' : 'destructive'}>
+        {u.status ? '启用' : '禁用'}
+      </Badge>
+    )},
+    { key: 'roles', header: '角色', render: (u) => (
+      <div className="flex flex-wrap gap-1">
+        {u.role_codes?.map((c: string) => (
+          <Badge key={c} variant="secondary">{c}</Badge>
+        )) || '-'}
+      </div>
+    )},
+    { key: 'actions', header: '操作', headerClassName: 'w-[140px]', render: (u) => (
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => openEdit(u)}>编辑</Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="destructive">删除</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确定删除？</AlertDialogTitle>
+              <AlertDialogDescription>
+                将删除用户「{u.username}」，此操作不可撤销。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={() => doDelete(u.id)}>
+                删除
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    )},
+  ]
+
   return (
     <div>
       <Button size="sm" onClick={() => openEdit()} className="mb-3" data-icon="inline-start">
@@ -144,93 +181,25 @@ export default function UsersTab() {
       </Button>
 
       {/* Table */}
-      <div className="rounded-xl border bg-card text-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]">ID</TableHead>
-              <TableHead>用户名</TableHead>
-              <TableHead>昵称</TableHead>
-              <TableHead>邮箱</TableHead>
-              <TableHead className="w-[60px]">状态</TableHead>
-              <TableHead>角色</TableHead>
-              <TableHead className="w-[140px]">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  <Loader2 className="inline-block size-4 animate-spin mr-2" />
-                  加载中...
-                </TableCell>
-              </TableRow>
-            ) : users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((u: any) => (
-                <TableRow key={u.id}>
-                  <TableCell>{u.id}</TableCell>
-                  <TableCell>{u.username}</TableCell>
-                  <TableCell>{u.nickname || '-'}</TableCell>
-                  <TableCell>{u.email || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={u.status ? 'default' : 'destructive'}>
-                      {u.status ? '启用' : '禁用'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {u.role_codes?.map((c: string) => (
-                        <Badge key={c} variant="secondary">{c}</Badge>
-                      )) || '-'}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openEdit(u)}>编辑</Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="destructive">删除</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>确定删除？</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              将删除用户「{u.username}」，此操作不可撤销。
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction variant="destructive" onClick={() => doDelete(u.id)}>
-                              删除
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        columns={userColumns}
+        data={users}
+        rowKey={(u) => u.id}
+        loading={loading}
+        loadingRows={4}
+        emptyState={{ title: '暂无用户', description: '点击「新建用户」添加系统用户' }}
+      />
 
-      {/* Create/Edit Sheet */}
-      <Sheet open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
-        <SheetContent side="right" className="w-[480px] sm:max-w-[480px]">
-          <SheetHeader>
-            <SheetTitle>{editing?.id ? '编辑用户' : '新建用户'}</SheetTitle>
-            <SheetDescription>
+      {/* Create/Edit Dialog */}
+      <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>{editing?.id ? '编辑用户' : '新建用户'}</DialogTitle>
+            <DialogDescription>
               {editing?.id ? '修改用户信息' : '创建一个新的系统用户'}
-            </SheetDescription>
-          </SheetHeader>
-          <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4 py-4 flex-1 overflow-y-auto">
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.username} aria-invalid={!!errors.username}>
               <label className="text-sm font-medium">用户名</label>
               <Input
@@ -298,7 +267,7 @@ export default function UsersTab() {
               </div>
             </div>
           </form>
-          <SheetFooter>
+          <DialogFooter>
             <Button variant="outline" onClick={() => { setDrawer(false); setEditing(null) }}>
               取消
             </Button>
@@ -306,9 +275,9 @@ export default function UsersTab() {
               {saving && <Loader2 className="animate-spin" />}
               保存
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

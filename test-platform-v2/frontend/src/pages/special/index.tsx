@@ -18,6 +18,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
+import Pagination from '@/components/Pagination'
+import PageHeader from '@/components/PageHeader'
+import EmptyState from '@/components/EmptyState'
+import { SkeletonText } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -32,10 +36,16 @@ import { Card, CardContent } from '@/components/ui/card'
 import {
   Sheet,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -164,11 +174,9 @@ export default function SpecialPage() {
     } catch { /* ignore */ }
   }
 
-  const totalPages = Math.max(1, Math.ceil(data.total / data.page_size))
-
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight">音视频检测</h2>
+      <PageHeader title="音视频检测" />
 
       {/* Filter bar */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -237,15 +245,14 @@ export default function SpecialPage() {
           <TableBody>
             {loading && data.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  <Loader2 className="size-4 inline animate-spin mr-2" />
-                  加载中...
+                <TableCell colSpan={6} className="py-8">
+                  <SkeletonText lines={4} />
                 </TableCell>
               </TableRow>
             ) : data.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  暂无数据
+                <TableCell colSpan={6} className="py-8">
+                  <EmptyState title="暂无音视频任务" description="点击「新建任务」创建音视频质量检测" className="py-0" />
                 </TableCell>
               </TableRow>
             ) : (
@@ -305,28 +312,20 @@ export default function SpecialPage() {
       </div>
 
       {/* Pagination */}
-      {data.total > 0 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-          <span>共 {data.total} 条</span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={data.page <= 1} onClick={() => load(data.page - 1)}>
-              上一页
-            </Button>
-            <span>{data.page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={data.page >= totalPages} onClick={() => load(data.page + 1)}>
-              下一页
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={data.page}
+        totalPages={Math.max(1, Math.ceil(data.total / data.page_size))}
+        total={data.total}
+        onChange={(p) => load(p)}
+      />
 
-      {/* Create Sheet */}
-      <Sheet open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); form.reset() } }}>
-        <SheetContent className="sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>新建音视频检测</SheetTitle>
-          </SheetHeader>
-          <form onSubmit={form.handleSubmit(doCreate)} className="flex flex-col gap-4 mt-4 overflow-y-auto flex-1">
+      {/* Create Dialog */}
+      <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); form.reset() } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>新建音视频检测</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(doCreate)} className="flex flex-col gap-4">
             <div data-invalid={!!form.formState.errors.name} aria-invalid={!!form.formState.errors.name}>
               <label className="text-sm font-medium mb-1 block">任务名称</label>
               <Input placeholder="如：HLS 直播流检测" {...form.register('name')} />
@@ -354,7 +353,7 @@ export default function SpecialPage() {
               </Select>
             </div>
 
-            <SheetFooter>
+            <DialogFooter>
               <Button type="button" variant="outline" onClick={() => { setDrawer(false); form.reset() }}>
                 取消
               </Button>
@@ -362,10 +361,10 @@ export default function SpecialPage() {
                 {saving && <Loader2 className="size-4 animate-spin" />}
                 保存
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail Sheet */}
       <Sheet open={detailOpen} onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetail(null) } }}>

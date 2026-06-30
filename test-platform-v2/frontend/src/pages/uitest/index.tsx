@@ -18,6 +18,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
+import DataTable, { type DataTableColumn } from '@/components/DataTable'
+import PageHeader from '@/components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -33,10 +35,16 @@ import { Card, CardContent } from '@/components/ui/card'
 import {
   Sheet,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -126,6 +134,70 @@ export default function UiTestPage() {
     defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium' },
   })
 
+  // ── DataTable column definitions ──
+  const uiJobColumns: DataTableColumn<UiJobItem>[] = [
+    { key: 'name', header: '名称', className: 'max-w-0', render: (r) => (
+      <button
+        className="text-primary hover:underline text-left truncate cursor-pointer bg-transparent border-0 p-0"
+        onClick={() => openDetail(r)}
+      >
+        {r.name}
+      </button>
+    )},
+    { key: 'test_spec', header: '测试文件', headerClassName: 'w-[200px]', className: 'max-w-[200px] truncate', render: (r) => r.test_spec || '-' },
+    { key: 'browser', header: '浏览器', headerClassName: 'w-[100px]', render: (r) => (
+      <Badge variant="outline" className={browserBadgeClass(BROWSER_MAP[r.browser]?.color)}>
+        <Monitor className="size-3" />
+        {r.browser}
+      </Badge>
+    )},
+    { key: 'status', header: '状态', headerClassName: 'w-[100px]', render: (r) => (
+      <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
+        {STATUS_MAP[r.status]?.label || r.status}
+      </Badge>
+    )},
+    { key: 'last_run_time', header: '上次执行', headerClassName: 'w-[170px]', render: (r) => r.last_run_time ? new Date(r.last_run_time).toLocaleString('zh-CN') : '-' },
+    { key: 'actions', header: '操作', headerClassName: 'w-[240px]', render: (r) => (
+      <div className="flex items-center gap-1">
+        <Button size="xs" variant="outline" onClick={() => openDetail(r)}>
+          <Eye className="size-3" />
+          详情
+        </Button>
+        {hasPerm('uitest:update') && (
+          <Button size="xs" variant="outline" onClick={() => openEdit(r)}>
+            <Edit className="size-3" />
+            编辑
+          </Button>
+        )}
+        {hasPerm('uitest:trigger') && (
+          <Button size="xs" variant="outline" onClick={() => doTrigger(r.id)} disabled={r.status === 'running'}>
+            <Play className="size-3" />
+            执行
+          </Button>
+        )}
+        {hasPerm('uitest:delete') && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="xs" variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
+                <Trash2 className="size-3" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确定删除？</AlertDialogTitle>
+                <AlertDialogDescription>此操作不可撤销。</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDeleteTarget(null)}>取消</AlertDialogCancel>
+                <AlertDialogAction onClick={doDelete}>确定删除</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
+    )},
+  ]
+
   const load = useCallback(async (page = 1) => {
     setLoading(true)
     try {
@@ -190,171 +262,71 @@ export default function UiTestPage() {
     setDrawer(true)
   }
 
-  const totalPages = Math.max(1, Math.ceil(data.total / data.page_size))
-
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight">UI 测试</h2>
+      <PageHeader title="UI 测试" />
 
-      {/* Filter bar */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <Select value={fStatus ?? '__all__'} onValueChange={(v) => setFStatus(v === '__all__' ? undefined : v)}>
-          <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="状态" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">全部</SelectItem>
-            {Object.entries(STATUS_MAP).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <DataTable
+        columns={uiJobColumns}
+        data={data.items}
+        rowKey={(r) => r.id}
+        loading={loading}
+        loadingRows={4}
+        emptyState={{ title: '暂无 UI 测试任务', description: '点击「新建任务」创建 UI 自动化测试' }}
+        pagination={{
+          page: data.page,
+          totalPages: Math.max(1, Math.ceil(data.total / data.page_size)),
+          total: data.total,
+          onChange: (p) => load(p),
+        }}
+        toolbar={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={fStatus ?? '__all__'} onValueChange={(v) => setFStatus(v === '__all__' ? undefined : v)}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="状态" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">全部</SelectItem>
+                {Object.entries(STATUS_MAP).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        <div className="flex items-center gap-1">
-          <Input
-            placeholder="搜索任务名"
-            className="w-[240px]"
-            value={fKeyword}
-            onChange={(e) => setFKeyword(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') load() }}
-          />
-          <Button size="icon-sm" variant="ghost" onClick={() => load()}>
-            <Search className="size-4" />
-          </Button>
-        </div>
+            <div className="flex items-center gap-1">
+              <Input
+                placeholder="搜索任务名"
+                className="w-[240px]"
+                value={fKeyword}
+                onChange={(e) => setFKeyword(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') load() }}
+              />
+              <Button size="icon-sm" variant="ghost" onClick={() => load()}>
+                <Search className="size-4" />
+              </Button>
+            </div>
 
-        <Button variant="outline" size="default" onClick={() => load()}>
-          <RotateCcw className="size-4" />
-          刷新
-        </Button>
-        {hasPerm('uitest:create') && (
-          <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium' }); setEditing(null); setDrawer(true) }}>
-            <Plus className="size-4" />
-            新建任务
-          </Button>
-        )}
-      </div>
-
-      {/* Table */}
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>名称</TableHead>
-              <TableHead className="w-[200px]">测试文件</TableHead>
-              <TableHead className="w-[100px]">浏览器</TableHead>
-              <TableHead className="w-[100px]">状态</TableHead>
-              <TableHead className="w-[170px]">上次执行</TableHead>
-              <TableHead className="w-[240px]">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading && data.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  <Loader2 className="size-4 inline animate-spin mr-2" />
-                  加载中...
-                </TableCell>
-              </TableRow>
-            ) : data.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.items.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="max-w-0">
-                    <button
-                      className="text-primary hover:underline text-left truncate cursor-pointer bg-transparent border-0 p-0"
-                      onClick={() => openDetail(r)}
-                    >
-                      {r.name}
-                    </button>
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{r.test_spec || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={browserBadgeClass(BROWSER_MAP[r.browser]?.color)}>
-                      <Monitor className="size-3" />
-                      {r.browser}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
-                      {STATUS_MAP[r.status]?.label || r.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{r.last_run_time ? new Date(r.last_run_time).toLocaleString('zh-CN') : '-'}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button size="xs" variant="outline" onClick={() => openDetail(r)}>
-                        <Eye className="size-3" />
-                        详情
-                      </Button>
-                      {hasPerm('uitest:update') && (
-                        <Button size="xs" variant="outline" onClick={() => openEdit(r)}>
-                          <Edit className="size-3" />
-                          编辑
-                        </Button>
-                      )}
-                      {hasPerm('uitest:trigger') && (
-                        <Button size="xs" variant="outline" onClick={() => doTrigger(r.id)} disabled={r.status === 'running'}>
-                          <Play className="size-3" />
-                          执行
-                        </Button>
-                      )}
-                      {hasPerm('uitest:delete') && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="xs" variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
-                              <Trash2 className="size-3" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>确定删除？</AlertDialogTitle>
-                              <AlertDialogDescription>此操作不可撤销。</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setDeleteTarget(null)}>取消</AlertDialogCancel>
-                              <AlertDialogAction onClick={doDelete}>确定删除</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+            <Button variant="outline" size="default" onClick={() => load()}>
+              <RotateCcw className="size-4" />
+              刷新
+            </Button>
+            {hasPerm('uitest:create') && (
+              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium' }); setEditing(null); setDrawer(true) }}>
+                <Plus className="size-4" />
+                新建任务
+              </Button>
             )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      {data.total > 0 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-          <span>共 {data.total} 条</span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={data.page <= 1} onClick={() => load(data.page - 1)}>
-              上一页
-            </Button>
-            <span>{data.page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={data.page >= totalPages} onClick={() => load(data.page + 1)}>
-              下一页
-            </Button>
           </div>
-        </div>
-      )}
+        }
+      />
 
-      {/* Create/Edit Sheet */}
-      <Sheet open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null); form.reset() } }}>
-        <SheetContent className="sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>{editing?.id ? '编辑UI测试任务' : '新建UI测试任务'}</SheetTitle>
-          </SheetHeader>
-          <form onSubmit={form.handleSubmit(doSave)} className="flex flex-col gap-4 mt-4 overflow-y-auto flex-1">
+      {/* Create/Edit Dialog */}
+      <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null); form.reset() } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing?.id ? '编辑UI测试任务' : '新建UI测试任务'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(doSave)} className="flex flex-col gap-4">
             <div data-invalid={!!form.formState.errors.name} aria-invalid={!!form.formState.errors.name}>
               <label className="text-sm font-medium mb-1 block">任务名称</label>
               <Input placeholder="如：首页推荐冒烟测试" {...form.register('name')} />
@@ -387,7 +359,7 @@ export default function UiTestPage() {
               </Select>
             </div>
 
-            <SheetFooter>
+            <DialogFooter>
               <Button type="button" variant="outline" onClick={() => { setDrawer(false); setEditing(null); form.reset() }}>
                 取消
               </Button>
@@ -395,10 +367,10 @@ export default function UiTestPage() {
                 {saving && <Loader2 className="size-4 animate-spin" />}
                 保存
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail Sheet */}
       <Sheet open={detailOpen} onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetail(null) } }}>

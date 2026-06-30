@@ -1,4 +1,4 @@
-"""鉴权路由 —— 登录 / 当前用户。"""
+"""鉴权路由 —— 登录 / 当前用户 / 修改密码。"""
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user
-from app.schemas.auth import LoginIn, LoginOut, MeOut, ProjectBrief, UserBrief
+from app.core.exceptions import APIException
+from app.core.security import hash_password, verify_password
+from app.schemas.auth import ChangePasswordIn, LoginIn, LoginOut, MeOut, ProjectBrief, UserBrief
 from app.schemas.common import R
 from app.services import auth_service, project_service
 
@@ -28,3 +30,19 @@ def me(current: CurrentUser = Depends(get_current_user), db: Session = Depends(g
         current_project_id=current.project_id,
     )
     return R.ok(data)
+
+
+@router.post("/change-password", response_model=R[None], summary="修改当前用户密码")
+def change_password(
+    body: ChangePasswordIn,
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(body.old_password, current.user.password):
+        raise APIException(code=400, message="原密码错误")
+    if body.old_password == body.new_password:
+        raise APIException(code=400, message="新密码不能与原密码相同")
+    current.user.password = hash_password(body.new_password)
+    current.user.must_change_password = False
+    db.commit()
+    return R.ok()

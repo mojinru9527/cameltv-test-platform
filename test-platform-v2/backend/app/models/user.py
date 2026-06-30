@@ -20,3 +20,5 @@ class User(Base, TimestampMixin):
     # 1=启用 0=禁用
     status: Mapped[int] = mapped_column(default=1)
     last_login_at: Mapped[datetime | None] = mapped_column(default=None)
+    # 首次登录是否必须修改密码（seed 创建的默认账号为 True）
+    must_change_password: Mapped[bool] = mapped_column(default=False)

@@ -1,0 +1,812 @@
+{
+  "document_name": "用户端原型",
+  "document_type": "axure",
+  "project_info": {
+    "name": "产品需求",
+    "creator": "产品-肖琪鸣",
+    "path": "团队文件/骆驼TV/产品需求/用户端原型"
+  },
+  "project_docs": [],
+  "total_pages": 98,
+  "folder_structure": {
+    "根目录": 1,
+    "说明附件": 6,
+    "APP端": 24,
+    "首页": 6,
+    "UGC": 4,
+    "资讯": 2,
+    "搜索": 2,
+    "赛事详情": 14,
+    "我的": 23,
+    "PC端": 6,
+    "WEB端": 3,
+    "直播间": 7
+  },
+  "pages": [
+    {
+      "name": "更新日志",
+      "url": "更新日志.html",
+      "folder": "根目录",
+      "path": "更新日志",
+      "level": 0,
+      "type": "Wireframe"
+    },
+    {
+      "name": "广告位系统",
+      "url": "广告位系统.html",
+      "folder": "说明附件",
+      "path": "说明附件/广告位系统",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "银钻系统",
+      "url": "银钻系统.html",
+      "folder": "说明附件",
+      "path": "说明附件/银钻系统",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "银钻预测玩法",
+      "url": "银钻预测玩法.html",
+      "folder": "说明附件",
+      "path": "说明附件/银钻预测玩法",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "UGC功能概述",
+      "url": "ugc功能概述.html",
+      "folder": "说明附件",
+      "path": "说明附件/UGC功能概述",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "付费活动",
+      "url": "付费活动.html",
+      "folder": "说明附件",
+      "path": "说明附件/付费活动",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "骆驼币及绿钻",
+      "url": "骆驼币及绿钻.html",
+      "folder": "说明附件",
+      "path": "说明附件/骆驼币及绿钻",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "启动页",
+      "url": "启动页.html",
+      "folder": "APP端",
+      "path": "APP端/启动页",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "开屏广告",
+      "url": "开屏广告.html",
+      "folder": "APP端",
+      "path": "APP端/开屏广告",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "登录注册",
+      "url": "登录注册.html",
+      "folder": "APP端",
+      "path": "APP端/登录注册",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "首页",
+      "url": "首页.html",
+      "folder": "首页",
+      "path": "APP端/首页/首页",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "进行中的比赛/热门比赛",
+      "url": "进行中的比赛_热门比赛.html",
+      "folder": "首页",
+      "path": "APP端/首页/首页/进行中的比赛/热门比赛",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "开播",
+      "url": "开播.html",
+      "folder": "首页",
+      "path": "APP端/首页/开播",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "热门赛事",
+      "url": "热门赛事.html",
+      "folder": "首页",
+      "path": "APP端/首页/热门赛事",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "热门联赛",
+      "url": "热门联赛.html",
+      "folder": "首页",
+      "path": "APP端/首页/热门联赛",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "赛程表",
+      "url": "赛程表.html",
+      "folder": "首页",
+      "path": "APP端/首页/赛程表",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "UGC列表",
+      "url": "ugc列表.html",
+      "folder": "UGC",
+      "path": "APP端/UGC/UGC列表",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "UGC详情",
+      "url": "ugc详情.html",
+      "folder": "UGC",
+      "path": "APP端/UGC/UGC列表/UGC详情",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "我已解锁",
+      "url": "我已解锁.html",
+      "folder": "UGC",
+      "path": "APP端/UGC/UGC列表/我已解锁",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "创作者主页",
+      "url": "创作者主页.html",
+      "folder": "UGC",
+      "path": "APP端/UGC/创作者主页",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "资讯列表",
+      "url": "资讯列表.html",
+      "folder": "资讯",
+      "path": "APP端/资讯/资讯列表",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "资讯详情",
+      "url": "资讯详情.html",
+      "folder": "资讯",
+      "path": "APP端/资讯/资讯列表/资讯详情",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "搜索页",
+      "url": "搜索页.html",
+      "folder": "搜索",
+      "path": "APP端/搜索/搜索页",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "搜索结果页",
+      "url": "搜索结果页.html",
+      "folder": "搜索",
+      "path": "APP端/搜索/搜索结果页",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "赛况",
+      "url": "赛况.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/赛况",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "广告",
+      "url": "广告.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/赛况/广告",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "视频直播",
+      "url": "视频直播.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/赛况/视频直播",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "动画直播",
+      "url": "动画直播.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/赛况/动画直播",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "聊天室",
+      "url": "聊天室.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/聊天室",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "用户资料卡",
+      "url": "用户资料卡.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/聊天室/用户资料卡",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "Picks",
+      "url": "picks.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/Picks",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "预测",
+      "url": "预测.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/预测",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "预测记录",
+      "url": "预测记录.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/预测/预测记录",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "阵容",
+      "url": "阵容.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/阵容",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "数据",
+      "url": "数据.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/数据",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "指数",
+      "url": "指数.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/指数",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "赛程",
+      "url": "赛程.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/赛程",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "Game(移动)",
+      "url": "game_移动_.html",
+      "folder": "赛事详情",
+      "path": "APP端/赛事详情/Game(移动)",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "数据",
+      "url": "数据_1.html",
+      "folder": "APP端",
+      "path": "APP端/数据",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "预测比赛列表",
+      "url": "预测比赛列表.html",
+      "folder": "APP端",
+      "path": "APP端/预测比赛列表",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "联赛详情页",
+      "url": "联赛详情页.html",
+      "folder": "APP端",
+      "path": "APP端/联赛详情页",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "资讯",
+      "url": "资讯.html",
+      "folder": "APP端",
+      "path": "APP端/联赛详情页/资讯",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "资料",
+      "url": "资料.html",
+      "folder": "APP端",
+      "path": "APP端/联赛详情页/资料",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "积分",
+      "url": "积分.html",
+      "folder": "APP端",
+      "path": "APP端/联赛详情页/积分",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "数据",
+      "url": "数据_2.html",
+      "folder": "APP端",
+      "path": "APP端/联赛详情页/数据",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "球队榜",
+      "url": "球队榜.html",
+      "folder": "APP端",
+      "path": "APP端/联赛详情页/球队榜",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "球员榜",
+      "url": "球员榜.html",
+      "folder": "APP端",
+      "path": "APP端/联赛详情页/球员榜",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "球队详情页",
+      "url": "球队详情页.html",
+      "folder": "APP端",
+      "path": "APP端/球队详情页",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "资料",
+      "url": "资料_1.html",
+      "folder": "APP端",
+      "path": "APP端/球队详情页/资料",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "积分",
+      "url": "积分_1.html",
+      "folder": "APP端",
+      "path": "APP端/球队详情页/积分",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "阵容",
+      "url": "阵容_1.html",
+      "folder": "APP端",
+      "path": "APP端/球队详情页/阵容",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "数据",
+      "url": "数据_3.html",
+      "folder": "APP端",
+      "path": "APP端/球队详情页/数据",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "最佳",
+      "url": "最佳.html",
+      "folder": "APP端",
+      "path": "APP端/球队详情页/最佳",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "球员详情页",
+      "url": "球员详情页.html",
+      "folder": "APP端",
+      "path": "APP端/球员详情页",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "数据统计",
+      "url": "数据统计.html",
+      "folder": "APP端",
+      "path": "APP端/球员详情页/数据统计",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "比赛",
+      "url": "比赛.html",
+      "folder": "APP端",
+      "path": "APP端/球员详情页/比赛",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "资讯",
+      "url": "资讯_1.html",
+      "folder": "APP端",
+      "path": "APP端/球员详情页/资讯",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "我的",
+      "url": "我的.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "关注",
+      "url": "关注.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/关注",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "订阅",
+      "url": "订阅.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/订阅",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "骆驼币账户(WEB)",
+      "url": "骆驼币账户_web_.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/骆驼币账户(WEB)",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "数字货币支付(WEB)",
+      "url": "数字货币支付_web_.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/骆驼币账户(WEB)/数字货币支付(WEB)",
+      "level": 4,
+      "type": "Wireframe"
+    },
+    {
+      "name": "骆驼币流水记录",
+      "url": "骆驼币流水记录.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/骆驼币账户(WEB)/骆驼币流水记录",
+      "level": 4,
+      "type": "Wireframe"
+    },
+    {
+      "name": "支付结果页(WEB)",
+      "url": "支付结果页_web_.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/骆驼币账户(WEB)/支付结果页(WEB)",
+      "level": 4,
+      "type": "Wireframe"
+    },
+    {
+      "name": "银钻账户",
+      "url": "银钻账户.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/银钻账户",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "领银钻",
+      "url": "领银钻.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/领银钻",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "邀请好友",
+      "url": "邀请好友.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/领银钻/邀请好友",
+      "level": 4,
+      "type": "Wireframe"
+    },
+    {
+      "name": "Camel商城",
+      "url": "camel__.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/Camel商城",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "我的收藏",
+      "url": "我的收藏.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/我的收藏",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "我的资料",
+      "url": "我的资料.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/我的资料",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "FAQ",
+      "url": "faq.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/FAQ",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "FAQ内容",
+      "url": "faq内容.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/FAQ/FAQ内容",
+      "level": 4,
+      "type": "Wireframe"
+    },
+    {
+      "name": "意见反馈",
+      "url": "意见反馈.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/FAQ/意见反馈",
+      "level": 4,
+      "type": "Wireframe"
+    },
+    {
+      "name": "我的装扮",
+      "url": "我的装扮.html",
+      "folder": "我的",
+      "path": "APP端/我的/我的/我的装扮",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "创作者中心",
+      "url": "创作者中心.html",
+      "folder": "我的",
+      "path": "APP端/我的/创作者中心",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "每日收益",
+      "url": "每日收益.html",
+      "folder": "我的",
+      "path": "APP端/我的/创作者中心/每日收益",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "提现记录",
+      "url": "提现记录.html",
+      "folder": "我的",
+      "path": "APP端/我的/创作者中心/提现记录",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "设置",
+      "url": "设置.html",
+      "folder": "我的",
+      "path": "APP端/我的/设置",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "切换语言",
+      "url": "切换语言.html",
+      "folder": "我的",
+      "path": "APP端/我的/设置/切换语言",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "关于我们",
+      "url": "关于我们.html",
+      "folder": "我的",
+      "path": "APP端/我的/设置/关于我们",
+      "level": 3,
+      "type": "Wireframe"
+    },
+    {
+      "name": "通用组件",
+      "url": "通用组件.html",
+      "folder": "APP端",
+      "path": "APP端/通用组件",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "权限获取",
+      "url": "权限获取.html",
+      "folder": "APP端",
+      "path": "APP端/权限获取",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "首页(PC端)",
+      "url": "首页_pc端_.html",
+      "folder": "PC端",
+      "path": "PC端/首页(PC端)",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "UGC列表(PC)",
+      "url": "ugc列表_pc_.html",
+      "folder": "PC端",
+      "path": "PC端/UGC列表(PC)",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "UGC详情(PC)",
+      "url": "ugc详情_pc_.html",
+      "folder": "PC端",
+      "path": "PC端/UGC列表(PC)/UGC详情(PC)",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "赛事详情页(PC)",
+      "url": "赛事详情页_pc_.html",
+      "folder": "PC端",
+      "path": "PC端/赛事详情页(PC)",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "推荐搜索(PC)",
+      "url": "推荐搜索_pc_.html",
+      "folder": "PC端",
+      "path": "PC端/推荐搜索(PC)",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "球员详情(PC)",
+      "url": "球员详情_pc_.html",
+      "folder": "PC端",
+      "path": "PC端/球员详情(PC)",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "首页(Mobile)",
+      "url": "___mobile_.html",
+      "folder": "WEB端",
+      "path": "WEB端/首页(Mobile)",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "赛程",
+      "url": "赛程_1.html",
+      "folder": "WEB端",
+      "path": "WEB端/赛程",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "单场比赛主播列表(后期)",
+      "url": "单场比赛主播列表_后期_.html",
+      "folder": "WEB端",
+      "path": "WEB端/赛程/单场比赛主播列表(后期)",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "直播间提示弹窗",
+      "url": "直播间提示弹窗.html",
+      "folder": "直播间",
+      "path": "WEB端/直播间/直播间提示弹窗",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "聊天",
+      "url": "聊天.html",
+      "folder": "直播间",
+      "path": "WEB端/直播间/聊天",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "赛况",
+      "url": "赛况_1.html",
+      "folder": "直播间",
+      "path": "WEB端/直播间/赛况",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "主播",
+      "url": "主播.html",
+      "folder": "直播间",
+      "path": "WEB端/直播间/主播",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "分析",
+      "url": "分析.html",
+      "folder": "直播间",
+      "path": "WEB端/直播间/分析",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "赛程",
+      "url": "赛程_2.html",
+      "folder": "直播间",
+      "path": "WEB端/直播间/赛程",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "同场主播(后期)",
+      "url": "同场主播_后期_.html",
+      "folder": "直播间",
+      "path": "WEB端/直播间/同场主播(后期)",
+      "level": 2,
+      "type": "Wireframe"
+    }
+  ],
+  "extracted_at": "20260611_180510"
+}
