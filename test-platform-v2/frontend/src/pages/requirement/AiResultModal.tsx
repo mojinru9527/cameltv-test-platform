@@ -303,6 +303,7 @@ export default function AiResultModal({
   const [rejectNotes, setRejectNotes] = useState('')
   const [generating, setGenerating] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState('func')
 
   // Initialize extraction state when extractionResult changes
   useEffect(() => {
