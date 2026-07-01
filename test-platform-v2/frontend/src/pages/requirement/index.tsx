@@ -27,6 +27,7 @@ import {
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
+import { AsyncState } from '@/components/state'
 import AiResultModal from './AiResultModal'
 
 const TYPE_TAG: Record<string, { className: string; label: string; icon: React.ReactNode }> = {
@@ -75,7 +76,7 @@ export default function RequirementPage() {
   const domainPageSize = 8
 
   // ── Data fetching with useApi — loads all three data sources in parallel ──
-  const { data, isLoading, isRefetching, refetch } = useApi<RequirementData>(
+  const { data, isLoading, isRefetching, isError, error, refetch } = useApi<RequirementData>(
     async () => {
       const [domainData, caseData, docData]: any[] = await Promise.all([
         fetchDomains(),
@@ -474,17 +475,19 @@ export default function RequirementPage() {
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Loader2 className="size-8 mb-2 animate-spin opacity-40" />
-              <p className="text-sm">加载中...</p>
-            </div>
-          ) : filteredDocs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Inbox className="size-8 mb-2 opacity-40" />
-              <p className="text-sm">暂无需求文档，请上传</p>
-            </div>
-          ) : (
+          <AsyncState
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            data={filteredDocs.length > 0 ? filteredDocs : ([] as any[])}
+            onRetry={refetch}
+            emptyTitle="暂无需求文档"
+            emptyDescription="请上传需求文档开始使用"
+            emptyIcon={Inbox}
+            skeletonType="table"
+            loadingRows={3}
+          >
+            {() => (
             <>
               <Table>
                 <TableHeader>
@@ -714,7 +717,8 @@ export default function RequirementPage() {
                 onChange={(p) => setDocPage(p)}
               />
             </>
-          )}
+            )}
+          </AsyncState>
         </CardContent>
       </Card>
 
