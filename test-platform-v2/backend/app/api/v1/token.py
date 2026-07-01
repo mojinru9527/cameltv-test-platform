@@ -3,20 +3,35 @@ from __future__ import annotations
 
 import hashlib
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.deps import CurrentUser, get_db, require_project
+from app.core.deps import CurrentUser, get_db, require_permission, require_project
 from app.models.api_token import ApiToken
 from app.schemas.common import R
+from app.services.audit_service import write_audit
 
 router = APIRouter(prefix="/tokens", tags=["API Token"])
 
 
+def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
+    """P1-6/S3c: 审计日志 — Token 操作追溯。"""
+    write_audit(
+        db,
+        user_id=cu.user.id,
+        username=cu.user.username or "",
+        project_id=cu.project_id or 0,
+        action=action,
+        target=target,
+        detail=detail,
+        ip=req.client.host if req.client else "",
+    )
+
+
 @router.get("", response_model=R[list], summary="API Token 列表")
 def list_tokens(
-    current: CurrentUser = Depends(require_project),
+    current: CurrentUser = Depends(require_permission("token:list")),
     db: Session = Depends(get_db),
 ):
     rows = db.scalars(
@@ -33,7 +48,8 @@ def list_tokens(
 @router.post("", response_model=R[dict], summary="创建 API Token")
 def create_token(
     body: dict,
-    current: CurrentUser = Depends(require_project),
+    req: Request,
+    current: CurrentUser = Depends(require_permission("token:manage")),
     db: Session = Depends(get_db),
 ):
     plain, token_hash = ApiToken.generate()
@@ -47,6 +63,7 @@ def create_token(
     )
     db.add(t)
     db.commit()
+    _audit(req, current, db, "token:create", f"#{t.id} {t.name}")
     # Only time the plain token is returned!
     return R.ok({
         "id": t.id,
@@ -62,7 +79,8 @@ def create_token(
 def update_token(
     token_id: int,
     body: dict,
-    current: CurrentUser = Depends(require_project),
+    req: Request,
+    current: CurrentUser = Depends(require_permission("token:manage")),
     db: Session = Depends(get_db),
 ):
     t = db.scalar(
@@ -80,13 +98,15 @@ def update_token(
         t.enabled = body["enabled"]
 
     db.commit()
+    _audit(req, current, db, "token:update", f"#{token_id} {t.name}")
     return R.ok({"id": t.id, "name": t.name, "enabled": t.enabled})
 
 
 @router.delete("/{token_id}", response_model=R[dict], summary="删除 API Token")
 def delete_token(
     token_id: int,
-    current: CurrentUser = Depends(require_project),
+    req: Request,
+    current: CurrentUser = Depends(require_permission("token:manage")),
     db: Session = Depends(get_db),
 ):
     t = db.scalar(
@@ -97,6 +117,7 @@ def delete_token(
     if not t:
         from app.core.exceptions import not_found
         raise not_found("API Token")
+    _audit(req, current, db, "token:delete", f"#{token_id} {t.name}")
     db.delete(t)
     db.commit()
     return R.ok({"deleted": True})
