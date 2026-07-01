@@ -57,6 +57,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# P1-1/S1d: CSRF protection (validate Origin/Referer for state-changing requests)
+from app.middleware.csrf import CSRFMiddleware  # noqa: E402
+
+app.add_middleware(CSRFMiddleware)
+
+# P1-2/S2c: Content-Security-Policy header (defense-in-depth against XSS)
+from app.middleware.csp import CSPMiddleware  # noqa: E402
+
+app.add_middleware(CSPMiddleware)
+
 app.add_exception_handler(APIException, api_exception_handler)
 
 app.include_router(api_router)
