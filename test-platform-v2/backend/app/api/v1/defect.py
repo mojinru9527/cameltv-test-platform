@@ -260,7 +260,32 @@ def upload_attachment(
     db: Session = Depends(get_db),
 ):
     """Upload a file attachment to a defect (max 50 MB)."""
-    content = file.file.read()
+    # P1-S6a: Content-Length 前置检查，避免读取超大文件
+    content_length = req.headers.get("content-length")
+    if content_length:
+        cl = int(content_length)
+        max_bytes = 50 * 1024 * 1024
+        if cl > max_bytes:
+            from app.core.exceptions import APIException
+            raise APIException(
+                f"上传文件超过限制 (max: 50 MB, got: {cl / (1024*1024):.1f} MB)",
+                code=413,
+            )
+    # P1-S6b: 流式写入临时文件，避免大文件完全加载到内存
+    import os
+    import shutil
+    import tempfile
+    tmp_path = ""
+    try:
+        suffix = os.path.splitext(file.filename or ".bin")[1] or ".bin"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(file.file, tmp, length=64 * 1024)
+            tmp_path = tmp.name
+        with open(tmp_path, "rb") as f:
+            content = f.read()
+    finally:
+        if tmp_path:
+            os.unlink(tmp_path)
     if len(content) > 50 * 1024 * 1024:
         from app.core.exceptions import APIException
         raise APIException("附件大小不能超过 50 MB", code=413)

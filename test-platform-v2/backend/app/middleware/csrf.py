@@ -1,7 +1,10 @@
-"""CSRF protection middleware (P1-1/S1d).
+"""CSRF protection middleware (P1-1/S1d, refined in P1-C1).
 
 Validates Origin / Referer headers for state-changing requests to prevent
 cross-site request forgery when httpOnly cookies carry the auth token.
+
+Bypass logic: only /api/v1/open is excluded (API Token Bearer tpat_xxx — no cookie).
+All other endpoints including /api/v1/tokens/* are CSRF-protected (JWT Cookie auth).
 
 Deliberately implemented as pure ASGI middleware to avoid issues with
 BaseHTTPMiddleware and BackgroundTasks.
@@ -20,8 +23,10 @@ logger = logging.getLogger("csrf")
 # Safe methods that do not require CSRF validation
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS", "TRACE"})
 
-# Path prefixes that bypass CSRF (API Token auth — no cookie)
-_BYPASS_PREFIXES = ("/api/v1/tokens", "/api/v1/open")
+# Path prefixes that bypass CSRF.
+# Only /api/v1/open uses API Token (Bearer tpat_xxx) — no cookie, no CSRF needed.
+# /api/v1/tokens management endpoints use JWT cookie auth and are now CSRF-protected.
+_BYPASS_PREFIXES = ("/api/v1/open",)
 
 
 class CSRFMiddleware:
