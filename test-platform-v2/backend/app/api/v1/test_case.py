@@ -274,6 +274,7 @@ def export_xmind(
 
 @router.post("/import/xmind", response_model=R[dict], summary="从 Xmind 导入用例")
 def import_xmind(
+    req: Request,
     file: UploadFile = File(...),
     current: CurrentUser = Depends(require_permission("testcase:create")),
     db: Session = Depends(get_db),
@@ -284,6 +285,18 @@ def import_xmind(
 
     if not file.filename or not file.filename.endswith(".xmind"):
         return R(code=1, msg="请上传 .xmind 文件")
+
+    # P1-S6a: Content-Length 前置检查，避免读取超大文件 (max 10 MB)
+    content_length = req.headers.get("content-length")
+    if content_length:
+        cl = int(content_length)
+        max_bytes = 10 * 1024 * 1024
+        if cl > max_bytes:
+            from app.core.exceptions import APIException
+            raise APIException(
+                f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
+                code=413,
+            )
 
     raw = file.file.read()
     cases = xmind_bytes_to_cases(raw)
