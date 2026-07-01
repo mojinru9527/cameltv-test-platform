@@ -75,6 +75,8 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = ""
     smtp_use_tls: bool = True
+    smtp_verify_cert: bool = True       # P1-S5b: SMTP TLS 证书验证开关
+    smtp_ca_bundle: str = ""             # P1-S5b: 自定义 CA 证书包路径
 
     @property
     def cors_origins(self) -> list[str]:
