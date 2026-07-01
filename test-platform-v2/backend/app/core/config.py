@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     lanhu_mcp_dir: str = ""       # lanhu-mcp module directory
     data_dir: str = ""            # extracted data cache directory
 
+    # ── SMTP (optional, for email notifications) ──
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_use_tls: bool = True
+
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]

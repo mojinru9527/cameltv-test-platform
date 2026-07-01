@@ -1,13 +1,17 @@
-"""Defect service — list / get / create / update / delete / stats / transitions / comments."""
+"""Defect service — list / get / create / update / delete / stats / transitions / comments / attachments."""
 from __future__ import annotations
 
+import os
+import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.base_service import batch_field_map, batch_user_names, paginate
-from app.models.defect import Defect, DefectComment, DefectTransition
+from app.core.config import settings
+from app.models.defect import Defect, DefectAttachment, DefectComment, DefectTransition
 from app.models.test_case import TestCase
 from app.models.user import User
 
@@ -361,3 +365,121 @@ def create_comment(
         "author_name": c.author_name,
         "created_at": c.created_at.isoformat() if c.created_at else None,
     }
+
+
+# ── Attachments ────────────────────────────────────────
+
+def _attachments_dir() -> Path:
+    """Resolve the attachments root directory."""
+    data_root = settings.data_dir or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data"
+    )
+    return Path(data_root) / "attachments" / "defects"
+
+
+def upload_attachment(
+    db: Session,
+    defect_id: int,
+    filename: str,
+    content: bytes,
+    *,
+    project_id: int,
+    uploader_id: int = 0,
+    uploader_name: str = "",
+) -> dict | None:
+    """Save an uploaded file to disk and record metadata in DB."""
+    r = db.scalar(
+        select(Defect).where(Defect.id == defect_id, Defect.project_id == project_id)
+    )
+    if not r:
+        return None
+
+    # Ensure unique filename on disk
+    ext = os.path.splitext(filename)[1]
+    stored_name = f"{uuid.uuid4().hex}{ext}"
+    target_dir = _attachments_dir() / str(defect_id)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    file_path = target_dir / stored_name
+    file_path.write_bytes(content)
+
+    a = DefectAttachment(
+        defect_id=defect_id,
+        filename=filename,
+        stored_path=str(file_path.relative_to(_attachments_dir().parent)),
+        file_size=len(content),
+        mime_type=_guess_mime(filename),
+        uploader_id=uploader_id,
+        uploader_name=uploader_name,
+    )
+    db.add(a)
+    db.flush()
+    return _attachment_to_dict(a)
+
+
+def list_attachments(db: Session, defect_id: int, project_id: int) -> list[dict]:
+    """List attachment metadata for a defect."""
+    r = db.scalar(
+        select(Defect).where(Defect.id == defect_id, Defect.project_id == project_id)
+    )
+    if not r:
+        return []
+    rows = db.scalars(
+        select(DefectAttachment)
+        .where(DefectAttachment.defect_id == defect_id)
+        .order_by(DefectAttachment.created_at.asc())
+    ).all()
+    return [_attachment_to_dict(a) for a in rows]
+
+
+def get_attachment(db: Session, attachment_id: int, project_id: int) -> tuple[dict, Path] | None:
+    """Return (metadata_dict, absolute_file_path) or None if not found."""
+    a = db.scalar(
+        select(DefectAttachment)
+        .join(Defect, Defect.id == DefectAttachment.defect_id)
+        .where(DefectAttachment.id == attachment_id, Defect.project_id == project_id)
+    )
+    if not a:
+        return None
+    file_path = _attachments_dir().parent / a.stored_path
+    if not file_path.exists():
+        return None
+    return _attachment_to_dict(a), file_path
+
+
+def delete_attachment(db: Session, attachment_id: int, project_id: int) -> bool:
+    """Delete attachment record and its file on disk."""
+    a = db.scalar(
+        select(DefectAttachment)
+        .join(Defect, Defect.id == DefectAttachment.defect_id)
+        .where(DefectAttachment.id == attachment_id, Defect.project_id == project_id)
+    )
+    if not a:
+        return False
+    file_path = _attachments_dir().parent / a.stored_path
+    try:
+        file_path.unlink(missing_ok=True)
+    except OSError:
+        pass
+    db.delete(a)
+    db.flush()
+    return True
+
+
+def _attachment_to_dict(a: DefectAttachment) -> dict:
+    return {
+        "id": a.id,
+        "defect_id": a.defect_id,
+        "filename": a.filename,
+        "stored_path": a.stored_path,
+        "file_size": a.file_size,
+        "mime_type": a.mime_type,
+        "uploader_id": a.uploader_id,
+        "uploader_name": a.uploader_name,
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+    }
+
+
+def _guess_mime(filename: str) -> str:
+    import mimetypes
+    mime, _ = mimetypes.guess_type(filename)
+    return mime or "application/octet-stream"
