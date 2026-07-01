@@ -30,6 +30,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { deletePlan, fetchPlans } from '@/api/testplan'
 import { useApi } from '@/hooks/useApi'
+import { ErrorState } from '@/components/state'
 import PlanDrawer from './PlanDrawer'
 
 const STATUS_MAP: Record<string, { variant: 'outline' | 'default' | 'secondary'; className?: string; label: string }> = {
@@ -49,7 +50,7 @@ export default function TestPlanPage() {
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
 
   // ── Data fetching with useApi ──
-  const { data, isLoading, isRefetching, refetch } = useApi(
+  const { data, isLoading, isRefetching, isError, error, refetch } = useApi(
     () => {
       const params: any = { page, page_size: 20 }
       if (status) params.status = status
@@ -136,6 +137,9 @@ export default function TestPlanPage() {
     <div className="space-y-4">
       <PageHeader title="测试计划" />
 
+      {isError && (!data || data.items?.length === 0) ? (
+        <ErrorState error={error} onRetry={refetch} />
+      ) : (
       <DataTable
         columns={planColumns}
         data={items}
@@ -192,6 +196,7 @@ export default function TestPlanPage() {
           </div>
         }
       />
+      )}
 
       <PlanDrawer
         open={drawer}

@@ -57,6 +57,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { useApi } from '@/hooks/useApi'
+import { ErrorState } from '@/components/state'
 import {
   Plus,
   Search,
@@ -117,7 +118,7 @@ export default function ReportPage() {
   const watchPlanId = watch('plan_id')
 
   // ── Data fetching with useApi ──
-  const { data, isLoading, isRefetching, refetch } = useApi(
+  const { data, isLoading, isRefetching, isError, error, refetch } = useApi(
     () => {
       const params: any = { page, page_size: 20 }
       if (keyword) params.keyword = keyword
@@ -231,6 +232,9 @@ export default function ReportPage() {
     <div>
       <PageHeader title="报告中心" />
 
+      {isError && (!data || data.items?.length === 0) ? (
+        <ErrorState error={error} onRetry={refetch} />
+      ) : (
       <DataTable
         columns={reportColumns}
         data={items}
@@ -264,6 +268,7 @@ export default function ReportPage() {
           </div>
         }
       />
+      )}
 
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={(open) => { if (!open) setCreateOpen(false) }}>
