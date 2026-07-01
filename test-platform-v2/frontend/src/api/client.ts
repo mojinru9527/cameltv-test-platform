@@ -12,9 +12,11 @@ interface ApiEnvelope<T> {
 const client = axios.create({
   baseURL: '/api/v1',
   timeout: 600000,
+  withCredentials: true, // P1-1: 携带 httpOnly 鉴权 cookie
 })
 
-// 请求拦截：注入 JWT + 当前项目
+// 请求拦截：注入当前项目；JWT 由 httpOnly cookie 自动携带
+// （过渡期：若内存中仍持有 token 则附加 Authorization 头作为兼容回退）
 client.interceptors.request.use((config) => {
   const { token, currentProjectId } = useAuthStore.getState()
   if (token) config.headers.Authorization = `Bearer ${token}`

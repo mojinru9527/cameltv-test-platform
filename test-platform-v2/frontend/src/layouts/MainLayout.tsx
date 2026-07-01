@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { fetchMenus } from '@/api/auth'
+import { fetchMenus, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import type { ColorTheme } from '@/stores/auth'
 import { useTheme } from '@/components/theme-provider'
@@ -397,8 +397,11 @@ export default function MainLayout() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    logout()
-                    navigate('/login', { replace: true })
+                    // P1-1: 先请求后端清除 httpOnly cookie，再清本地状态并跳转。
+                    logoutApi().catch(() => {}).finally(() => {
+                      logout()
+                      navigate('/login', { replace: true })
+                    })
                   }}
                 >
                   <LogOut className="mr-2 size-4" />

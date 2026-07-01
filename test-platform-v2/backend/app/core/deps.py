@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from fastapi import Depends, Header
+from fastapi import Depends, Header, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.exceptions import forbidden, unauthorized
 from app.core.security import decode_token
@@ -28,13 +29,18 @@ class CurrentUser:
 
 
 def get_current_user(
+    request: Request,
     creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
     x_project_id: int | None = Header(default=None, alias="X-Project-Id"),
     db: Session = Depends(get_db),
 ) -> CurrentUser:
-    if creds is None:
+    # P1-1: prefer httpOnly cookie; fall back to Authorization header (transition period).
+    token = request.cookies.get(settings.cookie_name)
+    if not token and creds is not None:
+        token = creds.credentials
+    if not token:
         raise unauthorized()
-    payload = decode_token(creds.credentials)
+    payload = decode_token(token)
     if not payload or "sub" not in payload:
         raise unauthorized()
     user = db.get(User, int(payload["sub"]))

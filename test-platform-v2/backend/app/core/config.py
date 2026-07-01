@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440
 
+    # ── Auth cookie (P1-1: JWT via httpOnly cookie, XSS-hardened) ──
+    cookie_name: str = "cameltv_token"
+    cookie_secure: bool = False               # production: true (requires HTTPS)
+    cookie_samesite: str = "lax"              # "strict" | "lax" | "none"
+    cookie_domain: str = ""                    # empty = host-only cookie
+    cookie_path: str = "/api"
+
     # ── Database ──
     database_url: str = "sqlite:///./data/platform.db"
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
