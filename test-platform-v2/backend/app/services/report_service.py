@@ -66,7 +66,7 @@ def _build_content(db: Session, plan_id: int) -> str:
                 case_trace_map[pcase_id] = last_exec.trace_id
 
     cases = []
-    stats = {"total": 0, "pass_": 0, "fail": 0, "skip": 0, "block": 0, "pending": 0}
+    stats = {"total": 0, "pass": 0, "fail": 0, "skip": 0, "block": 0, "pending": 0}
     for pc, tc in pcases:
         trace_id = case_trace_map.get(pc.id, "")
         cases.append({
@@ -238,7 +238,7 @@ def _compute_gate(db, plan_id: int, project_id: int, content_str: str) -> dict:
     pcases = db.scalars(
         select(TestPlanCase.case_id).where(TestPlanCase.plan_id == plan_id)
     ).all()
-    case_ids = {pc[0] for pc in pcases} if pcases else set()
+    case_ids = set(pcases) if pcases else set()
     p0_defects = 0
     if case_ids:
         p0_defects = db.scalar(
@@ -266,6 +266,86 @@ def _compute_gate(db, plan_id: int, project_id: int, content_str: str) -> dict:
         details.append("无未关闭 P0 缺陷 (通过)")
 
     return {"status": "pass" if passed else "fail", "details": details}
+
+
+def get_trends(db: Session, project_id: int) -> dict:
+    """Aggregate pass-rate trend and defect convergence across all reports.
+
+    Returns a list of time-sorted data points suitable for line/area charts.
+    """
+    reports = db.execute(
+        select(TestReport).where(TestReport.project_id == project_id)
+        .order_by(TestReport.created_at.asc())
+    ).scalars().all()
+
+    points = []
+    for r in reports:
+        try:
+            content = json.loads(r.content) if r.content else {}
+        except json.JSONDecodeError:
+            content = {}
+        stats = content.get("stats", {}) if isinstance(content, dict) else {}
+        total = stats.get("total", 0)
+        pass_count = stats.get("pass", 0) or stats.get("pass_", 0)
+        fail_count = stats.get("fail", 0)
+        skip_count = stats.get("skip", 0)
+        block_count = stats.get("block", 0)
+        pass_rate = round(pass_count / total * 100, 1) if total else 0.0
+
+        # Defect convergence: count open defects at the time this report was created
+        open_defects = _count_open_defects_at(db, project_id, r.plan_id, r.created_at)
+
+        points.append({
+            "date": r.created_at.isoformat() if r.created_at else "",
+            "report_id": r.id,
+            "report_name": r.name,
+            "pass_rate": pass_rate,
+            "total": total,
+            "pass_count": pass_count,
+            "fail_count": fail_count,
+            "skip_count": skip_count,
+            "block_count": block_count,
+            "open_p0": open_defects.get("P0", 0),
+            "open_p1": open_defects.get("P1", 0),
+            "open_p2": open_defects.get("P2", 0),
+            "open_total": sum(open_defects.values()),
+        })
+
+    # Summary
+    rates = [p["pass_rate"] for p in points]
+    summary = {
+        "total_reports": len(points),
+        "avg_pass_rate": round(sum(rates) / len(rates), 1) if rates else 0,
+        "best_pass_rate": max(rates) if rates else 0,
+        "worst_pass_rate": min(rates) if rates else 0,
+        "latest_open_defects": points[-1]["open_total"] if points else 0,
+    }
+
+    return {"points": points, "summary": summary}
+
+
+def _count_open_defects_at(db: Session, project_id: int, plan_id: int, at_time) -> dict[str, int]:
+    """Count defects that were still open at the given timestamp, grouped by severity."""
+    # Defects linked to this plan's cases that were created before `at_time`
+    # and either never resolved, or resolved after `at_time`
+    pcases = db.scalars(
+        select(TestPlanCase.case_id).where(TestPlanCase.plan_id == plan_id)
+    ).all()
+    case_ids = set(pcases) if pcases else set()
+    if not case_ids:
+        return {}
+
+    rows = db.execute(
+        select(Defect.severity, func.count(Defect.id))
+        .where(
+            Defect.project_id == project_id,
+            Defect.case_id.in_(case_ids),
+            Defect.created_at <= at_time,
+            (Defect.resolved_at == None) | (Defect.resolved_at > at_time),
+        )
+        .group_by(Defect.severity)
+    ).all()
+    return {sev: cnt for sev, cnt in rows}
 
 
 def delete_report(db: Session, report_id: int, project_id: int) -> bool:

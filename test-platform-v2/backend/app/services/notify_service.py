@@ -159,12 +159,15 @@ async def notify(db: Session, project_id: int, event: str, data: dict) -> dict:
             results["skipped"] += 1
             continue
 
-        payload = _format_msg(event, data, ch.provider)
-        ok = await _send_webhook(ch.webhook_url, payload)
+        # ── Route by channel type ──
+        if ch.channel_type == "email":
+            ok = await _dispatch_email(event, data, ch)
+        else:
+            ok = await _dispatch_webhook(event, data, ch)
         log = NotificationLog(
             channel_id=ch.id, project_id=project_id, event=event,
             status="sent" if ok else "failed",
-            error="" if ok else f"Webhook delivery failed",
+            error="" if ok else "Delivery failed",
             retry_count=2 if not ok else 0,
         )
         db.add(log)
@@ -179,6 +182,48 @@ async def notify(db: Session, project_id: int, event: str, data: dict) -> dict:
             results["failed"] += 1
 
     return results
+
+
+async def _dispatch_webhook(event: str, data: dict, ch) -> bool:
+    """Send event via webhook channel."""
+    payload = _format_msg(event, data, ch.provider)
+    return await _send_webhook(ch.webhook_url, payload)
+
+
+async def _dispatch_email(event: str, data: dict, ch) -> bool:
+    """Send event via email channel using global SMTP config."""
+    from app.core.config import settings
+
+    if not settings.smtp_host:
+        logger.warning("SMTP not configured, skipping email notification")
+        return False
+
+    recipients = [addr.strip() for addr in ch.webhook_url.split(",") if addr.strip()]
+    if not recipients:
+        return False
+
+    subject_map = {
+        "plan_done": f"测试计划执行完成 — {data.get('plan_name', '')}",
+        "defect_assigned": f"[{data.get('severity', '')}] 缺陷指派 — {data.get('title', '')}",
+        "schedule_failed": f"定时任务失败 — {data.get('schedule_name', '')}",
+        "report_generated": f"测试报告已生成 — {data.get('report_name', '')}",
+    }
+    subject = subject_map.get(event, f"通知: {event}")
+
+    template = _TEMPLATES.get(event, "")
+    time_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    body = template.format(time=time_str, **data)
+
+    return await _send_email(
+        to_addrs=recipients,
+        subject=subject,
+        body=body,
+        smtp_host=settings.smtp_host,
+        smtp_port=settings.smtp_port,
+        smtp_user=settings.smtp_user,
+        smtp_password=settings.smtp_password,
+        smtp_from=settings.smtp_from or settings.smtp_user,
+    )
 
 
 # ── Sync helpers for use in sync service functions ─────

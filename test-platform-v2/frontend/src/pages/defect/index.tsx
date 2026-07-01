@@ -82,10 +82,15 @@ const SEVERITY_MAP: Record<string, { color: string; label: string }> = {
 }
 
 const STATUS_MAP: Record<string, { color: string; label: string }> = {
-  open: { color: 'red', label: '待处理' },
+  open: { color: 'red', label: '新建' },
+  confirmed: { color: 'orange', label: '已确认' },
+  fixing: { color: 'processing', label: '修复中' },
+  pending_review: { color: 'purple', label: '待回归' },
+  closed: { color: 'green', label: '已关闭' },
+  rejected: { color: 'default', label: '已拒绝' },
+  // legacy compatibility (backend normalizes these)
   in_progress: { color: 'processing', label: '处理中' },
   resolved: { color: 'green', label: '已解决' },
-  closed: { color: 'default', label: '已关闭' },
   wontfix: { color: 'default', label: '不修复' },
 }
 
