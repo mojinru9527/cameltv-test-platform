@@ -72,8 +72,15 @@ export default function MindmapPage() {
         containerRef.current.innerHTML = ''
         Markmap.create(containerRef.current, undefined, root)
       } else {
-        // Fallback: render as plain markdown in a pre
-        containerRef.current.innerHTML = `<pre style="white-space:pre-wrap;font-size:13px">${md}</pre>`
+        // Fallback: render as plain markdown in a <pre>.
+        // Use textContent (not innerHTML) so user-controlled case fields
+        // (title / preconditions / expected_result) cannot inject markup — XSS-safe.
+        containerRef.current.innerHTML = ''
+        const pre = document.createElement('pre')
+        pre.style.whiteSpace = 'pre-wrap'
+        pre.style.fontSize = '13px'
+        pre.textContent = md
+        containerRef.current.appendChild(pre)
       }
     } catch (e) {
       console.error('Mindmap load error:', e)
