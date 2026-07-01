@@ -100,6 +100,10 @@ class Settings(BaseSettings):
                 issues.append("ADMIN_PASSWORD 未设置或仍为默认值，请设置强密码")
             if self.ai_enabled and not self.ai_api_key:
                 issues.append("AI_API_KEY 未设置，AI 功能将不可用")
+            if not self.cookie_secure:
+                issues.append("生产环境 cookie_secure 必须为 True（需要 HTTPS），否则 httpOnly cookie 以明文传输")
+            if self.cookie_samesite == "none" and not self.cookie_secure:
+                issues.append("SameSite=None 要求 cookie_secure=True，否则浏览器将拒绝 cookie")
 
         if self.environment == "development":
             if self.secret_key and self.secret_key.startswith("dev-"):
