@@ -10,6 +10,8 @@
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:a11y": "npx @axe-core/cli --stdout http://localhost:5173 || echo 'Run: npx @axe-core/cli --stdout <url>'",
+    "lighthouse:a11y": "lhci autorun --collect.url=http://localhost:5173 --collect.numberOfRuns=1 --assert.assertions.preset=lighthouse:recommended --assert.assertions.accessibility=90 || echo 'Ensure the dev server is running on port 5173'",
     "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o src/types/api.d.ts"
   },
   "dependencies": {

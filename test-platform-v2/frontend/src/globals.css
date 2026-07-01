@@ -143,6 +143,8 @@
   --card-radius: var(--radius-lg);
   --neon-glow: oklch(0.6 0.25 265 / 0.5);
   --neon-glow-strong: oklch(0.55 0.28 265 / 0.7);
+  --text-muted-high-contrast: hsl(215 16% 35%);
+  --border-high-contrast: hsl(215 16% 55%);
 }
 
 .dark {
@@ -181,6 +183,8 @@
   --glass-border: oklch(0.28 0 0 / 0.6);
   --neon-glow: oklch(0.65 0.25 265 / 0.55);
   --neon-glow-strong: oklch(0.6 0.3 265 / 0.75);
+  --text-muted-high-contrast: hsl(215 16% 65%);
+  --border-high-contrast: hsl(215 16% 50%);
 }
 
 /* ── Theme: Professional Blue (default) ── */
@@ -1379,4 +1383,9 @@ html.theme-transition *::after {
   h2 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
   h3 { font-size: 1.125rem; font-weight: 600; }
   h4 { font-size: 1rem; font-weight: 600; }
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
 }

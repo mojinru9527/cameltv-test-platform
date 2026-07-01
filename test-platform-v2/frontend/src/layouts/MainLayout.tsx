@@ -216,8 +216,13 @@ export default function MainLayout() {
 
   return (
     <SidebarProvider defaultOpen>
+      {/* ── Skip to content (accessibility) ── */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded">
+        跳到主内容
+      </a>
+
       {/* ── Sidebar ── */}
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="icon" aria-label="主导航">
         <SidebarHeader>
           <div className="flex h-14 items-center gap-2.5 px-3 border-b border-sidebar-border">
             {/* Logo icon — always visible, serves as collapsed-state brand */}
@@ -413,7 +418,7 @@ export default function MainLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-6 page-enter">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto p-6 page-enter">
           <Outlet />
         </main>
       </SidebarInset>

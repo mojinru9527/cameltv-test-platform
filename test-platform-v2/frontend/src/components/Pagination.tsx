@@ -17,6 +17,7 @@ export default function Pagination({ page, totalPages, total, onChange }: Pagina
           size="sm"
           disabled={page <= 1}
           onClick={() => onChange(page - 1)}
+          aria-label="上一页"
         >
           上一页
         </Button>
@@ -27,6 +28,7 @@ export default function Pagination({ page, totalPages, total, onChange }: Pagina
           size="sm"
           disabled={page >= totalPages}
           onClick={() => onChange(page + 1)}
+          aria-label="下一页"
         >
           下一页
         </Button>

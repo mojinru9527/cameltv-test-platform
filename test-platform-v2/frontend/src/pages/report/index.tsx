@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -56,6 +56,7 @@ import { cn } from '@/lib/utils'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { SkeletonText } from '@/components/ui/skeleton'
+import { useApi } from '@/hooks/useApi'
 import {
   Plus,
   Search,
@@ -95,9 +96,8 @@ const reportSchema = z.object({
 type ReportFormData = z.infer<typeof reportSchema>
 
 export default function ReportPage() {
-  const [data, setData] = useState({ total: 0, items: [] as any[], page: 1, page_size: 20 })
-  const [loading, setLoading] = useState(false)
   const [keyword, setKeyword] = useState('')
+  const [page, setPage] = useState(1)
   const [createOpen, setCreateOpen] = useState(false)
   const [detailId, setDetailId] = useState<number | null>(null)
   const [detail, setDetail] = useState<any>(null)
@@ -115,6 +115,19 @@ export default function ReportPage() {
     resolver: zodResolver(reportSchema),
   })
   const watchPlanId = watch('plan_id')
+
+  // ── Data fetching with useApi ──
+  const { data, isLoading, isRefetching, refetch } = useApi(
+    () => {
+      const params: any = { page, page_size: 20 }
+      if (keyword) params.keyword = keyword
+      return fetchReports(params) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
+    },
+    [keyword, page]
+  )
+
+  const items = data?.items || []
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / data.page_size)) : 1
 
   // ── DataTable column definitions ──
   const reportColumns: DataTableColumn<any>[] = [
@@ -153,18 +166,7 @@ export default function ReportPage() {
     )},
   ]
 
-  const load = useCallback(async (page = 1) => {
-    setLoading(true)
-    try {
-      const params: any = { page, page_size: 20 }
-      if (keyword) params.keyword = keyword
-      const r: any = await fetchReports(params)
-      setData(r)
-    } finally { setLoading(false) }
-  }, [keyword])
-
-  useEffect(() => { load() }, [load])
-
+  // ── Actions ──
   const loadPlans = async () => {
     try {
       const r: any = await fetchPlans({ page_size: 200 })
@@ -184,14 +186,14 @@ export default function ReportPage() {
       await createReport({ plan_id: v.plan_id, name: v.name, description: v.description })
       toast.success('报告已生成')
       setCreateOpen(false)
-      load()
+      refetch()
     } finally { setCreating(false) }
   }
 
   const doDelete = async (id: number) => {
     await deleteReport(id)
     toast.success('已删除')
-    load()
+    refetch()
   }
 
   const openDetail = async (id: number) => {
@@ -203,11 +205,11 @@ export default function ReportPage() {
   }
 
   const handleSearch = () => {
-    load()
+    setPage(1)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') load()
+    if (e.key === 'Enter') setPage(1)
   }
 
   // detail content parsing
@@ -231,16 +233,16 @@ export default function ReportPage() {
 
       <DataTable
         columns={reportColumns}
-        data={data.items}
+        data={items}
         rowKey={(r) => r.id}
-        loading={loading}
+        loading={isLoading || isRefetching}
         loadingRows={4}
         emptyState={{ title: '暂无报告', description: '选择测试计划生成第一份报告' }}
         pagination={{
-          page: data.page,
-          totalPages: Math.max(1, Math.ceil(data.total / data.page_size)),
-          total: data.total,
-          onChange: (p) => load(p),
+          page: data?.page || 1,
+          totalPages,
+          total: data?.total || 0,
+          onChange: (p) => setPage(p),
         }}
         toolbar={
           <div className="flex items-center gap-2 flex-wrap">

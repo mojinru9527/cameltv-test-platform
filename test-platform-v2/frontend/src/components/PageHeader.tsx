@@ -18,7 +18,7 @@ export default function PageHeader({ title, icon: Icon, description, children, c
           {title}
         </h2>
         {description && (
-          <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+          <p className="text-sm text-muted-hc mt-0.5">{description}</p>
         )}
       </div>
       {children && <div className="flex items-center gap-2">{children}</div>}
