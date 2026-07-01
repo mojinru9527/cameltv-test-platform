@@ -97,6 +97,12 @@ _ACTIONS = [
     ("requirement:upload", "上传需求文档", "button"),
     ("requirement:generate", "AI生成用例", "button"),
     ("requirement:import", "导入生成用例", "button"),
+    # API Token 管理 (P1-6/S3)
+    ("token:list", "查看 API Token", "button"),
+    ("token:manage", "管理 API Token", "button"),
+    # 通知配置 (P1-6/S3)
+    ("notify:list", "查看通知配置", "button"),
+    ("notify:manage", "管理通知配置", "button"),
 ]
 
 # 测试人员可见的菜单子集

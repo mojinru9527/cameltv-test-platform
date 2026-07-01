@@ -756,8 +756,8 @@ graph LR
 
 | Sprint | 周次 | Epic | 任务 | 交付物 | 里程碑 |
 |--------|------|------|------|--------|--------|
-| **Sprint 0.1** | Week 1-2 | S1, S2 (T0) | S1a~S1c, S2a~S2c | Cookie 认证可用 + XSS 修复上线 | 安全漏洞快速封堵完成 |
-| **Sprint 0.2** | Week 2-3 | S3, S4 (T1) | S3a~S3e, S4a~S4c | RBAC 补齐 + BackgroundTasks 切换 | 权限模型完整 + 通知可靠性达标 |
+| **Sprint 0.1** | Week 1-2 | S1, S2 (T0) | ~~S1a~S1c, S2a~~ → **已交付** ✅ | Cookie 认证 + XSS 修复上线 | PR #4 已合并 develop (2026-07-01) |
+| **Sprint 0.2** | Week 2-3 | S1d,S2c,S1b + S3,S4 (T1) | S1d,S2c,S1b + S3a~S3e,S4a~S4c | CSRF+CSP+WARNING + RBAC+BackgroundTasks | 批次 A 收尾 + 权限/可靠性达标 |
 | **Sprint 0.3** | Week 3-4 | S5, S6 (T2) | S5a~S5c, S6a~S6d | SMTP TLS + 流式上传 | 网络安全+内存安全基线达标 |
 | **Sprint 0.4** | Week 3-5 | S7 (T3) | S7a~S7e | useApi + AsyncState + 12 页面替换 | 全平台三态统一（与 S5/S6 并行启动） |
 | **Sprint 0.5** | Week 5-6 | S8 (T3) | S8a~S8f | WCAG AA 达标 + CI 门禁 | Lighthouse >= 90 分 |
@@ -771,6 +771,14 @@ graph LR
 **资源建议**：
 - 后端 1 人（全职 6 周，覆盖 S1~S6，约 62h）
 - 前端 1 人（全职 6 周，覆盖 S7~S8 + S1/S2/S3 前端部分，约 57h）
+
+### 交付日志
+
+| 日期 | 批次 | 内容 | PR/Commit | 状态 |
+|------|------|------|-----------|------|
+| 2026-07-01 | 批次 A (Sprint 0.1) | S1a-S1c (JWT httpOnly Cookie) + S2a (innerHTML XSS fix) | PR #4 → develop (84715dc) | ✅ 已交付 |
+| 2026-07-01 | 批次 A 收尾 | S1d CSRF + S2c CSP + S1b WARNING 日志 — Leader 放行条件 | 纳入批次 B | 🔜 待实施 |
+| 2026-07-01 | 批次 B (Sprint 0.2) | S3 RBAC (P1-6) + S4 BackgroundTasks (P1-4) + Leader 3 条件 | — | 🚀 启动中 |
 
 ### 批次一（V2.2 起步）：G1/G2/G3（健康度）+ T1/T2（追溯矩阵，最高 ROI）。
 - **批次二（V2.2 主体）**：D 缺陷工作流 + N 通知中心 + R 报告增强 —— 让平台从「数据库」变「团队工作台」。

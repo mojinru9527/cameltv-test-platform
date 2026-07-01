@@ -1,7 +1,9 @@
 """Defect API routes."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, Request, UploadFile, File
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, UploadFile, File
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -12,6 +14,7 @@ from app.services import defect_service
 from app.services.audit_service import write_audit
 from app.models.user import User
 
+logger = logging.getLogger("defect")
 router = APIRouter(prefix="/defects", tags=["缺陷管理"])
 
 
@@ -26,6 +29,24 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
+
+
+def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
+    """P1-4/S4a: 在独立 DB session 中发送通知（供 BackgroundTasks 调用）。
+
+    必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
+    原请求的 db session 可能已关闭。
+    """
+    from app.core.db import SessionLocal
+    from app.services.notify_service import notify_sync
+
+    db = SessionLocal()
+    try:
+        notify_sync(db, project_id, event, data)
+    except Exception:
+        logger.exception("Background notification failed: event=%s project=%s", event, project_id)
+    finally:
+        db.close()
 
 
 @router.get("/stats", response_model=R[DefectStats])
@@ -65,6 +86,7 @@ def list_defects(
 def create_defect(
     req: Request,
     body: DefectCreate,
+    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("defect:create")),
     db: Session = Depends(get_db),
 ):
@@ -72,19 +94,24 @@ def create_defect(
     db.commit()
     _audit(req, current, db, "defect:create", f"#{r['id']} {r['title']}")
 
-    # Background notification if assignee is set
+    # P1-4/S4a: Background notification via FastAPI BackgroundTasks
+    # (replaces fire-and-forget asyncio.create_task — task is tracked and
+    # runs in its own DB session to avoid session-closed errors).
     if body.assignee_id and body.assignee_id > 0:
-        import asyncio
-        from app.services.notify_service import notify
-        assignee = db.get(User, body.assignee_id) if 'User' in dir() else None
+        assignee = db.get(User, body.assignee_id)
         assignee_name = (assignee.nickname or assignee.username) if assignee else ""
-        asyncio.create_task(notify(db, current.project_id or 0, "defect_assigned", {
-            "title": body.title,
-            "severity": body.severity,
-            "assignee": assignee_name,
-            "status": "open",
-            "link": "",
-        }))
+        background_tasks.add_task(
+            _run_notify_in_new_session,
+            current.project_id or 0,
+            "defect_assigned",
+            {
+                "title": body.title,
+                "severity": body.severity,
+                "assignee": assignee_name,
+                "status": "open",
+                "link": "",
+            },
+        )
 
     return R.ok(DefectOut(**r))
 

@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     cookie_domain: str = ""                    # empty = host-only cookie
     cookie_path: str = "/api"
 
+    # ── CSRF protection (P1-1/S1d) ──
+    csrf_enabled: bool = True
+    csrf_allowed_origins: str = ""             # comma-separated; empty = use allowed_origins
+
+    # ── CSP (P1-2/S2c) ──
+    csp_enabled: bool = True
+    csp_header: str = "script-src 'self' cdn.jsdelivr.net; object-src 'none'; base-uri 'self'"
+
     # ── Database ──
     database_url: str = "sqlite:///./data/platform.db"
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
