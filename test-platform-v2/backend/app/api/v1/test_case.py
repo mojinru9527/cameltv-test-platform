@@ -298,8 +298,19 @@ def import_xmind(
                 code=413,
             )
 
-    raw = file.file.read()
-    cases = xmind_bytes_to_cases(raw)
+    # P1-S6d: 流式写入临时文件，zipfile 直接从磁盘读取，避免全量加载到内存
+    import os
+    import shutil
+    import tempfile
+    tmp_path = ""
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xmind") as tmp:
+            shutil.copyfileobj(file.file, tmp, length=64 * 1024)
+            tmp_path = tmp.name
+        cases = xmind_bytes_to_cases(tmp_path)
+    finally:
+        if tmp_path:
+            os.unlink(tmp_path)
     if not cases:
         return R(code=1, msg="未能从 Xmind 文件中解析出用例")
 

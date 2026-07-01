@@ -78,17 +78,27 @@ def cases_to_xmind_bytes(cases: list[dict], root_title: str = "测试用例") ->
     return buf
 
 
-def xmind_bytes_to_cases(data: bytes) -> list[dict]:
+def xmind_bytes_to_cases(data: bytes | str) -> list[dict]:
     """Parse an Xmind .xmind file and extract test cases.
+
+    Accepts either raw bytes or a file path (str).
+    When a file path is provided, the ZIP is read directly from disk
+    without loading the entire file into memory (P1-S6d).
 
     Expected structure: root → domain → module → case (with [P0] prefix).
     Returns a list of case dicts ready for creation.
     """
     cases: list[dict] = []
 
-    with zipfile.ZipFile(BytesIO(data)) as zf:
-        content_json = zf.read("content.json")
-        content = json.loads(content_json)
+    if isinstance(data, str):
+        # File path — zipfile reads directly from disk (P1-S6d)
+        with zipfile.ZipFile(data) as zf:
+            content_json = zf.read("content.json")
+            content = json.loads(content_json)
+    else:
+        with zipfile.ZipFile(BytesIO(data)) as zf:
+            content_json = zf.read("content.json")
+            content = json.loads(content_json)
 
     def _walk(node, domain="", module=""):
         title = node.get("title", "")
