@@ -260,6 +260,17 @@ def upload_attachment(
     db: Session = Depends(get_db),
 ):
     """Upload a file attachment to a defect (max 50 MB)."""
+    # P1-S6a: Content-Length 前置检查，避免读取超大文件
+    content_length = req.headers.get("content-length")
+    if content_length:
+        cl = int(content_length)
+        max_bytes = 50 * 1024 * 1024
+        if cl > max_bytes:
+            from app.core.exceptions import APIException
+            raise APIException(
+                f"上传文件超过限制 (max: 50 MB, got: {cl / (1024*1024):.1f} MB)",
+                code=413,
+            )
     content = file.file.read()
     if len(content) > 50 * 1024 * 1024:
         from app.core.exceptions import APIException
