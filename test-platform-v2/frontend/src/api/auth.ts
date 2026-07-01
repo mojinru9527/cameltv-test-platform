@@ -5,6 +5,11 @@ export function login(username: string, password: string) {
   return client.post<unknown, LoginResult>('/auth/login', { username, password })
 }
 
+/** P1-1: 通知后端清除 httpOnly 鉴权 cookie。 */
+export function logoutApi() {
+  return client.post<unknown, null>('/auth/logout')
+}
+
 export function fetchMe() {
   return client.get<unknown, MeResult>('/auth/me')
 }
