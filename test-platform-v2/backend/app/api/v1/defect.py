@@ -1,7 +1,8 @@
 """Defect API routes."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, UploadFile, File
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_current_user, get_db, require_permission
@@ -174,7 +175,7 @@ def transition_defect(
         )
     except ValueError as e:
         from app.core.exceptions import APIException
-        raise APIException(str(e))
+        raise APIException(msg=str(e))
     if not r:
         from app.core.exceptions import not_found
         raise not_found("缺陷")
@@ -219,3 +220,81 @@ def add_comment(
     db.commit()
     _audit(req, current, db, "defect:comment", f"#{defect_id}", body.content[:100])
     return R.ok(c)
+
+
+# ── 附件上传/下载 ──────────────────────────────────────
+
+@router.post("/{defect_id}/attachments", response_model=R[dict], summary="上传缺陷附件")
+def upload_attachment(
+    defect_id: int,
+    req: Request,
+    file: UploadFile = File(...),
+    current: CurrentUser = Depends(require_permission("defect:update")),
+    db: Session = Depends(get_db),
+):
+    """Upload a file attachment to a defect (max 50 MB)."""
+    content = file.file.read()
+    if len(content) > 50 * 1024 * 1024:
+        from app.core.exceptions import APIException
+        raise APIException("附件大小不能超过 50 MB", code=413)
+    a = defect_service.upload_attachment(
+        db, defect_id, file.filename or "unknown", content,
+        project_id=current.project_id or 0,
+        uploader_id=current.user.id,
+        uploader_name=current.user.nickname or current.user.username,
+    )
+    if a is None:
+        from app.core.exceptions import not_found
+        raise not_found("缺陷")
+    db.commit()
+    _audit(req, current, db, "defect:attachment:upload", f"#{defect_id}", file.filename or "")
+    return R.ok(a)
+
+
+@router.get("/{defect_id}/attachments", response_model=R[list], summary="缺陷附件列表")
+def list_attachments(
+    defect_id: int,
+    current: CurrentUser = Depends(require_permission("defect:detail")),
+    db: Session = Depends(get_db),
+):
+    """List all attachments for a defect."""
+    items = defect_service.list_attachments(db, defect_id, current.project_id or 0)
+    return R.ok(items)
+
+
+@router.get("/{defect_id}/attachments/{attachment_id}", summary="下载缺陷附件")
+def download_attachment(
+    defect_id: int,
+    attachment_id: int,
+    current: CurrentUser = Depends(require_permission("defect:detail")),
+    db: Session = Depends(get_db),
+):
+    """Download an attachment file."""
+    result = defect_service.get_attachment(db, attachment_id, current.project_id or 0)
+    if not result:
+        from app.core.exceptions import not_found
+        raise not_found("附件")
+    meta, file_path = result
+    return FileResponse(
+        str(file_path),
+        filename=meta["filename"],
+        media_type=meta["mime_type"],
+    )
+
+
+@router.delete("/{defect_id}/attachments/{attachment_id}", response_model=R[dict], summary="删除缺陷附件")
+def delete_attachment(
+    defect_id: int,
+    attachment_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("defect:delete")),
+    db: Session = Depends(get_db),
+):
+    """Delete an attachment (file + DB record)."""
+    ok = defect_service.delete_attachment(db, attachment_id, current.project_id or 0)
+    if not ok:
+        from app.core.exceptions import not_found
+        raise not_found("附件")
+    db.commit()
+    _audit(req, current, db, "defect:attachment:delete", f"#{defect_id}", f"attachment #{attachment_id}")
+    return R.ok({"deleted": True})

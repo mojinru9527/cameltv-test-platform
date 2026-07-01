@@ -57,6 +57,8 @@ import {
   Link2,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
+import EmptyState from '@/components/EmptyState'
+import { SkeletonText, SkeletonPage } from '@/components/ui/skeleton'
 import { deletePlan, executeCase, fetchExecutions, fetchPlan, removeCasesFromPlan, updatePlan } from '@/api/testplan'
 import AddCasesModal from './AddCasesModal'
 import PlanDrawer from './PlanDrawer'
@@ -162,8 +164,8 @@ export default function PlanDetail() {
 
   if (!plan) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <p className="text-muted-foreground">加载中...</p>
+      <div className="p-4">
+        <SkeletonPage />
       </div>
     )
   }
@@ -305,11 +307,15 @@ export default function PlanDetail() {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">加载中...</TableCell>
+                        <TableCell colSpan={5} className="py-8">
+                          <SkeletonText lines={4} />
+                        </TableCell>
                       </TableRow>
                     ) : (plan.cases || []).length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">暂无用例</TableCell>
+                        <TableCell colSpan={5} className="py-8">
+                          <EmptyState title="暂无用例" description="点击「添加用例」将用例纳入计划" className="py-0" />
+                        </TableCell>
                       </TableRow>
                     ) : (
                       (plan.cases || []).map((r: any) => {
@@ -388,11 +394,15 @@ export default function PlanDetail() {
                   <TableBody>
                     {execLoading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">加载中...</TableCell>
+                        <TableCell colSpan={5} className="py-8">
+                          <SkeletonText lines={4} />
+                        </TableCell>
                       </TableRow>
                     ) : executions.items?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">暂无执行记录</TableCell>
+                        <TableCell colSpan={5} className="py-8">
+                          <EmptyState title="暂无执行记录" description="对用例执行测试后将在此显示记录" className="py-0" />
+                        </TableCell>
                       </TableRow>
                     ) : (
                       (executions.items || []).map((r: any) => {

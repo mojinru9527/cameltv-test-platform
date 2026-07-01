@@ -1,17 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import PageHeader from '@/components/PageHeader'
+import StatCard from '@/components/StatCard'
+import EmptyState from '@/components/EmptyState'
+import { SkeletonPage } from '@/components/ui/skeleton'
 import { useCallback, useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent } from '@/lib/icons'
-
-const STAT_CARDS = [
-  { key: 'total_cases', label: '用例总数', icon: FileCheck },
-  { key: 'cases_in_plans', label: '已纳入计划', icon: Link2 },
-  { key: 'cases_executed', label: '已执行', icon: Play },
-  { key: 'cases_passed', label: '已通过', icon: ShieldCheck },
-  { key: 'cases_with_defects', label: '关联缺陷', icon: Bug },
-]
 
 export default function TracePage() {
   const [data, setData] = useState<CoverageData | null>(null)
@@ -29,74 +25,58 @@ export default function TracePage() {
 
   useEffect(() => { load() }, [load])
 
-  if (loading) return <div className="p-8 text-muted-foreground">加载中...</div>
-  if (!data) return <div className="p-8 text-muted-foreground">暂无数据</div>
+  if (loading) return <div className="p-6"><SkeletonPage /></div>
+  if (!data) return (
+    <div className="p-6">
+      <EmptyState
+        title="暂无追溯数据"
+        description="请先创建用例和测试计划，系统将自动追踪质量链路"
+      />
+    </div>
+  )
 
   // Chart data: by type
   const typeChart = Object.entries(data.by_type).map(([k, v]) => ({ name: typeLabel(k), 数量: v }))
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold">质量追溯</h1>
-        <Badge variant="secondary">需求 → 用例 → 计划 → 执行 → 缺陷</Badge>
-      </div>
+      <PageHeader
+        title="质量追溯"
+        description="需求 → 用例 → 计划 → 执行 → 缺陷，全链路质量可视化"
+      />
 
       {/* ── 统计卡片 ── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {STAT_CARDS.map(({ key, label, icon: Icon }) => (
-          <Card key={key}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <Icon className="size-4" />
-                {label}
-              </div>
-              <div className="text-2xl font-bold mt-1">
-                {(data as any)[key] ?? 0}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <StatCard icon={FileCheck} label="用例总数" value={data.total_cases} variant="glass" />
+        <StatCard icon={Link2} label="已纳入计划" value={data.cases_in_plans} variant="glass" />
+        <StatCard icon={Play} label="已执行" value={data.cases_executed} variant="glass" />
+        <StatCard icon={ShieldCheck} label="已通过" value={data.cases_passed} variant="glass" />
+        <StatCard icon={Bug} label="关联缺陷" value={data.cases_with_defects} variant="glass" />
       </div>
 
       {/* ── 覆盖率指标 ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader><CardTitle className="text-sm">计划覆盖率</CardTitle></CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Percent className="size-5 text-blue-500" />
-              <span className="text-3xl font-bold">{data.coverage_rate}%</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {data.cases_in_plans} / {data.total_cases} 条用例已纳入计划
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm">执行率</CardTitle></CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Percent className="size-5 text-green-500" />
-              <span className="text-3xl font-bold">{data.execution_rate}%</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {data.cases_executed} / {data.total_cases} 条已执行
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="text-sm">通过率</CardTitle></CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Percent className="size-5 text-emerald-500" />
-              <span className="text-3xl font-bold">{data.pass_rate}%</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              需求覆盖率: {data.requirements_with_cases} / {data.requirement_count}
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={Percent}
+          label="计划覆盖率"
+          value={`${data.coverage_rate}%`}
+          trend={`${data.cases_in_plans} / ${data.total_cases} 条用例已纳入计划`}
+          variant="glass"
+        />
+        <StatCard
+          icon={Percent}
+          label="执行率"
+          value={`${data.execution_rate}%`}
+          trend={`${data.cases_executed} / ${data.total_cases} 条已执行`}
+          variant="glass"
+        />
+        <StatCard
+          icon={Percent}
+          label="通过率"
+          value={`${data.pass_rate}%`}
+          trend={`需求覆盖: ${data.requirements_with_cases} / ${data.requirement_count}`}
+          variant="glass"
+        />
       </div>
 
       {/* ── 按用例类型分布 ── */}

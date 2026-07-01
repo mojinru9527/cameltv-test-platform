@@ -1,6 +1,7 @@
 import { FileText, Users, Shield } from '@/lib/icons'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useAuthStore } from '@/stores/auth'
+import PageHeader from '@/components/PageHeader'
 import AuditTab from './AuditTab'
 import RolesTab from './RolesTab'
 import UsersTab from './UsersTab'
@@ -16,7 +17,7 @@ export default function SystemPage() {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">系统管理</h2>
+      <PageHeader title="系统管理" className="mb-4" />
       <Tabs defaultValue={defaultTab}>
         <TabsList>
           {showUsers && (

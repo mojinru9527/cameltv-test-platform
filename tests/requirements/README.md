@@ -1,3 +1,13 @@
+---
+title: "需求分析"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["requirements", "prd", "traceability", "specification"]
+related: ["tests/test-cases/README.md", "tests/README.md"]
+---
+
 # 需求分析
 
 ## 目录

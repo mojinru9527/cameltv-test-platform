@@ -2,6 +2,7 @@ import { Search, RotateCcw } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import {
   Select,
   SelectContent,
@@ -9,14 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { format } from 'date-fns'
 import { useCallback, useEffect, useState } from 'react'
 import { fetchAuditLogs } from '@/api/system'
@@ -93,113 +86,68 @@ export default function AuditTab() {
     }
   }
 
+  // ── DataTable column definitions ──
+  const auditColumns: DataTableColumn<any>[] = [
+    { key: 'created_at', header: '时间', headerClassName: 'w-[170px]', render: (item) => formatDate(item.created_at) },
+    { key: 'username', header: '操作人', headerClassName: 'w-[100px]', render: (item) => item.username },
+    { key: 'action', header: '操作', headerClassName: 'w-[100px]', render: (item) => (
+      <Badge variant={ACTION_VARIANTS[item.action] || 'outline'}>
+        {ACTION_LABELS[item.action] || item.action}
+      </Badge>
+    )},
+    { key: 'target', header: '目标', className: 'max-w-[200px] truncate', render: (item) => item.target },
+    { key: 'detail', header: '详情', className: 'max-w-[200px] truncate text-muted-foreground text-xs', render: (item) => item.detail || '-' },
+    { key: 'ip', header: 'IP', headerClassName: 'w-[120px]', render: (item) => item.ip },
+  ]
+
   return (
     <div>
-      {/* Filters */}
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <Select value={action || 'all'} onValueChange={handleActionChange}>
-          <SelectTrigger className="w-[130px]" size="sm">
-            <SelectValue placeholder="操作类型" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">全部操作</SelectItem>
-            <SelectItem value="user:create">新建用户</SelectItem>
-            <SelectItem value="user:update">编辑用户</SelectItem>
-            <SelectItem value="user:delete">删除用户</SelectItem>
-            <SelectItem value="role:create">新建角色</SelectItem>
-            <SelectItem value="role:update">编辑角色</SelectItem>
-            <SelectItem value="role:delete">删除角色</SelectItem>
-          </SelectContent>
-        </Select>
-        <Input
-          placeholder="搜索目标/操作人"
-          className="w-[200px]"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-        <Button size="sm" onClick={handleSearch}>
-          <Search className="size-4" />
-          搜索
-        </Button>
-        <Button size="sm" variant="outline" onClick={handleRefresh}>
-          <RotateCcw className="size-4" />
-        </Button>
-      </div>
-
-      {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[170px]">时间</TableHead>
-              <TableHead className="w-[100px]">操作人</TableHead>
-              <TableHead className="w-[100px]">操作</TableHead>
-              <TableHead>目标</TableHead>
-              <TableHead>详情</TableHead>
-              <TableHead className="w-[120px]">IP</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  加载中...
-                </TableCell>
-              </TableRow>
-            ) : data.list.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.list.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>{formatDate(item.created_at)}</TableCell>
-                  <TableCell>{item.username}</TableCell>
-                  <TableCell>
-                    <Badge variant={ACTION_VARIANTS[item.action] || 'outline'}>
-                      {ACTION_LABELS[item.action] || item.action}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{item.target}</TableCell>
-                  <TableCell className="max-w-[200px] truncate text-muted-foreground text-xs">
-                    {item.detail || '-'}
-                  </TableCell>
-                  <TableCell>{item.ip}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-3 text-sm text-muted-foreground">
-        <span>共 {data.total} 条</span>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page <= 0}
-            onClick={() => handlePageChange(page - 1)}
-          >
-            上一页
-          </Button>
-          <span>
-            第 {page + 1} / {totalPages} 页
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page >= totalPages - 1}
-            onClick={() => handlePageChange(page + 1)}
-          >
-            下一页
-          </Button>
-        </div>
-      </div>
+      <DataTable
+        columns={auditColumns}
+        data={data.list}
+        rowKey={(item) => item.id}
+        loading={loading}
+        loadingRows={4}
+        emptyState={{ title: '暂无审计日志', description: '系统操作记录将在此显示' }}
+        pagination={{
+          page: page + 1,
+          totalPages,
+          total: data.total,
+          onChange: (p) => handlePageChange(p - 1),
+        }}
+        toolbar={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={action || 'all'} onValueChange={handleActionChange}>
+              <SelectTrigger className="w-[130px]" size="sm">
+                <SelectValue placeholder="操作类型" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部操作</SelectItem>
+                <SelectItem value="user:create">新建用户</SelectItem>
+                <SelectItem value="user:update">编辑用户</SelectItem>
+                <SelectItem value="user:delete">删除用户</SelectItem>
+                <SelectItem value="role:create">新建角色</SelectItem>
+                <SelectItem value="role:update">编辑角色</SelectItem>
+                <SelectItem value="role:delete">删除角色</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="搜索目标/操作人"
+              className="w-[200px]"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <Button size="sm" onClick={handleSearch}>
+              <Search className="size-4" />
+              搜索
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleRefresh}>
+              <RotateCcw className="size-4" />
+            </Button>
+          </div>
+        }
+      />
     </div>
   )
 }

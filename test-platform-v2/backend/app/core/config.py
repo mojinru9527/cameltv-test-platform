@@ -43,14 +43,23 @@ class Settings(BaseSettings):
     ai_api_base_url: str = "https://api.deepseek.com/v1"
     ai_api_key: str = ""                       # production: required
     ai_model: str = "deepseek-chat"
-    ai_max_tokens: int = 8192
+    ai_max_tokens: int = 16384                 # each sub-call gets full budget (model caps at 8K, but split strategy doubles effective output)
     ai_temperature: float = 0.3
+    ai_split_calls: bool = True                # split generation into functional + API parallel calls to avoid truncation
 
     # ── File paths (configurable for portability) ──
     workspace_root: str = ""      # empty = auto-detect from app/services/__file__
     skill_dir: str = ""           # test-case-design skill directory
     lanhu_mcp_dir: str = ""       # lanhu-mcp module directory
     data_dir: str = ""            # extracted data cache directory
+
+    # ── SMTP (optional, for email notifications) ──
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_use_tls: bool = True
 
     @property
     def cors_origins(self) -> list[str]:

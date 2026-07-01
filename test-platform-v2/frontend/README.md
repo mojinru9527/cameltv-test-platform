@@ -1,3 +1,13 @@
+---
+title: "CamelTv 测试平台前端"
+owner: "frontend-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["frontend", "react", "ant-design", "vite", "typescript"]
+related: ["test-platform-v2/backend/README.md", "test-platform-v2/frontend/CLAUDE.md"]
+---
+
 # cameltv-test-frontend
 
 CamelTv 测试平台前端（React 18 + Ant Design 5 + Vite + TypeScript）。

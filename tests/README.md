@@ -1,3 +1,13 @@
+---
+title: "CamelTv 测试体系"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["testing", "test-cases", "api-testing", "automation", "qa"]
+related: ["tests/CLAUDE.md", "test-platform-v2/README.md"]
+---
+
 # 测试体系
 
 ## 目录结构

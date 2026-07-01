@@ -15,14 +15,14 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { createTestCase, updateTestCase } from '@/api/testcase'
 
 const formSchema = z.object({
@@ -149,16 +149,16 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
   }
 
   return (
-    <Sheet open={open} onOpenChange={(open) => { if (!open) onClose() }}>
-      <SheetContent side="right" className="w-[680px] sm:max-w-[680px] flex flex-col">
-        <SheetHeader>
-          <SheetTitle>{editing?.id ? '编辑用例' : '新建用例'}</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="sm:max-w-[680px]">
+        <DialogHeader>
+          <DialogTitle>{editing?.id ? '编辑用例' : '新建用例'}</DialogTitle>
+          <DialogDescription>
             {editing?.id ? '修改用例信息' : '创建一个新的测试用例'}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit(doSave)} className="flex-1 overflow-y-auto space-y-4 py-4">
+        <form onSubmit={handleSubmit(doSave)} className="max-h-[60vh] overflow-y-auto space-y-4">
           {/* Title */}
           <div>
             <label className="mb-1 block text-sm font-medium">标题</label>
@@ -342,15 +342,15 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
           </div>
         </form>
 
-        <SheetFooter>
-          <SheetClose asChild>
+        <DialogFooter>
+          <DialogClose asChild>
             <Button variant="outline" onClick={onClose}>取消</Button>
-          </SheetClose>
+          </DialogClose>
           <Button disabled={saving} onClick={handleSubmit(doSave)}>
             {saving ? '保存中...' : '保存'}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

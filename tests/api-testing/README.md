@@ -1,3 +1,13 @@
+---
+title: "接口测试"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["api-testing", "postman", "bruno", "newman", "collections"]
+related: ["tests/automation/README.md", "tests/README.md"]
+---
+
 # 接口测试
 
 ## 目录

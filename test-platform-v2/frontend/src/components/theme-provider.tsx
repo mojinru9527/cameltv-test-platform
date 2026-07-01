@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
 
 export type ThemeMode = "light" | "dark" | "system"
-export type ColorTheme = "blue" | "green" | "purple" | "orange" | "rose" | "cyan" | "amber" | "indigo"
+export type ColorTheme = "blue" | "dark-minimal" | "warm" | "nature"
 
 interface ThemeContextValue {
   mode: ThemeMode
@@ -15,6 +15,8 @@ const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
 const STORAGE_MODE_KEY = "cameltv-theme-mode"
 const STORAGE_COLOR_KEY = "cameltv-theme-color"
 
+const VALID_THEMES: ColorTheme[] = ["blue", "dark-minimal", "warm", "nature"]
+
 function getStoredMode(): ThemeMode {
   try {
     const v = localStorage.getItem(STORAGE_MODE_KEY)
@@ -26,7 +28,7 @@ function getStoredMode(): ThemeMode {
 function getStoredColor(): ColorTheme {
   try {
     const v = localStorage.getItem(STORAGE_COLOR_KEY)
-    if (["blue", "green", "purple", "orange", "rose", "cyan", "amber", "indigo"].includes(v ?? "")) return v as ColorTheme
+    if (VALID_THEMES.includes(v as ColorTheme)) return v as ColorTheme
   } catch {}
   return "blue"
 }
@@ -44,6 +46,10 @@ function applyTheme(mode: ThemeMode, colorTheme: ColorTheme) {
 
   root.classList.add(resolved)
   root.dataset.theme = colorTheme
+
+  // Smooth transition on theme change
+  root.classList.add("theme-transition")
+  setTimeout(() => root.classList.remove("theme-transition"), 250)
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
