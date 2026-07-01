@@ -274,6 +274,7 @@ def export_xmind(
 
 @router.post("/import/xmind", response_model=R[dict], summary="从 Xmind 导入用例")
 def import_xmind(
+    req: Request,
     file: UploadFile = File(...),
     current: CurrentUser = Depends(require_permission("testcase:create")),
     db: Session = Depends(get_db),
@@ -285,8 +286,31 @@ def import_xmind(
     if not file.filename or not file.filename.endswith(".xmind"):
         return R(code=1, msg="请上传 .xmind 文件")
 
-    raw = file.file.read()
-    cases = xmind_bytes_to_cases(raw)
+    # P1-S6a: Content-Length 前置检查，避免读取超大文件 (max 10 MB)
+    content_length = req.headers.get("content-length")
+    if content_length:
+        cl = int(content_length)
+        max_bytes = 10 * 1024 * 1024
+        if cl > max_bytes:
+            from app.core.exceptions import APIException
+            raise APIException(
+                f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
+                code=413,
+            )
+
+    # P1-S6d: 流式写入临时文件，zipfile 直接从磁盘读取，避免全量加载到内存
+    import os
+    import shutil
+    import tempfile
+    tmp_path = ""
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xmind") as tmp:
+            shutil.copyfileobj(file.file, tmp, length=64 * 1024)
+            tmp_path = tmp.name
+        cases = xmind_bytes_to_cases(tmp_path)
+    finally:
+        if tmp_path:
+            os.unlink(tmp_path)
     if not cases:
         return R(code=1, msg="未能从 Xmind 文件中解析出用例")
 

@@ -74,6 +74,17 @@ async def upload_requirement(
     excel_cases: list[dict] | None = None
 
     if file is not None and file.filename:
+        # P1-S6a: Content-Length 前置检查，避免读取超大文件 (max 20 MB)
+        content_length = req.headers.get("content-length")
+        if content_length:
+            cl = int(content_length)
+            max_bytes = 20 * 1024 * 1024
+            if cl > max_bytes:
+                from app.core.exceptions import APIException
+                raise APIException(
+                    f"上传文件超过限制 (max: 20 MB, got: {cl / (1024*1024):.1f} MB)",
+                    code=413,
+                )
         file_bytes = await file.read()
         filename = file.filename
         source_ref = filename

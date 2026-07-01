@@ -12,8 +12,10 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import json
 import logging
+import ssl
 from datetime import datetime, timezone
 
 import httpx
@@ -56,6 +58,19 @@ _TEMPLATES: dict[str, str] = {
         "[查看详情]({link})"
     ),
 }
+
+
+# ── P1-C2: ThreadPoolExecutor module singleton ─────────
+
+_notify_executor: concurrent.futures.ThreadPoolExecutor | None = None
+
+
+def _get_notify_executor() -> concurrent.futures.ThreadPoolExecutor:
+    """Return the module-level ThreadPoolExecutor singleton for notifications."""
+    global _notify_executor
+    if _notify_executor is None:
+        _notify_executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+    return _notify_executor
 
 
 def _format_msg(event: str, data: dict, provider: str) -> dict | str:
@@ -130,12 +145,34 @@ async def _send_email(
 
 
 def _sync_send_email(host, port, user, password, msg):
+    """Send email via SMTP with TLS certificate validation (P1-S5a).
+
+    Certificate verification is controlled by settings.smtp_verify_cert.
+    When disabled, a security warning is logged.
+    On certificate verification failure, the error is logged and the
+    exception is re-raised (no silent downgrade).
+    """
     import smtplib
-    with smtplib.SMTP(host, port, timeout=10) as smtp:
-        smtp.starttls()
-        if user:
-            smtp.login(user, password)
-        smtp.send_message(msg)
+    from app.core.config import settings
+
+    # P1-S5a: Build SSL context with optional CA bundle
+    ssl_context = ssl.create_default_context()
+    if not settings.smtp_verify_cert:
+        logger.warning("SMTP 证书验证已关闭，邮件传输不安全")
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+    if settings.smtp_ca_bundle:
+        ssl_context.load_verify_locations(settings.smtp_ca_bundle)
+
+    try:
+        with smtplib.SMTP(host, port, timeout=10) as smtp:
+            smtp.starttls(context=ssl_context)
+            if user:
+                smtp.login(user, password)
+            smtp.send_message(msg)
+    except ssl.SSLError as e:
+        logger.error("SMTP TLS 证书验证失败: host=%s port=%s error=%s", host, port, e)
+        raise
 
 
 async def notify(db: Session, project_id: int, event: str, data: dict) -> dict:
@@ -252,10 +289,10 @@ def notify_sync(db: Session, project_id: int, event: str, data: dict) -> dict:
         return asyncio.run(notify(db, project_id, event, data))
 
     # Event loop is running — delegate to a separate thread to avoid nesting
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-        future = pool.submit(asyncio.run, notify(db, project_id, event, data))
-        return future.result()
+    # P1-C2: Use module-level executor singleton instead of creating a new pool each time
+    pool = _get_notify_executor()
+    future = pool.submit(asyncio.run, notify(db, project_id, event, data))
+    return future.result()
 
 
 # ── Channel CRUD ──────────────────────────────────────
