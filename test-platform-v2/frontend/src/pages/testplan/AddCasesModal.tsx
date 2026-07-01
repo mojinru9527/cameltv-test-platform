@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import Pagination from '@/components/Pagination'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
@@ -250,32 +251,12 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
             </div>
 
             {/* Pagination */}
-            {data.total > 0 && (
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>共 {data.total} 条</span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={data.page <= 1}
-                    onClick={() => load(data.page - 1)}
-                  >
-                    上一页
-                  </Button>
-                  <span className="tabular-nums">
-                    {data.page} / {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={data.page >= totalPages}
-                    onClick={() => load(data.page + 1)}
-                  >
-                    下一页
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              page={data.page}
+              totalPages={totalPages}
+              total={data.total}
+              onChange={(p) => load(p)}
+            />
           </div>
         </div>
 

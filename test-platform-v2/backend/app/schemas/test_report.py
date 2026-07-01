@@ -31,3 +31,26 @@ class ReportOut(BaseModel):
 
 class ReportDetailOut(ReportOut):
     content: Optional[dict] = None
+
+
+class TrendPoint(BaseModel):
+    """A single data point on a trend chart."""
+    date: str = ""                      # ISO date string
+    report_id: int = 0
+    report_name: str = ""
+    pass_rate: float = 0.0              # percentage (0-100)
+    total: int = 0
+    pass_count: int = 0
+    fail_count: int = 0
+    skip_count: int = 0
+    block_count: int = 0
+    open_p0: int = 0
+    open_p1: int = 0
+    open_p2: int = 0
+    open_total: int = 0
+
+
+class TrendOut(BaseModel):
+    """Multi-plan trend + defect convergence data."""
+    points: list[TrendPoint] = []
+    summary: dict = {}

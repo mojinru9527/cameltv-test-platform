@@ -10,6 +10,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import Pagination from '@/components/Pagination'
+import PageHeader from '@/components/PageHeader'
+import EmptyState from '@/components/EmptyState'
+import { SkeletonText } from '@/components/ui/skeleton'
 import {
   Table,
   TableHeader,
@@ -19,12 +23,12 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -179,7 +183,7 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold">定时任务</h2>
+      <PageHeader title="定时任务" />
 
       <Card>
         <CardContent className="flex items-center gap-3 pt-4">
@@ -208,14 +212,14 @@ export default function SchedulePage() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  加载中...
+                <TableCell colSpan={6} className="py-8">
+                  <SkeletonText lines={4} />
                 </TableCell>
               </TableRow>
             ) : data.items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  暂无数据
+                <TableCell colSpan={6} className="py-8">
+                  <EmptyState title="暂无定时任务" description="点击「新建调度」创建定时测试任务" className="py-0" />
                 </TableCell>
               </TableRow>
             ) : (
@@ -287,9 +291,9 @@ export default function SchedulePage() {
                         <TableCell colSpan={6} className="bg-muted/30 p-0">
                           <div className="p-3">
                             {expState?.loading ? (
-                              <div className="text-center text-sm text-muted-foreground py-4">加载中...</div>
+                              <div className="py-4"><SkeletonText lines={3} /></div>
                             ) : expState?.runs.length === 0 ? (
-                              <div className="text-center text-sm text-muted-foreground py-4">暂无执行记录</div>
+                              <EmptyState title="暂无执行记录" className="py-4" />
                             ) : (
                               <Table>
                                 <TableHeader>
@@ -339,38 +343,20 @@ export default function SchedulePage() {
       </div>
 
       {/* Pagination */}
-      {data.total > 0 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>共 {data.total} 条</span>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.page <= 1}
-              onClick={() => load(data.page - 1)}
-            >
-              上一页
-            </Button>
-            <span>{data.page} / {totalPages}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={data.page >= totalPages}
-              onClick={() => load(data.page + 1)}
-            >
-              下一页
-            </Button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={data.page}
+        totalPages={totalPages}
+        total={data.total}
+        onChange={(p) => load(p)}
+      />
 
-      {/* Create/Edit Sheet */}
-      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <SheetContent className="w-[520px] sm:max-w-[520px]">
-          <SheetHeader>
-            <SheetTitle>{editing?.id ? '编辑调度' : '新建调度'}</SheetTitle>
-          </SheetHeader>
-          <form onSubmit={form.handleSubmit(doSave)} className="flex flex-col gap-4 flex-1 overflow-y-auto py-4">
+      {/* Create/Edit Dialog */}
+      <Dialog open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>{editing?.id ? '编辑调度' : '新建调度'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(doSave)} className="flex flex-col gap-4">
             {/* Name */}
             <div>
               <label className="text-sm font-medium mb-1.5 block">
@@ -448,14 +434,14 @@ export default function SchedulePage() {
               />
             </div>
           </form>
-          <SheetFooter>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setDrawerOpen(false)}>取消</Button>
             <Button disabled={saving} onClick={form.handleSubmit(doSave)}>
               {saving ? '保存中...' : '保存'}
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

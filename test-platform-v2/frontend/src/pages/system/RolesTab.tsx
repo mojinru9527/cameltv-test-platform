@@ -17,13 +17,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,15 +35,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { Plus, Loader2 } from '@/lib/icons'
 
 // ── Zod schema ──
@@ -149,6 +142,42 @@ export default function RolesTab() {
     }
   }
 
+  // ── DataTable column definitions ──
+  const roleColumns: DataTableColumn<any>[] = [
+    { key: 'code', header: '编码', headerClassName: 'w-[100px]', render: (r) => r.code },
+    { key: 'name', header: '名称', render: (r) => r.name },
+    { key: 'data_scope', header: '数据范围', headerClassName: 'w-[80px]', render: (r) => (
+      <Badge variant="secondary">
+        {r.data_scope === 'global' ? '全局' : '本项目'}
+      </Badge>
+    )},
+    { key: 'perm_count', header: '权限数', headerClassName: 'w-[70px]', render: (r) => r.permission_codes?.length || 0 },
+    { key: 'actions', header: '操作', headerClassName: 'w-[140px]', render: (r) => (
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => openEdit(r)}>编辑</Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="destructive">删除</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确定删除？</AlertDialogTitle>
+              <AlertDialogDescription>
+                将删除角色「{r.name}」，此操作不可撤销。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
+                删除
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    )},
+  ]
+
   return (
     <div>
       <Button size="sm" onClick={() => openEdit()} className="mb-3" data-icon="inline-start">
@@ -157,83 +186,25 @@ export default function RolesTab() {
       </Button>
 
       {/* Table */}
-      <div className="rounded-xl border bg-card text-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[100px]">编码</TableHead>
-              <TableHead>名称</TableHead>
-              <TableHead className="w-[80px]">数据范围</TableHead>
-              <TableHead className="w-[70px]">权限数</TableHead>
-              <TableHead className="w-[140px]">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  <Loader2 className="inline-block size-4 animate-spin mr-2" />
-                  加载中...
-                </TableCell>
-              </TableRow>
-            ) : roles.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              roles.map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell>{r.code}</TableCell>
-                  <TableCell>{r.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {r.data_scope === 'global' ? '全局' : '本项目'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{r.permission_codes?.length || 0}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openEdit(r)}>编辑</Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="destructive">删除</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>确定删除？</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              将删除角色「{r.name}」，此操作不可撤销。
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
-                              删除
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable
+        columns={roleColumns}
+        data={roles}
+        rowKey={(r) => r.id}
+        loading={loading}
+        loadingRows={4}
+        emptyState={{ title: '暂无角色', description: '点击「新建角色」创建权限角色' }}
+      />
 
-      {/* Create/Edit Sheet */}
-      <Sheet open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
-        <SheetContent side="right" className="w-[560px] sm:max-w-[560px]">
-          <SheetHeader>
-            <SheetTitle>{editing?.id ? '编辑角色' : '新建角色'}</SheetTitle>
-            <SheetDescription>
+      {/* Create/Edit Dialog */}
+      <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle>{editing?.id ? '编辑角色' : '新建角色'}</DialogTitle>
+            <DialogDescription>
               {editing?.id ? '修改角色信息与权限' : '创建一个新的系统角色'}
-            </SheetDescription>
-          </SheetHeader>
-          <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4 py-4 flex-1 overflow-y-auto">
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.code} aria-invalid={!!errors.code}>
               <label className="text-sm font-medium">编码</label>
               <Input
@@ -309,7 +280,7 @@ export default function RolesTab() {
               </div>
             </div>
           </form>
-          <SheetFooter>
+          <DialogFooter>
             <Button variant="outline" onClick={() => { setDrawer(false); setEditing(null) }}>
               取消
             </Button>
@@ -317,9 +288,9 @@ export default function RolesTab() {
               {saving && <Loader2 className="animate-spin" />}
               保存
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

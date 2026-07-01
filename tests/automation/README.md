@@ -1,3 +1,13 @@
+---
+title: "自动化测试"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["automation", "playwright", "selenium", "pytest", "ci"]
+related: ["tests/api-testing/README.md", "tests/README.md"]
+---
+
 # 自动化测试
 
 ## 目录

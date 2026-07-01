@@ -1,3 +1,13 @@
+---
+title: "CamelTv 测试平台 v2（前后端分离重构）"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["test-platform", "v2", "fullstack", "fastapi", "react"]
+related: ["test-platform-v2/backend/README.md", "test-platform-v2/frontend/README.md", "test-platform-v2/docs/CamelTv测试平台-完整PRD.md"]
+---
+
 # CamelTv 测试平台 v2（前后端分离重构）
 
 > 按《测试平台-前后端分离重构方案 v2.1》搭建的全新项目，与重构前的 `../test-platform/` 物理隔离。

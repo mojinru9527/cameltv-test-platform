@@ -1,3 +1,13 @@
+---
+title: "体育平台 本地测试平台（v1 旧版）"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "maintenance"
+expires: "2026-12-26"
+tags: ["test-platform", "v1", "cli", "legacy", "maintenance"]
+related: ["test-platform-v2/README.md", "test-platform/CLAUDE.md"]
+---
+
 # 体育平台 · 本地测试平台
 
 多站点 × 多环境的 6 件套测试工具,统一 CLI `tp` 驱动。基于《test-测试平台设计方案.md》落地。

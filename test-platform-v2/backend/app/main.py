@@ -21,7 +21,7 @@ async def lifespan(_: FastAPI):
     if security_issues:
         print("[security] WARNING — configuration issues detected:")
         for issue in security_issues:
-            print(f"  • {issue}")
+            print(f"  - {issue}")
         if settings.environment == "production":
             raise SystemExit(
                 "\n[security] FATAL — refusing to start in production with insecure configuration.\n"

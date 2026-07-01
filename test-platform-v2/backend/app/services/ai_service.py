@@ -497,16 +497,59 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
             params = extractor.parse_url(url)
             doc_id = params["doc_id"]
             url_version_id = params.get("version_id", "")
+            effective_url = url
+
+            # ── Handle project-level URLs (no docId) ──
+            if not doc_id:
+                team_id = params.get("team_id", "")
+                project_id = params.get("project_id", "")
+                print(f"[ai_service] No docId in URL "
+                      f"(tid={team_id[:8]}..., pid={project_id[:8]}...)")
+                # Try to auto-discover the first document in the project
+                try:
+                    resp = await extractor.client.get(
+                        f"https://lanhuapp.com/api/project/images"
+                        f"?project_id={project_id}&team_id={team_id}"
+                        f"&dds_status=1&position=1&show_cb_src=1&comment=1"
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if data.get("code") == "00000":
+                            images = data.get("data", {}).get("images", [])
+                            if images:
+                                doc_id = images[0].get("id")
+                                doc_name_hint = images[0].get("name", "")
+                                print(f"[ai_service] Auto-selected document: "
+                                      f"'{doc_name_hint}' (id={doc_id[:16]}...) "
+                                      f"from {len(images)} available")
+                                sep = "&" if "?" in url.split("#")[-1] else "?"
+                                effective_url = f"{url}{sep}docId={doc_id}"
+                                params = extractor.parse_url(effective_url)
+                                doc_id = params["doc_id"]
+                except Exception:
+                    pass  # Fall through to error message below
+
+                if not doc_id:
+                    raise ValueError(
+                        "蓝湖链接缺少文档 ID（docId 参数）。\n\n"
+                        "您当前提交的是蓝湖「项目」链接，需要改为具体的「设计文档」链接。\n\n"
+                        "获取正确链接的方法：\n"
+                        "1. 在浏览器中打开蓝湖项目\n"
+                        "2. 点击左侧菜单中的具体设计稿名称\n"
+                        "3. 复制浏览器地址栏中的完整 URL\n"
+                        "4. 该 URL 应包含 docId= 参数\n\n"
+                        f"当前链接: {url[:120]}..."
+                    )
 
             resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
             download_result = await extractor.download_resources(
-                url, resource_dir, target_version_id=url_version_id,
+                effective_url, resource_dir, target_version_id=url_version_id,
             )
 
             if download_result["status"] in ["downloaded", "updated"]:
                 fix_html_files(resource_dir)
 
-            pages_info = await extractor.get_pages_list(url)
+            pages_info = await extractor.get_pages_list(effective_url)
             all_pages = pages_info["pages"]
             doc_name = pages_info.get("document_name", "设计稿")
 
@@ -686,7 +729,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                                 + "\n\n---\n\n# 各版本需求内容\n"
                             )
                         content_parts.append("\n\n".join(version_sections))
-                        content_parts.append(f"\n\n---\n蓝湖链接: {url}")
+                        content_parts.append(f"\n\n---\n蓝湖链接: {effective_url}")
 
                         content = "\n".join(content_parts)
                         return {
@@ -782,7 +825,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
 
             if page_texts:
                 return {
-                    "content": summary + "\n\n---\n\n".join(page_texts) + f"\n\n---\n蓝湖链接: {url}",
+                    "content": summary + "\n\n---\n\n".join(page_texts) + f"\n\n---\n蓝湖链接: {effective_url}",
                     "page_filtered": page_filtered,
                     "folder_name": folder_name,
                     "changelog": {"raw": changelog_content} if changelog_content else None,

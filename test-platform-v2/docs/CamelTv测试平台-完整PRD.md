@@ -1,3 +1,13 @@
+---
+title: "CamelTv 测试平台 v2 完整产品需求文档"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["PRD", "产品需求", "架构", "路线图"]
+related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/改进任务backlog.md", "test-platform-v2/docs/onboarding.md"]
+---
+
 # CamelTv 测试平台 v2 —— 完整产品需求文档（PRD）
 
 > 单一权威 PRD：整合「现状功能 + 架构流程图 + 改进路线」。

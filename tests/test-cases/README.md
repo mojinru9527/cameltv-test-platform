@@ -1,3 +1,13 @@
+---
+title: "测试用例"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["test-cases", "functional", "integration", "performance", "security", "template"]
+related: ["tests/requirements/README.md", "tests/test-case-standards/"]
+---
+
 # 测试用例
 
 ## 目录

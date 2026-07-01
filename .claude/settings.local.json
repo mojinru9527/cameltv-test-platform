@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npx skills add https://github.com/obra/superpowers --skill using-superpowers -g -y)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "Bash(pnpm *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "WebFetch(domain:github.com)",
+      "Bash(python extract_doc.py)",
+      "Bash(ls -la .venv/Scripts/python.exe)",
+      "Bash(.venv/Scripts/python.exe -c \"import playwright; print\\('playwright OK'\\)\")",
+      "Bash(.venv/Scripts/python.exe extract_doc.py)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe -m pip install playwright)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe extract_doc.py)",
+      "Bash(taskkill /F /IM msedge.exe)",
+      "Bash(start msedge *)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe extract_cdp.py)",
+      "Bash(tasklist /FI \"IMAGENAME eq msedge.exe\")",
+      "Bash(powershell -Command \"Get-Process msedge -ErrorAction SilentlyContinue | Select-Object Id, ProcessName\")",
+      "Bash(powershell -Command \"Stop-Process -Name msedge -Force; Start-Sleep 2; Start-Process 'msedge' -ArgumentList '--remote-debugging-port=9222', 'https://lanhuapp.com/web/#/item/project/product?tid=6324825d-1614-4d73-bc4c-f05cdf0734c1&pid=cc8cfbd5-16d2-481f-828e-7eb424a91694&versionId=c7f3fb95-caf3-4efb-8549-f983c33120de&docId=e6b5ce1e-0d25-4e22-a9e9-450283918b3b&docType=axure&pageId=8cedc40ecb0c4d08939b5b3f1d16009a'\")",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe -c \"import httpx; print\\('httpx OK'\\)\")",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe -c ' *)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe find_admin.py)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe find_admin2.py)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe find_admin3.py)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe extract_admin.py)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe check_admin_type.py)",
+      "Bash(/c/Users/26029/AppData/Local/Programs/Python/Python312/python.exe find_docids.py)",
+      "Bash(mkdir -p \"f:/CamelTv/tests/test-case-standards\")",
+      "WebFetch(domain:share.note.youdao.com)",
+      "Bash(curl -sL --max-time 30 -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" \"https://share.note.youdao.com/s/IwoNlhbh\")",
+      "Bash(curl -sL --max-time 30 -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://note.youdao.com/share/shareConfig.json?$\\(date +%s\\)\")",
+      "Bash(curl -sL --max-time 30 -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://share.note.youdao.com/ynoteshare/index.html?s=IwoNlhbh\" -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -sL --max-time 30 -H \"User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://share.note.youdao.com/ynoteshare/index.html?s=IwoNlhbh\")",
+      "Bash(pip install *)",
+      "Bash(cd \"f:/CamelTv/tests/test-case-standards\" && rm -f *.docx && echo \"--- Final directory ---\" && ls -la)",
+      "Bash(python -c \"import pytesseract; print\\('pytesseract: OK'\\)\")",
+      "Bash(python -c \"import matplotlib; import pandas; import numpy; import imutils; print\\('matplotlib:', matplotlib.__version__\\); print\\('pandas:', pandas.__version__\\); print\\('numpy:', numpy.__version__\\); print\\('imutils: OK'\\)\")",
+      "PowerShell(\\(Get-Item 'f:\\\\CamelTv\\\\tests\\\\test-cases\\\\functional\\\\BASELINE-用户端-基线功能.md'\\).Length; \\(Get-Item 'f:\\\\CamelTv\\\\tests\\\\test-cases\\\\functional\\\\ADMIN-运营后台-全版本.md'\\).Length)",
+      "Bash(.\\\\.venv\\\\Scripts\\\\python.exe -m cli.tp envcheck --env test)",
+      "Bash(.\\\\.venv\\\\Scripts\\\\python.exe -m cli.tp api pull --source \"https://g3-test3.elelive.cn/v3/api-docs\" --out tests/api-testing/generated)"
+    ],
+    "additionalDirectories": [
+      "f:\\CamelTv\\tests",
+      "F:\\CamelTv\\tests\\test-case-standards"
+    ]
+  }
+}

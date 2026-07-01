@@ -1,3 +1,13 @@
+---
+title: "测试平台 v2 改进任务 Backlog"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["backlog", "改进任务", "开发任务", "issue"]
+related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/CamelTv测试平台-完整PRD.md"]
+---
+
 # CamelTv 测试平台 —— 改进任务 Backlog（可领取开发任务）
 
 > 来源：《现状功能PRD.md》第 5.3 节「已知能力缺口」8 条改进项。

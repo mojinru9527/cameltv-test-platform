@@ -44,3 +44,17 @@ def case_trace(
         from app.core.exceptions import not_found
         raise not_found("用例不存在")
     return R(data=result)
+
+
+@router.get("/requirement/{doc_id}", response_model=R[dict], summary="需求覆盖率详情")
+def requirement_coverage(
+    doc_id: int,
+    current: CurrentUser = Depends(require_project),
+    db=Depends(get_db),
+):
+    """返回单个需求文档的覆盖率：关联用例→计划→执行→缺陷的完整矩阵。"""
+    result = trace_service.get_requirement_coverage(db, doc_id, current.project_id)
+    if result is None:
+        from app.core.exceptions import not_found
+        raise not_found("需求文档不存在")
+    return R(data=result)

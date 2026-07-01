@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { LoginResult, Project, User } from '@/types'
 
-export type ColorTheme = "blue" | "green" | "purple" | "orange" | "rose" | "cyan" | "amber" | "indigo"
+export type ColorTheme = "blue" | "dark-minimal" | "warm" | "nature"
 
 interface AuthState {
   token: string | null

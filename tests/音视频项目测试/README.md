@@ -1,3 +1,13 @@
+---
+title: "音视频项目测试 - 快速启动指南"
+owner: "qa-team"
+last_reviewed: "2026-06-26"
+status: "active"
+expires: "2026-12-26"
+tags: ["av-testing", "video", "audio", "latency", "livestream"]
+related: ["tests/音视频测试/", "tests/README.md"]
+---
+
 # 音视频项目测试 - 快速启动指南
 
 > **用途**: 直播音视频质量测试的完整工程，包含环境搭建、测试素材、分析脚本、自动化流程。

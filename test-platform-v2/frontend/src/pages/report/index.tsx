@@ -53,6 +53,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
+import DataTable, { type DataTableColumn } from '@/components/DataTable'
+import PageHeader from '@/components/PageHeader'
+import { SkeletonText } from '@/components/ui/skeleton'
 import {
   Plus,
   Search,
@@ -91,45 +94,6 @@ const reportSchema = z.object({
 
 type ReportFormData = z.infer<typeof reportSchema>
 
-// ── Pagination ──
-function Pagination({
-  page,
-  pageSize,
-  total,
-  onChange,
-}: {
-  page: number
-  pageSize: number
-  total: number
-  onChange: (p: number) => void
-}) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  return (
-    <div className="flex items-center justify-between pt-4 text-sm text-muted-foreground">
-      <span>共 {total} 条</span>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => onChange(page - 1)}
-        >
-          上一页
-        </Button>
-        <span>{page} / {totalPages}</span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => onChange(page + 1)}
-        >
-          下一页
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 export default function ReportPage() {
   const [data, setData] = useState({ total: 0, items: [] as any[], page: 1, page_size: 20 })
   const [loading, setLoading] = useState(false)
@@ -151,6 +115,43 @@ export default function ReportPage() {
     resolver: zodResolver(reportSchema),
   })
   const watchPlanId = watch('plan_id')
+
+  // ── DataTable column definitions ──
+  const reportColumns: DataTableColumn<any>[] = [
+    { key: 'report_id', header: '编号', headerClassName: 'w-[150px]', className: 'max-w-[150px] truncate', render: (r) => r.report_id },
+    { key: 'name', header: '名称', className: 'truncate', render: (r) => r.name },
+    { key: 'plan_name', header: '关联计划', headerClassName: 'w-[160px]', className: 'max-w-[160px] truncate', render: (r) => r.plan_name || <span className="text-muted-foreground">—</span> },
+    { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
+    { key: 'actions', header: '操作', headerClassName: 'w-[120px]', render: (r) => (
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => openDetail(r.id)} data-icon="inline-start">
+          <Eye />
+          查看
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="destructive" data-icon="inline-start">
+              <Trash2 />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确定删除？</AlertDialogTitle>
+              <AlertDialogDescription>
+                将删除报告「{r.name}」，此操作不可撤销。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
+                删除
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    )},
+  ]
 
   const load = useCallback(async (page = 1) => {
     setLoading(true)
@@ -226,11 +227,22 @@ export default function ReportPage() {
 
   return (
     <div>
-      <h4 className="font-heading text-lg font-medium mb-4">报告中心</h4>
+      <PageHeader title="报告中心" />
 
-      {/* Search bar */}
-      <Card size="sm" className="mb-4">
-        <CardContent>
+      <DataTable
+        columns={reportColumns}
+        data={data.items}
+        rowKey={(r) => r.id}
+        loading={loading}
+        loadingRows={4}
+        emptyState={{ title: '暂无报告', description: '选择测试计划生成第一份报告' }}
+        pagination={{
+          page: data.page,
+          totalPages: Math.max(1, Math.ceil(data.total / data.page_size)),
+          total: data.total,
+          onChange: (p) => load(p),
+        }}
+        toolbar={
           <div className="flex items-center gap-2 flex-wrap">
             <Input
               placeholder="搜索报告名称"
@@ -248,85 +260,7 @@ export default function ReportPage() {
               生成报告
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <div className="rounded-xl border bg-card text-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[150px]">编号</TableHead>
-              <TableHead>名称</TableHead>
-              <TableHead className="w-[160px]">关联计划</TableHead>
-              <TableHead className="w-[170px]">创建时间</TableHead>
-              <TableHead className="w-[120px]">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  <Loader2 className="inline-block size-4 animate-spin mr-2" />
-                  加载中...
-                </TableCell>
-              </TableRow>
-            ) : data.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.items.map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell className="max-w-[150px] truncate">{r.report_id}</TableCell>
-                  <TableCell className="truncate">{r.name}</TableCell>
-                  <TableCell className="max-w-[160px] truncate">
-                    {r.plan_name || <span className="text-muted-foreground">—</span>}
-                  </TableCell>
-                  <TableCell>{r.created_at ? new Date(r.created_at).toLocaleString() : '-'}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openDetail(r.id)} data-icon="inline-start">
-                        <Eye />
-                        查看
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="destructive" data-icon="inline-start">
-                            <Trash2 />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>确定删除？</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              将删除报告「{r.name}」，此操作不可撤销。
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
-                              删除
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination
-        page={data.page}
-        pageSize={data.page_size}
-        total={data.total}
-        onChange={(p) => load(p)}
+        }
       />
 
       {/* Create Dialog */}
@@ -496,9 +430,8 @@ export default function ReportPage() {
               </Card>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-muted-foreground py-4">
-              <Loader2 className="size-4 animate-spin" />
-              加载中...
+            <div className="py-4">
+              <SkeletonText lines={6} />
             </div>
           )}
         </SheetContent>

@@ -24,3 +24,5 @@ class RequirementDocument(Base, TimestampMixin):
     imported_api_count: Mapped[int] = mapped_column(default=0)
     imported_func_indices: Mapped[str] = mapped_column(default="[]")   # JSON array of imported func case indices
     imported_api_indices: Mapped[str] = mapped_column(default="[]")    # JSON array of imported api case indices
+    extraction_raw: Mapped[str] = mapped_column(default="")            # Stage 1 AI extraction JSON (modules + function_points)
+    extraction_status: Mapped[str] = mapped_column(default="not_started")  # not_started|pending_review|confirmed

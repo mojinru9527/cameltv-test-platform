@@ -11,15 +11,24 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import DataTable, { type DataTableColumn } from '@/components/DataTable'
+import PageHeader from '@/components/PageHeader'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,46 +74,6 @@ const memberSchema = z.object({
 
 type MemberFormData = z.infer<typeof memberSchema>
 
-function Pagination({
-  page,
-  pageSize,
-  total,
-  onChange,
-}: {
-  page: number
-  pageSize: number
-  total: number
-  onChange: (p: number) => void
-}) {
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
-  return (
-    <div className="flex items-center justify-between pt-4 text-sm text-muted-foreground">
-      <span>共 {total} 条</span>
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => onChange(page - 1)}
-        >
-          上一页
-        </Button>
-        <span>
-          {page} / {totalPages}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => onChange(page + 1)}
-        >
-          下一页
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 export default function ProjectPage() {
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [data, setData] = useState({ total: 0, items: [] as ProjectDetail[], page: 1, page_size: 20 })
@@ -142,6 +111,58 @@ export default function ProjectPage() {
   })
   const memberUserId = watchMember('user_id')
   const memberRoleId = watchMember('role_id')
+
+  // ── DataTable column definitions ──
+  const projectColumns: DataTableColumn<ProjectDetail>[] = [
+    { key: 'code', header: '编码', headerClassName: 'w-[120px]', className: 'max-w-[120px] truncate', render: (r) => r.code },
+    { key: 'name', header: '名称', className: 'truncate', render: (r) => r.name },
+    { key: 'description', header: '描述', className: 'truncate', render: (r) => r.description || '-' },
+    { key: 'owner_name', header: '负责人', headerClassName: 'w-[100px]', render: (r) => (r as any).owner_name || '-' },
+    { key: 'status', header: '状态', headerClassName: 'w-[80px]', render: (r) => (
+      <Badge variant={r.status === 1 ? 'default' : 'secondary'}>
+        {r.status === 1 ? '启用' : '禁用'}
+      </Badge>
+    )},
+    { key: 'actions', header: '操作', headerClassName: 'w-[200px]', render: (r) => (
+      <div className="flex items-center gap-2">
+        {hasPerm('project:manage') && (
+          <Button size="sm" variant="outline" onClick={() => openMembers(r)} data-icon="inline-start">
+            <Users />
+            成员
+          </Button>
+        )}
+        {hasPerm('project:update') && (
+          <Button size="sm" variant="outline" onClick={() => openEdit(r)} data-icon="inline-start">
+            <Edit />
+            编辑
+          </Button>
+        )}
+        {hasPerm('project:delete') && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" variant="destructive" data-icon="inline-start">
+                <Trash2 />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确定删除此项目？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  此操作不可撤销。将删除项目「{r.name}」及其关联数据。
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
+                  删除
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+      </div>
+    )},
+  ]
 
   const load = useCallback(async (page = 1) => {
     setLoading(true)
@@ -221,7 +242,7 @@ export default function ProjectPage() {
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-4">
+      <PageHeader title="项目管理">
         <Button variant="outline" size="sm" onClick={() => load()} data-icon="inline-start">
           <RotateCcw />
           刷新
@@ -232,109 +253,34 @@ export default function ProjectPage() {
             新建项目
           </Button>
         )}
-      </div>
+      </PageHeader>
 
       {/* Table */}
-      <div className="rounded-xl border bg-card text-sm">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[120px]">编码</TableHead>
-              <TableHead>名称</TableHead>
-              <TableHead>描述</TableHead>
-              <TableHead className="w-[100px]">负责人</TableHead>
-              <TableHead className="w-[80px]">状态</TableHead>
-              <TableHead className="w-[200px]">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  加载中...
-                </TableCell>
-              </TableRow>
-            ) : data.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.items.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="max-w-[120px] truncate">{r.code}</TableCell>
-                  <TableCell className="truncate">{r.name}</TableCell>
-                  <TableCell className="truncate">{r.description || '-'}</TableCell>
-                  <TableCell>{(r as any).owner_name || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant={r.status === 1 ? 'default' : 'secondary'}>
-                      {r.status === 1 ? '启用' : '禁用'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {hasPerm('project:manage') && (
-                        <Button size="sm" variant="outline" onClick={() => openMembers(r)} data-icon="inline-start">
-                          <Users />
-                          成员
-                        </Button>
-                      )}
-                      {hasPerm('project:update') && (
-                        <Button size="sm" variant="outline" onClick={() => openEdit(r)} data-icon="inline-start">
-                          <Edit />
-                          编辑
-                        </Button>
-                      )}
-                      {hasPerm('project:delete') && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="destructive" data-icon="inline-start">
-                              <Trash2 />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>确定删除此项目？</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                此操作不可撤销。将删除项目「{r.name}」及其关联数据。
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>取消</AlertDialogCancel>
-                              <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
-                                删除
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <Pagination
-        page={data.page}
-        pageSize={data.page_size}
-        total={data.total}
-        onChange={(p) => load(p)}
+      <DataTable
+        columns={projectColumns}
+        data={data.items}
+        rowKey={(r) => r.id}
+        loading={loading}
+        loadingRows={4}
+        emptyState={{ title: '暂无项目', description: '点击「新建项目」开始创建' }}
+        pagination={{
+          page: data.page,
+          totalPages: Math.max(1, Math.ceil(data.total / data.page_size)),
+          total: data.total,
+          onChange: (p) => load(p),
+        }}
       />
 
-      {/* Create/Edit Sheet */}
-      <Sheet open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
-        <SheetContent side="right" className="w-[480px] sm:max-w-[480px]">
-          <SheetHeader>
-            <SheetTitle>{editing?.id ? '编辑项目' : '新建项目'}</SheetTitle>
-            <SheetDescription>
+      {/* Create/Edit Dialog */}
+      <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>{editing?.id ? '编辑项目' : '新建项目'}</DialogTitle>
+            <DialogDescription>
               {editing?.id ? '修改项目信息' : '创建一个新的测试项目'}
-            </SheetDescription>
-          </SheetHeader>
-          <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4 py-4 flex-1 overflow-y-auto">
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.code} aria-invalid={!!errors.code}>
               <label className="text-sm font-medium">项目编码</label>
               <Input
@@ -359,7 +305,7 @@ export default function ProjectPage() {
               <Textarea placeholder="项目说明" rows={3} {...register('description')} />
             </div>
           </form>
-          <SheetFooter>
+          <DialogFooter>
             <Button variant="outline" onClick={() => { setDrawer(false); setEditing(null) }}>
               取消
             </Button>
@@ -367,9 +313,9 @@ export default function ProjectPage() {
               {saving && <Loader2 className="animate-spin" />}
               保存
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Members Sheet */}
       <Sheet open={membersOpen} onOpenChange={(open) => { if (!open) { setMembersOpen(false); setActiveProject(null) } }}>

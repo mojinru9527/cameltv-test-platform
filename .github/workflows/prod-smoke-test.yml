@@ -1,0 +1,42 @@
+name: 正式环境冒烟测试
+
+on:
+  schedule:
+    - cron: '7 8 * * *'   # 每日 08:07 UTC
+  workflow_dispatch:
+
+jobs:
+  prod-smoke:
+    runs-on: [self-hosted, internal-network]
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          cd test-platform
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Verify VPN Connection
+        run: |
+          cd test-platform
+          tp config show --env prod
+        # vpn07 不通会直接 fail fast (vpn07_check)
+
+      - name: Run Smoke Tests
+        run: |
+          cd test-platform
+          tp api run --env prod --filter smoke --report data/reports/prod-smoke-${{ github.run_number }}.xml
+
+      - name: Ingest Report
+        if: always()
+        run: |
+          cd test-platform
+          tp report ingest --file data/reports/prod-smoke-${{ github.run_number }}.xml --build ${{ github.run_number }} --branch main --source api

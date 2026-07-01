@@ -1,4 +1,6 @@
-import { BarChart3, Bug, Calendar, PieChart, RotateCcw } from '@/lib/icons'
+import { BarChart3, Bug, Calendar, FileCheck, PieChart, RotateCcw, Percent } from '@/lib/icons'
+import PageHeader from '@/components/PageHeader'
+import StatCard from '@/components/StatCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCallback, useEffect, useState } from 'react'
@@ -19,6 +21,7 @@ import {
 import { format, subDays } from 'date-fns'
 import { fetchDashboardStats, type DashboardParams } from '@/api/dashboard'
 import { useAuthStore } from '@/stores/auth'
+import { useChartColors } from '@/hooks/use-chart-colors'
 import type { CaseTypePriority, DashboardStats } from '@/types'
 
 type PresetKey = '7d' | '30d' | 'custom'
@@ -45,21 +48,6 @@ function getDateRange(key: PresetKey, custom: [string, string] | null): { start:
   return { start, end }
 }
 
-// ── 优先级颜色 ──
-const PRIORITY_COLORS: Record<string, string> = {
-  P0: '#ff4d4f',
-  P1: '#fa8c16',
-  P2: '#1890ff',
-  P3: '#8c8c8c',
-}
-
-// 柱状图颜色（用例总数 / 通过 / 失败）
-const BAR_COLORS = {
-  total: '#1890ff',
-  pass: '#52c41a',
-  fail: '#ff4d4f',
-}
-
 export default function Workbench() {
   const user = useAuthStore((s) => s.user)
   const projects = useAuthStore((s) => s.projects)
@@ -73,6 +61,9 @@ export default function Workbench() {
   const sevenDaysAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd')
   const [preset, setPreset] = useState<PresetKey>('7d')
   const [rangeValue, setRangeValue] = useState<[string, string]>([sevenDaysAgo, today])
+  const chartColors = useChartColors()
+  const priorityColor = (p: string) =>
+    p === 'P0' ? chartColors.p0 : p === 'P1' ? chartColors.p1 : p === 'P2' ? chartColors.p2 : chartColors.p3
 
   const load = useCallback(async (key: PresetKey, custom: [string, string] | null) => {
     setLoading(true)
@@ -158,21 +149,25 @@ export default function Workbench() {
   return (
     <div>
       {/* 标题栏 */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <BarChart3 className="size-5" />
-          工作台
-        </h2>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            {user?.nickname || user?.username} / {current?.name || '未选择项目'}
-          </span>
-          <Button size="sm" variant="outline" onClick={() => load(preset, rangeValue)} disabled={loading}>
-            <RotateCcw className="size-4" />
-            刷新
-          </Button>
+      <PageHeader title="工作台" icon={BarChart3}>
+        <span className="text-sm text-muted-foreground">
+          {user?.nickname || user?.username} / {current?.name || '未选择项目'}
+        </span>
+        <Button size="sm" variant="outline" onClick={() => load(preset, rangeValue)} disabled={loading}>
+          <RotateCcw className="size-4" />
+          刷新
+        </Button>
+      </PageHeader>
+
+      {/* ─── 摘要指标 ─── */}
+      {s && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+          <StatCard icon={FileCheck} label="用例总数" value={s.total_cases} variant="glass" />
+          <StatCard icon={BarChart3} label="测试计划" value={s.total_plans} variant="glass" />
+          <StatCard icon={Percent} label="通过率" value={`${s.pass_rate}%`} variant="glass" />
+          <StatCard icon={Bug} label="接口用例" value={s.api_cases} variant="glass" />
         </div>
-      </div>
+      )}
 
       {/* ─── 时间范围筛选 ─── */}
       <Card size="sm" className="mb-4">
@@ -255,19 +250,19 @@ export default function Workbench() {
                         margin={{ top: 20, right: 8, left: 0, bottom: 8 }}
                         barCategoryGap="30%"
                       >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
                         <XAxis dataKey="name" tick={{ fontSize: 13 }} />
                         <YAxis tick={{ fontSize: 12 }} />
                         <RechartsTooltip content={<BarTooltip />} />
                         <Legend content={() => null} />
-                        <Bar dataKey="用例总数" fill={BAR_COLORS.total} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                          <LabelList dataKey="用例总数" position="top" style={{ fontSize: 11, fontWeight: 600, fill: BAR_COLORS.total }} />
+                        <Bar dataKey="用例总数" fill={chartColors.barTotal} radius={[4, 4, 0, 0]} maxBarSize={48}>
+                          <LabelList dataKey="用例总数" position="top" style={{ fontSize: 11, fontWeight: 600, fill: chartColors.barTotal }} />
                         </Bar>
-                        <Bar dataKey="执行通过" fill={BAR_COLORS.pass} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                          <LabelList dataKey="执行通过" position="top" style={{ fontSize: 11, fontWeight: 600, fill: BAR_COLORS.pass }} />
+                        <Bar dataKey="执行通过" fill={chartColors.barPass} radius={[4, 4, 0, 0]} maxBarSize={48}>
+                          <LabelList dataKey="执行通过" position="top" style={{ fontSize: 11, fontWeight: 600, fill: chartColors.barPass }} />
                         </Bar>
-                        <Bar dataKey="执行失败" fill={BAR_COLORS.fail} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                          <LabelList dataKey="执行失败" position="top" style={{ fontSize: 11, fontWeight: 600, fill: BAR_COLORS.fail }} />
+                        <Bar dataKey="执行失败" fill={chartColors.barFail} radius={[4, 4, 0, 0]} maxBarSize={48}>
+                          <LabelList dataKey="执行失败" position="top" style={{ fontSize: 11, fontWeight: 600, fill: chartColors.barFail }} />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -278,9 +273,9 @@ export default function Workbench() {
                     <div className="bg-muted/50 rounded-lg p-4 border m-2">
                       <div className="text-xs font-semibold mb-2.5">图例</div>
                       {([
-                        { label: '用例总数', color: BAR_COLORS.total, value: sumTotal },
-                        { label: '执行通过', color: BAR_COLORS.pass, value: sumPass },
-                        { label: '执行失败', color: BAR_COLORS.fail, value: sumFail },
+                        { label: '用例总数', color: chartColors.barTotal, value: sumTotal },
+                        { label: '执行通过', color: chartColors.barPass, value: sumPass },
+                        { label: '执行失败', color: chartColors.barFail, value: sumFail },
                       ]).map((item) => (
                         <div key={item.label} className="flex items-center mb-2 text-xs">
                           <span
@@ -363,10 +358,10 @@ export default function Workbench() {
                             outerRadius={85}
                             paddingAngle={2}
                             label={({ name, value }) => `${name}: ${value}`}
-                            labelLine={{ stroke: '#bbb', strokeWidth: 1 }}
+                            labelLine={{ stroke: chartColors.labelLineColor, strokeWidth: 1 }}
                           >
                             {pieData.map((entry) => (
-                              <Cell key={entry.name} fill={PRIORITY_COLORS[entry.name]} />
+                              <Cell key={entry.name} fill={priorityColor(entry.name)} />
                             ))}
                           </Pie>
                           <RechartsTooltip
@@ -394,12 +389,12 @@ export default function Workbench() {
                               <span className="text-muted-foreground flex items-center gap-1.5">
                                 <span
                                   className="inline-block size-2.5 rounded-sm"
-                                  style={{ background: PRIORITY_COLORS[key] }}
+                                  style={{ background: priorityColor(key) }}
                                 />
                                 {key}
                               </span>
                               <span>
-                                <span className="font-semibold" style={{ color: PRIORITY_COLORS[key] }}>
+                                <span className="font-semibold" style={{ color: priorityColor(key) }}>
                                   {val}
                                 </span>
                                 <span className="text-muted-foreground ml-1 text-[11px]">{pct}%</span>

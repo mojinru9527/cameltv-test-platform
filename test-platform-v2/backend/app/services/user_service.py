@@ -50,9 +50,12 @@ def get_user(db: Session, user_id: int, project_id: int | None = None) -> dict |
 
 
 def create_user(db: Session, data: dict) -> dict:
+    password = data.get("password")
+    if not password:
+        raise ValueError("password 为必填字段，不允许为空")
     user = User(
         username=data["username"],
-        password=hash_password(data.get("password", "123456")),
+        password=hash_password(password),
         nickname=data.get("nickname", ""),
         email=data.get("email", ""),
         status=data.get("status", 1),

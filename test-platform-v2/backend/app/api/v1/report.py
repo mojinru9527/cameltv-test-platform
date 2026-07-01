@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_current_user, get_db, require_permission
 from app.schemas.common import R
-from app.schemas.test_report import ReportCreate, ReportDetailOut, ReportOut
+from app.schemas.test_report import ReportCreate, ReportDetailOut, ReportOut, TrendOut
 from app.services import report_service
 from app.services.audit_service import write_audit
 
@@ -43,6 +43,16 @@ def list_reports(
         page_size=page_size,
     )
     return R.ok({"total": total, "page": page, "page_size": page_size, "items": items})
+
+
+@router.get("/trends", response_model=R[TrendOut], summary="多计划趋势与缺陷收敛")
+def get_trends(
+    current: CurrentUser = Depends(require_permission("report:list")),
+    db: Session = Depends(get_db),
+):
+    """获取项目下所有报告的通过率趋势和缺陷收敛曲线数据。"""
+    data = report_service.get_trends(db, current.project_id or 0)
+    return R.ok(TrendOut(**data))
 
 
 @router.post("", response_model=R[ReportOut])
@@ -134,11 +144,28 @@ def export_report(
 
         pdf = FPDF()
         pdf.add_page()
-        # Use built-in font for CJK support via fpdf2's Unicode support
-        try:
-            pdf.add_font("NotoSansCJK", "", r"C:\Windows\Fonts\msyh.ttc", uni=True)
-            pdf.set_font("NotoSansCJK", "", 12)
-        except Exception:
+        # Try multiple CJK font paths (Windows / Linux), fall back to Helvetica
+        import os as _os
+        _cjk_font_paths = [
+            r"C:\Windows\Fonts\msyh.ttc",           # Windows
+            r"C:\Windows\Fonts\simsun.ttc",         # Windows fallback
+            "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",     # Debian/Ubuntu
+            "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",   # Debian/Ubuntu alt
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Noto
+            "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",       # Noto alt
+            "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Regular.ttc", # Fedora
+        ]
+        _font_loaded = False
+        for _fp in _cjk_font_paths:
+            if _os.path.isfile(_fp):
+                try:
+                    pdf.add_font("CJK", "", _fp, uni=True)
+                    pdf.set_font("CJK", "", 12)
+                    _font_loaded = True
+                    break
+                except Exception:
+                    continue
+        if not _font_loaded:
             pdf.set_font("Helvetica", "", 12)
 
         # Title

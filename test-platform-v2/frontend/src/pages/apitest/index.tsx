@@ -7,6 +7,7 @@ import { Play, Save, Plus, Trash2, Code2, Loader2 } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import PageHeader from '@/components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -140,28 +141,20 @@ export default function ApiTestPage() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold">接口测试</h2>
-          <p className="text-sm text-muted-foreground">
-            调试后端接口、复用登录态并保存常用请求。
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={saveExample} data-icon="inline-start">
-            <Save />
-            保存
-          </Button>
-          <Button onClick={run} disabled={loading} data-icon="inline-start">
-            {loading ? (
-              <Loader2 className="animate-spin" />
-            ) : (
-              <Play />
-            )}
-            发送
-          </Button>
-        </div>
-      </div>
+      <PageHeader title="接口测试" description="调试后端接口、复用登录态并保存常用请求。">
+        <Button variant="outline" onClick={saveExample} data-icon="inline-start">
+          <Save />
+          保存
+        </Button>
+        <Button onClick={run} disabled={loading} data-icon="inline-start">
+          {loading ? (
+            <Loader2 className="animate-spin" />
+          ) : (
+            <Play />
+          )}
+          发送
+        </Button>
+      </PageHeader>
 
       {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

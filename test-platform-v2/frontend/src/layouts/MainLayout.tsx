@@ -9,6 +9,7 @@ import type { MenuItem } from '@/types'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
@@ -16,11 +17,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import CommandPalette from '@/components/CommandPalette'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -58,6 +65,8 @@ import {
   GitBranch,
   Share2,
   Palette,
+  ChevronRight,
+  TestTube2,
   type LucideIcon,
 } from '@/lib/icons'
 
@@ -79,26 +88,31 @@ const ICONS: Record<string, LucideIcon> = {
   BugOutlined: Bug,
 }
 
-const THEME_LABELS: Record<ColorTheme, string> = {
-  blue: '极客蓝',
-  green: '翡翠绿',
-  purple: '星空紫',
-  orange: '活力橙',
-  rose: '玫瑰红',
-  cyan: '青碧色',
-  amber: '琥珀金',
-  indigo: '幽兰紫',
-}
-
-const THEME_COLORS: Record<ColorTheme, string> = {
-  blue: 'bg-blue-600',
-  green: 'bg-emerald-600',
-  purple: 'bg-purple-600',
-  orange: 'bg-orange-500',
-  rose: 'bg-rose-600',
-  cyan: 'bg-cyan-600',
-  amber: 'bg-amber-500',
-  indigo: 'bg-indigo-600',
+const THEME_CONFIG: Record<ColorTheme, { label: string; desc: string; preview: string[]; icon: string }> = {
+  blue: {
+    label: '专业蓝',
+    desc: '清爽、现代、专业',
+    preview: ['#3b82f6', '#f8fafc', '#1e293b'],
+    icon: '🔵',
+  },
+  'dark-minimal': {
+    label: '极简暗',
+    desc: '暗色、极简、聚焦',
+    preview: ['#94a3b8', '#1a1a1a', '#0d0d0d'],
+    icon: '🌙',
+  },
+  warm: {
+    label: '温润金',
+    desc: '温暖、柔和、优雅',
+    preview: ['#d97706', '#fef7ed', '#3d2e1e'],
+    icon: '🌟',
+  },
+  nature: {
+    label: '自然绿',
+    desc: '清新、自然、舒适',
+    preview: ['#16a34a', '#f0fdf4', '#1a2e1a'],
+    icon: '🌿',
+  },
 }
 
 export default function MainLayout() {
@@ -132,46 +146,134 @@ export default function MainLayout() {
 
   const userInitials = (user?.nickname || user?.username || 'U')[0].toUpperCase()
 
+  // Build menu tree: top-level items + render children as submenus
+  const renderMenuItems = (items: typeof menus, depth = 0) => {
+    return items.map((m) => {
+      const Icon = ICONS[m.icon] ?? LayoutDashboard
+      const isActive = location.pathname === m.path ||
+        (m.path !== '/' && location.pathname.startsWith(m.path))
+      const hasChildren = m.children && m.children.length > 0
+
+      if (hasChildren && depth === 0) {
+        // Top-level item with children — render as expandable group
+        return (
+          <SidebarMenuItem key={m.path || m.code}>
+            <SidebarMenuButton
+              onClick={() => navigate(m.path)}
+              isActive={isActive}
+              tooltip={m.name}
+              className="peer/menu-parent"
+            >
+              <Icon />
+              <span>{m.name}</span>
+              <ChevronRight className="ml-auto size-3.5 transition-transform duration-200 group-data-[state=open]/menu-item:rotate-90" />
+            </SidebarMenuButton>
+            <SidebarMenuSub>
+              {m.children!.map((child) => {
+                const ChildIcon = ICONS[child.icon] ?? LayoutDashboard
+                const childActive = location.pathname === child.path ||
+                  (child.path !== '/' && location.pathname.startsWith(child.path))
+                return (
+                  <SidebarMenuSubItem key={child.path || child.code}>
+                    <SidebarMenuSubButton
+                      onClick={() => navigate(child.path)}
+                      isActive={childActive}
+                    >
+                      <ChildIcon className="size-3.5" />
+                      <span>{child.name}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                )
+              })}
+            </SidebarMenuSub>
+          </SidebarMenuItem>
+        )
+      }
+
+      // Leaf item or nested child
+      return (
+        <SidebarMenuItem key={m.path || m.code}>
+          <SidebarMenuButton
+            onClick={() => navigate(m.path)}
+            isActive={isActive}
+            tooltip={m.name}
+          >
+            <Icon />
+            <span>{m.name}</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      )
+    })
+  }
+
+  // Split menus into primary and secondary groups
+  const mainMenus = menus.filter((m) =>
+    !['system', 'settings'].includes(m.code?.toLowerCase())
+  )
+  const systemMenus = menus.filter((m) =>
+    ['system', 'settings'].includes(m.code?.toLowerCase())
+  )
+
   return (
     <SidebarProvider defaultOpen>
       {/* ── Sidebar ── */}
       <Sidebar collapsible="icon">
-        <SidebarHeader className="flex h-14 items-center justify-center border-b border-sidebar-border">
-          <span className="text-base font-semibold text-sidebar-foreground">
-            CamelTv 测试平台
-          </span>
+        <SidebarHeader>
+          <div className="flex h-14 items-center gap-2.5 px-3 border-b border-sidebar-border">
+            {/* Logo icon — always visible, serves as collapsed-state brand */}
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
+              <TestTube2 className="size-4" />
+            </div>
+            {/* Text brand — hidden when collapsed */}
+            <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
+              <span className="text-sm font-bold sidebar-brand">CamelTv</span>
+              <span className="text-[10px] text-sidebar-foreground/50">测试平台</span>
+            </div>
+          </div>
         </SidebarHeader>
 
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupLabel>导航菜单</SidebarGroupLabel>
             <SidebarMenu>
-              {menus.map((m) => {
-                const Icon = ICONS[m.icon] ?? LayoutDashboard
-                const isActive = location.pathname === m.path ||
-                  (m.path !== '/' && location.pathname.startsWith(m.path))
-                return (
-                  <SidebarMenuItem key={m.path}>
-                    <SidebarMenuButton
-                      onClick={() => navigate(m.path)}
-                      isActive={isActive}
-                      tooltip={m.name}
-                    >
-                      <Icon />
-                      <span>{m.name}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
+              {renderMenuItems(mainMenus)}
             </SidebarMenu>
           </SidebarGroup>
+
+          {systemMenus.length > 0 && (
+            <SidebarGroup>
+              <SidebarGroupLabel>系统</SidebarGroupLabel>
+              <SidebarMenu>
+                {renderMenuItems(systemMenus)}
+              </SidebarMenu>
+            </SidebarGroup>
+          )}
         </SidebarContent>
+
+        {/* ── Sidebar footer: user info ── */}
+        <SidebarFooter>
+          <div className="flex items-center gap-2.5 px-1 py-1 border-t border-sidebar-border">
+            <Avatar className="size-8 shrink-0 ring-2 ring-sidebar-border">
+              <AvatarFallback className="text-xs bg-sidebar-accent text-sidebar-accent-foreground font-medium">
+                {userInitials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
+              <span className="text-sm font-medium truncate text-sidebar-foreground">
+                {user?.nickname || user?.username || '用户'}
+              </span>
+              <span className="text-[10px] text-sidebar-foreground/50 truncate">
+                {user?.email || ''}
+              </span>
+            </div>
+          </div>
+        </SidebarFooter>
       </Sidebar>
 
       {/* ── Main content ── */}
       <SidebarInset className="flex flex-col">
         {/* Header */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4 glass-card">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="h-8 w-8" />
             <Separator orientation="vertical" className="mx-1 h-6" />
@@ -194,46 +296,81 @@ export default function MainLayout() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Theme dropdown */}
+            {/* Theme dropdown — redesigned as card picker */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Palette className="size-4" />
-                  <span className="ml-1 hidden sm:inline">{THEME_LABELS[colorTheme]}</span>
+                <Button variant="ghost" size="sm" className="gap-1.5">
+                  <Palette className="size-4 text-primary" />
+                  <span className="hidden sm:inline text-sm font-medium">
+                    {THEME_CONFIG[colorTheme]?.label ?? '主题'}
+                  </span>
                   <ChevronDown className="size-3 opacity-50" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>外观设置</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-72 p-3">
+                {/* Mode toggle */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium text-muted-foreground">外观模式</span>
+                  <div className="flex gap-1 bg-muted rounded-md p-0.5">
+                    {(['light', 'dark', 'system'] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setMode(m)}
+                        className={`px-2.5 py-1 text-xs rounded-sm transition-colors ${
+                          mode === m
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {m === 'light' ? <Sun className="size-3.5" /> : m === 'dark' ? <Moon className="size-3.5" /> : <Monitor className="size-3.5" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setMode('light')}>
-                    <Sun className="mr-2 size-4" />
-                    <span>浅色</span>
-                    {mode === 'light' && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setMode('dark')}>
-                    <Moon className="mr-2 size-4" />
-                    <span>暗色</span>
-                    {mode === 'dark' && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setMode('system')}>
-                    <Monitor className="mr-2 size-4" />
-                    <span>跟随系统</span>
-                    {mode === 'system' && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>主题色彩</DropdownMenuLabel>
-                <DropdownMenuGroup>
-                  {(Object.keys(THEME_COLORS) as ColorTheme[]).map((t) => (
-                    <DropdownMenuItem key={t} onClick={() => onSetColorAndProject(t)}>
-                      <span className={`mr-2 size-3 rounded-full ${THEME_COLORS[t]}`} />
-                      <span>{THEME_LABELS[t]}</span>
-                      {colorTheme === t && <span className="ml-auto text-xs text-muted-foreground">✓</span>}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuGroup>
+
+                {/* Theme cards grid */}
+                <DropdownMenuLabel className="text-xs text-muted-foreground px-0 py-2">
+                  主题风格
+                </DropdownMenuLabel>
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.keys(THEME_CONFIG) as ColorTheme[]).map((t) => {
+                    const cfg = THEME_CONFIG[t]
+                    const isActive = colorTheme === t
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => onSetColorAndProject(t)}
+                        className={`relative flex flex-col items-start gap-1.5 p-2.5 rounded-lg border-2 transition-all text-left ${
+                          isActive
+                            ? 'border-primary bg-primary/5 shadow-sm'
+                            : 'border-border hover:border-muted-foreground/30 hover:bg-muted/50'
+                        }`}
+                      >
+                        {isActive && (
+                          <span className="absolute top-1.5 right-1.5 text-primary text-xs">✓</span>
+                        )}
+                        {/* Color preview dots */}
+                        <div className="flex gap-1">
+                          {cfg.preview.map((color, i) => (
+                            <span
+                              key={i}
+                              className="size-3 rounded-full border border-black/10"
+                              style={{ backgroundColor: color }}
+                            />
+                          ))}
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold">{cfg.icon} {cfg.label}</div>
+                          <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                            {cfg.desc}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -273,10 +410,11 @@ export default function MainLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-6 page-enter">
           <Outlet />
         </main>
       </SidebarInset>
+      <CommandPalette />
     </SidebarProvider>
   )
 }

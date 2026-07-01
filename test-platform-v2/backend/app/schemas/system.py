@@ -47,7 +47,7 @@ class UserOut(BaseModel):
 
 class UserCreate(BaseModel):
     username: str
-    password: str = "123456"
+    password: str = Field(..., min_length=6, description="密码，最少 6 位，无默认值")
     nickname: str = ""
     email: str = ""
     status: int = 1

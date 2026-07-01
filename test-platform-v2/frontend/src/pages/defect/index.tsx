@@ -1,5 +1,8 @@
 import {
+  AlertTriangle,
   Bug,
+  CheckCircle2,
+  Clock,
   Edit,
   Eye,
   Link2,
@@ -32,13 +35,25 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import Pagination from '@/components/Pagination'
+import PageHeader from '@/components/PageHeader'
+import StatCard from '@/components/StatCard'
+import EmptyState from '@/components/EmptyState'
+import SearchInput from '@/components/SearchInput'
+import { SkeletonTable } from '@/components/ui/skeleton'
 import {
   Sheet,
   SheetContent,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,10 +82,15 @@ const SEVERITY_MAP: Record<string, { color: string; label: string }> = {
 }
 
 const STATUS_MAP: Record<string, { color: string; label: string }> = {
-  open: { color: 'red', label: '待处理' },
+  open: { color: 'red', label: '新建' },
+  confirmed: { color: 'orange', label: '已确认' },
+  fixing: { color: 'processing', label: '修复中' },
+  pending_review: { color: 'purple', label: '待回归' },
+  closed: { color: 'green', label: '已关闭' },
+  rejected: { color: 'default', label: '已拒绝' },
+  // legacy compatibility (backend normalizes these)
   in_progress: { color: 'processing', label: '处理中' },
   resolved: { color: 'green', label: '已解决' },
-  closed: { color: 'default', label: '已关闭' },
   wontfix: { color: 'default', label: '不修复' },
 }
 
@@ -218,37 +238,37 @@ export default function DefectPage() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold tracking-tight">缺陷管理</h2>
+      <PageHeader title="缺陷管理" />
 
       {/* Stats cards */}
       <div className="grid grid-cols-4 gap-4 mb-4">
-        <Card size="sm">
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <Bug className="size-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">缺陷总数</span>
-            </div>
-            <div className="text-2xl font-bold mt-1">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card size="sm">
-          <CardContent>
-            <div className="text-xs text-muted-foreground">P0 致命</div>
-            <div className="text-2xl font-bold mt-1 text-red-500">{stats.by_severity?.P0 || 0}</div>
-          </CardContent>
-        </Card>
-        <Card size="sm">
-          <CardContent>
-            <div className="text-xs text-muted-foreground">待处理</div>
-            <div className="text-2xl font-bold mt-1 text-red-500">{stats.by_status?.open || 0}</div>
-          </CardContent>
-        </Card>
-        <Card size="sm">
-          <CardContent>
-            <div className="text-xs text-muted-foreground">已解决</div>
-            <div className="text-2xl font-bold mt-1 text-green-500">{(stats.by_status?.resolved || 0) + (stats.by_status?.closed || 0)}</div>
-          </CardContent>
-        </Card>
+        <StatCard
+          icon={Bug}
+          label="缺陷总数"
+          value={stats.total}
+          variant="glass"
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="P0 致命"
+          value={stats.by_severity?.P0 || 0}
+          trendUp={false}
+          variant="glass"
+        />
+        <StatCard
+          icon={Clock}
+          label="待处理"
+          value={stats.by_status?.open || 0}
+          trendUp={false}
+          variant="glass"
+        />
+        <StatCard
+          icon={CheckCircle2}
+          label="已解决"
+          value={(stats.by_status?.resolved || 0) + (stats.by_status?.closed || 0)}
+          trendUp={true}
+          variant="glass"
+        />
       </div>
 
       {/* Filter bar */}
@@ -277,25 +297,21 @@ export default function DefectPage() {
           </SelectContent>
         </Select>
 
-        <div className="flex items-center gap-1">
-          <Input
-            placeholder="搜索缺陷标题"
-            className="w-[240px]"
-            value={fKeyword}
-            onChange={(e) => setFKeyword(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') load() }}
-          />
-          <Button size="icon-sm" variant="ghost" onClick={() => load()}>
-            <Search className="size-4" />
-          </Button>
-        </div>
+        <SearchInput
+          value={fKeyword}
+          onChange={setFKeyword}
+          onSearch={() => load()}
+          placeholder="搜索缺陷标题"
+          inputClassName="w-[220px]"
+          clearable
+        />
 
         <Button variant="outline" size="default" onClick={() => load()}>
           <RotateCcw className="size-4" />
           刷新
         </Button>
         {hasPerm('defect:create') && (
-          <Button onClick={openCreate}>
+          <Button onClick={openCreate} variant="neon">
             <Plus className="size-4" />
             新建缺陷
           </Button>
@@ -303,35 +319,29 @@ export default function DefectPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[160px]">编号</TableHead>
-              <TableHead>标题</TableHead>
-              <TableHead className="w-[100px]">状态</TableHead>
-              <TableHead className="w-[100px]">处理人</TableHead>
-              <TableHead className="w-[150px]">关联用例</TableHead>
-              <TableHead className="w-[170px]">创建时间</TableHead>
-              <TableHead className="w-[200px]">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading && data.items.length === 0 ? (
+      {loading && data.items.length === 0 ? (
+        <SkeletonTable rows={5} cols={7} />
+      ) : data.items.length === 0 ? (
+        <EmptyState
+          title="暂无缺陷"
+          description="当前筛选条件下没有缺陷记录"
+        />
+      ) : (
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  <Loader2 className="size-4 inline animate-spin mr-2" />
-                  加载中...
-                </TableCell>
+                <TableHead className="w-[160px]">编号</TableHead>
+                <TableHead>标题</TableHead>
+                <TableHead className="w-[100px]">状态</TableHead>
+                <TableHead className="w-[100px]">处理人</TableHead>
+                <TableHead className="w-[150px]">关联用例</TableHead>
+                <TableHead className="w-[170px]">创建时间</TableHead>
+                <TableHead className="w-[200px]">操作</TableHead>
               </TableRow>
-            ) : data.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                  暂无数据
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.items.map((r) => (
+            </TableHeader>
+            <TableBody>
+              {data.items.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="max-w-[160px] truncate">{r.defect_id}</TableCell>
                   <TableCell className="max-w-0">
@@ -389,35 +399,27 @@ export default function DefectPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* Pagination */}
-      {data.total > 0 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-muted-foreground">
-          <span>共 {data.total} 条</span>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={data.page <= 1} onClick={() => load(data.page - 1)}>
-              上一页
-            </Button>
-            <span>{data.page} / {totalPages}</span>
-            <Button variant="outline" size="sm" disabled={data.page >= totalPages} onClick={() => load(data.page + 1)}>
-              下一页
-            </Button>
-          </div>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
 
-      {/* Create/Edit Sheet */}
-      <Sheet open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null); form.reset() } }}>
-        <SheetContent className="sm:max-w-lg">
-          <SheetHeader>
-            <SheetTitle>{editing?.id ? '编辑缺陷' : '新建缺陷'}</SheetTitle>
-          </SheetHeader>
-          <form onSubmit={form.handleSubmit(doSave)} className="flex flex-col gap-4 mt-4 overflow-y-auto flex-1">
+      {/* Pagination */}
+      <Pagination
+        page={data.page}
+        totalPages={totalPages}
+        total={data.total}
+        onChange={(p) => load(p)}
+      />
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null); form.reset() } }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editing?.id ? '编辑缺陷' : '新建缺陷'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={form.handleSubmit(doSave)} className="flex flex-col gap-4">
             <div data-invalid={!!form.formState.errors.title} aria-invalid={!!form.formState.errors.title}>
               <label className="text-sm font-medium mb-1 block">缺陷标题</label>
               <Input placeholder="缺陷标题" {...form.register('title')} />
@@ -512,7 +514,7 @@ export default function DefectPage() {
               </div>
             </div>
 
-            <SheetFooter>
+            <DialogFooter>
               <Button type="button" variant="outline" onClick={() => { setDrawer(false); setEditing(null); form.reset() }}>
                 取消
               </Button>
@@ -520,10 +522,10 @@ export default function DefectPage() {
                 {saving && <Loader2 className="size-4 animate-spin" />}
                 保存
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
 
       {/* Detail Sheet */}
       <Sheet open={detailOpen} onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetail(null) } }}>

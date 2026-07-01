@@ -46,7 +46,7 @@ class DefectTransition(Base):
     __tablename__ = "defect_transition"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    defect_id: Mapped[int] = mapped_column(ForeignKey("defect.id"), index=True)
+    defect_id: Mapped[int] = mapped_column(ForeignKey("defect.id", ondelete="CASCADE"), index=True)
     from_status: Mapped[str] = mapped_column(String(20), default="")
     to_status: Mapped[str] = mapped_column(String(20), default="")
     comment: Mapped[str] = mapped_column(Text, default="")
@@ -63,8 +63,23 @@ class DefectComment(Base):
     __tablename__ = "defect_comment"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    defect_id: Mapped[int] = mapped_column(ForeignKey("defect.id"), index=True)
+    defect_id: Mapped[int] = mapped_column(ForeignKey("defect.id", ondelete="CASCADE"), index=True)
     content: Mapped[str] = mapped_column(Text, default="")
     author_id: Mapped[int] = mapped_column(default=0)
     author_name: Mapped[str] = mapped_column(String(100), default="")
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+
+
+class DefectAttachment(Base):
+    """File attachments on defects — metadata in DB, files on disk."""
+    __tablename__ = "defect_attachment"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    defect_id: Mapped[int] = mapped_column(ForeignKey("defect.id", ondelete="CASCADE"), index=True)
+    filename: Mapped[str] = mapped_column(String(255), default="")        # original filename
+    stored_path: Mapped[str] = mapped_column(String(500), default="")     # relative path on disk
+    file_size: Mapped[int] = mapped_column(default=0)                     # bytes
+    mime_type: Mapped[str] = mapped_column(String(100), default="")
+    uploader_id: Mapped[int] = mapped_column(default=0)
+    uploader_name: Mapped[str] = mapped_column(String(100), default="")
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))

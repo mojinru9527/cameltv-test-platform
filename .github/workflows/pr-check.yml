@@ -1,0 +1,72 @@
+name: PR 代码门禁
+
+on:
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  backend-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Lint (ruff)
+        working-directory: test-platform-v2/backend
+        continue-on-error: true
+        run: |
+          pip install ruff
+          ruff check app/ --output-format=github || echo "::warning::ruff 检查发现问题"
+
+      - name: Type Check (mypy)
+        working-directory: test-platform-v2/backend
+        continue-on-error: true
+        run: |
+          pip install mypy
+          mypy app/ --ignore-missing-imports --no-error-summary || echo "::warning::mypy 类型检查发现问题"
+
+      - name: Unit Tests (pytest)
+        working-directory: test-platform-v2/backend
+        run: python -m pytest tests/ -v --tb=short
+
+  frontend-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/frontend
+        run: npm ci
+
+      - name: Type Check (tsc)
+        working-directory: test-platform-v2/frontend
+        run: npx tsc -b --noEmit
+
+      - name: Lint (ESLint)
+        working-directory: test-platform-v2/frontend
+        continue-on-error: true
+        run: npx eslint src/ --ext .ts,.tsx || echo "::warning::ESLint 检查发现问题（可能未配置）"
+
+      - name: Unit Tests (vitest)
+        working-directory: test-platform-v2/frontend
+        run: npx vitest run
