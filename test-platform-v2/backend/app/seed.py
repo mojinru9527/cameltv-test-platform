@@ -86,6 +86,8 @@ _ACTIONS = [
     ("uitest:update", "编辑UI自动化任务", "button"),
     ("uitest:delete", "删除UI自动化任务", "button"),
     ("uitest:trigger", "触发UI自动化", "button"),
+    # API 测试
+    ("apitest:execute", "执行接口测试", "button"),
     # 项目管理
     ("project:list", "查看项目列表", "button"),
     ("project:detail", "查看项目详情", "button"),

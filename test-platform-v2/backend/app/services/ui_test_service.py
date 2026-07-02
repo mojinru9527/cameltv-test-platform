@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-import random
+import logging
 from datetime import datetime, timezone
 
 from sqlalchemy import func, select
@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from app.core.base_service import batch_user_names, paginate
 from app.models.ui_test import UiTestJob, UiTestRun
 from app.models.user import User
+
+logger = logging.getLogger("uitest")
 
 
 def _job_to_dict(r: UiTestJob, creator_name: str = "") -> dict:
@@ -147,36 +149,47 @@ def delete_job(db: Session, job_id: int, project_id: int) -> bool:
 
 
 def trigger_job(db: Session, job_id: int, project_id: int) -> dict:
+    """触发 UI 测试执行。"""
+
+    # --- 同步路径：检查 Playwright 是否可用，决定执行方式 ---
+    from app.services.playwright_executor import _check_playwright_installed, run_playwright_test
+
     r = db.scalar(select(UiTestJob).where(UiTestJob.id == job_id, UiTestJob.project_id == project_id))
     if not r:
         raise ValueError("任务不存在")
 
-    r.status = "running"
-    db.flush()
+    pw_ok, pw_msg = _check_playwright_installed()
+    if not pw_ok:
+        # Playwright 不可用 → 创建运行记录并标记失败
+        r.status = "fail"
+        r.last_result = json.dumps({"error": f"Playwright 不可用: {pw_msg}"}, ensure_ascii=False)
+        run = UiTestRun(
+            job_id=job_id, status="fail",
+            started_at=datetime.now(timezone.utc),
+            finished_at=datetime.now(timezone.utc),
+            result=json.dumps({"error": pw_msg}, ensure_ascii=False),
+        )
+        db.add(run)
+        db.commit()
+        db.refresh(run)
+        return _run_to_dict(run)
 
-    run = UiTestRun(job_id=job_id, status="running", started_at=datetime.now(timezone.utc))
-    db.add(run)
-    db.flush()
+    # Playwright 可用 → 同步执行（简单可靠，UI 测试数量少）
+    try:
+        result = run_playwright_test(db, job_id, project_id)
+        return result
+    except Exception as e:
+        logger.exception(f"Playwright execution failed for job {job_id}")
+        r.status = "fail"
+        r.last_result = json.dumps({"error": str(e)}, ensure_ascii=False)
+        db.commit()
+        return {"error": str(e)}
 
-    # Simulate execution
-    total = random.randint(5, 20)
-    pass_ = random.randint(0, total)
-    fail = total - pass_
-    result = {
-        "total": total, "pass_": pass_, "fail": fail,
-        "skip": 0, "duration": round(random.uniform(10, 120), 1),
-    }
-    run.result = json.dumps(result, ensure_ascii=False)
-    run.status = "done"
-    run.finished_at = datetime.now(timezone.utc)
-    run.screenshots = json.dumps([f"screenshots/job_{job_id}_run_{run.id}_01.png"], ensure_ascii=False)
 
-    r.last_result = json.dumps(result, ensure_ascii=False)
-    r.status = "done"
-
-    db.flush()
-    db.refresh(run)
-    return _run_to_dict(run)
+def list_available_specs() -> list[str]:
+    """返回可用的 Playwright 测试脚本列表。"""
+    from app.services.playwright_executor import _list_available_specs
+    return _list_available_specs()
 
 
 def list_runs(db: Session, job_id: int, project_id: int, page: int = 1, page_size: int = 20):

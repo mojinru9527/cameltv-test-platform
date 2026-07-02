@@ -92,6 +92,15 @@ def delete_job(
     return R.ok({"deleted": True})
 
 
+@router.get("/scripts", response_model=R[list[str]], summary="可用 Playwright 脚本列表")
+def list_scripts(
+    current: CurrentUser = Depends(require_permission("uitest:list")),
+):
+    """返回 tests/playwright/ 目录下可用的测试脚本。"""
+    specs = ui_test_service.list_available_specs()
+    return R.ok(specs)
+
+
 @router.post("/{job_id}/trigger", response_model=R[UiTestRunOut])
 def trigger_job(
     req: Request, job_id: int,

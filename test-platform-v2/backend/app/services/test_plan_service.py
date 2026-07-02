@@ -350,6 +350,115 @@ def _calc_stats(db: Session, plan_id: int) -> dict:
 
 
 # ═══════════════════════════════════════════════════════
+# API 用例自动执行
+# ═══════════════════════════════════════════════════════
+
+def auto_execute_api_cases(
+    db: Session,
+    plan_id: int,
+    *,
+    executor_id: int = 0,
+    environment_id: int | None = None,
+    project_id: int = 0,
+) -> dict:
+    """自动执行计划中所有 API 类型用例，返回汇总。"""
+    from app.services.api_execution_service import execute_api_case
+
+    plan = db.scalar(
+        select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == project_id)
+    )
+    if not plan:
+        raise ValueError("计划不存在")
+
+    # 获取所有 API 类型用例的 plan_case
+    pcs = db.scalars(
+        select(TestPlanCase)
+        .where(TestPlanCase.plan_id == plan_id)
+    ).all()
+
+    api_cases = []
+    for pc in pcs:
+        tc = db.get(TestCase, pc.case_id)
+        if tc and tc.case_type == "api":
+            api_cases.append((pc, tc))
+
+    if not api_cases:
+        return {"total": 0, "executed": 0, "passed": 0, "failed": 0, "details": [], "message": "计划中没有 API 类型用例"}
+
+    now = datetime.now()
+    results = []
+    executed = 0
+    passed = 0
+    failed = 0
+
+    for pc, tc in api_cases:
+        try:
+            exec_result = execute_api_case(
+                db, tc.id,
+                project_id=project_id,
+                environment_id=environment_id,
+            )
+            api_pass = exec_result.get("all_pass", False)
+            status = "pass" if api_pass else "fail"
+            actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
+
+            # 创建执行记录
+            exec_row = TestExecution(
+                plan_case_id=pc.id,
+                executor_id=executor_id,
+                status=status,
+                actual_result=actual_result,
+                notes=f"API 自动执行: {tc.api_method or 'GET'} {tc.api_endpoint}",
+                trace_id="",
+                executed_at=now,
+            )
+            db.add(exec_row)
+            executed += 1
+            if api_pass:
+                passed += 1
+            else:
+                failed += 1
+
+        except Exception as e:
+            status = "fail"
+            actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
+            exec_row = TestExecution(
+                plan_case_id=pc.id,
+                executor_id=executor_id,
+                status=status,
+                actual_result=actual_result,
+                notes=f"API 执行异常: {e}",
+                trace_id="",
+                executed_at=now,
+            )
+            db.add(exec_row)
+            executed += 1
+            failed += 1
+
+        # 更新 plan_case 状态
+        pc.last_status = status
+        pc.last_executed_at = now
+        pc.executor_id = executor_id
+
+        results.append({
+            "plan_case_id": pc.id,
+            "case_id": tc.id,
+            "case_title": tc.title,
+            "status": status,
+        })
+
+    db.commit()
+
+    return {
+        "total": len(api_cases),
+        "executed": executed,
+        "passed": passed,
+        "failed": failed,
+        "details": results,
+    }
+
+
+# ═══════════════════════════════════════════════════════
 # helpers
 # ═══════════════════════════════════════════════════════
 

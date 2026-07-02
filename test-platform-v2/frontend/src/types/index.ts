@@ -379,6 +379,44 @@ export interface TestCaseVersionDetail extends TestCaseVersion {
   snapshot: Record<string, any>
 }
 
+// ── API Test Execution ──
+
+export interface ApiAssertion {
+  type: string           // "status_code" | "jsonpath" | "regex" | "response_time"
+  path?: string          // JSONPath or field
+  expected: any
+  operator: string       // "eq" | "neq" | "gt" | "lt" | "contains" | "exists" | "regex"
+  pattern?: string       // for regex type
+}
+
+export interface ApiExecutionResult {
+  status: string
+  status_code: number
+  response_headers: Record<string, string>
+  response_body: any
+  duration_ms: number
+  assertions: ApiAssertionResult[]
+  all_pass: boolean
+  error?: string
+  executed_at?: string
+}
+
+export interface ApiAssertionResult {
+  type: string
+  expected: any
+  actual: any
+  passed: boolean
+  message: string
+}
+
+export interface QuickExecuteRequest {
+  method: string
+  url: string
+  headers: string       // JSON string
+  body: string          // JSON string
+  environment_id?: number
+}
+
 // ── TestCase Review ──
 
 export interface TestCaseReviewTransition {
