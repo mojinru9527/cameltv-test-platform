@@ -339,3 +339,42 @@ export interface ProjectDetail {
   created_at: string | null
   updated_at: string | null
 }
+
+// ── Environment & Variables ──
+
+export interface Environment {
+  id: number
+  project_id: number
+  name: string
+  env_type: string           // dev | test | staging | prod
+  base_url: string
+  description: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface EnvironmentVariable {
+  id: number
+  environment_id: number
+  key: string
+  value: string
+  encrypted: boolean
+  description: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+// ── TestCase Version ──
+
+export interface TestCaseVersion {
+  id: number
+  case_id: number
+  version_number: number
+  changed_by: number
+  changed_fields: string[]
+  created_at: string | null
+}
+
+export interface TestCaseVersionDetail extends TestCaseVersion {
+  snapshot: Record<string, any>
+}

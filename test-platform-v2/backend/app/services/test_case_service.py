@@ -85,10 +85,17 @@ def create_case(db: Session, data: dict) -> dict:
     return _row_to_dict(row)
 
 
-def update_case(db: Session, case_id: int, data: dict) -> dict | None:
+def update_case(db: Session, case_id: int, data: dict, changed_by: int = 0) -> dict | None:
     row = db.get(TestCase, case_id)
     if not row:
         return None
+
+    # Auto-version: save snapshot before modifying
+    changed_fields = [k for k, v in data.items() if v is not None]
+    if changed_fields:
+        from app.services.version_service import save_version
+        save_version(db, case_id, changed_by=changed_by, changed_fields=",".join(sorted(changed_fields)))
+
     for k, v in data.items():
         if v is not None:
             setattr(row, k, v)

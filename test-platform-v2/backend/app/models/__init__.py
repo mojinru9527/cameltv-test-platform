@@ -2,11 +2,13 @@
 from app.models.audit import AuditLog
 from app.models.av_check import AvCheckMetric, AvCheckTask
 from app.models.defect import Defect
+from app.models.environment import Environment, EnvironmentVariable
 from app.models.project import Project, ProjectMember
 from app.models.notification import NotificationChannel, NotificationLog
 from app.models.requirement import RequirementDocument
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.test_case import TestCase
+from app.models.test_case_version import TestCaseVersion
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.test_report import TestReport
 from app.models.test_schedule import TestSchedule, TestScheduleRun
@@ -22,9 +24,12 @@ __all__ = [
     "Project",
     "ProjectMember",
     "AuditLog",
+    "Environment",
+    "EnvironmentVariable",
     "NotificationChannel",
     "NotificationLog",
     "TestCase",
+    "TestCaseVersion",
     "TestPlan",
     "TestPlanCase",
     "TestExecution",
