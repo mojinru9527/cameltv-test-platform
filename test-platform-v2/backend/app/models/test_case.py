@@ -41,6 +41,9 @@ class TestCase(Base, TimestampMixin):
     api_method: Mapped[str] = mapped_column(default="")           # GET/POST/PUT/DELETE
     api_endpoint: Mapped[str] = mapped_column(default="")         # /api/v1/xxx
     api_spec_ref: Mapped[str] = mapped_column(default="")         # 旧引用
+    api_headers: Mapped[str] = mapped_column(default="{}")        # JSON: {"Content-Type":"application/json"}
+    api_body: Mapped[str] = mapped_column(default="")             # JSON: 请求体
+    api_assertions: Mapped[str] = mapped_column(default="[]")     # JSON: 断言规则数组
 
     # 来源追溯
     source: Mapped[str] = mapped_column(default="migration")      # manual / swagger_import / migration / ai_generated
