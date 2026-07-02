@@ -757,11 +757,11 @@ graph LR
 | Sprint | 周次 | Epic | 任务 | 交付物 | 里程碑 |
 |--------|------|------|------|--------|--------|
 | **Sprint 0.1** | Week 1-2 | S1, S2 (T0) | ~~S1a~S1c, S2a~~ → **已交付** ✅ | Cookie 认证 + XSS 修复上线 | PR #4 已合并 develop (2026-07-01) |
-| **Sprint 0.2** | Week 2-3 | S1d,S2c,S1b + S3,S4 (T1) | S1d,S2c,S1b + S3a~S3e,S4a~S4c | CSRF+CSP+WARNING + RBAC+BackgroundTasks | 批次 A 收尾 + 权限/可靠性达标 |
-| **Sprint 0.3** | Week 3-4 | S5, S6 (T2) | S5a~S5c, S6a~S6d | SMTP TLS + 流式上传 | 网络安全+内存安全基线达标 |
-| **Sprint 0.4** | Week 3-5 | S7 (T3) | S7a~S7e | useApi + AsyncState + 12 页面替换 | 全平台三态统一（与 S5/S6 并行启动） |
-| **Sprint 0.5** | Week 5-6 | S8 (T3) | S8a~S8f | WCAG AA 达标 + CI 门禁 | Lighthouse >= 90 分 |
-| **Sprint 0.6** | Week 6 | 安全回归 | 渗透测试 + 全量回归 | 8 项验收总清单全部通过 | V2.2 安全基线发布 |
+| **Sprint 0.2** | Week 2-3 | S1d,S2c,S1b + S3,S4 (T1) | S1d,S2c,S1b + S3a~S3e,S4a~S4c | CSRF+CSP+WARNING + RBAC+BackgroundTasks | 批次 B 已交付 ✅ PR #5 (2026-07-01) |
+| **Sprint 0.3** | Week 3-4 | S5, S6 (T2) | S5a~S5c, S6a~S6d + C1,C2 | SMTP TLS + 流式上传 + CSRF/Executor优化 | 批次 C 已交付 ✅ PR #6 (2026-07-01) |
+| **Sprint 0.4** | Week 3-5 | S7 (T3) | S7a~S7e | useApi + AsyncState + 12 页面替换 | 批次 D 已交付 ✅ PR #7 (2026-07-01) |
+| **Sprint 0.5** | Week 5-6 | S8 (T3) | S8a~S8f + C3,C4 | WCAG AA 达标 + CI 门禁 + 安全头 + SMTP 集成测试 | 批次 D 已交付 ✅ PR #7 (2026-07-01) |
+| **Sprint 0.6** | Week 6 | 安全回归 | C5+C6+C7+C8 最终回归测试 | 8 项验收总清单全部通过 ✅ | V2.2 安全基线发布 (2026-07-02) |
 
 **并行策略**：
 - Week 1 起：S1（后端 Cookie）与 S7a/S7b（useApi + 三态组件）并行——前端组件库建设不依赖后端
@@ -778,7 +778,12 @@ graph LR
 |------|------|------|-----------|------|
 | 2026-07-01 | 批次 A (Sprint 0.1) | S1a-S1c (JWT httpOnly Cookie) + S2a (innerHTML XSS fix) | PR #4 → develop (84715dc) | ✅ 已交付 |
 | 2026-07-01 | 批次 A 收尾 | S1d CSRF + S2c CSP + S1b WARNING 日志 — Leader 放行条件 | 纳入批次 B | 🔜 待实施 |
-| 2026-07-01 | 批次 B (Sprint 0.2) | S3 RBAC (P1-6) + S4 BackgroundTasks (P1-4) + Leader 3 条件 | — | 🚀 启动中 |
+| 2026-07-01 | 批次 B (Sprint 0.2) | S1d CSRF + S2c CSP + S1b WARNING + S3 RBAC + S4 BackgroundTasks (10 slices) | PR #5 → develop (13d4eba) | ✅ 已交付 |
+| 2026-07-01 | 批次 C (Sprint 0.3) | S5 SMTP TLS (P1-3) + S6 流式上传 (P1-5) + C1/C2 Leader 条件 (9 slices) | PR #6 → develop (d309a84) | ✅ 已交付 |
+| 2026-07-01 | 批次 D (Sprint 0.4-0.5) | S7 三态统一 (P1-8) + S8 WCAG AA (P1-7) + C3 安全头 + C4 SMTP 集成测试 (13 slices) | PR #7 → develop (c9eb73d) | ✅ 已交付 |
+| 2026-07-02 | 批次 E (Sprint 0.6) | C5 useApi Strict Mode + C6 模式文档 + C7 A11y 审计 + C8 P1 安全回归测试 (4 slices) | PR #8 → develop | ✅ 已交付 |
+
+> **V2.2 P1 安全基线 8/8 项全部完成 ✅**（批次 A-E，5 个 PR，2026-07-01 ~ 2026-07-02）
 
 ### 批次一（V2.2 起步）：G1/G2/G3（健康度）+ T1/T2（追溯矩阵，最高 ROI）。
 - **批次二（V2.2 主体）**：D 缺陷工作流 + N 通知中心 + R 报告增强 —— 让平台从「数据库」变「团队工作台」。
