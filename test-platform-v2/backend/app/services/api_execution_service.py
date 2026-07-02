@@ -1,6 +1,7 @@
 """API 测试执行引擎 — 服务端 HTTP 请求 + 变量替换 + 断言。"""
 from __future__ import annotations
 
+import copy
 import json
 import re
 import time
@@ -12,6 +13,9 @@ from sqlalchemy.orm import Session
 
 from app.models.test_case import TestCase
 from app.services.environment_service import resolve_variables
+
+# Column variable pattern for dataset parameterized execution
+_COL_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
 
 # ── 配置 ──
 DEFAULT_TIMEOUT = 30  # seconds
@@ -28,8 +32,9 @@ def execute_api_case(
     *,
     project_id: int = 0,
     environment_id: int | None = None,
+    dataset_id: int | None = None,
 ) -> dict:
-    """执行已保存的 API 用例，返回执行结果。"""
+    """执行已保存的 API 用例，返回执行结果。若提供 dataset_id 则进行参数化批量执行。"""
     case = db.get(TestCase, case_id)
     if not case or (project_id and case.project_id != project_id):
         raise ValueError(f"用例 #{case_id} 不存在")
@@ -42,7 +47,7 @@ def execute_api_case(
     body = case.api_body or ""
     assertions = _safe_json(case.api_assertions, [])
 
-    # 构造 rqeuest
+    # 构造 request
     request_def = {
         "method": case.api_method or "GET",
         "url": case.api_endpoint or "",
@@ -50,6 +55,8 @@ def execute_api_case(
         "body": body,
     }
 
+    if dataset_id:
+        return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id)
     return _do_execute(db, request_def, assertions, environment_id=environment_id)
 
 
@@ -59,8 +66,11 @@ def quick_execute(
     *,
     assertions: list[dict] | None = None,
     environment_id: int | None = None,
+    dataset_id: int | None = None,
 ) -> dict:
-    """即时执行（不依赖已保存用例），用于调试面板。"""
+    """即时执行（不依赖已保存用例），用于调试面板。若提供 dataset_id 则批量执行。"""
+    if dataset_id:
+        return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id)
     return _do_execute(db, request_def, assertions or [], environment_id=environment_id)
 
 
@@ -413,3 +423,65 @@ def _error_result(message: str) -> dict:
         "error": message,
         "executed_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+# ── 参数化批量执行 ──────────────────────────────────────
+
+def _execute_with_dataset(
+    db: Session,
+    request_def: dict,
+    assertions: list[dict],
+    environment_id: int | None,
+    dataset_id: int,
+) -> dict:
+    """遍历数据集每一行，逐行替换 ${column_name} 并执行，返回批量结果。"""
+    from app.services.dataset_service import get_dataset_rows, get_dataset
+
+    rows = get_dataset_rows(db, dataset_id)
+    dataset = get_dataset(db, dataset_id)
+    columns = json.loads(dataset["columns_meta"]) if dataset else []
+
+    per_row_results = []
+    for row_idx, row in enumerate(rows):
+        # Deep-copy request_def to avoid mutation across iterations
+        row_req = copy.deepcopy(request_def)
+        row_assertions = copy.deepcopy(assertions)
+
+        # Substitute ${column_name} in url, headers, body
+        row_req["url"] = _substitute_columns(row_req.get("url", ""), row)
+        row_req["body"] = _substitute_columns(row_req.get("body", ""), row)
+        headers = row_req.get("headers", {})
+        if isinstance(headers, dict):
+            for k, v in headers.items():
+                headers[k] = _substitute_columns(str(v), row)
+
+        # Execute
+        result = _do_execute(db, row_req, row_assertions, environment_id=environment_id)
+        per_row_results.append({
+            "row_index": row_idx,
+            "row_data": row,
+            "result": result,
+        })
+
+    total = len(per_row_results)
+    passed = sum(1 for r in per_row_results if r["result"].get("all_pass", False))
+    failed = total - passed
+
+    return {
+        "status": "ok",
+        "batch_mode": True,
+        "dataset_id": dataset_id,
+        "columns": columns,
+        "total_rows": total,
+        "passed": passed,
+        "failed": failed,
+        "per_row": per_row_results,
+        "executed_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+def _substitute_columns(template: str, row: dict) -> str:
+    """Replace ${column_name} in template with values from the current data row."""
+    def _replacer(m: re.Match) -> str:
+        return str(row.get(m.group(1), m.group(0)))
+    return _COL_VAR_PATTERN.sub(_replacer, template)

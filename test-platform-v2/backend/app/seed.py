@@ -26,6 +26,8 @@ _MENUS = [
     ("menu:system", "系统管理", "", "/system", "SettingOutlined", 12),
     ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 13),
     ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 14),
+    ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 15),
+    ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 16),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -108,13 +110,22 @@ _ACTIONS = [
     # 用例评审 (C3)
     ("review:submit", "提交评审", "button"),
     ("review:approve", "审批评审", "button"),
+    # 测试数据集 (V2.5)
+    ("dataset:list", "查看数据集", "button"),
+    ("dataset:create", "新建数据集", "button"),
+    ("dataset:update", "编辑数据集", "button"),
+    ("dataset:delete", "删除数据集", "button"),
+    # 集成配置 (V2.6)
+    ("integration:list", "查看集成配置", "button"),
+    ("integration:manage", "管理集成配置", "button"),
+    ("integration:sync", "执行同步操作", "button"),
 ]
 
 # 测试人员可见的菜单子集
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
-    "menu:defect",
+    "menu:defect", "menu:dataset", "menu:integration",
 }
 
 
