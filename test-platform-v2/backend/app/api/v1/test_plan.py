@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -203,6 +204,36 @@ def execute_case(
     }))
 
     return R.ok(ExecutionOut(**row))
+
+
+class AutoExecuteBody(BaseModel):
+    environment_id: int | None = None
+
+@router.post("/{plan_id}/auto-execute", response_model=R[dict], summary="自动执行计划中的 API 用例")
+def auto_execute_api_cases(
+    plan_id: int,
+    body: AutoExecuteBody | None = None,
+    req: Request = None,
+    current: CurrentUser = Depends(require_permission("testplan:execute")),
+    db: Session = Depends(get_db),
+):
+    """自动执行计划中所有 case_type='api' 的用例，生成执行记录。"""
+    try:
+        result = test_plan_service.auto_execute_api_cases(
+            db,
+            plan_id=plan_id,
+            executor_id=current.user.id,
+            environment_id=body.environment_id if body else None,
+            project_id=current.project_id or 0,
+        )
+    except ValueError as e:
+        return R(code=1, msg=str(e))
+    except Exception as e:
+        return R(code=1, msg=f"批量执行失败: {e}")
+
+    _audit(req, current, db, "plan:auto_execute", f"plan #{plan_id}",
+           f"executed={result['executed']}, passed={result['passed']}, failed={result['failed']}")
+    return R.ok(result)
 
 
 @router.get("/{plan_id}/executions", response_model=R[Page[ExecutionOut]])
