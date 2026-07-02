@@ -97,6 +97,8 @@ export {
   ArrowLeftRight,
   // History
   History,
+  // Keys
+  Key,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"

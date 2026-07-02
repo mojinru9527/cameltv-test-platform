@@ -1,6 +1,8 @@
 """测试用例 API 路由 — /api/v1/test-cases/*"""
 from __future__ import annotations
 
+from io import BytesIO
+
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
@@ -324,3 +326,108 @@ def import_xmind(
                 imported += 1
 
     return R.ok({"imported": imported, "total": len(cases)})
+
+
+# ── Excel 导入导出 ──
+
+@router.get("/export/excel", summary="导出用例为 Excel")
+def export_excel(
+    domain: str = "",
+    module: str = "",
+    current: CurrentUser = Depends(require_permission("testcase:list")),
+    db: Session = Depends(get_db),
+):
+    """导出当前项目用例为 Excel 文件（.xlsx）。"""
+    from app.services.excel_service import cases_to_excel_bytes
+
+    items, _ = test_case_service.list_cases(
+        db, project_id=current.project_id or 0,
+        domain=domain, module=module, page=1, page_size=10000,
+    )
+    buf = cases_to_excel_bytes(items)
+    return StreamingResponse(
+        BytesIO(buf),  # type: ignore[arg-type]
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=test-cases.xlsx"},
+    )
+
+
+@router.post("/import/excel", response_model=R[dict], summary="从 Excel 导入用例")
+def import_excel(
+    req: Request,
+    file: UploadFile = File(...),
+    current: CurrentUser = Depends(require_permission("testcase:create")),
+    db: Session = Depends(get_db),
+):
+    """解析 Excel 文件，批量创建用例。"""
+    from app.core.base_service import transaction
+    from app.services.excel_service import excel_bytes_to_cases
+
+    if not file.filename or not file.filename.endswith((".xlsx", ".xls")):
+        return R(code=1, msg="请上传 .xlsx 或 .xls 文件")
+
+    # Content-Length check (max 10 MB)
+    content_length = req.headers.get("content-length")
+    if content_length:
+        cl = int(content_length)
+        max_bytes = 10 * 1024 * 1024
+        if cl > max_bytes:
+            from app.core.exceptions import APIException
+            raise APIException(
+                f"上传文件超过限制 (max: 10 MB, got: {cl / (1024*1024):.1f} MB)",
+                code=413,
+            )
+
+    contents = file.file.read()
+    cases = excel_bytes_to_cases(contents)
+    if not cases:
+        return R(code=1, msg="未能从 Excel 文件中解析出用例（请确保包含「用例标题」列）")
+
+    imported = 0
+    with transaction(db):
+        for c in cases:
+            c["project_id"] = current.project_id or 0
+            row = test_case_service.create_case(db, c)
+            if row:
+                imported += 1
+
+    return R.ok({"imported": imported, "total": len(cases)})
+
+
+# ── 版本历史 ──
+
+@router.get("/{case_id}/versions", response_model=R[list[dict]], summary="用例版本历史")
+def list_versions(
+    case_id: int,
+    current: CurrentUser = Depends(require_permission("testcase:list")),
+    db: Session = Depends(get_db),
+):
+    """返回用例的所有版本快照列表。"""
+    from app.services.version_service import list_versions, get_version
+
+    case = test_case_service.get_case(db, case_id, project_id=current.project_id or 0)
+    if not case:
+        return R.err(code=404, msg="用例不存在")
+
+    versions = list_versions(db, case_id)
+    return R.ok(versions)
+
+
+@router.get("/{case_id}/versions/{version_id}", response_model=R[dict], summary="版本详情")
+def get_version_detail(
+    case_id: int,
+    version_id: int,
+    current: CurrentUser = Depends(require_permission("testcase:list")),
+    db: Session = Depends(get_db),
+):
+    """返回单个版本快照详情（含完整 snapshot）。"""
+    from app.services.version_service import get_version
+
+    case = test_case_service.get_case(db, case_id, project_id=current.project_id or 0)
+    if not case:
+        return R.err(code=404, msg="用例不存在")
+
+    version = get_version(db, version_id)
+    if not version or version["case_id"] != case_id:
+        return R.err(code=404, msg="版本不存在")
+    return R.ok(version)
