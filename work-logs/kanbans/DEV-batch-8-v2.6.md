@@ -14,7 +14,7 @@
 | **关联 PM 计划** | N/A（Backlog 驱动） |
 | **关联 PRD** | N/A（Backlog 驱动） |
 | **总预估工时** | 已编码完成，仅剩合入 |
-| **已用批次** | 0 批 |
+| **已用批次** | 1 批 |
 | **看板创建** | 2026-07-02 |
 | **最后更新** | 2026-07-02 |
 
@@ -26,34 +26,42 @@
 
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
-| 1 | V2.5 测试数据集管理 (7 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | Dataset CRUD + CSV/JSON 解析 + 参数化注入 |
-| 2 | V2.5 多项目仪表板 (6 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | 跨项目聚合 + 对比视图 |
-| 3 | V2.5 API 测试集成 (5 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | 数据集选择器 + 批量结果展示 |
-| 4 | V2.6 集成模型+Schema (4 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | IntegrationConfig + SyncLog + schemas |
-| 5 | V2.6 同步引擎 (5 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | BaseSyncProvider + Jira + TAPD + SyncEngine |
-| 6 | V2.6 集成 API+权限 (4 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | 8 REST 端点 + 3 权限码 + 路由器 |
-| 7 | V2.6 缺陷同步端点+调度 (3 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | defect sync-push/pull + APScheduler 自动同步 |
-| 8 | V2.6 PostgreSQL 迁移 (8 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | psycopg2 + 连接池 + Alembic 0006 + Docker + startup.sh |
-| 9 | V2.6 前端集成页面 (6 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | Integration 配置页 + 缺陷同步按钮 + 路由 |
-| 10 | 烟雾测试 + 文档 + Backlog (5 files) | ✅ | ✅ | ✅ | ⏳ | ⏳ | V2.5 quick + V2.6 smoke + PG 迁移指南 + ADR |
+| 1 | V2.5 测试数据集管理 (7 files) | ✅ | ✅ | ✅ | ✅ | ✅ | Dataset CRUD + CSV/JSON 解析 + 参数化注入 |
+| 2 | V2.5 多项目仪表板 (6 files) | ✅ | ✅ | ✅ | ✅ | ✅ | 跨项目聚合 + 对比视图 |
+| 3 | V2.5 API 测试集成 (5 files) | ✅ | ✅ | ✅ | ✅ | ✅ | 数据集选择器 + 批量结果展示 |
+| 4 | V2.6 集成模型+Schema (4 files) | ✅ | ✅ | ✅ | ✅ | ✅ | IntegrationConfig + SyncLog + schemas |
+| 5 | V2.6 同步引擎 (5 files) | ✅ | ✅ | ✅ | ✅ | ✅ | BaseSyncProvider + Jira + TAPD + SyncEngine |
+| 6 | V2.6 集成 API+权限 (4 files) | ✅ | ✅ | ✅ | ✅ | ✅ | 8 REST 端点 + 3 权限码 + 路由器 |
+| 7 | V2.6 缺陷同步端点+调度 (3 files) | ✅ | ✅ | ✅ | ✅ | ✅ | defect sync-push/pull + APScheduler 自动同步 |
+| 8 | V2.6 PostgreSQL 迁移 (8 files) | ✅ | ✅ | ✅ | ✅ | ✅ | psycopg2 + 连接池 + Alembic 0006 + Docker + startup.sh |
+| 9 | V2.6 前端集成页面 (6 files) | ✅ | ✅ | ✅ | ✅ | ✅ | Integration 配置页 + 缺陷同步按钮 + 路由 |
+| 10 | 烟雾测试 + 文档 + Backlog (5 files) | ✅ | ✅ | ✅ | ✅ | ✅ | V2.5 quick + V2.6 smoke + PG 迁移指南 + ADR |
 
 ---
 
 ## 📍 当前位置
 
 ```
-Batch #1 — V2.5+V2.6 合并合入
-├── ✅ 已完成: 全部 10 个 Slice 代码编写完成（31 files）
-├── 🔄 进行中: Git commit → PR → merge develop ⬅️
-├── ⏳ 待审批: PR review
-└── ⏳ 下一步: 合并后更新 backlog 状态
+Batch #1 — V2.5+V2.6 合并合入 ✅ 已完成
+├── ✅ 已完成: 全部 10 个 Slice 代码完成
+├── ✅ 已验证: V2.5 smoke 7/7 PASS + V2.6 smoke 14/14 PASS
+├── ✅ 已提交: ae3e2cc (51 files, +3859/-73)
+├── ✅ 已推送: origin/feature/batch-5-v2.4-real-engines
+└── ⏳ 下一步: 创建 PR → merge develop
 ```
 
 ---
 
 ## 📜 批次记录
 
-_（Dev 部门完成合入后填写）_
+### Batch 1 — V2.5+V2.6 合并合入 (2026-07-02)
+- **产出**: 51 files, +3859/-73 lines
+  - V2.5: Dataset CRUD + 多项目仪表板 + API 测试集成 (18 files)
+  - V2.6: Jira/TAPD 同步引擎 + PostgreSQL 迁移 + 前端集成 (33 files)
+- **验证**: V2.5 smoke 7/7 ✅ | V2.6 smoke 14/14 ✅
+- **Commit**: `ae3e2cc` → `feature/batch-5-v2.4-real-engines` (已推送)
+- **PR**: 待创建（目标 develop）
+- **耗时**: Git 合入 ~30min
 
 ---
 
