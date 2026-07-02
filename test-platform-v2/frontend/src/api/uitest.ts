@@ -27,3 +27,7 @@ export async function triggerUiJob(id: number) {
 export async function fetchUiRuns(jobId: number, params: Record<string, any> = {}) {
   return api.get(`/ui-tests/${jobId}/runs`, { params })
 }
+
+export async function fetchScripts(): Promise<string[]> {
+  return api.get('/ui-tests/scripts')
+}

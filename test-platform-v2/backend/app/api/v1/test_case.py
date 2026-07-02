@@ -17,6 +17,7 @@ from app.schemas.test_case import (
     TestCaseUpdate,
 )
 from app.services import audit_service, test_case_service
+from app.services.api_execution_service import execute_api_case
 
 router = APIRouter(prefix="/test-cases", tags=["测试用例"])
 
@@ -193,6 +194,33 @@ def batch_delete_test_cases(
 
     _audit(req, current, db, "case:batch_delete", f"{deleted}/{len(body.ids)} 条用例")
     return R.ok({"deleted": deleted, "total": len(body.ids)})
+
+
+# ── API 执行 ──────────────────────────────────────────
+
+class ExecuteApiBody(BaseModel):
+    environment_id: int | None = None
+
+@router.post("/{case_id}/execute", response_model=R[dict], summary="执行 API 用例")
+def execute_test_case(
+    case_id: int,
+    body: ExecuteApiBody | None = None,
+    current: CurrentUser = Depends(require_permission("apitest:execute")),
+    db: Session = Depends(get_db),
+):
+    """对已保存的 API 类型用例发起真实 HTTP 请求，返回响应 + 断言结果。"""
+    try:
+        result = execute_api_case(
+            db, case_id,
+            project_id=current.project_id or 0,
+            environment_id=body.environment_id if body else None,
+        )
+    except ValueError as e:
+        return R(code=1, msg=str(e))
+    except Exception as e:
+        return R(code=1, msg=f"执行失败: {e}")
+
+    return R.ok(result)
 
 
 # ── 评审流 ──────────────────────────────────────────
