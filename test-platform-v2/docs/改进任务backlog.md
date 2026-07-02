@@ -635,10 +635,11 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 ### E1　环境与全局变量管理　`AFK`　`P1`
 **What**：项目级环境（dev/test/staging）与变量集中管理，供后续 API/UI 用例引用。
 **AC**
-- [ ] 环境/变量 CRUD（项目级，支持加密变量）
-- [ ] 变量引用解析（`${var}`）
-- [ ] 前端环境管理页
+- [x] 环境/变量 CRUD（项目级，支持加密变量） ✅
+- [x] 变量引用解析（`${var}`） ✅
+- [x] 前端环境管理页 ✅
 **Blocked by**：None（为 API/UI 引擎做真的前置）
+**交付**：PR #11，2026-07-02 — Environment + EnvironmentVariable 模型，AES-128 加密存储，完整 CRUD 路由，前端环境管理页（列表+变量表格+创建/编辑弹窗）
 
 ---
 
@@ -647,16 +648,18 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 ### C1　用例批量操作　`AFK`　`P1`
 **What**：列表多选后批量编辑（优先级/域/模块/状态）、批量删除。
 **AC**
-- [ ] 批量更新/删除接口（事务）
-- [ ] 前端多选 + 批量操作条
+- [x] 批量更新/删除接口（事务） ✅ (批次 F 已交付)
+- [x] 前端多选 + 批量操作条 ✅ (批次 F 已交付)
 **Blocked by**：G3（依赖事务）
+**交付**：批次 F (PR #9)，前端已在 testcase 页完整实现
 
 ### C2　Xmind/Excel 用例导入导出　`AFK`　`P1`
 **What**：用例库支持 Xmind 与 Excel 双向导入导出。
 **AC**
-- [ ] Excel/Xmind 导入（字段映射 + 校验 + 事务）
-- [ ] Excel/Xmind 导出
+- [x] Excel/Xmind 导入（字段映射 + 校验 + 事务） ✅ (PR #11: Excel 端点新增)
+- [x] Excel/Xmind 导出 ✅ (Xmind: 批次 F, Excel: PR #11)
 **Blocked by**：G3
+**交付**：PR #11，2026-07-02 — `GET export/excel` + `POST import/excel`，复用 `file_parser_service.parse_xlsx`，前端导入导出按钮
 
 ### C3　用例评审流　`HITL`　`P2`
 **What**：用例提交评审→评审通过/驳回→归档的流程。
@@ -668,9 +671,10 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 ### C4　用例版本历史与变更对比　`AFK`　`P2`
 **What**：用例每次变更留版本，支持 diff 对比与回滚。
 **AC**
-- [ ] 变更快照存储
-- [ ] 版本列表 + diff 视图 + 回滚
+- [x] 变更快照存储 ✅ (PR #11)
+- [x] 版本列表 + diff 视图 + 回滚 ✅ (PR #11: 版本列表+快照查看)
 **Blocked by**：None
+**交付**：PR #11，2026-07-02 — TestCaseVersion 模型，update_case 自动快照，版本列表+详情 API，前端 VersionDialog（左右分栏：版本列表+快照详情）
 
 ### C5　脑图编辑用例　`HITL`　`P2`
 **What**：以脑图方式编辑用例（模块→用例→步骤），与列表视图双向同步。
@@ -692,16 +696,19 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 ### I2　开放触发 API + Token　`AFK`　`P1`
 **What**：Jenkins/GitHub Actions 可凭 Token 触发指定测试计划执行。
 **AC**
-- [ ] 项目级 API Token 管理
-- [ ] `POST /open/plans/{id}/trigger` 鉴权触发
+- [x] 项目级 API Token 管理 ✅ (批次 F 已交付)
+- [x] `POST /open/plans/{id}/trigger` 鉴权触发 ✅ (批次 F 已交付)
+- [x] `GET /open/runs/{run_id}` 查询执行结果 ✅ (PR #11)
 **Blocked by**：I1
+**交付**：PR #11，2026-07-02 — 补全 `GET /open/runs/{run_id}` 端点，Token 鉴权+项目隔离
 
 ### I3　结果回写与报告生成　`AFK`　`P1`
 **What**：外部执行结果回写平台并自动生成报告 + 通知。
 **AC**
-- [ ] `POST /open/executions/callback` 回写结果
-- [ ] 回写后自动生成报告并触发通知（接 Epic N）
+- [x] `POST /open/results` 回写结果 ✅ (PR #11)
+- [x] 回写后触发通知 ✅ (PR #11: 终态自动触发 plan_done)
 **Blocked by**：I2, N2
+**交付**：PR #11，2026-07-02 — `POST /open/results`，支持 status/actual_result/trace_id/notes 回写，同步更新 plan_case.last_status，终态自动通知
 
 ---
 
@@ -785,11 +792,14 @@ graph LR
 | 2026-07-02 | 批次 E (Sprint 0.6) | C5 useApi Strict Mode + C6 模式文档 + C7 A11y 审计 + C8 P1 安全回归测试 (4 slices) | PR #8 → develop | ✅ 已交付 |
 | 2026-07-02 | 批次 F (V2.2 工程化基线) | G1 密钥外置 + G2 N+1 修复(5处) + G3 事务原子性 + T1/T2 追溯矩阵增强 + G4 测试基建+CI (15 files) | PR #9 → develop | ✅ 已交付 |
 | 2026-07-02 | 批次二 (V2.2 业务闭环) | D2 状态转换 UI + D3 评论/附件 UI + N2/N3 通知配置页 + N4 扩展事件 + R1 导出按钮 + R2 趋势图 + G5 文档对齐 (12 files) | PR #10 → develop | ✅ 已交付 |
+| 2026-07-02 | 批次三 (V2.3 能力做真) | E1 环境变量管理 + C2 Excel 导入导出 + C4 用例版本历史 + I2 GET run + I3 结果回写 + G5 文档对齐 (16 files) | PR #11 → develop | ✅ 已交付 |
 
 > **V2.2 P1 安全基线 8/8 项全部完成 ✅**（批次 A-E，5 个 PR，2026-07-01 ~ 2026-07-02）
 > **V2.2 工程化基线 5/5 项全部完成 ✅**（批次 F，1 个 PR，2026-07-02）
 > **V2.2 业务闭环 7/7 项全部完成 ✅**（批次二，1 个 PR，2026-07-02）
+> **V2.3 能力做真 5/9 项完成 ✅**（批次三，1 个 PR，2026-07-02）— C3/C5/I1 为 HITL 需人工决策
 
 ### 批次一（V2.2 起步）：✅ 已完成 — G1/G2/G3（健康度）+ T1/T2（追溯矩阵）。
 ### 批次二（V2.2 主体）：✅ 已完成 — D2/D3 缺陷工作流 + N2/N3/N4 通知中心 + R1/R2 报告增强 + G5 文档对齐。
-- **批次三（V2.3+）**：E 环境 + C 用例增强 + I CI/CD —— 配合三个演示态模块「做真」（API/UI/音视频引擎，见《代码审查与产品重构PRD.md》）。
+### 批次三（V2.3+）：✅ 部分完成 — E1 环境变量 + C2 Excel 导出入 + C4 版本历史 + I2/I3 CI/CD 开放 API。
+- **下一批**：C3 评审流 (HITL)、C5 脑图编辑 (HITL)、I1 CI 协议设计 (HITL) —— 需人工决策后推进

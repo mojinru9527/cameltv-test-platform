@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -39,11 +39,13 @@ import EmptyState from '@/components/EmptyState'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/state'
 
-import { Search, RotateCcw, Plus, Edit, Trash2 } from '@/lib/icons'
+import { Search, RotateCcw, Plus, Edit, Trash2, Download, Upload, FileSpreadsheet, History } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases } from '@/api/testcase'
+import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, exportExcelUrl, exportXmindUrl, importExcel, importXmind, fetchVersions } from '@/api/testcase'
 import { useApi } from '@/hooks/useApi'
 import CaseDrawer from './CaseDrawer'
+import VersionDialog from './VersionDialog'
+import type { TestCaseVersion } from '@/types'
 
 const PRIORITY_COLORS: Record<string, string> = { P0: 'red', P1: 'orange', P2: 'blue', P3: 'default' }
 
@@ -71,6 +73,16 @@ export default function TestCasePage() {
 
   // delete dialog
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
+  // import/export
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importFormat, setImportFormat] = useState<'xmind' | 'excel'>('excel')
+  const [importing, setImporting] = useState(false)
+
+  // version history
+  const [versionDialog, setVersionDialog] = useState(false)
+  const [versionCase, setVersionCase] = useState<any>(null)
+  const [versions, setVersions] = useState<TestCaseVersion[]>([])
 
   // ── Main data fetching with useApi ──
   const { data, isLoading, isError, error, refetch } = useApi(
@@ -182,6 +194,51 @@ export default function TestCasePage() {
     loadDomains()
   }
 
+  // ── Import/Export handlers ──
+
+  const handleExport = (format: 'excel' | 'xmind') => {
+    const params: Record<string, string> = {}
+    if (selDomain) params.domain = selDomain
+    if (selModule) params.module = selModule
+    const url = format === 'excel' ? exportExcelUrl(params) : exportXmindUrl(params)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = format === 'excel' ? 'test-cases.xlsx' : 'test-cases.xmind'
+    a.click()
+  }
+
+  const handleImportClick = (format: 'xmind' | 'excel') => {
+    setImportFormat(format)
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImporting(true)
+    try {
+      const result = importFormat === 'excel' ? await importExcel(file) : await importXmind(file)
+      toast.success(`导入完成：${result.imported} / ${result.total} 条用例已创建`)
+      refetch()
+      loadDomains()
+    } catch { /* handled by interceptor */ }
+    finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  // ── Version history ──
+
+  const openVersionHistory = async (row: any) => {
+    setVersionCase(row)
+    setVersionDialog(true)
+    try {
+      const data = await fetchVersions(row.id)
+      setVersions(data)
+    } catch { setVersions([]) }
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader title="用例服务" />
@@ -290,6 +347,28 @@ export default function TestCasePage() {
               <RotateCcw className="size-3.5" data-icon="inline-start" />
             </Button>
             <div className="flex-1" />
+            {/* Import/Export dropdown */}
+            <div className="flex items-center gap-1">
+              <Button size="sm" variant="outline" onClick={() => handleExport('excel')} title="导出 Excel">
+                <Download className="size-3.5" data-icon="inline-start" />
+                Excel
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleExport('xmind')} title="导出 Xmind">
+                <Download className="size-3.5" data-icon="inline-start" />
+                Xmind
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleImportClick('excel')} disabled={importing} title="导入 Excel">
+                <Upload className="size-3.5" data-icon="inline-start" />
+                导入
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={importFormat === 'excel' ? '.xlsx,.xls' : '.xmind'}
+                className="hidden"
+                onChange={handleFileSelected}
+              />
+            </div>
             <Button size="sm" onClick={() => openEdit()}>
               <Plus className="size-3.5" data-icon="inline-start" />
               新建用例
@@ -399,6 +478,9 @@ export default function TestCasePage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
+                          <Button size="icon-xs" variant="ghost" onClick={() => openVersionHistory(r)} title="版本历史">
+                            <History className="size-3" />
+                          </Button>
                           <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)}>
                             <Edit className="size-3" />
                           </Button>
@@ -444,6 +526,13 @@ export default function TestCasePage() {
         domains={domains}
         onClose={() => { setDrawer(false); setEditing(null) }}
         onSaved={onSaved}
+      />
+
+      <VersionDialog
+        open={versionDialog}
+        onClose={() => setVersionDialog(false)}
+        caseData={versionCase}
+        versions={versions}
       />
     </div>
   )

@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, av_check, dashboard, defect, notify, open_api, project, report, requirement, schedule, system, test_case, test_plan, token, trace, ui_test
+from app.api.v1 import auth, av_check, dashboard, defect, environment, notify, open_api, project, report, requirement, schedule, system, test_case, test_plan, token, trace, ui_test
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
 api_router.include_router(dashboard.router)
 api_router.include_router(defect.router)
+api_router.include_router(environment.router)
 api_router.include_router(project.router)
 api_router.include_router(system.router)
 api_router.include_router(test_case.router)
