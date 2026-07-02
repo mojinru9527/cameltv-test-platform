@@ -173,21 +173,23 @@ def run_seed() -> None:
                 "nickname": "超级管理员",
                 "email": "admin@cameltv.local",
                 "status": 1,
-                "must_change_password": settings.admin_password == "" or settings.admin_password == "admin123",
+                "must_change_password": settings.admin_password == "",
             },
             username=settings.admin_username,
         )
 
         # 5.5) 测试用户（方便验证角色隔离）
+        import secrets as _secrets
+        tester_pwd = settings.tester_password or _secrets.token_urlsafe(10)
         tester_user, created_tester = _get_or_create(
             db, User,
             defaults={
-                "password": hash_password("tester123"),
+                "password": hash_password(tester_pwd),
                 "nickname": "测试同学",
                 "email": "tester@cameltv.local",
                 "status": 1,
             },
-            username="tester",
+            username=settings.tester_username,
         )
 
         # 6) 默认项目
@@ -211,11 +213,13 @@ def run_seed() -> None:
         db.commit()
         if created_admin:
             print(f"[seed] 初始管理员已创建：{settings.admin_username}")
-            if settings.admin_password and settings.admin_password != "admin123":
+            if settings.admin_password:
                 print("[seed] 管理员使用自定义密码")
             else:
-                print("[seed] 管理员使用默认密码，首次登录需修改")
+                print("[seed] 管理员使用自动生成密码（见启动日志），首次登录需修改")
         if created_tester:
-            print("[seed] 测试用户已创建：tester")
+            print(f"[seed] 测试用户已创建：{settings.tester_username}")
+            if not settings.tester_password:
+                print(f"[seed] 测试用户自动生成密码：{tester_pwd}")
     finally:
         db.close()
