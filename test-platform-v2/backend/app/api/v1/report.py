@@ -1,7 +1,10 @@
 """Report API routes."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, Request
+import json
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_current_user, get_db, require_permission
@@ -10,6 +13,7 @@ from app.schemas.test_report import ReportCreate, ReportDetailOut, ReportOut, Tr
 from app.services import report_service
 from app.services.audit_service import write_audit
 
+logger = logging.getLogger("report")
 router = APIRouter(prefix="/reports", tags=["报告中心"])
 
 
@@ -24,6 +28,20 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
+
+
+def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
+    """在独立 DB session 中发送通知（供 BackgroundTasks 调用）。"""
+    from app.core.db import SessionLocal
+    from app.services.notify_service import notify_sync
+
+    db = SessionLocal()
+    try:
+        notify_sync(db, project_id, event, data)
+    except Exception:
+        logger.exception("Background notification failed: event=%s project=%s", event, project_id)
+    finally:
+        db.close()
 
 
 @router.get("", response_model=R[dict])
@@ -59,6 +77,7 @@ def get_trends(
 def create_report(
     req: Request,
     body: ReportCreate,
+    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("report:create")),
     db: Session = Depends(get_db),
 ):
@@ -66,6 +85,28 @@ def create_report(
         r = report_service.create_report(db, body, current.user.id, current.project_id or 0)
         db.commit()
         _audit(req, current, db, "report:create", f"#{r['id']} {r['name']}")
+
+        # Dispatch report_generated notification
+        try:
+            content = json.loads(r.get("content", "{}")) if isinstance(r.get("content"), str) else (r.get("content") or {})
+        except (json.JSONDecodeError, TypeError):
+            content = {}
+        stats = content.get("stats", {}) if isinstance(content, dict) else {}
+        total = stats.get("total", 0)
+        pass_count = stats.get("pass", 0)
+        pass_rate = f"{round(pass_count / total * 100, 1)}%" if total > 0 else "N/A"
+
+        background_tasks.add_task(
+            _run_notify_in_new_session,
+            current.project_id or 0,
+            "report_generated",
+            {
+                "report_name": r.get("name", ""),
+                "pass_rate": pass_rate,
+                "link": "",
+            },
+        )
+
         return R.ok(ReportOut(**r))
     except ValueError as e:
         from app.core.exceptions import APIException

@@ -298,6 +298,36 @@ export interface UiRunItem {
   finished_at: string | null
 }
 
+export interface DefectTransition {
+  id: number
+  defect_id: number
+  from_status: string
+  to_status: string
+  comment?: string
+  operator_id?: number
+  operator_name?: string
+  created_at: string
+}
+
+export interface DefectComment {
+  id: number
+  defect_id: number
+  content: string
+  author_id?: number
+  author_name?: string
+  created_at: string
+}
+
+export interface DefectAttachment {
+  id: number
+  defect_id: number
+  filename: string
+  file_size: number
+  mime_type?: string
+  uploader_name?: string
+  created_at: string
+}
+
 export interface ProjectDetail {
   id: number
   code: string
