@@ -86,6 +86,17 @@ export {
   RefreshCw,
   FlaskConical,
   TestTube2,
+  // Communication
+  MessageSquare,
+  Send,
+  // Files
+  Paperclip,
+  File,
+  // Arrows
+  ArrowRight,
+  ArrowLeftRight,
+  // History
+  History,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"

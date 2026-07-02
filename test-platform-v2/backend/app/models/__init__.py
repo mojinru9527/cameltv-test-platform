@@ -3,6 +3,7 @@ from app.models.audit import AuditLog
 from app.models.av_check import AvCheckMetric, AvCheckTask
 from app.models.defect import Defect
 from app.models.project import Project, ProjectMember
+from app.models.notification import NotificationChannel, NotificationLog
 from app.models.requirement import RequirementDocument
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.test_case import TestCase
@@ -21,6 +22,8 @@ __all__ = [
     "Project",
     "ProjectMember",
     "AuditLog",
+    "NotificationChannel",
+    "NotificationLog",
     "TestCase",
     "TestPlan",
     "TestPlanCase",
