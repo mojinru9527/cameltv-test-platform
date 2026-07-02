@@ -8,39 +8,64 @@ from app.models.rbac import Permission, Role, RolePermission
 
 
 def list_roles(db: Session) -> list[dict]:
-    """列出所有角色，附带其拥有的权限 code 列表。"""
+    """列出所有角色，附带其拥有的权限 code 列表（批量查询，避免 N+1）。"""
     roles = list(db.scalars(select(Role).order_by(Role.id)).all())
-    result = []
-    for r in roles:
-        perm_ids = db.scalars(
-            select(RolePermission.permission_id).where(RolePermission.role_id == r.id)
+    if not roles:
+        return []
+
+    # Batch load all RolePermission rows and all Permission codes in 2 queries
+    role_ids = [r.id for r in roles]
+    rp_rows = db.execute(
+        select(RolePermission.role_id, RolePermission.permission_id)
+        .where(RolePermission.role_id.in_(role_ids))
+    ).all()
+
+    # Collect unique permission ids
+    perm_ids = {rp.permission_id for rp in rp_rows}
+    perm_map: dict[int, str] = {}
+    if perm_ids:
+        perm_rows = db.execute(
+            select(Permission.id, Permission.code)
+            .where(Permission.id.in_(perm_ids))
         ).all()
-        codes = list(
-            db.scalars(
-                select(Permission.code).where(Permission.id.in_(set(perm_ids)))
-            ).all()
-        )
-        result.append({
+        perm_map = {p.id: p.code for p in perm_rows}
+
+    # Group permissions by role_id
+    role_perms: dict[int, list[str]] = {rid: [] for rid in role_ids}
+    for rp in rp_rows:
+        code = perm_map.get(rp.permission_id)
+        if code:
+            role_perms.setdefault(rp.role_id, []).append(code)  # type: ignore[arg-type]
+        else:
+            role_perms.setdefault(rp.role_id, [])
+
+    return [
+        {
             "id": r.id, "code": r.code, "name": r.name,
             "data_scope": r.data_scope, "remark": r.remark,
-            "permission_codes": sorted(codes),
+            "permission_codes": sorted(role_perms.get(r.id, [])),
             "created_at": r.created_at,
-        })
-    return result
+        }
+        for r in roles
+    ]
 
 
 def get_role(db: Session, role_id: int) -> dict | None:
     r = db.get(Role, role_id)
     if not r:
         return None
-    perm_ids = db.scalars(
-        select(RolePermission.permission_id).where(RolePermission.role_id == r.id)
+    # Batch load permissions in 2 queries
+    rp_rows = db.execute(
+        select(RolePermission.permission_id).where(RolePermission.role_id == role_id)
     ).all()
-    codes = list(
-        db.scalars(
-            select(Permission.code).where(Permission.id.in_(set(perm_ids)))
-        ).all()
-    )
+    codes: list[str] = []
+    perm_ids = {rp.permission_id for rp in rp_rows}
+    if perm_ids:
+        codes = list(
+            db.scalars(
+                select(Permission.code).where(Permission.id.in_(perm_ids))
+            ).all()
+        )
     return {
         "id": r.id, "code": r.code, "name": r.name,
         "data_scope": r.data_scope, "remark": r.remark,

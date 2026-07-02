@@ -107,7 +107,7 @@ export default function TracePage() {
               <Card>
                 <CardHeader><CardTitle>需求覆盖状态</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-8">
+                  <div className="flex items-center gap-8 mb-4">
                     <div className="text-center">
                       <div className="text-3xl font-bold text-blue-600">{d.requirement_count}</div>
                       <div className="text-sm text-muted-foreground">需求文档总数</div>
@@ -119,6 +119,12 @@ export default function TracePage() {
                     <div className="text-center">
                       <div className="text-3xl font-bold text-orange-600">{d.requirement_count - d.requirements_with_cases}</div>
                       <div className="text-sm text-muted-foreground">待覆盖的需求</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold" style={{ color: (d.requirement_coverage_rate ?? 0) >= 80 ? '#16a34a' : (d.requirement_coverage_rate ?? 0) >= 50 ? '#d97706' : '#dc2626' }}>
+                        {d.requirement_coverage_rate ?? 0}%
+                      </div>
+                      <div className="text-sm text-muted-foreground">需求覆盖率</div>
                     </div>
                   </div>
                 </CardContent>
