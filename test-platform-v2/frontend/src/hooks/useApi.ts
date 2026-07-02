@@ -187,17 +187,16 @@ export function useApi<T>(
   // This handles the case where the component mounts and the deps have
   // not "changed" (the effect above skips when deps match the initial
   // ref value). We use a separate effect that fires exactly once on mount.
+  // C5: Track whether the initial (empty-deps) fetch has fired. Resets on
+  // unmount to handle React 18 Strict Mode double-mount: Strict Mode
+  // mounts → unmounts → re-mounts the component, and without the reset
+  // the second mount would skip the initial fetch, causing a perpetual
+  // loading state.
   const didInitialFetch = useRef(false)
   useEffect(() => {
     if (!didInitialFetch.current) {
       didInitialFetch.current = true
       // Only fire if the main effect didn't already fire because deps changed.
-      // The main effect runs after this one (same tick), but since it also
-      // checks a ref that starts empty, the changed check is true on first
-      // mount (prev.length is 0, deps.length might be 0 or N).  For zero-
-      // length deps arrays on first mount, prev is [] (empty) and deps is
-      // also [] — so changed = false and the main effect skips. This second
-      // effect handles that case.
       const prev = depsRef.current
       const depsArr = deps as any[]
       const changed =
@@ -206,6 +205,11 @@ export function useApi<T>(
       if (!changed) {
         execute()
       }
+    }
+    // Cleanup: reset on unmount so Strict Mode double-mount re-fires.
+    return () => {
+      controllerRef.current?.abort()
+      didInitialFetch.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
