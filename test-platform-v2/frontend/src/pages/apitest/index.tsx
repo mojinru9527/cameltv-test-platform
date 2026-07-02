@@ -19,7 +19,8 @@ import { useAuthStore } from '@/stores/auth'
 import { executeApiCase, quickExecute } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchTestCases } from '@/api/testcase'
-import type { ApiExecutionResult, ApiAssertionResult, Environment } from '@/types'
+import { fetchDatasets } from '@/api/dataset'
+import type { ApiExecutionResult, ApiAssertionResult, BatchExecutionResult, DatasetListItem, Environment } from '@/types'
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
 
@@ -47,6 +48,8 @@ export default function ApiTestPage() {
   const [assertions, setAssertions] = useState('[]')
   const [envId, setEnvId] = useState<number | undefined>()
   const [envs, setEnvs] = useState<Environment[]>([])
+  const [datasetId, setDatasetId] = useState<number | undefined>()
+  const [datasets, setDatasets] = useState<DatasetListItem[]>([])
 
   // ── Saved cases state ──
   const [apiCases, setApiCases] = useState<any[]>([])
@@ -54,6 +57,7 @@ export default function ApiTestPage() {
 
   useEffect(() => {
     fetchEnvironments().then(setEnvs).catch(() => {})
+    fetchDatasets({ page_size: 100 }).then(d => setDatasets(d.items || [])).catch(() => {})
   }, [])
 
   // Load api-type cases
@@ -74,9 +78,12 @@ export default function ApiTestPage() {
     setLoading(true)
     setResult(null)
     try {
-      const res = await quickExecute({ method, url, headers, body, assertions, environment_id: envId })
-      setResult(res)
-      if (res.all_pass) toast.success('全部断言通过')
+      const res = await quickExecute({ method, url, headers, body, assertions, environment_id: envId, dataset_id: datasetId })
+      setResult(res as any)
+      if ((res as any).batch_mode) {
+        const b = res as any as BatchExecutionResult
+        toast.success(`批量执行完成: ${b.passed}/${b.total_rows} 通过`)
+      } else if (res.all_pass) toast.success('全部断言通过')
       else if (res.assertions?.length) toast.error(`${res.assertions.filter((a: ApiAssertionResult) => !a.passed).length} 个断言失败`)
     } catch (e: any) {
       toast.error(e?.message || '请求失败')
@@ -89,9 +96,12 @@ export default function ApiTestPage() {
     setLoading(true)
     setResult(null)
     try {
-      const res = await executeApiCase(selectedCase.id, envId)
-      setResult(res)
-      if (res.all_pass) toast.success('全部断言通过')
+      const res = await executeApiCase(selectedCase.id, envId, datasetId)
+      setResult(res as any)
+      if ((res as any).batch_mode) {
+        const b = res as any as BatchExecutionResult
+        toast.success(`批量执行完成: ${b.passed}/${b.total_rows} 通过`)
+      } else if (res.all_pass) toast.success('全部断言通过')
       else if (res.assertions?.length) toast.error(`${res.assertions.filter((a: ApiAssertionResult) => !a.passed).length} 个断言失败`)
     } catch (e: any) {
       toast.error(e?.message || '执行失败')
@@ -124,28 +134,52 @@ export default function ApiTestPage() {
         )}
       </PageHeader>
 
-      {/* Environment selector - shared */}
-      {envs.length > 0 && (
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium whitespace-nowrap">环境:</label>
-          <Select value={envId?.toString() || '_none'} onValueChange={(v) => setEnvId(v === '_none' ? undefined : Number(v))}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="不使用环境变量" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none">不使用环境变量</SelectItem>
-              {envs.map((e) => (
-                <SelectItem key={e.id} value={e.id.toString()}>
-                  {e.name} ({e.env_type})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {envId && (
-            <p className="text-xs text-muted-foreground">URL/Headers/Body 中的 $&#123;VAR&#125; 将自动替换</p>
-          )}
-        </div>
-      )}
+      {/* Environment + Dataset selectors - shared */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {envs.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium whitespace-nowrap">环境:</label>
+            <Select value={envId?.toString() || '_none'} onValueChange={(v) => setEnvId(v === '_none' ? undefined : Number(v))}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="不使用环境变量" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">不使用环境变量</SelectItem>
+                {envs.map((e) => (
+                  <SelectItem key={e.id} value={e.id.toString()}>
+                    {e.name} ({e.env_type})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {envId && (
+              <p className="text-xs text-muted-foreground">$&#123;VAR&#125; 自动替换</p>
+            )}
+          </div>
+        )}
+
+        {datasets.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium whitespace-nowrap">测试数据:</label>
+            <Select value={datasetId?.toString() || '_none'} onValueChange={(v) => setDatasetId(v === '_none' ? undefined : Number(v))}>
+              <SelectTrigger className="w-[220px]">
+                <SelectValue placeholder="不使用测试数据" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">不使用测试数据</SelectItem>
+                {datasets.map((d) => (
+                  <SelectItem key={d.id} value={d.id.toString()}>
+                    {d.name} ({d.row_count} 行)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {datasetId && (
+              <p className="text-xs text-muted-foreground">$&#123;列名&#125; 按行替换</p>
+            )}
+          </div>
+        )}
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
@@ -366,7 +400,100 @@ function AssertionEditor({ value, onChange }: { value: string; onChange: (v: str
 
 // ── Response Panel ──
 
-function ResponsePanel({ result, loading }: { result: ApiExecutionResult | null; loading: boolean }) {
+function ResponsePanel({ result, loading }: { result: any; loading: boolean }) {
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
+
+  const toggleRow = (idx: number) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev)
+      if (next.has(idx)) next.delete(idx) else next.add(idx)
+      return next
+    })
+  }
+
+  // Batch mode result
+  if (result?.batch_mode) {
+    const b = result as BatchExecutionResult
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            批量执行结果
+            <Badge className={b.failed === 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>
+              {b.passed}/{b.total_rows} 通过
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 max-h-[70vh] overflow-y-auto">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="bg-muted rounded p-2">
+              <div className="text-lg font-bold">{b.total_rows}</div>
+              <div className="text-xs text-muted-foreground">总行数</div>
+            </div>
+            <div className="bg-green-50 dark:bg-green-950/20 rounded p-2">
+              <div className="text-lg font-bold text-green-600">{b.passed}</div>
+              <div className="text-xs text-muted-foreground">通过</div>
+            </div>
+            <div className="bg-red-50 dark:bg-red-950/20 rounded p-2">
+              <div className="text-lg font-bold text-red-600">{b.failed}</div>
+              <div className="text-xs text-muted-foreground">失败</div>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">每行详情:</p>
+            {b.per_row.map((row) => (
+              <div key={row.row_index} className="border rounded-md">
+                <div
+                  className={`flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted text-xs ${row.result.all_pass ? '' : 'bg-red-50 dark:bg-red-950/10'}`}
+                  onClick={() => toggleRow(row.row_index)}
+                >
+                  {row.result.all_pass
+                    ? <CheckCircle2 className="size-3 text-green-600 shrink-0" />
+                    : <XCircle className="size-3 text-red-600 shrink-0" />}
+                  <span className="font-medium">#{row.row_index + 1}</span>
+                  <span className="text-muted-foreground truncate flex-1">
+                    {b.columns.slice(0, 3).map(c => `${c}=${row.row_data[c] ?? '-'}`).join(', ')}
+                  </span>
+                  <span className="text-muted-foreground">{row.result.duration_ms}ms</span>
+                  <span className="text-xs">{expandedRows.has(row.row_index) ? '▲' : '▼'}</span>
+                </div>
+                {expandedRows.has(row.row_index) && (
+                  <div className="px-3 pb-3 space-y-2 border-t pt-2">
+                    {/* Row data */}
+                    <div className="text-xs">
+                      <span className="text-muted-foreground">数据: </span>
+                      {Object.entries(row.row_data).map(([k, v]) => (
+                        <span key={k} className="inline-block mr-2"><code>{k}</code>={v}</span>
+                      ))}
+                    </div>
+                    {/* Assertions */}
+                    {row.result.assertions?.length > 0 && (
+                      <div className="space-y-0.5">
+                        {row.result.assertions.map((a: ApiAssertionResult, i: number) => (
+                          <div key={i} className={`flex items-start gap-1 text-xs p-1 rounded ${a.passed ? 'bg-green-50' : 'bg-red-50'}`}>
+                            {a.passed ? <CheckCircle2 className="size-3 text-green-600 mt-0.5 shrink-0" /> : <XCircle className="size-3 text-red-600 mt-0.5 shrink-0" />}
+                            <span>{a.message}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {/* Response */}
+                    <div>
+                      <p className="text-xs text-muted-foreground">响应:</p>
+                      <pre className="text-xs bg-muted p-2 rounded max-h-32 overflow-auto">{formatBody(row.result.response_body)}</pre>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Regular result
   return (
     <Card>
       <CardHeader><CardTitle>响应结果</CardTitle></CardHeader>
@@ -400,7 +527,7 @@ function ResponsePanel({ result, loading }: { result: ApiExecutionResult | null;
             {result.assertions && result.assertions.length > 0 && (
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground">断言详情:</p>
-                {result.assertions.map((a, i) => (
+                {result.assertions.map((a: ApiAssertionResult, i: number) => (
                   <div key={i} className={`flex items-start gap-1.5 text-xs p-1.5 rounded ${a.passed ? 'bg-green-50 dark:bg-green-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
                     {a.passed ? <CheckCircle2 className="size-3 text-green-600 mt-0.5 shrink-0" /> : <XCircle className="size-3 text-red-600 mt-0.5 shrink-0" />}
                     <span>{a.message}</span>

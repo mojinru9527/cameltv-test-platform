@@ -200,6 +200,7 @@ def batch_delete_test_cases(
 
 class ExecuteApiBody(BaseModel):
     environment_id: int | None = None
+    dataset_id: int | None = None
 
 @router.post("/{case_id}/execute", response_model=R[dict], summary="执行 API 用例")
 def execute_test_case(
@@ -214,6 +215,7 @@ def execute_test_case(
             db, case_id,
             project_id=current.project_id or 0,
             environment_id=body.environment_id if body else None,
+            dataset_id=body.dataset_id if body else None,
         )
     except ValueError as e:
         return R(code=1, msg=str(e))

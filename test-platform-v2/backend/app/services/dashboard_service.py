@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import func, select, case as sa_case
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.models.defect import Defect
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 
@@ -196,4 +197,105 @@ def get_dashboard_stats(
         "case_type_stats": case_type_stats,
         "priority_distribution": priority_distribution,
         "time_range": time_range,
+    }
+
+
+# ── V2.5: Cross-project aggregation ──
+
+def get_cross_project_stats(
+    db: Session,
+    user_id: int,
+    is_superadmin: bool = False,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> dict:
+    """Aggregate dashboard statistics across all projects visible to the user."""
+    from app.services import project_service
+
+    projects = project_service.projects_for_user(db, user_id, is_superadmin)
+    project_ids = [p.id for p in projects]
+    project_list = [{"id": p.id, "code": p.code, "name": p.name} for p in projects]
+
+    if not project_ids:
+        return {
+            "projects": [],
+            "aggregate": {
+                "total_projects": 0, "total_cases": 0, "total_plans": 0,
+                "total_api_cases": 0, "overall_pass_rate": 0.0, "total_defects": 0,
+            },
+            "per_project": [],
+            "trends": {"pass_rate": [], "defects": []},
+        }
+
+    # Per-project stats
+    per_project = []
+    agg_cases = 0
+    agg_plans = 0
+    agg_execs = 0
+    agg_pass = 0
+    agg_defects = 0
+
+    for pid in project_ids:
+        stats = get_dashboard_stats(db, pid, start_date, end_date)
+        defect_count = db.scalar(
+            select(func.count(Defect.id)).where(Defect.project_id == pid)
+        ) or 0
+
+        per_project.append({
+            "project_id": pid,
+            "project_name": next((p["name"] for p in project_list if p["id"] == pid), ""),
+            "total_cases": stats["total_cases"],
+            "total_plans": stats["total_plans"],
+            "api_cases": stats["api_cases"],
+            "pass_rate": stats["pass_rate"],
+            "defect_count": defect_count,
+        })
+        agg_cases += stats["total_cases"]
+        agg_plans += stats["total_plans"]
+        agg_defects += defect_count
+        total, pass_, _ = _execution_filter_for_project(db, pid, start_date, end_date)
+        agg_execs += total
+        agg_pass += pass_
+
+    overall_pr = round((agg_pass / agg_execs) * 100, 1) if agg_execs > 0 else 0.0
+
+    aggregate = {
+        "total_projects": len(project_ids),
+        "total_cases": agg_cases,
+        "total_plans": agg_plans,
+        "total_api_cases": sum(p["api_cases"] for p in per_project),
+        "overall_pass_rate": overall_pr,
+        "total_defects": agg_defects,
+    }
+
+    # Trends: last 7 days
+    pass_rate_trend = []
+    defect_trend = []
+    today = date.today()
+    for i in range(6, -1, -1):
+        day = today - timedelta(days=i)
+        day_execs = 0
+        day_pass = 0
+        day_defects = 0
+        for pid in project_ids:
+            t, p, _ = _execution_filter_for_project(db, pid, day, day)
+            day_execs += t
+            day_pass += p
+            dc = db.scalar(
+                select(func.count(Defect.id)).where(
+                    Defect.project_id == pid,
+                    Defect.created_at >= datetime.combine(day, datetime.min.time()),
+                    Defect.created_at <= datetime.combine(day, datetime.max.time()),
+                )
+            ) or 0
+            day_defects += dc
+        day_pr = round((day_pass / day_execs) * 100, 1) if day_execs > 0 else 0.0
+        pass_rate_trend.append({"date": day.isoformat(), "pass_rate": day_pr, "total_execs": day_execs, "count": None})
+        defect_trend.append({"date": day.isoformat(), "pass_rate": None, "total_execs": None, "count": day_defects})
+
+    return {
+        "projects": project_list,
+        "aggregate": aggregate,
+        "per_project": per_project,
+        "trends": {"pass_rate": pass_rate_trend, "defects": defect_trend},
     }

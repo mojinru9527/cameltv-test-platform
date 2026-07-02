@@ -415,6 +415,103 @@ export interface QuickExecuteRequest {
   headers: string       // JSON string
   body: string          // JSON string
   environment_id?: number
+  dataset_id?: number
+}
+
+// ── Dataset (V2.5) ──
+
+export interface Dataset {
+  id: number
+  project_id: number
+  name: string
+  description: string
+  source_type: 'csv' | 'json' | 'sql'
+  raw_content: string
+  sql_query: string
+  connection_string: string
+  row_count: number
+  columns_meta: string     // JSON string: ["col1", "col2", ...]
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface DatasetListItem {
+  id: number
+  project_id: number
+  name: string
+  description: string
+  source_type: string
+  row_count: number
+  columns_meta: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface DatasetPreview {
+  columns: string[]
+  rows: Record<string, string>[]
+  total_rows: number
+}
+
+export interface DatasetUploadResponse {
+  dataset: Dataset
+  preview: DatasetPreview
+}
+
+export interface BatchExecutionResult {
+  status: string
+  batch_mode: boolean
+  dataset_id: number
+  columns: string[]
+  total_rows: number
+  passed: number
+  failed: number
+  per_row: Array<{
+    row_index: number
+    row_data: Record<string, string>
+    result: ApiExecutionResult
+  }>
+  executed_at: string
+}
+
+// ── Cross-Project Dashboard (V2.5) ──
+
+export interface CrossProjectCard {
+  project_id: number
+  project_name: string
+  total_cases: number
+  total_plans: number
+  api_cases: number
+  pass_rate: number
+  defect_count: number
+}
+
+export interface CrossProjectAggregate {
+  total_projects: number
+  total_cases: number
+  total_plans: number
+  total_api_cases: number
+  overall_pass_rate: number
+  total_defects: number
+}
+
+export interface TrendPoint {
+  date: string
+  pass_rate?: number
+  total_execs?: number
+  count?: number
+}
+
+export interface CrossProjectTrends {
+  pass_rate: TrendPoint[]
+  defects: TrendPoint[]
+}
+
+export interface CrossProjectStats {
+  projects: Array<{ id: number; code: string; name: string }>
+  aggregate: CrossProjectAggregate
+  per_project: CrossProjectCard[]
+  trends: CrossProjectTrends
 }
 
 // ── TestCase Review ──
@@ -441,4 +538,37 @@ export interface QualityGateConfig {
   p1_max: number
   enabled: boolean
   is_default?: boolean
+}
+
+// ── Integration Config (V2.6) ──
+
+export interface IntegrationConfig {
+  id: number
+  project_id: number
+  name: string
+  provider_type: 'jira' | 'tapd'
+  base_url: string
+  auth_json: string       // always "********" in response
+  field_mapping: string    // JSON string
+  sync_direction: string   // bidirectional | push_only | pull_only
+  sync_interval_minutes: number
+  enabled: boolean
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface SyncLog {
+  id: number
+  integration_id: number
+  defect_id: number
+  direction: 'push' | 'pull'
+  status: 'success' | 'failed' | 'skipped'
+  external_id: string
+  message: string
+  created_at: string | null
+}
+
+export interface TestConnectionResult {
+  success: boolean
+  message: string
 }

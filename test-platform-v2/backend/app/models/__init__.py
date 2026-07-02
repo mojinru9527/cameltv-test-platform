@@ -1,13 +1,16 @@
 """统一导出所有模型，确保 Base.metadata 能感知全部表。"""
 from app.models.audit import AuditLog
 from app.models.av_check import AvCheckMetric, AvCheckTask
+from app.models.dataset import Dataset
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
+from app.models.integration import IntegrationConfig
 from app.models.project import Project, ProjectMember
 from app.models.notification import NotificationChannel, NotificationLog
 from app.models.quality_gate import QualityGateConfig
 from app.models.requirement import RequirementDocument
 from app.models.rbac import Permission, Role, RolePermission, UserRole
+from app.models.sync_log import SyncLog
 from app.models.test_case import TestCase
 from app.models.test_case_review import TestCaseReviewTransition
 from app.models.test_case_version import TestCaseVersion
@@ -40,10 +43,13 @@ __all__ = [
     "TestReport",
     "TestSchedule",
     "TestScheduleRun",
+    "Dataset",
     "Defect",
     "AvCheckTask",
     "AvCheckMetric",
     "UiTestJob",
     "UiTestRun",
     "RequirementDocument",
+    "IntegrationConfig",
+    "SyncLog",
 ]

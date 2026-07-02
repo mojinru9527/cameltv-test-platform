@@ -1,6 +1,26 @@
-# CamelTv 测试平台 v2 — 一键部署（前端 + 后端）
+# CamelTv 测试平台 v2 — 一键部署（前端 + 后端 + 可选 PostgreSQL）
 # 用法: docker-compose up -d  → 访问 http://localhost
+# PostgreSQL: 设置 DATABASE_URL=postgresql://cameltv:cameltv123@postgres:5432/cameltv
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cameltv-tp-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cameltv}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cameltv123}
+      POSTGRES_DB: ${POSTGRES_DB:-cameltv}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cameltv}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   backend:
     build:
       context: ../backend
@@ -8,10 +28,15 @@ services:
     container_name: cameltv-tp-backend
     environment:
       - SECRET_KEY=${SECRET_KEY:-please-change-me-in-production}
-      - DATABASE_URL=sqlite:////data/platform.db
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/platform.db}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+      - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-20}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
       - ELK_BASE_URL=${ELK_BASE_URL:-}
       - ELK_INDEX=${ELK_INDEX:-*}
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - tp-data:/data
     expose:
@@ -43,4 +68,6 @@ services:
 
 volumes:
   tp-data:
+    driver: local
+  pg-data:
     driver: local

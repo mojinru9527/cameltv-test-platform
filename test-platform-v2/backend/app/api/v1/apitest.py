@@ -20,6 +20,7 @@ class QuickExecuteRequest(BaseModel):
     body: str = Field(default="")        # JSON 字符串
     assertions: str = Field(default="[]")  # JSON 数组
     environment_id: int | None = None
+    dataset_id: int | None = None
 
 
 @router.post("/api-execute", response_model=R[dict], summary="即时执行（调试）")
@@ -40,7 +41,12 @@ def api_quick_execute(
     assertions = _safe_json(body.assertions, [])
 
     try:
-        result = quick_execute(db, request_def, assertions=assertions, environment_id=body.environment_id)
+        result = quick_execute(
+            db, request_def,
+            assertions=assertions,
+            environment_id=body.environment_id,
+            dataset_id=body.dataset_id,
+        )
     except Exception as e:
         return R(code=1, msg=f"执行失败: {e}")
 
