@@ -184,7 +184,11 @@ def _row_to_dict(r: TestCase) -> dict:
         "api_endpoint": r.api_endpoint,
         "api_spec_ref": r.api_spec_ref,
         "source": r.source,
+        "source_doc_id": r.source_doc_id,
         "old_id": r.old_id,
+        "review_status": r.review_status,
+        "review_comment": r.review_comment,
+        "reviewer_id": r.reviewer_id,
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "updated_at": r.updated_at.isoformat() if r.updated_at else None,
     }
