@@ -21,6 +21,7 @@ const TracePage = lazy(() => import('@/pages/trace'))
 const RequirementPage = lazy(() => import('@/pages/requirement'))
 const MindmapPage = lazy(() => import('@/pages/mindmap'))
 const ApiTestPage = lazy(() => import('@/pages/apitest'))
+const NotifyPage = lazy(() => import('@/pages/notify'))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -61,6 +62,7 @@ export const router = createBrowserRouter([
       { path: 'report', element: <PageLoader><ReportPage /></PageLoader> },
       { path: 'system', element: <PageLoader><SystemPage /></PageLoader> },
       { path: 'project', element: <PageLoader><ProjectPage /></PageLoader> },
+      { path: 'notify', element: <PageLoader><NotifyPage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
   },

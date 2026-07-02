@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { createReport, deleteReport, fetchReport, fetchReports } from '@/api/report'
+import { createReport, deleteReport, exportReportUrl, fetchReport, fetchReports, fetchTrends, type TrendsData } from '@/api/report'
 import { fetchPlans } from '@/api/testplan'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,6 +19,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Sheet,
   SheetContent,
@@ -57,7 +63,18 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { useApi } from '@/hooks/useApi'
-import { ErrorState } from '@/components/state'
+import { ErrorState, AsyncState } from '@/components/state'
+import StatCard from '@/components/StatCard'
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from 'recharts'
 import {
   Plus,
   Search,
@@ -69,6 +86,15 @@ import {
   StopCircle,
   Clock,
   Loader2,
+  Download,
+  FileDown,
+  FileSpreadsheet,
+  FileText,
+  BarChart3,
+  Bug,
+  Percent,
+  ArrowUp,
+  ArrowDown,
 } from '@/lib/icons'
 
 // ── Status config ──
@@ -129,6 +155,12 @@ export default function ReportPage() {
 
   const items = data?.items || []
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.page_size)) : 1
+
+  // ── Trends data ──
+  const trendsState = useApi<TrendsData>(
+    () => fetchTrends(),
+    [],
+  )
 
   // ── DataTable column definitions ──
   const reportColumns: DataTableColumn<any>[] = [
@@ -231,6 +263,109 @@ export default function ReportPage() {
   return (
     <div>
       <PageHeader title="报告中心" />
+
+      {/* ── Trend Section ── */}
+      <AsyncState
+        isLoading={trendsState.isLoading}
+        isError={trendsState.isError}
+        error={trendsState.error}
+        data={trendsState.data}
+        onRetry={trendsState.refetch}
+        loadingVariant="skeleton"
+        skeletonType="page"
+        emptyTitle="暂无趋势数据"
+        emptyDescription="生成多份报告后，系统将自动汇总趋势分析"
+      >
+        {(trends) => {
+          const passRateData = trends.points.map((p) => ({
+            ...p,
+            dateLabel: p.date ? new Date(p.date).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }) : '',
+          }))
+          return (
+            <div className="mb-6 space-y-4">
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <StatCard icon={BarChart3} label="报告总数" value={trends.summary.total_reports} variant="glass" />
+                <StatCard icon={Percent} label="平均通过率" value={`${trends.summary.avg_pass_rate}%`} variant="glass" />
+                <StatCard icon={ArrowUp} label="最高通过率" value={`${trends.summary.best_pass_rate}%`} variant="glass" />
+                <StatCard icon={ArrowDown} label="最低通过率" value={`${trends.summary.worst_pass_rate}%`} variant="glass" />
+                <StatCard icon={Bug} label="待处理缺陷" value={trends.summary.latest_open_defects} variant="glass" />
+              </div>
+
+              {/* Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Pass rate trend */}
+                <Card>
+                  <CardHeader><CardTitle>通过率趋势</CardTitle></CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={passRateData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="dateLabel" />
+                        <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                        <Tooltip
+                          formatter={(value: any) => [`${value}%`, '通过率']}
+                          labelFormatter={(label: any) => `日期: ${label}`}
+                        />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="pass_rate"
+                          name="通过率"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          dot={{ r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Defect convergence trend */}
+                <Card>
+                  <CardHeader><CardTitle>缺陷收敛趋势</CardTitle></CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={passRateData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="dateLabel" />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="open_p0"
+                          name="P0 缺陷"
+                          stroke="#dc2626"
+                          strokeWidth={2}
+                          dot={{ r: 4 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="open_p1"
+                          name="P1 缺陷"
+                          stroke="#d97706"
+                          strokeWidth={2}
+                          dot={{ r: 4 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="open_p2"
+                          name="P2 缺陷"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          dot={{ r: 4 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )
+        }}
+      </AsyncState>
 
       {isError && (!data || data.items?.length === 0) ? (
         <ErrorState error={error} onRetry={refetch} />
@@ -356,6 +491,32 @@ export default function ReportPage() {
                   </div>
                 )}
               </dl>
+
+              {/* Export button */}
+              <div className="flex justify-end">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" data-icon="inline-start">
+                      <Download />
+                      导出
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => window.open(exportReportUrl(detail.id, 'csv'), '_blank')}>
+                      <FileDown />
+                      CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => window.open(exportReportUrl(detail.id, 'excel'), '_blank')}>
+                      <FileSpreadsheet />
+                      Excel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => window.open(exportReportUrl(detail.id, 'pdf'), '_blank')}>
+                      <FileText />
+                      PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
               {/* Stats grid */}
               <div className="grid grid-cols-10 gap-2">

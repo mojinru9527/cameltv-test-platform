@@ -233,6 +233,7 @@ def create_report(
         "creator_id": r.creator_id,
         "created_at": r.created_at,
         "updated_at": r.updated_at,
+        "content": content,
         "gate_status": gate["status"],
         "gate_details": gate["details"],
     }
