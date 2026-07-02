@@ -57,6 +57,15 @@ _TEMPLATES: dict[str, str] = {
         "**时间**: {time}\n"
         "[查看详情]({link})"
     ),
+    "case_reviewed": (
+        "## 用例评审通知\n"
+        "**用例**: {case_title}\n"
+        "**操作**: {action}\n"
+        "**评审人**: {reviewer}\n"
+        "**意见**: {comment}\n"
+        "**时间**: {time}\n"
+        "[查看详情]({link})"
+    ),
 }
 
 
@@ -251,6 +260,7 @@ async def _dispatch_email(event: str, data: dict, ch) -> tuple[bool, str, int]:
         "defect_assigned": f"[{data.get('severity', '')}] 缺陷指派 — {data.get('title', '')}",
         "schedule_failed": f"定时任务失败 — {data.get('schedule_name', '')}",
         "report_generated": f"测试报告已生成 — {data.get('report_name', '')}",
+        "case_reviewed": f"用例评审通知 — {data.get('case_title', '')}",
     }
     subject = subject_map.get(event, f"通知: {event}")
 

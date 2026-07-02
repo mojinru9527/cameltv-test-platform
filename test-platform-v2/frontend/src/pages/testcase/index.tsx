@@ -39,15 +39,17 @@ import EmptyState from '@/components/EmptyState'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/state'
 
-import { Search, RotateCcw, Plus, Edit, Trash2, Download, Upload, FileSpreadsheet, History } from '@/lib/icons'
+import { Search, RotateCcw, Plus, Edit, Trash2, Download, Upload, FileSpreadsheet, History, ClipboardCheck } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, exportExcelUrl, exportXmindUrl, importExcel, importXmind, fetchVersions } from '@/api/testcase'
+import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, exportExcelUrl, exportXmindUrl, importExcel, importXmind, fetchVersions, reviewCase } from '@/api/testcase'
 import { useApi } from '@/hooks/useApi'
 import CaseDrawer from './CaseDrawer'
 import VersionDialog from './VersionDialog'
 import type { TestCaseVersion } from '@/types'
 
 const PRIORITY_COLORS: Record<string, string> = { P0: 'red', P1: 'orange', P2: 'blue', P3: 'default' }
+const REVIEW_LABELS: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }
+const REVIEW_COLORS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = { draft: 'secondary', submitted: 'outline', approved: 'default', rejected: 'destructive' }
 
 export default function TestCasePage() {
   // domains are loaded independently (used for tree + filter dropdowns)
@@ -416,6 +418,7 @@ export default function TestCasePage() {
                   <TableHead>标题</TableHead>
                   <TableHead className="w-[120px]">模块</TableHead>
                   <TableHead className="w-[60px]">状态</TableHead>
+                  <TableHead className="w-[80px]">评审</TableHead>
                   <TableHead className="w-[140px]">API</TableHead>
                   <TableHead className="w-[120px]">操作</TableHead>
                 </TableRow>
@@ -435,7 +438,7 @@ export default function TestCasePage() {
                   </TableRow>
                 ) : items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8">
+                    <TableCell colSpan={8} className="py-8">
                       <EmptyState title="暂无测试用例" description="点击「新建用例」开始创建" className="py-0" />
                     </TableCell>
                   </TableRow>
@@ -471,6 +474,11 @@ export default function TestCasePage() {
                             : 'outline'
                         }>
                           {r.status === 'active' ? '启用' : r.status === 'draft' ? '草稿' : r.status === 'archived' ? '归档' : r.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={REVIEW_COLORS[r.review_status] || 'secondary'} className="text-[10px]">
+                          {REVIEW_LABELS[r.review_status] || r.review_status || '草稿'}
                         </Badge>
                       </TableCell>
                       <TableCell className="max-w-[140px] truncate font-mono text-xs">

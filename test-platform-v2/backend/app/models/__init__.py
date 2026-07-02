@@ -5,9 +5,11 @@ from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.project import Project, ProjectMember
 from app.models.notification import NotificationChannel, NotificationLog
+from app.models.quality_gate import QualityGateConfig
 from app.models.requirement import RequirementDocument
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.test_case import TestCase
+from app.models.test_case_review import TestCaseReviewTransition
 from app.models.test_case_version import TestCaseVersion
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.test_report import TestReport
@@ -28,7 +30,9 @@ __all__ = [
     "EnvironmentVariable",
     "NotificationChannel",
     "NotificationLog",
+    "QualityGateConfig",
     "TestCase",
+    "TestCaseReviewTransition",
     "TestCaseVersion",
     "TestPlan",
     "TestPlanCase",

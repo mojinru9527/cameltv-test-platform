@@ -1,10 +1,15 @@
 """测试用例模型。"""
 from __future__ import annotations
 
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import TYPE_CHECKING
+
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
 from app.models.base import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.test_case_review import TestCaseReviewTransition
 
 
 class TestCase(Base, TimestampMixin):
@@ -46,3 +51,8 @@ class TestCase(Base, TimestampMixin):
     review_status: Mapped[str] = mapped_column(default="draft")   # draft / submitted / approved / rejected
     review_comment: Mapped[str] = mapped_column(default="")       # 评审意见
     reviewer_id: Mapped[int] = mapped_column(default=0)           # 评审人 ID
+
+    # 关系
+    review_transitions: Mapped[list["TestCaseReviewTransition"]] = relationship(
+        back_populates="case", cascade="all, delete-orphan", order_by="TestCaseReviewTransition.created_at"
+    )

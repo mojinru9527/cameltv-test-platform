@@ -378,3 +378,29 @@ export interface TestCaseVersion {
 export interface TestCaseVersionDetail extends TestCaseVersion {
   snapshot: Record<string, any>
 }
+
+// ── TestCase Review ──
+
+export interface TestCaseReviewTransition {
+  id: number
+  case_id: number
+  from_status: string
+  from_label: string
+  to_status: string
+  to_label: string
+  comment: string
+  reviewer_id: number
+  reviewer_name: string
+  created_at: string | null
+}
+
+// ── Quality Gate ──
+
+export interface QualityGateConfig {
+  project_id: number
+  pass_rate_threshold: number
+  p0_max: number
+  p1_max: number
+  enabled: boolean
+  is_default?: boolean
+}

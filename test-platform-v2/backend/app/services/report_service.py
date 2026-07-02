@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.defect import Defect
+from app.models.quality_gate import QualityGateConfig
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.test_report import TestReport
@@ -148,6 +149,8 @@ def list_reports(
             "plan_id": r.plan_id,
             "plan_name": plan_name or "",
             "creator_id": r.creator_id,
+            "gate_status": r.gate_status,
+            "gate_details": _parse_gate_details(r.gate_details),
             "created_at": r.created_at,
             "updated_at": r.updated_at,
         }
@@ -182,6 +185,8 @@ def get_report(db: Session, report_id: int, project_id: int) -> dict | None:
         "plan_id": r.plan_id,
         "plan_name": plan_name or "",
         "creator_id": r.creator_id,
+        "gate_status": r.gate_status,
+        "gate_details": _parse_gate_details(r.gate_details),
         "created_at": r.created_at,
         "updated_at": r.updated_at,
         "content": content,
@@ -219,8 +224,14 @@ def create_report(
     db.add(r)
     db.flush()
 
-    # Compute quality gate
-    gate = _compute_gate(db, data.plan_id, project_id, content)
+    # Compute quality gate with project config
+    gate_config = get_quality_gate_config(db, project_id)
+    gate = _compute_gate(db, data.plan_id, project_id, content, gate_config)
+
+    # Persist gate result
+    r.gate_status = gate["status"]
+    r.gate_details = json.dumps(gate["details"], ensure_ascii=False)
+    db.flush()
 
     return {
         "id": r.id,
@@ -239,8 +250,22 @@ def create_report(
     }
 
 
-def _compute_gate(db, plan_id: int, project_id: int, content_str: str) -> dict:
-    """Compute quality gate for a report. Returns {status, details}."""
+def _parse_gate_details(gate_details_raw: str | None) -> list:
+    """Safely parse gate_details JSON string to list."""
+    if not gate_details_raw:
+        return []
+    try:
+        return json.loads(gate_details_raw)
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+
+def _compute_gate(db, plan_id: int, project_id: int, content_str: str, config: dict | None = None) -> dict:
+    """Compute quality gate for a report. Returns {status, details}.
+
+    If config is None or disabled, falls back to hardcoded defaults (80%, 0 P0, no P1 check).
+    Gate logic: pass_rate check AND defect check → both pass=PASS, both fail=FAIL, else WARN.
+    """
     try:
         content = json.loads(content_str) if isinstance(content_str, str) else content_str
     except json.JSONDecodeError:
@@ -251,38 +276,150 @@ def _compute_gate(db, plan_id: int, project_id: int, content_str: str) -> dict:
     pass_count = stats.get("pass", 0)
     pass_rate = round(pass_count / total * 100, 1) if total else 0
 
-    # Check for P0 open defects linked to this plan's cases
+    # Read thresholds from config or use defaults
+    cfg = config if config and config.get("enabled", True) else {}
+    pass_rate_threshold = cfg.get("pass_rate_threshold", 80)
+    p0_max = cfg.get("p0_max", 0)
+    p1_max = cfg.get("p1_max", 5)
+
+    # Check for open defects linked to this plan's cases
     pcases = db.scalars(
         select(TestPlanCase.case_id).where(TestPlanCase.plan_id == plan_id)
     ).all()
     case_ids = set(pcases) if pcases else set()
+
     p0_defects = 0
+    p1_defects = 0
     if case_ids:
-        p0_defects = db.scalar(
-            select(func.count(Defect.id)).where(
+        defect_rows = db.execute(
+            select(Defect.severity, func.count(Defect.id)).where(
                 Defect.project_id == project_id,
-                Defect.severity == "P0",
+                Defect.severity.in_(["P0", "P1"]),
                 Defect.status.in_(["open", "confirmed", "fixing"]),
                 Defect.case_id.in_(case_ids),
-            )
-        ) or 0
+            ).group_by(Defect.severity)
+        ).all()
+        for sev, cnt in defect_rows:
+            if sev == "P0":
+                p0_defects = cnt
+            elif sev == "P1":
+                p1_defects = cnt
 
     details = []
-    passed = True
+    pass_rate_ok = pass_rate >= pass_rate_threshold
+    defects_ok = (p0_defects <= p0_max) and (p1_defects <= p1_max)
 
-    if pass_rate < 80:
-        passed = False
-        details.append(f"通过率 {pass_rate}% 低于门禁阈值 80%")
+    # Pass rate detail
+    if pass_rate_ok:
+        details.append(f"通过率 {pass_rate}% >= {pass_rate_threshold}% (通过)")
     else:
-        details.append(f"通过率 {pass_rate}% >= 80% (通过)")
+        details.append(f"通过率 {pass_rate}% 低于门禁阈值 {pass_rate_threshold}%")
 
-    if p0_defects > 0:
-        passed = False
-        details.append(f"存在 {p0_defects} 个未关闭的 P0 缺陷")
+    # Defect detail
+    defect_parts = []
+    if not (p0_defects <= p0_max):
+        defect_parts.append(f"存在 {p0_defects} 个未关闭 P0 缺陷 (上限 {p0_max})")
+    elif p0_max > 0 or p0_defects == 0:
+        defect_parts.append(f"未关闭 P0 缺陷 {p0_defects} <= {p0_max} (通过)")
+
+    if not (p1_defects <= p1_max):
+        defect_parts.append(f"存在 {p1_defects} 个未关闭 P1 缺陷 (上限 {p1_max})")
     else:
-        details.append("无未关闭 P0 缺陷 (通过)")
+        defect_parts.append(f"未关闭 P1 缺陷 {p1_defects} <= {p1_max} (通过)")
 
-    return {"status": "pass" if passed else "fail", "details": details}
+    details.extend(defect_parts) if defect_parts else details.append("无缺陷检查")
+
+    # Gate status
+    if pass_rate_ok and defects_ok:
+        status = "pass"
+    elif not pass_rate_ok and not defects_ok:
+        status = "fail"
+    else:
+        status = "warn"
+
+    return {"status": status, "details": details}
+
+
+# ── Quality Gate Config ───────────────────────────────
+
+def get_quality_gate_config(db: Session, project_id: int) -> dict | None:
+    """Get quality gate config for a project. Returns None if not configured."""
+    row = db.scalar(
+        select(QualityGateConfig).where(QualityGateConfig.project_id == project_id)
+    )
+    if not row:
+        return None
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "pass_rate_threshold": row.pass_rate_threshold,
+        "p0_max": row.p0_max,
+        "p1_max": row.p1_max,
+        "enabled": row.enabled,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+        "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+    }
+
+
+def save_quality_gate_config(db: Session, project_id: int, data: dict) -> dict:
+    """Create or update quality gate config for a project. Returns the config dict."""
+    row = db.scalar(
+        select(QualityGateConfig).where(QualityGateConfig.project_id == project_id)
+    )
+
+    if row:
+        for k in ("pass_rate_threshold", "p0_max", "p1_max", "enabled"):
+            if k in data and data[k] is not None:
+                setattr(row, k, data[k])
+    else:
+        row = QualityGateConfig(
+            project_id=project_id,
+            pass_rate_threshold=data.get("pass_rate_threshold", 80),
+            p0_max=data.get("p0_max", 0),
+            p1_max=data.get("p1_max", 5),
+            enabled=data.get("enabled", True),
+        )
+        db.add(row)
+
+    db.flush()
+    db.refresh(row)
+
+    return {
+        "id": row.id,
+        "project_id": row.project_id,
+        "pass_rate_threshold": row.pass_rate_threshold,
+        "p0_max": row.p0_max,
+        "p1_max": row.p1_max,
+        "enabled": row.enabled,
+        "created_at": row.created_at.isoformat() if row.created_at else None,
+        "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+    }
+
+
+def get_report_gate(db: Session, report_id: int, project_id: int) -> dict | None:
+    """Get gate evaluation for a report (recomputes from persisted data)."""
+    r = db.scalar(
+        select(TestReport).where(
+            TestReport.id == report_id,
+            TestReport.project_id == project_id,
+        )
+    )
+    if not r:
+        return None
+
+    # Return persisted gate if available
+    details = []
+    if r.gate_details:
+        try:
+            details = json.loads(r.gate_details)
+        except json.JSONDecodeError:
+            details = []
+
+    return {
+        "report_id": r.id,
+        "gate_status": r.gate_status or "unknown",
+        "gate_details": details,
+    }
 
 
 def get_trends(db: Session, project_id: int) -> dict:
