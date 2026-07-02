@@ -795,6 +795,7 @@ graph LR
 | 2026-07-02 | 批次三 (V2.3 能力做真) | E1 环境变量管理 + C2 Excel 导入导出 + C4 用例版本历史 + I2 GET run + I3 结果回写 + G5 文档对齐 (16 files) | PR #11 → develop | ✅ 已交付 |
 | 2026-07-02 | 批次四 (V2.3 HITL 补齐) | C3 用例评审流 + C5 脑图增强 + I1 CI 协议设计 + R3 质量门禁 (28 files) | PR #12 → develop | ✅ 已交付 |
 | 2026-07-02 | 批次五 (V2.4 三引擎做真) | API 测试引擎(httpx+断言+变量替换) + UI 自动化(Playwright 子进程) + 音视频专项(ffprobe 探测) (18 files) | feature/batch-5-v2.4-real-engines | ✅ 已交付 |
+| 2026-07-02 | 批次六 (V2.4 补齐+Playwright) | Playwright 浏览器安装(3浏览器)+ Windows subprocess 修复(playwright_executor+ffmpeg_service)+ S2b HTML sanitization(_sanitize_html/_sanitize_case_data)+ playwright 配置文件与示例 (8 files) | 待提交 | 🔧 进行中 |
 
 > **V2.2 P1 安全基线 8/8 项全部完成 ✅**（批次 A-E，5 个 PR，2026-07-01 ~ 2026-07-02）
 > **V2.2 工程化基线 5/5 项全部完成 ✅**（批次 F，1 个 PR，2026-07-02）
@@ -809,7 +810,7 @@ graph LR
 ### 批次三（V2.3 能力做真）：✅ 已完成 — E1 环境变量 + C2 Excel 导出入 + C4 版本历史 + I2/I3 CI/CD 开放 API。
 ### 批次四（V2.3 HITL 补齐）：✅ 已完成 — C3 评审流 + C5 脑图 + I1 CI 协议 + R3 质量门禁。
 
-### 下一步推进 (V2.4+)
-- **近期**：API 测试引擎做真、UI 自动化(Playwright)、音视频专项(FFmpeg)
-- **中期**：测试数据管理、多项目仪表板、外部系统集成(Jira/TAPD)
-- **长期**：PostgreSQL 迁移、微服务拆分、AI 失败根因分析
+### 下一步推进 (V2.5+)
+- **近期**：测试数据管理(CSV/JSON/SQL 参数化注入)、多项目仪表板(跨项目聚合看板)
+- **中期**：外部系统集成(Jira/TAPD 缺陷同步)、PostgreSQL 迁移
+- **长期**：微服务拆分、AI 失败根因分析

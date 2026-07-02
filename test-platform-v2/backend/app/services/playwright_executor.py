@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import os
+import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,19 +24,26 @@ MAX_CONCURRENT = 2  # 最大并发执行数
 _semaphore = asyncio.Semaphore(MAX_CONCURRENT)
 
 
+def _resolve_cmd(name: str) -> str | None:
+    """跨平台解析可执行文件路径（Windows 上自动补全 .cmd/.exe 扩展名）。"""
+    resolved = shutil.which(name)
+    return resolved
+
+
 def _check_playwright_installed() -> tuple[bool, str]:
     """检查 Playwright 是否可用。"""
+    npx = _resolve_cmd("npx")
+    if not npx:
+        return False, "npx 命令不可用，请安装 Node.js"
     try:
         result = subprocess.run(
-            ["npx", "playwright", "--version"],
+            [npx, "playwright", "--version"],
             capture_output=True, text=True, timeout=15,
             cwd=str(PLAYWRIGHT_DIR) if PLAYWRIGHT_DIR.exists() else os.getcwd(),
         )
         if result.returncode == 0:
             return True, result.stdout.strip()
         return False, f"Playwright 未正确安装: {result.stderr.strip()}"
-    except FileNotFoundError:
-        return False, "npx 命令不可用，请安装 Node.js"
     except subprocess.TimeoutExpired:
         return False, "检查 Playwright 版本超时"
     except Exception as e:
@@ -93,8 +101,15 @@ def run_playwright_test(db: Session, job_id: int, project_id: int) -> dict:
 
     try:
         # 5. 执行 Playwright
+        npx = _resolve_cmd("npx")
+        if not npx:
+            return _complete_run(
+                db, job, run, status="fail",
+                total=0, passed=0, failed=0, skipped=0, duration=0,
+                error="npx 命令不可用",
+            )
         cmd = [
-            "npx", "playwright", "test", test_spec,
+            npx, "playwright", "test", test_spec,
             "--project", browser,
             "--reporter", "json",
         ]
