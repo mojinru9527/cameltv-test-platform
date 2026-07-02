@@ -298,35 +298,33 @@ def import_cases(
             for c in cases:
                 case_type = c.get("case_type", "manual")
                 case_index = c.get("index")
-                try:
-                    steps_raw = c.get("steps", "[]")
-                    if isinstance(steps_raw, list):
-                        steps_raw = json.dumps(steps_raw, ensure_ascii=False)
-                    test_case_service.create_case(db, {
-                        "project_id": project_id,
-                        "title": c.get("title", ""),
-                        "domain": c.get("domain", ""),
-                        "module": c.get("module", ""),
-                        "case_type": case_type,
-                        "priority": c.get("priority", "P2"),
-                        "preconditions": c.get("preconditions", ""),
-                        "steps": steps_raw,
-                        "expected_result": c.get("expected_result", ""),
-                        "api_method": c.get("api_method", ""),
-                        "api_endpoint": c.get("api_endpoint", ""),
-                        "source": "ai_generated",
-                        "source_doc_id": doc_id,
-                    })
-                    if case_type == "api":
-                        imported_api += 1
-                        if case_index is not None:
-                            api_indices.append(case_index)
-                    else:
-                        imported_func += 1
-                        if case_index is not None:
-                            func_indices.append(case_index)
-                except Exception:
-                    skipped += 1
+                # Each case is attempted; any failure breaks the entire batch
+                steps_raw = c.get("steps", "[]")
+                if isinstance(steps_raw, list):
+                    steps_raw = json.dumps(steps_raw, ensure_ascii=False)
+                test_case_service.create_case(db, {
+                    "project_id": project_id,
+                    "title": c.get("title", ""),
+                    "domain": c.get("domain", ""),
+                    "module": c.get("module", ""),
+                    "case_type": case_type,
+                    "priority": c.get("priority", "P2"),
+                    "preconditions": c.get("preconditions", ""),
+                    "steps": steps_raw,
+                    "expected_result": c.get("expected_result", ""),
+                    "api_method": c.get("api_method", ""),
+                    "api_endpoint": c.get("api_endpoint", ""),
+                    "source": "ai_generated",
+                    "source_doc_id": doc_id,
+                })
+                if case_type == "api":
+                    imported_api += 1
+                    if case_index is not None:
+                        api_indices.append(case_index)
+                else:
+                    imported_func += 1
+                    if case_index is not None:
+                        func_indices.append(case_index)
 
             # Update document status with per-type tracking
             row = db.get(RequirementDocument, doc_id)

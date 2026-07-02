@@ -50,20 +50,36 @@ def _build_content(db: Session, plan_id: int) -> str:
         .order_by(TestPlanCase.sort_order)
     ).all()
 
-    # Get latest trace_id per plan case from executions
+    # Get latest trace_id per plan case from executions (batch query — was N+1)
     case_trace_map: dict[int, str] = {}
     pcase_ids = [pc.id for pc, _ in pcases]
     if pcase_ids:
-        from sqlalchemy import desc
-        for pcase_id in pcase_ids:
-            last_exec = db.scalar(
-                select(TestExecution)
-                .where(TestExecution.plan_case_id == pcase_id)
-                .order_by(desc(TestExecution.executed_at))
-                .limit(1)
+        from sqlalchemy import and_, desc
+
+        # Find max executed_at per plan_case_id, then join back to TestExecution
+        latest_sub = (
+            select(
+                TestExecution.plan_case_id,
+                func.max(TestExecution.executed_at).label("max_at"),
             )
-            if last_exec and last_exec.trace_id:
-                case_trace_map[pcase_id] = last_exec.trace_id
+            .where(TestExecution.plan_case_id.in_(pcase_ids))
+            .group_by(TestExecution.plan_case_id)
+        ).subquery()
+
+        latest_execs = db.execute(
+            select(TestExecution)
+            .join(
+                latest_sub,
+                and_(
+                    TestExecution.plan_case_id == latest_sub.c.plan_case_id,
+                    TestExecution.executed_at == latest_sub.c.max_at,
+                ),
+            )
+        ).scalars().all()
+
+        for e in latest_execs:
+            if e.trace_id:
+                case_trace_map[e.plan_case_id] = e.trace_id
 
     cases = []
     stats = {"total": 0, "pass": 0, "fail": 0, "skip": 0, "block": 0, "pending": 0}
@@ -278,6 +294,57 @@ def get_trends(db: Session, project_id: int) -> dict:
         .order_by(TestReport.created_at.asc())
     ).scalars().all()
 
+    # Batch load defect data for all reports at once (was N+1 per report)
+    from collections import defaultdict
+
+    # 1) Collect plan_ids and timestamps
+    report_meta = [(r.id, r.plan_id, r.created_at) for r in reports if r.plan_id]
+    all_plan_ids = list({pid for _, pid, _ in report_meta})
+
+    # 2) Batch load all plan_cases for all plan_ids
+    plan_case_map: dict[int, set[int]] = {}
+    if all_plan_ids:
+        pc_rows = db.execute(
+            select(TestPlanCase.plan_id, TestPlanCase.case_id)
+            .where(TestPlanCase.plan_id.in_(all_plan_ids))
+        ).all()
+        for pid, cid in pc_rows:
+            plan_case_map.setdefault(pid, set()).add(cid)
+
+    # 3) Batch load all relevant defects (all in one query, then group in memory)
+    all_case_ids = set()
+    for cids in plan_case_map.values():
+        all_case_ids.update(cids)
+
+    defects_by_case: dict[int, list[dict]] = defaultdict(list)
+    if all_case_ids:
+        defect_rows = db.execute(
+            select(Defect.case_id, Defect.severity, Defect.status, Defect.created_at, Defect.resolved_at)
+            .where(
+                Defect.project_id == project_id,
+                Defect.case_id.in_(all_case_ids),
+            )
+        ).all()
+        for row in defect_rows:
+            defects_by_case[row.case_id].append({
+                "severity": row.severity,
+                "status": row.status,
+                "created_at": row.created_at,
+                "resolved_at": row.resolved_at,
+            })
+
+    def _compute_open_defects_at(pid: int, at_time) -> dict[str, int]:
+        """Count open defects at timestamp using preloaded data."""
+        case_ids = plan_case_map.get(pid, set())
+        counts: dict[str, int] = {}
+        for cid in case_ids:
+            for d in defects_by_case.get(cid, []):
+                if d["created_at"] and d["created_at"] <= at_time:
+                    if d["resolved_at"] is None or d["resolved_at"] > at_time:
+                        sev = d["severity"]
+                        counts[sev] = counts.get(sev, 0) + 1
+        return counts
+
     points = []
     for r in reports:
         try:
@@ -292,8 +359,8 @@ def get_trends(db: Session, project_id: int) -> dict:
         block_count = stats.get("block", 0)
         pass_rate = round(pass_count / total * 100, 1) if total else 0.0
 
-        # Defect convergence: count open defects at the time this report was created
-        open_defects = _count_open_defects_at(db, project_id, r.plan_id, r.created_at)
+        # Defect convergence: count open defects using preloaded data
+        open_defects = _compute_open_defects_at(r.plan_id, r.created_at) if r.plan_id else {}
 
         points.append({
             "date": r.created_at.isoformat() if r.created_at else "",
