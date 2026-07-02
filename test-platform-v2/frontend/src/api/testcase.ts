@@ -80,3 +80,13 @@ export async function fetchVersions(caseId: number): Promise<import('@/types').T
 export async function fetchVersionDetail(caseId: number, versionId: number): Promise<import('@/types').TestCaseVersionDetail> {
   return api.get(`/test-cases/${caseId}/versions/${versionId}`)
 }
+
+// ── Review ──
+
+export async function reviewCase(caseId: number, action: string, comment: string = ''): Promise<any> {
+  return api.post(`/test-cases/${caseId}/review`, { action, comment })
+}
+
+export async function fetchReviewHistory(caseId: number): Promise<import('@/types').TestCaseReviewTransition[]> {
+  return api.get(`/test-cases/${caseId}/review-history`)
+}

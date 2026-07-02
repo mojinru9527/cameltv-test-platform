@@ -126,6 +126,20 @@ def get_report(
     return R.ok(ReportDetailOut(**r))
 
 
+@router.get("/{report_id}/gate", response_model=R[dict], summary="查询报告门禁评估")
+def get_report_gate(
+    report_id: int,
+    current: CurrentUser = Depends(require_permission("report:detail")),
+    db: Session = Depends(get_db),
+):
+    """获取指定报告的质量门禁评估结果（含 pass/fail/warn 和详情）。"""
+    gate = report_service.get_report_gate(db, report_id, current.project_id or 0)
+    if not gate:
+        from app.core.exceptions import not_found
+        raise not_found("报告")
+    return R.ok(gate)
+
+
 @router.delete("/{report_id}", response_model=R[dict])
 def delete_report(
     req: Request,

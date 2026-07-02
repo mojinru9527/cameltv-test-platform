@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -278,6 +278,9 @@ export default function ProjectPage() {
         />
       )}
 
+      {/* Quality Gate Config */}
+      <QualityGateCard />
+
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
         <DialogContent className="sm:max-w-[480px]">
@@ -435,5 +438,102 @@ export default function ProjectPage() {
         </SheetContent>
       </Sheet>
     </>
+  )
+}
+
+// ── Quality Gate Config ──
+
+function QualityGateCard() {
+  const [loading, setLoading] = useState(false)
+  const [config, setConfig] = useState<any>(null)
+  const [form, setForm] = useState({ pass_rate_threshold: 80, p0_max: 0, p1_max: 5, enabled: true })
+
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  const loadConfig = async () => {
+    try {
+      const r: any = await api.get('/projects/current')
+      const projectId = r.id
+      if (!projectId) return
+      const g: any = await api.get(`/projects/${projectId}/quality-gate`)
+      if (g) {
+        setConfig(g)
+        setForm({ pass_rate_threshold: g.pass_rate_threshold, p0_max: g.p0_max, p1_max: g.p1_max, enabled: g.enabled })
+      }
+    } catch { /* no gate config yet */ }
+  }
+
+  const saveConfig = async () => {
+    setLoading(true)
+    try {
+      const r: any = await api.get('/projects/current')
+      const projectId = r.id
+      const result: any = await api.put(`/projects/${projectId}/quality-gate`, form)
+      setConfig(result)
+      toast.success('门禁配置已保存')
+    } catch {
+      toast.error('保存失败')
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <Card className="mt-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">质量门禁配置</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-4 gap-4 items-end">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">通过率阈值 (%)</label>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={form.pass_rate_threshold}
+              onChange={(e) => setForm((f) => ({ ...f, pass_rate_threshold: parseInt(e.target.value) || 0 }))}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">P0 缺陷上限</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.p0_max}
+              onChange={(e) => setForm((f) => ({ ...f, p0_max: parseInt(e.target.value) || 0 }))}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">P1 缺陷上限</label>
+            <Input
+              type="number"
+              min={0}
+              value={form.p1_max}
+              onChange={(e) => setForm((f) => ({ ...f, p1_max: parseInt(e.target.value) || 0 }))}
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.enabled}
+                onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
+                className="size-4"
+              />
+              <span className="text-sm">启用门禁</span>
+            </label>
+            <Button size="sm" onClick={saveConfig} disabled={loading}>
+              {loading ? '保存中...' : '保存'}
+            </Button>
+          </div>
+        </div>
+        {config?.is_default !== undefined && (
+          <p className="text-xs text-muted-foreground mt-2">
+            {config.is_default ? '当前使用默认配置' : '已自定义配置'}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   )
 }

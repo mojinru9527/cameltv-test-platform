@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -198,16 +198,23 @@ def batch_delete_test_cases(
 # ── 评审流 ──────────────────────────────────────────
 
 class ReviewBody(BaseModel):
-    action: str = Field(..., pattern="^(submit|approve|reject)$")
+    action: str = Field(..., pattern="^(submit|approve|reject|withdraw)$")
     comment: str = Field("", max_length=500)
 
 
-_REVIEW_TRANSITIONS = {
-    "submit":  {"from": {"draft", "rejected"}, "to": "submitted"},
-    "approve": {"from": {"submitted"},            "to": "approved"},
-    "reject":  {"from": {"submitted"},            "to": "rejected"},
-}
-_REVIEW_LABELS = {"draft": "草稿", "submitted": "已提交", "approved": "已通过", "rejected": "已驳回"}
+def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
+    """在独立 DB session 中发送通知（供 BackgroundTasks 调用）。"""
+    import logging
+    from app.core.db import SessionLocal
+    from app.services.notify_service import notify_sync
+    logger = logging.getLogger("review")
+    db2 = SessionLocal()
+    try:
+        notify_sync(db2, project_id, event, data)
+    except Exception:
+        logger.exception("Background notification failed")
+    finally:
+        db2.close()
 
 
 @router.post("/{case_id}/review", response_model=R[TestCaseOut], summary="用例评审操作")
@@ -215,35 +222,68 @@ def review_case(
     case_id: int,
     body: ReviewBody,
     req: Request,
-    current: CurrentUser = Depends(require_permission("testcase:update")),
+    background_tasks: BackgroundTasks,
+    current: CurrentUser = Depends(require_permission("review:submit")),
     db: Session = Depends(get_db),
 ):
-    """提交评审 / 通过 / 驳回。合法流转: draft/rejected→submitted→approved/rejected。"""
-    row = test_case_service.update_case(db, case_id, {"_": None})  # just check exists
-    # Actually fetch the raw ORM row for review_status
-    from app.models.test_case import TestCase
-    case = db.scalar(
-        __import__("sqlalchemy").select(TestCase).where(
-            TestCase.id == case_id, TestCase.project_id == current.project_id
+    """提交评审 / 通过 / 驳回 / 撤回。合法流转详见 review_service 状态机。"""
+    from app.services import review_service
+    from fastapi import BackgroundTasks as BgTasks
+
+    # approve/reject use review:approve permission
+    if body.action in ("approve", "reject"):
+        # Re-check permission — the Depends above allows submit/withdraw via review:submit
+        if "review:approve" not in current.permissions:
+            from app.core.exceptions import APIException
+            raise APIException(code=403, msg="需要审批评审权限 (review:approve)", http_status=403)
+
+    try:
+        row = review_service.transition_review(
+            db, case_id, body.action,
+            project_id=current.project_id or 0,
+            operator_id=current.user.id,
+            operator_name=current.user.nickname or current.user.username,
+            comment=body.comment,
         )
-    )
-    if not case:
+    except ValueError as e:
+        return R(code=1, msg=str(e))
+
+    if not row:
         return R(code=404, msg="用例不存在")
 
-    rule = _REVIEW_TRANSITIONS[body.action]
-    if case.review_status not in rule["from"]:
-        allowed = ", ".join(f"{s}({_REVIEW_LABELS.get(s,s)})" for s in rule["from"])
-        return R(code=1, msg=f"不允许从「{_REVIEW_LABELS.get(case.review_status, case.review_status)}」执行「{body.action}」，仅允许从 {allowed} 操作")
-
-    case.review_status = rule["to"]
-    case.review_comment = body.comment
-    case.reviewer_id = current.user.id
     db.commit()
-    db.refresh(case)
 
     _audit(req, current, db, "case:review", f"#{case_id} {body.action}", body.comment)
-    row_dict = test_case_service.get_case(db, case_id, project_id=current.project_id or 0)
-    return R.ok(TestCaseOut(**row_dict) if row_dict else TestCaseOut(id=case_id))
+
+    # Background notification
+    action_labels = {"submit": "提交评审", "approve": "评审通过", "reject": "评审驳回", "withdraw": "撤回评审"}
+    background_tasks.add_task(
+        _run_notify_in_new_session,
+        current.project_id or 0,
+        "case_reviewed",
+        {
+            "case_title": row.get("title", f"#{case_id}"),
+            "action": action_labels.get(body.action, body.action),
+            "reviewer": current.user.nickname or current.user.username,
+            "comment": body.comment or "无",
+            "link": "",
+        },
+    )
+
+    return R.ok(TestCaseOut(**row))
+
+
+@router.get("/{case_id}/review-history", response_model=R[list[dict]], summary="用例评审历史")
+def review_history(
+    case_id: int,
+    current: CurrentUser = Depends(require_permission("testcase:list")),
+    db: Session = Depends(get_db),
+):
+    """返回用例的完整评审流转记录。"""
+    from app.services import review_service
+
+    history = review_service.get_review_history(db, case_id, project_id=current.project_id or 0)
+    return R.ok(history)
 
 
 # ── Xmind 导入导出 ──────────────────────────────────

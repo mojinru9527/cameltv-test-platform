@@ -492,6 +492,27 @@ export default function ReportPage() {
                 )}
               </dl>
 
+              {/* Quality Gate */}
+              {detail.gate_status && (
+                <div className="flex items-center gap-2 rounded-md border p-3">
+                  <span className="text-sm font-medium">质量门禁：</span>
+                  <Badge variant={
+                    detail.gate_status === 'pass' ? 'default'
+                      : detail.gate_status === 'fail' ? 'destructive'
+                      : 'secondary'
+                  }>
+                    {detail.gate_status === 'pass' ? '✅ 通过' : detail.gate_status === 'fail' ? '❌ 未通过' : '⚠️ 警告'}
+                  </Badge>
+                  {detail.gate_details && detail.gate_details.length > 0 && (
+                    <div className="ml-2 text-xs text-muted-foreground">
+                      {detail.gate_details.map((d: string, i: number) => (
+                        <div key={i}>{d}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Export button */}
               <div className="flex justify-end">
                 <DropdownMenu>

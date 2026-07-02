@@ -103,6 +103,9 @@ _ACTIONS = [
     # 通知配置 (P1-6/S3)
     ("notify:list", "查看通知配置", "button"),
     ("notify:manage", "管理通知配置", "button"),
+    # 用例评审 (C3)
+    ("review:submit", "提交评审", "button"),
+    ("review:approve", "审批评审", "button"),
 ]
 
 # 测试人员可见的菜单子集
