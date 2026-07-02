@@ -2,10 +2,72 @@
 from __future__ import annotations
 
 import json
+import re
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.test_case import TestCase
+
+# ── P1-2/S2b: HTML sanitization (defense-in-depth against stored XSS) ────
+
+# Tags whose inner content is stripped entirely (dangerous active content)
+_DANGEROUS_TAGS_RE = re.compile(
+    r"<\s*(script|iframe|object|embed|form|input|textarea|select|option"
+    r"|link|meta|base|applet|frame|frameset|ilayer|layer|bgsound"
+    r"|xml|style)[^>]*/?\s*>.*?</\s*\1\s*>",
+    re.IGNORECASE | re.DOTALL,
+)
+# Self-closing dangerous tags
+_SELF_CLOSING_TAGS_RE = re.compile(
+    r"<\s*(script|iframe|object|embed|form|input|textarea|select"
+    r"|link|meta|base|applet|frame|frameset)[^>]*/?\s*>",
+    re.IGNORECASE,
+)
+# Event handler attributes (onerror, onclick, onload, etc.)
+_EVENT_ATTRS_RE = re.compile(
+    r"\s+on\w+\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s>]+)",
+    re.IGNORECASE,
+)
+# javascript: URLs in href/src attributes
+_JS_URL_RE = re.compile(
+    r"""(href|src|action)\s*=\s*["']?\s*javascript\s*:""",
+    re.IGNORECASE,
+)
+
+_SAFE_FIELDS = frozenset({
+    "title", "preconditions", "steps", "expected_result",
+    "description", "remark", "tags", "api_endpoint", "review_comment",
+})
+
+
+def _sanitize_html(value: str) -> str:
+    """Strip dangerous HTML tags and event handlers, preserving markdown syntax.
+
+    Strategy: remove dangerous tags first (strip their inner content for
+    script/iframe, or just the tag for others), then strip event handler
+    attributes and javascript: URLs.
+    """
+    if not value or not isinstance(value, str):
+        return value or ""
+
+    # 1. Remove fully wrapped dangerous tags (strip inner content too)
+    cleaned = _DANGEROUS_TAGS_RE.sub("", value)
+    # 2. Remove self-closing dangerous tags
+    cleaned = _SELF_CLOSING_TAGS_RE.sub("", cleaned)
+    # 3. Strip event handler attributes
+    cleaned = _EVENT_ATTRS_RE.sub("", cleaned)
+    # 4. Strip javascript: URLs
+    cleaned = _JS_URL_RE.sub(r'\1=""', cleaned)
+
+    return cleaned.strip()
+
+
+def _sanitize_case_data(data: dict) -> dict:
+    """Sanitize user-controlled text fields in create/update payloads."""
+    for field in _SAFE_FIELDS:
+        if field in data and isinstance(data[field], str):
+            data[field] = _sanitize_html(data[field])
+    return data
 
 
 # ── CRUD ──────────────────────────────────────────────
@@ -78,6 +140,7 @@ def get_case(db: Session, case_id: int, project_id: int = 0) -> dict | None:
 
 
 def create_case(db: Session, data: dict) -> dict:
+    data = _sanitize_case_data(data)
     row = TestCase(**data)
     db.add(row)
     db.commit()
@@ -86,6 +149,7 @@ def create_case(db: Session, data: dict) -> dict:
 
 
 def update_case(db: Session, case_id: int, data: dict, changed_by: int = 0) -> dict | None:
+    data = _sanitize_case_data(data)
     row = db.get(TestCase, case_id)
     if not row:
         return None

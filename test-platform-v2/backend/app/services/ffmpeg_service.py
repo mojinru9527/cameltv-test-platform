@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
 import subprocess
 from typing import Any
 
@@ -62,17 +63,18 @@ METRIC_DEFS = [
 
 def _check_ffmpeg_installed() -> tuple[bool, str]:
     """检查 ffprobe 是否可用。"""
+    ffprobe = shutil.which("ffprobe")
+    if not ffprobe:
+        return False, "ffprobe 命令不可用，请安装 FFmpeg (apt install ffmpeg 或 brew install ffmpeg)"
     try:
         result = subprocess.run(
-            ["ffprobe", "-version"],
+            [ffprobe, "-version"],
             capture_output=True, text=True, timeout=10,
         )
         if result.returncode == 0:
             version_line = result.stdout.split("\n")[0] if result.stdout else "ffprobe"
             return True, version_line.strip()
         return False, "ffprobe 未正确安装"
-    except FileNotFoundError:
-        return False, "ffprobe 命令不可用，请安装 FFmpeg (apt install ffmpeg 或 brew install ffmpeg)"
     except subprocess.TimeoutExpired:
         return False, "检查 ffprobe 版本超时"
     except Exception as e:
@@ -103,8 +105,9 @@ def probe_stream(url: str, protocol: str = "HLS", timeout: int = DEFAULT_TIMEOUT
         return {"ok": False, "metrics": [], "raw": {}, "error": f"FFmpeg 不可用: {version}"}
 
     # 3. 执行 ffprobe
+    ffprobe = shutil.which("ffprobe") or "ffprobe"
     cmd = [
-        "ffprobe",
+        ffprobe,
         "-v", "quiet",
         "-print_format", "json",
         "-show_format",
