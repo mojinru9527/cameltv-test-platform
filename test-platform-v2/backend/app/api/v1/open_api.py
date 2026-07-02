@@ -10,10 +10,25 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.exceptions import APIException
+from app.core.rate_limit import open_api_limiter
 from app.models.api_token import ApiToken
 from app.schemas.common import R
 
 router = APIRouter(prefix="/open", tags=["开放API"])
+
+# Allow-listed health check path (no auth required)
+_HEALTH_PATH = "/open/health"
+
+
+def _check_rate_limit(token: ApiToken) -> None:
+    """Enforce 60 req/min per token. Raises 429 if exceeded."""
+    allowed, wait = open_api_limiter.is_allowed(token.token_hash)
+    if not allowed:
+        raise APIException(
+            code=429,
+            msg=f"请求过于频繁，请 {wait}s 后重试 (限制: 60次/分钟)",
+            http_status=429,
+        )
 
 
 def verify_api_token(
@@ -33,7 +48,18 @@ def verify_api_token(
     if not row:
         raise APIException(code=401, msg="无效或已禁用的 API Token", http_status=401)
 
+    # Rate limit check (after auth so we know which token)
+    _check_rate_limit(row)
+
     return row
+
+
+# ── Health ────────────────────────────────────────────
+
+@router.get("/health", summary="连通性检查")
+def health_check():
+    """轻量健康检查，无需鉴权。CI 可在触发前调用以验证 API 可达。"""
+    return R.ok({"status": "ok", "version": "2.3.0"})
 
 
 @router.post("/plans/{plan_id}/trigger", response_model=R[dict], summary="CI 触发测试计划执行")

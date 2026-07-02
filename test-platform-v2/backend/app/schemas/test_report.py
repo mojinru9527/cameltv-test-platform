@@ -23,6 +23,8 @@ class ReportOut(BaseModel):
     description: str = ""
     plan_id: int = 0
     creator_id: int = 0
+    gate_status: str | None = None
+    gate_details: list | None = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     # filled by service:

@@ -99,6 +99,11 @@ export {
   History,
   // Keys
   Key,
+  // Fullscreen
+  Maximize2,
+  Minimize2,
+  // Checklist
+  ClipboardCheck,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"
