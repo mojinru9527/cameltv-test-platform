@@ -22,6 +22,7 @@ const RequirementPage = lazy(() => import('@/pages/requirement'))
 const MindmapPage = lazy(() => import('@/pages/mindmap'))
 const ApiTestPage = lazy(() => import('@/pages/apitest'))
 const NotifyPage = lazy(() => import('@/pages/notify'))
+const EnvironmentPage = lazy(() => import('@/pages/environment'))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -63,6 +64,7 @@ export const router = createBrowserRouter([
       { path: 'system', element: <PageLoader><SystemPage /></PageLoader> },
       { path: 'project', element: <PageLoader><ProjectPage /></PageLoader> },
       { path: 'notify', element: <PageLoader><NotifyPage /></PageLoader> },
+      { path: 'environment', element: <PageLoader><EnvironmentPage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
   },
