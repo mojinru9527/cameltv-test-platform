@@ -41,6 +41,8 @@ module.exports = {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
+        'muted-hc': 'var(--text-muted-high-contrast)',
+        'border-hc': 'var(--border-high-contrast)',
         sidebar: {
           DEFAULT: "var(--sidebar-background)",
           foreground: "var(--sidebar-foreground)",

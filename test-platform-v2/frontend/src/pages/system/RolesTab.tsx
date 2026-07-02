@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ErrorState } from '@/components/state'
+import useApi from '@/hooks/useApi'
 import {
   Select,
   SelectContent,
@@ -50,9 +52,6 @@ const roleSchema = z.object({
 type RoleFormData = z.infer<typeof roleSchema>
 
 export default function RolesTab() {
-  const [roles, setRoles] = useState<any[]>([])
-  const [permGroups, setPermGroups] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [saving, setSaving] = useState(false)
@@ -70,16 +69,19 @@ export default function RolesTab() {
   })
   const watchDataScope = watch('data_scope')
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [rls, perms] = await Promise.all([fetchRoles(), fetchPermissions()])
-      setRoles(rls as any)
-      setPermGroups(perms as any)
-    } finally { setLoading(false) }
-  }, [])
+  const {
+    data: rolesAndPerms,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useApi<any>(
+    () => Promise.all([fetchRoles(), fetchPermissions()]),
+    { showErrorToast: true },
+  )
 
-  useEffect(() => { load() }, [load])
+  const roles: any[] = (rolesAndPerms?.[0] as any) ?? []
+  const permGroups: any[] = (rolesAndPerms?.[1] as any) ?? []
 
   const openEdit = (role?: any) => {
     setEditing(role || null)
@@ -114,14 +116,14 @@ export default function RolesTab() {
       }
       setDrawer(false)
       setEditing(null)
-      load()
+      refetch()
     } finally { setSaving(false) }
   }
 
   const doDelete = async (id: number) => {
     await deleteRole(id)
     toast.success('已删除')
-    load()
+    refetch()
   }
 
   const togglePerm = (code: string, checked: boolean | 'indeterminate') => {
@@ -185,15 +187,22 @@ export default function RolesTab() {
         新建角色
       </Button>
 
+      {/* Error state */}
+      {isError && roles.length === 0 && (
+        <ErrorState error={error} onRetry={refetch} />
+      )}
+
       {/* Table */}
-      <DataTable
-        columns={roleColumns}
-        data={roles}
-        rowKey={(r) => r.id}
-        loading={loading}
-        loadingRows={4}
-        emptyState={{ title: '暂无角色', description: '点击「新建角色」创建权限角色' }}
-      />
+      {(!isError || roles.length > 0) && (
+        <DataTable
+          columns={roleColumns}
+          data={roles}
+          rowKey={(r) => r.id}
+          loading={isLoading}
+          loadingRows={4}
+          emptyState={{ title: '暂无角色', description: '点击「新建角色」创建权限角色' }}
+        />
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>

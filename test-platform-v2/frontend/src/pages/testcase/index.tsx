@@ -3,7 +3,6 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -38,19 +37,19 @@ import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import EmptyState from '@/components/EmptyState'
 import { SkeletonText } from '@/components/ui/skeleton'
+import { ErrorState } from '@/components/state'
 
 import { Search, RotateCcw, Plus, Edit, Trash2 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases } from '@/api/testcase'
+import { useApi } from '@/hooks/useApi'
 import CaseDrawer from './CaseDrawer'
 
 const PRIORITY_COLORS: Record<string, string> = { P0: 'red', P1: 'orange', P2: 'blue', P3: 'default' }
 
 export default function TestCasePage() {
-  // data
-  const [data, setData] = useState({ total: 0, items: [] as any[], page: 1, page_size: 20 })
+  // domains are loaded independently (used for tree + filter dropdowns)
   const [domains, setDomains] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
 
   // filter state
   const [actTab, setActTab] = useState('')
@@ -58,6 +57,7 @@ export default function TestCasePage() {
   const [selModule, setSelModule] = useState('')
   const [priority, setPriority] = useState('')
   const [keyword, setKeyword] = useState('')
+  const [page, setPage] = useState(1)
 
   // drawer
   const [drawer, setDrawer] = useState(false)
@@ -69,6 +69,37 @@ export default function TestCasePage() {
   const [batchUpdating, setBatchUpdating] = useState(false)
   const [batchPriority, setBatchPriority] = useState('')
 
+  // delete dialog
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
+  // ── Main data fetching with useApi ──
+  const { data, isLoading, isError, error, refetch } = useApi(
+    () => {
+      const params: any = { page, page_size: 20 }
+      if (actTab) params.case_type = actTab
+      if (selDomain) params.domain = selDomain
+      if (selModule) params.module = selModule
+      if (priority) params.priority = priority
+      if (keyword) params.keyword = keyword
+      return fetchTestCases(params) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
+    },
+    [actTab, selDomain, selModule, priority, keyword, page]
+  )
+
+  // ── Domains (secondary data, loaded independently) ──
+  const loadDomains = useCallback(async () => {
+    try {
+      const d: any = await fetchDomains()
+      setDomains(d || [])
+    } catch { /* handled by interceptor */ }
+  }, [])
+
+  useEffect(() => { loadDomains() }, [loadDomains])
+
+  const items = data?.items || []
+  const totalPages = data ? Math.ceil(data.total / data.page_size) : 1
+
+  // ── Selection helpers ──
   const toggleSelect = (id: number) => {
     setSelected(prev => {
       const next = new Set(prev)
@@ -77,20 +108,21 @@ export default function TestCasePage() {
     })
   }
   const toggleSelectAll = () => {
-    if (selected.size === data.items.length) {
+    if (selected.size === items.length) {
       setSelected(new Set())
     } else {
-      setSelected(new Set(data.items.map((r: any) => r.id)))
+      setSelected(new Set(items.map((r: any) => r.id)))
     }
   }
 
+  // ── Batch operations ──
   const doBatchDelete = async () => {
     setBatchDeleting(true)
     try {
       await batchDeleteCases(Array.from(selected))
       toast.success(`已删除 ${selected.size} 条用例`)
       setSelected(new Set())
-      reload()
+      refetch()
     } catch {
       toast.error('批量删除失败')
     } finally { setBatchDeleting(false) }
@@ -104,43 +136,13 @@ export default function TestCasePage() {
       toast.success(`已更新 ${selected.size} 条用例`)
       setSelected(new Set())
       setBatchPriority('')
-      reload()
+      refetch()
     } catch {
       toast.error('批量更新失败')
     } finally { setBatchUpdating(false) }
   }
 
-  // delete dialog
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
-
-  // load domains
-  const loadDomains = useCallback(async () => {
-    try {
-      const d: any = await fetchDomains()
-      setDomains(d || [])
-    } catch { /* handled by interceptor */ }
-  }, [])
-
-  // load cases
-  const load = useCallback(async (page = 1) => {
-    setLoading(true)
-    try {
-      const params: any = { page, page_size: 20 }
-      if (actTab) params.case_type = actTab
-      if (selDomain) params.domain = selDomain
-      if (selModule) params.module = selModule
-      if (priority) params.priority = priority
-      if (keyword) params.keyword = keyword
-      const r: any = await fetchTestCases(params)
-      setData(r)
-    } finally { setLoading(false) }
-  }, [actTab, selDomain, selModule, priority, keyword])
-
-  useEffect(() => { loadDomains(); load() }, [loadDomains])
-
-  const reload = () => load(data.page)
-
-  // domain tree data
+  // ── Domain tree data ──
   const domainTree = useMemo(() => {
     return domains.map((d: any) => ({
       title: <span className="text-[13px]">{d.domain} <span className="text-muted-foreground">({d.count})</span></span>,
@@ -160,12 +162,12 @@ export default function TestCasePage() {
     return d?.modules?.map((m: any) => ({ value: m.module, label: `${m.module} (${m.count})` })) || []
   }, [selDomain, domains])
 
-  // actions
+  // ── Actions ──
   const doDelete = async (id: number) => {
     await deleteTestCase(id)
     toast.success('已删除')
     setDeleteTarget(null)
-    reload()
+    refetch()
   }
 
   const openEdit = (row?: any) => {
@@ -176,11 +178,9 @@ export default function TestCasePage() {
   const onSaved = () => {
     setDrawer(false)
     setEditing(null)
-    reload()
+    refetch()
     loadDomains()
   }
-
-  const totalPages = Math.ceil(data.total / data.page_size)
 
   return (
     <div className="space-y-4">
@@ -188,11 +188,11 @@ export default function TestCasePage() {
 
       {/* Top Tabs */}
       <div className="flex items-center gap-2">
-        {[
+        {([
           ['', '全部 (901)'],
           ['manual', '功能用例 (795)'],
           ['api', '接口用例 (106)'],
-        ].map(([k, label]) => (
+        ]).map(([k, label]) => (
           <button
             key={k as string}
             type="button"
@@ -202,7 +202,7 @@ export default function TestCasePage() {
                 ? 'bg-accent text-accent-foreground font-semibold'
                 : 'text-muted-foreground hover:text-foreground'
             )}
-            onClick={() => { setActTab(k as string); load() }}
+            onClick={() => { setActTab(k as string); setPage(1) }}
           >
             {label}
           </button>
@@ -220,15 +220,14 @@ export default function TestCasePage() {
             <DomainTree
               treeData={domainTree}
               onSelect={(keys) => {
-                if (!keys.length) { setSelDomain(''); setSelModule(''); load(); return }
+                if (!keys.length) { setSelDomain(''); setSelModule(''); setPage(1); return }
                 const key = keys[0]
                 if (key.includes('::')) {
                   const [d, m] = key.split('::')
-                  setSelDomain(d); setSelModule(m)
+                  setSelDomain(d); setSelModule(m); setPage(1)
                 } else {
-                  setSelDomain(key); setSelModule('')
+                  setSelDomain(key); setSelModule(''); setPage(1)
                 }
-                load()
               }}
             />
           </CardContent>
@@ -238,7 +237,7 @@ export default function TestCasePage() {
         <div className="flex-1 min-w-0 space-y-3">
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); load() }}>
+            <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); setPage(1) }}>
               <SelectTrigger className="w-[130px]" size="sm">
                 <SelectValue placeholder="按域筛选" />
               </SelectTrigger>
@@ -249,7 +248,7 @@ export default function TestCasePage() {
               </SelectContent>
             </Select>
 
-            <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); load() }}>
+            <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[150px]" size="sm">
                 <SelectValue placeholder="按模块筛选" />
               </SelectTrigger>
@@ -260,7 +259,7 @@ export default function TestCasePage() {
               </SelectContent>
             </Select>
 
-            <Select value={priority || undefined} onValueChange={(v) => { setPriority(v || ''); load() }}>
+            <Select value={priority || undefined} onValueChange={(v) => { setPriority(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[100px]" size="sm">
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
@@ -279,15 +278,15 @@ export default function TestCasePage() {
                 placeholder="搜索标题/编号/接口"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') load() }}
+                onKeyDown={(e) => { if (e.key === 'Enter') refetch() }}
               />
             </InputGroup>
 
-            <Button size="sm" onClick={() => load()}>
+            <Button size="sm" onClick={() => setPage(1)}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
-            <Button size="sm" variant="outline" onClick={reload}>
+            <Button size="sm" variant="outline" onClick={refetch}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
             </Button>
             <div className="flex-1" />
@@ -330,7 +329,7 @@ export default function TestCasePage() {
                 <TableRow>
                   <TableHead className="w-[40px]">
                     <Checkbox
-                      checked={selected.size === data.items.length && data.items.length > 0}
+                      checked={selected.size === items.length && items.length > 0}
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -343,20 +342,26 @@ export default function TestCasePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading && data.items.length === 0 ? (
+                {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={7} className="py-8">
                       <SkeletonText lines={4} />
                     </TableCell>
                   </TableRow>
-                ) : data.items.length === 0 ? (
+                ) : isError ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-8">
+                      <ErrorState error={error} onRetry={refetch} />
+                    </TableCell>
+                  </TableRow>
+                ) : items.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="py-8">
                       <EmptyState title="暂无测试用例" description="点击「新建用例」开始创建" className="py-0" />
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data.items.map((r: any) => (
+                  items.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell>
                         <Checkbox
@@ -425,10 +430,10 @@ export default function TestCasePage() {
 
           {/* Pagination */}
           <Pagination
-            page={data.page}
+            page={data?.page || 1}
             totalPages={totalPages}
-            total={data.total}
-            onChange={(p) => load(p)}
+            total={data?.total || 0}
+            onChange={(p) => setPage(p)}
           />
         </div>
       </div>

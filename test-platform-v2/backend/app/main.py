@@ -106,6 +106,11 @@ app.add_middleware(CSRFMiddleware)
 # P1-S6c: Global request body size limit (100 MB)
 app.add_middleware(RequestSizeLimitMiddleware)
 
+# C3: Security response headers (X-Content-Type-Options, X-Frame-Options, etc.)
+from app.middleware.security_headers import SecurityHeadersMiddleware  # noqa: E402
+
+app.add_middleware(SecurityHeadersMiddleware)
+
 # P1-2/S2c: Content-Security-Policy header (defense-in-depth against XSS)
 from app.middleware.csp import CSPMiddleware  # noqa: E402
 
