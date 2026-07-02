@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     csp_enabled: bool = True
     csp_header: str = "script-src 'self' cdn.jsdelivr.net; object-src 'none'; base-uri 'self'"
 
+    # ── Security headers (C3) ──
+    security_headers_enabled: bool = True
+
     # ── Database ──
     database_url: str = "sqlite:///./data/platform.db"
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"

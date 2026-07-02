@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +14,8 @@ import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import EmptyState from '@/components/EmptyState'
 import { SkeletonText } from '@/components/ui/skeleton'
+import { AsyncState } from '@/components/state'
+import useApi from '@/hooks/useApi'
 import {
   Table,
   TableHeader,
@@ -74,34 +76,30 @@ const scheduleSchema = z.object({
 type ScheduleFormValues = z.infer<typeof scheduleSchema>
 
 export default function SchedulePage() {
-  const [data, setData] = useState({ total: 0, items: [] as any[], page: 1, page_size: 20 })
-  const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
   const [expandedRows, setExpandedRows] = useState<Record<number, { loading: boolean; runs: any[]; total: number }>>({})
 
+  const { data, isLoading, isError, error, refetch } = useApi<any>(
+    () => fetchSchedules({ page, page_size: 20 }),
+    [page],
+  )
+
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleSchema),
     defaultValues: { enabled: true, description: '' },
   })
 
-  const load = useCallback(async (page = 1) => {
-    setLoading(true)
-    try {
-      const r: any = await fetchSchedules({ page, page_size: 20 })
-      setData(r)
-    } finally { setLoading(false) }
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
   const loadPlans = async () => {
     try {
       const r: any = await fetchPlans({ page_size: 200 })
       setPlans(r.items || [])
-    } catch { /* */ }
+    } catch {
+      setPlans([])
+    }
   }
 
   const openNew = () => {
@@ -139,25 +137,25 @@ export default function SchedulePage() {
         toast.success('已创建')
       }
       setDrawerOpen(false)
-      load()
+      refetch()
     } finally { setSaving(false) }
   }
 
   const doDelete = async (id: number) => {
     await deleteSchedule(id)
     toast.success('已删除')
-    load()
+    refetch()
   }
 
   const doToggle = async (id: number, enabled: boolean) => {
     await updateSchedule(id, { enabled })
-    load()
+    refetch()
   }
 
   const doTrigger = async (id: number) => {
     await triggerSchedule(id)
     toast.success('已触发执行')
-    load()
+    refetch()
   }
 
   const loadRuns = async (scheduleId: number) => {
@@ -179,8 +177,6 @@ export default function SchedulePage() {
     }
   }
 
-  const totalPages = Math.max(1, Math.ceil(data.total / data.page_size))
-
   return (
     <div className="space-y-4">
       <PageHeader title="定时任务" />
@@ -197,158 +193,164 @@ export default function SchedulePage() {
         </CardContent>
       </Card>
 
-      <div className="rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>名称</TableHead>
-              <TableHead className="w-[150px]">目标计划</TableHead>
-              <TableHead className="w-[160px]">Cron 表达式</TableHead>
-              <TableHead className="w-[60px] text-center">启用</TableHead>
-              <TableHead className="w-[160px]">上次执行</TableHead>
-              <TableHead className="w-[200px]">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8">
-                  <SkeletonText lines={4} />
-                </TableCell>
-              </TableRow>
-            ) : data.items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8">
-                  <EmptyState title="暂无定时任务" description="点击「新建调度」创建定时测试任务" className="py-0" />
-                </TableCell>
-              </TableRow>
-            ) : (
-              data.items.map((row: any) => {
-                const isExpanded = expandedRows[row.id] && expandedRows[row.id].runs.length > 0
-                const expState = expandedRows[row.id]
-                return (
-                  <Fragment key={row.id}>
-                    <TableRow key={row.id}>
-                      <TableCell>
-                        <button
-                          onClick={() => loadRuns(row.id)}
-                          className="text-primary hover:underline text-left"
-                        >
-                          {row.name}
-                        </button>
-                      </TableCell>
-                      <TableCell>
-                        {row.plan_name || <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell>
-                        <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{row.cron_expression}</code>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Switch
-                          size="sm"
-                          checked={row.enabled}
-                          onCheckedChange={(checked) => doToggle(row.id, checked)}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {row.last_run
-                          ? new Date(row.last_run).toLocaleString()
-                          : <span className="text-muted-foreground">—</span>}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button size="sm" variant="outline" onClick={() => doTrigger(row.id)} data-icon="inline-start">
-                            <Zap />
-                            触发
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openEdit(row)} data-icon="inline-start">
-                            <Edit />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive" data-icon="inline-start">
-                                <Trash2 />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>确定删除？</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  此操作不可撤销。
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>取消</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => doDelete(row.id)}>删除</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data}
+        onRetry={refetch}
+        loadingVariant="skeleton"
+        skeletonType="table"
+        loadingRows={5}
+        emptyTitle="暂无定时任务"
+        emptyDescription="点击「新建调度」创建定时测试任务"
+      >
+        {(d) => {
+          const totalPages = Math.max(1, Math.ceil(d.total / d.page_size))
+          return (
+            <>
+              <div className="rounded-lg border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>名称</TableHead>
+                      <TableHead className="w-[150px]">目标计划</TableHead>
+                      <TableHead className="w-[160px]">Cron 表达式</TableHead>
+                      <TableHead className="w-[60px] text-center">启用</TableHead>
+                      <TableHead className="w-[160px]">上次执行</TableHead>
+                      <TableHead className="w-[200px]">操作</TableHead>
                     </TableRow>
-                    {isExpanded && (
-                      <TableRow key={`${row.id}-expanded`}>
-                        <TableCell colSpan={6} className="bg-muted/30 p-0">
-                          <div className="p-3">
-                            {expState?.loading ? (
-                              <div className="py-4"><SkeletonText lines={3} /></div>
-                            ) : expState?.runs.length === 0 ? (
-                              <EmptyState title="暂无执行记录" className="py-4" />
-                            ) : (
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead className="w-[100px]">状态</TableHead>
-                                    <TableHead className="w-[170px]">开始时间</TableHead>
-                                    <TableHead className="w-[170px]">结束时间</TableHead>
-                                    <TableHead className="w-[200px]">结果</TableHead>
-                                    <TableHead>错误</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {expState?.runs.map((run: any) => {
-                                    const resultParts: string[] = []
-                                    if (run.result?.pass_) resultParts.push(`通过${run.result.pass_}`)
-                                    if (run.result?.fail) resultParts.push(`失败${run.result.fail}`)
-                                    if (run.result?.pending) resultParts.push(`待执行${run.result.pending}`)
-                                    return (
-                                      <TableRow key={run.id}>
-                                        <TableCell>
-                                          <Badge className={RUN_STATUS_BADGE[run.status] || ''}>{run.status}</Badge>
-                                        </TableCell>
-                                        <TableCell>{run.started_at ? new Date(run.started_at).toLocaleString() : '-'}</TableCell>
-                                        <TableCell>{run.finished_at ? new Date(run.finished_at).toLocaleString() : '-'}</TableCell>
-                                        <TableCell>{resultParts.length > 0 ? resultParts.join(' / ') : '-'}</TableCell>
-                                        <TableCell>
-                                          {run.error_message
-                                            ? <span className="text-destructive">{run.error_message}</span>
-                                            : '-'}
-                                        </TableCell>
-                                      </TableRow>
-                                    )
-                                  })}
-                                </TableBody>
-                              </Table>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </Fragment>
-                )
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                  </TableHeader>
+                  <TableBody>
+                    {d.items.map((row: any) => {
+                      const isExpanded = expandedRows[row.id] && expandedRows[row.id].runs.length > 0
+                      const expState = expandedRows[row.id]
+                      return (
+                        <Fragment key={row.id}>
+                          <TableRow key={row.id}>
+                            <TableCell>
+                              <button
+                                onClick={() => loadRuns(row.id)}
+                                className="text-primary hover:underline text-left"
+                              >
+                                {row.name}
+                              </button>
+                            </TableCell>
+                            <TableCell>
+                              {row.plan_name || <span className="text-muted-foreground">—</span>}
+                            </TableCell>
+                            <TableCell>
+                              <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{row.cron_expression}</code>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                size="sm"
+                                checked={row.enabled}
+                                onCheckedChange={(checked) => doToggle(row.id, checked)}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {row.last_run
+                                ? new Date(row.last_run).toLocaleString()
+                                : <span className="text-muted-foreground">—</span>}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Button size="sm" variant="outline" onClick={() => doTrigger(row.id)} data-icon="inline-start">
+                                  <Zap />
+                                  触发
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => openEdit(row)} data-icon="inline-start">
+                                  <Edit />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="sm" variant="destructive" data-icon="inline-start">
+                                      <Trash2 />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>确定删除？</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        此操作不可撤销。
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>取消</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => doDelete(row.id)}>删除</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                          {isExpanded && (
+                            <TableRow key={`${row.id}-expanded`}>
+                              <TableCell colSpan={6} className="bg-muted/30 p-0">
+                                <div className="p-3">
+                                  {expState?.loading ? (
+                                    <div className="py-4"><SkeletonText lines={3} /></div>
+                                  ) : expState?.runs.length === 0 ? (
+                                    <EmptyState title="暂无执行记录" className="py-4" />
+                                  ) : (
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead className="w-[100px]">状态</TableHead>
+                                          <TableHead className="w-[170px]">开始时间</TableHead>
+                                          <TableHead className="w-[170px]">结束时间</TableHead>
+                                          <TableHead className="w-[200px]">结果</TableHead>
+                                          <TableHead>错误</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {expState?.runs.map((run: any) => {
+                                          const resultParts: string[] = []
+                                          if (run.result?.pass_) resultParts.push(`通过${run.result.pass_}`)
+                                          if (run.result?.fail) resultParts.push(`失败${run.result.fail}`)
+                                          if (run.result?.pending) resultParts.push(`待执行${run.result.pending}`)
+                                          return (
+                                            <TableRow key={run.id}>
+                                              <TableCell>
+                                                <Badge className={RUN_STATUS_BADGE[run.status] || ''}>{run.status}</Badge>
+                                              </TableCell>
+                                              <TableCell>{run.started_at ? new Date(run.started_at).toLocaleString() : '-'}</TableCell>
+                                              <TableCell>{run.finished_at ? new Date(run.finished_at).toLocaleString() : '-'}</TableCell>
+                                              <TableCell>{resultParts.length > 0 ? resultParts.join(' / ') : '-'}</TableCell>
+                                              <TableCell>
+                                                {run.error_message
+                                                  ? <span className="text-destructive">{run.error_message}</span>
+                                                  : '-'}
+                                              </TableCell>
+                                            </TableRow>
+                                          )
+                                        })}
+                                      </TableBody>
+                                    </Table>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </Fragment>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
 
-      {/* Pagination */}
-      <Pagination
-        page={data.page}
-        totalPages={totalPages}
-        total={data.total}
-        onChange={(p) => load(p)}
-      />
+              {/* Pagination */}
+              <Pagination
+                page={d.page}
+                totalPages={totalPages}
+                total={d.total}
+                onChange={(p) => setPage(p)}
+              />
+            </>
+          )
+        }}
+      </AsyncState>
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawerOpen} onOpenChange={setDrawerOpen}>

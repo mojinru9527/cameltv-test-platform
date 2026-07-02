@@ -27,7 +27,7 @@ export default function StatCard({ icon: Icon, label, value, trend, trendUp, cla
           <Icon className="size-5" />
         </div>
         <div className="flex flex-col min-w-0">
-          <span className="text-xs text-muted-foreground truncate">{label}</span>
+          <span className="text-xs text-muted-hc truncate">{label}</span>
           <span className="text-xl font-bold tracking-tight">{value}</span>
           {trend && (
             <span

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
+import { ErrorState } from '@/components/state'
+import useApi from '@/hooks/useApi'
 import {
   Dialog,
   DialogContent,
@@ -44,9 +46,6 @@ const userSchema = z.object({
 type UserFormData = z.infer<typeof userSchema>
 
 export default function UsersTab() {
-  const [users, setUsers] = useState<any[]>([])
-  const [roles, setRoles] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [saving, setSaving] = useState(false)
@@ -63,16 +62,19 @@ export default function UsersTab() {
     defaultValues: { status: true, username: '', password: '', nickname: '', email: '' },
   })
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [u, r] = await Promise.all([fetchUsers(), fetchRoles()])
-      setUsers(u as any)
-      setRoles(r as any)
-    } finally { setLoading(false) }
-  }, [])
+  const {
+    data: usersAndRoles,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useApi<any>(
+    () => Promise.all([fetchUsers(), fetchRoles()]),
+    { showErrorToast: true },
+  )
 
-  useEffect(() => { load() }, [load])
+  const users: any[] = (usersAndRoles?.[0] as any) ?? []
+  const roles: any[] = (usersAndRoles?.[1] as any) ?? []
 
   const doSave = async (v: UserFormData) => {
     setSaving(true)
@@ -94,14 +96,14 @@ export default function UsersTab() {
       }
       setDrawer(false)
       setEditing(null)
-      load()
+      refetch()
     } finally { setSaving(false) }
   }
 
   const doDelete = async (id: number) => {
     await deleteUser(id)
     toast.success('已删除')
-    load()
+    refetch()
   }
 
   const openEdit = (u?: any) => {
@@ -180,15 +182,22 @@ export default function UsersTab() {
         新建用户
       </Button>
 
+      {/* Error state */}
+      {isError && users.length === 0 && (
+        <ErrorState error={error} onRetry={refetch} />
+      )}
+
       {/* Table */}
-      <DataTable
-        columns={userColumns}
-        data={users}
-        rowKey={(u) => u.id}
-        loading={loading}
-        loadingRows={4}
-        emptyState={{ title: '暂无用户', description: '点击「新建用户」添加系统用户' }}
-      />
+      {(!isError || users.length > 0) && (
+        <DataTable
+          columns={userColumns}
+          data={users}
+          rowKey={(u) => u.id}
+          loading={isLoading}
+          loadingRows={4}
+          emptyState={{ title: '暂无用户', description: '点击「新建用户」添加系统用户' }}
+        />
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>

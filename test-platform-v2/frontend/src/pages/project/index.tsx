@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -13,6 +13,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
+import { ErrorState } from '@/components/state'
+import useApi from '@/hooks/useApi'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Sheet,
@@ -76,8 +78,12 @@ type MemberFormData = z.infer<typeof memberSchema>
 
 export default function ProjectPage() {
   const hasPerm = useAuthStore((s) => s.hasPerm)
-  const [data, setData] = useState({ total: 0, items: [] as ProjectDetail[], page: 1, page_size: 20 })
-  const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+
+  const { data, isLoading, isError, error, refetch } = useApi<any>(
+    () => api.get('/projects/all', { params: { page, page_size: 20 } }),
+    { deps: [page], initialData: { total: 0, items: [] as ProjectDetail[], page: 1, page_size: 20 } },
+  )
 
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<ProjectDetail | null>(null)
@@ -164,16 +170,6 @@ export default function ProjectPage() {
     )},
   ]
 
-  const load = useCallback(async (page = 1) => {
-    setLoading(true)
-    try {
-      const res: any = await api.get('/projects/all', { params: { page, page_size: 20 } })
-      setData(res)
-    } finally { setLoading(false) }
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
   const doSave = async (vals: ProjectFormData) => {
     setSaving(true)
     try {
@@ -185,14 +181,14 @@ export default function ProjectPage() {
         toast.success('项目已创建')
       }
       setDrawer(false)
-      load()
+      refetch()
     } finally { setSaving(false) }
   }
 
   const doDelete = async (id: number) => {
     await api.delete(`/projects/${id}`)
     toast.success('已删除')
-    load()
+    refetch()
   }
 
   const openMembers = async (project: ProjectDetail) => {
@@ -206,7 +202,9 @@ export default function ProjectPage() {
       setMembers(mRes || [])
       setUsers(Array.isArray(uRes) ? uRes : (uRes as any)?.items || [])
       setRoles(Array.isArray(rRes) ? rRes : (rRes as any)?.items || [])
-    } catch { /* ignore */ }
+    } catch {
+      toast.error('获取成员数据失败')
+    }
     resetMember({ user_id: undefined as any, role_id: undefined as any })
     setMembersOpen(true)
   }
@@ -218,7 +216,9 @@ export default function ProjectPage() {
       const mRes: any = await api.get(`/projects/${activeProject?.id}/members`)
       setMembers(mRes || [])
       resetMember({ user_id: undefined as any, role_id: undefined as any })
-    } catch { /* ignore */ }
+    } catch {
+      toast.error('添加成员失败')
+    }
   }
 
   const doRemoveMember = async (userId: number) => {
@@ -243,7 +243,7 @@ export default function ProjectPage() {
   return (
     <>
       <PageHeader title="项目管理">
-        <Button variant="outline" size="sm" onClick={() => load()} data-icon="inline-start">
+        <Button variant="outline" size="sm" onClick={refetch} data-icon="inline-start">
           <RotateCcw />
           刷新
         </Button>
@@ -255,21 +255,28 @@ export default function ProjectPage() {
         )}
       </PageHeader>
 
+      {/* Error state */}
+      {isError && data && data.items.length === 0 && (
+        <ErrorState error={error} onRetry={refetch} />
+      )}
+
       {/* Table */}
-      <DataTable
-        columns={projectColumns}
-        data={data.items}
-        rowKey={(r) => r.id}
-        loading={loading}
-        loadingRows={4}
-        emptyState={{ title: '暂无项目', description: '点击「新建项目」开始创建' }}
-        pagination={{
-          page: data.page,
-          totalPages: Math.max(1, Math.ceil(data.total / data.page_size)),
-          total: data.total,
-          onChange: (p) => load(p),
-        }}
-      />
+      {(!isError || (data && data.items.length > 0)) && (
+        <DataTable
+          columns={projectColumns}
+          data={data?.items ?? []}
+          rowKey={(r) => r.id}
+          loading={isLoading}
+          loadingRows={4}
+          emptyState={{ title: '暂无项目', description: '点击「新建项目」开始创建' }}
+          pagination={{
+            page: data?.page ?? 1,
+            totalPages: Math.max(1, Math.ceil((data?.total ?? 0) / (data?.page_size ?? 20))),
+            total: data?.total ?? 0,
+            onChange: (p) => setPage(p),
+          }}
+        />
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>

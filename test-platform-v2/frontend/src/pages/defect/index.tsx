@@ -8,11 +8,10 @@ import {
   Link2,
   Plus,
   RotateCcw,
-  Search,
   Trash2,
   Loader2,
 } from '@/lib/icons'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createDefect, deleteDefect, fetchDefectStats, fetchDefects, updateDefect } from '@/api/defect'
 import { fetchTestCases } from '@/api/testcase'
 import { fetchUsers } from '@/api/system'
@@ -38,9 +37,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
-import EmptyState from '@/components/EmptyState'
 import SearchInput from '@/components/SearchInput'
-import { SkeletonTable } from '@/components/ui/skeleton'
+import { AsyncState } from '@/components/state'
+import useApi from '@/hooks/useApi'
 import {
   Sheet,
   SheetContent,
@@ -129,14 +128,31 @@ type DefectFormValues = z.infer<typeof defectFormSchema>
 
 export default function DefectPage() {
   const hasPerm = useAuthStore((s) => s.hasPerm)
-  const [data, setData] = useState({ total: 0, items: [] as DefectItem[], page: 1, page_size: 20 })
-  const [loading, setLoading] = useState(false)
-  const [stats, setStats] = useState({ total: 0, by_severity: {} as Record<string, number>, by_status: {} as Record<string, number> })
 
   // filters
   const [fSeverity, setFSeverity] = useState<string | undefined>()
   const [fStatus, setFStatus] = useState<string | undefined>()
   const [fKeyword, setFKeyword] = useState('')
+  const [page, setPage] = useState(1)
+
+  // main data
+  const { data, isLoading, isError, error, refetch } = useApi<any>(
+    () => {
+      const params: any = { page, page_size: 20 }
+      if (fSeverity) params.severity = fSeverity
+      if (fStatus) params.status = fStatus
+      if (fKeyword) params.keyword = fKeyword
+      return fetchDefects(params)
+    },
+    [fSeverity, fStatus, fKeyword, page],
+  )
+
+  // stats (non-critical, silent errors)
+  const { data: statsData, refetch: refetchStats } = useApi<any>(
+    () => fetchDefectStats(),
+    { showErrorToast: false },
+  )
+  const stats = statsData || { total: 0, by_severity: {} as Record<string, number>, by_status: {} as Record<string, number> }
 
   // sheet / detail
   const [drawer, setDrawer] = useState(false)
@@ -157,35 +173,12 @@ export default function DefectPage() {
   const [users, setUsers] = useState<any[]>([])
   const [cases, setCases] = useState<any[]>([])
 
-  const load = useCallback(async (page = 1) => {
-    setLoading(true)
-    try {
-      const params: any = { page, page_size: 20 }
-      if (fSeverity) params.severity = fSeverity
-      if (fStatus) params.status = fStatus
-      if (fKeyword) params.keyword = fKeyword
-      const r: any = await fetchDefects(params)
-      setData(r)
-    } finally {
-      setLoading(false)
-    }
-  }, [fSeverity, fStatus, fKeyword])
-
-  const loadStats = useCallback(async () => {
-    try {
-      const r: any = await fetchDefectStats()
-      setStats(r)
-    } catch { /* ignore */ }
-  }, [])
-
-  useEffect(() => { load(); loadStats() }, [load, loadStats])
-
   const openCreate = () => {
     setEditing(null)
     form.reset({ title: '', description: '', severity: 'P2', status: undefined, assignee_id: null, case_id: null, external_id: '', external_url: '' })
     setDrawer(true)
-    fetchUsers().then((r: any) => setUsers(r || [])).catch(() => {})
-    fetchTestCases({ page_size: 200 }).then((r: any) => setCases(r?.items || [])).catch(() => {})
+    fetchUsers().then((r: any) => setUsers(r || [])).catch(() => setUsers([]))
+    fetchTestCases({ page_size: 200 }).then((r: any) => setCases(r?.items || [])).catch(() => setCases([]))
   }
 
   const openEdit = (r: DefectItem) => {
@@ -201,8 +194,8 @@ export default function DefectPage() {
       external_url: r.external_url ?? '',
     })
     setDrawer(true)
-    fetchUsers().then((u: any) => setUsers(u || [])).catch(() => {})
-    fetchTestCases({ page_size: 200 }).then((c: any) => setCases(c?.items || [])).catch(() => {})
+    fetchUsers().then((u: any) => setUsers(u || [])).catch(() => setUsers([]))
+    fetchTestCases({ page_size: 200 }).then((c: any) => setCases(c?.items || [])).catch(() => setCases([]))
   }
 
   const doSave = async (vals: DefectFormValues) => {
@@ -216,8 +209,8 @@ export default function DefectPage() {
         toast.success('缺陷已创建')
       }
       setDrawer(false)
-      load()
-      loadStats()
+      refetch()
+      refetchStats()
     } finally {
       setSaving(false)
     }
@@ -228,13 +221,11 @@ export default function DefectPage() {
     await deleteDefect(deleteTarget)
     toast.success('已删除')
     setDeleteTarget(null)
-    load()
-    loadStats()
+    refetch()
+    refetchStats()
   }
 
   const openDetail = (r: DefectItem) => { setDetail(r); setDetailOpen(true) }
-
-  const totalPages = Math.max(1, Math.ceil(data.total / data.page_size))
 
   return (
     <div className="space-y-4">
@@ -273,7 +264,7 @@ export default function DefectPage() {
 
       {/* Filter bar */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <Select value={fSeverity ?? '__all__'} onValueChange={(v) => setFSeverity(v === '__all__' ? undefined : v)}>
+        <Select value={fSeverity ?? '__all__'} onValueChange={(v) => { setFSeverity(v === '__all__' ? undefined : v); setPage(1) }}>
           <SelectTrigger className="w-[130px]">
             <SelectValue placeholder="严重程度" />
           </SelectTrigger>
@@ -285,7 +276,7 @@ export default function DefectPage() {
           </SelectContent>
         </Select>
 
-        <Select value={fStatus ?? '__all__'} onValueChange={(v) => setFStatus(v === '__all__' ? undefined : v)}>
+        <Select value={fStatus ?? '__all__'} onValueChange={(v) => { setFStatus(v === '__all__' ? undefined : v); setPage(1) }}>
           <SelectTrigger className="w-[130px]">
             <SelectValue placeholder="状态" />
           </SelectTrigger>
@@ -299,14 +290,14 @@ export default function DefectPage() {
 
         <SearchInput
           value={fKeyword}
-          onChange={setFKeyword}
-          onSearch={() => load()}
+          onChange={(v) => { setFKeyword(v); setPage(1) }}
+          onSearch={refetch}
           placeholder="搜索缺陷标题"
           inputClassName="w-[220px]"
           clearable
         />
 
-        <Button variant="outline" size="default" onClick={() => load()}>
+        <Button variant="outline" size="default" onClick={refetch}>
           <RotateCcw className="size-4" />
           刷新
         </Button>
@@ -318,30 +309,36 @@ export default function DefectPage() {
         )}
       </div>
 
-      {/* Table */}
-      {loading && data.items.length === 0 ? (
-        <SkeletonTable rows={5} cols={7} />
-      ) : data.items.length === 0 ? (
-        <EmptyState
-          title="暂无缺陷"
-          description="当前筛选条件下没有缺陷记录"
-        />
-      ) : (
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[160px]">编号</TableHead>
-                <TableHead>标题</TableHead>
-                <TableHead className="w-[100px]">状态</TableHead>
-                <TableHead className="w-[100px]">处理人</TableHead>
-                <TableHead className="w-[150px]">关联用例</TableHead>
-                <TableHead className="w-[170px]">创建时间</TableHead>
-                <TableHead className="w-[200px]">操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.items.map((r) => (
+      {/* Table with AsyncState */}
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data}
+        onRetry={refetch}
+        loadingVariant="skeleton"
+        skeletonType="table"
+        loadingRows={5}
+        emptyTitle="暂无缺陷"
+        emptyDescription="当前筛选条件下没有缺陷记录"
+      >
+        {(d) => (
+          <>
+            <div className="rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[160px]">编号</TableHead>
+                    <TableHead>标题</TableHead>
+                    <TableHead className="w-[100px]">状态</TableHead>
+                    <TableHead className="w-[100px]">处理人</TableHead>
+                    <TableHead className="w-[150px]">关联用例</TableHead>
+                    <TableHead className="w-[170px]">创建时间</TableHead>
+                    <TableHead className="w-[200px]">操作</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {d.items.map((r: any) => (
                 <TableRow key={r.id}>
                   <TableCell className="max-w-[160px] truncate">{r.defect_id}</TableCell>
                   <TableCell className="max-w-0">
@@ -403,15 +400,17 @@ export default function DefectPage() {
             </TableBody>
           </Table>
         </div>
-      )}
 
-      {/* Pagination */}
-      <Pagination
-        page={data.page}
-        totalPages={totalPages}
-        total={data.total}
-        onChange={(p) => load(p)}
-      />
+        {/* Pagination */}
+        <Pagination
+          page={d.page}
+          totalPages={Math.max(1, Math.ceil(d.total / d.page_size))}
+          total={d.total}
+          onChange={(p) => setPage(p)}
+        />
+      </>
+        )}
+      </AsyncState>
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null); form.reset() } }}>
