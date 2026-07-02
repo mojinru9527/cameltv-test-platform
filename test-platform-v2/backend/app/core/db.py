@@ -18,12 +18,16 @@ if _is_sqlite:
     db_file = settings.database_url.replace("sqlite:///", "", 1)
     Path(db_file).resolve().parent.mkdir(parents=True, exist_ok=True)
 
-engine = create_engine(
-    settings.database_url,
-    connect_args={"check_same_thread": False} if _is_sqlite else {},
-    pool_pre_ping=True,
-    future=True,
-)
+_engine_kwargs: dict = {"pool_pre_ping": True}
+if _is_sqlite:
+    _engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    # PostgreSQL connection pooling (V2.6)
+    _engine_kwargs["pool_size"] = settings.db_pool_size
+    _engine_kwargs["max_overflow"] = settings.db_max_overflow
+    _engine_kwargs["pool_recycle"] = 3600
+
+engine = create_engine(settings.database_url, **_engine_kwargs)
 
 if _is_sqlite:
     @event.listens_for(engine, "connect")

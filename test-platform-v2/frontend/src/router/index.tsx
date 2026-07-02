@@ -23,6 +23,8 @@ const MindmapPage = lazy(() => import('@/pages/mindmap'))
 const ApiTestPage = lazy(() => import('@/pages/apitest'))
 const NotifyPage = lazy(() => import('@/pages/notify'))
 const EnvironmentPage = lazy(() => import('@/pages/environment'))
+const DatasetPage = lazy(() => import('@/pages/dataset'))
+const IntegrationPage = lazy(() => import('@/pages/integration'))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -65,6 +67,8 @@ export const router = createBrowserRouter([
       { path: 'project', element: <PageLoader><ProjectPage /></PageLoader> },
       { path: 'notify', element: <PageLoader><NotifyPage /></PageLoader> },
       { path: 'environment', element: <PageLoader><EnvironmentPage /></PageLoader> },
+      { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },
+      { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
   },

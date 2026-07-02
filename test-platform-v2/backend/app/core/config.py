@@ -49,6 +49,10 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     auto_create_tables: bool = True
 
+    # ── PostgreSQL connection pooling (V2.6) ──
+    db_pool_size: int = 10
+    db_max_overflow: int = 20
+
     # ── Default admin ──
     admin_username: str = "admin"
     admin_password: str = ""                   # production: required; dev auto-generates
@@ -85,6 +89,11 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = True
     smtp_verify_cert: bool = True       # P1-S5b: SMTP TLS 证书验证开关
     smtp_ca_bundle: str = ""             # P1-S5b: 自定义 CA 证书包路径
+
+    # ── External Integration Sync (V2.6) ──
+    sync_enabled: bool = True
+    sync_retry_attempts: int = 2
+    sync_timeout_seconds: int = 30
 
     @property
     def cors_origins(self) -> list[str]:
