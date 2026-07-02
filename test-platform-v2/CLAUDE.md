@@ -40,7 +40,7 @@ test-platform-v2/
 | 需求管理 + AI 生成 | `/requirement` | ✅ 生产可用 | DeepSeek LLM 两段式生成+反向评审 |
 | 质量追溯矩阵 | `/trace` | ✅ 生产可用 | 项目覆盖率 + 单用例全链路追溯 |
 | 缺陷管理 | `/defect` | ✅ 生产可用 | 6 状态状态机 |
-| 通知中心 | `/notify` | 🟡 能力有限 | 飞书/钉钉/企微 Webhook |
+| 通知中心 | `/notify` | ✅ 生产可用 | Webhook + 邮件，4 事件触发，重试/日志 |
 | 项目管理 | `/project` | ✅ 生产可用 | 多项目 + 成员 + 主题 |
 | API 测试 | `/apitest` | 🧪 演示态 | 纯前端 fetch + localStorage |
 | UI 自动化 | `/uitest` | 🧪 演示态 | 结果为 random 模拟 |
