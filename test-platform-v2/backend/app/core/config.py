@@ -7,6 +7,7 @@ Default empty values will cause a startup validation error in production mode.
 from __future__ import annotations
 
 import os
+import secrets
 from functools import cached_property
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -50,7 +51,11 @@ class Settings(BaseSettings):
 
     # ── Default admin ──
     admin_username: str = "admin"
-    admin_password: str = ""                   # production: required; dev falls back to "admin123"
+    admin_password: str = ""                   # production: required; dev auto-generates
+
+    # ── Seed users ──
+    tester_password: str = ""                  # empty = auto-generate in dev; required in prod
+    tester_username: str = "tester"
 
     # ── ELK ──
     elk_base_url: str = ""
@@ -87,19 +92,31 @@ class Settings(BaseSettings):
 
     @cached_property
     def effective_admin_password(self) -> str:
-        """Dev convenience: fall back to a dev-only default when unconfigured."""
+        """Dev: auto-generate a random password when unconfigured (logged to console)."""
         if self.admin_password:
             return self.admin_password
         if self.environment == "development":
-            return "admin123"
+            pwd = secrets.token_urlsafe(12)
+            import logging
+            logging.getLogger("uvicorn").warning(
+                "[security] ADMIN_PASSWORD not set — auto-generated dev password: %s (valid this session only)",
+                pwd,
+            )
+            return pwd
         return ""  # production will fail validation
 
     @cached_property
     def effective_secret_key(self) -> str:
+        """Dev: auto-generate a random key when unconfigured (logged to console)."""
         if self.secret_key:
             return self.secret_key
         if self.environment == "development":
-            return "dev-secret-do-not-use-in-prod"
+            key = secrets.token_hex(32)
+            import logging
+            logging.getLogger("uvicorn").warning(
+                "[security] SECRET_KEY not set — auto-generated dev key (valid this session only)"
+            )
+            return key
         return ""
 
     def validate_security(self) -> list[str]:

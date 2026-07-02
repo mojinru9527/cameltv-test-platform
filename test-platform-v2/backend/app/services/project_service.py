@@ -4,6 +4,7 @@ from __future__ import annotations
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.base_service import batch_user_names
 from app.models.project import Project, ProjectMember
 from app.models.rbac import Role
 from app.models.user import User
@@ -45,14 +46,10 @@ def list_all_projects(db: Session, page: int = 1, page_size: int = 20) -> tuple[
         base.offset((page - 1) * page_size).limit(page_size)
     ).scalars().all()
 
-    items = []
-    for r in rows:
-        owner_name = ""
-        if r.owner_id:
-            u = db.get(User, r.owner_id)
-            if u:
-                owner_name = u.nickname or u.username
-        items.append(_project_to_dict(r, owner_name))
+    # Batch load owner names in one query (was N+1 per row)
+    owner_ids = {r.owner_id for r in rows if r.owner_id}
+    owner_names = batch_user_names(db, owner_ids)
+    items = [_project_to_dict(r, owner_names.get(r.owner_id, "")) for r in rows]
     return items, total
 
 

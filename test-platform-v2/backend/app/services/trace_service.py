@@ -118,6 +118,7 @@ def get_project_coverage(db: Session, project_id: int) -> dict:
         "pass_rate": round(cases_passed / max(cases_executed, 1) * 100, 1),
         "requirement_count": req_count,
         "requirements_with_cases": req_with_cases,
+        "requirement_coverage_rate": round(req_with_cases / req_count * 100, 1) if req_count else 0,
     }
 
 
@@ -303,14 +304,22 @@ def get_case_trace(db: Session, case_id: int, project_id: int) -> dict | None:
         )
     ).all()
 
+    # Batch load all executions for all plan_cases (was N+1 per plan_case)
+    pc_ids = [pc.id for pc in plan_cases]
+    all_execs_by_pc: dict[int, list] = {}
+    if pc_ids:
+        all_execs = db.scalars(
+            select(TestExecution)
+            .where(TestExecution.plan_case_id.in_(pc_ids))
+            .order_by(TestExecution.executed_at.desc())
+        ).all()
+        for e in all_execs:
+            all_execs_by_pc.setdefault(e.plan_case_id, []).append(e)
+
     plans = []
     for pc in plan_cases:
         plan = pc.plan
-        execs = db.scalars(
-            select(TestExecution)
-            .where(TestExecution.plan_case_id == pc.id)
-            .order_by(TestExecution.executed_at.desc())
-        ).all()
+        execs = all_execs_by_pc.get(pc.id, [])
         plans.append({
             "plan_id": plan.id,
             "plan_name": plan.name,
