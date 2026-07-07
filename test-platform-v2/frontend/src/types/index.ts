@@ -88,7 +88,8 @@ export interface RequirementDocument {
   source_ref: string
   content: string
   status: string
-  extraction_status?: string  // not_started | pending_review | confirmed
+  extraction_status?: string  // not_started | extracting | pending_review | confirmed
+  extraction_progress?: number  // V2: 0.0 - 1.0
   imported_count: number
   imported_func_count: number
   imported_api_count: number
@@ -175,9 +176,14 @@ export interface FeatureExtractionResult {
   overall_assessment: string
   raw_response: string
   extraction_summary?: string
-  extraction_status?: string
-  version_info?: VersionInfo[]   // parsed version info from changelog
-  client_summary?: string        // e.g. "涉及 App端、PC端"
+  extraction_status?: string       // not_started | extracting | pending_review | confirmed
+  version_info?: VersionInfo[]     // parsed version info from changelog
+  client_summary?: string          // e.g. "涉及 App端、PC端"
+  // V2 enhanced extraction
+  truncated?: boolean              // True if extraction was cut off
+  extraction_progress?: number     // 0.0-1.0
+  versions_total?: number          // Total versions from changelog
+  versions_done?: number           // Versions fully extracted
 }
 
 export interface ExtractionConfirmRequest {
@@ -571,4 +577,126 @@ export interface SyncLog {
 export interface TestConnectionResult {
   success: boolean
   message: string
+}
+
+// ── API Test Asset Types (接口测试模块优化) ──
+
+export interface ApiService {
+  id: number
+  project_id: number
+  name: string
+  display_name: string
+  description: string
+  default_base_path: string
+  owner: string
+  status: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface ApiEndpoint {
+  id: number
+  project_id: number
+  service_id: number
+  module: string
+  method: string
+  path: string
+  summary: string
+  description: string
+  request_schema: string
+  response_schema: string
+  auth_required: boolean
+  deprecated: boolean
+  source: string
+  import_batch_id: number | null
+  version: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface ApiImportPreview {
+  service_name: string
+  version: string
+  total_count: number
+  new_count: number
+  existing_count: number
+  endpoints: Array<{
+    module: string
+    method: string
+    path: string
+    summary: string
+    source: string
+    _exists?: boolean
+  }>
+  errors: Array<{ method: string; path: string; error: string }>
+}
+
+export interface ApiImportResult {
+  batch_id: number
+  service_name: string
+  version: string
+  total_count: number
+  created_count: number
+  updated_count: number
+  skipped_count: number
+  generated_case_count: number
+  errors: Array<{ method: string; path: string; error: string }>
+}
+
+export interface ApiExecutionTask {
+  id: number
+  project_id: number
+  task_id: string
+  name: string
+  environment_id: number | null
+  service_id: number | null
+  status: string
+  total: number
+  passed: number
+  failed: number
+  skipped: number
+  trigger_type: string
+  creator_id: number
+  started_at: string | null
+  finished_at: string | null
+  created_at: string | null
+}
+
+export interface ApiExecutionTaskItem {
+  id: number
+  task_id: number
+  case_id: number
+  status: string
+  duration_ms: number
+  request_snapshot: string
+  response_snapshot: string
+  assertion_results: string
+  error_message: string
+  created_at: string | null
+}
+
+export interface ApiTaskDetail extends ApiExecutionTask {
+  items: ApiExecutionTaskItem[]
+}
+
+export interface GenerateApiCasesRequest {
+  endpoint_id?: number
+  endpoint_data?: Record<string, any>
+  templates?: string[]
+  import_to_case_library?: boolean
+  module?: string
+  service_name?: string
+}
+
+export interface BatchGenerateRequest {
+  endpoint_ids: number[]
+  templates?: string[]
+  import_to_case_library?: boolean
+}
+
+export interface ApiTaskCreateRequest {
+  name: string
+  environment_id?: number
+  service_id?: number
+  case_ids: number[]
 }
