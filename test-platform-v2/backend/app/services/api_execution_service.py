@@ -105,10 +105,11 @@ def _do_execute(
     # 2. 发起 HTTP 请求
     start = time.perf_counter()
     try:
+        resolved_url = _resolve_url(db, environment_id, url)
         with httpx.Client(timeout=DEFAULT_TIMEOUT, follow_redirects=True) as client:
             resp = client.request(
                 method=method,
-                url=url if url.startswith("http") else f"http://{url}",
+                url=resolved_url,
                 headers=_prepare_headers(headers, body),
                 content=body if method in ("POST", "PUT", "PATCH") else None,
             )
@@ -139,6 +140,7 @@ def _do_execute(
         response_data=response_data,
         raw_body=raw_body,
         duration_ms=duration_ms,
+        response_headers=resp_headers,
     )
     all_pass = all(a["passed"] for a in assertion_results) if assertion_results else True
 
@@ -164,8 +166,9 @@ def _run_assertions(
     response_data: Any,
     raw_body: str,
     duration_ms: float,
+    response_headers: dict | None = None,
 ) -> list[dict]:
-    """执行所有断言规则，返回结果列表。"""
+    """执行所有断言规则，返回结果列表。支持 status_code/jsonpath/regex/response_time/header/json_schema/type/array_length。"""
     results = []
     for rule in assertions:
         atype = rule.get("type", "")
@@ -177,6 +180,14 @@ def _run_assertions(
             r = _assert_jsonpath(rule, response_data)
         elif atype == "regex":
             r = _assert_regex(rule, raw_body)
+        elif atype == "header":
+            r = _assert_header(rule, response_headers or {})
+        elif atype == "json_schema":
+            r = _assert_json_schema(rule, response_data)
+        elif atype == "type":
+            r = _assert_type(rule, response_data)
+        elif atype == "array_length":
+            r = _assert_array_length(rule, response_data)
         else:
             r = {"type": atype, "expected": rule.get("expected"), "actual": None,
                  "passed": False, "message": f"未知断言类型: {atype}"}
@@ -265,6 +276,169 @@ def _assert_regex(rule: dict, text: str) -> dict:
         "actual": f"<{'matched' if m else 'no match'}>",
         "passed": passed,
         "message": f"regex /{pattern}/ {'匹配' if passed else '不匹配'}" + (" ✓" if passed else " ✗"),
+    }
+
+
+# ── 新增断言类型 (Task 4) ──────────────────────────────
+
+def _assert_header(rule: dict, response_headers: dict) -> dict:
+    """断言响应头。"""
+    key = rule.get("key", "")
+    expected = rule.get("expected", "")
+    op = rule.get("operator", "contains")
+    actual = response_headers.get(key)
+    if actual is None:
+        # 尝试大小写不敏感查找
+        for hk, hv in response_headers.items():
+            if hk.lower() == key.lower():
+                actual = hv
+                break
+    exists = actual is not None
+
+    if op == "exists":
+        return {
+            "type": "header", "key": key,
+            "expected": "exists",
+            "actual": f"<{'present' if exists else 'missing'}>",
+            "passed": exists,
+            "message": f"Header {key} {'存在' if exists else '不存在'}" + (" ✓" if exists else " ✗"),
+        }
+
+    if not exists:
+        return {
+            "type": "header", "key": key,
+            "expected": expected, "actual": "<missing>",
+            "passed": False,
+            "message": f"Header {key} 不存在 ✗",
+        }
+
+    passed = _compare(str(actual), expected, op)
+    return {
+        "type": "header", "key": key,
+        "expected": f"{op} {expected}",
+        "actual": actual,
+        "passed": passed,
+        "message": f"Header {key}: {actual} {_op_label(op)} {expected}" + (" ✓" if passed else " ✗"),
+    }
+
+
+def _assert_json_schema(rule: dict, data: Any) -> dict:
+    """断言响应体符合 JSON Schema。"""
+    schema = rule.get("expected")
+    if not schema or not isinstance(data, dict):
+        return {
+            "type": "json_schema", "expected": str(schema)[:80],
+            "actual": "<non-object>",
+            "passed": False,
+            "message": "json_schema 断言需要 object 类型的响应体 ✗",
+        }
+
+    errors = _validate_json_schema(data, schema)
+    passed = len(errors) == 0
+    return {
+        "type": "json_schema",
+        "expected": f"schema with {len(schema.get('properties', {}))} fields",
+        "actual": f"<{'valid' if passed else ', '.join(errors[:3])}>",
+        "passed": passed,
+        "message": f"JSON Schema {'✓' if passed else '✗: ' + '; '.join(errors[:3])}",
+    }
+
+
+def _validate_json_schema(data: dict, schema: dict, path: str = "$") -> list[str]:
+    """轻量 JSON Schema 验证器。"""
+    errors = []
+    stype = schema.get("type", "")
+    if stype and stype != "object":
+        return errors  # 仅验证顶层 object
+
+    required = schema.get("required", [])
+    for field in required:
+        if field not in data:
+            errors.append(f"{path}.{field} 缺失")
+
+    properties = schema.get("properties", {})
+    for field, prop in properties.items():
+        if field not in data:
+            continue
+        val = data[field]
+        expected_type = prop.get("type", "")
+        if expected_type == "integer" and not isinstance(val, int):
+            errors.append(f"{path}.{field} 类型应为 integer，实际 {type(val).__name__}")
+        elif expected_type == "number" and not isinstance(val, (int, float)):
+            errors.append(f"{path}.{field} 类型应为 number，实际 {type(val).__name__}")
+        elif expected_type == "string" and not isinstance(val, str):
+            errors.append(f"{path}.{field} 类型应为 string，实际 {type(val).__name__}")
+        elif expected_type == "boolean" and not isinstance(val, bool):
+            errors.append(f"{path}.{field} 类型应为 boolean，实际 {type(val).__name__}")
+        elif expected_type == "array" and not isinstance(val, list):
+            errors.append(f"{path}.{field} 类型应为 array，实际 {type(val).__name__}")
+        elif expected_type == "object" and not isinstance(val, dict):
+            errors.append(f"{path}.{field} 类型应为 object，实际 {type(val).__name__}")
+
+    return errors
+
+
+def _assert_type(rule: dict, data: Any) -> dict:
+    """断言 JSONPath 字段类型。"""
+    path = rule.get("path", "$")
+    expected_type = rule.get("expected", "string")
+    actual = _jsonpath_get(data, path)
+    if actual is _JSONPATH_MISSING:
+        return {
+            "type": "type", "path": path,
+            "expected": expected_type, "actual": "<missing>",
+            "passed": False,
+            "message": f"{path} 不存在 ✗",
+        }
+
+    type_map = {
+        "string": str, "str": str,
+        "number": (int, float), "integer": int, "int": int,
+        "boolean": bool, "bool": bool,
+        "array": list, "list": list,
+        "object": dict, "dict": dict,
+        "null": type(None),
+    }
+    expected_cls = type_map.get(expected_type, str)
+    passed = isinstance(actual, expected_cls)
+    return {
+        "type": "type", "path": path,
+        "expected": f"type {expected_type}",
+        "actual": type(actual).__name__,
+        "passed": passed,
+        "message": f"{path} 类型: {type(actual).__name__} {'==' if passed else '!='} {expected_type}" + (" ✓" if passed else " ✗"),
+    }
+
+
+def _assert_array_length(rule: dict, data: Any) -> dict:
+    """断言 JSONPath 数组长度。"""
+    path = rule.get("path", "$")
+    expected = rule.get("expected", 0)
+    op = rule.get("operator", "gte")
+    actual = _jsonpath_get(data, path)
+    if actual is _JSONPATH_MISSING:
+        return {
+            "type": "array_length", "path": path,
+            "expected": f"{op} {expected}", "actual": "<missing>",
+            "passed": False,
+            "message": f"{path} 不存在 ✗",
+        }
+    if not isinstance(actual, list):
+        return {
+            "type": "array_length", "path": path,
+            "expected": f"{op} {expected}", "actual": f"<non-array: {type(actual).__name__}>",
+            "passed": False,
+            "message": f"{path} 不是数组 ✗",
+        }
+
+    length = len(actual)
+    passed = _compare(length, expected, op)
+    return {
+        "type": "array_length", "path": path,
+        "expected": f"{op} {expected}",
+        "actual": length,
+        "passed": passed,
+        "message": f"{path} 长度 {length} {_op_label(op)} {expected}" + (" ✓" if passed else " ✗"),
     }
 
 
@@ -408,6 +582,24 @@ def _prepare_headers(headers: dict, body: str) -> dict:
     if body and "content-type" not in {k.lower() for k in h}:
         h["Content-Type"] = "application/json"
     return h
+
+
+def _resolve_url(db: Session, environment_id: int | None, url: str) -> str:
+    """将相对路径与环境 base_url 拼接为完整 URL。
+    - 完整 URL (http/https 开头) 直接返回
+    - 相对路径与环境 base_url 拼接
+    - 无环境时给相对路径添加 http:// 前缀
+    """
+    if url.startswith(("http://", "https://")):
+        return url
+
+    if environment_id:
+        from app.models.environment import Environment
+        env = db.get(Environment, environment_id)
+        if env and env.base_url:
+            return env.base_url.rstrip("/") + "/" + url.lstrip("/")
+
+    return url if url.startswith("http") else f"http://{url}"
 
 
 def _error_result(message: str) -> dict:
