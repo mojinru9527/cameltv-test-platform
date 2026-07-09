@@ -29,6 +29,7 @@ _MENUS = [
     ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 15),
     ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 16),
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 17),
+    ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 18),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -134,18 +135,26 @@ _ACTIONS = [
     ("integration:list", "查看集成配置", "button"),
     ("integration:manage", "管理集成配置", "button"),
     ("integration:sync", "执行同步操作", "button"),
+    # 知识中心 (RAG / Agent 持续学习 — M0)
+    ("knowledge:view", "查看知识中心", "button"),
+    ("knowledge:manage", "管理知识源（重解析/废弃）", "button"),
+    ("knowledge:approve", "审核知识与 AI 产物", "button"),
+    ("agent:run", "手动触发 Agent", "button"),
+    ("agent:admin", "管理 Agent 配置", "button"),
+    ("ai_artifact:import", "导入 AI 产物到正式资产", "button"),
 ]
 
 # 测试人员可见的菜单子集
 _TESTER_ACTIONS = {
     "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
     "apitest:task", "apitest:asset_manage",
+    "knowledge:view",
 }
 
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
-    "menu:defect", "menu:dataset", "menu:integration",
+    "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
 }
 
 

@@ -67,6 +67,7 @@ import {
   Palette,
   ChevronRight,
   TestTube2,
+  Sparkles,
   type LucideIcon,
 } from '@/lib/icons'
 
@@ -86,6 +87,7 @@ const ICONS: Record<string, LucideIcon> = {
   SettingOutlined: Settings,
   AppstoreOutlined: LayoutDashboard,
   BugOutlined: Bug,
+  BrainCircuitOutlined: Sparkles,
 }
 
 const THEME_CONFIG: Record<ColorTheme, { label: string; desc: string; preview: string[]; icon: string }> = {
@@ -124,9 +126,11 @@ export default function MainLayout() {
   const [menus, setMenus] = useState<MenuItem[]>([])
 
   useEffect(() => {
+    let cancelled = false
     fetchMenus()
-      .then(setMenus)
+      .then((data) => { if (!cancelled) setMenus(data) })
       .catch(() => {})
+    return () => { cancelled = true }
   }, [])
 
   const onSwitchProject = (id: number) => {

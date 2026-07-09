@@ -95,6 +95,15 @@ class Settings(BaseSettings):
     sync_retry_attempts: int = 2
     sync_timeout_seconds: int = 30
 
+    # ── Knowledge Center / RAG / Agent (M0 治理开关) ──
+    # 安全默认：全部 OFF。知识入库为写路径的后台副作用，须由运维在评审脱敏与容量后
+    # 显式开启（避免合入即在共享/测试环境自动激活对全量写操作的入库）。
+    knowledge_ingest_enabled: bool = False       # M1 知识源入库总开关（默认关，显式开启）
+    rag_enabled: bool = False                    # 是否启用 RAG 检索（M2）
+    knowledge_graph_enabled: bool = False        # 是否启用知识图谱（M3）
+    ai_artifact_allow_batch_import: bool = False # AI 产物是否允许批量导入正式库
+    knowledge_ingest_production_data: bool = False  # 生产环境执行结果是否允许进入知识库
+
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
