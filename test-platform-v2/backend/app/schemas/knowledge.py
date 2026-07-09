@@ -1,4 +1,4 @@
-"""知识中心 Pydantic schemas —— 知识源 / 切片 / AI 产物 / Agent 执行记录 / 概览。"""
+"""知识中心 Pydantic schemas —— 知识源 / 切片 / 图谱实体 / 图谱关系 / AI 产物 / Agent 执行记录 / 概览。"""
 from __future__ import annotations
 
 from datetime import datetime
@@ -152,3 +152,93 @@ class ReembedResult(BaseModel):
     total: int = 0        # 本次扫描到的待嵌入 active 切片数
     embedded: int = 0     # 成功写入向量数
     skipped: int = 0      # 跳过数（无内容/嵌入失败）
+
+
+# ── M3 知识图谱 ──
+
+class KnowledgeEntityOut(BaseModel):
+    id: int
+    project_id: int
+    entity_type: str
+    entity_key: str
+    name: str
+    description: str
+    source_id: int | None = None
+    business_ref_type: str
+    business_ref_id: int | None = None
+    confidence: float
+    review_status: str
+    metadata_json: str = "{}"
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class KnowledgeEntityBrief(BaseModel):
+    """图谱节点——精简视图。"""
+    id: int
+    entity_type: str
+    entity_key: str
+    name: str
+    description: str
+    confidence: float
+
+    model_config = {"from_attributes": True}
+
+
+class KnowledgeRelationOut(BaseModel):
+    id: int
+    project_id: int
+    from_entity_id: int
+    relation_type: str
+    to_entity_id: int
+    confidence: float
+    evidence_chunk_ids: str = "[]"
+    review_status: str
+    metadata_json: str = "{}"
+    created_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class GraphNode(BaseModel):
+    """可视化节点。"""
+    id: str  # entity_type:entity_key
+    entity_type: str
+    name: str
+    group: str = ""  # 按 entity_type 着色分组
+    description: str = ""
+    confidence: float = 0.0
+    entity_id: int = 0  # DB PK for click-to-detail
+
+
+class GraphEdge(BaseModel):
+    """可视化边。"""
+    source: str  # from node id
+    target: str  # to node id
+    relation_type: str
+    confidence: float
+
+
+class GraphViewOut(BaseModel):
+    """力导向图数据。"""
+    nodes: list[GraphNode] = Field(default_factory=list)
+    edges: list[GraphEdge] = Field(default_factory=list)
+
+
+class EntityExtractRequest(BaseModel):
+    """触发实体提取请求。"""
+    source_id: int | None = None  # 指定知识源（None=全项目扫描）
+    max_chunks: int = Field(100, ge=1, le=500)
+
+
+class EntityExtractResult(BaseModel):
+    extracted: int = 0   # 新提取实体数
+    relations: int = 0   # 新关系数
+    skipped: int = 0     # 已存在跳过数
+    message: str = ""
+
+
+class RelationApprovalRequest(BaseModel):
+    comment: str = ""
