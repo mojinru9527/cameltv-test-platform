@@ -34,6 +34,7 @@ import {
 import { AsyncState } from '@/components/state'
 import EmptyState from '@/components/EmptyState'
 import useApi from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 const ENV_TYPE_MAP: Record<string, { label: string; color: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   dev: { label: '开发', color: 'secondary' },
@@ -43,6 +44,7 @@ const ENV_TYPE_MAP: Record<string, { label: string; color: 'default' | 'secondar
 }
 
 export default function EnvironmentPage() {
+  useDocumentTitle('环境配置')
   // ── Environments (useApi — P1-8) ──
   const { data: envs, isLoading, isError, error, refetch } = useApi<Environment[]>(
     () => fetchEnvironments(),

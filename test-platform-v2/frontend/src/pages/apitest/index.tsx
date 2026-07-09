@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { FlaskConical, FileText, FolderTree, ClipboardCheck } from '@/lib/icons'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import PageHeader from '@/components/PageHeader'
@@ -10,6 +11,7 @@ import ImportDialog from './components/ImportDialog'
 import type { ApiEndpoint } from '@/types'
 
 export default function ApiTestPage() {
+  useDocumentTitle('API 测试')
   const [activeTab, setActiveTab] = useState('quick')
   const [importOpen, setImportOpen] = useState(false)
   const [debugEndpoint, setDebugEndpoint] = useState<ApiEndpoint | null>(null)

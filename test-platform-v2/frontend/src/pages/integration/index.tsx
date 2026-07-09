@@ -26,6 +26,7 @@ import {
   testConnection, syncNow, fetchSyncLogs,
 } from '@/api/integration'
 import type { IntegrationConfig, SyncLog } from '@/types'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 // ── Form schema ──
 
@@ -68,6 +69,7 @@ const StatusIcon = ({ status }: { status: string }) => {
 // ── Component ──
 
 export default function IntegrationPage() {
+  useDocumentTitle('集成管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [integrations, setIntegrations] = useState<IntegrationConfig[]>([])
   const [drawer, setDrawer] = useState(false)

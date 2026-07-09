@@ -27,6 +27,7 @@ import {
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import AiResultModal from './AiResultModal'
 
@@ -51,6 +52,7 @@ interface RequirementData {
 }
 
 export default function RequirementPage() {
+  useDocumentTitle('需求管理')
   const [keyword, setKeyword] = useState('')
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)

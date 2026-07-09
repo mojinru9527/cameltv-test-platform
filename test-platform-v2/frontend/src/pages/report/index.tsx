@@ -64,6 +64,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { useApi } from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { ErrorState, AsyncState } from '@/components/state'
 import StatCard from '@/components/StatCard'
 import {
@@ -125,6 +126,7 @@ const reportSchema = z.object({
 type ReportFormData = z.infer<typeof reportSchema>
 
 export default function ReportPage() {
+  useDocumentTitle('测试报告')
   const chartColors = useChartColors()
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
