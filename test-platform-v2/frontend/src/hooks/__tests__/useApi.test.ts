@@ -1,11 +1,14 @@
 /**
  * useApi hook tests — covers core states: loading, data, error, refetch, abort.
+ *
+ * Uses jsdom environment + real async (NO fake timers) to avoid deadlocks
+ * between vi.useFakeTimers() and @testing-library/react's waitFor.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { useApi } from '../useApi'
 
-// Helper: create a controllable promise so we can test timing
+// Helper: create a controllable promise
 function deferred<T>() {
   let resolve!: (value: T) => void
   let reject!: (reason?: unknown) => void
@@ -17,14 +20,6 @@ function deferred<T>() {
 }
 
 describe('useApi', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
   it('returns isLoading=true before fetch resolves', async () => {
     const { promise, resolve } = deferred<string[]>()
     const fetchFn = vi.fn().mockReturnValue(promise)
@@ -35,11 +30,14 @@ describe('useApi', () => {
     expect(result.current.data).toBeUndefined()
     expect(result.current.isError).toBe(false)
 
-    resolve(['item1', 'item2'])
-    await vi.runAllTimersAsync()
+    // Resolve and wait for state update
+    await act(async () => {
+      resolve(['item1', 'item2'])
+    })
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false)
+      expect(result.current.data).toEqual(['item1', 'item2'])
     })
   })
 
@@ -102,7 +100,9 @@ describe('useApi', () => {
     expect(result.current.data).toBe(1)
 
     // Trigger refetch
-    result.current.refetch()
+    await act(async () => {
+      result.current.refetch()
+    })
 
     await waitFor(() => {
       expect(result.current.data).toBe(2)
@@ -122,7 +122,6 @@ describe('useApi', () => {
 
     // Reject with AbortError — should not cause state updates
     reject(new DOMException('Aborted', 'AbortError'))
-    await vi.runAllTimersAsync()
 
     // No assertion needed — if the hook didn't handle abort correctly,
     // React would warn about state updates on unmounted component
