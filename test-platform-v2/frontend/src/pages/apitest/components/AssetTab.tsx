@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { fetchApiServices, fetchApiEndpoints, generateApiCases } from '@/api/apitest'
 import { useAuthStore } from '@/stores/auth'
+import EndpointDetailPanel from './EndpointDetailPanel'
 import type { ApiService, ApiEndpoint } from '@/types'
 
 const METHOD_COLORS: Record<string, string> = {
@@ -32,6 +34,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
   const [keyword, setKeyword] = useState('')
   const [methodFilter, setMethodFilter] = useState<string>('')
   const [generating, setGenerating] = useState<Set<number>>(new Set())
+  const [selectedEndpoint, setSelectedEndpoint] = useState<ApiEndpoint | null>(null)
 
   const loadServices = useCallback(async () => {
     if (!projectId) return
@@ -113,7 +116,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
           </div>
         ) : (
           endpoints.map(ep => (
-            <div key={ep.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors">
+            <div key={ep.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedEndpoint(ep)}>
               <Badge className={METHOD_COLORS[ep.method] || ''}>{ep.method}</Badge>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -149,6 +152,15 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
           </div>
         </div>
       )}
+
+      {/* Endpoint detail Sheet */}
+      <Sheet open={!!selectedEndpoint} onOpenChange={(open) => { if (!open) setSelectedEndpoint(null) }}>
+        <SheetContent side="right" className="w-full sm:max-w-xl p-0">
+          {selectedEndpoint && (
+            <EndpointDetailPanel endpoint={selectedEndpoint} />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
