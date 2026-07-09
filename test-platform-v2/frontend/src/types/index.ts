@@ -199,6 +199,7 @@ export interface ReportItem {
   name: string
   description: string
   plan_id: number
+  template_id?: number
   plan_name: string
   creator_id: number
   created_at: string | null
