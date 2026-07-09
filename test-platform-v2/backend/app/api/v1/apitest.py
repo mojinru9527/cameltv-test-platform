@@ -5,7 +5,7 @@ import json
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -222,6 +222,7 @@ def import_preview(
 @router.post("/import/confirm", response_model=R[dict], summary="确认导入")
 def import_confirm(
     body: OpenApiImportConfirmRequest,
+    background_tasks: BackgroundTasks,
     project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:import")),
     db: Session = Depends(get_db),
@@ -241,10 +242,24 @@ def import_confirm(
         source_type=body.source_type,
     )
 
+    # M1 入库 hook：接口导入 → 沉淀为知识源（api_schema 切片）
+    from app.services.knowledge import ingest_service
+    background_tasks.add_task(
+        ingest_service.ingest_api_import_in_new_session,
+        project_id, result["batch_id"], body.service_name,
+    )
+
     # 可选：导入后批量生成用例
     if body.generate_cases:
-        generated = _batch_generate_for_endpoints(db, result["batch_id"], project_id)
+        generated, case_ids = _batch_generate_for_endpoints(db, result["batch_id"], project_id)
         result["generated_case_count"] = generated
+        # 生成的用例一并入库（test_case 切片）
+        if case_ids:
+            background_tasks.add_task(
+                ingest_service.ingest_test_cases_in_new_session, project_id, case_ids,
+            )
+    else:
+        result["generated_case_count"] = 0
 
     return R.ok(result)
 
@@ -279,12 +294,13 @@ def _resolve_spec(source_type: str, source_ref: str, spec_content: str | None) -
             return None
 
 
-def _batch_generate_for_endpoints(db: Session, batch_id: int, project_id: int) -> int:
-    """导入后批量生成基础用例。"""
+def _batch_generate_for_endpoints(db: Session, batch_id: int, project_id: int) -> tuple[int, list[int]]:
+    """导入后批量生成基础用例。返回 (生成条数, 创建的用例 id 列表)。"""
     from app.services.api_case_generation_service import generate_cases_from_endpoint
 
     endpoints = db.query(ApiEndpoint).filter_by(import_batch_id=batch_id).all()
     count = 0
+    case_ids: list[int] = []
     for ep in endpoints:
         ep_data = {
             "service_name": "",
@@ -296,10 +312,11 @@ def _batch_generate_for_endpoints(db: Session, batch_id: int, project_id: int) -
         }
         cases = generate_cases_from_endpoint(ep_data, templates=["basic"])
         for c in cases:
-            _create_test_case_from_generated(db, project_id, c, ep.id)
+            tc = _create_test_case_from_generated(db, project_id, c, ep.id)
+            case_ids.append(tc.id)
             count += 1
     db.commit()
-    return count
+    return count, case_ids
 
 
 # ═══════════════════════════════════════════════════════
@@ -309,6 +326,7 @@ def _batch_generate_for_endpoints(db: Session, batch_id: int, project_id: int) -
 @router.post("/cases/generate", response_model=R[dict], summary="单接口生成用例")
 def generate_cases(
     body: GenerateApiCasesRequest,
+    background_tasks: BackgroundTasks,
     project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:generate")),
     db: Session = Depends(get_db),
@@ -342,6 +360,12 @@ def generate_cases(
             tc = _create_test_case_from_generated(db, project_id, c, body.endpoint_id)
             imported_ids.append(tc.id)
         db.commit()
+        # M1 入库 hook：生成用例 → 沉淀为知识切片
+        if imported_ids:
+            from app.services.knowledge import ingest_service
+            background_tasks.add_task(
+                ingest_service.ingest_test_cases_in_new_session, project_id, imported_ids.copy(),
+            )
 
     return R.ok({
         "cases": cases,
@@ -353,6 +377,7 @@ def generate_cases(
 @router.post("/cases/batch-generate", response_model=R[dict], summary="批量生成用例")
 def batch_generate_cases(
     body: BatchGenerateRequest,
+    background_tasks: BackgroundTasks,
     project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:generate")),
     db: Session = Depends(get_db),
@@ -386,6 +411,12 @@ def batch_generate_cases(
                 all_imported_ids.append(tc.id)
 
     db.commit()
+    # M1 入库 hook：批量生成用例 → 沉淀为知识切片
+    if all_imported_ids:
+        from app.services.knowledge import ingest_service
+        background_tasks.add_task(
+            ingest_service.ingest_test_cases_in_new_session, project_id, all_imported_ids.copy(),
+        )
 
     return R.ok({
         "total_generated": total_generated,
@@ -525,6 +556,11 @@ def _execute_task_async(db: Session, task_id: int, project_id: int):
     task.status = "success" if failed == 0 else "failed"
     task.finished_at = datetime.now(timezone.utc)
     db.commit()
+
+    # M1 入库 hook：有失败项时 → 沉淀为知识切片（用于后续影响分析 & Agent 学习）
+    if failed > 0:
+        from app.services.knowledge import ingest_service
+        ingest_service.ingest_execution_failure_in_new_session(project_id, task_id)
 
 
 @router.get("/tasks", response_model=R[dict], summary="任务列表")
