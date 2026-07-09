@@ -78,8 +78,17 @@ def embed_pending_chunks_in_new_session(
             if not chunks:
                 break
             scanned_total += len(chunks)
-            embedded_total += _embed_and_store(db, chunks)
+            embedded = _embed_and_store(db, chunks)
             db.commit()
+            embedded_total += embedded
+            if embedded == 0:
+                # 本批零进展（模型中途不可用 / 嵌入异常 → embedding_id 未回填）：若不中断，
+                # 同一批 embedding_id=="" 切片会被反复选出，形成死循环（/reembed 为同步阻塞）。
+                logger.warning(
+                    "向量回填批次零进展，提前终止 project_id=%s source_id=%s scanned=%s",
+                    project_id, source_id, scanned_total,
+                )
+                break
             if len(chunks) < batch:
                 break
         return {"embedded": embedded_total, "skipped": scanned_total - embedded_total}
