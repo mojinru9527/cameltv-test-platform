@@ -1,6 +1,8 @@
 import { Construction } from '@/lib/icons'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export default function Placeholder({ title }: { title: string }) {
+  useDocumentTitle(title)
   return (
     <div>
       <h2 className="text-lg font-semibold">{title}</h2>

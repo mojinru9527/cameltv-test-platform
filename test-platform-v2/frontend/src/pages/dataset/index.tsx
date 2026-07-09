@@ -21,6 +21,7 @@ import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state/AsyncState'
 import { useApi } from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 import {
   fetchDatasets, fetchDataset, createDataset, updateDataset, deleteDataset,
@@ -29,6 +30,7 @@ import {
 import type { DatasetListItem } from '@/types'
 
 export default function DatasetPage() {
+  useDocumentTitle('数据集')
   const [page, setPage] = useState(1)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)

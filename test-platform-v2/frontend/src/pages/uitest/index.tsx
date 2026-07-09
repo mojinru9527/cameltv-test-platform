@@ -65,6 +65,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 const BROWSER_MAP: Record<string, { color: string }> = {
   chromium: { color: 'blue' },
@@ -114,6 +115,7 @@ const uiJobFormSchema = z.object({
 type UiJobFormValues = z.infer<typeof uiJobFormSchema>
 
 export default function UiTestPage() {
+  useDocumentTitle('UI 测试')
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [data, setData] = useState({ total: 0, items: [] as UiJobItem[], page: 1, page_size: 20 })
   const [loading, setLoading] = useState(false)

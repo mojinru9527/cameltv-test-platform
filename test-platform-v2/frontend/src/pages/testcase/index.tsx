@@ -41,6 +41,7 @@ import { Search, RotateCcw, Plus, Edit, Trash2, Download, Upload, FileSpreadshee
 import { cn } from '@/lib/utils'
 import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, exportExcelUrl, exportXmindUrl, importExcel, importXmind, fetchVersions, reviewCase } from '@/api/testcase'
 import { useApi } from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import CaseDrawer from './CaseDrawer'
 import VersionDialog from './VersionDialog'
 import type { TestCaseVersion } from '@/types'
@@ -50,6 +51,7 @@ const REVIEW_LABELS: Record<string, string> = { draft: '草稿', submitted: '已
 const REVIEW_COLORS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = { draft: 'secondary', submitted: 'outline', approved: 'default', rejected: 'destructive' }
 
 export default function TestCasePage() {
+  useDocumentTitle('用例库')
   // domains are loaded independently (used for tree + filter dropdowns)
   const [domains, setDomains] = useState<any[]>([])
 

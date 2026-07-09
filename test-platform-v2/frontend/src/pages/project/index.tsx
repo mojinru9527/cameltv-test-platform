@@ -15,6 +15,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Sheet,
@@ -77,6 +78,7 @@ const memberSchema = z.object({
 type MemberFormData = z.infer<typeof memberSchema>
 
 export default function ProjectPage() {
+  useDocumentTitle('项目管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [page, setPage] = useState(1)
 

@@ -1,6 +1,7 @@
 import api from './client'
 import type {
   AiArtifact,
+  GraphView,
   KnowledgeChunk,
   KnowledgeOverview,
   KnowledgePage,
@@ -54,4 +55,14 @@ export async function searchKnowledge(
 
 export async function reembedKnowledge(): Promise<ReembedResult> {
   return api.post('/knowledge/reembed')
+}
+
+// ── M3 知识图谱 ──
+
+export async function fetchGraphView(limit = 200): Promise<GraphView> {
+  return api.get('/knowledge/graph/view', { params: { limit } })
+}
+
+export async function triggerEntityExtract(sourceId?: number | null, maxChunks = 100): Promise<{ extracted: number; relations: number; skipped: number; message: string }> {
+  return api.post('/knowledge/graph/extract', { source_id: sourceId, max_chunks: maxChunks })
 }

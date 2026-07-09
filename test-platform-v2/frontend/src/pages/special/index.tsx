@@ -65,6 +65,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 const PROTOCOL_MAP: Record<string, { color: string }> = {
   HLS: { color: 'blue' },
@@ -109,6 +110,7 @@ const avTaskFormSchema = z.object({
 type AvTaskFormValues = z.infer<typeof avTaskFormSchema>
 
 export default function SpecialPage() {
+  useDocumentTitle('专项测试')
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [data, setData] = useState({ total: 0, items: [] as AvTaskItem[], page: 1, page_size: 20 })
   const [loading, setLoading] = useState(false)

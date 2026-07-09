@@ -109,6 +109,7 @@ export {
   Minimize2,
   // Checklist
   ClipboardCheck,
+  BrainCircuit,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"

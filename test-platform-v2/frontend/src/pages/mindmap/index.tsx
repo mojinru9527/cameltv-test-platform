@@ -6,6 +6,7 @@ import { fetchTestCases } from '@/api/testcase'
 import { fetchDomains } from '@/api/testcase'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { RotateCcw, Download, Maximize2, Minimize2 } from '@/lib/icons'
 
 /**
@@ -18,6 +19,7 @@ import { RotateCcw, Download, Maximize2, Minimize2 } from '@/lib/icons'
  */
 
 export default function MindmapPage() {
+  useDocumentTitle('思维导图')
   const containerRef = useRef<HTMLDivElement>(null)
   const mmRef = useRef<any>(null)
   const [domain, setDomain] = useState('')
