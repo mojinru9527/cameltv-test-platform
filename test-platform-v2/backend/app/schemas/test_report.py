@@ -11,6 +11,7 @@ class ReportCreate(BaseModel):
     plan_id: int
     name: str
     description: str = ""
+    template_id: int | None = None
 
 
 class ReportOut(BaseModel):
@@ -22,6 +23,7 @@ class ReportOut(BaseModel):
     name: str = ""
     description: str = ""
     plan_id: int = 0
+    template_id: int | None = None
     creator_id: int = 0
     gate_status: str | None = None
     gate_details: list | None = None
