@@ -22,9 +22,9 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950 p-8">
           <div className="max-w-md text-center">
             <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-500" />
-            <h1 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
+            <h2 className="mb-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
               页面出现异常
-            </h1>
+            </h2>
             <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">
               {this.state.error?.message || '未知错误'}
             </p>
