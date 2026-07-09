@@ -88,7 +88,8 @@ export interface RequirementDocument {
   source_ref: string
   content: string
   status: string
-  extraction_status?: string  // not_started | pending_review | confirmed
+  extraction_status?: string  // not_started | extracting | pending_review | confirmed
+  extraction_progress?: number  // V2: 0.0 - 1.0
   imported_count: number
   imported_func_count: number
   imported_api_count: number
@@ -175,9 +176,14 @@ export interface FeatureExtractionResult {
   overall_assessment: string
   raw_response: string
   extraction_summary?: string
-  extraction_status?: string
-  version_info?: VersionInfo[]   // parsed version info from changelog
-  client_summary?: string        // e.g. "涉及 App端、PC端"
+  extraction_status?: string       // not_started | extracting | pending_review | confirmed
+  version_info?: VersionInfo[]     // parsed version info from changelog
+  client_summary?: string          // e.g. "涉及 App端、PC端"
+  // V2 enhanced extraction
+  truncated?: boolean              // True if extraction was cut off
+  extraction_progress?: number     // 0.0-1.0
+  versions_total?: number          // Total versions from changelog
+  versions_done?: number           // Versions fully extracted
 }
 
 export interface ExtractionConfirmRequest {
@@ -415,6 +421,103 @@ export interface QuickExecuteRequest {
   headers: string       // JSON string
   body: string          // JSON string
   environment_id?: number
+  dataset_id?: number
+}
+
+// ── Dataset (V2.5) ──
+
+export interface Dataset {
+  id: number
+  project_id: number
+  name: string
+  description: string
+  source_type: 'csv' | 'json' | 'sql'
+  raw_content: string
+  sql_query: string
+  connection_string: string
+  row_count: number
+  columns_meta: string     // JSON string: ["col1", "col2", ...]
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface DatasetListItem {
+  id: number
+  project_id: number
+  name: string
+  description: string
+  source_type: string
+  row_count: number
+  columns_meta: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface DatasetPreview {
+  columns: string[]
+  rows: Record<string, string>[]
+  total_rows: number
+}
+
+export interface DatasetUploadResponse {
+  dataset: Dataset
+  preview: DatasetPreview
+}
+
+export interface BatchExecutionResult {
+  status: string
+  batch_mode: boolean
+  dataset_id: number
+  columns: string[]
+  total_rows: number
+  passed: number
+  failed: number
+  per_row: Array<{
+    row_index: number
+    row_data: Record<string, string>
+    result: ApiExecutionResult
+  }>
+  executed_at: string
+}
+
+// ── Cross-Project Dashboard (V2.5) ──
+
+export interface CrossProjectCard {
+  project_id: number
+  project_name: string
+  total_cases: number
+  total_plans: number
+  api_cases: number
+  pass_rate: number
+  defect_count: number
+}
+
+export interface CrossProjectAggregate {
+  total_projects: number
+  total_cases: number
+  total_plans: number
+  total_api_cases: number
+  overall_pass_rate: number
+  total_defects: number
+}
+
+export interface TrendPoint {
+  date: string
+  pass_rate?: number
+  total_execs?: number
+  count?: number
+}
+
+export interface CrossProjectTrends {
+  pass_rate: TrendPoint[]
+  defects: TrendPoint[]
+}
+
+export interface CrossProjectStats {
+  projects: Array<{ id: number; code: string; name: string }>
+  aggregate: CrossProjectAggregate
+  per_project: CrossProjectCard[]
+  trends: CrossProjectTrends
 }
 
 // ── TestCase Review ──
@@ -441,4 +544,159 @@ export interface QualityGateConfig {
   p1_max: number
   enabled: boolean
   is_default?: boolean
+}
+
+// ── Integration Config (V2.6) ──
+
+export interface IntegrationConfig {
+  id: number
+  project_id: number
+  name: string
+  provider_type: 'jira' | 'tapd'
+  base_url: string
+  auth_json: string       // always "********" in response
+  field_mapping: string    // JSON string
+  sync_direction: string   // bidirectional | push_only | pull_only
+  sync_interval_minutes: number
+  enabled: boolean
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface SyncLog {
+  id: number
+  integration_id: number
+  defect_id: number
+  direction: 'push' | 'pull'
+  status: 'success' | 'failed' | 'skipped'
+  external_id: string
+  message: string
+  created_at: string | null
+}
+
+export interface TestConnectionResult {
+  success: boolean
+  message: string
+}
+
+// ── API Test Asset Types (接口测试模块优化) ──
+
+export interface ApiService {
+  id: number
+  project_id: number
+  name: string
+  display_name: string
+  description: string
+  default_base_path: string
+  owner: string
+  status: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface ApiEndpoint {
+  id: number
+  project_id: number
+  service_id: number
+  module: string
+  method: string
+  path: string
+  summary: string
+  description: string
+  request_schema: string
+  response_schema: string
+  auth_required: boolean
+  deprecated: boolean
+  source: string
+  import_batch_id: number | null
+  version: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface ApiImportPreview {
+  service_name: string
+  version: string
+  total_count: number
+  new_count: number
+  existing_count: number
+  endpoints: Array<{
+    module: string
+    method: string
+    path: string
+    summary: string
+    source: string
+    _exists?: boolean
+  }>
+  errors: Array<{ method: string; path: string; error: string }>
+}
+
+export interface ApiImportResult {
+  batch_id: number
+  service_name: string
+  version: string
+  total_count: number
+  created_count: number
+  updated_count: number
+  skipped_count: number
+  generated_case_count: number
+  errors: Array<{ method: string; path: string; error: string }>
+}
+
+export interface ApiExecutionTask {
+  id: number
+  project_id: number
+  task_id: string
+  name: string
+  environment_id: number | null
+  service_id: number | null
+  status: string
+  total: number
+  passed: number
+  failed: number
+  skipped: number
+  trigger_type: string
+  creator_id: number
+  started_at: string | null
+  finished_at: string | null
+  created_at: string | null
+}
+
+export interface ApiExecutionTaskItem {
+  id: number
+  task_id: number
+  case_id: number
+  status: string
+  duration_ms: number
+  request_snapshot: string
+  response_snapshot: string
+  assertion_results: string
+  error_message: string
+  created_at: string | null
+}
+
+export interface ApiTaskDetail extends ApiExecutionTask {
+  items: ApiExecutionTaskItem[]
+}
+
+export interface GenerateApiCasesRequest {
+  endpoint_id?: number
+  endpoint_data?: Record<string, any>
+  templates?: string[]
+  import_to_case_library?: boolean
+  module?: string
+  service_name?: string
+}
+
+export interface BatchGenerateRequest {
+  endpoint_ids: number[]
+  templates?: string[]
+  import_to_case_library?: boolean
+}
+
+export interface ApiTaskCreateRequest {
+  name: string
+  environment_id?: number
+  service_id?: number
+  case_ids: number[]
 }

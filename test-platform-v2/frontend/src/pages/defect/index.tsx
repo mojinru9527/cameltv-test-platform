@@ -18,6 +18,7 @@ import {
   Send,
   File,
   ArrowLeftRight,
+  RefreshCw,
 } from '@/lib/icons'
 import { useRef, useState } from 'react'
 import {
@@ -37,6 +38,7 @@ import {
 } from '@/api/defect'
 import { fetchTestCases } from '@/api/testcase'
 import { fetchUsers } from '@/api/system'
+import { pushDefect, pullDefect } from '@/api/integration'
 import { useAuthStore } from '@/stores/auth'
 import type { DefectItem, DefectTransition, DefectComment, DefectAttachment } from '@/types'
 import { toast } from 'sonner'
@@ -748,6 +750,43 @@ export default function DefectPage() {
                       查看外部链接
                     </a>
                   </p>
+                )}
+
+                {/* V2.6: Sync buttons */}
+                {hasPerm('integration:sync') && (
+                  <div className="flex items-center gap-2 mt-4 pt-3 border-t">
+                    <span className="text-xs text-muted-foreground">同步:</span>
+                    <Button
+                      variant="outline" size="sm"
+                      onClick={async () => {
+                        const iid = prompt('请输入集成配置 ID (可在集成配置页查看):')
+                        if (!iid) return
+                        try {
+                          await pushDefect(detail.id, Number(iid))
+                          toast.success('推送成功')
+                          if (refetch) refetch()
+                        } catch (e: any) { toast.error(e?.message || '推送失败') }
+                      }}
+                    >
+                      <RefreshCw className="size-3 mr-1" />推送
+                    </Button>
+                    {detail.external_id && (
+                      <Button
+                        variant="outline" size="sm"
+                        onClick={async () => {
+                          const iid = prompt('请输入集成配置 ID:')
+                          if (!iid) return
+                          try {
+                            await pullDefect(detail.id, Number(iid))
+                            toast.success('拉取成功')
+                            if (refetch) refetch()
+                          } catch (e: any) { toast.error(e?.message || '拉取失败') }
+                        }}
+                      >
+                        <RefreshCw className="size-3 mr-1" />拉取
+                      </Button>
+                    )}
+                  </div>
                 )}
 
                 {detail.description && (
