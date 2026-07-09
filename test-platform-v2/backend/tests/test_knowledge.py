@@ -396,3 +396,219 @@ class TestKnowledgeApi:
         resp = kclient.get("/api/v1/agents/runs")
         assert resp.status_code == 200
         assert resp.json()["data"]["total"] == 0
+
+
+# ═══════════════════════════════════════════════════════
+# M2 — 向量化 / 向量存储 / 混合检索
+# ═══════════════════════════════════════════════════════
+
+def _bag_vec(text: str, dim: int = 32):
+    """确定性 bag-of-chars 向量（字符重叠 → 余弦相近），供离线测试替身。"""
+    import numpy as np
+
+    v = np.zeros(dim, dtype=np.float32)
+    for ch in text or "":
+        v[ord(ch) % dim] += 1.0
+    n = float(np.linalg.norm(v))
+    return v / n if n else v
+
+
+def _fake_embed(texts):
+    import numpy as np
+
+    return np.vstack([_bag_vec(t) for t in texts]).astype(np.float32)
+
+
+def _patch_fake_embedder(monkeypatch):
+    """把共享单例 embedding_service 替换为确定性替身（available/embed/embed_query/dim）。"""
+    from app.services.knowledge.embedding_service import embedding_service
+
+    monkeypatch.setattr(embedding_service, "available", lambda: True)
+    monkeypatch.setattr(embedding_service, "embed", _fake_embed)
+    monkeypatch.setattr(embedding_service, "embed_query", lambda q: _bag_vec(q))
+    monkeypatch.setattr(embedding_service, "_model_name", "bag-test")
+    monkeypatch.setattr(embedding_service, "_dim", 32)
+    return embedding_service
+
+
+def _seed_chunks(db, texts, project_id=1, chunk_type="test_case"):
+    from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+
+    src = KnowledgeSource(project_id=project_id, source_type=chunk_type, title="源", status="parsed")
+    db.add(src)
+    db.flush()
+    for t in texts:
+        db.add(KnowledgeChunk(
+            project_id=project_id, source_id=src.id, chunk_type=chunk_type,
+            title=t[:20], content=t, status="active", embedding_id="",
+        ))
+    db.commit()
+    return src
+
+
+class TestEmbeddingService:
+    def test_empty_input_returns_none(self):
+        from app.services.knowledge.embedding_service import EmbeddingService
+        es = EmbeddingService()
+        assert es.embed([]) is None
+
+    def test_graceful_degradation_when_unavailable(self):
+        """模型不可用（未装/下载失败）→ embed/embed_one 返回 None，绝不抛异常。"""
+        from app.services.knowledge.embedding_service import EmbeddingService
+        es = EmbeddingService()
+        es._unavailable = True  # 模拟加载失败态
+        assert es.available() is False
+        assert es.embed(["x"]) is None
+        assert es.embed_one("x") is None
+        assert es.embed_query("x") is None
+
+
+class TestVectorStore:
+    def test_upsert_search_roundtrip_and_1to1(self, kdb):
+        from app.services.knowledge.vector_store import SqliteVectorStore
+        _seed_chunks(kdb, ["密码校验", "视频播放", "登录token"])
+        from app.models.knowledge import KnowledgeChunk
+        chunks = kdb.query(KnowledgeChunk).all()
+        store = SqliteVectorStore()
+        for c in chunks:
+            store.upsert(kdb, chunk_id=c.id, project_id=1, model="bag", dim=32, vec=_bag_vec(c.content))
+        kdb.commit()
+        # 自身向量检索 → top-1 命中自身、score≈1
+        res = store.search(kdb, project_id=1, query_vec=_bag_vec(chunks[0].content), top_k=3)
+        assert res[0].chunk_id == chunks[0].id
+        assert abs(res[0].score - 1.0) < 1e-4
+        # 覆盖写：同 chunk_id 再 upsert 不新增行
+        from app.models.knowledge import KnowledgeVector
+        before = kdb.query(KnowledgeVector).count()
+        store.upsert(kdb, chunk_id=chunks[0].id, project_id=1, model="bag", dim=32, vec=_bag_vec("变了"))
+        kdb.commit()
+        assert kdb.query(KnowledgeVector).count() == before
+
+    def test_delete_and_project_isolation(self, kdb):
+        from app.models.knowledge import KnowledgeChunk, KnowledgeVector
+        from app.services.knowledge.vector_store import SqliteVectorStore
+        _seed_chunks(kdb, ["a1", "b2"], project_id=1)
+        _seed_chunks(kdb, ["c3"], project_id=2)
+        store = SqliteVectorStore()
+        for c in kdb.query(KnowledgeChunk).all():
+            store.upsert(kdb, chunk_id=c.id, project_id=c.project_id, model="bag", dim=32, vec=_bag_vec(c.content))
+        kdb.commit()
+        # 只搜项目 1
+        assert store.search(kdb, project_id=2, query_vec=_bag_vec("c3"), top_k=5)[0].score > 0.5
+        # 删单个
+        one = kdb.query(KnowledgeChunk).filter_by(project_id=1).first()
+        assert store.delete_by_chunk(kdb, one.id) == 1
+        # 项目级清空只清项目 1
+        n = store.deactivate_project(kdb, 1)
+        kdb.commit()
+        assert n >= 1
+        assert kdb.query(KnowledgeVector).filter_by(project_id=1).count() == 0
+        assert kdb.query(KnowledgeVector).filter_by(project_id=2).count() == 1
+
+    def test_dim_mismatch_skipped(self, kdb):
+        """模型切换残留的异维向量在检索时被跳过，不报错。"""
+        import numpy as np
+        from app.models.knowledge import KnowledgeChunk, KnowledgeVector
+        from app.services.knowledge.vector_store import SqliteVectorStore
+        _seed_chunks(kdb, ["x"], project_id=1)
+        c = kdb.query(KnowledgeChunk).first()
+        # 存一个 8 维向量（与 query 的 32 维不符）
+        kdb.add(KnowledgeVector(chunk_id=c.id, project_id=1, model="old", dim=8,
+                                vec=np.ones(8, dtype=np.float32).tobytes()))
+        kdb.commit()
+        res = SqliteVectorStore().search(kdb, project_id=1, query_vec=_bag_vec("x"), top_k=3)
+        assert res == []
+
+
+class TestSearchService:
+    def test_keyword_cjk_bigram(self, kdb, monkeypatch):
+        from app.services.knowledge import search_service
+        _patch_fake_embedder(monkeypatch)
+        _seed_chunks(kdb, ["密码字段需要非空校验", "视频清晰度切换", "支付金额校验"])
+        hits = search_service.hybrid_search(kdb, project_id=1, query="密码校验", top_k=3, mode="keyword")
+        assert hits and "密码" in hits[0].title + hits[0].snippet
+
+    def test_vector_and_hybrid_modes(self, kdb, monkeypatch):
+        from app.models.knowledge import KnowledgeChunk
+        from app.services.knowledge import search_service, vectorize
+        _patch_fake_embedder(monkeypatch)
+        _seed_chunks(kdb, ["密码字段需要非空校验", "视频清晰度切换", "支付金额校验"])
+        vectorize._embed_and_store(kdb, kdb.query(KnowledgeChunk).all())
+        kdb.commit()
+        for mode in ("vector", "hybrid"):
+            hits = search_service.hybrid_search(kdb, project_id=1, query="密码校验", top_k=3, mode=mode)
+            assert hits, f"{mode} 应有结果"
+            assert hits == sorted(hits, key=lambda h: -h.score)  # 降序
+
+    def test_empty_query_and_isolation(self, kdb, monkeypatch):
+        from app.services.knowledge import search_service
+        _patch_fake_embedder(monkeypatch)
+        _seed_chunks(kdb, ["密码校验"], project_id=1)
+        assert search_service.hybrid_search(kdb, project_id=1, query="   ", top_k=3) == []
+        assert search_service.hybrid_search(kdb, project_id=999, query="密码", top_k=3) == []
+
+
+class TestM2SearchApi:
+    def test_search_503_when_rag_disabled(self, kclient, monkeypatch):
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "rag_enabled", False, raising=False)
+        resp = kclient.post("/api/v1/knowledge/search", json={"query": "密码"})
+        assert resp.status_code == 503
+
+    def test_search_200_when_rag_enabled(self, kclient, kdb, monkeypatch):
+        from app.core.config import settings
+        from app.models.knowledge import KnowledgeChunk
+        from app.services.knowledge import vectorize
+        monkeypatch.setattr(settings, "rag_enabled", True, raising=False)
+        _patch_fake_embedder(monkeypatch)
+        _seed_chunks(kdb, ["密码字段需要非空校验", "支付金额校验"])
+        vectorize._embed_and_store(kdb, kdb.query(KnowledgeChunk).all())
+        kdb.commit()
+        resp = kclient.post("/api/v1/knowledge/search", json={"query": "密码校验", "top_k": 5})
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert isinstance(data, list) and len(data) >= 1
+        assert {"chunk_id", "snippet", "score", "source_name"} <= set(data[0].keys())
+
+    def test_search_missing_permission_403(self, kdb):
+        from fastapi.testclient import TestClient
+        from app.core.config import settings
+        from app.core.db import get_db
+        from app.core.deps import CurrentUser, get_current_user
+        from app.main import app
+        from app.models.user import User
+
+        def _override_db():
+            yield kdb
+
+        def _limited_user():
+            return CurrentUser(
+                user=User(id=3, username="v", password="x", nickname="V", email="v@t.local", status=1),
+                permissions=["testcase:list"], project_id=1,
+            )
+
+        settings.rag_enabled = True
+        app.dependency_overrides[get_db] = _override_db
+        app.dependency_overrides[get_current_user] = _limited_user
+        try:
+            with TestClient(app) as c:
+                resp = c.post("/api/v1/knowledge/search", json={"query": "密码"})
+            assert resp.status_code == 403
+        finally:
+            app.dependency_overrides.clear()
+            settings.rag_enabled = False
+
+    def test_reembed_503_when_rag_disabled(self, kclient, monkeypatch):
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "rag_enabled", False, raising=False)
+        resp = kclient.post("/api/v1/knowledge/reembed")
+        assert resp.status_code == 503
+
+    def test_reembed_503_when_model_unavailable(self, kclient, monkeypatch):
+        from app.core.config import settings
+        from app.services.knowledge.embedding_service import embedding_service
+        monkeypatch.setattr(settings, "rag_enabled", True, raising=False)
+        monkeypatch.setattr(embedding_service, "available", lambda: False)
+        resp = kclient.post("/api/v1/knowledge/reembed")
+        assert resp.status_code == 503
+
