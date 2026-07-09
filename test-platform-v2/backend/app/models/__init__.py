@@ -6,6 +6,14 @@ from app.models.dataset import Dataset
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.integration import IntegrationConfig
+from app.models.knowledge import (
+    AgentRun,
+    AiArtifact,
+    KnowledgeChunk,
+    KnowledgeEntity,
+    KnowledgeRelation,
+    KnowledgeSource,
+)
 from app.models.project import Project, ProjectMember
 from app.models.notification import NotificationChannel, NotificationLog
 from app.models.quality_gate import QualityGateConfig
@@ -64,4 +72,10 @@ __all__ = [
     "VersionMission",
     "AgentWorkLog",
     "GeneratedArtifact",
+    "KnowledgeSource",
+    "KnowledgeChunk",
+    "KnowledgeEntity",
+    "KnowledgeRelation",
+    "AiArtifact",
+    "AgentRun",
 ]

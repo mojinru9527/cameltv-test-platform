@@ -25,6 +25,7 @@ const NotifyPage = lazy(() => import('@/pages/notify'))
 const EnvironmentPage = lazy(() => import('@/pages/environment'))
 const DatasetPage = lazy(() => import('@/pages/dataset'))
 const IntegrationPage = lazy(() => import('@/pages/integration'))
+const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -69,6 +70,7 @@ export const router = createBrowserRouter([
       { path: 'environment', element: <PageLoader><EnvironmentPage /></PageLoader> },
       { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },
       { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
+      { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
   },
