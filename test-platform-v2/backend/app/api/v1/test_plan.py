@@ -1,7 +1,9 @@
 """测试计划 API 路由 — /api/v1/test-plans/*"""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -22,7 +24,23 @@ from app.schemas.test_plan import (
 )
 from app.services import audit_service, test_plan_service
 
+logger = logging.getLogger("test_plan")
+
 router = APIRouter(prefix="/test-plans", tags=["测试计划"])
+
+
+def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
+    """P1-4: 在独立 DB session 中发送通知（供 BackgroundTasks 调用）。"""
+    from app.core.db import SessionLocal
+    from app.services.notify_service import notify_sync
+
+    db = SessionLocal()
+    try:
+        notify_sync(db, project_id, event, data)
+    except Exception:
+        logger.exception("Background notification failed: event=%s project=%s", event, project_id)
+    finally:
+        db.close()
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
@@ -175,6 +193,7 @@ def execute_case(
     pcase_id: int,
     body: ExecutionCreate,
     req: Request,
+    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("testplan:execute")),
     db: Session = Depends(get_db),
 ):
@@ -192,16 +211,19 @@ def execute_case(
         return R(code=404, msg="关联不存在或无权操作")
     _audit(req, current, db, "plan:execute", f"plan #{plan_id} case #{pcase_id}", f"status={body.status}")
 
-    # Background notification: plan execution progress
-    import asyncio
-    from app.services.notify_service import notify
+    # P1-4: Background notification via BackgroundTasks (was fire-and-forget asyncio.create_task)
     plan = test_plan_service.get_plan(db, plan_id, current.project_id or 0)
     stats = plan.get("stats", {}) if plan else {}
-    asyncio.create_task(notify(db, current.project_id or 0, "plan_done", {
-        "plan_name": plan.get("name", "") if plan else "",
-        "result_summary": f"通过 {stats.get('pass_',0)} / 失败 {stats.get('fail',0)} / 跳过 {stats.get('skip',0)}",
-        "link": "",
-    }))
+    background_tasks.add_task(
+        _run_notify_in_new_session,
+        current.project_id or 0,
+        "plan_done",
+        {
+            "plan_name": plan.get("name", "") if plan else "",
+            "result_summary": f"通过 {stats.get('pass_',0)} / 失败 {stats.get('fail',0)} / 跳过 {stats.get('skip',0)}",
+            "link": "",
+        },
+    )
 
     return R.ok(ExecutionOut(**row))
 
