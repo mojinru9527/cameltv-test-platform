@@ -52,6 +52,7 @@ import {
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   Plus,
   Edit,
@@ -97,6 +98,7 @@ function emptyForm(): {
 }
 
 export default function NotifyPage() {
+  useDocumentTitle('通知管理')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm())

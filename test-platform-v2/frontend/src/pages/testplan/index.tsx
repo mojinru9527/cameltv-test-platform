@@ -30,6 +30,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { deletePlan, fetchPlans } from '@/api/testplan'
 import { useApi } from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import PlanDrawer from './PlanDrawer'
 
@@ -41,6 +42,7 @@ const STATUS_MAP: Record<string, { variant: 'outline' | 'default' | 'secondary';
 }
 
 export default function TestPlanPage() {
+  useDocumentTitle('测试计划')
   const navigate = useNavigate()
   const [status, setStatus] = useState('')
   const [keyword, setKeyword] = useState('')

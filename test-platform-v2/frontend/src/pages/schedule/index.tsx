@@ -16,6 +16,7 @@ import EmptyState from '@/components/EmptyState'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   Table,
   TableHeader,
@@ -76,6 +77,7 @@ const scheduleSchema = z.object({
 type ScheduleFormValues = z.infer<typeof scheduleSchema>
 
 export default function SchedulePage() {
+  useDocumentTitle('定时任务')
   const [page, setPage] = useState(1)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)

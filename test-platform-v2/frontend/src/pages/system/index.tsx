@@ -5,8 +5,10 @@ import PageHeader from '@/components/PageHeader'
 import AuditTab from './AuditTab'
 import RolesTab from './RolesTab'
 import UsersTab from './UsersTab'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export default function SystemPage() {
+  useDocumentTitle('系统管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
 
   const showUsers = hasPerm('system:user:list')

@@ -6,12 +6,14 @@ import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
 import SearchTab from './components/SearchTab'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 /**
  * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表 / M2 混合检索）。
  * 概览 / 检索 / 知识源 / AI 审核台 四个 Tab。
  */
 export default function KnowledgePage() {
+  useDocumentTitle('知识中心')
   const [tab, setTab] = useState('overview')
 
   return (
