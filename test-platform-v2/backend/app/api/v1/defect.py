@@ -281,21 +281,9 @@ def upload_attachment(
                 f"上传文件超过限制 (max: 50 MB, got: {cl / (1024*1024):.1f} MB)",
                 code=413,
             )
-    # P1-S6b: 流式写入临时文件，避免大文件完全加载到内存
-    import os
-    import shutil
-    import tempfile
-    tmp_path = ""
-    try:
-        suffix = os.path.splitext(file.filename or ".bin")[1] or ".bin"
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            shutil.copyfileobj(file.file, tmp, length=64 * 1024)
-            tmp_path = tmp.name
-        with open(tmp_path, "rb") as f:
-            content = f.read()
-    finally:
-        if tmp_path:
-            os.unlink(tmp_path)
+    # P1-5b: 直接读取（Content-Length 已做前置检查，max 50 MB；upload_attachment
+    # 需要完整 bytes，流式写入临时文件后再次读回不能节省峰值内存）。
+    content = file.file.read()
     if len(content) > 50 * 1024 * 1024:
         from app.core.exceptions import APIException
         raise APIException("附件大小不能超过 50 MB", code=413)

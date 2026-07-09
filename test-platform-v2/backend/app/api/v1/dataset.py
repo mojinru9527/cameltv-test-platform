@@ -1,7 +1,7 @@
 """Dataset API — /api/v1/datasets/*"""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -98,6 +98,7 @@ def upload_dataset(
     file: UploadFile = File(...),
     name: str = Form(..., description="数据集名称"),
     description: str = Form(""),
+    req: Request = None,
     current: CurrentUser = Depends(require_permission("dataset:create")),
     db: Session = Depends(get_db),
 ):
@@ -105,7 +106,16 @@ def upload_dataset(
     if not file.filename:
         return R(code=1, msg="请上传文件")
 
-    # Size check: 10 MB limit
+    # P1-5a: Content-Length 前置检查，避免读取超大文件 (max 10 MB)
+    if req:
+        content_length = req.headers.get("content-length")
+        if content_length:
+            cl = int(content_length)
+            max_bytes = 10 * 1024 * 1024
+            if cl > max_bytes:
+                return R(code=1, msg=f"文件大小超过 10MB 限制 (got {cl / (1024*1024):.1f} MB)")
+
+    # Size check: 10 MB limit (二次校验)
     content_bytes = file.file.read()
     if len(content_bytes) > 10 * 1024 * 1024:
         return R(code=1, msg="文件大小超过 10MB 限制")
