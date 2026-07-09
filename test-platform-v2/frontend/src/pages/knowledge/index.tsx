@@ -1,18 +1,19 @@
 import { useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
 import SearchTab from './components/SearchTab'
 import GraphTab from './components/GraphTab'
 import EntityTab from './components/EntityTab'
+import IterationTab from './components/IterationTab'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 /**
- * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表 / M2 混合检索 / M3 图谱可视化）。
- * 概览 / 检索 / 知识源 / AI 审核台 / 图谱 五个 Tab。
+ * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表 / M2 混合检索 / M3 图谱可视化 / M6 迭代知识包）。
+ * 概览 / 检索 / 知识源 / AI 审核台 / 图谱 / 实体 / 迭代 七个 Tab。
  */
 export default function KnowledgePage() {
   useDocumentTitle('知识中心')
@@ -51,6 +52,10 @@ export default function KnowledgePage() {
             <Layers className="size-4 mr-1" />
             实体
           </TabsTrigger>
+          <TabsTrigger value="iterations">
+            <Calendar className="size-4 mr-1" />
+            迭代
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -70,6 +75,9 @@ export default function KnowledgePage() {
         </TabsContent>
         <TabsContent value="entities" className="mt-4">
           {tab === 'entities' && <EntityTab />}
+        </TabsContent>
+        <TabsContent value="iterations" className="mt-4">
+          {tab === 'iterations' && <IterationTab />}
         </TabsContent>
       </Tabs>
     </div>

@@ -6,12 +6,16 @@ import type {
   KnowledgeChunk,
   KnowledgeEntityBrief,
   KnowledgeEntity,
+  KnowledgeIteration,
   KnowledgeOverview,
   KnowledgePage,
   KnowledgeRelation,
+  KnowledgeSnapshot,
   KnowledgeSearchQuery,
   KnowledgeSearchResult,
   KnowledgeSource,
+  CompareSnapshots,
+  RegressionPrediction,
   ReembedResult,
 } from '@/types'
 
@@ -111,4 +115,54 @@ export async function rejectArtifact(id: number, comment?: string): Promise<AiAr
 
 export async function importArtifact(id: number): Promise<{ case_id: number }> {
   return api.post(`/knowledge/ai-artifacts/${id}/import-to-test-cases`, { comment: '' })
+}
+
+// ── M6 迭代知识包 ──
+
+export async function fetchIterations(params: {
+  status?: string
+  page?: number
+  page_size?: number
+}): Promise<KnowledgePage<KnowledgeIteration>> {
+  return api.get('/knowledge/iterations', { params })
+}
+
+export async function fetchIteration(id: number): Promise<KnowledgeIteration> {
+  return api.get(`/knowledge/iterations/${id}`)
+}
+
+export async function createIteration(body: {
+  iteration_name: string
+  version?: string
+  start_date?: string | null
+  end_date?: string | null
+  description?: string
+}): Promise<KnowledgeIteration> {
+  return api.post('/knowledge/iterations', body)
+}
+
+export async function closeIteration(id: number): Promise<{ success: boolean; iteration_id: number; status: string }> {
+  return api.post(`/knowledge/iterations/${id}/close`)
+}
+
+export async function fetchSnapshots(iterationId: number): Promise<KnowledgeSnapshot[]> {
+  return api.get(`/knowledge/iterations/${iterationId}/snapshots`)
+}
+
+export async function compareIterations(
+  iterationId: number,
+  baseIterationId: number,
+): Promise<CompareSnapshots> {
+  return api.get(`/knowledge/iterations/${iterationId}/compare`, {
+    params: { base_iteration_id: baseIterationId },
+  })
+}
+
+// ── M6 回归预测 ──
+
+export async function predictRegressionScope(body: {
+  changed_paths: string[]
+  changed_modules: string[]
+}): Promise<RegressionPrediction> {
+  return api.post('/knowledge/predict/regression-scope', body)
 }

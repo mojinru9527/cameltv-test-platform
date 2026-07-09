@@ -897,3 +897,53 @@ export interface KnowledgeEntityPage {
   items: KnowledgeEntityBrief[]
   total: number
 }
+
+// ── M6 迭代知识包 ──
+
+export interface KnowledgeIteration {
+  id: number
+  project_id: number
+  iteration_name: string
+  version: string
+  start_date: string | null
+  end_date: string | null
+  status: string
+  description: string
+  metadata_json: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface KnowledgeSnapshot {
+  id: number
+  iteration_id: number
+  snapshot_type: string
+  data_json: string
+  created_at: string | null
+}
+
+export interface CompareSnapshots {
+  base_iteration_id: number
+  base_iteration_name: string
+  target_iteration_id: number
+  target_iteration_name: string
+  deltas: Record<string, any>
+  trends: Record<string, any>
+}
+
+// ── M6 回归预测 ──
+
+export interface RegressionPredictionItem {
+  api_path: string
+  module: string
+  risk_score: number
+  historical_defects: number
+  suggested_test_cases: string[]
+  affected_entities: string[]
+}
+
+export interface RegressionPrediction {
+  items: RegressionPredictionItem[]
+  total_analyzed: number
+  high_risk_count: number
+}

@@ -16,6 +16,8 @@ from app.schemas.knowledge import AgentRunOut
 from app.services.knowledge import agent_run_service
 from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
 from app.services.knowledge.agent_prompts import AGENT_META
+from app.services.knowledge.agent_queue import enqueue, cancel_queue_item, ensure_processor_running, get_queue_stats, list_queue_items
+from app.schemas.knowledge import AgentQueueItemOut, QueueStats
 
 router = APIRouter(prefix="/agents", tags=["Agent 工作台"])
 
@@ -87,30 +89,24 @@ def trigger_agent(
         return R(code=400, msg=f"未知 Agent 类型: {agent_type}。支持: {', '.join(AGENT_META.keys())}")
 
     pid = current.project_id or 0
-    bg.add_task(
-        run_agent_in_new_session,
+
+    # 确保队列处理器已启动
+    ensure_processor_running()
+
+    # 入队（DB 持久化）
+    item = enqueue(
         project_id=pid,
         agent_type=agent_type,
+        trigger_type="manual",
         user_input=body.query,
         params=body.params,
         operator_id=current.user.id,
     )
 
-    # 创建一个 pending run 记录让前端立即拿到 run_id
-    placeholder = agent_run_service.start_run(
-        db, project_id=pid, agent_type=agent_type,
-        trigger_type="manual",
-        input_data={"query": body.query, "params": body.params},
-        operator_id=current.user.id,
-    )
-    placeholder.status = "pending"
-    db.commit()
-    db.refresh(placeholder)
-
     return R.ok(AgentRunResponse(
-        run_id=placeholder.id,
+        run_id=item.id,
         status="pending",
-        message=f"{AGENT_META[agent_type]['label']}已加入后台执行队列",
+        message=f"{AGENT_META[agent_type]['label']}已加入任务队列 (#{item.id})",
     ))
 
 
@@ -151,3 +147,47 @@ def get_trigger_rules():
     """返回当前的触发规则配置。"""
     from app.services.knowledge.change_detector import TRIGGER_RULES
     return R.ok(TRIGGER_RULES)
+
+
+# ═══════════════════════════════════════════════════════
+# M5 Agent 任务队列
+# ═══════════════════════════════════════════════════════
+
+@router.get("/queue", response_model=R[Page[AgentQueueItemOut]], summary="Agent 任务队列列表")
+def list_queue(
+    status: str | None = Query(None, description="过滤状态: pending/running/completed/failed/cancelled"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    current: CurrentUser = Depends(require_permission("agent:read")),
+    db: Session = Depends(get_db),
+):
+    rows, total = list_queue_items(
+        db, current.project_id or 0,
+        status=status, page=page, page_size=page_size,
+    )
+    return R.ok(Page(
+        total=total, page=page, page_size=page_size,
+        items=[AgentQueueItemOut.model_validate(r) for r in rows],
+    ))
+
+
+@router.get("/queue/stats", response_model=R[QueueStats], summary="队列统计")
+def queue_stats(
+    current: CurrentUser = Depends(require_permission("agent:read")),
+    db: Session = Depends(get_db),
+):
+    stats = get_queue_stats(db, current.project_id or 0)
+    return R.ok(QueueStats(**stats))
+
+
+@router.post("/queue/{item_id}/cancel", response_model=R[dict], summary="取消队列任务")
+def cancel_queue(
+    item_id: int,
+    current: CurrentUser = Depends(require_permission("agent:run")),
+    db: Session = Depends(get_db),
+):
+    ok = cancel_queue_item(db, item_id, current.project_id or 0)
+    if not ok:
+        return R(code=404, msg="队列项不存在或无法取消（仅 pending 状态可取消）")
+    db.commit()
+    return R.ok({"id": item_id, "status": "cancelled"})

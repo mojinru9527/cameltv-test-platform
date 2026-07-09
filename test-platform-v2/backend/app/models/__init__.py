@@ -7,11 +7,14 @@ from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.integration import IntegrationConfig
 from app.models.knowledge import (
+    AgentQueueItem,
     AgentRun,
     AiArtifact,
     KnowledgeChunk,
     KnowledgeEntity,
+    KnowledgeIteration,
     KnowledgeRelation,
+    KnowledgeSnapshot,
     KnowledgeSource,
     KnowledgeVector,
 )
@@ -80,4 +83,7 @@ __all__ = [
     "KnowledgeVector",
     "AiArtifact",
     "AgentRun",
+    "AgentQueueItem",
+    "KnowledgeIteration",
+    "KnowledgeSnapshot",
 ]

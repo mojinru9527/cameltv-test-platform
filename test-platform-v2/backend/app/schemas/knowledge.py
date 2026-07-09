@@ -247,3 +247,98 @@ class EntityExtractResult(BaseModel):
 
 class RelationApprovalRequest(BaseModel):
     comment: str = ""
+
+
+# ── M5 Agent 任务队列 ──
+
+class AgentQueueItemOut(BaseModel):
+    id: int
+    project_id: int
+    agent_type: str
+    trigger_type: str
+    priority: int
+    input_json: str
+    status: str
+    retry_count: int
+    max_retries: int
+    error_message: str
+    operator_id: int
+    created_at: datetime | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class QueueStats(BaseModel):
+    pending: int = 0
+    running: int = 0
+    completed: int = 0
+    failed: int = 0
+
+
+# ── M6 迭代知识包 ──
+
+class KnowledgeIterationOut(BaseModel):
+    id: int
+    project_id: int
+    iteration_name: str
+    version: str
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    status: str
+    description: str
+    metadata_json: str = "{}"
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class KnowledgeIterationCreate(BaseModel):
+    iteration_name: str = Field(..., min_length=1, max_length=200)
+    version: str = ""
+    start_date: str | None = None  # ISO date
+    end_date: str | None = None
+    description: str = ""
+
+
+class KnowledgeSnapshotOut(BaseModel):
+    id: int
+    iteration_id: int
+    snapshot_type: str
+    data_json: str = "{}"
+    created_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class CompareSnapshotsOut(BaseModel):
+    base_iteration_id: int
+    base_iteration_name: str = ""
+    target_iteration_id: int
+    target_iteration_name: str = ""
+    deltas: dict = Field(default_factory=dict)
+    trends: dict = Field(default_factory=dict)
+
+
+# ── M6 回归预测 ──
+
+class RegressionPredictionRequest(BaseModel):
+    changed_paths: list[str] = Field(default_factory=list, description="变更的 API paths")
+    changed_modules: list[str] = Field(default_factory=list, description="变更的模块名")
+
+
+class RegressionPredictionItem(BaseModel):
+    api_path: str = ""
+    module: str = ""
+    risk_score: float = 0.0  # 0-1
+    historical_defects: int = 0
+    suggested_test_cases: list[str] = Field(default_factory=list)
+    affected_entities: list[str] = Field(default_factory=list)
+
+
+class RegressionPredictionOut(BaseModel):
+    items: list[RegressionPredictionItem] = Field(default_factory=list)
+    total_analyzed: int = 0
+    high_risk_count: int = 0
