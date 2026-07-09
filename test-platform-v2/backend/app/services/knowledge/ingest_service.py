@@ -18,6 +18,7 @@ from app.core.db import SessionLocal
 from app.services.knowledge import chunk_service
 from app.services.knowledge.sanitize import sanitize
 from app.services.knowledge.source_service import record_source
+from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
 
 logger = logging.getLogger("knowledge.ingest")
 
@@ -62,6 +63,7 @@ def ingest_requirement_in_new_session(project_id: int, doc_id: int) -> None:
         ]
         chunk_service.make_chunks(db, src, chunks)
         db.commit()
+        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest requirement doc_id=%s failed", doc_id)
         db.rollback()
@@ -124,6 +126,7 @@ def ingest_api_import_in_new_session(project_id: int, batch_id: int, service_nam
             })
         chunk_service.make_chunks(db, src, chunks)
         db.commit()
+        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest api import batch_id=%s failed", batch_id)
         db.rollback()
@@ -178,6 +181,7 @@ def ingest_test_case_in_new_session(project_id: int, case_id: int) -> None:
     try:
         _ingest_one_test_case(db, project_id, case_id)
         db.commit()
+        embed_pending_chunks_in_new_session(project_id)
     except Exception:
         logger.exception("ingest test_case case_id=%s failed", case_id)
         db.rollback()
@@ -194,6 +198,7 @@ def ingest_test_cases_in_new_session(project_id: int, case_ids: list[int]) -> No
         for cid in case_ids:
             _ingest_one_test_case(db, project_id, cid)
         db.commit()
+        embed_pending_chunks_in_new_session(project_id)
     except Exception:
         logger.exception("ingest test_cases (%d) failed", len(case_ids))
         db.rollback()
@@ -251,6 +256,7 @@ def ingest_defect_in_new_session(project_id: int, defect_id: int) -> None:
             "tags": [defect.severity, defect.status],
         }])
         db.commit()
+        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest defect defect_id=%s failed", defect_id)
         db.rollback()
@@ -313,6 +319,7 @@ def ingest_execution_failure_in_new_session(project_id: int, task_id: int) -> No
             "tags": ["execution", "failed"],
         }])
         db.commit()
+        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest execution failure task_id=%s failed", task_id)
         db.rollback()

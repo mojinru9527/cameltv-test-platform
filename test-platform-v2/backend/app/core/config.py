@@ -74,6 +74,11 @@ class Settings(BaseSettings):
     ai_temperature: float = 0.3
     ai_split_calls: bool = True                # split generation into functional + API parallel calls to avoid truncation
 
+    # ── AI 降级 / 超时（DeepSeek 分类器不可用时的本地降级提取）──
+    ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）
+    ai_retry_attempts: int = 2                 # 瞬时失败（超时/网络）总尝试次数，最小 1
+    ai_fallback_on_failure: bool = True        # 瞬时失败时降级到本地模块提取，返回可复核草稿而非硬失败
+
     # ── File paths (configurable for portability) ──
     workspace_root: str = ""      # empty = auto-detect from app/services/__file__
     skill_dir: str = ""           # test-case-design skill directory
@@ -103,6 +108,15 @@ class Settings(BaseSettings):
     knowledge_graph_enabled: bool = False        # 是否启用知识图谱（M3）
     ai_artifact_allow_batch_import: bool = False # AI 产物是否允许批量导入正式库
     knowledge_ingest_production_data: bool = False  # 生产环境执行结果是否允许进入知识库
+
+    # ── M2 向量化 / 混合检索（RAG）──
+    # 本地 fastembed(onnx) 嵌入，离线不外传（见 ADR-0010）。仅在 rag_enabled 时激活嵌入管线。
+    embedding_model: str = "BAAI/bge-small-zh-v1.5"  # 中文小模型，512 维
+    embedding_dim: int = 512
+    embedding_batch_size: int = 32               # 批量嵌入/回填批大小
+    embedding_cache_dir: str = ""                # 空=fastembed 默认（~/.cache/fastembed）
+    # bge 检索建议对 query 加前缀以对齐训练目标；passage 侧不加
+    embedding_query_prefix: str = "为这个句子生成表示以用于检索相关文章："
 
     @property
     def cors_origins(self) -> list[str]:
