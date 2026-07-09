@@ -78,7 +78,9 @@ fake_db2 = _make_fake_db(
 content_fail = json.dumps({"stats": {"total": 10, "pass": 4, "fail": 6}})
 result2 = _compute_gate(fake_db2, plan_id=1, project_id=1, content_str=content_fail, config=config)
 assert result2["status"] == "fail", f"Expected fail, got {result2['status']}"
-assert any("低于" in d for d in result2["details"])
+# R3 expanded: details now use structured "checks" format; verify both old "details" and new "checks"
+assert any("通过率" in d for d in result2["details"])
+assert "checks" in result2  # new R3 structured checks array
 print("[PASS] R3d-2: Gate FAIL (40% rate + 2 P0 + 8 P1 defects)")
 
 # Test 3: Warn (mixed — pass rate ok, but defects fail)
@@ -119,13 +121,16 @@ result7 = _compute_gate(fake_db7, plan_id=1, project_id=1, content_str=content_a
 assert result7["status"] == "pass"
 print("[PASS] R3d-7: Gate with disabled config uses defaults")
 
-# Test 8: GateConfigBody defaults
+# Test 8: GateConfigBody defaults (R3 expanded: 6 dimensions)
 default_body = GateConfigBody()
 assert default_body.pass_rate_threshold == 80
 assert default_body.p0_max == 0
 assert default_body.p1_max == 5
+assert default_body.coverage_threshold == 0
+assert default_body.max_failed_cases == 0
+assert default_body.max_blocked_cases == 0
 assert default_body.enabled is True
-print("[PASS] R3d-8: GateConfigBody default values")
+print("[PASS] R3d-8: GateConfigBody default values (6 dimensions)")
 
 # ═══════════════════════════════════════════════════════════
 # R4: Report Template — model + schema + service + API
