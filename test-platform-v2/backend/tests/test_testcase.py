@@ -111,7 +111,8 @@ class TestCaseBatch:
             }, headers=auth_headers)
             ids.append(r.json()["data"]["id"])
 
-        resp = client.delete("/api/v1/test-cases/batch", json={
+        # httpx's TestClient.delete() doesn't accept a body; use .request() for DELETE+json.
+        resp = client.request("DELETE", "/api/v1/test-cases/batch", json={
             "ids": ids,
         }, headers=auth_headers)
         assert resp.status_code == 200
