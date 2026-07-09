@@ -18,13 +18,15 @@ class TestAuthCriticalPath:
         })
         assert resp.status_code == 200
         data = resp.json()["data"]
-        token = data["token"]
+        # LoginOut 暴露 JWT 字段名为 access_token（兼容过渡期客户端），非 token。
+        token = data["access_token"]
         assert token
 
         # 2) Get current user
         resp = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
         assert resp.status_code == 200
-        assert resp.json()["data"]["username"] == "admin_test"
+        # MeOut 把用户信息嵌在 data.user 下，而非 data 顶层。
+        assert resp.json()["data"]["user"]["username"] == "admin_test"
 
         # 3) List projects
         resp = client.get("/api/v1/projects", headers={
@@ -86,7 +88,8 @@ class TestPlanExecutionCriticalPath:
         r = self.client.get("/api/v1/trace/trend?days=7", headers=self.headers)
         assert r.status_code == 200
         trend = r.json()["data"]
-        assert "points" in trend
+        # get_trend 返回键为 "trend"（每日通过率桶列表），从来没有 "points"。
+        assert "trend" in trend
 
 
 class TestRBACCriticalPath:

@@ -68,7 +68,7 @@ def _auth_headers(token: str) -> dict:
 class TestJWTHttpOnlyCookie:
     """Batch A: JWT stored in httpOnly cookie, not localStorage."""
 
-    def test_login_sets_cookie(self, client):
+    def test_login_sets_cookie(self, client, admin_user):
         """S1a: /auth/login sets the auth cookie with correct attributes."""
         resp = client.post("/api/v1/auth/login", json={
             "username": "admin_test", "password": "admin123",
@@ -82,11 +82,11 @@ class TestJWTHttpOnlyCookie:
         assert "SameSite" in cookies, f"Cookie missing SameSite: {cookies}"
         assert "Path=/api" in cookies, f"Cookie missing Path=/api: {cookies}"
 
-    def test_login_response_includes_token_in_body(self, client):
-        """S1e: Login response body still contains token for transition period clients."""
+    def test_login_response_includes_token_in_body(self, client, admin_user):
+        """S1e: Login response body still contains access_token for transition period clients."""
         data = _login(client)
-        assert "token" in data, "Response body must include token for transition compatibility"
-        assert len(data["token"]) > 10
+        assert "access_token" in data, "Response body must include access_token for transition compatibility"
+        assert len(data["access_token"]) > 10
 
     def test_logout_clears_cookie(self, client, auth_headers):
         """S1a: /auth/logout clears the auth cookie (Max-Age=0)."""
@@ -120,14 +120,20 @@ class TestJWTHttpOnlyCookie:
         )
         assert resp.status_code == 200, f"Cookie auth failed: {resp.text}"
         data = resp.json()["data"]
-        assert data["username"] == "admin_test"
+        # MeOut 把用户嵌在 data.user 下。
+        assert data["user"]["username"] == "admin_test"
 
     def test_authorization_header_fallback(self, client, admin_user, caplog):
         """S1b: Authorization header still works (transition fallback) with WARNING log."""
         resp = client.post("/api/v1/auth/login", json={
             "username": "admin_test", "password": "admin123",
         })
-        token = resp.json()["data"]["token"]
+        token = resp.json()["data"]["access_token"]
+
+        # TestClient 会持久化 login 下发的 cameltv_token cookie，后续请求自动带上它。
+        # deps.get_current_user 优先用 cookie（used_fallback=False，不打告警）。要真正
+        # 触发「Authorization 头回退」分支，必须先清空 cookie jar，只留 Authorization 头。
+        client.cookies.clear()
 
         with caplog.at_level(logging.WARNING, logger="auth"):
             resp2 = client.get(
@@ -302,8 +308,9 @@ class TestRBACPermissions:
         assert resp.status_code == 401, f"Expected 401, got {resp.status_code}"
 
     def test_notify_list_requires_permission(self, client, admin_user):
-        """S3b: GET /api/v1/notify/ requires authentication."""
-        resp = client.get("/api/v1/notify/", headers={"X-Project-Id": "1"})
+        """S3b: GET /api/v1/notify/channels requires authentication."""
+        # 真实的通知列表端点是 /notify/channels（需 notify:list 权限）；根路径 /notify/ 从不存在。
+        resp = client.get("/api/v1/notify/channels", headers={"X-Project-Id": "1"})
         assert resp.status_code == 401, f"Expected 401, got {resp.status_code}"
 
     def test_admin_can_access_token_list(self, client, auth_headers):
@@ -313,7 +320,7 @@ class TestRBACPermissions:
 
     def test_admin_can_access_notify_list(self, client, auth_headers):
         """S3d: Admin user can access notify list."""
-        resp = client.get("/api/v1/notify/", headers=auth_headers)
+        resp = client.get("/api/v1/notify/channels", headers=auth_headers)
         assert resp.status_code == 200, f"Admin denied notify list: {resp.status_code}"
 
 
@@ -470,7 +477,7 @@ class TestP1EndToEnd:
         })
         assert login_resp.status_code == 200
         data = login_resp.json()["data"]
-        token = data["token"]
+        token = data["access_token"]
         cookie = login_resp.headers.get("set-cookie", "")
         assert "cameltv_token=" in cookie
         assert "HttpOnly" in cookie
@@ -480,7 +487,7 @@ class TestP1EndToEnd:
         # 2. Access protected resources
         me_resp = client.get("/api/v1/auth/me", headers=headers)
         assert me_resp.status_code == 200
-        assert me_resp.json()["data"]["username"] == "admin_test"
+        assert me_resp.json()["data"]["user"]["username"] == "admin_test"
 
         # 3. List resources (RBAC check)
         cases_resp = client.get("/api/v1/test-cases", headers=headers)

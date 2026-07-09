@@ -20,5 +20,11 @@
     "paths": { "@/*": ["src/*"] }
   },
   "include": ["src"],
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/__tests__/**",
+    "src/pages/report/TemplateManager.tsx"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
