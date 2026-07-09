@@ -42,6 +42,64 @@ jobs:
         working-directory: test-platform-v2/backend
         run: python -m pytest tests/ -v --tb=short
 
+  # PostgreSQL 兼容性验证 — 校验 Alembic 迁移 + 模型导入在 PG 上通过。
+  # 与 backend-check (SQLite) 并行运行，确保 PG 升级路径不被破坏。
+  backend-check-pg:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cameltv
+          POSTGRES_PASSWORD: cameltv_test
+          POSTGRES_DB: cameltv_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install psycopg2-binary
+
+      - name: Verify Alembic migrations on PostgreSQL
+        working-directory: test-platform-v2/backend
+        env:
+          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+        run: |
+          alembic upgrade head
+          echo "✅ Alembic migrations applied successfully on PostgreSQL"
+
+      - name: Verify model import on PostgreSQL
+        working-directory: test-platform-v2/backend
+        env:
+          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+          AUTO_CREATE_TABLES: 'false'
+        run: |
+          python -c "
+          from app.main import app
+          from app.core.db import engine, Base
+          # Verify all models are importable and tables exist
+          tables = Base.metadata.tables.keys()
+          print(f'✅ {len(tables)} tables registered: {\", \".join(sorted(tables))}')
+          assert len(tables) >= 30, f'Expected >=30 tables, got {len(tables)}'
+          "
+
   frontend-check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
