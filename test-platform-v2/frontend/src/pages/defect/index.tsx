@@ -64,6 +64,7 @@ import StatCard from '@/components/StatCard'
 import SearchInput from '@/components/SearchInput'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   Sheet,
   SheetContent,
@@ -173,6 +174,7 @@ const defectFormSchema = z.object({
 type DefectFormValues = z.infer<typeof defectFormSchema>
 
 export default function DefectPage() {
+  useDocumentTitle('缺陷管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
 
   // filters

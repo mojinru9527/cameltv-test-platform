@@ -5,11 +5,13 @@ import StatCard from '@/components/StatCard'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useChartColors } from '@/hooks/use-chart-colors'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent } from '@/lib/icons'
 
 export default function TracePage() {
+  useDocumentTitle('链路追踪')
   const chartColors = useChartColors()
   const { data, isLoading, isError, error, refetch } = useApi<CoverageData>(
     () => fetchCoverage(),

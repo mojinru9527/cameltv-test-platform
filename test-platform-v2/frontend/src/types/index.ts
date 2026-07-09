@@ -809,3 +809,57 @@ export interface ReembedResult {
   embedded: number
   skipped: number
 }
+
+// ── M3 知识图谱 ──
+
+export interface KnowledgeEntity {
+  id: number
+  project_id: number
+  entity_type: string
+  entity_key: string
+  name: string
+  description: string
+  source_id: number | null
+  business_ref_type: string
+  business_ref_id: number | null
+  confidence: number
+  review_status: string
+  metadata_json: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface KnowledgeRelation {
+  id: number
+  project_id: number
+  from_entity_id: number
+  relation_type: string
+  to_entity_id: number
+  confidence: number
+  evidence_chunk_ids: string
+  review_status: string
+  metadata_json: string
+  created_at: string | null
+}
+
+export interface GraphNode {
+  id: string
+  entity_type: string
+  name: string
+  group: string
+  description: string
+  confidence: number
+  entity_id: number
+}
+
+export interface GraphEdge {
+  source: string
+  target: string
+  relation_type: string
+  confidence: number
+}
+
+export interface GraphView {
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+}
