@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LayoutDashboard, Database, FileCheck, Search } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search, GitBranch } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
 import SearchTab from './components/SearchTab'
+import GraphTab from './components/GraphTab'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 /**
- * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表 / M2 混合检索）。
- * 概览 / 检索 / 知识源 / AI 审核台 四个 Tab。
+ * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表 / M2 混合检索 / M3 图谱可视化）。
+ * 概览 / 检索 / 知识源 / AI 审核台 / 图谱 五个 Tab。
  */
 export default function KnowledgePage() {
   useDocumentTitle('知识中心')
@@ -41,6 +42,10 @@ export default function KnowledgePage() {
             <FileCheck className="size-4 mr-1" />
             AI 审核台
           </TabsTrigger>
+          <TabsTrigger value="graph">
+            <GitBranch className="size-4 mr-1" />
+            图谱
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -54,6 +59,9 @@ export default function KnowledgePage() {
         </TabsContent>
         <TabsContent value="artifacts" className="mt-4">
           {tab === 'artifacts' && <ArtifactReviewTab />}
+        </TabsContent>
+        <TabsContent value="graph" className="mt-4">
+          {tab === 'graph' && <GraphTab />}
         </TabsContent>
       </Tabs>
     </div>
