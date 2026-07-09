@@ -61,11 +61,11 @@
 
 ### Slice 4 — 前端：接口详情「相关知识」面板 + 搜索预览
 
-- [ ] `frontend/src/api/knowledge.ts` 加 `searchKnowledge(params: SearchQuery): Promise<SearchResultOut[]>`
-- [ ] `frontend/src/types/index.ts` 追加 `SearchQuery / SearchResultOut` 接口
-- [ ] 知识中心搜索 Tab（新或复用概览页）：输入框→搜→结果卡片（标题/type/snippet/score）
-- [ ] 接口资产详情页（`/apitest` API 详情弹窗或面板）追加「相关知识」区块：用 endpoint path + 方法 + summary 拼 query → 调 search → 侧栏卡片展示
-- [ ] **C4 验收**：搜索 Tab 可搜；API 详情拉得到关联知识（若无匹配则显示「暂无相关」占位）
+- [x] `frontend/src/api/knowledge.ts` 加 `searchKnowledge(params: SearchQuery): Promise<SearchResultOut[]>`
+- [x] `frontend/src/types/index.ts` 追加 `SearchQuery / SearchResultOut` 接口
+- [x] 知识中心搜索 Tab（新或复用概览页）：输入框→搜→结果卡片（标题/type/snippet/score）
+- [x] 接口资产详情页（`/apitest` API 详情弹窗或面板）追加「相关知识」区块：用 endpoint path + 方法 + summary 拼 query → 调 search → 侧栏卡片展示
+- [x] **C4 验收**：搜索 Tab 可搜；API 详情拉得到关联知识（若无匹配则显示「暂无相关」占位）
 
 ### Slice 5 — 测试 + ADR-0010 定稿 + 压测
 
@@ -118,7 +118,7 @@
 **依赖**：`requirements.txt` 增 `fastembed>=0.3` + `numpy>=1.26`（首次使用下载 bge-small-zh-v1.5 onnx 模型；离线环境需预置缓存）。**未装 fastembed 时全链路优雅降级**：嵌入返回 None、检索退化纯关键词、`import app.main` 与 M1 入库零影响（已单测）。
 
 **延后项**（避免与并行 apitest 本体重构冲突，随其本体 PR 一并补入）：
-- `/apitest` 接口详情页「相关知识」区块（前端）
-- apitest.py / test_case.py 的 4 个入库 hook（知识 5 事件源余项，属 batch-11 A3 延后）
+- ~~`/apitest` 接口详情页「相关知识」区块（前端）~~ → ✅ 已交付（commit `1638a58`，feature/knowledge-m2-vector）
+- ~~apitest.py / test_case.py 的 4 个入库 hook（知识 5 事件源余项，属 batch-11 A3 延后）~~ → ✅ 已交付（PR #25 合入，commit `9338585`）
 
 **证据**：`pytest tests/test_knowledge.py -q` → **35 passed**；`npx tsc --noEmit` → 0 error。
