@@ -22,22 +22,22 @@
 
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
-| 1 | 后端共享夹具修复（StaticPool + token→access_token） | ✅ | ✅ | ✅ | ✅ | ⏳ | auth 12/12 通过 |
-| 2 | auth 测试体漂移修复（3 处断言/夹具依赖） | ✅ | ✅ | ✅ | ✅ | ⏳ | 同源登录响应漂移 |
-| 3 | 前端 17 处类型错误修复（trace/dataset/integration） | ✅ | ✅ | ✅ | ✅ | ⏳ | tsc -b 归零 |
-| 4 | 隔离孤儿/测试文件（TemplateManager + *.test.ts） | ✅ | ✅ | ✅ | ✅ | ⏳ | tsconfig exclude |
-| 5 | drift 1 路由顺序修复（静态 /batch 前置于 /{case_id}） | ✅ | ✅ | ✅ | ✅ | ⏳ | QA 判定=端点 bug；纯搬移零逻辑变更 |
-| 6 | drift 2 测试改调真实端点 auto-execute | ✅ | ✅ | ✅ | ✅ | ⏳ | QA 判定=测试陈旧 |
-| 7 | drift 3 删除断言对齐 envelope（200+code=404） | ✅ | ✅ | ✅ | ✅ | ⏳ | QA 判定=测试陈旧（硬删生效） |
-| 8 | 第二波簇1：登录体漂移 token→access_token / username→user.username（6 例） | ✅ | ✅ | ✅ | ✅ | ⏳ | QA=测试陈旧，同源 |
-| 9 | 第二波簇2：test_login_sets_cookie/includes_token 补 admin_user 夹具（2 例） | ✅ | ✅ | ✅ | ✅ | ⏳ | QA=夹具缺失 |
-| 10 | 第二波簇3：/notify/ → /notify/channels（2 例） | ✅ | ✅ | ✅ | ✅ | ⏳ | QA=测试陈旧，真实端点是 /channels |
-| 11 | 第二波簇4a：trace trend 断言 points→trend | ✅ | ✅ | ✅ | ✅ | ⏳ | QA=测试陈旧，真实键是 trend |
-| 12 | 第二波簇4c：v26/v27 smoke 脚本式结构修复（误采集/采集中断） | ✅ | ✅ | ✅ | ✅ | ⏳ | test_connection 别名导入 + R4c 特性守卫 |
-| 13 | test_authorization_header_fallback：清 cookie jar 隔离头回退 | ✅ | ✅ | ✅ | ✅ | ⏳ | QA=测试缺陷（端点正确，cookie 抢先） |
-| 14 | Feature A：AI 超时降级到本地模块提取（config 字段 + retry + _local_extract_modules） | ✅ | ✅ | ✅ | ✅ | ⏳ | Batch 4，用户确认实现 |
-| 15 | Feature B (R4c)：ReportCreate/TestReport 导入 template_id（model 列 + schema 字段） | ✅ | ✅ | ✅ | ✅ | ⏳ | Batch 4，迁移已在 0009 中 |
-| 16 | Feature B (R4c)：create_report 服务挂接 template（校验→存储→sections 注入） | ✅ | ✅ | ✅ | ✅ | ⏳ | +3 行为测试验证 |
+| 1 | 后端共享夹具修复（StaticPool + token→access_token） | ✅ | ✅ | ✅ | ✅ | ✅ | auth 12/12 通过 |
+| 2 | auth 测试体漂移修复（3 处断言/夹具依赖） | ✅ | ✅ | ✅ | ✅ | ✅ | 同源登录响应漂移 |
+| 3 | 前端 17 处类型错误修复（trace/dataset/integration） | ✅ | ✅ | ✅ | ✅ | ✅ | tsc -b 归零 |
+| 4 | 隔离孤儿/测试文件（TemplateManager + *.test.ts） | ✅ | ✅ | ✅ | ✅ | ✅ | tsconfig exclude |
+| 5 | drift 1 路由顺序修复（静态 /batch 前置于 /{case_id}） | ✅ | ✅ | ✅ | ✅ | ✅ | QA 判定=端点 bug；纯搬移零逻辑变更 |
+| 6 | drift 2 测试改调真实端点 auto-execute | ✅ | ✅ | ✅ | ✅ | ✅ | QA 判定=测试陈旧 |
+| 7 | drift 3 删除断言对齐 envelope（200+code=404） | ✅ | ✅ | ✅ | ✅ | ✅ | QA 判定=测试陈旧（硬删生效） |
+| 8 | 第二波簇1：登录体漂移 token→access_token / username→user.username（6 例） | ✅ | ✅ | ✅ | ✅ | ✅ | QA=测试陈旧，同源 |
+| 9 | 第二波簇2：test_login_sets_cookie/includes_token 补 admin_user 夹具（2 例） | ✅ | ✅ | ✅ | ✅ | ✅ | QA=夹具缺失 |
+| 10 | 第二波簇3：/notify/ → /notify/channels（2 例） | ✅ | ✅ | ✅ | ✅ | ✅ | QA=测试陈旧，真实端点是 /channels |
+| 11 | 第二波簇4a：trace trend 断言 points→trend | ✅ | ✅ | ✅ | ✅ | ✅ | QA=测试陈旧，真实键是 trend |
+| 12 | 第二波簇4c：v26/v27 smoke 脚本式结构修复（误采集/采集中断） | ✅ | ✅ | ✅ | ✅ | ✅ | test_connection 别名导入 + R4c 特性守卫 |
+| 13 | test_authorization_header_fallback：清 cookie jar 隔离头回退 | ✅ | ✅ | ✅ | ✅ | ✅ | QA=测试缺陷（端点正确，cookie 抢先） |
+| 14 | Feature A：AI 超时降级到本地模块提取（config 字段 + retry + _local_extract_modules） | ✅ | ✅ | ✅ | ✅ | ✅ | Batch 4，用户确认实现 |
+| 15 | Feature B (R4c)：ReportCreate/TestReport 导入 template_id（model 列 + schema 字段） | ✅ | ✅ | ✅ | ✅ | ✅ | Batch 4，迁移已在 0009 中 |
+| 16 | Feature B (R4c)：create_report 服务挂接 template（校验→存储→sections 注入） | ✅ | ✅ | ✅ | ✅ | ✅ | +3 行为测试验证 |
 
 > 状态图例：⏳ 待开始 | 🔄 进行中 | ✅ 已完成 | ❌ 已取消 | 🔒 阻塞中
 
@@ -50,8 +50,8 @@ Batch #4 — 两处未实现特性落地（用户确认实现：AI 超时降级 
 ├── 已完成: Feature A（ai fallback）+ Feature B（R4c 挂接），全套件 179 passed / 0 skipped / 0 failed
 ├── 🔄 进行中: 无
 ├── ✅ 已审批: 用户 Review 通过（2026-07-09）
-├── ⏳ 待合入: PR #17 等待 merge
-└── ⏳ 待产品判定: 无（Batch 3 的两处 flag 已应用户确认实现并转绿）
+├── ✅ 已合入: PR #17 squashed → develop (2026-07-09)
+└── 🎉 全批次完成！
 ```
 
 ---
