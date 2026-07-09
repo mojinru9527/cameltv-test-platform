@@ -18,6 +18,7 @@ from app.schemas.test_case import (
 )
 from app.services import audit_service, test_case_service
 from app.services.api_execution_service import execute_api_case
+from app.services.knowledge import ingest_service
 
 router = APIRouter(prefix="/test-cases", tags=["测试用例"])
 
@@ -94,6 +95,7 @@ def get_test_case(
 def create_test_case(
     body: TestCaseCreate,
     req: Request,
+    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("testcase:create")),
     db: Session = Depends(get_db),
 ):
@@ -101,39 +103,17 @@ def create_test_case(
     data["project_id"] = current.project_id or 0
     row = test_case_service.create_case(db, data)
     _audit(req, current, db, "case:create", f"#{row['id']} {row['title']}")
+    if row.get("case_type") == "api":
+        background_tasks.add_task(
+            ingest_service.ingest_test_case_in_new_session, current.project_id or 0, row["id"]
+        )
     return R.ok(TestCaseOut(**row))
-
-
-@router.put("/{case_id}", response_model=R[TestCaseOut])
-def update_test_case(
-    case_id: int,
-    body: TestCaseUpdate,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("testcase:update")),
-    db: Session = Depends(get_db),
-):
-    row = test_case_service.update_case(db, case_id, body.model_dump(exclude_none=True))
-    if not row:
-        return R(code=404, msg="用例不存在")
-    _audit(req, current, db, "case:update", f"#{row['id']} {row['title']}")
-    return R.ok(TestCaseOut(**row))
-
-
-@router.delete("/{case_id}", response_model=R[dict])
-def delete_test_case(
-    case_id: int,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("testcase:delete")),
-    db: Session = Depends(get_db),
-):
-    ok = test_case_service.delete_case(db, case_id, project_id=current.project_id or 0)
-    if not ok:
-        return R(code=404, msg="用例不存在或无权操作")
-    _audit(req, current, db, "case:delete", f"#{case_id}")
-    return R.ok({"deleted": case_id})
 
 
 # ── 批量操作 ──────────────────────────────────────────
+# 契约铁律：静态路径段 /batch 必须注册在动态 /{case_id} 之前。
+# FastAPI 按注册顺序匹配，若 /{case_id} 在先，PUT/DELETE /test-cases/batch
+# 会被它抢匹配 → "batch" 解析为 int 失败 → 422。见 [[common-pitfalls]]。
 
 from pydantic import BaseModel, Field
 
@@ -196,6 +176,60 @@ def batch_delete_test_cases(
     return R.ok({"deleted": deleted, "total": len(body.ids)})
 
 
+@router.post("/batch-delete", response_model=R[dict], summary="批量删除用例")
+def batch_delete_test_cases_post(
+    body: BatchDeleteBody,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:delete")),
+    db: Session = Depends(get_db),
+):
+    """批量删除指定用例。POST 入口避免 DELETE body 和动态路由匹配兼容性问题。"""
+    from app.core.base_service import transaction
+
+    deleted = 0
+    with transaction(db):
+        for case_id in body.ids:
+            if test_case_service.delete_case(db, case_id, project_id=current.project_id or 0):
+                deleted += 1
+
+    _audit(req, current, db, "case:batch_delete", f"{deleted}/{len(body.ids)} 条用例")
+    return R.ok({"deleted": deleted, "total": len(body.ids)})
+
+
+@router.put("/{case_id}", response_model=R[TestCaseOut])
+def update_test_case(
+    case_id: int,
+    body: TestCaseUpdate,
+    req: Request,
+    background_tasks: BackgroundTasks,
+    current: CurrentUser = Depends(require_permission("testcase:update")),
+    db: Session = Depends(get_db),
+):
+    row = test_case_service.update_case(db, case_id, body.model_dump(exclude_none=True))
+    if not row:
+        return R(code=404, msg="用例不存在")
+    _audit(req, current, db, "case:update", f"#{row['id']} {row['title']}")
+    if row.get("case_type") == "api":
+        background_tasks.add_task(
+            ingest_service.ingest_test_case_in_new_session, current.project_id or 0, row["id"]
+        )
+    return R.ok(TestCaseOut(**row))
+
+
+@router.delete("/{case_id}", response_model=R[dict])
+def delete_test_case(
+    case_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:delete")),
+    db: Session = Depends(get_db),
+):
+    ok = test_case_service.delete_case(db, case_id, project_id=current.project_id or 0)
+    if not ok:
+        return R(code=404, msg="用例不存在或无权操作")
+    _audit(req, current, db, "case:delete", f"#{case_id}")
+    return R.ok({"deleted": case_id})
+
+
 # ── API 执行 ──────────────────────────────────────────
 
 class ExecuteApiBody(BaseModel):
@@ -209,12 +243,26 @@ def execute_test_case(
     current: CurrentUser = Depends(require_permission("apitest:execute")),
     db: Session = Depends(get_db),
 ):
-    """对已保存的 API 类型用例发起真实 HTTP 请求，返回响应 + 断言结果。"""
+    """对已保存的 API 类型用例发起真实 HTTP 请求，返回响应 + 断言结果。
+    P1: 生产环境执行需要额外 apitest:execute_prod 权限。
+    """
+    env_id = body.environment_id if body else None
+
+    # P1: 生产环境保护
+    if env_id:
+        from app.models.environment import Environment
+        env = db.query(Environment).filter_by(id=env_id, project_id=current.project_id).first()
+        if not env:
+            return R(code=404, msg="环境不存在或不属于当前项目")
+        if env.env_type == "prod":
+            if "apitest:execute_prod" not in current.permissions and "*" not in current.permissions:
+                return R(code=403, msg="生产环境执行需要 apitest:execute_prod 权限")
+
     try:
         result = execute_api_case(
             db, case_id,
             project_id=current.project_id or 0,
-            environment_id=body.environment_id if body else None,
+            environment_id=env_id,
             dataset_id=body.dataset_id if body else None,
         )
     except ValueError as e:

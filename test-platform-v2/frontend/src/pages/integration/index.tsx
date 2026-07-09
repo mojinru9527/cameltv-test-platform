@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-import { useApi } from '@/hooks/useApi'
 import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/utils'
 import {
@@ -78,7 +77,9 @@ export default function IntegrationPage() {
   const [logsOpen, setLogsOpen] = useState<number | null>(null)
   const [logs, setLogs] = useState<SyncLog[]>([])
 
-  const [loadState, load] = useApi(fetchIntegrations)
+  // fetchIntegrations returns the promise directly; useApi's object contract
+  // doesn't fit this "call then setState" usage, so use a plain callback.
+  const load = useCallback(() => fetchIntegrations(), [])
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
