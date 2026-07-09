@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LayoutDashboard, Database, FileCheck, Search, GitBranch } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
 import SearchTab from './components/SearchTab'
 import GraphTab from './components/GraphTab'
+import EntityTab from './components/EntityTab'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 /**
@@ -46,6 +47,10 @@ export default function KnowledgePage() {
             <GitBranch className="size-4 mr-1" />
             图谱
           </TabsTrigger>
+          <TabsTrigger value="entities">
+            <Layers className="size-4 mr-1" />
+            实体
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -62,6 +67,9 @@ export default function KnowledgePage() {
         </TabsContent>
         <TabsContent value="graph" className="mt-4">
           {tab === 'graph' && <GraphTab />}
+        </TabsContent>
+        <TabsContent value="entities" className="mt-4">
+          {tab === 'entities' && <EntityTab />}
         </TabsContent>
       </Tabs>
     </div>

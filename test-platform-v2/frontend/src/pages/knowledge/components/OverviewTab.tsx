@@ -45,7 +45,14 @@ export default function OverviewTab() {
     { label: '已废弃知识源', value: data.health.deprecated_sources },
     { label: '孤儿切片', value: data.health.sourceless_chunks },
     { label: '低置信度关系', value: data.health.low_confidence_relations },
+    { label: '待审核关系', value: data.health.unreviewed_relations },
   ]
+
+  const agentStats = data.health.agent_total_runs > 0 ? [
+    { label: 'Agent 执行总量', value: data.health.agent_total_runs },
+    { label: 'AI 产物采纳率', value: `${(data.health.agent_approval_rate * 100).toFixed(0)}%` },
+    { label: 'Agent 平均耗时', value: `${(data.health.agent_avg_duration_ms / 1000).toFixed(1)}s` },
+  ] : []
 
   return (
     <div className="space-y-4">
@@ -75,6 +82,24 @@ export default function OverviewTab() {
           </div>
         </CardContent>
       </Card>
+
+      {agentStats.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Agent 执行指标</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {agentStats.map((s) => (
+                <div key={s.label} className="rounded-md border p-3">
+                  <div className="text-lg font-medium">{s.value}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {data.recent_sources.length > 0 && (
         <Card>

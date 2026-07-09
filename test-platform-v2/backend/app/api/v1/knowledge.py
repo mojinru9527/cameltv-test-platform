@@ -15,7 +15,7 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
-from app.models.knowledge import AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource
+from app.models.knowledge import AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource
 from app.schemas.common import Page, R
 from app.schemas.knowledge import (
     AiArtifactOut,
@@ -23,6 +23,8 @@ from app.schemas.knowledge import (
     ArtifactReviewRequest,
     EntityExtractRequest,
     EntityExtractResult,
+    GraphEdge,
+    GraphNode,
     GraphViewOut,
     KnowledgeChunkOut,
     KnowledgeEntityBrief,
@@ -93,6 +95,25 @@ def overview(
         .limit(5)
     ).all()
 
+    # M3: 关系健康指标
+    low_confidence_relations = _count(KnowledgeRelation, KnowledgeRelation.confidence < 0.5)
+    unreviewed_relations = _count(KnowledgeRelation, KnowledgeRelation.review_status == "pending")
+
+    # M4: Agent 执行指标
+    agent_total_runs = _count(AgentRun)
+    agent_avg_duration = db.scalar(
+        select(func.avg(AgentRun.duration_ms)).where(
+            AgentRun.project_id == pid,
+            AgentRun.status == "success",
+            AgentRun.duration_ms > 0,
+        )
+    ) or 0
+    # 采纳率 = approved / (approved + rejected)
+    approved_count = _count(AiArtifact, AiArtifact.review_status == "approved")
+    rejected_count = _count(AiArtifact, AiArtifact.review_status == "rejected")
+    total_reviewed = approved_count + rejected_count
+    agent_approval_rate = approved_count / total_reviewed if total_reviewed > 0 else 0.0
+
     out = KnowledgeOverviewOut(
         source_count=source_count,
         chunk_count=chunk_count,
@@ -103,7 +124,11 @@ def overview(
             unreviewed_artifacts=pending_artifacts,
             deprecated_sources=deprecated_sources,
             sourceless_chunks=sourceless,
-            low_confidence_relations=0,
+            low_confidence_relations=low_confidence_relations,
+            unreviewed_relations=unreviewed_relations,
+            agent_approval_rate=round(agent_approval_rate, 2),
+            agent_avg_duration_ms=int(agent_avg_duration),
+            agent_total_runs=agent_total_runs,
         ),
     )
     return R.ok(out)
@@ -305,7 +330,6 @@ def reject_artifact(
     row = artifact_service.reject(db, artifact_id, current.project_id or 0, current.user.id, body.comment)
     if not row:
         return R(code=404, msg="AI 产物不存在")
-    db.commit()
     _audit(req, current, db, "knowledge:reject", f"artifact#{artifact_id}", body.comment)
     db.commit()
     db.refresh(row)
@@ -322,7 +346,6 @@ def import_artifact(
 ):
     """治理守卫：仅 review_status='approved' 的 AI 用例产物允许导入正式库。"""
     result = artifact_service.import_to_test_case(db, artifact_id, current.project_id or 0)
-    db.commit()
     _audit(req, current, db, "ai_artifact:import", f"artifact#{artifact_id} → case#{result['case_id']}", body.comment)
     db.commit()
     return R.ok(result)
@@ -424,7 +447,7 @@ def graph_view(
     )
     entity_ids = {e.id for e in entities}
     nodes = [
-        GraphViewOut.model_fields["nodes"].annotation.__args__[0].__args__[0](
+        GraphNode(
             id=f"{e.entity_type}:{e.entity_key}",
             entity_type=e.entity_type,
             name=e.name,
@@ -436,7 +459,7 @@ def graph_view(
         for e in entities
     ]
     edges = [
-        GraphViewOut.model_fields["edges"].annotation.__args__[0].__args__[0](
+        GraphEdge(
             source=f"entity:{r.from_entity_id}",
             target=f"entity:{r.to_entity_id}",
             relation_type=r.relation_type,
@@ -469,7 +492,6 @@ def approve_relation(
         return R(code=404, msg="关系不存在")
     rel.review_status = "approved"
     rel.metadata_json = json.dumps({**json.loads(rel.metadata_json or "{}"), "comment": body.comment})
-    db.commit()
     _audit(req, current, db, "knowledge:relation_approve", f"relation#{relation_id}", body.comment)
     db.commit()
     db.refresh(rel)
@@ -489,7 +511,6 @@ def reject_relation(
         return R(code=404, msg="关系不存在")
     rel.review_status = "rejected"
     rel.metadata_json = json.dumps({**json.loads(rel.metadata_json or "{}"), "comment": body.comment})
-    db.commit()
     _audit(req, current, db, "knowledge:relation_reject", f"relation#{relation_id}", body.comment)
     db.commit()
     db.refresh(rel)
