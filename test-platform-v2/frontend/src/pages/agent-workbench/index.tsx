@@ -31,8 +31,13 @@ import {
   fetchAgentTypes,
   triggerAgent,
   fetchAgentRun,
+  fetchQueueItems,
+  fetchQueueStats,
+  cancelQueueItem,
   type AgentRun,
   type AgentTypeMeta,
+  type AgentQueueItem,
+  type QueueStats,
 } from '@/api/agent'
 import {
   Sparkles,
@@ -44,6 +49,7 @@ import {
   Loader2,
   RefreshCw,
   Clock,
+  XCircle,
 } from '@/lib/icons'
 
 const AGENT_ICONS: Record<string, React.ComponentType<any>> = {
@@ -81,6 +87,14 @@ export default function AgentWorkbenchPage() {
   const [triggerQuery, setTriggerQuery] = useState('')
   const [triggering, setTriggering] = useState(false)
 
+  // Tabs
+  const [activeTab, setActiveTab] = useState<'history' | 'queue'>('history')
+
+  // Queue state
+  const [queueItems, setQueueItems] = useState<AgentQueueItem[]>([])
+  const [queueStats, setQueueStats] = useState<QueueStats>({ pending: 0, running: 0, completed: 0, failed: 0 })
+  const [queueLoading, setQueueLoading] = useState(false)
+
   const loadRuns = useCallback(() => {
     setRunsLoading(true)
     fetchAgentRuns({ page_size: 50 })
@@ -95,10 +109,25 @@ export default function AgentWorkbenchPage() {
       .catch(() => {})
   }, [])
 
+  const loadQueue = useCallback(() => {
+    setQueueLoading(true)
+    Promise.all([
+      fetchQueueItems({ page_size: 100 }),
+      fetchQueueStats(),
+    ])
+      .then(([items, stats]) => {
+        setQueueItems(items.items)
+        setQueueStats(stats)
+      })
+      .catch(() => toast.error('加载队列失败'))
+      .finally(() => setQueueLoading(false))
+  }, [])
+
   useEffect(() => {
     loadTypes()
     loadRuns()
-  }, [loadTypes, loadRuns])
+    loadQueue()
+  }, [loadTypes, loadRuns, loadQueue])
 
   // Load run detail when selected
   useEffect(() => {
@@ -126,11 +155,32 @@ export default function AgentWorkbenchPage() {
     }
   }
 
-  const handleRefresh = () => loadRuns()
+  const handleRefresh = () => {
+    loadRuns()
+    loadQueue()
+  }
+
+  const handleCancelQueue = async (itemId: number) => {
+    try {
+      await cancelQueueItem(itemId)
+      toast.success('任务已取消')
+      loadQueue()
+    } catch (e: any) {
+      toast.error(e?.message || '取消失败')
+    }
+  }
 
   // Parse JSON safely
   const safeJson = (s: string) => {
     try { return JSON.parse(s) } catch { return null }
+  }
+
+  const QUEUE_STATUS_BADGE: Record<string, { label: string; color: string }> = {
+    pending: { label: '等待', color: 'bg-amber-100 text-amber-700' },
+    running: { label: '执行', color: 'bg-blue-100 text-blue-700' },
+    completed: { label: '完成', color: 'bg-green-100 text-green-700' },
+    failed: { label: '失败', color: 'bg-red-100 text-red-700' },
+    cancelled: { label: '取消', color: 'bg-muted text-muted-foreground' },
   }
 
   return (
@@ -176,80 +226,205 @@ export default function AgentWorkbenchPage() {
           )}
         </div>
 
-        {/* 执行历史 */}
+        {/* 右侧面板：执行历史 + 任务队列 */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium">执行历史</h3>
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={runsLoading}>
-              <RefreshCw className={`size-4 mr-1 ${runsLoading ? 'animate-spin' : ''}`} />
+            <div className="flex gap-1 bg-muted rounded-md p-1">
+              <button
+                className={`px-3 py-1 text-xs rounded-sm font-medium transition-colors ${
+                  activeTab === 'history' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+                onClick={() => setActiveTab('history')}
+              >
+                执行历史
+              </button>
+              <button
+                className={`px-3 py-1 text-xs rounded-sm font-medium transition-colors ${
+                  activeTab === 'queue' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+                onClick={() => { setActiveTab('queue'); loadQueue() }}
+              >
+                任务队列
+                {queueStats.pending > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px]">
+                    {queueStats.pending}
+                  </span>
+                )}
+              </button>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={runsLoading || queueLoading}>
+              <RefreshCw className={`size-4 mr-1 ${runsLoading || queueLoading ? 'animate-spin' : ''}`} />
               刷新
             </Button>
           </div>
 
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-24">Agent</TableHead>
-                    <TableHead className="w-40">输入</TableHead>
-                    <TableHead className="w-20">状态</TableHead>
-                    <TableHead className="w-20">耗时</TableHead>
-                    <TableHead className="w-36">时间</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {runsLoading ? (
-                    Array.from({ length: 5 }).map((_, i) => (
-                      <TableRow key={i}>
-                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-12" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-12" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-28" /></TableCell>
-                      </TableRow>
-                    ))
-                  ) : runs.length === 0 ? (
+          {activeTab === 'history' ? (
+            /* ── 执行历史 ── */
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                        暂无执行记录。点击左侧 Agent 卡片「执行」按钮启动。
-                      </TableCell>
+                      <TableHead className="w-24">Agent</TableHead>
+                      <TableHead className="w-40">输入</TableHead>
+                      <TableHead className="w-20">状态</TableHead>
+                      <TableHead className="w-20">耗时</TableHead>
+                      <TableHead className="w-36">时间</TableHead>
                     </TableRow>
-                  ) : (
-                    runs.map((r) => {
-                      const input = safeJson(r.input_json)
-                      const status = STATUS_BADGE[r.status] ?? { label: r.status, color: '' }
-                      return (
-                        <TableRow
-                          key={r.id}
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => setSelectedRun(r)}
-                        >
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs">
-                              {r.agent_type.replace(/_/g, ' ')}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground truncate max-w-40">
-                            {input?.query || input?.user_input || '-'}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={status.color}>{status.label}</Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {r.duration_ms ? `${(r.duration_ms / 1000).toFixed(1)}s` : '-'}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {r.created_at?.slice(0, 19)?.replace('T', ' ') || '-'}
+                  </TableHeader>
+                  <TableBody>
+                    {runsLoading ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <TableRow key={i}>
+                          <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                          <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                          <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                          <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                          <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                        </TableRow>
+                      ))
+                    ) : runs.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          暂无执行记录。点击左侧 Agent 卡片「执行」按钮启动。
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      runs.map((r) => {
+                        const input = safeJson(r.input_json)
+                        const status = STATUS_BADGE[r.status] ?? { label: r.status, color: '' }
+                        return (
+                          <TableRow
+                            key={r.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => setSelectedRun(r)}
+                          >
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">
+                                {r.agent_type.replace(/_/g, ' ')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground truncate max-w-40">
+                              {input?.query || input?.user_input || '-'}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={status.color}>{status.label}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {r.duration_ms ? `${(r.duration_ms / 1000).toFixed(1)}s` : '-'}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">
+                              {r.created_at?.slice(0, 19)?.replace('T', ' ') || '-'}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          ) : (
+            /* ── 任务队列看板 ── */
+            <div className="space-y-3">
+              {/* 队列统计卡片 */}
+              <div className="grid grid-cols-4 gap-2">
+                {(['pending', 'running', 'completed', 'failed'] as const).map((s) => {
+                  const badge = QUEUE_STATUS_BADGE[s]
+                  return (
+                    <Card key={s} className="border-2 border-muted">
+                      <CardContent className="p-3 text-center">
+                        <div className={`text-2xl font-bold ${badge.color.replace('bg-', 'text-').replace(/-\d+/, '').replace(' text-', ' ')}`}>
+                          {queueStats[s]}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">{badge.label}</div>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+
+              {/* 队列列表 */}
+              <Card>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-24">Agent</TableHead>
+                        <TableHead className="w-16">优先级</TableHead>
+                        <TableHead className="w-16">状态</TableHead>
+                        <TableHead className="w-16">重试</TableHead>
+                        <TableHead className="w-32">入队时间</TableHead>
+                        <TableHead className="w-16">操作</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {queueLoading ? (
+                        Array.from({ length: 3 }).map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-8" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-8" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-28" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-8" /></TableCell>
+                          </TableRow>
+                        ))
+                      ) : queueItems.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                            队列为空。触发 Agent 执行后任务将在此排队。
                           </TableCell>
                         </TableRow>
-                      )
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                      ) : (
+                        queueItems.map((q) => {
+                          const input = safeJson(q.input_json)
+                          const badge = QUEUE_STATUS_BADGE[q.status] ?? { label: q.status, color: '' }
+                          return (
+                            <TableRow key={q.id}>
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs">
+                                  {q.agent_type.replace(/_/g, ' ')}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                {q.priority >= 10 ? (
+                                  <Badge className="bg-blue-100 text-blue-700 text-xs">手动</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-xs">自动</Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={badge.color}>{badge.label}</Badge>
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground">
+                                {q.retry_count}/{q.max_retries}
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground">
+                                {q.created_at?.slice(0, 19)?.replace('T', ' ') || '-'}
+                              </TableCell>
+                              <TableCell>
+                                {q.status === 'pending' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleCancelQueue(q.id)}
+                                  >
+                                    <XCircle className="size-4" />
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </div>
       </div>
 

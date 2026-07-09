@@ -15,12 +15,16 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
-from app.models.knowledge import AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource
+from app.models.knowledge import (
+    AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeIteration,
+    KnowledgeRelation, KnowledgeSnapshot, KnowledgeSource,
+)
 from app.schemas.common import Page, R
 from app.schemas.knowledge import (
     AiArtifactOut,
     ArtifactImportRequest,
     ArtifactReviewRequest,
+    CompareSnapshotsOut,
     EntityExtractRequest,
     EntityExtractResult,
     GraphEdge,
@@ -30,11 +34,17 @@ from app.schemas.knowledge import (
     KnowledgeEntityBrief,
     KnowledgeEntityOut,
     KnowledgeHealth,
+    KnowledgeIterationCreate,
+    KnowledgeIterationOut,
     KnowledgeOverviewOut,
     KnowledgeRelationOut,
+    KnowledgeSnapshotOut,
     KnowledgeSourceBrief,
     KnowledgeSourceOut,
     ReembedResult,
+    RegressionPredictionItem,
+    RegressionPredictionOut,
+    RegressionPredictionRequest,
     RelationApprovalRequest,
     SearchQuery,
     SearchResultOut,
@@ -515,3 +525,128 @@ def reject_relation(
     db.commit()
     db.refresh(rel)
     return R.ok(KnowledgeRelationOut.model_validate(rel))
+
+
+# ═══════════════════════════════════════════════════════
+# M6 迭代知识包
+# ═══════════════════════════════════════════════════════
+
+from app.services.knowledge import snapshot_service
+from app.services.knowledge.snapshot_service import compare_iterations, get_snapshots
+
+
+@router.post("/iterations", response_model=R[KnowledgeIterationOut], summary="创建迭代")
+def create_iteration(
+    body: KnowledgeIterationCreate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    it = snapshot_service.create_iteration(
+        db,
+        current.project_id or 0,
+        iteration_name=body.iteration_name,
+        version=body.version,
+        start_date=body.start_date,
+        end_date=body.end_date,
+        description=body.description,
+    )
+    _audit(req, current, db, "knowledge:iteration_create", f"iteration#{it.id}", body.iteration_name)
+    db.commit()
+    db.refresh(it)
+    return R.ok(KnowledgeIterationOut.model_validate(it))
+
+
+@router.get("/iterations", response_model=R[Page[KnowledgeIterationOut]], summary="迭代列表")
+def list_iterations(
+    status: str | None = Query(None, description="active/closed"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    rows, total = snapshot_service.list_iterations(
+        db, current.project_id or 0,
+        status=status, page=page, page_size=page_size,
+    )
+    return R.ok(Page(
+        total=total, page=page, page_size=page_size,
+        items=[KnowledgeIterationOut.model_validate(r) for r in rows],
+    ))
+
+
+@router.get("/iterations/{iteration_id}", response_model=R[KnowledgeIterationOut], summary="迭代详情")
+def get_iteration(
+    iteration_id: int,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    it = snapshot_service.get_iteration(db, iteration_id, current.project_id or 0)
+    if not it:
+        return R(code=404, msg="迭代不存在")
+    return R.ok(KnowledgeIterationOut.model_validate(it))
+
+
+@router.post("/iterations/{iteration_id}/close", response_model=R[dict], summary="关闭迭代并生成快照")
+def close_iteration(
+    iteration_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """关闭迭代，自动创建 entity/relation/chunk/stats 四种快照。"""
+    from app.services.knowledge.snapshot_service import close_iteration_in_new_session
+    result = close_iteration_in_new_session(iteration_id, current.project_id or 0)
+    _audit(req, current, db, "knowledge:iteration_close", f"iteration#{iteration_id}", str(result))
+    db.commit()
+    if result.get("success"):
+        return R.ok(result)
+    return R(code=400, msg=result.get("error", "关闭失败"))
+
+
+@router.get("/iterations/{iteration_id}/snapshots", response_model=R[list[KnowledgeSnapshotOut]], summary="迭代快照列表")
+def list_snapshots(
+    iteration_id: int,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """获取某个迭代的所有快照（entity/relation/chunk/stats）。"""
+    snaps = get_snapshots(db, iteration_id)
+    return R.ok([KnowledgeSnapshotOut.model_validate(s) for s in snaps])
+
+
+@router.get("/iterations/{iteration_id}/compare", response_model=R[CompareSnapshotsOut], summary="跨迭代对比")
+def compare_iteration(
+    iteration_id: int,
+    base_iteration_id: int = Query(..., description="基准迭代 ID"),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """对比两个迭代的快照数据，返回增量和趋势。"""
+    result = compare_iterations(db, base_iteration_id, iteration_id, current.project_id or 0)
+    if not result:
+        return R(code=404, msg="迭代不存在")
+    return R.ok(CompareSnapshotsOut(**result))
+
+
+# ═══════════════════════════════════════════════════════
+# M6 回归范围预测
+# ═══════════════════════════════════════════════════════
+
+@router.post("/predict/regression-scope", response_model=R[RegressionPredictionOut], summary="回归范围预测")
+def predict_regression_scope(
+    body: RegressionPredictionRequest,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+):
+    """输入变更的 API paths / modules，输出按风险排序的回归范围预测。"""
+    from app.services.knowledge.regression_predictor import predict_regression_scope
+    result = predict_regression_scope(
+        current.project_id or 0,
+        changed_paths=body.changed_paths,
+        changed_modules=body.changed_modules,
+    )
+    return R.ok(RegressionPredictionOut(
+        items=[RegressionPredictionItem(**i) for i in result["items"]],
+        total_analyzed=result["total_analyzed"],
+        high_risk_count=result["high_risk_count"],
+    ))

@@ -142,7 +142,7 @@
 | Slice | 提交 | 验收 |
 |---|---|---|---|
 | M5 S1 变更检测+自动触发 | 本批次 | ✅ change_detector + _post_ingest_hooks 统一入口 + /triggers/check API |
-| M5 S2 Agent 任务队列 | 待后续 | — |
-| M6 S3 迭代知识包 | 待后续 | — |
-| M6 S4 跨迭代洞察+回归预测 | 待后续 | — |
-| M5/M6 S5 测试+文档 | 待后续 | — |
+| M5 S2 Agent 任务队列 | 本批次 | ✅ agent_queue.py + AgentQueueItem 表 + 并发控制 + 队列看板 + /agents/queue API |
+| M6 S3 迭代知识包 | 本批次 | ✅ KnowledgeIteration/KnowledgeSnapshot + 快照服务 + 迭代管理 API + IterationTab |
+| M6 S4 跨迭代洞察+回归预测 | 本批次 | ✅ regression_predictor.py + /predict/regression-scope + 跨迭代对比 |
+| M5/M6 S5 测试+文档 | 本批次 | ✅ 32 tests + ADR-0012 — 102 passed total |
