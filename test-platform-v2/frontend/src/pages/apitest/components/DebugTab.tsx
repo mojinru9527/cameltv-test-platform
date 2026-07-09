@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Play, Plus, Trash2, Loader2, CheckCircle2, XCircle, Save, FlaskConical } from '@/lib/icons'
+import { Play, Plus, Trash2, Loader2, CheckCircle2, XCircle } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -12,7 +12,9 @@ import {
 import { quickExecute } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchDatasets } from '@/api/dataset'
-import type { ApiExecutionResult, ApiAssertionResult, BatchExecutionResult, DatasetListItem, Environment } from '@/types'
+import AssertionEditor from './AssertionEditor'
+import { buildSampleBody, formatBody } from './utils'
+import type { ApiEndpoint, ApiExecutionResult, ApiAssertionResult, BatchExecutionResult, DatasetListItem, Environment } from '@/types'
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
 
@@ -26,34 +28,112 @@ const METHOD_COLORS: Record<string, string> = {
   OPTIONS: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
 }
 
+const BODY_TYPES = [
+  { value: 'json', label: 'JSON' },
+  { value: 'form', label: 'form-data' },
+  { value: 'x-www-form-urlencoded', label: 'x-www-form-urlencoded' },
+  { value: 'raw', label: 'Raw' },
+] as const
+
+type HeaderRow = { key: string; value: string }
+type ParamRow = { key: string; value: string }
+
 function isBatchResult(res: ApiExecutionResult | BatchExecutionResult): res is BatchExecutionResult {
   return 'batch_mode' in res && (res as any).batch_mode
 }
 
-export default function DebugTab() {
+interface Props {
+  endpoint?: ApiEndpoint | null
+}
+
+export default function DebugTab({ endpoint }: Props) {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiExecutionResult | null>(null)
   const [method, setMethod] = useState<string>('GET')
   const [url, setUrl] = useState('')
-  const [headers, setHeaders] = useState('{}')
+  const [bodyType, setBodyType] = useState<string>('json')
   const [body, setBody] = useState('')
+  const [headersJson, setHeadersJson] = useState('{}')
   const [assertions, setAssertions] = useState('[]')
   const [envId, setEnvId] = useState<number | undefined>()
   const [envs, setEnvs] = useState<Environment[]>([])
   const [datasetId, setDatasetId] = useState<number | undefined>()
   const [datasets, setDatasets] = useState<DatasetListItem[]>([])
 
+  // P2: Multi-format — header table + params table
+  const [headerRows, setHeaderRows] = useState<HeaderRow[]>([{ key: 'Content-Type', value: 'application/json' }])
+  const [paramRows, setParamRows] = useState<ParamRow[]>([])
+  const [headerMode, setHeaderMode] = useState<'table' | 'json'>('table')
+
   useEffect(() => {
-    fetchEnvironments().then(setEnvs).catch(() => {})
-    fetchDatasets({ page_size: 100 }).then(d => setDatasets(d.items || [])).catch(() => {})
+    let cancelled = false
+    fetchEnvironments().then((data) => { if (!cancelled) setEnvs(data) }).catch(() => {})
+    fetchDatasets({ page_size: 100 }).then(d => { if (!cancelled) setDatasets(d.items || []) }).catch(() => {})
+    return () => { cancelled = true }
   }, [])
+
+  // P2-2: Pre-fill from endpoint asset
+  useEffect(() => {
+    if (!endpoint) return
+    setMethod(endpoint.method || 'GET')
+    setUrl(endpoint.path || '')
+
+    // Parse request_schema to pre-fill headers/body/params
+    try {
+      const schema = typeof endpoint.request_schema === 'string'
+        ? JSON.parse(endpoint.request_schema)
+        : endpoint.request_schema || {}
+
+      // Pre-fill query params
+      if (schema.query && Array.isArray(schema.query)) {
+        const qp: ParamRow[] = schema.query
+          .filter((p: any) => p.required)
+          .map((p: any) => ({ key: p.name, value: '' }))
+        if (qp.length > 0) setParamRows(qp)
+      }
+
+      // Pre-fill body from schema (shared util returns JSON string)
+      if (schema.body?.properties) {
+        setBody(buildSampleBody(schema.body.properties))
+        setBodyType('json')
+        setHeaderRows([{ key: 'Content-Type', value: 'application/json' }])
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, [endpoint])
+
+  const buildHeaders = (): string => {
+    if (headerMode === 'json') return headersJson
+    const h: Record<string, string> = {}
+    headerRows.filter(r => r.key.trim()).forEach(r => { h[r.key.trim()] = r.value })
+    return JSON.stringify(h)
+  }
+
+  const buildUrl = (): string => {
+    if (paramRows.length === 0) return url
+    const qs = paramRows
+      .filter(r => r.key.trim())
+      .map(r => `${encodeURIComponent(r.key.trim())}=${encodeURIComponent(r.value)}`)
+      .join('&')
+    if (!qs) return url
+    return url.includes('?') ? `${url}&${qs}` : `${url}?${qs}`
+  }
 
   const runQuick = async () => {
     if (!url.trim()) { toast.error('请输入 URL'); return }
     setLoading(true)
     setResult(null)
     try {
-      const res = await quickExecute({ method, url, headers, body, assertions, environment_id: envId, dataset_id: datasetId })
+      const res = await quickExecute({
+        method,
+        url: buildUrl(),
+        headers: buildHeaders(),
+        body: bodyType === 'json' ? body : body,
+        assertions,
+        environment_id: envId,
+        dataset_id: datasetId,
+      })
       setResult(res as any)
       if (isBatchResult(res)) toast.success(`批量执行完成: ${res.passed}/${res.total_rows} 通过`)
       else if (res.all_pass) toast.success('全部断言通过')
@@ -62,6 +142,30 @@ export default function DebugTab() {
       toast.error(e?.message || '请求失败')
       setResult(e?.response?.data || { status: 'error', status_code: 0, error: e?.message })
     } finally { setLoading(false) }
+  }
+
+  // ── Header table helpers ──
+  const addHeaderRow = () => setHeaderRows([...headerRows, { key: '', value: '' }])
+  const removeHeaderRow = (i: number) => setHeaderRows(headerRows.filter((_, idx) => idx !== i))
+  const updateHeaderRow = (i: number, field: 'key' | 'value', val: string) => {
+    const next = [...headerRows]
+    next[i][field] = val
+    setHeaderRows(next)
+    // Auto-update Content-Type when body type changes
+    if (field === 'key' && val.toLowerCase() === 'content-type') {
+      if (bodyType === 'json') next[i].value = 'application/json'
+      else if (bodyType === 'form') next[i].value = 'multipart/form-data'
+      else if (bodyType === 'x-www-form-urlencoded') next[i].value = 'application/x-www-form-urlencoded'
+    }
+  }
+
+  // ── Param table helpers ──
+  const addParamRow = () => setParamRows([...paramRows, { key: '', value: '' }])
+  const removeParamRow = (i: number) => setParamRows(paramRows.filter((_, idx) => idx !== i))
+  const updateParamRow = (i: number, field: 'key' | 'value', val: string) => {
+    const next = [...paramRows]
+    next[i][field] = val
+    setParamRows(next)
   }
 
   return (
@@ -106,6 +210,7 @@ export default function DebugTab() {
         <Card>
           <CardHeader><CardTitle>请求配置</CardTitle></CardHeader>
           <CardContent className="space-y-4">
+            {/* Method + URL */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
               <div className="md:col-span-3">
                 <label className="text-sm font-medium mb-1.5 block">方法</label>
@@ -121,13 +226,73 @@ export default function DebugTab() {
                 <Input placeholder="https://example.com/api/v1/users" value={url} onChange={(e) => setUrl(e.target.value)} />
               </div>
             </div>
+
+            {/* P2: Params table */}
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Headers (JSON)</label>
-              <Textarea rows={3} placeholder='{"Content-Type":"application/json"}' value={headers} onChange={(e) => setHeaders(e.target.value)} />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium">Params (Query)</label>
+                <Button size="icon-sm" variant="ghost" onClick={addParamRow} title="添加参数"><Plus className="size-3" /></Button>
+              </div>
+              {paramRows.length > 0 && (
+                <div className="border rounded-md divide-y">
+                  {paramRows.map((r, i) => (
+                    <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+                      <Input className="flex-1 h-7 text-xs" placeholder="参数名" value={r.key} onChange={(e) => updateParamRow(i, 'key', e.target.value)} />
+                      <Input className="flex-1 h-7 text-xs" placeholder="参数值" value={r.value} onChange={(e) => updateParamRow(i, 'value', e.target.value)} />
+                      <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeParamRow(i)}><Trash2 className="size-3" /></Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
+            {/* P2: Headers — table or JSON mode */}
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Body</label>
-              <Textarea rows={6} placeholder='{"key":"value"}' value={body} onChange={(e) => setBody(e.target.value)} />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium">Headers</label>
+                <div className="flex items-center gap-1">
+                  <Button size="sm" variant={headerMode === 'table' ? 'default' : 'outline'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('table')}>表格</Button>
+                  <Button size="sm" variant={headerMode === 'json' ? 'default' : 'outline'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('json')}>JSON</Button>
+                  {headerMode === 'table' && <Button size="icon-sm" variant="ghost" onClick={addHeaderRow} title="添加 Header"><Plus className="size-3" /></Button>}
+                </div>
+              </div>
+              {headerMode === 'table' ? (
+                <div className="border rounded-md divide-y">
+                  {headerRows.map((r, i) => (
+                    <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+                      <Input className="flex-1 h-7 text-xs" placeholder="Header 名" value={r.key} onChange={(e) => updateHeaderRow(i, 'key', e.target.value)} />
+                      <Input className="flex-1 h-7 text-xs" placeholder="Header 值" value={r.value} onChange={(e) => updateHeaderRow(i, 'value', e.target.value)} />
+                      <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeHeaderRow(i)}><Trash2 className="size-3" /></Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Textarea rows={3} placeholder='{"Content-Type":"application/json"}' value={headersJson} onChange={(e) => setHeadersJson(e.target.value)} />
+              )}
+            </div>
+
+            {/* P2: Body type selector + Body editor */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium">Body</label>
+                <Select value={bodyType} onValueChange={setBodyType}>
+                  <SelectTrigger className="w-[180px] h-7 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {BODY_TYPES.map(bt => <SelectItem key={bt.value} value={bt.value}>{bt.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Textarea
+                rows={bodyType === 'form' ? 4 : 6}
+                placeholder={
+                  bodyType === 'json' ? '{"key":"value"}'
+                    : bodyType === 'form' ? 'key1=value1\nkey2=value2'
+                    : bodyType === 'x-www-form-urlencoded' ? 'key1=value1&key2=value2'
+                    : 'Raw body content...'
+                }
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+              />
             </div>
           </CardContent>
         </Card>
@@ -142,89 +307,7 @@ export default function DebugTab() {
   )
 }
 
-// ── Assertion Editor ──
-
-function AssertionEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [items, setItems] = useState<Array<{ type: string; path: string; expected: string; operator: string; pattern: string; key: string }>>([])
-  const [expanded, setExpanded] = useState(true)
-
-  useEffect(() => {
-    try { setItems(JSON.parse(value)) } catch { setItems([]) }
-  }, [value])
-
-  const sync = (newItems: typeof items) => {
-    setItems(newItems)
-    onChange(JSON.stringify(newItems, null, 2))
-  }
-
-  const addRule = () => {
-    sync([...items, { type: 'status_code', path: '', expected: '200', operator: 'eq', pattern: '', key: '' }])
-  }
-
-  const removeRule = (i: number) => sync(items.filter((_, idx) => idx !== i))
-  const updateRule = (i: number, field: string, val: string) => {
-    const next = [...items]
-    ;(next[i] as any)[field] = val
-    sync(next)
-  }
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
-        <CardTitle className="text-sm">断言规则 ({items.length})</CardTitle>
-        <Button size="icon-sm" variant="ghost" onClick={(e) => { e.stopPropagation(); addRule() }} title="添加断言"><Plus className="size-4" /></Button>
-      </CardHeader>
-      {expanded && (
-        <CardContent className="space-y-3">
-          {items.map((rule, i) => (
-            <div key={i} className="flex flex-wrap items-center gap-2 p-2 border rounded-md">
-              <Select value={rule.type} onValueChange={(v) => updateRule(i, 'type', v)}>
-                <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="status_code">status_code</SelectItem>
-                  <SelectItem value="jsonpath">jsonpath</SelectItem>
-                  <SelectItem value="regex">regex</SelectItem>
-                  <SelectItem value="response_time">response_time</SelectItem>
-                  <SelectItem value="header">header</SelectItem>
-                  <SelectItem value="type">type</SelectItem>
-                  <SelectItem value="array_length">array_length</SelectItem>
-                  <SelectItem value="json_schema">json_schema</SelectItem>
-                </SelectContent>
-              </Select>
-              {rule.type === 'header' && (
-                <Input className="w-[120px] h-8 text-xs" placeholder="Header名" value={rule.key} onChange={(e) => updateRule(i, 'key', e.target.value)} />
-              )}
-              {['jsonpath', 'type', 'array_length'].includes(rule.type) && (
-                <Input className="w-[140px] h-8 text-xs" placeholder="$.data.code" value={rule.path} onChange={(e) => updateRule(i, 'path', e.target.value)} />
-              )}
-              {rule.type === 'regex' && (
-                <Input className="w-[140px] h-8 text-xs" placeholder="正则表达式" value={rule.pattern} onChange={(e) => updateRule(i, 'pattern', e.target.value)} />
-              )}
-              <Select value={rule.operator} onValueChange={(v) => updateRule(i, 'operator', v)}>
-                <SelectTrigger className="w-[80px] h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="eq">=</SelectItem>
-                  <SelectItem value="neq">≠</SelectItem>
-                  <SelectItem value="gt">&gt;</SelectItem>
-                  <SelectItem value="lt">&lt;</SelectItem>
-                  <SelectItem value="gte">≥</SelectItem>
-                  <SelectItem value="lte">≤</SelectItem>
-                  <SelectItem value="contains">含</SelectItem>
-                  <SelectItem value="exists">存在</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input className="flex-1 min-w-[100px] h-8 text-xs" placeholder="期望值" value={rule.expected} onChange={(e) => updateRule(i, 'expected', e.target.value)} />
-              <Button size="icon-sm" variant="ghost" className="text-destructive h-8 w-8" onClick={() => removeRule(i)}>
-                <Trash2 className="size-3" />
-              </Button>
-            </div>
-          ))}
-          {items.length === 0 && <p className="text-xs text-muted-foreground">暂未配置断言。点击 + 添加。</p>}
-        </CardContent>
-      )}
-    </Card>
-  )
-}
+// AssertionEditor and utility functions now live in ./AssertionEditor.tsx and ./utils.ts
 
 // ── Response Panel ──
 
@@ -297,8 +380,4 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
   )
 }
 
-function formatBody(data: any): string {
-  if (data === null || data === undefined) return '(空)'
-  if (typeof data === 'string') { try { return JSON.stringify(JSON.parse(data), null, 2) } catch { return data } }
-  return JSON.stringify(data, null, 2)
-}
+// formatBody imported from ./utils
