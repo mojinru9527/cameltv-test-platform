@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useChartColors } from '@/hooks/use-chart-colors'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -124,6 +125,7 @@ const reportSchema = z.object({
 type ReportFormData = z.infer<typeof reportSchema>
 
 export default function ReportPage() {
+  const chartColors = useChartColors()
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [createOpen, setCreateOpen] = useState(false)
@@ -255,11 +257,11 @@ export default function ReportPage() {
   const dPassRate = dTotal > 0 ? Math.round(((dStats.pass_ || 0) / dTotal) * 100) : 0
 
   const statItems = [
-    { key: 'pass', color: '#52c41a', value: dStats.pass_ || 0 },
-    { key: 'fail', color: '#ff4d4f', value: dStats.fail || 0 },
-    { key: 'skip', color: '#faad14', value: dStats.skip || 0 },
-    { key: 'block', color: '#d9d9d9', value: dStats.block || 0 },
-    { key: 'pending', color: '#1890ff', value: dStats.pending || 0 },
+    { key: 'pass', color: chartColors.barPass, value: dStats.pass_ || 0 },
+    { key: 'fail', color: chartColors.barFail, value: dStats.fail || 0 },
+    { key: 'skip', color: chartColors.chart4, value: dStats.skip || 0 },
+    { key: 'block', color: chartColors.p3, value: dStats.block || 0 },
+    { key: 'pending', color: chartColors.chart1, value: dStats.pending || 0 },
   ]
 
   return (
@@ -314,7 +316,7 @@ export default function ReportPage() {
                           type="monotone"
                           dataKey="pass_rate"
                           name="通过率"
-                          stroke="#3b82f6"
+                          stroke={chartColors.chart1}
                           strokeWidth={2}
                           dot={{ r: 4 }}
                           activeDot={{ r: 6 }}
@@ -339,7 +341,7 @@ export default function ReportPage() {
                           type="monotone"
                           dataKey="open_p0"
                           name="P0 缺陷"
-                          stroke="#dc2626"
+                          stroke={chartColors.barFail}
                           strokeWidth={2}
                           dot={{ r: 4 }}
                         />
@@ -347,7 +349,7 @@ export default function ReportPage() {
                           type="monotone"
                           dataKey="open_p1"
                           name="P1 缺陷"
-                          stroke="#d97706"
+                          stroke={chartColors.chart4}
                           strokeWidth={2}
                           dot={{ r: 4 }}
                         />
@@ -355,7 +357,7 @@ export default function ReportPage() {
                           type="monotone"
                           dataKey="open_p2"
                           name="P2 缺陷"
-                          stroke="#3b82f6"
+                          stroke={chartColors.chart1}
                           strokeWidth={2}
                           dot={{ r: 4 }}
                         />

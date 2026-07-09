@@ -104,6 +104,7 @@ export default function AssertionEditor({ value, onChange }: Props) {
                   placeholder="Header名"
                   value={rule.key}
                   onChange={(e) => updateRule(i, 'key', e.target.value)}
+                  aria-label={`断言 ${i + 1} Header 名称`}
                 />
               )}
 
@@ -114,6 +115,7 @@ export default function AssertionEditor({ value, onChange }: Props) {
                   placeholder="$.data.code"
                   value={rule.path}
                   onChange={(e) => updateRule(i, 'path', e.target.value)}
+                  aria-label={`断言 ${i + 1} JSON Path`}
                 />
               )}
 
@@ -124,6 +126,7 @@ export default function AssertionEditor({ value, onChange }: Props) {
                   placeholder="正则表达式"
                   value={rule.pattern}
                   onChange={(e) => updateRule(i, 'pattern', e.target.value)}
+                  aria-label={`断言 ${i + 1} 正则表达式`}
                 />
               )}
 
@@ -148,6 +151,7 @@ export default function AssertionEditor({ value, onChange }: Props) {
                 placeholder="期望值"
                 value={rule.expected}
                 onChange={(e) => updateRule(i, 'expected', e.target.value)}
+                aria-label={`断言 ${i + 1} 期望值`}
               />
 
               {/* 删除按钮 */}

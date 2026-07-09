@@ -576,23 +576,23 @@ export default function DefectPage() {
           </DialogHeader>
           <form onSubmit={form.handleSubmit(doSave)} className="flex flex-col gap-4">
             <div data-invalid={!!form.formState.errors.title} aria-invalid={!!form.formState.errors.title}>
-              <label className="text-sm font-medium mb-1 block">缺陷标题</label>
-              <Input placeholder="缺陷标题" {...form.register('title')} />
+              <label htmlFor="defect-title" className="text-sm font-medium mb-1 block">缺陷标题</label>
+              <Input id="defect-title" placeholder="缺陷标题" {...form.register('title')} aria-describedby={form.formState.errors.title ? 'defect-title-error' : undefined} />
               {form.formState.errors.title && (
-                <p className="text-xs text-destructive mt-0.5">{form.formState.errors.title.message}</p>
+                <p id="defect-title-error" className="text-xs text-destructive mt-0.5">{form.formState.errors.title.message}</p>
               )}
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">详细描述</label>
-              <Textarea rows={3} placeholder="缺陷描述" {...form.register('description')} />
+              <label htmlFor="defect-description" className="text-sm font-medium mb-1 block">详细描述</label>
+              <Textarea id="defect-description" rows={3} placeholder="缺陷描述" {...form.register('description')} />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">严重程度</label>
+                <label htmlFor="defect-severity" className="text-sm font-medium mb-1 block">严重程度</label>
                 <Select value={form.watch('severity')} onValueChange={(v) => form.setValue('severity', v)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="defect-severity">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -605,9 +605,9 @@ export default function DefectPage() {
               <div>
                 {editing?.id ? (
                   <>
-                    <label className="text-sm font-medium mb-1 block">状态</label>
+                    <label htmlFor="defect-status" className="text-sm font-medium mb-1 block">状态</label>
                     <Select value={form.watch('status') ?? ''} onValueChange={(v) => form.setValue('status', v || undefined)}>
-                      <SelectTrigger>
+                      <SelectTrigger id="defect-status">
                         <SelectValue placeholder="选择状态" />
                       </SelectTrigger>
                       <SelectContent>
@@ -623,12 +623,12 @@ export default function DefectPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">处理人</label>
+                <label htmlFor="defect-assignee" className="text-sm font-medium mb-1 block">处理人</label>
                 <Select
                   value={form.watch('assignee_id')?.toString() ?? '__none__'}
                   onValueChange={(v) => form.setValue('assignee_id', v === '__none__' ? null : Number(v))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="defect-assignee">
                     <SelectValue placeholder="选择处理人" />
                   </SelectTrigger>
                   <SelectContent>
@@ -640,12 +640,12 @@ export default function DefectPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">关联用例</label>
+                <label htmlFor="defect-case" className="text-sm font-medium mb-1 block">关联用例</label>
                 <Select
                   value={form.watch('case_id')?.toString() ?? '__none__'}
                   onValueChange={(v) => form.setValue('case_id', v === '__none__' ? null : Number(v))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="defect-case">
                     <SelectValue placeholder="关联用例" />
                   </SelectTrigger>
                   <SelectContent>
@@ -660,12 +660,12 @@ export default function DefectPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-1 block">外部ID</label>
-                <Input placeholder="禅道/Jira 编号" {...form.register('external_id')} />
+                <label htmlFor="defect-external-id" className="text-sm font-medium mb-1 block">外部ID</label>
+                <Input id="defect-external-id" placeholder="禅道/Jira 编号" {...form.register('external_id')} />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">外部链接</label>
-                <Input placeholder="https://..." {...form.register('external_url')} />
+                <label htmlFor="defect-external-url" className="text-sm font-medium mb-1 block">外部链接</label>
+                <Input id="defect-external-url" placeholder="https://..." {...form.register('external_url')} />
               </div>
             </div>
 
@@ -821,6 +821,7 @@ export default function DefectPage() {
                 <Separator className="my-3" />
                 <div className="flex gap-2">
                   <Textarea
+                    id="detail-comment"
                     rows={2}
                     placeholder="输入评论..."
                     value={commentText}
@@ -961,8 +962,9 @@ export default function DefectPage() {
               </Badge>
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">备注（可选）</label>
+              <label htmlFor="transition-comment" className="text-sm font-medium mb-1 block">备注（可选）</label>
               <Textarea
+                id="transition-comment"
                 rows={3}
                 placeholder="输入流转备注..."
                 value={transitionComment}

@@ -30,7 +30,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { deletePlan, fetchPlans } from '@/api/testplan'
 import { useApi } from '@/hooks/useApi'
-import { ErrorState } from '@/components/state'
+import { AsyncState } from '@/components/state'
 import PlanDrawer from './PlanDrawer'
 
 const STATUS_MAP: Record<string, { variant: 'outline' | 'default' | 'secondary'; className?: string; label: string }> = {
@@ -137,24 +137,32 @@ export default function TestPlanPage() {
     <div className="space-y-4">
       <PageHeader title="测试计划" />
 
-      {isError && (!data || data.items?.length === 0) ? (
-        <ErrorState error={error} onRetry={refetch} />
-      ) : (
-      <DataTable
-        columns={planColumns}
-        data={items}
-        rowKey={(r) => r.id}
-        loading={isLoading || isRefetching}
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data?.items}
+        onRetry={refetch}
+        emptyTitle="暂无测试计划"
+        emptyDescription="点击「新建计划」开始创建"
+        skeletonType="table"
         loadingRows={4}
-        emptyState={{ title: '暂无测试计划', description: '点击「新建计划」开始创建' }}
-        pagination={{
-          page: data?.page || 1,
-          totalPages,
-          total: data?.total || 0,
-          onChange: (p) => setPage(p),
-        }}
-        onRowClick={(r) => navigate(`/testplan/${r.id}`)}
-        toolbar={
+      >
+        {() => (
+        <DataTable
+          columns={planColumns}
+          data={items}
+          rowKey={(r) => r.id}
+          loading={isRefetching}
+          loadingRows={4}
+          pagination={{
+            page: data?.page || 1,
+            totalPages,
+            total: data?.total || 0,
+            onChange: (p) => setPage(p),
+          }}
+          onRowClick={(r) => navigate(`/testplan/${r.id}`)}
+          toolbar={
           <div className="flex flex-wrap items-center gap-2">
             <Select value={status || undefined} onValueChange={(v) => { setStatus(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[120px]" size="sm">
@@ -195,8 +203,9 @@ export default function TestPlanPage() {
             </Button>
           </div>
         }
-      />
-      )}
+        />
+        )}
+      </AsyncState>
 
       <PlanDrawer
         open={drawer}
