@@ -139,6 +139,7 @@ _ACTIONS = [
     ("knowledge:view", "查看知识中心", "button"),
     ("knowledge:manage", "管理知识源（重解析/废弃）", "button"),
     ("knowledge:approve", "审核知识与 AI 产物", "button"),
+    ("agent:list", "查看 Agent 执行记录", "button"),
     ("agent:run", "手动触发 Agent", "button"),
     ("agent:admin", "管理 Agent 配置", "button"),
     ("ai_artifact:import", "导入 AI 产物到正式资产", "button"),
@@ -149,6 +150,7 @@ _TESTER_ACTIONS = {
     "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
     "apitest:task", "apitest:asset_manage",
     "knowledge:view",
+    "agent:list",
 }
 
 _TESTER_MENUS = {
