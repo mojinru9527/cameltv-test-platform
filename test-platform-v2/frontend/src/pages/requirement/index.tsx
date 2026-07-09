@@ -362,7 +362,7 @@ export default function RequirementPage() {
             <TabsContent value="lanhu" className="pt-4 space-y-3">
               <div className="flex w-full">
                 <div className="relative flex-1">
-                  <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-[#7b61ff] pointer-events-none" />
+                  <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-primary pointer-events-none" />
                   <Input
                     className="pl-8 rounded-r-none border-r-0 focus-visible:z-10"
                     placeholder="输入蓝湖设计稿链接..."

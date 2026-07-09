@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -13,24 +15,32 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
-from app.models.knowledge import AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeSource
+from app.models.knowledge import AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource
 from app.schemas.common import Page, R
 from app.schemas.knowledge import (
     AiArtifactOut,
     ArtifactImportRequest,
     ArtifactReviewRequest,
+    EntityExtractRequest,
+    EntityExtractResult,
+    GraphViewOut,
     KnowledgeChunkOut,
+    KnowledgeEntityBrief,
+    KnowledgeEntityOut,
     KnowledgeHealth,
     KnowledgeOverviewOut,
+    KnowledgeRelationOut,
     KnowledgeSourceBrief,
     KnowledgeSourceOut,
     ReembedResult,
+    RelationApprovalRequest,
     SearchQuery,
     SearchResultOut,
 )
 from app.services import audit_service
 from app.services.knowledge import artifact_service, chunk_service, search_service, source_service
 from app.services.knowledge.embedding_service import embedding_service
+from app.services.knowledge.entity_service import extract_and_build_graph_in_new_session
 from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
 
 router = APIRouter(prefix="/knowledge", tags=["知识中心"])
@@ -316,3 +326,171 @@ def import_artifact(
     _audit(req, current, db, "ai_artifact:import", f"artifact#{artifact_id} → case#{result['case_id']}", body.comment)
     db.commit()
     return R.ok(result)
+
+
+# ═══════════════════════════════════════════════════════
+# M3 知识图谱
+# ═══════════════════════════════════════════════════════
+
+@router.post("/graph/extract", response_model=R[EntityExtractResult], summary="触发实体提取与关系建图")
+def extract_graph(
+    req: Request,
+    body: EntityExtractRequest,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """对项目内 active 切片执行规则驱动的实体提取+关系构建（独立 Session，异步入库）。"""
+    from app.core.config import settings
+    if not settings.knowledge_graph_enabled:
+        return R(code=503, msg="知识图谱未启用（knowledge_graph_enabled=False）")
+
+    result = extract_and_build_graph_in_new_session(
+        current.project_id or 0,
+        source_id=body.source_id,
+        max_chunks=body.max_chunks,
+    )
+    _audit(req, current, db, "knowledge:graph_extract", f"project#{current.project_id}", str(result))
+    db.commit()
+    return R.ok(EntityExtractResult(**result))
+
+
+@router.get("/graph/entities", response_model=R[list[KnowledgeEntityBrief]], summary="实体列表")
+def list_entities(
+    entity_type: str | None = Query(None),
+    keyword: str | None = Query(None),
+    limit: int = Query(200, ge=1, le=1000),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """列出项目内知识图谱实体（支持按类型和关键词过滤）。"""
+    pid = current.project_id or 0
+    stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
+    if entity_type:
+        stmt = stmt.where(KnowledgeEntity.entity_type == entity_type)
+    if keyword:
+        stmt = stmt.where(KnowledgeEntity.name.contains(keyword) | KnowledgeEntity.description.contains(keyword))
+    rows = db.scalars(stmt.order_by(KnowledgeEntity.id.desc()).limit(limit)).all()
+    return R.ok([KnowledgeEntityBrief.model_validate(r) for r in rows])
+
+
+@router.get("/graph/entities/{entity_id}", response_model=R[KnowledgeEntityOut], summary="实体详情")
+def get_entity(
+    entity_id: int,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    entity = db.get(KnowledgeEntity, entity_id)
+    if not entity or entity.project_id != (current.project_id or 0):
+        return R(code=404, msg="实体不存在")
+    return R.ok(KnowledgeEntityOut.model_validate(entity))
+
+
+@router.get("/graph/relations", response_model=R[list[KnowledgeRelationOut]], summary="关系列表")
+def list_relations(
+    entity_id: int | None = Query(None, description="过滤以该实体为起点的关系"),
+    relation_type: str | None = Query(None),
+    limit: int = Query(200, ge=1, le=1000),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """列出项目内知识图谱关系。"""
+    pid = current.project_id or 0
+    stmt = select(KnowledgeRelation).where(KnowledgeRelation.project_id == pid)
+    if entity_id:
+        stmt = stmt.where(KnowledgeRelation.from_entity_id == entity_id)
+    if relation_type:
+        stmt = stmt.where(KnowledgeRelation.relation_type == relation_type)
+    rows = db.scalars(stmt.order_by(KnowledgeRelation.id.desc()).limit(limit)).all()
+    return R.ok([KnowledgeRelationOut.model_validate(r) for r in rows])
+
+
+@router.get("/graph/view", response_model=R[GraphViewOut], summary="图谱可视化数据")
+def graph_view(
+    limit: int = Query(200, ge=1, le=1000),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """返回力导向图所需的 nodes + edges 数据。"""
+    pid = current.project_id or 0
+    entities = list(
+        db.scalars(
+            select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid).limit(limit)
+        ).all()
+    )
+    relations = list(
+        db.scalars(
+            select(KnowledgeRelation).where(KnowledgeRelation.project_id == pid).limit(limit)
+        ).all()
+    )
+    entity_ids = {e.id for e in entities}
+    nodes = [
+        GraphViewOut.model_fields["nodes"].annotation.__args__[0].__args__[0](
+            id=f"{e.entity_type}:{e.entity_key}",
+            entity_type=e.entity_type,
+            name=e.name,
+            group=e.entity_type,
+            description=e.description[:120] if e.description else "",
+            confidence=e.confidence,
+            entity_id=e.id,
+        )
+        for e in entities
+    ]
+    edges = [
+        GraphViewOut.model_fields["edges"].annotation.__args__[0].__args__[0](
+            source=f"entity:{r.from_entity_id}",
+            target=f"entity:{r.to_entity_id}",
+            relation_type=r.relation_type,
+            confidence=r.confidence,
+        )
+        for r in relations
+        if r.from_entity_id in entity_ids and r.to_entity_id in entity_ids
+    ]
+    # Resolve source/target to entity:id format
+    id_to_node_id: dict[int, str] = {e.id: f"{e.entity_type}:{e.entity_key}" for e in entities}
+    for edge in edges:
+        from_id = int(edge.source.split(":")[1])
+        to_id = int(edge.target.split(":")[1])
+        edge.source = id_to_node_id.get(from_id, edge.source)
+        edge.target = id_to_node_id.get(to_id, edge.target)
+
+    return R.ok(GraphViewOut(nodes=nodes, edges=edges))
+
+
+@router.post("/graph/relations/{relation_id}/approve", response_model=R[KnowledgeRelationOut], summary="采纳关系")
+def approve_relation(
+    relation_id: int,
+    req: Request,
+    body: RelationApprovalRequest,
+    current: CurrentUser = Depends(require_permission("knowledge:approve")),
+    db: Session = Depends(get_db),
+):
+    rel = db.get(KnowledgeRelation, relation_id)
+    if not rel or rel.project_id != (current.project_id or 0):
+        return R(code=404, msg="关系不存在")
+    rel.review_status = "approved"
+    rel.metadata_json = json.dumps({**json.loads(rel.metadata_json or "{}"), "comment": body.comment})
+    db.commit()
+    _audit(req, current, db, "knowledge:relation_approve", f"relation#{relation_id}", body.comment)
+    db.commit()
+    db.refresh(rel)
+    return R.ok(KnowledgeRelationOut.model_validate(rel))
+
+
+@router.post("/graph/relations/{relation_id}/reject", response_model=R[KnowledgeRelationOut], summary="驳回关系")
+def reject_relation(
+    relation_id: int,
+    req: Request,
+    body: RelationApprovalRequest,
+    current: CurrentUser = Depends(require_permission("knowledge:approve")),
+    db: Session = Depends(get_db),
+):
+    rel = db.get(KnowledgeRelation, relation_id)
+    if not rel or rel.project_id != (current.project_id or 0):
+        return R(code=404, msg="关系不存在")
+    rel.review_status = "rejected"
+    rel.metadata_json = json.dumps({**json.loads(rel.metadata_json or "{}"), "comment": body.comment})
+    db.commit()
+    _audit(req, current, db, "knowledge:relation_reject", f"relation#{relation_id}", body.comment)
+    db.commit()
+    db.refresh(rel)
+    return R.ok(KnowledgeRelationOut.model_validate(rel))

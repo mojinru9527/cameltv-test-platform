@@ -22,8 +22,8 @@
 | # | 发现 | 严重度 | 归属 | 说明 |
 |---|------|:------:|------|------|
 | B-4 | **alembic 从零升级失败**：`alembic upgrade head`（空库）在 `0002` 报 `duplicate column name: imported_func_count` —— `0001 initial_schema` 已含该列，`0002` 再 `add_column` 重复。`0005/0010` 亦向 `requirement_document` 追列，疑存同类漂移。dev 用 `auto_create_tables` 故长期潜伏；PG 生产靠增量迁移侥幸未触发。 | **P2** | 平台维护者 | 需将相关 `add_column` 改幂等（先 inspect 列存在性）或重整 `initial_schema` 与后续迁移的边界。**属既有历史，非本次引入**，且触多文件，宜单独 PR 谨慎回归。 |
-| B-5 | **共享测试夹具漂移**：`conftest.py` 的 `client`/`auth_headers` 因登录响应体 shape 漂移 + `:memory:` 缺 StaticPool 而失败 → 完整 `pytest tests/` 在 develop 为红，故本批冒烟门禁未纳入完整套件。 | **P2** | 平台维护者 | 修复后即可把 `pr-check.yml` 的完整套件触发扩展到 develop，形成硬门禁。知识测试已自带独立夹具规避。 |
-| B-6 | **大量在制工作悬空未提交**：develop 工作树 41 改动 + 218 未跟踪（`version_mission`/`report_template` 前端页、`swagger_doc_discovery`、`template_service`、数十 `scripts/`、`work-logs/` 等）。部分（apitest 二次验收本体，如 `ApiDebugPanel` 抽取）正由并行同事提交（见 `34099d9`）。 | **P2** | 各特性归属 Dev | 建议**按特性拆分聚焦 PR** 逐一入库；**避免与并行 apitest 提交冲突**——不动 `apitest.py`/`test_case.py`。此前延后的 apitest/test_case 入库 hook（知识 5 事件源余项）随其本体 PR 一并补入。 |
+| B-5 | ~~**共享测试夹具漂移**~~ | ~~P2~~ | ✅ 已处置 | **2026-07-09 PR #17 已修复**（commit `3a8a6af`：repair 15 test/frontend drift items — 176/176 green）。`conftest.py` 的 `client`/`auth_headers` 现已可用；知识测试自带独立夹具（`kclient`/`kdb`）亦稳定。 |
+| B-6 | **大量在制工作悬空未提交**：develop 工作树 41 改动 + 218 未跟踪（`version_mission`/`report_template` 前端页、`swagger_doc_discovery`、`template_service`、数十 `scripts/`、`work-logs/` 等）。 | **P2** | 各特性归属 Dev | **部分处置**：① Knife4j 导入测试与 API 用例生成重构已随 PR #20 合入；② 延后的 apitest/test_case 入库 hook（知识 M1 五事件源余项）正随 item-2 分支补入（PR 待开，`feature/knowledge-ingest-hooks`）。其余悬空产物仍由各特性归属跟进。
 
 ## 机制改进建议（防复发）
 

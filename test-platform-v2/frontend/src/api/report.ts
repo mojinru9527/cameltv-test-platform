@@ -46,6 +46,7 @@ export async function createReport(body: {
   plan_id: number
   name: string
   description?: string
+  template_id?: number
 }) {
   return api.post('/reports', body)
 }

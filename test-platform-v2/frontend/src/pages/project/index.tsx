@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
-import { ErrorState } from '@/components/state'
+import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -255,20 +255,24 @@ export default function ProjectPage() {
         )}
       </PageHeader>
 
-      {/* Error state */}
-      {isError && data && data.items.length === 0 && (
-        <ErrorState error={error} onRetry={refetch} />
-      )}
-
-      {/* Table */}
-      {(!isError || (data && data.items.length > 0)) && (
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data?.items}
+        onRetry={refetch}
+        emptyTitle="暂无项目"
+        emptyDescription="点击「新建项目」开始创建"
+        skeletonType="table"
+        loadingRows={4}
+      >
+        {() => (
         <DataTable
           columns={projectColumns}
           data={data?.items ?? []}
           rowKey={(r) => r.id}
           loading={isLoading}
           loadingRows={4}
-          emptyState={{ title: '暂无项目', description: '点击「新建项目」开始创建' }}
           pagination={{
             page: data?.page ?? 1,
             totalPages: Math.max(1, Math.ceil((data?.total ?? 0) / (data?.page_size ?? 20))),
@@ -276,7 +280,8 @@ export default function ProjectPage() {
             onChange: (p) => setPage(p),
           }}
         />
-      )}
+        )}
+      </AsyncState>
 
       {/* Quality Gate Config */}
       <QualityGateCard />
@@ -292,27 +297,31 @@ export default function ProjectPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.code} aria-invalid={!!errors.code}>
-              <label className="text-sm font-medium">项目编码</label>
+              <label htmlFor="project-code" className="text-sm font-medium">项目编码</label>
               <Input
+                id="project-code"
                 placeholder="如：cameltv"
                 disabled={!!editing?.id}
                 {...register('code')}
                 className={cn(errors.code && 'border-destructive')}
+                aria-describedby={errors.code ? 'project-code-error' : undefined}
               />
-              {errors.code && <span className="text-xs text-destructive">{errors.code.message}</span>}
+              {errors.code && <span id="project-code-error" className="text-xs text-destructive">{errors.code.message}</span>}
             </div>
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.name} aria-invalid={!!errors.name}>
-              <label className="text-sm font-medium">项目名称</label>
+              <label htmlFor="project-name" className="text-sm font-medium">项目名称</label>
               <Input
+                id="project-name"
                 placeholder="项目显示名"
                 {...register('name')}
                 className={cn(errors.name && 'border-destructive')}
+                aria-describedby={errors.name ? 'project-name-error' : undefined}
               />
-              {errors.name && <span className="text-xs text-destructive">{errors.name.message}</span>}
+              {errors.name && <span id="project-name-error" className="text-xs text-destructive">{errors.name.message}</span>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">描述</label>
-              <Textarea placeholder="项目说明" rows={3} {...register('description')} />
+              <label htmlFor="project-description" className="text-sm font-medium">描述</label>
+              <Textarea id="project-description" placeholder="项目说明" rows={3} {...register('description')} />
             </div>
           </form>
           <DialogFooter>
@@ -348,7 +357,7 @@ export default function ProjectPage() {
                       value={memberUserId ? String(memberUserId) : undefined}
                       onValueChange={(v) => setMemberValue('user_id', Number(v), { shouldValidate: true })}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger id="member-user" className="w-[180px]" aria-label="选择用户">
                         <SelectValue placeholder="选择用户" />
                       </SelectTrigger>
                       <SelectContent>
@@ -357,14 +366,14 @@ export default function ProjectPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {memberErrors.user_id && <span className="text-xs text-destructive">{memberErrors.user_id.message}</span>}
+                    {memberErrors.user_id && <span id="member-user-error" className="text-xs text-destructive">{memberErrors.user_id.message}</span>}
                   </div>
                   <div className="flex flex-col gap-1.5" data-invalid={!!memberErrors.role_id} aria-invalid={!!memberErrors.role_id}>
                     <Select
                       value={memberRoleId ? String(memberRoleId) : undefined}
                       onValueChange={(v) => setMemberValue('role_id', Number(v), { shouldValidate: true })}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger id="member-role" className="w-[180px]" aria-label="选择角色">
                         <SelectValue placeholder="选择角色" />
                       </SelectTrigger>
                       <SelectContent>
@@ -373,7 +382,7 @@ export default function ProjectPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {memberErrors.role_id && <span className="text-xs text-destructive">{memberErrors.role_id.message}</span>}
+                    {memberErrors.role_id && <span id="member-role-error" className="text-xs text-destructive">{memberErrors.role_id.message}</span>}
                   </div>
                   <Button type="submit" size="sm" data-icon="inline-start">
                     <Plus />
@@ -486,8 +495,9 @@ function QualityGateCard() {
       <CardContent>
         <div className="grid grid-cols-4 gap-4 items-end">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">通过率阈值 (%)</label>
+            <label htmlFor="gate-pass-rate" className="text-sm font-medium">通过率阈值 (%)</label>
             <Input
+              id="gate-pass-rate"
               type="number"
               min={0}
               max={100}
@@ -496,8 +506,9 @@ function QualityGateCard() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">P0 缺陷上限</label>
+            <label htmlFor="gate-p0-max" className="text-sm font-medium">P0 缺陷上限</label>
             <Input
+              id="gate-p0-max"
               type="number"
               min={0}
               value={form.p0_max}
@@ -505,8 +516,9 @@ function QualityGateCard() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">P1 缺陷上限</label>
+            <label htmlFor="gate-p1-max" className="text-sm font-medium">P1 缺陷上限</label>
             <Input
+              id="gate-p1-max"
               type="number"
               min={0}
               value={form.p1_max}
@@ -514,8 +526,9 @@ function QualityGateCard() {
             />
           </div>
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label htmlFor="gate-enabled" className="flex items-center gap-2 cursor-pointer">
               <input
+                id="gate-enabled"
                 type="checkbox"
                 checked={form.enabled}
                 onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}

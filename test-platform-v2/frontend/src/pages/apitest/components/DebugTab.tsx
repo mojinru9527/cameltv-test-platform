@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Play, Plus, Trash2, Loader2, CheckCircle2, XCircle } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
@@ -223,7 +223,7 @@ export default function DebugTab({ endpoint }: Props) {
               </div>
               <div className="md:col-span-9">
                 <label className="text-sm font-medium mb-1.5 block">URL <span className="text-destructive">*</span></label>
-                <Input placeholder="https://example.com/api/v1/users" value={url} onChange={(e) => setUrl(e.target.value)} />
+                <Input id="debug-url" placeholder="https://example.com/api/v1/users" value={url} onChange={(e) => setUrl(e.target.value)} aria-label="请求 URL" />
               </div>
             </div>
 
@@ -237,8 +237,8 @@ export default function DebugTab({ endpoint }: Props) {
                 <div className="border rounded-md divide-y">
                   {paramRows.map((r, i) => (
                     <div key={i} className="flex items-center gap-2 px-2 py-1.5">
-                      <Input className="flex-1 h-7 text-xs" placeholder="参数名" value={r.key} onChange={(e) => updateParamRow(i, 'key', e.target.value)} />
-                      <Input className="flex-1 h-7 text-xs" placeholder="参数值" value={r.value} onChange={(e) => updateParamRow(i, 'value', e.target.value)} />
+                      <Input className="flex-1 h-7 text-xs" placeholder="参数名" value={r.key} onChange={(e) => updateParamRow(i, 'key', e.target.value)} aria-label={`参数 ${i + 1} 名称`} />
+                      <Input className="flex-1 h-7 text-xs" placeholder="参数值" value={r.value} onChange={(e) => updateParamRow(i, 'value', e.target.value)} aria-label={`参数 ${i + 1} 值`} />
                       <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeParamRow(i)}><Trash2 className="size-3" /></Button>
                     </div>
                   ))}
@@ -260,14 +260,14 @@ export default function DebugTab({ endpoint }: Props) {
                 <div className="border rounded-md divide-y">
                   {headerRows.map((r, i) => (
                     <div key={i} className="flex items-center gap-2 px-2 py-1.5">
-                      <Input className="flex-1 h-7 text-xs" placeholder="Header 名" value={r.key} onChange={(e) => updateHeaderRow(i, 'key', e.target.value)} />
-                      <Input className="flex-1 h-7 text-xs" placeholder="Header 值" value={r.value} onChange={(e) => updateHeaderRow(i, 'value', e.target.value)} />
+                      <Input className="flex-1 h-7 text-xs" placeholder="Header 名" value={r.key} onChange={(e) => updateHeaderRow(i, 'key', e.target.value)} aria-label={`Header ${i + 1} 名称`} />
+                      <Input className="flex-1 h-7 text-xs" placeholder="Header 值" value={r.value} onChange={(e) => updateHeaderRow(i, 'value', e.target.value)} aria-label={`Header ${i + 1} 值`} />
                       <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeHeaderRow(i)}><Trash2 className="size-3" /></Button>
                     </div>
                   ))}
                 </div>
               ) : (
-                <Textarea rows={3} placeholder='{"Content-Type":"application/json"}' value={headersJson} onChange={(e) => setHeadersJson(e.target.value)} />
+                <Textarea rows={3} placeholder='{"Content-Type":"application/json"}' value={headersJson} onChange={(e) => setHeadersJson(e.target.value)} aria-label="Headers JSON" />
               )}
             </div>
 
@@ -292,6 +292,7 @@ export default function DebugTab({ endpoint }: Props) {
                 }
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
+                aria-label="请求 Body"
               />
             </div>
           </CardContent>

@@ -258,7 +258,7 @@ export default function ApiDebugPanel({
               <div className="space-y-1 mt-1">
                 {pathRows.map((r, i) => (
                   <Input key={`${r.key}-${i}`} className="h-8 text-xs" placeholder={r.key}
-                    value={r.value}
+                    value={r.value} aria-label={`Path 参数 ${r.key}`}
                     onChange={e => setPathRows(prev => prev.map((row, idx) => idx === i ? { ...row, value: e.target.value } : row))}
                   />
                 ))}
@@ -277,7 +277,7 @@ export default function ApiDebugPanel({
                       className="size-3"
                     />
                     <Input className="h-8 text-xs" placeholder={`${r.key}${r.required ? ' *' : ''}`}
-                      value={r.value}
+                      value={r.value} aria-label={`Query 参数 ${r.key}`}
                       onChange={e => setQueryRows(prev => prev.map((row, idx) => idx === i ? { ...row, value: e.target.value } : row))}
                     />
                   </div>
@@ -300,10 +300,10 @@ export default function ApiDebugPanel({
                     onChange={e => setHeaderRows(prev => prev.map((row, idx) => idx === i ? { ...row, enabled: e.target.checked } : row))}
                     className="size-3"
                   />
-                  <Input className="h-8 text-xs" placeholder="Key" value={r.key}
+                  <Input className="h-8 text-xs" placeholder="Key" value={r.key} aria-label={`Header ${i + 1} 名称`}
                     onChange={e => setHeaderRows(prev => prev.map((row, idx) => idx === i ? { ...row, key: e.target.value } : row))}
                   />
-                  <Input className="h-8 text-xs" placeholder="Value" value={r.value}
+                  <Input className="h-8 text-xs" placeholder="Value" value={r.value} aria-label={`Header ${i + 1} 值`}
                     onChange={e => setHeaderRows(prev => prev.map((row, idx) => idx === i ? { ...row, value: e.target.value } : row))}
                   />
                   <Button type="button" size="icon-sm" variant="ghost" className="text-destructive" onClick={() => removeHeader(i)}>
@@ -316,12 +316,12 @@ export default function ApiDebugPanel({
 
           <div>
             <Label className="text-[11px] text-muted-foreground">Body</Label>
-            <Textarea className="font-mono text-xs mt-1 min-h-[120px]" value={body} onChange={e => setBody(e.target.value)} />
+            <Textarea className="font-mono text-xs mt-1 min-h-[120px]" value={body} onChange={e => setBody(e.target.value)} aria-label="请求 Body" />
           </div>
 
           <div>
             <Label className="text-[11px] text-muted-foreground">响应断言</Label>
-            <Textarea className="font-mono text-xs mt-1 min-h-[96px]" value={assertions} onChange={e => setAssertions(e.target.value)} />
+            <Textarea className="font-mono text-xs mt-1 min-h-[96px]" value={assertions} onChange={e => setAssertions(e.target.value)} aria-label="响应断言" />
           </div>
 
           <Button size="sm" onClick={handleSend} disabled={!envId || loading} className="w-full" data-icon="inline-start">

@@ -260,34 +260,36 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
     <div className="max-h-[50vh] overflow-y-auto space-y-4">
       {/* Title */}
       <div>
-        <label className="mb-1 block text-sm font-medium">标题</label>
+        <label htmlFor="case-title" className="mb-1 block text-sm font-medium">标题</label>
         <Input
+          id="case-title"
           placeholder="用例标题"
           {...register('title')}
           data-invalid={!!errors.title}
           aria-invalid={!!errors.title}
+          aria-describedby={errors.title ? 'case-title-error' : undefined}
         />
         {errors.title && (
-          <p className="mt-1 text-xs text-destructive">{errors.title.message}</p>
+          <p id="case-title-error" className="mt-1 text-xs text-destructive">{errors.title.message}</p>
         )}
       </div>
 
       {/* Case ID */}
       <div>
-        <label className="mb-1 block text-sm font-medium">用例编号</label>
-        <Input placeholder="如 TC-HOME-001" {...register('case_id')} />
+        <label htmlFor="case-id" className="mb-1 block text-sm font-medium">用例编号</label>
+        <Input id="case-id" placeholder="如 TC-HOME-001" {...register('case_id')} />
       </div>
 
       {/* Row: Type, Priority, Status */}
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="mb-1 block text-sm font-medium">用例类型</label>
+          <label htmlFor="case-type" className="mb-1 block text-sm font-medium">用例类型</label>
           <Controller
             name="case_type"
             control={control}
             render={({ field }: any) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger size="sm"><SelectValue placeholder="选择类型" /></SelectTrigger>
+                <SelectTrigger id="case-type" size="sm"><SelectValue placeholder="选择类型" /></SelectTrigger>
                 <SelectContent>
                   {CASE_TYPES.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
@@ -298,13 +300,13 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">优先级</label>
+          <label htmlFor="case-priority" className="mb-1 block text-sm font-medium">优先级</label>
           <Controller
             name="priority"
             control={control}
             render={({ field }: any) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger size="sm"><SelectValue placeholder="优先级" /></SelectTrigger>
+                <SelectTrigger id="case-priority" size="sm"><SelectValue placeholder="优先级" /></SelectTrigger>
                 <SelectContent>
                   {PRIORITIES.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
@@ -315,13 +317,13 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">状态</label>
+          <label htmlFor="case-status" className="mb-1 block text-sm font-medium">状态</label>
           <Controller
             name="status"
             control={control}
             render={({ field }: any) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger size="sm"><SelectValue placeholder="状态" /></SelectTrigger>
+                <SelectTrigger id="case-status" size="sm"><SelectValue placeholder="状态" /></SelectTrigger>
                 <SelectContent>
                   {STATUSES.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
@@ -336,13 +338,13 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
       {/* Row: Domain, Module */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="mb-1 block text-sm font-medium">所属域</label>
+          <label htmlFor="case-domain" className="mb-1 block text-sm font-medium">所属域</label>
           <Controller
             name="domain"
             control={control}
             render={({ field }: any) => (
               <Select value={field.value || undefined} onValueChange={field.onChange}>
-                <SelectTrigger size="sm"><SelectValue placeholder="选择域" /></SelectTrigger>
+                <SelectTrigger id="case-domain" size="sm"><SelectValue placeholder="选择域" /></SelectTrigger>
                 <SelectContent>
                   {domains.map((d: any) => (
                     <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
@@ -353,13 +355,13 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">所属模块</label>
+          <label htmlFor="case-module" className="mb-1 block text-sm font-medium">所属模块</label>
           <Controller
             name="module"
             control={control}
             render={({ field }: any) => (
               <Select value={field.value || undefined} onValueChange={field.onChange}>
-                <SelectTrigger size="sm"><SelectValue placeholder="选择模块" /></SelectTrigger>
+                <SelectTrigger id="case-module" size="sm"><SelectValue placeholder="选择模块" /></SelectTrigger>
                 <SelectContent>
                   {selModules.map((m: any) => (
                     <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
@@ -375,13 +377,13 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
       {selType === 'api' && (
         <div className="grid grid-cols-[120px_1fr] gap-4">
           <div>
-            <label className="mb-1 block text-sm font-medium">HTTP 方法</label>
+            <label htmlFor="case-api-method" className="mb-1 block text-sm font-medium">HTTP 方法</label>
             <Controller
               name="api_method"
               control={control}
               render={({ field }: any) => (
                 <Select value={field.value || undefined} onValueChange={field.onChange}>
-                  <SelectTrigger size="sm"><SelectValue placeholder="方法" /></SelectTrigger>
+                  <SelectTrigger id="case-api-method" size="sm"><SelectValue placeholder="方法" /></SelectTrigger>
                   <SelectContent>
                     {['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].map((v) => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
@@ -392,40 +394,40 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium">接口路径</label>
-            <Input placeholder="/api/v1/xxx" {...register('api_endpoint')} />
+            <label htmlFor="case-api-endpoint" className="mb-1 block text-sm font-medium">接口路径</label>
+            <Input id="case-api-endpoint" placeholder="/api/v1/xxx" {...register('api_endpoint')} />
           </div>
         </div>
       )}
 
       {/* Tags */}
       <div>
-        <label className="mb-1 block text-sm font-medium">标签 (JSON 数组)</label>
-        <Input placeholder='["功能","首页"]' {...register('tags')} />
+        <label htmlFor="case-tags" className="mb-1 block text-sm font-medium">标签 (JSON 数组)</label>
+        <Input id="case-tags" placeholder='["功能","首页"]' {...register('tags')} />
       </div>
 
       {/* Preconditions */}
       <div>
-        <label className="mb-1 block text-sm font-medium">前置条件</label>
-        <Textarea rows={2} placeholder="执行用例前需要满足的条件" {...register('preconditions')} />
+        <label htmlFor="case-preconditions" className="mb-1 block text-sm font-medium">前置条件</label>
+        <Textarea id="case-preconditions" rows={2} placeholder="执行用例前需要满足的条件" {...register('preconditions')} />
       </div>
 
       {/* Steps */}
       <div>
-        <label className="mb-1 block text-sm font-medium">测试步骤 (JSON)</label>
-        <Textarea rows={4} placeholder='[{"step":1,"desc":"操作描述","expected":"预期结果"}]' {...register('steps')} />
+        <label htmlFor="case-steps" className="mb-1 block text-sm font-medium">测试步骤 (JSON)</label>
+        <Textarea id="case-steps" rows={4} placeholder='[{"step":1,"desc":"操作描述","expected":"预期结果"}]' {...register('steps')} />
       </div>
 
       {/* Expected Result */}
       <div>
-        <label className="mb-1 block text-sm font-medium">预期结果</label>
-        <Textarea rows={2} placeholder="整体预期结果描述" {...register('expected_result')} />
+        <label htmlFor="case-expected-result" className="mb-1 block text-sm font-medium">预期结果</label>
+        <Textarea id="case-expected-result" rows={2} placeholder="整体预期结果描述" {...register('expected_result')} />
       </div>
 
       {/* Ref */}
       <div>
-        <label className="mb-1 block text-sm font-medium">关联引用</label>
-        <Input placeholder="generated:Module:spec 或 functional:Suite:ID" {...register('api_spec_ref')} />
+        <label htmlFor="case-api-spec-ref" className="mb-1 block text-sm font-medium">关联引用</label>
+        <Input id="case-api-spec-ref" placeholder="generated:Module:spec 或 functional:Suite:ID" {...register('api_spec_ref')} />
       </div>
     </div>
   )
@@ -481,8 +483,9 @@ function ReviewPanel({
       {/* Comment */}
       {reviewStatus !== 'approved' && (
         <div>
-          <label className="mb-1 block text-sm font-medium">评审意见</label>
+          <label htmlFor="review-comment" className="mb-1 block text-sm font-medium">评审意见</label>
           <Textarea
+            id="review-comment"
             rows={3}
             placeholder="输入评审意见（可选）"
             value={reviewComment}

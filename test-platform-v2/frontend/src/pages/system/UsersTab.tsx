@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ErrorState } from '@/components/state'
+import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import {
   Dialog,
@@ -182,22 +182,27 @@ export default function UsersTab() {
         新建用户
       </Button>
 
-      {/* Error state */}
-      {isError && users.length === 0 && (
-        <ErrorState error={error} onRetry={refetch} />
-      )}
-
-      {/* Table */}
-      {(!isError || users.length > 0) && (
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={usersAndRoles?.[0]}
+        onRetry={refetch}
+        emptyTitle="暂无用户"
+        emptyDescription="点击「新建用户」添加系统用户"
+        skeletonType="table"
+        loadingRows={4}
+      >
+        {() => (
         <DataTable
           columns={userColumns}
           data={users}
           rowKey={(u) => u.id}
           loading={isLoading}
           loadingRows={4}
-          emptyState={{ title: '暂无用户', description: '点击「新建用户」添加系统用户' }}
         />
-      )}
+        )}
+      </AsyncState>
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
@@ -210,46 +215,51 @@ export default function UsersTab() {
           </DialogHeader>
           <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.username} aria-invalid={!!errors.username}>
-              <label className="text-sm font-medium">用户名</label>
+              <label htmlFor="user-username" className="text-sm font-medium">用户名</label>
               <Input
+                id="user-username"
                 disabled={!!editing?.id}
                 placeholder="用户名"
                 {...register('username')}
                 className={cn(errors.username && 'border-destructive')}
+                aria-describedby={errors.username ? 'user-username-error' : undefined}
               />
-              {errors.username && <span className="text-xs text-destructive">{errors.username.message}</span>}
+              {errors.username && <span id="user-username-error" className="text-xs text-destructive">{errors.username.message}</span>}
             </div>
 
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.password} aria-invalid={!!errors.password}>
-              <label className="text-sm font-medium">
+              <label htmlFor="user-password" className="text-sm font-medium">
                 {editing?.id ? '新密码（留空不修改）' : '密码'}
               </label>
               <Input
+                id="user-password"
                 type="password"
                 placeholder={editing?.id ? '留空则不改密码' : ''}
                 {...register('password')}
                 className={cn(errors.password && 'border-destructive')}
+                aria-describedby={errors.password ? 'user-password-error' : undefined}
               />
-              {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
+              {errors.password && <span id="user-password-error" className="text-xs text-destructive">{errors.password.message}</span>}
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">昵称</label>
-              <Input placeholder="昵称" {...register('nickname')} />
+              <label htmlFor="user-nickname" className="text-sm font-medium">昵称</label>
+              <Input id="user-nickname" placeholder="昵称" {...register('nickname')} />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">邮箱</label>
-              <Input placeholder="邮箱" type="email" {...register('email')} />
+              <label htmlFor="user-email" className="text-sm font-medium">邮箱</label>
+              <Input id="user-email" placeholder="邮箱" type="email" {...register('email')} />
             </div>
 
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">启用</label>
+              <label htmlFor="user-status" className="text-sm font-medium">启用</label>
               <Controller
                 name="status"
                 control={control}
                 render={({ field }) => (
                   <Switch
+                    id="user-status"
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />

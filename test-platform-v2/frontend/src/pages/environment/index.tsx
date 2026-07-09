@@ -1,11 +1,13 @@
 /**
  * Environment & Variable management page.
  * E1: Project-level environments (dev/test/staging/prod) + variables with optional encryption.
+ *
+ * P1-8: Migrated to useApi + AsyncState for loading/error/empty handling.
  */
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
-  Server, Plus, Edit, Trash2, Eye, EyeOff, Key, Globe, FileText,
+  Server, Plus, Edit, Trash2, Eye, EyeOff, Globe,
 } from '@/lib/icons'
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -24,14 +26,14 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { AsyncState } from '@/components/state'
-import EmptyState from '@/components/EmptyState'
 import type { Environment, EnvironmentVariable } from '@/types'
 import {
   fetchEnvironments, createEnvironment, updateEnvironment, deleteEnvironment,
   fetchVariables, createVariable, updateVariable, deleteVariable,
 } from '@/api/environment'
-import { useApi } from '@/hooks/useApi'
+import { AsyncState } from '@/components/state'
+import EmptyState from '@/components/EmptyState'
+import useApi from '@/hooks/useApi'
 
 const ENV_TYPE_MAP: Record<string, { label: string; color: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   dev: { label: '开发', color: 'secondary' },
@@ -41,8 +43,8 @@ const ENV_TYPE_MAP: Record<string, { label: string; color: 'default' | 'secondar
 }
 
 export default function EnvironmentPage() {
-  // P1-8: useApi hook 统一加载/错误/空三态
-  const { data: envs = [], isLoading, isError, error, refetch: refetchEnvs } = useApi(
+  // ── Environments (useApi — P1-8) ──
+  const { data: envs, isLoading, isError, error, refetch } = useApi<Environment[]>(
     () => fetchEnvironments(),
     [],
   )
@@ -58,18 +60,17 @@ export default function EnvironmentPage() {
   const [editVar, setEditVar] = useState<EnvironmentVariable | null>(null)
 
   // Form state
-  const [envForm, setEnvForm] = useState({ name: '', env_type: 'test', base_url: '', description: '' })
+  const [envForm, setEnvForm] = useState({ name: '', env_type: 'test' as string, base_url: '', description: '' })
   const [varForm, setVarForm] = useState({ key: '', value: '', encrypted: false, description: '' })
 
-  // Auto-select first environment on initial load (ref-guarded to prevent double-fire)
-  const initialEnvSelected = useRef(false)
+  // ── Auto-select first env when data loads ──
   useEffect(() => {
-    if (envs.length > 0 && !initialEnvSelected.current && !selectedEnv) {
-      initialEnvSelected.current = true
+    if (envs && envs.length > 0 && !selectedEnv) {
       setSelectedEnv(envs[0])
     }
   }, [envs, selectedEnv])
 
+  // ── Variables loading (on-demand per selected env) ──
   const loadVars = useCallback(async (envId: number) => {
     setVarsLoading(true)
     try {
@@ -101,17 +102,22 @@ export default function EnvironmentPage() {
     if (!envForm.name.trim()) { toast.error('请输入环境名称'); return }
     try {
       if (editEnv) {
-        const updated = await updateEnvironment(editEnv.id, envForm)
-        refetchEnvs()
-        if (selectedEnv?.id === updated.id) setSelectedEnv(updated)
+        await updateEnvironment(editEnv.id, envForm)
+        if (selectedEnv?.id === editEnv.id) {
+          // Refresh selected env details
+          const updated = envs?.find((e) => e.id === editEnv.id)
+          if (updated) {
+            setSelectedEnv({ ...updated, ...envForm })
+          }
+        }
         toast.success('环境已更新')
       } else {
         const created = await createEnvironment(envForm)
-        refetchEnvs()
         setSelectedEnv(created)
         toast.success('环境已创建')
       }
       setEnvDialog(false)
+      refetch()
     } catch { /* handled by interceptor */ }
   }
 
@@ -119,9 +125,9 @@ export default function EnvironmentPage() {
     if (!confirm(`确定删除环境「${env.name}」？其中的变量也将被删除。`)) return
     try {
       await deleteEnvironment(env.id)
-      refetchEnvs()
       if (selectedEnv?.id === env.id) setSelectedEnv(null)
       toast.success('环境已删除')
+      refetch()
     } catch { /* handled by interceptor */ }
   }
 
@@ -146,16 +152,15 @@ export default function EnvironmentPage() {
     try {
       if (editVar) {
         const body: Record<string, any> = { key: varForm.key, encrypted: varForm.encrypted, description: varForm.description }
-        if (varForm.value) body.value = varForm.value  // only send value if changed
-        const updated = await updateVariable(selectedEnv.id, editVar.id, body)
-        setVariables((prev) => prev.map((v) => (v.id === updated.id ? updated : v)))
+        if (varForm.value) body.value = varForm.value
+        await updateVariable(selectedEnv.id, editVar.id, body)
         toast.success('变量已更新')
       } else {
-        const created = await createVariable(selectedEnv.id, varForm)
-        setVariables((prev) => [...prev, created])
+        await createVariable(selectedEnv.id, varForm)
         toast.success('变量已创建')
       }
       setVarDialog(false)
+      if (selectedEnv) loadVars(selectedEnv.id)
     } catch { /* handled by interceptor */ }
   }
 
@@ -164,10 +169,12 @@ export default function EnvironmentPage() {
     if (!confirm(`确定删除变量「${v.key}」？`)) return
     try {
       await deleteVariable(selectedEnv.id, v.id)
-      setVariables((prev) => prev.filter((x) => x.id !== v.id))
       toast.success('变量已删除')
+      if (selectedEnv) loadVars(selectedEnv.id)
     } catch { /* handled by interceptor */ }
   }
+
+  // ── Render ──
 
   return (
     <div className="space-y-6 p-6">
@@ -179,115 +186,121 @@ export default function EnvironmentPage() {
         <Button onClick={openEnvCreate}><Plus className="size-4" data-icon="inline-start" />新建环境</Button>
       </div>
 
-      {/* Environment tabs */}
       <AsyncState
         isLoading={isLoading}
         isError={isError}
         error={error}
         data={envs}
-        onRetry={refetchEnvs}
-        loadingVariant="spinner"
+        onRetry={refetch}
         emptyTitle="暂无环境"
-        emptyDescription="点击「新建环境」开始配置项目测试环境"
+        emptyDescription={'点击"新建环境"创建第一个测试环境'}
+        emptyAction={{ label: '新建环境', onClick: openEnvCreate }}
       >
-        {() => (
-          <div className="flex flex-wrap gap-2">
-            {envs.map((env) => (
-              <Button
-                key={env.id}
-                variant={selectedEnv?.id === env.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedEnv(env)}
-              >
-                <Server className="size-3.5" data-icon="inline-start" />
-                {env.name}
-                <Badge variant={ENV_TYPE_MAP[env.env_type]?.color ?? 'outline'} className="ml-2 text-[10px] px-1.5 py-0">
-                  {ENV_TYPE_MAP[env.env_type]?.label ?? env.env_type}
-                </Badge>
-              </Button>
-            ))}
-          </div>
+        {(envList) => (
+          <>
+            {/* Environment tabs */}
+            <div className="flex flex-wrap gap-2">
+              {envList.map((env) => (
+                <Button
+                  key={env.id}
+                  variant={selectedEnv?.id === env.id ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedEnv(env)}
+                >
+                  <Server className="size-3.5" data-icon="inline-start" />
+                  {env.name}
+                  <Badge variant={ENV_TYPE_MAP[env.env_type]?.color ?? 'outline'} className="ml-2 text-[10px] px-1.5 py-0">
+                    {ENV_TYPE_MAP[env.env_type]?.label ?? env.env_type}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+
+            {/* Selected environment detail */}
+            {selectedEnv && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Globe className="size-5 text-muted-foreground" />
+                      <div>
+                        <CardTitle className="text-lg">{selectedEnv.name}</CardTitle>
+                        <CardDescription>{selectedEnv.description || selectedEnv.base_url || '未设置描述'}</CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => openEnvEdit(selectedEnv)} title="编辑环境">
+                        <Edit className="size-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleEnvDelete(selectedEnv)} title="删除环境">
+                        <Trash2 className="size-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold">变量列表</h3>
+                    <Button variant="outline" size="sm" onClick={openVarCreate}>
+                      <Plus className="size-3.5" data-icon="inline-start" />添加变量
+                    </Button>
+                  </div>
+
+                  {varsLoading ? (
+                    <p className="text-sm text-muted-foreground py-8 text-center">加载变量中…</p>
+                  ) : variables.length === 0 ? (
+                    <EmptyState
+                      title="暂无变量"
+                      description={'点击"添加变量"开始配置'}
+                      className="py-8"
+                    />
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[180px]">变量名</TableHead>
+                          <TableHead>值</TableHead>
+                          <TableHead className="w-[80px]">加密</TableHead>
+                          <TableHead className="w-[200px]">描述</TableHead>
+                          <TableHead className="w-[100px]">操作</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {variables.map((v) => (
+                          <TableRow key={v.id}>
+                            <TableCell className="font-mono text-sm">{v.key}</TableCell>
+                            <TableCell className="font-mono text-sm text-muted-foreground max-w-[200px] truncate">
+                              {v.encrypted ? '••••••••' : v.value}
+                            </TableCell>
+                            <TableCell>
+                              {v.encrypted ? (
+                                <Badge variant="secondary" className="text-[10px]">加密</Badge>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">明文</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{v.description}</TableCell>
+                            <TableCell>
+                              <div className="flex gap-1">
+                                <Button variant="ghost" size="icon" onClick={() => openVarEdit(v)} title="编辑">
+                                  <Edit className="size-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleVarDelete(v)} title="删除">
+                                  <Trash2 className="size-3.5 text-destructive" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </AsyncState>
-
-      {/* Selected environment detail */}
-      {selectedEnv && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Globe className="size-5 text-muted-foreground" />
-                <div>
-                  <CardTitle className="text-lg">{selectedEnv.name}</CardTitle>
-                  <CardDescription>{selectedEnv.description || selectedEnv.base_url || '未设置描述'}</CardDescription>
-                </div>
-              </div>
-              <div className="flex gap-1">
-                <Button variant="ghost" size="icon" onClick={() => openEnvEdit(selectedEnv)} title="编辑环境">
-                  <Edit className="size-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => handleEnvDelete(selectedEnv)} title="删除环境">
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold">变量列表</h3>
-              <Button variant="outline" size="sm" onClick={openVarCreate}>
-                <Plus className="size-3.5" data-icon="inline-start" />添加变量
-              </Button>
-            </div>
-
-            {varsLoading ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">加载中...</p>
-            ) : variables.length === 0 ? (
-              <EmptyState title="暂无变量" description="点击「添加变量」开始配置" size="sm" />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[180px]">变量名</TableHead>
-                    <TableHead>值</TableHead>
-                    <TableHead className="w-[80px]">加密</TableHead>
-                    <TableHead className="w-[200px]">描述</TableHead>
-                    <TableHead className="w-[100px]">操作</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {variables.map((v) => (
-                    <TableRow key={v.id}>
-                      <TableCell className="font-mono text-sm">{v.key}</TableCell>
-                      <TableCell className="font-mono text-sm text-muted-foreground max-w-[200px] truncate">
-                        {v.encrypted ? '••••••••' : v.value}
-                      </TableCell>
-                      <TableCell>
-                        {v.encrypted ? (
-                          <Badge variant="secondary" className="text-[10px]">加密</Badge>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">明文</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{v.description}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openVarEdit(v)} title="编辑">
-                            <Edit className="size-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleVarDelete(v)} title="删除">
-                            <Trash2 className="size-3.5 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Environment dialog */}
       <Dialog open={envDialog} onOpenChange={setEnvDialog}>
