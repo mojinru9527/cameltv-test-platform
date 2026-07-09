@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
-import { ErrorState } from '@/components/state'
+import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import {
   Select,
@@ -95,18 +95,24 @@ export default function AuditTab() {
 
   return (
     <div>
-      {isError && (!data || (data.list && data.list.length === 0)) && (
-        <ErrorState error={error} onRetry={refetch} />
-      )}
-
-      {(!isError || (data && data.list && data.list.length > 0)) && (
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data?.list}
+        onRetry={refetch}
+        emptyTitle="暂无审计日志"
+        emptyDescription="系统操作记录将在此显示"
+        skeletonType="table"
+        loadingRows={4}
+      >
+        {() => (
         <DataTable
           columns={auditColumns}
           data={data?.list ?? []}
           rowKey={(item) => item.id}
           loading={isLoading}
           loadingRows={4}
-          emptyState={{ title: '暂无审计日志', description: '系统操作记录将在此显示' }}
           pagination={{
             page: page + 1,
             totalPages,
@@ -146,7 +152,8 @@ export default function AuditTab() {
             </div>
           }
         />
-      )}
+        )}
+      </AsyncState>
     </div>
   )
 }

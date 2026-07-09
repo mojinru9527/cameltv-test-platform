@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useChartColors } from '@/hooks/use-chart-colors'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -118,11 +119,13 @@ const reportSchema = z.object({
   plan_id: z.coerce.number({ invalid_type_error: '请选择计划' }),
   name: z.string().min(1, '请输入报告名称'),
   description: z.string().optional(),
+  template_id: z.coerce.number().optional(),
 })
 
 type ReportFormData = z.infer<typeof reportSchema>
 
 export default function ReportPage() {
+  const chartColors = useChartColors()
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [createOpen, setCreateOpen] = useState(false)
@@ -167,6 +170,7 @@ export default function ReportPage() {
     { key: 'report_id', header: '编号', headerClassName: 'w-[150px]', className: 'max-w-[150px] truncate', render: (r) => r.report_id },
     { key: 'name', header: '名称', className: 'truncate', render: (r) => r.name },
     { key: 'plan_name', header: '关联计划', headerClassName: 'w-[160px]', className: 'max-w-[160px] truncate', render: (r) => r.plan_name || <span className="text-muted-foreground">—</span> },
+    { key: 'template_id', header: '模板', headerClassName: 'w-[60px]', render: (r) => r.template_id ? <Badge variant="secondary" className="text-[10px]">#{r.template_id}</Badge> : <span className="text-muted-foreground">—</span> },
     { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[120px]', render: (r) => (
       <div className="flex items-center gap-2">
@@ -216,7 +220,7 @@ export default function ReportPage() {
   const doCreate = async (v: ReportFormData) => {
     setCreating(true)
     try {
-      await createReport({ plan_id: v.plan_id, name: v.name, description: v.description })
+      await createReport({ plan_id: v.plan_id, name: v.name, description: v.description, template_id: v.template_id })
       toast.success('报告已生成')
       setCreateOpen(false)
       refetch()
@@ -253,11 +257,11 @@ export default function ReportPage() {
   const dPassRate = dTotal > 0 ? Math.round(((dStats.pass_ || 0) / dTotal) * 100) : 0
 
   const statItems = [
-    { key: 'pass', color: '#52c41a', value: dStats.pass_ || 0 },
-    { key: 'fail', color: '#ff4d4f', value: dStats.fail || 0 },
-    { key: 'skip', color: '#faad14', value: dStats.skip || 0 },
-    { key: 'block', color: '#d9d9d9', value: dStats.block || 0 },
-    { key: 'pending', color: '#1890ff', value: dStats.pending || 0 },
+    { key: 'pass', color: chartColors.barPass, value: dStats.pass_ || 0 },
+    { key: 'fail', color: chartColors.barFail, value: dStats.fail || 0 },
+    { key: 'skip', color: chartColors.chart4, value: dStats.skip || 0 },
+    { key: 'block', color: chartColors.p3, value: dStats.block || 0 },
+    { key: 'pending', color: chartColors.chart1, value: dStats.pending || 0 },
   ]
 
   return (
@@ -312,7 +316,7 @@ export default function ReportPage() {
                           type="monotone"
                           dataKey="pass_rate"
                           name="通过率"
-                          stroke="#3b82f6"
+                          stroke={chartColors.chart1}
                           strokeWidth={2}
                           dot={{ r: 4 }}
                           activeDot={{ r: 6 }}
@@ -337,7 +341,7 @@ export default function ReportPage() {
                           type="monotone"
                           dataKey="open_p0"
                           name="P0 缺陷"
-                          stroke="#dc2626"
+                          stroke={chartColors.barFail}
                           strokeWidth={2}
                           dot={{ r: 4 }}
                         />
@@ -345,7 +349,7 @@ export default function ReportPage() {
                           type="monotone"
                           dataKey="open_p1"
                           name="P1 缺陷"
-                          stroke="#d97706"
+                          stroke={chartColors.chart4}
                           strokeWidth={2}
                           dot={{ r: 4 }}
                         />
@@ -353,7 +357,7 @@ export default function ReportPage() {
                           type="monotone"
                           dataKey="open_p2"
                           name="P2 缺陷"
-                          stroke="#3b82f6"
+                          stroke={chartColors.chart1}
                           strokeWidth={2}
                           dot={{ r: 4 }}
                         />
@@ -440,6 +444,14 @@ export default function ReportPage() {
                 className={cn(errors.name && 'border-destructive')}
               />
               {errors.name && <span className="text-xs text-destructive">{errors.name.message}</span>}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">模板 ID <span className="text-muted-foreground font-normal">(可选)</span></label>
+              <Input
+                type="number"
+                placeholder="关联的报告模板 ID，留空则使用默认模板"
+                {...register('template_id')}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">备注</label>

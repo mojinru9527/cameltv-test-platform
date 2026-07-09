@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMemo, useState } from 'react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   BarChart,
   Bar,
@@ -54,6 +55,7 @@ function getDateRange(key: PresetKey, custom: [string, string] | null): { start:
 }
 
 export default function Workbench() {
+  useDocumentTitle('工作台')
   const user = useAuthStore((s) => s.user)
   const projects = useAuthStore((s) => s.projects)
   const currentProjectId = useAuthStore((s) => s.currentProjectId)
@@ -216,11 +218,13 @@ export default function Workbench() {
                           setPreset('custom')
                           setRangeValue([e.target.value, rangeValue[1]])
                         }}
+                        aria-label="开始日期"
                         className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
                       />
                       <span className="text-sm text-muted-foreground">至</span>
                       <input
                         type="date"
+                        aria-label="结束日期"
                         value={rangeValue[1]}
                         onChange={(e) => {
                           setPreset('custom')
@@ -498,7 +502,7 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
                     <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
                     <RechartsTooltip formatter={(value: any) => [`${value}%`, '通过率']} />
-                    <Line type="monotone" dataKey="pass_rate" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="pass_rate" stroke={chartColors.barPass} strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -518,7 +522,7 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
                     <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                     <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                     <RechartsTooltip formatter={(value: any) => [value, '新增缺陷']} />
-                    <Bar dataKey="count" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                    <Bar dataKey="count" fill={chartColors.barFail} radius={[4, 4, 0, 0]} maxBarSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>

@@ -281,7 +281,8 @@ def upload_attachment(
                 f"上传文件超过限制 (max: 50 MB, got: {cl / (1024*1024):.1f} MB)",
                 code=413,
             )
-    # P1-S6a: Content-Length 前置检查已保障 OOM 防护，直接读取即可
+    # P1-5b: 直接读取（Content-Length 已做前置检查，max 50 MB；upload_attachment
+    # 需要完整 bytes，流式写入临时文件后再次读回不能节省峰值内存）。
     content = file.file.read()
     if len(content) > 50 * 1024 * 1024:
         from app.core.exceptions import APIException

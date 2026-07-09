@@ -1,8 +1,6 @@
 """测试计划 API 路由 — /api/v1/test-plans/*"""
 from __future__ import annotations
 
-import logging
-
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -24,13 +22,16 @@ from app.schemas.test_plan import (
 )
 from app.services import audit_service, test_plan_service
 
+import logging
 logger = logging.getLogger("test_plan")
-
-router = APIRouter(prefix="/test-plans", tags=["测试计划"])
 
 
 def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
-    """P1-4: 在独立 DB session 中发送通知（供 BackgroundTasks 调用）。"""
+    """P1-4: 在独立 DB session 中发送通知（供 BackgroundTasks 调用）。
+
+    必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
+    原请求的 db session 可能已关闭。
+    """
     from app.core.db import SessionLocal
     from app.services.notify_service import notify_sync
 
@@ -41,6 +42,9 @@ def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
         logger.exception("Background notification failed: event=%s project=%s", event, project_id)
     finally:
         db.close()
+
+
+router = APIRouter(prefix="/test-plans", tags=["测试计划"])
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
@@ -211,7 +215,8 @@ def execute_case(
         return R(code=404, msg="关联不存在或无权操作")
     _audit(req, current, db, "plan:execute", f"plan #{plan_id} case #{pcase_id}", f"status={body.status}")
 
-    # P1-4: Background notification via BackgroundTasks (was fire-and-forget asyncio.create_task)
+    # P1-4: Background notification via BackgroundTasks (replaces fire-and-forget
+    # asyncio.create_task — runs in its own DB session to avoid session-closed errors).
     plan = test_plan_service.get_plan(db, plan_id, current.project_id or 0)
     stats = plan.get("stats", {}) if plan else {}
     background_tasks.add_task(
