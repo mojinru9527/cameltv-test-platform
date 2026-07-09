@@ -8,8 +8,8 @@
 |------|-----|
 | **里程碑** | M2：切片向量化 + 混合检索 |
 | **关联 PRD** | [RAG知识图谱与Agent持续学习能力落地执行文档 §M2](../../test-platform-v2/docs/RAG知识图谱与Agent持续学习能力落地执行文档.md) |
-| **ADR** | [ADR-0010](../../docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md)（草案） |
-| **状态** | 📝 方案设计（本看板为落地方案草稿，需 Product → Design → Dev → QA → Leader 流水线） |
+| **ADR** | [ADR-0010](../../docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md)（已接受） |
+| **状态** | ✅ 已落地（Slice 1–5 提交完成，PR 待 Product→Design→QA→Leader 评审） |
 | **开关** | `rag_enabled`（已建，默认 OFF） |
 
 ## ℹ️ 架构决策（已锁定）
@@ -99,3 +99,26 @@
 - [fastembed 文档](https://github.com/qdrant/fastembed)——Python onnx embedding
 - [BAAI/bge-small-zh-v1.5](https://huggingface.co/BAAI/bge-small-zh-v1.5)——中文小模型，输出 512 维（onnx/CPU 可跑，离线）
 - [RRF — Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf)——Cormack et al. SIGIR 2009
+
+## 落地记录（batch-12 · feature/knowledge-m2-vector）
+
+| Slice | 提交 | 验收 |
+|---|---|---|
+| S1 向量化基石 | `44af6ec` | C1 ✅ 写路径/余弦/1:1 upsert/项目隔离；`rag_enabled=False` 无副作用 |
+| S2 混合检索 | `079ab70` | C2 ✅ keyword(CJK 二元组)/vector/hybrid 三模，RRF 融合降序 |
+| S3 端点+治理 | `f228dbb` | C3 ✅ `/search` rag关503·无权403·200；`/reembed` rag关/模型未就绪503、幂等 |
+| S4 前端检索 Tab | `0023e7b` | C4 ✅ 知识中心「检索」Tab（模式选择+结果卡片+向量回填）；`tsc --noEmit` 0 err |
+| S5 测试+ADR+压测 | 本提交 | C5 ✅ `test_knowledge.py` 35 绿；ADR-0010→accepted；压测基线见下 |
+
+**压测基线**（512 维 NumPy 暴力余弦，search-only，in-memory）：
+- 1,000 向量：p50 **5.3ms** / p95 **11.2ms**
+- 5,000 向量：p50 **41.7ms** / p95 **87.1ms**
+- 结论：千级远低于 100ms 目标；**~5,000/项目** 为 <100ms 舒适上限，超出即按 D2 切 pgvector。
+
+**依赖**：`requirements.txt` 增 `fastembed>=0.3` + `numpy>=1.26`（首次使用下载 bge-small-zh-v1.5 onnx 模型；离线环境需预置缓存）。**未装 fastembed 时全链路优雅降级**：嵌入返回 None、检索退化纯关键词、`import app.main` 与 M1 入库零影响（已单测）。
+
+**延后项**（避免与并行 apitest 本体重构冲突，随其本体 PR 一并补入）：
+- `/apitest` 接口详情页「相关知识」区块（前端）
+- apitest.py / test_case.py 的 4 个入库 hook（知识 5 事件源余项，属 batch-11 A3 延后）
+
+**证据**：`pytest tests/test_knowledge.py -q` → **35 passed**；`npx tsc --noEmit` → 0 error。
