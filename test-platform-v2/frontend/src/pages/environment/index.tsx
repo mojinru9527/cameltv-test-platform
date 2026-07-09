@@ -2,7 +2,7 @@
  * Environment & Variable management page.
  * E1: Project-level environments (dev/test/staging/prod) + variables with optional encryption.
  */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import {
   Server, Plus, Edit, Trash2, Eye, EyeOff, Key, Globe, FileText,
@@ -24,11 +24,14 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
+import { AsyncState } from '@/components/state'
+import EmptyState from '@/components/EmptyState'
 import type { Environment, EnvironmentVariable } from '@/types'
 import {
   fetchEnvironments, createEnvironment, updateEnvironment, deleteEnvironment,
   fetchVariables, createVariable, updateVariable, deleteVariable,
 } from '@/api/environment'
+import { useApi } from '@/hooks/useApi'
 
 const ENV_TYPE_MAP: Record<string, { label: string; color: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   dev: { label: '开发', color: 'secondary' },
@@ -38,10 +41,15 @@ const ENV_TYPE_MAP: Record<string, { label: string; color: 'default' | 'secondar
 }
 
 export default function EnvironmentPage() {
-  const [envs, setEnvs] = useState<Environment[]>([])
+  // P1-8: useApi hook 统一加载/错误/空三态
+  const { data: envs = [], isLoading, isError, error, refetch: refetchEnvs } = useApi(
+    () => fetchEnvironments(),
+    [],
+  )
+
   const [selectedEnv, setSelectedEnv] = useState<Environment | null>(null)
   const [variables, setVariables] = useState<EnvironmentVariable[]>([])
-  const [loading, setLoading] = useState(false)
+  const [varsLoading, setVarsLoading] = useState(false)
 
   // Dialogs
   const [envDialog, setEnvDialog] = useState(false)
@@ -53,24 +61,23 @@ export default function EnvironmentPage() {
   const [envForm, setEnvForm] = useState({ name: '', env_type: 'test', base_url: '', description: '' })
   const [varForm, setVarForm] = useState({ key: '', value: '', encrypted: false, description: '' })
 
-  const loadEnvs = useCallback(async () => {
-    setLoading(true)
-    try {
-      const data = await fetchEnvironments()
-      setEnvs(data)
-      if (data.length > 0 && !selectedEnv) setSelectedEnv(data[0])
-    } catch { /* handled by interceptor */ }
-    finally { setLoading(false) }
-  }, [selectedEnv])
+  // Auto-select first environment on initial load (ref-guarded to prevent double-fire)
+  const initialEnvSelected = useRef(false)
+  useEffect(() => {
+    if (envs.length > 0 && !initialEnvSelected.current && !selectedEnv) {
+      initialEnvSelected.current = true
+      setSelectedEnv(envs[0])
+    }
+  }, [envs, selectedEnv])
 
   const loadVars = useCallback(async (envId: number) => {
+    setVarsLoading(true)
     try {
       const data = await fetchVariables(envId)
       setVariables(data)
     } catch { /* handled by interceptor */ }
+    finally { setVarsLoading(false) }
   }, [])
-
-  useEffect(() => { loadEnvs() }, [loadEnvs])  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (selectedEnv) loadVars(selectedEnv.id)
@@ -95,12 +102,12 @@ export default function EnvironmentPage() {
     try {
       if (editEnv) {
         const updated = await updateEnvironment(editEnv.id, envForm)
-        setEnvs((prev) => prev.map((e) => (e.id === updated.id ? updated : e)))
+        refetchEnvs()
         if (selectedEnv?.id === updated.id) setSelectedEnv(updated)
         toast.success('环境已更新')
       } else {
         const created = await createEnvironment(envForm)
-        setEnvs((prev) => [...prev, created])
+        refetchEnvs()
         setSelectedEnv(created)
         toast.success('环境已创建')
       }
@@ -112,7 +119,7 @@ export default function EnvironmentPage() {
     if (!confirm(`确定删除环境「${env.name}」？其中的变量也将被删除。`)) return
     try {
       await deleteEnvironment(env.id)
-      setEnvs((prev) => prev.filter((e) => e.id !== env.id))
+      refetchEnvs()
       if (selectedEnv?.id === env.id) setSelectedEnv(null)
       toast.success('环境已删除')
     } catch { /* handled by interceptor */ }
@@ -173,23 +180,35 @@ export default function EnvironmentPage() {
       </div>
 
       {/* Environment tabs */}
-      <div className="flex flex-wrap gap-2">
-        {envs.map((env) => (
-          <Button
-            key={env.id}
-            variant={selectedEnv?.id === env.id ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setSelectedEnv(env)}
-          >
-            <Server className="size-3.5" data-icon="inline-start" />
-            {env.name}
-            <Badge variant={ENV_TYPE_MAP[env.env_type]?.color ?? 'outline'} className="ml-2 text-[10px] px-1.5 py-0">
-              {ENV_TYPE_MAP[env.env_type]?.label ?? env.env_type}
-            </Badge>
-          </Button>
-        ))}
-        {envs.length === 0 && <p className="text-sm text-muted-foreground py-4">暂无环境，点击"新建环境"开始</p>}
-      </div>
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={envs}
+        onRetry={refetchEnvs}
+        loadingVariant="spinner"
+        emptyTitle="暂无环境"
+        emptyDescription="点击「新建环境」开始配置项目测试环境"
+      >
+        {() => (
+          <div className="flex flex-wrap gap-2">
+            {envs.map((env) => (
+              <Button
+                key={env.id}
+                variant={selectedEnv?.id === env.id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedEnv(env)}
+              >
+                <Server className="size-3.5" data-icon="inline-start" />
+                {env.name}
+                <Badge variant={ENV_TYPE_MAP[env.env_type]?.color ?? 'outline'} className="ml-2 text-[10px] px-1.5 py-0">
+                  {ENV_TYPE_MAP[env.env_type]?.label ?? env.env_type}
+                </Badge>
+              </Button>
+            ))}
+          </div>
+        )}
+      </AsyncState>
 
       {/* Selected environment detail */}
       {selectedEnv && (
@@ -221,10 +240,10 @@ export default function EnvironmentPage() {
               </Button>
             </div>
 
-            {variables.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">
-                暂无变量，点击"添加变量"开始配置
-              </p>
+            {varsLoading ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">加载中...</p>
+            ) : variables.length === 0 ? (
+              <EmptyState title="暂无变量" description="点击「添加变量」开始配置" size="sm" />
             ) : (
               <Table>
                 <TableHeader>
