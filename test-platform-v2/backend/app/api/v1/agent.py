@@ -23,7 +23,7 @@ def list_runs(
     status: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    current: CurrentUser = Depends(require_permission("agent:run")),
+    current: CurrentUser = Depends(require_permission("agent:list")),
     db: Session = Depends(get_db),
 ):
     rows, total = agent_run_service.list_runs(
@@ -39,7 +39,7 @@ def list_runs(
 @router.get("/runs/{run_id}", response_model=R[AgentRunOut], summary="Agent 执行记录详情")
 def get_run(
     run_id: int,
-    current: CurrentUser = Depends(require_permission("agent:run")),
+    current: CurrentUser = Depends(require_permission("agent:list")),
     db: Session = Depends(get_db),
 ):
     row = agent_run_service.get_run(db, run_id, current.project_id or 0)

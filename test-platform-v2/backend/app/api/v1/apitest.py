@@ -465,7 +465,7 @@ def create_task(
     current: CurrentUser = Depends(require_permission("apitest:task")),
     db: Session = Depends(get_db),
 ):
-    """从用例列表创建批量执行任务。"""
+    """从用例列表创建批量执行任务。执行通过 BackgroundTasks 异步进行。"""
     from app.models.test_case import TestCase
 
     task_id_str = f"API-{uuid.uuid4().hex[:8].upper()}"
@@ -499,68 +499,79 @@ def create_task(
 
     db.commit()
 
-    # 异步执行任务
-    _execute_task_async(db, task.id, project_id)
+    # 通过 BackgroundTasks 异步执行（不阻塞请求线程）
+    background_tasks.add_task(_execute_task_async, task.id, project_id)
 
     db.refresh(task)
     return R.ok(ApiTaskOut.model_validate(task))
 
 
-def _execute_task_async(db: Session, task_id: int, project_id: int):
-    """同步执行批量任务（在请求线程内执行，TODO: 后续改为 celery/background task）。"""
+def _execute_task_async(task_id: int, project_id: int):
+    """在独立 DB session 中执行批量任务（供 BackgroundTasks 调用）。
+    必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
+    原请求的 db session 可能已关闭。
+    """
+    from app.core.db import SessionLocal
     from app.models.test_case import TestCase
     from app.services.api_execution_service import execute_api_case
 
-    task = db.get(ApiExecutionTask, task_id)
-    if not task:
-        return
+    db = SessionLocal()
+    try:
+        task = db.get(ApiExecutionTask, task_id)
+        if not task:
+            return
 
-    task.status = "running"
-    task.started_at = datetime.now(timezone.utc)
-    db.commit()
+        task.status = "running"
+        task.started_at = datetime.now(timezone.utc)
+        db.commit()
 
-    items = db.query(ApiExecutionTaskItem).filter_by(task_id=task.id).all()
-    passed = 0
-    failed = 0
+        items = db.query(ApiExecutionTaskItem).filter_by(task_id=task.id).all()
+        passed = 0
+        failed = 0
 
-    for item in items:
-        try:
-            result = execute_api_case(
-                db, item.case_id,
-                project_id=project_id,
-                environment_id=task.environment_id,
-            )
-            item.status = "passed" if result.get("all_pass", False) else "failed"
-            item.duration_ms = result.get("duration_ms", 0)
-            item.request_snapshot = json.dumps(result.get("request_snapshot", {}), ensure_ascii=False)
-            item.response_snapshot = json.dumps({
-                "status_code": result.get("status_code"),
-                "response_body": result.get("response_body"),
-            }, ensure_ascii=False, default=str)
-            item.assertion_results = json.dumps(result.get("assertions", []), ensure_ascii=False)
-            if result.get("error"):
-                item.error_message = result["error"]
+        for item in items:
+            try:
+                result = execute_api_case(
+                    db, item.case_id,
+                    project_id=project_id,
+                    environment_id=task.environment_id,
+                )
+                item.status = "passed" if result.get("all_pass", False) else "failed"
+                item.duration_ms = result.get("duration_ms", 0)
+                item.request_snapshot = json.dumps(result.get("request_snapshot", {}), ensure_ascii=False)
+                item.response_snapshot = json.dumps({
+                    "status_code": result.get("status_code"),
+                    "response_body": result.get("response_body"),
+                }, ensure_ascii=False, default=str)
+                item.assertion_results = json.dumps(result.get("assertions", []), ensure_ascii=False)
+                if result.get("error"):
+                    item.error_message = result["error"]
 
-            if item.status == "passed":
-                passed += 1
-            else:
+                if item.status == "passed":
+                    passed += 1
+                else:
+                    failed += 1
+            except Exception as e:
+                item.status = "failed"
+                item.error_message = str(e)
                 failed += 1
-        except Exception as e:
-            item.status = "failed"
-            item.error_message = str(e)
-            failed += 1
 
-    task.passed = passed
-    task.failed = failed
-    task.skipped = task.total - passed - failed
-    task.status = "success" if failed == 0 else "failed"
-    task.finished_at = datetime.now(timezone.utc)
-    db.commit()
+        task.passed = passed
+        task.failed = failed
+        task.skipped = task.total - passed - failed
+        task.status = "success" if failed == 0 else "failed"
+        task.finished_at = datetime.now(timezone.utc)
+        db.commit()
 
-    # M1 入库 hook：有失败项时 → 沉淀为知识切片（用于后续影响分析 & Agent 学习）
-    if failed > 0:
-        from app.services.knowledge import ingest_service
-        ingest_service.ingest_execution_failure_in_new_session(project_id, task_id)
+        # M1 入库 hook：有失败项时 → 沉淀为知识切片（用于后续影响分析 & Agent 学习）
+        if failed > 0:
+            from app.services.knowledge import ingest_service
+            ingest_service.ingest_execution_failure_in_new_session(project_id, task_id)
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Background task execution failed: task_id=%s", task_id)
+    finally:
+        db.close()
 
 
 @router.get("/tasks", response_model=R[dict], summary="任务列表")
