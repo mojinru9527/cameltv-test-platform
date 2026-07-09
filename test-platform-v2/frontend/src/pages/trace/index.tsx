@@ -4,11 +4,13 @@ import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
+import { useChartColors } from '@/hooks/use-chart-colors'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent } from '@/lib/icons'
 
 export default function TracePage() {
+  const chartColors = useChartColors()
   const { data, isLoading, isError, error, refetch } = useApi<CoverageData>(
     () => fetchCoverage(),
     [],
@@ -82,7 +84,7 @@ export default function TracePage() {
                       <YAxis allowDecimals={false} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="数量" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="数量" fill={chartColors.chart1} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -121,7 +123,7 @@ export default function TracePage() {
                       <div className="text-sm text-muted-foreground">待覆盖的需求</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold" style={{ color: (d.requirement_coverage_rate ?? 0) >= 80 ? '#16a34a' : (d.requirement_coverage_rate ?? 0) >= 50 ? '#d97706' : '#dc2626' }}>
+                      <div className="text-3xl font-bold" style={{ color: (d.requirement_coverage_rate ?? 0) >= 80 ? chartColors.barPass : (d.requirement_coverage_rate ?? 0) >= 50 ? chartColors.chart4 : chartColors.barFail }}>
                         {d.requirement_coverage_rate ?? 0}%
                       </div>
                       <div className="text-sm text-muted-foreground">需求覆盖率</div>

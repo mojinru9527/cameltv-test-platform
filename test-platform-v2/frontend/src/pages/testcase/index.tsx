@@ -35,9 +35,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import DomainTree from '@/components/DomainTree'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
-import EmptyState from '@/components/EmptyState'
-import { SkeletonText } from '@/components/ui/skeleton'
-import { ErrorState } from '@/components/state'
+import { AsyncState } from '@/components/state'
 
 import { Search, RotateCcw, Plus, Edit, Trash2, Download, Upload, FileSpreadsheet, History, ClipboardCheck } from '@/lib/icons'
 import { cn } from '@/lib/utils'
@@ -404,46 +402,39 @@ export default function TestCasePage() {
           )}
 
           {/* Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={selected.size === items.length && items.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="w-[160px]">编号</TableHead>
-                  <TableHead>标题</TableHead>
-                  <TableHead className="w-[120px]">模块</TableHead>
-                  <TableHead className="w-[60px]">状态</TableHead>
-                  <TableHead className="w-[80px]">评审</TableHead>
-                  <TableHead className="w-[140px]">API</TableHead>
-                  <TableHead className="w-[120px]">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+          <AsyncState
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            data={data?.items}
+            onRetry={refetch}
+            emptyTitle="暂无测试用例"
+            emptyDescription="点击「新建用例」开始创建"
+            skeletonType="table"
+            loadingRows={4}
+          >
+            {() => (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8">
-                      <SkeletonText lines={4} />
-                    </TableCell>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={selected.size === items.length && items.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="w-[160px]">编号</TableHead>
+                    <TableHead>标题</TableHead>
+                    <TableHead className="w-[120px]">模块</TableHead>
+                    <TableHead className="w-[60px]">状态</TableHead>
+                    <TableHead className="w-[80px]">评审</TableHead>
+                    <TableHead className="w-[140px]">API</TableHead>
+                    <TableHead className="w-[120px]">操作</TableHead>
                   </TableRow>
-                ) : isError ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-8">
-                      <ErrorState error={error} onRetry={refetch} />
-                    </TableCell>
-                  </TableRow>
-                ) : items.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="py-8">
-                      <EmptyState title="暂无测试用例" description="点击「新建用例」开始创建" className="py-0" />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  items.map((r: any) => (
+                </TableHeader>
+                <TableBody>
+                  {items.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell>
                         <Checkbox
@@ -512,11 +503,12 @@ export default function TestCasePage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            )}
+          </AsyncState>
 
           {/* Pagination */}
           <Pagination

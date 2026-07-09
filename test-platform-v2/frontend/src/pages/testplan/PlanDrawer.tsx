@@ -131,40 +131,42 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
         <form onSubmit={handleSubmit(doSave)} className="max-h-[60vh] overflow-y-auto space-y-4">
           {/* Name */}
           <div>
-            <label className="mb-1 block text-sm font-medium">计划名称</label>
+            <label htmlFor="plan-name" className="mb-1 block text-sm font-medium">计划名称</label>
             <Input
+              id="plan-name"
               placeholder="如：回归测试 v1.0"
               {...register('name')}
               data-invalid={!!errors.name}
               aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? 'plan-name-error' : undefined}
             />
             {errors.name && (
-              <p className="mt-1 text-xs text-destructive">{errors.name.message}</p>
+              <p id="plan-name-error" className="mt-1 text-xs text-destructive">{errors.name.message}</p>
             )}
           </div>
 
           {/* Plan ID */}
           <div>
-            <label className="mb-1 block text-sm font-medium">计划编号</label>
-            <Input placeholder="如 TP-HOME-001 (可选)" {...register('plan_id')} />
+            <label htmlFor="plan-id" className="mb-1 block text-sm font-medium">计划编号</label>
+            <Input id="plan-id" placeholder="如 TP-HOME-001 (可选)" {...register('plan_id')} />
           </div>
 
           {/* Description */}
           <div>
-            <label className="mb-1 block text-sm font-medium">计划描述</label>
-            <Textarea rows={3} placeholder="测试范围、目标、注意事项等" {...register('description')} />
+            <label htmlFor="plan-description" className="mb-1 block text-sm font-medium">计划描述</label>
+            <Textarea id="plan-description" rows={3} placeholder="测试范围、目标、注意事项等" {...register('description')} />
           </div>
 
           {/* Row: Status, Start Date, End Date */}
           <div className="grid grid-cols-[140px_1fr_1fr] gap-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">状态</label>
+              <label htmlFor="plan-status" className="mb-1 block text-sm font-medium">状态</label>
               <Controller
                 name="status"
                 control={control}
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger size="sm">
+                    <SelectTrigger id="plan-status" size="sm">
                       <SelectValue placeholder="状态" />
                     </SelectTrigger>
                     <SelectContent>
@@ -177,12 +179,12 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">开始时间</label>
-              <Input type="datetime-local" {...register('start_date')} />
+              <label htmlFor="plan-start-date" className="mb-1 block text-sm font-medium">开始时间</label>
+              <Input id="plan-start-date" type="datetime-local" {...register('start_date')} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">结束时间</label>
-              <Input type="datetime-local" {...register('end_date')} />
+              <label htmlFor="plan-end-date" className="mb-1 block text-sm font-medium">结束时间</label>
+              <Input id="plan-end-date" type="datetime-local" {...register('end_date')} />
             </div>
           </div>
         </form>
