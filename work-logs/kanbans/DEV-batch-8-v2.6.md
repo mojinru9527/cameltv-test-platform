@@ -46,8 +46,8 @@ Batch #1 — V2.5+V2.6 合并合入 ✅ 已完成
 ├── ✅ 已完成: 全部 10 个 Slice 代码完成
 ├── ✅ 已验证: V2.5 smoke 7/7 PASS + V2.6 smoke 14/14 PASS
 ├── ✅ 已提交: ae3e2cc (51 files, +3859/-73)
-├── ✅ 已推送: origin/feature/batch-5-v2.4-real-engines
-└── ⏳ 下一步: 创建 PR → merge develop
+├── ✅ 已合入: develop (0d1a1be，通过 PR #13 路径，内容与 ae3e2cc 零差异)
+└── ✅ 看板关闭: 2026-07-09
 ```
 
 ---
