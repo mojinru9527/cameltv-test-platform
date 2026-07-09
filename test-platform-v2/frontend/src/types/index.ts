@@ -420,8 +420,11 @@ export interface QuickExecuteRequest {
   url: string
   headers: string       // JSON string
   body: string          // JSON string
+  assertions?: string
   environment_id?: number
   dataset_id?: number
+  service_name?: string  // for asset debug: service name for URL composition
+  query_params?: string  // JSON string of query key-value pairs
 }
 
 // ── Dataset (V2.5) ──
@@ -590,6 +593,7 @@ export interface ApiService {
   default_base_path: string
   owner: string
   status: string
+  endpoint_count: number
   created_at: string | null
   updated_at: string | null
 }
@@ -620,6 +624,10 @@ export interface ApiImportPreview {
   total_count: number
   new_count: number
   existing_count: number
+  doc_url: string
+  spec_urls: string[]
+  discovered_by: string
+  modules: Array<{ name: string; count: number }>
   endpoints: Array<{
     module: string
     method: string
@@ -699,4 +707,79 @@ export interface ApiTaskCreateRequest {
   environment_id?: number
   service_id?: number
   case_ids: number[]
+}
+
+// ========== 知识中心 (RAG / Agent 持续学习) ==========
+
+export interface KnowledgePage<T> {
+  total: number
+  page: number
+  page_size: number
+  items: T[]
+}
+
+export interface KnowledgeSource {
+  id: number
+  project_id: number
+  source_type: string
+  source_id: number | null
+  title: string
+  source_ref: string
+  version: string
+  status: string
+  created_at?: string
+  // 详情附加字段
+  content_hash?: string
+  iteration_id?: number | null
+  raw_content?: string
+  metadata_json?: string
+  updated_at?: string
+}
+
+export interface KnowledgeChunk {
+  id: number
+  project_id: number
+  source_id: number
+  chunk_type: string
+  title: string
+  content: string
+  content_hash: string
+  token_count: number
+  embedding_id: string
+  tags: string
+  status: string
+  created_at?: string
+}
+
+export interface AiArtifact {
+  id: number
+  project_id: number
+  artifact_type: string
+  title: string
+  content_json: string
+  source_refs: string
+  agent_run_id: number | null
+  confidence: number
+  review_status: string
+  reviewer_id: number
+  review_comment: string
+  imported_ref_type: string
+  imported_ref_id: number | null
+  created_at?: string
+}
+
+export interface KnowledgeHealth {
+  unreviewed_artifacts: number
+  deprecated_sources: number
+  sourceless_chunks: number
+  low_confidence_relations: number
+}
+
+export interface KnowledgeOverview {
+  source_count: number
+  chunk_count: number
+  entity_count: number
+  pending_artifact_count: number
+  recent_sources: KnowledgeSource[]
+  health: KnowledgeHealth
 }

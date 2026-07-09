@@ -12,6 +12,7 @@ from app.schemas.common import R
 from app.schemas.defect import DefectCreate, DefectOut, DefectStats, DefectUpdate
 from app.services import defect_service
 from app.services.audit_service import write_audit
+from app.services.knowledge import ingest_service
 from app.models.user import User
 
 logger = logging.getLogger("defect")
@@ -93,6 +94,10 @@ def create_defect(
     r = defect_service.create_defect(db, body, current.user.id, current.project_id or 0)
     db.commit()
     _audit(req, current, db, "defect:create", f"#{r['id']} {r['title']}")
+    # 知识入库：缺陷 → 知识源/切片（post-commit，自带 Session）
+    background_tasks.add_task(
+        ingest_service.ingest_defect_in_new_session, current.project_id or 0, r["id"]
+    )
 
     # P1-4/S4a: Background notification via FastAPI BackgroundTasks
     # (replaces fire-and-forget asyncio.create_task — task is tracked and
@@ -188,6 +193,7 @@ def transition_defect(
     req: Request,
     defect_id: int,
     body: TransitionBody,
+    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
@@ -208,6 +214,10 @@ def transition_defect(
         raise not_found("缺陷")
     db.commit()
     _audit(req, current, db, "defect:transition", f"#{defect_id} → {body.to_status}", body.comment)
+    # 知识入库：状态变更后重新沉淀缺陷（关闭时含处理说明）
+    background_tasks.add_task(
+        ingest_service.ingest_defect_in_new_session, current.project_id or 0, defect_id
+    )
     return R.ok(DefectOut(**r))
 
 
