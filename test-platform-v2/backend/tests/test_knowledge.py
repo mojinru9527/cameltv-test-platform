@@ -612,3 +612,36 @@ class TestM2SearchApi:
         resp = kclient.post("/api/v1/knowledge/reembed")
         assert resp.status_code == 503
 
+
+class TestReembedBackfillGuard:
+    """回填循环健康度：零进展批次必须提前终止（评审 #21 发现的死循环隐患）。"""
+
+    def test_no_progress_batch_terminates_not_infinite_loop(self, kdb, monkeypatch):
+        """模型 available 但 embed 持续返回 None（嵌入异常/形状异常）时，embedding_id 无法回填。
+        若循环不设前进守卫，同一满批切片会被反复选出 → 死循环（/reembed 同步阻塞、占用连接）。
+        守卫（embedded==0 即中断）应让其在有限时间内返回 embedded=0。"""
+        import threading
+
+        from app.core.config import settings
+        from app.services.knowledge import vectorize
+        from app.services.knowledge.embedding_service import embedding_service
+
+        monkeypatch.setattr(settings, "rag_enabled", True, raising=False)
+        monkeypatch.setattr(embedding_service, "available", lambda: True)
+        monkeypatch.setattr(embedding_service, "embed", lambda texts: None)  # 持续失败
+        # 独立 Session 指向本用例的 in-memory 引擎，方能看到 seed 的切片
+        monkeypatch.setattr(vectorize, "SessionLocal", lambda: kdb)
+        _seed_chunks(kdb, ["密码校验", "视频播放"])  # limit==batch==2 → 老代码会死循环
+
+        box: dict = {}
+
+        def _run():
+            box["r"] = vectorize.embed_pending_chunks_in_new_session(1, limit=2)
+
+        t = threading.Thread(target=_run, daemon=True)
+        t.start()
+        t.join(timeout=5)
+        assert not t.is_alive(), "回填在零进展批次上未终止（疑似死循环）"
+        assert box["r"]["embedded"] == 0
+        assert box["r"]["skipped"] >= 2
+

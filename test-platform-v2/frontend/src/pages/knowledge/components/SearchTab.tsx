@@ -72,7 +72,7 @@ export default function SearchTab() {
             placeholder="语义检索知识库（如：密码字段参数校验）"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && doSearch()}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !loading) doSearch() }}
           />
         </div>
         <Select value={mode} onValueChange={setMode}>
@@ -126,7 +126,7 @@ export default function SearchTab() {
                   <Badge variant="secondary">{CHUNK_LABEL[r.chunk_type] ?? r.chunk_type}</Badge>
                   <span className="text-sm font-medium truncate">{r.title || '(无标题)'}</span>
                   <span className="ml-auto text-xs text-muted-foreground shrink-0">
-                    score {r.score.toFixed(4)}
+                    相关度 {r.score.toFixed(4)}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground break-words">{r.snippet}</p>
