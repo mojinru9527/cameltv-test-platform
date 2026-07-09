@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LayoutDashboard, Database, FileCheck } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
+import SearchTab from './components/SearchTab'
 
 /**
- * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表）。
- * 概览 / 知识源 / AI 审核台 三个 Tab，本期只读。
+ * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表 / M2 混合检索）。
+ * 概览 / 检索 / 知识源 / AI 审核台 四个 Tab。
  */
 export default function KnowledgePage() {
   const [tab, setTab] = useState('overview')
@@ -26,6 +27,10 @@ export default function KnowledgePage() {
             <LayoutDashboard className="size-4 mr-1" />
             概览
           </TabsTrigger>
+          <TabsTrigger value="search">
+            <Search className="size-4 mr-1" />
+            检索
+          </TabsTrigger>
           <TabsTrigger value="sources">
             <Database className="size-4 mr-1" />
             知识源
@@ -38,6 +43,9 @@ export default function KnowledgePage() {
 
         <TabsContent value="overview" className="mt-4">
           {tab === 'overview' && <OverviewTab />}
+        </TabsContent>
+        <TabsContent value="search" className="mt-4">
+          {tab === 'search' && <SearchTab />}
         </TabsContent>
         <TabsContent value="sources" className="mt-4">
           {tab === 'sources' && <SourceListTab />}

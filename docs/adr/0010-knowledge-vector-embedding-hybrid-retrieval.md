@@ -1,6 +1,6 @@
 # ADR-0010: 知识切片向量化与混合检索（M2）
 
-- **状态**：草案（待 Product/Design/Leader 评审，按 [[agent-team-gate]]）
+- **状态**：已接受（accepted）—— batch-12 实现落地并验证 D1–D4（35 用例绿；见下「验证」）
 - **日期**：2026-07-09
 - **决策者**：Dev 部门（承接 M1，落地 M2）
 - **关联**：[ADR-0009 知识中心与 Agent 持续学习子系统](0009-knowledge-center-agent-continuous-learning.md)、[RAG落地执行文档 §M2](../../test-platform-v2/docs/RAG知识图谱与Agent持续学习能力落地执行文档.md)
@@ -52,3 +52,14 @@ M0+M1（PR #15）已把需求/接口/用例/缺陷/执行等沉淀为 `knowledge
 - **成本**：新增 `fastembed`/`numpy` 依赖（需更新 `requirements.txt` 并过 [[common-pitfalls]] 隐式依赖检查）；
   首次下载嵌入模型（部署镜像宜预置缓存）。
 - **风险**：暴力余弦在语料显著增长后需切 pgvector/ANN（已由分层抽象兜底）；嵌入延迟需压测（目标单条 <50ms CPU）。
+
+## 验证（batch-12 落地）
+
+- **单测**：`tests/test_knowledge.py` 扩展至 **35 用例全绿**（嵌入降级 / 向量 upsert↔search 往返·1:1·项目隔离·异维跳过 / RRF 三模 / 端点 503·403 治理）。
+- **暴力余弦压测**（512 维、NumPy、search-only、in-memory）：
+  | 向量规模 | p50 | p95 |
+  |---|---|---|
+  | 1,000 | 5.3 ms | 11.2 ms |
+  | 5,000 | 41.7 ms | 87.1 ms |
+  → 千级远低于 100ms 目标；**~5,000/项目** 为 <100ms 舒适上限，超出即按 D2 切 pgvector HNSW。嵌入侧延迟（fastembed CPU）需联网环境实测，此处未含。
+- **降级**：`fastembed` 缺失/模型未就绪时嵌入返回 None、检索自动降级为纯关键词，M1 入库与主流程零影响（已单测）。
