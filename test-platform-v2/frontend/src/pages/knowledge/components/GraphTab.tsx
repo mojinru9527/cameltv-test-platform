@@ -25,6 +25,9 @@ const EDGE_DASHES: Record<string, boolean> = {
   contains: false,
   executed_by: true,
   depends_on: true,
+  affects: true,
+  covers: true,
+  generated_from: true,
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -43,6 +46,7 @@ export default function GraphTab() {
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<{ id: string; name: string; type: string; description: string; confidence: number } | null>(null)
   const [extracting, setExtracting] = useState(false)
+  const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set())
 
   const loadGraph = useCallback(async () => {
     setLoading(true)
@@ -72,28 +76,43 @@ export default function GraphTab() {
       networkRef.current = null
     }
 
+    // 计算每个节点的度（关联边数）
+    const degreeMap: Record<string, number> = {}
+    for (const e of graphData.edges) {
+      degreeMap[e.source] = (degreeMap[e.source] || 0) + 1
+      degreeMap[e.target] = (degreeMap[e.target] || 0) + 1
+    }
+    const minSize = 16
+    const maxSize = 45
+    const maxDegree = Math.max(1, ...Object.values(degreeMap))
+
     const nodes = new DataSet(
-      graphData.nodes.map((n) => ({
-        id: n.id,
-        label: n.name.length > 20 ? n.name.slice(0, 18) + '…' : n.name,
-        title: `<b>${n.name}</b><br/>${n.description || ''}<br/>置信度: ${(n.confidence * 100).toFixed(0)}%`,
-        group: n.group,
-        color: {
-          background: GROUP_COLORS[n.entity_type] || DEFAULT_COLOR,
-          border: '#fff',
-          highlight: {
+      graphData.nodes.map((n) => {
+        const degree = degreeMap[n.id] || 0
+        const scale = degree / maxDegree
+        const size = minSize + scale * (maxSize - minSize)
+        return {
+          id: n.id,
+          label: n.name.length > 20 ? n.name.slice(0, 18) + '…' : n.name,
+          title: `<b>${n.name}</b><br/>${n.description || ''}<br/>置信度: ${(n.confidence * 100).toFixed(0)}%<br/>关联: ${degree} 条边`,
+          group: n.group,
+          color: {
             background: GROUP_COLORS[n.entity_type] || DEFAULT_COLOR,
-            border: '#333',
+            border: '#fff',
+            highlight: {
+              background: GROUP_COLORS[n.entity_type] || DEFAULT_COLOR,
+              border: '#333',
+            },
           },
-        },
-        font: { color: '#fff', size: 13 },
-        shape: 'dot',
-        size: 22,
-        entityType: n.entity_type,
-        description: n.description,
-        confidence: n.confidence,
-        entityId: n.entity_id,
-      }))
+          font: { color: '#fff', size: Math.max(11, Math.round(13 * (1 + scale * 0.3))) },
+          shape: 'dot',
+          size,
+          entityType: n.entity_type,
+          description: n.description,
+          confidence: n.confidence,
+          entityId: n.entity_id,
+        }
+      })
     )
 
     const edges = new DataSet(
@@ -166,6 +185,17 @@ export default function GraphTab() {
       networkRef.current = null
     }
   }, [graphData])
+
+  // 按类型过滤节点可见性
+  useEffect(() => {
+    if (!networkRef.current) return
+    const allNodes = (networkRef.current as any).body.data.nodes
+    allNodes.forEach((node: any) => {
+      const entityType = node.entityType || ''
+      const shouldHide = hiddenTypes.has(entityType)
+      allNodes.update({ id: node.id, hidden: shouldHide })
+    })
+  }, [hiddenTypes])
 
   const handleExtract = async () => {
     setExtracting(true)
@@ -307,21 +337,35 @@ export default function GraphTab() {
           <div className="flex flex-col gap-3">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm">图例</CardTitle>
+                <CardTitle className="text-sm">图例 <span className="text-xs font-normal text-muted-foreground">(点击过滤)</span></CardTitle>
               </CardHeader>
               <CardContent className="space-y-1.5">
-                {Object.entries(TYPE_LABELS).map(([key, label]) => (
-                  <div key={key} className="flex items-center gap-2 text-sm">
-                    <span
-                      className="inline-block size-3 rounded-full shrink-0"
-                      style={{ backgroundColor: GROUP_COLORS[key] || DEFAULT_COLOR }}
-                    />
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className="text-xs text-muted-foreground/60 ml-auto">
-                      {graphData.nodes.filter((n) => n.entity_type === key).length}
-                    </span>
-                  </div>
-                ))}
+                {Object.entries(TYPE_LABELS).map(([key, label]) => {
+                  const hidden = hiddenTypes.has(key)
+                  return (
+                    <div
+                      key={key}
+                      className={`flex items-center gap-2 text-sm cursor-pointer rounded px-1 py-0.5 hover:bg-muted/50 transition-colors ${hidden ? 'opacity-40' : ''}`}
+                      onClick={() => {
+                        setHiddenTypes((prev) => {
+                          const next = new Set(prev)
+                          if (next.has(key)) next.delete(key)
+                          else next.add(key)
+                          return next
+                        })
+                      }}
+                    >
+                      <span
+                        className="inline-block size-3 rounded-full shrink-0"
+                        style={{ backgroundColor: GROUP_COLORS[key] || DEFAULT_COLOR }}
+                      />
+                      <span className={`text-muted-foreground ${hidden ? 'line-through' : ''}`}>{label}</span>
+                      <span className="text-xs text-muted-foreground/60 ml-auto">
+                        {graphData.nodes.filter((n) => n.entity_type === key).length}
+                      </span>
+                    </div>
+                  )
+                })}
               </CardContent>
             </Card>
 
@@ -330,7 +374,7 @@ export default function GraphTab() {
                 <CardTitle className="text-sm">统计</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm text-muted-foreground">
-                <p>节点 {graphData.nodes.length}</p>
+                <p>节点 {graphData.nodes.filter((n) => !hiddenTypes.has(n.entity_type)).length}/{graphData.nodes.length}</p>
                 <p>边 {graphData.edges.length}</p>
               </CardContent>
             </Card>

@@ -98,3 +98,17 @@ export async function approveRelation(id: number, comment?: string): Promise<Kno
 export async function rejectRelation(id: number, comment?: string): Promise<KnowledgeRelation> {
   return api.post(`/knowledge/graph/relations/${id}/reject`, { comment: comment ?? '' })
 }
+
+// ── M4 AI 产物操作 ──
+
+export async function approveArtifact(id: number, comment?: string): Promise<AiArtifact> {
+  return api.post(`/knowledge/ai-artifacts/${id}/approve`, { comment: comment ?? '' })
+}
+
+export async function rejectArtifact(id: number, comment?: string): Promise<AiArtifact> {
+  return api.post(`/knowledge/ai-artifacts/${id}/reject`, { comment: comment ?? '' })
+}
+
+export async function importArtifact(id: number): Promise<{ case_id: number }> {
+  return api.post(`/knowledge/ai-artifacts/${id}/import-to-test-cases`, { comment: '' })
+}

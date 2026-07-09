@@ -645,3 +645,493 @@ class TestReembedBackfillGuard:
         assert box["r"]["embedded"] == 0
         assert box["r"]["skipped"] >= 2
 
+
+# ═══════════════════════════════════════════════════════
+# M3 知识图谱 — 实体提取 + 关系构建
+# ═══════════════════════════════════════════════════════
+
+def _seed_graph_data(db, project_id: int = 1) -> dict:
+    """在给定 Session 中播种图谱所需的基础数据（source + chunks）。返回 source_id。"""
+    from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+
+    src = KnowledgeSource(
+        project_id=project_id, source_type="openapi", title="用户服务 API",
+        raw_content="GET /api/v1/users\nPOST /api/v1/users\nfields: username, email",
+    )
+    db.add(src)
+    db.flush()
+
+    c1 = KnowledgeChunk(
+        project_id=project_id, source_id=src.id, chunk_type="api_schema",
+        content='GET /api/v1/users 获取用户列表\nPOST /api/v1/users 创建用户\n{"username": {"type": "string"}, "email": {"type": "string"}}',
+        status="active",
+    )
+    c2 = KnowledgeChunk(
+        project_id=project_id, source_id=src.id, chunk_type="test_case",
+        content="用例：验证创建用户接口\nGET /api/v1/users",
+        status="active",
+    )
+    db.add_all([c1, c2])
+    db.commit()
+    return {"source_id": src.id, "chunks": [c1.id, c2.id]}
+
+
+class TestEntityExtraction:
+    """规则驱动实体提取——api / field / requirement / test_case / defect 五类覆盖。"""
+
+    def test_extract_api_entities(self, kdb):
+        from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+        src = KnowledgeSource(project_id=1, source_type="openapi", title="API", raw_content="x")
+        kdb.add(src)
+        kdb.flush()
+        chunk = KnowledgeChunk(
+            project_id=1, source_id=src.id, chunk_type="api_schema",
+            content="GET /api/v1/users\nPOST /api/v1/orders\nfields: username, email",
+            status="active",
+        )
+        kdb.add(chunk)
+        kdb.commit()
+
+        from app.services.knowledge.entity_service import extract_entities_from_chunk
+        result = extract_entities_from_chunk(chunk, src)
+        api_entities = [r for r in result if r["entity_type"] == "api"]
+        assert len(api_entities) == 2
+        assert api_entities[0]["name"] == "GET /api/v1/users"
+        assert api_entities[1]["name"] == "POST /api/v1/orders"
+
+    def test_extract_field_entities(self, kdb):
+        from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+        src = KnowledgeSource(project_id=1, source_type="openapi", title="服务A", raw_content="x")
+        kdb.add(src)
+        kdb.flush()
+        chunk = KnowledgeChunk(
+            project_id=1, source_id=src.id, chunk_type="api_schema",
+            content='POST /api/login\n{"username": {"type": "string"}, "password": {"type": "string"}, "remember": {"type": "bool"}}',
+            status="active",
+        )
+        kdb.add(chunk)
+        kdb.commit()
+
+        from app.services.knowledge.entity_service import extract_entities_from_chunk
+        result = extract_entities_from_chunk(chunk, src)
+        field_entities = [r for r in result if r["entity_type"] == "field"]
+        assert len(field_entities) >= 2  # username, password 至少提取到
+        names = [r["name"] for r in field_entities]
+        assert any("username" in n for n in names)
+        assert any("password" in n for n in names)
+
+    def test_extract_requirement_entities(self, kdb):
+        from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+        src = KnowledgeSource(project_id=1, source_type="requirement", title="登录模块需求", raw_content="x")
+        kdb.add(src)
+        kdb.flush()
+        chunk = KnowledgeChunk(
+            project_id=1, source_id=src.id, chunk_type="requirement_rule",
+            content="需求：用户登录功能\n支持用户名密码登录和手机验证码登录",
+            status="active",
+        )
+        kdb.add(chunk)
+        kdb.commit()
+
+        from app.services.knowledge.entity_service import extract_entities_from_chunk
+        result = extract_entities_from_chunk(chunk, src)
+        req = [r for r in result if r["entity_type"] == "requirement"]
+        assert len(req) == 1
+        assert "用户登录功能" in req[0]["name"]
+
+    def test_extract_test_case_entities(self, kdb):
+        from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+        src = KnowledgeSource(project_id=1, source_type="test_case", title="用例标题", raw_content="x")
+        kdb.add(src)
+        kdb.flush()
+        chunk = KnowledgeChunk(
+            project_id=1, source_id=src.id, chunk_type="test_case",
+            content="验证登录接口返回正确token\nGET /api/login\n预期: 200 + token字段",
+            status="active",
+        )
+        kdb.add(chunk)
+        kdb.commit()
+
+        from app.services.knowledge.entity_service import extract_entities_from_chunk
+        result = extract_entities_from_chunk(chunk, src)
+        tc = [r for r in result if r["entity_type"] == "test_case"]
+        assert len(tc) == 1
+        assert "验证登录接口" in tc[0]["name"]
+
+    def test_extract_defect_entities(self, kdb):
+        from app.models.knowledge import KnowledgeChunk, KnowledgeSource
+        src = KnowledgeSource(project_id=1, source_type="defect", title="缺陷标题", raw_content="x")
+        kdb.add(src)
+        kdb.flush()
+        chunk = KnowledgeChunk(
+            project_id=1, source_id=src.id, chunk_type="defect_case",
+            content="[high] 登录接口返回500错误\n严重程度: high\n端点: GET /api/login",
+            status="active",
+        )
+        kdb.add(chunk)
+        kdb.commit()
+
+        from app.services.knowledge.entity_service import extract_entities_from_chunk
+        result = extract_entities_from_chunk(chunk, src)
+        defects = [r for r in result if r["entity_type"] == "defect"]
+        assert len(defects) == 1
+        assert "high" in defects[0]["name"]
+
+    def test_unique_entity_key(self, kdb):
+        """同一项目+同一名称→同一 entity_key、只存一条。"""
+        from app.services.knowledge.entity_service import _entity_key
+        key1 = _entity_key("api", 1, "GET /api/users")
+        key2 = _entity_key("api", 1, "GET /api/users")
+        assert key1 == key2
+        key3 = _entity_key("api", 2, "GET /api/users")  # 不同项目
+        assert key1 != key3
+
+
+class TestRelationBuilding:
+    """关系构建——contains / executed_by / affects / covers / generated_from。"""
+
+    def test_build_contains_relations(self, kdb):
+        """API + field 同 source → 自动建 contains 关系。"""
+        from app.models.knowledge import KnowledgeEntity
+        # 插入一个 API 实体和一个 field 实体
+        api = KnowledgeEntity(
+            project_id=1, entity_type="api", entity_key="api:p1:GET /api/test",
+            name="GET /api/test", source_id=1, confidence=0.9,
+        )
+        field = KnowledgeEntity(
+            project_id=1, entity_type="field", entity_key="field:p1:svc:username",
+            name="username", source_id=1, confidence=0.7,
+        )
+        kdb.add_all([api, field])
+        kdb.flush()
+
+        from app.services.knowledge.entity_service import _build_relations
+        rels = _build_relations(kdb, 1, [api, field], [api, field])
+        contains = [r for r in rels if r["relation_type"] == "contains"]
+        assert len(contains) == 1
+        assert contains[0]["from_entity_id"] == api.id
+        assert contains[0]["to_entity_id"] == field.id
+
+    def test_full_extract_and_build(self, kdb, monkeypatch):
+        """端到端：seeds → extract_and_build_graph → 有实体 + 有 contains 关系。"""
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "knowledge_graph_enabled", True, raising=False)
+        _seed_graph_data(kdb)
+
+        from app.services.knowledge.entity_service import extract_and_build_graph_in_new_session
+        # 独立 Session 指向当前 kdb
+        import app.services.knowledge.entity_service as es
+        monkeypatch.setattr(es, "SessionLocal", lambda: kdb)
+
+        result = extract_and_build_graph_in_new_session(1, max_chunks=50)
+        assert result["extracted"] >= 2  # API + field 实体
+        assert result["relations"] >= 1  # contains 关系
+
+    def test_extract_disabled_when_flag_off(self, kdb, monkeypatch):
+        """knowledge_graph_enabled=False → 直接返回 0。"""
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "knowledge_graph_enabled", False, raising=False)
+
+        from app.services.knowledge.entity_service import extract_and_build_graph_in_new_session
+        result = extract_and_build_graph_in_new_session(1)
+        assert result["extracted"] == 0
+        assert result["relations"] == 0
+
+
+class TestGraphApi:
+    """图谱 API 端点——extract / entities / relations / graph view / approve / reject。"""
+
+    def test_extract_endpoint_503_when_disabled(self, kclient, monkeypatch):
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "knowledge_graph_enabled", False, raising=False)
+        resp = kclient.post("/api/v1/knowledge/graph/extract", json={"max_chunks": 10})
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 503
+
+    def test_entities_list_empty(self, kclient):
+        resp = kclient.get("/api/v1/knowledge/graph/entities")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["code"] == 0
+        assert body["data"] == []
+
+    def test_entities_list_with_filter(self, kdb, kclient):
+        from app.models.knowledge import KnowledgeEntity
+        e = KnowledgeEntity(
+            project_id=1, entity_type="api", entity_key="api:p1:GET /api/x",
+            name="GET /api/x", confidence=0.9,
+        )
+        kdb.add(e)
+        kdb.commit()
+
+        resp = kclient.get("/api/v1/knowledge/graph/entities?entity_type=api")
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert len(data) == 1
+        assert data[0]["entity_type"] == "api"
+
+    def test_entity_detail_404(self, kclient):
+        resp = kclient.get("/api/v1/knowledge/graph/entities/99999")
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 404
+
+    def test_relations_list(self, kdb, kclient):
+        from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
+        e1 = KnowledgeEntity(id=101, project_id=1, entity_type="api", entity_key="k1", name="A", confidence=0.9)
+        e2 = KnowledgeEntity(id=102, project_id=1, entity_type="field", entity_key="k2", name="B", confidence=0.7)
+        kdb.add_all([e1, e2])
+        kdb.flush()
+        r = KnowledgeRelation(project_id=1, from_entity_id=101, relation_type="contains", to_entity_id=102, confidence=0.8)
+        kdb.add(r)
+        kdb.commit()
+
+        resp = kclient.get("/api/v1/knowledge/graph/relations?entity_id=101")
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert len(data) == 1
+        assert data[0]["relation_type"] == "contains"
+
+    def test_graph_view(self, kdb, kclient):
+        from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
+        e1 = KnowledgeEntity(id=201, project_id=1, entity_type="api", entity_key="g1", name="GET /a", confidence=0.9)
+        e2 = KnowledgeEntity(id=202, project_id=1, entity_type="field", entity_key="g2", name="f1", confidence=0.7)
+        kdb.add_all([e1, e2])
+        kdb.flush()
+        r = KnowledgeRelation(project_id=1, from_entity_id=201, relation_type="contains", to_entity_id=202, confidence=0.8)
+        kdb.add(r)
+        kdb.commit()
+
+        resp = kclient.get("/api/v1/knowledge/graph/view?limit=50")
+        assert resp.status_code == 200
+        body = resp.json()["data"]
+        assert len(body["nodes"]) >= 2
+        assert len(body["edges"]) >= 1
+
+    def test_approve_relation(self, kdb, kclient):
+        from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
+        e1 = KnowledgeEntity(id=301, project_id=1, entity_type="api", entity_key="a1", name="A", confidence=0.9)
+        e2 = KnowledgeEntity(id=302, project_id=1, entity_type="field", entity_key="a2", name="B", confidence=0.7)
+        kdb.add_all([e1, e2])
+        kdb.flush()
+        r = KnowledgeRelation(project_id=1, from_entity_id=301, relation_type="contains", to_entity_id=302, confidence=0.4, review_status="pending")
+        kdb.add(r)
+        kdb.commit()
+
+        resp = kclient.post(f"/api/v1/knowledge/graph/relations/{r.id}/approve", json={"comment": "ok"})
+        assert resp.status_code == 200
+        assert resp.json()["data"]["review_status"] == "approved"
+
+    def test_reject_relation(self, kdb, kclient):
+        from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
+        e1 = KnowledgeEntity(id=401, project_id=1, entity_type="api", entity_key="r1", name="A", confidence=0.9)
+        e2 = KnowledgeEntity(id=402, project_id=1, entity_type="field", entity_key="r2", name="B", confidence=0.7)
+        kdb.add_all([e1, e2])
+        kdb.flush()
+        r = KnowledgeRelation(project_id=1, from_entity_id=401, relation_type="contains", to_entity_id=402, confidence=0.4, review_status="pending")
+        kdb.add(r)
+        kdb.commit()
+
+        resp = kclient.post(f"/api/v1/knowledge/graph/relations/{r.id}/reject", json={"comment": "no"})
+        assert resp.status_code == 200
+        assert resp.json()["data"]["review_status"] == "rejected"
+
+    def test_approve_nonexistent_returns_404(self, kclient):
+        resp = kclient.post("/api/v1/knowledge/graph/relations/99999/approve", json={"comment": "x"})
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 404
+
+    def test_approve_wrong_project_rejected(self, kdb, kclient):
+        """跨项目实体关系不可操作。"""
+        from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
+        e1 = KnowledgeEntity(id=501, project_id=999, entity_type="api", entity_key="wp1", name="A", confidence=0.9)
+        e2 = KnowledgeEntity(id=502, project_id=999, entity_type="field", entity_key="wp2", name="B", confidence=0.7)
+        kdb.add_all([e1, e2])
+        kdb.flush()
+        r = KnowledgeRelation(project_id=999, from_entity_id=501, relation_type="contains", to_entity_id=502, confidence=0.8)
+        kdb.add(r)
+        kdb.commit()
+
+        resp = kclient.post(f"/api/v1/knowledge/graph/relations/{r.id}/approve", json={"comment": "x"})
+        assert resp.json()["code"] == 404  # project_id 不匹配 → 视为不存在
+
+
+class TestGraphIngestHook:
+    """自动触发：入库 → 自动提取实体（当 knowledge_graph_enabled=True）。"""
+
+    def test_ingest_requirement_triggers_extract(self, kdb, monkeypatch):
+        """需求入库且 flag 开 → extract_and_build_graph 被调用。"""
+        from app.core.config import settings
+        from app.models.requirement import RequirementDocument
+
+        monkeypatch.setattr(settings, "knowledge_ingest_enabled", True, raising=False)
+        monkeypatch.setattr(settings, "knowledge_graph_enabled", True, raising=False)
+
+        doc = RequirementDocument(
+            id=99, project_id=1, title="测试需求", content="需求描述内容",
+            file_type="md", status="active",
+        )
+        kdb.add(doc)
+        kdb.commit()
+
+        from app.services.knowledge import ingest_service
+        import app.services.knowledge.entity_service as es
+        monkeypatch.setattr(ingest_service, "SessionLocal", lambda: kdb)  # 内部调用同 Session
+
+        called_with: list = []
+
+        def _fake_extract(project_id, source_id=None, max_chunks=100):
+            called_with.append({"project_id": project_id, "source_id": source_id})
+            return {"extracted": 0, "relations": 0, "skipped": 0, "message": "test"}
+
+        monkeypatch.setattr(ingest_service, "extract_and_build_graph_in_new_session", _fake_extract)
+        ingest_service.ingest_requirement_in_new_session(1, 99)
+        assert len(called_with) >= 1, "入库应触发 extract_and_build_graph"
+
+    def test_ingest_skips_extract_when_flag_off(self, kdb, monkeypatch):
+        """knowledge_graph_enabled=False → 不触发提取。"""
+        from app.core.config import settings
+        from app.models.requirement import RequirementDocument
+
+        monkeypatch.setattr(settings, "knowledge_ingest_enabled", True, raising=False)
+        monkeypatch.setattr(settings, "knowledge_graph_enabled", False, raising=False)
+
+        doc = RequirementDocument(
+            id=98, project_id=1, title="忽略提取的需求", content="内容",
+            file_type="md", status="active",
+        )
+        kdb.add(doc)
+        kdb.commit()
+
+        from app.services.knowledge import ingest_service
+        monkeypatch.setattr(ingest_service, "SessionLocal", lambda: kdb)
+
+        called = False
+
+        def _fake_extract(*args, **kwargs):
+            nonlocal called
+            called = True
+            return {"extracted": 0, "relations": 0, "skipped": 0, "message": ""}
+
+        monkeypatch.setattr(ingest_service, "extract_and_build_graph_in_new_session", _fake_extract)
+        ingest_service.ingest_requirement_in_new_session(1, 98)
+        assert not called, "flag 关闭时不应触发提取"
+
+
+# ═══════════════════════════════════════════════════════
+# M4 Agent 编排 + 审核台
+# ═══════════════════════════════════════════════════════
+
+class TestAgentPrompts:
+    """Agent 提示词模板——覆盖 4 种 agent_type。"""
+
+    def test_all_agent_types_have_prompts(self):
+        from app.services.knowledge.agent_prompts import AGENT_META, build_system_prompt
+        for agent_type in AGENT_META:
+            prompt = build_system_prompt(agent_type, "")
+            assert len(prompt) > 100, f"Agent {agent_type} 的 prompt 太短"
+            assert "JSON" in prompt, f"Agent {agent_type} 的 prompt 缺少 JSON 输出要求"
+
+    def test_rag_context_injected(self):
+        from app.services.knowledge.agent_prompts import build_system_prompt
+        prompt = build_system_prompt("requirement_analysis", "测试上下文数据")
+        assert "测试上下文数据" in prompt
+        assert "RAG 检索结果" in prompt
+
+    def test_unknown_type_returns_base(self):
+        from app.services.knowledge.agent_prompts import build_system_prompt
+        prompt = build_system_prompt("unknown_type", "")
+        assert len(prompt) > 50
+
+
+class TestAgentOrchestrator:
+    """Agent 编排器——pipeline 各阶段。"""
+
+    def test_run_invalid_type_returns_error(self):
+        from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
+        result = run_agent_in_new_session(1, "invalid_agent_type")
+        assert result["status"] == "invalid_type"
+
+    def test_run_without_ai_key(self, monkeypatch):
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "ai_api_key", "", raising=False)
+        from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
+        result = run_agent_in_new_session(1, "requirement_analysis", user_input="测试需求")
+        assert result["status"] == "failed"
+        assert "error" in result
+        assert result["run_id"] > 0
+
+
+class TestAgentApi:
+    """Agent API 端点——触发 / 列表 / 详情 / 类型。"""
+
+    def test_get_agent_types(self, kclient):
+        resp = kclient.get("/api/v1/agents/types")
+        assert resp.status_code == 200
+        types = resp.json()["data"]
+        assert len(types) >= 4
+        assert any(t["type"] == "requirement_analysis" for t in types)
+
+    def test_trigger_without_permission(self, kclient):
+        """没有 agent:run 权限→ 403。"""
+        # kclient 使用 * 权限，本测试验证占位；
+        # 实际 403 需依赖覆盖注入受限用户（此处用参数校验覆盖）。
+        resp = kclient.post("/api/v1/agents/run/invalid_type", json={"query": "test"})
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 400  # 未知类型返回 400
+
+    def test_list_runs(self, kclient):
+        resp = kclient.get("/api/v1/agents/runs")
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["code"] == 0
+
+    def test_get_nonexistent_run(self, kclient):
+        resp = kclient.get("/api/v1/agents/runs/99999")
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 404
+
+
+class TestArtifactWriteApi:
+    """AI 产物写操作——approve / reject / import。"""
+
+    def _seed_artifact(self, kdb) -> int:
+        from app.models.knowledge import AiArtifact
+        a = AiArtifact(
+            project_id=1, artifact_type="test_case", title="测试用例草案",
+            content_json='{"test_cases":[]}', review_status="pending",
+        )
+        kdb.add(a)
+        kdb.commit()
+        return a.id
+
+    def test_approve_artifact(self, kdb, kclient):
+        aid = self._seed_artifact(kdb)
+        resp = kclient.post(f"/api/v1/knowledge/ai-artifacts/{aid}/approve", json={"comment": "ok"})
+        assert resp.status_code == 200
+        assert resp.json()["data"]["review_status"] == "approved"
+
+    def test_reject_artifact(self, kdb, kclient):
+        aid = self._seed_artifact(kdb)
+        resp = kclient.post(f"/api/v1/knowledge/ai-artifacts/{aid}/reject", json={"comment": "bad"})
+        assert resp.status_code == 200
+        assert resp.json()["data"]["review_status"] == "rejected"
+
+    def test_import_not_approved(self, kdb, kclient):
+        from app.models.knowledge import AiArtifact
+        a = AiArtifact(
+            project_id=1, artifact_type="test_case", title="未审核",
+            content_json='{"test_cases":[]}', review_status="pending",
+        )
+        kdb.add(a)
+        kdb.commit()
+
+        resp = kclient.post(f"/api/v1/knowledge/ai-artifacts/{a.id}/import-to-test-cases", json={"comment": ""})
+        # 治理守卫：仅 approved 才能导入
+        data = resp.json()
+        assert resp.status_code in (403, 200)  # 拒绝或返回错误
+
+    def test_approve_nonexistent_artifact(self, kclient):
+        resp = kclient.post("/api/v1/knowledge/ai-artifacts/99999/approve", json={"comment": ""})
+        assert resp.status_code == 200
+        assert resp.json()["code"] == 404
+

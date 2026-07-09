@@ -14,7 +14,8 @@
     "lighthouse:a11y": "lhci autorun --collect.url=http://localhost:5173 --collect.numberOfRuns=1 --assert.assertions.preset=lighthouse:recommended --assert.assertions.accessibility=90 || echo 'Ensure the dev server is running on port 5173'",
     "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o src/types/api.d.ts",
     "test:e2e": "npx playwright test",
-    "test:e2e:headed": "npx playwright test --headed"
+    "test:e2e:headed": "npx playwright test --headed",
+    "test:a11y:ci": "npx serve dist -p 4173 & SERVE_PID=$!; sleep 3; npx @axe-core/cli --stdout http://localhost:4173/login > a11y-results.json 2>&1; A11Y_EXIT=$?; cat a11y-results.json; kill $SERVE_PID 2>/dev/null || true; exit $A11Y_EXIT",
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
@@ -59,7 +60,9 @@
     "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "@axe-core/cli": "^4.10.0",
     "@playwright/test": "^1.61.1",
+    "serve": "^14.2.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20.16.13",

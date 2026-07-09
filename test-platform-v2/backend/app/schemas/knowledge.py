@@ -117,7 +117,12 @@ class KnowledgeHealth(BaseModel):
     unreviewed_artifacts: int = 0      # 未审核 AI 产物
     deprecated_sources: int = 0        # 已废弃知识源
     sourceless_chunks: int = 0         # 无来源切片（孤儿）
-    low_confidence_relations: int = 0  # 低置信度关系（M3 起用）
+    low_confidence_relations: int = 0  # 低置信度关系（confidence < 0.5）
+    unreviewed_relations: int = 0      # 待审核关系（M3 起用）
+    # M4 Agent 指标
+    agent_approval_rate: float = 0.0   # AI 产物采纳率
+    agent_avg_duration_ms: int = 0     # Agent 平均耗时 (ms)
+    agent_total_runs: int = 0          # Agent 执行总量
 
 
 class KnowledgeOverviewOut(BaseModel):

@@ -774,6 +774,10 @@ export interface KnowledgeHealth {
   deprecated_sources: number
   sourceless_chunks: number
   low_confidence_relations: number
+  unreviewed_relations: number
+  agent_approval_rate: number
+  agent_avg_duration_ms: number
+  agent_total_runs: number
 }
 
 export interface KnowledgeOverview {
@@ -862,4 +866,34 @@ export interface GraphEdge {
 export interface GraphView {
   nodes: GraphNode[]
   edges: GraphEdge[]
+}
+
+// M3 实体列表精简视图（匹配后端 KnowledgeEntityBrief）
+export interface KnowledgeEntityBrief {
+  id: number
+  entity_type: string
+  entity_key: string
+  name: string
+  description: string
+  confidence: number
+}
+
+// M3 实体提取结果
+export interface EntityExtractResult {
+  extracted: number
+  relations: number
+  skipped: number
+  message: string
+}
+
+// M3 关系列表分页包装
+export interface KnowledgeRelationPage {
+  items: KnowledgeRelation[]
+  total: number
+}
+
+// M3 实体列表分页包装
+export interface KnowledgeEntityPage {
+  items: KnowledgeEntityBrief[]
+  total: number
 }

@@ -30,6 +30,7 @@ _MENUS = [
     ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 16),
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 17),
     ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 18),
+    ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 19),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
