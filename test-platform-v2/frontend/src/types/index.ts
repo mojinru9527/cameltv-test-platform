@@ -783,3 +783,28 @@ export interface KnowledgeOverview {
   recent_sources: KnowledgeSource[]
   health: KnowledgeHealth
 }
+
+// ── M2 混合检索 ──
+
+export interface KnowledgeSearchQuery {
+  query: string
+  chunk_type?: string
+  top_k?: number
+  mode?: 'hybrid' | 'keyword' | 'vector'
+}
+
+export interface KnowledgeSearchResult {
+  chunk_id: number
+  chunk_type: string
+  title: string
+  snippet: string
+  score: number
+  source_id: number
+  source_name: string
+}
+
+export interface ReembedResult {
+  total: number
+  embedded: number
+  skipped: number
+}
