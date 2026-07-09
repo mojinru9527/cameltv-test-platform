@@ -216,11 +216,13 @@ export default function Workbench() {
                           setPreset('custom')
                           setRangeValue([e.target.value, rangeValue[1]])
                         }}
+                        aria-label="开始日期"
                         className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
                       />
                       <span className="text-sm text-muted-foreground">至</span>
                       <input
                         type="date"
+                        aria-label="结束日期"
                         value={rangeValue[1]}
                         onChange={(e) => {
                           setPreset('custom')

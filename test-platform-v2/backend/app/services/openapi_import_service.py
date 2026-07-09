@@ -2,9 +2,24 @@
 from __future__ import annotations
 
 import json
+from typing import Any
+
 from sqlalchemy.orm import Session
 
 from app.models.api_asset import ApiEndpoint, ApiImportBatch, ApiService
+
+
+# ── source_type → source label mapping ──
+_SOURCE_LABEL_MAP: dict[str, str] = {
+    "openapi_url": "openapi",
+    "openapi_text": "openapi",
+    "swagger_doc_url": "knife4j_import",
+}
+
+
+def _source_label(source_type: str) -> str:
+    """Map source_type to the label stored on ApiEndpoint.source."""
+    return _SOURCE_LABEL_MAP.get(source_type, "openapi")
 
 
 def preview_openapi_import(
@@ -111,6 +126,7 @@ def confirm_openapi_import(
     updated = 0
     skipped = 0
     errors = []
+    source_label = _source_label(source_type)
 
     for ep_data in endpoints:
         try:
@@ -130,7 +146,7 @@ def confirm_openapi_import(
                 existing.module = ep_data.get("module", existing.module)
                 existing.version = version
                 existing.import_batch_id = batch.id
-                existing.source = "openapi"
+                existing.source = source_label
                 existing.deprecated = ep_data.get("deprecated", False)
                 updated += 1
             else:
@@ -146,7 +162,7 @@ def confirm_openapi_import(
                     response_schema=json.dumps(ep_data.get("response_schema", {}), ensure_ascii=False),
                     auth_required=ep_data.get("auth_required", False),
                     deprecated=ep_data.get("deprecated", False),
-                    source="openapi",
+                    source=source_label,
                     import_batch_id=batch.id,
                     version=version,
                 )
@@ -201,8 +217,8 @@ def _extract_endpoints(spec: dict) -> list[dict]:
             tags = detail.get("tags", [])
             module = tags[0] if tags else _infer_module_from_path(path)
 
-            # 提取 request schema
-            request_schema = _extract_request_schema(detail)
+            # 提取 request schema（传入完整 spec 用于 $ref 解析）
+            request_schema = _extract_request_schema(detail, spec)
 
             # 提取 response schema
             response_schema = _extract_response_schema(detail)
@@ -243,11 +259,38 @@ def _infer_module_from_path(path: str) -> str:
     return segments[1] if len(segments) > 1 else segments[0]
 
 
-def _extract_request_schema(detail: dict) -> dict:
-    """提取请求参数/body schema。"""
+def _resolve_ref(spec: dict, ref: str) -> dict:
+    """Resolve a JSON $ref pointer against the spec.
+
+    Supports:
+      - Swagger 2.0:  #/definitions/Foo
+      - OpenAPI 3.x:  #/components/schemas/Foo
+    Returns the resolved schema dict, or empty dict on failure.
+    """
+    if not ref or not ref.startswith("#/"):
+        return {}
+    parts = ref[2:].split("/")
+    current: Any = spec
+    for part in parts:
+        if isinstance(current, dict):
+            current = current.get(part)
+        else:
+            return {}
+        if current is None:
+            return {}
+    return current if isinstance(current, dict) else {}
+
+
+def _extract_request_schema(detail: dict, spec: dict | None = None) -> dict:
+    """Extract request parameters/body schema from an operation.
+
+    Handles:
+      - OpenAPI 3.x requestBody
+      - Swagger 2.0 parameters (query/path/header/body with inline or $ref schema)
+    """
     schema: dict = {}
 
-    # parameters (query, path, header)
+    # parameters (query, path, header) — shared by OpenAPI 3.x and Swagger 2.0
     params = detail.get("parameters", [])
     if params:
         query_params = []
@@ -256,6 +299,23 @@ def _extract_request_schema(detail: dict) -> dict:
         for p in params:
             if not isinstance(p, dict):
                 continue
+
+            # Swagger 2.0 body parameter
+            if p.get("in") == "body":
+                body_schema = p.get("schema", {})
+                # Resolve $ref if present
+                if "$ref" in body_schema and spec:
+                    resolved = _resolve_ref(spec, body_schema["$ref"])
+                    if resolved:
+                        body_schema = resolved
+                schema["body"] = {
+                    "content_type": "application/json",
+                    "type": body_schema.get("type", "object"),
+                    "properties": body_schema.get("properties", {}),
+                    "required": body_schema.get("required", []),
+                }
+                continue
+
             param_info = {
                 "name": p.get("name", ""),
                 "type": _resolve_schema_type(p.get("schema", {})) if p.get("schema") else p.get("type", "string"),
