@@ -1,8 +1,9 @@
-import { BarChart3, Bug, Calendar, FileCheck, PieChart, RotateCcw, Percent } from '@/lib/icons'
+import { BarChart3, Bug, Calendar, FileCheck, PieChart, RotateCcw, Percent, Building2, TrendingUp, AlertTriangle } from '@/lib/icons'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMemo, useState } from 'react'
 import {
   BarChart,
@@ -17,14 +18,16 @@ import {
   Pie,
   Cell,
   LabelList,
+  LineChart,
+  Line,
 } from 'recharts'
 import { format, subDays } from 'date-fns'
-import { fetchDashboardStats } from '@/api/dashboard'
+import { fetchDashboardStats, fetchCrossProjectStats } from '@/api/dashboard'
 import { useAuthStore } from '@/stores/auth'
 import { useChartColors } from '@/hooks/use-chart-colors'
 import { useApi } from '@/hooks/useApi'
 import { AsyncState } from '@/components/state'
-import type { CaseTypePriority, DashboardStats } from '@/types'
+import type { CaseTypePriority, CrossProjectStats, DashboardStats } from '@/types'
 
 type PresetKey = '7d' | '30d' | 'custom'
 
@@ -60,6 +63,7 @@ export default function Workbench() {
   const sevenDaysAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd')
   const [preset, setPreset] = useState<PresetKey>('7d')
   const [rangeValue, setRangeValue] = useState<[string, string]>([sevenDaysAgo, today])
+  const [tab, setTab] = useState<'project' | 'cross'>('project')
   const chartColors = useChartColors()
 
   // ── Data fetching with useApi ──
@@ -149,16 +153,23 @@ export default function Workbench() {
         </Button>
       </PageHeader>
 
-      <AsyncState
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        data={stats}
-        onRetry={refetch}
-        skeletonType="card"
-        loadingText="加载仪表盘数据..."
-        emptyTitle="暂无仪表盘数据"
-      >
+      <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mb-4">
+        <TabsList>
+          <TabsTrigger value="project">项目概览</TabsTrigger>
+          <TabsTrigger value="cross">多项目概览</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="project">
+          <AsyncState
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            data={stats}
+            onRetry={refetch}
+            skeletonType="card"
+            loadingText="加载仪表盘数据..."
+            emptyTitle="暂无仪表盘数据"
+          >
         {(_s) => {
           const _caseTypes = _s.case_type_stats || []
           const _priorityData = _s.priority_distribution || []
@@ -407,6 +418,114 @@ export default function Workbench() {
           )
         }}
       </AsyncState>
+        </TabsContent>
+
+        <TabsContent value="cross">
+          <CrossProjectDashboard dateRange={dateRange} />
+        </TabsContent>
+      </Tabs>
     </div>
+  )
+}
+
+// ── Cross-Project Dashboard (V2.5) ──
+
+function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end: string } }) {
+  const chartColors = useChartColors()
+
+  const { data: crossStats, isLoading, isError, error, refetch } = useApi<CrossProjectStats>(
+    () => fetchCrossProjectStats({ start_date: dateRange.start, end_date: dateRange.end }),
+    [dateRange.start, dateRange.end]
+  )
+
+  return (
+    <AsyncState
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      data={crossStats}
+      onRetry={refetch}
+      skeletonType="card"
+      loadingText="加载跨项目数据..."
+      emptyTitle="暂无跨项目数据"
+    >
+      {(stats) => (
+        <div className="space-y-4">
+          {/* Aggregate Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            <StatCard icon={Building2} label="项目总数" value={stats.aggregate.total_projects} variant="glass" />
+            <StatCard icon={FileCheck} label="用例总数" value={stats.aggregate.total_cases} variant="glass" />
+            <StatCard icon={BarChart3} label="测试计划" value={stats.aggregate.total_plans} variant="glass" />
+            <StatCard icon={Percent} label="整体通过率" value={`${stats.aggregate.overall_pass_rate}%`} variant="glass" />
+            <StatCard icon={Bug} label="接口用例" value={stats.aggregate.total_api_cases} variant="glass" />
+            <StatCard icon={AlertTriangle} label="缺陷总数" value={stats.aggregate.total_defects} variant="glass" />
+          </div>
+
+          {/* Per-Project Cards */}
+          {stats.per_project.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {stats.per_project.map((proj) => (
+                <Card key={proj.project_id} size="sm">
+                  <CardHeader>
+                    <CardTitle className="text-sm">{proj.project_name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="text-muted-foreground">用例: <span className="font-semibold text-foreground">{proj.total_cases}</span></div>
+                      <div className="text-muted-foreground">计划: <span className="font-semibold text-foreground">{proj.total_plans}</span></div>
+                      <div className="text-muted-foreground">通过率: <span className="font-semibold text-green-600">{proj.pass_rate}%</span></div>
+                      <div className="text-muted-foreground">缺陷: <span className="font-semibold text-red-600">{proj.defect_count}</span></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Trends Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Card size="sm">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <TrendingUp className="size-4" />
+                  整体通过率趋势（近 7 天）
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={stats.trends.pass_rate}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                    <RechartsTooltip formatter={(value: any) => [`${value}%`, '通过率']} />
+                    <Line type="monotone" dataKey="pass_rate" stroke="#22c55e" strokeWidth={2} dot={{ r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card size="sm">
+              <CardHeader>
+                <CardTitle className="text-sm flex items-center gap-1.5">
+                  <Bug className="size-4" />
+                  缺陷趋势（近 7 天）
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={stats.trends.defects}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                    <RechartsTooltip formatter={(value: any) => [value, '新增缺陷']} />
+                    <Bar dataKey="count" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+    </AsyncState>
   )
 }

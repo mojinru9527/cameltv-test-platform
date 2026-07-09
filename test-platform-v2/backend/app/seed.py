@@ -15,17 +15,20 @@ _MENUS = [
     ("menu:workbench", "工作台", "", "/workbench", "DashboardOutlined", 1),
     ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
     ("menu:requirement", "需求文档", "", "/requirement", "FileTextOutlined", 3),
-    ("menu:mindmap", "用例脑图", "", "/mindmap", "ShareAltOutlined", 4),
-    ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 5),
-    ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 6),
-    ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 7),
-    ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 8),
-    ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 9),
-    ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 10),
-    ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 11),
-    ("menu:system", "系统管理", "", "/system", "SettingOutlined", 12),
-    ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 13),
-    ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 14),
+    ("menu:versionmission", "版本测试任务", "", "/version-mission", "GitBranchOutlined", 4),
+    ("menu:mindmap", "用例脑图", "", "/mindmap", "ShareAltOutlined", 5),
+    ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 6),
+    ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 7),
+    ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 8),
+    ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 9),
+    ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 10),
+    ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 11),
+    ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 12),
+    ("menu:system", "系统管理", "", "/system", "SettingOutlined", 13),
+    ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 14),
+    ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 15),
+    ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 16),
+    ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 17),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -88,6 +91,12 @@ _ACTIONS = [
     ("uitest:trigger", "触发UI自动化", "button"),
     # API 测试
     ("apitest:execute", "执行接口测试", "button"),
+    ("apitest:view", "查看接口测试", "button"),
+    ("apitest:import", "导入接口文档", "button"),
+    ("apitest:generate", "生成接口用例", "button"),
+    ("apitest:task", "管理执行任务", "button"),
+    ("apitest:asset_manage", "管理接口资产", "button"),
+    ("apitest:execute_prod", "执行生产环境接口测试", "button"),
     # 项目管理
     ("project:list", "查看项目列表", "button"),
     ("project:detail", "查看项目详情", "button"),
@@ -99,6 +108,14 @@ _ACTIONS = [
     ("requirement:upload", "上传需求文档", "button"),
     ("requirement:generate", "AI生成用例", "button"),
     ("requirement:import", "导入生成用例", "button"),
+    # 版本测试任务
+    ("mission:list", "查看版本测试任务", "button"),
+    ("mission:detail", "查看版本测试任务详情", "button"),
+    ("mission:create", "创建版本测试任务", "button"),
+    ("mission:update", "编辑版本测试任务", "button"),
+    ("mission:delete", "删除版本测试任务", "button"),
+    ("mission:log", "记录Agent部门日志", "button"),
+    ("mission:generate", "生成版本测试资产", "button"),
     # API Token 管理 (P1-6/S3)
     ("token:list", "查看 API Token", "button"),
     ("token:manage", "管理 API Token", "button"),
@@ -108,13 +125,27 @@ _ACTIONS = [
     # 用例评审 (C3)
     ("review:submit", "提交评审", "button"),
     ("review:approve", "审批评审", "button"),
+    # 测试数据集 (V2.5)
+    ("dataset:list", "查看数据集", "button"),
+    ("dataset:create", "新建数据集", "button"),
+    ("dataset:update", "编辑数据集", "button"),
+    ("dataset:delete", "删除数据集", "button"),
+    # 集成配置 (V2.6)
+    ("integration:list", "查看集成配置", "button"),
+    ("integration:manage", "管理集成配置", "button"),
+    ("integration:sync", "执行同步操作", "button"),
 ]
 
 # 测试人员可见的菜单子集
+_TESTER_ACTIONS = {
+    "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
+    "apitest:task", "apitest:asset_manage",
+}
+
 _TESTER_MENUS = {
-    "menu:workbench", "menu:trace", "menu:requirement", "menu:mindmap", "menu:testcase", "menu:testplan",
+    "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
-    "menu:defect",
+    "menu:defect", "menu:dataset", "menu:integration",
 }
 
 
@@ -167,6 +198,9 @@ def run_seed() -> None:
         # 4) 角色-权限
         _get_or_create(db, RolePermission, role_id=admin_role.id, permission_id=star.id)
         for code in _TESTER_MENUS:
+            if code in code_to_perm:
+                _get_or_create(db, RolePermission, role_id=tester_role.id, permission_id=code_to_perm[code].id)
+        for code in _TESTER_ACTIONS:
             if code in code_to_perm:
                 _get_or_create(db, RolePermission, role_id=tester_role.id, permission_id=code_to_perm[code].id)
 

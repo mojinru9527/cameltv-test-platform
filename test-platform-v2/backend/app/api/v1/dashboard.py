@@ -51,3 +51,35 @@ def get_dashboard_stats(
         end_date=parsed_end,
     )
     return R.ok(DashboardStats(**stats))
+
+
+@router.get("/cross-project", response_model=R[dict])
+def get_cross_project_stats(
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+):
+    """Get aggregated stats across all projects visible to the current user."""
+    from datetime import timedelta
+    from app.schemas.dashboard import CrossProjectStats
+
+    parsed_start: date | None = None
+    parsed_end: date | None = None
+    if start_date:
+        parsed_start = date.fromisoformat(start_date)
+    if end_date:
+        parsed_end = date.fromisoformat(end_date)
+    if not parsed_start and not parsed_end:
+        today = date.today()
+        parsed_start = today - timedelta(days=7)
+        parsed_end = today
+
+    stats = dashboard_service.get_cross_project_stats(
+        db,
+        user_id=current.user.id,
+        is_superadmin=current.is_super,
+        start_date=parsed_start,
+        end_date=parsed_end,
+    )
+    return R.ok(CrossProjectStats(**stats).model_dump())

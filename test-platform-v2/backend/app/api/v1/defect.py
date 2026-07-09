@@ -350,3 +350,33 @@ def delete_attachment(
     db.commit()
     _audit(req, current, db, "defect:attachment:delete", f"#{defect_id}", f"attachment #{attachment_id}")
     return R.ok({"deleted": True})
+
+
+# ── V2.6: External sync endpoints ──
+
+@router.post("/{defect_id}/sync-push", response_model=R[dict])
+def sync_push_defect(
+    defect_id: int,
+    integration_id: int = Query(..., description="Integration config ID to push to"),
+    current: CurrentUser = Depends(require_permission("integration:sync")),
+    db: Session = Depends(get_db),
+):
+    """Push a single defect to the external system."""
+    from app.services.sync import engine as sync_engine
+
+    log_entry = sync_engine.push_defect(db, integration_id, defect_id, current.project_id or 0)
+    return R.ok(log_entry)
+
+
+@router.post("/{defect_id}/sync-pull", response_model=R[dict])
+def sync_pull_defect(
+    defect_id: int,
+    integration_id: int = Query(..., description="Integration config ID to pull from"),
+    current: CurrentUser = Depends(require_permission("integration:sync")),
+    db: Session = Depends(get_db),
+):
+    """Pull latest status for a single defect from the external system."""
+    from app.services.sync import engine as sync_engine
+
+    log_entry = sync_engine.pull_defect_status(db, integration_id, defect_id, current.project_id or 0)
+    return R.ok(log_entry)
