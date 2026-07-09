@@ -46,9 +46,12 @@ class TestPlanCRUD:
         plan_id = r.json()["data"]["id"]
         resp = client.delete(f"/api/v1/test-plans/{plan_id}", headers=auth_headers)
         assert resp.status_code == 200
-        # Verify deleted
+        # 硬删（service 用 db.delete），但「资源不存在」遵循 envelope 约定：
+        # HTTP 200 + body.code=404（与 test_testcase.py::test_delete_case 一致），
+        # 而非 HTTP 404。
         resp2 = client.get(f"/api/v1/test-plans/{plan_id}", headers=auth_headers)
-        assert resp2.status_code == 404
+        assert resp2.status_code == 200
+        assert resp2.json()["code"] == 404
 
 
 class TestPlanAuthorization:
@@ -70,7 +73,8 @@ class TestPlanExecution:
         """空计划（无关联用例）执行应正常返回。"""
         r = client.post("/api/v1/test-plans", json={"name": "空计划"}, headers=auth_headers)
         plan_id = r.json()["data"]["id"]
-        # Trigger execution (may succeed or return a reasonable error for empty plan)
-        resp = client.post(f"/api/v1/test-plans/{plan_id}/execute", headers=auth_headers)
-        # Accept 200 (success) or 400 (validation error)
+        # 计划级自动执行的真实端点是 /auto-execute（前端 testplan.ts 用的是
+        # per-case /cases/{id}/execute；不存在 plan 级 /execute）。
+        resp = client.post(f"/api/v1/test-plans/{plan_id}/auto-execute", headers=auth_headers)
+        # 空计划返回 code=0 + total=0（HTTP 200）；接受 200/400。
         assert resp.status_code in (200, 400)

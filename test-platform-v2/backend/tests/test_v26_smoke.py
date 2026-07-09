@@ -14,9 +14,11 @@ from app.schemas.integration import (
 print("[PASS] Integration schemas")
 
 # ── Service imports ──
+# NOTE: test_connection 别名为 _test_connection —— 它是 integration_service 的业务函数，
+# 若以 test_ 前缀名导入本 test_*.py 模块，pytest 会误当作测试函数收集并无参调用 → ERROR。
 from app.services.integration_service import (
     list_integrations, get_integration, create_integration, update_integration,
-    delete_integration, test_connection, list_sync_logs,
+    delete_integration, test_connection as _test_connection, list_sync_logs,
 )
 print("[PASS] Integration service")
 
@@ -67,7 +69,7 @@ assert decrypt_value(encrypted) == original
 print("[PASS] Cipher encrypt/decrypt for auth_json")
 
 # ── Config test_connection with invalid auth JSON ──
-result = test_connection("jira", "https://test.atlassian.net", 'not-valid-json')
+result = _test_connection("jira", "https://test.atlassian.net", 'not-valid-json')
 assert result["success"] is False  # expect failure on bad JSON
 assert len(result["message"]) > 0
 print("[PASS] Test connection rejects invalid auth JSON")

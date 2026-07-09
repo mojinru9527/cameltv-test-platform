@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Pagination } from '@/components/Pagination'
-import { PageHeader } from '@/components/PageHeader'
+import Pagination from '@/components/Pagination'
+import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state/AsyncState'
 import { useApi } from '@/hooks/useApi'
 
@@ -173,7 +173,7 @@ export default function DatasetPage() {
         isLoading={isLoading}
         isError={isError}
         error={error}
-        isEmpty={items.length === 0}
+        data={items}
         emptyTitle="暂无数据集"
         emptyDescription="点击「新建数据集」上传 CSV 或 JSON 文件"
         onRetry={refetch}
@@ -232,7 +232,7 @@ export default function DatasetPage() {
         </Card>
         {total > 20 && (
           <div className="flex justify-center pt-2">
-            <Pagination current={page} total={total} pageSize={20} onChange={setPage} />
+            <Pagination page={page} totalPages={Math.ceil(total / 20)} total={total} onChange={setPage} />
           </div>
         )}
       </AsyncState>
@@ -362,7 +362,7 @@ export default function DatasetPage() {
       {/* ── Detail Dialog ── */}
       <Dialog open={!!detailId} onOpenChange={() => setDetailId(null)}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <AsyncState isLoading={detailLoading} isEmpty={!detailData}>
+          <AsyncState isLoading={detailLoading} isError={false} error={null} data={detailData}>
             {detailData && (
               <>
                 <DialogHeader>
