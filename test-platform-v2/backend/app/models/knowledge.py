@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Text
+from sqlalchemy import LargeBinary, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -51,6 +51,22 @@ class KnowledgeChunk(Base):
     embedding_id: Mapped[str] = mapped_column(default="")  # 外部/本地向量 ID，M2 填充
     tags: Mapped[str] = mapped_column(Text, default="[]")  # JSON 数组
     status: Mapped[str] = mapped_column(default="active", index=True)  # active/deprecated
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class KnowledgeVector(Base):
+    """知识切片向量（M2）—— 与 chunk 1:1，dev 存 float32 BLOB，升 PG 切 pgvector。
+
+    检索时 JOIN knowledge_chunk 取 status="active"（本表不冗余 chunk 状态）。
+    """
+    __tablename__ = "knowledge_vector"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    chunk_id: Mapped[int] = mapped_column(index=True, unique=True)  # -> knowledge_chunk.id
+    project_id: Mapped[int] = mapped_column(index=True)
+    model: Mapped[str] = mapped_column(default="")   # 生成向量的嵌入模型（回填/切模型可辨识）
+    dim: Mapped[int] = mapped_column(default=0)
+    vec: Mapped[bytes] = mapped_column(LargeBinary)  # float32 小端字节，已 L2 归一化
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 
 

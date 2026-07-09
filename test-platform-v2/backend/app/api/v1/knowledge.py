@@ -9,8 +9,10 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.core.exceptions import APIException
 from app.models.knowledge import AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeSource
 from app.schemas.common import Page, R
 from app.schemas.knowledge import (
@@ -22,9 +24,14 @@ from app.schemas.knowledge import (
     KnowledgeOverviewOut,
     KnowledgeSourceBrief,
     KnowledgeSourceOut,
+    ReembedResult,
+    SearchQuery,
+    SearchResultOut,
 )
 from app.services import audit_service
-from app.services.knowledge import artifact_service, chunk_service, source_service
+from app.services.knowledge import artifact_service, chunk_service, search_service, source_service
+from app.services.knowledge.embedding_service import embedding_service
+from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
 
 router = APIRouter(prefix="/knowledge", tags=["知识中心"])
 
@@ -90,6 +97,59 @@ def overview(
         ),
     )
     return R.ok(out)
+
+
+# ═══════════════════════════════════════════════════════
+# 混合检索（M2 RAG）
+# ═══════════════════════════════════════════════════════
+
+@router.post("/search", response_model=R[list[SearchResultOut]], summary="知识混合检索（RAG）")
+def search_knowledge(
+    body: SearchQuery,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """关键词+向量 RRF 融合检索。仅 rag_enabled 时可用；模型不可用时自动降级为纯关键词。"""
+    if not settings.rag_enabled:
+        raise APIException(code=503, msg="RAG 检索未启用（rag_enabled=False）", http_status=503)
+    hits = search_service.hybrid_search(
+        db,
+        project_id=current.project_id or 0,
+        query=body.query,
+        top_k=body.top_k,
+        chunk_type=body.chunk_type,
+        mode=body.mode,
+    )
+    return R.ok([SearchResultOut(**hit.__dict__) for hit in hits])
+
+
+@router.post("/reembed", response_model=R[ReembedResult], summary="存量切片向量回填（RAG）")
+def reembed(
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """分批回填本项目 active 且未嵌入的切片（幂等）。需 rag_enabled 且嵌入模型就绪。"""
+    if not settings.rag_enabled:
+        raise APIException(code=503, msg="RAG 检索未启用（rag_enabled=False）", http_status=503)
+    if not embedding_service.available():
+        raise APIException(code=503, msg="嵌入模型不可用（fastembed 未安装或模型未就绪）", http_status=503)
+    pid = current.project_id or 0
+    pending = db.scalar(
+        select(func.count(KnowledgeChunk.id)).where(
+            KnowledgeChunk.project_id == pid,
+            KnowledgeChunk.status == "active",
+            KnowledgeChunk.embedding_id == "",
+        )
+    ) or 0
+    result = embed_pending_chunks_in_new_session(pid)  # 独立 Session、分批、幂等
+    _audit(req, current, db, "knowledge:reembed", f"project#{pid}", str(result))
+    db.commit()
+    return R.ok(ReembedResult(
+        total=pending,
+        embedded=result.get("embedded", 0),
+        skipped=result.get("skipped", 0),
+    ))
 
 
 # ═══════════════════════════════════════════════════════

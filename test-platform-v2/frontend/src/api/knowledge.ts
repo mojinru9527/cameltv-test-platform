@@ -4,7 +4,10 @@ import type {
   KnowledgeChunk,
   KnowledgeOverview,
   KnowledgePage,
+  KnowledgeSearchQuery,
+  KnowledgeSearchResult,
   KnowledgeSource,
+  ReembedResult,
 } from '@/types'
 
 // 说明：axios 拦截器已拆包 {code,msg,data}，并自动附带 X-Project-Id 头，
@@ -39,4 +42,16 @@ export async function fetchAiArtifacts(params: {
   page_size?: number
 }): Promise<KnowledgePage<AiArtifact>> {
   return api.get('/knowledge/ai-artifacts', { params })
+}
+
+// ── M2 混合检索 ──
+
+export async function searchKnowledge(
+  body: KnowledgeSearchQuery,
+): Promise<KnowledgeSearchResult[]> {
+  return api.post('/knowledge/search', body)
+}
+
+export async function reembedKnowledge(): Promise<ReembedResult> {
+  return api.post('/knowledge/reembed')
 }

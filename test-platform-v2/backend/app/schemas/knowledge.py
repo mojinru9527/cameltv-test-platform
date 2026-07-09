@@ -127,3 +127,28 @@ class KnowledgeOverviewOut(BaseModel):
     pending_artifact_count: int = 0
     recent_sources: list[KnowledgeSourceBrief] = Field(default_factory=list)
     health: KnowledgeHealth = Field(default_factory=KnowledgeHealth)
+
+
+# ── M2 混合检索 ──
+
+class SearchQuery(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500)
+    chunk_type: str | None = None
+    top_k: int = Field(8, ge=1, le=50)
+    mode: str = "hybrid"  # hybrid | keyword | vector
+
+
+class SearchResultOut(BaseModel):
+    chunk_id: int
+    chunk_type: str
+    title: str
+    snippet: str
+    score: float
+    source_id: int
+    source_name: str
+
+
+class ReembedResult(BaseModel):
+    total: int = 0        # 本次扫描到的待嵌入 active 切片数
+    embedded: int = 0     # 成功写入向量数
+    skipped: int = 0      # 跳过数（无内容/嵌入失败）

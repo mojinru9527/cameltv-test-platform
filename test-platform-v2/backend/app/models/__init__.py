@@ -13,6 +13,7 @@ from app.models.knowledge import (
     KnowledgeEntity,
     KnowledgeRelation,
     KnowledgeSource,
+    KnowledgeVector,
 )
 from app.models.project import Project, ProjectMember
 from app.models.notification import NotificationChannel, NotificationLog
@@ -76,6 +77,7 @@ __all__ = [
     "KnowledgeChunk",
     "KnowledgeEntity",
     "KnowledgeRelation",
+    "KnowledgeVector",
     "AiArtifact",
     "AgentRun",
 ]
