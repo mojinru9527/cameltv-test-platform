@@ -1087,4 +1087,3 @@ export interface WikiDiffCreateArtifactResult {
   artifact_id: number
   artifact_type: string
 }
-
