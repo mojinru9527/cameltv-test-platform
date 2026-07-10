@@ -15,14 +15,12 @@ import { fetchWikiConfig } from '@/api/wiki'
 import { useAuthStore } from '@/stores/auth'
 import { GitCompare, Loader2, ArrowLeftRight } from '@/lib/icons'
 import WikiDiffDetailDrawer from './WikiDiffDetailDrawer'
+import { severityBadge } from './wikiSeverity'
 
 const KB_OPTIONS = [
   { v: 'platform_rag', l: '平台 RAG 知识库' },
   { v: 'platform_wiki', l: 'LLM Wiki 知识库' },
 ]
-const SEVERITY_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  P0: 'destructive', P1: 'destructive', P2: 'secondary', P3: 'outline',
-}
 
 function ContractView({ title, json }: { title: string; json: any }) {
   return (
@@ -107,7 +105,7 @@ export default function WikiDiffTab() {
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <GitCompare className="size-4" /> 知识差异对比
           {config && !config.wiki_diff_enabled && (
-            <Badge variant="outline" className="text-amber-600 border-amber-300">未启用</Badge>
+            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">未启用</Badge>
           )}
         </div>
       </div>
@@ -175,7 +173,9 @@ export default function WikiDiffTab() {
                 <button key={it.id} onClick={() => setActive(it)}
                   className="w-full text-left rounded-md border p-2 hover:bg-muted space-y-1">
                   <div className="flex items-center gap-1.5">
-                    <Badge variant={SEVERITY_VARIANT[it.severity] ?? 'outline'} className="text-[10px]">{it.severity}</Badge>
+                    {(() => { const s = severityBadge(it.severity); return (
+                      <Badge variant={s.variant} className={`text-[10px] ${s.className ?? ''}`}>{it.severity}</Badge>
+                    ) })()}
                     <Badge variant="secondary" className="text-[10px]">{it.dimension}</Badge>
                     <Badge variant="outline" className="text-[10px]">{it.diff_type}</Badge>
                     {it.review_status !== 'pending' && (

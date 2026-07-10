@@ -8,10 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { acceptWikiDiffItem, rejectWikiDiffItem, createWikiDiffArtifact } from '@/api/wiki'
 import type { WikiDiffItem } from '@/types'
 import { useAuthStore } from '@/stores/auth'
-
-const SEVERITY_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  P0: 'destructive', P1: 'destructive', P2: 'secondary', P3: 'outline',
-}
+import { severityBadge } from './wikiSeverity'
 
 interface Props {
   item: WikiDiffItem | null
@@ -45,7 +42,9 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
           <>
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2 flex-wrap text-left">
-                <Badge variant={SEVERITY_VARIANT[item.severity] ?? 'outline'}>{item.severity}</Badge>
+                {(() => { const s = severityBadge(item.severity); return (
+                  <Badge variant={s.variant} className={s.className}>{item.severity}</Badge>
+                ) })()}
                 <Badge variant="secondary">{item.dimension}</Badge>
                 <Badge variant="outline">{item.diff_type}</Badge>
               </SheetTitle>
@@ -64,7 +63,7 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
                 </div>
               </div>
               {item.suggestion && (
-                <div className="rounded-md border border-blue-200 bg-blue-50 p-2 text-blue-700">
+                <div className="rounded-md border border-blue-200 bg-blue-50 p-2 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
                   <div className="text-xs font-medium mb-0.5">建议</div>
                   {item.suggestion}
                 </div>
