@@ -225,3 +225,16 @@
 **结论：有条件通过（Conditional Pass）**——整体沿用 shadcn/Tailwind 体系、与知识中心其余 Tab 视觉一致性良好，Dialog/Sheet 走 Radix 具备键盘可达与焦点管理基线。但存在 **2 项 P1**（严重级配色不可辨、深色模式对比度失效）需在下一切片修复方可达成"设计一致性 ≥95% + WCAG AA"目标；P2/P3 项排入迭代优化。
 
 > 走查人：设计部门 🎨 ｜ 复核对象：DEV 部门 VNext-1..3 前端实现 ｜ 日期：2026-07-10
+
+---
+
+## 8. P1 收口记录（batch-20，提交 `2c7c1bb`，2026-07-10）
+
+两项 P1 已修复并通过 typecheck + build，设计签核升级为 **通过（Pass）**：
+
+- ✅ **P1-1 严重级四级可辨色梯度** — 新增 [`wikiSeverity.ts`](../test-platform-v2/frontend/src/pages/knowledge/components/wikiSeverity.ts) `severityBadge()` 共享助手：P0 `destructive` 实心红 / **P1 `outline` + 橙色描边（`border-orange-400 text-orange-600` + 暗色变体）** / P2 `secondary` 灰 / P3 `outline` 描边。`WikiDiffTab` 与 `WikiDiffDetailDrawer` 复用同一映射，消除原 P0/P1 同红不可辨。
+- ✅ **P1-2 深色模式对比度** — 建议框 blue（Drawer:67）、导入结果 emerald/amber（ImportDialog:122-124）、"未启用" amber 徽标（WikiTab:104 / WikiDiffTab:110）全部补 `dark:` 变体（`dark:bg-*-950/40 dark:text-*-300/400 dark:border-*-700/800`），深色模式不再浅底刺眼，满足 WCAG AA。
+
+P2/P3 项（状态中文映射、failed/running 分态、evidence 结构化、触控目标、aria-label）排入后续迭代，非合并阻断。
+
+> 收口人：设计部门 🎨 ｜ 结论：**Pass** ｜ 日期：2026-07-10
