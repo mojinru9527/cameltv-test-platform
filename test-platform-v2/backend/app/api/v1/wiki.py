@@ -7,6 +7,8 @@ VNext-1..3：蓝湖导入 → Raw Source → Wiki 编译 → RAG vs Wiki 差异�
 """
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
 from sqlalchemy.orm import Session
 
@@ -14,12 +16,19 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
-from app.models.wiki import WikiIngestJob
+from app.models.wiki import WikiDiffItem, WikiDiffTask, WikiIngestJob
 from app.schemas.common import Page, R
 from app.schemas.wiki import (
     LanhuImportRequest,
     LanhuImportResult,
     WikiConfigOut,
+    WikiDiffCreateArtifactRequest,
+    WikiDiffCreateArtifactResult,
+    WikiDiffCreateRequest,
+    WikiDiffItemOut,
+    WikiDiffItemReviewRequest,
+    WikiDiffTaskBrief,
+    WikiDiffTaskOut,
     WikiIngestJobCreate,
     WikiIngestJobOut,
     WikiLinkOut,
@@ -30,7 +39,9 @@ from app.schemas.wiki import (
     WikiReviewRequest,
 )
 from app.services import audit_service
-from app.services.wiki import import_service, ingest_service, page_service, raw_source_service
+from app.services.wiki import (
+    compare_service, import_service, ingest_service, page_service, raw_source_service,
+)
 
 router = APIRouter(prefix="/wiki", tags=["Wiki 知识库"])
 
@@ -49,6 +60,11 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
 def _require_wiki_enabled() -> None:
     if not settings.wiki_enabled:
         raise APIException(code=503, msg="Wiki 知识库未启用（wiki_enabled=False）", http_status=503)
+
+
+def _require_wiki_diff_enabled() -> None:
+    if not settings.wiki_diff_enabled:
+        raise APIException(code=503, msg="知识差异对比未启用（wiki_diff_enabled=False）", http_status=503)
 
 
 # ═══════════════════════════════════════════════════════
@@ -286,3 +302,141 @@ def reject_page(
     _audit(req, current, db, action="wiki.page.reject", target=f"page#{page_id}", detail=body.comment)
     db.commit()
     return R.ok(WikiPageOut.model_validate(row))
+
+
+# ═══════════════════════════════════════════════════════
+# 知识库差异对比（VNext-3）
+# ═══════════════════════════════════════════════════════
+
+@router.post("/diff/tasks", response_model=R[WikiDiffTaskOut], summary="发起知识库差异对比")
+def create_diff_task(
+    body: WikiDiffCreateRequest,
+    background_tasks: BackgroundTasks,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("wiki:diff")),
+    db: Session = Depends(get_db),
+):
+    _require_wiki_diff_enabled()
+    pid = current.project_id or 0
+    task = WikiDiffTask(
+        project_id=pid, title=body.title or f"{body.query} 差异对比",
+        compare_type=body.compare_type, status="pending",
+        left_ref_json=json.dumps({"kb_type": body.left_kb_type, "query": body.query}, ensure_ascii=False),
+        right_ref_json=json.dumps({"kb_type": body.right_kb_type, "query": body.query}, ensure_ascii=False),
+        created_by=current.user.id if current.user else 0,
+    )
+    db.add(task)
+    db.flush()
+    _audit(req, current, db, action="wiki.diff.create", target=body.query, detail=f"task#{task.id}")
+    db.commit()
+    background_tasks.add_task(compare_service.run_diff_in_new_session, pid, task.id)
+    return R.ok(WikiDiffTaskOut.model_validate(task))
+
+
+@router.get("/diff/tasks", response_model=R[Page[WikiDiffTaskBrief]], summary="差异任务列表")
+def list_diff_tasks(
+    status: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    pid = current.project_id or 0
+    q = db.query(WikiDiffTask).filter(WikiDiffTask.project_id == pid)
+    if status:
+        q = q.filter(WikiDiffTask.status == status)
+    total = q.count()
+    rows = q.order_by(WikiDiffTask.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    return R.ok(Page(total=total, page=page, page_size=page_size,
+                     items=[WikiDiffTaskBrief.model_validate(r) for r in rows]))
+
+
+@router.get("/diff/tasks/{task_id}", response_model=R[WikiDiffTaskOut], summary="差异任务详情（含差异项）")
+def get_diff_task(
+    task_id: int,
+    dimension: str | None = Query(None),
+    diff_type: str | None = Query(None),
+    severity: str | None = Query(None),
+    review_status: str | None = Query(None),
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    pid = current.project_id or 0
+    task = db.get(WikiDiffTask, task_id)
+    if not task or task.project_id != pid:
+        return R(code=404, msg="任务不存在")
+    q = db.query(WikiDiffItem).filter(WikiDiffItem.task_id == task_id)
+    if dimension:
+        q = q.filter(WikiDiffItem.dimension == dimension)
+    if diff_type:
+        q = q.filter(WikiDiffItem.diff_type == diff_type)
+    if severity:
+        q = q.filter(WikiDiffItem.severity == severity)
+    if review_status:
+        q = q.filter(WikiDiffItem.review_status == review_status)
+    items = q.order_by(WikiDiffItem.severity, WikiDiffItem.id).all()
+    out = WikiDiffTaskOut.model_validate(task)
+    out.items = [WikiDiffItemOut.model_validate(x) for x in items]
+    return R.ok(out)
+
+
+def _get_diff_item(db: Session, item_id: int, pid: int) -> WikiDiffItem | None:
+    item = db.get(WikiDiffItem, item_id)
+    if not item or item.project_id != pid:
+        return None
+    return item
+
+
+@router.post("/diff/items/{item_id}/accept", response_model=R[WikiDiffItemOut], summary="采纳差异项")
+def accept_diff_item(
+    item_id: int,
+    body: WikiDiffItemReviewRequest,
+    current: CurrentUser = Depends(require_permission("wiki:diff")),
+    db: Session = Depends(get_db),
+):
+    item = _get_diff_item(db, item_id, current.project_id or 0)
+    if not item:
+        return R(code=404, msg="差异项不存在")
+    item.review_status = "accepted"
+    db.commit()
+    return R.ok(WikiDiffItemOut.model_validate(item))
+
+
+@router.post("/diff/items/{item_id}/reject", response_model=R[WikiDiffItemOut], summary="忽略差异项")
+def reject_diff_item(
+    item_id: int,
+    body: WikiDiffItemReviewRequest,
+    current: CurrentUser = Depends(require_permission("wiki:diff")),
+    db: Session = Depends(get_db),
+):
+    item = _get_diff_item(db, item_id, current.project_id or 0)
+    if not item:
+        return R(code=404, msg="差异项不存在")
+    item.review_status = "rejected"
+    db.commit()
+    return R.ok(WikiDiffItemOut.model_validate(item))
+
+
+@router.post("/diff/items/{item_id}/create-artifact",
+             response_model=R[WikiDiffCreateArtifactResult], summary="差异项转待审 AI 产物")
+def create_artifact(
+    item_id: int,
+    body: WikiDiffCreateArtifactRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("wiki:diff")),
+    db: Session = Depends(get_db),
+):
+    _require_wiki_diff_enabled()
+    pid = current.project_id or 0
+    item = _get_diff_item(db, item_id, pid)
+    if not item:
+        return R(code=404, msg="差异项不存在")
+    if item.resolved_artifact_id:
+        return R(code=400, msg="该差异项已生成产物")
+    art = compare_service.create_artifact_from_item(
+        db, pid, item, artifact_type=body.artifact_type,
+        operator_id=current.user.id if current.user else 0)
+    _audit(req, current, db, action="wiki.diff.create_artifact", target=f"item#{item_id}",
+           detail=f"artifact#{art.id} type={art.artifact_type}")
+    db.commit()
+    return R.ok(WikiDiffCreateArtifactResult(artifact_id=art.id, artifact_type=art.artifact_type))

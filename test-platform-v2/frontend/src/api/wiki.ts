@@ -8,6 +8,11 @@ import type {
   WikiPageBrief,
   WikiPage,
   WikiLink,
+  WikiDiffTaskBrief,
+  WikiDiffTask,
+  WikiDiffItem,
+  WikiDiffCreateRequest,
+  WikiDiffCreateArtifactResult,
   KnowledgePage,
 } from '@/types'
 
@@ -87,6 +92,36 @@ export async function rejectWikiPage(pageId: number, comment = ''): Promise<Wiki
   return api.post(`/wiki/pages/${pageId}/reject`, { comment })
 }
 
+// ── 知识库差异对比 (VNext-3) ──
+
+export async function createWikiDiffTask(body: WikiDiffCreateRequest): Promise<WikiDiffTask> {
+  return api.post('/wiki/diff/tasks', body)
+}
+
+export async function fetchWikiDiffTasks(params?: {
+  status?: string; page?: number; page_size?: number
+}): Promise<KnowledgePage<WikiDiffTaskBrief>> {
+  return api.get('/wiki/diff/tasks', { params })
+}
+
+export async function fetchWikiDiffTask(taskId: number, filters?: {
+  dimension?: string; diff_type?: string; severity?: string; review_status?: string
+}): Promise<WikiDiffTask> {
+  return api.get(`/wiki/diff/tasks/${taskId}`, { params: filters })
+}
+
+export async function acceptWikiDiffItem(itemId: number): Promise<WikiDiffItem> {
+  return api.post(`/wiki/diff/items/${itemId}/accept`, {})
+}
+
+export async function rejectWikiDiffItem(itemId: number): Promise<WikiDiffItem> {
+  return api.post(`/wiki/diff/items/${itemId}/reject`, {})
+}
+
+export async function createWikiDiffArtifact(itemId: number, artifact_type = ''): Promise<WikiDiffCreateArtifactResult> {
+  return api.post(`/wiki/diff/items/${itemId}/create-artifact`, { artifact_type })
+}
+
 export type {
   WikiConfig,
   WikiRawSource,
@@ -96,4 +131,8 @@ export type {
   WikiPageBrief,
   WikiPage,
   WikiLink,
+  WikiDiffTaskBrief,
+  WikiDiffTask,
+  WikiDiffItem,
+  WikiDiffCreateRequest,
 } from '@/types'

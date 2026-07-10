@@ -34,6 +34,12 @@ AGENT_META: dict[str, dict] = {
         "icon": "BookOpen",
         "artifact_type": "wiki_page",
     },
+    "knowledge_diff": {
+        "label": "知识差异对比",
+        "description": "抽取需求契约并比对两个知识库，输出缺失/冲突/覆盖缺口",
+        "icon": "GitCompare",
+        "artifact_type": "knowledge_diff",
+    },
 }
 
 
@@ -166,4 +172,8 @@ _TYPE_PROMPTS = {
   "review_items": [{"title": "端范围不明确", "reason": "未标注 PC 是否覆盖", "confidence": 0.4}],
   "confidence": 0.8
 }""",
+
+    "knowledge_diff": """## 知识差异对比任务
+你负责把知识片段归一化为「需求契约」，供确定性差异引擎逐维度比对两个知识库。
+严格要求：只依据提供的知识片段，不得编造；无法确定的字段留空数组，不要臆测。""",
 }

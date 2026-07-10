@@ -129,3 +129,67 @@ class WikiLinkOut(BaseModel):
 
 class WikiReviewRequest(BaseModel):
     comment: str = ""
+
+
+# ══════════════════════════════════════════════
+# 知识库差异对比（VNext-3）
+# ══════════════════════════════════════════════
+
+class WikiDiffCreateRequest(BaseModel):
+    title: str = Field("", max_length=200)
+    compare_type: str = "rag_vs_wiki"      # rag_vs_wiki/wiki_vs_wiki/lanhu_version/external_llm_wiki
+    query: str = Field(..., min_length=1)  # 需求名/关键词，用于在两侧知识库定位同一需求
+    left_kb_type: str = "platform_rag"     # platform_rag/platform_wiki
+    right_kb_type: str = "platform_wiki"
+
+
+class WikiDiffItemOut(BaseModel):
+    id: int
+    task_id: int
+    project_id: int
+    dimension: str
+    diff_type: str
+    severity: str
+    title: str
+    left_value: str = ""
+    right_value: str = ""
+    evidence_json: str = "[]"
+    suggestion: str = ""
+    review_status: str = "pending"
+    resolved_artifact_id: int | None = None
+    created_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class WikiDiffTaskBrief(BaseModel):
+    id: int
+    project_id: int
+    title: str
+    compare_type: str
+    status: str
+    summary_json: str = "{}"
+    created_at: datetime | None = None
+    finished_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class WikiDiffTaskOut(WikiDiffTaskBrief):
+    left_ref_json: str = "{}"
+    right_ref_json: str = "{}"
+    error_message: str = ""
+    items: list[WikiDiffItemOut] = Field(default_factory=list)
+
+
+class WikiDiffItemReviewRequest(BaseModel):
+    comment: str = ""
+
+
+class WikiDiffCreateArtifactRequest(BaseModel):
+    artifact_type: str = ""   # 留空则按维度自动映射
+
+
+class WikiDiffCreateArtifactResult(BaseModel):
+    artifact_id: int
+    artifact_type: str
