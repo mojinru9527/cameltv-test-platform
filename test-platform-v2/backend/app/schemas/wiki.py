@@ -67,3 +67,65 @@ class LanhuImportResult(BaseModel):
     wiki_job_id: int | None = None
     extraction_status: str  # success/partial/image_only/auth_failed/permission_denied/invalid_url/failed
     extraction_summary: str = ""
+
+
+# ══════════════════════════════════════════════
+# Wiki 编译任务 / 页面 / 链接（VNext-2）
+# ══════════════════════════════════════════════
+
+class WikiIngestJobOut(BaseModel):
+    id: int
+    project_id: int
+    raw_source_id: int
+    status: str
+    stage: str
+    result_json: str = "{}"
+    error_message: str = ""
+    retry_count: int = 0
+    created_at: datetime | None = None
+    finished_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class WikiIngestJobCreate(BaseModel):
+    raw_source_id: int
+
+
+class WikiPageBrief(BaseModel):
+    id: int
+    project_id: int
+    page_type: str
+    slug: str
+    title: str
+    version: int = 1
+    review_status: str = "pending"
+    confidence: float = 0.0
+    updated_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class WikiPageOut(WikiPageBrief):
+    content_md: str = ""
+    frontmatter_json: str = "{}"
+    source_refs_json: str = "[]"
+    content_hash: str = ""
+    created_by_agent_run_id: int | None = None
+    created_at: datetime | None = None
+
+
+class WikiLinkOut(BaseModel):
+    id: int
+    project_id: int
+    from_page_id: int
+    to_page_id: int
+    link_type: str
+    evidence_json: str = "{}"
+    confidence: float = 0.0
+
+    model_config = {"from_attributes": True}
+
+
+class WikiReviewRequest(BaseModel):
+    comment: str = ""

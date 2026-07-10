@@ -996,3 +996,47 @@ export interface LanhuImportResult {
   extraction_summary: string
 }
 
+export interface WikiIngestJob {
+  id: number
+  project_id: number
+  raw_source_id: number
+  status: string
+  stage: string
+  result_json?: string
+  error_message?: string
+  retry_count?: number
+  created_at: string | null
+  finished_at: string | null
+}
+
+export interface WikiPageBrief {
+  id: number
+  project_id: number
+  page_type: string
+  slug: string
+  title: string
+  version: number
+  review_status: string
+  confidence: number
+  updated_at: string | null
+}
+
+export interface WikiPage extends WikiPageBrief {
+  content_md: string
+  frontmatter_json: string
+  source_refs_json: string
+  content_hash: string
+  created_by_agent_run_id: number | null
+  created_at: string | null
+}
+
+export interface WikiLink {
+  id: number
+  project_id: number
+  from_page_id: number
+  to_page_id: number
+  link_type: string
+  evidence_json: string
+  confidence: number
+}
+
