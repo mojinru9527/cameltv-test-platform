@@ -1040,3 +1040,51 @@ export interface WikiLink {
   confidence: number
 }
 
+export interface WikiDiffItem {
+  id: number
+  task_id: number
+  project_id: number
+  dimension: string
+  diff_type: string
+  severity: string
+  title: string
+  left_value: string
+  right_value: string
+  evidence_json: string
+  suggestion: string
+  review_status: string
+  resolved_artifact_id: number | null
+  created_at: string | null
+}
+
+export interface WikiDiffTaskBrief {
+  id: number
+  project_id: number
+  title: string
+  compare_type: string
+  status: string
+  summary_json: string
+  created_at: string | null
+  finished_at: string | null
+}
+
+export interface WikiDiffTask extends WikiDiffTaskBrief {
+  left_ref_json: string
+  right_ref_json: string
+  error_message: string
+  items: WikiDiffItem[]
+}
+
+export interface WikiDiffCreateRequest {
+  title?: string
+  compare_type?: string
+  query: string
+  left_kb_type?: string
+  right_kb_type?: string
+}
+
+export interface WikiDiffCreateArtifactResult {
+  artifact_id: number
+  artifact_type: string
+}
+
