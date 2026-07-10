@@ -27,7 +27,8 @@ export interface AgentTypeMeta {
 }
 
 export interface AgentRunTriggerResult {
-  run_id: number
+  queue_item_id: number
+  run_id: number | null
   status: string
   message: string
 }
@@ -94,7 +95,7 @@ export async function fetchQueueItems(params: {
   status?: string
   page?: number
   page_size?: number
-}): Promise<AgentRunPage> {
+}): Promise<KnowledgePage<AgentQueueItem>> {
   return api.get('/agents/queue', { params })
 }
 
