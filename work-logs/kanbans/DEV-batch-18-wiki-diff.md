@@ -113,6 +113,14 @@
 | 18-Slice2 VNext-2 | Wiki 两阶段编译 | `c4e1fd8` | — |
 | 18-Slice3 VNext-3 | RAG vs Wiki 差异对比 + 转产物 | `13ded44` | — |
 | 18-Slice4 集成收口 | 两 Tab 挂载 + 发起对比入口 + API 门禁测试 | `f301ba0` | — |
+| **19 验收修复** | **C1 RBAC 越权 + C2 契约状态过滤 + C3 ADR-0013** | **Leader 3 项必办已清** | — |
+
+**batch-19（合并 develop 前必办条件收口）**：
+- ✅ C1 — 差异 `accept`/`reject`/`create-artifact` 权限 `wiki:diff`→`wiki:approve`；accept/reject 补 `_require_wiki_diff_enabled` 门禁 + `_audit` 审计。
+- ✅ C2 — `contract_extractor._gather_wiki_text` 仅纳入 `approved` 页，排除 draft/pending/rejected/superseded；新增回归 `test_wiki_excludes_non_approved_pages`。
+- ✅ C3 — 新增 [ADR-0013](../../docs/adr/0013-llm-wiki-structured-knowledge-diff.md)（自建 LLM-Wiki 层 + GPLv3 借鉴 + 确定性分类器）+ 索引。
+- 验证：wiki 专项 **34 passed**；全量 **270 passed / 1 failed**（预存 `test_ai_extraction_fallback`，无关）。
+- **剩余（上线前 / batch-20 跟进）**：Design 两项 P1（严重级 Badge P0/P1 同色、深色模式对比度）、迁移 `20260710_0017` staging 演练、review_items 持久化、差异召回率基线、灰度放量 SOP。
 
 **证据**：新增 33 条 wiki 测试（provider 9 / raw_source 5 / ingest 6 / diff 8 / api 5）；后端回归 269 passed（唯一失败 `test_ai_extraction_fallback` 为改动前既存、与本批次无关）；前端 `npm run build` 通过。
 
