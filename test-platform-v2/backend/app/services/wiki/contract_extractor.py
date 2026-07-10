@@ -43,7 +43,9 @@ def _gather_wiki_text(db: Session, project_id: int, query: str, top_k: int = 12)
     rows = list(db.scalars(
         select(WikiPage).where(
             WikiPage.project_id == project_id,
-            WikiPage.review_status != "superseded",
+            # 仅纳入已审核通过的 Wiki 页面：排除 draft/pending/rejected/superseded，
+            # 避免未审或已驳回的低置信内容污染差异对比结果（治理门禁：未审不进正式比对）。
+            WikiPage.review_status == "approved",
             WikiPage.page_type.in_(("requirement", "rule", "module", "api")),
             or_(WikiPage.title.like(kw), WikiPage.content_md.like(kw)),
         ).order_by(WikiPage.id.desc()).limit(top_k)
