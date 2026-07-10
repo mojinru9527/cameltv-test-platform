@@ -120,8 +120,8 @@ export default function WikiImportDialog({ open, onOpenChange, onImported }: Pro
           {result && (
             <div className={`flex items-start gap-2 rounded-md border p-3 text-sm ${
               STATUS_HINT[result.extraction_status]?.ok
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                : 'border-amber-200 bg-amber-50 text-amber-700'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300'
             }`}>
               {STATUS_HINT[result.extraction_status]?.ok
                 ? <CheckCircle2 className="size-4 mt-0.5 shrink-0" />

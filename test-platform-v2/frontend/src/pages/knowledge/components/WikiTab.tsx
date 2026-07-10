@@ -101,7 +101,7 @@ export default function WikiTab() {
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <BookOpen className="size-4" /> Wiki 知识库
           {config && !config.wiki_enabled && (
-            <Badge variant="outline" className="text-amber-600 border-amber-300">未启用</Badge>
+            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">未启用</Badge>
           )}
         </div>
         <span className="ml-2 text-xs text-muted-foreground">来源 {raws.length} · 页面 {pages.length}</span>
