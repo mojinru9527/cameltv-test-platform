@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import { fetchDomains, fetchTestCases } from '@/api/testcase'
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/table'
 import {
   BookOpen, Trash2, Eye, FileSpreadsheet, FileText,
-  Inbox, Layers, Link2, RotateCcw, Sparkles, Search, XCircle, Loader2, ExternalLink, Cloud,
+  Inbox, Layers, Link2, RotateCcw, Sparkles, Search, XCircle, Loader2, ExternalLink, Cloud, GitCompare,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
@@ -64,6 +65,7 @@ export default function RequirementPage() {
   const [lanhuUrl, setLanhuUrl] = useState('')
   const [lanhuDesc, setLanhuDesc] = useState('')
   const [previewExpanded, setPreviewExpanded] = useState(false)
+  const navigate = useNavigate()
   const [deleteTarget, setDeleteTarget] = useState<RequirementDocument | null>(null)
   const [docPage, setDocPage] = useState(1)
   const [domainPage, setDomainPage] = useState(1)
@@ -586,6 +588,17 @@ export default function RequirementPage() {
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-1 flex-wrap">
+                            {r.file_type === 'lanhu' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                title="在知识中心对该需求发起 RAG vs Wiki 差异对比"
+                                onClick={() => navigate(`/knowledge?tab=wikidiff&q=${encodeURIComponent(r.title || '')}`)}
+                              >
+                                <GitCompare className="size-3.5" />
+                                发起对比
+                              </Button>
+                            )}
                             {(r.status === 'uploaded' || r.status === 'parsed') && (
                               <>
                                 {/* Stage 1: Feature Extraction buttons */}

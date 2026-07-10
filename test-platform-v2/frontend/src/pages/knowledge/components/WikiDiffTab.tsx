@@ -40,7 +40,7 @@ function ContractView({ title, json }: { title: string; json: any }) {
 export default function WikiDiffTab() {
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [config, setConfig] = useState<WikiConfig | null>(null)
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(() => new URLSearchParams(window.location.search).get('q') || '')
   const [leftKb, setLeftKb] = useState('platform_rag')
   const [rightKb, setRightKb] = useState('platform_wiki')
   const [running, setRunning] = useState(false)
