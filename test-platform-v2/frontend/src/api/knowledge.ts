@@ -166,3 +166,7 @@ export async function predictRegressionScope(body: {
 }): Promise<RegressionPrediction> {
   return api.post('/knowledge/predict/regression-scope', body)
 }
+
+// ── 类型重导出（供组件直接使用） ──
+
+export type { KnowledgeIteration, KnowledgeSnapshot, CompareSnapshots } from '@/types'
