@@ -34,6 +34,14 @@ from app.models.test_schedule import TestSchedule, TestScheduleRun
 from app.models.ui_test import UiTestJob, UiTestRun
 from app.models.user import User
 from app.models.version_mission import AgentWorkLog, GeneratedArtifact, VersionMission
+from app.models.wiki import (
+    WikiDiffItem,
+    WikiDiffTask,
+    WikiIngestJob,
+    WikiLink,
+    WikiPage,
+    WikiRawSource,
+)
 
 __all__ = [
     "ApiEndpoint",
@@ -86,4 +94,10 @@ __all__ = [
     "AgentQueueItem",
     "KnowledgeIteration",
     "KnowledgeSnapshot",
+    "WikiRawSource",
+    "WikiPage",
+    "WikiLink",
+    "WikiIngestJob",
+    "WikiDiffTask",
+    "WikiDiffItem",
 ]

@@ -947,3 +947,52 @@ export interface RegressionPrediction {
   total_analyzed: number
   high_risk_count: number
 }
+
+// ========== LLM-Wiki 知识库 / 差异对比 (VNext-1..3) ==========
+
+export interface WikiConfig {
+  wiki_enabled: boolean
+  wiki_auto_ingest_enabled: boolean
+  wiki_diff_enabled: boolean
+  wiki_auto_create_artifact: boolean
+  lanhu_mcp_enabled: boolean
+}
+
+export interface WikiRawSource {
+  id: number
+  project_id: number
+  source_type: string
+  source_ref: string
+  title: string
+  content_hash: string
+  immutable_version: string
+  status: string
+  knowledge_source_id: number | null
+  business_ref_type?: string
+  business_ref_id?: number | null
+  content_md?: string
+  metadata_json?: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface LanhuImportTarget {
+  ingest_knowledge: boolean
+  build_wiki: boolean
+  extract_graph: boolean
+}
+
+export interface LanhuImportRequest {
+  url: string
+  description?: string
+  target?: LanhuImportTarget
+}
+
+export interface LanhuImportResult {
+  raw_source_id: number | null
+  knowledge_source_id: number | null
+  wiki_job_id: number | null
+  extraction_status: string
+  extraction_summary: string
+}
+
