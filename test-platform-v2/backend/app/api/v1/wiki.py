@@ -14,16 +14,23 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
+from app.models.wiki import WikiIngestJob
 from app.schemas.common import Page, R
 from app.schemas.wiki import (
     LanhuImportRequest,
     LanhuImportResult,
     WikiConfigOut,
+    WikiIngestJobCreate,
+    WikiIngestJobOut,
+    WikiLinkOut,
+    WikiPageBrief,
+    WikiPageOut,
     WikiRawSourceBrief,
     WikiRawSourceOut,
+    WikiReviewRequest,
 )
 from app.services import audit_service
-from app.services.wiki import import_service, raw_source_service
+from app.services.wiki import import_service, ingest_service, page_service, raw_source_service
 
 router = APIRouter(prefix="/wiki", tags=["Wiki 知识库"])
 
@@ -115,3 +122,167 @@ def get_raw_source(
     if not row:
         return R(code=404, msg="Raw Source 不存在")
     return R.ok(WikiRawSourceOut.model_validate(row))
+
+
+# ═══════════════════════════════════════════════════════
+# Wiki 编译任务（VNext-2）
+# ═══════════════════════════════════════════════════════
+
+@router.post("/ingest-jobs", response_model=R[WikiIngestJobOut], summary="创建并触发 Wiki 编译任务")
+def create_ingest_job(
+    body: WikiIngestJobCreate,
+    background_tasks: BackgroundTasks,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("wiki:manage")),
+    db: Session = Depends(get_db),
+):
+    _require_wiki_enabled()
+    pid = current.project_id or 0
+    raw = raw_source_service.get_raw_source(db, body.raw_source_id, pid)
+    if not raw:
+        return R(code=404, msg="Raw Source 不存在")
+    job = WikiIngestJob(project_id=pid, raw_source_id=raw.id, status="pending",
+                        stage="analysis", operator_id=current.user.id if current.user else 0)
+    db.add(job)
+    db.flush()
+    _audit(req, current, db, action="wiki.ingest.create", target=f"raw#{raw.id}", detail=f"job#{job.id}")
+    db.commit()
+    background_tasks.add_task(ingest_service.run_wiki_ingest_in_new_session, pid, job.id)
+    return R.ok(WikiIngestJobOut.model_validate(job))
+
+
+@router.get("/ingest-jobs/{job_id}", response_model=R[WikiIngestJobOut], summary="Wiki 编译任务详情")
+def get_ingest_job(
+    job_id: int,
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    job = db.get(WikiIngestJob, job_id)
+    if not job or job.project_id != (current.project_id or 0):
+        return R(code=404, msg="任务不存在")
+    return R.ok(WikiIngestJobOut.model_validate(job))
+
+
+@router.post("/ingest-jobs/{job_id}/retry", response_model=R[WikiIngestJobOut], summary="重试 Wiki 编译任务")
+def retry_ingest_job(
+    job_id: int,
+    background_tasks: BackgroundTasks,
+    current: CurrentUser = Depends(require_permission("wiki:manage")),
+    db: Session = Depends(get_db),
+):
+    _require_wiki_enabled()
+    job = db.get(WikiIngestJob, job_id)
+    if not job or job.project_id != (current.project_id or 0):
+        return R(code=404, msg="任务不存在")
+    if job.status == "running":
+        return R(code=400, msg="任务运行中，无法重试")
+    job.status = "pending"; job.stage = "analysis"; job.error_message = ""
+    job.retry_count = (job.retry_count or 0) + 1
+    db.commit()
+    background_tasks.add_task(ingest_service.run_wiki_ingest_in_new_session, job.project_id, job.id)
+    return R.ok(WikiIngestJobOut.model_validate(job))
+
+
+@router.post("/ingest-jobs/{job_id}/cancel", response_model=R[WikiIngestJobOut], summary="取消 Wiki 编译任务")
+def cancel_ingest_job(
+    job_id: int,
+    current: CurrentUser = Depends(require_permission("wiki:manage")),
+    db: Session = Depends(get_db),
+):
+    job = db.get(WikiIngestJob, job_id)
+    if not job or job.project_id != (current.project_id or 0):
+        return R(code=404, msg="任务不存在")
+    if job.status in ("success", "failed"):
+        return R(code=400, msg="任务已结束，无法取消")
+    job.status = "cancelled"
+    db.commit()
+    return R.ok(WikiIngestJobOut.model_validate(job))
+
+
+# ═══════════════════════════════════════════════════════
+# Wiki 页面（VNext-2）
+# ═══════════════════════════════════════════════════════
+
+@router.get("/pages", response_model=R[Page[WikiPageBrief]], summary="Wiki 页面列表")
+def list_pages(
+    page_type: str | None = Query(None),
+    review_status: str | None = Query(None),
+    keyword: str | None = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=200),
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    rows, total = page_service.list_pages(
+        db, current.project_id or 0, page_type=page_type, review_status=review_status,
+        keyword=keyword, page=page, page_size=page_size)
+    return R.ok(Page(total=total, page=page, page_size=page_size,
+                     items=[WikiPageBrief.model_validate(r) for r in rows]))
+
+
+@router.get("/search", response_model=R[Page[WikiPageBrief]], summary="Wiki 页面关键词检索")
+def search_pages(
+    keyword: str = Query(..., min_length=1),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    rows, total = page_service.list_pages(
+        db, current.project_id or 0, keyword=keyword, page=page, page_size=page_size)
+    return R.ok(Page(total=total, page=page, page_size=page_size,
+                     items=[WikiPageBrief.model_validate(r) for r in rows]))
+
+
+@router.get("/pages/{page_id}", response_model=R[WikiPageOut], summary="Wiki 页面详情")
+def get_page(
+    page_id: int,
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    row = page_service.get_page(db, page_id, current.project_id or 0)
+    if not row:
+        return R(code=404, msg="页面不存在")
+    return R.ok(WikiPageOut.model_validate(row))
+
+
+@router.get("/pages/{page_id}/links", response_model=R[list[WikiLinkOut]], summary="Wiki 页面链接")
+def get_page_links(
+    page_id: int,
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    links = page_service.get_page_links(db, page_id, current.project_id or 0)
+    return R.ok([WikiLinkOut.model_validate(x) for x in links])
+
+
+@router.post("/pages/{page_id}/approve", response_model=R[WikiPageOut], summary="通过 Wiki 页面")
+def approve_page(
+    page_id: int,
+    body: WikiReviewRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("wiki:approve")),
+    db: Session = Depends(get_db),
+):
+    row = page_service.review_page(db, page_id, current.project_id or 0, approve=True)
+    if not row:
+        return R(code=404, msg="页面不存在")
+    _audit(req, current, db, action="wiki.page.approve", target=f"page#{page_id}", detail=body.comment)
+    db.commit()
+    return R.ok(WikiPageOut.model_validate(row))
+
+
+@router.post("/pages/{page_id}/reject", response_model=R[WikiPageOut], summary="驳回 Wiki 页面")
+def reject_page(
+    page_id: int,
+    body: WikiReviewRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("wiki:approve")),
+    db: Session = Depends(get_db),
+):
+    row = page_service.review_page(db, page_id, current.project_id or 0, approve=False)
+    if not row:
+        return R(code=404, msg="页面不存在")
+    _audit(req, current, db, action="wiki.page.reject", target=f"page#{page_id}", detail=body.comment)
+    db.commit()
+    return R.ok(WikiPageOut.model_validate(row))

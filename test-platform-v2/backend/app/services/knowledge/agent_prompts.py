@@ -28,6 +28,12 @@ AGENT_META: dict[str, dict] = {
         "icon": "Bug",
         "artifact_type": "failure_analysis",
     },
+    "wiki_ingest": {
+        "label": "Wiki 编译",
+        "description": "把原始来源两阶段编译为结构化 Wiki 页面与页面链接",
+        "icon": "BookOpen",
+        "artifact_type": "wiki_page",
+    },
 }
 
 
@@ -127,5 +133,37 @@ _TYPE_PROMPTS = {
   ],
   "related_defects": [{"defect_id": 100, "title": "相似缺陷", "similarity": "high"}],
   "summary": "一句话总结"
+}""",
+
+    "wiki_ingest": """## Wiki 编译 · 阶段1 分析任务
+你是知识工程师。把提供的「原始来源」分析为结构化知识，供后续确定性地生成 Wiki 页面。
+严格要求：
+1. 只依据来源内容，不得编造；信息不足的结论写入 review_items，并降低 confidence。
+2. 每条 requirement / rule 尽量给出可追溯的 evidence（来源中的原文片段）。
+3. stable_key 用稳定命名，如 lanhu:<docId8>:<pageId8>:<英文短标识>。
+
+输出 JSON 格式：
+{
+  "source_summary": "来源摘要（2-4 句）",
+  "detected_modules": ["赛事模块"],
+  "requirements": [
+    {
+      "stable_key": "lanhu:e6b5ce1e:2b4c4235:match_push",
+      "title": "比赛推送",
+      "module": "赛事模块",
+      "description": "当比赛进行到指定分钟推送...",
+      "client_scope": ["app"],
+      "business_rules": [{"id": "R1", "rule": "matchId 必填", "evidence": "页面出现 matchId"}],
+      "fields": [{"name": "matchId", "location": "query", "type": "string", "required": true}],
+      "apis": [{"method": "GET", "path": "/ee/test/matchpush"}],
+      "test_focus": ["matchId 边界", "无数据"]
+    }
+  ],
+  "connections": [
+    {"from": "比赛推送", "to": "GET /ee/test/matchpush", "type": "depends_on", "evidence": "页面出现 matchId/minis"}
+  ],
+  "contradictions": [],
+  "review_items": [{"title": "端范围不明确", "reason": "未标注 PC 是否覆盖", "confidence": 0.4}],
+  "confidence": 0.8
 }""",
 }

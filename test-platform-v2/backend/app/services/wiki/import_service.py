@@ -132,7 +132,10 @@ async def import_lanhu(
     # 昂贵的向量嵌入放到响应后台
     if ks_id:
         background_tasks.add_task(embed_pending_chunks_in_new_session, project_id, ks_id)
-    # Wiki 编译任务的实际执行在切片 2（wiki_auto_ingest_enabled 时自动触发）——此处仅建 pending 任务
+    # Wiki 编译：wiki_auto_ingest_enabled 时自动触发两阶段编译
+    if job and settings.wiki_auto_ingest_enabled:
+        from app.services.wiki import ingest_service
+        background_tasks.add_task(ingest_service.run_wiki_ingest_in_new_session, project_id, job.id)
 
     return LanhuImportResult(
         raw_source_id=raw.id,
