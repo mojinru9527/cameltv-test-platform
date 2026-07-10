@@ -114,6 +114,7 @@
 | 18-Slice3 VNext-3 | RAG vs Wiki 差异对比 + 转产物 | `13ded44` | — |
 | 18-Slice4 集成收口 | 两 Tab 挂载 + 发起对比入口 + API 门禁测试 | `f301ba0` | — |
 | **19 验收修复** | **C1 RBAC 越权 + C2 契约状态过滤 + C3 ADR-0013** | **Leader 3 项必办已清** | — |
+| **20 Design P1** | **严重级四级可辨色梯度 + 深色模式对比度** | **`2c7c1bb`** | — |
 
 **batch-19（合并 develop 前必办条件收口）**：
 - ✅ C1 — 差异 `accept`/`reject`/`create-artifact` 权限 `wiki:diff`→`wiki:approve`；accept/reject 补 `_require_wiki_diff_enabled` 门禁 + `_audit` 审计。
@@ -121,6 +122,12 @@
 - ✅ C3 — 新增 [ADR-0013](../../docs/adr/0013-llm-wiki-structured-knowledge-diff.md)（自建 LLM-Wiki 层 + GPLv3 借鉴 + 确定性分类器）+ 索引。
 - 验证：wiki 专项 **34 passed**；全量 **270 passed / 1 failed**（预存 `test_ai_extraction_fallback`，无关）。
 - **剩余（上线前 / batch-20 跟进）**：Design 两项 P1（严重级 Badge P0/P1 同色、深色模式对比度）、迁移 `20260710_0017` staging 演练、review_items 持久化、差异召回率基线、灰度放量 SOP。
+
+**batch-20（Design 两项 P1 收口，提交 `2c7c1bb`）**：
+- ✅ P1-1 严重级配色 — 新增 `wikiSeverity.severityBadge` 共享助手（P0 实心红 / P1 橙色描边 / P2 灰 / P3 描边），`WikiDiffTab` 与 `WikiDiffDetailDrawer` 复用同一映射，消除 P0/P1 同色不可辨。
+- ✅ P1-2 深色模式对比度 — 建议框 blue、导入结果 emerald/amber、"未启用" amber 徽标全部补 `dark:` 变体（`dark:bg-*-950/40 dark:text-*-300/400 dark:border-*-700/800`），满足 WCAG AA。
+- 验证：`tsc --noEmit` 通过；`npm run build` 通过（7.76s）。
+- **剩余（P2/P3 迭代优化，非合并阻断）**：状态标签中文映射、failed/running 分态 + 重试、evidence_json 结构化、触控目标 ≥44px、aria-label；及迁移 staging 演练、review_items 持久化、差异召回率基线、灰度放量 SOP。
 
 **证据**：新增 33 条 wiki 测试（provider 9 / raw_source 5 / ingest 6 / diff 8 / api 5）；后端回归 269 passed（唯一失败 `test_ai_extraction_fallback` 为改动前既存、与本批次无关）；前端 `npm run build` 通过。
 
