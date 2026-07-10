@@ -144,6 +144,11 @@ _ACTIONS = [
     ("agent:run", "手动触发 Agent", "button"),
     ("agent:admin", "管理 Agent 配置", "button"),
     ("ai_artifact:import", "导入 AI 产物到正式资产", "button"),
+    # LLM-Wiki 知识库 / 差异对比 (VNext-1..3) — 收在知识中心，不新增菜单
+    ("wiki:view", "查看 Wiki 页面与差异报告", "button"),
+    ("wiki:manage", "导入来源、触发编译、重试任务", "button"),
+    ("wiki:approve", "审核 Wiki 页面与差异处理", "button"),
+    ("wiki:diff", "发起知识库对比", "button"),
 ]
 
 # 测试人员可见的菜单子集
@@ -152,12 +157,13 @@ _TESTER_ACTIONS = {
     "apitest:task", "apitest:asset_manage",
     "knowledge:view",
     "agent:list",
+    "wiki:view", "wiki:diff",
 }
 
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
-    "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge",
+    "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
 }
 
 
