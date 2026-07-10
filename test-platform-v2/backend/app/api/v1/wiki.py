@@ -391,13 +391,17 @@ def _get_diff_item(db: Session, item_id: int, pid: int) -> WikiDiffItem | None:
 def accept_diff_item(
     item_id: int,
     body: WikiDiffItemReviewRequest,
-    current: CurrentUser = Depends(require_permission("wiki:diff")),
+    req: Request,
+    current: CurrentUser = Depends(require_permission("wiki:approve")),
     db: Session = Depends(get_db),
 ):
+    _require_wiki_diff_enabled()
     item = _get_diff_item(db, item_id, current.project_id or 0)
     if not item:
         return R(code=404, msg="差异项不存在")
     item.review_status = "accepted"
+    _audit(req, current, db, action="wiki.diff.accept", target=f"item#{item_id}",
+           detail=f"{item.dimension}/{item.diff_type}")
     db.commit()
     return R.ok(WikiDiffItemOut.model_validate(item))
 
@@ -406,13 +410,17 @@ def accept_diff_item(
 def reject_diff_item(
     item_id: int,
     body: WikiDiffItemReviewRequest,
-    current: CurrentUser = Depends(require_permission("wiki:diff")),
+    req: Request,
+    current: CurrentUser = Depends(require_permission("wiki:approve")),
     db: Session = Depends(get_db),
 ):
+    _require_wiki_diff_enabled()
     item = _get_diff_item(db, item_id, current.project_id or 0)
     if not item:
         return R(code=404, msg="差异项不存在")
     item.review_status = "rejected"
+    _audit(req, current, db, action="wiki.diff.reject", target=f"item#{item_id}",
+           detail=f"{item.dimension}/{item.diff_type}")
     db.commit()
     return R.ok(WikiDiffItemOut.model_validate(item))
 
@@ -423,7 +431,7 @@ def create_artifact(
     item_id: int,
     body: WikiDiffCreateArtifactRequest,
     req: Request,
-    current: CurrentUser = Depends(require_permission("wiki:diff")),
+    current: CurrentUser = Depends(require_permission("wiki:approve")),
     db: Session = Depends(get_db),
 ):
     _require_wiki_diff_enabled()

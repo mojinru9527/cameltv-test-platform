@@ -74,7 +74,7 @@ class TestContractExtractorFallback:
 
     def test_wiki_gathers_pages(self, db_session, monkeypatch):
         db_session.add(WikiPage(project_id=1, page_type="requirement", slug="mp", title="比赛推送",
-                                content_md="matchId 必填", review_status="pending"))
+                                content_md="matchId 必填", review_status="approved"))
         db_session.flush()
         monkeypatch.setattr(contract_extractor, "_call_llm_sync",
                             lambda *a, **k: {"result": {"title": "比赛推送", "business_rules": [{"rule": "matchId 必填"}]},
@@ -82,6 +82,24 @@ class TestContractExtractorFallback:
         c = contract_extractor.extract_contract(db_session, 1, kb_type="platform_wiki", query="比赛推送")
         assert c["business_rules"][0]["rule"] == "matchId 必填"
         assert c["source_refs"][0]["wiki_page_id"]
+
+    def test_wiki_excludes_non_approved_pages(self, db_session, monkeypatch):
+        """C2 回归：契约抽取只纳入 approved 页，draft/pending/rejected/superseded 均排除。"""
+        for st in ("draft", "pending", "rejected", "superseded"):
+            db_session.add(WikiPage(project_id=1, page_type="requirement", slug=f"mp-{st}",
+                                    title="比赛推送", content_md="matchId 必填", review_status=st))
+        db_session.flush()
+        # 仅有非 approved 页 → gather 结果为空 → 走"未找到相关内容"退化契约，不调用 LLM
+        called = {"n": 0}
+
+        def _spy(*a, **k):
+            called["n"] += 1
+            return {"result": None, "raw": "", "error": None}
+
+        monkeypatch.setattr(contract_extractor, "_call_llm_sync", _spy)
+        c = contract_extractor.extract_contract(db_session, 1, kb_type="platform_wiki", query="比赛推送")
+        assert called["n"] == 0, "非 approved 页不应进入契约抽取"
+        assert c["source_refs"] == [] and "未找到相关内容" in c["summary"]
 
 
 class TestCreateArtifact:
