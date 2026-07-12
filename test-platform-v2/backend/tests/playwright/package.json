@@ -1,0 +1,15 @@
+{
+  "name": "cameltv-playwright-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CamelTv UI 自动化测试脚本",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:chromium": "npx playwright test --project=chromium",
+    "test:firefox": "npx playwright test --project=firefox",
+    "test:webkit": "npx playwright test --project=webkit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

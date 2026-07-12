@@ -21,6 +21,12 @@ const TracePage = lazy(() => import('@/pages/trace'))
 const RequirementPage = lazy(() => import('@/pages/requirement'))
 const MindmapPage = lazy(() => import('@/pages/mindmap'))
 const ApiTestPage = lazy(() => import('@/pages/apitest'))
+const NotifyPage = lazy(() => import('@/pages/notify'))
+const EnvironmentPage = lazy(() => import('@/pages/environment'))
+const DatasetPage = lazy(() => import('@/pages/dataset'))
+const IntegrationPage = lazy(() => import('@/pages/integration'))
+const KnowledgePage = lazy(() => import('@/pages/knowledge'))
+const AgentWorkbenchPage = lazy(() => import('@/pages/agent-workbench'))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -61,6 +67,12 @@ export const router = createBrowserRouter([
       { path: 'report', element: <PageLoader><ReportPage /></PageLoader> },
       { path: 'system', element: <PageLoader><SystemPage /></PageLoader> },
       { path: 'project', element: <PageLoader><ProjectPage /></PageLoader> },
+      { path: 'notify', element: <PageLoader><NotifyPage /></PageLoader> },
+      { path: 'environment', element: <PageLoader><EnvironmentPage /></PageLoader> },
+      { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },
+      { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
+      { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
+      { path: 'agent-workbench', element: <PageLoader><AgentWorkbenchPage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
   },

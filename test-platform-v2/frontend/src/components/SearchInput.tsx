@@ -32,6 +32,7 @@ export default function SearchInput({
     <div className="flex items-center gap-1">
       <div className="relative">
         <Input
+          aria-label="搜索"
           placeholder={placeholder}
           className={cn(inputClassName)}
           value={value}
@@ -41,6 +42,7 @@ export default function SearchInput({
         {clearable && value && (
           <button
             type="button"
+            aria-label="清除搜索"
             className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             onClick={() => onChange('')}
           >

@@ -40,3 +40,46 @@ class DashboardStats(BaseModel):
     case_type_stats: list[CaseTypeStat] = []       # 按用例类型分组的执行统计
     priority_distribution: list[CaseTypePriority] = []  # 按用例类型 + 优先级分布
     time_range: Optional[dict] = None
+
+
+# ── V2.5: Cross-project dashboard ──
+
+class CrossProjectCard(BaseModel):
+    """单个项目的指标卡片。"""
+    project_id: int = 0
+    project_name: str = ""
+    total_cases: int = 0
+    total_plans: int = 0
+    api_cases: int = 0
+    pass_rate: float = 0.0
+    defect_count: int = 0
+
+
+class CrossProjectAggregate(BaseModel):
+    """全部项目的聚合汇总。"""
+    total_projects: int = 0
+    total_cases: int = 0
+    total_plans: int = 0
+    total_api_cases: int = 0
+    overall_pass_rate: float = 0.0
+    total_defects: int = 0
+
+
+class TrendPoint(BaseModel):
+    """跨项目趋势数据点。"""
+    date: str = ""
+    pass_rate: float | None = None
+    total_execs: int | None = None
+    count: int | None = None
+
+
+class CrossProjectTrends(BaseModel):
+    pass_rate: list[TrendPoint] = []
+    defects: list[TrendPoint] = []
+
+
+class CrossProjectStats(BaseModel):
+    projects: list = []               # simplified project info [{id, code, name}]
+    aggregate: CrossProjectAggregate = CrossProjectAggregate()
+    per_project: list[CrossProjectCard] = []
+    trends: CrossProjectTrends = CrossProjectTrends()

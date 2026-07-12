@@ -32,18 +32,20 @@ test-platform-v2/
 |------|------|--------|------|
 | 登录鉴权 / 项目切换 | `/login` | ✅ 生产可用 | bcrypt + JWT，多项目隔离 |
 | 用户/角色/权限 RBAC | `/system` | ✅ 生产可用 | 三级数据范围 + 审计日志 |
-| 用例服务 CRUD + 域树 | `/testcase` | ✅ 生产可用 | 批量操作、域/模块树 |
+| 用例服务 CRUD + 域树 | `/testcase` | ✅ 生产可用 | 批量操作、域/模块树、Excel/Xmind 导出入、版本历史 |
 | 测试计划 + 执行闭环 | `/testplan` | ✅ 生产可用 | pass/fail/skip/block，ELK traceId |
 | 工作台看板 | `/workbench` | ✅ 生产可用 | Recharts 图表 |
 | 报告中心 | `/report` | ✅ 生产可用 | JSON 快照，CSV/Excel 导出 |
 | 定时任务 | `/schedule` | ✅ 生产可用 | APScheduler + Cron 表达式 |
 | 需求管理 + AI 生成 | `/requirement` | ✅ 生产可用 | DeepSeek LLM 两段式生成+反向评审 |
 | 质量追溯矩阵 | `/trace` | ✅ 生产可用 | 项目覆盖率 + 单用例全链路追溯 |
-| 缺陷管理 | `/defect` | ✅ 生产可用 | 6 状态状态机 |
-| 通知中心 | `/notify` | 🟡 能力有限 | 飞书/钉钉/企微 Webhook |
+| 缺陷管理 | `/defect` | ✅ 生产可用 | 6 状态状态机 + 评论 + 附件 |
+| 开放 API | `/open` | ✅ 生产可用 | Token 鉴权 + 触发 + 查询 + 结果回写 |
+| 通知中心 | `/notify` | ✅ 生产可用 | Webhook + 邮件，4 事件触发，重试/日志 |
+| 环境/变量管理 | `/environment` | ✅ 生产可用 | 项目级 dev/test/staging/prod，AES-128 加密变量 |
 | 项目管理 | `/project` | ✅ 生产可用 | 多项目 + 成员 + 主题 |
-| API 测试 | `/apitest` | 🧪 演示态 | 纯前端 fetch + localStorage |
-| UI 自动化 | `/uitest` | 🧪 演示态 | 结果为 random 模拟 |
+| API 测试 | `/apitest` | 🟡 真实执行，能力待生产化 | httpx 真实 HTTP 请求，缺请求快照/任务取消/生产保护 |
+| UI 自动化 | `/uitest` | 🟡 真实执行，能力待生产化 | npx playwright test 真实执行，缺异步/环境注入/产物归档 |
 | 音视频专项 | `/special` | 🧪 演示态 | 指标为 random 模拟 |
 
 ## 关键架构决策

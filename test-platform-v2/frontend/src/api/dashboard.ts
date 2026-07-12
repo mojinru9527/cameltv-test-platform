@@ -1,5 +1,5 @@
 import api from './client'
-import type { DashboardStats } from '@/types'
+import type { CrossProjectStats, DashboardStats } from '@/types'
 
 export interface DashboardParams {
   start_date?: string   // YYYY-MM-DD
@@ -8,4 +8,8 @@ export interface DashboardParams {
 
 export async function fetchDashboardStats(params: DashboardParams = {}): Promise<DashboardStats> {
   return api.get('/dashboard/stats', { params })
+}
+
+export async function fetchCrossProjectStats(params: DashboardParams = {}): Promise<CrossProjectStats> {
+  return api.get('/dashboard/cross-project', { params })
 }

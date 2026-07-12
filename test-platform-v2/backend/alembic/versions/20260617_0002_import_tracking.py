@@ -17,10 +17,18 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column("requirement_document", sa.Column("imported_func_count", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("requirement_document", sa.Column("imported_api_count", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("requirement_document", sa.Column("imported_func_indices", sa.String(), nullable=False, server_default="[]"))
-    op.add_column("requirement_document", sa.Column("imported_api_indices", sa.String(), nullable=False, server_default="[]"))
+    # Skip if columns already exist (e.g. created by ORM auto-create with AUTO_CREATE_TABLES)
+    conn = op.get_bind()
+    insp = sa.inspect(conn)
+    existing = [c["name"] for c in insp.get_columns("requirement_document")]
+    if "imported_func_count" not in existing:
+        op.add_column("requirement_document", sa.Column("imported_func_count", sa.Integer(), nullable=False, server_default="0"))
+    if "imported_api_count" not in existing:
+        op.add_column("requirement_document", sa.Column("imported_api_count", sa.Integer(), nullable=False, server_default="0"))
+    if "imported_func_indices" not in existing:
+        op.add_column("requirement_document", sa.Column("imported_func_indices", sa.String(), nullable=False, server_default="[]"))
+    if "imported_api_indices" not in existing:
+        op.add_column("requirement_document", sa.Column("imported_api_indices", sa.String(), nullable=False, server_default="[]"))
 
 
 def downgrade() -> None:

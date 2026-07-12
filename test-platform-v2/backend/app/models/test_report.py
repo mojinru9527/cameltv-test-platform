@@ -19,7 +19,10 @@ class TestReport(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     plan_id: Mapped[int] = mapped_column(ForeignKey("test_plan.id"), index=True)
     content: Mapped[str] = mapped_column(Text, default="{}")
+    template_id: Mapped[int | None] = mapped_column(ForeignKey("report_template.id"), default=None, nullable=True)
     creator_id: Mapped[int] = mapped_column(default=0)
+    gate_status: Mapped[str | None] = mapped_column(String(20), default=None, nullable=True)  # pass/fail/warn
+    gate_details: Mapped[str] = mapped_column(Text, default="[]")  # JSON array of detail strings
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     updated_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc),

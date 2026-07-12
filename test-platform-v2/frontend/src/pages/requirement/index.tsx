@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import { fetchDomains, fetchTestCases } from '@/api/testcase'
@@ -23,9 +24,12 @@ import {
 } from '@/components/ui/table'
 import {
   BookOpen, Trash2, Eye, FileSpreadsheet, FileText,
-  Inbox, Layers, Link2, RotateCcw, Sparkles, Search, XCircle, Loader2, ExternalLink, Cloud,
+  Inbox, Layers, Link2, RotateCcw, Sparkles, Search, XCircle, Loader2, ExternalLink, Cloud, GitCompare,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
+import { useApi } from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { AsyncState } from '@/components/state'
 import AiResultModal from './AiResultModal'
 
 const TYPE_TAG: Record<string, { className: string; label: string; icon: React.ReactNode }> = {
@@ -42,12 +46,15 @@ const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'outline'; classNa
   imported: { variant: 'outline', className: 'border-green-200 bg-green-50 text-green-700', label: '已导入' },
 }
 
+interface RequirementData {
+  domains: any[]
+  cases: any[]
+  docs: RequirementDocument[]
+}
+
 export default function RequirementPage() {
-  const [domains, setDomains] = useState<any[]>([])
-  const [cases, setCases] = useState<any[]>([])
-  const [docs, setDocs] = useState<RequirementDocument[]>([])
+  useDocumentTitle('需求管理')
   const [keyword, setKeyword] = useState('')
-  const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [generatingDocId, setGeneratingDocId] = useState<number | null>(null)
@@ -58,6 +65,7 @@ export default function RequirementPage() {
   const [lanhuUrl, setLanhuUrl] = useState('')
   const [lanhuDesc, setLanhuDesc] = useState('')
   const [previewExpanded, setPreviewExpanded] = useState(false)
+  const navigate = useNavigate()
   const [deleteTarget, setDeleteTarget] = useState<RequirementDocument | null>(null)
   const [docPage, setDocPage] = useState(1)
   const [domainPage, setDomainPage] = useState(1)
@@ -71,27 +79,22 @@ export default function RequirementPage() {
   const docPageSize = 10
   const domainPageSize = 8
 
-  const loadAll = useCallback(async () => {
-    setLoading(true)
-    try {
+  // ── Data fetching with useApi — loads all three data sources in parallel ──
+  const { data, isLoading, isRefetching, isError, error, refetch } = useApi<RequirementData>(
+    async () => {
       const [domainData, caseData, docData]: any[] = await Promise.all([
         fetchDomains(),
         fetchTestCases({ page: 1, page_size: 200 }),
         fetchRequirements(),
       ])
-      setDomains(domainData || [])
-      setCases(caseData?.items || [])
-      setDocs(docData || [])
-    } catch {
-      // keep
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+      return { domains: domainData || [], cases: caseData?.items || [], docs: docData || [] }
+    },
+    []
+  )
 
-  useEffect(() => {
-    loadAll()
-  }, [loadAll])
+  const domains = data?.domains || []
+  const cases = data?.cases || []
+  const docs = data?.docs || []
 
   // Stats
   const totalModules = useMemo(
@@ -122,9 +125,9 @@ export default function RequirementPage() {
       const formData = new FormData()
       formData.append('file', file)
       const doc = await uploadRequirement(formData)
-      setDocs((prev) => [doc, ...prev])
       setActiveDocId(doc.id)
       toast.success(`「${doc.title}」上传成功`)
+      refetch()
     } catch {
       toast.error('上传失败')
     } finally {
@@ -146,11 +149,11 @@ export default function RequirementPage() {
         formData.append('lanhu_description', lanhuDesc.trim())
       }
       const doc = await uploadRequirement(formData)
-      setDocs((prev) => [doc, ...prev])
       setActiveDocId(doc.id)
       setLanhuUrl('')
       setLanhuDesc('')
       toast.success('蓝湖链接已提交')
+      refetch()
     } catch {
       toast.error('提交失败')
     } finally {
@@ -175,10 +178,7 @@ export default function RequirementPage() {
       setGeneratingDocId(null)
     }
     // Refresh doc list (outside try/catch so a refresh failure doesn't mask generation success)
-    try {
-      const updated = await fetchRequirements()
-      setDocs(updated || [])
-    } catch { /* refresh failed – list will be stale but generation succeeded */ }
+    refetch()
   }
 
   // ── Stage 1: Feature Extraction handlers ──
@@ -205,10 +205,7 @@ export default function RequirementPage() {
       setShowAiModal(true)
 
       // Refresh doc list to update status badges
-      try {
-        const updated = await fetchRequirements()
-        setDocs(updated || [])
-      } catch { /* ok */ }
+      refetch()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '功能拆分失败'
       toast.error(msg)
@@ -228,9 +225,7 @@ export default function RequirementPage() {
       setConfirmedExtractionIds((prev) => new Set(prev).add(activeDocId))
     }
     // Refresh doc list
-    try {
-      fetchRequirements().then((updated) => setDocs(updated || []))
-    } catch { /* ok */ }
+    refetch()
   }
 
   const handleExtractionReject = () => {
@@ -238,9 +233,7 @@ export default function RequirementPage() {
     setShowAiModal(false)
     setExtractionResult(null)
     // Refresh doc list to show updated status
-    try {
-      fetchRequirements().then((updated) => setDocs(updated || []))
-    } catch { /* ok */ }
+    refetch()
   }
 
   const handleImportSuccess = async () => {
@@ -250,7 +243,7 @@ export default function RequirementPage() {
         setAiResult(result)
       } catch { /* keep existing result */ }
     }
-    loadAll()
+    refetch()
   }
 
   const handleViewCases = async (docId: number) => {
@@ -276,7 +269,7 @@ export default function RequirementPage() {
       toast.success('已删除')
       if (activeDocId === deleteTarget.id) setActiveDocId(null)
       setDeleteTarget(null)
-      loadAll()
+      refetch()
     } catch {
       toast.error('删除失败')
     }
@@ -301,8 +294,8 @@ export default function RequirementPage() {
     <div className="space-y-4">
       {/* Header */}
       <PageHeader title="需求文档" icon={BookOpen} description="上传 PRD / Excel / 蓝湖链接，AI 自动生成测试用例。">
-        <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
-          {loading ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+        <Button variant="outline" size="sm" onClick={refetch} disabled={isLoading || isRefetching}>
+          {isLoading || isRefetching ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
           刷新
         </Button>
       </PageHeader>
@@ -373,7 +366,7 @@ export default function RequirementPage() {
             <TabsContent value="lanhu" className="pt-4 space-y-3">
               <div className="flex w-full">
                 <div className="relative flex-1">
-                  <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-[#7b61ff] pointer-events-none" />
+                  <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-primary pointer-events-none" />
                   <Input
                     className="pl-8 rounded-r-none border-r-0 focus-visible:z-10"
                     placeholder="输入蓝湖设计稿链接..."
@@ -486,12 +479,19 @@ export default function RequirementPage() {
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          {filteredDocs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <Inbox className="size-8 mb-2 opacity-40" />
-              <p className="text-sm">暂无需求文档，请上传</p>
-            </div>
-          ) : (
+          <AsyncState
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            data={filteredDocs.length > 0 ? filteredDocs : ([] as any[])}
+            onRetry={refetch}
+            emptyTitle="暂无需求文档"
+            emptyDescription="请上传需求文档开始使用"
+            emptyIcon={Inbox}
+            skeletonType="table"
+            loadingRows={3}
+          >
+            {() => (
             <>
               <Table>
                 <TableHeader>
@@ -588,6 +588,17 @@ export default function RequirementPage() {
                         </TableCell>
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center gap-1 flex-wrap">
+                            {r.file_type === 'lanhu' && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                title="在知识中心对该需求发起 RAG vs Wiki 差异对比"
+                                onClick={() => navigate(`/knowledge?tab=wikidiff&q=${encodeURIComponent(r.title || '')}`)}
+                              >
+                                <GitCompare className="size-3.5" />
+                                发起对比
+                              </Button>
+                            )}
                             {(r.status === 'uploaded' || r.status === 'parsed') && (
                               <>
                                 {/* Stage 1: Feature Extraction buttons */}
@@ -721,7 +732,8 @@ export default function RequirementPage() {
                 onChange={(p) => setDocPage(p)}
               />
             </>
-          )}
+            )}
+          </AsyncState>
         </CardContent>
       </Card>
 

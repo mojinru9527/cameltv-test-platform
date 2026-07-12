@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 from app.core.db import Base
 from app.core.security import hash_password
@@ -18,7 +19,13 @@ def db_session():
     """Create a fresh in-memory SQLite database per test function."""
     import app.models  # noqa: F401 — ensure all models are registered on Base.metadata
     _ = app.models
-    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    # StaticPool: a single shared connection so the TestClient's request thread
+    # and the test thread see the SAME in-memory DB (else → "no such table").
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     Base.metadata.create_all(bind=engine)
     SessionLocal = sessionmaker(bind=engine)
     session = SessionLocal()
@@ -75,7 +82,9 @@ def auth_headers(admin_user, client) -> dict:
         "username": "admin_test", "password": "admin123",
     })
     assert resp.status_code == 200
-    token = resp.json()["data"]["token"]
+    # LoginOut exposes the JWT as `access_token` (response body still returns it
+    # for the transition period alongside the httpOnly cookie).
+    token = resp.json()["data"]["access_token"]
     return {
         "Authorization": f"Bearer {token}",
         "X-Project-Id": "1",

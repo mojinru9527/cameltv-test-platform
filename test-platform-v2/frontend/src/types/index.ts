@@ -88,7 +88,8 @@ export interface RequirementDocument {
   source_ref: string
   content: string
   status: string
-  extraction_status?: string  // not_started | pending_review | confirmed
+  extraction_status?: string  // not_started | extracting | pending_review | confirmed
+  extraction_progress?: number  // V2: 0.0 - 1.0
   imported_count: number
   imported_func_count: number
   imported_api_count: number
@@ -175,9 +176,14 @@ export interface FeatureExtractionResult {
   overall_assessment: string
   raw_response: string
   extraction_summary?: string
-  extraction_status?: string
-  version_info?: VersionInfo[]   // parsed version info from changelog
-  client_summary?: string        // e.g. "涉及 App端、PC端"
+  extraction_status?: string       // not_started | extracting | pending_review | confirmed
+  version_info?: VersionInfo[]     // parsed version info from changelog
+  client_summary?: string          // e.g. "涉及 App端、PC端"
+  // V2 enhanced extraction
+  truncated?: boolean              // True if extraction was cut off
+  extraction_progress?: number     // 0.0-1.0
+  versions_total?: number          // Total versions from changelog
+  versions_done?: number           // Versions fully extracted
 }
 
 export interface ExtractionConfirmRequest {
@@ -193,6 +199,7 @@ export interface ReportItem {
   name: string
   description: string
   plan_id: number
+  template_id?: number
   plan_name: string
   creator_id: number
   created_at: string | null
@@ -298,6 +305,36 @@ export interface UiRunItem {
   finished_at: string | null
 }
 
+export interface DefectTransition {
+  id: number
+  defect_id: number
+  from_status: string
+  to_status: string
+  comment?: string
+  operator_id?: number
+  operator_name?: string
+  created_at: string
+}
+
+export interface DefectComment {
+  id: number
+  defect_id: number
+  content: string
+  author_id?: number
+  author_name?: string
+  created_at: string
+}
+
+export interface DefectAttachment {
+  id: number
+  defect_id: number
+  filename: string
+  file_size: number
+  mime_type?: string
+  uploader_name?: string
+  created_at: string
+}
+
 export interface ProjectDetail {
   id: number
   code: string
@@ -308,4 +345,745 @@ export interface ProjectDetail {
   status: number
   created_at: string | null
   updated_at: string | null
+}
+
+// ── Environment & Variables ──
+
+export interface Environment {
+  id: number
+  project_id: number
+  name: string
+  env_type: string           // dev | test | staging | prod
+  base_url: string
+  description: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface EnvironmentVariable {
+  id: number
+  environment_id: number
+  key: string
+  value: string
+  encrypted: boolean
+  description: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+// ── TestCase Version ──
+
+export interface TestCaseVersion {
+  id: number
+  case_id: number
+  version_number: number
+  changed_by: number
+  changed_fields: string[]
+  created_at: string | null
+}
+
+export interface TestCaseVersionDetail extends TestCaseVersion {
+  snapshot: Record<string, any>
+}
+
+// ── API Test Execution ──
+
+export interface ApiAssertion {
+  type: string           // "status_code" | "jsonpath" | "regex" | "response_time"
+  path?: string          // JSONPath or field
+  expected: any
+  operator: string       // "eq" | "neq" | "gt" | "lt" | "contains" | "exists" | "regex"
+  pattern?: string       // for regex type
+}
+
+export interface ApiExecutionResult {
+  status: string
+  status_code: number
+  response_headers: Record<string, string>
+  response_body: any
+  duration_ms: number
+  assertions: ApiAssertionResult[]
+  all_pass: boolean
+  error?: string
+  executed_at?: string
+}
+
+export interface ApiAssertionResult {
+  type: string
+  expected: any
+  actual: any
+  passed: boolean
+  message: string
+}
+
+export interface QuickExecuteRequest {
+  method: string
+  url: string
+  headers: string       // JSON string
+  body: string          // JSON string
+  assertions?: string
+  environment_id?: number
+  dataset_id?: number
+  service_name?: string  // for asset debug: service name for URL composition
+  query_params?: string  // JSON string of query key-value pairs
+}
+
+// ── Dataset (V2.5) ──
+
+export interface Dataset {
+  id: number
+  project_id: number
+  name: string
+  description: string
+  source_type: 'csv' | 'json' | 'sql'
+  raw_content: string
+  sql_query: string
+  connection_string: string
+  row_count: number
+  columns_meta: string     // JSON string: ["col1", "col2", ...]
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface DatasetListItem {
+  id: number
+  project_id: number
+  name: string
+  description: string
+  source_type: string
+  row_count: number
+  columns_meta: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface DatasetPreview {
+  columns: string[]
+  rows: Record<string, string>[]
+  total_rows: number
+}
+
+export interface DatasetUploadResponse {
+  dataset: Dataset
+  preview: DatasetPreview
+}
+
+export interface BatchExecutionResult {
+  status: string
+  batch_mode: boolean
+  dataset_id: number
+  columns: string[]
+  total_rows: number
+  passed: number
+  failed: number
+  per_row: Array<{
+    row_index: number
+    row_data: Record<string, string>
+    result: ApiExecutionResult
+  }>
+  executed_at: string
+}
+
+// ── Cross-Project Dashboard (V2.5) ──
+
+export interface CrossProjectCard {
+  project_id: number
+  project_name: string
+  total_cases: number
+  total_plans: number
+  api_cases: number
+  pass_rate: number
+  defect_count: number
+}
+
+export interface CrossProjectAggregate {
+  total_projects: number
+  total_cases: number
+  total_plans: number
+  total_api_cases: number
+  overall_pass_rate: number
+  total_defects: number
+}
+
+export interface TrendPoint {
+  date: string
+  pass_rate?: number
+  total_execs?: number
+  count?: number
+}
+
+export interface CrossProjectTrends {
+  pass_rate: TrendPoint[]
+  defects: TrendPoint[]
+}
+
+export interface CrossProjectStats {
+  projects: Array<{ id: number; code: string; name: string }>
+  aggregate: CrossProjectAggregate
+  per_project: CrossProjectCard[]
+  trends: CrossProjectTrends
+}
+
+// ── TestCase Review ──
+
+export interface TestCaseReviewTransition {
+  id: number
+  case_id: number
+  from_status: string
+  from_label: string
+  to_status: string
+  to_label: string
+  comment: string
+  reviewer_id: number
+  reviewer_name: string
+  created_at: string | null
+}
+
+// ── Quality Gate ──
+
+export interface QualityGateConfig {
+  project_id: number
+  pass_rate_threshold: number
+  p0_max: number
+  p1_max: number
+  enabled: boolean
+  is_default?: boolean
+}
+
+// ── Integration Config (V2.6) ──
+
+export interface IntegrationConfig {
+  id: number
+  project_id: number
+  name: string
+  provider_type: 'jira' | 'tapd'
+  base_url: string
+  auth_json: string       // always "********" in response
+  field_mapping: string    // JSON string
+  sync_direction: string   // bidirectional | push_only | pull_only
+  sync_interval_minutes: number
+  enabled: boolean
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface SyncLog {
+  id: number
+  integration_id: number
+  defect_id: number
+  direction: 'push' | 'pull'
+  status: 'success' | 'failed' | 'skipped'
+  external_id: string
+  message: string
+  created_at: string | null
+}
+
+export interface TestConnectionResult {
+  success: boolean
+  message: string
+}
+
+// ── API Test Asset Types (接口测试模块优化) ──
+
+export interface ApiService {
+  id: number
+  project_id: number
+  name: string
+  display_name: string
+  description: string
+  default_base_path: string
+  owner: string
+  status: string
+  endpoint_count: number
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface ApiEndpoint {
+  id: number
+  project_id: number
+  service_id: number
+  module: string
+  method: string
+  path: string
+  summary: string
+  description: string
+  request_schema: string
+  response_schema: string
+  auth_required: boolean
+  deprecated: boolean
+  source: string
+  import_batch_id: number | null
+  version: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface ApiImportPreview {
+  service_name: string
+  version: string
+  total_count: number
+  new_count: number
+  existing_count: number
+  doc_url: string
+  spec_urls: string[]
+  discovered_by: string
+  modules: Array<{ name: string; count: number }>
+  endpoints: Array<{
+    module: string
+    method: string
+    path: string
+    summary: string
+    source: string
+    _exists?: boolean
+  }>
+  errors: Array<{ method: string; path: string; error: string }>
+}
+
+export interface ApiImportResult {
+  batch_id: number
+  service_name: string
+  version: string
+  total_count: number
+  created_count: number
+  updated_count: number
+  skipped_count: number
+  generated_case_count: number
+  errors: Array<{ method: string; path: string; error: string }>
+}
+
+export interface ApiExecutionTask {
+  id: number
+  project_id: number
+  task_id: string
+  name: string
+  environment_id: number | null
+  service_id: number | null
+  status: string
+  total: number
+  passed: number
+  failed: number
+  skipped: number
+  trigger_type: string
+  creator_id: number
+  started_at: string | null
+  finished_at: string | null
+  created_at: string | null
+}
+
+export interface ApiExecutionTaskItem {
+  id: number
+  task_id: number
+  case_id: number
+  status: string
+  duration_ms: number
+  request_snapshot: string
+  response_snapshot: string
+  assertion_results: string
+  error_message: string
+  created_at: string | null
+}
+
+export interface ApiTaskDetail extends ApiExecutionTask {
+  items: ApiExecutionTaskItem[]
+}
+
+export interface GenerateApiCasesRequest {
+  endpoint_id?: number
+  endpoint_data?: Record<string, any>
+  templates?: string[]
+  import_to_case_library?: boolean
+  module?: string
+  service_name?: string
+}
+
+export interface BatchGenerateRequest {
+  endpoint_ids: number[]
+  templates?: string[]
+  import_to_case_library?: boolean
+}
+
+export interface ApiTaskCreateRequest {
+  name: string
+  environment_id?: number
+  service_id?: number
+  case_ids: number[]
+}
+
+// ========== 知识中心 (RAG / Agent 持续学习) ==========
+
+export interface KnowledgePage<T> {
+  total: number
+  page: number
+  page_size: number
+  items: T[]
+}
+
+export interface KnowledgeSource {
+  id: number
+  project_id: number
+  source_type: string
+  source_id: number | null
+  title: string
+  source_ref: string
+  version: string
+  status: string
+  created_at?: string
+  // 详情附加字段
+  content_hash?: string
+  iteration_id?: number | null
+  raw_content?: string
+  metadata_json?: string
+  updated_at?: string
+}
+
+export interface KnowledgeChunk {
+  id: number
+  project_id: number
+  source_id: number
+  chunk_type: string
+  title: string
+  content: string
+  content_hash: string
+  token_count: number
+  embedding_id: string
+  tags: string
+  status: string
+  created_at?: string
+}
+
+export interface AiArtifact {
+  id: number
+  project_id: number
+  artifact_type: string
+  title: string
+  content_json: string
+  source_refs: string
+  agent_run_id: number | null
+  confidence: number
+  review_status: string
+  reviewer_id: number
+  review_comment: string
+  imported_ref_type: string
+  imported_ref_id: number | null
+  created_at?: string
+}
+
+export interface KnowledgeHealth {
+  unreviewed_artifacts: number
+  deprecated_sources: number
+  sourceless_chunks: number
+  low_confidence_relations: number
+  unreviewed_relations: number
+  agent_approval_rate: number
+  agent_avg_duration_ms: number
+  agent_total_runs: number
+}
+
+export interface KnowledgeOverview {
+  source_count: number
+  chunk_count: number
+  entity_count: number
+  pending_artifact_count: number
+  recent_sources: KnowledgeSource[]
+  health: KnowledgeHealth
+}
+
+// ── M2 混合检索 ──
+
+export interface KnowledgeSearchQuery {
+  query: string
+  chunk_type?: string
+  top_k?: number
+  mode?: 'hybrid' | 'keyword' | 'vector'
+}
+
+export interface KnowledgeSearchResult {
+  chunk_id: number
+  chunk_type: string
+  title: string
+  snippet: string
+  score: number
+  source_id: number
+  source_name: string
+}
+
+export interface ReembedResult {
+  total: number
+  embedded: number
+  skipped: number
+}
+
+// ── M3 知识图谱 ──
+
+export interface KnowledgeEntity {
+  id: number
+  project_id: number
+  entity_type: string
+  entity_key: string
+  name: string
+  description: string
+  source_id: number | null
+  business_ref_type: string
+  business_ref_id: number | null
+  confidence: number
+  review_status: string
+  metadata_json: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface KnowledgeRelation {
+  id: number
+  project_id: number
+  from_entity_id: number
+  relation_type: string
+  to_entity_id: number
+  confidence: number
+  evidence_chunk_ids: string
+  review_status: string
+  metadata_json: string
+  created_at: string | null
+}
+
+export interface GraphNode {
+  id: string
+  entity_type: string
+  name: string
+  group: string
+  description: string
+  confidence: number
+  entity_id: number
+}
+
+export interface GraphEdge {
+  source: string
+  target: string
+  relation_type: string
+  confidence: number
+}
+
+export interface GraphView {
+  nodes: GraphNode[]
+  edges: GraphEdge[]
+}
+
+// M3 实体列表精简视图（匹配后端 KnowledgeEntityBrief）
+export interface KnowledgeEntityBrief {
+  id: number
+  entity_type: string
+  entity_key: string
+  name: string
+  description: string
+  confidence: number
+}
+
+// M3 实体提取结果
+export interface EntityExtractResult {
+  extracted: number
+  relations: number
+  skipped: number
+  message: string
+}
+
+// M3 关系列表分页包装
+export interface KnowledgeRelationPage {
+  items: KnowledgeRelation[]
+  total: number
+}
+
+// M3 实体列表分页包装
+export interface KnowledgeEntityPage {
+  items: KnowledgeEntityBrief[]
+  total: number
+}
+
+// ── M6 迭代知识包 ──
+
+export interface KnowledgeIteration {
+  id: number
+  project_id: number
+  iteration_name: string
+  version: string
+  start_date: string | null
+  end_date: string | null
+  status: string
+  description: string
+  metadata_json: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface KnowledgeSnapshot {
+  id: number
+  iteration_id: number
+  snapshot_type: string
+  data_json: string
+  created_at: string | null
+}
+
+export interface CompareSnapshots {
+  base_iteration_id: number
+  base_iteration_name: string
+  target_iteration_id: number
+  target_iteration_name: string
+  deltas: Record<string, any>
+  trends: Record<string, any>
+}
+
+// ── M6 回归预测 ──
+
+export interface RegressionPredictionItem {
+  api_path: string
+  module: string
+  risk_score: number
+  historical_defects: number
+  suggested_test_cases: string[]
+  affected_entities: string[]
+}
+
+export interface RegressionPrediction {
+  items: RegressionPredictionItem[]
+  total_analyzed: number
+  high_risk_count: number
+}
+
+// ========== LLM-Wiki 知识库 / 差异对比 (VNext-1..3) ==========
+
+export interface WikiConfig {
+  wiki_enabled: boolean
+  wiki_auto_ingest_enabled: boolean
+  wiki_diff_enabled: boolean
+  wiki_auto_create_artifact: boolean
+  lanhu_mcp_enabled: boolean
+}
+
+export interface WikiRawSource {
+  id: number
+  project_id: number
+  source_type: string
+  source_ref: string
+  title: string
+  content_hash: string
+  immutable_version: string
+  status: string
+  knowledge_source_id: number | null
+  business_ref_type?: string
+  business_ref_id?: number | null
+  content_md?: string
+  metadata_json?: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface LanhuImportTarget {
+  ingest_knowledge: boolean
+  build_wiki: boolean
+  extract_graph: boolean
+}
+
+export interface LanhuImportRequest {
+  url: string
+  description?: string
+  target?: LanhuImportTarget
+}
+
+export interface LanhuImportResult {
+  raw_source_id: number | null
+  knowledge_source_id: number | null
+  wiki_job_id: number | null
+  extraction_status: string
+  extraction_summary: string
+}
+
+export interface WikiIngestJob {
+  id: number
+  project_id: number
+  raw_source_id: number
+  status: string
+  stage: string
+  result_json?: string
+  error_message?: string
+  retry_count?: number
+  created_at: string | null
+  finished_at: string | null
+}
+
+export interface WikiPageBrief {
+  id: number
+  project_id: number
+  page_type: string
+  slug: string
+  title: string
+  version: number
+  review_status: string
+  confidence: number
+  updated_at: string | null
+}
+
+export interface WikiPage extends WikiPageBrief {
+  content_md: string
+  frontmatter_json: string
+  source_refs_json: string
+  content_hash: string
+  created_by_agent_run_id: number | null
+  created_at: string | null
+}
+
+export interface WikiLink {
+  id: number
+  project_id: number
+  from_page_id: number
+  to_page_id: number
+  link_type: string
+  evidence_json: string
+  confidence: number
+}
+
+export interface WikiDiffItem {
+  id: number
+  task_id: number
+  project_id: number
+  dimension: string
+  diff_type: string
+  severity: string
+  title: string
+  left_value: string
+  right_value: string
+  evidence_json: string
+  suggestion: string
+  review_status: string
+  resolved_artifact_id: number | null
+  created_at: string | null
+}
+
+export interface WikiDiffTaskBrief {
+  id: number
+  project_id: number
+  title: string
+  compare_type: string
+  status: string
+  summary_json: string
+  created_at: string | null
+  finished_at: string | null
+}
+
+export interface WikiDiffTask extends WikiDiffTaskBrief {
+  left_ref_json: string
+  right_ref_json: string
+  error_message: string
+  items: WikiDiffItem[]
+}
+
+export interface WikiDiffCreateRequest {
+  title?: string
+  compare_type?: string
+  query: string
+  left_kb_type?: string
+  right_kb_type?: string
+}
+
+export interface WikiDiffCreateArtifactResult {
+  artifact_id: number
+  artifact_type: string
 }

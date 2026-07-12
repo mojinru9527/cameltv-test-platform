@@ -13,6 +13,7 @@ export interface CoverageData {
   pass_rate: number
   requirement_count: number
   requirements_with_cases: number
+  requirement_coverage_rate: number
 }
 
 export interface CaseTrace {

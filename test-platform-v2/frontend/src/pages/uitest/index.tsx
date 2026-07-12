@@ -10,7 +10,7 @@ import {
   Loader2,
 } from '@/lib/icons'
 import { useCallback, useEffect, useState } from 'react'
-import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob } from '@/api/uitest'
+import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts } from '@/api/uitest'
 import { useAuthStore } from '@/stores/auth'
 import type { UiJobItem, UiRunItem } from '@/types'
 import { toast } from 'sonner'
@@ -65,6 +65,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 const BROWSER_MAP: Record<string, { color: string }> = {
   chromium: { color: 'blue' },
@@ -114,11 +115,15 @@ const uiJobFormSchema = z.object({
 type UiJobFormValues = z.infer<typeof uiJobFormSchema>
 
 export default function UiTestPage() {
+  useDocumentTitle('UI 测试')
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [data, setData] = useState({ total: 0, items: [] as UiJobItem[], page: 1, page_size: 20 })
   const [loading, setLoading] = useState(false)
   const [fStatus, setFStatus] = useState<string | undefined>()
   const [fKeyword, setFKeyword] = useState('')
+  const [scripts, setScripts] = useState<string[]>([])
+
+  useEffect(() => { fetchScripts().then(setScripts).catch(() => setScripts([])) }, [])
 
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<UiJobItem | null>(null)
@@ -341,8 +346,11 @@ export default function UiTestPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">测试文件路径</label>
-              <Input placeholder="tests/home.spec.ts" {...form.register('test_spec')} />
+              <label className="text-sm font-medium mb-1 block">测试脚本</label>
+              <ScriptSelector
+                value={form.watch('test_spec') || ''}
+                onChange={(v) => form.setValue('test_spec', v)}
+              />
             </div>
 
             <div>
@@ -468,6 +476,39 @@ export default function UiTestPage() {
           )}
         </SheetContent>
       </Sheet>
+    </div>
+  )
+}
+
+// ── Script Selector ──
+
+function ScriptSelector({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [scripts, setScripts] = useState<string[]>([])
+  const [custom, setCustom] = useState(false)
+
+  useEffect(() => { fetchScripts().then(setScripts).catch(() => setScripts([])) }, [])
+
+  if (scripts.length === 0 || custom) {
+    return (
+      <div className="flex gap-2">
+        <Input placeholder="tests/login.spec.js" value={value} onChange={(e) => onChange(e.target.value)} />
+        {scripts.length > 0 && (
+          <Button variant="ghost" size="sm" onClick={() => setCustom(false)}>选择</Button>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex gap-2">
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger><SelectValue placeholder="选择测试脚本" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">(空)</SelectItem>
+          {scripts.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Button variant="ghost" size="sm" onClick={() => setCustom(true)}>自定义</Button>
     </div>
   )
 }

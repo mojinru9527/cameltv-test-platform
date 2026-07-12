@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import { AsyncState } from '@/components/state'
+import useApi from '@/hooks/useApi'
 import {
   Select,
   SelectContent,
@@ -50,9 +52,6 @@ const roleSchema = z.object({
 type RoleFormData = z.infer<typeof roleSchema>
 
 export default function RolesTab() {
-  const [roles, setRoles] = useState<any[]>([])
-  const [permGroups, setPermGroups] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [saving, setSaving] = useState(false)
@@ -70,16 +69,19 @@ export default function RolesTab() {
   })
   const watchDataScope = watch('data_scope')
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    try {
-      const [rls, perms] = await Promise.all([fetchRoles(), fetchPermissions()])
-      setRoles(rls as any)
-      setPermGroups(perms as any)
-    } finally { setLoading(false) }
-  }, [])
+  const {
+    data: rolesAndPerms,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useApi<any>(
+    () => Promise.all([fetchRoles(), fetchPermissions()]),
+    { showErrorToast: true },
+  )
 
-  useEffect(() => { load() }, [load])
+  const roles: any[] = (rolesAndPerms?.[0] as any) ?? []
+  const permGroups: any[] = (rolesAndPerms?.[1] as any) ?? []
 
   const openEdit = (role?: any) => {
     setEditing(role || null)
@@ -114,14 +116,14 @@ export default function RolesTab() {
       }
       setDrawer(false)
       setEditing(null)
-      load()
+      refetch()
     } finally { setSaving(false) }
   }
 
   const doDelete = async (id: number) => {
     await deleteRole(id)
     toast.success('已删除')
-    load()
+    refetch()
   }
 
   const togglePerm = (code: string, checked: boolean | 'indeterminate') => {
@@ -185,15 +187,27 @@ export default function RolesTab() {
         新建角色
       </Button>
 
-      {/* Table */}
-      <DataTable
-        columns={roleColumns}
-        data={roles}
-        rowKey={(r) => r.id}
-        loading={loading}
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={rolesAndPerms?.[0]}
+        onRetry={refetch}
+        emptyTitle="暂无角色"
+        emptyDescription="点击「新建角色」创建权限角色"
+        skeletonType="table"
         loadingRows={4}
-        emptyState={{ title: '暂无角色', description: '点击「新建角色」创建权限角色' }}
-      />
+      >
+        {() => (
+        <DataTable
+          columns={roleColumns}
+          data={roles}
+          rowKey={(r) => r.id}
+          loading={isLoading}
+          loadingRows={4}
+        />
+        )}
+      </AsyncState>
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
@@ -206,33 +220,37 @@ export default function RolesTab() {
           </DialogHeader>
           <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.code} aria-invalid={!!errors.code}>
-              <label className="text-sm font-medium">编码</label>
+              <label htmlFor="role-code" className="text-sm font-medium">编码</label>
               <Input
+                id="role-code"
                 disabled={!!editing?.id}
                 placeholder="角色编码"
                 {...register('code')}
                 className={cn(errors.code && 'border-destructive')}
+                aria-describedby={errors.code ? 'role-code-error' : undefined}
               />
-              {errors.code && <span className="text-xs text-destructive">{errors.code.message}</span>}
+              {errors.code && <span id="role-code-error" className="text-xs text-destructive">{errors.code.message}</span>}
             </div>
 
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.name} aria-invalid={!!errors.name}>
-              <label className="text-sm font-medium">名称</label>
+              <label htmlFor="role-name" className="text-sm font-medium">名称</label>
               <Input
+                id="role-name"
                 placeholder="角色名称"
                 {...register('name')}
                 className={cn(errors.name && 'border-destructive')}
+                aria-describedby={errors.name ? 'role-name-error' : undefined}
               />
-              {errors.name && <span className="text-xs text-destructive">{errors.name.message}</span>}
+              {errors.name && <span id="role-name-error" className="text-xs text-destructive">{errors.name.message}</span>}
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">数据范围</label>
+              <label htmlFor="role-data-scope" className="text-sm font-medium">数据范围</label>
               <Select
                 value={watchDataScope || 'project'}
                 onValueChange={(v) => setValue('data_scope', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="role-data-scope">
                   <SelectValue placeholder="选择数据范围" />
                 </SelectTrigger>
                 <SelectContent>
@@ -244,8 +262,8 @@ export default function RolesTab() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">备注</label>
-              <Textarea rows={2} placeholder="备注信息" {...register('remark')} />
+              <label htmlFor="role-remark" className="text-sm font-medium">备注</label>
+              <Textarea id="role-remark" rows={2} placeholder="备注信息" {...register('remark')} />
             </div>
 
             <div className="flex flex-col gap-1.5">

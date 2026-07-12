@@ -12,6 +12,7 @@ export {
   // Actions
   Plus,
   Edit,
+  Pencil,
   Trash2,
   Eye,
   Search,
@@ -59,10 +60,13 @@ export {
   Bug,
   BarChart3,
   PieChart,
+  TrendingUp,
+  Building2,
   Monitor,
   Smartphone,
   Video,
   Wifi,
+  WifiOff,
   Server,
   Database,
   Code2,
@@ -86,6 +90,28 @@ export {
   RefreshCw,
   FlaskConical,
   TestTube2,
+  Star,
+  // Communication
+  MessageSquare,
+  Send,
+  // Files
+  Paperclip,
+  File,
+  // Arrows
+  ArrowRight,
+  ArrowLeftRight,
+  // History
+  History,
+  // Keys
+  Key,
+  // Fullscreen
+  Maximize2,
+  Minimize2,
+  // Checklist
+  ClipboardCheck,
+  BrainCircuit,
+  AlertCircle,
+  GitCompare,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"

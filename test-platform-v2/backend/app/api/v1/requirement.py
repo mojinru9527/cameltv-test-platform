@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, Body, Depends, File, Form, Request, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, Request, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -26,6 +26,7 @@ from app.schemas.requirement import (
 )
 from app.services import audit_service, requirement_service
 from app.services.file_parser_service import parse_docx, parse_markdown, parse_xlsx
+from app.services.knowledge import ingest_service
 
 router = APIRouter(prefix="/requirements", tags=["需求文档"])
 
@@ -59,6 +60,7 @@ def list_requirements(
 @router.post("/upload", response_model=R[RequirementDocumentOut])
 async def upload_requirement(
     req: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile | None = File(None),
     lanhu_url: str = Form(""),
     lanhu_description: str = Form(""),
@@ -74,6 +76,17 @@ async def upload_requirement(
     excel_cases: list[dict] | None = None
 
     if file is not None and file.filename:
+        # P1-S6a: Content-Length 前置检查，避免读取超大文件 (max 20 MB)
+        content_length = req.headers.get("content-length")
+        if content_length:
+            cl = int(content_length)
+            max_bytes = 20 * 1024 * 1024
+            if cl > max_bytes:
+                from app.core.exceptions import APIException
+                raise APIException(
+                    f"上传文件超过限制 (max: 20 MB, got: {cl / (1024*1024):.1f} MB)",
+                    code=413,
+                )
         file_bytes = await file.read()
         filename = file.filename
         source_ref = filename
@@ -121,6 +134,19 @@ async def upload_requirement(
         excel_cases=excel_cases,
     )
     _audit(req, current, db, "requirement:upload", f"#{doc['id']} {title}")
+    # 知识入库（自带 Session，post-commit，失败不影响主流程）
+    background_tasks.add_task(
+        ingest_service.ingest_requirement_in_new_session, current.project_id or 0, doc["id"]
+    )
+    # Wiki Raw Source 入库（仅蓝湖来源 + wiki_enabled；自带 Session，失败不影响主流程）
+    if file_type == "lanhu" and source_ref:
+        from app.services.wiki import import_service as wiki_import_service
+        background_tasks.add_task(
+            wiki_import_service.ingest_lanhu_raw_source_in_new_session,
+            current.project_id or 0, source_ref,
+            business_ref_type="requirement_document", business_ref_id=doc["id"],
+            description=lanhu_description.strip() if lanhu_url.strip() else "",
+        )
     return R.ok(RequirementDocumentOut(**doc))
 
 

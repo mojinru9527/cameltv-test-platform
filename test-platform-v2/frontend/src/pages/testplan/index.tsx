@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import {
@@ -30,6 +29,9 @@ import { Search, RotateCcw, Plus, Edit, Trash2 } from '@/lib/icons'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { deletePlan, fetchPlans } from '@/api/testplan'
+import { useApi } from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { AsyncState } from '@/components/state'
 import PlanDrawer from './PlanDrawer'
 
 const STATUS_MAP: Record<string, { variant: 'outline' | 'default' | 'secondary'; className?: string; label: string }> = {
@@ -40,33 +42,31 @@ const STATUS_MAP: Record<string, { variant: 'outline' | 'default' | 'secondary';
 }
 
 export default function TestPlanPage() {
+  useDocumentTitle('测试计划')
   const navigate = useNavigate()
-  const [data, setData] = useState({ total: 0, items: [] as any[], page: 1, page_size: 20 })
-  const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState('')
   const [keyword, setKeyword] = useState('')
+  const [page, setPage] = useState(1)
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
 
-  const load = useCallback(async (page = 1) => {
-    setLoading(true)
-    try {
+  // ── Data fetching with useApi ──
+  const { data, isLoading, isRefetching, isError, error, refetch } = useApi(
+    () => {
       const params: any = { page, page_size: 20 }
       if (status) params.status = status
       if (keyword) params.keyword = keyword
-      const r: any = await fetchPlans(params)
-      setData(r)
-    } finally { setLoading(false) }
-  }, [status, keyword])
-
-  useEffect(() => { load() }, [load])
+      return fetchPlans(params) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
+    },
+    [status, keyword, page]
+  )
 
   const doDelete = async (id: number) => {
     await deletePlan(id)
     toast.success('已删除')
     setDeleteTarget(null)
-    load()
+    refetch()
   }
 
   const openEdit = (row?: any) => {
@@ -77,10 +77,11 @@ export default function TestPlanPage() {
   const onSaved = () => {
     setDrawer(false)
     setEditing(null)
-    load()
+    refetch()
   }
 
-  const totalPages = Math.ceil(data.total / data.page_size)
+  const items = data?.items || []
+  const totalPages = data ? Math.ceil(data.total / data.page_size) : 1
 
   // ── DataTable column definitions ──
   const planColumns: DataTableColumn<any>[] = [
@@ -138,23 +139,34 @@ export default function TestPlanPage() {
     <div className="space-y-4">
       <PageHeader title="测试计划" />
 
-      <DataTable
-        columns={planColumns}
-        data={data.items}
-        rowKey={(r) => r.id}
-        loading={loading}
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data?.items}
+        onRetry={refetch}
+        emptyTitle="暂无测试计划"
+        emptyDescription="点击「新建计划」开始创建"
+        skeletonType="table"
         loadingRows={4}
-        emptyState={{ title: '暂无测试计划', description: '点击「新建计划」开始创建' }}
-        pagination={{
-          page: data.page,
-          totalPages,
-          total: data.total,
-          onChange: (p) => load(p),
-        }}
-        onRowClick={(r) => navigate(`/testplan/${r.id}`)}
-        toolbar={
+      >
+        {() => (
+        <DataTable
+          columns={planColumns}
+          data={items}
+          rowKey={(r) => r.id}
+          loading={isRefetching}
+          loadingRows={4}
+          pagination={{
+            page: data?.page || 1,
+            totalPages,
+            total: data?.total || 0,
+            onChange: (p) => setPage(p),
+          }}
+          onRowClick={(r) => navigate(`/testplan/${r.id}`)}
+          toolbar={
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={status || undefined} onValueChange={(v) => { setStatus(v || ''); load() }}>
+            <Select value={status || undefined} onValueChange={(v) => { setStatus(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[120px]" size="sm">
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
@@ -175,15 +187,15 @@ export default function TestPlanPage() {
                 placeholder="搜索计划名称"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') load() }}
+                onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1) } }}
               />
             </InputGroup>
 
-            <Button size="sm" onClick={() => load()}>
+            <Button size="sm" onClick={() => setPage(1)}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
-            <Button size="sm" variant="outline" onClick={() => load(data.page)}>
+            <Button size="sm" variant="outline" onClick={refetch}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
             </Button>
             <div className="flex-1" />
@@ -193,7 +205,9 @@ export default function TestPlanPage() {
             </Button>
           </div>
         }
-      />
+        />
+        )}
+      </AsyncState>
 
       <PlanDrawer
         open={drawer}
