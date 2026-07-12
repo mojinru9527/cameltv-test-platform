@@ -183,6 +183,20 @@ def init_scheduler():
     finally:
         db.close()
 
+    # ── 注册独立任务 Worker 轮询 ──
+    from app.services.task_worker import poll_and_execute
+    from apscheduler.triggers.interval import IntervalTrigger
+    try:
+        scheduler.add_job(
+            func=poll_and_execute,
+            trigger=IntervalTrigger(seconds=5),
+            id="task_worker_poll",
+            replace_existing=True,
+        )
+        logger.info("[scheduler] Task worker poll registered (every 5s)")
+    except Exception as e:
+        logger.error(f"[scheduler] Failed to register task worker: {e}")
+
 
 def shutdown_scheduler():
     """Called at app shutdown."""

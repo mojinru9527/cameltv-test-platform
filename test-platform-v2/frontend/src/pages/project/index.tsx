@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -13,6 +13,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
+import { AsyncState } from '@/components/state'
+import useApi from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Sheet,
@@ -75,9 +78,14 @@ const memberSchema = z.object({
 type MemberFormData = z.infer<typeof memberSchema>
 
 export default function ProjectPage() {
+  useDocumentTitle('项目管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
-  const [data, setData] = useState({ total: 0, items: [] as ProjectDetail[], page: 1, page_size: 20 })
-  const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+
+  const { data, isLoading, isError, error, refetch } = useApi<any>(
+    () => api.get('/projects/all', { params: { page, page_size: 20 } }),
+    { deps: [page], initialData: { total: 0, items: [] as ProjectDetail[], page: 1, page_size: 20 } },
+  )
 
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<ProjectDetail | null>(null)
@@ -164,16 +172,6 @@ export default function ProjectPage() {
     )},
   ]
 
-  const load = useCallback(async (page = 1) => {
-    setLoading(true)
-    try {
-      const res: any = await api.get('/projects/all', { params: { page, page_size: 20 } })
-      setData(res)
-    } finally { setLoading(false) }
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
   const doSave = async (vals: ProjectFormData) => {
     setSaving(true)
     try {
@@ -185,14 +183,14 @@ export default function ProjectPage() {
         toast.success('项目已创建')
       }
       setDrawer(false)
-      load()
+      refetch()
     } finally { setSaving(false) }
   }
 
   const doDelete = async (id: number) => {
     await api.delete(`/projects/${id}`)
     toast.success('已删除')
-    load()
+    refetch()
   }
 
   const openMembers = async (project: ProjectDetail) => {
@@ -206,7 +204,9 @@ export default function ProjectPage() {
       setMembers(mRes || [])
       setUsers(Array.isArray(uRes) ? uRes : (uRes as any)?.items || [])
       setRoles(Array.isArray(rRes) ? rRes : (rRes as any)?.items || [])
-    } catch { /* ignore */ }
+    } catch {
+      toast.error('获取成员数据失败')
+    }
     resetMember({ user_id: undefined as any, role_id: undefined as any })
     setMembersOpen(true)
   }
@@ -218,7 +218,9 @@ export default function ProjectPage() {
       const mRes: any = await api.get(`/projects/${activeProject?.id}/members`)
       setMembers(mRes || [])
       resetMember({ user_id: undefined as any, role_id: undefined as any })
-    } catch { /* ignore */ }
+    } catch {
+      toast.error('添加成员失败')
+    }
   }
 
   const doRemoveMember = async (userId: number) => {
@@ -243,7 +245,7 @@ export default function ProjectPage() {
   return (
     <>
       <PageHeader title="项目管理">
-        <Button variant="outline" size="sm" onClick={() => load()} data-icon="inline-start">
+        <Button variant="outline" size="sm" onClick={refetch} data-icon="inline-start">
           <RotateCcw />
           刷新
         </Button>
@@ -255,21 +257,36 @@ export default function ProjectPage() {
         )}
       </PageHeader>
 
-      {/* Table */}
-      <DataTable
-        columns={projectColumns}
-        data={data.items}
-        rowKey={(r) => r.id}
-        loading={loading}
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data?.items}
+        onRetry={refetch}
+        emptyTitle="暂无项目"
+        emptyDescription="点击「新建项目」开始创建"
+        skeletonType="table"
         loadingRows={4}
-        emptyState={{ title: '暂无项目', description: '点击「新建项目」开始创建' }}
-        pagination={{
-          page: data.page,
-          totalPages: Math.max(1, Math.ceil(data.total / data.page_size)),
-          total: data.total,
-          onChange: (p) => load(p),
-        }}
-      />
+      >
+        {() => (
+        <DataTable
+          columns={projectColumns}
+          data={data?.items ?? []}
+          rowKey={(r) => r.id}
+          loading={isLoading}
+          loadingRows={4}
+          pagination={{
+            page: data?.page ?? 1,
+            totalPages: Math.max(1, Math.ceil((data?.total ?? 0) / (data?.page_size ?? 20))),
+            total: data?.total ?? 0,
+            onChange: (p) => setPage(p),
+          }}
+        />
+        )}
+      </AsyncState>
+
+      {/* Quality Gate Config */}
+      <QualityGateCard />
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null) } }}>
@@ -282,27 +299,31 @@ export default function ProjectPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit(doSave)} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.code} aria-invalid={!!errors.code}>
-              <label className="text-sm font-medium">项目编码</label>
+              <label htmlFor="project-code" className="text-sm font-medium">项目编码</label>
               <Input
+                id="project-code"
                 placeholder="如：cameltv"
                 disabled={!!editing?.id}
                 {...register('code')}
                 className={cn(errors.code && 'border-destructive')}
+                aria-describedby={errors.code ? 'project-code-error' : undefined}
               />
-              {errors.code && <span className="text-xs text-destructive">{errors.code.message}</span>}
+              {errors.code && <span id="project-code-error" className="text-xs text-destructive">{errors.code.message}</span>}
             </div>
             <div className="flex flex-col gap-1.5" data-invalid={!!errors.name} aria-invalid={!!errors.name}>
-              <label className="text-sm font-medium">项目名称</label>
+              <label htmlFor="project-name" className="text-sm font-medium">项目名称</label>
               <Input
+                id="project-name"
                 placeholder="项目显示名"
                 {...register('name')}
                 className={cn(errors.name && 'border-destructive')}
+                aria-describedby={errors.name ? 'project-name-error' : undefined}
               />
-              {errors.name && <span className="text-xs text-destructive">{errors.name.message}</span>}
+              {errors.name && <span id="project-name-error" className="text-xs text-destructive">{errors.name.message}</span>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">描述</label>
-              <Textarea placeholder="项目说明" rows={3} {...register('description')} />
+              <label htmlFor="project-description" className="text-sm font-medium">描述</label>
+              <Textarea id="project-description" placeholder="项目说明" rows={3} {...register('description')} />
             </div>
           </form>
           <DialogFooter>
@@ -338,7 +359,7 @@ export default function ProjectPage() {
                       value={memberUserId ? String(memberUserId) : undefined}
                       onValueChange={(v) => setMemberValue('user_id', Number(v), { shouldValidate: true })}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger id="member-user" className="w-[180px]" aria-label="选择用户">
                         <SelectValue placeholder="选择用户" />
                       </SelectTrigger>
                       <SelectContent>
@@ -347,14 +368,14 @@ export default function ProjectPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {memberErrors.user_id && <span className="text-xs text-destructive">{memberErrors.user_id.message}</span>}
+                    {memberErrors.user_id && <span id="member-user-error" className="text-xs text-destructive">{memberErrors.user_id.message}</span>}
                   </div>
                   <div className="flex flex-col gap-1.5" data-invalid={!!memberErrors.role_id} aria-invalid={!!memberErrors.role_id}>
                     <Select
                       value={memberRoleId ? String(memberRoleId) : undefined}
                       onValueChange={(v) => setMemberValue('role_id', Number(v), { shouldValidate: true })}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger id="member-role" className="w-[180px]" aria-label="选择角色">
                         <SelectValue placeholder="选择角色" />
                       </SelectTrigger>
                       <SelectContent>
@@ -363,7 +384,7 @@ export default function ProjectPage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {memberErrors.role_id && <span className="text-xs text-destructive">{memberErrors.role_id.message}</span>}
+                    {memberErrors.role_id && <span id="member-role-error" className="text-xs text-destructive">{memberErrors.role_id.message}</span>}
                   </div>
                   <Button type="submit" size="sm" data-icon="inline-start">
                     <Plus />
@@ -428,5 +449,106 @@ export default function ProjectPage() {
         </SheetContent>
       </Sheet>
     </>
+  )
+}
+
+// ── Quality Gate Config ──
+
+function QualityGateCard() {
+  const [loading, setLoading] = useState(false)
+  const [config, setConfig] = useState<any>(null)
+  const [form, setForm] = useState({ pass_rate_threshold: 80, p0_max: 0, p1_max: 5, enabled: true })
+
+  useEffect(() => {
+    loadConfig()
+  }, [])
+
+  const loadConfig = async () => {
+    try {
+      const r: any = await api.get('/projects/current')
+      const projectId = r.id
+      if (!projectId) return
+      const g: any = await api.get(`/projects/${projectId}/quality-gate`)
+      if (g) {
+        setConfig(g)
+        setForm({ pass_rate_threshold: g.pass_rate_threshold, p0_max: g.p0_max, p1_max: g.p1_max, enabled: g.enabled })
+      }
+    } catch { /* no gate config yet */ }
+  }
+
+  const saveConfig = async () => {
+    setLoading(true)
+    try {
+      const r: any = await api.get('/projects/current')
+      const projectId = r.id
+      const result: any = await api.put(`/projects/${projectId}/quality-gate`, form)
+      setConfig(result)
+      toast.success('门禁配置已保存')
+    } catch {
+      toast.error('保存失败')
+    } finally { setLoading(false) }
+  }
+
+  return (
+    <Card className="mt-4">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">质量门禁配置</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-4 gap-4 items-end">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="gate-pass-rate" className="text-sm font-medium">通过率阈值 (%)</label>
+            <Input
+              id="gate-pass-rate"
+              type="number"
+              min={0}
+              max={100}
+              value={form.pass_rate_threshold}
+              onChange={(e) => setForm((f) => ({ ...f, pass_rate_threshold: parseInt(e.target.value) || 0 }))}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="gate-p0-max" className="text-sm font-medium">P0 缺陷上限</label>
+            <Input
+              id="gate-p0-max"
+              type="number"
+              min={0}
+              value={form.p0_max}
+              onChange={(e) => setForm((f) => ({ ...f, p0_max: parseInt(e.target.value) || 0 }))}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="gate-p1-max" className="text-sm font-medium">P1 缺陷上限</label>
+            <Input
+              id="gate-p1-max"
+              type="number"
+              min={0}
+              value={form.p1_max}
+              onChange={(e) => setForm((f) => ({ ...f, p1_max: parseInt(e.target.value) || 0 }))}
+            />
+          </div>
+          <div className="flex items-center gap-4">
+            <label htmlFor="gate-enabled" className="flex items-center gap-2 cursor-pointer">
+              <input
+                id="gate-enabled"
+                type="checkbox"
+                checked={form.enabled}
+                onChange={(e) => setForm((f) => ({ ...f, enabled: e.target.checked }))}
+                className="size-4"
+              />
+              <span className="text-sm">启用门禁</span>
+            </label>
+            <Button size="sm" onClick={saveConfig} disabled={loading}>
+              {loading ? '保存中...' : '保存'}
+            </Button>
+          </div>
+        </div>
+        {config?.is_default !== undefined && (
+          <p className="text-xs text-muted-foreground mt-2">
+            {config.is_default ? '当前使用默认配置' : '已自定义配置'}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   )
 }

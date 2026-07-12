@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -28,6 +29,7 @@ type LoginForm = z.infer<typeof loginSchema>
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  useDocumentTitle('登录')
   const setLogin = useAuthStore((s) => s.setLogin)
   const [loading, setLoading] = useState(false)
 
@@ -65,35 +67,41 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onFinish)} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
+              <label htmlFor="username" className="text-sm font-medium">用户名</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
+                  id="username"
                   className="pl-9"
                   placeholder="用户名"
                   {...register('username')}
                   data-invalid={!!errors.username}
                   aria-invalid={!!errors.username}
+                  aria-describedby={errors.username ? 'username-error' : undefined}
                 />
               </div>
               {errors.username && (
-                <span className="text-xs text-destructive">{errors.username.message}</span>
+                <span id="username-error" className="text-xs text-destructive">{errors.username.message}</span>
               )}
             </div>
 
             <div className="flex flex-col gap-1.5">
+              <label htmlFor="password" className="text-sm font-medium">密码</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                 <Input
+                  id="password"
                   className="pl-9"
                   type="password"
                   placeholder="密码"
                   {...register('password')}
                   data-invalid={!!errors.password}
                   aria-invalid={!!errors.password}
+                  aria-describedby={errors.password ? 'password-error' : undefined}
                 />
               </div>
               {errors.password && (
-                <span className="text-xs text-destructive">{errors.password.message}</span>
+                <span id="password-error" className="text-xs text-destructive">{errors.password.message}</span>
               )}
             </div>
 

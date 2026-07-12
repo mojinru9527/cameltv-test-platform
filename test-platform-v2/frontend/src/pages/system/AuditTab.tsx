@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
+import { AsyncState } from '@/components/state'
+import useApi from '@/hooks/useApi'
 import {
   Select,
   SelectContent,
@@ -11,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { format } from 'date-fns'
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { fetchAuditLogs } from '@/api/system'
 
 const ACTION_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -35,37 +37,29 @@ const ACTION_LABELS: Record<string, string> = {
 const PAGE_SIZE = 50
 
 export default function AuditTab() {
-  const [data, setData] = useState({ total: 0, list: [] as any[] })
-  const [loading, setLoading] = useState(false)
   const [action, setAction] = useState('')
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(0)
 
-  const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE))
-
-  const load = useCallback(async (pageNum = 0) => {
-    setLoading(true)
-    try {
-      const params: any = { limit: PAGE_SIZE, offset: pageNum * PAGE_SIZE }
+  const { data, isLoading, isError, error, refetch } = useApi<any>(
+    () => {
+      const params: any = { limit: PAGE_SIZE, offset: page * PAGE_SIZE }
       if (action) params.action = action
       if (keyword) params.keyword = keyword
-      const r: any = await fetchAuditLogs(params)
-      setData(r)
-    } finally {
-      setLoading(false)
-    }
-  }, [action, keyword])
+      return fetchAuditLogs(params)
+    },
+    [action, keyword, page],
+  )
 
-  useEffect(() => { load(0) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const totalPages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE))
 
-  const handleSearch = () => { setPage(0); load(0) }
+  const handleSearch = () => { setPage(0) }
 
-  const handleRefresh = () => { load(page) }
+  const handleRefresh = () => { refetch() }
 
   const handleActionChange = (v: string) => {
     setAction(v === 'all' ? '' : v)
     setPage(0)
-    setTimeout(() => load(0), 0)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -74,7 +68,6 @@ export default function AuditTab() {
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage)
-    load(newPage)
   }
 
   const formatDate = (v: string) => {
@@ -102,52 +95,65 @@ export default function AuditTab() {
 
   return (
     <div>
-      <DataTable
-        columns={auditColumns}
-        data={data.list}
-        rowKey={(item) => item.id}
-        loading={loading}
+      <AsyncState
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={data?.list}
+        onRetry={refetch}
+        emptyTitle="暂无审计日志"
+        emptyDescription="系统操作记录将在此显示"
+        skeletonType="table"
         loadingRows={4}
-        emptyState={{ title: '暂无审计日志', description: '系统操作记录将在此显示' }}
-        pagination={{
-          page: page + 1,
-          totalPages,
-          total: data.total,
-          onChange: (p) => handlePageChange(p - 1),
-        }}
-        toolbar={
-          <div className="flex items-center gap-2 flex-wrap">
-            <Select value={action || 'all'} onValueChange={handleActionChange}>
-              <SelectTrigger className="w-[130px]" size="sm">
-                <SelectValue placeholder="操作类型" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部操作</SelectItem>
-                <SelectItem value="user:create">新建用户</SelectItem>
-                <SelectItem value="user:update">编辑用户</SelectItem>
-                <SelectItem value="user:delete">删除用户</SelectItem>
-                <SelectItem value="role:create">新建角色</SelectItem>
-                <SelectItem value="role:update">编辑角色</SelectItem>
-                <SelectItem value="role:delete">删除角色</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="搜索目标/操作人"
-              className="w-[200px]"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              onKeyDown={handleKeyDown}
-            />
-            <Button size="sm" onClick={handleSearch}>
-              <Search className="size-4" />
-              搜索
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleRefresh}>
-              <RotateCcw className="size-4" />
-            </Button>
-          </div>
-        }
-      />
+      >
+        {() => (
+        <DataTable
+          columns={auditColumns}
+          data={data?.list ?? []}
+          rowKey={(item) => item.id}
+          loading={isLoading}
+          loadingRows={4}
+          pagination={{
+            page: page + 1,
+            totalPages,
+            total: data?.total ?? 0,
+            onChange: (p) => handlePageChange(p - 1),
+          }}
+          toolbar={
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={action || 'all'} onValueChange={handleActionChange}>
+                <SelectTrigger className="w-[130px]" size="sm">
+                  <SelectValue placeholder="操作类型" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部操作</SelectItem>
+                  <SelectItem value="user:create">新建用户</SelectItem>
+                  <SelectItem value="user:update">编辑用户</SelectItem>
+                  <SelectItem value="user:delete">删除用户</SelectItem>
+                  <SelectItem value="role:create">新建角色</SelectItem>
+                  <SelectItem value="role:update">编辑角色</SelectItem>
+                  <SelectItem value="role:delete">删除角色</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                placeholder="搜索目标/操作人"
+                className="w-[200px]"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+              <Button size="sm" onClick={handleSearch}>
+                <Search className="size-4" />
+                搜索
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleRefresh}>
+                <RotateCcw className="size-4" />
+              </Button>
+            </div>
+          }
+        />
+        )}
+      </AsyncState>
     </div>
   )
 }

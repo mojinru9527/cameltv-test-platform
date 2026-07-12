@@ -2,10 +2,72 @@
 from __future__ import annotations
 
 import json
+import re
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.test_case import TestCase
+
+# ── P1-2/S2b: HTML sanitization (defense-in-depth against stored XSS) ────
+
+# Tags whose inner content is stripped entirely (dangerous active content)
+_DANGEROUS_TAGS_RE = re.compile(
+    r"<\s*(script|iframe|object|embed|form|input|textarea|select|option"
+    r"|link|meta|base|applet|frame|frameset|ilayer|layer|bgsound"
+    r"|xml|style)[^>]*/?\s*>.*?</\s*\1\s*>",
+    re.IGNORECASE | re.DOTALL,
+)
+# Self-closing dangerous tags
+_SELF_CLOSING_TAGS_RE = re.compile(
+    r"<\s*(script|iframe|object|embed|form|input|textarea|select"
+    r"|link|meta|base|applet|frame|frameset)[^>]*/?\s*>",
+    re.IGNORECASE,
+)
+# Event handler attributes (onerror, onclick, onload, etc.)
+_EVENT_ATTRS_RE = re.compile(
+    r"\s+on\w+\s*=\s*(\"[^\"]*\"|'[^']*'|[^\s>]+)",
+    re.IGNORECASE,
+)
+# javascript: URLs in href/src attributes
+_JS_URL_RE = re.compile(
+    r"""(href|src|action)\s*=\s*["']?\s*javascript\s*:""",
+    re.IGNORECASE,
+)
+
+_SAFE_FIELDS = frozenset({
+    "title", "preconditions", "steps", "expected_result",
+    "description", "remark", "tags", "api_endpoint", "review_comment",
+})
+
+
+def _sanitize_html(value: str) -> str:
+    """Strip dangerous HTML tags and event handlers, preserving markdown syntax.
+
+    Strategy: remove dangerous tags first (strip their inner content for
+    script/iframe, or just the tag for others), then strip event handler
+    attributes and javascript: URLs.
+    """
+    if not value or not isinstance(value, str):
+        return value or ""
+
+    # 1. Remove fully wrapped dangerous tags (strip inner content too)
+    cleaned = _DANGEROUS_TAGS_RE.sub("", value)
+    # 2. Remove self-closing dangerous tags
+    cleaned = _SELF_CLOSING_TAGS_RE.sub("", cleaned)
+    # 3. Strip event handler attributes
+    cleaned = _EVENT_ATTRS_RE.sub("", cleaned)
+    # 4. Strip javascript: URLs
+    cleaned = _JS_URL_RE.sub(r'\1=""', cleaned)
+
+    return cleaned.strip()
+
+
+def _sanitize_case_data(data: dict) -> dict:
+    """Sanitize user-controlled text fields in create/update payloads."""
+    for field in _SAFE_FIELDS:
+        if field in data and isinstance(data[field], str):
+            data[field] = _sanitize_html(data[field])
+    return data
 
 
 # ── CRUD ──────────────────────────────────────────────
@@ -78,6 +140,7 @@ def get_case(db: Session, case_id: int, project_id: int = 0) -> dict | None:
 
 
 def create_case(db: Session, data: dict) -> dict:
+    data = _sanitize_case_data(data)
     row = TestCase(**data)
     db.add(row)
     db.commit()
@@ -85,10 +148,18 @@ def create_case(db: Session, data: dict) -> dict:
     return _row_to_dict(row)
 
 
-def update_case(db: Session, case_id: int, data: dict) -> dict | None:
+def update_case(db: Session, case_id: int, data: dict, changed_by: int = 0) -> dict | None:
+    data = _sanitize_case_data(data)
     row = db.get(TestCase, case_id)
     if not row:
         return None
+
+    # Auto-version: save snapshot before modifying
+    changed_fields = [k for k, v in data.items() if v is not None]
+    if changed_fields:
+        from app.services.version_service import save_version
+        save_version(db, case_id, changed_by=changed_by, changed_fields=",".join(sorted(changed_fields)))
+
     for k, v in data.items():
         if v is not None:
             setattr(row, k, v)
@@ -176,8 +247,15 @@ def _row_to_dict(r: TestCase) -> dict:
         "api_method": r.api_method,
         "api_endpoint": r.api_endpoint,
         "api_spec_ref": r.api_spec_ref,
+        "api_headers": r.api_headers,
+        "api_body": r.api_body,
+        "api_assertions": r.api_assertions,
         "source": r.source,
+        "source_doc_id": r.source_doc_id,
         "old_id": r.old_id,
+        "review_status": r.review_status,
+        "review_comment": r.review_comment,
+        "reviewer_id": r.reviewer_id,
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "updated_at": r.updated_at.isoformat() if r.updated_at else None,
     }

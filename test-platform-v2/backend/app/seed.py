@@ -15,17 +15,22 @@ _MENUS = [
     ("menu:workbench", "工作台", "", "/workbench", "DashboardOutlined", 1),
     ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
     ("menu:requirement", "需求文档", "", "/requirement", "FileTextOutlined", 3),
-    ("menu:mindmap", "用例脑图", "", "/mindmap", "ShareAltOutlined", 4),
-    ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 5),
-    ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 6),
-    ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 7),
-    ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 8),
-    ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 9),
-    ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 10),
-    ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 11),
-    ("menu:system", "系统管理", "", "/system", "SettingOutlined", 12),
-    ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 13),
-    ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 14),
+    ("menu:versionmission", "版本测试任务", "", "/version-mission", "GitBranchOutlined", 4),
+    ("menu:mindmap", "用例脑图", "", "/mindmap", "ShareAltOutlined", 5),
+    ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 6),
+    ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 7),
+    ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 8),
+    ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 9),
+    ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 10),
+    ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 11),
+    ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 12),
+    ("menu:system", "系统管理", "", "/system", "SettingOutlined", 13),
+    ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 14),
+    ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 15),
+    ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 16),
+    ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 17),
+    ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 18),
+    ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 19),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -86,6 +91,14 @@ _ACTIONS = [
     ("uitest:update", "编辑UI自动化任务", "button"),
     ("uitest:delete", "删除UI自动化任务", "button"),
     ("uitest:trigger", "触发UI自动化", "button"),
+    # API 测试
+    ("apitest:execute", "执行接口测试", "button"),
+    ("apitest:view", "查看接口测试", "button"),
+    ("apitest:import", "导入接口文档", "button"),
+    ("apitest:generate", "生成接口用例", "button"),
+    ("apitest:task", "管理执行任务", "button"),
+    ("apitest:asset_manage", "管理接口资产", "button"),
+    ("apitest:execute_prod", "执行生产环境接口测试", "button"),
     # 项目管理
     ("project:list", "查看项目列表", "button"),
     ("project:detail", "查看项目详情", "button"),
@@ -97,13 +110,60 @@ _ACTIONS = [
     ("requirement:upload", "上传需求文档", "button"),
     ("requirement:generate", "AI生成用例", "button"),
     ("requirement:import", "导入生成用例", "button"),
+    # 版本测试任务
+    ("mission:list", "查看版本测试任务", "button"),
+    ("mission:detail", "查看版本测试任务详情", "button"),
+    ("mission:create", "创建版本测试任务", "button"),
+    ("mission:update", "编辑版本测试任务", "button"),
+    ("mission:delete", "删除版本测试任务", "button"),
+    ("mission:log", "记录Agent部门日志", "button"),
+    ("mission:generate", "生成版本测试资产", "button"),
+    # API Token 管理 (P1-6/S3)
+    ("token:list", "查看 API Token", "button"),
+    ("token:manage", "管理 API Token", "button"),
+    # 通知配置 (P1-6/S3)
+    ("notify:list", "查看通知配置", "button"),
+    ("notify:manage", "管理通知配置", "button"),
+    # 用例评审 (C3)
+    ("review:submit", "提交评审", "button"),
+    ("review:approve", "审批评审", "button"),
+    # 测试数据集 (V2.5)
+    ("dataset:list", "查看数据集", "button"),
+    ("dataset:create", "新建数据集", "button"),
+    ("dataset:update", "编辑数据集", "button"),
+    ("dataset:delete", "删除数据集", "button"),
+    # 集成配置 (V2.6)
+    ("integration:list", "查看集成配置", "button"),
+    ("integration:manage", "管理集成配置", "button"),
+    ("integration:sync", "执行同步操作", "button"),
+    # 知识中心 (RAG / Agent 持续学习 — M0)
+    ("knowledge:view", "查看知识中心", "button"),
+    ("knowledge:manage", "管理知识源（重解析/废弃）", "button"),
+    ("knowledge:approve", "审核知识与 AI 产物", "button"),
+    ("agent:list", "查看 Agent 执行记录", "button"),
+    ("agent:run", "手动触发 Agent", "button"),
+    ("agent:admin", "管理 Agent 配置", "button"),
+    ("ai_artifact:import", "导入 AI 产物到正式资产", "button"),
+    # LLM-Wiki 知识库 / 差异对比 (VNext-1..3) — 收在知识中心，不新增菜单
+    ("wiki:view", "查看 Wiki 页面与差异报告", "button"),
+    ("wiki:manage", "导入来源、触发编译、重试任务", "button"),
+    ("wiki:approve", "审核 Wiki 页面与差异处理", "button"),
+    ("wiki:diff", "发起知识库对比", "button"),
 ]
 
 # 测试人员可见的菜单子集
+_TESTER_ACTIONS = {
+    "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
+    "apitest:task", "apitest:asset_manage",
+    "knowledge:view",
+    "agent:list",
+    "wiki:view", "wiki:diff",
+}
+
 _TESTER_MENUS = {
-    "menu:workbench", "menu:trace", "menu:requirement", "menu:mindmap", "menu:testcase", "menu:testplan",
+    "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
-    "menu:defect",
+    "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
 }
 
 
@@ -158,6 +218,9 @@ def run_seed() -> None:
         for code in _TESTER_MENUS:
             if code in code_to_perm:
                 _get_or_create(db, RolePermission, role_id=tester_role.id, permission_id=code_to_perm[code].id)
+        for code in _TESTER_ACTIONS:
+            if code in code_to_perm:
+                _get_or_create(db, RolePermission, role_id=tester_role.id, permission_id=code_to_perm[code].id)
 
         # 5) 管理员用户
         admin_user, created_admin = _get_or_create(
@@ -167,21 +230,23 @@ def run_seed() -> None:
                 "nickname": "超级管理员",
                 "email": "admin@cameltv.local",
                 "status": 1,
-                "must_change_password": settings.admin_password == "" or settings.admin_password == "admin123",
+                "must_change_password": settings.admin_password == "",
             },
             username=settings.admin_username,
         )
 
         # 5.5) 测试用户（方便验证角色隔离）
+        import secrets as _secrets
+        tester_pwd = settings.tester_password or _secrets.token_urlsafe(10)
         tester_user, created_tester = _get_or_create(
             db, User,
             defaults={
-                "password": hash_password("tester123"),
+                "password": hash_password(tester_pwd),
                 "nickname": "测试同学",
                 "email": "tester@cameltv.local",
                 "status": 1,
             },
-            username="tester",
+            username=settings.tester_username,
         )
 
         # 6) 默认项目
@@ -205,11 +270,13 @@ def run_seed() -> None:
         db.commit()
         if created_admin:
             print(f"[seed] 初始管理员已创建：{settings.admin_username}")
-            if settings.admin_password and settings.admin_password != "admin123":
+            if settings.admin_password:
                 print("[seed] 管理员使用自定义密码")
             else:
-                print("[seed] 管理员使用默认密码，首次登录需修改")
+                print("[seed] 管理员使用自动生成密码（见启动日志），首次登录需修改")
         if created_tester:
-            print("[seed] 测试用户已创建：tester")
+            print(f"[seed] 测试用户已创建：{settings.tester_username}")
+            if not settings.tester_password:
+                print(f"[seed] 测试用户自动生成密码：{tester_pwd}")
     finally:
         db.close()

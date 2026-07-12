@@ -46,7 +46,7 @@ class TestLoginAPI:
         })
         assert resp.status_code == 200
         data = resp.json()["data"]
-        assert "token" in data
+        assert "access_token" in data
         assert data["user"]["username"] == "admin_test"
 
     def test_login_wrong_password(self, client, admin_user):
@@ -64,13 +64,14 @@ class TestLoginAPI:
     def test_me_endpoint(self, client, auth_headers):
         resp = client.get("/api/v1/auth/me", headers=auth_headers)
         assert resp.status_code == 200
-        assert resp.json()["data"]["username"] == "admin_test"
+        # MeOut nests the user under `data.user`, not `data` directly.
+        assert resp.json()["data"]["user"]["username"] == "admin_test"
 
     def test_me_no_token(self, client):
         resp = client.get("/api/v1/auth/me")
         assert resp.status_code == 401
 
-    def test_disabled_user_cannot_login(self, client, db_session):
+    def test_disabled_user_cannot_login(self, client, admin_user, db_session):
         u = db_session.query(User).filter_by(username="admin_test").first()
         u.status = 0
         db_session.commit()

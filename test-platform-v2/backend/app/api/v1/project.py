@@ -146,3 +146,62 @@ def list_members(
 ):
     items = project_service.list_members(db, project_id)
     return R.ok(items)
+
+
+# ── Quality Gate Config ────────────────────────────────
+
+from pydantic import BaseModel as _PydanticBase
+
+
+class GateConfigBody(_PydanticBase):
+    pass_rate_threshold: int | None = 80   # 0-100
+    p0_max: int | None = 0
+    p1_max: int | None = 5
+    coverage_threshold: int | None = 0     # 0-100, 0=disabled
+    max_failed_cases: int | None = 0       # 0=unlimited
+    max_blocked_cases: int | None = 0      # 0=unlimited
+    enabled: bool | None = True
+
+
+@router.get("/{project_id}/quality-gate", response_model=R[dict], summary="获取质量门禁配置")
+def get_quality_gate(
+    project_id: int,
+    current: CurrentUser = Depends(require_permission("project:manage")),
+    db: Session = Depends(get_db),
+):
+    """获取项目的质量门禁配置。未配置时返回默认值。"""
+    from app.services.report_service import get_quality_gate_config
+
+    config = get_quality_gate_config(db, project_id)
+    if not config:
+        return R.ok({
+            "project_id": project_id,
+            "pass_rate_threshold": 80,
+            "p0_max": 0,
+            "p1_max": 5,
+            "coverage_threshold": 0,
+            "max_failed_cases": 0,
+            "max_blocked_cases": 0,
+            "enabled": True,
+            "is_default": True,
+        })
+    return R.ok({**config, "is_default": False})
+
+
+@router.put("/{project_id}/quality-gate", response_model=R[dict], summary="配置质量门禁")
+def upsert_quality_gate(
+    project_id: int,
+    body: GateConfigBody,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("project:manage")),
+    db: Session = Depends(get_db),
+):
+    """创建或更新项目的质量门禁配置。"""
+    from app.services.report_service import save_quality_gate_config
+
+    config = save_quality_gate_config(
+        db, project_id, body.model_dump(exclude_none=True)
+    )
+    db.commit()
+    _audit(req, current, db, "project:gate:config", f"project#{project_id} gate updated")
+    return R.ok({**config, "is_default": False})

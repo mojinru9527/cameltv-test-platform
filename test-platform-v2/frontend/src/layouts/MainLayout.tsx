@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { fetchMenus } from '@/api/auth'
+import { fetchMenus, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import type { ColorTheme } from '@/stores/auth'
 import { useTheme } from '@/components/theme-provider'
@@ -67,6 +67,7 @@ import {
   Palette,
   ChevronRight,
   TestTube2,
+  Sparkles,
   type LucideIcon,
 } from '@/lib/icons'
 
@@ -86,6 +87,7 @@ const ICONS: Record<string, LucideIcon> = {
   SettingOutlined: Settings,
   AppstoreOutlined: LayoutDashboard,
   BugOutlined: Bug,
+  BrainCircuitOutlined: Sparkles,
 }
 
 const THEME_CONFIG: Record<ColorTheme, { label: string; desc: string; preview: string[]; icon: string }> = {
@@ -124,9 +126,11 @@ export default function MainLayout() {
   const [menus, setMenus] = useState<MenuItem[]>([])
 
   useEffect(() => {
+    let cancelled = false
     fetchMenus()
-      .then(setMenus)
+      .then((data) => { if (!cancelled) setMenus(data) })
       .catch(() => {})
+    return () => { cancelled = true }
   }, [])
 
   const onSwitchProject = (id: number) => {
@@ -216,8 +220,13 @@ export default function MainLayout() {
 
   return (
     <SidebarProvider defaultOpen>
+      {/* ── Skip to content (accessibility) ── */}
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded">
+        跳到主内容
+      </a>
+
       {/* ── Sidebar ── */}
-      <Sidebar collapsible="icon">
+      <Sidebar collapsible="icon" aria-label="主导航">
         <SidebarHeader>
           <div className="flex h-14 items-center gap-2.5 px-3 border-b border-sidebar-border">
             {/* Logo icon — always visible, serves as collapsed-state brand */}
@@ -397,8 +406,11 @@ export default function MainLayout() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    logout()
-                    navigate('/login', { replace: true })
+                    // P1-1: 先请求后端清除 httpOnly cookie，再清本地状态并跳转。
+                    logoutApi().catch(() => {}).finally(() => {
+                      logout()
+                      navigate('/login', { replace: true })
+                    })
                   }}
                 >
                   <LogOut className="mr-2 size-4" />
@@ -410,7 +422,7 @@ export default function MainLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-6 page-enter">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto p-6 page-enter">
           <Outlet />
         </main>
       </SidebarInset>

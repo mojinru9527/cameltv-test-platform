@@ -1,7 +1,8 @@
 """测试计划 API 路由 — /api/v1/test-plans/*"""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
@@ -20,6 +21,28 @@ from app.schemas.test_plan import (
     PlanUpdate,
 )
 from app.services import audit_service, test_plan_service
+
+import logging
+logger = logging.getLogger("test_plan")
+
+
+def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
+    """P1-4: 在独立 DB session 中发送通知（供 BackgroundTasks 调用）。
+
+    必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
+    原请求的 db session 可能已关闭。
+    """
+    from app.core.db import SessionLocal
+    from app.services.notify_service import notify_sync
+
+    db = SessionLocal()
+    try:
+        notify_sync(db, project_id, event, data)
+    except Exception:
+        logger.exception("Background notification failed: event=%s project=%s", event, project_id)
+    finally:
+        db.close()
+
 
 router = APIRouter(prefix="/test-plans", tags=["测试计划"])
 
@@ -174,6 +197,7 @@ def execute_case(
     pcase_id: int,
     body: ExecutionCreate,
     req: Request,
+    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("testplan:execute")),
     db: Session = Depends(get_db),
 ):
@@ -191,18 +215,52 @@ def execute_case(
         return R(code=404, msg="关联不存在或无权操作")
     _audit(req, current, db, "plan:execute", f"plan #{plan_id} case #{pcase_id}", f"status={body.status}")
 
-    # Background notification: plan execution progress
-    import asyncio
-    from app.services.notify_service import notify
+    # P1-4: Background notification via BackgroundTasks (replaces fire-and-forget
+    # asyncio.create_task — runs in its own DB session to avoid session-closed errors).
     plan = test_plan_service.get_plan(db, plan_id, current.project_id or 0)
     stats = plan.get("stats", {}) if plan else {}
-    asyncio.create_task(notify(db, current.project_id or 0, "plan_done", {
-        "plan_name": plan.get("name", "") if plan else "",
-        "result_summary": f"通过 {stats.get('pass_',0)} / 失败 {stats.get('fail',0)} / 跳过 {stats.get('skip',0)}",
-        "link": "",
-    }))
+    background_tasks.add_task(
+        _run_notify_in_new_session,
+        current.project_id or 0,
+        "plan_done",
+        {
+            "plan_name": plan.get("name", "") if plan else "",
+            "result_summary": f"通过 {stats.get('pass_',0)} / 失败 {stats.get('fail',0)} / 跳过 {stats.get('skip',0)}",
+            "link": "",
+        },
+    )
 
     return R.ok(ExecutionOut(**row))
+
+
+class AutoExecuteBody(BaseModel):
+    environment_id: int | None = None
+
+@router.post("/{plan_id}/auto-execute", response_model=R[dict], summary="自动执行计划中的 API 用例")
+def auto_execute_api_cases(
+    plan_id: int,
+    body: AutoExecuteBody | None = None,
+    req: Request = None,
+    current: CurrentUser = Depends(require_permission("testplan:execute")),
+    db: Session = Depends(get_db),
+):
+    """自动执行计划中所有 case_type='api' 的用例，生成执行记录。"""
+    try:
+        result = test_plan_service.auto_execute_api_cases(
+            db,
+            plan_id=plan_id,
+            executor_id=current.user.id,
+            environment_id=body.environment_id if body else None,
+            project_id=current.project_id or 0,
+        )
+    except ValueError as e:
+        return R(code=1, msg=str(e))
+    except Exception as e:
+        return R(code=1, msg=f"批量执行失败: {e}")
+
+    _audit(req, current, db, "plan:auto_execute", f"plan #{plan_id}",
+           f"executed={result['executed']}, passed={result['passed']}, failed={result['failed']}")
+    return R.ok(result)
 
 
 @router.get("/{plan_id}/executions", response_model=R[Page[ExecutionOut]])

@@ -1,7 +1,9 @@
 """Defect API routes."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, Request, UploadFile, File
+import logging
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, UploadFile, File
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -10,8 +12,10 @@ from app.schemas.common import R
 from app.schemas.defect import DefectCreate, DefectOut, DefectStats, DefectUpdate
 from app.services import defect_service
 from app.services.audit_service import write_audit
+from app.services.knowledge import ingest_service
 from app.models.user import User
 
+logger = logging.getLogger("defect")
 router = APIRouter(prefix="/defects", tags=["缺陷管理"])
 
 
@@ -26,6 +30,24 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
+
+
+def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
+    """P1-4/S4a: 在独立 DB session 中发送通知（供 BackgroundTasks 调用）。
+
+    必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
+    原请求的 db session 可能已关闭。
+    """
+    from app.core.db import SessionLocal
+    from app.services.notify_service import notify_sync
+
+    db = SessionLocal()
+    try:
+        notify_sync(db, project_id, event, data)
+    except Exception:
+        logger.exception("Background notification failed: event=%s project=%s", event, project_id)
+    finally:
+        db.close()
 
 
 @router.get("/stats", response_model=R[DefectStats])
@@ -65,26 +87,36 @@ def list_defects(
 def create_defect(
     req: Request,
     body: DefectCreate,
+    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("defect:create")),
     db: Session = Depends(get_db),
 ):
     r = defect_service.create_defect(db, body, current.user.id, current.project_id or 0)
     db.commit()
     _audit(req, current, db, "defect:create", f"#{r['id']} {r['title']}")
+    # 知识入库：缺陷 → 知识源/切片（post-commit，自带 Session）
+    background_tasks.add_task(
+        ingest_service.ingest_defect_in_new_session, current.project_id or 0, r["id"]
+    )
 
-    # Background notification if assignee is set
+    # P1-4/S4a: Background notification via FastAPI BackgroundTasks
+    # (replaces fire-and-forget asyncio.create_task — task is tracked and
+    # runs in its own DB session to avoid session-closed errors).
     if body.assignee_id and body.assignee_id > 0:
-        import asyncio
-        from app.services.notify_service import notify
-        assignee = db.get(User, body.assignee_id) if 'User' in dir() else None
+        assignee = db.get(User, body.assignee_id)
         assignee_name = (assignee.nickname or assignee.username) if assignee else ""
-        asyncio.create_task(notify(db, current.project_id or 0, "defect_assigned", {
-            "title": body.title,
-            "severity": body.severity,
-            "assignee": assignee_name,
-            "status": "open",
-            "link": "",
-        }))
+        background_tasks.add_task(
+            _run_notify_in_new_session,
+            current.project_id or 0,
+            "defect_assigned",
+            {
+                "title": body.title,
+                "severity": body.severity,
+                "assignee": assignee_name,
+                "status": "open",
+                "link": "",
+            },
+        )
 
     return R.ok(DefectOut(**r))
 
@@ -161,6 +193,7 @@ def transition_defect(
     req: Request,
     defect_id: int,
     body: TransitionBody,
+    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
@@ -181,6 +214,10 @@ def transition_defect(
         raise not_found("缺陷")
     db.commit()
     _audit(req, current, db, "defect:transition", f"#{defect_id} → {body.to_status}", body.comment)
+    # 知识入库：状态变更后重新沉淀缺陷（关闭时含处理说明）
+    background_tasks.add_task(
+        ingest_service.ingest_defect_in_new_session, current.project_id or 0, defect_id
+    )
     return R.ok(DefectOut(**r))
 
 
@@ -233,6 +270,19 @@ def upload_attachment(
     db: Session = Depends(get_db),
 ):
     """Upload a file attachment to a defect (max 50 MB)."""
+    # P1-S6a: Content-Length 前置检查，避免读取超大文件
+    content_length = req.headers.get("content-length")
+    if content_length:
+        cl = int(content_length)
+        max_bytes = 50 * 1024 * 1024
+        if cl > max_bytes:
+            from app.core.exceptions import APIException
+            raise APIException(
+                f"上传文件超过限制 (max: 50 MB, got: {cl / (1024*1024):.1f} MB)",
+                code=413,
+            )
+    # P1-5b: 直接读取（Content-Length 已做前置检查，max 50 MB；upload_attachment
+    # 需要完整 bytes，流式写入临时文件后再次读回不能节省峰值内存）。
     content = file.file.read()
     if len(content) > 50 * 1024 * 1024:
         from app.core.exceptions import APIException
@@ -298,3 +348,33 @@ def delete_attachment(
     db.commit()
     _audit(req, current, db, "defect:attachment:delete", f"#{defect_id}", f"attachment #{attachment_id}")
     return R.ok({"deleted": True})
+
+
+# ── V2.6: External sync endpoints ──
+
+@router.post("/{defect_id}/sync-push", response_model=R[dict])
+def sync_push_defect(
+    defect_id: int,
+    integration_id: int = Query(..., description="Integration config ID to push to"),
+    current: CurrentUser = Depends(require_permission("integration:sync")),
+    db: Session = Depends(get_db),
+):
+    """Push a single defect to the external system."""
+    from app.services.sync import engine as sync_engine
+
+    log_entry = sync_engine.push_defect(db, integration_id, defect_id, current.project_id or 0)
+    return R.ok(log_entry)
+
+
+@router.post("/{defect_id}/sync-pull", response_model=R[dict])
+def sync_pull_defect(
+    defect_id: int,
+    integration_id: int = Query(..., description="Integration config ID to pull from"),
+    current: CurrentUser = Depends(require_permission("integration:sync")),
+    db: Session = Depends(get_db),
+):
+    """Pull latest status for a single defect from the external system."""
+    from app.services.sync import engine as sync_engine
+
+    log_entry = sync_engine.pull_defect_status(db, integration_id, defect_id, current.project_id or 0)
+    return R.ok(log_entry)

@@ -51,3 +51,47 @@ def get_dashboard_stats(
         end_date=parsed_end,
     )
     return R.ok(DashboardStats(**stats))
+
+
+@router.get("/cross-project", response_model=R[dict])
+def get_cross_project_stats(
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+):
+    """Get aggregated stats across all projects visible to the current user."""
+    from datetime import timedelta
+    from app.schemas.dashboard import CrossProjectStats
+
+    parsed_start: date | None = None
+    parsed_end: date | None = None
+    if start_date:
+        parsed_start = date.fromisoformat(start_date)
+    if end_date:
+        parsed_end = date.fromisoformat(end_date)
+    if not parsed_start and not parsed_end:
+        today = date.today()
+        parsed_start = today - timedelta(days=7)
+        parsed_end = today
+
+    stats = dashboard_service.get_cross_project_stats(
+        db,
+        user_id=current.user.id,
+        is_superadmin=current.is_super,
+        start_date=parsed_start,
+        end_date=parsed_end,
+    )
+    return R.ok(CrossProjectStats(**stats).model_dump())
+
+
+@router.get("/test-summary", response_model=R[dict], summary="API+UI 测试全景摘要")
+def get_test_summary(
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    days: int = Query(7, ge=1, le=90, description="统计最近 N 天"),
+):
+    """获取项目 API 测试 + UI 自动化的全景摘要（含错误分类和趋势）。"""
+    from app.services.report_aggregator import get_aggregated_summary
+    summary = get_aggregated_summary(db, current.project_id or 0, days=days)
+    return R.ok(summary)

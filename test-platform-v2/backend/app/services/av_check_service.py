@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-import random
+import logging
 from datetime import datetime, timezone
 
 from sqlalchemy import func, select
@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from app.core.base_service import batch_user_names, paginate
 from app.models.av_check import AvCheckMetric, AvCheckTask
 from app.models.user import User
+
+logger = logging.getLogger("avcheck")
 
 
 def _generate_task_id(db: Session, project_id: int) -> str:
@@ -104,38 +106,71 @@ def delete_task(db: Session, task_id: int, project_id: int) -> bool:
 
 
 def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
-    """Simulate AV check and generate metrics."""
+    """触发 AV 质量检测 — 使用 ffprobe 真实探测流媒体。"""
+    from app.services.ffmpeg_service import probe_stream, _check_ffmpeg_installed
+
     r = db.scalar(select(AvCheckTask).where(AvCheckTask.id == task_id, AvCheckTask.project_id == project_id))
     if not r:
         raise ValueError("任务不存在")
 
+    stream_url = (r.stream_url or "").strip()
+
+    # 检查 ffprobe 可用性
+    ff_ok, ff_ver = _check_ffmpeg_installed()
+    if not ff_ok:
+        r.status = "fail"
+        r.last_result = json.dumps({"error": f"FFmpeg 不可用: {ff_ver}"}, ensure_ascii=False)
+        db.commit()
+        return _task_to_dict(r, metrics=[])
+
+    if not stream_url:
+        r.status = "fail"
+        r.last_result = json.dumps({"error": "流地址为空"}, ensure_ascii=False)
+        db.commit()
+        return _task_to_dict(r, metrics=[])
+
     r.status = "running"
     db.flush()
 
-    # Simulate metrics
-    metric_defs = [
-        ("起播时延", "ms", 2000),
-        ("卡顿率", "%", 5.0),
-        ("音画同步", "ms", 100),
-        ("首帧时间", "ms", 3000),
-        ("缓冲次数", "次", 3),
-    ]
-    metrics = []
-    for name, unit, threshold in metric_defs:
-        value = round(random.uniform(0, threshold * 1.5), 2)
-        passed = value <= threshold
-        m = AvCheckMetric(
-            task_id=task_id, metric_name=f"{name}({unit})",
-            metric_value=value, threshold=threshold, pass_=passed,
-            detail=json.dumps({"unit": unit, "recommended": f"<={threshold}"}, ensure_ascii=False),
-        )
-        db.add(m)
-        metrics.append(m)
+    # 执行 ffprobe 探测
+    logger.info(f"AV check #{task_id}: probing {stream_url[:100]}...")
+    probe_result = probe_stream(stream_url, protocol=r.protocol or "HLS")
 
+    if not probe_result["ok"]:
+        # 探测失败
+        r.status = "fail"
+        r.last_result = json.dumps({
+            "error": probe_result.get("error", "探测失败"),
+            "checked_at": datetime.now(timezone.utc).isoformat(),
+        }, ensure_ascii=False)
+        db.commit()
+        return _task_to_dict(r, metrics=[])
+
+    # 保存指标到数据库
+    metrics = []
+    for m in probe_result["metrics"]:
+        db_metric = AvCheckMetric(
+            task_id=task_id,
+            metric_name=f"{m['name']}({m['unit']})" if m.get("unit") else m["name"],
+            metric_value=float(m["value"]) if m["value"] is not None else 0,
+            threshold=float(m["threshold"]),
+            pass_=bool(m["passed"]),
+            detail=json.dumps({
+                "unit": m.get("unit", ""),
+                "recommended": m.get("recommended", ""),
+                "raw_value": m.get("raw_value"),
+            }, ensure_ascii=False),
+        )
+        db.add(db_metric)
+        metrics.append(db_metric)
+
+    pass_count = sum(1 for m in metrics if m.pass_)
     result_summary = {
         "total": len(metrics),
-        "pass_count": sum(1 for m in metrics if m.pass_),
+        "pass_count": pass_count,
+        "ffprobe_version": probe_result.get("raw", {}).get("ffprobe_version", ff_ver),
         "checked_at": datetime.now(timezone.utc).isoformat(),
+        **{f"raw_{k}": v for k, v in (probe_result.get("raw") or {}).items()},
     }
     r.last_result = json.dumps(result_summary, ensure_ascii=False)
     r.status = "done"

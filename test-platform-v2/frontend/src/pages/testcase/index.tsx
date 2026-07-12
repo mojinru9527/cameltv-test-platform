@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -36,21 +35,25 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 import DomainTree from '@/components/DomainTree'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
-import EmptyState from '@/components/EmptyState'
-import { SkeletonText } from '@/components/ui/skeleton'
+import { AsyncState } from '@/components/state'
 
-import { Search, RotateCcw, Plus, Edit, Trash2 } from '@/lib/icons'
+import { Search, RotateCcw, Plus, Edit, Trash2, Download, Upload, FileSpreadsheet, History, ClipboardCheck } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases } from '@/api/testcase'
+import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, exportExcelUrl, exportXmindUrl, importExcel, importXmind, fetchVersions, reviewCase } from '@/api/testcase'
+import { useApi } from '@/hooks/useApi'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import CaseDrawer from './CaseDrawer'
+import VersionDialog from './VersionDialog'
+import type { TestCaseVersion } from '@/types'
 
 const PRIORITY_COLORS: Record<string, string> = { P0: 'red', P1: 'orange', P2: 'blue', P3: 'default' }
+const REVIEW_LABELS: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }
+const REVIEW_COLORS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = { draft: 'secondary', submitted: 'outline', approved: 'default', rejected: 'destructive' }
 
 export default function TestCasePage() {
-  // data
-  const [data, setData] = useState({ total: 0, items: [] as any[], page: 1, page_size: 20 })
+  useDocumentTitle('用例库')
+  // domains are loaded independently (used for tree + filter dropdowns)
   const [domains, setDomains] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
 
   // filter state
   const [actTab, setActTab] = useState('')
@@ -58,6 +61,7 @@ export default function TestCasePage() {
   const [selModule, setSelModule] = useState('')
   const [priority, setPriority] = useState('')
   const [keyword, setKeyword] = useState('')
+  const [page, setPage] = useState(1)
 
   // drawer
   const [drawer, setDrawer] = useState(false)
@@ -69,6 +73,47 @@ export default function TestCasePage() {
   const [batchUpdating, setBatchUpdating] = useState(false)
   const [batchPriority, setBatchPriority] = useState('')
 
+  // delete dialog
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+
+  // import/export
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importFormat, setImportFormat] = useState<'xmind' | 'excel'>('excel')
+  const [importing, setImporting] = useState(false)
+
+  // version history
+  const [versionDialog, setVersionDialog] = useState(false)
+  const [versionCase, setVersionCase] = useState<any>(null)
+  const [versions, setVersions] = useState<TestCaseVersion[]>([])
+
+  // ── Main data fetching with useApi ──
+  const { data, isLoading, isError, error, refetch } = useApi(
+    () => {
+      const params: any = { page, page_size: 20 }
+      if (actTab) params.case_type = actTab
+      if (selDomain) params.domain = selDomain
+      if (selModule) params.module = selModule
+      if (priority) params.priority = priority
+      if (keyword) params.keyword = keyword
+      return fetchTestCases(params) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
+    },
+    [actTab, selDomain, selModule, priority, keyword, page]
+  )
+
+  // ── Domains (secondary data, loaded independently) ──
+  const loadDomains = useCallback(async () => {
+    try {
+      const d: any = await fetchDomains()
+      setDomains(d || [])
+    } catch { /* handled by interceptor */ }
+  }, [])
+
+  useEffect(() => { loadDomains() }, [loadDomains])
+
+  const items = data?.items || []
+  const totalPages = data ? Math.ceil(data.total / data.page_size) : 1
+
+  // ── Selection helpers ──
   const toggleSelect = (id: number) => {
     setSelected(prev => {
       const next = new Set(prev)
@@ -77,20 +122,21 @@ export default function TestCasePage() {
     })
   }
   const toggleSelectAll = () => {
-    if (selected.size === data.items.length) {
+    if (selected.size === items.length) {
       setSelected(new Set())
     } else {
-      setSelected(new Set(data.items.map((r: any) => r.id)))
+      setSelected(new Set(items.map((r: any) => r.id)))
     }
   }
 
+  // ── Batch operations ──
   const doBatchDelete = async () => {
     setBatchDeleting(true)
     try {
       await batchDeleteCases(Array.from(selected))
       toast.success(`已删除 ${selected.size} 条用例`)
       setSelected(new Set())
-      reload()
+      refetch()
     } catch {
       toast.error('批量删除失败')
     } finally { setBatchDeleting(false) }
@@ -104,43 +150,13 @@ export default function TestCasePage() {
       toast.success(`已更新 ${selected.size} 条用例`)
       setSelected(new Set())
       setBatchPriority('')
-      reload()
+      refetch()
     } catch {
       toast.error('批量更新失败')
     } finally { setBatchUpdating(false) }
   }
 
-  // delete dialog
-  const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
-
-  // load domains
-  const loadDomains = useCallback(async () => {
-    try {
-      const d: any = await fetchDomains()
-      setDomains(d || [])
-    } catch { /* handled by interceptor */ }
-  }, [])
-
-  // load cases
-  const load = useCallback(async (page = 1) => {
-    setLoading(true)
-    try {
-      const params: any = { page, page_size: 20 }
-      if (actTab) params.case_type = actTab
-      if (selDomain) params.domain = selDomain
-      if (selModule) params.module = selModule
-      if (priority) params.priority = priority
-      if (keyword) params.keyword = keyword
-      const r: any = await fetchTestCases(params)
-      setData(r)
-    } finally { setLoading(false) }
-  }, [actTab, selDomain, selModule, priority, keyword])
-
-  useEffect(() => { loadDomains(); load() }, [loadDomains])
-
-  const reload = () => load(data.page)
-
-  // domain tree data
+  // ── Domain tree data ──
   const domainTree = useMemo(() => {
     return domains.map((d: any) => ({
       title: <span className="text-[13px]">{d.domain} <span className="text-muted-foreground">({d.count})</span></span>,
@@ -160,12 +176,12 @@ export default function TestCasePage() {
     return d?.modules?.map((m: any) => ({ value: m.module, label: `${m.module} (${m.count})` })) || []
   }, [selDomain, domains])
 
-  // actions
+  // ── Actions ──
   const doDelete = async (id: number) => {
     await deleteTestCase(id)
     toast.success('已删除')
     setDeleteTarget(null)
-    reload()
+    refetch()
   }
 
   const openEdit = (row?: any) => {
@@ -176,11 +192,54 @@ export default function TestCasePage() {
   const onSaved = () => {
     setDrawer(false)
     setEditing(null)
-    reload()
+    refetch()
     loadDomains()
   }
 
-  const totalPages = Math.ceil(data.total / data.page_size)
+  // ── Import/Export handlers ──
+
+  const handleExport = (format: 'excel' | 'xmind') => {
+    const params: Record<string, string> = {}
+    if (selDomain) params.domain = selDomain
+    if (selModule) params.module = selModule
+    const url = format === 'excel' ? exportExcelUrl(params) : exportXmindUrl(params)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = format === 'excel' ? 'test-cases.xlsx' : 'test-cases.xmind'
+    a.click()
+  }
+
+  const handleImportClick = (format: 'xmind' | 'excel') => {
+    setImportFormat(format)
+    fileInputRef.current?.click()
+  }
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImporting(true)
+    try {
+      const result = importFormat === 'excel' ? await importExcel(file) : await importXmind(file)
+      toast.success(`导入完成：${result.imported} / ${result.total} 条用例已创建`)
+      refetch()
+      loadDomains()
+    } catch { /* handled by interceptor */ }
+    finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  // ── Version history ──
+
+  const openVersionHistory = async (row: any) => {
+    setVersionCase(row)
+    setVersionDialog(true)
+    try {
+      const data = await fetchVersions(row.id)
+      setVersions(data)
+    } catch { setVersions([]) }
+  }
 
   return (
     <div className="space-y-4">
@@ -188,11 +247,11 @@ export default function TestCasePage() {
 
       {/* Top Tabs */}
       <div className="flex items-center gap-2">
-        {[
+        {([
           ['', '全部 (901)'],
           ['manual', '功能用例 (795)'],
           ['api', '接口用例 (106)'],
-        ].map(([k, label]) => (
+        ]).map(([k, label]) => (
           <button
             key={k as string}
             type="button"
@@ -202,7 +261,7 @@ export default function TestCasePage() {
                 ? 'bg-accent text-accent-foreground font-semibold'
                 : 'text-muted-foreground hover:text-foreground'
             )}
-            onClick={() => { setActTab(k as string); load() }}
+            onClick={() => { setActTab(k as string); setPage(1) }}
           >
             {label}
           </button>
@@ -220,15 +279,14 @@ export default function TestCasePage() {
             <DomainTree
               treeData={domainTree}
               onSelect={(keys) => {
-                if (!keys.length) { setSelDomain(''); setSelModule(''); load(); return }
+                if (!keys.length) { setSelDomain(''); setSelModule(''); setPage(1); return }
                 const key = keys[0]
                 if (key.includes('::')) {
                   const [d, m] = key.split('::')
-                  setSelDomain(d); setSelModule(m)
+                  setSelDomain(d); setSelModule(m); setPage(1)
                 } else {
-                  setSelDomain(key); setSelModule('')
+                  setSelDomain(key); setSelModule(''); setPage(1)
                 }
-                load()
               }}
             />
           </CardContent>
@@ -238,7 +296,7 @@ export default function TestCasePage() {
         <div className="flex-1 min-w-0 space-y-3">
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); load() }}>
+            <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); setPage(1) }}>
               <SelectTrigger className="w-[130px]" size="sm">
                 <SelectValue placeholder="按域筛选" />
               </SelectTrigger>
@@ -249,7 +307,7 @@ export default function TestCasePage() {
               </SelectContent>
             </Select>
 
-            <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); load() }}>
+            <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[150px]" size="sm">
                 <SelectValue placeholder="按模块筛选" />
               </SelectTrigger>
@@ -260,7 +318,7 @@ export default function TestCasePage() {
               </SelectContent>
             </Select>
 
-            <Select value={priority || undefined} onValueChange={(v) => { setPriority(v || ''); load() }}>
+            <Select value={priority || undefined} onValueChange={(v) => { setPriority(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[100px]" size="sm">
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
@@ -279,18 +337,40 @@ export default function TestCasePage() {
                 placeholder="搜索标题/编号/接口"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') load() }}
+                onKeyDown={(e) => { if (e.key === 'Enter') refetch() }}
               />
             </InputGroup>
 
-            <Button size="sm" onClick={() => load()}>
+            <Button size="sm" onClick={() => setPage(1)}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
-            <Button size="sm" variant="outline" onClick={reload}>
+            <Button size="sm" variant="outline" onClick={refetch}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
             </Button>
             <div className="flex-1" />
+            {/* Import/Export dropdown */}
+            <div className="flex items-center gap-1">
+              <Button size="sm" variant="outline" onClick={() => handleExport('excel')} title="导出 Excel">
+                <Download className="size-3.5" data-icon="inline-start" />
+                Excel
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleExport('xmind')} title="导出 Xmind">
+                <Download className="size-3.5" data-icon="inline-start" />
+                Xmind
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleImportClick('excel')} disabled={importing} title="导入 Excel">
+                <Upload className="size-3.5" data-icon="inline-start" />
+                导入
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={importFormat === 'excel' ? '.xlsx,.xls' : '.xmind'}
+                className="hidden"
+                onChange={handleFileSelected}
+              />
+            </div>
             <Button size="sm" onClick={() => openEdit()}>
               <Plus className="size-3.5" data-icon="inline-start" />
               新建用例
@@ -324,39 +404,39 @@ export default function TestCasePage() {
           )}
 
           {/* Table */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]">
-                    <Checkbox
-                      checked={selected.size === data.items.length && data.items.length > 0}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead className="w-[160px]">编号</TableHead>
-                  <TableHead>标题</TableHead>
-                  <TableHead className="w-[120px]">模块</TableHead>
-                  <TableHead className="w-[60px]">状态</TableHead>
-                  <TableHead className="w-[140px]">API</TableHead>
-                  <TableHead className="w-[120px]">操作</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading && data.items.length === 0 ? (
+          <AsyncState
+            isLoading={isLoading}
+            isError={isError}
+            error={error}
+            data={data?.items}
+            onRetry={refetch}
+            emptyTitle="暂无测试用例"
+            emptyDescription="点击「新建用例」开始创建"
+            skeletonType="table"
+            loadingRows={4}
+          >
+            {() => (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8">
-                      <SkeletonText lines={4} />
-                    </TableCell>
+                    <TableHead className="w-[40px]">
+                      <Checkbox
+                        checked={selected.size === items.length && items.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="w-[160px]">编号</TableHead>
+                    <TableHead>标题</TableHead>
+                    <TableHead className="w-[120px]">模块</TableHead>
+                    <TableHead className="w-[60px]">状态</TableHead>
+                    <TableHead className="w-[80px]">评审</TableHead>
+                    <TableHead className="w-[140px]">API</TableHead>
+                    <TableHead className="w-[120px]">操作</TableHead>
                   </TableRow>
-                ) : data.items.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-8">
-                      <EmptyState title="暂无测试用例" description="点击「新建用例」开始创建" className="py-0" />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  data.items.map((r: any) => (
+                </TableHeader>
+                <TableBody>
+                  {items.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell>
                         <Checkbox
@@ -389,11 +469,19 @@ export default function TestCasePage() {
                           {r.status === 'active' ? '启用' : r.status === 'draft' ? '草稿' : r.status === 'archived' ? '归档' : r.status}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <Badge variant={REVIEW_COLORS[r.review_status] || 'secondary'} className="text-[10px]">
+                          {REVIEW_LABELS[r.review_status] || r.review_status || '草稿'}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="max-w-[140px] truncate font-mono text-xs">
                         {r.api_method ? <span>{r.api_method} {r.api_endpoint}</span> : '-'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
+                          <Button size="icon-xs" variant="ghost" onClick={() => openVersionHistory(r)} title="版本历史">
+                            <History className="size-3" />
+                          </Button>
                           <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)}>
                             <Edit className="size-3" />
                           </Button>
@@ -417,18 +505,19 @@ export default function TestCasePage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            )}
+          </AsyncState>
 
           {/* Pagination */}
           <Pagination
-            page={data.page}
+            page={data?.page || 1}
             totalPages={totalPages}
-            total={data.total}
-            onChange={(p) => load(p)}
+            total={data?.total || 0}
+            onChange={(p) => setPage(p)}
           />
         </div>
       </div>
@@ -439,6 +528,13 @@ export default function TestCasePage() {
         domains={domains}
         onClose={() => { setDrawer(false); setEditing(null) }}
         onSaved={onSaved}
+      />
+
+      <VersionDialog
+        open={versionDialog}
+        onClose={() => setVersionDialog(false)}
+        caseData={versionCase}
+        versions={versions}
       />
     </div>
   )
