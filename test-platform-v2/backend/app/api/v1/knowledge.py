@@ -375,7 +375,7 @@ def extract_graph(
     """对项目内 active 切片执行规则驱动的实体提取+关系构建（独立 Session，异步入库）。"""
     from app.core.config import settings
     if not settings.knowledge_graph_enabled:
-        return R(code=503, msg="知识图谱未启用（knowledge_graph_enabled=False）")
+        raise APIException(code=503, msg="知识图谱未启用（knowledge_graph_enabled=False）", http_status=503)
 
     result = extract_and_build_graph_in_new_session(
         current.project_id or 0,

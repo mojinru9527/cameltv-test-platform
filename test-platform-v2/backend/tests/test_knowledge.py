@@ -845,7 +845,7 @@ class TestGraphApi:
         from app.core.config import settings
         monkeypatch.setattr(settings, "knowledge_graph_enabled", False, raising=False)
         resp = kclient.post("/api/v1/knowledge/graph/extract", json={"max_chunks": 10})
-        assert resp.status_code == 200
+        assert resp.status_code == 503
         assert resp.json()["code"] == 503
 
     def test_entities_list_empty(self, kclient):
