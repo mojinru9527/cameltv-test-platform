@@ -44,8 +44,8 @@ test-platform-v2/
 | 通知中心 | `/notify` | ✅ 生产可用 | Webhook + 邮件，4 事件触发，重试/日志 |
 | 环境/变量管理 | `/environment` | ✅ 生产可用 | 项目级 dev/test/staging/prod，AES-128 加密变量 |
 | 项目管理 | `/project` | ✅ 生产可用 | 多项目 + 成员 + 主题 |
-| API 测试 | `/apitest` | 🧪 演示态 | 纯前端 fetch + localStorage |
-| UI 自动化 | `/uitest` | 🧪 演示态 | 结果为 random 模拟 |
+| API 测试 | `/apitest` | 🟡 真实执行，能力待生产化 | httpx 真实 HTTP 请求，缺请求快照/任务取消/生产保护 |
+| UI 自动化 | `/uitest` | 🟡 真实执行，能力待生产化 | npx playwright test 真实执行，缺异步/环境注入/产物归档 |
 | 音视频专项 | `/special` | 🧪 演示态 | 指标为 random 模拟 |
 
 ## 关键架构决策

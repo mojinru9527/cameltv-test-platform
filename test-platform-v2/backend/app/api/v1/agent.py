@@ -31,9 +31,10 @@ class AgentRunRequest(BaseModel):
 
 
 class AgentRunResponse(BaseModel):
-    """Agent 触发响应（立即返回 run_id，后台执行）。"""
-    run_id: int = 0
-    status: str = "running"
+    """Agent 触发响应（立即返回 queue_item_id，后台执行生成 agent_run）。"""
+    queue_item_id: int = 0
+    run_id: int | None = None
+    status: str = "pending"
     message: str = ""
 
 
@@ -104,7 +105,8 @@ def trigger_agent(
     )
 
     return R.ok(AgentRunResponse(
-        run_id=item.id,
+        queue_item_id=item.id,
+        run_id=None,
         status="pending",
         message=f"{AGENT_META[agent_type]['label']}已加入任务队列 (#{item.id})",
     ))
@@ -158,7 +160,7 @@ def list_queue(
     status: str | None = Query(None, description="过滤状态: pending/running/completed/failed/cancelled"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    current: CurrentUser = Depends(require_permission("agent:read")),
+    current: CurrentUser = Depends(require_permission("agent:list")),
     db: Session = Depends(get_db),
 ):
     rows, total = list_queue_items(
@@ -173,7 +175,7 @@ def list_queue(
 
 @router.get("/queue/stats", response_model=R[QueueStats], summary="队列统计")
 def queue_stats(
-    current: CurrentUser = Depends(require_permission("agent:read")),
+    current: CurrentUser = Depends(require_permission("agent:list")),
     db: Session = Depends(get_db),
 ):
     stats = get_queue_stats(db, current.project_id or 0)

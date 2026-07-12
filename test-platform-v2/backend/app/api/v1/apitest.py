@@ -38,6 +38,24 @@ def _safe_json(raw: str, default=None):
         return default
 
 
+def _build_response_snapshot(result: dict) -> str:
+    """构建结构化响应快照 JSON 字符串。"""
+    snapshot = result.get("response_snapshot", {})
+    if not snapshot:
+        # 兼容旧版执行结果：从顶层字段构建
+        raw_body = result.get("raw_body") or ""
+        body_str = result.get("response_body") or raw_body
+        body_size = len(str(body_str)) if body_str else 0
+        snapshot = {
+            "status_code": result.get("status_code"),
+            "headers": result.get("response_headers", {}),
+            "body_size_bytes": body_size,
+            "truncated": False,
+            "content_type": "",
+        }
+    return json.dumps(snapshot, ensure_ascii=False, default=str)
+
+
 def _paginate(query, db: Session, page: int, page_size: int):
     total = query.count()
     items = query.offset((page - 1) * page_size).limit(page_size).all()
@@ -56,6 +74,7 @@ class QuickExecuteRequest(BaseModel):
     assertions: str = Field(default="[]")
     environment_id: int | None = None
     dataset_id: int | None = None
+    confirm_prod: bool = False  # 生产环境写操作必须为 True
 
 
 @router.post("/api-execute", response_model=R[dict], summary="即时执行（调试）")
@@ -79,6 +98,7 @@ def api_quick_execute(
             assertions=assertions,
             environment_id=body.environment_id,
             dataset_id=body.dataset_id,
+            confirm_prod=body.confirm_prod,
         )
     except Exception as e:
         return R(code=1, msg=f"执行失败: {e}")
@@ -500,16 +520,18 @@ def create_task(
     db.commit()
 
     # 通过 BackgroundTasks 异步执行（不阻塞请求线程）
-    background_tasks.add_task(_execute_task_async, task.id, project_id)
+    background_tasks.add_task(_execute_task_async, task.id, project_id, body.confirm_prod)
 
     db.refresh(task)
     return R.ok(ApiTaskOut.model_validate(task))
 
 
-def _execute_task_async(task_id: int, project_id: int):
+def _execute_task_async(task_id: int, project_id: int, confirm_prod: bool = False):
     """在独立 DB session 中执行批量任务（供 BackgroundTasks 调用）。
     必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
     原请求的 db session 可能已关闭。
+
+    每条 item 执行前检查 task 是否已取消，若取消则跳过剩余 item。
     """
     from app.core.db import SessionLocal
     from app.models.test_case import TestCase
@@ -528,21 +550,29 @@ def _execute_task_async(task_id: int, project_id: int):
         items = db.query(ApiExecutionTaskItem).filter_by(task_id=task.id).all()
         passed = 0
         failed = 0
+        skipped = 0
 
         for item in items:
+            # ── 取消检查：每条 item 执行前重新查询 task 状态 ──
+            db.refresh(task)
+            if task.status == "cancelled":
+                item.status = "skipped"
+                item.error_message = "任务已取消"
+                skipped += 1
+                db.commit()
+                continue
+
             try:
                 result = execute_api_case(
                     db, item.case_id,
                     project_id=project_id,
                     environment_id=task.environment_id,
+                    confirm_prod=confirm_prod,
                 )
                 item.status = "passed" if result.get("all_pass", False) else "failed"
                 item.duration_ms = result.get("duration_ms", 0)
                 item.request_snapshot = json.dumps(result.get("request_snapshot", {}), ensure_ascii=False)
-                item.response_snapshot = json.dumps({
-                    "status_code": result.get("status_code"),
-                    "response_body": result.get("response_body"),
-                }, ensure_ascii=False, default=str)
+                item.response_snapshot = _build_response_snapshot(result)
                 item.assertion_results = json.dumps(result.get("assertions", []), ensure_ascii=False)
                 if result.get("error"):
                     item.error_message = result["error"]
@@ -558,8 +588,8 @@ def _execute_task_async(task_id: int, project_id: int):
 
         task.passed = passed
         task.failed = failed
-        task.skipped = task.total - passed - failed
-        task.status = "success" if failed == 0 else "failed"
+        task.skipped = task.total - passed - failed + skipped
+        task.status = "success" if (failed == 0 and skipped == 0) else ("failed" if failed > 0 else "cancelled")
         task.finished_at = datetime.now(timezone.utc)
         db.commit()
 
@@ -629,3 +659,104 @@ def cancel_task(
     task.finished_at = datetime.now(timezone.utc)
     db.commit()
     return R.ok({"status": "cancelled"})
+
+
+@router.post("/tasks/{task_id}/retry-failed", response_model=R[dict], summary="重跑失败用例")
+def retry_failed(
+    task_id: int,
+    background_tasks: BackgroundTasks,
+    project_id: int = Query(...),
+    current: CurrentUser = Depends(require_permission("apitest:task")),
+    db: Session = Depends(get_db),
+):
+    """将任务中所有失败项重新执行（异步）。"""
+    task = db.get(ApiExecutionTask, task_id)
+    if not task:
+        raise HTTPException(404, "任务不存在")
+
+    failed_items = db.query(ApiExecutionTaskItem).filter_by(
+        task_id=task.id, status="failed"
+    ).all()
+
+    if not failed_items:
+        raise HTTPException(400, "没有失败的用例需要重跑")
+
+    # 重置失败项状态为 pending
+    for item in failed_items:
+        item.status = "pending"
+        item.error_message = ""
+        item.request_snapshot = "{}"
+        item.response_snapshot = "{}"
+        item.assertion_results = "[]"
+        item.duration_ms = 0
+
+    task.status = "pending"
+    task.failed = 0
+    task.passed = 0
+    task.skipped = 0
+    db.commit()
+
+    # 异步重跑
+    background_tasks.add_task(_execute_task_async, task.id, project_id)
+    return R.ok({"retry_count": len(failed_items), "task_id": task.task_id})
+
+
+@router.get("/tasks/{task_id}/items/{item_id}/curl", response_model=R[dict], summary="生成 curl 复现命令")
+def get_curl_command(
+    task_id: int,
+    item_id: int,
+    current: CurrentUser = Depends(require_permission("apitest:task")),
+    db: Session = Depends(get_db),
+):
+    """从请求快照生成等效 curl 命令，方便失败排查和复现。"""
+    from app.services.api_execution_service import build_curl_command
+
+    item = db.get(ApiExecutionTaskItem, item_id)
+    if not item or item.task_id != task_id:
+        raise HTTPException(404, "任务明细不存在")
+
+    try:
+        snapshot = json.loads(item.request_snapshot) if item.request_snapshot else {}
+    except (json.JSONDecodeError, TypeError):
+        snapshot = {}
+
+    if not snapshot:
+        raise HTTPException(400, "该执行记录无请求快照，无法生成 curl 命令")
+
+    curl_cmd = build_curl_command(snapshot)
+    return R.ok({"curl": curl_cmd, "snapshot": snapshot})
+
+
+@router.get("/tasks/{task_id}/analysis", response_model=R[dict], summary="任务失败分析")
+def analyze_task_failures(
+    task_id: int,
+    current: CurrentUser = Depends(require_permission("apitest:task")),
+    db: Session = Depends(get_db),
+):
+    """对任务中所有失败项进行结构化分析，返回分类和修复建议。"""
+    from app.services.failure_analyzer import analyze_api_failure
+
+    task = db.get(ApiExecutionTask, task_id)
+    if not task:
+        raise HTTPException(404, "任务不存在")
+
+    failed_items = db.query(ApiExecutionTaskItem).filter_by(
+        task_id=task.id, status="failed"
+    ).all()
+
+    if not failed_items:
+        return R.ok({"analyses": [], "summary": "没有失败项需要分析"})
+
+    analyses = [analyze_api_failure(item) for item in failed_items]
+
+    # 汇总分类
+    categories: dict[str, int] = {}
+    for a in analyses:
+        cat = a["category"]
+        categories[cat] = categories.get(cat, 0) + 1
+
+    return R.ok({
+        "total_failed": len(failed_items),
+        "categories": categories,
+        "analyses": analyses,
+    })

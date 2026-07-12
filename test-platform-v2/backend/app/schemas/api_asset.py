@@ -131,6 +131,7 @@ class ApiTaskCreateRequest(BaseModel):
     environment_id: int | None = None
     service_id: int | None = None
     case_ids: list[int] = Field(..., min_length=1, max_length=500)
+    confirm_prod: bool = False  # 生产环境写操作必须为 True
 
 
 class ApiTaskOut(BaseModel):

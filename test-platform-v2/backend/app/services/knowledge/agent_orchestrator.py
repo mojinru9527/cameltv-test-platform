@@ -184,7 +184,7 @@ def run_agent_in_new_session(
             artifact_type=meta["artifact_type"],
             title=str(title)[:200],
             content_json=json.dumps(output_data, ensure_ascii=False),
-            source_run_id=run.id,
+            agent_run_id=run.id,
             review_status="pending",
         )
         db.add(artifact)

@@ -9,7 +9,7 @@
 | **里程碑** | M2：切片向量化 + 混合检索 |
 | **关联 PRD** | [RAG知识图谱与Agent持续学习能力落地执行文档 §M2](../../test-platform-v2/docs/RAG知识图谱与Agent持续学习能力落地执行文档.md) |
 | **ADR** | [ADR-0010](../../docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md)（已接受） |
-| **状态** | ✅ 已落地（Slice 1–5 提交完成，PR 待 Product→Design→QA→Leader 评审） |
+| **状态** | ✅ 已合入 develop（PR #26 squash merge，`6b283fe`，2026-07-09） |
 | **开关** | `rag_enabled`（已建，默认 OFF） |
 
 ## ℹ️ 架构决策（已锁定）

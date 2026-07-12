@@ -227,3 +227,129 @@ def ci_post_results(
         "status": exec_row.status,
         "updated": True,
     })
+
+
+# ── UI 测试触发 ────────────────────────────────────────
+
+@router.post("/ui-tests/{job_id}/trigger", response_model=R[dict], summary="CI 触发 UI 自动化测试")
+def ci_trigger_ui_test(
+    job_id: int,
+    req: Request,
+    token: ApiToken = Depends(verify_api_token),
+    db: Session = Depends(get_db),
+):
+    """外部 CI (Jenkins/GitHub Actions) 通过 API Token 触发 UI 自动化任务。
+
+    返回 run 记录，可通过轮询 GET /api/v1/open/ui-tests/runs/{run_id} 查询状态。
+    """
+    from app.models.ui_test import UiTestJob, UiTestRun
+    from datetime import datetime, timezone
+
+    job = db.scalar(
+        select(UiTestJob).where(
+            UiTestJob.id == job_id, UiTestJob.project_id == token.project_id
+        )
+    )
+    if not job:
+        raise APIException(code=404, msg="UI 测试任务不存在")
+
+    if job.status == "running":
+        raise APIException(code=400, msg="任务正在执行中，请等待完成后再触发")
+
+    # 检查 Playwright
+    from app.services.playwright_executor import _check_playwright_installed
+    pw_ok, pw_msg = _check_playwright_installed()
+
+    # 解析环境 base_url
+    base_url = ""
+    if job.environment_id:
+        from app.models.environment import Environment
+        env = db.get(Environment, job.environment_id)
+        base_url = env.base_url if env else ""
+
+    now = datetime.now(timezone.utc)
+    job.status = "running" if pw_ok else "fail"
+    job.last_result = json.dumps({} if pw_ok else {"error": pw_msg}, ensure_ascii=False)
+
+    run = UiTestRun(
+        job_id=job_id,
+        status="pending" if pw_ok else "fail",
+        base_url=base_url,
+        started_at=now,
+        result=json.dumps({}, ensure_ascii=False),
+    )
+    if not pw_ok:
+        run.status = "fail"
+        run.finished_at = now
+        run.error_message = f"Playwright 不可用: {pw_msg}"
+        run.result = json.dumps({"error": pw_msg}, ensure_ascii=False)
+
+    db.add(run)
+
+    # Update token last_used
+    token.last_used_at = now
+    db.commit()
+    db.refresh(run)
+
+    # 后台执行 (仅当 Playwright 可用)
+    if pw_ok:
+        try:
+            from app.services.ui_test_service import execute_playwright_async
+            # Use a separate thread since open_api doesn't have BackgroundTasks
+            import threading
+            t = threading.Thread(
+                target=execute_playwright_async,
+                args=(run.id, job_id, token.project_id),
+                daemon=True,
+                name=f"ci-ui-run-{run.id}",
+            )
+            t.start()
+        except Exception:
+            pass
+
+    return R.ok({
+        "triggered": True,
+        "job_id": job_id,
+        "job_name": job.name,
+        "run_id": run.id,
+        "run_status": run.status,
+        "triggered_by": token.name,
+    })
+
+
+@router.get("/ui-tests/runs/{run_id}", response_model=R[dict], summary="CI 查询 UI 测试运行状态")
+def ci_get_ui_run(
+    run_id: int,
+    token: ApiToken = Depends(verify_api_token),
+    db: Session = Depends(get_db),
+):
+    """外部 CI 查询 UI 测试运行的状态与结果。"""
+    from app.models.ui_test import UiTestRun, UiTestJob
+
+    run = db.get(UiTestRun, run_id)
+    if not run:
+        raise APIException(code=404, msg="运行记录不存在")
+
+    # Project isolation via job
+    job = db.get(UiTestJob, run.job_id)
+    if not job or job.project_id != token.project_id:
+        raise APIException(code=403, msg="无权访问此运行记录")
+
+    import json as _json
+    result = {}
+    try:
+        result = _json.loads(run.result) if run.result else {}
+    except (_json.JSONDecodeError, TypeError):
+        pass
+
+    return R.ok({
+        "run_id": run.id,
+        "job_id": run.job_id,
+        "job_name": job.name,
+        "status": run.status,
+        "result": result,
+        "error_message": run.error_message,
+        "base_url": run.base_url,
+        "started_at": run.started_at.isoformat() if run.started_at else None,
+        "finished_at": run.finished_at.isoformat() if run.finished_at else None,
+    })

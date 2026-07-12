@@ -38,6 +38,7 @@ export default function SearchTab() {
   const [results, setResults] = useState<KnowledgeSearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
   const [reembedding, setReembedding] = useState(false)
 
   const doSearch = () => {
@@ -49,7 +50,7 @@ export default function SearchTab() {
       .then((res) => setResults(res || []))
       .catch((e) => {
         setResults([])
-        toast.error(e?.message || 'RAG 检索未启用或不可用')
+        setSearchError(e?.message || 'RAG 检索未启用或不可用')
       })
       .finally(() => setLoading(false))
   }
@@ -112,6 +113,11 @@ export default function SearchTab() {
       {loading ? (
         <div className="h-24 flex items-center justify-center">
           <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : searchError ? (
+        <div className="h-24 flex flex-col items-center justify-center gap-1">
+          <span className="text-sm text-amber-600 font-medium">功能未启用</span>
+          <span className="text-xs text-muted-foreground">{searchError}</span>
         </div>
       ) : results.length === 0 ? (
         <div className="h-24 flex items-center justify-center text-sm text-muted-foreground">
