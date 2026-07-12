@@ -19,10 +19,22 @@ from app.services.knowledge import chunk_service
 from app.services.knowledge.sanitize import sanitize
 from app.services.knowledge.source_service import record_source
 from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
+from app.services.knowledge.entity_service import extract_and_build_graph_in_new_session
+from app.services.knowledge.change_detector import handle_changes as _auto_trigger_agents
 
 logger = logging.getLogger("knowledge.ingest")
 
 _MAX_RAW = 20000  # 单条 raw_content 上限，避免超大文档撑爆
+
+
+def _post_ingest_hooks(project_id: int, source_id: int | None = None) -> None:
+    """入库后统一触发：向量嵌入 + 实体提取 + Agent 自动变更检测（均独立 Session，不阻塞）。"""
+    embed_pending_chunks_in_new_session(project_id, source_id=source_id)
+    if settings.knowledge_graph_enabled:
+        extract_and_build_graph_in_new_session(project_id, source_id=source_id, max_chunks=50)
+    if settings.knowledge_graph_enabled:
+        # 自动触发 Agent（变更检测 → 匹配规则 → 防抖）
+        _auto_trigger_agents(project_id, auto_trigger=settings.knowledge_graph_enabled)
 
 
 def _truncate(text: str) -> str:
@@ -63,7 +75,7 @@ def ingest_requirement_in_new_session(project_id: int, doc_id: int) -> None:
         ]
         chunk_service.make_chunks(db, src, chunks)
         db.commit()
-        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
+        _post_ingest_hooks(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest requirement doc_id=%s failed", doc_id)
         db.rollback()
@@ -126,7 +138,7 @@ def ingest_api_import_in_new_session(project_id: int, batch_id: int, service_nam
             })
         chunk_service.make_chunks(db, src, chunks)
         db.commit()
-        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
+        _post_ingest_hooks(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest api import batch_id=%s failed", batch_id)
         db.rollback()
@@ -181,7 +193,7 @@ def ingest_test_case_in_new_session(project_id: int, case_id: int) -> None:
     try:
         _ingest_one_test_case(db, project_id, case_id)
         db.commit()
-        embed_pending_chunks_in_new_session(project_id)
+        _post_ingest_hooks(project_id)
     except Exception:
         logger.exception("ingest test_case case_id=%s failed", case_id)
         db.rollback()
@@ -198,7 +210,7 @@ def ingest_test_cases_in_new_session(project_id: int, case_ids: list[int]) -> No
         for cid in case_ids:
             _ingest_one_test_case(db, project_id, cid)
         db.commit()
-        embed_pending_chunks_in_new_session(project_id)
+        _post_ingest_hooks(project_id)
     except Exception:
         logger.exception("ingest test_cases (%d) failed", len(case_ids))
         db.rollback()
@@ -256,7 +268,7 @@ def ingest_defect_in_new_session(project_id: int, defect_id: int) -> None:
             "tags": [defect.severity, defect.status],
         }])
         db.commit()
-        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
+        _post_ingest_hooks(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest defect defect_id=%s failed", defect_id)
         db.rollback()
@@ -319,7 +331,7 @@ def ingest_execution_failure_in_new_session(project_id: int, task_id: int) -> No
             "tags": ["execution", "failed"],
         }])
         db.commit()
-        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
+        _post_ingest_hooks(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest execution failure task_id=%s failed", task_id)
         db.rollback()

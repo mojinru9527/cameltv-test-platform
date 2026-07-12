@@ -215,20 +215,34 @@ def extract_entities_from_chunk(
 
 # ── 关系构建 ──
 
+def _rel_exists(db, project_id: int, from_id: int, to_id: int, rel_type: str) -> bool:
+    """检查关系是否已存在（去重）。"""
+    return db.scalar(
+        select(KnowledgeRelation.id).where(
+            KnowledgeRelation.project_id == project_id,
+            KnowledgeRelation.from_entity_id == from_id,
+            KnowledgeRelation.to_entity_id == to_id,
+            KnowledgeRelation.relation_type == rel_type,
+        )
+    ) is not None
+
+
 def _build_relations(
     db,
     project_id: int,
     new_entities: list[KnowledgeEntity],
     all_entities: list[KnowledgeEntity],
 ) -> list[dict[str, Any]]:
-    """从提取的实体列表中构建关系（共现、引用、包含等）。"""
+    """从提取的实体列表中构建关系（contains / executed_by / affects / covers / generated_from）。"""
     relations: list[dict[str, Any]] = []
     # 索引已存在实体
     by_key: dict[str, KnowledgeEntity] = {e.entity_key: e for e in all_entities}
-    # 索引新提取实体
-    new_keys = {e.entity_key for e in new_entities}
+    # 索引：name → entity 列表（用于模糊匹配）
+    by_name: dict[str, list[KnowledgeEntity]] = defaultdict(list)
+    for e in all_entities:
+        by_name[e.name.lower()].append(e)
 
-    # 按 source_id 分组，同一 source 内的实体建立 contains 关系
+    # ── 1. contains: API → field（同一 source 内） ──
     by_source: dict[int, list[KnowledgeEntity]] = defaultdict(list)
     for e in new_entities:
         if e.source_id:
@@ -237,22 +251,11 @@ def _build_relations(
     for sid, group in by_source.items():
         if len(group) < 2:
             continue
-        # API 级实体与其他实体建立 contains 关系
         apis = [e for e in group if e.entity_type == "api"]
         fields = [e for e in group if e.entity_type == "field"]
         for api_e in apis:
             for field_e in fields:
-                rel_key = f"contains:{api_e.id}:{field_e.id}"
-                # 去重检查
-                exists = db.scalar(
-                    select(KnowledgeRelation.id).where(
-                        KnowledgeRelation.project_id == project_id,
-                        KnowledgeRelation.from_entity_id == api_e.id,
-                        KnowledgeRelation.to_entity_id == field_e.id,
-                        KnowledgeRelation.relation_type == "contains",
-                    )
-                )
-                if not exists:
+                if not _rel_exists(db, project_id, api_e.id, field_e.id, "contains"):
                     relations.append({
                         "from_entity_id": api_e.id,
                         "relation_type": "contains",
@@ -261,11 +264,10 @@ def _build_relations(
                         "evidence_chunk_ids": json.dumps([sid]),
                     })
 
-    # 跨 chunk_type 的业务关联：test_case ↔ defect, test_case ↔ api, requirement ↔ test_case
+    # ── 2. executed_by: test_case → 同源实体（共现/业务引用） ──
     for e in new_entities:
         if e.entity_type == "test_case" and e.business_ref_id:
             ref_id = e.business_ref_id
-            # 按 source.source_type 查找关联源实体
             same_source = db.scalars(
                 select(KnowledgeEntity).where(
                     KnowledgeEntity.project_id == project_id,
@@ -274,21 +276,81 @@ def _build_relations(
                 )
             ).all()
             for other in same_source:
-                rel_key = f"executed_by:{e.id}:{other.id}"
-                exists = db.scalar(
-                    select(KnowledgeRelation.id).where(
-                        KnowledgeRelation.project_id == project_id,
-                        KnowledgeRelation.from_entity_id == e.id,
-                        KnowledgeRelation.to_entity_id == other.id,
-                    )
-                )
-                if not exists:
+                if not _rel_exists(db, project_id, e.id, other.id, "executed_by"):
                     relations.append({
                         "from_entity_id": e.id,
                         "relation_type": "executed_by",
                         "to_entity_id": other.id,
                         "confidence": 0.6,
                     })
+
+    # ── 3. affects: defect → API（缺陷影响范围） ──
+    for e in new_entities:
+        if e.entity_type != "defect":
+            continue
+        source = db.get(KnowledgeSource, e.source_id) if e.source_id else None
+        # 从 source 关联的 chunk content 中提取受影响 API
+        if source:
+            related_chunks = db.scalars(
+                select(KnowledgeChunk).where(KnowledgeChunk.source_id == e.source_id)
+            ).all()
+            for chunk in related_chunks:
+                api_matches = _API_RE.findall(chunk.content or "")
+                for method, path in api_matches:
+                    api_name = f"{method.upper()} {path}"
+                    api_key = _entity_key("api", project_id, api_name)
+                    api_entity = by_key.get(api_key)
+                    if api_entity and not _rel_exists(db, project_id, e.id, api_entity.id, "affects"):
+                        relations.append({
+                            "from_entity_id": e.id,
+                            "relation_type": "affects",
+                            "to_entity_id": api_entity.id,
+                            "confidence": 0.55,
+                            "evidence_chunk_ids": json.dumps([chunk.id]),
+                        })
+                        break  # 每个缺陷只关联第一个匹配 API
+
+    # ── 4. covers: test_case → requirement（用例覆盖需求） ──
+    for e in new_entities:
+        if e.entity_type != "test_case":
+            continue
+        # 查找同 project 下的 requirement 实体
+        req_entities = [ent for ent in all_entities if ent.entity_type == "requirement" and ent.project_id == project_id]
+        source = db.get(KnowledgeSource, e.source_id) if e.source_id else None
+        if source and source.source_ref:
+            # source_ref 中可能包含需求引用
+            for req_e in req_entities:
+                if req_e.name in (source.source_ref or ""):
+                    if not _rel_exists(db, project_id, e.id, req_e.id, "covers"):
+                        relations.append({
+                            "from_entity_id": e.id,
+                            "relation_type": "covers",
+                            "to_entity_id": req_e.id,
+                            "confidence": 0.5,
+                        })
+                    break
+
+    # ── 5. generated_from: test_case → API（AI 从接口生成用例） ──
+    for e in new_entities:
+        if e.entity_type != "test_case":
+            continue
+        source = db.get(KnowledgeSource, e.source_id) if e.source_id else None
+        if not source or not source.source_ref:
+            continue
+        # source_ref 如 "GET /api/v1/users" → 查找匹配的 API 实体
+        api_match = _API_RE.search(source.source_ref)
+        if api_match:
+            method, path = api_match.group(1).upper(), api_match.group(2)
+            api_name = f"{method} {path}"
+            api_key = _entity_key("api", project_id, api_name)
+            api_entity = by_key.get(api_key)
+            if api_entity and not _rel_exists(db, project_id, e.id, api_entity.id, "generated_from"):
+                relations.append({
+                    "from_entity_id": e.id,
+                    "relation_type": "generated_from",
+                    "to_entity_id": api_entity.id,
+                    "confidence": 0.65,
+                })
 
     return relations
 

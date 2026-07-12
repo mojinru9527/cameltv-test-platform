@@ -25,6 +25,7 @@ related: ["template.md", "0001-use-python-fastapi-monostack.md", "../document-st
 | [0006](0006-shadcn-ui-over-antd.md) | shadcn/ui 替代 Ant Design 作为 v2 前端 UI 库 | ✅ 已采纳 | 2026-01 |
 | [0007](0007-deepseek-llm-test-case-generation.md) | DeepSeek LLM 驱动 AI 测试用例生成 | ✅ 已采纳 | 2026-03 |
 | [0008](0008-jenkins-github-actions-dual-cicd.md) | Jenkins + GitHub Actions 双通道 CI/CD | ✅ 已采纳 | 2026-01 |
+| [0013](0013-llm-wiki-structured-knowledge-diff.md) | 自建 LLM-Wiki 结构化知识层与 RAG/Wiki 差异对比 | ✅ 已采纳 | 2026-07 |
 
 ## ADR 状态
 

@@ -157,6 +157,9 @@ class GateConfigBody(_PydanticBase):
     pass_rate_threshold: int | None = 80   # 0-100
     p0_max: int | None = 0
     p1_max: int | None = 5
+    coverage_threshold: int | None = 0     # 0-100, 0=disabled
+    max_failed_cases: int | None = 0       # 0=unlimited
+    max_blocked_cases: int | None = 0      # 0=unlimited
     enabled: bool | None = True
 
 
@@ -176,6 +179,9 @@ def get_quality_gate(
             "pass_rate_threshold": 80,
             "p0_max": 0,
             "p1_max": 5,
+            "coverage_threshold": 0,
+            "max_failed_cases": 0,
+            "max_blocked_cases": 0,
             "enabled": True,
             "is_default": True,
         })

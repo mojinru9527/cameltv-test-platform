@@ -7,11 +7,14 @@ from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.integration import IntegrationConfig
 from app.models.knowledge import (
+    AgentQueueItem,
     AgentRun,
     AiArtifact,
     KnowledgeChunk,
     KnowledgeEntity,
+    KnowledgeIteration,
     KnowledgeRelation,
+    KnowledgeSnapshot,
     KnowledgeSource,
     KnowledgeVector,
 )
@@ -31,6 +34,14 @@ from app.models.test_schedule import TestSchedule, TestScheduleRun
 from app.models.ui_test import UiTestJob, UiTestRun
 from app.models.user import User
 from app.models.version_mission import AgentWorkLog, GeneratedArtifact, VersionMission
+from app.models.wiki import (
+    WikiDiffItem,
+    WikiDiffTask,
+    WikiIngestJob,
+    WikiLink,
+    WikiPage,
+    WikiRawSource,
+)
 
 __all__ = [
     "ApiEndpoint",
@@ -80,4 +91,13 @@ __all__ = [
     "KnowledgeVector",
     "AiArtifact",
     "AgentRun",
+    "AgentQueueItem",
+    "KnowledgeIteration",
+    "KnowledgeSnapshot",
+    "WikiRawSource",
+    "WikiPage",
+    "WikiLink",
+    "WikiIngestJob",
+    "WikiDiffTask",
+    "WikiDiffItem",
 ]
