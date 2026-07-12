@@ -267,8 +267,14 @@ def _parse_gate_details(gate_details_raw: str | None) -> list:
 def _compute_gate(db, plan_id: int, project_id: int, content_str: str, config: dict | None = None) -> dict:
     """Compute quality gate for a report. Returns {status, details}.
 
-    If config is None or disabled, falls back to hardcoded defaults (80%, 0 P0, no P1 check).
-    Gate logic: pass_rate check AND defect check → both pass=PASS, both fail=FAIL, else WARN.
+    Dimensions evaluated (only those with threshold > 0 are enforced):
+      1. pass_rate_threshold  — minimum pass rate %
+      2. p0_max / p1_max       — max open P0/P1 defects
+      3. coverage_threshold    — minimum requirement coverage %
+      4. max_failed_cases      — max allowed failed executions
+      5. max_blocked_cases     — max allowed blocked executions
+
+    Gate logic: ALL enforced dimensions pass → PASS, ALL fail → FAIL, else WARN.
     """
     try:
         content = json.loads(content_str) if isinstance(content_str, str) else content_str
@@ -278,13 +284,18 @@ def _compute_gate(db, plan_id: int, project_id: int, content_str: str, config: d
     stats = content.get("stats", {}) if isinstance(content, dict) else {}
     total = stats.get("total", 0)
     pass_count = stats.get("pass", 0)
+    fail_count = stats.get("fail", 0)
+    block_count = stats.get("block", 0)
     pass_rate = round(pass_count / total * 100, 1) if total else 0
 
-    # Read thresholds from config or use defaults
+    # Read thresholds from config; 0 means "skip this dimension"
     cfg = config if config and config.get("enabled", True) else {}
     pass_rate_threshold = cfg.get("pass_rate_threshold", 80)
     p0_max = cfg.get("p0_max", 0)
     p1_max = cfg.get("p1_max", 5)
+    coverage_threshold = cfg.get("coverage_threshold", 0)
+    max_failed_cases = cfg.get("max_failed_cases", 0)
+    max_blocked_cases = cfg.get("max_blocked_cases", 0)
 
     # Check for open defects linked to this plan's cases
     pcases = db.scalars(
@@ -309,39 +320,106 @@ def _compute_gate(db, plan_id: int, project_id: int, content_str: str, config: d
             elif sev == "P1":
                 p1_defects = cnt
 
-    details = []
-    pass_rate_ok = pass_rate >= pass_rate_threshold
-    defects_ok = (p0_defects <= p0_max) and (p1_defects <= p1_max)
+    # ── Evaluate each dimension ──
+    checks: list[dict] = []
 
-    # Pass rate detail
-    if pass_rate_ok:
-        details.append(f"通过率 {pass_rate}% >= {pass_rate_threshold}% (通过)")
-    else:
-        details.append(f"通过率 {pass_rate}% 低于门禁阈值 {pass_rate_threshold}%")
+    # 1) Pass rate
+    pr_ok = pass_rate >= pass_rate_threshold if pass_rate_threshold > 0 else None
+    if pr_ok is not None:
+        checks.append({
+            "dimension": "pass_rate",
+            "value": pass_rate,
+            "threshold": pass_rate_threshold,
+            "passed": pr_ok,
+            "detail": f"通过率 {pass_rate}% {'>=' if pr_ok else '<'} {pass_rate_threshold}%",
+        })
 
-    # Defect detail
-    defect_parts = []
-    if not (p0_defects <= p0_max):
-        defect_parts.append(f"存在 {p0_defects} 个未关闭 P0 缺陷 (上限 {p0_max})")
-    elif p0_max > 0 or p0_defects == 0:
-        defect_parts.append(f"未关闭 P0 缺陷 {p0_defects} <= {p0_max} (通过)")
+    # 2) P0 defects
+    if p0_max > 0 or p0_defects > 0:
+        checks.append({
+            "dimension": "p0_defects",
+            "value": p0_defects,
+            "threshold": p0_max,
+            "passed": p0_defects <= p0_max,
+            "detail": f"P0 缺陷 {p0_defects} {'<=' if p0_defects <= p0_max else '>'} {p0_max}",
+        })
 
-    if not (p1_defects <= p1_max):
-        defect_parts.append(f"存在 {p1_defects} 个未关闭 P1 缺陷 (上限 {p1_max})")
-    else:
-        defect_parts.append(f"未关闭 P1 缺陷 {p1_defects} <= {p1_max} (通过)")
+    # 3) P1 defects
+    if p1_max > 0 or p1_defects > 0:
+        checks.append({
+            "dimension": "p1_defects",
+            "value": p1_defects,
+            "threshold": p1_max,
+            "passed": p1_defects <= p1_max,
+            "detail": f"P1 缺陷 {p1_defects} {'<=' if p1_defects <= p1_max else '>'} {p1_max}",
+        })
 
-    details.extend(defect_parts) if defect_parts else details.append("无缺陷检查")
+    # 4) Coverage (checks trace data for requirement coverage %)
+    coverage_ok: bool | None = None
+    if coverage_threshold > 0:
+        cov_pct = _compute_coverage(db, plan_id, project_id)
+        coverage_ok = cov_pct >= coverage_threshold
+        checks.append({
+            "dimension": "coverage",
+            "value": cov_pct,
+            "threshold": coverage_threshold,
+            "passed": coverage_ok,
+            "detail": f"需求覆盖率 {cov_pct}% {'>=' if coverage_ok else '<'} {coverage_threshold}%",
+        })
 
-    # Gate status
-    if pass_rate_ok and defects_ok:
+    # 5) Failed cases cap
+    if max_failed_cases > 0:
+        fail_ok = fail_count <= max_failed_cases
+        checks.append({
+            "dimension": "max_failed_cases",
+            "value": fail_count,
+            "threshold": max_failed_cases,
+            "passed": fail_ok,
+            "detail": f"失败用例 {fail_count} {'<=' if fail_ok else '>'} {max_failed_cases}",
+        })
+
+    # 6) Blocked cases cap
+    if max_blocked_cases > 0:
+        block_ok = block_count <= max_blocked_cases
+        checks.append({
+            "dimension": "max_blocked_cases",
+            "value": block_count,
+            "threshold": max_blocked_cases,
+            "passed": block_ok,
+            "detail": f"阻塞用例 {block_count} {'<=' if block_ok else '>'} {max_blocked_cases}",
+        })
+
+    # ── Aggregate status ──
+    enforced = [c for c in checks if c["passed"] is not None]
+    if not enforced:
         status = "pass"
-    elif not pass_rate_ok and not defects_ok:
+    elif all(c["passed"] for c in enforced):
+        status = "pass"
+    elif not any(c["passed"] for c in enforced):
         status = "fail"
     else:
         status = "warn"
 
-    return {"status": status, "details": details}
+    details = [c["detail"] for c in checks]
+    return {"status": status, "details": details, "checks": checks}
+
+
+def _compute_coverage(db, plan_id: int, project_id: int) -> float:
+    """Compute requirement coverage % for a plan: (cases with req links / total)."""
+    total_cases = db.scalar(
+        select(func.count(TestPlanCase.id)).where(TestPlanCase.plan_id == plan_id)
+    ) or 0
+    if total_cases == 0:
+        return 0.0
+
+    linked = db.scalar(
+        select(func.count(TestPlanCase.id))
+        .where(TestPlanCase.plan_id == plan_id)
+        .where(TestPlanCase.case_id.in_(
+            select(TestCase.id).where(TestCase.requirement_doc_id.isnot(None))
+        ))
+    ) or 0
+    return round(linked / total_cases * 100, 1)
 
 
 # ── Quality Gate Config ───────────────────────────────
@@ -359,6 +437,9 @@ def get_quality_gate_config(db: Session, project_id: int) -> dict | None:
         "pass_rate_threshold": row.pass_rate_threshold,
         "p0_max": row.p0_max,
         "p1_max": row.p1_max,
+        "coverage_threshold": getattr(row, "coverage_threshold", 0),
+        "max_failed_cases": getattr(row, "max_failed_cases", 0),
+        "max_blocked_cases": getattr(row, "max_blocked_cases", 0),
         "enabled": row.enabled,
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,
@@ -371,8 +452,13 @@ def save_quality_gate_config(db: Session, project_id: int, data: dict) -> dict:
         select(QualityGateConfig).where(QualityGateConfig.project_id == project_id)
     )
 
+    _settable = (
+        "pass_rate_threshold", "p0_max", "p1_max",
+        "coverage_threshold", "max_failed_cases", "max_blocked_cases",
+        "enabled",
+    )
     if row:
-        for k in ("pass_rate_threshold", "p0_max", "p1_max", "enabled"):
+        for k in _settable:
             if k in data and data[k] is not None:
                 setattr(row, k, data[k])
     else:
@@ -381,6 +467,9 @@ def save_quality_gate_config(db: Session, project_id: int, data: dict) -> dict:
             pass_rate_threshold=data.get("pass_rate_threshold", 80),
             p0_max=data.get("p0_max", 0),
             p1_max=data.get("p1_max", 5),
+            coverage_threshold=data.get("coverage_threshold", 0),
+            max_failed_cases=data.get("max_failed_cases", 0),
+            max_blocked_cases=data.get("max_blocked_cases", 0),
             enabled=data.get("enabled", True),
         )
         db.add(row)
@@ -394,6 +483,9 @@ def save_quality_gate_config(db: Session, project_id: int, data: dict) -> dict:
         "pass_rate_threshold": row.pass_rate_threshold,
         "p0_max": row.p0_max,
         "p1_max": row.p1_max,
+        "coverage_threshold": getattr(row, "coverage_threshold", 0),
+        "max_failed_cases": getattr(row, "max_failed_cases", 0),
+        "max_blocked_cases": getattr(row, "max_blocked_cases", 0),
         "enabled": row.enabled,
         "created_at": row.created_at.isoformat() if row.created_at else None,
         "updated_at": row.updated_at.isoformat() if row.updated_at else None,

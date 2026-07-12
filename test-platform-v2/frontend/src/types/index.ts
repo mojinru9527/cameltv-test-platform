@@ -774,6 +774,10 @@ export interface KnowledgeHealth {
   deprecated_sources: number
   sourceless_chunks: number
   low_confidence_relations: number
+  unreviewed_relations: number
+  agent_approval_rate: number
+  agent_avg_duration_ms: number
+  agent_total_runs: number
 }
 
 export interface KnowledgeOverview {
@@ -862,4 +866,224 @@ export interface GraphEdge {
 export interface GraphView {
   nodes: GraphNode[]
   edges: GraphEdge[]
+}
+
+// M3 实体列表精简视图（匹配后端 KnowledgeEntityBrief）
+export interface KnowledgeEntityBrief {
+  id: number
+  entity_type: string
+  entity_key: string
+  name: string
+  description: string
+  confidence: number
+}
+
+// M3 实体提取结果
+export interface EntityExtractResult {
+  extracted: number
+  relations: number
+  skipped: number
+  message: string
+}
+
+// M3 关系列表分页包装
+export interface KnowledgeRelationPage {
+  items: KnowledgeRelation[]
+  total: number
+}
+
+// M3 实体列表分页包装
+export interface KnowledgeEntityPage {
+  items: KnowledgeEntityBrief[]
+  total: number
+}
+
+// ── M6 迭代知识包 ──
+
+export interface KnowledgeIteration {
+  id: number
+  project_id: number
+  iteration_name: string
+  version: string
+  start_date: string | null
+  end_date: string | null
+  status: string
+  description: string
+  metadata_json: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface KnowledgeSnapshot {
+  id: number
+  iteration_id: number
+  snapshot_type: string
+  data_json: string
+  created_at: string | null
+}
+
+export interface CompareSnapshots {
+  base_iteration_id: number
+  base_iteration_name: string
+  target_iteration_id: number
+  target_iteration_name: string
+  deltas: Record<string, any>
+  trends: Record<string, any>
+}
+
+// ── M6 回归预测 ──
+
+export interface RegressionPredictionItem {
+  api_path: string
+  module: string
+  risk_score: number
+  historical_defects: number
+  suggested_test_cases: string[]
+  affected_entities: string[]
+}
+
+export interface RegressionPrediction {
+  items: RegressionPredictionItem[]
+  total_analyzed: number
+  high_risk_count: number
+}
+
+// ========== LLM-Wiki 知识库 / 差异对比 (VNext-1..3) ==========
+
+export interface WikiConfig {
+  wiki_enabled: boolean
+  wiki_auto_ingest_enabled: boolean
+  wiki_diff_enabled: boolean
+  wiki_auto_create_artifact: boolean
+  lanhu_mcp_enabled: boolean
+}
+
+export interface WikiRawSource {
+  id: number
+  project_id: number
+  source_type: string
+  source_ref: string
+  title: string
+  content_hash: string
+  immutable_version: string
+  status: string
+  knowledge_source_id: number | null
+  business_ref_type?: string
+  business_ref_id?: number | null
+  content_md?: string
+  metadata_json?: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface LanhuImportTarget {
+  ingest_knowledge: boolean
+  build_wiki: boolean
+  extract_graph: boolean
+}
+
+export interface LanhuImportRequest {
+  url: string
+  description?: string
+  target?: LanhuImportTarget
+}
+
+export interface LanhuImportResult {
+  raw_source_id: number | null
+  knowledge_source_id: number | null
+  wiki_job_id: number | null
+  extraction_status: string
+  extraction_summary: string
+}
+
+export interface WikiIngestJob {
+  id: number
+  project_id: number
+  raw_source_id: number
+  status: string
+  stage: string
+  result_json?: string
+  error_message?: string
+  retry_count?: number
+  created_at: string | null
+  finished_at: string | null
+}
+
+export interface WikiPageBrief {
+  id: number
+  project_id: number
+  page_type: string
+  slug: string
+  title: string
+  version: number
+  review_status: string
+  confidence: number
+  updated_at: string | null
+}
+
+export interface WikiPage extends WikiPageBrief {
+  content_md: string
+  frontmatter_json: string
+  source_refs_json: string
+  content_hash: string
+  created_by_agent_run_id: number | null
+  created_at: string | null
+}
+
+export interface WikiLink {
+  id: number
+  project_id: number
+  from_page_id: number
+  to_page_id: number
+  link_type: string
+  evidence_json: string
+  confidence: number
+}
+
+export interface WikiDiffItem {
+  id: number
+  task_id: number
+  project_id: number
+  dimension: string
+  diff_type: string
+  severity: string
+  title: string
+  left_value: string
+  right_value: string
+  evidence_json: string
+  suggestion: string
+  review_status: string
+  resolved_artifact_id: number | null
+  created_at: string | null
+}
+
+export interface WikiDiffTaskBrief {
+  id: number
+  project_id: number
+  title: string
+  compare_type: string
+  status: string
+  summary_json: string
+  created_at: string | null
+  finished_at: string | null
+}
+
+export interface WikiDiffTask extends WikiDiffTaskBrief {
+  left_ref_json: string
+  right_ref_json: string
+  error_message: string
+  items: WikiDiffItem[]
+}
+
+export interface WikiDiffCreateRequest {
+  title?: string
+  compare_type?: string
+  query: string
+  left_kb_type?: string
+  right_kb_type?: string
+}
+
+export interface WikiDiffCreateArtifactResult {
+  artifact_id: number
+  artifact_type: string
 }

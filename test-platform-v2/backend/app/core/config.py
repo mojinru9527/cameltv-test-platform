@@ -118,6 +118,15 @@ class Settings(BaseSettings):
     # bge 检索建议对 query 加前缀以对齐训练目标；passage 侧不加
     embedding_query_prefix: str = "为这个句子生成表示以用于检索相关文章："
 
+    # ── LLM-Wiki 知识库 / 差异对比（VNext-1..3 治理开关）──
+    # 安全默认全部 OFF：Wiki 编译与差异对比会调用 LLM（成本），须由运维显式开启。
+    # external_llm_wiki_enabled 留待 VNext-5 外部连接器。
+    wiki_enabled: bool = False                   # 平台内 Wiki 知识库总开关（导入/编译/页面）
+    wiki_auto_ingest_enabled: bool = False       # 导入 raw source 后是否自动触发 Wiki 编译
+    wiki_diff_enabled: bool = False              # 是否启用知识库差异对比
+    wiki_auto_create_artifact: bool = False      # 差异是否自动生成待审 AI 产物
+    lanhu_mcp_enabled: bool = True               # 是否启用蓝湖 MCP 提取
+
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]

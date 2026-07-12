@@ -110,6 +110,8 @@ export {
   // Checklist
   ClipboardCheck,
   BrainCircuit,
+  AlertCircle,
+  GitCompare,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"

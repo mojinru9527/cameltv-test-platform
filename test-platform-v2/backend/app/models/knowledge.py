@@ -149,3 +149,55 @@ class AgentRun(Base):
     operator_id: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     finished_at: Mapped[datetime | None] = mapped_column(default=None)
+
+
+class AgentQueueItem(Base):
+    """Agent 任务队列（M5）—— 持久化排队，支持并发控制和重试。"""
+    __tablename__ = "agent_queue_item"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(index=True)
+    # requirement_analysis/impact_analysis/case_generation/failure_analysis
+    agent_type: Mapped[str] = mapped_column(default="", index=True)
+    # manual/auto_trigger
+    trigger_type: Mapped[str] = mapped_column(default="manual")
+    # 0=auto, 10=manual（数值越大优先级越高）
+    priority: Mapped[int] = mapped_column(default=0)
+    input_json: Mapped[str] = mapped_column(Text, default="{}")
+    # pending/running/completed/failed/cancelled
+    status: Mapped[str] = mapped_column(default="pending", index=True)
+    retry_count: Mapped[int] = mapped_column(default=0)
+    max_retries: Mapped[int] = mapped_column(default=1)
+    error_message: Mapped[str] = mapped_column(Text, default="")
+    operator_id: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    started_at: Mapped[datetime | None] = mapped_column(default=None)
+    finished_at: Mapped[datetime | None] = mapped_column(default=None)
+
+
+class KnowledgeIteration(Base, TimestampMixin):
+    """迭代知识包（M6）—— 按迭代/版本归档知识快照。"""
+    __tablename__ = "knowledge_iteration"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(index=True)
+    iteration_name: Mapped[str] = mapped_column(default="")
+    version: Mapped[str] = mapped_column(default="")
+    start_date: Mapped[datetime | None] = mapped_column(default=None)
+    end_date: Mapped[datetime | None] = mapped_column(default=None)
+    # active/closed
+    status: Mapped[str] = mapped_column(default="active", index=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    metadata_json: Mapped[str] = mapped_column(Text, default="{}")
+
+
+class KnowledgeSnapshot(Base):
+    """知识快照（M6）—— 迭代关闭时自动捕获的统计数据。"""
+    __tablename__ = "knowledge_snapshot"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iteration_id: Mapped[int] = mapped_column(index=True)
+    # entity/relation/chunk/stats
+    snapshot_type: Mapped[str] = mapped_column(default="", index=True)
+    data_json: Mapped[str] = mapped_column(Text, default="{}")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)

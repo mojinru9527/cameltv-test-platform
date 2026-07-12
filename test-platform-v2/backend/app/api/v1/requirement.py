@@ -138,6 +138,15 @@ async def upload_requirement(
     background_tasks.add_task(
         ingest_service.ingest_requirement_in_new_session, current.project_id or 0, doc["id"]
     )
+    # Wiki Raw Source 入库（仅蓝湖来源 + wiki_enabled；自带 Session，失败不影响主流程）
+    if file_type == "lanhu" and source_ref:
+        from app.services.wiki import import_service as wiki_import_service
+        background_tasks.add_task(
+            wiki_import_service.ingest_lanhu_raw_source_in_new_session,
+            current.project_id or 0, source_ref,
+            business_ref_type="requirement_document", business_ref_id=doc["id"],
+            description=lanhu_description.strip() if lanhu_url.strip() else "",
+        )
     return R.ok(RequirementDocumentOut(**doc))
 
 

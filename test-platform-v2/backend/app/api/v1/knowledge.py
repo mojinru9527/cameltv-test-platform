@@ -15,24 +15,36 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
-from app.models.knowledge import AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource
+from app.models.knowledge import (
+    AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeIteration,
+    KnowledgeRelation, KnowledgeSnapshot, KnowledgeSource,
+)
 from app.schemas.common import Page, R
 from app.schemas.knowledge import (
     AiArtifactOut,
     ArtifactImportRequest,
     ArtifactReviewRequest,
+    CompareSnapshotsOut,
     EntityExtractRequest,
     EntityExtractResult,
+    GraphEdge,
+    GraphNode,
     GraphViewOut,
     KnowledgeChunkOut,
     KnowledgeEntityBrief,
     KnowledgeEntityOut,
     KnowledgeHealth,
+    KnowledgeIterationCreate,
+    KnowledgeIterationOut,
     KnowledgeOverviewOut,
     KnowledgeRelationOut,
+    KnowledgeSnapshotOut,
     KnowledgeSourceBrief,
     KnowledgeSourceOut,
     ReembedResult,
+    RegressionPredictionItem,
+    RegressionPredictionOut,
+    RegressionPredictionRequest,
     RelationApprovalRequest,
     SearchQuery,
     SearchResultOut,
@@ -93,6 +105,25 @@ def overview(
         .limit(5)
     ).all()
 
+    # M3: 关系健康指标
+    low_confidence_relations = _count(KnowledgeRelation, KnowledgeRelation.confidence < 0.5)
+    unreviewed_relations = _count(KnowledgeRelation, KnowledgeRelation.review_status == "pending")
+
+    # M4: Agent 执行指标
+    agent_total_runs = _count(AgentRun)
+    agent_avg_duration = db.scalar(
+        select(func.avg(AgentRun.duration_ms)).where(
+            AgentRun.project_id == pid,
+            AgentRun.status == "success",
+            AgentRun.duration_ms > 0,
+        )
+    ) or 0
+    # 采纳率 = approved / (approved + rejected)
+    approved_count = _count(AiArtifact, AiArtifact.review_status == "approved")
+    rejected_count = _count(AiArtifact, AiArtifact.review_status == "rejected")
+    total_reviewed = approved_count + rejected_count
+    agent_approval_rate = approved_count / total_reviewed if total_reviewed > 0 else 0.0
+
     out = KnowledgeOverviewOut(
         source_count=source_count,
         chunk_count=chunk_count,
@@ -103,7 +134,11 @@ def overview(
             unreviewed_artifacts=pending_artifacts,
             deprecated_sources=deprecated_sources,
             sourceless_chunks=sourceless,
-            low_confidence_relations=0,
+            low_confidence_relations=low_confidence_relations,
+            unreviewed_relations=unreviewed_relations,
+            agent_approval_rate=round(agent_approval_rate, 2),
+            agent_avg_duration_ms=int(agent_avg_duration),
+            agent_total_runs=agent_total_runs,
         ),
     )
     return R.ok(out)
@@ -305,7 +340,6 @@ def reject_artifact(
     row = artifact_service.reject(db, artifact_id, current.project_id or 0, current.user.id, body.comment)
     if not row:
         return R(code=404, msg="AI 产物不存在")
-    db.commit()
     _audit(req, current, db, "knowledge:reject", f"artifact#{artifact_id}", body.comment)
     db.commit()
     db.refresh(row)
@@ -322,7 +356,6 @@ def import_artifact(
 ):
     """治理守卫：仅 review_status='approved' 的 AI 用例产物允许导入正式库。"""
     result = artifact_service.import_to_test_case(db, artifact_id, current.project_id or 0)
-    db.commit()
     _audit(req, current, db, "ai_artifact:import", f"artifact#{artifact_id} → case#{result['case_id']}", body.comment)
     db.commit()
     return R.ok(result)
@@ -424,7 +457,7 @@ def graph_view(
     )
     entity_ids = {e.id for e in entities}
     nodes = [
-        GraphViewOut.model_fields["nodes"].annotation.__args__[0].__args__[0](
+        GraphNode(
             id=f"{e.entity_type}:{e.entity_key}",
             entity_type=e.entity_type,
             name=e.name,
@@ -436,7 +469,7 @@ def graph_view(
         for e in entities
     ]
     edges = [
-        GraphViewOut.model_fields["edges"].annotation.__args__[0].__args__[0](
+        GraphEdge(
             source=f"entity:{r.from_entity_id}",
             target=f"entity:{r.to_entity_id}",
             relation_type=r.relation_type,
@@ -469,7 +502,6 @@ def approve_relation(
         return R(code=404, msg="关系不存在")
     rel.review_status = "approved"
     rel.metadata_json = json.dumps({**json.loads(rel.metadata_json or "{}"), "comment": body.comment})
-    db.commit()
     _audit(req, current, db, "knowledge:relation_approve", f"relation#{relation_id}", body.comment)
     db.commit()
     db.refresh(rel)
@@ -489,8 +521,132 @@ def reject_relation(
         return R(code=404, msg="关系不存在")
     rel.review_status = "rejected"
     rel.metadata_json = json.dumps({**json.loads(rel.metadata_json or "{}"), "comment": body.comment})
-    db.commit()
     _audit(req, current, db, "knowledge:relation_reject", f"relation#{relation_id}", body.comment)
     db.commit()
     db.refresh(rel)
     return R.ok(KnowledgeRelationOut.model_validate(rel))
+
+
+# ═══════════════════════════════════════════════════════
+# M6 迭代知识包
+# ═══════════════════════════════════════════════════════
+
+from app.services.knowledge import snapshot_service
+from app.services.knowledge.snapshot_service import compare_iterations, get_snapshots
+
+
+@router.post("/iterations", response_model=R[KnowledgeIterationOut], summary="创建迭代")
+def create_iteration(
+    body: KnowledgeIterationCreate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    it = snapshot_service.create_iteration(
+        db,
+        current.project_id or 0,
+        iteration_name=body.iteration_name,
+        version=body.version,
+        start_date=body.start_date,
+        end_date=body.end_date,
+        description=body.description,
+    )
+    _audit(req, current, db, "knowledge:iteration_create", f"iteration#{it.id}", body.iteration_name)
+    db.commit()
+    db.refresh(it)
+    return R.ok(KnowledgeIterationOut.model_validate(it))
+
+
+@router.get("/iterations", response_model=R[Page[KnowledgeIterationOut]], summary="迭代列表")
+def list_iterations(
+    status: str | None = Query(None, description="active/closed"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=200),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    rows, total = snapshot_service.list_iterations(
+        db, current.project_id or 0,
+        status=status, page=page, page_size=page_size,
+    )
+    return R.ok(Page(
+        total=total, page=page, page_size=page_size,
+        items=[KnowledgeIterationOut.model_validate(r) for r in rows],
+    ))
+
+
+@router.get("/iterations/{iteration_id}", response_model=R[KnowledgeIterationOut], summary="迭代详情")
+def get_iteration(
+    iteration_id: int,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    it = snapshot_service.get_iteration(db, iteration_id, current.project_id or 0)
+    if not it:
+        return R(code=404, msg="迭代不存在")
+    return R.ok(KnowledgeIterationOut.model_validate(it))
+
+
+@router.post("/iterations/{iteration_id}/close", response_model=R[dict], summary="关闭迭代并生成快照")
+def close_iteration(
+    iteration_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """关闭迭代，自动创建 entity/relation/chunk/stats 四种快照。"""
+    from app.services.knowledge.snapshot_service import close_iteration_in_new_session
+    result = close_iteration_in_new_session(iteration_id, current.project_id or 0)
+    _audit(req, current, db, "knowledge:iteration_close", f"iteration#{iteration_id}", str(result))
+    db.commit()
+    if result.get("success"):
+        return R.ok(result)
+    return R(code=400, msg=result.get("error", "关闭失败"))
+
+
+@router.get("/iterations/{iteration_id}/snapshots", response_model=R[list[KnowledgeSnapshotOut]], summary="迭代快照列表")
+def list_snapshots(
+    iteration_id: int,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """获取某个迭代的所有快照（entity/relation/chunk/stats）。"""
+    snaps = get_snapshots(db, iteration_id)
+    return R.ok([KnowledgeSnapshotOut.model_validate(s) for s in snaps])
+
+
+@router.get("/iterations/{iteration_id}/compare", response_model=R[CompareSnapshotsOut], summary="跨迭代对比")
+def compare_iteration(
+    iteration_id: int,
+    base_iteration_id: int = Query(..., description="基准迭代 ID"),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """对比两个迭代的快照数据，返回增量和趋势。"""
+    result = compare_iterations(db, base_iteration_id, iteration_id, current.project_id or 0)
+    if not result:
+        return R(code=404, msg="迭代不存在")
+    return R.ok(CompareSnapshotsOut(**result))
+
+
+# ═══════════════════════════════════════════════════════
+# M6 回归范围预测
+# ═══════════════════════════════════════════════════════
+
+@router.post("/predict/regression-scope", response_model=R[RegressionPredictionOut], summary="回归范围预测")
+def predict_regression_scope(
+    body: RegressionPredictionRequest,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+):
+    """输入变更的 API paths / modules，输出按风险排序的回归范围预测。"""
+    from app.services.knowledge.regression_predictor import predict_regression_scope
+    result = predict_regression_scope(
+        current.project_id or 0,
+        changed_paths=body.changed_paths,
+        changed_modules=body.changed_modules,
+    )
+    return R.ok(RegressionPredictionOut(
+        items=[RegressionPredictionItem(**i) for i in result["items"]],
+        total_analyzed=result["total_analyzed"],
+        high_risk_count=result["high_risk_count"],
+    ))

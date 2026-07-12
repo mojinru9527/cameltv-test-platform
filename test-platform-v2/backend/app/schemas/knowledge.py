@@ -117,7 +117,12 @@ class KnowledgeHealth(BaseModel):
     unreviewed_artifacts: int = 0      # 未审核 AI 产物
     deprecated_sources: int = 0        # 已废弃知识源
     sourceless_chunks: int = 0         # 无来源切片（孤儿）
-    low_confidence_relations: int = 0  # 低置信度关系（M3 起用）
+    low_confidence_relations: int = 0  # 低置信度关系（confidence < 0.5）
+    unreviewed_relations: int = 0      # 待审核关系（M3 起用）
+    # M4 Agent 指标
+    agent_approval_rate: float = 0.0   # AI 产物采纳率
+    agent_avg_duration_ms: int = 0     # Agent 平均耗时 (ms)
+    agent_total_runs: int = 0          # Agent 执行总量
 
 
 class KnowledgeOverviewOut(BaseModel):
@@ -242,3 +247,98 @@ class EntityExtractResult(BaseModel):
 
 class RelationApprovalRequest(BaseModel):
     comment: str = ""
+
+
+# ── M5 Agent 任务队列 ──
+
+class AgentQueueItemOut(BaseModel):
+    id: int
+    project_id: int
+    agent_type: str
+    trigger_type: str
+    priority: int
+    input_json: str
+    status: str
+    retry_count: int
+    max_retries: int
+    error_message: str
+    operator_id: int
+    created_at: datetime | None = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class QueueStats(BaseModel):
+    pending: int = 0
+    running: int = 0
+    completed: int = 0
+    failed: int = 0
+
+
+# ── M6 迭代知识包 ──
+
+class KnowledgeIterationOut(BaseModel):
+    id: int
+    project_id: int
+    iteration_name: str
+    version: str
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    status: str
+    description: str
+    metadata_json: str = "{}"
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class KnowledgeIterationCreate(BaseModel):
+    iteration_name: str = Field(..., min_length=1, max_length=200)
+    version: str = ""
+    start_date: str | None = None  # ISO date
+    end_date: str | None = None
+    description: str = ""
+
+
+class KnowledgeSnapshotOut(BaseModel):
+    id: int
+    iteration_id: int
+    snapshot_type: str
+    data_json: str = "{}"
+    created_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class CompareSnapshotsOut(BaseModel):
+    base_iteration_id: int
+    base_iteration_name: str = ""
+    target_iteration_id: int
+    target_iteration_name: str = ""
+    deltas: dict = Field(default_factory=dict)
+    trends: dict = Field(default_factory=dict)
+
+
+# ── M6 回归预测 ──
+
+class RegressionPredictionRequest(BaseModel):
+    changed_paths: list[str] = Field(default_factory=list, description="变更的 API paths")
+    changed_modules: list[str] = Field(default_factory=list, description="变更的模块名")
+
+
+class RegressionPredictionItem(BaseModel):
+    api_path: str = ""
+    module: str = ""
+    risk_score: float = 0.0  # 0-1
+    historical_defects: int = 0
+    suggested_test_cases: list[str] = Field(default_factory=list)
+    affected_entities: list[str] = Field(default_factory=list)
+
+
+class RegressionPredictionOut(BaseModel):
+    items: list[RegressionPredictionItem] = Field(default_factory=list)
+    total_analyzed: int = 0
+    high_risk_count: int = 0
