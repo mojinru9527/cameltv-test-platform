@@ -337,3 +337,77 @@ def ingest_execution_failure_in_new_session(project_id: int, task_id: int) -> No
         db.rollback()
     finally:
         db.close()
+
+
+# ── 6. UI 测试失败回流入库 ──
+
+def ingest_ui_test_failure_in_new_session(project_id: int, run_id: int) -> None:
+    """UI 自动化执行失败后，提取失败摘要和错误信息沉淀到知识库。"""
+    if not settings.knowledge_ingest_enabled:
+        return
+    db = SessionLocal()
+    try:
+        from app.models.ui_test import UiTestRun, UiTestJob
+        from app.models.environment import Environment
+
+        run = db.get(UiTestRun, run_id)
+        if not run:
+            return
+
+        if run.status != "fail":
+            return  # 只摄入失败记录
+
+        job = db.get(UiTestJob, run.job_id)
+        if not job:
+            return
+
+        # 生产环境保护
+        if job.environment_id:
+            env = db.get(Environment, job.environment_id)
+            if env and env.env_type == "prod" and not settings.knowledge_ingest_production_data:
+                logger.info("skip prod UI test ingest run_id=%s (flag off)", run_id)
+                return
+
+        # 构建知识切片内容
+        import json as _json
+        try:
+            result = _json.loads(run.result or "{}")
+        except (_json.JSONDecodeError, TypeError):
+            result = {}
+
+        raw_lines = [
+            f"UI 自动化执行失败 - {job.name}",
+            f"脚本: {job.test_spec}",
+            f"浏览器: {job.browser}",
+            f"错误: {run.error_message}",
+            f"结果: 总数={result.get('total',0)} 通过={result.get('pass_',0)} 失败={result.get('fail',0)}",
+            f"执行时间: {run.started_at.isoformat() if run.started_at else 'N/A'}",
+        ]
+        raw = "\n".join(raw_lines)
+
+        src = record_source(
+            db,
+            project_id=project_id,
+            source_type="ui_test_execution",
+            source_id=run_id,
+            title=f"UI 测试 #{run_id}: {job.name}",
+            source_ref=str(run_id),
+            raw_content=raw,
+            metadata={"browser": job.browser, "test_spec": job.test_spec},
+        )
+        if src is None:
+            db.rollback()
+            return
+        chunk_service.make_chunks(db, src, [{
+            "chunk_type": "ui_test_result",
+            "title": f"UI 测试失败 #{run_id}: {job.name}",
+            "content": raw,
+            "tags": ["ui_test", "failed", job.browser],
+        }])
+        db.commit()
+        _post_ingest_hooks(project_id, source_id=src.id)
+    except Exception:
+        logger.exception("ingest UI test failure run_id=%s failed", run_id)
+        db.rollback()
+    finally:
+        db.close()

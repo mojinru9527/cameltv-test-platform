@@ -53,8 +53,8 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 8 | 测试报告 | `/report` | ✅ |
 | 9 | 定时任务 | `/schedule` | ✅ |
 | 10 | 缺陷管理 | `/defect` | 🟡（仅外链，无内建工作流） |
-| 11 | API 测试 | `/apitest` | 🧪（纯前端 fetch + localStorage） |
-| 12 | UI 自动化 | `/uitest` | 🧪（执行结果为随机数模拟） |
+| 11 | API 测试 | `/apitest` | 🟡（真实 httpx 执行，待补齐快照/取消/生产保护） |
+| 12 | UI 自动化 | `/uitest` | 🟡（真实 Playwright 执行，待补齐异步/环境/产物） |
 | 13 | 音视频专项 | `/special` | 🧪（检测指标为随机数模拟） |
 
 ---
