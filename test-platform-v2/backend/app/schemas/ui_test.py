@@ -14,6 +14,7 @@ class UiTestJobCreate(BaseModel):
     description: str = ""
     test_spec: str = ""
     browser: str = "chromium"       # chromium/firefox/webkit
+    environment_id: int | None = None
 
 
 class UiTestJobUpdate(BaseModel):
@@ -23,6 +24,7 @@ class UiTestJobUpdate(BaseModel):
     description: Optional[str] = None
     test_spec: Optional[str] = None
     browser: Optional[str] = None
+    environment_id: int | None = None
 
 
 class UiTestRunOut(BaseModel):
@@ -30,11 +32,13 @@ class UiTestRunOut(BaseModel):
 
     id: int
     job_id: int
-    status: str = "running"
+    status: str = "pending"
     result: Optional[dict] = None
     screenshots: list[str] = []
     video_url: str = ""
     trace_id: str = ""
+    base_url: str = ""
+    error_message: str = ""
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
 
@@ -48,6 +52,7 @@ class UiTestJobOut(BaseModel):
     description: str = ""
     test_spec: str = ""
     browser: str = "chromium"
+    environment_id: int | None = None
     status: str = "idle"
     last_result: str = "{}"
     creator_id: int = 0
@@ -60,3 +65,45 @@ class UiTestJobOut(BaseModel):
 
 class UiTestJobDetailOut(UiTestJobOut):
     runs: list[UiTestRunOut] = []
+
+
+# ── UiTestScript ──
+
+class UiTestScriptCreate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: str
+    script_key: str = ""
+    spec_path: str = ""
+    module: str = ""
+    owner: str = ""
+    tags: str = "[]"
+    status: str = "active"
+
+
+class UiTestScriptUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    name: Optional[str] = None
+    script_key: Optional[str] = None
+    spec_path: Optional[str] = None
+    module: Optional[str] = None
+    owner: Optional[str] = None
+    tags: Optional[str] = None
+    status: Optional[str] = None
+
+
+class UiTestScriptOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    project_id: int = 0
+    name: str
+    script_key: str
+    spec_path: str
+    module: str
+    owner: str
+    tags: str
+    status: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None

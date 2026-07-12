@@ -30,7 +30,7 @@ client.interceptors.response.use(
     const body = resp.data as ApiEnvelope<unknown>
     if (body && typeof body === 'object' && 'code' in body) {
       if (body.code !== 0) {
-        toast.error(body.msg || '请求失败')
+        // 业务错误不在此 toast，由调用方组件按需提示
         return Promise.reject(new Error(body.msg))
       }
       return body.data

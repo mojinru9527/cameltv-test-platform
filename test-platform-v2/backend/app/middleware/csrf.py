@@ -92,7 +92,7 @@ class CSRFMiddleware:
 
         try:
             parsed = urlparse(check_val)
-            check_host = parsed.netloc or parsed.path.split("/")[0] if parsed.path else ""
+            check_host = parsed.netloc or (parsed.path.split("/")[0] if parsed.path else "")
         except Exception:
             return False
 

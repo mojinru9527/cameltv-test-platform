@@ -20,6 +20,7 @@ _COL_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
 # ── 配置 ──
 DEFAULT_TIMEOUT = 30  # seconds
 MAX_RESPONSE_BODY_SIZE = 500 * 1024  # 500 KB
+SENSITIVE_HEADERS = {"authorization", "cookie", "set-cookie", "x-api-key", "x-auth-token", "token"}
 
 
 # ═══════════════════════════════════════════════════════
@@ -33,6 +34,7 @@ def execute_api_case(
     project_id: int = 0,
     environment_id: int | None = None,
     dataset_id: int | None = None,
+    confirm_prod: bool = False,
 ) -> dict:
     """执行已保存的 API 用例，返回执行结果。若提供 dataset_id 则进行参数化批量执行。"""
     case = db.get(TestCase, case_id)
@@ -56,8 +58,8 @@ def execute_api_case(
     }
 
     if dataset_id:
-        return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id)
-    return _do_execute(db, request_def, assertions, environment_id=environment_id)
+        return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id, confirm_prod=confirm_prod)
+    return _do_execute(db, request_def, assertions, environment_id=environment_id, confirm_prod=confirm_prod)
 
 
 def quick_execute(
@@ -67,11 +69,12 @@ def quick_execute(
     assertions: list[dict] | None = None,
     environment_id: int | None = None,
     dataset_id: int | None = None,
+    confirm_prod: bool = False,
 ) -> dict:
     """即时执行（不依赖已保存用例），用于调试面板。若提供 dataset_id 则批量执行。"""
     if dataset_id:
-        return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id)
-    return _do_execute(db, request_def, assertions or [], environment_id=environment_id)
+        return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id, confirm_prod=confirm_prod)
+    return _do_execute(db, request_def, assertions or [], environment_id=environment_id, confirm_prod=confirm_prod)
 
 
 # ═══════════════════════════════════════════════════════
@@ -84,12 +87,19 @@ def _do_execute(
     assertions: list[dict],
     *,
     environment_id: int | None = None,
+    dataset_row_index: int | None = None,
+    confirm_prod: bool = False,
 ) -> dict:
-    """核心执行流程：解析变量 → 发请求 → 跑断言 → 汇总结果。"""
+    """核心执行流程：解析变量 → 生产保护检查 → 发请求 → 跑断言 → 汇总结果。"""
     method = (request_def.get("method") or "GET").upper()
     url = request_def.get("url") or ""
     headers = request_def.get("headers") or {}
     body = request_def.get("body") or ""
+
+    # 0. 生产环境保护检查
+    allowed, prod_msg = _check_prod_protection(db, method, environment_id, confirm_prod)
+    if not allowed:
+        return _error_result(prod_msg)
 
     # 1. 变量替换
     if environment_id:
@@ -102,10 +112,23 @@ def _do_execute(
             resolved_headers[k2] = v2
         headers = resolved_headers
 
-    # 2. 发起 HTTP 请求
+    # 2. 解析最终 URL
+    resolved_url = _resolve_url(db, environment_id, url)
+
+    # 3. 构建请求快照（执行前）
+    request_snapshot = _build_request_snapshot(
+        method=method,
+        original_url=request_def.get("url", ""),
+        resolved_url=resolved_url,
+        headers=headers,
+        body=body,
+        environment_id=environment_id,
+        dataset_row_index=dataset_row_index,
+    )
+
+    # 4. 发起 HTTP 请求
     start = time.perf_counter()
     try:
-        resolved_url = _resolve_url(db, environment_id, url)
         with httpx.Client(timeout=DEFAULT_TIMEOUT, follow_redirects=True) as client:
             resp = client.request(
                 method=method,
@@ -127,13 +150,13 @@ def _do_execute(
 
         request_error = None
     except httpx.TimeoutException:
-        return _error_result("请求超时 (30s)")
+        return _error_result("请求超时 (30s)", request_snapshot)
     except httpx.ConnectError as e:
-        return _error_result(f"连接失败: {e}")
+        return _error_result(f"连接失败: {e}", request_snapshot)
     except Exception as e:
-        return _error_result(f"请求异常: {type(e).__name__}: {e}")
+        return _error_result(f"请求异常: {type(e).__name__}: {e}", request_snapshot)
 
-    # 3. 执行断言
+    # 5. 执行断言
     assertion_results = _run_assertions(
         assertions,
         status_code=resp.status_code,
@@ -144,6 +167,16 @@ def _do_execute(
     )
     all_pass = all(a["passed"] for a in assertion_results) if assertion_results else True
 
+    # 6. 构建响应快照
+    body_truncated = len(raw_body) > MAX_RESPONSE_BODY_SIZE if raw_body else False
+    response_snapshot = {
+        "status_code": resp.status_code,
+        "headers": resp_headers,
+        "body_size_bytes": len(raw_body) if raw_body else 0,
+        "truncated": body_truncated,
+        "content_type": resp_headers.get("content-type", ""),
+    }
+
     return {
         "status": "ok",
         "status_code": resp.status_code,
@@ -153,6 +186,8 @@ def _do_execute(
         "duration_ms": duration_ms,
         "assertions": assertion_results,
         "all_pass": all_pass,
+        "request_snapshot": request_snapshot,
+        "response_snapshot": response_snapshot,
         "executed_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -602,7 +637,7 @@ def _resolve_url(db: Session, environment_id: int | None, url: str) -> str:
     return url if url.startswith("http") else f"http://{url}"
 
 
-def _error_result(message: str) -> dict:
+def _error_result(message: str, request_snapshot: dict | None = None) -> dict:
     return {
         "status": "error",
         "status_code": 0,
@@ -613,8 +648,78 @@ def _error_result(message: str) -> dict:
         "assertions": [],
         "all_pass": False,
         "error": message,
+        "request_snapshot": request_snapshot or {},
+        "response_snapshot": {},
         "executed_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+def _build_request_snapshot(
+    *,
+    method: str,
+    original_url: str,
+    resolved_url: str,
+    headers: dict,
+    body: str,
+    environment_id: int | None = None,
+    dataset_row_index: int | None = None,
+) -> dict:
+    """构建完整请求快照，敏感头脱敏。"""
+    safe_headers = {}
+    for k, v in headers.items():
+        if k.lower() in SENSITIVE_HEADERS:
+            safe_headers[k] = "<redacted>"
+        else:
+            safe_headers[k] = v
+
+    safe_body = body
+    if body and len(str(body)) > 10000:
+        safe_body = str(body)[:10000] + f"\n... (truncated, total {len(str(body))} bytes)"
+
+    snapshot = {
+        "method": method,
+        "original_url": original_url,
+        "resolved_url": resolved_url,
+        "headers": safe_headers,
+        "body": safe_body,
+        "environment_id": environment_id,
+    }
+    if dataset_row_index is not None:
+        snapshot["dataset_row_index"] = dataset_row_index
+    return snapshot
+
+
+# ── 生产环境保护 ──────────────────────────────────────────
+
+WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+
+
+def _check_prod_protection(
+    db: Session,
+    method: str,
+    environment_id: int | None,
+    confirm_prod: bool = False,
+) -> tuple[bool, str]:
+    """检查生产环境保护：写操作需要 confirm_prod=True。返回 (allowed, message)。"""
+    if not environment_id:
+        return True, ""
+    method_upper = method.upper()
+    if method_upper not in WRITE_METHODS:
+        return True, ""  # 读操作不需要保护
+
+    from app.models.environment import Environment
+    env = db.get(Environment, environment_id)
+    if not env:
+        return True, ""  # 环境不存在由调用方处理
+    if env.env_type != "prod":
+        return True, ""
+
+    if not confirm_prod:
+        return False, (
+            f"生产环境禁止执行 {method_upper} 写操作。"
+            f"如需执行，请设置 confirm_prod=true 并确认。"
+        )
+    return True, ""
 
 
 # ── 参数化批量执行 ──────────────────────────────────────
@@ -625,6 +730,7 @@ def _execute_with_dataset(
     assertions: list[dict],
     environment_id: int | None,
     dataset_id: int,
+    confirm_prod: bool = False,
 ) -> dict:
     """遍历数据集每一行，逐行替换 ${column_name} 并执行，返回批量结果。"""
     from app.services.dataset_service import get_dataset_rows, get_dataset
@@ -648,7 +754,7 @@ def _execute_with_dataset(
                 headers[k] = _substitute_columns(str(v), row)
 
         # Execute
-        result = _do_execute(db, row_req, row_assertions, environment_id=environment_id)
+        result = _do_execute(db, row_req, row_assertions, environment_id=environment_id, dataset_row_index=row_idx, confirm_prod=confirm_prod)
         per_row_results.append({
             "row_index": row_idx,
             "row_data": row,
@@ -677,3 +783,38 @@ def _substitute_columns(template: str, row: dict) -> str:
     def _replacer(m: re.Match) -> str:
         return str(row.get(m.group(1), m.group(0)))
     return _COL_VAR_PATTERN.sub(_replacer, template)
+
+
+# ── curl 复现命令生成 ────────────────────────────────────
+
+def build_curl_command(request_snapshot: dict) -> str:
+    """从请求快照生成等效 curl 命令，方便失败排查。"""
+    method = (request_snapshot.get("method") or "GET").upper()
+    url = request_snapshot.get("resolved_url") or request_snapshot.get("original_url") or ""
+    headers = request_snapshot.get("headers") or {}
+    body = request_snapshot.get("body") or ""
+
+    parts = ["curl", "-X", method]
+
+    # URL
+    if url:
+        parts.append(_shell_quote(url))
+
+    # Headers (skip redacted)
+    for k, v in headers.items():
+        if v == "<redacted>":
+            parts.append(f"-H {_shell_quote(f'{k}: <your-token>')}")
+        else:
+            parts.append(f"-H {_shell_quote(f'{k}: {v}')}")
+
+    # Body
+    if body and method in ("POST", "PUT", "PATCH"):
+        parts.append(f"-d {_shell_quote(str(body))}")
+
+    return " \\\n  ".join(parts)
+
+
+def _shell_quote(s: str) -> str:
+    """简单 shell 引号（Windows cmd 兼容：优先双引号）。"""
+    escaped = s.replace('"', '\\"')
+    return f'"{escaped}"'
