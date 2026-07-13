@@ -750,3 +750,85 @@ async def extract(url: str, auto_login: bool = True):
         extraction_status=status,
         extraction_summary=summary,
     )
+
+
+# ── 证据包专用：下载资源 + 返回全页面树（供滚动截图与 OCR）──
+
+async def get_lanhu_pages_for_evidence(url: str) -> dict:
+    """下载 Axure 资源并返回全页面列表，供证据包截图/OCR 使用。
+
+    与 `_extract_lanhu_content` 共用下载与认证重试逻辑，但不做文本聚合：
+    只返回 resource_dir、document_name 和规范化 pages（含 filename / folder /
+    local_url），让 screenshot_service 逐页滚动截图、OCR。
+
+    Return:
+        {"status": "success", "resource_dir": str, "document_name": str,
+         "pages": [{"id","name","path","folder","filename","local_url"}, ...]}
+    异常统一以 status="failed" + error 表达，绝不裸抛。
+    """
+    sys.path.insert(0, str(_lanhu_mcp_dir()))
+    try:
+        from lanhu_mcp_server import (  # type: ignore
+            LanhuAuthError,
+            LanhuExtractor,
+            fix_html_files,
+            lanhu_login,
+            _save_cached_cookie,
+        )
+
+        async def _do(cookie_override: str = "") -> dict:
+            extractor = LanhuExtractor(cookie=cookie_override)
+            params = extractor.parse_url(url)
+            doc_id = params.get("doc_id", "")
+            url_version_id = params.get("version_id", "")
+            if not doc_id:
+                raise ValueError("蓝湖链接缺少 docId，请复制具体设计稿页面链接")
+
+            resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
+            download_result = await extractor.download_resources(
+                url, resource_dir, target_version_id=url_version_id,
+            )
+            if download_result.get("status") in ("downloaded", "updated"):
+                fix_html_files(resource_dir)
+
+            pages_info = await extractor.get_pages_list(url)
+            document_name = pages_info.get("document_name", "设计稿")
+
+            pages: list[dict] = []
+            for p in pages_info.get("pages", []):
+                name = p.get("name", "")
+                folder = p.get("folder", "")
+                filename = p.get("filename", f"{name}.html")
+                path = f"{folder}/{name}" if folder else name
+                html_path = Path(resource_dir) / filename
+                local_url = html_path.as_uri() if html_path.exists() else ""
+                pages.append({
+                    "id": p.get("id", ""),
+                    "name": name,
+                    "path": path,
+                    "folder": folder,
+                    "filename": filename,
+                    "local_url": local_url,
+                })
+
+            return {
+                "status": "success",
+                "resource_dir": resource_dir,
+                "document_name": document_name,
+                "pages": pages,
+            }
+
+        try:
+            return await _do()
+        except LanhuAuthError:
+            new_cookie = await lanhu_login()
+            if new_cookie:
+                _save_cached_cookie(new_cookie)
+                return await _do(cookie_override=new_cookie)
+            return {"status": "failed", "error": "蓝湖认证失败且自动登录未获取到 Cookie", "pages": []}
+    except Exception as e:  # noqa: BLE001 — 统一以状态表达失败
+        return {"status": "failed", "error": str(e)[:300], "pages": []}
+    finally:
+        if str(_lanhu_mcp_dir()) in sys.path:
+            sys.path.remove(str(_lanhu_mcp_dir()))
+
