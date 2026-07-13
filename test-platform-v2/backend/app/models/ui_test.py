@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import ForeignKey, String, Text
+from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -47,7 +47,13 @@ class UiTestRun(Base):
     trace_id: Mapped[str] = mapped_column(String(100), default="")
     base_url: Mapped[str] = mapped_column(String(500), default="")        # 执行时 BASE_URL 快照
     artifact_dir: Mapped[str] = mapped_column(String(500), default="")    # 产物目录路径
+    report_json_path: Mapped[str] = mapped_column(String(500), default="")  # report.json 路径
+    html_report_path: Mapped[str] = mapped_column(String(500), default="")  # HTML 报告路径
     error_message: Mapped[str] = mapped_column(Text, default="")          # 错误信息
+    stdout: Mapped[str] = mapped_column(Text, default="")                 # 捕获的标准输出
+    stderr: Mapped[str] = mapped_column(Text, default="")                 # 捕获的标准错误
+    process_id: Mapped[int | None] = mapped_column(Integer, default=None) # 运行中 Playwright 进程 PID
+    cancel_requested: Mapped[bool] = mapped_column(Boolean, default=False) # 是否请求取消
     started_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     finished_at: Mapped[Optional[datetime]] = mapped_column(default=None)
 
