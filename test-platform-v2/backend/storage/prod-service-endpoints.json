@@ -1,0 +1,81 @@
+{
+  "site": "https://www.camel1.tv",
+  "total_endpoints": 200,
+  "tested": [
+    {
+      "endpoint": "/account-service/ee/ads/activity/get",
+      "status": 404,
+      "duration_ms": 787
+    },
+    {
+      "endpoint": "/account-service/ee/ads/activity/read",
+      "status": 404,
+      "duration_ms": 463
+    },
+    {
+      "endpoint": "/account-service/ee/block_speak/do",
+      "status": 404,
+      "duration_ms": 517
+    },
+    {
+      "endpoint": "/account-service/ee/block_speak/list",
+      "status": 404,
+      "duration_ms": 1052
+    },
+    {
+      "endpoint": "/account-service/ee/client/addForbiddenUser",
+      "status": 404,
+      "duration_ms": 479
+    },
+    {
+      "endpoint": "/account-service/ee/client/addReportUser",
+      "status": 404,
+      "duration_ms": 716
+    },
+    {
+      "endpoint": "/account-service/ee/client/canWebLive",
+      "status": 404,
+      "duration_ms": 711
+    },
+    {
+      "endpoint": "/account-service/ee/client/demo/changeForgetPwd",
+      "status": 404,
+      "duration_ms": 475
+    },
+    {
+      "endpoint": "/account-service/ee/client/demo/changeForgetPwdForEmail",
+      "status": 404,
+      "duration_ms": 636
+    },
+    {
+      "endpoint": "/account-service/ee/client/demo/emailByWeb",
+      "status": 404,
+      "duration_ms": 265
+    },
+    {
+      "endpoint": "/account-service/ee/client/demo/forgetPwd",
+      "status": 404,
+      "duration_ms": 583
+    },
+    {
+      "endpoint": "/account-service/ee/client/demo/forgetPwdForEmail",
+      "status": 404,
+      "duration_ms": 462
+    },
+    {
+      "endpoint": "/account-service/ee/client/demo/login",
+      "status": 404,
+      "duration_ms": 437
+    },
+    {
+      "endpoint": "/account-service/ee/client/demo/loginForEmail",
+      "status": 404,
+      "duration_ms": 851
+    },
+    {
+      "endpoint": "/account-service/ee/client/demo/mobileByWeb",
+      "status": 404,
+      "duration_ms": 175
+    }
+  ]
+}

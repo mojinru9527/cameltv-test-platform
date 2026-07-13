@@ -481,10 +481,10 @@ def _create_test_case_from_generated(db: Session, project_id: int, case_data: di
 @router.post("/tasks", response_model=R[ApiTaskOut], summary="创建执行任务")
 def create_task(
     body: ApiTaskCreateRequest,
+    background_tasks: BackgroundTasks,
     project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:task")),
     db: Session = Depends(get_db),
-    background_tasks: BackgroundTasks | None = None,
 ):
     """从用例列表创建批量执行任务。
 
@@ -524,14 +524,7 @@ def create_task(
     db.commit()
 
     # 通过 BackgroundTasks 异步执行（不阻塞请求线程）
-    # 若 BackgroundTasks 不可用（如某些测试场景），task_worker 轮询会接管
-    if background_tasks is not None:
-        background_tasks.add_task(_execute_task_async, task.id, project_id, body.confirm_prod)
-    else:
-        import logging
-        logging.getLogger(__name__).warning(
-            "BackgroundTasks not available for task #%s; task_worker polling will pick it up", task.id
-        )
+    background_tasks.add_task(_execute_task_async, task.id, project_id, body.confirm_prod)
 
     db.refresh(task)
     return R.ok(ApiTaskOut.model_validate(task))

@@ -101,38 +101,30 @@ test.describe('CamelTv 生产环境冒烟测试', () => {
     }
   });
 
-  // ─── TC-PROD-003: 主要导航检查 ───
-  test('TC-PROD-003: 主导航可点击', async ({ page }) => {
+  // ─── TC-PROD-003: 主要导航检查 (鲁棒版) ───
+  test('TC-PROD-003: 核心页面可交互', async ({ page }) => {
     await page.goto(SITE_URL, { waitUntil: 'networkidle' });
+    await page.screenshot({ path: 'artifacts/prod-nav-homepage.png', fullPage: true });
 
-    // 收集所有导航链接
-    const navLinks = page.locator('nav a, header a, [class*="nav"] a, [class*="menu"] a');
-    const count = await navLinks.count();
+    // 统计所有可点击元素（不限于 a 标签，camel1.tv 大量使用 div/span + onclick）
+    const clickables = page.locator('a[href], button, [role="button"], [onclick], [class*="tab"]');
+    const total = await clickables.count();
+    console.log(`可交互元素总数: ${total}`);
 
-    if (count > 0) {
-      // 点击前几个导航链接并验证跳转
-      for (let i = 0; i < Math.min(count, 5); i++) {
-        const link = navLinks.nth(i);
-        const href = await link.getAttribute('href');
-        const text = await link.textContent();
-
-        if (href && !href.startsWith('#') && !href.startsWith('javascript:') && href !== '/') {
-          try {
-            await link.click({ timeout: 5000 });
-            await page.waitForTimeout(2000);
-            await page.screenshot({
-              path: `artifacts/prod-nav-${i}-${text?.trim().slice(0, 20) || 'unknown'}.png`,
-              fullPage: false
-            });
-          } catch {
-            // 某些链接可能需要登录，跳过
-          }
-        }
-      }
+    // 尝试点击前几个可见元素
+    let clicked = 0;
+    for (let i = 0; i < Math.min(total, 30) && clicked < 3; i++) {
+      const el = clickables.nth(i);
+      try {
+        if (!(await el.isVisible({ timeout: 1000 }))) continue;
+        await el.click({ timeout: 3000 });
+        await page.waitForTimeout(1000);
+        clicked++;
+      } catch { /* 跳过不可点击的元素 */ }
     }
 
-    // 至少验证页面可以正常交互
-    expect(count).toBeGreaterThanOrEqual(0);
+    await page.screenshot({ path: 'artifacts/prod-interaction.png', fullPage: false });
+    expect(total).toBeGreaterThan(0);
   });
 
   // ─── TC-PROD-004: 关键 API 端点可达性 ───
