@@ -45,9 +45,11 @@ def _emit(text: str, conf: float, quad: Any) -> None:
     text = (text or "").strip()
     if not text:
         return
+    # ensure_ascii=True：输出纯 ASCII 的 \uXXXX 转义，规避 Windows stdout 重定向时
+    # cp936/UTF-8 编码不一致导致的乱码；provider 侧 json.loads 会无损还原中文。
     line = json.dumps(
         {"text": text, "confidence": round(float(conf), 4), "bbox": _bbox_from_quad(quad)},
-        ensure_ascii=False,
+        ensure_ascii=True,
     )
     sys.stdout.write(line + "\n")
 
@@ -108,8 +110,12 @@ def main() -> int:
         return 3
 
     # 构造 OCR（尽量静默日志到 stderr；不同版本参数不同，逐步降级）。
+    # 关键：paddlepaddle 3.x 的 oneDNN/PIR 推理路径存在 ConvertPirAttribute2RuntimeAttribute
+    # 回归 bug，必须 enable_mkldnn=False + device='cpu' 才能在 CPU 上稳定推理。
     ocr = None
     for kwargs in (
+        {"lang": "ch", "enable_mkldnn": False, "device": "cpu"},
+        {"lang": "ch", "enable_mkldnn": False},
         {"use_angle_cls": True, "lang": "ch", "show_log": False},
         {"use_angle_cls": True, "lang": "ch"},
         {"lang": "ch"},
