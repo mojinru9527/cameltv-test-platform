@@ -38,3 +38,29 @@ def test_parse_command_output_reads_json_lines():
     assert len(blocks) == 2
     assert blocks[0].text == "matchId 必填"
     assert blocks[1].order_index == 2
+
+
+def test_merge_prefers_non_empty_ocr_and_preserves_dom():
+    from app.services.lanhu_evidence.merge_service import merge_page_text
+
+    result = merge_page_text(
+        page_name="比赛推送",
+        dom_text="接口 /ee/test/matchpush",
+        ocr_text="比赛推送\nmatchId 必填\n分钟数必填",
+    )
+
+    assert "matchId 必填" in result.merged_text
+    assert "/ee/test/matchpush" in result.merged_text
+    assert result.quality["ocr_chars"] > 0
+    assert result.quality["status"] == "success"
+
+
+def test_merge_marks_low_confidence_when_ocr_empty_and_dom_short():
+    from app.services.lanhu_evidence.merge_service import merge_page_text
+
+    result = merge_page_text(page_name="空页面", dom_text="", ocr_text="")
+
+    assert result.quality["status"] == "needs_review"
+    assert result.quality["has_ocr"] is False
+    assert result.quality["has_dom"] is False
+
