@@ -6,6 +6,12 @@ from app.models.dataset import Dataset
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.integration import IntegrationConfig
+from app.models.lanhu_evidence import (
+    LanhuEvidenceAsset,
+    LanhuEvidenceJob,
+    LanhuEvidencePage,
+    LanhuOcrBlock,
+)
 from app.models.knowledge import (
     AgentQueueItem,
     AgentRun,
@@ -100,4 +106,8 @@ __all__ = [
     "WikiIngestJob",
     "WikiDiffTask",
     "WikiDiffItem",
+    "LanhuEvidenceJob",
+    "LanhuEvidencePage",
+    "LanhuEvidenceAsset",
+    "LanhuOcrBlock",
 ]
