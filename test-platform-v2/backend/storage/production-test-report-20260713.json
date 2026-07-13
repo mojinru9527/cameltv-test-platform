@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-07-13T01:58:52Z",
+  "branch": "feature/apitest-uitest-realization",
+  "site": "https://www.camel1.tv",
+  "credentials": "+86 18476944071 / a123456",
+  "ui_tests": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "results": [
+      {
+        "test": "TC-PROD-001",
+        "name": "首页加载正常",
+        "status": "passed",
+        "duration": "8.9s"
+      },
+      {
+        "test": "TC-PROD-002",
+        "name": "用户登录",
+        "status": "passed",
+        "duration": "15.0s"
+      },
+      {
+        "test": "TC-PROD-003",
+        "name": "核心页面可交互",
+        "status": "passed",
+        "duration": "13.9s",
+        "note": "622 interactive elements"
+      },
+      {
+        "test": "TC-PROD-004",
+        "name": "核心 API 探活",
+        "status": "passed",
+        "duration": "16.0s",
+        "note": "56 API calls, all 200"
+      },
+      {
+        "test": "TC-PROD-005",
+        "name": "首页加载性能",
+        "status": "passed",
+        "duration": "6.3s",
+        "note": "6104ms load, TTFB 742ms"
+      }
+    ]
+  },
+  "api_discovery": {
+    "total_endpoints": 200,
+    "services": {
+      "account-service": 61,
+      "camel-service": 118,
+      "payment-service": 8,
+      "studio-service": 9,
+      "search-service": 1,
+      "konfi-service": 1,
+      "api": 2
+    }
+  },
+  "backend_status": {
+    "server": "running at http://127.0.0.1:8000",
+    "kb_overview": {
+      "source_count": 0,
+      "chunk_count": 0
+    },
+    "flags_enabled": [
+      "KNOWLEDGE_INGEST",
+      "RAG",
+      "WIKI",
+      "KNOWLEDGE_GRAPH",
+      "WIKI_DIFF"
+    ]
+  },
+  "bugs_fixed": [
+    {
+      "id": "P1",
+      "file": "apitest.py:482",
+      "issue": "create_task missing BackgroundTasks param → 500",
+      "fix": "Added background_tasks: BackgroundTasks to function signature"
+    }
+  ]
+}
