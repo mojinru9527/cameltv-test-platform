@@ -51,6 +51,11 @@ export default function WikiImportDialog({ open, onOpenChange, onImported }: Pro
   const submit = () => {
     const u = url.trim()
     if (!u) return
+    // image_only 状态时强制要求补充说明
+    if (result?.extraction_status === 'image_only' && !description.trim()) {
+      toast.warning('原型为图片无法提取文本，请填写补充说明后重试')
+      return
+    }
     setLoading(true)
     setResult(null)
     importLanhu({
@@ -137,6 +142,11 @@ export default function WikiImportDialog({ open, onOpenChange, onImported }: Pro
                   <div className="text-xs opacity-80">Raw Source #{result.raw_source_id}
                     {result.knowledge_source_id ? ` · 知识源 #${result.knowledge_source_id}` : ''}
                     {result.wiki_job_id ? ` · Wiki 任务 #${result.wiki_job_id}` : ''}
+                  </div>
+                )}
+                {result.extraction_status === 'image_only' && !description.trim() && (
+                  <div className="text-xs font-medium mt-1 text-red-600 dark:text-red-400">
+                    请在「补充说明」中填写关键需求描述，然后再次点击「开始导入」
                   </div>
                 )}
               </div>

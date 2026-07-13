@@ -10,7 +10,7 @@ import {
 } from '@/api/wiki'
 import type { WikiConfig, WikiRawSource, WikiPageBrief, WikiPage, WikiLink } from '@/types'
 import { useAuthStore } from '@/stores/auth'
-import { Upload, RefreshCw, Loader2, BookOpen, CheckCircle2, FileText } from '@/lib/icons'
+import { Upload, RefreshCw, Loader2, BookOpen, CheckCircle2, FileText, ExternalLink, GitBranch, Layers } from '@/lib/icons'
 import WikiImportDialog from './WikiImportDialog'
 
 const PAGE_TYPE_LABEL: Record<string, string> = {
@@ -126,14 +126,38 @@ export default function WikiTab() {
               {loading ? <Skeleton className="h-10 w-full" /> : raws.length === 0 ? (
                 <div className="text-xs text-muted-foreground py-2">暂无来源，先导入蓝湖需求</div>
               ) : raws.map((r) => (
-                <div key={r.id} className="flex items-center gap-2 text-sm">
-                  <span className="truncate flex-1" title={r.title}>{r.title || '(无标题)'}</span>
-                  <Badge variant={r.status === 'active' ? 'secondary' : 'outline'} className="shrink-0">{r.status}</Badge>
-                  {canManage && (
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs shrink-0"
-                      disabled={compiling === r.id} onClick={() => compile(r.id)}>
-                      {compiling === r.id ? <Loader2 className="size-3 animate-spin" /> : '编译'}
-                    </Button>
+                <div key={r.id} className="space-y-1.5 text-sm py-1 border-b last:border-0 border-border/40">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate flex-1 font-medium" title={r.title}>{r.title || '(无标题)'}</span>
+                    <Badge variant={r.status === 'active' ? 'secondary' : 'outline'} className="shrink-0 text-[10px]">{r.status}</Badge>
+                    {canManage && (
+                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs shrink-0"
+                        disabled={compiling === r.id} onClick={() => compile(r.id)}>
+                        {compiling === r.id ? <Loader2 className="size-3 animate-spin" /> : '编译'}
+                      </Button>
+                    )}
+                  </div>
+                  {r.source_type === 'lanhu' && (
+                    <div className="text-[10px] text-muted-foreground space-y-0.5">
+                      {r.immutable_version && (
+                        <div className="flex items-center gap-1">
+                          <GitBranch className="size-3 shrink-0" />
+                          <span className="font-mono truncate" title={r.immutable_version}>{r.immutable_version}</span>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-1">
+                        {r.doc_id && <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">docId:{r.doc_id.slice(0,12)}...</Badge>}
+                        {r.version_id && <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">ver:{r.version_id.slice(0,8)}...</Badge>}
+                        {r.page_id && <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">page:{r.page_id.slice(0,8)}...</Badge>}
+                      </div>
+                      {r.source_ref && (
+                        <a href={r.source_ref} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-0.5 text-blue-600 dark:text-blue-400 hover:underline truncate">
+                          <ExternalLink className="size-3 shrink-0" />
+                          <span className="truncate">蓝湖源链接</span>
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
@@ -196,6 +220,51 @@ export default function WikiTab() {
                 <pre className="whitespace-pre-wrap text-xs bg-muted/40 rounded-md p-3 max-h-[420px] overflow-auto font-mono leading-relaxed">
                   {selected.content_md}
                 </pre>
+                {/* Raw Source → Wiki Page 追溯 */}
+                {(() => {
+                  try {
+                    const refs = JSON.parse(selected.source_refs_json || '[]')
+                    if (refs.length === 0) return null
+                    return (
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div className="font-medium flex items-center gap-1">
+                          <Layers className="size-3" /> 来源追溯
+                        </div>
+                        {refs.map((ref: any, i: number) => (
+                          <div key={i} className="flex items-center gap-1.5 ml-1">
+                            {ref.raw_source_id && (
+                              <Badge variant="outline" className="text-[10px] font-mono">
+                                Raw Source #{ref.raw_source_id}
+                              </Badge>
+                            )}
+                            {ref.knowledge_source_id && (
+                              <Badge variant="outline" className="text-[10px] font-mono">
+                                知识源 #{ref.knowledge_source_id}
+                              </Badge>
+                            )}
+                            {ref.raw_source_id && (
+                              <button
+                                className="text-blue-600 dark:text-blue-400 hover:underline text-[10px]"
+                                onClick={async () => {
+                                  try {
+                                    const { fetchWikiRawSource } = await import('@/api/wiki')
+                                    const raw = await fetchWikiRawSource(ref.raw_source_id)
+                                    if (raw?.immutable_version) {
+                                      const el = document.getElementById('wiki-raw-version')
+                                      if (el) el.textContent = raw.immutable_version
+                                    }
+                                  } catch { /* ignore */ }
+                                }}
+                              >
+                                查看来源
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  } catch { return null }
+                })()}
                 <div className="text-xs text-muted-foreground">
                   来源引用：<span className="font-mono break-all">{selected.source_refs_json}</span>
                 </div>
