@@ -1,19 +1,19 @@
-"""LLM-Wiki 知识库模型 —— Raw Source / Wiki 页面 / 链接 / 编译任务 / 差异任务 / 差异项。
+"""LLM-Wiki 知识库模型 —— Raw Source / Wiki 页面 / 链接 / 编译任务 / 差异任务 / 差异项 / 外部连接。
 
-对应《LLM-Wiki 知识库差异对比能力落地方案》§6。落地 VNext-1..3：
+对应《LLM-Wiki 知识库差异对比能力落地方案》§6。落地 VNext-1..5：
   - wiki_raw_source：蓝湖等原始来源（不可变、可 supersede），可绑 knowledge_source。
   - wiki_page / wiki_link：LLM 编译出的结构化 Wiki 页面与页面级链接。
   - wiki_ingest_job：两阶段编译任务（analysis→generation）状态。
   - wiki_diff_task / wiki_diff_item：同一需求在两知识库之间的差异任务与差异项。
+  - external_wiki_connection：外部 LLM-Wiki 连接器（只读）。
 
 设计沿用知识中心约定：project_id 松散作用域（无 FK）、枚举以 str + 注释、JSON 存 Text。
-外部 LLM-Wiki 连接（wiki_external_connection）留待 VNext-5，本期不建。
 """
 from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Text
+from sqlalchemy import Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -135,6 +135,63 @@ class WikiDiffItem(Base):
     left_value: Mapped[str] = mapped_column(Text, default="")
     right_value: Mapped[str] = mapped_column(Text, default="")
     evidence_json: Mapped[str] = mapped_column(Text, default="[]")
+    suggestion: Mapped[str] = mapped_column(Text, default="")
+    # pending/accepted/rejected/resolved
+    review_status: Mapped[str] = mapped_column(default="pending", index=True)
+    resolved_artifact_id: Mapped[int | None] = mapped_column(default=None)  # -> ai_artifact.id
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class ExternalWikiConnection(Base, TimestampMixin):
+    """外部 LLM-Wiki 连接器 —— 只读连接外部 LLM Wiki Desktop/API（VNext-5）。
+
+    项目级隔离：每个连接绑定 project_id。token 经 AES-128 加密存储，API 响应中不暴露。
+    """
+    __tablename__ = "external_wiki_connection"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(index=True)
+    name: Mapped[str] = mapped_column(default="")
+    # llm_wiki_desktop / custom / ...
+    provider: Mapped[str] = mapped_column(default="llm_wiki_desktop")
+    base_url: Mapped[str] = mapped_column(default="")
+    token_encrypted: Mapped[str | None] = mapped_column(Text, default=None)  # AES encrypted
+    external_project_id: Mapped[str | None] = mapped_column(default=None)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class WikiLintReport(Base, TimestampMixin):
+    """Wiki 健康体检报告 —— 对项目内 Wiki 页面运行确定性 lint 规则，生成问题清单。
+
+    每条 issue 可独立转换为 AiArtifact（review_status=pending）进入人工审核。
+    """
+    __tablename__ = "wiki_lint_report"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(index=True)
+    # running/success/failed
+    status: Mapped[str] = mapped_column(default="running", index=True)
+    # 各规则命中数快照 {"orphan_page":2,"no_source":1,...}
+    summary_json: Mapped[str] = mapped_column(Text, default="{}")
+    error_message: Mapped[str] = mapped_column(Text, default="")
+
+
+class WikiLintIssue(Base):
+    """单条 lint 问题 —— 一条规则在一次报告中命中的一个页面/关系。"""
+    __tablename__ = "wiki_lint_issue"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    report_id: Mapped[int] = mapped_column(index=True)  # -> wiki_lint_report.id
+    project_id: Mapped[int] = mapped_column(index=True)
+    # orphan_page / no_source / stale_page / conflict_rule / coverage_gap
+    rule: Mapped[str] = mapped_column(default="", index=True)
+    severity: Mapped[str] = mapped_column(default="P2", index=True)  # P0/P1/P2/P3
+    title: Mapped[str] = mapped_column(default="")
+    description: Mapped[str] = mapped_column(Text, default="")
+    # 涉及实体引用
+    entity_type: Mapped[str] = mapped_column(default="")   # wiki_page/wiki_raw_source/wiki_link
+    entity_id: Mapped[int | None] = mapped_column(default=None, index=True)
+    related_entity_json: Mapped[str] = mapped_column(Text, default="{}")
     suggestion: Mapped[str] = mapped_column(Text, default="")
     # pending/accepted/rejected/resolved
     review_status: Mapped[str] = mapped_column(default="pending", index=True)
