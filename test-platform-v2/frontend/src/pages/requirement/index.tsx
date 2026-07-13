@@ -31,6 +31,8 @@ import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import AiResultModal from './AiResultModal'
+import LanhuEvidenceDialog from '@/pages/knowledge/components/LanhuEvidenceDialog'
+import LanhuEvidenceJobDrawer from '@/pages/knowledge/components/LanhuEvidenceJobDrawer'
 
 const TYPE_TAG: Record<string, { className: string; label: string; icon: React.ReactNode }> = {
   md: { className: 'border-blue-200 bg-blue-50 text-blue-700', label: 'Markdown', icon: <FileText className="size-3" /> },
@@ -64,6 +66,8 @@ export default function RequirementPage() {
   const [activeDocId, setActiveDocId] = useState<number | null>(null)
   const [lanhuUrl, setLanhuUrl] = useState('')
   const [lanhuDesc, setLanhuDesc] = useState('')
+  const [evOpen, setEvOpen] = useState(false)
+  const [evJobId, setEvJobId] = useState<number | null>(null)
   const [previewExpanded, setPreviewExpanded] = useState(false)
   const navigate = useNavigate()
   const [deleteTarget, setDeleteTarget] = useState<RequirementDocument | null>(null)
@@ -389,6 +393,25 @@ export default function RequirementPage() {
                   提交
                 </Button>
               </div>
+              <div className="flex items-center gap-2">
+                <Button variant="secondary" size="sm" onClick={() => setEvOpen(true)}>
+                  证据包 OCR 导入（推荐）
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  全页面滚动截图 + OCR，生成可追溯证据包（Word/JSON），再入需求 / RAG / Wiki
+                </span>
+              </div>
+              <LanhuEvidenceDialog
+                open={evOpen}
+                onOpenChange={setEvOpen}
+                initialUrl={lanhuUrl}
+                onCreated={(job) => setEvJobId(job.id)}
+              />
+              <LanhuEvidenceJobDrawer
+                open={evJobId != null}
+                onOpenChange={(v) => { if (!v) setEvJobId(null) }}
+                jobId={evJobId}
+              />
               <Textarea
                 placeholder="补充说明（可选）：描述设计稿中的页面功能、交互逻辑、关键组件等，帮助 AI 更精准地生成用例"
                 value={lanhuDesc}

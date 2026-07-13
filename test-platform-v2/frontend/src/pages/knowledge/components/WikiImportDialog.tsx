@@ -16,6 +16,8 @@ import { Button } from '@/components/ui/button'
 import { importLanhu } from '@/api/wiki'
 import type { LanhuImportResult } from '@/types'
 import { Loader2, AlertCircle, CheckCircle2 } from '@/lib/icons'
+import LanhuEvidenceDialog from './LanhuEvidenceDialog'
+import LanhuEvidenceJobDrawer from './LanhuEvidenceJobDrawer'
 
 // 蓝湖提取状态 → 前端提示（对齐落地方案 §6.1 状态表）
 const STATUS_HINT: Record<string, { ok: boolean; label: string }> = {
@@ -42,6 +44,8 @@ export default function WikiImportDialog({ open, onOpenChange, onImported }: Pro
   const [extractGraph, setExtractGraph] = useState(true)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<LanhuImportResult | null>(null)
+  const [evOpen, setEvOpen] = useState(false)
+  const [drawerJobId, setDrawerJobId] = useState<number | null>(null)
 
   const reset = () => {
     setUrl(''); setDescription(''); setResult(null)
@@ -78,6 +82,7 @@ export default function WikiImportDialog({ open, onOpenChange, onImported }: Pro
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
       <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
@@ -155,6 +160,7 @@ export default function WikiImportDialog({ open, onOpenChange, onImported }: Pro
         </div>
 
         <DialogFooter>
+          <Button variant="secondary" onClick={() => setEvOpen(true)}>使用证据包 OCR 导入</Button>
           <Button variant="outline" onClick={() => onOpenChange(false)}>关闭</Button>
           <Button disabled={loading || !url.trim()} onClick={submit}>
             {loading ? <Loader2 className="size-4 animate-spin mr-1" /> : null}
@@ -163,5 +169,18 @@ export default function WikiImportDialog({ open, onOpenChange, onImported }: Pro
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <LanhuEvidenceDialog
+      open={evOpen}
+      onOpenChange={setEvOpen}
+      initialUrl={url}
+      onCreated={(job) => setDrawerJobId(job.id)}
+    />
+    <LanhuEvidenceJobDrawer
+      open={drawerJobId != null}
+      onOpenChange={(v) => { if (!v) setDrawerJobId(null) }}
+      jobId={drawerJobId}
+    />
+    </>
   )
 }
