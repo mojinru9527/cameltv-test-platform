@@ -21,6 +21,7 @@ from app.schemas.api_asset import (
 )
 from app.schemas.common import R, Page
 from app.services.api_execution_service import quick_execute
+from app.services import api_task_worker
 
 router = APIRouter(prefix="/apitest", tags=["接口测试"])
 
@@ -28,6 +29,13 @@ router = APIRouter(prefix="/apitest", tags=["接口测试"])
 # ═══════════════════════════════════════════════════════
 # 辅助
 # ═══════════════════════════════════════════════════════
+
+def _current_project_id(current: CurrentUser) -> int:
+    """Derive current project from JWT token. Rejects missing project context."""
+    if not current.project_id:
+        raise HTTPException(400, "缺少当前项目上下文")
+    return current.project_id
+
 
 def _safe_json(raw: str, default=None):
     if not raw or not raw.strip():
@@ -44,15 +52,22 @@ def _build_response_snapshot(result: dict) -> str:
     if not snapshot:
         # 兼容旧版执行结果：从顶层字段构建
         raw_body = result.get("raw_body") or ""
-        body_str = result.get("response_body") or raw_body
-        body_size = len(str(body_str)) if body_str else 0
+        body_size = len(raw_body) if raw_body else 0
+        preview_max = 4096
+        body_preview = raw_body[:preview_max] if len(raw_body) > preview_max else raw_body
         snapshot = {
             "status_code": result.get("status_code"),
             "headers": result.get("response_headers", {}),
+            "body_preview": body_preview,
             "body_size_bytes": body_size,
-            "truncated": False,
-            "content_type": "",
+            "truncated": len(raw_body) > preview_max,
+            "content_type": result.get("response_headers", {}).get("content-type", ""),
         }
+    # Always ensure body_preview and truncated are populated
+    if "body_preview" not in snapshot:
+        snapshot["body_preview"] = ""
+    if "truncated" not in snapshot:
+        snapshot["truncated"] = False
     return json.dumps(snapshot, ensure_ascii=False, default=str)
 
 
@@ -83,7 +98,10 @@ def api_quick_execute(
     current: CurrentUser = Depends(require_permission("apitest:execute")),
     db: Session = Depends(get_db),
 ):
-    """发送一个接口请求并返回响应+断言结果（不保存为用例）。"""
+    """发送一个接口请求并返回响应+断言结果（不保存为用例）。
+
+    生产环境写操作需要 apitest:execute_prod 权限 + confirm_prod=true。
+    """
     request_def = {
         "method": body.method,
         "url": body.url,
@@ -92,6 +110,9 @@ def api_quick_execute(
     }
     assertions = _safe_json(body.assertions, [])
 
+    # 判断用户是否有生产环境执行权限
+    has_execute_prod = current.is_super or "apitest:execute_prod" in current.permissions
+
     try:
         result = quick_execute(
             db, request_def,
@@ -99,6 +120,7 @@ def api_quick_execute(
             environment_id=body.environment_id,
             dataset_id=body.dataset_id,
             confirm_prod=body.confirm_prod,
+            has_execute_prod=has_execute_prod,
         )
     except Exception as e:
         return R(code=1, msg=f"执行失败: {e}")
@@ -112,22 +134,22 @@ def api_quick_execute(
 
 @router.get("/services", response_model=R[list[ApiServiceOut]], summary="服务列表")
 def list_services(
-    project_id: int = Query(..., description="项目 ID"),
     current: CurrentUser = Depends(require_permission("apitest:view")),
     db: Session = Depends(get_db),
 ):
-    rows = db.query(ApiService).filter_by(project_id=project_id).order_by(ApiService.name).all()
+    pid = _current_project_id(current)
+    rows = db.query(ApiService).filter_by(project_id=pid).order_by(ApiService.name).all()
     return R.ok([ApiServiceOut.model_validate(r) for r in rows])
 
 
 @router.post("/services", response_model=R[ApiServiceOut], summary="创建服务")
 def create_service(
     body: ApiServiceCreate,
-    project_id: int = Query(..., description="项目 ID"),
     current: CurrentUser = Depends(require_permission("apitest:asset_manage")),
     db: Session = Depends(get_db),
 ):
-    svc = ApiService(project_id=project_id, **body.model_dump())
+    pid = _current_project_id(current)
+    svc = ApiService(project_id=pid, **body.model_dump())
     db.add(svc)
     db.commit()
     db.refresh(svc)
@@ -157,7 +179,6 @@ def update_service(
 
 @router.get("/endpoints", response_model=R[dict], summary="接口资产列表（分页）")
 def list_endpoints(
-    project_id: int = Query(...),
     service_id: int | None = Query(None),
     module: str | None = Query(None),
     method: str | None = Query(None),
@@ -167,7 +188,8 @@ def list_endpoints(
     current: CurrentUser = Depends(require_permission("apitest:view")),
     db: Session = Depends(get_db),
 ):
-    q = db.query(ApiEndpoint).filter_by(project_id=project_id)
+    pid = _current_project_id(current)
+    q = db.query(ApiEndpoint).filter_by(project_id=pid)
     if service_id:
         q = q.filter_by(service_id=service_id)
     if module:
@@ -189,11 +211,11 @@ def list_endpoints(
 @router.post("/endpoints", response_model=R[ApiEndpointOut], summary="手动创建接口资产")
 def create_endpoint(
     body: ApiEndpointCreate,
-    project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:asset_manage")),
     db: Session = Depends(get_db),
 ):
-    ep = ApiEndpoint(project_id=project_id, **body.model_dump())
+    pid = _current_project_id(current)
+    ep = ApiEndpoint(project_id=pid, **body.model_dump())
     db.add(ep)
     db.commit()
     db.refresh(ep)
@@ -224,18 +246,18 @@ def update_endpoint(
 @router.post("/import/preview", response_model=R[dict], summary="导入预览")
 def import_preview(
     body: OpenApiImportPreviewRequest,
-    project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:import")),
     db: Session = Depends(get_db),
 ):
     """解析 OpenAPI/Swagger spec，返回接口列表预览。"""
     from app.services.openapi_import_service import preview_openapi_import_with_db
 
+    pid = _current_project_id(current)
     spec = _resolve_spec(body.source_type, body.source_ref, body.spec_content)
     if not spec:
         raise HTTPException(400, "无法解析 OpenAPI 文档，请检查输入内容")
 
-    result = preview_openapi_import_with_db(db, spec, project_id=project_id, service_name=body.service_name)
+    result = preview_openapi_import_with_db(db, spec, project_id=pid, service_name=body.service_name)
     return R.ok(result)
 
 
@@ -243,20 +265,20 @@ def import_preview(
 def import_confirm(
     body: OpenApiImportConfirmRequest,
     background_tasks: BackgroundTasks,
-    project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:import")),
     db: Session = Depends(get_db),
 ):
     """确认导入 OpenAPI 接口到资产库。"""
     from app.services.openapi_import_service import confirm_openapi_import
 
+    pid = _current_project_id(current)
     spec = _resolve_spec(body.source_type, body.source_ref, body.spec_content)
     if not spec:
         raise HTTPException(400, "无法解析 OpenAPI 文档")
 
     result = confirm_openapi_import(
         db, spec,
-        project_id=project_id,
+        project_id=pid,
         service_name=body.service_name,
         source_ref=body.source_ref,
         source_type=body.source_type,
@@ -266,17 +288,17 @@ def import_confirm(
     from app.services.knowledge import ingest_service
     background_tasks.add_task(
         ingest_service.ingest_api_import_in_new_session,
-        project_id, result["batch_id"], body.service_name,
+        pid, result["batch_id"], body.service_name,
     )
 
     # 可选：导入后批量生成用例
     if body.generate_cases:
-        generated, case_ids = _batch_generate_for_endpoints(db, result["batch_id"], project_id)
+        generated, case_ids = _batch_generate_for_endpoints(db, result["batch_id"], pid)
         result["generated_case_count"] = generated
         # 生成的用例一并入库（test_case 切片）
         if case_ids:
             background_tasks.add_task(
-                ingest_service.ingest_test_cases_in_new_session, project_id, case_ids,
+                ingest_service.ingest_test_cases_in_new_session, pid, case_ids,
             )
     else:
         result["generated_case_count"] = 0
@@ -347,12 +369,13 @@ def _batch_generate_for_endpoints(db: Session, batch_id: int, project_id: int) -
 def generate_cases(
     body: GenerateApiCasesRequest,
     background_tasks: BackgroundTasks,
-    project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:generate")),
     db: Session = Depends(get_db),
 ):
     """基于接口定义生成测试用例。"""
     from app.services.api_case_generation_service import generate_cases_from_endpoint
+
+    pid = _current_project_id(current)
 
     # 获取 endpoint 数据
     if body.endpoint_id:
@@ -377,14 +400,14 @@ def generate_cases(
     imported_ids = []
     if body.import_to_case_library:
         for c in cases:
-            tc = _create_test_case_from_generated(db, project_id, c, body.endpoint_id)
+            tc = _create_test_case_from_generated(db, pid, c, body.endpoint_id)
             imported_ids.append(tc.id)
         db.commit()
         # M1 入库 hook：生成用例 → 沉淀为知识切片
         if imported_ids:
             from app.services.knowledge import ingest_service
             background_tasks.add_task(
-                ingest_service.ingest_test_cases_in_new_session, project_id, imported_ids.copy(),
+                ingest_service.ingest_test_cases_in_new_session, pid, imported_ids.copy(),
             )
 
     return R.ok({
@@ -398,13 +421,13 @@ def generate_cases(
 def batch_generate_cases(
     body: BatchGenerateRequest,
     background_tasks: BackgroundTasks,
-    project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:generate")),
     db: Session = Depends(get_db),
 ):
     """批量多个接口生成测试用例。"""
     from app.services.api_case_generation_service import generate_cases_from_endpoint
 
+    pid = _current_project_id(current)
     total_generated = 0
     all_imported_ids = []
     errors = []
@@ -427,7 +450,7 @@ def batch_generate_cases(
 
         if body.import_to_case_library:
             for c in cases:
-                tc = _create_test_case_from_generated(db, project_id, c, ep_id)
+                tc = _create_test_case_from_generated(db, pid, c, ep_id)
                 all_imported_ids.append(tc.id)
 
     db.commit()
@@ -435,7 +458,7 @@ def batch_generate_cases(
     if all_imported_ids:
         from app.services.knowledge import ingest_service
         background_tasks.add_task(
-            ingest_service.ingest_test_cases_in_new_session, project_id, all_imported_ids.copy(),
+            ingest_service.ingest_test_cases_in_new_session, pid, all_imported_ids.copy(),
         )
 
     return R.ok({
@@ -481,37 +504,52 @@ def _create_test_case_from_generated(db: Session, project_id: int, case_data: di
 @router.post("/tasks", response_model=R[ApiTaskOut], summary="创建执行任务")
 def create_task(
     body: ApiTaskCreateRequest,
-    background_tasks: BackgroundTasks,
-    project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:task")),
     db: Session = Depends(get_db),
 ):
     """从用例列表创建批量执行任务。
 
-    通过 BackgroundTasks 异步执行（若可用），否则依赖 task_worker 轮询 pending 任务。
+    任务创建后状态为 pending，由持久化 task_worker 后台轮询认领执行。
+    接口立即返回，不等待用例执行完成。
+
+    生产环境任务需要 apitest:execute_prod 权限 + confirm_prod=true。
     """
     from app.models.test_case import TestCase
+    from app.models.environment import Environment
 
+    pid = _current_project_id(current)
     task_id_str = f"API-{uuid.uuid4().hex[:8].upper()}"
 
     # 验证用例存在且为 API 类型
     cases = db.query(TestCase).filter(
         TestCase.id.in_(body.case_ids),
-        TestCase.project_id == project_id,
+        TestCase.project_id == pid,
         TestCase.case_type == "api",
     ).all()
 
     if len(cases) != len(body.case_ids):
         raise HTTPException(400, "部分用例不存在或不是 API 类型")
 
+    # 生产环境保护检查：若目标环境为 prod，验证权限和二次确认
+    has_execute_prod = current.is_super or "apitest:execute_prod" in current.permissions
+    if body.environment_id:
+        env = db.get(Environment, body.environment_id)
+        if env and env.env_type == "prod":
+            if not has_execute_prod:
+                raise HTTPException(403, "生产环境执行任务需要 apitest:execute_prod 权限")
+            if not body.confirm_prod:
+                raise HTTPException(400, "生产环境执行任务需要 confirm_prod=true 确认")
+
     task = ApiExecutionTask(
-        project_id=project_id,
+        project_id=pid,
         task_id=task_id_str,
         name=body.name,
         environment_id=body.environment_id,
         service_id=body.service_id,
+        status="pending",
         total=len(cases),
         creator_id=current.user.id if current.user else 0,
+        confirm_prod=body.confirm_prod,
     )
     db.add(task)
     db.flush()
@@ -522,95 +560,17 @@ def create_task(
         db.add(item)
 
     db.commit()
-
-    # 通过 BackgroundTasks 异步执行（不阻塞请求线程）
-    background_tasks.add_task(_execute_task_async, task.id, project_id, body.confirm_prod)
-
     db.refresh(task)
+
+    # 启动 worker 并唤醒以立即处理新任务
+    api_task_worker.ensure_processor_running()
+    api_task_worker.kick()
+
     return R.ok(ApiTaskOut.model_validate(task))
-
-
-def _execute_task_async(task_id: int, project_id: int, confirm_prod: bool = False):
-    """在独立 DB session 中执行批量任务（供 BackgroundTasks 调用）。
-    必须使用独立的 SessionLocal()，因为 BackgroundTasks 在响应返回后执行，
-    原请求的 db session 可能已关闭。
-
-    每条 item 执行前检查 task 是否已取消，若取消则跳过剩余 item。
-    """
-    from app.core.db import SessionLocal
-    from app.models.test_case import TestCase
-    from app.services.api_execution_service import execute_api_case
-
-    db = SessionLocal()
-    try:
-        task = db.get(ApiExecutionTask, task_id)
-        if not task:
-            return
-
-        task.status = "running"
-        task.started_at = datetime.now(timezone.utc)
-        db.commit()
-
-        items = db.query(ApiExecutionTaskItem).filter_by(task_id=task.id).all()
-        passed = 0
-        failed = 0
-        skipped = 0
-
-        for item in items:
-            # ── 取消检查：每条 item 执行前重新查询 task 状态 ──
-            db.refresh(task)
-            if task.status == "cancelled":
-                item.status = "skipped"
-                item.error_message = "任务已取消"
-                skipped += 1
-                db.commit()
-                continue
-
-            try:
-                result = execute_api_case(
-                    db, item.case_id,
-                    project_id=project_id,
-                    environment_id=task.environment_id,
-                    confirm_prod=confirm_prod,
-                )
-                item.status = "passed" if result.get("all_pass", False) else "failed"
-                item.duration_ms = result.get("duration_ms", 0)
-                item.request_snapshot = json.dumps(result.get("request_snapshot", {}), ensure_ascii=False)
-                item.response_snapshot = _build_response_snapshot(result)
-                item.assertion_results = json.dumps(result.get("assertions", []), ensure_ascii=False)
-                if result.get("error"):
-                    item.error_message = result["error"]
-
-                if item.status == "passed":
-                    passed += 1
-                else:
-                    failed += 1
-            except Exception as e:
-                item.status = "failed"
-                item.error_message = str(e)
-                failed += 1
-
-        task.passed = passed
-        task.failed = failed
-        task.skipped = task.total - passed - failed + skipped
-        task.status = "success" if (failed == 0 and skipped == 0) else ("failed" if failed > 0 else "cancelled")
-        task.finished_at = datetime.now(timezone.utc)
-        db.commit()
-
-        # M1 入库 hook：有失败项时 → 沉淀为知识切片（用于后续影响分析 & Agent 学习）
-        if failed > 0:
-            from app.services.knowledge import ingest_service
-            ingest_service.ingest_execution_failure_in_new_session(project_id, task_id)
-    except Exception:
-        import logging
-        logging.getLogger(__name__).exception("Background task execution failed: task_id=%s", task_id)
-    finally:
-        db.close()
 
 
 @router.get("/tasks", response_model=R[dict], summary="任务列表")
 def list_tasks(
-    project_id: int = Query(...),
     service_id: int | None = Query(None),
     status: str | None = Query(None),
     page: int = Query(1, ge=1),
@@ -618,7 +578,8 @@ def list_tasks(
     current: CurrentUser = Depends(require_permission("apitest:task")),
     db: Session = Depends(get_db),
 ):
-    q = db.query(ApiExecutionTask).filter_by(project_id=project_id)
+    pid = _current_project_id(current)
+    q = db.query(ApiExecutionTask).filter_by(project_id=pid)
     if service_id:
         q = q.filter_by(service_id=service_id)
     if status:
@@ -639,6 +600,9 @@ def get_task(
     task = db.get(ApiExecutionTask, task_id)
     if not task:
         raise HTTPException(404, "任务不存在")
+    pid = _current_project_id(current)
+    if task.project_id != pid:
+        raise HTTPException(403, "无权访问该任务")
 
     items = db.query(ApiExecutionTaskItem).filter_by(task_id=task.id).all()
     detail = ApiTaskDetailOut(
@@ -654,29 +618,38 @@ def cancel_task(
     current: CurrentUser = Depends(require_permission("apitest:task")),
     db: Session = Depends(get_db),
 ):
+    """设置 cancel_requested 标记，由 worker 在下一条 item 执行前检查并终止。"""
     task = db.get(ApiExecutionTask, task_id)
     if not task:
         raise HTTPException(404, "任务不存在")
+    pid = _current_project_id(current)
+    if task.project_id != pid:
+        raise HTTPException(403, "无权访问该任务")
     if task.status not in ("pending", "running"):
         raise HTTPException(400, "只能取消 pending 或 running 状态的任务")
-    task.status = "cancelled"
-    task.finished_at = datetime.now(timezone.utc)
+    task.cancel_requested = True
     db.commit()
-    return R.ok({"status": "cancelled"})
+    # 唤醒 worker 以立即处理取消
+    api_task_worker.kick()
+    return R.ok({"status": "cancelling", "task_id": task.id})
 
 
 @router.post("/tasks/{task_id}/retry-failed", response_model=R[dict], summary="重跑失败用例")
 def retry_failed(
     task_id: int,
-    background_tasks: BackgroundTasks,
-    project_id: int = Query(...),
     current: CurrentUser = Depends(require_permission("apitest:task")),
     db: Session = Depends(get_db),
 ):
-    """将任务中所有失败项重新执行（异步）。"""
+    """为原任务中所有失败项创建新的重试任务（trigger_type=retry_failed）。
+
+    原任务不受影响；新任务仅包含失败项的 case_id。
+    """
+    pid = _current_project_id(current)
     task = db.get(ApiExecutionTask, task_id)
     if not task:
         raise HTTPException(404, "任务不存在")
+    if task.project_id != pid:
+        raise HTTPException(403, "无权访问该任务")
 
     failed_items = db.query(ApiExecutionTaskItem).filter_by(
         task_id=task.id, status="failed"
@@ -685,24 +658,42 @@ def retry_failed(
     if not failed_items:
         raise HTTPException(400, "没有失败的用例需要重跑")
 
-    # 重置失败项状态为 pending
-    for item in failed_items:
-        item.status = "pending"
-        item.error_message = ""
-        item.request_snapshot = "{}"
-        item.response_snapshot = "{}"
-        item.assertion_results = "[]"
-        item.duration_ms = 0
+    # 收集失败用例的 case_id（去重）
+    failed_case_ids = list({it.case_id for it in failed_items})
 
-    task.status = "pending"
-    task.failed = 0
-    task.passed = 0
-    task.skipped = 0
+    # 创建新任务
+    retry_task_id_str = f"API-{uuid.uuid4().hex[:8].upper()}"
+    new_task = ApiExecutionTask(
+        project_id=pid,
+        task_id=retry_task_id_str,
+        name=f"{task.name} (失败重试)",
+        environment_id=task.environment_id,
+        service_id=task.service_id,
+        status="pending",
+        total=len(failed_case_ids),
+        trigger_type="retry_failed",
+        creator_id=current.user.id if current.user else 0,
+    )
+    db.add(new_task)
+    db.flush()
+
+    for cid in failed_case_ids:
+        item = ApiExecutionTaskItem(task_id=new_task.id, case_id=cid)
+        db.add(item)
+
     db.commit()
+    db.refresh(new_task)
 
-    # 异步重跑
-    background_tasks.add_task(_execute_task_async, task.id, project_id)
-    return R.ok({"retry_count": len(failed_items), "task_id": task.task_id})
+    # 唤醒 worker
+    api_task_worker.ensure_processor_running()
+    api_task_worker.kick()
+
+    return R.ok({
+        "new_task_id": new_task.id,
+        "new_task_uid": retry_task_id_str,
+        "retry_count": len(failed_case_ids),
+        "original_task_id": task.id,
+    })
 
 
 @router.get("/tasks/{task_id}/items/{item_id}/curl", response_model=R[dict], summary="生成 curl 复现命令")
