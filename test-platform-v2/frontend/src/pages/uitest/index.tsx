@@ -8,11 +8,21 @@ import {
   Search,
   Trash2,
   Loader2,
+  XCircle,
+  FileText,
+  Image,
+  Video,
+  Download,
+  Terminal,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Ban,
 } from '@/lib/icons'
-import { useCallback, useEffect, useState } from 'react'
-import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts } from '@/api/uitest'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts } from '@/api/uitest'
 import { useAuthStore } from '@/stores/auth'
-import type { UiJobItem, UiRunItem } from '@/types'
+import type { UiJobItem, UiRunItem, UiRunArtifact } from '@/types'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -81,9 +91,11 @@ const STATUS_MAP: Record<string, { color: string; label: string }> = {
 }
 
 const RUN_STATUS_MAP: Record<string, { color: string; label: string }> = {
+  pending: { color: 'default', label: '等待中' },
   running: { color: 'processing', label: '运行中' },
   done: { color: 'green', label: '完成' },
   fail: { color: 'red', label: '失败' },
+  cancelled: { color: 'yellow', label: '已取消' },
 }
 
 function browserBadgeClass(c: string) {
@@ -101,6 +113,7 @@ function statusBadgeClass(c: string) {
     processing: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-400',
     green: 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400',
     red: 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400',
+    yellow: 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-400',
   }
   return map[c] ?? ''
 }
@@ -133,6 +146,42 @@ export default function UiTestPage() {
   const [detail, setDetail] = useState<any>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   const [runs, setRuns] = useState({ total: 0, items: [] as UiRunItem[] })
+
+  // Run detail state
+  const [selectedRun, setSelectedRun] = useState<UiRunItem | null>(null)
+  const [runDetailOpen, setRunDetailOpen] = useState(false)
+  const [runArtifacts, setRunArtifacts] = useState<UiRunArtifact[]>([])
+  const [runDetailLoading, setRunDetailLoading] = useState(false)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Auto-poll run detail while running/pending
+  useEffect(() => {
+    if (!selectedRun || !runDetailOpen) return
+    if (selectedRun.status !== 'pending' && selectedRun.status !== 'running') return
+
+    pollRef.current = setInterval(async () => {
+      try {
+        const fresh = await fetchRunDetail(selectedRun.id)
+        setSelectedRun(fresh)
+        if (fresh.status !== 'pending' && fresh.status !== 'running') {
+          // Load artifacts when done
+          try {
+            const arts = await fetchRunArtifacts(selectedRun.id)
+            setRunArtifacts(arts)
+          } catch { /* ignore */ }
+        }
+      } catch { /* ignore */ }
+    }, 3000)
+
+    return () => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+    }
+  }, [selectedRun?.id, selectedRun?.status, runDetailOpen])
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [])
 
   const form = useForm<UiJobFormValues>({
     resolver: zodResolver(uiJobFormSchema),
@@ -254,6 +303,31 @@ export default function UiTestPage() {
       setRuns(runsData)
       setDetailOpen(true)
     } catch { /* ignore */ }
+  }
+
+  const openRunDetail = async (run: UiRunItem) => {
+    setSelectedRun(run)
+    setRunDetailOpen(true)
+    setRunDetailLoading(true)
+    try {
+      const [fresh, arts] = await Promise.all([
+        fetchRunDetail(run.id),
+        fetchRunArtifacts(run.id).catch(() => []),
+      ])
+      setSelectedRun(fresh)
+      setRunArtifacts(arts)
+    } catch { /* ignore */ }
+    finally { setRunDetailLoading(false) }
+  }
+
+  const handleCancelRun = async () => {
+    if (!selectedRun) return
+    try {
+      await cancelRun(selectedRun.id)
+      toast.success('已请求取消')
+      const fresh = await fetchRunDetail(selectedRun.id)
+      setSelectedRun(fresh)
+    } catch { setRunDetailLoading(false) }
   }
 
   const openEdit = (r: UiJobItem) => {
@@ -439,7 +513,7 @@ export default function UiTestPage() {
                           </TableRow>
                         ) : (
                           runs.items.map((run) => (
-                            <TableRow key={run.id}>
+                            <TableRow key={run.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openRunDetail(run)}>
                               <TableCell>
                                 <Badge variant="outline" className={statusBadgeClass(RUN_STATUS_MAP[run.status]?.color)}>
                                   {RUN_STATUS_MAP[run.status]?.label || run.status}
@@ -476,6 +550,198 @@ export default function UiTestPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* Run Detail Dialog */}
+      <Dialog open={runDetailOpen} onOpenChange={(open) => { if (!open) { setRunDetailOpen(false); setSelectedRun(null); setRunArtifacts([]) } }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              运行详情 #{selectedRun?.id}
+              {selectedRun && (
+                <Badge variant="outline" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>
+                  {RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}
+                </Badge>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          {runDetailLoading && !selectedRun ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="size-6 animate-spin" />
+            </div>
+          ) : selectedRun ? (
+            <div className="flex flex-col gap-4">
+              {/* Info grid */}
+              <dl className="grid grid-cols-2 border rounded-lg">
+                {[
+                  ['状态', <Badge key="st" variant="outline" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>{RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}</Badge>],
+                  ['浏览器', selectedRun.browser ? <Badge key="br" variant="outline" className={browserBadgeClass(BROWSER_MAP[selectedRun.browser]?.color)}><Monitor className="size-3" />{selectedRun.browser}</Badge> : '-'],
+                  ['Base URL', selectedRun.base_url || '-'],
+                  ['耗时', selectedRun.duration != null ? `${selectedRun.duration}s` : '-'],
+                  ['开始时间', selectedRun.started_at ? new Date(selectedRun.started_at).toLocaleString() : '-'],
+                  ['结束时间', selectedRun.finished_at ? new Date(selectedRun.finished_at).toLocaleString() : '-'],
+                  ['进程 ID', selectedRun.process_id != null ? String(selectedRun.process_id) : '-'],
+                ].map(([label, value], i) => (
+                  <div key={i} className={`flex flex-col border-b border-r p-2 even:border-r-0 ${i >= 6 ? 'border-b-0' : ''}`}>
+                    <dt className="text-xs text-muted-foreground">{label}</dt>
+                    <dd className="text-sm mt-0.5 break-all">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              {/* Error message */}
+              {selectedRun.error_message && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
+                  <div className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
+                    <AlertTriangle className="size-4" />
+                    错误信息
+                  </div>
+                  <pre className="mt-1 whitespace-pre-wrap text-xs text-red-600 dark:text-red-300">{selectedRun.error_message}</pre>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {(selectedRun.status === 'pending' || selectedRun.status === 'running') && (
+                  <Button variant="outline" size="sm" onClick={handleCancelRun} className="text-destructive border-destructive/20 hover:bg-destructive/10">
+                    <Ban className="size-4" />
+                    取消运行
+                  </Button>
+                )}
+                {selectedRun.status !== 'pending' && selectedRun.status !== 'running' && (
+                  <Button variant="outline" size="sm" onClick={() => { setRunDetailLoading(true); fetchRunDetail(selectedRun.id).then(setSelectedRun).finally(() => setRunDetailLoading(false)); fetchRunArtifacts(selectedRun.id).then(setRunArtifacts).catch(() => {}) }}>
+                    <RotateCcw className="size-4" />
+                    刷新
+                  </Button>
+                )}
+              </div>
+
+              {/* Result summary */}
+              {selectedRun.result && (selectedRun.result.total != null) && (
+                <div className="flex gap-3 flex-wrap">
+                  <div className="rounded-lg border px-3 py-2 text-center min-w-[70px]">
+                    <div className="text-xs text-muted-foreground">总计</div>
+                    <div className="text-lg font-semibold">{selectedRun.result.total}</div>
+                  </div>
+                  <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-center min-w-[70px] dark:border-green-800 dark:bg-green-950">
+                    <div className="text-xs text-green-600 dark:text-green-400">通过</div>
+                    <div className="text-lg font-semibold text-green-700 dark:text-green-300">{selectedRun.result.pass_ ?? '-'}</div>
+                  </div>
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center min-w-[70px] dark:border-red-800 dark:bg-red-950">
+                    <div className="text-xs text-red-600 dark:text-red-400">失败</div>
+                    <div className="text-lg font-semibold text-red-700 dark:text-red-300">{selectedRun.result.fail ?? '-'}</div>
+                  </div>
+                  <div className="rounded-lg border px-3 py-2 text-center min-w-[70px]">
+                    <div className="text-xs text-muted-foreground">跳过</div>
+                    <div className="text-lg font-semibold">{selectedRun.result.skip ?? '-'}</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Stdout/Stderr toggle */}
+              <Tabs defaultValue="">
+                <TabsList>
+                  <TabsTrigger value="" disabled>输出</TabsTrigger>
+                  {(selectedRun.stdout) && <TabsTrigger value="stdout"><Terminal className="size-3" />stdout</TabsTrigger>}
+                  {(selectedRun.stderr) && <TabsTrigger value="stderr"><XCircle className="size-3" />stderr</TabsTrigger>}
+                </TabsList>
+                {selectedRun.stdout && (
+                  <TabsContent value="stdout" className="mt-3">
+                    <Card size="sm">
+                      <CardContent>
+                        <pre className="whitespace-pre-wrap m-0 text-xs max-h-[300px] overflow-y-auto font-mono">{selectedRun.stdout}</pre>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                )}
+                {selectedRun.stderr && (
+                  <TabsContent value="stderr" className="mt-3">
+                    <Card size="sm">
+                      <CardContent>
+                        <pre className="whitespace-pre-wrap m-0 text-xs max-h-[300px] overflow-y-auto font-mono text-red-600 dark:text-red-400">{selectedRun.stderr}</pre>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                )}
+              </Tabs>
+
+              {/* Artifacts */}
+              {runArtifacts.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium flex items-center gap-2">
+                    <FileText className="size-4" />
+                    产物 ({runArtifacts.length})
+                  </h4>
+                  {/* Screenshots */}
+                  {runArtifacts.filter(a => a.type === 'png').length > 0 && (
+                    <div>
+                      <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Image className="size-3" />截图</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {runArtifacts.filter(a => a.type === 'png').slice(0, 9).map((a) => (
+                          <a key={a.path} href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} target="_blank" rel="noreferrer" className="block rounded border overflow-hidden hover:ring-2 hover:ring-primary">
+                            <img src={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} alt={a.name} className="w-full h-24 object-cover" />
+                            <div className="text-[10px] p-1 truncate">{a.name}</div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Videos */}
+                  {runArtifacts.filter(a => a.type === 'webm').map((a) => (
+                    <div key={a.path} className="rounded border overflow-hidden">
+                      <div className="text-xs text-muted-foreground p-2 flex items-center gap-1"><Video className="size-3" />视频: {a.name}</div>
+                      <video controls className="w-full max-h-[300px]" src={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} />
+                    </div>
+                  ))}
+                  {/* Traces */}
+                  {runArtifacts.filter(a => a.type === 'zip').map((a) => (
+                    <div key={a.path}>
+                      <a href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                        <Download className="size-3" />
+                        下载 Trace: {a.name}
+                      </a>
+                    </div>
+                  ))}
+                  {/* Other files */}
+                  {runArtifacts.filter(a => !['png', 'webm', 'zip'].includes(a.type)).length > 0 && (
+                    <div className="text-xs text-muted-foreground flex flex-wrap gap-2">
+                      其他文件:
+                      {runArtifacts.filter(a => !['png', 'webm', 'zip'].includes(a.type)).map((a) => (
+                        <a key={a.path} href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} className="text-primary hover:underline">{a.name}</a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* HTML Report link */}
+              {selectedRun.html_report_path && (
+                <a href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/report/index.html`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                  <FileText className="size-4" />
+                  查看 HTML 报告
+                </a>
+              )}
+
+              {/* Empty artifacts for pending/running */}
+              {runArtifacts.length === 0 && (selectedRun.status === 'pending' || selectedRun.status === 'running') && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-4 justify-center">
+                  <Loader2 className="size-4 animate-spin" />
+                  运行中，产物将在完成后显示...
+                </div>
+              )}
+              {runArtifacts.length === 0 && selectedRun.status !== 'pending' && selectedRun.status !== 'running' && (
+                <p className="text-sm text-muted-foreground text-center py-4">暂无产物文件</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-12">加载失败</p>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRunDetailOpen(false); setSelectedRun(null); setRunArtifacts([]) }}>关闭</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
