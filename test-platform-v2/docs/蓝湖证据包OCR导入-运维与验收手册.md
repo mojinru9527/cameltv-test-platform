@@ -20,7 +20,7 @@ LANHU_EVIDENCE_ENABLED=true          # 总开关，默认 false（采集+OCR 成
 LANHU_OCR_PROVIDER=mock              # mock（确定性演示/测试）| local（真实命令）
 # 真实 OCR：
 LANHU_OCR_PROVIDER=local
-LANHU_OCR_COMMAND=paddleocr --image {image} --json   # {image} 占位图片路径
+LANHU_OCR_COMMAND=python F:/CamelTv/test-platform-v2/backend/scripts/ocr_paddle.py {image}   # {image} 占位图片路径
 LANHU_OCR_MIN_CONFIDENCE=0.60
 # 采集：
 LANHU_CAPTURE_VIEWPORT_WIDTH=1440
@@ -31,6 +31,10 @@ LANHU_CAPTURE_WAIT_MS=600
 ```
 
 OCR 命令须逐行输出 JSON：`{"text":"比赛推送","confidence":0.96,"bbox":[0,0,100,20]}`。
+> 注意：PaddleOCR 原生 CLI **不**输出该逐行 JSON 格式，故仓库提供封装脚本
+> [`backend/scripts/ocr_paddle.py`](../backend/scripts/ocr_paddle.py)（兼容 PaddleOCR 2.x/3.x）。
+> 启用真实 OCR：`pip install paddleocr paddlepaddle`（首次运行自动下载模型，需联网），
+> 再把 `.env` 的 `LANHU_OCR_PROVIDER` 改为 `local` 并启用 `LANHU_OCR_COMMAND`。
 
 前置依赖：`playwright` + chromium（`python -m playwright install chromium`）、`python-docx`、
 蓝湖登录态（`LANHU_COOKIE` 或 `LANHU_USERNAME`/`LANHU_PASSWORD` 自动登录）。
