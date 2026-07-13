@@ -1,4 +1,7 @@
-"""Playwright 测试执行器 — 子进程调用 npx playwright test，解析 JSON 报告。"""
+"""Playwright 测试执行器 — 子进程调用 npx playwright test，解析 JSON 报告。
+
+使用 subprocess.Popen 实现进程管理、取消轮询、超时 kill 和产物隔离。
+"""
 from __future__ import annotations
 
 import asyncio
@@ -7,6 +10,7 @@ import logging
 import os
 import shutil
 import subprocess
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -21,6 +25,7 @@ PLAYWRIGHT_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "play
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage" / "ui-runs"
 DEFAULT_TIMEOUT = 300  # 5 minutes
 MAX_CONCURRENT = 2  # 最大并发执行数
+CANCEL_POLL_INTERVAL = 1.0  # 取消轮询间隔 (秒)
 
 _semaphore = asyncio.Semaphore(MAX_CONCURRENT)
 
@@ -64,10 +69,10 @@ def _list_available_specs() -> list[str]:
 
 
 def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
-    """后台执行 Playwright 测试 — 更新已有的 UiTestRun 记录。
+    """使用 subprocess.Popen 执行 Playwright 测试，支持取消轮询和超时 kill。
 
-    所有代码路径（成功/失败/异常）都会更新 run 状态和 error_message。
-    此函数由 BackgroundTasks 调用，使用独立 db session。
+    所有代码路径（成功/失败/取消/超时）都会更新 run 状态和 error_message。
+    此函数由后台 worker 调用，使用独立 db session。
     """
     from app.models.ui_test import UiTestJob, UiTestRun
 
@@ -89,6 +94,8 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
     artifact_dir = STORAGE_DIR / str(run_id)
     artifact_dir.mkdir(parents=True, exist_ok=True)
     run.artifact_dir = str(artifact_dir).replace("\\", "/")
+    run.report_json_path = str(artifact_dir / "report.json").replace("\\", "/")
+    run.cancel_requested = False
     db.commit()
 
     test_spec = (job.test_spec or "").strip()
@@ -112,41 +119,93 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
     # Playwright JSON 报告写入产物目录
     env["PLAYWRIGHT_JSON_OUTPUT_NAME"] = str(artifact_dir / "report.json")
 
-    # 5. 执行 Playwright
+    npx = _resolve_cmd("npx")
+    if not npx:
+        return _fail_run(db, run, "npx 命令不可用，请安装 Node.js", job)
+
+    # 5. 使用 subprocess.Popen 启动 Playwright 子进程
+    cmd = [
+        npx, "playwright", "test", test_spec,
+        "--project", browser,
+        "--reporter", "json",
+        "--output", str(artifact_dir),
+    ]
+    logger.info(f"Running: {' '.join(cmd)} in {PLAYWRIGHT_DIR}")
+
     try:
-        npx = _resolve_cmd("npx")
-        if not npx:
-            return _fail_run(db, run, "npx 命令不可用，请安装 Node.js", job)
-
-        cmd = [
-            npx, "playwright", "test", test_spec,
-            "--project", browser,
-            "--reporter", "json",
-            "--output", str(artifact_dir),
-        ]
-        logger.info(f"Running: {' '.join(cmd)} in {PLAYWRIGHT_DIR}")
-
-        result = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True, text=True,
-            timeout=DEFAULT_TIMEOUT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
             cwd=str(PLAYWRIGHT_DIR),
             env=env,
         )
 
-        # 5. 解析结果
-        stdout_text = result.stdout.strip() if result.stdout else ""
-        stderr_text = result.stderr[:2000] if result.stderr else ""
+        # 记录进程 PID 以便取消时 kill
+        run.process_id = proc.pid
+        db.commit()
+        logger.info(f"Playwright process started: PID={proc.pid}, run_id={run_id}")
 
-        if result.returncode != 0 and not stdout_text:
-            # Playwright 自身错误（非测试失败）
+        # 6. 轮询循环：检查进程状态 + 取消标记 + 超时
+        start_time = time.monotonic()
+        cancelled = False
+
+        while proc.poll() is None:
+            db.refresh(run)
+            # 检查取消标记
+            if run.cancel_requested or run.status == "cancelled":
+                logger.info(f"Cancelling Playwright process PID={proc.pid} for run #{run_id}")
+                proc.kill()
+                stdout_text, stderr_text = _safe_communicate(proc)
+                run.status = "cancelled"
+                run.finished_at = datetime.now(timezone.utc)
+                run.error_message = "用户手动取消"
+                run.stdout = stdout_text or ""
+                run.stderr = (stderr_text or "")[:5000]
+                cancelled = True
+                break
+
+            # 检查超时
+            elapsed = time.monotonic() - start_time
+            if elapsed > DEFAULT_TIMEOUT:
+                logger.warning(f"Playwright timeout for run #{run_id} after {elapsed:.0f}s")
+                proc.kill()
+                stdout_text, stderr_text = _safe_communicate(proc)
+                run.stdout = stdout_text or ""
+                run.stderr = (stderr_text or "")[:5000]
+                db.commit()
+                return _fail_run(
+                    db, run,
+                    f"测试执行超时 ({DEFAULT_TIMEOUT}s)", job,
+                )
+
+            time.sleep(CANCEL_POLL_INTERVAL)
+
+        if cancelled:
+            db.commit()
+            # Update job status on cancel
+            if job.status == "running":
+                job.status = "idle"
+                db.commit()
+            return {"status": "cancelled", "run_id": run_id}
+
+        # 7. 进程正常结束，收集输出
+        stdout_text, stderr_text = _safe_communicate(proc)
+        run.stdout = stdout_text or ""
+        run.stderr = (stderr_text or "")[:5000]
+
+        exit_code = proc.returncode
+
+        if exit_code != 0 and not (stdout_text or "").strip():
+            # Playwright 自身错误（非测试失败，stdout 无 JSON 输出）
             return _fail_run(
                 db, run,
-                f"Playwright 执行失败 (exit={result.returncode}): {stderr_text}",
+                f"Playwright 执行失败 (exit={exit_code}): {(stderr_text or '')[:2000]}",
                 job,
             )
 
-        # Parse JSON report
+        # 8. 解析 JSON 报告
         try:
             report = json.loads(stdout_text) if stdout_text else {}
         except json.JSONDecodeError:
@@ -189,42 +248,25 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
 
         duration_sec = round(duration / 1000, 2) if duration else 0
 
-        # 6. 收集产物（产物目录 + Playwright test-results + Playwright 项目根）
-        test_results_dir = PLAYWRIGHT_DIR / "test-results"
-        screenshots = (
-            _collect_artifacts(artifact_dir, "*.png") +
-            _collect_artifacts(test_results_dir, "*.png") +
-            _collect_artifacts(PLAYWRIGHT_DIR, "*.png")
-        )
-        videos = (
-            _collect_artifacts(artifact_dir, "*.webm") +
-            _collect_artifacts(test_results_dir, "*.webm") +
-            _collect_artifacts(PLAYWRIGHT_DIR, "*.webm")
-        )
-        traces = (
-            _collect_artifacts(artifact_dir, "*.zip") +
-            _collect_artifacts(test_results_dir, "*.zip") +
-            _collect_artifacts(PLAYWRIGHT_DIR, "*.zip")
-        )
+        # 9. 产物隔离：只从 artifact_dir 收集产物，不扫描共享目录
+        screenshots = _collect_artifacts(artifact_dir, "*.png")
+        videos = _collect_artifacts(artifact_dir, "*.webm")
+        traces = _collect_artifacts(artifact_dir, "*.zip")
 
-        # Copy artifacts from test-results and PLAYWRIGHT_DIR into artifact_dir if not already there
-        for src_dir in [test_results_dir, PLAYWRIGHT_DIR]:
-            if src_dir == artifact_dir or not src_dir.exists():
-                continue
-            for pattern in ["*.png", "*.webm", "*.zip"]:
-                for f in src_dir.rglob(pattern):
-                    rel = f.relative_to(src_dir)
-                    dest = artifact_dir / rel
-                    if not dest.exists():
-                        try:
-                            dest.parent.mkdir(parents=True, exist_ok=True)
-                            shutil.copy2(f, dest)
-                        except Exception:
-                            pass
+        # 将 test-results 中的 Playwright 原生产物复制到隔离目录（方便查看，但只报告 artifact_dir 内的文件）
+        test_results_dir = PLAYWRIGHT_DIR / "test-results"
+        _copy_artifacts_to_run_dir(test_results_dir, artifact_dir)
+        # Playwright trace 有时直接写在项目根目录，也复制进来
+        _copy_artifacts_to_run_dir(PLAYWRIGHT_DIR, artifact_dir)
+
+        # 检测 HTML 报告（如果存在）
+        html_report = artifact_dir / "index.html"
+        if html_report.exists():
+            run.html_report_path = str(html_report).replace("\\", "/")
 
         return _complete_run(
             db, job, run,
-            status="done",
+            status="done" if fail_count == 0 else "fail",
             total=total, passed=passed, failed=fail_count, skipped=skipped,
             duration=duration_sec,
             screenshots=screenshots,
@@ -232,11 +274,6 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
             traces=traces,
         )
 
-    except subprocess.TimeoutExpired:
-        return _fail_run(
-            db, run,
-            f"测试执行超时 ({DEFAULT_TIMEOUT}s)", job,
-        )
     except Exception as e:
         logger.exception(f"Playwright run error for run #{run_id}, job #{job_id}")
         return _fail_run(
@@ -246,6 +283,22 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
 
 
 # ── Helpers ──
+
+def _safe_communicate(proc: subprocess.Popen) -> tuple[str, str]:
+    """安全地读取子进程 stdout/stderr，防止管道死锁。"""
+    try:
+        stdout_text, stderr_text = proc.communicate(timeout=10)
+        return stdout_text or "", stderr_text or ""
+    except subprocess.TimeoutExpired:
+        try:
+            proc.kill()
+            stdout_text, stderr_text = proc.communicate()
+            return stdout_text or "", stderr_text or ""
+        except Exception:
+            return "", ""
+    except Exception:
+        return "", ""
+
 
 def _fail_run(db: Session, run, message: str, job=None) -> dict:
     """标记 run 为失败并落库 error_message。所有失败路径必须调用此函数。"""
@@ -321,11 +374,35 @@ def _complete_run(
 
 
 def _collect_artifacts(base_dir: Path, pattern: str) -> list[str]:
-    """收集产物路径。"""
+    """收集产物路径（仅从指定目录，不扫描共享目录）。"""
     items = []
     try:
+        if not base_dir.exists():
+            return items
         for f in base_dir.rglob(pattern):
             items.append(str(f.relative_to(base_dir)).replace("\\", "/"))
     except Exception:
         pass
     return items[:20]  # max 20
+
+
+def _copy_artifacts_to_run_dir(src_dir: Path, dest_dir: Path) -> None:
+    """将 src_dir 中的产物复制到 dest_dir（如果不在 dest_dir 中已存在）。"""
+    if not src_dir.exists() or src_dir == dest_dir:
+        return
+    for pattern in ["*.png", "*.webm", "*.zip"]:
+        for f in src_dir.rglob(pattern):
+            # 跳过已在 artifact_dir 内的文件
+            try:
+                if str(dest_dir.resolve()) in str(f.resolve()):
+                    continue
+            except Exception:
+                continue
+            rel = f.relative_to(src_dir)
+            dest = dest_dir / rel
+            if not dest.exists():
+                try:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(f, dest)
+                except Exception:
+                    pass
