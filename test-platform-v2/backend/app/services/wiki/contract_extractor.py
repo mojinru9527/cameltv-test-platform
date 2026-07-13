@@ -21,6 +21,7 @@ logger = logging.getLogger("wiki.contract")
 _EMPTY_CONTRACT_KEYS = (
     "business_rules", "fields", "apis", "acceptance_criteria",
     "exception_paths", "test_cases", "client_scope", "source_refs",
+    "permissions", "data_dependencies", "version",
 )
 
 
@@ -80,9 +81,10 @@ def extract_contract(db: Session, project_id: int, *, kb_type: str, query: str) 
 
     prompt = build_system_prompt("knowledge_diff") + (
         "\n\n## 契约抽取子任务\n把下面的知识片段归一化为一个「需求契约」JSON，字段："
-        "requirement_key,title,module,summary,client_scope[],business_rules[{id,rule,evidence}],"
-        "fields[{name,location,type,required}],apis[{method,path}],acceptance_criteria[],"
-        "exception_paths[],test_cases[]。只依据片段，不编造。"
+        "requirement_key,title,module,summary,version,client_scope[],business_rules[{id,rule,evidence}],"
+        "fields[{name,location,type,required}],apis[{method,path}],"
+        "permissions[{role,actions[]}],data_dependencies[{name,source,type}],"
+        "acceptance_criteria[],exception_paths[],test_cases[]。只依据片段，不编造。"
     )
     res = _call_llm_sync(prompt, f"需求关键词：{query}\n\n知识片段：\n{text}")
     result = res.get("result")
