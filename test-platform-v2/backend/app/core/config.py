@@ -130,6 +130,22 @@ class Settings(BaseSettings):
     wiki_lint_enabled: bool = False              # 是否启用 Wiki 健康体检（默认关）
     embedding_health_required: bool = False      # 是否要求 embedding 健康检查通过后才允许搜索
 
+    # ── Lanhu Evidence Pack / OCR ──（默认关，采集+OCR 成本高）
+    lanhu_evidence_enabled: bool = False
+    lanhu_evidence_storage_dir: str = ""         # 空 = backend/storage/lanhu-evidence
+    lanhu_capture_viewport_width: int = 1440
+    lanhu_capture_viewport_height: int = 1200
+    lanhu_capture_scroll_step_ratio: float = 0.85
+    lanhu_capture_max_segments_per_page: int = 30
+    lanhu_capture_wait_ms: int = 600
+    lanhu_ocr_provider: str = "local"            # local/cloud/mock
+    lanhu_ocr_command: str = ""                  # 命令模板，如 paddleocr --image {image}
+    lanhu_ocr_min_confidence: float = 0.60
+    lanhu_evidence_word_embed_screenshots: bool = True
+    lanhu_evidence_import_to_requirement: bool = True
+    lanhu_evidence_import_to_knowledge: bool = True
+    lanhu_evidence_import_to_wiki: bool = True
+
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
