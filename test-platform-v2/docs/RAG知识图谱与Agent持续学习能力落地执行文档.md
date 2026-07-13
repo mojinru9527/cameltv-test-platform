@@ -409,3 +409,12 @@ src/api/__tests__/knowledge.test.ts               — Knowledge API 测试
 | 日期 | 变更 | 版本 |
 |------|------|:----:|
 | 2026-07-09 | M0+M1+M2+M3 全链路落地，文档创建 | v1.0 |
+
+---
+
+## 附：蓝湖证据包作为 RAG 来源
+
+证据包导入 RAG 时，KnowledgeSource.source_type=lanhu_evidence，chunk 为页面粒度
+（chunk_type=requirement_page，tags=[lanhu, ocr, folder]），每条携带 evidence_job_id /
+doc_id / version_id / page_id，可回溯到截图与蓝湖原页。运维与验收见
+docs/蓝湖证据包OCR导入-运维与验收手册.md。
