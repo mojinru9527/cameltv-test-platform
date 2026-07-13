@@ -92,3 +92,59 @@ def test_get_job_isolated_by_project(client, auth_headers, db_session, monkeypat
     resp = client.get(f"/api/v1/lanhu-evidence/jobs/{other.id}", headers=auth_headers)
     assert resp.status_code == 404
 
+
+# ── Import to requirement / RAG / Wiki ──
+
+def _make_job_with_pages(db_session, *, project_id=1):
+    from app.models.lanhu_evidence import LanhuEvidenceJob, LanhuEvidencePage
+
+    job = LanhuEvidenceJob(
+        project_id=project_id,
+        source_url="https://lanhuapp.com/x?docId=d&versionId=v",
+        doc_id="d",
+        version_id="v",
+        document_name="CamelTv 需求",
+        status="success",
+        word_path="storage/lanhu-evidence/1/lanhu.docx",
+        json_path="storage/lanhu-evidence/1/lanhu.json",
+        storage_dir="storage/lanhu-evidence/1",
+    )
+    db_session.add(job)
+    db_session.flush()
+    db_session.add(LanhuEvidencePage(
+        job_id=job.id, project_id=project_id, page_id="p1",
+        page_name="比赛推送", page_path="App/赛事/比赛推送", folder="App/赛事",
+        order_index=0, merged_text="# 比赛推送\nmatchId 必填",
+    ))
+    db_session.commit()
+    return job
+
+
+def test_import_evidence_to_requirement_creates_doc(db_session):
+    from app.services.lanhu_evidence.import_service import import_to_requirement
+
+    job = _make_job_with_pages(db_session)
+    doc = import_to_requirement(db_session, project_id=1, job_id=job.id, creator_id=1)
+
+    assert doc["file_type"] == "docx"
+    assert "蓝湖证据包" in doc["title"]
+
+
+def test_import_evidence_to_knowledge_preserves_source_refs(db_session):
+    from app.services.lanhu_evidence.import_service import import_to_knowledge
+
+    job = _make_job_with_pages(db_session)
+    source_id = import_to_knowledge(db_session, project_id=1, job_id=job.id)
+
+    assert source_id is not None
+
+
+def test_import_evidence_to_wiki_creates_raw_source(db_session):
+    from app.services.lanhu_evidence.import_service import import_to_wiki
+
+    job = _make_job_with_pages(db_session)
+    raw_id = import_to_wiki(db_session, project_id=1, job_id=job.id)
+
+    assert raw_id is not None
+
+
