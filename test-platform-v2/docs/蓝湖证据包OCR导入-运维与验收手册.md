@@ -35,6 +35,15 @@ OCR 命令须逐行输出 JSON：`{"text":"比赛推送","confidence":0.96,"bbox
 > [`backend/scripts/ocr_paddle.py`](../backend/scripts/ocr_paddle.py)（兼容 PaddleOCR 2.x/3.x）。
 > 启用真实 OCR：`pip install paddleocr paddlepaddle`（首次运行自动下载模型，需联网），
 > 再把 `.env` 的 `LANHU_OCR_PROVIDER` 改为 `local` 并启用 `LANHU_OCR_COMMAND`。
+>
+> **关键落地经验（2026-07-13 真实 OCR 调通）**：
+> 1. **python 解释器绝对路径**：`LANHU_OCR_COMMAND` 里的 python 必须指向**装了 paddleocr 的那个**解释器绝对路径，
+>    它不一定等于后端进程的解释器（后端 venv 与 OCR venv 可以是两套）。例如：
+>    `LANHU_OCR_COMMAND=F:/CamelTv/test-platform/.venv/Scripts/python.exe F:/CamelTv/test-platform-v2/backend/scripts/ocr_paddle.py {image}`
+> 2. **paddlepaddle 3.x oneDNN 回归 bug**：CPU 推理需 `enable_mkldnn=False, device='cpu'`（脚本已内置逐级降级）。
+> 3. **Windows stdout 编码**：脚本以 `ensure_ascii=True` 输出纯 ASCII `\uXXXX`，规避重定向时 cp936/UTF-8 不一致的乱码；
+>    provider 侧 `json.loads` 无损还原中文。
+> 4. 慢网可用清华镜像加速：`pip install -i https://pypi.tuna.tsinghua.edu.cn/simple paddleocr paddlepaddle`。
 
 前置依赖：`playwright` + chromium（`python -m playwright install chromium`）、`python-docx`、
 蓝湖登录态（`LANHU_COOKIE` 或 `LANHU_USERNAME`/`LANHU_PASSWORD` 自动登录）。
