@@ -150,6 +150,10 @@ _ACTIONS = [
     ("wiki:manage", "导入来源、触发编译、重试任务", "button"),
     ("wiki:approve", "审核 Wiki 页面与差异处理", "button"),
     ("wiki:diff", "发起知识库对比", "button"),
+    # 蓝湖证据包 OCR — 收在知识中心/需求，不新增菜单
+    ("lanhu_evidence:view", "查看蓝湖证据包", "button"),
+    ("lanhu_evidence:run", "创建蓝湖证据包", "button"),
+    ("lanhu_evidence:import", "导入蓝湖证据包", "button"),
 ]
 
 # 测试人员可见的菜单子集
@@ -159,6 +163,7 @@ _TESTER_ACTIONS = {
     "knowledge:view",
     "agent:view", "agent:list",
     "wiki:view", "wiki:diff",
+    "lanhu_evidence:view", "lanhu_evidence:run",
 }
 
 _TESTER_MENUS = {
