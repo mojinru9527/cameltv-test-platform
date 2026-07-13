@@ -46,7 +46,7 @@ def list_runs(
     status: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    current: CurrentUser = Depends(require_permission("agent:list")),
+    current: CurrentUser = Depends(require_permission("agent:view")),
     db: Session = Depends(get_db),
 ):
     rows, total = agent_run_service.list_runs(
@@ -62,7 +62,7 @@ def list_runs(
 @router.get("/runs/{run_id}", response_model=R[AgentRunOut], summary="Agent 执行记录详情")
 def get_run(
     run_id: int,
-    current: CurrentUser = Depends(require_permission("agent:list")),
+    current: CurrentUser = Depends(require_permission("agent:view")),
     db: Session = Depends(get_db),
 ):
     row = agent_run_service.get_run(db, run_id, current.project_id or 0)
@@ -113,7 +113,9 @@ def trigger_agent(
 
 
 @router.get("/types", response_model=R[list[dict]], summary="获取可用 Agent 类型列表")
-def list_agent_types():
+def list_agent_types(
+    current: CurrentUser = Depends(require_permission("agent:view")),
+):
     """返回所有可用的 Agent 类型及其元数据（label / description / artifact_type）。"""
     return R.ok([
         {"type": k, "label": v["label"], "description": v["description"], "artifact_type": v["artifact_type"]}
@@ -145,7 +147,9 @@ def check_changes(
 
 
 @router.get("/triggers/rules", response_model=R[dict], summary="查看触发规则")
-def get_trigger_rules():
+def get_trigger_rules(
+    current: CurrentUser = Depends(require_permission("agent:view")),
+):
     """返回当前的触发规则配置。"""
     from app.services.knowledge.change_detector import TRIGGER_RULES
     return R.ok(TRIGGER_RULES)
@@ -160,7 +164,7 @@ def list_queue(
     status: str | None = Query(None, description="过滤状态: pending/running/completed/failed/cancelled"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    current: CurrentUser = Depends(require_permission("agent:list")),
+    current: CurrentUser = Depends(require_permission("agent:view")),
     db: Session = Depends(get_db),
 ):
     rows, total = list_queue_items(
@@ -175,7 +179,7 @@ def list_queue(
 
 @router.get("/queue/stats", response_model=R[QueueStats], summary="队列统计")
 def queue_stats(
-    current: CurrentUser = Depends(require_permission("agent:list")),
+    current: CurrentUser = Depends(require_permission("agent:view")),
     db: Session = Depends(get_db),
 ):
     stats = get_queue_stats(db, current.project_id or 0)
