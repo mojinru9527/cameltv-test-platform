@@ -45,18 +45,17 @@ export async function quickExecute(request: {
 
 // ── 服务管理 ──
 
-export async function fetchApiServices(projectId: number): Promise<ApiService[]> {
-  return api.get('/apitest/services', { params: { project_id: projectId } }).then(r => r.data)
+export async function fetchApiServices(): Promise<ApiService[]> {
+  return api.get('/apitest/services').then(r => r.data)
 }
 
-export async function createApiService(projectId: number, data: { name: string; display_name?: string; description?: string }): Promise<ApiService> {
-  return api.post('/apitest/services', data, { params: { project_id: projectId } }).then(r => r.data)
+export async function createApiService(data: { name: string; display_name?: string; description?: string }): Promise<ApiService> {
+  return api.post('/apitest/services', data).then(r => r.data)
 }
 
 // ── 接口资产管理 ──
 
 export async function fetchApiEndpoints(params: {
-  project_id: number
   service_id?: number
   module?: string
   method?: string
@@ -67,8 +66,8 @@ export async function fetchApiEndpoints(params: {
   return api.get('/apitest/endpoints', { params }).then(r => r.data)
 }
 
-export async function createApiEndpoint(projectId: number, data: Partial<ApiEndpoint>): Promise<ApiEndpoint> {
-  return api.post('/apitest/endpoints', data, { params: { project_id: projectId } }).then(r => r.data)
+export async function createApiEndpoint(data: Partial<ApiEndpoint>): Promise<ApiEndpoint> {
+  return api.post('/apitest/endpoints', data).then(r => r.data)
 }
 
 export async function updateApiEndpoint(endpointId: number, data: Partial<ApiEndpoint>): Promise<ApiEndpoint> {
@@ -78,46 +77,40 @@ export async function updateApiEndpoint(endpointId: number, data: Partial<ApiEnd
 // ── OpenAPI 导入 ──
 
 export async function previewOpenApiImport(
-  projectId: number,
   data: { service_name: string; source_type: string; source_ref?: string; spec_content?: string },
 ): Promise<ApiImportPreview> {
-  return api.post('/apitest/import/preview', data, { params: { project_id: projectId } }).then(r => r.data)
+  return api.post('/apitest/import/preview', data).then(r => r.data)
 }
 
 export async function confirmOpenApiImport(
-  projectId: number,
   data: { service_name: string; source_type: string; source_ref?: string; spec_content?: string; generate_cases?: boolean },
 ): Promise<ApiImportResult> {
-  return api.post('/apitest/import/confirm', data, { params: { project_id: projectId } }).then(r => r.data)
+  return api.post('/apitest/import/confirm', data).then(r => r.data)
 }
 
 // ── 用例生成 ──
 
 export async function generateApiCases(
-  projectId: number,
   data: GenerateApiCasesRequest,
 ): Promise<{ cases: any[]; total: number; imported_case_ids: number[] }> {
-  return api.post('/apitest/cases/generate', data, { params: { project_id: projectId } }).then(r => r.data)
+  return api.post('/apitest/cases/generate', data).then(r => r.data)
 }
 
 export async function batchGenerateApiCases(
-  projectId: number,
   data: BatchGenerateRequest,
 ): Promise<{ total_generated: number; imported_case_ids: number[]; errors: any[] }> {
-  return api.post('/apitest/cases/batch-generate', data, { params: { project_id: projectId } }).then(r => r.data)
+  return api.post('/apitest/cases/batch-generate', data).then(r => r.data)
 }
 
 // ── 批量执行任务 ──
 
 export async function createApiExecutionTask(
-  projectId: number,
   data: ApiTaskCreateRequest,
 ): Promise<ApiExecutionTask> {
-  return api.post('/apitest/tasks', data, { params: { project_id: projectId } }).then(r => r.data)
+  return api.post('/apitest/tasks', data).then(r => r.data)
 }
 
 export async function fetchApiExecutionTasks(params: {
-  project_id: number
   service_id?: number
   status?: string
   page?: number
