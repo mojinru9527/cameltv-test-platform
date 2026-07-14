@@ -13,7 +13,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.lanhu_evidence import LanhuEvidenceJob, LanhuEvidencePage
+from app.models.lanhu_evidence import (
+    LanhuEvidenceAsset,
+    LanhuEvidenceJob,
+    LanhuEvidencePage,
+)
 from app.services import requirement_service
 from app.services.knowledge import chunk_service, source_service
 from app.services.wiki import raw_source_service
@@ -28,7 +32,7 @@ def _ensure_import_ready(job: LanhuEvidenceJob) -> None:
         quality = json.loads(job.quality_json or "{}")
     except (json.JSONDecodeError, TypeError):
         quality = {}
-    if not quality.get("import_ready"):
+    if job.status != "success" or not quality.get("import_ready"):
         raise ValueError("证据包质量未达标（import_ready=false），禁止导入需求/RAG/Wiki")
 
 
@@ -57,14 +61,24 @@ def _combined_text(job: LanhuEvidenceJob, pages: list[LanhuEvidencePage]) -> str
     return "\n".join(parts).strip()
 
 
-def _job_metadata(job: LanhuEvidenceJob) -> dict:
-    return {
+def _job_metadata(db: Session, job: LanhuEvidenceJob) -> dict:
+    assets = db.execute(
+        select(LanhuEvidenceAsset.id, LanhuEvidenceAsset.asset_type)
+        .where(
+            LanhuEvidenceAsset.job_id == job.id,
+            LanhuEvidenceAsset.project_id == job.project_id,
+            LanhuEvidenceAsset.asset_type.in_(("word", "json")),
+        )
+        .order_by(LanhuEvidenceAsset.id)
+    ).all()
+    metadata = {
         "evidence_job_id": job.id,
-        "word_path": job.word_path,
-        "json_path": job.json_path,
         "doc_id": job.doc_id,
         "version_id": job.version_id,
     }
+    for asset_id, asset_type in assets:
+        metadata[f"{asset_type}_asset_id"] = asset_id
+    return metadata
 
 
 def import_to_requirement(db: Session, *, project_id: int, job_id: int, creator_id: int = 0) -> dict:
@@ -94,7 +108,7 @@ def import_to_knowledge(db: Session, *, project_id: int, job_id: int) -> int | N
         source_ref=job.source_url,
         raw_content=_combined_text(job, pages),
         version=job.version_id or "",
-        metadata=_job_metadata(job),
+        metadata=_job_metadata(db, job),
     )
     if source is None:
         return None
@@ -129,9 +143,36 @@ def import_to_wiki(db: Session, *, project_id: int, job_id: int) -> int | None:
         content_md=content_md,
         content_hash=content_hash,
         immutable_version=immutable_version,
-        metadata=_job_metadata(job),
+        metadata=_job_metadata(db, job),
     )
     if raw is None:
         return None
     db.commit()
     return raw.id
+
+
+def execute_requested_imports(
+    db: Session,
+    *,
+    job: LanhuEvidenceJob,
+    options: dict,
+    creator_id: int,
+) -> dict:
+    """Execute exactly the requested, quality-gated downstream imports."""
+    result: dict = {}
+    if options.get("import_to_requirement"):
+        result["requirement"] = import_to_requirement(
+            db,
+            project_id=job.project_id,
+            job_id=job.id,
+            creator_id=creator_id,
+        )
+    if options.get("import_to_knowledge"):
+        result["knowledge_source_id"] = import_to_knowledge(
+            db, project_id=job.project_id, job_id=job.id,
+        )
+    if options.get("import_to_wiki"):
+        result["wiki_raw_source_id"] = import_to_wiki(
+            db, project_id=job.project_id, job_id=job.id,
+        )
+    return result

@@ -36,13 +36,12 @@ class LanhuEvidenceJobOut(BaseModel):
     captured_pages: int = 0
     ocr_pages: int = 0
     failed_pages: int = 0
-    word_path: str = ""
-    json_path: str = ""
     quality_json: str = "{}"
     error_message: str = ""
     attempt_no: int = 1
     parent_job_id: int | None = None
     import_result_json: str = "{}"
+    requested_options_json: str = "{}"
     heartbeat_at: datetime | None = None
     created_at: datetime | None = None
     finished_at: datetime | None = None

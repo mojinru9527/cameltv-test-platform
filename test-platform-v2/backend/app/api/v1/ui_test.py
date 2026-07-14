@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import os as _os
 from pathlib import Path as _Path
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_db, require_permission
@@ -25,6 +25,26 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         project_id=cu.project_id or 0, action=action, target=target, detail=detail,
         ip=req.client.host if req.client else "",
     )
+
+
+def _get_project_run(db: Session, run_id: int, project_id: int):
+    """Load a run only through its owning job and current project."""
+    from app.models.ui_test import UiTestJob, UiTestRun
+
+    return db.scalar(
+        select(UiTestRun)
+        .join(UiTestJob, UiTestJob.id == UiTestRun.job_id)
+        .where(UiTestRun.id == run_id, UiTestJob.project_id == project_id)
+    )
+
+
+def _resolve_artifact_path(artifact_dir: _Path, filename: str) -> _Path:
+    """Resolve one artifact path without string-prefix containment mistakes."""
+    base_dir = artifact_dir.resolve()
+    file_path = (base_dir / filename).resolve()
+    if not file_path.is_relative_to(base_dir):
+        raise HTTPException(403, "非法文件路径")
+    return file_path
 
 
 # ═══════════════════════════════════════════════════════
@@ -177,13 +197,11 @@ def list_artifacts(
     db: Session = Depends(get_db),
 ):
     """列出某次运行的所有产物文件（截图/视频/trace/报告）。"""
-    from app.models.ui_test import UiTestRun
-
-    run = db.get(UiTestRun, run_id)
+    run = _get_project_run(db, run_id, current.project_id or 0)
     if not run:
         raise HTTPException(404, "运行记录不存在")
 
-    artifact_dir = _Path(run.artifact_dir) if run.artifact_dir else None
+    artifact_dir = _Path(run.artifact_dir).resolve() if run.artifact_dir else None
     if not artifact_dir or not artifact_dir.exists():
         return R.ok([])
 
@@ -208,9 +226,7 @@ def download_artifact(
     db: Session = Depends(get_db),
 ):
     """下载某次运行的产物文件。"""
-    from app.models.ui_test import UiTestRun
-
-    run = db.get(UiTestRun, run_id)
+    run = _get_project_run(db, run_id, current.project_id or 0)
     if not run:
         raise HTTPException(404, "运行记录不存在")
 
@@ -218,14 +234,10 @@ def download_artifact(
     if not artifact_dir:
         raise HTTPException(404, "该运行无产物目录")
 
-    # 防目录遍历
-    safe_path = _os.path.normpath(filename).lstrip("\\/")
-    file_path = (artifact_dir / safe_path).resolve()
-    if not str(file_path).startswith(str(artifact_dir.resolve())):
-        raise HTTPException(403, "非法文件路径")
+    file_path = _resolve_artifact_path(artifact_dir, filename)
 
     if not file_path.exists() or not file_path.is_file():
-        raise HTTPException(404, f"产物文件不存在: {safe_path}")
+        raise HTTPException(404, "产物文件不存在")
 
     return FileResponse(file_path, filename=file_path.name)
 

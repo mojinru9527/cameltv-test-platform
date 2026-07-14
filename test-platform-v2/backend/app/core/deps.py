@@ -24,10 +24,15 @@ class CurrentUser:
     user: User
     permissions: list[str] = field(default_factory=list)
     project_id: int | None = None
+    system_permissions: list[str] | None = None
 
     @property
     def is_super(self) -> bool:
-        return "*" in self.permissions
+        # Production authentication supplies system_permissions from global
+        # (project_id=0) role assignments only. The None fallback preserves
+        # explicitly constructed CurrentUser objects used by internal callers.
+        permissions = self.permissions if self.system_permissions is None else self.system_permissions
+        return "*" in permissions
 
 
 def get_current_user(
@@ -58,7 +63,13 @@ def get_current_user(
         raise unauthorized("用户不存在或已禁用")
 
     codes = rbac_service.permission_codes(db, user.id, x_project_id)
-    return CurrentUser(user=user, permissions=codes, project_id=x_project_id)
+    system_codes = rbac_service.permission_codes(db, user.id)
+    return CurrentUser(
+        user=user,
+        permissions=codes,
+        project_id=x_project_id,
+        system_permissions=system_codes,
+    )
 
 
 def require_project(

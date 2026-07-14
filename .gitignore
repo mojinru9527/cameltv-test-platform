@@ -56,6 +56,12 @@ test-results.xml
 *-report.html
 *-results.xml
 
+# Test Platform V2 runtime artifacts
+test-platform-v2/backend/storage/lanhu-evidence/
+test-platform-v2/backend/storage/ui-runs/
+test-platform-v2/backend/tests/playwright/test-results/
+test-platform-v2/data/
+
 # TypeScript build artifacts
 *.tsbuildinfo
 vite.config.d.ts

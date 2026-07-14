@@ -5,9 +5,11 @@ import json
 import os
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi import HTTPException
 
 
 @pytest.fixture
@@ -116,7 +118,7 @@ class TestExecutorArtifactIsolation:
 
         run = ui_run_factory(job_id=job.id, status="pending")
 
-        # Create a shared test-results file (should be copied but NOT reported)
+        # Create a shared test-results file (must never enter the run directory)
         shared_dir = PLAYWRIGHT_DIR / "test-results"
         shared_dir.mkdir(parents=True, exist_ok=True)
         (shared_dir / "shared_screenshot.png").write_text("shared artifact")
@@ -142,71 +144,10 @@ class TestExecutorArtifactIsolation:
             # All paths should be relative to the artifact_dir (run-specific)
             assert ".." not in s
             assert not s.startswith("/")
+        assert not (run_storage_dir / str(run.id) / "shared_screenshot.png").exists()
 
         # Cleanup
         spec_path.unlink(missing_ok=True)
-
-    def test_copy_artifacts_to_run_dir_excludes_existing(self, tmp_path):
-        """_copy_artifacts_to_run_dir should not overwrite existing files."""
-        from app.services.playwright_executor import _copy_artifacts_to_run_dir
-
-        src = tmp_path / "src"
-        src.mkdir(parents=True)
-        (src / "test.png").write_text("source content")
-
-        dest = tmp_path / "dest"
-        dest.mkdir(parents=True)
-        (dest / "test.png").write_text("original content")
-
-        # Should not overwrite
-        _copy_artifacts_to_run_dir(src, dest)
-
-        # dest file should still have original content
-        assert (dest / "test.png").read_text() == "original content"
-
-    def test_copy_artifacts_skips_when_src_equals_dest(self, tmp_path):
-        """_copy_artifacts_to_run_dir should skip when src == dest."""
-        from app.services.playwright_executor import _copy_artifacts_to_run_dir
-
-        same_dir = tmp_path / "same"
-        same_dir.mkdir(parents=True)
-        (same_dir / "test.png").write_text("test content")
-
-        # Should not raise or loop
-        _copy_artifacts_to_run_dir(same_dir, same_dir)
-        # File should still exist
-        assert (same_dir / "test.png").exists()
-
-    def test_copy_artifacts_to_run_dir_skips_nested_paths(self, tmp_path):
-        """_copy_artifacts_to_run_dir should skip files already inside dest."""
-        from app.services.playwright_executor import _copy_artifacts_to_run_dir
-
-        dest = tmp_path / "dest"
-        dest.mkdir(parents=True)
-        nested = dest / "sub"
-        nested.mkdir(parents=True)
-        (nested / "test.png").write_text("nested content")
-
-        # Copy from nested into dest - file should be skipped since it's already under dest
-        _copy_artifacts_to_run_dir(nested, dest)
-        # No error expected
-
-    def test_copy_artifacts_to_run_dir_creates_parent_dirs(self, tmp_path):
-        """_copy_artifacts_to_run_dir should create parent directories as needed."""
-        from app.services.playwright_executor import _copy_artifacts_to_run_dir
-
-        src = tmp_path / "src"
-        src.mkdir(parents=True)
-        sub = src / "deep" / "path"
-        sub.mkdir(parents=True)
-        (sub / "test.png").write_text("deep file")
-
-        dest = tmp_path / "dest"
-        dest.mkdir(parents=True)
-
-        _copy_artifacts_to_run_dir(src, dest)
-        assert (dest / "deep" / "path" / "test.png").exists()
-        assert (dest / "deep" / "path" / "test.png").read_text() == "deep file"
 
 
 class TestArtifactListApiIsolation:
@@ -248,3 +189,82 @@ class TestArtifactListApiIsolation:
         )
         assert resp.status_code == 200
         assert resp.json()["data"] == []
+
+    def test_download_returns_same_project_artifact(
+        self, client, auth_headers, db_session, ui_job_factory, ui_run_factory, tmp_path,
+    ):
+        """The project guard must preserve valid downloads from the current project."""
+        job = ui_job_factory(project_id=1)
+        artifact_dir = tmp_path / "ui-runs" / "current"
+        artifact_dir.mkdir(parents=True)
+        (artifact_dir / "report.json").write_text('{"ok": true}', encoding="utf-8")
+        run = ui_run_factory(
+            job_id=job.id,
+            status="done",
+            artifact_dir=str(artifact_dir),
+        )
+
+        response = client.get(
+            f"/api/v1/ui-tests/runs/{run.id}/artifacts/report.json",
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        assert response.json() == {"ok": True}
+
+    @pytest.mark.parametrize("endpoint_suffix", ["artifacts", "artifacts/report.json"])
+    def test_artifact_endpoints_hide_runs_from_other_projects(
+        self,
+        endpoint_suffix,
+        client,
+        auth_headers,
+        db_session,
+        ui_job_factory,
+        ui_run_factory,
+        tmp_path,
+    ):
+        """A run must be scoped through run -> job -> current project for list and download."""
+        other_job = ui_job_factory(project_id=999)
+        artifact_dir = tmp_path / "ui-runs" / "foreign"
+        artifact_dir.mkdir(parents=True)
+        (artifact_dir / "report.json").write_text('{"secret": true}', encoding="utf-8")
+        other_run = ui_run_factory(
+            job_id=other_job.id,
+            status="done",
+            artifact_dir=str(artifact_dir),
+        )
+
+        response = client.get(
+            f"/api/v1/ui-tests/runs/{other_run.id}/{endpoint_suffix}",
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 404
+
+    def test_download_rejects_prefix_sibling_directory(
+        self, db_session, ui_job_factory, ui_run_factory, tmp_path,
+    ):
+        """`.../1` must not authorize `.../10` merely because their strings share a prefix."""
+        from app.api.v1.ui_test import download_artifact
+
+        job = ui_job_factory(project_id=1)
+        artifact_dir = tmp_path / "ui-runs" / "1"
+        sibling_dir = tmp_path / "ui-runs" / "10"
+        artifact_dir.mkdir(parents=True)
+        sibling_dir.mkdir(parents=True)
+        (sibling_dir / "secret.txt").write_text("foreign artifact", encoding="utf-8")
+        run = ui_run_factory(
+            job_id=job.id,
+            status="done",
+            artifact_dir=str(artifact_dir),
+        )
+
+        with pytest.raises(HTTPException) as exc_info:
+            download_artifact(
+                run_id=run.id,
+                filename="../10/secret.txt",
+                current=SimpleNamespace(project_id=1),
+                db=db_session,
+            )
+
+        assert exc_info.value.status_code == 403

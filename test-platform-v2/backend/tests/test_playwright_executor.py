@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import json
 import subprocess
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -213,7 +215,8 @@ class TestPlaywrightExecutorCancel:
         spec_path.parent.mkdir(parents=True, exist_ok=True)
         spec_path.write_text("// mock spec", encoding="utf-8")
 
-        run = ui_run_factory(job_id=job.id, status="running", cancel_requested=False)
+        # Public execution now owns the pending -> running CAS transition.
+        run = ui_run_factory(job_id=job.id, status="pending", cancel_requested=False)
 
         mock_proc = MagicMock(spec=subprocess.Popen)
         mock_proc.pid = 99999
@@ -339,6 +342,109 @@ class TestPlaywrightExecutorStdoutStderr:
         spec_path.unlink(missing_ok=True)
 
 
+class TestPlaywrightJsonReportFile:
+    """The JSON reporter may write only to PLAYWRIGHT_JSON_OUTPUT_NAME."""
+
+    @staticmethod
+    def _report(*statuses: str) -> dict:
+        return {
+            "suites": [{
+                "specs": [{
+                    "tests": [{
+                        "results": [{"status": status, "duration": 100}],
+                    } for status in statuses],
+                }],
+            }],
+        }
+
+    def test_empty_stdout_reads_success_report_from_current_run_dir(
+        self, db_session, ui_job_factory, ui_run_factory, monkeypatch, tmp_path,
+    ):
+        from app.services import playwright_executor
+
+        playwright_dir = tmp_path / "playwright"
+        storage_dir = tmp_path / "ui-runs"
+        spec_path = playwright_dir / "specs" / "report-file.spec.ts"
+        spec_path.parent.mkdir(parents=True)
+        spec_path.write_text("// mock spec", encoding="utf-8")
+
+        job = ui_job_factory(test_spec="specs/report-file.spec.ts")
+        run = ui_run_factory(job_id=job.id)
+        artifact_dir = storage_dir / str(run.id)
+        artifact_dir.mkdir(parents=True)
+        (artifact_dir / "report.json").write_text(
+            json.dumps(self._report("passed")), encoding="utf-8",
+        )
+        # A conflicting shared report must never influence this run.
+        (playwright_dir / "report.json").write_text(
+            json.dumps(self._report(*(["failed"] * 5))), encoding="utf-8",
+        )
+
+        mock_proc = MagicMock(spec=subprocess.Popen)
+        mock_proc.pid = 99999
+        mock_proc.poll.return_value = 0
+        mock_proc.communicate.return_value = ("", "")
+        mock_proc.returncode = 0
+
+        monkeypatch.setattr(playwright_executor, "PLAYWRIGHT_DIR", playwright_dir)
+        monkeypatch.setattr(playwright_executor, "STORAGE_DIR", storage_dir)
+        monkeypatch.setattr(playwright_executor, "_resolve_cmd", lambda _: "npx")
+        monkeypatch.setattr(playwright_executor.subprocess, "Popen", MagicMock(return_value=mock_proc))
+
+        result = playwright_executor.run_playwright_test(
+            db_session, run.id, job.id, job.project_id,
+        )
+
+        assert result["status"] == "done"
+        assert result["result"]["total"] == 1
+        assert result["result"]["pass_"] == 1
+        assert result["result"]["fail"] == 0
+
+    def test_empty_stdout_reads_failed_report_before_treating_exit_one_as_executor_error(
+        self, db_session, ui_job_factory, ui_run_factory, monkeypatch, tmp_path,
+    ):
+        from app.services import playwright_executor
+
+        playwright_dir = tmp_path / "playwright"
+        storage_dir = tmp_path / "ui-runs"
+        spec_path = playwright_dir / "specs" / "report-file.spec.ts"
+        spec_path.parent.mkdir(parents=True)
+        spec_path.write_text("// mock spec", encoding="utf-8")
+
+        job = ui_job_factory(test_spec="specs/report-file.spec.ts")
+        run = ui_run_factory(job_id=job.id)
+        artifact_dir = storage_dir / str(run.id)
+        artifact_dir.mkdir(parents=True)
+        (artifact_dir / "report.json").write_text(
+            json.dumps(self._report("passed", "failed")), encoding="utf-8",
+        )
+        # If the executor accidentally reads outside artifact_dir, totals differ.
+        (playwright_dir / "report.json").write_text(
+            json.dumps(self._report(*(["passed"] * 7))), encoding="utf-8",
+        )
+
+        mock_proc = MagicMock(spec=subprocess.Popen)
+        mock_proc.pid = 99999
+        mock_proc.poll.return_value = 1
+        mock_proc.communicate.return_value = ("", "assertion failed")
+        mock_proc.returncode = 1
+
+        monkeypatch.setattr(playwright_executor, "PLAYWRIGHT_DIR", playwright_dir)
+        monkeypatch.setattr(playwright_executor, "STORAGE_DIR", storage_dir)
+        monkeypatch.setattr(playwright_executor, "_resolve_cmd", lambda _: "npx")
+        monkeypatch.setattr(playwright_executor.subprocess, "Popen", MagicMock(return_value=mock_proc))
+
+        result = playwright_executor.run_playwright_test(
+            db_session, run.id, job.id, job.project_id,
+        )
+
+        assert result["status"] == "fail"
+        assert result["result"]["total"] == 2
+        assert result["result"]["pass_"] == 1
+        assert result["result"]["fail"] == 1
+        assert result["error_message"] == ""
+
+
 class TestPlaywrightExecutorHelperFunctions:
     """Test helper functions directly."""
 
@@ -363,6 +469,170 @@ class TestPlaywrightExecutorHelperFunctions:
         assert "screenshot1.png" in pngs[0]
         # Should NOT contain files from other_dir
         assert not any("leak" in p for p in pngs)
+
+    def test_executor_uses_bounded_thread_semaphore(self):
+        from app.services import playwright_executor
+
+        assert playwright_executor._semaphore.__class__.__name__ == "BoundedSemaphore"
+
+    def test_busy_semaphore_does_not_requeue_running_run(
+        self, db_session, ui_job_factory, ui_run_factory, monkeypatch,
+    ):
+        from app.services import playwright_executor
+
+        job = ui_job_factory()
+        run = ui_run_factory(job_id=job.id, status="running")
+        semaphore = MagicMock()
+        semaphore.acquire.return_value = False
+        monkeypatch.setattr(playwright_executor, "_semaphore", semaphore)
+        popen = MagicMock()
+        monkeypatch.setattr(playwright_executor.subprocess, "Popen", popen)
+
+        result = playwright_executor.run_playwright_test(
+            db_session, run.id, job.id, job.project_id,
+        )
+
+        db_session.refresh(run)
+        assert result == {"status": "running", "run_id": run.id}
+        assert run.status == "running"
+        semaphore.acquire.assert_called_once_with(blocking=False)
+        semaphore.release.assert_not_called()
+        popen.assert_not_called()
+
+    def test_busy_semaphore_leaves_unclaimed_run_pending(
+        self, db_session, ui_job_factory, ui_run_factory, monkeypatch,
+    ):
+        from app.services import playwright_executor
+
+        job = ui_job_factory()
+        run = ui_run_factory(job_id=job.id, status="pending")
+        semaphore = MagicMock()
+        semaphore.acquire.return_value = False
+        monkeypatch.setattr(playwright_executor, "_semaphore", semaphore)
+        popen = MagicMock()
+        monkeypatch.setattr(playwright_executor.subprocess, "Popen", popen)
+
+        result = playwright_executor.run_playwright_test(
+            db_session, run.id, job.id, job.project_id,
+        )
+
+        db_session.refresh(run)
+        assert result == {"status": "pending", "run_id": run.id}
+        assert run.status == "pending"
+        semaphore.release.assert_not_called()
+        popen.assert_not_called()
+
+    def test_immediate_queue_and_periodic_worker_atomically_claim_run_once(
+        self, monkeypatch, tmp_path,
+    ):
+        """Two independent consumers racing the same pending run execute it exactly once."""
+        import app.models  # noqa: F401 - register all mapped tables
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        from app.core.db import Base
+        from app.models.ui_test import UiTestJob, UiTestRun
+        from app.services import playwright_executor
+
+        database_path = (tmp_path / "ui-claim.db").as_posix()
+        engine = create_engine(
+            f"sqlite:///{database_path}",
+            connect_args={"check_same_thread": False},
+        )
+        Base.metadata.create_all(
+            engine,
+            tables=[UiTestJob.__table__, UiTestRun.__table__],
+        )
+        session_factory = sessionmaker(bind=engine)
+        with session_factory() as setup_db:
+            job = UiTestJob(
+                project_id=1,
+                name="CAS job",
+                test_spec="specs/cas.spec.ts",
+                browser="chromium",
+                status="running",
+                creator_id=1,
+            )
+            setup_db.add(job)
+            setup_db.flush()
+            run = UiTestRun(job_id=job.id, status="pending")
+            setup_db.add(run)
+            setup_db.commit()
+            job_id = job.id
+            run_id = run.id
+
+        semaphore = threading.BoundedSemaphore(2)
+        monkeypatch.setattr(playwright_executor, "_semaphore", semaphore)
+        execution_calls: list[int] = []
+        calls_lock = threading.Lock()
+
+        def fake_execute(db, claimed_run_id, claimed_job_id, project_id):
+            with calls_lock:
+                execution_calls.append(claimed_run_id)
+            time.sleep(0.1)
+            return {"status": "done", "run_id": claimed_run_id}
+
+        monkeypatch.setattr(playwright_executor, "_run_playwright_test", fake_execute)
+        start = threading.Barrier(2)
+
+        def consume():
+            with session_factory() as consumer_db:
+                start.wait(timeout=5)
+                return playwright_executor.run_playwright_test(
+                    consumer_db, run_id, job_id, 1,
+                )
+
+        try:
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                results = [future.result(timeout=5) for future in [
+                    pool.submit(consume),
+                    pool.submit(consume),
+                ]]
+
+            assert execution_calls == [run_id]
+            assert sorted(result["status"] for result in results) == ["done", "running"]
+
+            # Both the winning and losing consumers must release their slots.
+            assert semaphore.acquire(blocking=False) is True
+            assert semaphore.acquire(blocking=False) is True
+            assert semaphore.acquire(blocking=False) is False
+            semaphore.release()
+            semaphore.release()
+        finally:
+            engine.dispose()
+
+    def test_executor_does_not_copy_shared_test_results(
+        self, db_session, ui_job_factory, ui_run_factory, monkeypatch, tmp_path,
+    ):
+        from app.services import playwright_executor
+
+        playwright_dir = tmp_path / "playwright"
+        storage_dir = tmp_path / "ui-runs"
+        spec_path = playwright_dir / "specs" / "isolated.spec.ts"
+        spec_path.parent.mkdir(parents=True)
+        spec_path.write_text("// mock spec", encoding="utf-8")
+        shared_dir = playwright_dir / "test-results"
+        shared_dir.mkdir()
+        (shared_dir / "foreign.png").write_bytes(b"foreign")
+
+        job = ui_job_factory(test_spec="specs/isolated.spec.ts")
+        run = ui_run_factory(job_id=job.id)
+        mock_proc = MagicMock(spec=subprocess.Popen)
+        mock_proc.pid = 99999
+        mock_proc.poll.return_value = 0
+        mock_proc.communicate.return_value = ('{"suites":[]}', "")
+        mock_proc.returncode = 0
+
+        monkeypatch.setattr(playwright_executor, "PLAYWRIGHT_DIR", playwright_dir)
+        monkeypatch.setattr(playwright_executor, "STORAGE_DIR", storage_dir)
+        monkeypatch.setattr(playwright_executor, "_resolve_cmd", lambda _: "npx")
+        monkeypatch.setattr(playwright_executor.subprocess, "Popen", MagicMock(return_value=mock_proc))
+
+        playwright_executor.run_playwright_test(db_session, run.id, job.id, job.project_id)
+
+        run_dir = storage_dir / str(run.id)
+        assert not (run_dir / "foreign.png").exists()
+        assert not (run_dir / "test-results" / "foreign.png").exists()
 
     def test_resolve_cmd_finds_npx(self, monkeypatch):
         """_resolve_cmd should locate npx when available."""

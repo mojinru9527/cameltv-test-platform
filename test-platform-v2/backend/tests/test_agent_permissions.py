@@ -6,6 +6,8 @@
 """
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -169,6 +171,109 @@ class TestAgentRunWrite:
             assert data["code"] == 0
             assert data["data"]["status"] == "pending"
             assert data["data"]["queue_item_id"] > 0
+        finally:
+            from app.main import app
+            app.dependency_overrides.clear()
+
+    def test_trigger_commits_before_starting_processor(self, agent_db, monkeypatch):
+        """The worker must not see a queue row until the request transaction commits."""
+        from types import SimpleNamespace
+
+        import app.api.v1.agent as agent_api
+
+        events = []
+
+        def fake_enqueue(db, **kwargs):
+            events.append(("enqueue", db))
+            return SimpleNamespace(id=123)
+
+        monkeypatch.setattr(agent_api, "enqueue", fake_enqueue)
+        monkeypatch.setattr(agent_db, "commit", lambda: events.append(("commit", agent_db)))
+        monkeypatch.setattr(agent_api, "ensure_processor_running", lambda: events.append(("start", None)))
+
+        c = _make_client(agent_db, ["agent:view", "agent:run"])
+        try:
+            resp = c.post(
+                "/api/v1/agents/run/case_generation",
+                headers={"X-Project-Id": "1"},
+                json={"query": "generate cases"},
+            )
+            assert resp.status_code == 200
+            assert [event[0] for event in events] == ["enqueue", "commit", "start"]
+            assert events[0][1] is agent_db
+        finally:
+            from app.main import app
+            app.dependency_overrides.clear()
+
+    def test_trigger_returns_503_when_queue_lock_retries_are_exhausted(self, agent_db, monkeypatch):
+        """SQLite writer contention is a retryable 503, never an internal 500."""
+        import app.api.v1.agent as agent_api
+        from app.services.knowledge.agent_queue import QueueWriteBusy
+
+        monkeypatch.setattr(
+            agent_api,
+            "enqueue",
+            MagicMock(side_effect=QueueWriteBusy("agent queue is temporarily busy")),
+        )
+        start_processor = MagicMock()
+        monkeypatch.setattr(agent_api, "ensure_processor_running", start_processor)
+
+        c = _make_client(agent_db, ["agent:view", "agent:run"])
+        try:
+            resp = c.post(
+                "/api/v1/agents/run/case_generation",
+                headers={"X-Project-Id": "1"},
+                json={"query": "generate cases"},
+            )
+            assert resp.status_code == 503
+            assert resp.json() == {
+                "code": 503,
+                "msg": "Agent queue is temporarily busy; retry shortly",
+                "data": None,
+            }
+            start_processor.assert_not_called()
+        finally:
+            from app.main import app
+            app.dependency_overrides.clear()
+
+    @pytest.mark.parametrize(
+        "lock_message",
+        [
+            "database is locked",
+            "database table is locked",
+            "database schema is locked",
+        ],
+    )
+    def test_trigger_returns_503_when_commit_is_locked(
+        self, lock_message, agent_db, monkeypatch,
+    ):
+        """A lock raised while committing must not escape as a raw HTTP 500."""
+        from types import SimpleNamespace
+
+        from sqlalchemy.exc import OperationalError
+
+        import app.api.v1.agent as agent_api
+
+        monkeypatch.setattr(agent_api, "enqueue", lambda db, **kwargs: SimpleNamespace(id=456))
+        monkeypatch.setattr(
+            agent_db,
+            "commit",
+            MagicMock(side_effect=OperationalError("COMMIT", {}, Exception(lock_message))),
+        )
+        start_processor = MagicMock()
+        monkeypatch.setattr(agent_api, "ensure_processor_running", start_processor)
+
+        c = _make_client(agent_db, ["agent:view", "agent:run"])
+        try:
+            resp = c.post(
+                "/api/v1/agents/run/case_generation",
+                headers={"X-Project-Id": "1"},
+                json={"query": "generate cases"},
+            )
+            assert resp.status_code == 503
+            assert resp.json()["code"] == 503
+            assert resp.json()["msg"] == "Agent queue is temporarily busy; retry shortly"
+            start_processor.assert_not_called()
         finally:
             from app.main import app
             app.dependency_overrides.clear()

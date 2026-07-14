@@ -42,7 +42,7 @@ _JOB_COLUMNS = [
 ]
 
 _PAGE_COLUMNS = [
-    ("capture_truncated", sa.Column("capture_truncated", sa.Boolean(), nullable=False, server_default=sa.text("0"))),
+    ("capture_truncated", sa.Column("capture_truncated", sa.Boolean(), nullable=False, server_default=sa.false())),
     ("review_status", sa.Column("review_status", sa.String(length=32), nullable=False, server_default="pending")),
     ("reviewer_id", sa.Column("reviewer_id", sa.Integer(), nullable=False, server_default="0")),
     ("review_comment", sa.Column("review_comment", sa.Text(), nullable=False, server_default="")),
