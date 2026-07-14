@@ -132,6 +132,9 @@ class Settings(BaseSettings):
 
     # ── Lanhu Evidence Pack / OCR ──（默认关，采集+OCR 成本高）
     lanhu_evidence_enabled: bool = False
+    lanhu_evidence_worker_enabled: bool = True
+    lanhu_evidence_max_concurrent: int = 1
+    lanhu_evidence_stale_after_seconds: int = 600
     lanhu_evidence_storage_dir: str = ""         # 空 = backend/storage/lanhu-evidence
     lanhu_capture_viewport_width: int = 1440
     lanhu_capture_viewport_height: int = 1200

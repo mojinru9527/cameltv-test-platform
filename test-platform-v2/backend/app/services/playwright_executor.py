@@ -4,16 +4,17 @@
 """
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import os
 import shutil
 import subprocess
+import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
@@ -27,7 +28,35 @@ DEFAULT_TIMEOUT = 300  # 5 minutes
 MAX_CONCURRENT = 2  # 最大并发执行数
 CANCEL_POLL_INTERVAL = 1.0  # 取消轮询间隔 (秒)
 
-_semaphore = asyncio.Semaphore(MAX_CONCURRENT)
+_semaphore = threading.BoundedSemaphore(MAX_CONCURRENT)
+
+
+def _claim_pending_run(db: Session, run_id: int) -> bool:
+    """Atomically transition exactly one pending run to running."""
+    from app.models.ui_test import UiTestRun
+
+    result = db.execute(
+        update(UiTestRun)
+        .where(UiTestRun.id == run_id, UiTestRun.status == "pending")
+        .values(
+            status="running",
+            started_at=datetime.now(timezone.utc),
+            cancel_requested=False,
+        )
+        .execution_options(synchronize_session=False)
+    )
+    if result.rowcount != 1:
+        db.rollback()
+        return False
+    db.commit()
+    return True
+
+
+def _current_run_status(db: Session, run_id: int) -> str:
+    from app.models.ui_test import UiTestRun
+
+    run = db.get(UiTestRun, run_id, populate_existing=True)
+    return run.status if run else "missing"
 
 
 def _resolve_cmd(name: str) -> str | None:
@@ -69,6 +98,19 @@ def _list_available_specs() -> list[str]:
 
 
 def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
+    """Acquire a bounded slot and atomically claim a pending run before execution."""
+    if not _semaphore.acquire(blocking=False):
+        return {"status": _current_run_status(db, run_id), "run_id": run_id}
+
+    try:
+        if not _claim_pending_run(db, run_id):
+            return {"status": _current_run_status(db, run_id), "run_id": run_id}
+        return _run_playwright_test(db, run_id, job_id, project_id)
+    finally:
+        _semaphore.release()
+
+
+def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
     """使用 subprocess.Popen 执行 Playwright 测试，支持取消轮询和超时 kill。
 
     所有代码路径（成功/失败/取消/超时）都会更新 run 状态和 error_message。
@@ -82,20 +124,20 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
         logger.error(f"UiTestRun #{run_id} 不存在")
         return {"error": f"运行记录 #{run_id} 不存在"}
 
+    # Cancellation can win after the CAS claim but before executor setup.
+    if run.status != "running":
+        return {"status": run.status, "run_id": run_id}
+
     job = db.get(UiTestJob, job_id)
     if not job:
         _fail_run(db, run, f"任务 #{job_id} 不存在")
         return {"error": f"任务 #{job_id} 不存在"}
 
-    # 2. 标记 run 为 running，创建产物目录
-    run.status = "running"
-    run.started_at = datetime.now(timezone.utc)
-
+    # 2. The wrapper already claimed this run; create its isolated artifact directory.
     artifact_dir = STORAGE_DIR / str(run_id)
     artifact_dir.mkdir(parents=True, exist_ok=True)
     run.artifact_dir = str(artifact_dir).replace("\\", "/")
     run.report_json_path = str(artifact_dir / "report.json").replace("\\", "/")
-    run.cancel_requested = False
     db.commit()
 
     test_spec = (job.test_spec or "").strip()
@@ -196,22 +238,20 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
         run.stderr = (stderr_text or "")[:5000]
 
         exit_code = proc.returncode
+        report = _load_playwright_json_report(artifact_dir, stdout_text)
 
-        if exit_code != 0 and not (stdout_text or "").strip():
-            # Playwright 自身错误（非测试失败，stdout 无 JSON 输出）
+        if exit_code != 0 and report is None:
+            # A non-zero exit is a normal test failure when a valid JSON report
+            # exists. Without one, Playwright itself failed before reporting.
             return _fail_run(
                 db, run,
                 f"Playwright 执行失败 (exit={exit_code}): {(stderr_text or '')[:2000]}",
                 job,
             )
 
-        # 8. 解析 JSON 报告
-        try:
-            report = json.loads(stdout_text) if stdout_text else {}
-        except json.JSONDecodeError:
-            report = {}
-
-        suites = report.get("suites", [])
+        # 8. Parse the isolated JSON report; successful no-report runs retain
+        # the historical zero-test result instead of becoming executor errors.
+        suites = (report or {}).get("suites", [])
 
         # Recursively flatten nested suites → specs (Playwright JSON can nest suites arbitrarily)
         def _collect_specs(suite_list: list[dict]) -> list[dict]:
@@ -253,12 +293,6 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
         videos = _collect_artifacts(artifact_dir, "*.webm")
         traces = _collect_artifacts(artifact_dir, "*.zip")
 
-        # 将 test-results 中的 Playwright 原生产物复制到隔离目录（方便查看，但只报告 artifact_dir 内的文件）
-        test_results_dir = PLAYWRIGHT_DIR / "test-results"
-        _copy_artifacts_to_run_dir(test_results_dir, artifact_dir)
-        # Playwright trace 有时直接写在项目根目录，也复制进来
-        _copy_artifacts_to_run_dir(PLAYWRIGHT_DIR, artifact_dir)
-
         # 检测 HTML 报告（如果存在）
         html_report = artifact_dir / "index.html"
         if html_report.exists():
@@ -283,6 +317,27 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
 
 
 # ── Helpers ──
+
+def _load_playwright_json_report(artifact_dir: Path, stdout_text: str) -> dict | None:
+    """Load a valid report from this run's directory, then fall back to stdout."""
+    report_path = artifact_dir / "report.json"
+    if report_path.is_file():
+        try:
+            payload = json.loads(report_path.read_text(encoding="utf-8-sig"))
+            if isinstance(payload, dict) and isinstance(payload.get("suites"), list):
+                return payload
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            logger.warning("Invalid Playwright JSON report: %s", report_path)
+
+    if stdout_text and stdout_text.strip():
+        try:
+            payload = json.loads(stdout_text)
+            if isinstance(payload, dict) and isinstance(payload.get("suites"), list):
+                return payload
+        except json.JSONDecodeError:
+            pass
+
+    return None
 
 def _safe_communicate(proc: subprocess.Popen) -> tuple[str, str]:
     """安全地读取子进程 stdout/stderr，防止管道死锁。"""
@@ -384,25 +439,3 @@ def _collect_artifacts(base_dir: Path, pattern: str) -> list[str]:
     except Exception:
         pass
     return items[:20]  # max 20
-
-
-def _copy_artifacts_to_run_dir(src_dir: Path, dest_dir: Path) -> None:
-    """将 src_dir 中的产物复制到 dest_dir（如果不在 dest_dir 中已存在）。"""
-    if not src_dir.exists() or src_dir == dest_dir:
-        return
-    for pattern in ["*.png", "*.webm", "*.zip"]:
-        for f in src_dir.rglob(pattern):
-            # 跳过已在 artifact_dir 内的文件
-            try:
-                if str(dest_dir.resolve()) in str(f.resolve()):
-                    continue
-            except Exception:
-                continue
-            rel = f.relative_to(src_dir)
-            dest = dest_dir / rel
-            if not dest.exists():
-                try:
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(f, dest)
-                except Exception:
-                    pass

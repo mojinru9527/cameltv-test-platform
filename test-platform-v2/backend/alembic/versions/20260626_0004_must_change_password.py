@@ -17,10 +17,15 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "sys_user",
-        sa.Column("must_change_password", sa.Boolean(), nullable=False, server_default=sa.text("0")),
-    )
+    columns = {
+        column["name"]
+        for column in sa.inspect(op.get_bind()).get_columns("sys_user")
+    }
+    if "must_change_password" not in columns:
+        op.add_column(
+            "sys_user",
+            sa.Column("must_change_password", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+        )
 
 
 def downgrade() -> None:

@@ -37,6 +37,35 @@ def _current_project_id(current: CurrentUser) -> int:
     return current.project_id
 
 
+def _get_project_service(db: Session, service_id: int, project_id: int) -> ApiService | None:
+    """Return a service only when it belongs to the active project."""
+    return db.query(ApiService).filter(
+        ApiService.id == service_id,
+        ApiService.project_id == project_id,
+    ).first()
+
+
+def _get_project_endpoint(db: Session, endpoint_id: int, project_id: int) -> ApiEndpoint | None:
+    """Return an endpoint only when it belongs to the active project."""
+    return db.query(ApiEndpoint).filter(
+        ApiEndpoint.id == endpoint_id,
+        ApiEndpoint.project_id == project_id,
+    ).first()
+
+
+def _get_project_task(db: Session, task_id: int, project_id: int) -> ApiExecutionTask | None:
+    """Return an execution task only when it belongs to the active project."""
+    return db.query(ApiExecutionTask).filter(
+        ApiExecutionTask.id == task_id,
+        ApiExecutionTask.project_id == project_id,
+    ).first()
+
+
+def _endpoint_reference(endpoint_id: int) -> str:
+    """Build the stable TestCase.api_spec_ref marker used by safe deletion."""
+    return f"api_endpoint:{endpoint_id}"
+
+
 def _safe_json(raw: str, default=None):
     if not raw or not raw.strip():
         return default
@@ -163,7 +192,8 @@ def update_service(
     current: CurrentUser = Depends(require_permission("apitest:asset_manage")),
     db: Session = Depends(get_db),
 ):
-    svc = db.get(ApiService, service_id)
+    pid = _current_project_id(current)
+    svc = _get_project_service(db, service_id, pid)
     if not svc:
         raise HTTPException(404, "服务不存在")
     for k, v in body.model_dump(exclude_none=True).items():
@@ -171,6 +201,27 @@ def update_service(
     db.commit()
     db.refresh(svc)
     return R.ok(ApiServiceOut.model_validate(svc))
+
+
+@router.delete("/services/{service_id}", response_model=R[dict], summary="删除服务")
+def delete_service(
+    service_id: int,
+    current: CurrentUser = Depends(require_permission("apitest:asset_manage")),
+    db: Session = Depends(get_db),
+):
+    """Delete an unreferenced service in the active project."""
+    pid = _current_project_id(current)
+    svc = _get_project_service(db, service_id, pid)
+    if not svc:
+        raise HTTPException(404, "服务不存在")
+
+    referenced = db.query(ApiEndpoint.id).filter(ApiEndpoint.service_id == service_id).first()
+    if referenced:
+        raise HTTPException(409, "服务仍被接口资产引用，无法删除")
+
+    db.delete(svc)
+    db.commit()
+    return R.ok({"id": service_id})
 
 
 # ═══════════════════════════════════════════════════════
@@ -215,6 +266,8 @@ def create_endpoint(
     db: Session = Depends(get_db),
 ):
     pid = _current_project_id(current)
+    if not _get_project_service(db, body.service_id, pid):
+        raise HTTPException(404, "服务不存在")
     ep = ApiEndpoint(project_id=pid, **body.model_dump())
     db.add(ep)
     db.commit()
@@ -229,14 +282,43 @@ def update_endpoint(
     current: CurrentUser = Depends(require_permission("apitest:asset_manage")),
     db: Session = Depends(get_db),
 ):
-    ep = db.get(ApiEndpoint, endpoint_id)
+    pid = _current_project_id(current)
+    ep = _get_project_endpoint(db, endpoint_id, pid)
     if not ep:
         raise HTTPException(404, "接口资产不存在")
+    if body.service_id is not None and not _get_project_service(db, body.service_id, pid):
+        raise HTTPException(404, "服务不存在")
     for k, v in body.model_dump(exclude_none=True).items():
         setattr(ep, k, v)
     db.commit()
     db.refresh(ep)
     return R.ok(ApiEndpointOut.model_validate(ep))
+
+
+@router.delete("/endpoints/{endpoint_id}", response_model=R[dict], summary="删除接口资产")
+def delete_endpoint(
+    endpoint_id: int,
+    current: CurrentUser = Depends(require_permission("apitest:asset_manage")),
+    db: Session = Depends(get_db),
+):
+    """Delete an endpoint unless an active-project test case still references it."""
+    from app.models.test_case import TestCase
+
+    pid = _current_project_id(current)
+    ep = _get_project_endpoint(db, endpoint_id, pid)
+    if not ep:
+        raise HTTPException(404, "接口资产不存在")
+
+    referenced = db.query(TestCase.id).filter(
+        TestCase.project_id == pid,
+        TestCase.api_spec_ref == _endpoint_reference(endpoint_id),
+    ).first()
+    if referenced:
+        raise HTTPException(409, "接口资产仍被测试用例引用，无法删除")
+
+    db.delete(ep)
+    db.commit()
+    return R.ok({"id": endpoint_id})
 
 
 # ═══════════════════════════════════════════════════════
@@ -340,7 +422,10 @@ def _batch_generate_for_endpoints(db: Session, batch_id: int, project_id: int) -
     """导入后批量生成基础用例。返回 (生成条数, 创建的用例 id 列表)。"""
     from app.services.api_case_generation_service import generate_cases_from_endpoint
 
-    endpoints = db.query(ApiEndpoint).filter_by(import_batch_id=batch_id).all()
+    endpoints = db.query(ApiEndpoint).filter_by(
+        import_batch_id=batch_id,
+        project_id=project_id,
+    ).all()
     count = 0
     case_ids: list[int] = []
     for ep in endpoints:
@@ -379,7 +464,7 @@ def generate_cases(
 
     # 获取 endpoint 数据
     if body.endpoint_id:
-        ep = db.get(ApiEndpoint, body.endpoint_id)
+        ep = _get_project_endpoint(db, body.endpoint_id, pid)
         if not ep:
             raise HTTPException(404, "接口资产不存在")
         endpoint_data = {
@@ -433,7 +518,7 @@ def batch_generate_cases(
     errors = []
 
     for ep_id in body.endpoint_ids:
-        ep = db.get(ApiEndpoint, ep_id)
+        ep = _get_project_endpoint(db, ep_id, pid)
         if not ep:
             errors.append({"endpoint_id": ep_id, "error": "接口资产不存在"})
             continue
@@ -485,6 +570,7 @@ def _create_test_case_from_generated(db: Session, project_id: int, case_data: di
         expected_result=case_data.get("expected_result", ""),
         api_method=case_data.get("api_method", "GET"),
         api_endpoint=case_data.get("api_endpoint", ""),
+        api_spec_ref=_endpoint_reference(endpoint_id) if endpoint_id else "",
         api_headers=_json.dumps(case_data.get("api_headers", {}), ensure_ascii=False),
         api_body=case_data.get("api_body", ""),
         api_assertions=_json.dumps(case_data.get("api_assertions", []), ensure_ascii=False),
@@ -706,8 +792,13 @@ def get_curl_command(
     """从请求快照生成等效 curl 命令，方便失败排查和复现。"""
     from app.services.api_execution_service import build_curl_command
 
+    pid = _current_project_id(current)
+    task = _get_project_task(db, task_id, pid)
+    if not task:
+        raise HTTPException(404, "任务不存在")
+
     item = db.get(ApiExecutionTaskItem, item_id)
-    if not item or item.task_id != task_id:
+    if not item or item.task_id != task.id:
         raise HTTPException(404, "任务明细不存在")
 
     try:
@@ -731,7 +822,8 @@ def analyze_task_failures(
     """对任务中所有失败项进行结构化分析，返回分类和修复建议。"""
     from app.services.failure_analyzer import analyze_api_failure
 
-    task = db.get(ApiExecutionTask, task_id)
+    pid = _current_project_id(current)
+    task = _get_project_task(db, task_id, pid)
     if not task:
         raise HTTPException(404, "任务不存在")
 

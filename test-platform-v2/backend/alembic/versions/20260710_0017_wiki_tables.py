@@ -26,7 +26,13 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_table(
+    tables = set(sa.inspect(op.get_bind()).get_table_names())
+
+    def create_table_if_missing(table_name: str, *columns) -> None:
+        if table_name not in tables:
+            op.create_table(table_name, *columns)
+
+    create_table_if_missing(
         "wiki_raw_source",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -45,7 +51,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table(
+    create_table_if_missing(
         "wiki_page",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -65,7 +71,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table(
+    create_table_if_missing(
         "wiki_link",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -77,7 +83,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table(
+    create_table_if_missing(
         "wiki_ingest_job",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -93,7 +99,7 @@ def upgrade() -> None:
         sa.Column("finished_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table(
+    create_table_if_missing(
         "wiki_diff_task",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -109,7 +115,7 @@ def upgrade() -> None:
         sa.Column("finished_at", sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_table(
+    create_table_if_missing(
         "wiki_diff_item",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("task_id", sa.Integer(), nullable=False, index=True),

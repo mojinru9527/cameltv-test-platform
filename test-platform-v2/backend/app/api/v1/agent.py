@@ -5,18 +5,27 @@ M4: Agent 触发端点（POST /run/{agent_type}）— 编排 RAG 检索 + LLM �
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.core.exceptions import APIException
 from app.schemas.common import Page, R
 from app.schemas.knowledge import AgentRunOut
 from app.services.knowledge import agent_run_service
 from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
 from app.services.knowledge.agent_prompts import AGENT_META
-from app.services.knowledge.agent_queue import enqueue, cancel_queue_item, ensure_processor_running, get_queue_stats, list_queue_items
+from app.services.knowledge.agent_queue import (
+    QueueWriteBusy,
+    cancel_queue_item,
+    commit_queue_write,
+    enqueue,
+    ensure_processor_running,
+    get_queue_stats,
+    list_queue_items,
+)
 from app.schemas.knowledge import AgentQueueItemOut, QueueStats
 
 router = APIRouter(prefix="/agents", tags=["Agent 工作台"])
@@ -77,7 +86,6 @@ def get_run(
 def trigger_agent(
     agent_type: str,
     body: AgentRunRequest,
-    bg: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("agent:run")),
     db: Session = Depends(get_db),
 ):
@@ -91,18 +99,27 @@ def trigger_agent(
 
     pid = current.project_id or 0
 
-    # 确保队列处理器已启动
-    ensure_processor_running()
+    try:
+        item = enqueue(
+            db,
+            project_id=pid,
+            agent_type=agent_type,
+            trigger_type="manual",
+            user_input=body.query,
+            params=body.params,
+            operator_id=current.user.id,
+        )
+        commit_queue_write(db)
+    except QueueWriteBusy as exc:
+        db.rollback()
+        raise APIException(
+            code=503,
+            http_status=503,
+            msg="Agent queue is temporarily busy; retry shortly",
+        ) from exc
 
-    # 入队（DB 持久化）
-    item = enqueue(
-        project_id=pid,
-        agent_type=agent_type,
-        trigger_type="manual",
-        user_input=body.query,
-        params=body.params,
-        operator_id=current.user.id,
-    )
+    # The processor may only observe the queue row after it has committed.
+    ensure_processor_running()
 
     return R.ok(AgentRunResponse(
         queue_item_id=item.id,

@@ -19,20 +19,33 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    inspector = sa.inspect(op.get_bind())
+    columns_by_table = {
+        table_name: {
+            column["name"]
+            for column in inspector.get_columns(table_name)
+        }
+        for table_name in ("api_execution_task", "api_execution_task_item")
+    }
+
+    def add_column_if_missing(table_name: str, column: sa.Column) -> None:
+        if column.name not in columns_by_table[table_name]:
+            op.add_column(table_name, column)
+
     # api_execution_task — worker governance columns
-    op.add_column("api_execution_task", sa.Column("cancel_requested", sa.Boolean(), nullable=False, server_default=sa.false()))
-    op.add_column("api_execution_task", sa.Column("confirm_prod", sa.Boolean(), nullable=False, server_default=sa.false()))
-    op.add_column("api_execution_task", sa.Column("retry_count", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("api_execution_task", sa.Column("max_retries", sa.Integer(), nullable=False, server_default="1"))
-    op.add_column("api_execution_task", sa.Column("locked_at", sa.DateTime(), nullable=True))
-    op.add_column("api_execution_task", sa.Column("locked_by", sa.String(), nullable=False, server_default=""))
-    op.add_column("api_execution_task", sa.Column("timeout_seconds", sa.Integer(), nullable=False, server_default="1800"))
+    add_column_if_missing("api_execution_task", sa.Column("cancel_requested", sa.Boolean(), nullable=False, server_default=sa.false()))
+    add_column_if_missing("api_execution_task", sa.Column("confirm_prod", sa.Boolean(), nullable=False, server_default=sa.false()))
+    add_column_if_missing("api_execution_task", sa.Column("retry_count", sa.Integer(), nullable=False, server_default="0"))
+    add_column_if_missing("api_execution_task", sa.Column("max_retries", sa.Integer(), nullable=False, server_default="1"))
+    add_column_if_missing("api_execution_task", sa.Column("locked_at", sa.DateTime(), nullable=True))
+    add_column_if_missing("api_execution_task", sa.Column("locked_by", sa.String(), nullable=False, server_default=""))
+    add_column_if_missing("api_execution_task", sa.Column("timeout_seconds", sa.Integer(), nullable=False, server_default="1800"))
 
     # api_execution_task_item — per-item execution tracking columns
-    op.add_column("api_execution_task_item", sa.Column("error_type", sa.String(), nullable=False, server_default=""))
-    op.add_column("api_execution_task_item", sa.Column("retry_count", sa.Integer(), nullable=False, server_default="0"))
-    op.add_column("api_execution_task_item", sa.Column("started_at", sa.DateTime(), nullable=True))
-    op.add_column("api_execution_task_item", sa.Column("finished_at", sa.DateTime(), nullable=True))
+    add_column_if_missing("api_execution_task_item", sa.Column("error_type", sa.String(), nullable=False, server_default=""))
+    add_column_if_missing("api_execution_task_item", sa.Column("retry_count", sa.Integer(), nullable=False, server_default="0"))
+    add_column_if_missing("api_execution_task_item", sa.Column("started_at", sa.DateTime(), nullable=True))
+    add_column_if_missing("api_execution_task_item", sa.Column("finished_at", sa.DateTime(), nullable=True))
 
 
 def downgrade() -> None:

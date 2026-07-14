@@ -54,6 +54,7 @@ class ApiEndpointCreate(BaseModel):
 
 
 class ApiEndpointUpdate(BaseModel):
+    service_id: int | None = None
     module: str | None = None
     summary: str | None = None
     description: str | None = None

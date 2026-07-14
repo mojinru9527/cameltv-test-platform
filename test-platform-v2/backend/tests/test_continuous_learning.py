@@ -184,10 +184,9 @@ class TestAgentQueue:
     def test_enqueue_creates_pending_item(self, kdb, monkeypatch):
         """入队 → 状态为 pending。"""
         from app.services.knowledge.agent_queue import enqueue
-        import app.services.knowledge.agent_queue as aq
-        monkeypatch.setattr(aq, "SessionLocal", lambda: kdb)
 
-        item = enqueue(1, "requirement_analysis", user_input="测试")
+        item = enqueue(kdb, 1, "requirement_analysis", user_input="测试")
+        kdb.commit()
         assert item.status == "pending"
         assert item.project_id == 1
         assert item.agent_type == "requirement_analysis"

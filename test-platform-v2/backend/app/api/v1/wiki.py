@@ -137,15 +137,11 @@ async def import_lanhu(
     db: Session = Depends(get_db),
 ):
     _require_wiki_enabled()
-    result = await import_service.import_lanhu(
-        db, project_id=current.project_id or 0,
-        operator_id=current.user.id if current.user else 0,
-        req=body, background_tasks=background_tasks,
+    raise APIException(
+        code=409,
+        msg="蓝湖链接必须先通过证据包质量门禁，再导入需求/RAG/Wiki",
+        http_status=409,
     )
-    _audit(req, current, db, action="wiki.import.lanhu", target=body.url,
-           detail=f"status={result.extraction_status} raw={result.raw_source_id}")
-    db.commit()
-    return R.ok(result)
 
 
 @router.get("/raw-sources", response_model=R[Page[WikiRawSourceBrief]], summary="Raw Source 列表")
@@ -702,6 +698,16 @@ def run_wiki_lint(
     db: Session = Depends(get_db),
 ):
     _require_wiki_lint_enabled()
+    if (
+        body.project_id_override
+        and body.project_id_override != (current.project_id or 0)
+        and not current.is_super
+    ):
+        raise APIException(
+            code=403,
+            msg="Only a super administrator may override project scope",
+            http_status=403,
+        )
     pid = body.project_id_override if body.project_id_override else (current.project_id or 0)
     if not pid:
         raise APIException(code=400, msg="缺少项目上下文")

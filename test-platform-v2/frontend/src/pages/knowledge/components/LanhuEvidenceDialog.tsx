@@ -15,11 +15,15 @@ import { Button } from '@/components/ui/button'
 import { createLanhuEvidenceJob } from '@/api/lanhuEvidence'
 import type { LanhuEvidenceJob } from '@/api/lanhuEvidence'
 import { Loader2 } from '@/lib/icons'
+import { useAuthStore } from '@/stores/auth'
 
 interface Props {
   open: boolean
   onOpenChange: (v: boolean) => void
   initialUrl?: string
+  initialImportRequirement?: boolean
+  initialImportKnowledge?: boolean
+  initialImportWiki?: boolean
   onCreated?: (job: LanhuEvidenceJob) => void
 }
 
@@ -27,7 +31,16 @@ interface Props {
  * 证据包 OCR 导入对话框 —— 提交蓝湖链接启动全页面截图 + OCR 采集任务。
  * 纯操作型 UI（无营销文案）：链接 + 采集/导出/导入开关。
  */
-export default function LanhuEvidenceDialog({ open, onOpenChange, initialUrl, onCreated }: Props) {
+export default function LanhuEvidenceDialog({
+  open,
+  onOpenChange,
+  initialUrl,
+  initialImportRequirement = false,
+  initialImportKnowledge = false,
+  initialImportWiki = false,
+  onCreated,
+}: Props) {
+  const canImport = useAuthStore((state) => state.hasPerm('lanhu_evidence:import'))
   const [url, setUrl] = useState(initialUrl || '')
   const [captureAll, setCaptureAll] = useState(true)
   const [includeWord, setIncludeWord] = useState(true)
@@ -38,8 +51,19 @@ export default function LanhuEvidenceDialog({ open, onOpenChange, initialUrl, on
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (open) setUrl(initialUrl || '')
-  }, [open, initialUrl])
+    if (open) {
+      setUrl(initialUrl || '')
+      setImportRequirement(initialImportRequirement)
+      setImportKnowledge(initialImportKnowledge)
+      setImportWiki(initialImportWiki)
+    }
+  }, [
+    open,
+    initialUrl,
+    initialImportRequirement,
+    initialImportKnowledge,
+    initialImportWiki,
+  ])
 
   const submit = () => {
     const u = url.trim()
@@ -53,9 +77,9 @@ export default function LanhuEvidenceDialog({ open, onOpenChange, initialUrl, on
       capture_all_pages: captureAll,
       include_word: includeWord,
       include_json: includeJson,
-      import_to_requirement: importRequirement,
-      import_to_knowledge: importKnowledge,
-      import_to_wiki: importWiki,
+      import_to_requirement: canImport && importRequirement,
+      import_to_knowledge: canImport && importKnowledge,
+      import_to_wiki: canImport && importWiki,
     })
       .then((job) => {
         toast.success(`证据包任务已创建 #${job.id}`)
@@ -70,9 +94,11 @@ export default function LanhuEvidenceDialog({ open, onOpenChange, initialUrl, on
     ['ev-all', '发现并采集全部页面', captureAll, setCaptureAll],
     ['ev-word', '生成 Word 文档', includeWord, setIncludeWord],
     ['ev-json', '生成结构化 JSON', includeJson, setIncludeJson],
-    ['ev-req', '完成后导入需求文档', importRequirement, setImportRequirement],
-    ['ev-rag', '完成后导入 RAG 知识库', importKnowledge, setImportKnowledge],
-    ['ev-wiki', '完成后导入 Wiki', importWiki, setImportWiki],
+    ...(canImport ? [
+      ['ev-req', '完成后导入需求文档', importRequirement, setImportRequirement],
+      ['ev-rag', '完成后导入 RAG 知识库', importKnowledge, setImportKnowledge],
+      ['ev-wiki', '完成后导入 Wiki', importWiki, setImportWiki],
+    ] as Array<[string, string, boolean, (v: boolean) => void]> : []),
   ]
 
   return (
