@@ -48,6 +48,12 @@ class LanhuEvidenceJob(Base, TimestampMixin):
     creator_id: Mapped[int] = mapped_column(default=0)
     started_at: Mapped[datetime | None] = mapped_column(default=None)
     finished_at: Mapped[datetime | None] = mapped_column(default=None)
+    # ── 恢复 / 不可变重试 / 请求选项（P0-A/B） ──
+    parent_job_id: Mapped[int | None] = mapped_column(default=None, index=True)
+    attempt_no: Mapped[int] = mapped_column(default=1)
+    requested_options_json: Mapped[str] = mapped_column(Text, default="{}")
+    import_result_json: Mapped[str] = mapped_column(Text, default="{}")
+    heartbeat_at: Mapped[datetime | None] = mapped_column(default=None, index=True)
 
 
 class LanhuEvidencePage(Base, TimestampMixin):
@@ -74,6 +80,13 @@ class LanhuEvidencePage(Base, TimestampMixin):
     segment_count: Mapped[int] = mapped_column(default=0)
     quality_json: Mapped[str] = mapped_column(Text, default="{}")
     error_message: Mapped[str] = mapped_column(Text, default="")
+    # ── 滚动截断 + 人审豁免（P0-A） ──
+    capture_truncated: Mapped[bool] = mapped_column(default=False)
+    # pending/approved/rejected —— OCR 不可用页需显式人审批准方可导入
+    review_status: Mapped[str] = mapped_column(default="pending", index=True)
+    reviewer_id: Mapped[int] = mapped_column(default=0)
+    review_comment: Mapped[str] = mapped_column(Text, default="")
+    reviewed_at: Mapped[datetime | None] = mapped_column(default=None)
 
 
 class LanhuEvidenceAsset(Base, TimestampMixin):
