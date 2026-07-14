@@ -29,6 +29,7 @@ from app.services.lanhu_evidence import page_discovery, screenshot_service
 from app.services.lanhu_evidence.json_export_service import export_json
 from app.services.lanhu_evidence.merge_service import merge_page_text
 from app.services.lanhu_evidence.ocr_provider import get_ocr_provider
+from app.services.lanhu_evidence.quality_service import evaluate_job_quality
 from app.services.lanhu_evidence.word_export_service import WordPage, export_word
 
 
@@ -82,19 +83,30 @@ def _run_job(db, job_id: int, project_id: int) -> None:
     job = db.get(LanhuEvidenceJob, job_id)
     if job is None:
         return
+    # 尊重创建时序列化的请求选项（capture_all_pages / include_word / include_json / import_to_*）
+    try:
+        options = json.loads(job.requested_options_json or "{}")
+    except (json.JSONDecodeError, TypeError):
+        options = {}
+    capture_all_pages = bool(options.get("capture_all_pages", True))
+    include_word = bool(options.get("include_word", True))
+    include_json = bool(options.get("include_json", True))
+
     job.status = "running"
     job.stage = "discovering"
     job.started_at = datetime.now()
+    job.heartbeat_at = datetime.now()
     job.error_message = ""
     db.commit()
 
     try:
-        pages = page_discovery.discover_pages(job.source_url, capture_all_pages=True)
+        pages = page_discovery.discover_pages(job.source_url, capture_all_pages=capture_all_pages)
         base = page_discovery.parse_lanhu_url(job.source_url)
         job.doc_id = base.doc_id
         job.version_id = base.version_id
         job.root_page_id = base.page_id
         job.total_pages = len(pages)
+        job.heartbeat_at = datetime.now()
         db.commit()
 
         storage_dir = Path(job.storage_dir)
@@ -104,7 +116,7 @@ def _run_job(db, job_id: int, project_id: int) -> None:
         page_rows: list[LanhuEvidencePage] = []
         word_pages: list[WordPage] = []
         json_pages: list[dict] = []
-        needs_review: list[str] = []
+        page_dicts: list[dict] = []
         captured = 0
         ocr_done = 0
         failed = 0
@@ -180,6 +192,7 @@ def _run_job(db, job_id: int, project_id: int) -> None:
                                 order_index=oi,
                             ))
             row.segment_count = len(shot_paths)
+            row.capture_truncated = bool(getattr(cap, "truncated", False))
 
             # ── OCR 文本聚合 + DOM 文本 + 合并 ──
             ocr_text = _collect_ocr_text(db, row.id)
@@ -192,9 +205,6 @@ def _run_job(db, job_id: int, project_id: int) -> None:
             row.ocr_status = "success" if ocr_text else "unavailable"
             if ocr_text:
                 ocr_done += 1
-            if merged.quality.get("status") == "needs_review" or not shot_paths:
-                needs_review.append(dp.page_path or dp.page_name)
-            db.flush()
 
             page_rows.append(row)
             word_pages.append(WordPage(
@@ -215,44 +225,63 @@ def _run_job(db, job_id: int, project_id: int) -> None:
                 ],
                 "quality": merged.quality,
             })
+            page_dicts.append({
+                "capture_status": row.capture_status,
+                "segment_count": row.segment_count,
+                "capture_truncated": row.capture_truncated,
+                "merged_text": row.merged_text,
+                "ocr_status": row.ocr_status,
+                "review_status": row.review_status,
+            })
+
+            # 逐页短事务提交：缩短写锁持有时长（避免长事务饿死 login 等写者），并刷新心跳
+            job.captured_pages = captured
+            job.ocr_pages = ocr_done
+            job.failed_pages = failed
+            job.heartbeat_at = datetime.now()
+            db.commit()
 
         job.captured_pages = captured
         job.ocr_pages = ocr_done
         job.failed_pages = failed
         db.commit()
 
-        # ── 导出 Word / JSON ──
+        # ── 导出 Word / JSON（尊重请求选项） ──
         job.stage = "exporting"
         db.commit()
         title = f"蓝湖证据包 {job.document_name or job.doc_id or ''}".strip()
-        word_path = storage_dir / "lanhu.docx"
-        export_word(word_path, title, job.source_url, word_pages)
-        job.word_path = str(word_path)
+        if include_word:
+            word_path = storage_dir / "lanhu.docx"
+            export_word(word_path, title, job.source_url, word_pages)
+            job.word_path = str(word_path)
+        if include_json:
+            json_path = storage_dir / "lanhu.json"
+            export_json(json_path, {
+                "job_id": job.id,
+                "source_url": job.source_url,
+                "doc_id": job.doc_id,
+                "version_id": job.version_id,
+            }, json_pages)
+            job.json_path = str(json_path)
 
-        json_path = storage_dir / "lanhu.json"
-        export_json(json_path, {
-            "job_id": job.id,
-            "source_url": job.source_url,
-            "doc_id": job.doc_id,
-            "version_id": job.version_id,
-        }, json_pages)
-        job.json_path = str(json_path)
-
-        # ── 完整性校验 ──
-        complete = failed == 0 and not needs_review and captured == job.total_pages and job.total_pages > 0
-        job.quality_json = json.dumps({
-            "page_count": job.total_pages,
-            "captured_pages": captured,
-            "ocr_pages": ocr_done,
-            "failed_pages": failed,
-            "pages_needing_review": needs_review,
-            "complete": complete,
-        }, ensure_ascii=False)
-
-        job.status = "success" if complete else "success_with_warnings"
+        # ── 质量门禁：严格判定 complete / import_ready ──
+        quality = evaluate_job_quality(page_dicts)
+        job.quality_json = json.dumps(quality, ensure_ascii=False)
+        if quality["complete"]:
+            job.status = "success"
+        elif captured == 0:
+            job.status = "failed"
+            job.error_message = "No Lanhu page screenshot was captured"
+        else:
+            job.status = "success_with_warnings"
         job.stage = "done"
         job.finished_at = datetime.now()
+        job.heartbeat_at = datetime.now()
         db.commit()
+
+        # ── 仅在质量达标后执行请求的自动导入 ──
+        if quality["import_ready"] and job.status == "success":
+            _run_auto_import(db, job, project_id, options)
 
     except JobCancelled:
         db.rollback()
@@ -271,6 +300,31 @@ def _run_job(db, job_id: int, project_id: int) -> None:
             job.error_message = str(e)[:1000]
             job.finished_at = datetime.now()
             db.commit()
+
+
+def _run_auto_import(db, job: LanhuEvidenceJob, project_id: int, options: dict) -> None:
+    """质量达标后执行请求中开启的自动导入；结果记入 import_result_json，异常不致任务失败。"""
+    from app.services.lanhu_evidence import import_service
+
+    result: dict = {}
+    try:
+        if options.get("import_to_requirement"):
+            result["requirement"] = import_service.import_to_requirement(
+                db, project_id=project_id, job_id=job.id, creator_id=job.creator_id,
+            )
+        if options.get("import_to_knowledge"):
+            result["knowledge_source_id"] = import_service.import_to_knowledge(
+                db, project_id=project_id, job_id=job.id,
+            )
+        if options.get("import_to_wiki"):
+            result["wiki_raw_source_id"] = import_service.import_to_wiki(
+                db, project_id=project_id, job_id=job.id,
+            )
+    except Exception as e:  # noqa: BLE001
+        db.rollback()
+        result = {"error": str(e)[:500]}
+    job.import_result_json = json.dumps(result, ensure_ascii=False, default=str)
+    db.commit()
 
 
 def _collect_ocr_text(db, page_pk: int) -> str:
