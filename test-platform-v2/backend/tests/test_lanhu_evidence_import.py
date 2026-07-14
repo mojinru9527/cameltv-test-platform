@@ -105,6 +105,7 @@ def _make_job_with_pages(db_session, *, project_id=1):
         version_id="v",
         document_name="CamelTv 需求",
         status="success",
+        quality_json='{"import_ready": true, "complete": true}',
         word_path="storage/lanhu-evidence/1/lanhu.docx",
         json_path="storage/lanhu-evidence/1/lanhu.json",
         storage_dir="storage/lanhu-evidence/1",
@@ -146,5 +147,65 @@ def test_import_evidence_to_wiki_creates_raw_source(db_session):
     raw_id = import_to_wiki(db_session, project_id=1, job_id=job.id)
 
     assert raw_id is not None
+
+
+# ── Task 2: 质量门禁 ──
+
+def test_quality_is_not_import_ready_when_any_page_has_no_ocr_or_review():
+    from app.services.lanhu_evidence.quality_service import evaluate_job_quality
+
+    report = evaluate_job_quality([
+        {"capture_status": "success", "segment_count": 1, "capture_truncated": False,
+         "merged_text": "x" * 50, "ocr_status": "success", "review_status": "pending"},
+        {"capture_status": "success", "segment_count": 1, "capture_truncated": False,
+         "merged_text": "x" * 50, "ocr_status": "unavailable", "review_status": "pending"},
+    ])
+
+    assert report["complete"] is False
+    assert report["import_ready"] is False
+    assert report["pages_missing_ocr_review"] == [1]
+
+
+def test_quality_import_ready_when_ocr_unavailable_but_page_approved():
+    from app.services.lanhu_evidence.quality_service import evaluate_job_quality
+
+    report = evaluate_job_quality([
+        {"capture_status": "success", "segment_count": 1, "capture_truncated": False,
+         "merged_text": "x" * 50, "ocr_status": "unavailable", "review_status": "approved"},
+    ])
+    assert report["import_ready"] is True
+
+
+def test_import_rejects_warning_job(client, auth_headers, db_session, monkeypatch):
+    from app.models.lanhu_evidence import LanhuEvidenceJob
+
+    monkeypatch.setattr("app.core.config.settings.lanhu_evidence_enabled", True)
+    job = LanhuEvidenceJob(
+        project_id=1, status="success_with_warnings",
+        quality_json='{"import_ready":false}', storage_dir="x",
+    )
+    db_session.add(job)
+    db_session.commit()
+    response = client.post(
+        f"/api/v1/lanhu-evidence/jobs/{job.id}/import",
+        headers=auth_headers, json={"import_to_requirement": True},
+    )
+    assert response.status_code == 409
+
+
+def test_service_import_guard_blocks_non_import_ready(db_session):
+    """非 HTTP 调用方也不能绕过质量门禁。"""
+    import pytest
+    from app.models.lanhu_evidence import LanhuEvidenceJob
+    from app.services.lanhu_evidence.import_service import import_to_requirement
+
+    job = LanhuEvidenceJob(
+        project_id=1, status="success_with_warnings",
+        quality_json='{"import_ready": false}', storage_dir="x",
+    )
+    db_session.add(job)
+    db_session.commit()
+    with pytest.raises(ValueError):
+        import_to_requirement(db_session, project_id=1, job_id=job.id, creator_id=1)
 
 

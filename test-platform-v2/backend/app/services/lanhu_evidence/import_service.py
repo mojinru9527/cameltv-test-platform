@@ -7,6 +7,7 @@ LLM 摘要（若有）发生在后续编译，永不覆盖证据文本。
 from __future__ import annotations
 
 import hashlib
+import json
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -18,10 +19,24 @@ from app.services.knowledge import chunk_service, source_service
 from app.services.wiki import raw_source_service
 
 
+def _ensure_import_ready(job: LanhuEvidenceJob) -> None:
+    """质量门禁：仅当 quality_json.import_ready 为真才允许导入。
+
+    在三个 service 导入函数入口统一校验，确保非 HTTP 调用方也无法绕过。
+    """
+    try:
+        quality = json.loads(job.quality_json or "{}")
+    except (json.JSONDecodeError, TypeError):
+        quality = {}
+    if not quality.get("import_ready"):
+        raise ValueError("证据包质量未达标（import_ready=false），禁止导入需求/RAG/Wiki")
+
+
 def _load_job_and_pages(db: Session, project_id: int, job_id: int) -> tuple[LanhuEvidenceJob, list[LanhuEvidencePage]]:
     job = db.get(LanhuEvidenceJob, job_id)
     if job is None or job.project_id != project_id:
         raise ValueError("证据包任务不存在")
+    _ensure_import_ready(job)
     pages = db.execute(
         select(LanhuEvidencePage)
         .where(LanhuEvidencePage.job_id == job_id, LanhuEvidencePage.project_id == project_id)

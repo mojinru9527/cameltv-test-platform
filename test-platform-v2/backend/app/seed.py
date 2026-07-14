@@ -153,6 +153,7 @@ _ACTIONS = [
     # 蓝湖证据包 OCR — 收在知识中心/需求，不新增菜单
     ("lanhu_evidence:view", "查看蓝湖证据包", "button"),
     ("lanhu_evidence:run", "创建蓝湖证据包", "button"),
+    ("lanhu_evidence:review", "人工审核证据页（OCR 缺失豁免）", "button"),
     ("lanhu_evidence:import", "导入蓝湖证据包", "button"),
 ]
 

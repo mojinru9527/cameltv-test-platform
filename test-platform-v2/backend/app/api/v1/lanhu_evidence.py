@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
@@ -28,6 +29,7 @@ from app.schemas.lanhu_evidence import (
     LanhuEvidenceImportRequest,
     LanhuEvidenceJobOut,
     LanhuEvidencePageOut,
+    LanhuEvidencePageReviewRequest,
 )
 from app.services.lanhu_evidence import job_runner
 
@@ -61,12 +63,14 @@ def create_job(
 ):
     _require_enabled()
     project_id = current.project_id or 0
+    import json as _json
     job = LanhuEvidenceJob(
         project_id=project_id,
         source_url=body.url,
         status="pending",
         stage="queued",
         creator_id=current.user.id,
+        requested_options_json=_json.dumps(body.model_dump(), ensure_ascii=False),
     )
     db.add(job)
     db.flush()
@@ -140,6 +144,64 @@ def get_page(
     return R.ok(LanhuEvidencePageOut.model_validate(row))
 
 
+def _reevaluate_job_quality(db: Session, job_id: int, project_id: int) -> None:
+    """人工审核后重新评估父任务质量报告与状态。"""
+    import json as _json
+
+    from app.services.lanhu_evidence.quality_service import evaluate_job_quality
+
+    job = db.get(LanhuEvidenceJob, job_id)
+    if job is None or job.project_id != project_id:
+        return
+    pages = db.execute(
+        select(LanhuEvidencePage)
+        .where(LanhuEvidencePage.job_id == job_id, LanhuEvidencePage.project_id == project_id)
+        .order_by(LanhuEvidencePage.order_index)
+    ).scalars().all()
+    page_dicts = [{
+        "capture_status": p.capture_status,
+        "segment_count": p.segment_count,
+        "capture_truncated": p.capture_truncated,
+        "merged_text": p.merged_text,
+        "ocr_status": p.ocr_status,
+        "review_status": p.review_status,
+    } for p in pages]
+    quality = evaluate_job_quality(page_dicts)
+    job.quality_json = _json.dumps(quality, ensure_ascii=False)
+    # 仅在既有终态之间调整（不复活 failed/cancelled）
+    if job.status in ("success", "success_with_warnings"):
+        job.status = "success" if quality["complete"] else "success_with_warnings"
+
+
+@router.post("/pages/{page_id}/review", response_model=R[LanhuEvidencePageOut],
+             summary="人工审核证据页（OCR 缺失豁免）")
+def review_page(
+    page_id: int,
+    body: LanhuEvidencePageReviewRequest,
+    current: CurrentUser = Depends(require_permission("lanhu_evidence:review")),
+    db: Session = Depends(get_db),
+):
+    project_id = current.project_id or 0
+    row = db.get(LanhuEvidencePage, page_id)
+    if row is None or row.project_id != project_id:
+        raise APIException(code=404, msg="页面不存在", http_status=404)
+    if body.approved:
+        # 仅允许对有截图且合并文本非空的页面批准
+        if row.capture_status != "success" or not (row.merged_text or "").strip():
+            raise APIException(code=400, msg="仅可批准有截图且合并文本非空的页面", http_status=400)
+        row.review_status = "approved"
+    else:
+        row.review_status = "rejected"
+    row.reviewer_id = current.user.id
+    row.review_comment = body.comment
+    row.reviewed_at = datetime.now()
+    db.flush()
+    _reevaluate_job_quality(db, row.job_id, project_id)
+    db.commit()
+    db.refresh(row)
+    return R.ok(LanhuEvidencePageOut.model_validate(row))
+
+
 @router.get("/assets/{asset_id}", summary="下载证据包资产（截图/Word/JSON）")
 def download_asset(
     asset_id: int,
@@ -206,6 +268,18 @@ def import_job(
     job = _get_job(db, job_id, project_id)
     if job.status not in ("success", "success_with_warnings"):
         raise APIException(code=400, msg="任务未成功完成，无法导入", http_status=400)
+    # 质量门禁：仅 import_ready=true 的任务可导入；success_with_warnings 一律 409。
+    import json as _json
+    try:
+        quality = _json.loads(job.quality_json or "{}")
+    except (_json.JSONDecodeError, TypeError):
+        quality = {}
+    if not quality.get("import_ready"):
+        raise APIException(
+            code=409,
+            msg="证据包质量未达标（存在缺截图/截断/缺文本/未审 OCR 页），禁止导入",
+            http_status=409,
+        )
 
     from app.services.lanhu_evidence import import_service
 
