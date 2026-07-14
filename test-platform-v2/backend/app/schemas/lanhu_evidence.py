@@ -40,6 +40,10 @@ class LanhuEvidenceJobOut(BaseModel):
     json_path: str = ""
     quality_json: str = "{}"
     error_message: str = ""
+    attempt_no: int = 1
+    parent_job_id: int | None = None
+    import_result_json: str = "{}"
+    heartbeat_at: datetime | None = None
     created_at: datetime | None = None
     finished_at: datetime | None = None
 
@@ -62,6 +66,10 @@ class LanhuEvidencePageOut(BaseModel):
     merged_text: str = ""
     quality_json: str = "{}"
     error_message: str = ""
+    capture_truncated: bool = False
+    review_status: str = "pending"
+    review_comment: str = ""
+    reviewed_at: datetime | None = None
 
 
 class LanhuEvidenceAssetOut(BaseModel):
@@ -84,3 +92,8 @@ class LanhuEvidenceImportRequest(BaseModel):
     import_to_requirement: bool = False
     import_to_knowledge: bool = False
     import_to_wiki: bool = False
+
+
+class LanhuEvidencePageReviewRequest(BaseModel):
+    approved: bool
+    comment: str = Field(..., min_length=3, max_length=1000)

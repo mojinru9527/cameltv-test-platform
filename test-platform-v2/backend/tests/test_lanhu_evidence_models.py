@@ -69,3 +69,36 @@ def test_page_asset_and_ocr_block_relationship_fields(db_session):
     assert block.asset_id == asset.id
     assert block.page_id == page.id
     assert asset.asset_type == "screenshot"
+
+
+# ── Task 1: 质量门禁 + 恢复状态字段 ──
+
+def test_evidence_job_persists_requested_options_and_heartbeat(db_session):
+    from app.models.lanhu_evidence import LanhuEvidenceJob
+
+    job = LanhuEvidenceJob(
+        project_id=1,
+        source_url="https://lanhuapp.com/x?docId=d",
+        requested_options_json='{"capture_all_pages":false,"include_word":false}',
+        attempt_no=1,
+    )
+    db_session.add(job)
+    db_session.commit()
+    assert job.attempt_no == 1
+    assert "include_word" in job.requested_options_json
+    assert job.heartbeat_at is None
+    assert job.parent_job_id is None
+    assert job.import_result_json == "{}"
+
+
+def test_evidence_page_requires_explicit_review_for_ocr_waiver(db_session):
+    from app.models.lanhu_evidence import LanhuEvidencePage
+
+    page = LanhuEvidencePage(job_id=1, project_id=1, page_id="p1")
+    db_session.add(page)
+    db_session.commit()
+    assert page.review_status == "pending"
+    assert page.capture_truncated is False
+    assert page.reviewer_id == 0
+    assert page.review_comment == ""
+    assert page.reviewed_at is None
