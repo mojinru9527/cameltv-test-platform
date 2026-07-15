@@ -13,6 +13,10 @@ import type {
   WikiDiffItem,
   WikiDiffCreateRequest,
   WikiDiffCreateArtifactResult,
+  WikiLintReport,
+  WikiLintReportBrief,
+  WikiLintIssue,
+  WikiLintConvertResult,
   KnowledgePage,
 } from '@/types'
 
@@ -122,6 +126,30 @@ export async function createWikiDiffArtifact(itemId: number, artifact_type = '')
   return api.post(`/wiki/diff/items/${itemId}/create-artifact`, { artifact_type })
 }
 
+// ── Wiki 健康体检 / Lint (VNext-6) ──
+
+export async function runWikiLint(body?: { project_id_override?: number | null }): Promise<WikiLintReport> {
+  return api.post('/wiki/lint', body || {})
+}
+
+export async function fetchWikiLintReports(params?: {
+  status?: string; page?: number; page_size?: number
+}): Promise<KnowledgePage<WikiLintReportBrief>> {
+  return api.get('/wiki/lint/reports', { params })
+}
+
+export async function fetchWikiLintReport(reportId: number, filters?: {
+  rule?: string; severity?: string; review_status?: string
+}): Promise<WikiLintReport> {
+  return api.get(`/wiki/lint/reports/${reportId}`, { params: filters })
+}
+
+export async function convertWikiLintIssues(reportId: number, body?: {
+  issue_ids?: number[]; artifact_type?: string
+}): Promise<WikiLintConvertResult> {
+  return api.post(`/wiki/lint/reports/${reportId}/convert`, body || {})
+}
+
 export type {
   WikiConfig,
   WikiRawSource,
@@ -135,4 +163,8 @@ export type {
   WikiDiffTask,
   WikiDiffItem,
   WikiDiffCreateRequest,
+  WikiLintReport,
+  WikiLintReportBrief,
+  WikiLintIssue,
+  WikiLintConvertResult,
 } from '@/types'

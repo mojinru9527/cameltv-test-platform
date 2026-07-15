@@ -15,6 +15,8 @@ import time
 from datetime import datetime
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
 from app.models.knowledge import AgentQueueItem
@@ -39,10 +41,30 @@ _RETRY_DELAY = 30
 _processor_started = False
 _processor_lock = threading.Lock()
 
+_SQLITE_LOCK_RETRY_ATTEMPTS = 3
+_SQLITE_LOCK_RETRY_BASE_DELAY = 0.05
+
+
+class QueueWriteBusy(RuntimeError):
+    """Raised after bounded retries exhaust transient SQLite writer contention."""
+
+
+def _is_sqlite_locked(exc: OperationalError) -> bool:
+    message = str(exc).lower()
+    return any(
+        marker in message
+        for marker in (
+            "database is locked",
+            "database table is locked",
+            "database schema is locked",
+        )
+    )
+
 
 # ── 队列 CRUD ──
 
 def enqueue(
+    db: Session,
     project_id: int,
     agent_type: str,
     *,
@@ -52,12 +74,11 @@ def enqueue(
     operator_id: int = 0,
     priority: int | None = None,
 ) -> AgentQueueItem:
-    """将 Agent 任务加入队列。返回队列项。"""
+    """Add an Agent task using the caller-owned session and transaction."""
     if priority is None:
         priority = PRIORITY_MANUAL if trigger_type == "manual" else PRIORITY_AUTO
 
-    db = SessionLocal()
-    try:
+    for attempt in range(_SQLITE_LOCK_RETRY_ATTEMPTS):
         item = AgentQueueItem(
             project_id=project_id,
             agent_type=agent_type,
@@ -68,15 +89,38 @@ def enqueue(
             operator_id=operator_id,
         )
         db.add(item)
+        try:
+            # Flush executes the INSERT while leaving commit ownership with the
+            # request handler, so all request-side writes share one transaction.
+            db.flush()
+            return item
+        except OperationalError as exc:
+            db.rollback()
+            if not _is_sqlite_locked(exc):
+                raise
+            if attempt == _SQLITE_LOCK_RETRY_ATTEMPTS - 1:
+                raise QueueWriteBusy("agent queue is temporarily busy") from exc
+            delay = _SQLITE_LOCK_RETRY_BASE_DELAY * (2 ** attempt)
+            logger.warning(
+                "Agent queue write locked; retrying in %.2fs (%s/%s)",
+                delay,
+                attempt + 1,
+                _SQLITE_LOCK_RETRY_ATTEMPTS,
+            )
+            time.sleep(delay)
+
+    raise QueueWriteBusy("agent queue is temporarily busy")
+
+
+def commit_queue_write(db: Session) -> None:
+    """Commit a caller-owned queue write without leaking SQLite lock errors."""
+    try:
         db.commit()
-        db.refresh(item)
-        return item
-    except Exception:
-        logger.exception("Failed to enqueue agent task")
+    except OperationalError as exc:
         db.rollback()
+        if _is_sqlite_locked(exc):
+            raise QueueWriteBusy("agent queue is temporarily busy") from exc
         raise
-    finally:
-        db.close()
 
 
 def cancel_queue_item(db, item_id: int, project_id: int) -> bool:

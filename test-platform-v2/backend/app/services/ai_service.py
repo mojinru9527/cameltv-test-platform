@@ -776,6 +776,62 @@ def _parse_ai_response(raw: str) -> dict:
 
 # ── Public API: Stage 1 — Feature Extraction ─────────────────
 
+def _build_local_extraction_fallback(
+    content: str,
+    error_detail: str,
+    source_ref: str,
+    client_scope: list[str] | None = None,
+) -> dict:
+    """Build a deterministic review draft when the external classifier is unavailable.
+
+    The fallback deliberately keeps one source line per function point instead of
+    inventing requirements.  Reviewers can therefore continue the workflow while
+    clearly seeing that the result still needs human confirmation.
+    """
+    lines: list[str] = []
+    for raw_line in content.splitlines():
+        cleaned = re.sub(r"^[\s#>*+\-\d.、（）()]+", "", raw_line).strip()
+        if cleaned and cleaned not in lines:
+            lines.append(cleaned)
+
+    if not lines:
+        lines = ["需求内容待人工补充"]
+
+    scopes = client_scope or ["app", "pc", "web"]
+    function_points = [
+        {
+            "id": f"FP-{index}",
+            "title": line[:20],
+            "description": line,
+            "type": "functional",
+            "client_scope": scopes,
+            "issues": [
+                {
+                    "severity": "medium",
+                    "description": "外部 AI 暂不可用，本条由本地规则提取",
+                    "suggestion": "生成正式测试用例前请人工确认功能边界和异常规则",
+                }
+            ],
+        }
+        for index, line in enumerate(lines[:100], start=1)
+    ]
+    return {
+        "modules": [
+            {
+                "id": "MOD-1",
+                "name": "本地降级提取",
+                "description": "按原文非空行生成的待评审功能草稿",
+                "function_points": function_points,
+            }
+        ],
+        "overall_assessment": "外部 AI 调用失败，已生成不扩写原文的本地待评审草稿。",
+        "fallback_used": True,
+        "fallback_reason": error_detail,
+        "source_ref": source_ref,
+        "extraction_progress": 1.0,
+    }
+
+
 async def extract_features(content: str, file_type: str = "", source_ref: str = "") -> dict:
     """Stage 1: Extract test modules and function points from requirement content.
 
@@ -849,6 +905,18 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
     if resp["result"] is None:
         error_detail = resp.get("error", "未知错误")
         raw = resp.get("raw", "")
+        if settings.ai_fallback_on_failure:
+            fallback = _build_local_extraction_fallback(
+                effective_content,
+                error_detail,
+                source_ref,
+                client_scope,
+            )
+            if extraction_summary:
+                fallback["extraction_summary"] = extraction_summary
+            if changelog_info:
+                fallback["changelog"] = changelog_info
+            return fallback
         import tempfile, time
         dump_path = Path(tempfile.gettempdir()) / f"ai_extraction_failed_{int(time.time())}.json"
         if raw:

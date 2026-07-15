@@ -78,7 +78,7 @@ cd test-platform-v2/frontend
 npm run dev
 
 # 3. 浏览器打开 http://localhost:5173
-# 4. 登录 (admin / admin123)
+# 4. 使用环境变量注入的管理员账号登录
 # 5. 进入 "API 测试" 页面
 # 6. 点击 "导入" 按钮
 # 7. 切换到 "文本导入" Tab

@@ -38,7 +38,16 @@ class UiTestRunOut(BaseModel):
     video_url: str = ""
     trace_id: str = ""
     base_url: str = ""
+    browser: str = ""
+    duration: Optional[float] = None
+    artifact_dir: str = ""
+    report_json_path: str = ""
+    html_report_path: str = ""
     error_message: str = ""
+    stdout: str = ""
+    stderr: str = ""
+    process_id: int | None = None
+    cancel_requested: bool = False
     started_at: Optional[datetime] = None
     finished_at: Optional[datetime] = None
 

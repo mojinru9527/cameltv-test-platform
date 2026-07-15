@@ -8,7 +8,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { fetchApiServices, fetchApiEndpoints, generateApiCases } from '@/api/apitest'
-import { useAuthStore } from '@/stores/auth'
 import EndpointDetailPanel from './EndpointDetailPanel'
 import type { ApiService, ApiEndpoint } from '@/types'
 
@@ -25,7 +24,6 @@ interface Props {
 }
 
 export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: Props) {
-  const projectId = useAuthStore(s => s.currentProjectId)
   const [services, setServices] = useState<ApiService[]>([])
   const [selectedService, setSelectedService] = useState<number | undefined>()
   const [endpoints, setEndpoints] = useState<ApiEndpoint[]>([])
@@ -37,15 +35,12 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
   const [selectedEndpoint, setSelectedEndpoint] = useState<ApiEndpoint | null>(null)
 
   const loadServices = useCallback(async () => {
-    if (!projectId) return
-    try { setServices(await fetchApiServices(projectId)) } catch { setServices([]) }
-  }, [projectId])
+    try { setServices(await fetchApiServices()) } catch { setServices([]) }
+  }, [])
 
   const loadEndpoints = useCallback(async () => {
-    if (!projectId) return
     try {
       const result = await fetchApiEndpoints({
-        project_id: projectId,
         service_id: selectedService,
         method: methodFilter || undefined,
         keyword: keyword || undefined,
@@ -54,16 +49,15 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
       setEndpoints(result.items)
       setTotal(result.total)
     } catch { setEndpoints([]) }
-  }, [projectId, selectedService, methodFilter, keyword, page, refreshKey])
+  }, [selectedService, methodFilter, keyword, page, refreshKey])
 
   useEffect(() => { loadServices() }, [loadServices])
   useEffect(() => { loadEndpoints() }, [loadEndpoints])
 
   const handleGenerate = async (ep: ApiEndpoint) => {
-    if (!projectId) return
     setGenerating(prev => new Set(prev).add(ep.id))
     try {
-      const result = await generateApiCases(projectId, {
+      const result = await generateApiCases({
         endpoint_id: ep.id,
         templates: ['basic', 'boundary', 'invalid', 'idempotency'],
         import_to_case_library: true,

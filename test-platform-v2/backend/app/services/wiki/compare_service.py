@@ -22,6 +22,16 @@ logger = logging.getLogger("wiki.compare")
 _DIMENSION_ARTIFACT = {
     "业务规则": "business_rule",
     "版本": "regression_scope",
+    "字段": "test_case",
+    "接口": "test_case",
+    "异常路径": "test_case",
+    "权限角色": "business_rule",
+    "数据依赖": "test_data",
+    "验收标准": "test_case",
+    "测试覆盖": "test_case",
+    "客户端": "regression_scope",
+    "需求范围": "impact_analysis",
+    "证据": "impact_analysis",
 }
 
 

@@ -17,14 +17,20 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "requirement_document",
-        sa.Column("extraction_raw", sa.Text(), nullable=False, server_default=""),
-    )
-    op.add_column(
-        "requirement_document",
-        sa.Column("extraction_status", sa.String(30), nullable=False, server_default="not_started"),
-    )
+    columns = {
+        column["name"]
+        for column in sa.inspect(op.get_bind()).get_columns("requirement_document")
+    }
+    if "extraction_raw" not in columns:
+        op.add_column(
+            "requirement_document",
+            sa.Column("extraction_raw", sa.Text(), nullable=False, server_default=""),
+        )
+    if "extraction_status" not in columns:
+        op.add_column(
+            "requirement_document",
+            sa.Column("extraction_status", sa.String(30), nullable=False, server_default="not_started"),
+        )
 
 
 def downgrade() -> None:

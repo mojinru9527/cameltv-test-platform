@@ -22,8 +22,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    tables = set(sa.inspect(op.get_bind()).get_table_names())
+
+    def create_table_if_missing(table_name: str, *columns) -> None:
+        if table_name not in tables:
+            op.create_table(table_name, *columns)
+
     # api_service
-    op.create_table(
+    create_table_if_missing(
         "api_service",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -40,7 +46,7 @@ def upgrade() -> None:
     )
 
     # api_import_batch
-    op.create_table(
+    create_table_if_missing(
         "api_import_batch",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -60,7 +66,7 @@ def upgrade() -> None:
     )
 
     # api_endpoint
-    op.create_table(
+    create_table_if_missing(
         "api_endpoint",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -84,7 +90,7 @@ def upgrade() -> None:
     )
 
     # api_execution_task
-    op.create_table(
+    create_table_if_missing(
         "api_execution_task",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -107,7 +113,7 @@ def upgrade() -> None:
     )
 
     # api_execution_task_item
-    op.create_table(
+    create_table_if_missing(
         "api_execution_task_item",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("task_id", sa.Integer(), nullable=False, index=True),
