@@ -24,7 +24,7 @@ uvicorn app.main:app --reload --port 8000
 
 - API docs: http://localhost:8000/docs
 - OpenAPI: http://localhost:8000/openapi.json
-- Default account: `admin / admin123`
+- Login credentials are supplied by the administrator through environment variables; no reusable default password is published.
 
 ## Database Migrations
 

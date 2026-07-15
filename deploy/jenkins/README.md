@@ -31,10 +31,13 @@ deploy/jenkins/
 # 1. 进入 Jenkins 部署目录
 cd F:\CamelTv\deploy\jenkins
 
-# 2. 一键启动（首次需拉取镜像 + 构建，约 3~5 分钟）
+# 2. 复制安全配置模板并填写两个独立强密码（真实 .env 禁止提交）
+Copy-Item .env.example .env
+
+# 3. 一键启动（首次需拉取镜像 + 构建，约 3~5 分钟）
 docker compose up -d
 
-# 3. 查看启动日志（等待出现 "Jenkins is fully up and running"）
+# 4. 查看启动日志（等待出现 "Jenkins is fully up and running"）
 docker compose logs -f jenkins
 ```
 
@@ -43,14 +46,14 @@ docker compose logs -f jenkins
 | 项目 | 值 |
 |------|-----|
 | **地址** | `http://localhost:8080` |
-| **用户名** | `admin` |
-| **密码** | `cameltv123` |
+| **用户名** | 本机 `.env` 中的 `JENKINS_ADMIN_USERNAME` |
+| **密码** | 本机 `.env` 中的 `JENKINS_ADMIN_PASSWORD` |
 
 > CasC 已自动完成安全配置——跳过安装向导、跳过插件安装、用户账号已就绪。
 
 ### 运行首次构建
 
-1. 浏览器打开 `http://localhost:8080`，登录 `admin / cameltv123`
+1. 浏览器打开 `http://localhost:8080`，使用本机 `.env` 中的管理员账号登录
 2. 点击 **CamelTv-Platform** → **Build Now**（或用 **Build with Parameters** 选择参数）
 3. 点击构建编号进入详情，或点左侧 **Blue Ocean** 查看可视化进度
 4. Pipeline 自动执行 11 个阶段：Checkout → Lint → Test → Build → Deploy → Smoke → Gate
@@ -63,7 +66,7 @@ docker compose logs -f jenkins
 
 - **Docker 20.10+**
 - Git 仓库可访问（本地 `file:///workspace` 改为远程 Git URL）
-- 修改默认密码
+- 使用 Secret 管理提供管理员和开发账号密码
 
 ### 部署步骤
 
@@ -72,8 +75,8 @@ docker compose logs -f jenkins
 git clone <your-repo-url> /opt/cameltv
 cd /opt/cameltv/deploy/jenkins
 
-# 2. 修改默认密码（编辑 casc.yaml）
-# 找到 securityRealm.local.users 下的 password 字段，改为强密码
+# 2. 从模板创建未跟踪的密钥文件并填写强密码
+cp .env.example .env
 
 # 3. 启动
 docker compose up -d
@@ -131,10 +134,7 @@ pipeline {
         stage('Smoke') {
             steps {
                 sh '''
-                    curl -s http://localhost/health
-                    curl -s -X POST http://localhost/api/v1/auth/login \
-                      -H "Content-Type: application/json" \
-                      -d "{\\"username\\":\\"admin\\",\\"password\\":\\"admin123\\"}"
+                    curl -fsS http://localhost/health
                 '''
             }
         }

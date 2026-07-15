@@ -1,7 +1,7 @@
 """统一导出所有模型，确保 Base.metadata 能感知全部表。"""
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
 from app.models.audit import AuditLog
-from app.models.av_check import AvCheckMetric, AvCheckTask
+from app.models.av_check import AvCheckMeasurement, AvCheckMetric, AvCheckTask
 from app.models.dataset import Dataset
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
@@ -82,6 +82,7 @@ __all__ = [
     "Defect",
     "AvCheckTask",
     "AvCheckMetric",
+    "AvCheckMeasurement",
     "UiTestJob",
     "UiTestRun",
     "RequirementDocument",

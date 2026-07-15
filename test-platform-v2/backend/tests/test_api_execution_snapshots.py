@@ -11,7 +11,24 @@ from __future__ import annotations
 
 import json
 
+import httpx
 import pytest
+
+
+@pytest.fixture(autouse=True)
+def _mock_outbound_http(monkeypatch):
+    """Keep snapshot/protection unit tests deterministic and independent of httpbin."""
+
+    def fake_request(_client, method, url, **_kwargs):
+        request = httpx.Request(method, url)
+        return httpx.Response(
+            200,
+            json={"ok": True, "method": method, "url": str(url)},
+            headers={"Content-Type": "application/json"},
+            request=request,
+        )
+
+    monkeypatch.setattr(httpx.Client, "request", fake_request)
 
 
 class TestRequestSnapshot:

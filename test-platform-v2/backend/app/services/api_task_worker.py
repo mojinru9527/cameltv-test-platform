@@ -57,6 +57,17 @@ def claim_next_task(
         task.started_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(task)
+    from app.services.notify_service import queue_notification
+    queue_notification(
+        task.project_id,
+        "task_started",
+        {
+            "task_type": "API 测试",
+            "task_name": task.name or task.task_id,
+            "triggered_by": f"user#{task.creator_id}",
+            "link": "/apitest",
+        },
+    )
     return task
 
 
@@ -155,6 +166,34 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
         task.locked_by = ""
         db.commit()
 
+        from app.services.notify_service import queue_notification
+        task_name = task.name or task.task_id
+        summary = f"通过 {passed} / 失败 {failed} / 跳过 {skipped}"
+        queue_notification(
+            project_id,
+            "task_finished",
+            {
+                "task_type": "API 测试",
+                "task_name": task_name,
+                "status": task.status,
+                "result_summary": summary,
+                "link": "/apitest",
+            },
+        )
+        queue_notification(
+            project_id,
+            "test_result",
+            {
+                "task_name": task_name,
+                "passed": passed,
+                "failed": failed,
+                "skipped": skipped,
+                "pass_rate": f"{round(passed * 100 / task.total, 1)}%" if task.total else "0%",
+                "conclusion": "通过" if failed == 0 and skipped == 0 else task.status,
+                "link": "/apitest",
+            },
+        )
+
         # M1 入库 hook: 有失败项时沉淀为知识切片
         if failed > 0:
             from app.services.knowledge import ingest_service
@@ -170,6 +209,18 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
                 t.finished_at = datetime.now(timezone.utc)
                 t.locked_by = ""
                 db.commit()
+                from app.services.notify_service import queue_notification
+                queue_notification(
+                    project_id,
+                    "task_finished",
+                    {
+                        "task_type": "API 测试",
+                        "task_name": t.name or t.task_id,
+                        "status": "failed",
+                        "result_summary": "执行器异常，详见任务日志",
+                        "link": "/apitest",
+                    },
+                )
         except Exception:
             pass
     finally:

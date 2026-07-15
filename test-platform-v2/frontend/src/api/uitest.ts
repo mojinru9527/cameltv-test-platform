@@ -46,5 +46,6 @@ export async function fetchRunnerHealth(): Promise<RunnerHealth> {
 }
 
 export async function fetchScripts(): Promise<string[]> {
-  return api.get('/ui-tests/scripts')
+  const res: any = await api.get('/ui-tests/scripts')
+  return res?.available_specs ?? []
 }
