@@ -39,9 +39,9 @@ related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/改
 ### P0-1　真实 LLM API Key 明文硬编码（安全事故）
 `backend/app/core/config.py:30`
 ```python
-ai_api_key: str = "sk-17abf5e3018b44f7b755caa1d390ae20"   # ❌ 真实 DeepSeek 密钥写死在源码默认值
+ai_api_key: str = "[REDACTED]"                           # ❌ 真实 DeepSeek 密钥曾被写入源码默认值，现已移除并应轮换
 secret_key: str = "dev-secret-change-me"                  # ❌ JWT 签名默认弱密钥
-admin_password: str = "admin123"                          # ❌ 默认管理员口令入库
+admin_password: str = "[REDACTED]"                       # ❌ 通用管理员口令入库
 ```
 **风险**：源码一旦外泄即密钥泄露、可伪造任意 JWT。
 **整改**：敏感项默认值置空，启动时校验"生产环境必填"；立即吊销并轮换该 DeepSeek Key；密钥统一走环境变量 / Secret 管理。

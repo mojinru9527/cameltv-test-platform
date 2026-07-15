@@ -29,6 +29,33 @@ logger = logging.getLogger("notify")
 # ── Message templates (markdown) ──────────────────────
 
 _TEMPLATES: dict[str, str] = {
+    "task_started": (
+        "## 测试任务已发起\n"
+        "**类型**: {task_type}\n"
+        "**任务**: {task_name}\n"
+        "**发起人**: {triggered_by}\n"
+        "**时间**: {time}\n"
+        "[查看详情]({link})"
+    ),
+    "task_finished": (
+        "## 测试任务已结束\n"
+        "**类型**: {task_type}\n"
+        "**任务**: {task_name}\n"
+        "**状态**: {status}\n"
+        "**结果**: {result_summary}\n"
+        "**时间**: {time}\n"
+        "[查看详情]({link})"
+    ),
+    "test_result": (
+        "## 测试结果通知\n"
+        "**任务**: {task_name}\n"
+        "**通过**: {passed}\n"
+        "**失败**: {failed}\n"
+        "**跳过**: {skipped}\n"
+        "**通过率**: {pass_rate}\n"
+        "**结论**: {conclusion}\n"
+        "[查看详情]({link})"
+    ),
     "plan_done": (
         "## 测试计划执行完成\n"
         "**计划**: {plan_name}\n"
@@ -86,7 +113,8 @@ def _format_msg(event: str, data: dict, provider: str) -> dict | str:
     """Format a message payload for the target provider."""
     template = _TEMPLATES.get(event, "")
     time_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    text = template.format(time=time_str, **data)
+    values = {"time": time_str, **data}
+    text = template.format_map(_SafeFormatDict(values))
 
     if provider == "feishu":
         return {
@@ -256,6 +284,9 @@ async def _dispatch_email(event: str, data: dict, ch) -> tuple[bool, str, int]:
         return False, "No recipients configured", 0
 
     subject_map = {
+        "task_started": f"测试任务已发起 — {data.get('task_name', '')}",
+        "task_finished": f"测试任务已结束 — {data.get('task_name', '')}",
+        "test_result": f"测试结果 — {data.get('task_name', '')}",
         "plan_done": f"测试计划执行完成 — {data.get('plan_name', '')}",
         "defect_assigned": f"[{data.get('severity', '')}] 缺陷指派 — {data.get('title', '')}",
         "schedule_failed": f"定时任务失败 — {data.get('schedule_name', '')}",
@@ -266,7 +297,7 @@ async def _dispatch_email(event: str, data: dict, ch) -> tuple[bool, str, int]:
 
     template = _TEMPLATES.get(event, "")
     time_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    body = template.format(time=time_str, **data)
+    body = template.format_map(_SafeFormatDict({"time": time_str, **data}))
 
     ok = await _send_email(
         to_addrs=recipients,
@@ -303,6 +334,30 @@ def notify_sync(db: Session, project_id: int, event: str, data: dict) -> dict:
     pool = _get_notify_executor()
     future = pool.submit(asyncio.run, notify(db, project_id, event, data))
     return future.result()
+
+
+class _SafeFormatDict(dict):
+    def __missing__(self, key):
+        return "-"
+
+
+def notify_in_new_session(project_id: int, event: str, data: dict) -> dict:
+    """使用独立会话发送通知，适合后台 worker 和线程池。"""
+    from app.core.db import SessionLocal
+
+    db = SessionLocal()
+    try:
+        return notify_sync(db, project_id, event, data)
+    except Exception:
+        logger.exception("Task lifecycle notification failed: event=%s project=%s", event, project_id)
+        return {"sent": 0, "failed": 1, "skipped": 0}
+    finally:
+        db.close()
+
+
+def queue_notification(project_id: int, event: str, data: dict):
+    """非阻塞提交通知，测试执行主链路不等待外部 Webhook/SMTP。"""
+    return _get_notify_executor().submit(notify_in_new_session, project_id, event, data)
 
 
 # ── Channel CRUD ──────────────────────────────────────

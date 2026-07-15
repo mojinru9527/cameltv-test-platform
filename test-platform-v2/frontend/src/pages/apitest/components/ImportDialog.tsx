@@ -35,7 +35,7 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
     setPreview(null)
     try {
       const sourceType = importTab === 'url' ? 'openapi_url' : 'openapi_text'
-      const result = await previewOpenApiImport(projectId, {
+      const result = await previewOpenApiImport({
         service_name: serviceName,
         source_type: sourceType,
         source_ref: sourceRef,
@@ -52,7 +52,7 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
     setImporting(true)
     try {
       const sourceType = importTab === 'url' ? 'openapi_url' : 'openapi_text'
-      await confirmOpenApiImport(projectId, {
+      await confirmOpenApiImport({
         service_name: serviceName,
         source_type: sourceType,
         source_ref: sourceRef,

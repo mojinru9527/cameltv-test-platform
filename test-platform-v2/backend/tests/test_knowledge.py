@@ -549,11 +549,15 @@ class TestSearchService:
 
 
 class TestM2SearchApi:
-    def test_search_503_when_rag_disabled(self, kclient, monkeypatch):
+    def test_search_200_when_rag_disabled_fallback_keyword(self, kclient, kdb, monkeypatch):
+        """RAG 关闭 → 搜索自动降级为关键词模式，返回 200（非 503）。"""
         from app.core.config import settings
         monkeypatch.setattr(settings, "rag_enabled", False, raising=False)
+        _seed_chunks(kdb, ["密码字段需要非空校验"])
         resp = kclient.post("/api/v1/knowledge/search", json={"query": "密码"})
-        assert resp.status_code == 503
+        assert resp.status_code == 200
+        data = resp.json()["data"]
+        assert isinstance(data, list)
 
     def test_search_200_when_rag_enabled(self, kclient, kdb, monkeypatch):
         from app.core.config import settings

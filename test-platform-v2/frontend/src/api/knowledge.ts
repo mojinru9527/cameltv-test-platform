@@ -17,6 +17,7 @@ import type {
   CompareSnapshots,
   RegressionPrediction,
   ReembedResult,
+  SearchHealth,
 } from '@/types'
 
 // 说明：axios 拦截器已拆包 {code,msg,data}，并自动附带 X-Project-Id 头，
@@ -63,6 +64,10 @@ export async function searchKnowledge(
 
 export async function reembedKnowledge(): Promise<ReembedResult> {
   return api.post('/knowledge/reembed')
+}
+
+export async function fetchSearchHealth(): Promise<SearchHealth> {
+  return api.get('/knowledge/search/health')
 }
 
 // ── M3 知识图谱 ──

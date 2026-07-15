@@ -18,13 +18,13 @@
 
 ```bash
 # 数据库连接（从 SQLite 切换为 PostgreSQL）
-DATABASE_URL=postgresql://cameltv:cameltv123@postgres:5432/cameltv
+DATABASE_URL=postgresql://cameltv:<从密码管理器注入>@postgres:5432/cameltv
 DB_POOL_SIZE=10
 DB_MAX_OVERFLOW=20
 
 # PostgreSQL 凭据（需与 DATABASE_URL 一致）
 POSTGRES_USER=cameltv
-POSTGRES_PASSWORD=cameltv123
+POSTGRES_PASSWORD=<从密码管理器注入>
 POSTGRES_DB=cameltv
 ```
 
@@ -101,7 +101,7 @@ sqlite3 backend/data/platform.db .dump > dump.sql
 # 2. 手动转换或使用 pgloader 工具
 # pgloader 示例配置 (migrate.load):
 #   LOAD DATABASE FROM sqlite:///backend/data/platform.db
-#   INTO postgresql://cameltv:cameltv123@localhost:5432/cameltv
+#   INTO postgresql://cameltv:<从密码管理器注入>@localhost:5432/cameltv
 #   WITH data only, create no tables;
 
 # 3. 或者：启动 PG 模式后，通过平台的 Excel/CSV 导出功能重新导入数据

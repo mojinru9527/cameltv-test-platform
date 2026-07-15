@@ -24,8 +24,14 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    tables = set(sa.inspect(op.get_bind()).get_table_names())
+
+    def create_table_if_missing(table_name: str, *columns) -> None:
+        if table_name not in tables:
+            op.create_table(table_name, *columns)
+
     # knowledge_source
-    op.create_table(
+    create_table_if_missing(
         "knowledge_source",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -45,7 +51,7 @@ def upgrade() -> None:
     )
 
     # knowledge_chunk
-    op.create_table(
+    create_table_if_missing(
         "knowledge_chunk",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -63,7 +69,7 @@ def upgrade() -> None:
     )
 
     # knowledge_entity (M3 使用，本期建空表)
-    op.create_table(
+    create_table_if_missing(
         "knowledge_entity",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -83,7 +89,7 @@ def upgrade() -> None:
     )
 
     # knowledge_relation (M3 使用，本期建空表)
-    op.create_table(
+    create_table_if_missing(
         "knowledge_relation",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -99,7 +105,7 @@ def upgrade() -> None:
     )
 
     # ai_artifact
-    op.create_table(
+    create_table_if_missing(
         "ai_artifact",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),
@@ -119,7 +125,7 @@ def upgrade() -> None:
     )
 
     # agent_run
-    op.create_table(
+    create_table_if_missing(
         "agent_run",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("project_id", sa.Integer(), nullable=False, index=True),

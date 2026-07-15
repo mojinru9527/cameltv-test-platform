@@ -49,7 +49,7 @@ class TestClassifier:
         assert any(i["diff_type"] == "coverage_gap" for i in items)
 
     def test_identical_contracts_minimal_diff(self):
-        c = _contract(test_cases=[{"id": 1}])  # 有用例 → 无覆盖缺口
+        c = _contract(test_cases=[{"id": 1}], source_refs=[{"knowledge_chunk_id": 1}])  # 有 source_refs → 免证据缺项
         items = diff_classifier.classify(c, c)
         # 完全一致时不应有 missing/conflict
         assert not any(i["diff_type"] in ("missing_in_left", "missing_in_right", "conflict") for i in items)
