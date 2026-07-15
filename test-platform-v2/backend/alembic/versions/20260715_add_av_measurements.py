@@ -1,7 +1,7 @@
 """Add real AV measurement records.
 
 Revision ID: 20260715_add_av_measurements
-Revises: 20260715_add_test_case_api_columns
+Revises: 20260715_test_case_api_cols
 Create Date: 2026-07-15
 """
 from typing import Sequence, Union
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 
 revision: str = "20260715_add_av_measurements"
-down_revision: Union[str, None] = "20260715_add_test_case_api_columns"
+down_revision: Union[str, None] = "20260715_test_case_api_cols"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -1,6 +1,6 @@
 """Add api_headers/api_body/api_assertions to test_case, gate_status/gate_details/template_id to test_report.
 
-Revision ID: 20260715_add_test_case_api_columns
+Revision ID: 20260715_test_case_api_cols
 Revises: 20260714_lanhu_pg_reconcile
 Create Date: 2026-07-15
 """
@@ -10,7 +10,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "20260715_add_test_case_api_columns"
+revision: str = "20260715_test_case_api_cols"
 down_revision: Union[str, None] = "20260714_lanhu_pg_reconcile"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
