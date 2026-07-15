@@ -187,7 +187,7 @@ jobs:
 
       - name: Type Check (tsc)
         working-directory: test-platform-v2/frontend
-        run: npx tsc -b --noEmit
+        run: npm run typecheck
 
       - name: Lint (ESLint)
         working-directory: test-platform-v2/frontend

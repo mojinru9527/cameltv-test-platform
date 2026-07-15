@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:a11y": "npx @axe-core/cli --stdout http://localhost:5173 || echo 'Run: npx @axe-core/cli --stdout <url>'",
