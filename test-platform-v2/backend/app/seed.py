@@ -140,7 +140,8 @@ _ACTIONS = [
     ("knowledge:view", "查看知识中心", "button"),
     ("knowledge:manage", "管理知识源（重解析/废弃）", "button"),
     ("knowledge:approve", "审核知识与 AI 产物", "button"),
-    ("agent:list", "查看 Agent 执行记录", "button"),
+    ("agent:view", "查看 Agent 执行记录", "button"),
+    ("agent:list", "查看 Agent 执行记录（已弃用，请使用 agent:view）", "button"),
     ("agent:run", "手动触发 Agent", "button"),
     ("agent:admin", "管理 Agent 配置", "button"),
     ("ai_artifact:import", "导入 AI 产物到正式资产", "button"),
@@ -149,6 +150,11 @@ _ACTIONS = [
     ("wiki:manage", "导入来源、触发编译、重试任务", "button"),
     ("wiki:approve", "审核 Wiki 页面与差异处理", "button"),
     ("wiki:diff", "发起知识库对比", "button"),
+    # 蓝湖证据包 OCR — 收在知识中心/需求，不新增菜单
+    ("lanhu_evidence:view", "查看蓝湖证据包", "button"),
+    ("lanhu_evidence:run", "创建蓝湖证据包", "button"),
+    ("lanhu_evidence:review", "人工审核证据页（OCR 缺失豁免）", "button"),
+    ("lanhu_evidence:import", "导入蓝湖证据包", "button"),
 ]
 
 # 测试人员可见的菜单子集
@@ -156,8 +162,9 @@ _TESTER_ACTIONS = {
     "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
     "apitest:task", "apitest:asset_manage",
     "knowledge:view",
-    "agent:list",
+    "agent:view", "agent:list",
     "wiki:view", "wiki:diff",
+    "lanhu_evidence:view", "lanhu_evidence:run",
 }
 
 _TESTER_MENUS = {

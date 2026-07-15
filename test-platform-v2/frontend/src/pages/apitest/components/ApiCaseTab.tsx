@@ -63,7 +63,7 @@ export default function ApiCaseTab() {
     if (selected.size === 0) { toast.error('请至少选择一条用例'); return }
     setLoading(true)
     try {
-      const task = await createApiExecutionTask(projectId, {
+      const task = await createApiExecutionTask({
         name: `批量执行 ${new Date().toLocaleString('zh-CN')}`,
         case_ids: Array.from(selected),
       })

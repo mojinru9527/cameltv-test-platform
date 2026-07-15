@@ -1,11 +1,17 @@
 """统一导出所有模型，确保 Base.metadata 能感知全部表。"""
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
 from app.models.audit import AuditLog
-from app.models.av_check import AvCheckMetric, AvCheckTask
+from app.models.av_check import AvCheckMeasurement, AvCheckMetric, AvCheckTask
 from app.models.dataset import Dataset
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.integration import IntegrationConfig
+from app.models.lanhu_evidence import (
+    LanhuEvidenceAsset,
+    LanhuEvidenceJob,
+    LanhuEvidencePage,
+    LanhuOcrBlock,
+)
 from app.models.knowledge import (
     AgentQueueItem,
     AgentRun,
@@ -76,6 +82,7 @@ __all__ = [
     "Defect",
     "AvCheckTask",
     "AvCheckMetric",
+    "AvCheckMeasurement",
     "UiTestJob",
     "UiTestRun",
     "RequirementDocument",
@@ -100,4 +107,8 @@ __all__ = [
     "WikiIngestJob",
     "WikiDiffTask",
     "WikiDiffItem",
+    "LanhuEvidenceJob",
+    "LanhuEvidencePage",
+    "LanhuEvidenceAsset",
+    "LanhuOcrBlock",
 ]

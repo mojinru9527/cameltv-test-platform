@@ -13,7 +13,10 @@ from app.models.rbac import Permission, RolePermission, UserRole
 
 def role_ids_for_user(db: Session, user_id: int, project_id: int | None = None) -> set[int]:
     """用户的角色集合 = 全局角色(project_id=0) + 指定项目内角色 + 项目成员角色。"""
-    stmt = select(UserRole.role_id).where(UserRole.user_id == user_id)
+    stmt = select(UserRole.role_id).where(
+        UserRole.user_id == user_id,
+        UserRole.project_id == 0,
+    )
     role_ids: set[int] = set(db.scalars(stmt).all())
 
     if project_id:

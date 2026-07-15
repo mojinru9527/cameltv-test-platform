@@ -60,7 +60,7 @@ Checkout → Backend Lint → Backend Test → Frontend TypeCheck → Frontend T
 cd deploy/jenkins
 docker compose up -d
 # 访问 http://localhost:8080
-# 用户名: admin / 密码: cameltv123
+# 用户名和密码由 deploy/jenkins/.env 注入，禁止写入仓库
 ```
 
 ## Docker 端口映射

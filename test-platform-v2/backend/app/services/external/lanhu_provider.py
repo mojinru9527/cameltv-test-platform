@@ -635,6 +635,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
 _AUTH_HINTS = ("登录", "LANHU_USERNAME", "LANHU_PASSWORD", "LANHU_COOKIE", "cookie", "认证", "登录态")
 _PERM_HINTS = ("无权", "权限不足", "没有权限", "permission")
 _IMAGE_HINTS = ("图片", "补充说明", "无法提取", "image", "无文本")
+_PARTIAL_HINTS = ("部分", "partial")
 _INVALID_URL_HINTS = ("docId", "pageId", "文档链接", "项目链接", "设计稿页面")
 
 
@@ -652,12 +653,37 @@ def _classify_error_status(msg: str) -> str:
     return "failed"
 
 
-def _parse_url_ids(url: str) -> tuple[str, str, str]:
-    """从蓝湖 URL 解析 docId / versionId / pageId（本地正则，不触网）。"""
+def parse_lanhu_ids(url: str) -> tuple[str, str, str]:
+    """从蓝湖 URL 解析 docId / versionId / pageId（本地正则，不触网）。
+
+    Returns (doc_id, version_id, page_id). page_id 为可选——当 URL 不含 pageId 时
+    表示整文档导入。
+    """
     def _grab(param: str) -> str:
         m = re.search(param + r"=([^&#]+)", url or "")
         return m.group(1) if m else ""
     return _grab("docId"), _grab("versionId"), _grab("pageId")
+
+
+# 向后兼容别名：旧调用方仍可使用 _parse_url_ids
+_parse_url_ids = parse_lanhu_ids
+
+
+def build_immutable_version(doc_id: str, version_id: str, page_id: str | None) -> str:
+    """构建标准化的蓝湖 immutable_version。
+
+    格式: lanhu:{docId}:{versionId}:{pageId}
+    page_id 为空时省略末尾段: lanhu:{docId}:{versionId}
+
+    示例:
+        build_immutable_version("doc-123", "ver-456", "page-789")
+        -> "lanhu:doc-123:ver-456:page-789"
+
+        build_immutable_version("doc-123", "ver-456", None)
+        -> "lanhu:doc-123:ver-456"
+    """
+    parts = [p for p in (doc_id, version_id, page_id) if p]
+    return "lanhu:" + ":".join(parts)
 
 
 async def extract(url: str, auto_login: bool = True):
@@ -696,13 +722,20 @@ async def extract(url: str, auto_login: bool = True):
     client_scope = raw.get("client_scope") or []
     changelog = raw.get("changelog") or {}
     content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest() if content else ""
-    immutable_version = ":".join([p for p in (doc_id, version_id, page_id) if p]) or content_hash
+    if doc_id:
+        immutable_version = build_immutable_version(doc_id, version_id, page_id or None)
+    else:
+        immutable_version = content_hash  # 非蓝湖来源退化为 content_hash
 
     if not content:
         status, summary = "image_only", "原型无可提取文本（可能为图片），请填写补充说明"
     else:
         scope_txt = "/".join(client_scope) if client_scope else "未标注端"
-        status = "success"
+        # partial: 提取成功但部分页面无文本（content 中包含「无文本内容」提示）
+        if "无文本内容" in content or "页面无文本" in content:
+            status = "partial"
+        else:
+            status = "success"
         summary = f"提取成功，约 {len(content)} 字，模块「{folder_name or '未分组'}」，端范围 {scope_txt}"
 
     return LanhuExtractResult(
@@ -717,3 +750,85 @@ async def extract(url: str, auto_login: bool = True):
         extraction_status=status,
         extraction_summary=summary,
     )
+
+
+# ── 证据包专用：下载资源 + 返回全页面树（供滚动截图与 OCR）──
+
+async def get_lanhu_pages_for_evidence(url: str) -> dict:
+    """下载 Axure 资源并返回全页面列表，供证据包截图/OCR 使用。
+
+    与 `_extract_lanhu_content` 共用下载与认证重试逻辑，但不做文本聚合：
+    只返回 resource_dir、document_name 和规范化 pages（含 filename / folder /
+    local_url），让 screenshot_service 逐页滚动截图、OCR。
+
+    Return:
+        {"status": "success", "resource_dir": str, "document_name": str,
+         "pages": [{"id","name","path","folder","filename","local_url"}, ...]}
+    异常统一以 status="failed" + error 表达，绝不裸抛。
+    """
+    sys.path.insert(0, str(_lanhu_mcp_dir()))
+    try:
+        from lanhu_mcp_server import (  # type: ignore
+            LanhuAuthError,
+            LanhuExtractor,
+            fix_html_files,
+            lanhu_login,
+            _save_cached_cookie,
+        )
+
+        async def _do(cookie_override: str = "") -> dict:
+            extractor = LanhuExtractor(cookie=cookie_override)
+            params = extractor.parse_url(url)
+            doc_id = params.get("doc_id", "")
+            url_version_id = params.get("version_id", "")
+            if not doc_id:
+                raise ValueError("蓝湖链接缺少 docId，请复制具体设计稿页面链接")
+
+            resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
+            download_result = await extractor.download_resources(
+                url, resource_dir, target_version_id=url_version_id,
+            )
+            if download_result.get("status") in ("downloaded", "updated"):
+                fix_html_files(resource_dir)
+
+            pages_info = await extractor.get_pages_list(url)
+            document_name = pages_info.get("document_name", "设计稿")
+
+            pages: list[dict] = []
+            for p in pages_info.get("pages", []):
+                name = p.get("name", "")
+                folder = p.get("folder", "")
+                filename = p.get("filename", f"{name}.html")
+                path = f"{folder}/{name}" if folder else name
+                html_path = Path(resource_dir) / filename
+                local_url = html_path.as_uri() if html_path.exists() else ""
+                pages.append({
+                    "id": p.get("id", ""),
+                    "name": name,
+                    "path": path,
+                    "folder": folder,
+                    "filename": filename,
+                    "local_url": local_url,
+                })
+
+            return {
+                "status": "success",
+                "resource_dir": resource_dir,
+                "document_name": document_name,
+                "pages": pages,
+            }
+
+        try:
+            return await _do()
+        except LanhuAuthError:
+            new_cookie = await lanhu_login()
+            if new_cookie:
+                _save_cached_cookie(new_cookie)
+                return await _do(cookie_override=new_cookie)
+            return {"status": "failed", "error": "蓝湖认证失败且自动登录未获取到 Cookie", "pages": []}
+    except Exception as e:  # noqa: BLE001 — 统一以状态表达失败
+        return {"status": "failed", "error": str(e)[:300], "pages": []}
+    finally:
+        if str(_lanhu_mcp_dir()) in sys.path:
+            sys.path.remove(str(_lanhu_mcp_dir()))
+

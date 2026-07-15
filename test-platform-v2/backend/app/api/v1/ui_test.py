@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import os as _os
 from pathlib import Path as _Path
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_db, require_permission
@@ -25,6 +25,26 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         project_id=cu.project_id or 0, action=action, target=target, detail=detail,
         ip=req.client.host if req.client else "",
     )
+
+
+def _get_project_run(db: Session, run_id: int, project_id: int):
+    """Load a run only through its owning job and current project."""
+    from app.models.ui_test import UiTestJob, UiTestRun
+
+    return db.scalar(
+        select(UiTestRun)
+        .join(UiTestJob, UiTestJob.id == UiTestRun.job_id)
+        .where(UiTestRun.id == run_id, UiTestJob.project_id == project_id)
+    )
+
+
+def _resolve_artifact_path(artifact_dir: _Path, filename: str) -> _Path:
+    """Resolve one artifact path without string-prefix containment mistakes."""
+    base_dir = artifact_dir.resolve()
+    file_path = (base_dir / filename).resolve()
+    if not file_path.is_relative_to(base_dir):
+        raise HTTPException(403, "非法文件路径")
+    return file_path
 
 
 # ═══════════════════════════════════════════════════════
@@ -132,8 +152,8 @@ def get_run(
     current: CurrentUser = Depends(require_permission("uitest:detail")),
     db: Session = Depends(get_db),
 ):
-    """查询单次运行记录（用于前端轮询状态）。"""
-    run = ui_test_service.get_run(db, run_id)
+    """查询单次运行记录（用于前端轮询状态），校验项目归属。"""
+    run = ui_test_service.get_run(db, run_id, current.project_id or 0)
     if not run:
         from app.core.exceptions import not_found
         raise not_found("运行记录")
@@ -146,19 +166,24 @@ def cancel_run(
     current: CurrentUser = Depends(require_permission("uitest:trigger")),
     db: Session = Depends(get_db),
 ):
-    """取消正在运行的 UI 测试。"""
+    """取消正在运行的 UI 测试。设置 cancel_requested 标志，运行中 worker 会检测并终止进程。"""
     from app.models.ui_test import UiTestRun, UiTestJob
     run = db.get(UiTestRun, run_id)
     if not run:
         raise HTTPException(404, "运行记录不存在")
+    # Verify project isolation
+    job = db.get(UiTestJob, run.job_id)
+    if not job or job.project_id != (current.project_id or 0):
+        raise HTTPException(404, "运行记录不存在")
     if run.status not in ("pending", "running"):
         raise HTTPException(400, f"只能取消 pending/running 状态的运行（当前: {run.status}）")
+    # Set cancel flag so worker can detect and kill subprocess
+    run.cancel_requested = True
     run.status = "cancelled"
     run.finished_at = datetime.now(timezone.utc)
     run.error_message = "用户手动取消"
     # Update job status too
-    job = db.get(UiTestJob, run.job_id)
-    if job and job.status == "running":
+    if job.status == "running":
         job.status = "idle"
     db.commit()
     _audit(req, current, db, "uitest:cancel", f"run #{run_id}")
@@ -172,13 +197,11 @@ def list_artifacts(
     db: Session = Depends(get_db),
 ):
     """列出某次运行的所有产物文件（截图/视频/trace/报告）。"""
-    from app.models.ui_test import UiTestRun
-
-    run = db.get(UiTestRun, run_id)
+    run = _get_project_run(db, run_id, current.project_id or 0)
     if not run:
         raise HTTPException(404, "运行记录不存在")
 
-    artifact_dir = _Path(run.artifact_dir) if run.artifact_dir else None
+    artifact_dir = _Path(run.artifact_dir).resolve() if run.artifact_dir else None
     if not artifact_dir or not artifact_dir.exists():
         return R.ok([])
 
@@ -203,9 +226,7 @@ def download_artifact(
     db: Session = Depends(get_db),
 ):
     """下载某次运行的产物文件。"""
-    from app.models.ui_test import UiTestRun
-
-    run = db.get(UiTestRun, run_id)
+    run = _get_project_run(db, run_id, current.project_id or 0)
     if not run:
         raise HTTPException(404, "运行记录不存在")
 
@@ -213,16 +234,55 @@ def download_artifact(
     if not artifact_dir:
         raise HTTPException(404, "该运行无产物目录")
 
-    # 防目录遍历
-    safe_path = _os.path.normpath(filename).lstrip("\\/")
-    file_path = (artifact_dir / safe_path).resolve()
-    if not str(file_path).startswith(str(artifact_dir.resolve())):
-        raise HTTPException(403, "非法文件路径")
+    file_path = _resolve_artifact_path(artifact_dir, filename)
 
     if not file_path.exists() or not file_path.is_file():
-        raise HTTPException(404, f"产物文件不存在: {safe_path}")
+        raise HTTPException(404, "产物文件不存在")
 
     return FileResponse(file_path, filename=file_path.name)
+
+
+@router.get("/runner/health", response_model=R[dict], summary="Runner 健康检查")
+def runner_health(
+    current: CurrentUser = Depends(require_permission("uitest:list")),
+):
+    """检查 Playwright runner 状态：npx、Playwright 版本、浏览器安装、并发数。"""
+    import shutil
+    import subprocess
+
+    from app.services.playwright_executor import _check_playwright_installed, MAX_CONCURRENT
+    from app.services.ui_runner_queue import ensure_processor_running, running_count as q_running
+
+    # Ensure the thread pool is ready (lazy init)
+    ensure_processor_running()
+
+    # Check npx
+    npx_path = shutil.which("npx")
+    npx_ok = npx_path is not None
+
+    # Check playwright version
+    pw_ok, pw_version = _check_playwright_installed()
+
+    # Check browser binaries via playwright install --dry-run
+    browsers_ok = False
+    if npx_path:
+        try:
+            result = subprocess.run(
+                [npx_path, "playwright", "install", "--dry-run"],
+                capture_output=True, text=True, timeout=15,
+            )
+            browsers_ok = result.returncode == 0
+        except Exception:
+            pass
+
+    return R.ok({
+        "npx": npx_ok,
+        "playwright": pw_ok,
+        "version": pw_version if pw_ok else "N/A",
+        "browsers_installed": browsers_ok,
+        "max_concurrent": MAX_CONCURRENT,
+        "running": q_running(),
+    })
 
 
 # ═══════════════════════════════════════════════════════
@@ -275,23 +335,14 @@ def delete_job(
 @router.post("/{job_id}/trigger", response_model=R[UiTestRunOut])
 def trigger_job(
     req: Request, job_id: int,
-    background_tasks: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("uitest:trigger")),
     db: Session = Depends(get_db),
 ):
-    """触发 UI 测试 — 立即创建 run 并返回，后台异步执行 Playwright。"""
+    """触发 UI 测试 — 立即创建 run 并入队，由队列 worker 异步执行 Playwright。"""
     try:
         run_dict = ui_test_service.trigger_job(db, job_id, current.project_id or 0)
         db.commit()
         _audit(req, current, db, "uitest:trigger", f"#{job_id} run=#{run_dict['id']}")
-
-        # 仅当 Playwright 可用时才调度后台执行（不可用时 run 已标记 fail）
-        if run_dict["status"] == "pending":
-            background_tasks.add_task(
-                ui_test_service.execute_playwright_async,
-                run_dict["id"], job_id, current.project_id or 0,
-            )
-
         return R.ok(UiTestRunOut(**run_dict))
     except ValueError as e:
         raise HTTPException(400, str(e))

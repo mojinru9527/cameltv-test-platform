@@ -1076,3 +1076,12 @@ Wiki 页面和差异对比可能调用 LLM，成本较高。建议：
 2. nashsu/llm_wiki_skill：`https://github.com/nashsu/llm_wiki_skill`
 3. 平台现有文档：`docs/RAG知识图谱与Agent持续学习能力落地执行文档.md`
 4. 平台验收报告：`docs/知识中心与Agent持续学习功能验收报告-2026-07-10.md`
+
+---
+
+## 附：蓝湖证据包 OCR 导入（正式来源路径）
+
+正式需求沉淀改走「蓝湖证据包」路径：全页面截图 + OCR + DOM 合并 → Word/JSON → Wiki Raw Source
+（source_type=lanhu_evidence，immutable_version=lanhu-evidence:{docId}:{versionId}:{jobId}）。
+原 lanhu-mcp 文本导入保留为快速预览/降级路径。运维与验收见
+[蓝湖证据包OCR导入-运维与验收手册.md](蓝湖证据包OCR导入-运维与验收手册.md)。

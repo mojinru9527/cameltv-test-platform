@@ -26,6 +26,8 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuthStore } from '@/stores/auth'
+import Placeholder from '@/pages/Placeholder'
 import {
   fetchAgentRuns,
   fetchAgentTypes,
@@ -74,6 +76,9 @@ const STATUS_BADGE: Record<string, { label: string; color: string }> = {
 
 export default function AgentWorkbenchPage() {
   useDocumentTitle('Agent 工作台')
+  const hasPerm = useAuthStore((s) => s.hasPerm)
+  const canView = hasPerm('agent:view') || hasPerm('agent:list')
+  const canRun = hasPerm('agent:run')
 
   const [agentTypes, setAgentTypes] = useState<AgentTypeMeta[]>([])
   const [runs, setRuns] = useState<AgentRun[]>([])
@@ -183,6 +188,10 @@ export default function AgentWorkbenchPage() {
     cancelled: { label: '取消', color: 'bg-muted text-muted-foreground' },
   }
 
+  if (!canView) {
+    return <Placeholder title="需要 agent:view 权限" />
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -215,6 +224,8 @@ export default function AgentWorkbenchPage() {
                       className="w-full mt-3"
                       size="sm"
                       onClick={() => setTriggerDialog(t)}
+                      disabled={!canRun}
+                      title={canRun ? undefined : '需要 agent:run 权限'}
                     >
                       <Play className="size-4 mr-1" />
                       执行
@@ -404,7 +415,7 @@ export default function AgentWorkbenchPage() {
                                 {q.created_at?.slice(0, 19)?.replace('T', ' ') || '-'}
                               </TableCell>
                               <TableCell>
-                                {q.status === 'pending' && (
+                                {canRun && q.status === 'pending' && (
                                   <Button
                                     variant="ghost"
                                     size="sm"

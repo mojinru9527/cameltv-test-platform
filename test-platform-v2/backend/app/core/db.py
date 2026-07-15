@@ -20,7 +20,9 @@ if _is_sqlite:
 
 _engine_kwargs: dict = {"pool_pre_ping": True}
 if _is_sqlite:
-    _engine_kwargs["connect_args"] = {"check_same_thread": False}
+    # timeout（秒）：写锁被占用时，sqlite3 底层 busy handler 最长等待时长；
+    # 不设则并发写立即抛 "database is locked"（后台采集/嵌入/wiki 编译持锁时尤甚）。
+    _engine_kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
 else:
     # PostgreSQL connection pooling (V2.6)
     _engine_kwargs["pool_size"] = settings.db_pool_size
@@ -35,6 +37,11 @@ if _is_sqlite:
         cur = dbapi_conn.cursor()
         cur.execute("PRAGMA journal_mode=WAL")
         cur.execute("PRAGMA foreign_keys=ON")
+        # busy_timeout（毫秒）：与 connect timeout 呼应，显式让写者在锁竞争时轮询等待
+        # 而非立即失败，消除后台任务与同步请求并发写造成的 500 database is locked。
+        cur.execute("PRAGMA busy_timeout=30000")
+        # WAL 下 synchronous=NORMAL 安全且显著减少 fsync，降低写锁持有时长。
+        cur.execute("PRAGMA synchronous=NORMAL")
         cur.close()
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)

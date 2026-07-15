@@ -83,6 +83,13 @@ class ApiExecutionTask(Base, TimestampMixin):
     creator_id: Mapped[int] = mapped_column(default=0)
     started_at: Mapped[datetime | None] = mapped_column(default=None)
     finished_at: Mapped[datetime | None] = mapped_column(default=None)
+    cancel_requested: Mapped[bool] = mapped_column(default=False)
+    confirm_prod: Mapped[bool] = mapped_column(default=False)
+    retry_count: Mapped[int] = mapped_column(default=0)
+    max_retries: Mapped[int] = mapped_column(default=1)
+    locked_at: Mapped[datetime | None] = mapped_column(default=None)
+    locked_by: Mapped[str] = mapped_column(default="")
+    timeout_seconds: Mapped[int] = mapped_column(default=1800)
 
 
 class ApiExecutionTaskItem(Base, TimestampMixin):
@@ -98,3 +105,7 @@ class ApiExecutionTaskItem(Base, TimestampMixin):
     response_snapshot: Mapped[str] = mapped_column(Text, default="{}")
     assertion_results: Mapped[str] = mapped_column(Text, default="[]")
     error_message: Mapped[str] = mapped_column(Text, default="")
+    error_type: Mapped[str] = mapped_column(default="")
+    retry_count: Mapped[int] = mapped_column(default=0)
+    started_at: Mapped[datetime | None] = mapped_column(default=None)
+    finished_at: Mapped[datetime | None] = mapped_column(default=None)

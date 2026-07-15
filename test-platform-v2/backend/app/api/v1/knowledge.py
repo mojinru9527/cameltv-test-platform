@@ -46,6 +46,7 @@ from app.schemas.knowledge import (
     RegressionPredictionOut,
     RegressionPredictionRequest,
     RelationApprovalRequest,
+    SearchHealthOut,
     SearchQuery,
     SearchResultOut,
 )
@@ -124,6 +125,13 @@ def overview(
     total_reviewed = approved_count + rejected_count
     agent_approval_rate = approved_count / total_reviewed if total_reviewed > 0 else 0.0
 
+    # M2 RAG: embedding 覆盖率
+    rag_enabled = settings.rag_enabled
+    active_chunks = chunk_count
+    embedded_chunks = _count(KnowledgeChunk, KnowledgeChunk.status == "active", KnowledgeChunk.embedding_id != "")
+    embedding_coverage = embedded_chunks / active_chunks if active_chunks > 0 and rag_enabled else None
+    embedding_model = settings.embedding_model if rag_enabled else ""
+
     out = KnowledgeOverviewOut(
         source_count=source_count,
         chunk_count=chunk_count,
@@ -140,6 +148,11 @@ def overview(
             agent_avg_duration_ms=int(agent_avg_duration),
             agent_total_runs=agent_total_runs,
         ),
+        rag_enabled=rag_enabled,
+        embedding_model=embedding_model,
+        active_chunks=active_chunks,
+        embedded_chunks=embedded_chunks,
+        embedding_coverage=embedding_coverage,
     )
     return R.ok(out)
 
@@ -154,18 +167,72 @@ def search_knowledge(
     current: CurrentUser = Depends(require_permission("knowledge:view")),
     db: Session = Depends(get_db),
 ):
-    """关键词+向量 RRF 融合检索。仅 rag_enabled 时可用；模型不可用时自动降级为纯关键词。"""
+    """关键词+向量 RRF 融合检索。rag_enabled=False 或模型不可用时自动降级为纯关键词。"""
+    pid = current.project_id or 0
+
+    # Determine effective mode: if RAG disabled or model unavailable, force keyword-only
+    effective_mode = body.mode
     if not settings.rag_enabled:
-        raise APIException(code=503, msg="RAG 检索未启用（rag_enabled=False）", http_status=503)
+        effective_mode = "keyword"
+    elif not embedding_service.available():
+        effective_mode = "keyword"
+
     hits = search_service.hybrid_search(
         db,
-        project_id=current.project_id or 0,
+        project_id=pid,
         query=body.query,
         top_k=body.top_k,
         chunk_type=body.chunk_type,
-        mode=body.mode,
+        mode=effective_mode,
     )
     return R.ok([SearchResultOut(**hit.__dict__) for hit in hits])
+
+
+@router.get("/search/health", response_model=R[SearchHealthOut], summary="搜索健康检查（RAG）")
+def search_health(
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """报告 RAG 启用状态、模型可用性、向量检索功能与覆盖率。"""
+    pid = current.project_id or 0
+    rag_enabled = settings.rag_enabled
+    model_name = settings.embedding_model if rag_enabled else ""
+    embedding_available = embedding_service.available() if rag_enabled else False
+
+    # 向量检索功能验证：有 rag 开关 + 模型就绪 + 库中有向量记录
+    vector_functional = False
+    active_total = 0
+    embedded_total = 0
+    if rag_enabled and embedding_available:
+        active_total = db.scalar(
+            select(func.count(KnowledgeChunk.id)).where(
+                KnowledgeChunk.project_id == pid,
+                KnowledgeChunk.status == "active",
+            )
+        ) or 0
+        embedded_total = db.scalar(
+            select(func.count(KnowledgeChunk.id)).where(
+                KnowledgeChunk.project_id == pid,
+                KnowledgeChunk.status == "active",
+                KnowledgeChunk.embedding_id != "",
+            )
+        ) or 0
+        # 向量检索功能可用：至少有一条已嵌入切片（说明向量库和嵌入管线可工作）
+        vector_functional = embedded_total > 0
+
+    fallback_mode = "hybrid" if (rag_enabled and embedding_available and vector_functional) else "keyword-only"
+    coverage = embedded_total / active_total if active_total > 0 and rag_enabled else None
+
+    return R.ok(SearchHealthOut(
+        rag_enabled=rag_enabled,
+        embedding_model=model_name,
+        embedding_available=embedding_available,
+        vector_search_functional=vector_functional,
+        fallback_mode=fallback_mode,
+        active_chunks=active_total,
+        embedded_chunks=embedded_total,
+        embedding_coverage=coverage,
+    ))
 
 
 @router.post("/reembed", response_model=R[ReembedResult], summary="存量切片向量回填（RAG）")
