@@ -1,15 +1,21 @@
-"""Playwright 测试执行器 — 子进程调用 npx playwright test，解析 JSON 报告。"""
+"""Playwright 测试执行器 — 子进程调用 npx playwright test，解析 JSON 报告。
+
+使用 subprocess.Popen 实现进程管理、取消轮询、超时 kill 和产物隔离。
+"""
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
+import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
@@ -21,8 +27,38 @@ PLAYWRIGHT_DIR = Path(__file__).resolve().parent.parent.parent / "tests" / "play
 STORAGE_DIR = Path(__file__).resolve().parent.parent.parent / "storage" / "ui-runs"
 DEFAULT_TIMEOUT = 300  # 5 minutes
 MAX_CONCURRENT = 2  # 最大并发执行数
+CANCEL_POLL_INTERVAL = 1.0  # 取消轮询间隔 (秒)
 
-_semaphore = asyncio.Semaphore(MAX_CONCURRENT)
+_semaphore = threading.BoundedSemaphore(MAX_CONCURRENT)
+_ENV_KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def _claim_pending_run(db: Session, run_id: int) -> bool:
+    """Atomically transition exactly one pending run to running."""
+    from app.models.ui_test import UiTestRun
+
+    result = db.execute(
+        update(UiTestRun)
+        .where(UiTestRun.id == run_id, UiTestRun.status == "pending")
+        .values(
+            status="running",
+            started_at=datetime.now(timezone.utc),
+            cancel_requested=False,
+        )
+        .execution_options(synchronize_session=False)
+    )
+    if result.rowcount != 1:
+        db.rollback()
+        return False
+    db.commit()
+    return True
+
+
+def _current_run_status(db: Session, run_id: int) -> str:
+    from app.models.ui_test import UiTestRun
+
+    run = db.get(UiTestRun, run_id, populate_existing=True)
+    return run.status if run else "missing"
 
 
 def _resolve_cmd(name: str) -> str | None:
@@ -63,11 +99,97 @@ def _list_available_specs() -> list[str]:
     return sorted(specs)
 
 
-def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
-    """后台执行 Playwright 测试 — 更新已有的 UiTestRun 记录。
+def _resolve_environment_variables(db: Session, environment_id: int | None) -> dict[str, str]:
+    """Return decrypted, shell-safe variables for the selected environment."""
+    if not environment_id:
+        return {}
+    from sqlalchemy import select
+    from app.core.cipher import decrypt_value
+    from app.models.environment import EnvironmentVariable
 
-    所有代码路径（成功/失败/异常）都会更新 run 状态和 error_message。
-    此函数由 BackgroundTasks 调用，使用独立 db session。
+    rows = db.scalars(
+        select(EnvironmentVariable).where(EnvironmentVariable.environment_id == environment_id)
+    ).all()
+    resolved: dict[str, str] = {}
+    for row in rows:
+        if not _ENV_KEY_PATTERN.fullmatch(row.key or ""):
+            logger.warning("Skipping invalid environment variable key for UI run: %r", row.key)
+            continue
+        value = row.value or ""
+        if row.encrypted and value:
+            try:
+                value = decrypt_value(value)
+            except Exception:
+                logger.exception("Failed to decrypt UI-run environment variable %s", row.key)
+                continue
+        resolved[row.key] = value
+    return resolved
+
+
+def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
+    """Acquire a bounded slot and atomically claim a pending run before execution."""
+    if not _semaphore.acquire(blocking=False):
+        return {"status": _current_run_status(db, run_id), "run_id": run_id}
+
+    try:
+        if not _claim_pending_run(db, run_id):
+            return {"status": _current_run_status(db, run_id), "run_id": run_id}
+        from app.models.ui_test import UiTestJob
+        from app.services.notify_service import queue_notification
+
+        job = db.get(UiTestJob, job_id)
+        task_name = job.name if job else f"UI 任务 #{job_id}"
+        queue_notification(
+            project_id,
+            "task_started",
+            {
+                "task_type": "UI 自动化",
+                "task_name": task_name,
+                "triggered_by": f"user#{job.creator_id}" if job else "-",
+                "link": "/uitest",
+            },
+        )
+        output = _run_playwright_test(db, run_id, job_id, project_id)
+        result = output.get("result") or {}
+        passed = int(result.get("pass_", 0) or 0)
+        failed = int(result.get("fail", 0) or 0)
+        skipped = int(result.get("skip", 0) or 0)
+        total = int(result.get("total", passed + failed + skipped) or 0)
+        status = output.get("status", "failed")
+        queue_notification(
+            project_id,
+            "task_finished",
+            {
+                "task_type": "UI 自动化",
+                "task_name": task_name,
+                "status": status,
+                "result_summary": f"通过 {passed} / 失败 {failed} / 跳过 {skipped}",
+                "link": "/uitest",
+            },
+        )
+        queue_notification(
+            project_id,
+            "test_result",
+            {
+                "task_name": task_name,
+                "passed": passed,
+                "failed": failed,
+                "skipped": skipped,
+                "pass_rate": f"{round(passed * 100 / total, 1)}%" if total else "0%",
+                "conclusion": "通过" if total and failed == 0 else status,
+                "link": "/uitest",
+            },
+        )
+        return output
+    finally:
+        _semaphore.release()
+
+
+def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
+    """使用 subprocess.Popen 执行 Playwright 测试，支持取消轮询和超时 kill。
+
+    所有代码路径（成功/失败/取消/超时）都会更新 run 状态和 error_message。
+    此函数由后台 worker 调用，使用独立 db session。
     """
     from app.models.ui_test import UiTestJob, UiTestRun
 
@@ -77,18 +199,20 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
         logger.error(f"UiTestRun #{run_id} 不存在")
         return {"error": f"运行记录 #{run_id} 不存在"}
 
+    # Cancellation can win after the CAS claim but before executor setup.
+    if run.status != "running":
+        return {"status": run.status, "run_id": run_id}
+
     job = db.get(UiTestJob, job_id)
     if not job:
         _fail_run(db, run, f"任务 #{job_id} 不存在")
         return {"error": f"任务 #{job_id} 不存在"}
 
-    # 2. 标记 run 为 running，创建产物目录
-    run.status = "running"
-    run.started_at = datetime.now(timezone.utc)
-
+    # 2. The wrapper already claimed this run; create its isolated artifact directory.
     artifact_dir = STORAGE_DIR / str(run_id)
     artifact_dir.mkdir(parents=True, exist_ok=True)
     run.artifact_dir = str(artifact_dir).replace("\\", "/")
+    run.report_json_path = str(artifact_dir / "report.json").replace("\\", "/")
     db.commit()
 
     test_spec = (job.test_spec or "").strip()
@@ -109,50 +233,101 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
     if base_url:
         env["BASE_URL"] = base_url
         logger.info(f"Injecting BASE_URL={base_url} for run #{run_id}")
+    env.update(_resolve_environment_variables(db, job.environment_id))
     # Playwright JSON 报告写入产物目录
     env["PLAYWRIGHT_JSON_OUTPUT_NAME"] = str(artifact_dir / "report.json")
 
-    # 5. 执行 Playwright
+    npx = _resolve_cmd("npx")
+    if not npx:
+        return _fail_run(db, run, "npx 命令不可用，请安装 Node.js", job)
+
+    # 5. 使用 subprocess.Popen 启动 Playwright 子进程
+    cmd = [
+        npx, "playwright", "test", test_spec,
+        "--project", browser,
+        "--reporter", "json",
+        "--output", str(artifact_dir),
+    ]
+    logger.info(f"Running: {' '.join(cmd)} in {PLAYWRIGHT_DIR}")
+
     try:
-        npx = _resolve_cmd("npx")
-        if not npx:
-            return _fail_run(db, run, "npx 命令不可用，请安装 Node.js", job)
-
-        cmd = [
-            npx, "playwright", "test", test_spec,
-            "--project", browser,
-            "--reporter", "json",
-            "--output", str(artifact_dir),
-        ]
-        logger.info(f"Running: {' '.join(cmd)} in {PLAYWRIGHT_DIR}")
-
-        result = subprocess.run(
+        proc = subprocess.Popen(
             cmd,
-            capture_output=True, text=True,
-            timeout=DEFAULT_TIMEOUT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
             cwd=str(PLAYWRIGHT_DIR),
             env=env,
         )
 
-        # 5. 解析结果
-        stdout_text = result.stdout.strip() if result.stdout else ""
-        stderr_text = result.stderr[:2000] if result.stderr else ""
+        # 记录进程 PID 以便取消时 kill
+        run.process_id = proc.pid
+        db.commit()
+        logger.info(f"Playwright process started: PID={proc.pid}, run_id={run_id}")
 
-        if result.returncode != 0 and not stdout_text:
-            # Playwright 自身错误（非测试失败）
+        # 6. 轮询循环：检查进程状态 + 取消标记 + 超时
+        start_time = time.monotonic()
+        cancelled = False
+
+        while proc.poll() is None:
+            db.refresh(run)
+            # 检查取消标记
+            if run.cancel_requested or run.status == "cancelled":
+                logger.info(f"Cancelling Playwright process PID={proc.pid} for run #{run_id}")
+                proc.kill()
+                stdout_text, stderr_text = _safe_communicate(proc)
+                run.status = "cancelled"
+                run.finished_at = datetime.now(timezone.utc)
+                run.error_message = "用户手动取消"
+                run.stdout = stdout_text or ""
+                run.stderr = (stderr_text or "")[:5000]
+                cancelled = True
+                break
+
+            # 检查超时
+            elapsed = time.monotonic() - start_time
+            if elapsed > DEFAULT_TIMEOUT:
+                logger.warning(f"Playwright timeout for run #{run_id} after {elapsed:.0f}s")
+                proc.kill()
+                stdout_text, stderr_text = _safe_communicate(proc)
+                run.stdout = stdout_text or ""
+                run.stderr = (stderr_text or "")[:5000]
+                db.commit()
+                return _fail_run(
+                    db, run,
+                    f"测试执行超时 ({DEFAULT_TIMEOUT}s)", job,
+                )
+
+            time.sleep(CANCEL_POLL_INTERVAL)
+
+        if cancelled:
+            db.commit()
+            # Update job status on cancel
+            if job.status == "running":
+                job.status = "idle"
+                db.commit()
+            return {"status": "cancelled", "run_id": run_id}
+
+        # 7. 进程正常结束，收集输出
+        stdout_text, stderr_text = _safe_communicate(proc)
+        run.stdout = stdout_text or ""
+        run.stderr = (stderr_text or "")[:5000]
+
+        exit_code = proc.returncode
+        report = _load_playwright_json_report(artifact_dir, stdout_text)
+
+        if exit_code != 0 and report is None:
+            # A non-zero exit is a normal test failure when a valid JSON report
+            # exists. Without one, Playwright itself failed before reporting.
             return _fail_run(
                 db, run,
-                f"Playwright 执行失败 (exit={result.returncode}): {stderr_text}",
+                f"Playwright 执行失败 (exit={exit_code}): {(stderr_text or '')[:2000]}",
                 job,
             )
 
-        # Parse JSON report
-        try:
-            report = json.loads(stdout_text) if stdout_text else {}
-        except json.JSONDecodeError:
-            report = {}
-
-        suites = report.get("suites", [])
+        # 8. Parse the isolated JSON report; successful no-report runs retain
+        # the historical zero-test result instead of becoming executor errors.
+        suites = (report or {}).get("suites", [])
 
         # Recursively flatten nested suites → specs (Playwright JSON can nest suites arbitrarily)
         def _collect_specs(suite_list: list[dict]) -> list[dict]:
@@ -189,42 +364,19 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
 
         duration_sec = round(duration / 1000, 2) if duration else 0
 
-        # 6. 收集产物（产物目录 + Playwright test-results + Playwright 项目根）
-        test_results_dir = PLAYWRIGHT_DIR / "test-results"
-        screenshots = (
-            _collect_artifacts(artifact_dir, "*.png") +
-            _collect_artifacts(test_results_dir, "*.png") +
-            _collect_artifacts(PLAYWRIGHT_DIR, "*.png")
-        )
-        videos = (
-            _collect_artifacts(artifact_dir, "*.webm") +
-            _collect_artifacts(test_results_dir, "*.webm") +
-            _collect_artifacts(PLAYWRIGHT_DIR, "*.webm")
-        )
-        traces = (
-            _collect_artifacts(artifact_dir, "*.zip") +
-            _collect_artifacts(test_results_dir, "*.zip") +
-            _collect_artifacts(PLAYWRIGHT_DIR, "*.zip")
-        )
+        # 9. 产物隔离：只从 artifact_dir 收集产物，不扫描共享目录
+        screenshots = _collect_artifacts(artifact_dir, "*.png")
+        videos = _collect_artifacts(artifact_dir, "*.webm")
+        traces = _collect_artifacts(artifact_dir, "*.zip")
 
-        # Copy artifacts from test-results and PLAYWRIGHT_DIR into artifact_dir if not already there
-        for src_dir in [test_results_dir, PLAYWRIGHT_DIR]:
-            if src_dir == artifact_dir or not src_dir.exists():
-                continue
-            for pattern in ["*.png", "*.webm", "*.zip"]:
-                for f in src_dir.rglob(pattern):
-                    rel = f.relative_to(src_dir)
-                    dest = artifact_dir / rel
-                    if not dest.exists():
-                        try:
-                            dest.parent.mkdir(parents=True, exist_ok=True)
-                            shutil.copy2(f, dest)
-                        except Exception:
-                            pass
+        # 检测 HTML 报告（如果存在）
+        html_report = artifact_dir / "index.html"
+        if html_report.exists():
+            run.html_report_path = str(html_report).replace("\\", "/")
 
         return _complete_run(
             db, job, run,
-            status="done",
+            status="done" if fail_count == 0 else "fail",
             total=total, passed=passed, failed=fail_count, skipped=skipped,
             duration=duration_sec,
             screenshots=screenshots,
@@ -232,11 +384,6 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
             traces=traces,
         )
 
-    except subprocess.TimeoutExpired:
-        return _fail_run(
-            db, run,
-            f"测试执行超时 ({DEFAULT_TIMEOUT}s)", job,
-        )
     except Exception as e:
         logger.exception(f"Playwright run error for run #{run_id}, job #{job_id}")
         return _fail_run(
@@ -246,6 +393,43 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
 
 
 # ── Helpers ──
+
+def _load_playwright_json_report(artifact_dir: Path, stdout_text: str) -> dict | None:
+    """Load a valid report from this run's directory, then fall back to stdout."""
+    report_path = artifact_dir / "report.json"
+    if report_path.is_file():
+        try:
+            payload = json.loads(report_path.read_text(encoding="utf-8-sig"))
+            if isinstance(payload, dict) and isinstance(payload.get("suites"), list):
+                return payload
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            logger.warning("Invalid Playwright JSON report: %s", report_path)
+
+    if stdout_text and stdout_text.strip():
+        try:
+            payload = json.loads(stdout_text)
+            if isinstance(payload, dict) and isinstance(payload.get("suites"), list):
+                return payload
+        except json.JSONDecodeError:
+            pass
+
+    return None
+
+def _safe_communicate(proc: subprocess.Popen) -> tuple[str, str]:
+    """安全地读取子进程 stdout/stderr，防止管道死锁。"""
+    try:
+        stdout_text, stderr_text = proc.communicate(timeout=10)
+        return stdout_text or "", stderr_text or ""
+    except subprocess.TimeoutExpired:
+        try:
+            proc.kill()
+            stdout_text, stderr_text = proc.communicate()
+            return stdout_text or "", stderr_text or ""
+        except Exception:
+            return "", ""
+    except Exception:
+        return "", ""
+
 
 def _fail_run(db: Session, run, message: str, job=None) -> dict:
     """标记 run 为失败并落库 error_message。所有失败路径必须调用此函数。"""
@@ -321,9 +505,11 @@ def _complete_run(
 
 
 def _collect_artifacts(base_dir: Path, pattern: str) -> list[str]:
-    """收集产物路径。"""
+    """收集产物路径（仅从指定目录，不扫描共享目录）。"""
     items = []
     try:
+        if not base_dir.exists():
+            return items
         for f in base_dir.rglob(pattern):
             items.append(str(f.relative_to(base_dir)).replace("\\", "/"))
     except Exception:

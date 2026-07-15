@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { fetchApiExecutionTasks, fetchApiExecutionTask, cancelApiExecutionTask } from '@/api/apitest'
-import { useAuthStore } from '@/stores/auth'
 import type { ApiExecutionTask, ApiTaskDetail } from '@/types'
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
@@ -18,7 +17,6 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
 }
 
 export default function TaskTab() {
-  const projectId = useAuthStore(s => s.currentProjectId)
   const [tasks, setTasks] = useState<ApiExecutionTask[]>([])
   const [total, setTotal] = useState(0)
   const [statusFilter, setStatusFilter] = useState<string>('')
@@ -26,17 +24,15 @@ export default function TaskTab() {
   const [detailOpen, setDetailOpen] = useState(false)
 
   const loadTasks = useCallback(async () => {
-    if (!projectId) return
     try {
       const result = await fetchApiExecutionTasks({
-        project_id: projectId,
         status: statusFilter || undefined,
         page_size: 20,
       })
       setTasks(result.items)
       setTotal(result.total)
     } catch { setTasks([]) }
-  }, [projectId, statusFilter])
+  }, [statusFilter])
 
   useEffect(() => { loadTasks() }, [loadTasks])
 

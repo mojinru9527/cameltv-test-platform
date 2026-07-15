@@ -13,7 +13,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md"]
 ## 第一步：登录
 
 1. 浏览器打开 `http://localhost` (或 `http://localhost:5173` 开发模式)
-2. 使用管理员账户 `admin / admin123` 登录
+2. 使用平台管理员分配的账号登录；平台不提供公开默认密码
 
 ## 第二步：创建项目
 
@@ -83,3 +83,5 @@ ELK_INDEX=your-index-*
 ## 可选：使用 Docker 部署
 
 详见 [deploy/README.md](../deploy/README.md)
+
+完整操作、安全和发布说明见 [测试平台使用手册.md](测试平台使用手册.md)。

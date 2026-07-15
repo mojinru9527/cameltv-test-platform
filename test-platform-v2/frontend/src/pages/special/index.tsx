@@ -8,11 +8,23 @@ import {
   Trash2,
   XCircle,
   Loader2,
+  Edit,
 } from '@/lib/icons'
 import { useCallback, useEffect, useState } from 'react'
-import { createAvTask, deleteAvTask, fetchAvTask, fetchAvTasks, triggerAvCheck } from '@/api/avcheck'
+import {
+  createAvMeasurement,
+  createAvTask,
+  deleteAvMeasurement,
+  deleteAvTask,
+  fetchAvMeasurementTemplates,
+  fetchAvTask,
+  fetchAvTasks,
+  triggerAvCheck,
+  updateAvMeasurement,
+  type AvMeasurementPayload,
+} from '@/api/avcheck'
 import { useAuthStore } from '@/stores/auth'
-import type { AvTaskItem } from '@/types'
+import type { AvMeasurementItem, AvMeasurementTemplate, AvTaskItem } from '@/types'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,6 +36,7 @@ import EmptyState from '@/components/EmptyState'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -109,6 +122,32 @@ const avTaskFormSchema = z.object({
 
 type AvTaskFormValues = z.infer<typeof avTaskFormSchema>
 
+type MeasurementForm = {
+  metric_type: string
+  scenario: string
+  method: string
+  environment: string
+  device_info: string
+  network_condition: string
+  samples_text: string
+  threshold: string
+  notes: string
+}
+
+function emptyMeasurementForm(template?: AvMeasurementTemplate): MeasurementForm {
+  return {
+    metric_type: template?.metric_type || 'video_delay',
+    scenario: '',
+    method: template?.method || '',
+    environment: '',
+    device_info: '',
+    network_condition: '',
+    samples_text: '',
+    threshold: template ? String(template.threshold) : '2000',
+    notes: '',
+  }
+}
+
 export default function SpecialPage() {
   useDocumentTitle('专项测试')
   const hasPerm = useAuthStore((s) => s.hasPerm)
@@ -123,6 +162,11 @@ export default function SpecialPage() {
   const [detailOpen, setDetailOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+  const [measurementOpen, setMeasurementOpen] = useState(false)
+  const [measurementSaving, setMeasurementSaving] = useState(false)
+  const [measurementTemplates, setMeasurementTemplates] = useState<AvMeasurementTemplate[]>([])
+  const [editingMeasurement, setEditingMeasurement] = useState<AvMeasurementItem | null>(null)
+  const [measurementForm, setMeasurementForm] = useState<MeasurementForm>(emptyMeasurementForm())
 
   const form = useForm<AvTaskFormValues>({
     resolver: zodResolver(avTaskFormSchema),
@@ -170,10 +214,96 @@ export default function SpecialPage() {
 
   const openDetail = async (r: AvTaskItem) => {
     try {
-      const detailData: any = await fetchAvTask(r.id)
+      const [detailData, templates]: any[] = await Promise.all([
+        fetchAvTask(r.id),
+        measurementTemplates.length ? Promise.resolve(measurementTemplates) : fetchAvMeasurementTemplates(),
+      ])
+      setMeasurementTemplates(templates)
       setDetail(detailData)
       setDetailOpen(true)
     } catch { /* ignore */ }
+  }
+
+  const openMeasurement = (measurement?: AvMeasurementItem) => {
+    setEditingMeasurement(measurement || null)
+    if (measurement) {
+      setMeasurementForm({
+        metric_type: measurement.metric_type,
+        scenario: measurement.scenario,
+        method: measurement.method,
+        environment: measurement.environment,
+        device_info: measurement.device_info,
+        network_condition: measurement.network_condition,
+        samples_text: measurement.samples.join(', '),
+        threshold: String(measurement.threshold),
+        notes: measurement.notes,
+      })
+    } else {
+      setMeasurementForm(emptyMeasurementForm(measurementTemplates[0]))
+    }
+    setMeasurementOpen(true)
+  }
+
+  const changeMetricType = (metricType: string) => {
+    const template = measurementTemplates.find((item) => item.metric_type === metricType)
+    setMeasurementForm((prev) => ({
+      ...prev,
+      metric_type: metricType,
+      method: template?.method || prev.method,
+      threshold: template ? String(template.threshold) : prev.threshold,
+    }))
+  }
+
+  const saveMeasurement = async () => {
+    if (!detail) return
+    const samples = measurementForm.samples_text
+      .split(/[\s,，;；]+/)
+      .filter(Boolean)
+      .map(Number)
+    if (!samples.length || samples.some((item) => !Number.isFinite(item))) {
+      toast.error('请输入至少一个有效数值，多个样本用逗号或换行分隔')
+      return
+    }
+    const threshold = Number(measurementForm.threshold)
+    if (!Number.isFinite(threshold) || threshold <= 0) {
+      toast.error('阈值必须是大于 0 的数值')
+      return
+    }
+    const payload: AvMeasurementPayload = {
+      metric_type: measurementForm.metric_type,
+      scenario: measurementForm.scenario.trim(),
+      method: measurementForm.method.trim(),
+      environment: measurementForm.environment.trim(),
+      device_info: measurementForm.device_info.trim(),
+      network_condition: measurementForm.network_condition.trim(),
+      samples,
+      threshold,
+      notes: measurementForm.notes.trim(),
+    }
+    setMeasurementSaving(true)
+    try {
+      if (editingMeasurement) {
+        await updateAvMeasurement(detail.id, editingMeasurement.id, payload)
+        toast.success('测量记录已更新')
+      } else {
+        await createAvMeasurement(detail.id, payload)
+        toast.success('真实测量结果已保存')
+      }
+      const refreshed: any = await fetchAvTask(detail.id)
+      setDetail(refreshed)
+      setMeasurementOpen(false)
+      setEditingMeasurement(null)
+    } finally {
+      setMeasurementSaving(false)
+    }
+  }
+
+  const removeMeasurement = async (measurementId: number) => {
+    if (!detail) return
+    await deleteAvMeasurement(detail.id, measurementId)
+    const refreshed: any = await fetchAvTask(detail.id)
+    setDetail(refreshed)
+    toast.success('测量记录已删除')
   }
 
   return (
@@ -422,6 +552,86 @@ export default function SpecialPage() {
                 </div>
               )}
 
+              <div className="rounded-lg border p-3 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-sm font-medium">专项测量记录</h4>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      录入采集器、OCR、录屏解帧或 ffprobe 得到的真实样本，平台自动统计，不生成模拟数据。
+                    </p>
+                  </div>
+                  {hasPerm('avcheck:create') && (
+                    <Button size="sm" onClick={() => openMeasurement()}>
+                      <Plus className="size-4" />
+                      录入测量
+                    </Button>
+                  )}
+                </div>
+
+                {(!detail.measurements || detail.measurements.length === 0) ? (
+                  <div className="text-sm text-muted-foreground rounded-md bg-muted/40 p-3">
+                    暂无真实测量记录。可按“视频延迟、连麦延迟、音画同步、帧率、首帧耗时”模板录入。
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {detail.measurements.map((m) => (
+                      <div key={m.id} className="rounded-md border p-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{m.metric_name}</span>
+                              <Badge variant={m.passed ? 'default' : 'destructive'}>
+                                {m.passed ? '达标' : '未达标'}
+                              </Badge>
+                              <Badge variant="outline">真实样本 {m.sample_count} 个</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {m.scenario || '未填写场景'} · {m.method || '未填写方法'}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {hasPerm('avcheck:create') && (
+                              <Button size="xs" variant="ghost" onClick={() => openMeasurement(m)} aria-label="编辑测量记录">
+                                <Edit className="size-3" />
+                              </Button>
+                            )}
+                            {hasPerm('avcheck:delete') && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="xs" variant="ghost" aria-label="删除测量记录">
+                                    <Trash2 className="size-3 text-destructive" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>删除这条测量记录？</AlertDialogTitle>
+                                    <AlertDialogDescription>只删除本条真实样本统计，不删除专项任务。</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>取消</AlertDialogCancel>
+                                    <AlertDialogAction variant="destructive" onClick={() => removeMeasurement(m.id)}>删除</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
+                          <div className="rounded bg-muted/40 p-2">平均值 <strong>{m.mean} {m.unit}</strong></div>
+                          <div className="rounded bg-muted/40 p-2">P95 <strong>{m.p95} {m.unit}</strong></div>
+                          <div className="rounded bg-muted/40 p-2">最大值 <strong>{m.max} {m.unit}</strong></div>
+                          <div className="rounded bg-muted/40 p-2">最小值 <strong>{m.min} {m.unit}</strong></div>
+                          <div className="rounded bg-muted/40 p-2">标准差 <strong>{m.stddev}</strong></div>
+                          <div className="rounded bg-muted/40 p-2">
+                            判定 {m.pass_basis.toUpperCase()} {m.comparator} {m.threshold} {m.unit}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {detail.status === 'idle' && hasPerm('avcheck:trigger') && (
                 <div className="text-center pt-2">
                   <Button onClick={() => { doTrigger(detail.id); setDetailOpen(false) }}>
@@ -434,6 +644,71 @@ export default function SpecialPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={measurementOpen} onOpenChange={(open) => { if (!open) { setMeasurementOpen(false); setEditingMeasurement(null) } }}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingMeasurement ? '编辑专项测量' : '录入专项测量'}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="text-sm font-medium mb-1 block">指标类型</label>
+              <Select value={measurementForm.metric_type} onValueChange={changeMetricType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {measurementTemplates.map((item) => (
+                    <SelectItem key={item.metric_type} value={item.metric_type}>{item.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {measurementTemplates.find((item) => item.metric_type === measurementForm.metric_type)?.preconditions?.length ? (
+                <ul className="mt-2 text-xs text-muted-foreground list-disc pl-5 space-y-0.5">
+                  {measurementTemplates.find((item) => item.metric_type === measurementForm.metric_type)!.preconditions.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              ) : null}
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">测试场景</label>
+              <Input value={measurementForm.scenario} onChange={(e) => setMeasurementForm((p) => ({ ...p, scenario: e.target.value }))} placeholder="如：公司 5GHz WiFi" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">采集方法</label>
+              <Input value={measurementForm.method} onChange={(e) => setMeasurementForm((p) => ({ ...p, method: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">环境</label>
+              <Input value={measurementForm.environment} onChange={(e) => setMeasurementForm((p) => ({ ...p, environment: e.target.value }))} placeholder="测试5 / 生产" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">阈值</label>
+              <Input inputMode="decimal" value={measurementForm.threshold} onChange={(e) => setMeasurementForm((p) => ({ ...p, threshold: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-sm font-medium mb-1 block">真实样本 *</label>
+              <Textarea rows={4} value={measurementForm.samples_text} onChange={(e) => setMeasurementForm((p) => ({ ...p, samples_text: e.target.value }))} placeholder="例如：1200, 1350, 1420；支持逗号、空格或换行分隔" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">网络条件</label>
+              <Input value={measurementForm.network_condition} onChange={(e) => setMeasurementForm((p) => ({ ...p, network_condition: e.target.value }))} placeholder="带宽、延迟、丢包、抖动" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">设备信息</label>
+              <Input value={measurementForm.device_info} onChange={(e) => setMeasurementForm((p) => ({ ...p, device_info: e.target.value }))} placeholder="主播端 / 观众端 / 工具版本" />
+            </div>
+            <div className="col-span-2">
+              <label className="text-sm font-medium mb-1 block">备注</label>
+              <Textarea rows={2} value={measurementForm.notes} onChange={(e) => setMeasurementForm((p) => ({ ...p, notes: e.target.value }))} placeholder="异常、正负偏差方向、素材和录制文件说明" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMeasurementOpen(false)}>取消</Button>
+            <Button onClick={saveMeasurement} disabled={measurementSaving}>
+              {measurementSaving && <Loader2 className="size-4 animate-spin" />}
+              保存并统计
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

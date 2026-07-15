@@ -1,8 +1,9 @@
 """接口测试模块 Pydantic schemas — 服务、接口资产、导入、任务。"""
 from __future__ import annotations
 
+import json
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 
 # ── ApiService ──
@@ -53,6 +54,7 @@ class ApiEndpointCreate(BaseModel):
 
 
 class ApiEndpointUpdate(BaseModel):
+    service_id: int | None = None
     module: str | None = None
     summary: str | None = None
     description: str | None = None
@@ -151,6 +153,13 @@ class ApiTaskOut(BaseModel):
     started_at: datetime | None = None
     finished_at: datetime | None = None
     created_at: datetime | None = None
+    cancel_requested: bool = False
+    confirm_prod: bool = False
+    retry_count: int = 0
+    max_retries: int = 1
+    locked_at: datetime | None = None
+    locked_by: str = ""
+    timeout_seconds: int = 1800
 
     model_config = {"from_attributes": True}
 
@@ -165,9 +174,33 @@ class ApiTaskItemOut(BaseModel):
     response_snapshot: str
     assertion_results: str
     error_message: str
+    error_type: str = ""
+    retry_count: int = 0
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
     created_at: datetime | None = None
 
     model_config = {"from_attributes": True}
+
+    @computed_field
+    @property
+    def curl_command(self) -> str:
+        """从 request_snapshot 中提取 curl 命令。"""
+        try:
+            snap = json.loads(self.request_snapshot) if self.request_snapshot else {}
+        except (json.JSONDecodeError, TypeError):
+            return ""
+        return snap.get("curl", "") or ""
+
+    @computed_field
+    @property
+    def truncated(self) -> bool:
+        """从 response_snapshot 中提取 truncated 标记。"""
+        try:
+            snap = json.loads(self.response_snapshot) if self.response_snapshot else {}
+        except (json.JSONDecodeError, TypeError):
+            return False
+        return snap.get("truncated", False)
 
 
 class ApiTaskDetailOut(ApiTaskOut):

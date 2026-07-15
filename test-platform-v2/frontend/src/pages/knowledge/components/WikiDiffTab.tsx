@@ -162,7 +162,7 @@ export default function WikiDiffTab() {
                   <SelectTrigger className="h-7 w-[110px] text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部维度</SelectItem>
-                    {['业务规则', '字段', '接口', '异常路径', '客户端', '测试覆盖', '验收标准', '需求范围'].map(
+                    {['需求范围', '客户端', '业务规则', '字段', '接口', '异常路径', '权限角色', '数据依赖', '验收标准', '测试覆盖', '版本', '证据'].map(
                       (d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
                   </SelectContent>
                 </Select>

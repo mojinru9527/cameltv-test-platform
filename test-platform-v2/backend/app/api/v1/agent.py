@@ -5,18 +5,27 @@ M4: Agent 触发端点（POST /run/{agent_type}）— 编排 RAG 检索 + LLM �
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.core.exceptions import APIException
 from app.schemas.common import Page, R
 from app.schemas.knowledge import AgentRunOut
 from app.services.knowledge import agent_run_service
 from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
 from app.services.knowledge.agent_prompts import AGENT_META
-from app.services.knowledge.agent_queue import enqueue, cancel_queue_item, ensure_processor_running, get_queue_stats, list_queue_items
+from app.services.knowledge.agent_queue import (
+    QueueWriteBusy,
+    cancel_queue_item,
+    commit_queue_write,
+    enqueue,
+    ensure_processor_running,
+    get_queue_stats,
+    list_queue_items,
+)
 from app.schemas.knowledge import AgentQueueItemOut, QueueStats
 
 router = APIRouter(prefix="/agents", tags=["Agent 工作台"])
@@ -46,7 +55,7 @@ def list_runs(
     status: str | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    current: CurrentUser = Depends(require_permission("agent:list")),
+    current: CurrentUser = Depends(require_permission("agent:view")),
     db: Session = Depends(get_db),
 ):
     rows, total = agent_run_service.list_runs(
@@ -62,7 +71,7 @@ def list_runs(
 @router.get("/runs/{run_id}", response_model=R[AgentRunOut], summary="Agent 执行记录详情")
 def get_run(
     run_id: int,
-    current: CurrentUser = Depends(require_permission("agent:list")),
+    current: CurrentUser = Depends(require_permission("agent:view")),
     db: Session = Depends(get_db),
 ):
     row = agent_run_service.get_run(db, run_id, current.project_id or 0)
@@ -77,7 +86,6 @@ def get_run(
 def trigger_agent(
     agent_type: str,
     body: AgentRunRequest,
-    bg: BackgroundTasks,
     current: CurrentUser = Depends(require_permission("agent:run")),
     db: Session = Depends(get_db),
 ):
@@ -91,18 +99,27 @@ def trigger_agent(
 
     pid = current.project_id or 0
 
-    # 确保队列处理器已启动
-    ensure_processor_running()
+    try:
+        item = enqueue(
+            db,
+            project_id=pid,
+            agent_type=agent_type,
+            trigger_type="manual",
+            user_input=body.query,
+            params=body.params,
+            operator_id=current.user.id,
+        )
+        commit_queue_write(db)
+    except QueueWriteBusy as exc:
+        db.rollback()
+        raise APIException(
+            code=503,
+            http_status=503,
+            msg="Agent queue is temporarily busy; retry shortly",
+        ) from exc
 
-    # 入队（DB 持久化）
-    item = enqueue(
-        project_id=pid,
-        agent_type=agent_type,
-        trigger_type="manual",
-        user_input=body.query,
-        params=body.params,
-        operator_id=current.user.id,
-    )
+    # The processor may only observe the queue row after it has committed.
+    ensure_processor_running()
 
     return R.ok(AgentRunResponse(
         queue_item_id=item.id,
@@ -113,7 +130,9 @@ def trigger_agent(
 
 
 @router.get("/types", response_model=R[list[dict]], summary="获取可用 Agent 类型列表")
-def list_agent_types():
+def list_agent_types(
+    current: CurrentUser = Depends(require_permission("agent:view")),
+):
     """返回所有可用的 Agent 类型及其元数据（label / description / artifact_type）。"""
     return R.ok([
         {"type": k, "label": v["label"], "description": v["description"], "artifact_type": v["artifact_type"]}
@@ -145,7 +164,9 @@ def check_changes(
 
 
 @router.get("/triggers/rules", response_model=R[dict], summary="查看触发规则")
-def get_trigger_rules():
+def get_trigger_rules(
+    current: CurrentUser = Depends(require_permission("agent:view")),
+):
     """返回当前的触发规则配置。"""
     from app.services.knowledge.change_detector import TRIGGER_RULES
     return R.ok(TRIGGER_RULES)
@@ -160,7 +181,7 @@ def list_queue(
     status: str | None = Query(None, description="过滤状态: pending/running/completed/failed/cancelled"),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=200),
-    current: CurrentUser = Depends(require_permission("agent:list")),
+    current: CurrentUser = Depends(require_permission("agent:view")),
     db: Session = Depends(get_db),
 ):
     rows, total = list_queue_items(
@@ -175,7 +196,7 @@ def list_queue(
 
 @router.get("/queue/stats", response_model=R[QueueStats], summary="队列统计")
 def queue_stats(
-    current: CurrentUser = Depends(require_permission("agent:list")),
+    current: CurrentUser = Depends(require_permission("agent:view")),
     db: Session = Depends(get_db),
 ):
     stats = get_queue_stats(db, current.project_id or 0)
