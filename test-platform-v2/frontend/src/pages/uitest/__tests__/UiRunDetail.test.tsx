@@ -7,8 +7,7 @@
  * - Run detail dialog renders status badge, artifacts, and cancel button
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 
 // ── Mock API client ──
 const mockGet = vi.fn()
@@ -132,6 +131,56 @@ describe('UiRunDetail component rendering', () => {
     expect(mod.default).toBeDefined()
     // The RUN_STATUS_MAP is internal; test via API that it exists
     // (Component rendering with full DOM requires more mocking; covered by vitest + jsdom)
+  })
+
+  it('shows the bound environment when editing a UI job', async () => {
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/ui-tests/scripts') return Promise.resolve({ available_specs: ['specs/production-smoke.spec.ts'] })
+      if (url === '/environments') {
+        return Promise.resolve([{
+          id: 1,
+          project_id: 1,
+          name: 'CamelTv 体育生产环境',
+          env_type: 'prod',
+          base_url: 'https://www.camel1.tv',
+          description: '',
+          created_at: null,
+          updated_at: null,
+        }])
+      }
+      if (url === '/ui-tests') {
+        return Promise.resolve({
+          total: 1,
+          page: 1,
+          page_size: 20,
+          items: [{
+            id: 10,
+            name: 'DEV体育生产全功能Smoke-20260715',
+            description: '',
+            test_spec: 'specs/production-smoke.spec.ts',
+            browser: 'chromium',
+            environment_id: 1,
+            status: 'idle',
+            last_result: null,
+            creator_id: 1,
+            creator_name: 'DEV部门',
+            last_run_status: '',
+            last_run_time: null,
+            created_at: null,
+            updated_at: null,
+          }],
+        })
+      }
+      return Promise.resolve({ total: 0, items: [], page: 1, page_size: 20 })
+    })
+
+    const { default: UiTestPage } = await import('@/pages/uitest/index')
+    render(<UiTestPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: '编辑' }))
+
+    const environmentSelect = await screen.findByRole('combobox', { name: '运行环境' })
+    expect(environmentSelect.textContent).toContain('CamelTv 体育生产环境（https://www.camel1.tv）')
   })
 
   it('renders run table with clickable rows', async () => {

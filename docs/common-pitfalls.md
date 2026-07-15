@@ -189,7 +189,7 @@ if os.environ.get("WERKZEUG_RUN_MAIN") == "true" or not os.environ.get("ENVIRONM
 **排查步骤**：
 1. 检查后端 `.env` 中的 `ACCESS_TOKEN_EXPIRE_MINUTES` 和 `REFRESH_TOKEN_EXPIRE_DAYS`
 2. 打开浏览器 DevTools → Application → Local Storage，确认 token 存储正常
-3. 如果出现频繁 401，先用默认账号（admin/admin123）登录测试
+3. 如果出现频繁 401，先用管理员分配的测试账号重新登录
 4. 清除 localStorage 后重新登录：`localStorage.clear()`
 
 **预防措施**：在前端 Axios 拦截器中增加 token 过期前的静默刷新逻辑。

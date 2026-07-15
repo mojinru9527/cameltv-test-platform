@@ -4,13 +4,17 @@
  * 前置条件：
  *   1. 后端运行在 localhost:8000
  *   2. 前端运行在 localhost:5173（vite proxy → :8000）
- *   3. 数据库已 seed（admin / admin123）
+ *   3. 已通过 E2E_USERNAME / E2E_PASSWORD 注入测试账号
  *
  * 运行：npx playwright test
  */
 import { test, expect } from '@playwright/test'
 
-const ADMIN = { username: 'admin', password: 'admin123' }
+const ADMIN = {
+  username: process.env.E2E_USERNAME || '',
+  password: process.env.E2E_PASSWORD || '',
+}
+const HAS_AUTH = Boolean(ADMIN.username && ADMIN.password)
 
 // ── 关键页面列表（路由 + 页面标题断言） ──
 const PAGES = [
@@ -36,6 +40,7 @@ test.describe('Smoke: Login', () => {
   })
 
   test('successful login redirects to /workbench', async ({ page }) => {
+    test.skip(!HAS_AUTH, '未通过环境变量授权 E2E 登录账号')
     await page.goto('/login')
     await page.fill('input[name="username"]', ADMIN.username)
     await page.fill('input[type="password"]', ADMIN.password)
@@ -48,6 +53,7 @@ test.describe('Smoke: Login', () => {
 
 test.describe('Smoke: Page accessibility', () => {
   test.beforeEach(async ({ page }) => {
+    test.skip(!HAS_AUTH, '未通过环境变量授权 E2E 登录账号')
     // Login first
     await page.goto('/login')
     await page.fill('input[name="username"]', ADMIN.username)
@@ -82,6 +88,7 @@ test.describe('Smoke: Page accessibility', () => {
 
 test.describe('Smoke: Knowledge center tabs', () => {
   test.beforeEach(async ({ page }) => {
+    test.skip(!HAS_AUTH, '未通过环境变量授权 E2E 登录账号')
     await page.goto('/login')
     await page.fill('input[name="username"]', ADMIN.username)
     await page.fill('input[type="password"]', ADMIN.password)

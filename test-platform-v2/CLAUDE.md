@@ -59,12 +59,9 @@ test-platform-v2/
 - [backend/CLAUDE.md](backend/CLAUDE.md) — 后端架构、API 约定、服务层模式
 - [frontend/CLAUDE.md](frontend/CLAUDE.md) — 前端架构、组件库、状态管理约定
 
-## 默认凭据
+## 凭据策略
 
-| 角色 | 用户名 | 密码 |
-|------|--------|------|
-| 超级管理员 | admin | admin123 |
-| 测试人员 | tester | tester123 |
+部署账号密码通过未跟踪的 `.env` 或 Secret 管理注入，登录页不预填凭据。仓库、文档、测试报告和截图禁止保存真实密码、Token、API Key、Webhook 或 VPN 文件。
 
 ## 关联文档
 

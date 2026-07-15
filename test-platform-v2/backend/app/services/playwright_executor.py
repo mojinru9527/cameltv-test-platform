@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import threading
@@ -29,6 +30,7 @@ MAX_CONCURRENT = 2  # 最大并发执行数
 CANCEL_POLL_INTERVAL = 1.0  # 取消轮询间隔 (秒)
 
 _semaphore = threading.BoundedSemaphore(MAX_CONCURRENT)
+_ENV_KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def _claim_pending_run(db: Session, run_id: int) -> bool:
@@ -97,6 +99,33 @@ def _list_available_specs() -> list[str]:
     return sorted(specs)
 
 
+def _resolve_environment_variables(db: Session, environment_id: int | None) -> dict[str, str]:
+    """Return decrypted, shell-safe variables for the selected environment."""
+    if not environment_id:
+        return {}
+    from sqlalchemy import select
+    from app.core.cipher import decrypt_value
+    from app.models.environment import EnvironmentVariable
+
+    rows = db.scalars(
+        select(EnvironmentVariable).where(EnvironmentVariable.environment_id == environment_id)
+    ).all()
+    resolved: dict[str, str] = {}
+    for row in rows:
+        if not _ENV_KEY_PATTERN.fullmatch(row.key or ""):
+            logger.warning("Skipping invalid environment variable key for UI run: %r", row.key)
+            continue
+        value = row.value or ""
+        if row.encrypted and value:
+            try:
+                value = decrypt_value(value)
+            except Exception:
+                logger.exception("Failed to decrypt UI-run environment variable %s", row.key)
+                continue
+        resolved[row.key] = value
+    return resolved
+
+
 def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) -> dict:
     """Acquire a bounded slot and atomically claim a pending run before execution."""
     if not _semaphore.acquire(blocking=False):
@@ -105,7 +134,53 @@ def run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int) 
     try:
         if not _claim_pending_run(db, run_id):
             return {"status": _current_run_status(db, run_id), "run_id": run_id}
-        return _run_playwright_test(db, run_id, job_id, project_id)
+        from app.models.ui_test import UiTestJob
+        from app.services.notify_service import queue_notification
+
+        job = db.get(UiTestJob, job_id)
+        task_name = job.name if job else f"UI 任务 #{job_id}"
+        queue_notification(
+            project_id,
+            "task_started",
+            {
+                "task_type": "UI 自动化",
+                "task_name": task_name,
+                "triggered_by": f"user#{job.creator_id}" if job else "-",
+                "link": "/uitest",
+            },
+        )
+        output = _run_playwright_test(db, run_id, job_id, project_id)
+        result = output.get("result") or {}
+        passed = int(result.get("pass_", 0) or 0)
+        failed = int(result.get("fail", 0) or 0)
+        skipped = int(result.get("skip", 0) or 0)
+        total = int(result.get("total", passed + failed + skipped) or 0)
+        status = output.get("status", "failed")
+        queue_notification(
+            project_id,
+            "task_finished",
+            {
+                "task_type": "UI 自动化",
+                "task_name": task_name,
+                "status": status,
+                "result_summary": f"通过 {passed} / 失败 {failed} / 跳过 {skipped}",
+                "link": "/uitest",
+            },
+        )
+        queue_notification(
+            project_id,
+            "test_result",
+            {
+                "task_name": task_name,
+                "passed": passed,
+                "failed": failed,
+                "skipped": skipped,
+                "pass_rate": f"{round(passed * 100 / total, 1)}%" if total else "0%",
+                "conclusion": "通过" if total and failed == 0 else status,
+                "link": "/uitest",
+            },
+        )
+        return output
     finally:
         _semaphore.release()
 
@@ -158,6 +233,7 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
     if base_url:
         env["BASE_URL"] = base_url
         logger.info(f"Injecting BASE_URL={base_url} for run #{run_id}")
+    env.update(_resolve_environment_variables(db, job.environment_id))
     # Playwright JSON 报告写入产物目录
     env["PLAYWRIGHT_JSON_OUTPUT_NAME"] = str(artifact_dir / "report.json")
 

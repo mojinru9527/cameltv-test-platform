@@ -144,7 +144,7 @@ curl -s http://localhost/health
 # 登录 API
 curl -s -X POST http://localhost/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"${E2E_USERNAME}","password":"${E2E_PASSWORD}"}'
 
 # 前端可访问
 curl -s -o /dev/null -w '%{http_code}' http://localhost/

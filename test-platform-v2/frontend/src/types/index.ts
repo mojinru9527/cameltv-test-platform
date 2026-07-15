@@ -263,6 +263,7 @@ export interface AvTaskItem {
   creator_id: number
   creator_name: string
   metrics: AvMetricItem[]
+  measurements: AvMeasurementItem[]
   created_at: string | null
   updated_at: string | null
 }
@@ -277,12 +278,54 @@ export interface AvMetricItem {
   detail: string
 }
 
+export interface AvMeasurementItem {
+  id: number
+  task_id: number
+  metric_type: string
+  metric_name: string
+  scenario: string
+  method: string
+  environment: string
+  device_info: string
+  network_condition: string
+  samples: number[]
+  sample_count: number
+  unit: string
+  threshold: number
+  comparator: '<=' | '>='
+  mean: number
+  median: number
+  min: number
+  max: number
+  stddev: number
+  p95: number
+  pass_basis: 'mean' | 'p95'
+  passed: boolean
+  simulated: false
+  notes: string
+  creator_id: number
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface AvMeasurementTemplate {
+  metric_type: string
+  name: string
+  unit: string
+  threshold: number
+  comparator: '<=' | '>='
+  pass_basis: 'mean' | 'p95'
+  method: string
+  preconditions: string[]
+}
+
 export interface UiJobItem {
   id: number
   name: string
   description: string
   test_spec: string
   browser: string
+  environment_id: number | null
   status: string
   last_result: Record<string, any> | null
   creator_id: number

@@ -21,8 +21,9 @@ import {
 } from '@/lib/icons'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts } from '@/api/uitest'
+import { fetchEnvironments } from '@/api/environment'
 import { useAuthStore } from '@/stores/auth'
-import type { UiJobItem, UiRunItem, UiRunArtifact } from '@/types'
+import type { Environment, UiJobItem, UiRunItem, UiRunArtifact } from '@/types'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -123,6 +124,7 @@ const uiJobFormSchema = z.object({
   description: z.string().optional().default(''),
   test_spec: z.string().optional().default(''),
   browser: z.string().default('chromium'),
+  environment_id: z.number().nullable().default(null),
 })
 
 type UiJobFormValues = z.infer<typeof uiJobFormSchema>
@@ -135,8 +137,10 @@ export default function UiTestPage() {
   const [fStatus, setFStatus] = useState<string | undefined>()
   const [fKeyword, setFKeyword] = useState('')
   const [scripts, setScripts] = useState<string[]>([])
+  const [environments, setEnvironments] = useState<Environment[]>([])
 
   useEffect(() => { fetchScripts().then(setScripts).catch(() => setScripts([])) }, [])
+  useEffect(() => { fetchEnvironments().then(setEnvironments).catch(() => setEnvironments([])) }, [])
 
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<UiJobItem | null>(null)
@@ -185,7 +189,7 @@ export default function UiTestPage() {
 
   const form = useForm<UiJobFormValues>({
     resolver: zodResolver(uiJobFormSchema),
-    defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium' },
+    defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null },
   })
 
   // ── DataTable column definitions ──
@@ -337,6 +341,7 @@ export default function UiTestPage() {
       description: r.description ?? '',
       test_spec: r.test_spec ?? '',
       browser: r.browser ?? 'chromium',
+      environment_id: r.environment_id ?? null,
     })
     setDrawer(true)
   }
@@ -390,7 +395,7 @@ export default function UiTestPage() {
               刷新
             </Button>
             {hasPerm('uitest:create') && (
-              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium' }); setEditing(null); setDrawer(true) }}>
+              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null }); setEditing(null); setDrawer(true) }}>
                 <Plus className="size-4" />
                 新建任务
               </Button>
@@ -439,6 +444,29 @@ export default function UiTestPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">运行环境</label>
+              <Select
+                value={form.watch('environment_id') == null ? '__none__' : String(form.watch('environment_id'))}
+                onValueChange={(v) => form.setValue('environment_id', v === '__none__' ? null : Number(v))}
+              >
+                <SelectTrigger aria-label="运行环境">
+                  <SelectValue placeholder="选择运行环境" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">不绑定环境</SelectItem>
+                  {environments.map((env) => (
+                    <SelectItem key={env.id} value={String(env.id)}>
+                      {env.name}（{env.base_url || '未配置 Base URL'}）
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                执行时会把所选环境的 Base URL 注入 Playwright。
+              </p>
             </div>
 
             <DialogFooter>

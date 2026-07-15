@@ -15,6 +15,13 @@ from app.models.user import User
 logger = logging.getLogger("uitest")
 
 
+def _as_utc(value: datetime) -> datetime:
+    """Normalize SQLite-naive and timezone-aware timestamps to UTC."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 def _job_to_dict(r: UiTestJob, creator_name: str = "") -> dict:
     return {
         "id": r.id, "project_id": r.project_id,
@@ -42,10 +49,10 @@ def _run_to_dict(r: UiTestRun, job: UiTestJob | None = None) -> dict:
     # Compute duration
     duration = None
     if r.started_at and r.finished_at:
-        duration = round((r.finished_at - r.started_at).total_seconds(), 2)
+        duration = round((_as_utc(r.finished_at) - _as_utc(r.started_at)).total_seconds(), 2)
     elif r.started_at and r.status == "running":
         now = datetime.now(timezone.utc)
-        duration = round((now - r.started_at).total_seconds(), 2)
+        duration = round((now - _as_utc(r.started_at)).total_seconds(), 2)
     # Browser from job
     browser = job.browser if job else ""
     # Truncate stdout/stderr for API response
