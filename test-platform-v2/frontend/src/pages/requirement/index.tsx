@@ -40,6 +40,26 @@ const TYPE_TAG: Record<string, { className: string; label: string; icon: React.R
   lanhu: { className: 'border-purple-200 bg-purple-50 text-purple-700', label: '蓝湖', icon: <Link2 className="size-3" /> },
 }
 
+// ── Source ref display helpers ──
+function formatSourceRef(sourceRef: string, fileType: string): { label: string; isLink: boolean } {
+  if (!sourceRef) return { label: '-', isLink: false }
+  if (fileType === 'lanhu') {
+    // Extract version from lanhu URL: .../updates/{version} or query param
+    const versionMatch = sourceRef.match(/\/updates\/([\d.]+)/) || sourceRef.match(/[?&]v(?:ersion)?=([\d.]+)/)
+    if (versionMatch) {
+      return { label: `蓝湖 v${versionMatch[1]}`, isLink: true }
+    }
+    return { label: '蓝湖链接', isLink: true }
+  }
+  // Non-lanhu: extract domain
+  try {
+    const url = new URL(sourceRef)
+    return { label: url.hostname, isLink: true }
+  } catch {
+    return { label: sourceRef.length > 30 ? sourceRef.slice(0, 30) + '...' : sourceRef, isLink: false }
+  }
+}
+
 const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'outline'; className?: string; label: string }> = {
   uploaded: { variant: 'secondary', label: '已上传' },
   parsed: { variant: 'secondary', label: '已解析' },
@@ -513,23 +533,40 @@ export default function RequirementPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          {r.file_type === 'lanhu' ? (
-                            <a
-                              href={r.source_ref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <ExternalLink className="size-3" />
-                              <span className="truncate max-w-[150px] inline-block">
-                                {r.source_ref.length > 50 ? r.source_ref.slice(0, 50) + '...' : r.source_ref}
-                              </span>
-                            </a>
-                          ) : (
-                            <code className="text-xs bg-muted px-1 py-0.5 rounded">{r.source_ref}</code>
-                          )}
+                        <TableCell className="max-w-[200px]">
+                          {(() => {
+                            const { label, isLink } = formatSourceRef(r.source_ref, r.file_type)
+                            if (isLink && r.file_type === 'lanhu') {
+                              return (
+                                <a
+                                  href={r.source_ref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1 truncate"
+                                  title={r.source_ref}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="size-3 shrink-0" />
+                                  <span className="truncate">{label}</span>
+                                </a>
+                              )
+                            }
+                            if (isLink) {
+                              return (
+                                <a
+                                  href={r.source_ref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-muted-foreground hover:underline truncate block"
+                                  title={r.source_ref}
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {label}
+                                </a>
+                              )
+                            }
+                            return <span className="text-xs text-muted-foreground truncate block" title={r.source_ref}>{label}</span>
+                          })()}
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center gap-1 flex-wrap justify-center">

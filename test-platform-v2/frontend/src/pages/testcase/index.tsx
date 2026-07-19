@@ -62,6 +62,7 @@ export default function TestCasePage() {
   const [priority, setPriority] = useState('')
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
 
   // drawer
   const [drawer, setDrawer] = useState(false)
@@ -89,7 +90,7 @@ export default function TestCasePage() {
   // ── Main data fetching with useApi ──
   const { data, isLoading, isError, error, refetch } = useApi(
     () => {
-      const params: any = { page, page_size: 20 }
+      const params: any = { page, page_size: pageSize }
       if (actTab) params.case_type = actTab
       if (selDomain) params.domain = selDomain
       if (selModule) params.module = selModule
@@ -97,7 +98,7 @@ export default function TestCasePage() {
       if (keyword) params.keyword = keyword
       return fetchTestCases(params) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
     },
-    [actTab, selDomain, selModule, priority, keyword, page]
+    [actTab, selDomain, selModule, priority, keyword, page, pageSize]
   )
 
   // ── Domains (secondary data, loaded independently) ──
@@ -416,7 +417,7 @@ export default function TestCasePage() {
             loadingRows={4}
           >
             {() => (
-            <div className="rounded-md border">
+            <div className="rounded-md border min-h-[600px]">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -513,12 +514,24 @@ export default function TestCasePage() {
           </AsyncState>
 
           {/* Pagination */}
-          <Pagination
-            page={data?.page || 1}
-            totalPages={totalPages}
-            total={data?.total || 0}
-            onChange={(p) => setPage(p)}
-          />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">每页</span>
+              <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1) }}>
+                <SelectTrigger className="w-[80px]" size="sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {[20, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-muted-foreground">条</span>
+            </div>
+            <Pagination
+              page={data?.page || 1}
+              totalPages={totalPages}
+              total={data?.total || 0}
+              onChange={(p) => setPage(p)}
+            />
+          </div>
         </div>
       </div>
 

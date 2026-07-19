@@ -629,7 +629,7 @@
   background: var(--accent);
 }
 /* Blue sidebar: subtle gradient */
-[data-theme="blue"] [data-sidebar="root"] {
+[data-theme="blue"] [data-sidebar="sidebar"] {
   background: linear-gradient(180deg, var(--sidebar-background), var(--sidebar-accent));
 }
 
@@ -658,7 +658,7 @@
   padding: 0.5rem 0.75rem;
 }
 /* Dark-Minimal sidebar: no border, pure black */
-[data-theme="dark-minimal"] [data-sidebar="root"] {
+[data-theme="dark-minimal"] [data-sidebar="sidebar"] {
   border-right: none;
   background: var(--sidebar-background);
 }
@@ -691,7 +691,7 @@
   border-radius: 0 var(--radius-sm) 0 0;
 }
 /* Warm sidebar: warm tint */
-[data-theme="warm"] [data-sidebar="root"] {
+[data-theme="warm"] [data-sidebar="sidebar"] {
   background: linear-gradient(180deg, var(--sidebar-background), color-mix(in oklch, var(--sidebar-accent) 50%, var(--sidebar-background)));
 }
 
@@ -717,7 +717,7 @@
   padding: 1.5rem !important;
 }
 /* Nature sidebar: green tint */
-[data-theme="nature"] [data-sidebar="root"] {
+[data-theme="nature"] [data-sidebar="sidebar"] {
   background: linear-gradient(180deg, var(--sidebar-background), color-mix(in oklch, var(--sidebar-background) 85%, var(--sidebar-primary)));
   border-right: 2px solid var(--sidebar-border);
 }
@@ -747,7 +747,7 @@
   background: oklch(0.96 0.01 260 / 0.4);
 }
 /* Liquid sidebar: full glass morphism with high blur */
-[data-theme="liquid"] [data-sidebar="root"] {
+[data-theme="liquid"] [data-sidebar="sidebar"] {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
