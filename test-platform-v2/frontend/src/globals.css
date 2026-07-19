@@ -82,7 +82,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Theme System — 4 distinct visual presets
+   Theme System — 5 distinct visual presets
    Each preset defines a complete look: colors, radii, surfaces, sidebar, charts
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -524,6 +524,91 @@
   --shadow-header: 0 1px 3px 0 rgb(0 0 0 / 0.2);
 }
 
+/* ── Theme: Liquid Spectrum ── */
+[data-theme="liquid"] {
+  --radius: 0.625rem;
+  --radius-sm: 0.4rem;
+  --radius-lg: 0.875rem;
+
+  --background: oklch(0.985 0.005 260);
+  --foreground: oklch(0.15 0.02 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 265);
+  --primary: oklch(0.5 0.2 270);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.01 260);
+  --secondary-foreground: oklch(0.3 0.03 265);
+  --muted: oklch(0.96 0.01 260);
+  --muted-foreground: oklch(0.5 0.02 265);
+  --accent: oklch(0.9 0.04 265);
+  --accent-foreground: oklch(0.28 0.07 265);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.88 0.01 260);
+  --input: oklch(0.88 0.01 260);
+  --ring: oklch(0.5 0.2 270);
+
+  --chart-1: oklch(0.5 0.2 270);
+  --chart-2: oklch(0.52 0.2 190);
+  --chart-3: oklch(0.53 0.24 295);
+  --chart-4: oklch(0.55 0.19 55);
+  --chart-5: oklch(0.42 0.12 230);
+
+  --sidebar-background: oklch(0.97 0.008 260);
+  --sidebar-foreground: oklch(0.28 0.03 265);
+  --sidebar-primary: oklch(0.5 0.2 270);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.92 0.04 265);
+  --sidebar-accent-foreground: oklch(0.28 0.06 265);
+  --sidebar-border: oklch(0.9 0.01 260);
+  --sidebar-ring: oklch(0.5 0.2 270);
+
+  --shadow-card: 0 1px 4px 0 rgb(0 0 0 / 0.05);
+  --shadow-card-hover: 0 4px 20px -2px rgb(0 0 0 / 0.12);
+  --shadow-header: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+}
+
+.dark[data-theme="liquid"] {
+  --background: oklch(0.13 0.02 260);
+  --foreground: oklch(0.94 0.005 260);
+  --card: oklch(0.17 0.02 260);
+  --card-foreground: oklch(0.94 0.005 260);
+  --popover: oklch(0.17 0.02 260);
+  --popover-foreground: oklch(0.94 0.005 260);
+  --primary: oklch(0.62 0.22 270);
+  --primary-foreground: oklch(0.13 0 0);
+  --secondary: oklch(0.22 0.015 260);
+  --secondary-foreground: oklch(0.9 0.005 260);
+  --muted: oklch(0.22 0.015 260);
+  --muted-foreground: oklch(0.62 0.015 260);
+  --accent: oklch(0.24 0.06 265);
+  --accent-foreground: oklch(0.92 0 0);
+  --border: oklch(0.26 0.015 260);
+  --input: oklch(0.26 0.015 260);
+  --ring: oklch(0.62 0.22 270);
+
+  --chart-1: oklch(0.62 0.22 270);
+  --chart-2: oklch(0.58 0.22 190);
+  --chart-3: oklch(0.64 0.26 295);
+  --chart-4: oklch(0.66 0.21 55);
+  --chart-5: oklch(0.54 0.14 230);
+
+  --sidebar-background: oklch(0.11 0.015 260);
+  --sidebar-foreground: oklch(0.84 0.005 260);
+  --sidebar-primary: oklch(0.62 0.22 270);
+  --sidebar-primary-foreground: oklch(0.13 0 0);
+  --sidebar-accent: oklch(0.2 0.05 265);
+  --sidebar-accent-foreground: oklch(0.88 0 0);
+  --sidebar-border: oklch(0.24 0.015 260);
+  --sidebar-ring: oklch(0.62 0.22 270);
+
+  --shadow-card: 0 1px 4px 0 rgb(0 0 0 / 0.35);
+  --shadow-card-hover: 0 4px 20px -2px rgb(0 0 0 / 0.5);
+  --shadow-header: 0 1px 3px 0 rgb(0 0 0 / 0.25);
+}
+
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Per-Theme Component Styles — structural differences beyond color
@@ -637,6 +722,38 @@
   border-right: 2px solid var(--sidebar-border);
 }
 
+/* ── Liquid: full glass cards, translucent surfaces, glowing hover ── */
+[data-theme="liquid"] .card-lift {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-radius);
+  box-shadow: none;
+}
+[data-theme="liquid"] .card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px -4px oklch(0.5 0.2 270 / 0.18);
+  border-color: oklch(0.5 0.2 270 / 0.4);
+  background: oklch(0.98 0.005 260 / 0.65);
+}
+[data-theme="liquid"] .stat-card-icon {
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--primary), oklch(0.55 0.22 290));
+  box-shadow: 0 2px 8px oklch(0.5 0.2 270 / 0.25);
+}
+/* Liquid tables: translucent rows with subtle borders */
+[data-theme="liquid"] table tbody tr:nth-child(even) {
+  background: oklch(0.96 0.01 260 / 0.4);
+}
+/* Liquid sidebar: full glass morphism with high blur */
+[data-theme="liquid"] [data-sidebar="root"] {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-right: 1px solid var(--glass-border);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Per-Theme Density / Animation / Glass / Neon overrides
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -715,6 +832,25 @@
   --glass-blur: 14px;
   --neon-glow: oklch(0.6 0.25 155 / 0.45);
   --neon-glow-strong: oklch(0.6 0.3 155 / 0.65);
+}
+
+/* ── Liquid: translucent, high-blur glass, smooth transitions ── */
+[data-theme="liquid"] {
+  --density: 1;
+  --animation-duration: 220ms;
+  --glass-bg: oklch(0.98 0.005 260 / 0.45);
+  --glass-border: oklch(0.9 0.02 265 / 0.55);
+  --glass-blur: 20px;
+  --card-radius: var(--radius-lg);
+  --neon-glow: oklch(0.5 0.25 270 / 0.5);
+  --neon-glow-strong: oklch(0.5 0.3 270 / 0.7);
+}
+.dark[data-theme="liquid"] {
+  --glass-bg: oklch(0.16 0.02 260 / 0.5);
+  --glass-border: oklch(0.26 0.02 265 / 0.55);
+  --glass-blur: 24px;
+  --neon-glow: oklch(0.62 0.28 270 / 0.55);
+  --neon-glow-strong: oklch(0.62 0.32 270 / 0.75);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -966,6 +1102,15 @@ html.theme-transition *::after {
   border: 1px solid var(--primary);
   border-radius: var(--radius);
 }
+[data-theme="liquid"] [data-slot="dialog-content"],
+[data-theme="liquid"] [data-slot="sheet-content"] {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px -4px oklch(0.5 0.2 270 / 0.2);
+}
 
 /* ── Input focus ring treatment ── */
 [data-theme="blue"] input:focus-visible {
@@ -983,6 +1128,11 @@ html.theme-transition *::after {
   ring-width: 2px;
   ring-offset: 2px;
 }
+[data-theme="liquid"] input:focus-visible {
+  ring-width: 3px;
+  ring-color: oklch(0.5 0.2 270 / 0.6);
+  box-shadow: 0 0 12px oklch(0.5 0.2 270 / 0.2);
+}
 
 /* ── Badge treatment ── */
 [data-theme="dark-minimal"] [data-slot="badge"] {
@@ -998,6 +1148,13 @@ html.theme-transition *::after {
 [data-theme="nature"] [data-slot="badge"] {
   border-radius: var(--radius);
 }
+[data-theme="liquid"] [data-slot="badge"] {
+  border-radius: var(--radius);
+  background: var(--glass-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--glass-border);
+}
 
 /* ── Tooltip treatment ── */
 [data-theme="dark-minimal"] [data-slot="tooltip-content"] {
@@ -1007,6 +1164,13 @@ html.theme-transition *::after {
 [data-theme="warm"] [data-slot="tooltip-content"] {
   border-radius: var(--radius-lg);
 }
+[data-theme="liquid"] [data-slot="tooltip-content"] {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+}
 
 /* ── Separator treatment ── */
 [data-theme="warm"] [data-slot="separator"] {
@@ -1014,6 +1178,10 @@ html.theme-transition *::after {
 }
 [data-theme="nature"] [data-slot="separator"] {
   opacity: 0.6;
+}
+[data-theme="liquid"] [data-slot="separator"] {
+  opacity: 0.3;
+  background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
 }
 
 /* ── Select/Dropdown menu treatment ── */
@@ -1035,6 +1203,15 @@ html.theme-transition *::after {
 [data-theme="nature"] [data-slot="dropdown-menu-content"] {
   box-shadow: var(--shadow-card);
   border: 1px solid var(--accent);
+}
+[data-theme="liquid"] [data-slot="select-content"],
+[data-theme="liquid"] [data-slot="dropdown-menu-content"] {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px -4px oklch(0.5 0.2 270 / 0.15);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1080,6 +1257,14 @@ html.theme-transition *::after {
   background: color-mix(in oklch, var(--primary) 8%, transparent);
   border-left-color: var(--primary);
 }
+/* Liquid: glass-tinted background + subtle glow */
+[data-theme="liquid"] tbody tr {
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+[data-theme="liquid"] tbody tr:hover {
+  background: oklch(0.96 0.02 265 / 0.5);
+  box-shadow: inset 0 0 0 1px oklch(0.5 0.2 270 / 0.15);
+}
 
 /* ── 2. Tab indicator differentiation ── */
 /* The base tabs use an `after:` pseudo-element for the active indicator.
@@ -1120,6 +1305,19 @@ html.theme-transition *::after {
   border-radius: 2px;
   background: linear-gradient(90deg, var(--primary), var(--ring));
 }
+/* Liquid: glass pill active tab */
+[data-theme="liquid"] [data-slot="tabs-trigger"][data-state="active"] {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px oklch(0.5 0.2 270 / 0.15);
+}
+[data-theme="liquid"] [data-slot="tabs-trigger"][data-state="active"]::after {
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--primary), oklch(0.55 0.22 290));
+}
 
 /* ── 3. Button active/press feedback ── */
 /* Base already has active:translate-y-px. Per-theme overrides vary intensity. */
@@ -1144,6 +1342,12 @@ html.theme-transition *::after {
   transform: translateY(1px);
   box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 40%, transparent);
   transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+/* Liquid: soft press with glass ripple effect */
+[data-theme="liquid"] button:active:not([aria-haspopup]) {
+  transform: translateY(1px) scale(0.98);
+  filter: brightness(1.08);
+  transition: transform 0.1s ease, filter 0.1s ease;
 }
 
 /* ── 4. Selected row highlight ── */
@@ -1195,6 +1399,19 @@ html.theme-transition *::after {
 .dark[data-theme="nature"] .row-selected {
   background: color-mix(in oklch, var(--primary) 22%, transparent);
 }
+/* Liquid: glass highlight with glow border */
+[data-theme="liquid"] tr[data-selected="true"],
+[data-theme="liquid"] .row-selected {
+  background: oklch(0.92 0.04 265 / 0.4);
+  outline: 1px solid oklch(0.5 0.2 270 / 0.3);
+  outline-offset: -1px;
+  box-shadow: 0 0 12px oklch(0.5 0.2 270 / 0.12);
+  border-radius: var(--radius-sm);
+}
+.dark[data-theme="liquid"] tr[data-selected="true"],
+.dark[data-theme="liquid"] .row-selected {
+  background: oklch(0.24 0.06 265 / 0.5);
+}
 
 /* ── 5. Pagination active state ── */
 /* Pagination uses Button variant="outline". Current page number is plain <span>. */
@@ -1232,6 +1449,18 @@ html.theme-transition *::after {
   text-decoration-color: var(--primary);
   text-underline-offset: 4px;
   text-decoration-thickness: 2px;
+}
+/* Liquid: glass pill current page */
+[data-theme="liquid"] .pagination-current {
+  background: var(--glass-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: var(--primary);
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 2px 6px oklch(0.5 0.2 270 / 0.12);
 }
 
 /* ── 6. Sidebar menu item hover ── */
@@ -1273,6 +1502,13 @@ html.theme-transition *::after {
   background: var(--sidebar-accent);
   border-left-color: var(--sidebar-primary);
 }
+/* Liquid: glass highlight with glow on hover */
+[data-theme="liquid"] [data-sidebar="menu-button"]:not([data-active="true"]):hover {
+  background: oklch(0.92 0.04 265 / 0.4);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px oklch(0.5 0.2 270 / 0.1);
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-radius 0.2s ease;
+}
 
 /* ── 7. Sidebar footer per-theme ── */
 
@@ -1295,6 +1531,17 @@ html.theme-transition *::after {
 /* Nature: green accent avatar ring */
 [data-theme="nature"] [data-sidebar="footer"] {
   padding: 0.75rem !important;
+}
+/* Liquid: glass footer with subtle top glow */
+[data-theme="liquid"] [data-sidebar="footer"] {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--glass-border);
+}
+[data-theme="liquid"] [data-sidebar="footer"] [data-slot="avatar"] {
+  ring-color: var(--sidebar-primary);
+  ring-width: 2px;
 }
 
 /* ── 8. Collapsed sidebar refinements ── */
@@ -1361,6 +1608,20 @@ html.theme-transition *::after {
 }
 [data-theme="nature"] [data-slot="skeleton"] {
   background: color-mix(in oklch, var(--muted) 90%, var(--primary) 10%);
+}
+/* Liquid: glass-tinted shimmer with blue glow */
+[data-theme="liquid"] .shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.96 0.01 260 / 0.6) 25%,
+    oklch(0.9 0.04 265 / 0.7) 50%,
+    oklch(0.96 0.01 260 / 0.6) 75%
+  );
+  background-size: 200% 100%;
+}
+[data-theme="liquid"] [data-slot="skeleton"] {
+  background: oklch(0.95 0.01 260 / 0.5);
+  border-radius: var(--radius);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
