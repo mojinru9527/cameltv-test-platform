@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { LoginResult, Project, User } from '@/types'
 
-export type ColorTheme = "blue" | "dark-minimal" | "warm" | "nature"
+import type { ColorTheme } from '@/lib/themes'
+export type { ColorTheme }
 
 interface AuthState {
   token: string | null

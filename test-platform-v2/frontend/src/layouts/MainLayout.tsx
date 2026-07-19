@@ -5,6 +5,7 @@ import { fetchMenus, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import type { ColorTheme } from '@/stores/auth'
 import { useTheme } from '@/components/theme-provider'
+import { COLOR_THEMES, getThemeDefinition } from '@/lib/themes'
 import type { MenuItem } from '@/types'
 import {
   Sidebar,
@@ -90,32 +91,8 @@ const ICONS: Record<string, LucideIcon> = {
   BrainCircuitOutlined: Sparkles,
 }
 
-const THEME_CONFIG: Record<ColorTheme, { label: string; desc: string; preview: string[]; icon: string }> = {
-  blue: {
-    label: '专业蓝',
-    desc: '清爽、现代、专业',
-    preview: ['#3b82f6', '#f8fafc', '#1e293b'],
-    icon: '🔵',
-  },
-  'dark-minimal': {
-    label: '极简暗',
-    desc: '暗色、极简、聚焦',
-    preview: ['#94a3b8', '#1a1a1a', '#0d0d0d'],
-    icon: '🌙',
-  },
-  warm: {
-    label: '温润金',
-    desc: '温暖、柔和、优雅',
-    preview: ['#d97706', '#fef7ed', '#3d2e1e'],
-    icon: '🌟',
-  },
-  nature: {
-    label: '自然绿',
-    desc: '清新、自然、舒适',
-    preview: ['#16a34a', '#f0fdf4', '#1a2e1a'],
-    icon: '🌿',
-  },
-}
+// Theme lookup helper — delegates to themes.ts registry
+const getTheme = (id: ColorTheme) => getThemeDefinition(id)
 
 export default function MainLayout() {
   const navigate = useNavigate()
@@ -311,7 +288,7 @@ export default function MainLayout() {
                 <Button variant="ghost" size="sm" className="gap-1.5">
                   <Palette className="size-4 text-primary" />
                   <span className="hidden sm:inline text-sm font-medium">
-                    {THEME_CONFIG[colorTheme]?.label ?? '主题'}
+                    {getTheme(colorTheme).label}
                   </span>
                   <ChevronDown className="size-3 opacity-50" />
                 </Button>
@@ -344,13 +321,12 @@ export default function MainLayout() {
                   主题风格
                 </DropdownMenuLabel>
                 <div className="grid grid-cols-2 gap-2">
-                  {(Object.keys(THEME_CONFIG) as ColorTheme[]).map((t) => {
-                    const cfg = THEME_CONFIG[t]
-                    const isActive = colorTheme === t
+                  {COLOR_THEMES.map((t) => {
+                    const isActive = colorTheme === t.id
                     return (
                       <button
-                        key={t}
-                        onClick={() => onSetColorAndProject(t)}
+                        key={t.id}
+                        onClick={() => onSetColorAndProject(t.id)}
                         className={`relative flex flex-col items-start gap-1.5 p-2.5 rounded-lg border-2 transition-all text-left ${
                           isActive
                             ? 'border-primary bg-primary/5 shadow-sm'
@@ -362,7 +338,7 @@ export default function MainLayout() {
                         )}
                         {/* Color preview dots */}
                         <div className="flex gap-1">
-                          {cfg.preview.map((color, i) => (
+                          {t.preview.map((color, i) => (
                             <span
                               key={i}
                               className="size-3 rounded-full border border-black/10"
@@ -371,9 +347,9 @@ export default function MainLayout() {
                           ))}
                         </div>
                         <div>
-                          <div className="text-xs font-semibold">{cfg.icon} {cfg.label}</div>
+                          <div className="text-xs font-semibold">{t.number} {t.label}</div>
                           <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
-                            {cfg.desc}
+                            {t.description}
                           </div>
                         </div>
                       </button>
