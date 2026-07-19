@@ -1,5 +1,18 @@
 import api from './client'
 
+export interface TestCaseDomainCategory {
+  id?: number
+  domain: string
+  count: number
+  modules: TestCaseModuleCategory[]
+}
+
+export interface TestCaseModuleCategory {
+  id?: number
+  module: string
+  count: number
+}
+
 export interface TestCaseFilter {
   domain?: string
   module?: string

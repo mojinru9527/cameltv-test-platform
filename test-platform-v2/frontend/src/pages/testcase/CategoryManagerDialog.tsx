@@ -100,7 +100,7 @@ function DomainNode({ domain, onDeleteDomain, onDeleteModule }: DomainNodeProps)
         <div className="divide-y border-t bg-background pl-8">
           {domain.modules.length === 0 ? (
             <p className="px-3 py-2 text-xs text-muted-foreground">暂无模块</p>
-          ) : domain.modules.map((module) => {
+          ) : domain.modules.map((module: TestCaseModuleCategory) => {
             const moduleId = categoryId(module.id)
             return (
               <div
@@ -141,7 +141,7 @@ export default function CategoryManagerDialog({ open, domains, onClose, onChange
   const selectableDomains = domains.filter((domain) => categoryId(domain.id) !== null)
   const hasLegacyCategoryData = domains.some(
     (domain) => categoryId(domain.id) === null
-      || domain.modules.some((module) => categoryId(module.id) === null),
+      || domain.modules.some((module: TestCaseModuleCategory) => categoryId(module.id) === null),
   )
 
   useEffect(() => {
@@ -201,7 +201,7 @@ export default function CategoryManagerDialog({ open, domains, onClose, onChange
         await deleteDomain(deleteTarget.domainId)
         toast.success('域及其关联用例已删除')
       } else {
-        await deleteModule(deleteTarget.domainId, deleteTarget.moduleId)
+        await deleteModule(deleteTarget.moduleId)
         toast.success('模块及其关联用例已删除')
       }
       setDeleteTarget(null)
