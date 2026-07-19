@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import {
@@ -74,17 +74,26 @@ export default function PerfTestPage() {
   const [compareB, setCompareB] = useState<number | null>(null)
   const [compareResult, setCompareResult] = useState<CompareResponse | null>(null)
 
+  // mounted guard — prevents state updates after unmount (engineering-standards §4.1)
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    return () => { mountedRef.current = false }
+  }, [])
+
   // ── Device ──
 
   const loadDevices = useCallback(async () => {
+    if (!mountedRef.current) return
     setLoading(true)
     try {
       const list = await fetchDevices()
+      if (!mountedRef.current) return
       setDevices(list)
     } catch {
+      if (!mountedRef.current) return
       toast.error('获取设备列表失败')
     } finally {
-      setLoading(false)
+      if (mountedRef.current) setLoading(false)
     }
   }, [])
 
@@ -93,8 +102,10 @@ export default function PerfTestPage() {
   // ── Session ──
 
   const loadSessions = useCallback(async () => {
+    if (!mountedRef.current) return
     try {
       const data = await fetchSessions({ page: 1, page_size: 50 })
+      if (!mountedRef.current) return
       setSessions(data.items)
       setTotalSessions(data.total)
     } catch {

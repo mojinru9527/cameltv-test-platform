@@ -33,10 +33,18 @@ export function usePerfWebSocket({
 }: UsePerfWebSocketOptions) {
   const [mode, setMode] = useState<ConnectionMode>('disconnected')
   const [reconnectCount, setReconnectCount] = useState(0)
+  // Refs for values read inside useCallback callbacks, avoiding stale-closure
+  // and the SET-state-in-deps cascade (engineering-standards §4.2)
+  const modeRef = useRef(mode)
+  const reconnectCountRef = useRef(reconnectCount)
   const wsRef = useRef<WebSocket | null>(null)
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const lastTsRef = useRef(0)
   const reconnectTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+
+  // Keep refs in sync with state so callbacks always read latest values
+  useEffect(() => { modeRef.current = mode }, [mode])
+  useEffect(() => { reconnectCountRef.current = reconnectCount }, [reconnectCount])
 
   const cleanup = useCallback(() => {
     // 清理 WebSocket
@@ -117,9 +125,10 @@ export function usePerfWebSocket({
 
       ws.onclose = () => {
         wsRef.current = null
-        if (mode === 'websocket' && reconnectCount < 3) {
+        // Read from refs to avoid stale-closure on mode/reconnectCount
+        if (modeRef.current === 'websocket' && reconnectCountRef.current < 3) {
           // 自动重连（指数退避: 1s, 2s, 4s）
-          const delay = Math.min(1000 * Math.pow(2, reconnectCount), 4000)
+          const delay = Math.min(1000 * Math.pow(2, reconnectCountRef.current), 4000)
           setReconnectCount((c) => c + 1)
           const timer = setTimeout(() => connectWebSocket(), delay)
           reconnectTimersRef.current.push(timer)
@@ -139,7 +148,8 @@ export function usePerfWebSocket({
       // WebSocket 构造函数失败，直接降级
       startPolling()
     }
-  }, [sessionId, onSnapshot, onEnd, onEvent, mode, reconnectCount, cleanup, startPolling])
+    // mode and reconnectCount read via refs — NOT in deps (engineering-standards §4.2)
+  }, [sessionId, onSnapshot, onEnd, onEvent, cleanup, startPolling])
 
   useEffect(() => {
     if (!enabled || !sessionId) {
@@ -150,6 +160,7 @@ export function usePerfWebSocket({
 
     connectWebSocket()
     return cleanup
+    // connectWebSocket excluded deliberately: it's stable (no SET-state deps)
   }, [enabled, sessionId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return { mode, reconnectCount }
