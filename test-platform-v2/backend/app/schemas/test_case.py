@@ -120,3 +120,51 @@ class DomainNode(BaseModel):
     domain: str
     count: int = 0
     modules: list[ModuleNode] = []
+
+
+# ── 分类管理 ──────────────────────────────────────────
+
+class CategoryCreate(BaseModel):
+    project_id: int = 0
+    name: str
+
+
+class CategoryUpdate(BaseModel):
+    name: str | None = None
+
+
+class CategoryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    project_id: int = 0
+    name: str
+    is_deleted: bool = False
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class DomainOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    project_id: int = 0
+    name: str
+    is_deleted: bool = False
+    modules: list["ModuleOut"] = []
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class ModuleOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    project_id: int = 0
+    domain_id: int
+    name: str
+    is_deleted: bool = False
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class ModuleCreate(BaseModel):
+    domain_id: int
+    name: str

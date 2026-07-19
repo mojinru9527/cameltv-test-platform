@@ -51,6 +51,7 @@ class ApiEndpointCreate(BaseModel):
     request_schema: str = "{}"
     response_schema: str = "{}"
     auth_required: bool = False
+    remark: str = ""
 
 
 class ApiEndpointUpdate(BaseModel):
@@ -63,6 +64,7 @@ class ApiEndpointUpdate(BaseModel):
     auth_required: bool | None = None
     deprecated: bool | None = None
     version: str | None = None
+    remark: str | None = None
 
 
 class ApiEndpointOut(BaseModel):
@@ -81,6 +83,7 @@ class ApiEndpointOut(BaseModel):
     source: str
     import_batch_id: int | None
     version: str
+    remark: str = ""
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

@@ -62,6 +62,7 @@ class ApiEndpoint(Base, TimestampMixin):
     source: Mapped[str] = mapped_column(default="manual")
     import_batch_id: Mapped[int | None] = mapped_column(default=None, index=True)
     version: Mapped[str] = mapped_column(default="")
+    remark: Mapped[str] = mapped_column(default="")
 
 
 class ApiExecutionTask(Base, TimestampMixin):

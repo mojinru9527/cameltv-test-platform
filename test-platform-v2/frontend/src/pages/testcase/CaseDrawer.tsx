@@ -43,7 +43,6 @@ const formSchema = z.object({
   preconditions: z.string().optional().or(z.literal('')),
   steps: z.string().optional().or(z.literal('')),
   expected_result: z.string().optional().or(z.literal('')),
-  api_spec_ref: z.string().optional().or(z.literal('')),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -473,12 +472,6 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
       <div>
         <label htmlFor="case-expected-result" className="mb-1 block text-sm font-medium">预期结果</label>
         <Textarea id="case-expected-result" rows={2} placeholder="整体预期结果描述" {...register('expected_result')} />
-      </div>
-
-      {/* Ref */}
-      <div>
-        <label htmlFor="case-api-spec-ref" className="mb-1 block text-sm font-medium">关联引用</label>
-        <Input id="case-api-spec-ref" placeholder="generated:Module:spec 或 functional:Suite:ID" {...register('api_spec_ref')} />
       </div>
     </div>
   )

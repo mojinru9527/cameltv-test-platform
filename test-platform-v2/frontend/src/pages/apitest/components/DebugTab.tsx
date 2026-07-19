@@ -94,7 +94,18 @@ export default function DebugTab({ endpoint }: Props) {
 
   useEffect(() => {
     let cancelled = false
-    fetchEnvironments().then((data) => { if (!cancelled) setEnvs(data) }).catch(() => {})
+    fetchEnvironments().then((data) => {
+      if (cancelled) return
+      setEnvs(data)
+      // Auto-select "测试5" if available and no env selected yet
+      if (data && Array.isArray(data)) {
+        const test5 = data.find((e: any) => e.name === '测试5')
+        if (test5) {
+          setEnvId(test5.id)
+          setBaseUrl(test5.base_url)
+        }
+      }
+    }).catch(() => {})
     fetchDatasets({ page_size: 100 }).then(d => { if (!cancelled) setDatasets(d.items || []) }).catch(() => {})
     return () => { cancelled = true }
   }, [])

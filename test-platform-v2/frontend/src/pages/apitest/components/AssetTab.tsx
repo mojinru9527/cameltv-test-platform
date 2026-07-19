@@ -213,11 +213,12 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
                         <Badge className={METHOD_COLORS[ep.method] || ''}>{ep.method}</Badge>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <code className="text-sm font-medium truncate">{ep.path}</code>
+                            <code className="text-sm font-medium truncate">{ep.path.replace(/\//g, '-')}</code>
                             {ep.deprecated && <Badge variant="outline" className="text-[10px] text-yellow-600">已废弃</Badge>}
                           </div>
                           <p className="text-xs text-muted-foreground truncate">
                             {ep.summary && `${ep.summary} · `}{ep.module}
+                            {ep.remark && <span className="ml-2 text-muted-foreground/60">📝 {ep.remark}</span>}
                           </p>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">

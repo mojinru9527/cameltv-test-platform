@@ -10,12 +10,19 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user, require_permission
 from app.schemas.common import Page, R
 from app.schemas.test_case import (
+    CategoryCreate,
+    CategoryOut,
+    CategoryUpdate,
     DomainNode,
+    DomainOut,
+    ModuleCreate,
+    ModuleOut,
     TestCaseCreate,
     TestCaseFilter,
     TestCaseOut,
     TestCaseUpdate,
 )
+from app.models.test_case_category import TestCaseDomain, TestCaseModule
 from app.services import audit_service, test_case_service
 from app.services.api_execution_service import execute_api_case
 from app.services.knowledge import ingest_service
@@ -45,6 +52,172 @@ def list_domains(
 ):
     tree = test_case_service.get_domain_tree(db, project_id=current.project_id or 0)
     return R.ok(tree)
+
+
+# ── 分类管理 CRUD ──────────────────────────────────────
+# 铁律：静态路径 /domains /modules 必须在动态 /{case_id} 之前注册
+
+
+@router.post("/domains", response_model=R[DomainOut], summary="创建域")
+def create_domain(
+    body: CategoryCreate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:create")),
+    db: Session = Depends(get_db),
+):
+    """创建新的测试用例域分类。"""
+    pid = current.project_id or 0
+    existing = db.query(TestCaseDomain).filter_by(
+        project_id=pid, name=body.name, is_deleted=False
+    ).first()
+    if existing:
+        return R(code=1, msg=f"域「{body.name}」已存在")
+    domain = TestCaseDomain(project_id=pid, name=body.name)
+    db.add(domain)
+    db.commit()
+    db.refresh(domain)
+    _audit(req, current, db, "domain:create", body.name)
+    return R.ok(DomainOut.model_validate(domain))
+
+
+@router.put("/domains/{domain_id}", response_model=R[DomainOut], summary="更新域")
+def update_domain(
+    domain_id: int,
+    body: CategoryUpdate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:update")),
+    db: Session = Depends(get_db),
+):
+    """更新域名称。"""
+    domain = db.query(TestCaseDomain).filter_by(
+        id=domain_id, project_id=current.project_id or 0, is_deleted=False
+    ).first()
+    if not domain:
+        return R(code=404, msg="域不存在")
+    if body.name is not None:
+        existing = db.query(TestCaseDomain).filter_by(
+            project_id=current.project_id or 0, name=body.name, is_deleted=False
+        ).first()
+        if existing and existing.id != domain_id:
+            return R(code=1, msg=f"域「{body.name}」已存在")
+        domain.name = body.name
+    db.commit()
+    db.refresh(domain)
+    _audit(req, current, db, "domain:update", f"#{domain_id} → {body.name}")
+    return R.ok(DomainOut.model_validate(domain))
+
+
+@router.delete("/domains/{domain_id}", response_model=R[dict], summary="删除域（级联）")
+def delete_domain(
+    domain_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:delete")),
+    db: Session = Depends(get_db),
+):
+    """逻辑删除域，同时级联标记其下所有模块和关联用例为已删除。"""
+    pid = current.project_id or 0
+    domain = db.query(TestCaseDomain).filter_by(
+        id=domain_id, project_id=pid, is_deleted=False
+    ).first()
+    if not domain:
+        return R(code=404, msg="域不存在")
+
+    # 级联逻辑删除：子模块
+    db.query(TestCaseModule).filter_by(domain_id=domain_id, is_deleted=False).update(
+        {"is_deleted": True}, synchronize_session=False
+    )
+    # 级联逻辑删除：关联用例
+    db.query(TestCase).filter_by(project_id=pid, domain=domain.name, is_deleted=False).update(
+        {"is_deleted": True}, synchronize_session=False
+    )
+    domain.is_deleted = True
+    db.commit()
+    _audit(req, current, db, "domain:delete", f"#{domain_id} {domain.name}（含模块+用例）")
+    return R.ok({"deleted": domain_id})
+
+
+# ── 模块 CRUD ──
+
+@router.post("/modules", response_model=R[ModuleOut], summary="创建模块")
+def create_module(
+    body: ModuleCreate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:create")),
+    db: Session = Depends(get_db),
+):
+    """在指定域下创建新的模块分类。"""
+    pid = current.project_id or 0
+    domain = db.query(TestCaseDomain).filter_by(
+        id=body.domain_id, project_id=pid, is_deleted=False
+    ).first()
+    if not domain:
+        return R(code=404, msg="所属域不存在")
+    existing = db.query(TestCaseModule).filter_by(
+        domain_id=body.domain_id, name=body.name, is_deleted=False
+    ).first()
+    if existing:
+        return R(code=1, msg=f"模块「{body.name}」已存在于该域下")
+    mod = TestCaseModule(project_id=pid, domain_id=body.domain_id, name=body.name)
+    db.add(mod)
+    db.commit()
+    db.refresh(mod)
+    _audit(req, current, db, "module:create", f"{domain.name} / {body.name}")
+    return R.ok(ModuleOut.model_validate(mod))
+
+
+@router.put("/modules/{module_id}", response_model=R[ModuleOut], summary="更新模块")
+def update_module(
+    module_id: int,
+    body: CategoryUpdate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:update")),
+    db: Session = Depends(get_db),
+):
+    """更新模块名称。"""
+    mod = db.query(TestCaseModule).filter_by(
+        id=module_id, project_id=current.project_id or 0, is_deleted=False
+    ).first()
+    if not mod:
+        return R(code=404, msg="模块不存在")
+    if body.name is not None:
+        existing = db.query(TestCaseModule).filter_by(
+            domain_id=mod.domain_id, name=body.name, is_deleted=False
+        ).first()
+        if existing and existing.id != module_id:
+            return R(code=1, msg=f"模块「{body.name}」已存在")
+        mod.name = body.name
+    db.commit()
+    db.refresh(mod)
+    _audit(req, current, db, "module:update", f"#{module_id} → {body.name}")
+    return R.ok(ModuleOut.model_validate(mod))
+
+
+@router.delete("/modules/{module_id}", response_model=R[dict], summary="删除模块（级联）")
+def delete_module(
+    module_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:delete")),
+    db: Session = Depends(get_db),
+):
+    """逻辑删除模块，同时级联标记其下所有关联用例为已删除。"""
+    pid = current.project_id or 0
+    mod = db.query(TestCaseModule).filter_by(
+        id=module_id, project_id=pid, is_deleted=False
+    ).first()
+    if not mod:
+        return R(code=404, msg="模块不存在")
+
+    domain = db.query(TestCaseDomain).filter_by(id=mod.domain_id).first()
+    domain_name = domain.name if domain else ""
+
+    # 级联逻辑删除关联用例（域+模块匹配）
+    db.query(TestCase).filter_by(
+        project_id=pid, domain=domain_name, module=mod.name, is_deleted=False
+    ).update({"is_deleted": True}, synchronize_session=False)
+    mod.is_deleted = True
+    db.commit()
+    _audit(req, current, db, "module:delete", f"#{module_id} {mod.name}（含关联用例）")
+    return R.ok({"deleted": module_id})
 
 
 # ── 用例 CRUD ─────────────────────────────────────────

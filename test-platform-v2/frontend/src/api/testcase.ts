@@ -1,5 +1,18 @@
 import api from './client'
 
+export interface TestCaseDomainCategory {
+  id?: number
+  domain: string
+  count: number
+  modules: TestCaseModuleCategory[]
+}
+
+export interface TestCaseModuleCategory {
+  id?: number
+  module: string
+  count: number
+}
+
 export interface TestCaseFilter {
   domain?: string
   module?: string
@@ -89,4 +102,30 @@ export async function reviewCase(caseId: number, action: string, comment: string
 
 export async function fetchReviewHistory(caseId: number): Promise<import('@/types').TestCaseReviewTransition[]> {
   return api.get(`/test-cases/${caseId}/review-history`)
+}
+
+// ── Category management ──
+
+export async function createDomain(name: string): Promise<any> {
+  return api.post('/test-cases/domains', { name })
+}
+
+export async function updateDomain(id: number, name: string): Promise<any> {
+  return api.put(`/test-cases/domains/${id}`, { name })
+}
+
+export async function deleteDomain(id: number): Promise<any> {
+  return api.delete(`/test-cases/domains/${id}`)
+}
+
+export async function createModule(domainId: number, name: string): Promise<any> {
+  return api.post('/test-cases/modules', { domain_id: domainId, name })
+}
+
+export async function updateModule(id: number, name: string): Promise<any> {
+  return api.put(`/test-cases/modules/${id}`, { name })
+}
+
+export async function deleteModule(id: number): Promise<any> {
+  return api.delete(`/test-cases/modules/${id}`)
 }
