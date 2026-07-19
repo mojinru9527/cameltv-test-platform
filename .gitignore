@@ -5,6 +5,7 @@
 !*.env.example
 *.pem
 *.key
+*.ovpn
 secrets/
 
 # Python
@@ -56,6 +57,15 @@ test-results.xml
 *-report.html
 *-results.xml
 
+# Test Platform V2 runtime artifacts
+test-platform-v2/backend/storage/lanhu-evidence/
+test-platform-v2/backend/storage/ui-runs/
+test-platform-v2/backend/storage/models/
+test-platform-v2/backend/storage/*.json
+test-platform-v2/backend/storage/TASK-REPORT-*.md
+test-platform-v2/backend/tests/playwright/test-results/
+test-platform-v2/data/
+
 # TypeScript build artifacts
 *.tsbuildinfo
 vite.config.d.ts
@@ -68,3 +78,8 @@ temp_extract_output.txt
 .agents/
 .codex/
 skills-lock.json
+
+# Local network / VPN recovery helpers (machine-specific, not for CI)
+# fix_chatgpt_loopback.bat re-adds the ChatGPT/Codex loopback exemption; it
+# hardcodes a per-machine UWP package name and must never be committed.
+fix_chatgpt_loopback.bat

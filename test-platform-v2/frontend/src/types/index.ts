@@ -263,6 +263,7 @@ export interface AvTaskItem {
   creator_id: number
   creator_name: string
   metrics: AvMetricItem[]
+  measurements: AvMeasurementItem[]
   created_at: string | null
   updated_at: string | null
 }
@@ -277,12 +278,54 @@ export interface AvMetricItem {
   detail: string
 }
 
+export interface AvMeasurementItem {
+  id: number
+  task_id: number
+  metric_type: string
+  metric_name: string
+  scenario: string
+  method: string
+  environment: string
+  device_info: string
+  network_condition: string
+  samples: number[]
+  sample_count: number
+  unit: string
+  threshold: number
+  comparator: '<=' | '>='
+  mean: number
+  median: number
+  min: number
+  max: number
+  stddev: number
+  p95: number
+  pass_basis: 'mean' | 'p95'
+  passed: boolean
+  simulated: false
+  notes: string
+  creator_id: number
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface AvMeasurementTemplate {
+  metric_type: string
+  name: string
+  unit: string
+  threshold: number
+  comparator: '<=' | '>='
+  pass_basis: 'mean' | 'p95'
+  method: string
+  preconditions: string[]
+}
+
 export interface UiJobItem {
   id: number
   name: string
   description: string
   test_spec: string
   browser: string
+  environment_id: number | null
   status: string
   last_result: Record<string, any> | null
   creator_id: number
@@ -301,8 +344,35 @@ export interface UiRunItem {
   screenshots: string[]
   video_url: string
   trace_id: string
+  base_url: string
+  browser: string
+  duration: number | null
+  error_message: string
+  stdout: string
+  stderr: string
+  artifact_dir: string
+  report_json_path: string
+  html_report_path: string
+  process_id: number | null
+  cancel_requested: boolean
   started_at: string | null
   finished_at: string | null
+}
+
+export interface UiRunArtifact {
+  name: string
+  path: string
+  size_bytes: number
+  type: string
+}
+
+export interface RunnerHealth {
+  npx: boolean
+  playwright: boolean
+  version: string
+  browsers_installed: boolean
+  max_concurrent: number
+  running: number
 }
 
 export interface DefectTransition {
@@ -787,6 +857,12 @@ export interface KnowledgeOverview {
   pending_artifact_count: number
   recent_sources: KnowledgeSource[]
   health: KnowledgeHealth
+  // M2 RAG 健康指标
+  rag_enabled: boolean
+  embedding_model: string
+  active_chunks: number
+  embedded_chunks: number
+  embedding_coverage: number | null
 }
 
 // ── M2 混合检索 ──
@@ -812,6 +888,17 @@ export interface ReembedResult {
   total: number
   embedded: number
   skipped: number
+}
+
+export interface SearchHealth {
+  rag_enabled: boolean
+  embedding_model: string
+  embedding_available: boolean
+  vector_search_functional: boolean
+  fallback_mode: string
+  active_chunks: number
+  embedded_chunks: number
+  embedding_coverage: number | null
 }
 
 // ── M3 知识图谱 ──
@@ -968,6 +1055,9 @@ export interface WikiRawSource {
   immutable_version: string
   status: string
   knowledge_source_id: number | null
+  doc_id?: string
+  version_id?: string
+  page_id?: string
   business_ref_type?: string
   business_ref_id?: number | null
   content_md?: string
@@ -1086,4 +1176,51 @@ export interface WikiDiffCreateRequest {
 export interface WikiDiffCreateArtifactResult {
   artifact_id: number
   artifact_type: string
+}
+
+// ========== Wiki 健康体检 / Lint (VNext-6) ==========
+
+export interface WikiLintRunRequest {
+  project_id_override?: number | null
+}
+
+export interface WikiLintReportBrief {
+  id: number
+  project_id: number
+  status: string
+  summary_json: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface WikiLintIssue {
+  id: number
+  report_id: number
+  project_id: number
+  rule: string
+  severity: string
+  title: string
+  description: string
+  entity_type: string
+  entity_id: number | null
+  related_entity_json: string
+  suggestion: string
+  review_status: string
+  resolved_artifact_id: number | null
+  created_at: string | null
+}
+
+export interface WikiLintReport extends WikiLintReportBrief {
+  error_message: string
+  issues: WikiLintIssue[]
+}
+
+export interface WikiLintConvertRequest {
+  issue_ids?: number[]
+  artifact_type?: string
+}
+
+export interface WikiLintConvertResult {
+  converted: number
+  artifact_ids: number[]
 }

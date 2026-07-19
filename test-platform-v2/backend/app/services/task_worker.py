@@ -4,7 +4,7 @@
 - 轮询间隔可配（默认 5 秒）
 - 并发上限控制
 - 服务重启后 pending 任务自动恢复
-- 同时处理 API 执行任务和 UI 测试运行
+- 同时处理 API 执行任务、UI 测试运行和蓝湖证据包任务
 """
 from __future__ import annotations
 
@@ -25,10 +25,13 @@ _semaphore_ui = threading.Semaphore(MAX_CONCURRENT_UI_RUNS)
 
 def poll_and_execute():
     """主轮询入口 — 由 APScheduler interval job 调用。
-    检查 pending 状态的 API 任务和 UI 运行，逐个执行。
+    检查 pending 状态的 API 任务、UI 运行和蓝湖证据包任务。
     """
     _process_api_tasks()
     _process_ui_runs()
+    from app.services.lanhu_evidence.worker import poll_and_execute_evidence_jobs
+
+    poll_and_execute_evidence_jobs()
 
 
 # ═══════════════════════════════════════════════════════

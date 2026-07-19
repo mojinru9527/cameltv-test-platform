@@ -39,7 +39,7 @@ npm install
 npm run dev        # http://localhost:5173 （已配置 /api 代理到 localhost:8000）
 ```
 
-先启动后端（localhost:8000），再 `npm run dev`，用 `admin / admin123` 登录。
+先启动后端（localhost:8000），再运行 `npm run dev`，使用管理员分配的账号登录。
 
 ## 契约同步（前后端不脱节）
 

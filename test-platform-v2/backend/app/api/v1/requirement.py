@@ -109,16 +109,13 @@ async def upload_requirement(
             return R(code=400, msg=f"不支持的文件格式: {ext}，支持 .md / .docx / .xlsx")
 
     elif lanhu_url.strip():
-        file_type = "lanhu"
-        source_ref = lanhu_url.strip()
-        desc = lanhu_description.strip()
-        url_short = lanhu_url.strip()[:60]
-        title = f"蓝湖设计稿 {url_short}"
-        # Build content: description (if provided) + URL; prefer description for AI
-        if desc:
-            content = f"设计描述: {desc}\n\n蓝湖链接: {lanhu_url.strip()}"
-        else:
-            content = lanhu_url.strip()
+        from app.core.exceptions import APIException
+
+        raise APIException(
+            code=409,
+            msg="蓝湖链接必须先通过证据包质量门禁，再导入需求/RAG/Wiki",
+            http_status=409,
+        )
     else:
         return R(code=400, msg="请上传文件或输入蓝湖链接")
 
