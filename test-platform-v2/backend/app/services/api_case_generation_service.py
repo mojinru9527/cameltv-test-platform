@@ -6,7 +6,7 @@ import json
 from typing import Any
 
 # 单接口用例生成数量上限（防止膨胀）
-_MAX_CASES_PER_ENDPOINT = 30
+_MAX_CASES_PER_ENDPOINT = 200
 
 
 def generate_cases_from_endpoint(

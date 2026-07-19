@@ -23,6 +23,7 @@ export {
   Save,
   Play,
   Pause,
+  Square,
   StopCircle,
   Link2,
   ExternalLink,
@@ -110,6 +111,9 @@ export {
   // Fullscreen
   Maximize2,
   Minimize2,
+  // Hardware
+  Cpu,
+  Gauge,
   // Checklist
   ClipboardCheck,
   BrainCircuit,

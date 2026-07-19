@@ -77,6 +77,13 @@ Router (api/v1/)  →  Service (services/)  →  Model (models/)
 | av_check.py | `/api/v1/av-check` | — | 音视频专项 |
 | ui_test.py | `/api/v1/ui-test` | — | UI 自动化 |
 | open_api.py | `/api/v1/open` | — | 开放 API |
+| perf.py | `/api/v1/perf` | perf_service | 性能监控 |
+| perf_ws.py | `/ws/perf` | — | WebSocket 实时指标采集 |
+| environment.py | `/api/v1/environment` | — | 环境/变量管理 |
+| dataset.py | `/api/v1/datasets` | — | 测试数据集 |
+| integration.py | `/api/v1/integration` | — | 集成配置 |
+| knowledge.py | `/api/v1/knowledge` | — | 知识中心 |
+| agent.py | `/api/v1/agent` | — | Agent 工作台 |
 
 ## 核心配置
 
@@ -116,3 +123,7 @@ pytest tests/ -v --tb=short
 - **AI 调用**：`ai_service.py` 调用 DeepSeek LLM，注意超时和重试
 - **APScheduler**：定时任务在 `main.py` 生命周期中启动，开发时 `--reload` 会导致 scheduler 重复启动
 - **CORS**：生产环境 CORS 配置在 Nginx，本地开发在 `main.py` 中配置 `allow_origins`
+
+## 多项目隔离
+
+所有请求必须携带 `X-Project-Id` header（int 类型项目 ID）。不传该 header 的请求将返回 `{"code":403,"msg":"缺少当前项目（请求头 X-Project-Id）"}`。前端 Axios 拦截器自动从 `authStore.currentProjectId` 注入该 header。外部调用者（Playwright、curl、CI）须显式添加该 header。
