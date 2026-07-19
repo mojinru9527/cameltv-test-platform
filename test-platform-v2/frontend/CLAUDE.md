@@ -36,9 +36,16 @@ frontend/
 │   │   ├── schedule/          定时任务
 │   │   ├── defect/            缺陷管理
 │   │   ├── trace/             质量追溯
-│   │   ├── apitest/           API 测试 (演示态)
-│   │   ├── uitest/            UI 自动化 (演示态)
-│   │   └── special/           音视频专项 (演示态)
+│   │   ├── apitest/           API 测试
+│   │   ├── uitest/            UI 自动化
+│   │   ├── special/           音视频专项
+│   │   ├── perftest/          性能监控
+│   │   ├── knowledge/         知识中心
+│   │   ├── notify/            通知管理
+│   │   ├── environment/       环境配置
+│   │   ├── dataset/           测试数据集
+│   │   ├── integration/       集成配置
+│   │   └── agent-workbench/   Agent 工作台
 │   ├── components/            shadcn/ui 组件 (34 个)
 │   ├── hooks/                 自定义 hooks
 │   ├── lib/                   工具函数 (cn, formatters)
@@ -99,6 +106,13 @@ npm run gen:api
 /apitest            → API 测试
 /uitest             → UI 自动化
 /special            → 音视频专项
+/perftest           → 性能监控
+/notify             → 通知管理
+/environment        → 环境配置
+/dataset            → 测试数据集
+/integration        → 集成配置
+/knowledge          → 知识中心
+/agent-workbench    → Agent 工作台
 ```
 
 ## 本地开发
@@ -113,7 +127,8 @@ npx vitest           # 运行测试
 
 ## 常见陷阱
 
-- **演示态模块**（apitest/uitest/special）：数据为前端随机生成，不连接真实后端服务。修改时注意区分
+- **演示态模块**（special）：数据为前端随机生成，不连接真实后端服务。修改时注意区分
+- **真实执行引擎**（apitest/uitest/perftest）：已连接真实后端服务，通过 httpx/Playwright/WebSocket 执行实际测试
 - **JWT 过期**：Axios 拦截器处理 401，自动跳转登录。后端 token 过期时间在 `core/config.py` 配置
 - **shadcn/ui 组件**：直接用 `npx shadcn-ui@latest add <component>` 添加，组件在 `src/components/ui/`
 - **Tailwind**：使用 `cn()` 工具函数（clsx + tailwind-merge）合并类名，不要直接用字符串拼接

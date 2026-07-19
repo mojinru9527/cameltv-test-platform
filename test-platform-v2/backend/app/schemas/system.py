@@ -1,4 +1,7 @@
-"""系统管理 Pydantic 模型 —— 用户 / 角色 / 权限 / 审计 + 菜单。"""
+"""系统管理 Pydantic 模型 —— 用户 / 角色 / 权限 / 审计 + 菜单。
+
+MenuOut.sort uses field_validator(mode='before') to coerce float->int (fix 2026-07-20).
+"""
 from __future__ import annotations
 
 from datetime import datetime
@@ -8,6 +11,11 @@ from pydantic import BaseModel, ConfigDict, Field
 
 # ── 菜单 ──
 
+from typing import Any
+
+from pydantic import field_validator
+
+
 class MenuOut(BaseModel):
     code: str
     name: str
@@ -15,6 +23,12 @@ class MenuOut(BaseModel):
     icon: str = ""
     sort: int = 0
     children: list["MenuOut"] = []
+
+    @field_validator("sort", mode="before")
+    @classmethod
+    def coerce_sort(cls, v: Any) -> int:
+        """数据库 sort 字段历史数据可能存为 REAL（如 10.5），统一转 int。"""
+        return int(v)
 
 
 MenuOut.model_rebuild()

@@ -31,6 +31,7 @@ _MENUS = [
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 17),
     ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 18),
     ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 19),
+    ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 20),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -155,6 +156,12 @@ _ACTIONS = [
     ("lanhu_evidence:run", "创建蓝湖证据包", "button"),
     ("lanhu_evidence:review", "人工审核证据页（OCR 缺失豁免）", "button"),
     ("lanhu_evidence:import", "导入蓝湖证据包", "button"),
+    # 性能监控
+    ("perftest:list", "查看性能监控", "button"),
+    ("perftest:create", "创建性能监控会话", "button"),
+    ("perftest:delete", "删除性能监控会话", "button"),
+    ("perftest:execute", "执行性能监控", "button"),
+    ("perftest:report", "查看性能报告", "button"),
 ]
 
 # 测试人员可见的菜单子集
@@ -165,12 +172,14 @@ _TESTER_ACTIONS = {
     "agent:view", "agent:list",
     "wiki:view", "wiki:diff",
     "lanhu_evidence:view", "lanhu_evidence:run",
+    "perftest:list", "perftest:create", "perftest:delete", "perftest:execute", "perftest:report",
 }
 
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
+    "menu:perftest",
 }
 
 

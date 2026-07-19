@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { createTestCase, updateTestCase, reviewCase, fetchReviewHistory } from '@/api/testcase'
+import { Code2, FileText } from '@/lib/icons'
 import type { TestCaseReviewTransition } from '@/types'
 
 const formSchema = z.object({
@@ -256,6 +257,26 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
 // ── Sub-components ──
 
 function CaseForm({ register, control, errors, selDomain, selType, domains, selModules, watch, setValue }: any) {
+  const stepsValue = watch('steps') || ''
+  const [stepsViewMode, setStepsViewMode] = useState<'formatted' | 'json'>('formatted')
+
+  // Parse steps JSON to formatted text: "1、操作描述 — 预期结果"
+  const formatSteps = (raw: string): string => {
+    if (!raw || !raw.trim()) return ''
+    try {
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) return raw
+      return parsed.map((s: any) => {
+        const stepNum = s.step || ''
+        const desc = s.desc || s.action || s.description || ''
+        const expected = s.expected || ''
+        return expected ? `${stepNum}、${desc} — ${expected}` : `${stepNum}、${desc}`
+      }).join('\n')
+    } catch {
+      return raw
+    }
+  }
+
   return (
     <div className="max-h-[50vh] overflow-y-auto space-y-4">
       {/* Title */}
@@ -414,8 +435,38 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
 
       {/* Steps */}
       <div>
-        <label htmlFor="case-steps" className="mb-1 block text-sm font-medium">测试步骤 (JSON)</label>
-        <Textarea id="case-steps" rows={4} placeholder='[{"step":1,"desc":"操作描述","expected":"预期结果"}]' {...register('steps')} />
+        <div className="flex items-center justify-between mb-1">
+          <label htmlFor="case-steps" className="text-sm font-medium">测试步骤 (JSON)</label>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              size="sm"
+              variant={stepsViewMode === 'formatted' ? 'default' : 'outline'}
+              className="h-7 text-xs px-2"
+              onClick={() => setStepsViewMode('formatted')}
+            >
+              <FileText className="size-3 mr-1" />
+              格式化
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={stepsViewMode === 'json' ? 'default' : 'outline'}
+              className="h-7 text-xs px-2"
+              onClick={() => setStepsViewMode('json')}
+            >
+              <Code2 className="size-3 mr-1" />
+              JSON
+            </Button>
+          </div>
+        </div>
+        {stepsViewMode === 'formatted' && stepsValue ? (
+          <pre className="text-sm leading-relaxed bg-muted/30 rounded-md p-3 min-h-[120px] whitespace-pre-wrap font-sans">
+            {formatSteps(stepsValue) || '暂无步骤'}
+          </pre>
+        ) : (
+          <Textarea id="case-steps" rows={4} placeholder='[{"step":1,"desc":"操作描述","expected":"预期结果"}]' {...register('steps')} />
+        )}
       </div>
 
       {/* Expected Result */}
