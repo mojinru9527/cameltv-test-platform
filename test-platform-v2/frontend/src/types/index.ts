@@ -685,6 +685,7 @@ export interface ApiEndpoint {
   source: string
   import_batch_id: number | null
   version: string
+  remark: string
   created_at: string | null
   updated_at: string | null
 }

@@ -89,9 +89,9 @@ def list_cases(
     stmt = select(TestCase)
     count_stmt = select(func.count(TestCase.id))
 
-    # 项目隔离
-    stmt = stmt.where(TestCase.project_id == project_id)
-    count_stmt = count_stmt.where(TestCase.project_id == project_id)
+    # 项目隔离 + 逻辑删除过滤
+    stmt = stmt.where(TestCase.project_id == project_id, TestCase.is_deleted == False)
+    count_stmt = count_stmt.where(TestCase.project_id == project_id, TestCase.is_deleted == False)
 
     if domain:
         stmt = stmt.where(TestCase.domain == domain)
@@ -174,7 +174,8 @@ def delete_case(db: Session, case_id: int, project_id: int = 0) -> bool:
     )
     if not row:
         return False
-    db.delete(row)
+    row.is_deleted = True
+    db.flush()
     db.commit()
     return True
 
@@ -184,7 +185,8 @@ def batch_delete(db: Session, ids: list[int], project_id: int = 0) -> int:
         select(TestCase).where(TestCase.id.in_(ids), TestCase.project_id == project_id)
     ).all()
     for r in rows:
-        db.delete(r)
+        r.is_deleted = True
+    db.flush()
     db.commit()
     return len(rows)
 
@@ -192,10 +194,10 @@ def batch_delete(db: Session, ids: list[int], project_id: int = 0) -> int:
 # ── 域树 ──────────────────────────────────────────────
 
 def get_domain_tree(db: Session, project_id: int = 0) -> list[dict]:
-    """返回 domain→module 两级树结构，附带每模块用例数。"""
+    """返回 domain→module 两级树结构，附带每模块用例数。排除已删除的用例。"""
     rows = db.scalars(
         select(TestCase)
-        .where(TestCase.project_id == project_id)
+        .where(TestCase.project_id == project_id, TestCase.is_deleted == False)
         .order_by(TestCase.domain, TestCase.module)
     ).all()
 
@@ -210,8 +212,8 @@ def get_domain_tree(db: Session, project_id: int = 0) -> list[dict]:
         mod_list = [{"module": m, "count": c} for m, c in sorted(modules.items())]
         result.append({"domain": domain, "count": total, "modules": mod_list})
 
-    # 排序：用户端 → 运营后台 → 接口测试 → 其他
-    _domain_order = {"用户端": 0, "运营后台": 1, "接口测试": 2}
+    # 排序：用户端 → 运营后台 → 其他
+    _domain_order = {"用户端": 0, "运营后台": 1}
     result.sort(key=lambda d: _domain_order.get(d["domain"], 99))
     return result
 
@@ -256,6 +258,7 @@ def _row_to_dict(r: TestCase) -> dict:
         "review_status": r.review_status,
         "review_comment": r.review_comment,
         "reviewer_id": r.reviewer_id,
+        "is_deleted": r.is_deleted,
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "updated_at": r.updated_at.isoformat() if r.updated_at else None,
     }

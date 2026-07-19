@@ -427,6 +427,7 @@ export default function TestCasePage() {
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
+                    <TableHead className="w-[72px]">优先级</TableHead>
                     <TableHead className="w-[160px]">编号</TableHead>
                     <TableHead>标题</TableHead>
                     <TableHead className="w-[120px]">模块</TableHead>
@@ -445,12 +446,14 @@ export default function TestCasePage() {
                           onCheckedChange={() => toggleSelect(r.id)}
                         />
                       </TableCell>
+                      <TableCell>
+                        <Badge variant={PRIORITY_COLORS[r.priority] === 'red' ? 'destructive' : PRIORITY_COLORS[r.priority] === 'orange' ? 'secondary' : 'default'}>
+                          {r.priority}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="max-w-[160px] truncate">{r.case_id || '-'}</TableCell>
                       <TableCell className="max-w-0 truncate">
                         <div className="flex items-center gap-1">
-                          <Badge variant={PRIORITY_COLORS[r.priority] === 'red' ? 'destructive' : PRIORITY_COLORS[r.priority] === 'orange' ? 'secondary' : 'default'}>
-                            {r.priority}
-                          </Badge>
                           {r.case_type === 'api' && (
                             <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                               接口
