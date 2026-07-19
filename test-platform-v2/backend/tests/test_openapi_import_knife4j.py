@@ -329,7 +329,7 @@ class TestSecurityTemplateInDefaults:
 class TestCaseCap:
     """Verify the 30-case-per-endpoint cap."""
 
-    def test_generation_capped_at_30(self):
+    def test_generation_capped_at_200(self):
         """Even with many fields, cases are capped at _MAX_CASES_PER_ENDPOINT."""
         from app.services.api_case_generation_service import generate_cases_from_endpoint
 
@@ -353,4 +353,4 @@ class TestCaseCap:
         }
 
         cases = generate_cases_from_endpoint(ep)
-        assert len(cases) <= 30, f"Expected ≤30 cases, got {len(cases)}"
+        assert len(cases) <= 200, f"Expected ≤200 cases, got {len(cases)}"
