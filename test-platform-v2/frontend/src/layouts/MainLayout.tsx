@@ -69,6 +69,7 @@ import {
   ChevronRight,
   TestTube2,
   Sparkles,
+  Cpu,
   type LucideIcon,
 } from '@/lib/icons'
 
@@ -89,6 +90,7 @@ const ICONS: Record<string, LucideIcon> = {
   AppstoreOutlined: LayoutDashboard,
   BugOutlined: Bug,
   BrainCircuitOutlined: Sparkles,
+  CpuOutlined: Cpu,
 }
 
 // Theme lookup helper — delegates to themes.ts registry

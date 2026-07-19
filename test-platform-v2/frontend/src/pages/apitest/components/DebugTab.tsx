@@ -35,11 +35,34 @@ const BODY_TYPES = [
   { value: 'raw', label: 'Raw' },
 ] as const
 
+const TEST_COUNTS = [1, 3, 5] as const
+
 type HeaderRow = { key: string; value: string }
 type ParamRow = { key: string; value: string }
 
 function isBatchResult(res: ApiExecutionResult | BatchExecutionResult): res is BatchExecutionResult {
   return 'batch_mode' in res && (res as any).batch_mode
+}
+
+/**
+ * Compose a full URL from address segments, correctly handling slashes.
+ * Example: composeAssetUrl('https://api.example.com', 'api', '/v1/ee/search', '/synonyms/cou')
+ *       → 'https://api.example.com/api/v1/ee/search/synonyms/cou'
+ */
+function composeAssetUrl(baseUrl: string, serviceName: string, modulePath: string, endpointPath: string): string {
+  let result = baseUrl.replace(/\/+$/, '')
+  if (serviceName) {
+    result += '/' + serviceName.replace(/^\/+|\/+$/g, '')
+  }
+  if (modulePath) {
+    const cleaned = modulePath.replace(/\/+$/g, '')
+    result += cleaned.startsWith('/') ? cleaned : '/' + cleaned
+  }
+  if (endpointPath) {
+    const cleaned = endpointPath.replace(/\/+$/g, '')
+    result += cleaned.startsWith('/') ? cleaned : '/' + cleaned
+  }
+  return result
 }
 
 interface Props {
@@ -50,7 +73,11 @@ export default function DebugTab({ endpoint }: Props) {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiExecutionResult | null>(null)
   const [method, setMethod] = useState<string>('GET')
-  const [url, setUrl] = useState('')
+  const [baseUrl, setBaseUrl] = useState('')
+  const [serviceName, setServiceName] = useState('')
+  const [modulePath, setModulePath] = useState('')
+  const [endpointPath, setEndpointPath] = useState('')
+  const [testCount, setTestCount] = useState(5)
   const [bodyType, setBodyType] = useState<string>('json')
   const [body, setBody] = useState('')
   const [headersJson, setHeadersJson] = useState('{}')
@@ -72,11 +99,27 @@ export default function DebugTab({ endpoint }: Props) {
     return () => { cancelled = true }
   }, [])
 
-  // P2-2: Pre-fill from endpoint asset
+  // Pre-fill from endpoint asset
   useEffect(() => {
     if (!endpoint) return
     setMethod(endpoint.method || 'GET')
-    setUrl(endpoint.path || '')
+
+    // Parse path to pre-fill address fields:
+    // first segment → serviceName, last segment → endpointPath, middle → modulePath
+    const path = endpoint.path || ''
+    const segments = path.split('/').filter(Boolean)
+    if (segments.length > 0) {
+      setServiceName(segments[0])
+      if (segments.length > 1) {
+        const last = segments[segments.length - 1]
+        const middle = segments.slice(1, -1)
+        setModulePath(middle.length > 0 ? '/' + middle.join('/') : '')
+        setEndpointPath('/' + last)
+      } else {
+        setModulePath('')
+        setEndpointPath('')
+      }
+    }
 
     // Parse request_schema to pre-fill headers/body/params
     try {
@@ -111,33 +154,42 @@ export default function DebugTab({ endpoint }: Props) {
   }
 
   const buildUrl = (): string => {
-    if (paramRows.length === 0) return url
+    const base = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
+    if (paramRows.length === 0) return base
     const qs = paramRows
       .filter(r => r.key.trim())
       .map(r => `${encodeURIComponent(r.key.trim())}=${encodeURIComponent(r.value)}`)
       .join('&')
-    if (!qs) return url
-    return url.includes('?') ? `${url}&${qs}` : `${url}?${qs}`
+    if (!qs) return base
+    return base.includes('?') ? `${base}&${qs}` : `${base}?${qs}`
   }
 
   const runQuick = async () => {
-    if (!url.trim()) { toast.error('请输入 URL'); return }
+    const composed = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
+    if (!composed) { toast.error('请填写接口地址'); return }
     setLoading(true)
     setResult(null)
     try {
-      const res = await quickExecute({
-        method,
-        url: buildUrl(),
-        headers: buildHeaders(),
-        body: bodyType === 'json' ? body : body,
-        assertions,
-        environment_id: envId,
-        dataset_id: datasetId,
-      })
-      setResult(res as any)
-      if (isBatchResult(res)) toast.success(`批量执行完成: ${res.passed}/${res.total_rows} 通过`)
-      else if (res.all_pass) toast.success('全部断言通过')
-      else if (res.assertions?.length) toast.error(`${res.assertions.filter((a: ApiAssertionResult) => !a.passed).length} 个断言失败`)
+      // When a dataset is selected, backend handles batch per-row;
+      // otherwise repeat the same request sequentially testCount times.
+      const times = datasetId ? 1 : testCount
+      let lastResult: any = null
+      for (let i = 0; i < times; i++) {
+        const res = await quickExecute({
+          method,
+          url: buildUrl(),
+          headers: buildHeaders(),
+          body: bodyType === 'json' ? body : body,
+          assertions,
+          environment_id: envId,
+          dataset_id: datasetId,
+        })
+        lastResult = res
+      }
+      setResult(lastResult as any)
+      if (isBatchResult(lastResult)) toast.success(`批量执行完成: ${lastResult.passed}/${lastResult.total_rows} 通过`)
+      else if (lastResult.all_pass) toast.success('全部断言通过')
+      else if (lastResult.assertions?.length) toast.error(`${lastResult.assertions.filter((a: ApiAssertionResult) => !a.passed).length} 个断言失败`)
     } catch (e: any) {
       toast.error(e?.message || '请求失败')
       setResult(e?.response?.data || { status: 'error', status_code: 0, error: e?.message })
@@ -168,147 +220,201 @@ export default function DebugTab({ endpoint }: Props) {
     setParamRows(next)
   }
 
+  const urlPreview = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-2 space-y-4">
-        {/* Env + Dataset selectors */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {envs.length > 0 && (
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium whitespace-nowrap">环境:</label>
-              <Select value={envId?.toString() || '_none'} onValueChange={(v) => setEnvId(v === '_none' ? undefined : Number(v))}>
-                <SelectTrigger className="w-[200px]"><SelectValue placeholder="不使用环境变量" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">不使用环境变量</SelectItem>
-                  {envs.map((e) => (
-                    <SelectItem key={e.id} value={e.id.toString()}>{e.name} ({e.env_type})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          {datasets.length > 0 && (
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium whitespace-nowrap">测试数据:</label>
-              <Select value={datasetId?.toString() || '_none'} onValueChange={(v) => setDatasetId(v === '_none' ? undefined : Number(v))}>
-                <SelectTrigger className="w-[220px]"><SelectValue placeholder="不使用测试数据" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">不使用测试数据</SelectItem>
-                  {datasets.map((d) => (
-                    <SelectItem key={d.id} value={d.id.toString()}>{d.name} ({d.row_count} 行)</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <Button onClick={runQuick} disabled={loading} data-icon="inline-start" className="ml-auto">
-            {loading ? <Loader2 className="animate-spin" /> : <Play />}
-            发送
-          </Button>
+    <div className="space-y-4">
+      {/* Top bar: Env + Dataset + TestCount selectors + Send button */}
+      <div className="flex items-center gap-3 flex-wrap">
+        {envs.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium whitespace-nowrap">环境:</label>
+            <Select value={envId?.toString() || '_none'} onValueChange={(v) => {
+              if (v === '_none') { setEnvId(undefined); return }
+              const id = Number(v)
+              setEnvId(id)
+              const env = envs.find(e => e.id === id)
+              if (env) setBaseUrl(env.base_url)
+            }}>
+              <SelectTrigger className="w-[200px]"><SelectValue placeholder="不使用环境变量" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">不使用环境变量</SelectItem>
+                {envs.map((e) => (
+                  <SelectItem key={e.id} value={e.id.toString()}>{e.name} ({e.env_type})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {datasets.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium whitespace-nowrap">测试数据:</label>
+            <Select value={datasetId?.toString() || '_none'} onValueChange={(v) => setDatasetId(v === '_none' ? undefined : Number(v))}>
+              <SelectTrigger className="w-[220px]"><SelectValue placeholder="不使用测试数据" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">不使用测试数据</SelectItem>
+                {datasets.map((d) => (
+                  <SelectItem key={d.id} value={d.id.toString()}>{d.name} ({d.row_count} 行)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium whitespace-nowrap">次数:</label>
+          <Select value={testCount.toString()} onValueChange={(v) => setTestCount(Number(v))}>
+            <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {TEST_COUNTS.map((n) => <SelectItem key={n} value={n.toString()}>{n}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
+        <Button onClick={runQuick} disabled={loading} data-icon="inline-start" className="ml-auto">
+          {loading ? <Loader2 className="animate-spin" /> : <Play />}
+          发送
+        </Button>
+      </div>
 
-        <Card>
-          <CardHeader><CardTitle>请求配置</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            {/* Method + URL */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-              <div className="md:col-span-3">
-                <label className="text-sm font-medium mb-1.5 block">方法</label>
-                <Select value={method} onValueChange={setMethod}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {METHODS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-9">
-                <label className="text-sm font-medium mb-1.5 block">URL <span className="text-destructive">*</span></label>
-                <Input id="debug-url" placeholder="https://example.com/api/v1/users" value={url} onChange={(e) => setUrl(e.target.value)} aria-label="请求 URL" />
-              </div>
-            </div>
+      {/* Request Config Card */}
+      <Card>
+        <CardHeader><CardTitle>请求配置</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          {/* Method */}
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">方法</label>
+            <Select value={method} onValueChange={setMethod}>
+              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {METHODS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
 
-            {/* P2: Params table */}
+          {/* Split address fields — 2x2 grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium">Params (Query)</label>
-                <Button size="icon-sm" variant="ghost" onClick={addParamRow} title="添加参数"><Plus className="size-3" /></Button>
-              </div>
-              {paramRows.length > 0 && (
-                <div className="border rounded-md divide-y">
-                  {paramRows.map((r, i) => (
-                    <div key={i} className="flex items-center gap-2 px-2 py-1.5">
-                      <Input className="flex-1 h-7 text-xs" placeholder="参数名" value={r.key} onChange={(e) => updateParamRow(i, 'key', e.target.value)} aria-label={`参数 ${i + 1} 名称`} />
-                      <Input className="flex-1 h-7 text-xs" placeholder="参数值" value={r.value} onChange={(e) => updateParamRow(i, 'value', e.target.value)} aria-label={`参数 ${i + 1} 值`} />
-                      <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeParamRow(i)}><Trash2 className="size-3" /></Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* P2: Headers — table or JSON mode */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium">Headers</label>
-                <div className="flex items-center gap-1">
-                  <Button size="sm" variant={headerMode === 'table' ? 'default' : 'outline'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('table')}>表格</Button>
-                  <Button size="sm" variant={headerMode === 'json' ? 'default' : 'outline'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('json')}>JSON</Button>
-                  {headerMode === 'table' && <Button size="icon-sm" variant="ghost" onClick={addHeaderRow} title="添加 Header"><Plus className="size-3" /></Button>}
-                </div>
-              </div>
-              {headerMode === 'table' ? (
-                <div className="border rounded-md divide-y">
-                  {headerRows.map((r, i) => (
-                    <div key={i} className="flex items-center gap-2 px-2 py-1.5">
-                      <Input className="flex-1 h-7 text-xs" placeholder="Header 名" value={r.key} onChange={(e) => updateHeaderRow(i, 'key', e.target.value)} aria-label={`Header ${i + 1} 名称`} />
-                      <Input className="flex-1 h-7 text-xs" placeholder="Header 值" value={r.value} onChange={(e) => updateHeaderRow(i, 'value', e.target.value)} aria-label={`Header ${i + 1} 值`} />
-                      <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeHeaderRow(i)}><Trash2 className="size-3" /></Button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <Textarea rows={3} placeholder='{"Content-Type":"application/json"}' value={headersJson} onChange={(e) => setHeadersJson(e.target.value)} aria-label="Headers JSON" />
-              )}
-            </div>
-
-            {/* P2: Body type selector + Body editor */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-medium">Body</label>
-                <Select value={bodyType} onValueChange={setBodyType}>
-                  <SelectTrigger className="w-[180px] h-7 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {BODY_TYPES.map(bt => <SelectItem key={bt.value} value={bt.value}>{bt.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Textarea
-                rows={bodyType === 'form' ? 4 : 6}
-                placeholder={
-                  bodyType === 'json' ? '{"key":"value"}'
-                    : bodyType === 'form' ? 'key1=value1\nkey2=value2'
-                    : bodyType === 'x-www-form-urlencoded' ? 'key1=value1&key2=value2'
-                    : 'Raw body content...'
-                }
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                aria-label="请求 Body"
+              <label className="text-sm font-medium mb-1.5 block">服务器地址</label>
+              <Input
+                placeholder="https://api.example.com"
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                aria-label="服务器地址"
               />
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">服务名</label>
+              <Input
+                placeholder="api"
+                value={serviceName}
+                onChange={(e) => setServiceName(e.target.value)}
+                aria-label="服务名"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">模块路径</label>
+              <Input
+                placeholder="/ee/search"
+                value={modulePath}
+                onChange={(e) => setModulePath(e.target.value)}
+                aria-label="模块路径"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">接口路径</label>
+              <Input
+                placeholder="/synonyms/cou"
+                value={endpointPath}
+                onChange={(e) => setEndpointPath(e.target.value)}
+                aria-label="接口路径"
+              />
+            </div>
+          </div>
 
-        <AssertionEditor value={assertions} onChange={setAssertions} />
-      </div>
+          {/* URL preview */}
+          <div className="bg-muted/50 rounded-md px-3 py-2">
+            <span className="text-xs text-muted-foreground font-mono break-all">
+              {urlPreview || '(未设置)'}
+            </span>
+          </div>
 
-      <div className="lg:col-span-1">
-        <ResponsePanel result={result} loading={loading} />
-      </div>
+          {/* P2: Params table */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium">Params (Query)</label>
+              <Button size="icon-sm" variant="ghost" onClick={addParamRow} title="添加参数"><Plus className="size-3" /></Button>
+            </div>
+            {paramRows.length > 0 && (
+              <div className="border rounded-md divide-y">
+                {paramRows.map((r, i) => (
+                  <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+                    <Input className="flex-1 h-7 text-xs" placeholder="参数名" value={r.key} onChange={(e) => updateParamRow(i, 'key', e.target.value)} aria-label={`参数 ${i + 1} 名称`} />
+                    <Input className="flex-1 h-7 text-xs" placeholder="参数值" value={r.value} onChange={(e) => updateParamRow(i, 'value', e.target.value)} aria-label={`参数 ${i + 1} 值`} />
+                    <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeParamRow(i)}><Trash2 className="size-3" /></Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* P2: Headers — table or JSON mode */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium">Headers</label>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant={headerMode === 'table' ? 'default' : 'outline'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('table')}>表格</Button>
+                <Button size="sm" variant={headerMode === 'json' ? 'default' : 'outline'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('json')}>JSON</Button>
+                {headerMode === 'table' && <Button size="icon-sm" variant="ghost" onClick={addHeaderRow} title="添加 Header"><Plus className="size-3" /></Button>}
+              </div>
+            </div>
+            {headerMode === 'table' ? (
+              <div className="border rounded-md divide-y">
+                {headerRows.map((r, i) => (
+                  <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+                    <Input className="flex-1 h-7 text-xs" placeholder="Header 名" value={r.key} onChange={(e) => updateHeaderRow(i, 'key', e.target.value)} aria-label={`Header ${i + 1} 名称`} />
+                    <Input className="flex-1 h-7 text-xs" placeholder="Header 值" value={r.value} onChange={(e) => updateHeaderRow(i, 'value', e.target.value)} aria-label={`Header ${i + 1} 值`} />
+                    <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeHeaderRow(i)}><Trash2 className="size-3" /></Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Textarea rows={3} placeholder='{"Content-Type":"application/json"}' value={headersJson} onChange={(e) => setHeadersJson(e.target.value)} aria-label="Headers JSON" />
+            )}
+          </div>
+
+          {/* P2: Body type selector + Body editor */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium">Body</label>
+              <Select value={bodyType} onValueChange={setBodyType}>
+                <SelectTrigger className="w-[180px] h-7 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {BODY_TYPES.map(bt => <SelectItem key={bt.value} value={bt.value}>{bt.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <Textarea
+              rows={bodyType === 'form' ? 4 : 6}
+              placeholder={
+                bodyType === 'json' ? '{"key":"value"}'
+                  : bodyType === 'form' ? 'key1=value1\nkey2=value2'
+                  : bodyType === 'x-www-form-urlencoded' ? 'key1=value1&key2=value2'
+                  : 'Raw body content...'
+              }
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              aria-label="请求 Body"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <AssertionEditor value={assertions} onChange={setAssertions} />
+
+      {/* Response panel — full width below config */}
+      <ResponsePanel result={result} loading={loading} />
     </div>
   )
 }
-
-// AssertionEditor and utility functions now live in ./AssertionEditor.tsx and ./utils.ts
 
 // ── Response Panel ──
 
@@ -380,5 +486,3 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
     </Card>
   )
 }
-
-// formatBody imported from ./utils

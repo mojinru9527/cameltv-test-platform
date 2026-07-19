@@ -47,6 +47,7 @@ test-platform-v2/
 | API 测试 | `/apitest` | 🟡 真实执行，能力待生产化 | httpx 真实 HTTP 请求，缺请求快照/任务取消/生产保护 |
 | UI 自动化 | `/uitest` | 🟡 真实执行，能力待生产化 | npx playwright test 真实执行，缺异步/环境注入/产物归档 |
 | 音视频专项 | `/special` | 🧪 演示态 | 指标为 random 模拟 |
+| 性能监控 | `/perftest` | 🟡 功能完整待发布 | WebSocket 实时指标 + 会话管理 + 报告对比 |
 
 ## 关键架构决策
 

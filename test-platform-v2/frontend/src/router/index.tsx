@@ -27,6 +27,7 @@ const DatasetPage = lazy(() => import('@/pages/dataset'))
 const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const AgentWorkbenchPage = lazy(() => import('@/pages/agent-workbench'))
+const PerftestPage = lazy(() => import('@/pages/perftest'))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -73,6 +74,7 @@ export const router = createBrowserRouter([
       { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
       { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
       { path: 'agent-workbench', element: <PageLoader><AgentWorkbenchPage /></PageLoader> },
+      { path: 'perftest', element: <PageLoader><PerftestPage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
   },
