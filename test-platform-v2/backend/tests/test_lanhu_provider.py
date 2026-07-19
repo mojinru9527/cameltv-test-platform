@@ -50,7 +50,7 @@ class TestExtractStatus:
         assert r.module_name == "赛事模块"
         assert r.client_scope == ["app", "pc"]
         assert r.content_hash  # 有内容 → 有 hash
-        assert r.immutable_version == "e6b5ce1e:26af:2b4c4235"
+        assert r.immutable_version == "lanhu:e6b5ce1e:26af:2b4c4235"
         assert "比赛推送" in r.content_md
 
     def test_image_only_when_empty_content(self, monkeypatch):

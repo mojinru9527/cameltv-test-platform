@@ -37,11 +37,11 @@ test-platform-v2/
 | 需求管理 + AI 生成用例 | `/requirement` | ✅ | MD/Word/Excel/蓝湖上传，DeepSeek LLM 两段式生成+反向评审 |
 | 质量追溯矩阵 | `/trace` | ✅ | 项目覆盖率 + 单用例全链路追溯 |
 | 缺陷管理 + 内建工作流 | `/defect` | ✅ | 6 状态状态机（open→confirmed→fixing→pending_review→closed/rejected） |
-| 通知中心 (Webhook) | `/notify` | 🟡 | 飞书/钉钉/企微 Webhook，plan_done/defect_assigned 事件 |
+| 通知中心 (Webhook/SMTP) | `/notify` | ✅ | 飞书/钉钉/企微，任务发起/结束/结果通知与发送日志 |
 | 项目管理 | `/project` | ✅ | 多项目 + 成员 + 项目级主题 |
-| API 测试 | `/apitest` | 🧪 | ⚠️ 纯前端 fetch + localStorage，无服务端执行/无落库/不可团队共享 |
-| UI 自动化 | `/uitest` | 🧪 | ⚠️ 执行结果为 random.randint 模拟，未真实驱动 Playwright |
-| 音视频专项 | `/special` | 🧪 | ⚠️ 检测指标为 random.uniform 模拟，未真实拉流探测 |
+| API 测试 | `/apitest` | ✅ | OpenAPI 导入、服务端真实请求、加密环境变量、异步任务和结果快照 |
+| UI 自动化 | `/uitest` | ✅ | 服务端真实 Playwright、环境注入、截图/视频/Trace/报告归档 |
+| 音视频专项 | `/special` | ✅ | 真实样本记录、ffprobe 帧率探测、统计与阈值判定 |
 
 ## 技术栈
 
@@ -74,13 +74,13 @@ npm install
 npm run dev
 ```
 
-浏览器打开 http://localhost:5173 ，用 `admin / admin123` 登录。
+浏览器打开 http://localhost:5173，使用管理员分配的账号登录。平台不预填或公开通用默认密码。
 
 ## 一键部署（Docker）
 
 ```bash
 cd deploy
-cp .env.example .env     # 编辑 SECRET_KEY
+cp .env.example .env     # 填写本机密钥和首批账号密码，禁止提交 .env
 docker compose up -d     # 访问 http://localhost
 ```
 
@@ -101,8 +101,7 @@ docker compose up -d
 
 ```
 浏览器打开 http://localhost:8080
-用户名: admin
-密码:   cameltv123
+用户名和密码由 `deploy/jenkins/.env` 注入，不保存在仓库中。
 ```
 
 Jenkins 已通过 CasC 自动完成安全配置——跳过安装向导和插件安装。
@@ -113,17 +112,16 @@ Pipeline 流程：Checkout → Backend Lint → Backend Test(pytest) → Fronten
 
 详见 [deploy/jenkins/README.md](../deploy/jenkins/README.md)
 
-## 接入指南
+## 使用与接入指南
 
 新项目接入流程：[docs/onboarding.md](docs/onboarding.md)
+
+完整用户与管理员手册：[docs/测试平台使用手册.md](docs/测试平台使用手册.md)
 
 ## API 文档
 
 后端启动后访问 http://localhost:8000/docs (Swagger UI) 或 http://localhost:8000/redoc
 
-## 默认凭据
+## 凭据管理
 
-| 角色 | 用户名 | 密码 |
-|------|--------|------|
-| 超级管理员 | admin | admin123 |
-| 测试人员 | tester | tester123 |
+部署人员通过未跟踪的 `.env` 设置首批账号密码；普通用户由管理员在“系统管理”中创建。真实密码、Token、API Key、Webhook 和 VPN 文件不得提交到 Git。

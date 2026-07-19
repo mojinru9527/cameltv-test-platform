@@ -11,7 +11,6 @@ import type { AIGenerateResult, FeatureExtractionResult, RequirementDocument } f
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
@@ -31,6 +30,8 @@ import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import AiResultModal from './AiResultModal'
+import LanhuEvidenceDialog from '@/pages/knowledge/components/LanhuEvidenceDialog'
+import LanhuEvidenceJobDrawer from '@/pages/knowledge/components/LanhuEvidenceJobDrawer'
 
 const TYPE_TAG: Record<string, { className: string; label: string; icon: React.ReactNode }> = {
   md: { className: 'border-blue-200 bg-blue-50 text-blue-700', label: 'Markdown', icon: <FileText className="size-3" /> },
@@ -63,7 +64,8 @@ export default function RequirementPage() {
   const [modalMode, setModalMode] = useState<'generate' | 'view' | 'extract'>('generate')
   const [activeDocId, setActiveDocId] = useState<number | null>(null)
   const [lanhuUrl, setLanhuUrl] = useState('')
-  const [lanhuDesc, setLanhuDesc] = useState('')
+  const [evOpen, setEvOpen] = useState(false)
+  const [evJobId, setEvJobId] = useState<number | null>(null)
   const [previewExpanded, setPreviewExpanded] = useState(false)
   const navigate = useNavigate()
   const [deleteTarget, setDeleteTarget] = useState<RequirementDocument | null>(null)
@@ -135,30 +137,13 @@ export default function RequirementPage() {
     }
   }
 
-  const handleLanhuSubmit = async () => {
+  const handleLanhuSubmit = () => {
     const url = lanhuUrl.trim()
     if (!url) {
       toast.warning('请输入蓝湖链接')
       return
     }
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('lanhu_url', url)
-      if (lanhuDesc.trim()) {
-        formData.append('lanhu_description', lanhuDesc.trim())
-      }
-      const doc = await uploadRequirement(formData)
-      setActiveDocId(doc.id)
-      setLanhuUrl('')
-      setLanhuDesc('')
-      toast.success('蓝湖链接已提交')
-      refetch()
-    } catch {
-      toast.error('提交失败')
-    } finally {
-      setUploading(false)
-    }
+    setEvOpen(true)
   }
 
   // AI Generate
@@ -386,24 +371,26 @@ export default function RequirementPage() {
                 </div>
                 <Button className="rounded-l-none" onClick={handleLanhuSubmit} disabled={uploading}>
                   {uploading ? <Loader2 className="size-4 animate-spin" /> : null}
-                  提交
+                  证据采集
                 </Button>
               </div>
-              <Textarea
-                placeholder="补充说明（可选）：描述设计稿中的页面功能、交互逻辑、关键组件等，帮助 AI 更精准地生成用例"
-                value={lanhuDesc}
-                onChange={(e) => setLanhuDesc(e.target.value)}
-                rows={3}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  全页面滚动截图 + OCR，生成可追溯证据包（Word/JSON），再入需求 / RAG / Wiki
+                </span>
+              </div>
+              <LanhuEvidenceDialog
+                open={evOpen}
+                onOpenChange={setEvOpen}
+                initialUrl={lanhuUrl}
+                initialImportRequirement
+                onCreated={(job) => setEvJobId(job.id)}
               />
-              {lanhuDesc && (
-                <button
-                  type="button"
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => setLanhuDesc('')}
-                >
-                  清除说明
-                </button>
-              )}
+              <LanhuEvidenceJobDrawer
+                open={evJobId != null}
+                onOpenChange={(v) => { if (!v) setEvJobId(null) }}
+                jobId={evJobId}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -11,10 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { searchKnowledge, reembedKnowledge } from '@/api/knowledge'
-import type { KnowledgeSearchResult } from '@/types'
+import { searchKnowledge, reembedKnowledge, fetchSearchHealth } from '@/api/knowledge'
+import type { KnowledgeSearchResult, SearchHealth } from '@/types'
 import { useAuthStore } from '@/stores/auth'
-import { Search, Loader2, RefreshCw } from '@/lib/icons'
+import { Search, Loader2, RefreshCw, AlertTriangle, CheckCircle2, Database, BrainCircuit } from '@/lib/icons'
 
 const MODES = [
   { v: 'hybrid', l: '混合（关键词+向量）' },
@@ -31,6 +31,11 @@ const CHUNK_LABEL: Record<string, string> = {
   field_rule: '字段',
 }
 
+const FALLBACK_LABEL: Record<string, string> = {
+  'keyword-only': '仅关键词',
+  'hybrid': '混合（关键词+向量）',
+}
+
 export default function SearchTab() {
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [query, setQuery] = useState('')
@@ -40,17 +45,31 @@ export default function SearchTab() {
   const [searched, setSearched] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [reembedding, setReembedding] = useState(false)
+  const [health, setHealth] = useState<SearchHealth | null>(null)
+
+  useEffect(() => {
+    fetchSearchHealth()
+      .then(setHealth)
+      .catch(() => { /* 静默——健康检查失败不影响主功能 */ })
+  }, [])
+
+  const refreshHealth = () => {
+    fetchSearchHealth()
+      .then(setHealth)
+      .catch(() => toast.error('获取搜索健康状态失败'))
+  }
 
   const doSearch = () => {
     const q = query.trim()
     if (!q) return
     setLoading(true)
     setSearched(true)
+    setSearchError(null)
     searchKnowledge({ query: q, mode: mode as 'hybrid' | 'keyword' | 'vector', top_k: 10 })
       .then((res) => setResults(res || []))
       .catch((e) => {
         setResults([])
-        setSearchError(e?.message || 'RAG 检索未启用或不可用')
+        setSearchError(e?.message || '检索失败')
       })
       .finally(() => setLoading(false))
   }
@@ -58,13 +77,77 @@ export default function SearchTab() {
   const doReembed = () => {
     setReembedding(true)
     reembedKnowledge()
-      .then((r) => toast.success(`回填完成：共 ${r.total} 条，已嵌入 ${r.embedded}，跳过 ${r.skipped}`))
+      .then((r) => {
+        toast.success(`回填完成：共 ${r.total} 条，已嵌入 ${r.embedded}，跳过 ${r.skipped}`)
+        refreshHealth()
+      })
       .catch((e) => toast.error(e?.message || '回填失败（需启用 RAG 且模型就绪）'))
       .finally(() => setReembedding(false))
   }
 
+  const ragStatusBadge = () => {
+    if (!health) return null
+    if (health.rag_enabled && health.vector_search_functional) {
+      return <Badge variant="default" className="text-xs gap-1"><CheckCircle2 className="size-3" />RAG 已启用</Badge>
+    }
+    if (health.rag_enabled) {
+      return <Badge variant="secondary" className="text-xs gap-1"><AlertTriangle className="size-3" />RAG 降级</Badge>
+    }
+    return <Badge variant="outline" className="text-xs gap-1"><Database className="size-3" />仅关键词</Badge>
+  }
+
+  const coveragePct = health?.embedding_coverage != null
+    ? Math.round(health.embedding_coverage * 100)
+    : null
+
   return (
     <div className="space-y-4">
+      {/* RAG 健康状态栏 */}
+      {health && (
+        <div className="flex flex-wrap items-center gap-3 px-3 py-2 bg-muted/40 rounded-md text-xs">
+          {ragStatusBadge()}
+          <span className="text-muted-foreground">
+            检索模式：<span className="font-medium text-foreground">{FALLBACK_LABEL[health.fallback_mode] ?? health.fallback_mode}</span>
+          </span>
+          {health.rag_enabled && (
+            <>
+              <span className="text-muted-foreground">
+                模型：<span className="font-medium text-foreground">{health.embedding_model}</span>
+              </span>
+              <span className="text-muted-foreground">
+                切片：<span className="font-medium text-foreground">{health.embedded_chunks}/{health.active_chunks}</span>
+              </span>
+              {/* 嵌入覆盖率进度条 */}
+              {coveragePct != null && (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground shrink-0">覆盖率：</span>
+                  <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${coveragePct >= 80 ? 'bg-green-500' : coveragePct >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      style={{ width: `${coveragePct}%` }}
+                    />
+                  </div>
+                  <span className="font-medium tabular-nums">{coveragePct}%</span>
+                </div>
+              )}
+              {health.embedding_available && (
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <BrainCircuit className="size-3" />模型就绪
+                </span>
+              )}
+            </>
+          )}
+          <button
+            type="button"
+            className="ml-auto text-muted-foreground hover:text-foreground"
+            onClick={refreshHealth}
+            title="刷新健康状态"
+          >
+            <RefreshCw className="size-3" />
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -116,7 +199,7 @@ export default function SearchTab() {
         </div>
       ) : searchError ? (
         <div className="h-24 flex flex-col items-center justify-center gap-1">
-          <span className="text-sm text-amber-600 font-medium">功能未启用</span>
+          <span className="text-sm text-amber-600 font-medium">检索异常</span>
           <span className="text-xs text-muted-foreground">{searchError}</span>
         </div>
       ) : results.length === 0 ? (

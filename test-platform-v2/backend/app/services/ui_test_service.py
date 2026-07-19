@@ -15,6 +15,13 @@ from app.models.user import User
 logger = logging.getLogger("uitest")
 
 
+def _as_utc(value: datetime) -> datetime:
+    """Normalize SQLite-naive and timezone-aware timestamps to UTC."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 def _job_to_dict(r: UiTestJob, creator_name: str = "") -> dict:
     return {
         "id": r.id, "project_id": r.project_id,
@@ -28,7 +35,7 @@ def _job_to_dict(r: UiTestJob, creator_name: str = "") -> dict:
     }
 
 
-def _run_to_dict(r: UiTestRun) -> dict:
+def _run_to_dict(r: UiTestRun, job: UiTestJob | None = None) -> dict:
     result = None
     try:
         result = json.loads(r.result) if r.result else {}
@@ -39,12 +46,33 @@ def _run_to_dict(r: UiTestRun) -> dict:
         screenshots = json.loads(r.screenshots) if r.screenshots else []
     except (json.JSONDecodeError, TypeError):
         screenshots = []
+    # Compute duration
+    duration = None
+    if r.started_at and r.finished_at:
+        duration = round((_as_utc(r.finished_at) - _as_utc(r.started_at)).total_seconds(), 2)
+    elif r.started_at and r.status == "running":
+        now = datetime.now(timezone.utc)
+        duration = round((now - _as_utc(r.started_at)).total_seconds(), 2)
+    # Browser from job
+    browser = job.browser if job else ""
+    # Truncate stdout/stderr for API response
+    stdout_summary = (r.stdout or "")[:5000]
+    stderr_summary = (r.stderr or "")[:2000]
     return {
         "id": r.id, "job_id": r.job_id, "status": r.status,
         "result": result, "screenshots": screenshots,
         "video_url": r.video_url, "trace_id": r.trace_id,
         "base_url": r.base_url or "",
+        "browser": browser,
+        "duration": duration,
         "error_message": r.error_message or "",
+        "stdout": stdout_summary,
+        "stderr": stderr_summary,
+        "artifact_dir": r.artifact_dir or "",
+        "report_json_path": r.report_json_path or "",
+        "html_report_path": r.html_report_path or "",
+        "process_id": r.process_id,
+        "cancel_requested": bool(r.cancel_requested),
         "started_at": r.started_at, "finished_at": r.finished_at,
     }
 
@@ -162,7 +190,11 @@ def _resolve_base_url(db: Session, environment_id: int | None) -> str:
 
 
 def trigger_job(db: Session, job_id: int, project_id: int) -> dict:
-    """触发 UI 测试执行 — 创建 run 记录并立即返回（异步执行由 BackgroundTasks 驱动）。"""
+    """触发 UI 测试执行 — 创建 run 记录，入队，立即返回。
+
+    Playwright 执行由 ui_runner_queue 后台线程池异步驱动，
+    不再阻塞请求线程或依赖 FastAPI BackgroundTasks。
+    """
 
     from app.services.playwright_executor import _check_playwright_installed
 
@@ -203,7 +235,13 @@ def trigger_job(db: Session, job_id: int, project_id: int) -> dict:
     db.add(run)
     db.commit()
     db.refresh(run)
-    return _run_to_dict(run)
+
+    # 仅当 Playwright 可用时才入队后台执行（不可用时 run 已标记 fail）
+    if pw_ok:
+        from app.services.ui_runner_queue import enqueue_run
+        enqueue_run(run.id, job_id, project_id)
+
+    return _run_to_dict(run, job)
 
 
 def execute_playwright_async(run_id: int, job_id: int, project_id: int):
@@ -255,11 +293,18 @@ def list_runs(db: Session, job_id: int, project_id: int, page: int = 1, page_siz
     return [_run_to_dict(r) for r in rows], total
 
 
-def get_run(db: Session, run_id: int) -> dict | None:
+def get_run(db: Session, run_id: int, project_id: int | None = None) -> dict | None:
     r = db.get(UiTestRun, run_id)
     if not r:
         return None
-    return _run_to_dict(r)
+    # Verify project isolation: the run's job must belong to the current project
+    if project_id is not None and project_id != 0:
+        job = db.get(UiTestJob, r.job_id)
+        if not job or job.project_id != project_id:
+            return None  # treat as not-found to avoid leaking cross-project data
+    else:
+        job = db.get(UiTestJob, r.job_id)
+    return _run_to_dict(r, job)
 
 
 # ═══════════════════════════════════════════════════════

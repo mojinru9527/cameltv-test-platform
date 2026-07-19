@@ -39,7 +39,7 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { username: 'admin', password: 'admin123' },
+    defaultValues: { username: '', password: '' },
   })
 
   const onFinish = async (values: LoginForm) => {
@@ -112,7 +112,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="justify-center">
-          <p className="text-xs text-muted-foreground">默认账号：admin / admin123</p>
+          <p className="text-xs text-muted-foreground">请使用管理员分配的账号登录</p>
         </CardFooter>
       </Card>
     </div>

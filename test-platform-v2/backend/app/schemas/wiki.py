@@ -36,6 +36,9 @@ class WikiRawSourceBrief(BaseModel):
     immutable_version: str = ""
     status: str = "active"
     knowledge_source_id: int | None = None
+    doc_id: str = ""
+    version_id: str = ""
+    page_id: str = ""
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -193,3 +196,129 @@ class WikiDiffCreateArtifactRequest(BaseModel):
 class WikiDiffCreateArtifactResult(BaseModel):
     artifact_id: int
     artifact_type: str
+
+
+# ══════════════════════════════════════════════
+# 外部 LLM-Wiki 连接器（VNext-5）
+# ══════════════════════════════════════════════
+
+class ExternalWikiConnectionCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=200)
+    provider: str = Field(default="llm_wiki_desktop", max_length=50)
+    base_url: str = Field(..., min_length=1, max_length=500)
+    token: str = Field(default="", description="明文 token，服务端加密后存储")
+    external_project_id: str | None = None
+    enabled: bool = True
+
+
+class ExternalWikiConnectionUpdate(BaseModel):
+    name: str | None = None
+    provider: str | None = None
+    base_url: str | None = None
+    token: str | None = Field(default=None, description="留空则不更新 token")
+    external_project_id: str | None = None
+    enabled: bool | None = None
+
+
+class ExternalWikiConnectionOut(BaseModel):
+    id: int
+    project_id: int
+    name: str
+    provider: str
+    base_url: str
+    # token_encrypted: 永不通过 API 暴露
+    external_project_id: str | None = None
+    enabled: bool = True
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class ExternalWikiSearchRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500)
+    limit: int = Field(default=10, ge=1, le=100)
+
+
+class ExternalWikiPageRequest(BaseModel):
+    path: str = Field(..., min_length=1, max_length=500)
+
+
+class ExternalWikiGraphRequest(BaseModel):
+    node: str = Field(..., min_length=1, max_length=500)
+
+
+class ExternalWikiHealthResult(BaseModel):
+    ok: bool
+    version: str = ""
+    message: str = ""
+
+
+class ExternalWikiSearchResult(BaseModel):
+    items: list[dict] = Field(default_factory=list)
+    total: int = 0
+
+
+class ExternalWikiPageResult(BaseModel):
+    ok: bool
+    title: str = ""
+    content_md: str = ""
+    meta: dict = Field(default_factory=dict)
+    error: str = ""
+
+
+class ExternalWikiGraphResult(BaseModel):
+    ok: bool
+    node: str = ""
+    edges: list[dict] = Field(default_factory=list)
+    nodes: list[dict] = Field(default_factory=list)
+    error: str = ""
+
+
+# ══════════════════════════════════════════════
+# Wiki 健康体检 / Lint（VNext-6）
+# ══════════════════════════════════════════════
+
+class WikiLintRunRequest(BaseModel):
+    """触发 lint 扫描。"""
+    project_id_override: int | None = Field(default=None, description="管理员可覆盖项目范围")
+
+
+class WikiLintReportBrief(BaseModel):
+    id: int
+    project_id: int
+    status: str
+    summary_json: str = "{}"
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class WikiLintIssueOut(BaseModel):
+    id: int
+    report_id: int
+    project_id: int
+    rule: str
+    severity: str = "P2"
+    title: str
+    description: str = ""
+    entity_type: str = ""
+    entity_id: int | None = None
+    related_entity_json: str = "{}"
+    suggestion: str = ""
+    review_status: str = "pending"
+    resolved_artifact_id: int | None = None
+    created_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class WikiLintReportOut(WikiLintReportBrief):
+    error_message: str = ""
+    issues: list[WikiLintIssueOut] = Field(default_factory=list)
+
+
+class WikiLintConvertRequest(BaseModel):
+    issue_ids: list[int] = Field(default_factory=list, description="要转换的问题 id 列表，空=全部")
+    artifact_type: str = Field(default="", description="产物类型，留空按规则自动映射")

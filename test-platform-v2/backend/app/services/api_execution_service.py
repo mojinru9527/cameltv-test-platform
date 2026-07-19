@@ -19,8 +19,10 @@ _COL_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
 
 # ── 配置 ──
 DEFAULT_TIMEOUT = 30  # seconds
-MAX_RESPONSE_BODY_SIZE = 500 * 1024  # 500 KB
+MAX_RESPONSE_BODY_SIZE = 500 * 1024  # 500 KB (max stored in raw_body)
+BODY_PREVIEW_MAX_SIZE = 4096  # chars for response_snapshot.body_preview
 SENSITIVE_HEADERS = {"authorization", "cookie", "set-cookie", "x-api-key", "x-auth-token", "token"}
+SENSITIVE_MASK = "***"
 
 
 # ═══════════════════════════════════════════════════════
@@ -35,6 +37,7 @@ def execute_api_case(
     environment_id: int | None = None,
     dataset_id: int | None = None,
     confirm_prod: bool = False,
+    has_execute_prod: bool = False,
 ) -> dict:
     """执行已保存的 API 用例，返回执行结果。若提供 dataset_id 则进行参数化批量执行。"""
     case = db.get(TestCase, case_id)
@@ -58,8 +61,10 @@ def execute_api_case(
     }
 
     if dataset_id:
-        return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id, confirm_prod=confirm_prod)
-    return _do_execute(db, request_def, assertions, environment_id=environment_id, confirm_prod=confirm_prod)
+        return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id,
+                                     confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
+    return _do_execute(db, request_def, assertions, environment_id=environment_id,
+                       confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
 
 
 def quick_execute(
@@ -70,11 +75,14 @@ def quick_execute(
     environment_id: int | None = None,
     dataset_id: int | None = None,
     confirm_prod: bool = False,
+    has_execute_prod: bool = False,
 ) -> dict:
     """即时执行（不依赖已保存用例），用于调试面板。若提供 dataset_id 则批量执行。"""
     if dataset_id:
-        return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id, confirm_prod=confirm_prod)
-    return _do_execute(db, request_def, assertions or [], environment_id=environment_id, confirm_prod=confirm_prod)
+        return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id,
+                                     confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
+    return _do_execute(db, request_def, assertions or [], environment_id=environment_id,
+                       confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
 
 
 # ═══════════════════════════════════════════════════════
@@ -89,6 +97,7 @@ def _do_execute(
     environment_id: int | None = None,
     dataset_row_index: int | None = None,
     confirm_prod: bool = False,
+    has_execute_prod: bool = False,
 ) -> dict:
     """核心执行流程：解析变量 → 生产保护检查 → 发请求 → 跑断言 → 汇总结果。"""
     method = (request_def.get("method") or "GET").upper()
@@ -97,7 +106,7 @@ def _do_execute(
     body = request_def.get("body") or ""
 
     # 0. 生产环境保护检查
-    allowed, prod_msg = _check_prod_protection(db, method, environment_id, confirm_prod)
+    allowed, prod_msg = _check_prod_protection(db, method, environment_id, confirm_prod, has_execute_prod)
     if not allowed:
         return _error_result(prod_msg)
 
@@ -168,12 +177,16 @@ def _do_execute(
     all_pass = all(a["passed"] for a in assertion_results) if assertion_results else True
 
     # 6. 构建响应快照
-    body_truncated = len(raw_body) > MAX_RESPONSE_BODY_SIZE if raw_body else False
+    full_body = raw_body if raw_body else ""
+    body_size = len(raw_body) if raw_body else 0
+    body_truncated = body_size > MAX_RESPONSE_BODY_SIZE
+    body_preview = _truncate_for_preview(full_body, BODY_PREVIEW_MAX_SIZE)
     response_snapshot = {
         "status_code": resp.status_code,
         "headers": resp_headers,
-        "body_size_bytes": len(raw_body) if raw_body else 0,
-        "truncated": body_truncated,
+        "body_preview": body_preview,
+        "body_size_bytes": body_size,
+        "truncated": body_truncated or (len(full_body) > BODY_PREVIEW_MAX_SIZE),
         "content_type": resp_headers.get("content-type", ""),
     }
 
@@ -664,11 +677,11 @@ def _build_request_snapshot(
     environment_id: int | None = None,
     dataset_row_index: int | None = None,
 ) -> dict:
-    """构建完整请求快照，敏感头脱敏。"""
+    """构建完整请求快照，敏感头脱敏，包含可复制 curl 命令。"""
     safe_headers = {}
     for k, v in headers.items():
         if k.lower() in SENSITIVE_HEADERS:
-            safe_headers[k] = "<redacted>"
+            safe_headers[k] = SENSITIVE_MASK
         else:
             safe_headers[k] = v
 
@@ -683,15 +696,22 @@ def _build_request_snapshot(
         "headers": safe_headers,
         "body": safe_body,
         "environment_id": environment_id,
+        "dataset_row_index": dataset_row_index,
+        "curl": build_curl_command({
+            "method": method,
+            "resolved_url": resolved_url,
+            "original_url": original_url,
+            "headers": safe_headers,
+            "body": safe_body,
+        }),
     }
-    if dataset_row_index is not None:
-        snapshot["dataset_row_index"] = dataset_row_index
     return snapshot
 
 
 # ── 生产环境保护 ──────────────────────────────────────────
 
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+READ_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 
 def _check_prod_protection(
@@ -699,13 +719,17 @@ def _check_prod_protection(
     method: str,
     environment_id: int | None,
     confirm_prod: bool = False,
+    has_execute_prod: bool = False,
 ) -> tuple[bool, str]:
-    """检查生产环境保护：写操作需要 confirm_prod=True。返回 (allowed, message)。"""
+    """检查生产环境保护。
+
+    规则:
+    - GET/HEAD/OPTIONS in prod: allowed (read-only)
+    - POST/PUT/PATCH/DELETE in prod: require has_execute_prod AND confirm_prod=true
+    """
     if not environment_id:
         return True, ""
     method_upper = method.upper()
-    if method_upper not in WRITE_METHODS:
-        return True, ""  # 读操作不需要保护
 
     from app.models.environment import Environment
     env = db.get(Environment, environment_id)
@@ -714,10 +738,23 @@ def _check_prod_protection(
     if env.env_type != "prod":
         return True, ""
 
-    if not confirm_prod:
+    # 读操作在生产环境始终允许
+    if method_upper in READ_METHODS:
+        return True, ""
+
+    # 写操作在生产环境需要双重保护
+    if method_upper not in WRITE_METHODS:
+        return True, ""
+
+    if not has_execute_prod:
         return False, (
             f"生产环境禁止执行 {method_upper} 写操作。"
-            f"如需执行，请设置 confirm_prod=true 并确认。"
+            f"需要 apitest:execute_prod 权限。"
+        )
+    if not confirm_prod:
+        return False, (
+            f"生产环境执行 {method_upper} 写操作需要二次确认。"
+            f"请设置 confirm_prod=true。"
         )
     return True, ""
 
@@ -731,6 +768,7 @@ def _execute_with_dataset(
     environment_id: int | None,
     dataset_id: int,
     confirm_prod: bool = False,
+    has_execute_prod: bool = False,
 ) -> dict:
     """遍历数据集每一行，逐行替换 ${column_name} 并执行，返回批量结果。"""
     from app.services.dataset_service import get_dataset_rows, get_dataset
@@ -754,7 +792,9 @@ def _execute_with_dataset(
                 headers[k] = _substitute_columns(str(v), row)
 
         # Execute
-        result = _do_execute(db, row_req, row_assertions, environment_id=environment_id, dataset_row_index=row_idx, confirm_prod=confirm_prod)
+        result = _do_execute(db, row_req, row_assertions, environment_id=environment_id,
+                            dataset_row_index=row_idx, confirm_prod=confirm_prod,
+                            has_execute_prod=has_execute_prod)
         per_row_results.append({
             "row_index": row_idx,
             "row_data": row,
@@ -800,9 +840,9 @@ def build_curl_command(request_snapshot: dict) -> str:
     if url:
         parts.append(_shell_quote(url))
 
-    # Headers (skip redacted)
+    # Headers (keep masked tokens)
     for k, v in headers.items():
-        if v == "<redacted>":
+        if v == SENSITIVE_MASK:
             parts.append(f"-H {_shell_quote(f'{k}: <your-token>')}")
         else:
             parts.append(f"-H {_shell_quote(f'{k}: {v}')}")
@@ -812,6 +852,16 @@ def build_curl_command(request_snapshot: dict) -> str:
         parts.append(f"-d {_shell_quote(str(body))}")
 
     return " \\\n  ".join(parts)
+
+
+def _truncate_for_preview(text: str, max_chars: int) -> str:
+    """截断文本用于预览，保留开头和结尾。"""
+    if not text:
+        return ""
+    if len(text) <= max_chars:
+        return text
+    half = max_chars // 2
+    return text[:half] + f"\n... [truncated {len(text) - max_chars} chars] ...\n" + text[-half:]
 
 
 def _shell_quote(s: str) -> str:

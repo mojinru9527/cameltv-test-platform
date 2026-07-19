@@ -212,13 +212,8 @@ else:
                         error "Backend failed to start within ${maxRetries * 10}s"
                     }
 
-                    // API smoke tests
-                    def loginResp = sh(script: '''
-                        curl -s -X POST http://localhost/api/v1/auth/login \
-                            -H "Content-Type: application/json" \
-                            -d '{"username":"admin","password":"admin123"}'
-                    ''', returnStdout: true).trim()
-                    echo "Login test: ${loginResp.contains('token') ? 'PASS' : 'FAIL'}"
+                    // 无凭据 API 冒烟：认证流程由注入 CI Secret 的独立 E2E Job 覆盖
+                    sh 'curl -fsS http://localhost/health'
                 }
             }
         }

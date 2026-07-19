@@ -65,6 +65,9 @@ import {
 
 // ── Event labels ──
 const EVENT_OPTIONS: { value: string; label: string }[] = [
+  { value: 'task_started', label: '任务已发起' },
+  { value: 'task_finished', label: '任务已结束' },
+  { value: 'test_result', label: '测试结果' },
   { value: 'plan_done', label: '计划执行完成' },
   { value: 'defect_assigned', label: '缺陷分配' },
   { value: 'schedule_failed', label: '计划执行失败' },
@@ -93,7 +96,7 @@ function emptyForm(): {
     provider: 'feishu',
     webhook_url: '',
     enabled: true,
-    events: ['plan_done', 'defect_assigned'],
+    events: ['task_started', 'task_finished', 'test_result'],
   }
 }
 

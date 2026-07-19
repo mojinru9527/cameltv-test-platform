@@ -132,6 +132,24 @@ class KnowledgeOverviewOut(BaseModel):
     pending_artifact_count: int = 0
     recent_sources: list[KnowledgeSourceBrief] = Field(default_factory=list)
     health: KnowledgeHealth = Field(default_factory=KnowledgeHealth)
+    # M2 RAG 健康指标
+    rag_enabled: bool = False
+    embedding_model: str = ""
+    active_chunks: int = 0
+    embedded_chunks: int = 0
+    embedding_coverage: float | None = None  # None 表示 RAG 未启用
+
+
+class SearchHealthOut(BaseModel):
+    """搜索健康检查响应。"""
+    rag_enabled: bool = False
+    embedding_model: str = ""
+    embedding_available: bool = False
+    vector_search_functional: bool = False
+    fallback_mode: str = "keyword-only"  # "keyword-only" | "hybrid"
+    active_chunks: int = 0
+    embedded_chunks: int = 0
+    embedding_coverage: float | None = None
 
 
 # ── M2 混合检索 ──

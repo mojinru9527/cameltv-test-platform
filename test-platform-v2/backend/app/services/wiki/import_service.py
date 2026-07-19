@@ -136,6 +136,10 @@ async def import_lanhu(
     if job and settings.wiki_auto_ingest_enabled:
         from app.services.wiki import ingest_service
         background_tasks.add_task(ingest_service.run_wiki_ingest_in_new_session, project_id, job.id)
+    # 知识图谱提取：extract_graph=true 且知识图谱已启用时触发
+    if req.target.extract_graph and ks_id and settings.knowledge_graph_enabled:
+        from app.services.knowledge.entity_service import extract_and_build_graph_in_new_session
+        background_tasks.add_task(extract_and_build_graph_in_new_session, project_id, source_id=ks_id, max_chunks=50)
 
     return LanhuImportResult(
         raw_source_id=raw.id,
