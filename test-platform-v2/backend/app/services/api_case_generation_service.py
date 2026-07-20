@@ -102,6 +102,27 @@ def generate_cases_from_endpoint(
     if "invalid" in templates:
         cases.append(_build_auth_missing_case(endpoint))
 
+    # ── 额外边界覆盖 (null/空/零/负 per parameter) ──
+    if "boundary" in templates or "invalid" in templates:
+        cases.extend(_build_extra_boundary_cases(endpoint, properties, query_params))
+
+    # ── 多参数组合覆盖 ──
+    total_params = len(properties) + len(query_params)
+    if total_params >= 2:
+        cases.extend(_build_combo_param_cases(endpoint, properties, query_params))
+
+    # ── 数量下限保证 ──
+    if total_params >= 5 and len(cases) < 40:
+        # Generate additional combo cases to reach minimum
+        extra_needed = 40 - len(cases)
+        extra_combos = _build_combo_param_cases(endpoint, properties, query_params, count=min(extra_needed, 10))
+        cases.extend(extra_combos)
+    elif total_params >= 3 and len(cases) < 25:
+        # Generate additional boundary cases to reach minimum
+        extra_needed = 25 - len(cases)
+        extra_boundary = _build_extra_boundary_cases(endpoint, properties, query_params, count=min(extra_needed, 10))
+        cases.extend(extra_boundary)
+
     # ── 数量上限保护 ──
     if len(cases) > _MAX_CASES_PER_ENDPOINT:
         cases = cases[:_MAX_CASES_PER_ENDPOINT]
@@ -612,11 +633,12 @@ def _build_extreme_cases(ep: dict, properties: dict) -> list[dict]:
 # ═══════════════════════════════════════════════════════
 
 def _build_query_required_cases(ep: dict, query_params: list) -> list[dict]:
-    """为必填 query 参数生成缺失/空值/类型错误用例。"""
+    """为必填 query 参数生成缺失/null值/空字符串/类型错误用例。"""
     cases = []
     required = [q for q in query_params if q.get("required")]
     for q in required:
         name = q.get("name", "")
+        ptype = q.get("type", "string")
         # Missing required query param
         cases.append(_make_case(
             ep,
@@ -629,6 +651,31 @@ def _build_query_required_cases(ep: dict, query_params: list) -> list[dict]:
             ],
             expected=f"缺少必填 query 参数 {name} 时应返回 4xx。",
         ))
+        # Null value for required query param
+        cases.append(_make_case(
+            ep,
+            purpose=f"{name} 为 null 应返回参数错误", field=name,
+            priority="P1", scenario="query_required",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "status_code", "expected": 400, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected=f"必填 query 参数 {name} 为 null 时应返回 4xx。",
+        ))
+        # Empty string (only for string type)
+        if ptype == "string":
+            cases.append(_make_case(
+                ep,
+                purpose=f"{name} 为空字符串应返回参数错误", field=name,
+                priority="P2", scenario="query_required",
+                body=_build_valid_body(ep),
+                assertions=[
+                    {"type": "status_code", "expected": 400, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"必填 query 参数 {name} 为空字符串时应返回 4xx。",
+            ))
     return cases
 
 
@@ -759,6 +806,185 @@ def _build_security_cases(ep: dict, properties: dict) -> list[dict]:
         ))
 
     return cases
+
+
+# ═══════════════════════════════════════════════════════
+# 额外边界覆盖 (null/空/零/负 per parameter)
+# ═══════════════════════════════════════════════════════
+
+def _get_invalid_value(param: dict) -> Any:
+    """返回参数的边界/非法值。"""
+    ptype = param.get("type", "string")
+    if ptype == "string":
+        return ""
+    elif ptype == "integer":
+        return 0
+    elif ptype == "number":
+        return 0.0
+    elif ptype == "boolean":
+        return False
+    elif ptype == "array":
+        return []
+    elif ptype == "object":
+        return {}
+    return None
+
+
+def _build_extra_boundary_cases(
+    ep: dict, properties: dict, query_params: list, *, count: int = 0
+) -> list[dict]:
+    """为每个 body 参数生成 null/空/零/负数等边界覆盖用例。
+
+    Args:
+        count: if > 0, only generate up to this many cases (for minimum enforcement).
+    """
+    method = ep.get("method", "GET").upper()
+    cases: list[dict] = []
+
+    # Body params
+    for field, prop in properties.items():
+        if count > 0 and len(cases) >= count:
+            break
+        ptype = prop.get("type", "string")
+
+        # Null value
+        body = _build_valid_body(ep, overrides={field: None})
+        cases.append(_make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - {field} 为 null",
+            priority="P2",
+            scenario="boundary_valid",
+            body=body,
+            assertions=[
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected=f"{field} 为 null 时不应导致 5xx。",
+        ))
+
+        # Empty value per type
+        if ptype == "string":
+            body = _build_valid_body(ep, overrides={field: ""})
+            cases.append(_make_case(
+                ep,
+                title=f"{ep.get('summary') or ep.get('path')} - {field} 为空字符串",
+                priority="P2",
+                scenario="boundary_valid",
+                body=body,
+                assertions=[
+                    {"type": "status_code", "expected": 200, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"{field} 为空字符串时不应导致 5xx。",
+            ))
+        elif ptype in ("integer", "number"):
+            # Zero value
+            body = _build_valid_body(ep, overrides={field: 0 if ptype == "integer" else 0.0})
+            cases.append(_make_case(
+                ep,
+                title=f"{ep.get('summary') or ep.get('path')} - {field} 为零值",
+                priority="P2",
+                scenario="boundary_valid",
+                body=body,
+                assertions=[
+                    {"type": "status_code", "expected": 200, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"{field} 为零值时不应导致 5xx。",
+            ))
+            # Negative value
+            body = _build_valid_body(ep, overrides={field: -1})
+            cases.append(_make_case(
+                ep,
+                title=f"{ep.get('summary') or ep.get('path')} - {field} 为负数",
+                priority="P2",
+                scenario="boundary_valid",
+                body=body,
+                assertions=[
+                    {"type": "status_code", "expected": 200, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"{field} 为负数时不应导致 5xx。",
+            ))
+
+    return cases
+
+
+def _build_combo_param_cases(
+    ep: dict, properties: dict, query_params: list, *, count: int = 0
+) -> list[dict]:
+    """为多参数生成组合覆盖用例：全正常、全边界、混合场景。
+
+    Args:
+        count: if > 0, only generate up to this many cases (for minimum enforcement).
+    """
+    cases: list[dict] = []
+    all_params = list(properties.items())
+
+    if len(all_params) < 2:
+        return cases
+
+    # Take up to 3 params for combination coverage
+    combo_params = all_params[:3]
+
+    # Case 1: All params with valid values (happy path combo)
+    body_valid = _build_valid_body(ep)
+    cases.append(_make_case(
+        ep,
+        title=f"{ep.get('summary') or ep.get('path')} - 全参数正常组合",
+        priority="P1",
+        scenario="positive",
+        body=body_valid,
+        assertions=[
+            {"type": "status_code", "expected": 200, "operator": "gte"},
+            {"type": "status_code", "expected": 300, "operator": "lt"},
+        ],
+        expected="所有请求参数合法时接口应正常返回 2xx。",
+    ))
+
+    if count > 0 and len(cases) >= count:
+        return cases[:count]
+
+    # Case 2: All params empty/null (all-boundary combo)
+    overrides_all_empty = {}
+    for field, prop in combo_params:
+        overrides_all_empty[field] = _get_invalid_value(prop)
+    body_all_empty = _build_valid_body(ep, overrides=overrides_all_empty)
+    cases.append(_make_case(
+        ep,
+        title=f"{ep.get('summary') or ep.get('path')} - 全参数边界值组合",
+        priority="P2",
+        scenario="boundary_valid",
+        body=body_all_empty,
+        assertions=[
+            {"type": "status_code", "expected": 200, "operator": "gte"},
+            {"type": "status_code", "expected": 500, "operator": "lt"},
+        ],
+        expected="所有参数为边界值时不应导致 5xx。",
+    ))
+
+    if count > 0 and len(cases) >= count:
+        return cases[:count]
+
+    # Case 3-5: Mix — one param invalid, rest valid
+    for field, prop in combo_params:
+        if count > 0 and len(cases) >= count:
+            break
+        body_mix = _build_valid_body(ep, overrides={field: _get_invalid_value(prop)})
+        cases.append(_make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - {field} 边界值+其他正常",
+            priority="P2",
+            scenario="boundary_valid",
+            body=body_mix,
+            assertions=[
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected=f"{field} 为边界值、其他参数正常时不应导致 5xx。",
+        ))
+
+    return cases[:count] if count > 0 else cases
 
 
 # ═══════════════════════════════════════════════════════

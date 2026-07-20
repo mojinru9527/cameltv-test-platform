@@ -64,20 +64,23 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
   useEffect(() => { loadServices() }, [loadServices])
   useEffect(() => { loadEndpoints() }, [loadEndpoints])
 
-  // Module → Path-group → Endpoints (three-level)
-  const modulePathGroups = useMemo(() => {
-    const result: Record<string, Record<string, ApiEndpoint[]>> = {}
+  // Service → Module → PathGroup → Endpoints (four-level hierarchy)
+  const hierarchy = useMemo(() => {
+    const result: Record<string, Record<string, Record<string, ApiEndpoint[]>>> = {}
     for (const ep of endpoints) {
+      const svcName = services.find(s => s.id === ep.service_id)?.display_name
+        || services.find(s => s.id === ep.service_id)?.name || '未分类'
       const mod = ep.module || '默认模块'
       // Extract first path segment for grouping (e.g. /user/info → /user)
       const pathParts = (ep.path || '/').split('/').filter(Boolean)
       const pathGroup = pathParts.length > 0 ? `/${pathParts[0]}` : '/'
-      if (!result[mod]) result[mod] = {}
-      if (!result[mod][pathGroup]) result[mod][pathGroup] = []
-      result[mod][pathGroup].push(ep)
+      if (!result[svcName]) result[svcName] = {}
+      if (!result[svcName][mod]) result[svcName][mod] = {}
+      if (!result[svcName][mod][pathGroup]) result[svcName][mod][pathGroup] = []
+      result[svcName][mod][pathGroup].push(ep)
     }
     return result
-  }, [endpoints])
+  }, [endpoints, services])
 
   // Tab scroll helpers
   const checkScroll = useCallback(() => {
@@ -118,7 +121,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
     try {
       const result = await generateApiCases({
         endpoint_id: ep.id,
-        templates: ['basic', 'boundary', 'invalid', 'idempotency'],
+        templates: ['basic', 'boundary', 'invalid', 'security', 'idempotency', 'extreme'],
         import_to_case_library: true,
         service_name: services.find(s => s.id === ep.service_id)?.name || '',
         module: ep.module,
@@ -129,6 +132,139 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
     } finally {
       setGenerating(prev => { const s = new Set(prev); s.delete(ep.id); return s })
     }
+  }
+
+  // ── Render helpers ──
+
+  /** Render endpoint rows for a given list */
+  function renderEndpointRows(eps: ApiEndpoint[]) {
+    return eps.map(ep => (
+      <div
+        key={ep.id}
+        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer pl-10"
+        onClick={() => setSelectedEndpoint(ep)}
+      >
+        <Badge className={METHOD_COLORS[ep.method] || ''}>{ep.method}</Badge>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <code className="text-sm font-medium truncate">{ep.path}</code>
+            {ep.deprecated && <Badge variant="outline" className="text-[10px] text-yellow-600">已废弃</Badge>}
+          </div>
+          <p className="text-xs text-muted-foreground truncate">
+            {ep.summary || '-'}
+          </p>
+        </div>
+        <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={ep.remark || ''}>
+          {ep.remark || '-'}
+        </span>
+        <div className="flex items-center gap-1 shrink-0">
+          {onDebugEndpoint && (
+            <Button
+              size="icon-sm"
+              variant="ghost"
+              title="调试"
+              onClick={(e) => { e.stopPropagation(); onDebugEndpoint(ep) }}
+            >
+              <FlaskConical className="size-4" />
+            </Button>
+          )}
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            title="生成用例"
+            onClick={(e) => { e.stopPropagation(); handleGenerate(ep) }}
+            disabled={generating.has(ep.id)}
+          >
+            <Zap className={`size-4 ${generating.has(ep.id) ? 'animate-pulse' : ''}`} />
+          </Button>
+        </div>
+      </div>
+    ))
+  }
+
+  /** Render a list of modules (collapsed by default) with path groups and endpoints */
+  function renderModules(modules: Record<string, Record<string, ApiEndpoint[]>>) {
+    return Object.entries(modules).map(([moduleName, pathGroups]) => (
+      <Collapsible key={moduleName} defaultOpen={false}>
+        <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 text-sm font-medium hover:bg-muted/50 rounded-lg transition-colors group">
+          <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          <FolderOpen className="size-4 text-muted-foreground" />
+          <span>{moduleName}</span>
+          <Badge variant="secondary" className="ml-auto text-xs">
+            {Object.values(pathGroups).flat().length}
+          </Badge>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="border rounded-lg divide-y mt-1">
+          {Object.entries(pathGroups).map(([pathGroup, eps]) => (
+            <div key={pathGroup}>
+              {/* Path group header */}
+              <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/30 text-xs text-muted-foreground font-mono">
+                <ArrowRight className="size-3" />
+                <span>{pathGroup}</span>
+                <span className="ml-auto">{eps.length} 个接口</span>
+              </div>
+              {/* Endpoint rows */}
+              {renderEndpointRows(eps)}
+            </div>
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
+    ))
+  }
+
+  /** Render the content area based on active tab */
+  function renderTabContent() {
+    const serviceNames = Object.keys(hierarchy)
+
+    if (activeTab === '_all') {
+      // "全部服务" tab: show service groups with nested modules
+      return (
+        <div className="mt-2 space-y-2">
+          {serviceNames.length === 0 ? (
+            <div className="border rounded-lg py-12 text-center text-muted-foreground">
+              <p className="text-sm">暂无接口资产</p>
+              <p className="text-xs mt-1">点击「导入接口」从 Swagger/OpenAPI 导入</p>
+            </div>
+          ) : (
+            serviceNames.map(svcName => {
+              const modules = hierarchy[svcName]
+              const epsCount = Object.values(modules).reduce((sum, pgs) => sum + Object.values(pgs).flat().length, 0)
+              return (
+                <Collapsible key={svcName} defaultOpen={false}>
+                  <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 text-sm font-semibold hover:bg-muted/50 rounded-lg transition-colors group bg-muted/20">
+                    <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    <span>{svcName}</span>
+                    <Badge variant="secondary" className="ml-auto text-xs">{epsCount} 个接口</Badge>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="ml-4 mt-1 space-y-1">
+                    {renderModules(modules)}
+                  </CollapsibleContent>
+                </Collapsible>
+              )
+            })
+          )}
+        </div>
+      )
+    }
+
+    // Single service tab: show modules directly, no service group header
+    const svcId = Number(activeTab)
+    const svcName = services.find(s => s.id === svcId)?.display_name
+      || services.find(s => s.id === svcId)?.name || ''
+    const modules = hierarchy[svcName]
+
+    return (
+      <div className="mt-2 space-y-2">
+        {!modules || Object.keys(modules).length === 0 ? (
+          <div className="border rounded-lg py-12 text-center text-muted-foreground">
+            <p className="text-sm">该服务暂无接口资产</p>
+            <p className="text-xs mt-1">点击「导入接口」从 Swagger/OpenAPI 导入</p>
+          </div>
+        ) : (
+          renderModules(modules)
+        )}
+      </div>
+    )
   }
 
   return (
@@ -196,83 +332,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
           {/* Stats */}
           <p className="text-sm text-muted-foreground">{total} 个接口资产</p>
 
-          {/* Module → Path-group → Endpoints (three-level) */}
-          <div className="mt-2 space-y-2">
-            {Object.keys(modulePathGroups).length === 0 ? (
-              <div className="border rounded-lg py-12 text-center text-muted-foreground">
-                <p className="text-sm">暂无接口资产</p>
-                <p className="text-xs mt-1">点击「导入接口」从 Swagger/OpenAPI 导入</p>
-              </div>
-            ) : (
-              Object.entries(modulePathGroups).map(([moduleName, pathGroups]) => (
-                <Collapsible key={moduleName} defaultOpen={false}>
-                  <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 text-sm font-medium hover:bg-muted/50 rounded-lg transition-colors group">
-                    <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                    <FolderOpen className="size-4 text-muted-foreground" />
-                    <span>{moduleName}</span>
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      {Object.values(pathGroups).flat().length}
-                    </Badge>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="border rounded-lg divide-y mt-1">
-                    {Object.entries(pathGroups).map(([pathGroup, eps]) => (
-                      <div key={pathGroup}>
-                        {/* Path group header */}
-                        <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/30 text-xs text-muted-foreground font-mono">
-                          <ArrowRight className="size-3" />
-                          <span>{pathGroup}</span>
-                          <span className="ml-auto">{eps.length} 个接口</span>
-                        </div>
-                        {/* Endpoint rows */}
-                        {eps.map(ep => (
-                          <div
-                            key={ep.id}
-                            className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer pl-10"
-                            onClick={() => setSelectedEndpoint(ep)}
-                          >
-                            <Badge className={METHOD_COLORS[ep.method] || ''}>{ep.method}</Badge>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <code className="text-sm font-medium truncate">{ep.path.replace(/\//g, '-')}</code>
-                                {ep.deprecated && <Badge variant="outline" className="text-[10px] text-yellow-600">已废弃</Badge>}
-                              </div>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {ep.summary || '-'}
-                              </p>
-                            </div>
-                            <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={ep.remark}>
-                              {ep.remark || '-'}
-                            </span>
-                            <div className="flex items-center gap-1 shrink-0">
-                          {onDebugEndpoint && (
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              title="调试"
-                              onClick={(e) => { e.stopPropagation(); onDebugEndpoint(ep) }}
-                            >
-                              <FlaskConical className="size-4" />
-                            </Button>
-                          )}
-                          <Button
-                            size="icon-sm"
-                            variant="ghost"
-                            title="生成用例"
-                            onClick={(e) => { e.stopPropagation(); handleGenerate(ep) }}
-                            disabled={generating.has(ep.id)}
-                          >
-                            <Zap className={`size-4 ${generating.has(ep.id) ? 'animate-pulse' : ''}`} />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                      </div>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              ))
-            )}
-          </div>
+          {renderTabContent()}
 
           {/* Pagination */}
           {total > 20 && (
