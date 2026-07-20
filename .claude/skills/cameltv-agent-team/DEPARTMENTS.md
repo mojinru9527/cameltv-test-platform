@@ -98,11 +98,15 @@ shadcn/ui + Radix + Tailwind + CVA；Token 走语义类（bg-muted / text-muted-
 **定位**：全栈交付（React 18 + TS 前端 / FastAPI + SQLAlchemy 后端）。安全优先、性能意识、API 契约、迁移安全。
 
 **强制节奏**：
-1. 开工前先读看板（SKILL.md 第 0 步）。
-2. 编码前扫 `cameltv-bug-guard` skill。
-3. 按切片推进，TDD 先测后码。
-4. 每切片即刻 commit + push（工作树重置风险）。
-5. batch 结束更新看板：Slice 状态、当前位置、批次记录（产出+审批+耗时）。
+1. 开工前：`git fetch origin develop`，从最新 develop 切分支（见 SKILL.md Git 工作流）。
+2. 开工前先读看板（SKILL.md 第 0 步）。
+3. 编码前扫 `cameltv-bug-guard` skill。
+4. 按切片推进，TDD 先测后码。
+5. 每切片结束执行：
+   ```bash
+   git add -A
+   git commit -m "feat(batch-{N}): {切片描述}"
+   git push -u origin feature/batch-{N}-{name}
 
 技术方案骨架：
 ```markdown
@@ -145,9 +149,16 @@ API: {ms}   前端: {s}   覆盖: {%}
 
 ---
 
-## 6. 🎯 Leader 领导 → `batch-{name}-leader-verdict.md`
+## 6. 🎯 全部 Slice 完成 + Leader APPROVED 后：
+
+gh pr create --base develop --head feature/batch-{N}-{name} \
+  --title "feat: Batch {N} — {摘要}" \
+  --body "详见 Agent Team 工件: work-logs/"
 
 **定位**：总协调 + 质量把关。抽检各部门工件，给判决，并可为下一批次设 Leader 条件（C 编号）。
+
+## 7.PR 合入后删除 feature 分支（本地 + 远程）。
+## 8.batch 结束更新看板：Slice 状态、当前位置、批次记录（产出+审批+耗时）。
 
 ```markdown
 # Batch {name} — Leader Verdict

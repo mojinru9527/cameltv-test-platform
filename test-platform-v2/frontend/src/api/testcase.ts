@@ -11,8 +11,41 @@ export interface TestCaseFilter {
   page_size?: number
 }
 
-export async function fetchDomains() {
+// ── Category types ──
+
+export interface TestCaseModuleCategory {
+  id?: number
+  module: string
+  count: number
+}
+
+export interface TestCaseDomainCategory {
+  id?: number
+  domain: string
+  count: number
+  modules: TestCaseModuleCategory[]
+}
+
+export async function fetchDomains(): Promise<TestCaseDomainCategory[]> {
   return api.get('/test-cases/domains')
+}
+
+// ── Category CRUD ──
+
+export async function createDomain(name: string) {
+  return api.post('/test-cases/domains', { name })
+}
+
+export async function deleteDomain(domainId: number) {
+  return api.delete(`/test-cases/domains/${domainId}`)
+}
+
+export async function createModule(domainId: number, name: string) {
+  return api.post(`/test-cases/domains/${domainId}/modules`, { name })
+}
+
+export async function deleteModule(domainId: number, moduleId: number) {
+  return api.delete(`/test-cases/domains/${domainId}/modules/${moduleId}`)
 }
 
 export async function fetchTestCases(params: TestCaseFilter = {}) {
