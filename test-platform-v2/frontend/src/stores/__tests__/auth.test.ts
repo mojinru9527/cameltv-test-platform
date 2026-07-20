@@ -64,14 +64,14 @@ describe('useAuthStore', () => {
 
   describe('setProjectTheme', () => {
     it('stores per-project color theme', () => {
-      useAuthStore.getState().setProjectTheme(1, 'dark-minimal')
-      expect(useAuthStore.getState().projectThemeMap[1]).toBe('dark-minimal')
+      useAuthStore.getState().setProjectTheme(1, 'xlab')
+      expect(useAuthStore.getState().projectThemeMap[1]).toBe('xlab')
     })
 
     it('preserves other project themes on update', () => {
-      useAuthStore.getState().setProjectTheme(1, 'warm')
-      useAuthStore.getState().setProjectTheme(2, 'nature')
-      expect(useAuthStore.getState().projectThemeMap).toEqual({ 1: 'warm', 2: 'nature' })
+      useAuthStore.getState().setProjectTheme(1, 'clay')
+      useAuthStore.getState().setProjectTheme(2, 'apple')
+      expect(useAuthStore.getState().projectThemeMap).toEqual({ 1: 'clay', 2: 'apple' })
     })
   })
 
