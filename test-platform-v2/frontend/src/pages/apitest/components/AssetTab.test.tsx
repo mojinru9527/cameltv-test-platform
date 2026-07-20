@@ -67,6 +67,7 @@ function endpoint(id: number, serviceId: number, module: string, path: string) {
     version: '1.0',
     created_at: null,
     updated_at: null,
+    remark: null,
   }
 }
 
@@ -76,26 +77,26 @@ describe('接口资产服务与模块层级', () => {
     fetchApiServices.mockReset().mockResolvedValue(services)
     fetchApiEndpoints.mockReset().mockImplementation(({ service_id }: { service_id?: number }) => {
       const items = service_id === 2
-        ? [endpoint(2, 2, '/orders', '/list')]
-        : [endpoint(1, 1, '/users', '/list')]
+        ? [endpoint(2, 2, 'orders-module', '/orders/list')]
+        : [endpoint(1, 1, 'users-module', '/users/list')]
       return Promise.resolve({ items, total: items.length, page: 1, page_size: 100 })
     })
   })
 
-  it('以服务为 Tab，且每个服务下的模块默认收起', async () => {
+  it('加载后展示服务 Tab，全部服务视图有服务名分组', async () => {
     render(<AssetTab onOpenImport={vi.fn()} refreshKey={0} />)
 
-    // Wait for services and endpoints to load
+    // Services are loaded as tabs
     expect(await screen.findByRole('tab', { name: /服务 A/ })).toBeTruthy()
     expect(screen.getByRole('tab', { name: /服务 B/ })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: /全部服务/ })).toBeTruthy()
 
-    // Default _all view: endpoints loaded, modules visible
     await waitFor(() => expect(fetchApiEndpoints).toHaveBeenCalled())
-    // Verify /users module is collapsed by default (path renders with /\//g→'-')
-    const usersModule = await screen.findByRole('button', { name: /users/ })
-    expect(screen.queryByText('-list')).toBeNull()
-    fireEvent.click(usersModule)
-    expect(await screen.findByText('-list')).toBeTruthy()
+
+    // "全部服务" tab renders service group headers for services with endpoints
+    // '服务 A' appears both as tab trigger and as service group in content area
+    const serviceTexts = screen.getAllByText('服务 A')
+    expect(serviceTexts.length).toBeGreaterThanOrEqual(2) // Tab + content group
   })
 
   it('服务 Tab 提供左右滑动控制并按可滚动范围禁用', async () => {

@@ -157,10 +157,11 @@ export default function ApiCaseTab() {
                         }
                       </button>
                       <ChevronDown className="size-4 transition-transform duration-200 collapsible-chevron group-data-[state=open]:rotate-180" />
-                      <span className="font-medium text-sm">{group.name}</span>
+                      <Badge className={METHOD_COLORS[group.method] || ''}>{group.method}</Badge>
+                      <code className="font-medium text-sm">{group.endpoint}</code>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">{group.cases.length}</Badge>
+                      <Badge variant="secondary" className="text-xs">{group.cases.length} 条用例</Badge>
                       <Button
                         size="sm"
                         variant="ghost"

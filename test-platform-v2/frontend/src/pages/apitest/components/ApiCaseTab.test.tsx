@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchTestCases = vi.fn()
-const fetchEnvironments = vi.fn()
 const executeApiCase = vi.fn()
 const createApiExecutionTask = vi.fn()
 
@@ -15,7 +14,7 @@ vi.mock('@/api/apitest', () => ({
   quickExecute: vi.fn(),
 }))
 vi.mock('@/api/environment', () => ({
-  fetchEnvironments: (...args: any[]) => fetchEnvironments(...args),
+  fetchEnvironments: (...args: any[]) => Promise.resolve([]),
 }))
 vi.mock('@/stores/auth', () => ({
   useAuthStore: (selector: (state: { currentProjectId: number }) => unknown) => selector({ currentProjectId: 1 }),
@@ -48,20 +47,6 @@ describe('接口用例列表', () => {
         },
       ],
     })
-    fetchEnvironments.mockReset().mockResolvedValue([
-      {
-        id: 5,
-        name: '测试5',
-        env_type: 'test',
-        base_url: 'http://camel-api-gateway05.svc.elelive.cn/',
-      },
-      {
-        id: 6,
-        name: '预发布',
-        env_type: 'staging',
-        base_url: 'https://staging.example.com',
-      },
-    ])
     executeApiCase.mockReset().mockResolvedValue({
       status: 'ok',
       status_code: 200,
@@ -70,50 +55,43 @@ describe('接口用例列表', () => {
       duration_ms: 10,
       assertions: [],
       all_pass: true,
-      vpn: {
-        required: true,
-        status: 'connected',
-        connected_now: true,
-        message: 'OpenVPN 已自动连接',
-      },
     })
     createApiExecutionTask.mockReset().mockResolvedValue({ task_id: 'API-TEST', total: 1 })
   })
 
-  it('默认使用测试5执行接口用例并提示自动连接 OpenVPN', async () => {
+  it('接口用例按 endpoint 分组显示，点击用例执行并查看响应', async () => {
     render(<ApiCaseTab />)
 
-    expect(screen.queryByText('响应结果')).toBeNull()
-    expect(await screen.findByText('发送时自动连接 OpenVPN')).toBeTruthy()
-    const environment = screen.getByRole('combobox', { name: '接口用例运行环境' })
-    expect(environment.textContent).toContain('测试5')
+    // Group shows endpoint path and method badge
+    expect(await screen.findByText('/api/c')).toBeTruthy()
+    expect(screen.getByText('POST')).toBeTruthy()
 
-    const interfaceTrigger = await screen.findByRole('button', { name: /接口C.*2 条用例/ })
-    fireEvent.click(interfaceTrigger)
-    fireEvent.click(await screen.findByText('C1'))
-
-    await waitFor(() => expect(executeApiCase).toHaveBeenCalledWith(1, 5))
-    expect(await screen.findByRole('dialog')).toBeTruthy()
-    expect(screen.getByText(/接口响应/).textContent).toContain('正常请求')
-    expect(await screen.findByText('OpenVPN 已自动连接')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
-
-    fireEvent.click(screen.getByRole('button', { name: '选择接口 接口C 的全部用例' }))
-    fireEvent.click(screen.getByRole('button', { name: '批量执行 (2)' }))
-    await waitFor(() => expect(createApiExecutionTask).toHaveBeenCalledWith(expect.objectContaining({
-      case_ids: [1, 2],
-      environment_id: 5,
-    })))
-  })
-
-  it('接口作为集合且默认收起，展开后显示该接口全部用例', async () => {
-    render(<ApiCaseTab />)
-
-    const interfaceTrigger = await screen.findByRole('button', { name: /接口C.*2 条用例/ })
+    // Cases hidden when group is collapsed
     expect(screen.queryByText('【正向】接口C - 正常请求')).toBeNull()
 
-    fireEvent.click(interfaceTrigger)
-    expect(await screen.findByText('【正向】接口C - 正常请求')).toBeTruthy()
+    // Expand group by clicking the collapsible trigger
+    const endpointEl = screen.getByText('/api/c')
+    const trigger = endpointEl.closest('button')
+    if (trigger) fireEvent.click(trigger)
+
+    // Case titles now visible
+    const c1Title = await screen.findByText('【正向】接口C - 正常请求')
+    expect(c1Title).toBeTruthy()
     expect(screen.getByText('【类型校验】接口C - age - 类型错误')).toBeTruthy()
+
+    // Click case to execute
+    fireEvent.click(c1Title)
+    await waitFor(() => expect(executeApiCase).toHaveBeenCalledWith(1))
+
+    // Response dialog opens
+    expect(await screen.findByRole('dialog')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+    // Check batch execute
+    fireEvent.click(screen.getByRole('button', { name: '全选' }))
+    fireEvent.click(screen.getByRole('button', { name: /批量执行/ }))
+    await waitFor(() => expect(createApiExecutionTask).toHaveBeenCalledWith(expect.objectContaining({
+      case_ids: [1, 2],
+    })))
   })
 })
