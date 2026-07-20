@@ -112,11 +112,23 @@ class TestCaseFilter(BaseModel):
 # ── 域树 ──────────────────────────────────────────────
 
 class ModuleNode(BaseModel):
+    id: Optional[int] = None
     module: str
     count: int = 0
 
 
 class DomainNode(BaseModel):
+    id: Optional[int] = None
     domain: str
     count: int = 0
     modules: list[ModuleNode] = []
+
+
+# ── 域/模块分类请求 ───────────────────────────────────
+
+class DomainCreate(BaseModel):
+    name: str
+
+
+class ModuleCreate(BaseModel):
+    name: str

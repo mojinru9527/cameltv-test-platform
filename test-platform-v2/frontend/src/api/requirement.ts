@@ -50,3 +50,46 @@ export async function fetchGeneratedCases(documentId: number): Promise<AIGenerat
 export async function deleteRequirement(documentId: number): Promise<void> {
   return api.delete(`/requirements/${documentId}`)
 }
+
+// ── Review queue ──
+
+export interface ReviewState {
+  document_title: string
+  functional_cases: ReviewCaseItem[]
+  api_cases: ReviewCaseItem[]
+  summary: {
+    total: number
+    approved: number
+    rejected: number
+    pending: number
+  }
+}
+
+export interface ReviewCaseItem {
+  index: number
+  title: string
+  priority: string
+  module: string
+  domain: string
+  preconditions: string
+  steps: string
+  expected_result: string
+  case_type: string
+  review_status: string
+  edited_data: Record<string, unknown> | null
+  imported: boolean
+}
+
+export async function fetchReviewState(documentId: number): Promise<ReviewState> {
+  return api.get(`/requirements/${documentId}/review-state`)
+}
+
+export async function reviewCase(
+  documentId: number,
+  caseIndex: number,
+  action: 'approve' | 'reject',
+): Promise<Record<string, unknown>> {
+  return api.post(`/requirements/${documentId}/review/${caseIndex}`, { action })
+}
+
+export { importCases as reviewImportCases }
