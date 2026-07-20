@@ -48,6 +48,7 @@ class ApiEndpointCreate(BaseModel):
     path: str = Field(..., min_length=1)
     summary: str = ""
     description: str = ""
+    remark: str = ""
     request_schema: str = "{}"
     response_schema: str = "{}"
     auth_required: bool = False
@@ -58,6 +59,7 @@ class ApiEndpointUpdate(BaseModel):
     module: str | None = None
     summary: str | None = None
     description: str | None = None
+    remark: str | None = None
     request_schema: str | None = None
     response_schema: str | None = None
     auth_required: bool | None = None
@@ -74,6 +76,7 @@ class ApiEndpointOut(BaseModel):
     path: str
     summary: str
     description: str
+    remark: str
     request_schema: str
     response_schema: str
     auth_required: bool

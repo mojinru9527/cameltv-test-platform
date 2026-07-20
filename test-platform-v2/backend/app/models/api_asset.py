@@ -57,6 +57,7 @@ class ApiEndpoint(Base, TimestampMixin):
     description: Mapped[str] = mapped_column(Text, default="")
     request_schema: Mapped[str] = mapped_column(Text, default="{}")
     response_schema: Mapped[str] = mapped_column(Text, default="{}")
+    remark: Mapped[str] = mapped_column(Text, default="")
     auth_required: Mapped[bool] = mapped_column(default=False)
     deprecated: Mapped[bool] = mapped_column(default=False)
     source: Mapped[str] = mapped_column(default="manual")
