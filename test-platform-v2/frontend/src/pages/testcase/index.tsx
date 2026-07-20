@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -37,9 +37,10 @@ import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 
-import { Search, RotateCcw, Plus, Edit, Trash2, Download, Upload, FileSpreadsheet, History, ClipboardCheck } from '@/lib/icons'
+import { Search, RotateCcw, Plus, Edit, Trash2, History } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, exportExcelUrl, exportXmindUrl, importExcel, importXmind, fetchVersions, reviewCase } from '@/api/testcase'
+import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase } from '@/api/testcase'
+import { formatNumberedText, formatStepActions, formatStepExpectations } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import CaseDrawer from './CaseDrawer'
@@ -78,9 +79,6 @@ export default function TestCasePage() {
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
 
   // import/export
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [importFormat, setImportFormat] = useState<'xmind' | 'excel'>('excel')
-  const [importing, setImporting] = useState(false)
 
   // version history
   const [versionDialog, setVersionDialog] = useState(false)
@@ -197,40 +195,6 @@ export default function TestCasePage() {
     loadDomains()
   }
 
-  // ── Import/Export handlers ──
-
-  const handleExport = (format: 'excel' | 'xmind') => {
-    const params: Record<string, string> = {}
-    if (selDomain) params.domain = selDomain
-    if (selModule) params.module = selModule
-    const url = format === 'excel' ? exportExcelUrl(params) : exportXmindUrl(params)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = format === 'excel' ? 'test-cases.xlsx' : 'test-cases.xmind'
-    a.click()
-  }
-
-  const handleImportClick = (format: 'xmind' | 'excel') => {
-    setImportFormat(format)
-    fileInputRef.current?.click()
-  }
-
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setImporting(true)
-    try {
-      const result = importFormat === 'excel' ? await importExcel(file) : await importXmind(file)
-      toast.success(`导入完成：${result.imported} / ${result.total} 条用例已创建`)
-      refetch()
-      loadDomains()
-    } catch { /* handled by interceptor */ }
-    finally {
-      setImporting(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
-  }
-
   // ── Version history ──
 
   const openVersionHistory = async (row: any) => {
@@ -302,6 +266,7 @@ export default function TestCasePage() {
                 <SelectValue placeholder="按域筛选" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">全部</SelectItem>
                 {domains.map((d: any) => (
                   <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
                 ))}
@@ -313,6 +278,7 @@ export default function TestCasePage() {
                 <SelectValue placeholder="按模块筛选" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">全部</SelectItem>
                 {selModules.map((m: any) => (
                   <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                 ))}
@@ -324,6 +290,7 @@ export default function TestCasePage() {
                 <SelectValue placeholder="优先级" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">全部</SelectItem>
                 {['P0', 'P1', 'P2', 'P3'].map((v) => (
                   <SelectItem key={v} value={v}>{v}</SelectItem>
                 ))}
@@ -335,7 +302,7 @@ export default function TestCasePage() {
                 <Search className="size-3.5" />
               </InputGroupAddon>
               <InputGroupInput
-                placeholder="搜索标题/编号/接口"
+                placeholder="搜索标题/关键字"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') refetch() }}
@@ -350,28 +317,6 @@ export default function TestCasePage() {
               <RotateCcw className="size-3.5" data-icon="inline-start" />
             </Button>
             <div className="flex-1" />
-            {/* Import/Export dropdown */}
-            <div className="flex items-center gap-1">
-              <Button size="sm" variant="outline" onClick={() => handleExport('excel')} title="导出 Excel">
-                <Download className="size-3.5" data-icon="inline-start" />
-                Excel
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => handleExport('xmind')} title="导出 Xmind">
-                <Download className="size-3.5" data-icon="inline-start" />
-                Xmind
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => handleImportClick('excel')} disabled={importing} title="导入 Excel">
-                <Upload className="size-3.5" data-icon="inline-start" />
-                导入
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept={importFormat === 'excel' ? '.xlsx,.xls' : '.xmind'}
-                className="hidden"
-                onChange={handleFileSelected}
-              />
-            </div>
             <Button size="sm" onClick={() => openEdit()}>
               <Plus className="size-3.5" data-icon="inline-start" />
               新建用例
@@ -427,12 +372,13 @@ export default function TestCasePage() {
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
-                    <TableHead className="w-[160px]">编号</TableHead>
-                    <TableHead>标题</TableHead>
-                    <TableHead className="w-[120px]">模块</TableHead>
-                    <TableHead className="w-[60px]">状态</TableHead>
+                    <TableHead className="w-[120px]">模块名称</TableHead>
+                    <TableHead>用例标题</TableHead>
+                    <TableHead className="w-[80px]">用例等级</TableHead>
+                    <TableHead className="w-[140px]">前置条件</TableHead>
+                    <TableHead className="w-[160px]">操作步骤</TableHead>
+                    <TableHead className="w-[160px]">预期结果</TableHead>
                     <TableHead className="w-[80px]">评审</TableHead>
-                    <TableHead className="w-[140px]">API</TableHead>
                     <TableHead className="w-[120px]">操作</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -445,38 +391,28 @@ export default function TestCasePage() {
                           onCheckedChange={() => toggleSelect(r.id)}
                         />
                       </TableCell>
-                      <TableCell className="max-w-[160px] truncate">{r.case_id || '-'}</TableCell>
+                      <TableCell className="max-w-[120px] truncate">{r.module || '-'}</TableCell>
                       <TableCell className="max-w-0 truncate">
-                        <div className="flex items-center gap-1">
-                          <Badge variant={PRIORITY_COLORS[r.priority] === 'red' ? 'destructive' : PRIORITY_COLORS[r.priority] === 'orange' ? 'secondary' : 'default'}>
-                            {r.priority}
-                          </Badge>
-                          {r.case_type === 'api' && (
-                            <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
-                              接口
-                            </Badge>
-                          )}
-                          <span className="truncate">{r.title}</span>
-                        </div>
+                        <span className="truncate">{r.title}</span>
                       </TableCell>
-                      <TableCell className="max-w-[120px] truncate">{r.module}</TableCell>
                       <TableCell>
-                        <Badge variant={
-                          r.status === 'active' ? 'default'
-                            : r.status === 'draft' ? 'secondary'
-                            : r.status === 'archived' ? 'destructive'
-                            : 'outline'
-                        }>
-                          {r.status === 'active' ? '启用' : r.status === 'draft' ? '草稿' : r.status === 'archived' ? '归档' : r.status}
+                        <Badge variant={PRIORITY_COLORS[r.priority] === 'red' ? 'destructive' : PRIORITY_COLORS[r.priority] === 'orange' ? 'secondary' : 'default'}>
+                          {r.priority}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[140px] truncate text-xs">
+                        {formatNumberedText(r.preconditions) || '-'}
+                      </TableCell>
+                      <TableCell className="max-w-[160px] truncate text-xs">
+                        {formatStepActions(r.steps) || '-'}
+                      </TableCell>
+                      <TableCell className="max-w-[160px] truncate text-xs">
+                        {formatStepExpectations(r.steps, r.expected_result) || '-'}
                       </TableCell>
                       <TableCell>
                         <Badge variant={REVIEW_COLORS[r.review_status] || 'secondary'} className="text-[10px]">
                           {REVIEW_LABELS[r.review_status] || r.review_status || '草稿'}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-[140px] truncate font-mono text-xs">
-                        {r.api_method ? <span>{r.api_method} {r.api_endpoint}</span> : '-'}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">

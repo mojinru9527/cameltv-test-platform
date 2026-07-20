@@ -94,7 +94,18 @@ export default function DebugTab({ endpoint }: Props) {
 
   useEffect(() => {
     let cancelled = false
-    fetchEnvironments().then((data) => { if (!cancelled) setEnvs(data) }).catch(() => {})
+    fetchEnvironments().then((data) => {
+      if (cancelled) return
+      setEnvs(data)
+      // 默认选中「测试5」环境
+      if (envId === undefined) {
+        const defaultEnv = data.find((e: Environment) => e.name === '测试5')
+        if (defaultEnv) {
+          setEnvId(defaultEnv.id)
+          setBaseUrl(defaultEnv.base_url)
+        }
+      }
+    }).catch(() => {})
     fetchDatasets({ page_size: 100 }).then(d => { if (!cancelled) setDatasets(d.items || []) }).catch(() => {})
     return () => { cancelled = true }
   }, [])

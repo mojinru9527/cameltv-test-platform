@@ -249,8 +249,11 @@ def list_endpoints(
         q = q.filter_by(method=method.upper())
     if keyword:
         like = f"%{keyword}%"
-        q = q.filter(
-            (ApiEndpoint.path.ilike(like)) | (ApiEndpoint.summary.ilike(like))
+        q = q.outerjoin(ApiService, ApiEndpoint.service_id == ApiService.id).filter(
+            (ApiEndpoint.path.ilike(like))
+            | (ApiEndpoint.summary.ilike(like))
+            | (ApiEndpoint.module.ilike(like))
+            | (ApiService.name.ilike(like))
         )
     q = q.order_by(ApiEndpoint.module, ApiEndpoint.path)
 
