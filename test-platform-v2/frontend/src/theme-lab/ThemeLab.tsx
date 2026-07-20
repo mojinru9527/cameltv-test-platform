@@ -36,7 +36,7 @@ import {
 import { FadeContent } from '../ui-concepts/FadeContent'
 import { DecryptedText } from './DecryptedText'
 
-type ThemeId = 'crystal' | 'xlab' | 'column' | 'clay' | 'liquid'
+type ThemeId = 'cyberpunk' | 'apple' | 'clay' | 'xlab' | 'liquid-glass'
 type TabId = 'overview' | 'cases' | 'logs' | 'artifacts'
 type DialogMode = 'run' | 'command' | null
 
@@ -64,49 +64,49 @@ interface SnackbarState {
 
 const themes: ThemeDefinition[] = [
   {
-    id: 'crystal',
+    id: 'cyberpunk',
     number: '01',
-    label: '晶穹',
-    name: 'Crystal Command',
-    source: 'Apple × Liquid Glass',
-    scene: '日间质量总览与管理协作',
-    tags: ['内容优先', '功能层玻璃', '清晰留白'],
+    label: '赛博',
+    name: 'Cyberpunk Terminal',
+    source: '霓虹终端 × 暗黑数据工作台',
+    scene: '夜间深度工作与故障定位',
+    tags: ['终端美学', '霓虹发光', '等宽字体'],
   },
   {
-    id: 'xlab',
+    id: 'apple',
     number: '02',
-    label: '黑域',
-    name: 'X-Lab',
-    source: 'xAI × 轻赛博',
-    scene: '夜间运行值守与故障定位',
-    tags: ['高对比', '终端证据', '克制霓虹'],
-  },
-  {
-    id: 'column',
-    number: '03',
-    label: '列阵',
-    name: 'Column Pulse',
-    source: 'ClickHouse 工业数据',
-    scene: '高密度用例、执行与缺陷处理',
-    tags: ['黄黑识别', '数据密度', '技术可信'],
+    label: '晶穹',
+    name: 'Apple Minimal',
+    source: 'Apple 极简 × 日间协作',
+    scene: '日间质量总览与管理协作',
+    tags: ['内容优先', '毛玻璃侧栏', '清晰留白'],
   },
   {
     id: 'clay',
-    number: '04',
+    number: '03',
     label: '软体',
     name: 'Clay Studio',
-    source: '企业化 Claymorphism',
+    source: '企业黏土拟态 × 3D 触感',
     scene: '低代码编排与跨角色协作',
-    tags: ['低学习压力', '触感反馈', '柔和分步'],
+    tags: ['低学习压力', '触感反馈', '3D 膨胀感'],
   },
   {
-    id: 'liquid',
+    id: 'xlab',
+    number: '04',
+    label: '黑域',
+    name: 'X-Lab',
+    source: 'AI 实验室 × 夜间运行值守',
+    scene: '夜间运行值守与 Agent 工作台',
+    tags: ['高对比', '电光青微光', '精确排版'],
+  },
+  {
+    id: 'liquid-glass',
     number: '05',
     label: '液境',
-    name: 'Liquid Spectrum',
-    source: 'Liquid Glass × 全组件系统',
+    name: 'Liquid Glass Panoramic',
+    source: '全景液态玻璃 × 丝滑沉浸',
     scene: '跨模块连续操作与沉浸式质量协作',
-    tags: ['全景玻璃', '折射层级', '丝滑衔接'],
+    tags: ['全景玻璃', '折射层级', 'morphing 背景'],
   },
 ]
 
@@ -157,7 +157,7 @@ const artifactRows = [
 ]
 
 export function ThemeLab() {
-  const [theme, setTheme] = useState<ThemeId>('crystal')
+  const [theme, setTheme] = useState<ThemeId>('cyberpunk')
   const [activeModule, setActiveModule] = useState('dashboard')
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [dialog, setDialog] = useState<DialogMode>(null)
@@ -391,7 +391,7 @@ export function ThemeLab() {
               <ul>{themeDefinition.tags.map((tag) => <li key={tag}>{tag}</li>)}</ul>
             </section>
 
-            {theme === 'liquid' && (
+            {theme === 'liquid-glass' && (
               <LiquidComponentPanorama
                 progress={runProgress}
                 loading={loading}
@@ -408,7 +408,7 @@ export function ThemeLab() {
                 <p>{moduleDefinition.description}</p>
                 <div className="system-status">
                   <span className="status-signal" />
-                  {theme === 'xlab' || theme === 'liquid' ? (
+                  {theme === 'xlab' || theme === 'liquid-glass' ? (
                     <DecryptedText text={statusLine} activeKey={`${statusLine}-${theme}`} />
                   ) : (
                     <span>{statusLine}</span>

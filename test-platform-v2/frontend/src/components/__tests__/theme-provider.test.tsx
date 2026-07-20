@@ -6,7 +6,7 @@ import type { ColorTheme } from '@/lib/themes'
 function ThemeHarness() {
   const { colorTheme, setColorTheme } = useTheme()
   return (
-    <button type="button" onClick={() => setColorTheme('liquid' as ColorTheme)}>
+    <button type="button" onClick={() => setColorTheme('liquid-glass' as ColorTheme)}>
       {colorTheme}
     </button>
   )
@@ -38,22 +38,22 @@ describe('ThemeProvider', () => {
   it('applies and persists an approved theme ID', async () => {
     render(<ThemeProvider><ThemeHarness /></ThemeProvider>)
 
-    fireEvent.click(screen.getByRole('button', { name: 'crystal' }))
+    fireEvent.click(screen.getByRole('button', { name: 'cyberpunk' }))
 
     await waitFor(() => {
-      expect(document.documentElement.dataset.themeId).toBe('liquid')
+      expect(document.documentElement.dataset.themeId).toBe('liquid-glass')
     })
-    expect(document.documentElement.dataset.theme).toBe('liquid')
-    expect(localStorage.getItem('cameltv-theme-color')).toBe('liquid')
+    expect(document.documentElement.dataset.theme).toBe('liquid-glass')
+    expect(localStorage.getItem('cameltv-theme-color')).toBe('liquid-glass')
   })
 
   it('restores a legacy saved theme through the migration map', async () => {
     localStorage.setItem('cameltv-theme-color', 'blue')
     render(<ThemeProvider><ThemeHarness /></ThemeProvider>)
 
-    expect(screen.getByRole('button', { name: 'crystal' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'apple' })).toBeTruthy()
     await waitFor(() => {
-      expect(document.documentElement.dataset.themeId).toBe('crystal')
+      expect(document.documentElement.dataset.themeId).toBe('apple')
     })
   })
 })
