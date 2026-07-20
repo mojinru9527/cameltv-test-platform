@@ -12,7 +12,7 @@ import type { ApiEndpoint } from '@/types'
 
 export default function ApiTestPage() {
   useDocumentTitle('API 测试')
-  const [activeTab, setActiveTab] = useState('quick')
+  const [activeTab, setActiveTab] = useState('assets')
   const [importOpen, setImportOpen] = useState(false)
   const [debugEndpoint, setDebugEndpoint] = useState<ApiEndpoint | null>(null)
   const [importRefreshKey, setImportRefreshKey] = useState(0)
@@ -65,7 +65,7 @@ export default function ApiTestPage() {
         </TabsContent>
 
         <TabsContent value="quick" className="mt-4">
-          <DebugTab />
+          <DebugTab endpoint={debugEndpoint} />
         </TabsContent>
 
         <TabsContent value="cases" className="mt-4">

@@ -139,7 +139,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
         </Select>
         <div className="flex items-center gap-1 flex-1 min-w-[200px]">
           <Search className="size-4 text-muted-foreground shrink-0" />
-          <Input placeholder="搜索路径/描述..." value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
+          <Input placeholder="搜索服务/模块/路径/描述..." value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
         </div>
         <Button variant="outline" onClick={loadEndpoints} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
         <Button onClick={onOpenImport} data-icon="inline-start"><FileUp className="size-4" /> 导入接口</Button>
@@ -213,7 +213,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
                         <Badge className={METHOD_COLORS[ep.method] || ''}>{ep.method}</Badge>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <code className="text-sm font-medium truncate">{ep.path}</code>
+                            <code className="text-sm font-medium truncate">{ep.path.replace(/\//g, '-')}</code>
                             {ep.deprecated && <Badge variant="outline" className="text-[10px] text-yellow-600">已废弃</Badge>}
                           </div>
                           <p className="text-xs text-muted-foreground truncate">

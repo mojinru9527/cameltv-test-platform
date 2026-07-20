@@ -26,6 +26,9 @@ class TestCase(Base, TimestampMixin):
     domain: Mapped[str] = mapped_column(default="", index=True)   # 用户端 / 运营后台 / 接口测试
     module: Mapped[str] = mapped_column(default="", index=True)   # 首页推荐 / 资讯文章 / ...
 
+    # 软删除
+    is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
+
     # 用例属性
     case_type: Mapped[str] = mapped_column(default="manual")      # api / manual / ui
     priority: Mapped[str] = mapped_column(default="P2")           # P0 / P1 / P2 / P3
