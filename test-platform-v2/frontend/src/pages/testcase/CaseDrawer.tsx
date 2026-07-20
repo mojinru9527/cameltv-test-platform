@@ -35,15 +35,14 @@ const formSchema = z.object({
   case_type: z.enum(['manual', 'api', 'ui']).default('manual'),
   priority: z.enum(['P0', 'P1', 'P2', 'P3']).default('P2'),
   status: z.enum(['draft', 'active', 'archived']).default('active'),
-  domain: z.string().optional().or(z.literal('')),
-  module: z.string().optional().or(z.literal('')),
+  domain: z.string().min(1, '请选择域'),
+  module: z.string().min(1, '请选择模块'),
   api_method: z.string().optional().or(z.literal('')),
   api_endpoint: z.string().optional().or(z.literal('')),
   tags: z.string().optional().or(z.literal('')),
   preconditions: z.string().optional().or(z.literal('')),
-  steps: z.string().optional().or(z.literal('')),
-  expected_result: z.string().optional().or(z.literal('')),
-  api_spec_ref: z.string().optional().or(z.literal('')),
+  steps: z.string().min(1, '请填写操作步骤'),
+  expected_result: z.string().min(1, '请填写预期结果'),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -476,10 +475,6 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
       </div>
 
       {/* Ref */}
-      <div>
-        <label htmlFor="case-api-spec-ref" className="mb-1 block text-sm font-medium">关联引用</label>
-        <Input id="case-api-spec-ref" placeholder="generated:Module:spec 或 functional:Suite:ID" {...register('api_spec_ref')} />
-      </div>
     </div>
   )
 }
