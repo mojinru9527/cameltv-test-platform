@@ -159,16 +159,6 @@ export default function MindmapPage() {
           {isLoading ? '加载中...' : '刷新'}
         </Button>
 
-        <Button size="sm" variant="outline" onClick={() => {
-          const a = document.createElement('a')
-          a.href = '/api/v1/test-cases/export/xmind'
-          a.download = 'test-cases.xmind'
-          a.click()
-        }}>
-          <Download className="size-3.5" data-icon="inline-start" />
-          导出 Xmind
-        </Button>
-
         <div className="flex-1" />
 
         <Button

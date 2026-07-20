@@ -98,11 +98,12 @@ shadcn/ui + Radix + Tailwind + CVA；Token 走语义类（bg-muted / text-muted-
 **定位**：全栈交付（React 18 + TS 前端 / FastAPI + SQLAlchemy 后端）。安全优先、性能意识、API 契约、迁移安全。
 
 **强制节奏**：
-1. 开工前：`git fetch origin develop`，从最新 develop 切分支（见 SKILL.md Git 工作流）。
-2. 开工前先读看板（SKILL.md 第 0 步）。
-3. 编码前扫 `cameltv-bug-guard` skill。
-4. 按切片推进，TDD 先测后码。
-5. 每切片结束执行：
+1. **多窗口并行检查**：若已有 ≥1 个 Agent Team 窗口活跃，开工前必须用 `git worktree add` 创建独立 worktree（见 SKILL.md「多窗口并行开发」）。**禁止多个窗口共享同一工作目录。**
+2. 开工前：`git fetch origin develop`，从最新 develop 切分支（见 SKILL.md Git 工作流）。
+3. 开工前先读看板（SKILL.md 第 0 步）。
+4. 编码前扫 `cameltv-bug-guard` skill。
+5. 按切片推进，TDD 先测后码。
+6. 每切片结束执行：
    ```bash
    git add -A
    git commit -m "feat(batch-{N}): {切片描述}"

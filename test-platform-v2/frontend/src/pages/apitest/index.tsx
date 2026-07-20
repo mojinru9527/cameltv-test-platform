@@ -15,10 +15,12 @@ export default function ApiTestPage() {
   const [activeTab, setActiveTab] = useState('assets')
   const [importOpen, setImportOpen] = useState(false)
   const [debugEndpoint, setDebugEndpoint] = useState<ApiEndpoint | null>(null)
+  const [debugServiceName, setDebugServiceName] = useState<string>('')
   const [importRefreshKey, setImportRefreshKey] = useState(0)
 
-  const handleDebugEndpoint = (ep: ApiEndpoint) => {
+  const handleDebugEndpoint = (ep: ApiEndpoint, serviceName: string = '') => {
     setDebugEndpoint(ep)
+    setDebugServiceName(serviceName)
     setActiveTab('quick')
   }
 
@@ -65,7 +67,7 @@ export default function ApiTestPage() {
         </TabsContent>
 
         <TabsContent value="quick" className="mt-4">
-          <DebugTab endpoint={debugEndpoint} />
+          <DebugTab endpoint={debugEndpoint} serviceName={debugServiceName} />
         </TabsContent>
 
         <TabsContent value="cases" className="mt-4">
