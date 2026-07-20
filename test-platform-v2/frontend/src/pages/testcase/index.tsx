@@ -65,6 +65,9 @@ export default function TestCasePage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
+  // dynamic table min-height adapted to pageSize
+  const minHClass = pageSize === 20 ? 'min-h-[650px]' : pageSize === 50 ? 'min-h-[1550px]' : 'min-h-[3050px]'
+
   // drawer
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<any>(null)
@@ -362,7 +365,7 @@ export default function TestCasePage() {
             loadingRows={4}
           >
             {() => (
-            <div className="rounded-md border min-h-[600px]">
+            <div className={`rounded-md border ${minHClass}`}>
               <Table>
                 <TableHeader>
                   <TableRow>

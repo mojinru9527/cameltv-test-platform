@@ -1625,6 +1625,65 @@ html.theme-transition *::after {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Accessibility: prefers-reduced-motion
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .shimmer {
+    animation: none !important;
+    background-image: none !important;
+  }
+  [data-sidebar="menu-item"] {
+    transition: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Accessibility: prefers-reduced-transparency
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-slot="card-lift"],
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-sidebar="sidebar"],
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-slot="dialog-content"],
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-slot="sheet-content"],
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-slot="select-content"],
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-slot="dropdown-menu-content"],
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-slot="badge"],
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-slot="tooltip-content"],
+[data-reduced-transparency="true"] [data-theme="liquid"] [data-sidebar="footer"] {
+  background: var(--card);
+  backdrop-filter: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sonner toast per-theme overrides
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-theme] [data-sonner-toaster] {
+  --normal-bg: var(--popover);
+  --normal-border: var(--border);
+  --normal-text: var(--popover-foreground);
+  --success-bg: hsl(142 76% 90%);
+  --success-border: hsl(142 76% 36%);
+  --error-bg: hsl(0 76% 90%);
+  --error-border: hsl(0 76% 36%);
+}
+
+[data-theme="liquid"] [data-sonner-toaster] {
+  --normal-bg: var(--glass-bg);
+  --normal-border: var(--glass-border);
+}
+
+.dark[data-theme="liquid"] [data-sonner-toaster] {
+  --normal-bg: var(--glass-bg);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Base layer
    ═══════════════════════════════════════════════════════════════════════════ */
 @layer base {

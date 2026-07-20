@@ -159,6 +159,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
               size="icon-sm"
               className="shrink-0"
               onClick={() => scrollTabs('left')}
+              aria-label="向左查看更多服务"
             >
               <ChevronLeft className="size-4" />
             </Button>
@@ -167,6 +168,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
             ref={tabsScrollRef}
             className="overflow-x-auto scrollbar-none flex-1"
             onScroll={checkScroll}
+            data-testid="service-tabs-viewport"
           >
             <TabsList className="h-auto max-w-full justify-start w-max">
               <TabsTrigger value="_all">全部服务 ({total})</TabsTrigger>
@@ -183,6 +185,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
               size="icon-sm"
               className="shrink-0"
               onClick={() => scrollTabs('right')}
+              aria-label="向右查看更多服务"
             >
               <ChevronRight className="size-4" />
             </Button>
