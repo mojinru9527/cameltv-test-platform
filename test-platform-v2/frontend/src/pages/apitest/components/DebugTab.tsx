@@ -206,6 +206,15 @@ export default function DebugTab({ endpoint }: Props) {
       setResult(e?.response?.data || { status: 'error', status_code: 0, error: e?.message })
     } finally { setLoading(false) }
   }
+  // Auto-scroll to response when result arrives
+  useEffect(() => {
+    if (result) {
+      setTimeout(() => {
+        document.getElementById('response-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }
+  }, [result])
+
 
   // ── Header table helpers ──
   const addHeaderRow = () => setHeaderRows([...headerRows, { key: '', value: '' }])
@@ -459,7 +468,7 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
   }
 
   return (
-    <Card>
+    <Card id="response-panel">
       <CardHeader><CardTitle>响应结果</CardTitle></CardHeader>
       <CardContent>
         {loading ? (

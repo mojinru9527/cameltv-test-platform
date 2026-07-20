@@ -102,6 +102,12 @@ def generate_cases_from_endpoint(
     if "invalid" in templates:
         cases.append(_build_auth_missing_case(endpoint))
 
+    # ── 数量下限保证：多参数接口确保足够覆盖 ──
+    if len(properties) >= 3 and len(cases) < 25:
+        cases.extend(_build_extra_boundary_cases(endpoint, properties))
+    if len(properties) >= 5 and len(cases) < 40:
+        cases.extend(_build_combo_param_cases(endpoint, properties, query_params))
+
     # ── 数量上限保护 ──
     if len(cases) > _MAX_CASES_PER_ENDPOINT:
         cases = cases[:_MAX_CASES_PER_ENDPOINT]
@@ -629,6 +635,32 @@ def _build_query_required_cases(ep: dict, query_params: list) -> list[dict]:
             ],
             expected=f"缺少必填 query 参数 {name} 时应返回 4xx。",
         ))
+        # null value for required query param
+        cases.append(_make_case(
+            ep,
+            purpose=f"{name} 为 null 应返回参数错误", field=name,
+            priority="P1", scenario="query_required",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "status_code", "expected": 400, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected=f"必填 query 参数 {name} 为 null 时应返回 4xx。",
+        ))
+        # empty string for required string query param
+        if q.get("type", "string") == "string":
+            cases.append(_make_case(
+                ep,
+                purpose=f"{name} 为空字符串应返回参数错误", field=name,
+                priority="P2", scenario="query_required",
+                body=_build_valid_body(ep),
+                assertions=[
+                    {"type": "status_code", "expected": 400, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"必填 query 参数 {name} 为空字符串时应返回 4xx。",
+            ))
+
     return cases
 
 
@@ -927,3 +959,172 @@ def _sample_value_for_prop(prop: dict) -> Any:
 def _sample_value_for_param(param: dict) -> Any:
     """为 query/path 参数生成样本值。"""
     return _sample_value_for_prop(param)
+
+
+# ═══════════════════════════════════════════════════════
+# 数量下限保证：额外覆盖
+# ═══════════════════════════════════════════════════════
+
+def _build_extra_boundary_cases(ep: dict, properties: dict) -> list[dict]:
+    """当参数>=3但生成用例<25时，为每个参数追加null、空值、特殊边界用例。"""
+    method = ep.get("method", "GET").upper()
+    cases = []
+    
+    for field, prop in properties.items():
+        ptype = prop.get("type", "string")
+        nullable = prop.get("nullable", False)
+        
+        # null value for each parameter
+        body_null = _build_valid_body(ep, overrides={field: None})
+        expected_code = 200 if nullable else 400
+        cases.append(_make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - {field} 为 null",
+            priority="P2",
+            scenario="required_null",
+            body=body_null,
+            assertions=[
+                {"type": "status_code", "expected": expected_code, "operator": "eq"},
+            ],
+            expected=f"{field} 为 null 时{'应正常返回' if nullable else '应返回 4xx'}。",
+        ))
+        
+        # Empty value per type
+        if ptype == "string":
+            body_empty = _build_valid_body(ep, overrides={field: ""})
+            cases.append(_make_case(
+                ep,
+                title=f"{ep.get('summary') or ep.get('path')} - {field} 为空字符串",
+                priority="P2",
+                scenario="required_empty",
+                body=body_empty,
+                assertions=[
+                    {"type": "status_code", "expected": 400, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"{field} 为空字符串时应返回 4xx。",
+            ))
+        elif ptype in ("integer", "number"):
+            # Zero value
+            body_zero = _build_valid_body(ep, overrides={field: 0})
+            cases.append(_make_case(
+                ep,
+                title=f"{ep.get('summary') or ep.get('path')} - {field} 为 0",
+                priority="P2",
+                scenario="boundary_valid",
+                body=body_zero,
+                assertions=[
+                    {"type": "status_code", "expected": 200, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"{field} 为 0 时应正常处理或不接受。",
+            ))
+            # Negative value
+            body_neg = _build_valid_body(ep, overrides={field: -1})
+            cases.append(_make_case(
+                ep,
+                title=f"{ep.get('summary') or ep.get('path')} - {field} 为负数(-1)",
+                priority="P2",
+                scenario="boundary_min",
+                body=body_neg,
+                assertions=[
+                    {"type": "status_code", "expected": 200, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"{field} 为负数时应返回 4xx 或正常处理。",
+            ))
+        elif ptype == "boolean":
+            # "false" as string
+            body_false_str = _build_valid_body(ep, overrides={field: "false"})
+            cases.append(_make_case(
+                ep,
+                title=f"{ep.get('summary') or ep.get('path')} - {field} 字符串'false'",
+                priority="P2",
+                scenario="type_error",
+                body=body_false_str,
+                assertions=[
+                    {"type": "status_code", "expected": 400, "operator": "gte"},
+                    {"type": "status_code", "expected": 500, "operator": "lt"},
+                ],
+                expected=f"{field} 传入字符串 'false' 而非布尔值时应返回 4xx。",
+            ))
+    
+    return cases
+
+
+def _build_combo_param_cases(ep: dict, properties: dict, query_params: list) -> list[dict]:
+    """当参数>=5但生成用例<40时，生成参数组合覆盖用例。"""
+    method = ep.get("method", "GET").upper()
+    cases = []
+    prop_items = list(properties.items())
+    
+    # Take up to 4 parameters and generate pairwise combinations
+    if len(prop_items) >= 2:
+        f1, p1 = prop_items[0]
+        f2, p2 = prop_items[1]
+        
+        # Both valid
+        body = _build_valid_body(ep)
+        cases.append(_make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 多字段组合正常值",
+            priority="P1",
+            scenario="positive",
+            body=body,
+            assertions=[
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 300, "operator": "lt"},
+            ],
+            expected="所有字段合法时应返回 2xx。",
+        ))
+        
+        # f1 valid, f2 invalid
+        invalid_val_2 = _get_invalid_value(p2)
+        body = _build_valid_body(ep, overrides={f2: invalid_val_2})
+        cases.append(_make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - {f1}正常 {f2}非法",
+            priority="P2",
+            scenario="type_error",
+            body=body,
+            assertions=[
+                {"type": "status_code", "expected": 400, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected=f"仅 {f2} 非法时应返回 4xx。",
+        ))
+    
+    # Query param combo with body params
+    if query_params and len(prop_items) >= 1:
+        for q in query_params[:2]:
+            qname = q.get("name", "")
+            for f, p in prop_items[:1]:
+                # Missing query + valid body
+                body = _build_valid_body(ep)
+                cases.append(_make_case(
+                    ep,
+                    purpose=f"缺少 {qname} + {f} 正常值", field=qname,
+                    priority="P2", scenario="query_required",
+                    body=body,
+                    assertions=[
+                        {"type": "status_code", "expected": 400, "operator": "gte"},
+                        {"type": "status_code", "expected": 500, "operator": "lt"},
+                    ],
+                    expected=f"缺少 query 参数 {qname} 时应返回 4xx。",
+                ))
+    
+    return cases
+
+
+def _get_invalid_value(prop: dict) -> Any:
+    """Return a type-invalid value for the given property."""
+    ptype = prop.get("type", "string")
+    if ptype == "string":
+        return 12345
+    elif ptype in ("integer", "number"):
+        return "not_a_number"
+    elif ptype == "boolean":
+        return "not_bool"
+    elif ptype == "array":
+        return "not_an_array"
+    return "__invalid__"

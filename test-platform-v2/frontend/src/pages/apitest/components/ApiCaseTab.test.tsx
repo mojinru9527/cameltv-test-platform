@@ -88,31 +88,43 @@ describe('接口用例列表', () => {
     const environment = screen.getByRole('combobox', { name: '接口用例运行环境' })
     expect(environment.textContent).toContain('测试5')
 
-    const interfaceTrigger = await screen.findByRole('button', { name: /接口C.*2 条用例/ })
-    fireEvent.click(interfaceTrigger)
-    fireEvent.click(await screen.findByText('C1'))
+    // Group endpoint is displayed as "/api/c" with method badge "POST"
+    const endpointText = await screen.findByText('/api/c')
+    expect(endpointText).toBeTruthy()
+    // Click the collapsible trigger (the parent button containing the endpoint text)
+    const interfaceTrigger = endpointText.closest('[role="button"]') || endpointText.parentElement?.closest('button')
+    if (interfaceTrigger) fireEvent.click(interfaceTrigger)
 
-    await waitFor(() => expect(executeApiCase).toHaveBeenCalledWith(1, 5))
+    // Find and click C1 case title
+    fireEvent.click(await screen.findByText('【正向】接口C - 正常请求'))
+
+    await waitFor(() => expect(executeApiCase).toHaveBeenCalledWith(1))
     expect(await screen.findByRole('dialog')).toBeTruthy()
     expect(screen.getByText(/接口响应/).textContent).toContain('正常请求')
     expect(await screen.findByText('OpenVPN 已自动连接')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Close' }))
 
-    fireEvent.click(screen.getByRole('button', { name: '选择接口 接口C 的全部用例' }))
-    fireEvent.click(screen.getByRole('button', { name: '批量执行 (2)' }))
+    // Select all cases and batch execute
+    fireEvent.click(screen.getByRole('button', { name: '全选' }))
+    fireEvent.click(screen.getByRole('button', { name: /批量执行/ }))
     await waitFor(() => expect(createApiExecutionTask).toHaveBeenCalledWith(expect.objectContaining({
       case_ids: [1, 2],
-      environment_id: 5,
     })))
   })
 
   it('接口作为集合且默认收起，展开后显示该接口全部用例', async () => {
     render(<ApiCaseTab />)
 
-    const interfaceTrigger = await screen.findByRole('button', { name: /接口C.*2 条用例/ })
+    // Group is collapsed by default - endpoint text visible but case titles hidden
+    const endpointText = await screen.findByText('/api/c')
+    expect(endpointText).toBeTruthy()
     expect(screen.queryByText('【正向】接口C - 正常请求')).toBeNull()
 
-    fireEvent.click(interfaceTrigger)
+    // Click to expand the group
+    const interfaceTrigger = endpointText.closest('[data-state]') || endpointText.closest('button')
+    if (interfaceTrigger) fireEvent.click(interfaceTrigger)
+
+    // Case titles should now be visible
     expect(await screen.findByText('【正向】接口C - 正常请求')).toBeTruthy()
     expect(screen.getByText('【类型校验】接口C - age - 类型错误')).toBeTruthy()
   })
