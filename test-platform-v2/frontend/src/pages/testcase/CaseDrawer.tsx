@@ -460,7 +460,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
           </div>
         </div>
         {stepsViewMode === 'formatted' && stepsValue ? (
-          <pre className="text-sm leading-relaxed bg-muted/30 rounded-md p-3 min-h-[120px] whitespace-pre-wrap font-sans">
+          <pre id="case-steps" className="text-sm leading-relaxed bg-muted/30 rounded-md p-3 min-h-[120px] whitespace-pre-wrap font-sans">
             {formatSteps(stepsValue) || '暂无步骤'}
           </pre>
         ) : (
