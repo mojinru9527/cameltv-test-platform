@@ -20,7 +20,7 @@ const METHOD_COLORS: Record<string, string> = {
 }
 
 interface Props {
-  onDebugEndpoint?: (ep: ApiEndpoint) => void
+  onDebugEndpoint?: (ep: ApiEndpoint, serviceName?: string) => void
   onOpenImport: () => void
   refreshKey: number
 }
@@ -136,8 +136,20 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
 
   // ── Render helpers ──
 
+  /** Convert path segments to display format: / → - */
+  function displaySegment(s: string): string {
+    return s.replace(/\//g, '-').replace(/^-|-$/g, '')
+  }
+
+  /** Extract display path: last segment only, / replaced with - */
+  function displayPath(ep: ApiEndpoint): string {
+    const segments = (ep.path || '/').split('/').filter(Boolean)
+    if (segments.length === 0) return '/'
+    return displaySegment(segments[segments.length - 1])
+  }
+
   /** Render endpoint rows for a given list */
-  function renderEndpointRows(eps: ApiEndpoint[]) {
+  function renderEndpointRows(eps: ApiEndpoint[], serviceName: string = '') {
     return eps.map(ep => (
       <div
         key={ep.id}
@@ -147,23 +159,25 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
         <Badge className={METHOD_COLORS[ep.method] || ''}>{ep.method}</Badge>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <code className="text-sm font-medium truncate">{ep.path}</code>
+            <code className="text-sm font-medium truncate" title={ep.path}>{displayPath(ep)}</code>
             {ep.deprecated && <Badge variant="outline" className="text-[10px] text-yellow-600">已废弃</Badge>}
           </div>
           <p className="text-xs text-muted-foreground truncate">
             {ep.summary || '-'}
           </p>
         </div>
-        <span className="text-xs text-muted-foreground truncate max-w-[120px]" title={ep.remark || ''}>
-          {ep.remark || '-'}
-        </span>
+        {ep.remark && (
+          <span className="text-xs text-muted-foreground italic truncate max-w-[140px]" title={ep.remark}>
+            备注: {ep.remark}
+          </span>
+        )}
         <div className="flex items-center gap-1 shrink-0">
           {onDebugEndpoint && (
             <Button
               size="icon-sm"
               variant="ghost"
               title="调试"
-              onClick={(e) => { e.stopPropagation(); onDebugEndpoint(ep) }}
+              onClick={(e) => { e.stopPropagation(); onDebugEndpoint(ep, serviceName) }}
             >
               <FlaskConical className="size-4" />
             </Button>
@@ -183,13 +197,13 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
   }
 
   /** Render a list of modules (collapsed by default) with path groups and endpoints */
-  function renderModules(modules: Record<string, Record<string, ApiEndpoint[]>>) {
+  function renderModules(modules: Record<string, Record<string, ApiEndpoint[]>>, serviceName: string = '') {
     return Object.entries(modules).map(([moduleName, pathGroups]) => (
       <Collapsible key={moduleName} defaultOpen={false}>
         <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 text-sm font-medium hover:bg-muted/50 rounded-lg transition-colors group">
           <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
           <FolderOpen className="size-4 text-muted-foreground" />
-          <span>{moduleName}</span>
+          <span>{displaySegment(moduleName)}</span>
           <Badge variant="secondary" className="ml-auto text-xs">
             {Object.values(pathGroups).flat().length}
           </Badge>
@@ -204,7 +218,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
                 <span className="ml-auto">{eps.length} 个接口</span>
               </div>
               {/* Endpoint rows */}
-              {renderEndpointRows(eps)}
+              {renderEndpointRows(eps, serviceName)}
             </div>
           ))}
         </CollapsibleContent>
@@ -237,7 +251,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
                     <Badge variant="secondary" className="ml-auto text-xs">{epsCount} 个接口</Badge>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="ml-4 mt-1 space-y-1">
-                    {renderModules(modules)}
+                    {renderModules(modules, svcName)}
                   </CollapsibleContent>
                 </Collapsible>
               )
@@ -261,7 +275,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
             <p className="text-xs mt-1">点击「导入接口」从 Swagger/OpenAPI 导入</p>
           </div>
         ) : (
-          renderModules(modules)
+          renderModules(modules, svcName)
         )}
       </div>
     )
@@ -280,7 +294,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
         </Select>
         <div className="flex items-center gap-1 flex-1 min-w-[200px]">
           <Search className="size-4 text-muted-foreground shrink-0" />
-          <Input placeholder="搜索服务/模块/路径/描述..." value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
+          <Input placeholder="搜索服务名、模块名、路径..." value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
         </div>
         <Button variant="outline" onClick={loadEndpoints} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
         <Button onClick={onOpenImport} data-icon="inline-start"><FileUp className="size-4" /> 导入接口</Button>

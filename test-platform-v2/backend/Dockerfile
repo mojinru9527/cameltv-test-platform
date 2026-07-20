@@ -16,9 +16,6 @@ ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 COPY app ./app
 COPY alembic ./alembic
 COPY alembic.ini .
-COPY scripts ./scripts
-
-RUN chmod +x /app/scripts/startup.sh
 
 EXPOSE 8000
-CMD ["/app/scripts/startup.sh"]
+CMD ["sh", "-c", "echo '=== CamelTv Test Platform v2.6 ===' && echo 'Running database migrations...' && alembic upgrade heads && echo 'Starting application...' && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
