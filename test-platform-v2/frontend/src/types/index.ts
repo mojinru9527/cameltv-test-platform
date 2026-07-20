@@ -678,6 +678,7 @@ export interface ApiEndpoint {
   path: string
   summary: string
   description: string
+  remark: string
   request_schema: string
   response_schema: string
   auth_required: boolean
