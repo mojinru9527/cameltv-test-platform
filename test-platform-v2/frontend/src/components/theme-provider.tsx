@@ -59,6 +59,13 @@ function applyTheme(mode: ThemeMode, colorTheme: ColorTheme) {
     root.classList.add("theme-transition")
     setTimeout(() => root.classList.remove("theme-transition"), 250)
   }
+
+  // Detect reduced-transparency preference
+  if (window.matchMedia("(prefers-reduced-transparency: reduce)").matches) {
+    root.dataset.reducedTransparency = "true"
+  } else {
+    delete root.dataset.reducedTransparency
+  }
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -85,6 +92,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (mode !== "system") return
     const mq = window.matchMedia("(prefers-color-scheme: dark)")
     const handler = () => applyTheme("system", colorTheme)
+    mq.addEventListener("change", handler)
+    return () => mq.removeEventListener("change", handler)
+  }, [mode, colorTheme])
+
+  // Listen for reduced-transparency preference changes
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-transparency: reduce)")
+    const handler = () => applyTheme(mode, colorTheme)
     mq.addEventListener("change", handler)
     return () => mq.removeEventListener("change", handler)
   }, [mode, colorTheme])

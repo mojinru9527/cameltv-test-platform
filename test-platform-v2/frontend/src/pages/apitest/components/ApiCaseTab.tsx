@@ -72,7 +72,8 @@ export default function ApiCaseTab() {
       else if (!isBatchResult(res)) toast.error(`${res.assertions?.filter((a: ApiAssertionResult) => !a.passed).length || 0} 个断言失败`)
     } catch (e: any) {
       toast.error(e?.message || '执行失败')
-      setResult(null)
+      setResult({ error: true, message: e?.message || '网络请求失败，请检查后端服务是否启动' })
+      setResponseModalOpen(true)
     }
     finally { setExecutingCase(null) }
   }
