@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Play, Plus, Trash2, Loader2, CheckCircle2, XCircle } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
@@ -174,6 +174,15 @@ export default function DebugTab({ endpoint }: Props) {
     if (!qs) return base
     return base.includes('?') ? `${base}&${qs}` : `${base}?${qs}`
   }
+
+  // Auto-scroll to response when result changes
+  useEffect(() => {
+    if (result) {
+      setTimeout(() => {
+        document.getElementById('response-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 100)
+    }
+  }, [result])
 
   const runQuick = async () => {
     const composed = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
@@ -459,7 +468,7 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
   }
 
   return (
-    <Card>
+    <Card id="response-panel">
       <CardHeader><CardTitle>响应结果</CardTitle></CardHeader>
       <CardContent>
         {loading ? (
