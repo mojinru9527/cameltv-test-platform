@@ -27,13 +27,14 @@ describe('ThemeLab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /黑域主题/ }))
     expect(document.querySelector('.theme-lab')?.getAttribute('data-theme')).toBe('xlab')
-    fireEvent.click(screen.getByRole('button', { name: /列阵主题/ }))
-    expect(document.querySelector('.theme-lab')?.getAttribute('data-theme')).toBe('column')
+    fireEvent.click(screen.getByRole('button', { name: /晶穹主题/ }))
+    expect(document.querySelector('.theme-lab')?.getAttribute('data-theme')).toBe('apple')
     fireEvent.click(screen.getByRole('button', { name: /软体主题/ }))
     expect(document.querySelector('.theme-lab')?.getAttribute('data-theme')).toBe('clay')
     fireEvent.click(screen.getByRole('button', { name: /液境主题/ }))
-    expect(document.querySelector('.theme-lab')?.getAttribute('data-theme')).toBe('liquid')
-    fireEvent.click(screen.getByRole('button', { name: /晶穹主题/ }))
+    expect(document.querySelector('.theme-lab')?.getAttribute('data-theme')).toBe('liquid-glass')
+    fireEvent.click(screen.getByRole('button', { name: /赛博主题/ }))
+    expect(document.querySelector('.theme-lab')?.getAttribute('data-theme')).toBe('cyberpunk')
 
     expect(screen.getByRole('tab', { name: /实时日志/ }).getAttribute('aria-selected')).toBe('true')
   })
