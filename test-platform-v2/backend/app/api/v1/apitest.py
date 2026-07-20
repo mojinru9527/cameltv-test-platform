@@ -392,22 +392,80 @@ def import_confirm(
 
 
 def _resolve_spec(source_type: str, source_ref: str, spec_content: str | None) -> dict | None:
-    """从不同来源解析 OpenAPI spec 为 dict。"""
+    """从不同来源解析 OpenAPI spec 为 dict。
+
+    支持:
+    - openapi_url: 直接 URL (JSON/YAML)
+    - swagger_doc_url: Knife4j/Swagger UI doc.html — 自动发现底层 spec URL
+    - openapi_text/file: 文字/文件内容
+    """
     import yaml as _yaml
 
     raw = spec_content or ""
 
     # URL 导入
-    if source_type == "openapi_url" and source_ref:
+    if source_type in ("openapi_url", "swagger_doc_url") and source_ref:
         try:
             import httpx
-            resp = httpx.get(source_ref, timeout=30)
+            from urllib.parse import urljoin, urlparse
+
+            resp = httpx.get(source_ref, timeout=30, follow_redirects=True)
             resp.raise_for_status()
             raw = resp.text
+
+            # 如果返回的是 HTML 页面（Knife4j/Swagger UI），尝试发现真实 spec URL
+            if raw.strip().lower().startswith("<!doctype") or "<html" in raw[:512].lower():
+                parsed = urlparse(source_ref)
+                base = f"{parsed.scheme}://{parsed.netloc}"
+
+                # 候选 spec URL 列表（按优先级）
+                candidates = [
+                    f"{base}/v3/api-docs",
+                    f"{base}/v2/api-docs",
+                    f"{base}/swagger-resources",
+                ]
+
+                # doc.html → 检查同级路径下的 v3/api-docs
+                if parsed.path.endswith("doc.html"):
+                    group_base = parsed.path.rsplit("/", 1)[0]
+                    candidates.insert(0, f"{base}{group_base}/v3/api-docs")
+                    candidates.insert(1, f"{base}{group_base}/v2/api-docs")
+
+                # 尝试各候选 URL
+                spec_raw = None
+                for url in candidates:
+                    try:
+                        r = httpx.get(url, timeout=15)
+                        if r.status_code == 200:
+                            body = r.text.strip()
+                            # swagger-resources 返回 JSON 数组 — 取第一个 location
+                            if url.endswith("swagger-resources"):
+                                try:
+                                    resources = json.loads(body)
+                                    if isinstance(resources, list) and resources:
+                                        loc = resources[0].get("location") or resources[0].get("url", "")
+                                        if loc:
+                                            loc_url = urljoin(base, loc)
+                                            r2 = httpx.get(loc_url, timeout=15)
+                                            if r2.status_code == 200:
+                                                spec_raw = r2.text
+                                                break
+                                    continue
+                                except Exception:
+                                    pass
+                            spec_raw = body
+                            break
+                    except Exception:
+                        continue
+
+                if spec_raw:
+                    raw = spec_raw
+                else:
+                    return None
         except Exception:
             return None
 
-    # 文件导入 — raw 已在 spec_content 中
+    # 文件/文本导入 — raw 已在 spec_content 中
     if not raw:
         return None
 
