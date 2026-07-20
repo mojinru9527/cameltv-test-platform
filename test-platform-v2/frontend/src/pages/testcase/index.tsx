@@ -264,36 +264,36 @@ export default function TestCasePage() {
         <div className="flex-1 min-w-0 space-y-3">
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); setPage(1) }}>
+            <Select value={selDomain} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); setPage(1) }}>
               <SelectTrigger className="w-[130px]" size="sm">
-                <SelectValue placeholder="按域筛选" />
+                <SelectValue placeholder="全部域" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="">全部域</SelectItem>
                 {domains.map((d: any) => (
                   <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); setPage(1) }}>
+            <Select value={selModule} onValueChange={(v) => { setSelModule(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[150px]" size="sm">
-                <SelectValue placeholder="按模块筛选" />
+                <SelectValue placeholder="全部模块" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="">全部模块</SelectItem>
                 {selModules.map((m: any) => (
                   <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={priority || undefined} onValueChange={(v) => { setPriority(v || ''); setPage(1) }}>
+            <Select value={priority} onValueChange={(v) => { setPriority(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[100px]" size="sm">
-                <SelectValue placeholder="优先级" />
+                <SelectValue placeholder="全部优先级" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="">全部优先级</SelectItem>
                 {['P0', 'P1', 'P2', 'P3'].map((v) => (
                   <SelectItem key={v} value={v}>{v}</SelectItem>
                 ))}
@@ -312,7 +312,7 @@ export default function TestCasePage() {
               />
             </InputGroup>
 
-            <Button size="sm" onClick={() => setPage(1)}>
+            <Button size="sm" onClick={() => { setPage(1); refetch() }}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
@@ -403,14 +403,32 @@ export default function TestCasePage() {
                           {r.priority}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-[140px] truncate text-xs">
-                        {formatNumberedText(r.preconditions) || '-'}
+                      <TableCell className="max-w-[140px] text-xs">
+                        <div className="space-y-0.5 max-h-[72px] overflow-y-auto">
+                          {formatNumberedText(r.preconditions).length > 0
+                            ? formatNumberedText(r.preconditions).map((line: string, i: number) => (
+                                <div key={i} className="leading-tight">{line}</div>
+                              ))
+                            : <span className="text-muted-foreground">-</span>}
+                        </div>
                       </TableCell>
-                      <TableCell className="max-w-[160px] truncate text-xs">
-                        {formatStepActions(r.steps) || '-'}
+                      <TableCell className="max-w-[160px] text-xs">
+                        <div className="space-y-0.5 max-h-[72px] overflow-y-auto">
+                          {formatStepActions(r.steps).length > 0
+                            ? formatStepActions(r.steps).map((line: string, i: number) => (
+                                <div key={i} className="leading-tight">{line}</div>
+                              ))
+                            : <span className="text-muted-foreground">-</span>}
+                        </div>
                       </TableCell>
-                      <TableCell className="max-w-[160px] truncate text-xs">
-                        {formatStepExpectations(r.steps, r.expected_result) || '-'}
+                      <TableCell className="max-w-[160px] text-xs">
+                        <div className="space-y-0.5 max-h-[72px] overflow-y-auto">
+                          {formatStepExpectations(r.steps, r.expected_result).length > 0
+                            ? formatStepExpectations(r.steps, r.expected_result).map((line: string, i: number) => (
+                                <div key={i} className="leading-tight">{line}</div>
+                              ))
+                            : <span className="text-muted-foreground">-</span>}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge variant={REVIEW_COLORS[r.review_status] || 'secondary'} className="text-[10px]">

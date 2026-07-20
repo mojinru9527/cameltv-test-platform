@@ -37,14 +37,18 @@ export async function createDomain(name: string) {
 }
 
 export async function deleteDomain(domainId: number) {
+  if (!Number.isInteger(domainId) || domainId <= 0) throw new Error('domainId 无效')
   return api.delete(`/test-cases/domains/${domainId}`)
 }
 
 export async function createModule(domainId: number, name: string) {
+  if (!Number.isInteger(domainId) || domainId <= 0) throw new Error('domainId 无效')
   return api.post(`/test-cases/domains/${domainId}/modules`, { name })
 }
 
 export async function deleteModule(domainId: number, moduleId: number) {
+  if (!Number.isInteger(domainId) || domainId <= 0) throw new Error('domainId 无效')
+  if (!Number.isInteger(moduleId) || moduleId <= 0) throw new Error('moduleId 无效')
   return api.delete(`/test-cases/domains/${domainId}/modules/${moduleId}`)
 }
 

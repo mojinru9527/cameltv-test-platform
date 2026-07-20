@@ -135,7 +135,7 @@ def list_cases(
     total = db.scalar(count_stmt) or 0
 
     rows = db.scalars(
-        stmt.order_by(TestCase.domain, TestCase.module, TestCase.id)
+        stmt.order_by(TestCase.id.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
     ).all()
@@ -221,8 +221,9 @@ def get_domain_tree(db: Session, project_id: int = 0) -> list[dict]:
         mod_list = [{"module": m, "count": c} for m, c in sorted(modules.items())]
         result.append({"domain": domain, "count": total, "modules": mod_list})
 
-    # 排序：用户端 → 运营后台 → 接口测试 → 其他
-    _domain_order = {"用户端": 0, "运营后台": 1, "接口测试": 2}
+    # 排序：用户端 → 运营后台 → 其他（接口测试域不再独立展示）
+    result = [d for d in result if d["domain"] != "接口测试"]
+    _domain_order = {"用户端": 0, "运营后台": 1}
     result.sort(key=lambda d: _domain_order.get(d["domain"], 99))
     return result
 
@@ -473,6 +474,8 @@ def get_category_tree(db: Session, project_id: int) -> list[dict]:
         mod_list = [{"module": m, "count": c} for m, c in sorted(modules.items())]
         result.append({"domain": domain, "count": total, "modules": mod_list})
 
-    _domain_order = {"用户端": 0, "运营后台": 1, "接口测试": 2}
+    # 接口测试域不再作为独立域展示，接口用例归属各业务模块
+    result = [d for d in result if d["domain"] != "接口测试"]
+    _domain_order = {"用户端": 0, "运营后台": 1}
     result.sort(key=lambda d: _domain_order.get(d["domain"], 99))
     return result

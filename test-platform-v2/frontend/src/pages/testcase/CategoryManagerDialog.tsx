@@ -47,8 +47,10 @@ type DeleteTarget =
   | { type: 'domain'; domainId: number; name: string; caseCount: number }
   | { type: 'module'; domainId: number; moduleId: number; name: string; caseCount: number }
 
-function categoryId(id: number | undefined): number | null {
-  return Number.isInteger(id) && (id as number) > 0 ? (id as number) : null
+function categoryId(id: number | undefined | null): number | null {
+  if (id == null) return null
+  const num = Number(id)
+  return Number.isInteger(num) && num > 0 ? num : null
 }
 
 function errorMessage(error: unknown): string {
