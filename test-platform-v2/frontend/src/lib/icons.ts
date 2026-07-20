@@ -119,6 +119,7 @@ export {
   BrainCircuit,
   AlertCircle,
   GitCompare,
+  ListFilter,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"
