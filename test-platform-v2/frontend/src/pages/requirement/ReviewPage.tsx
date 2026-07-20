@@ -14,7 +14,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import {
-  ArrowLeft, CheckCircle2, XCircle, Edit, Import, Filter, Loader2,
+  ArrowLeft, CheckCircle2, XCircle, Edit, Import, ListFilter, Loader2,
   FileText, Layers, Search,
 } from '@/lib/icons'
 import { fetchReviewState, reviewCase, reviewImportCases, generateTestCases } from '@/api/requirement'
@@ -113,7 +113,7 @@ export default function ReviewPage() {
     else setSelectedIds(new Set(filteredCases.map((c) => c.index)))
   }
 
-  const handleReview = async (caseIndex: number, action: string) => {
+  const handleReview = async (caseIndex: number, action: 'approve' | 'reject') => {
     setReviewing(caseIndex)
     try {
       await reviewCase(docId, caseIndex, action)
@@ -236,7 +236,7 @@ export default function ReviewPage() {
               </div>
               <Select value={filter} onValueChange={(v: any) => setFilter(v)}>
                 <SelectTrigger className="h-7 w-[90px] text-xs">
-                  <Filter className="size-3 mr-1" />
+                  <ListFilter className="size-3 mr-1" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

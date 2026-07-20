@@ -10,7 +10,9 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user, require_permission
 from app.schemas.common import Page, R
 from app.schemas.test_case import (
+    DomainCreate,
     DomainNode,
+    ModuleCreate,
     TestCaseCreate,
     TestCaseFilter,
     TestCaseOut,
@@ -43,8 +45,70 @@ def list_domains(
     current: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    tree = test_case_service.get_domain_tree(db, project_id=current.project_id or 0)
+    tree = test_case_service.get_category_tree(db, project_id=current.project_id or 0)
     return R.ok(tree)
+
+
+@router.post("/domains", response_model=R[dict], summary="新增域")
+def add_domain(
+    body: DomainCreate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:create")),
+    db: Session = Depends(get_db),
+):
+    try:
+        result = test_case_service.create_domain(db, project_id=current.project_id or 0, name=body.name)
+        _audit(req, current, db, "create", f"domain/{body.name}", f"新增域: {body.name}")
+        return R.ok(result)
+    except ValueError as e:
+        return R.err(code=400, msg=str(e))
+
+
+@router.delete("/domains/{domain_id}", response_model=R[dict], summary="删除域")
+def remove_domain(
+    domain_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:delete")),
+    db: Session = Depends(get_db),
+):
+    ok = test_case_service.delete_domain(db, domain_id=domain_id, project_id=current.project_id or 0)
+    if not ok:
+        return R.err(code=404, msg="域不存在")
+    _audit(req, current, db, "delete", f"domain/{domain_id}")
+    return R.ok({"deleted": True})
+
+
+@router.post("/domains/{domain_id}/modules", response_model=R[dict], summary="新增模块")
+def add_module(
+    domain_id: int,
+    body: ModuleCreate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:create")),
+    db: Session = Depends(get_db),
+):
+    try:
+        result = test_case_service.create_module(
+            db, domain_id=domain_id, project_id=current.project_id or 0, name=body.name
+        )
+        _audit(req, current, db, "create", f"module/{body.name}")
+        return R.ok(result)
+    except ValueError as e:
+        return R.err(code=400, msg=str(e))
+
+
+@router.delete("/domains/{domain_id}/modules/{module_id}", response_model=R[dict], summary="删除模块")
+def remove_module(
+    domain_id: int,
+    module_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testcase:delete")),
+    db: Session = Depends(get_db),
+):
+    ok = test_case_service.delete_module(db, domain_id=domain_id, module_id=module_id)
+    if not ok:
+        return R.err(code=404, msg="模块不存在")
+    _audit(req, current, db, "delete", f"module/{module_id}")
+    return R.ok({"deleted": True})
 
 
 # ── 用例 CRUD ─────────────────────────────────────────
