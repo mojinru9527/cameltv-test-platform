@@ -31,7 +31,6 @@ import type { TestCaseReviewTransition } from '@/types'
 
 const formSchema = z.object({
   title: z.string().min(1, '请输入标题'),
-  case_id: z.string().optional().or(z.literal('')),
   case_type: z.enum(['manual', 'api', 'ui']).default('manual'),
   priority: z.enum(['P0', 'P1', 'P2', 'P3']).default('P2'),
   status: z.enum(['draft', 'active', 'archived']).default('active'),
@@ -294,12 +293,6 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
         )}
       </div>
 
-      {/* Case ID */}
-      <div>
-        <label htmlFor="case-id" className="mb-1 block text-sm font-medium">用例编号</label>
-        <Input id="case-id" placeholder="如 TC-HOME-001" {...register('case_id')} />
-      </div>
-
       {/* Row: Type, Priority, Status */}
       <div className="grid grid-cols-3 gap-4">
         <div>
@@ -310,7 +303,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             render={({ field }: any) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger id="case-type" size="sm"><SelectValue placeholder="选择类型" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {CASE_TYPES.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
@@ -327,7 +320,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             render={({ field }: any) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger id="case-priority" size="sm"><SelectValue placeholder="优先级" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {PRIORITIES.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
@@ -344,7 +337,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             render={({ field }: any) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger id="case-status" size="sm"><SelectValue placeholder="状态" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {STATUSES.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                   ))}
@@ -365,7 +358,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             render={({ field }: any) => (
               <Select value={field.value || undefined} onValueChange={field.onChange}>
                 <SelectTrigger id="case-domain" size="sm"><SelectValue placeholder="选择域" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {domains.map((d: any) => (
                     <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
                   ))}
@@ -373,16 +366,19 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
               </Select>
             )}
           />
+          {errors.domain && (
+            <p className="mt-1 text-xs text-destructive" role="alert">{errors.domain.message}</p>
+          )}
         </div>
         <div>
-          <label htmlFor="case-module" className="mb-1 block text-sm font-medium">所属模块</label>
+          <label htmlFor="case-module" className="mb-1 block text-sm font-medium">所属模块 <span className="text-destructive">*</span></label>
           <Controller
             name="module"
             control={control}
             render={({ field }: any) => (
               <Select value={field.value || undefined} onValueChange={field.onChange}>
                 <SelectTrigger id="case-module" size="sm"><SelectValue placeholder="选择模块" /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {selModules.map((m: any) => (
                     <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                   ))}
@@ -390,6 +386,9 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
               </Select>
             )}
           />
+          {errors.module && (
+            <p className="mt-1 text-xs text-destructive" role="alert">{errors.module.message}</p>
+          )}
         </div>
       </div>
 
@@ -404,7 +403,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
               render={({ field }: any) => (
                 <Select value={field.value || undefined} onValueChange={field.onChange}>
                   <SelectTrigger id="case-api-method" size="sm"><SelectValue placeholder="方法" /></SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper">
                     {['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].map((v) => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}

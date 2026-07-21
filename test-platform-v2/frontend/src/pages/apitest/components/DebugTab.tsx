@@ -67,9 +67,10 @@ function composeAssetUrl(baseUrl: string, serviceName: string, modulePath: strin
 
 interface Props {
   endpoint?: ApiEndpoint | null
+  serviceName?: string
 }
 
-export default function DebugTab({ endpoint }: Props) {
+export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiExecutionResult | null>(null)
   const [method, setMethod] = useState<string>('GET')
@@ -115,22 +116,10 @@ export default function DebugTab({ endpoint }: Props) {
     if (!endpoint) return
     setMethod(endpoint.method || 'GET')
 
-    // Parse path to pre-fill address fields:
-    // first segment → serviceName, last segment → endpointPath, middle → modulePath
-    const path = endpoint.path || ''
-    const segments = path.split('/').filter(Boolean)
-    if (segments.length > 0) {
-      setServiceName(segments[0])
-      if (segments.length > 1) {
-        const last = segments[segments.length - 1]
-        const middle = segments.slice(1, -1)
-        setModulePath(middle.length > 0 ? '/' + middle.join('/') : '')
-        setEndpointPath('/' + last)
-      } else {
-        setModulePath('')
-        setEndpointPath('')
-      }
-    }
+    // Use passed serviceName, endpoint.module for modulePath, endpoint.path for endpointPath
+    if (svcName) setServiceName(svcName)
+    if (endpoint.module) setModulePath(endpoint.module.startsWith('/') ? endpoint.module : '/' + endpoint.module)
+    if (endpoint.path) setEndpointPath(endpoint.path.startsWith('/') ? endpoint.path : '/' + endpoint.path)
 
     // Parse request_schema to pre-fill headers/body/params
     try {
