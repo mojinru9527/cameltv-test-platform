@@ -152,6 +152,10 @@ export async function retryLanhuEvidenceJob(jobId: number): Promise<LanhuEvidenc
   return api.post(`/lanhu-evidence/jobs/${jobId}/retry`, {})
 }
 
+export async function deleteLanhuEvidenceJob(jobId: number): Promise<{ deleted: boolean; job_id: number }> {
+  return api.delete(`/lanhu-evidence/jobs/${jobId}`)
+}
+
 export async function importLanhuEvidence(
   jobId: number,
   body: LanhuEvidenceImportRequest,
