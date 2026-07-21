@@ -173,11 +173,24 @@ export default function TestCasePage() {
     }))
   }, [domains])
 
-  // derived modules list
+  // derived modules list — returns all modules when no domain selected so the
+  // "全部模块" Select always has enough options for Radix to open it.
   const selModules = useMemo(() => {
-    if (!selDomain) return []
-    const d = visibleDomains.find((x: any) => x.domain === selDomain)
-    return d?.modules?.map((m: any) => ({ value: m.module, label: `${m.module} (${m.count})` })) || []
+    if (selDomain) {
+      const d = visibleDomains.find((x: any) => x.domain === selDomain)
+      return d?.modules?.map((m: any) => ({ value: m.module, label: `${m.module} (${m.count})` })) || []
+    }
+    // No domain selected → merge all modules from all domains (deduped by name)
+    const seen = new Set<string>()
+    const all: { value: string; label: string }[] = []
+    for (const d of visibleDomains) {
+      for (const m of (d.modules || [])) {
+        if (seen.has(m.module)) continue
+        seen.add(m.module)
+        all.push({ value: m.module, label: `${m.module} (${m.count})` })
+      }
+    }
+    return all
   }, [selDomain, visibleDomains])
 
   // ── Actions ──
@@ -269,7 +282,7 @@ export default function TestCasePage() {
               <SelectTrigger className="w-[130px]" size="sm">
                 <SelectValue placeholder="全部域" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="">全部域</SelectItem>
                 {visibleDomains.map((d: any) => (
                   <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
@@ -281,7 +294,7 @@ export default function TestCasePage() {
               <SelectTrigger className="w-[150px]" size="sm">
                 <SelectValue placeholder="全部模块" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="">全部模块</SelectItem>
                 {selModules.map((m: any) => (
                   <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
@@ -293,7 +306,7 @@ export default function TestCasePage() {
               <SelectTrigger className="w-[100px]" size="sm">
                 <SelectValue placeholder="全部优先级" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="">全部优先级</SelectItem>
                 {['P0', 'P1', 'P2', 'P3'].map((v) => (
                   <SelectItem key={v} value={v}>{v}</SelectItem>
@@ -338,7 +351,7 @@ export default function TestCasePage() {
                 <SelectTrigger className="w-[100px]" size="sm">
                   <SelectValue placeholder="优先级" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {['P0','P1','P2','P3'].map(v => (
                     <SelectItem key={v} value={v}>{v}</SelectItem>
                   ))}
@@ -371,8 +384,8 @@ export default function TestCasePage() {
             loadingRows={4}
           >
             {() => (
-            <div className="overflow-x-auto">
-              <Table className="min-w-[900px]">
+            <div className="overflow-x-visible">
+              <Table className="min-w-[900px] [&_td]:py-2.5">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[40px]">
@@ -467,7 +480,7 @@ export default function TestCasePage() {
               <span className="text-sm text-muted-foreground">每页</span>
               <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1) }}>
                 <SelectTrigger className="w-[80px]" size="sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {[20, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
                 </SelectContent>
               </Select>
