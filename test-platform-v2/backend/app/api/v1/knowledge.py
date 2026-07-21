@@ -597,16 +597,21 @@ def list_relations(
 @router.get("/graph/view", response_model=R[GraphViewOut], summary="图谱可视化数据")
 def graph_view(
     limit: int = Query(200, ge=1, le=1000),
+    knowledge_domain: str | None = Query(None, description="知识域过滤: project | platform"),
     current: CurrentUser = Depends(require_permission("knowledge:view")),
     db: Session = Depends(get_db),
 ):
-    """返回力导向图所需的 nodes + edges 数据。"""
+    """返回力导向图所需的 nodes + edges 数据。支持按 knowledge_domain 过滤。"""
     pid = current.project_id or 0
-    entities = list(
-        db.scalars(
-            select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid).limit(limit)
-        ).all()
-    )
+
+    stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
+    if knowledge_domain:
+        # JOIN KnowledgeSource 实现知识域过滤（source_id 可能为空，用 left join 保留无关联源的实体）
+        stmt = stmt.outerjoin(
+            KnowledgeSource, KnowledgeEntity.source_id == KnowledgeSource.id
+        ).where(KnowledgeSource.knowledge_domain == knowledge_domain)
+    entities = list(db.scalars(stmt.limit(limit)).all())
+
     relations = list(
         db.scalars(
             select(KnowledgeRelation).where(KnowledgeRelation.project_id == pid).limit(limit)

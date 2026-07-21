@@ -811,6 +811,8 @@ export interface KnowledgeSource {
   knowledge_domain?: string
   freshness_score?: number
   last_verified_at?: string | null
+  // 知识溯源
+  module_name?: string | null
 }
 
 export interface KnowledgeChunk {
