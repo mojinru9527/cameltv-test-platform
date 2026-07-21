@@ -38,7 +38,6 @@ const formSchema = z.object({
   module: z.string().min(1, '请选择模块'),
   api_method: z.string().optional().or(z.literal('')),
   api_endpoint: z.string().optional().or(z.literal('')),
-  tags: z.string().optional().or(z.literal('')),
   preconditions: z.string().optional().or(z.literal('')),
   steps: z.string().min(1, '请填写操作步骤'),
   expected_result: z.string().min(1, '请填写预期结果'),
@@ -418,12 +417,6 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
           </div>
         </div>
       )}
-
-      {/* Tags */}
-      <div>
-        <label htmlFor="case-tags" className="mb-1 block text-sm font-medium">标签 (JSON 数组)</label>
-        <Input id="case-tags" placeholder='["功能","首页"]' {...register('tags')} />
-      </div>
 
       {/* Preconditions */}
       <div>
