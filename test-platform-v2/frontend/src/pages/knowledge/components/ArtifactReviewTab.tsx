@@ -378,7 +378,7 @@ export default function ArtifactReviewTab() {
 
       {/* Detail Dialog */}
       <Dialog open={!!detailArtifact} onOpenChange={(open) => { if (!open) setDetailArtifact(null) }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
+        <DialogContent className="max-w-7xl max-h-[92vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="text-sm">{detailArtifact?.title}</DialogTitle>
             <DialogDescription className="text-xs">
@@ -387,7 +387,7 @@ export default function ArtifactReviewTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="text-xs">
-            <pre className="bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-words max-h-96">
+            <pre className="bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-words max-h-[60vh]">
               {(() => {
                 try {
                   return JSON.stringify(JSON.parse(detailArtifact?.content_json || '{}'), null, 2)

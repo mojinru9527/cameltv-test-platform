@@ -216,7 +216,7 @@ export default function SourceListTab() {
 
       {/* ── 知识源详情弹窗 ── */}
       <Dialog open={!!selected} onOpenChange={(open) => { if (!open) closeDetail() }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
+        <DialogContent className="max-w-7xl max-h-[92vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="text-lg">
               {selected?.title || '知识源详情'}
