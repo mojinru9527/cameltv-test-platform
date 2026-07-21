@@ -327,7 +327,17 @@ def cancel_job(
 ):
     job = _get_job(db, job_id, current.project_id or 0)
     if job.status in ("pending", "running"):
-        job.cancel_requested = True
+        from datetime import datetime, timedelta
+        stale_seconds = int(getattr(settings, 'lanhu_evidence_stale_after_seconds', None) or 600)
+        last_seen = job.heartbeat_at or job.started_at or job.updated_at or job.created_at
+        if last_seen is not None and (datetime.now() - last_seen).total_seconds() > stale_seconds:
+            # Stale job — force cancel directly
+            job.status = "cancelled"
+            job.stage = "done"
+            job.finished_at = datetime.now()
+            job.error_message = (job.error_message or "") + " (stale — force cancelled)"
+        else:
+            job.cancel_requested = True
         db.commit()
         db.refresh(job)
     return R.ok(LanhuEvidenceJobOut.model_validate(job))
@@ -343,7 +353,19 @@ def retry_job(
     project_id = current.project_id or 0
     old = _get_job(db, job_id, project_id)
     if old.status in ("pending", "running"):
-        raise APIException(code=409, msg="运行中的任务不可重试", http_status=409)
+        from datetime import datetime, timedelta
+        stale_seconds = int(getattr(settings, 'lanhu_evidence_stale_after_seconds', None) or 600)
+        last_seen = old.heartbeat_at or old.started_at or old.updated_at or old.created_at
+        if last_seen is None or (datetime.now() - last_seen).total_seconds() > stale_seconds:
+            # Auto-fail stuck job so retry can proceed
+            old.status = "failed"
+            old.stage = "done"
+            old.error_message = (old.error_message or "") + " (stale — auto-failed for retry)"
+            if old.finished_at is None:
+                old.finished_at = datetime.now()
+            db.commit()
+        else:
+            raise APIException(code=409, msg="运行中的任务不可重试", http_status=409)
     job = LanhuEvidenceJob(
         project_id=project_id,
         source_url=old.source_url,
