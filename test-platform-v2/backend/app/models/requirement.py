@@ -26,6 +26,14 @@ class RequirementDocument(Base, TimestampMixin):
     imported_api_indices: Mapped[str] = mapped_column(default="[]")    # JSON array of imported api case indices
     extraction_raw: Mapped[str] = mapped_column(default="")            # Stage 1 AI extraction JSON (modules + function_points)
     extraction_status: Mapped[str] = mapped_column(default="not_started")  # not_started|pending_review|confirmed
+    # ── Platform & doc type (batch-27 M1) ──
+    platform: Mapped[str] = mapped_column(
+        default="", index=True
+    )  # APP | PC | WEB | ADMIN — which platform the doc belongs to
+    doc_type: Mapped[str] = mapped_column(
+        default="lanhu"
+    )  # lanhu | prd | attachment | manual — document origin type
+
     # ── Version diff fields (batch-26) ──
     doc_id: Mapped[str] = mapped_column(default="", index=True)          # stable lanhu document id across versions
     version: Mapped[str] = mapped_column(default="")                     # parsed version string (e.g. "14.2.0")

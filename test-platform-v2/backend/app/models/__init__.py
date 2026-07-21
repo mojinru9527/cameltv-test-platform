@@ -28,7 +28,9 @@ from app.models.project import Project, ProjectMember
 from app.models.notification import NotificationChannel, NotificationLog
 from app.models.quality_gate import QualityGateConfig
 from app.models.report_template import ReportTemplate
+from app.models.release_bundle import ReleaseBundle
 from app.models.requirement import RequirementDocument
+from app.models.requirement_module import ModuleAdminLink, RequirementModule
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.sync_log import SyncLog
 from app.models.test_case import TestCase
@@ -86,6 +88,9 @@ __all__ = [
     "UiTestJob",
     "UiTestRun",
     "RequirementDocument",
+    "RequirementModule",
+    "ModuleAdminLink",
+    "ReleaseBundle",
     "IntegrationConfig",
     "SyncLog",
     "VersionMission",
