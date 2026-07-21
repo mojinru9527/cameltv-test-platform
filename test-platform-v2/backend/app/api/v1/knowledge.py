@@ -399,6 +399,39 @@ def classify_source(
     return R.ok(KnowledgeSourceBrief.model_validate(row))
 
 
+# ── 灵感捕获 ──
+
+class CaptureRequest(BaseModel):
+    title: str
+    content: str
+    source_url: str | None = None
+    tags: list[str] | None = None
+
+
+@router.post("/capture", response_model=R[dict], summary="灵感快速捕获")
+def capture_insight(
+    body: CaptureRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """快速捕获灵感/想法/片段，自动入库为 inbox 分类，后续 AI 自动加工。"""
+    from app.services.knowledge.ingest_service import ingest_capture_in_new_session
+
+    source_id = ingest_capture_in_new_session(
+        current.project_id or 0,
+        title=body.title,
+        content=body.content,
+        source_url=body.source_url or "",
+        tags=body.tags,
+    )
+    if source_id is None:
+        return R(code=409, msg="内容重复，已存在相同知识源")
+    _audit(req, current, db, "knowledge:capture", f"source#{source_id}", body.title)
+    db.commit()
+    return R.ok({"id": source_id, "title": body.title, "status": "captured"})
+
+
 # ═══════════════════════════════════════════════════════
 # AI 产物审核台
 # ═══════════════════════════════════════════════════════
@@ -649,6 +682,81 @@ def reject_relation(
     db.commit()
     db.refresh(rel)
     return R.ok(KnowledgeRelationOut.model_validate(rel))
+
+
+class GraphEvolveResult(BaseModel):
+    merged: int = 0
+    confidence_updates: int = 0
+    new_relations: int = 0
+    message: str = ""
+
+
+@router.post("/graph/evolve", response_model=R[GraphEvolveResult], summary="概念地图自演化")
+def evolve_graph(
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """触发概念地图自演化：合并重复实体、更新置信度、发现隐含关系。"""
+    from app.core.config import settings
+    if not settings.knowledge_graph_enabled:
+        raise APIException(code=503, msg="知识图谱未启用（knowledge_graph_enabled=False）", http_status=503)
+
+    from app.services.knowledge.entity_service import evolve_graph_in_new_session
+    result = evolve_graph_in_new_session(current.project_id or 0)
+    _audit(req, current, db, "knowledge:graph_evolve", f"project#{current.project_id}", str(result))
+    db.commit()
+    return R.ok(GraphEvolveResult(**result))
+
+
+# ═══════════════════════════════════════════════════════
+# Skills 模板（Layer 9）
+# ═══════════════════════════════════════════════════════
+
+
+class SkillApplyRequest(BaseModel):
+    params: dict | None = None
+
+
+class SkillApplyResult(BaseModel):
+    success: bool
+    skill: str = ""
+    result: str = ""
+    agent_run_id: int | None = None
+    knowledge_context: str = ""
+    prompt: str = ""
+    params: dict | None = None
+    note: str = ""
+    error: str = ""
+
+
+@router.get("/skills", response_model=R[list[dict]], summary="列出可用 Skills 模板")
+def list_skills(
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+):
+    """列出所有预置 AI 能力模板（生成用例、分析缺陷、提取契约等）。"""
+    from app.services.knowledge.skill_service import list_skills
+    return R.ok(list_skills())
+
+
+@router.post("/skills/{skill_name}/apply", response_model=R[SkillApplyResult], summary="应用 Skills 模板")
+async def apply_skill(
+    skill_name: str,
+    body: SkillApplyRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """应用指定的 AI 能力模板到当前项目知识库，返回 AI 处理结果。"""
+    from app.services.knowledge.skill_service import apply_skill_in_new_session
+    result = await apply_skill_in_new_session(
+        current.project_id or 0,
+        skill_name,
+        body.params,
+    )
+    _audit(req, current, db, "knowledge:skill_apply", skill_name, str(result.get("success", False)))
+    db.commit()
+    return R.ok(SkillApplyResult(**result))
 
 
 # ═══════════════════════════════════════════════════════
