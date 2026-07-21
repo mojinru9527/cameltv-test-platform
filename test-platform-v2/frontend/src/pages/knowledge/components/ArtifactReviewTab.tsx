@@ -387,7 +387,7 @@ export default function ArtifactReviewTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="text-xs">
-            <pre className="bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap max-h-96">
+            <pre className="bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-words max-h-96">
               {(() => {
                 try {
                   return JSON.stringify(JSON.parse(detailArtifact?.content_json || '{}'), null, 2)
@@ -405,7 +405,7 @@ export default function ArtifactReviewTab() {
 
       {/* Approve/Reject Dialog */}
       <Dialog open={!!actionTarget} onOpenChange={(open) => { if (!open) setActionTarget(null) }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {actionTarget?.action === 'approve' ? '采纳 AI 产物' : '驳回 AI 产物'}
@@ -443,7 +443,7 @@ export default function ArtifactReviewTab() {
 
       {/* Batch Reject Dialog */}
       <Dialog open={batchAction === 'reject'} onOpenChange={(open) => { if (!open) { setBatchAction(null); setBatchComment('') } }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>批量驳回 ({selectedPendingCount} 条)</DialogTitle>
             <DialogDescription>
