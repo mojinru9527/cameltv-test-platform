@@ -26,6 +26,12 @@ class RequirementDocumentOut(BaseModel):
     parsed_type: str = "requirement"    # "requirement" | "test_cases"
     excel_cases: list[dict] = []        # direct Excel rows when parsed_type == "test_cases"
     extraction_status: str = "not_started"  # not_started | pending_review | confirmed
+    # Version diff fields (batch-26)
+    doc_id: str = ""
+    version: str = ""
+    parent_id: Optional[int] = None
+    diff_json: str = ""
+    diff_status: str = "initial"  # initial | update
     created_at: Optional[datetime] = None
 
 
@@ -46,6 +52,8 @@ class AIGeneratedCase(BaseModel):
     remark: str = ""
     imported: bool = False          # whether this case has been imported
     client_scope: list[str] = []    # ["app", "pc", "web"] — applicable client platforms
+    _inherited: bool = False         # (batch-26) inherited from previous version
+    _from_version: str = ""          # (batch-26) which version this case came from
 
 
 # ── Requirement Analysis (two-phase AI output) ──
@@ -114,6 +122,10 @@ class FeatureExtractionResult(BaseModel):
     extraction_status: str = "not_started"
     version_info: list[VersionInfo] = []   # parsed version info from changelog
     client_summary: str = ""               # e.g. "本需求涉及 App端、PC端"
+    # Version diff (batch-26)
+    diff_summary: dict | None = None       # { new_pages, modified_pages, unchanged_pages, deleted_pages }
+    inherited_from_version: str = ""       # e.g. "14.1.0" — which version unchanged FPs came from
+    inherited_fp_count: int = 0            # number of function points inherited from parent
 
 
 class ExtractionConfirmRequest(BaseModel):
