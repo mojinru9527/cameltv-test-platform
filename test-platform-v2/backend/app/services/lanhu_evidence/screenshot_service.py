@@ -165,7 +165,7 @@ async def capture_page_segments(page_url: str, output_dir: Path, page_key: str) 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page(viewport={"width": vw, "height": vh})
-            await page.goto(page_url, wait_until="networkidle", timeout=60000)
+            await page.goto(page_url, wait_until="networkidle", timeout=120000)
             await page.wait_for_timeout(wait_ms)
 
             metrics = await page.evaluate(_METRICS_JS)

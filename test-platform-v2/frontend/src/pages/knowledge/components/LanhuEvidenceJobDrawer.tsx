@@ -11,6 +11,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import {
   cancelLanhuEvidenceJob,
+  deleteLanhuEvidenceJob,
   downloadLanhuEvidenceAsset,
   fetchLanhuEvidenceAssets,
   fetchLanhuEvidenceJob,
@@ -180,11 +181,15 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
   }
 
   const onImport = async () => {
-    if (!job || !quality.import_ready || !hasRequestedImport) return
+    if (!job || !hasRequestedImport) return
     setImporting(true)
     try {
       await importLanhuEvidence(job.id, requestedImport)
-      toast.success('已按请求选项完成导入')
+      if (!quality.import_ready) {
+        toast.success('已导入（部分页面存在质量问题，请检查导入结果）')
+      } else {
+        toast.success('已按请求选项完成导入')
+      }
       await loadJob(job.id)
     } catch (e: any) {
       toast.error(e?.message || '导入失败')
@@ -204,142 +209,163 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
     }
   }
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[520px] sm:max-w-[520px] overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            证据包任务 {job ? `#${job.id}` : ''}
-            {job && (
-              <Badge variant="outline" className={STATUS_VARIANT[job.status] || ''}>
-                {job.status}
-              </Badge>
-            )}
-            <Button size="sm" variant="ghost" onClick={load} disabled={loading} aria-label="刷新任务">
-              {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-            </Button>
-          </SheetTitle>
-          <SheetDescription>{job?.source_url}</SheetDescription>
-        </SheetHeader>
+  const onDelete = async () => {
+    if (!displayJobId) return
+    try {
+      await deleteLanhuEvidenceJob(displayJobId)
+      toast.success('已删除任务')
+      onOpenChange(false)
+    } catch (e: any) {
+      toast.error(e?.message || '删除失败')
+    }
+  }
 
-        {job && (
-          <div className="space-y-4 py-3 text-sm">
-            <div className="grid grid-cols-2 gap-2">
-              <div>阶段：{job.stage}</div>
-              <div>页面：{job.captured_pages}/{job.total_pages} 已采集</div>
-              <div>OCR：{job.ocr_pages}/{job.total_pages}</div>
-              <div>失败页：{job.failed_pages}</div>
-              <div>完整性：{quality.complete ? '完整' : '需复核'}</div>
-              <div>
-                导入状态：
-                <Badge
-                  variant="outline"
-                  className={quality.import_ready
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-red-200 bg-red-50 text-red-700'}
-                >
-                  {quality.import_ready ? '可导入' : '不可导入'}
+  return (
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="w-[520px] sm:max-w-[520px] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              证据包任务 {job ? `#${job.id}` : ''}
+              {job && (
+                <Badge variant="outline" className={STATUS_VARIANT[job.status] || ''}>
+                  {job.status}
                 </Badge>
+              )}
+              <Button size="sm" variant="ghost" onClick={load} disabled={loading} aria-label="刷新任务">
+                {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+              </Button>
+            </SheetTitle>
+            <SheetDescription>{job?.source_url}</SheetDescription>
+          </SheetHeader>
+
+          {job && (
+            <div className="space-y-4 py-3 text-sm">
+              <div className="grid grid-cols-2 gap-2">
+                <div>阶段：{job.stage}</div>
+                <div>页面：{job.captured_pages}/{job.total_pages} 已采集</div>
+                <div>OCR：{job.ocr_pages}/{job.total_pages}</div>
+                <div>失败页：{job.failed_pages}</div>
+                <div>完整性：{quality.complete ? '完整' : '需复核'}</div>
+                <div>
+                  导入状态：
+                  <Badge
+                    variant="outline"
+                    className={quality.import_ready
+                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : 'border-red-200 bg-red-50 text-red-700'}
+                  >
+                    {quality.import_ready ? '可导入' : '不可导入'}
+                  </Badge>
+                </div>
               </div>
-            </div>
-            {job.error_message && <div className="text-xs text-red-600 break-all">错误：{job.error_message}</div>}
-            <div className="space-y-1 text-xs" aria-label="质量阻断原因">
-              {!!quality.pages_missing_capture?.length && (
-                <div className="text-red-600">缺少截图：{formatPageNumbers(quality.pages_missing_capture)}</div>
-              )}
-              {!!quality.pages_truncated?.length && (
-                <div className="text-red-600">滚动截断：{formatPageNumbers(quality.pages_truncated)}</div>
-              )}
-              {!!quality.pages_missing_text?.length && (
-                <div className="text-red-600">缺少有效文本：{formatPageNumbers(quality.pages_missing_text)}</div>
-              )}
-              {!!quality.pages_missing_ocr_review?.length && (
-                <div className="text-amber-700">
-                  缺少 OCR 或人工审核：{formatPageNumbers(quality.pages_missing_ocr_review)}
+              {job.error_message && <div className="text-xs text-red-600 break-all">错误：{job.error_message}</div>}
+              <div className="space-y-1 text-xs" aria-label="质量阻断原因">
+                {!!quality.pages_missing_capture?.length && (
+                  <div className="text-red-600">缺少截图：{formatPageNumbers(quality.pages_missing_capture)}</div>
+                )}
+                {!!quality.pages_truncated?.length && (
+                  <div className="text-red-600">滚动截断：{formatPageNumbers(quality.pages_truncated)}</div>
+                )}
+                {!!quality.pages_missing_text?.length && (
+                  <div className="text-red-600">缺少有效文本：{formatPageNumbers(quality.pages_missing_text)}</div>
+                )}
+                {!!quality.pages_missing_ocr_review?.length && (
+                  <div className="text-amber-700">
+                    缺少 OCR 或人工审核：{formatPageNumbers(quality.pages_missing_ocr_review)}
+                  </div>
+                )}
+              </div>
+
+              {!!Object.keys(importResult).length && (
+                <div
+                  className={`rounded border px-2 py-1 text-xs ${importResult.error ? 'border-red-200 text-red-700' : 'border-emerald-200 text-emerald-700'}`}
+                  aria-label="导入结果"
+                >
+                  {importResult.error
+                    ? `导入失败：${String(importResult.error)}`
+                    : `已导入：${Object.keys(importResult).join('、')}`}
                 </div>
               )}
-            </div>
 
-            {!!Object.keys(importResult).length && (
-              <div
-                className={`rounded border px-2 py-1 text-xs ${importResult.error ? 'border-red-200 text-red-700' : 'border-emerald-200 text-emerald-700'}`}
-                aria-label="导入结果"
-              >
-                {importResult.error
-                  ? `导入失败：${String(importResult.error)}`
-                  : `已导入：${Object.keys(importResult).join('、')}`}
-              </div>
-            )}
+              {!!exportAssets.length && (
+                <div className="border-t pt-2">
+                  <div className="mb-1 font-medium">导出资产</div>
+                  <div className="flex flex-wrap gap-2">
+                    {exportAssets.map((asset) => (
+                      <Button
+                        key={asset.id}
+                        size="sm"
+                        variant="outline"
+                        disabled={downloadingAssetId === asset.id}
+                        onClick={() => onDownload(asset)}
+                      >
+                        {downloadingAssetId === asset.id && <Loader2 className="size-4 animate-spin" />}
+                        下载 {asset.asset_type === 'word' ? 'Word' : 'JSON'}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            {!!exportAssets.length && (
               <div className="border-t pt-2">
-                <div className="mb-1 font-medium">导出资产</div>
-                <div className="flex flex-wrap gap-2">
-                  {exportAssets.map((asset) => (
-                    <Button
-                      key={asset.id}
-                      size="sm"
-                      variant="outline"
-                      disabled={downloadingAssetId === asset.id}
-                      onClick={() => onDownload(asset)}
-                    >
-                      {downloadingAssetId === asset.id && <Loader2 className="size-4 animate-spin" />}
-                      下载 {asset.asset_type === 'word' ? 'Word' : 'JSON'}
-                    </Button>
+                <div className="font-medium mb-1">页面列表（{pages.length}）</div>
+                <div className="space-y-1 max-h-[40vh] overflow-y-auto">
+                  {pages.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between gap-2 rounded border px-2 py-1">
+                      <div className="min-w-0">
+                        <div className="truncate" title={p.page_path}>{p.page_name || p.page_id}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {p.segment_count} 段 · {p.capture_status}/{p.ocr_status}
+                          {p.capture_truncated ? ' · 已截断' : ''}
+                          {p.review_status === 'approved' ? ' · 已人工批准' : ''}
+                        </div>
+                      </div>
+                      {hasPerm('lanhu_evidence:review')
+                        && p.capture_status === 'success'
+                        && p.merged_text.trim().length > 0
+                        && p.ocr_status !== 'success'
+                        && p.review_status !== 'approved' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="shrink-0"
+                            onClick={() => {
+                              setReviewPage(p)
+                              setReviewComment('')
+                            }}
+                          >
+                            人工审核
+                          </Button>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
-            )}
-
-            <div className="border-t pt-2">
-              <div className="font-medium mb-1">页面列表（{pages.length}）</div>
-              <div className="space-y-1 max-h-[40vh] overflow-y-auto">
-                {pages.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between gap-2 rounded border px-2 py-1">
-                    <div className="min-w-0">
-                      <div className="truncate" title={p.page_path}>{p.page_name || p.page_id}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {p.segment_count} 段 · {p.capture_status}/{p.ocr_status}
-                        {p.capture_truncated ? ' · 已截断' : ''}
-                        {p.review_status === 'approved' ? ' · 已人工批准' : ''}
-                      </div>
-                    </div>
-                    {hasPerm('lanhu_evidence:review')
-                      && p.capture_status === 'success'
-                      && p.merged_text.trim().length > 0
-                      && p.ocr_status !== 'success'
-                      && p.review_status !== 'approved' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="shrink-0"
-                          onClick={() => {
-                            setReviewPage(p)
-                            setReviewComment('')
-                          }}
-                        >
-                          人工审核
-                        </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
             </div>
-          </div>
-        )}
-
-        <SheetFooter className="gap-2">
-          <Button variant="outline" onClick={onCancel}>取消任务</Button>
-          {quality.import_ready && hasRequestedImport && !importCompleted
-            && hasPerm('lanhu_evidence:import') && (
-            <Button variant="outline" disabled={importing} onClick={onImport}>
-              {importing && <Loader2 className="size-4 animate-spin" />}
-              执行导入
-            </Button>
           )}
-          <Button onClick={onRetry}>重试</Button>
-        </SheetFooter>
-      </SheetContent>
+
+          <SheetFooter className="gap-2">
+            <Button variant="outline" onClick={onCancel}>取消任务</Button>
+            <Button variant="outline" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>删除任务</Button>
+            {hasRequestedImport && !importCompleted
+              && hasPerm('lanhu_evidence:import') && (
+              <div className="space-y-2">
+                {!quality.import_ready && (
+                  <div className="rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-700">
+                    ⚠️ 证据包存在质量问题（缺截图/截断/缺文本/未审 OCR 页），导入结果可能不完整
+                  </div>
+                )}
+                <Button variant="outline" disabled={importing} onClick={onImport}>
+                  {importing && <Loader2 className="size-4 animate-spin" />}
+                  执行导入
+                </Button>
+              </div>
+            )}
+            <Button onClick={onRetry}>重试</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Dialog
         open={reviewPage !== null}
@@ -354,7 +380,7 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
           <DialogHeader>
             <DialogTitle>批准 OCR 缺失页</DialogTitle>
             <DialogDescription>
-              请确认已对照原始设计稿核验“{reviewPage?.page_name || reviewPage?.page_id}”，备注将保留在审计记录中。
+              请确认已对照原始设计稿核验"{reviewPage?.page_name || reviewPage?.page_id}"，备注将保留在审计记录中。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -385,6 +411,6 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Sheet>
+    </>
   )
 }
