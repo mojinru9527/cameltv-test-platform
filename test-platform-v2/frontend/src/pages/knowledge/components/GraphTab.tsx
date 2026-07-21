@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Network } from 'vis-network'
 import { DataSet } from 'vis-data'
 import { toast } from 'sonner'
-import { RefreshCw, Maximize2, Plus, MinusCircle } from '@/lib/icons'
+import { RefreshCw, Maximize2, Plus, MinusCircle, GitMerge } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SkeletonText } from '@/components/ui/skeleton'
-import { fetchGraphView, triggerEntityExtract } from '@/api/knowledge'
+import { fetchGraphView, triggerEntityExtract, evolveGraph } from '@/api/knowledge'
+import type { GraphEvolveResult } from '@/api/knowledge'
 import type { GraphView } from '@/types'
 
 // ── 实体类型着色 ──
@@ -47,6 +48,8 @@ export default function GraphTab() {
   const [selected, setSelected] = useState<{ id: string; name: string; type: string; description: string; confidence: number } | null>(null)
   const [extracting, setExtracting] = useState(false)
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set())
+  const [evolving, setEvolving] = useState(false)
+  const [evolveResult, setEvolveResult] = useState<GraphEvolveResult | null>(null)
 
   const loadGraph = useCallback(async () => {
     setLoading(true)
@@ -210,6 +213,21 @@ export default function GraphTab() {
     }
   }
 
+  const handleEvolve = async () => {
+    setEvolving(true)
+    setEvolveResult(null)
+    try {
+      const result = await evolveGraph()
+      setEvolveResult(result)
+      toast.success(result.message || '演化完成')
+      loadGraph()
+    } catch (e: any) {
+      toast.error(e?.message || '演化失败')
+    } finally {
+      setEvolving(false)
+    }
+  }
+
   // ── Loading ──
   if (loading) {
     return (
@@ -301,6 +319,16 @@ export default function GraphTab() {
             <RefreshCw className={`size-4 mr-1 ${extracting ? 'animate-spin' : ''}`} />
             提取
           </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleEvolve}
+            disabled={evolving}
+            title="概念地图自演化：合并重复实体、发现隐含关系"
+          >
+            <GitMerge className={`size-4 mr-1 ${evolving ? 'animate-spin' : ''}`} />
+            演化
+          </Button>
         </div>
 
         {/* vis 容器 */}
@@ -378,6 +406,31 @@ export default function GraphTab() {
                 <p>边 {graphData.edges.length}</p>
               </CardContent>
             </Card>
+
+            {evolveResult && (
+              <Card className="border-primary/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-1.5">
+                    <GitMerge className="size-4 text-primary" />
+                    演化结果
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-muted-foreground">
+                  {evolveResult.merged > 0 && (
+                    <p>合并重复实体: <span className="font-medium text-foreground">{evolveResult.merged}</span></p>
+                  )}
+                  {evolveResult.confidence_updates > 0 && (
+                    <p>更新置信度: <span className="font-medium text-foreground">{evolveResult.confidence_updates}</span></p>
+                  )}
+                  {evolveResult.new_relations > 0 && (
+                    <p>新隐含关系: <span className="font-medium text-foreground">{evolveResult.new_relations}</span></p>
+                  )}
+                  {evolveResult.merged === 0 && evolveResult.new_relations === 0 && (
+                    <p className="text-xs">图谱已是最优状态，无需演化</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>

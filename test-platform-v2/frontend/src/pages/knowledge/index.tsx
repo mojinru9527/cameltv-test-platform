@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap, Lightbulb } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
@@ -13,6 +13,8 @@ import WikiTab from './components/WikiTab'
 import WikiDiffTab from './components/WikiDiffTab'
 import ProjectTab from './components/ProjectTab'
 import PlatformTab from './components/PlatformTab'
+import SkillsTab from './components/SkillsTab'
+import CaptureDialog from './components/CaptureDialog'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 /**
@@ -80,6 +82,10 @@ export default function KnowledgePage() {
             <GitCompare className="size-4 mr-1" />
             知识差异对比
           </TabsTrigger>
+          <TabsTrigger value="skills">
+            <Zap className="size-4 mr-1" />
+            Skills
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="project" className="mt-4">
@@ -115,7 +121,13 @@ export default function KnowledgePage() {
         <TabsContent value="wikidiff" className="mt-4">
           {tab === 'wikidiff' && <WikiDiffTab />}
         </TabsContent>
+        <TabsContent value="skills" className="mt-4">
+          {tab === 'skills' && <SkillsTab />}
+        </TabsContent>
       </Tabs>
+
+      {/* 灵感快速捕获浮动按钮 */}
+      <CaptureDialog />
     </div>
   )
 }
