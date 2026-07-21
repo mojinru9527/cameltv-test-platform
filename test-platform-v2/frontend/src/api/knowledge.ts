@@ -47,6 +47,17 @@ export async function fetchSourceChunks(sourceId: number): Promise<KnowledgeChun
   return api.get(`/knowledge/sources/${sourceId}/chunks`)
 }
 
+export async function verifyKnowledgeSource(sourceId: number): Promise<KnowledgeSource> {
+  return api.post(`/knowledge/sources/${sourceId}/verify`)
+}
+
+export async function classifyKnowledgeSource(
+  sourceId: number,
+  body: { para_category?: string; knowledge_domain?: string },
+): Promise<KnowledgeSource> {
+  return api.patch(`/knowledge/sources/${sourceId}/classify`, body)
+}
+
 export async function fetchAiArtifacts(params: {
   review_status?: string
   artifact_type?: string

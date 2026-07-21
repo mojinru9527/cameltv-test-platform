@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles } from '@/lib/icons'
@@ -20,8 +20,12 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
  */
 export default function KnowledgePage() {
   useDocumentTitle('知识中心')
-  const initialTab = new URLSearchParams(window.location.search).get('tab') || 'project'
-  const [tab, setTab] = useState(initialTab)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') || 'project'
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value })
+  }
 
   return (
     <div className="space-y-4">
@@ -30,7 +34,7 @@ export default function KnowledgePage() {
         description="项目知识（需求/接口/用例）+ 平台研发知识（踩坑记录/设计决策/最佳实践）统一沉淀、可检索、可复用。"
       />
 
-      <Tabs value={tab} onValueChange={setTab}>
+      <Tabs value={tab} onValueChange={handleTabChange}>
         <TabsList className="overflow-x-auto flex-nowrap">
           <TabsTrigger value="project">
             <FolderOpen className="size-4 mr-1" />

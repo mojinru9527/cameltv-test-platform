@@ -197,6 +197,19 @@ def init_scheduler():
     except Exception as e:
         logger.error(f"[scheduler] Failed to register task worker: {e}")
 
+    # ── 知识保鲜退化 + 自动归档（每天凌晨 3:00）──
+    try:
+        from app.services.knowledge.source_service import decay_freshness_in_new_session
+        scheduler.add_job(
+            func=decay_freshness_in_new_session,
+            trigger=CronTrigger(hour=3, minute=7),
+            id="knowledge_freshness_decay",
+            replace_existing=True,
+        )
+        logger.info("[scheduler] Knowledge freshness decay registered (daily 03:07)")
+    except Exception as e:
+        logger.error(f"[scheduler] Failed to register freshness decay: {e}")
+
 
 def shutdown_scheduler():
     """Called at app shutdown."""
