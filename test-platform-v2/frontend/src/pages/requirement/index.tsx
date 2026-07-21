@@ -30,6 +30,7 @@ import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import AiResultModal from './AiResultModal'
+import EvidenceTaskPanel from './components/EvidenceTaskPanel'
 import LanhuEvidenceDialog from '@/pages/knowledge/components/LanhuEvidenceDialog'
 import LanhuEvidenceJobDrawer from '@/pages/knowledge/components/LanhuEvidenceJobDrawer'
 
@@ -251,6 +252,23 @@ export default function RequirementPage() {
     refetch()
   }
 
+  /** Navigate to feature extraction for the doc imported from this evidence job */
+  const handleViewExtraction = async (job: any) => {
+    // Find the requirement document linked to this job (via import_result_json)
+    try {
+      const importResult = job.import_result_json ? JSON.parse(job.import_result_json) : null
+      const docId = importResult?.requirement_doc_id
+      if (docId) {
+        setActiveDocId(docId)
+        handleExtract(docId)
+      } else {
+        toast.info('该任务未导入需求文档，请先在任务详情中导入')
+      }
+    } catch {
+      toast.info('该任务未导入需求文档')
+    }
+  }
+
   const handleViewCases = async (docId: number) => {
     try {
       const result = await fetchGeneratedCases(docId)
@@ -304,6 +322,15 @@ export default function RequirementPage() {
           刷新
         </Button>
       </PageHeader>
+
+      {/* Main layout: task panel (left) + content (right) */}
+      <div className="flex gap-4 items-start">
+        <EvidenceTaskPanel
+          onViewExtraction={handleViewExtraction}
+          onNewTask={() => setEvOpen(true)}
+        />
+
+        <div className="flex-1 min-w-0 space-y-4">
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -399,18 +426,6 @@ export default function RequirementPage() {
                   全页面滚动截图 + OCR，生成可追溯证据包（Word/JSON），再入需求 / RAG / Wiki
                 </span>
               </div>
-              <LanhuEvidenceDialog
-                open={evOpen}
-                onOpenChange={setEvOpen}
-                initialUrl={lanhuUrl}
-                initialImportRequirement
-                onCreated={(job) => setEvJobId(job.id)}
-              />
-              <LanhuEvidenceJobDrawer
-                open={evJobId != null}
-                onOpenChange={(v) => { if (!v) setEvJobId(null) }}
-                jobId={evJobId}
-              />
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -820,6 +835,23 @@ export default function RequirementPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+        </div>{/* end flex-1 main content */}
+      </div>{/* end flex row */}
+
+      {/* Lanhu Evidence — dialogs rendered at root so they work regardless of active tab */}
+      <LanhuEvidenceDialog
+        open={evOpen}
+        onOpenChange={setEvOpen}
+        initialUrl={lanhuUrl}
+        initialImportRequirement
+        onCreated={(job) => setEvJobId(job.id)}
+      />
+      <LanhuEvidenceJobDrawer
+        open={evJobId != null}
+        onOpenChange={(v) => { if (!v) setEvJobId(null) }}
+        jobId={evJobId}
+      />
 
       {/* Unified AI Modal — handles extraction review + case viewing */}
       <AiResultModal
