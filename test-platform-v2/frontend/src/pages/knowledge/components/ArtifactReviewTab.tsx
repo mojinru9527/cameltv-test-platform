@@ -68,6 +68,11 @@ export default function ArtifactReviewTab() {
   const [actionComment, setActionComment] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
 
+  // Batch approve/reject
+  const [batchAction, setBatchAction] = useState<'approve' | 'reject' | null>(null)
+  const [batchComment, setBatchComment] = useState('')
+  const [batchLoading, setBatchLoading] = useState(false)
+
   // Batch import
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [importing, setImporting] = useState(false)
@@ -129,7 +134,36 @@ export default function ArtifactReviewTab() {
     setImporting(false)
   }
 
+  const doBatchAction = async (action: 'approve' | 'reject', comment: string) => {
+    if (selectedIds.size === 0) return
+    setBatchLoading(true)
+    let success = 0
+    let failed = 0
+    const fn = action === 'approve' ? approveArtifact : rejectArtifact
+    for (const id of selectedIds) {
+      try {
+        const updated = await fn(id, comment)
+        success++
+        setRows((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+      } catch {
+        failed++
+      }
+    }
+    toast.success(`${action === 'approve' ? '批量采纳' : '批量驳回'}完成：成功 ${success} 条${failed > 0 ? `，失败 ${failed} 条` : ''}`)
+    setSelectedIds(new Set())
+    setBatchAction(null)
+    setBatchComment('')
+    setBatchLoading(false)
+  }
+
+  const handleBatchRejectClick = () => {
+    setBatchAction('reject')
+    setBatchComment('')
+  }
+
   const pendingApproved = rows.filter((r) => r.review_status === 'approved')
+  const pendingItemsCount = rows.filter((r) => r.review_status === 'pending').length
+  const selectedPendingCount = rows.filter((r) => r.review_status === 'pending' && selectedIds.has(r.id)).length
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
@@ -157,6 +191,33 @@ export default function ArtifactReviewTab() {
         </Select>
         <span className="text-xs text-muted-foreground">共 {total} 条</span>
 
+        {/* 批量采纳（pending 选中） */}
+        {selectedPendingCount > 0 && (
+          <Button
+            size="sm"
+            variant="default"
+            onClick={() => doBatchAction('approve', '')}
+            disabled={batchLoading}
+          >
+            <CheckCircle2 className="size-4 mr-1" />
+            {batchLoading && batchAction === 'approve' ? '采纳中…' : `批量采纳 (${selectedPendingCount})`}
+          </Button>
+        )}
+
+        {/* 批量驳回（pending 选中） */}
+        {selectedPendingCount > 0 && (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={handleBatchRejectClick}
+            disabled={batchLoading}
+          >
+            <XCircle className="size-4 mr-1" />
+            {batchLoading && batchAction === 'reject' ? '驳回中…' : `批量驳回 (${selectedPendingCount})`}
+          </Button>
+        )}
+
+        {/* 批量导入（approved 选中） */}
         {pendingApproved.length > 0 && (
           <Button
             size="sm"
@@ -179,12 +240,14 @@ export default function ArtifactReviewTab() {
               <TableHead className="w-10">
                 <Checkbox
                   checked={
-                    pendingApproved.length > 0 &&
-                    selectedIds.size === pendingApproved.length
+                    rows.filter((r) => r.review_status === 'pending' || r.review_status === 'approved').length > 0 &&
+                    selectedIds.size === rows.filter((r) => r.review_status === 'pending' || r.review_status === 'approved').length
                   }
                   onCheckedChange={(checked) => {
                     if (checked) {
-                      setSelectedIds(new Set(pendingApproved.map((r) => r.id)))
+                      setSelectedIds(new Set(
+                        rows.filter((r) => r.review_status === 'pending' || r.review_status === 'approved').map((r) => r.id)
+                      ))
                     } else {
                       setSelectedIds(new Set())
                     }
@@ -220,7 +283,7 @@ export default function ArtifactReviewTab() {
                 return (
                   <TableRow key={a.id}>
                     <TableCell>
-                      {isApproved && (
+                      {(isApproved || isPending) && (
                         <Checkbox
                           checked={selectedIds.has(a.id)}
                           onCheckedChange={(checked) => {
@@ -315,7 +378,7 @@ export default function ArtifactReviewTab() {
 
       {/* Detail Dialog */}
       <Dialog open={!!detailArtifact} onOpenChange={(open) => { if (!open) setDetailArtifact(null) }}>
-        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="text-sm">{detailArtifact?.title}</DialogTitle>
             <DialogDescription className="text-xs">
@@ -324,7 +387,7 @@ export default function ArtifactReviewTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="text-xs">
-            <pre className="bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap max-h-96">
+            <pre className="bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-words max-h-96">
               {(() => {
                 try {
                   return JSON.stringify(JSON.parse(detailArtifact?.content_json || '{}'), null, 2)
@@ -342,7 +405,7 @@ export default function ArtifactReviewTab() {
 
       {/* Approve/Reject Dialog */}
       <Dialog open={!!actionTarget} onOpenChange={(open) => { if (!open) setActionTarget(null) }}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {actionTarget?.action === 'approve' ? '采纳 AI 产物' : '驳回 AI 产物'}
@@ -373,6 +436,36 @@ export default function ArtifactReviewTab() {
                 : actionTarget?.action === 'approve'
                 ? '确认采纳'
                 : '确认驳回'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Reject Dialog */}
+      <Dialog open={batchAction === 'reject'} onOpenChange={(open) => { if (!open) { setBatchAction(null); setBatchComment('') } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>批量驳回 ({selectedPendingCount} 条)</DialogTitle>
+            <DialogDescription>
+              驳回后这些产物将不会被导入，可作为参考保留。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <Label>驳回原因（统一应用于所选条目）</Label>
+            <Input
+              placeholder="输入驳回原因…"
+              value={batchComment}
+              onChange={(e) => setBatchComment(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setBatchAction(null); setBatchComment('') }}>取消</Button>
+            <Button
+              variant="destructive"
+              onClick={() => doBatchAction('reject', batchComment)}
+              disabled={batchLoading}
+            >
+              {batchLoading ? '驳回中…' : '确认批量驳回'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -210,6 +210,38 @@ def init_scheduler():
     except Exception as e:
         logger.error(f"[scheduler] Failed to register freshness decay: {e}")
 
+    # ── 概念地图自演化（每天凌晨 4:00）──
+    try:
+        from app.services.knowledge.entity_service import evolve_graph_in_new_session
+        from app.core.config import settings
+        if settings.knowledge_graph_enabled:
+            def _evolve_all_projects():
+                from app.core.db import SessionLocal
+                from app.models.knowledge import KnowledgeEntity
+                from sqlalchemy import select, func
+                db = SessionLocal()
+                try:
+                    pids = list(db.scalars(
+                        select(KnowledgeEntity.project_id).distinct()
+                    ).all())
+                    for pid in pids:
+                        try:
+                            evolve_graph_in_new_session(pid)
+                        except Exception as ex:
+                            logger.error(f"[scheduler] Graph evolve failed for project {pid}: {ex}")
+                finally:
+                    db.close()
+
+            scheduler.add_job(
+                func=_evolve_all_projects,
+                trigger=CronTrigger(hour=4, minute=13),
+                id="knowledge_graph_evolve",
+                replace_existing=True,
+            )
+            logger.info("[scheduler] Knowledge graph auto-evolution registered (daily 04:13)")
+    except Exception as e:
+        logger.error(f"[scheduler] Failed to register graph evolution: {e}")
+
 
 def shutdown_scheduler():
     """Called at app shutdown."""

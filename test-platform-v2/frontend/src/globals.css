@@ -715,7 +715,6 @@
 }
 [data-theme="clay"] table tbody tr:hover {
   box-shadow: 0 6px 16px oklch(0.3 0.02 285 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.7);
-  transform: scale(1.01);
 }
 [data-theme="clay"] [data-sidebar="sidebar"] {
   background: linear-gradient(180deg, var(--sidebar-background), oklch(0.9 0.04 290));
@@ -1313,13 +1312,14 @@ html.theme-transition *::after {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── 1. Table row hover ── */
-/* Cyberpunk: neon-tinted background + left accent border */
+/* Cyberpunk: neon-tinted background + left accent via box-shadow (no layout shift) */
 [data-theme="cyberpunk"] tbody tr {
-  border-left: 2px solid transparent;
-  transition: background 0.08s ease, border-left-color 0.08s ease;
+  box-shadow: inset 2px 0 0 transparent;
+  transition: background 0.08s ease, box-shadow 0.08s ease;
 }
 [data-theme="cyberpunk"] tbody tr:hover {
   background: oklch(0.72 0.15 205 / 0.04);
+  box-shadow: inset 2px 0 0 oklch(0.72 0.15 205 / 0.3);
 }
 /* Apple: minimal grey tint */
 [data-theme="apple"] tbody tr:hover {
@@ -1331,7 +1331,7 @@ html.theme-transition *::after {
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 [data-theme="clay"] tbody tr:hover {
-  transform: scale(1.01);
+  /* scale removed to prevent horizontal scrollbar on hover */
 }
 /* xLab: subtle teal glow */
 [data-theme="xlab"] tbody tr {
@@ -1380,7 +1380,6 @@ html.theme-transition *::after {
   color: oklch(1 0 0) !important;
   border-radius: 999px;
   box-shadow: 0 4px 12px oklch(0.46 0.15 285 / 0.25), inset 0 1px 0 rgb(255 255 255 / 0.15);
-  transform: scale(1.04);
 }
 [data-theme="clay"] [data-slot="tabs-trigger"][data-state="active"]::after {
   opacity: 0 !important;
@@ -1437,23 +1436,21 @@ html.theme-transition *::after {
 }
 
 /* ── 4. Selected row highlight ── */
-/* Cyberpunk: neon left border + tinted bg */
+/* Cyberpunk: neon left accent + tinted bg (box-shadow, no layout shift) */
 [data-theme="cyberpunk"] tr[data-selected="true"],
 [data-theme="cyberpunk"] .row-selected {
   background: oklch(0.72 0.15 205 / 0.06);
-  border-left: 2px solid var(--primary);
-  box-shadow: inset 0 0 8px oklch(0.72 0.15 205 / 0.04);
+  box-shadow: inset 2px 0 0 var(--primary), inset 0 0 8px oklch(0.72 0.15 205 / 0.04);
 }
 /* Apple: subtle blue tint */
 [data-theme="apple"] tr[data-selected="true"],
 [data-theme="apple"] .row-selected {
   background: oklch(0.52 0.18 255 / 0.04);
 }
-/* Clay: purple glow border + scale */
+/* Clay: purple glow border */
 [data-theme="clay"] tr[data-selected="true"],
 [data-theme="clay"] .row-selected {
   box-shadow: 0 6px 18px oklch(0.46 0.15 285 / 0.18), inset 0 1px 0 rgb(255 255 255 / 0.7), 0 0 0 2px oklch(0.46 0.15 285 / 0.25);
-  transform: scale(1.01);
 }
 /* xLab: teal glow border */
 [data-theme="xlab"] tr[data-selected="true"],

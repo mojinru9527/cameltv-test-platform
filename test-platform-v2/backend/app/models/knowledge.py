@@ -40,6 +40,8 @@ class KnowledgeSource(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(default="pending", index=True)
     raw_content: Mapped[str] = mapped_column(Text, default="")
     metadata_json: Mapped[str] = mapped_column(Text, default="{}")
+    # 知识溯源：模块名（从 source_ref 中自动提取，如 "Agent Team", "API层"）
+    module_name: Mapped[str | None] = mapped_column(String(200), default=None)
 
 
 class KnowledgeChunk(Base):

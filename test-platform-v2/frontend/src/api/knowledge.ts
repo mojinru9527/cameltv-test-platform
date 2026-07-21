@@ -85,8 +85,8 @@ export async function fetchSearchHealth(): Promise<SearchHealth> {
 
 // ── M3 知识图谱 ──
 
-export async function fetchGraphView(limit = 200): Promise<GraphView> {
-  return api.get('/knowledge/graph/view', { params: { limit } })
+export async function fetchGraphView(limit = 200, knowledgeDomain?: string): Promise<GraphView> {
+  return api.get('/knowledge/graph/view', { params: { limit, ...(knowledgeDomain ? { knowledge_domain: knowledgeDomain } : {}) } })
 }
 
 export async function triggerEntityExtract(sourceId?: number | null, maxChunks = 100): Promise<EntityExtractResult> {
@@ -183,6 +183,75 @@ export async function predictRegressionScope(body: {
   changed_modules: string[]
 }): Promise<RegressionPrediction> {
   return api.post('/knowledge/predict/regression-scope', body)
+}
+
+// ── 灵感捕获 ──
+
+export async function captureInsight(body: {
+  title: string
+  content: string
+  source_url?: string
+  tags?: string[]
+}): Promise<{ id: number; title: string; status: string }> {
+  return api.post('/knowledge/capture', body)
+}
+
+// ── 概念地图自演化 ──
+
+export interface GraphEvolveResult {
+  merged: number
+  confidence_updates: number
+  new_relations: number
+  message: string
+  error?: string
+}
+
+export async function evolveGraph(): Promise<GraphEvolveResult> {
+  return api.post('/knowledge/graph/evolve')
+}
+
+// ── Skills 模板 ──
+
+export interface SkillTemplate {
+  name: string
+  label: string
+  description: string
+  icon: string
+  category: string
+  input_params: SkillParam[]
+}
+
+export interface SkillParam {
+  key: string
+  label: string
+  type: string
+  required: boolean
+  default?: any
+  description?: string
+  options?: string[]
+}
+
+export interface SkillApplyResult {
+  success: boolean
+  skill: string
+  result?: string
+  agent_run_id?: number
+  knowledge_context?: string
+  prompt?: string
+  params?: Record<string, any>
+  note?: string
+  error?: string
+}
+
+export async function fetchSkills(): Promise<SkillTemplate[]> {
+  return api.get('/knowledge/skills')
+}
+
+export async function applySkill(
+  skillName: string,
+  params?: Record<string, any>,
+): Promise<SkillApplyResult> {
+  return api.post(`/knowledge/skills/${skillName}/apply`, { params })
 }
 
 // ── 类型重导出（供组件直接使用） ──

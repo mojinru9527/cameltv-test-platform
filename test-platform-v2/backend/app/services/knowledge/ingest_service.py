@@ -599,7 +599,69 @@ def ingest_platform_knowledge_in_new_session(
         db.close()
 
 
-# ── 9. Agent 产出自动入库 ──
+# ── 9. 灵感捕获入库 ──
+
+def ingest_capture_in_new_session(
+    project_id: int,
+    title: str,
+    content: str,
+    *,
+    source_url: str = "",
+    tags: list[str] | None = None,
+) -> int | None:
+    """快速捕获灵感/想法/片段 → inbox，后续可由 AI 自动加工分类。
+
+    返回创建的 knowledge_source.id，去重时返回 None。
+    """
+    if not settings.knowledge_ingest_enabled:
+        return None
+    db = SessionLocal()
+    try:
+        raw = sanitize(_truncate(content))
+        full_content = f"# {title}\n\n{raw}"
+        if source_url:
+            full_content += f"\n\n来源: {source_url}"
+        src = record_source(
+            db,
+            project_id=project_id,
+            source_type="capture",
+            source_id=None,
+            title=title,
+            source_ref=source_url,
+            raw_content=sanitize(full_content),
+            metadata={
+                "tags": tags or [],
+                "capture_method": "manual",
+            },
+        )
+        if src is None:
+            db.commit()
+            return None
+        src.para_category = "inbox"
+        src.knowledge_domain = "platform"
+        src.freshness_score = 1.0
+
+        chunks = [
+            {
+                "chunk_type": "capture",
+                "title": title,
+                "content": full_content,
+                "tags": tags or [],
+            }
+        ]
+        chunk_service.make_chunks(db, src, chunks)
+        db.commit()
+        _post_ingest_hooks(project_id, source_id=src.id)
+        return src.id
+    except Exception:
+        logger.exception("ingest capture failed: %s", title)
+        db.rollback()
+        return None
+    finally:
+        db.close()
+
+
+# ── 10. Agent 产出自动入库 ──
 
 def ingest_agent_task_completed_in_new_session(
     project_id: int,
