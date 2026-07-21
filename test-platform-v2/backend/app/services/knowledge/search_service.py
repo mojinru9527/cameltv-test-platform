@@ -82,7 +82,6 @@ def _keyword_search(
         KnowledgeChunk.id, KnowledgeChunk.title, KnowledgeChunk.content
     ).where(
         KnowledgeChunk.project_id == project_id,
-        KnowledgeChunk.status == "active",
     )
     if chunk_type:
         base = base.where(KnowledgeChunk.chunk_type == chunk_type)

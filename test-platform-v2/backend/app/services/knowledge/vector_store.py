@@ -85,7 +85,6 @@ class SqliteVectorStore(VectorStore):
             .join(KnowledgeChunk, KnowledgeChunk.id == KnowledgeVector.chunk_id)
             .where(
                 KnowledgeVector.project_id == project_id,
-                KnowledgeChunk.status == "active",
             )
         )
         if chunk_type:

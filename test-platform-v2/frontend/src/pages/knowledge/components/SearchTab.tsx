@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -38,20 +39,44 @@ const FALLBACK_LABEL: Record<string, string> = {
 
 export default function SearchTab() {
   const hasPerm = useAuthStore((s) => s.hasPerm)
-  const [query, setQuery] = useState('')
-  const [mode, setMode] = useState('hybrid')
+  const [searchParams] = useSearchParams()
+  const urlQ = searchParams.get('q') || ''
+  const urlMode = searchParams.get('mode') || 'hybrid'
+
+  const [query, setQuery] = useState(urlQ)
+  const [mode, setMode] = useState(urlMode)
   const [results, setResults] = useState<KnowledgeSearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [reembedding, setReembedding] = useState(false)
   const [health, setHealth] = useState<SearchHealth | null>(null)
+  const autoSearched = useRef(false)
 
   useEffect(() => {
     fetchSearchHealth()
       .then(setHealth)
       .catch(() => { /* 静默——健康检查失败不影响主功能 */ })
   }, [])
+
+  // 顶部常驻搜索栏触发 → 自动执行检索
+  useEffect(() => {
+    if (urlQ && !autoSearched.current) {
+      autoSearched.current = true
+      setQuery(urlQ)
+      setMode(urlMode)
+      setLoading(true)
+      setSearched(true)
+      setSearchError(null)
+      searchKnowledge({ query: urlQ, mode: urlMode as 'hybrid' | 'keyword' | 'vector', top_k: 10 })
+        .then((res) => setResults(res || []))
+        .catch((e) => {
+          setResults([])
+          setSearchError(e?.message || '检索失败')
+        })
+        .finally(() => setLoading(false))
+    }
+  }, [urlQ, urlMode])
 
   const refreshHealth = () => {
     fetchSearchHealth()

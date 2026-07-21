@@ -50,19 +50,21 @@ export default function GraphTab() {
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set())
   const [evolving, setEvolving] = useState(false)
   const [evolveResult, setEvolveResult] = useState<GraphEvolveResult | null>(null)
+  const [domain, setDomain] = useState<string>('project')
 
-  const loadGraph = useCallback(async () => {
+  const loadGraph = useCallback(async (d?: string) => {
+    const dom = d ?? domain
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchGraphView(200)
+      const data = await fetchGraphView(200, dom)
       setGraphData(data)
     } catch (e: any) {
       setError(e?.message || '加载图谱数据失败')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [domain])
 
   // 初始加载
   useEffect(() => {
@@ -245,7 +247,7 @@ export default function GraphTab() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <p className="text-sm text-muted-foreground">{error}</p>
-        <Button variant="outline" size="sm" onClick={loadGraph}>
+        <Button variant="outline" size="sm" onClick={() => loadGraph()}>
           <RefreshCw className="size-4 mr-1" />
           重试
         </Button>
@@ -282,6 +284,23 @@ export default function GraphTab() {
       <div className="flex-1 relative rounded-lg border overflow-hidden bg-background">
         {/* 工具栏 */}
         <div className="absolute top-2 right-2 z-10 flex gap-1">
+          {/* 知识域切换 */}
+          <div className="flex rounded-md border bg-background mr-1">
+            <button
+              type="button"
+              className={`px-2 py-1 text-xs rounded-l-md transition-colors ${domain === 'project' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+              onClick={() => { setDomain('project'); loadGraph('project') }}
+            >
+              项目知识
+            </button>
+            <button
+              type="button"
+              className={`px-2 py-1 text-xs rounded-r-md transition-colors ${domain === 'platform' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+              onClick={() => { setDomain('platform'); loadGraph('platform') }}
+            >
+              平台研发
+            </button>
+          </div>
           <Button
             variant="secondary"
             size="icon"
