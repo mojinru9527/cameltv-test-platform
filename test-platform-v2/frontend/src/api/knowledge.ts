@@ -29,6 +29,8 @@ export async function fetchKnowledgeOverview(): Promise<KnowledgeOverview> {
 
 export async function fetchKnowledgeSources(params: {
   source_type?: string
+  para_category?: string
+  knowledge_domain?: string
   status?: string
   keyword?: string
   page?: number
@@ -43,6 +45,17 @@ export async function fetchKnowledgeSource(id: number): Promise<KnowledgeSource>
 
 export async function fetchSourceChunks(sourceId: number): Promise<KnowledgeChunk[]> {
   return api.get(`/knowledge/sources/${sourceId}/chunks`)
+}
+
+export async function verifyKnowledgeSource(sourceId: number): Promise<KnowledgeSource> {
+  return api.post(`/knowledge/sources/${sourceId}/verify`)
+}
+
+export async function classifyKnowledgeSource(
+  sourceId: number,
+  body: { para_category?: string; knowledge_domain?: string },
+): Promise<KnowledgeSource> {
+  return api.patch(`/knowledge/sources/${sourceId}/classify`, body)
 }
 
 export async function fetchAiArtifacts(params: {
