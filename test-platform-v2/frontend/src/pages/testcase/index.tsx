@@ -65,9 +65,6 @@ export default function TestCasePage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
-  // dynamic table min-height adapted to pageSize
-  const minHClass = pageSize === 20 ? 'min-h-[650px]' : pageSize === 50 ? 'min-h-[1550px]' : 'min-h-[3050px]'
-
   // drawer
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<any>(null)
@@ -176,11 +173,24 @@ export default function TestCasePage() {
     }))
   }, [domains])
 
-  // derived modules list
+  // derived modules list — returns all modules when no domain selected so the
+  // "全部模块" Select always has enough options for Radix to open it.
   const selModules = useMemo(() => {
-    if (!selDomain) return []
-    const d = visibleDomains.find((x: any) => x.domain === selDomain)
-    return d?.modules?.map((m: any) => ({ value: m.module, label: `${m.module} (${m.count})` })) || []
+    if (selDomain) {
+      const d = visibleDomains.find((x: any) => x.domain === selDomain)
+      return d?.modules?.map((m: any) => ({ value: m.module, label: `${m.module} (${m.count})` })) || []
+    }
+    // No domain selected → merge all modules from all domains (deduped by name)
+    const seen = new Set<string>()
+    const all: { value: string; label: string }[] = []
+    for (const d of visibleDomains) {
+      for (const m of (d.modules || [])) {
+        if (seen.has(m.module)) continue
+        seen.add(m.module)
+        all.push({ value: m.module, label: `${m.module} (${m.count})` })
+      }
+    }
+    return all
   }, [selDomain, visibleDomains])
 
   // ── Actions ──
@@ -223,7 +233,6 @@ export default function TestCasePage() {
         {([
           ['', '全部 (901)'],
           ['manual', '功能用例 (795)'],
-          ['api', '接口用例 (106)'],
         ]).map(([k, label]) => (
           <button
             key={k as string}
@@ -244,7 +253,7 @@ export default function TestCasePage() {
       {/* Body: Tree + Table */}
       <div className="flex gap-4">
         {/* Left: Domain Tree */}
-        <Card size="sm" className="w-[220px] shrink-0 max-h-[calc(100vh-230px)] overflow-y-auto">
+        <Card size="sm" className="w-[220px] shrink-0 h-[calc(100vh-215px)] overflow-y-auto">
           <CardHeader className="border-b pb-2">
             <CardTitle className="text-[13px]">模块分类</CardTitle>
           </CardHeader>
@@ -266,14 +275,14 @@ export default function TestCasePage() {
         </Card>
 
         {/* Right: Filter + Table */}
-        <div className="flex-1 min-w-0 space-y-3">
+        <div className="flex-1 min-w-0 flex flex-col" style={{ height: 'calc(100vh - 215px)' }}>
           {/* Filters */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); setPage(1) }}>
               <SelectTrigger className="w-[130px]" size="sm">
                 <SelectValue placeholder="全部域" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="">全部域</SelectItem>
                 {visibleDomains.map((d: any) => (
                   <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
@@ -285,7 +294,7 @@ export default function TestCasePage() {
               <SelectTrigger className="w-[150px]" size="sm">
                 <SelectValue placeholder="全部模块" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="">全部模块</SelectItem>
                 {selModules.map((m: any) => (
                   <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
@@ -297,7 +306,7 @@ export default function TestCasePage() {
               <SelectTrigger className="w-[100px]" size="sm">
                 <SelectValue placeholder="全部优先级" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper">
                 <SelectItem value="">全部优先级</SelectItem>
                 {['P0', 'P1', 'P2', 'P3'].map((v) => (
                   <SelectItem key={v} value={v}>{v}</SelectItem>
@@ -321,8 +330,11 @@ export default function TestCasePage() {
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
-            <Button size="sm" variant="outline" onClick={refetch}>
+            <Button size="sm" variant="outline" onClick={() => {
+              setSelDomain(''); setSelModule(''); setPriority(''); setKeyword(''); setPage(1)
+            }}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
+              重置
             </Button>
             <div className="flex-1" />
             <Button size="sm" onClick={() => openEdit()}>
@@ -339,7 +351,7 @@ export default function TestCasePage() {
                 <SelectTrigger className="w-[100px]" size="sm">
                   <SelectValue placeholder="优先级" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {['P0','P1','P2','P3'].map(v => (
                     <SelectItem key={v} value={v}>{v}</SelectItem>
                   ))}
@@ -357,7 +369,9 @@ export default function TestCasePage() {
             </div>
           )}
 
-          {/* Table */}
+          {/* Table + Pagination — flex-1 scrollable */}
+          <div className="flex-1 min-h-0 flex flex-col">
+            <div className="flex-1 min-h-0 overflow-y-auto rounded-md border">
           <AsyncState
             isLoading={isLoading}
             isError={isError}
@@ -370,8 +384,8 @@ export default function TestCasePage() {
             loadingRows={4}
           >
             {() => (
-            <div className={`rounded-md border ${minHClass}`}>
-              <Table>
+            <div className="overflow-x-visible">
+              <Table className="min-w-[900px] [&_td]:py-2.5">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[40px]">
@@ -380,14 +394,14 @@ export default function TestCasePage() {
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
-                    <TableHead className="w-[120px]">模块名称</TableHead>
-                    <TableHead>用例标题</TableHead>
-                    <TableHead className="w-[80px]">用例等级</TableHead>
-                    <TableHead className="w-[140px]">前置条件</TableHead>
-                    <TableHead className="w-[160px]">操作步骤</TableHead>
-                    <TableHead className="w-[160px]">预期结果</TableHead>
-                    <TableHead className="w-[80px]">评审</TableHead>
-                    <TableHead className="w-[120px]">操作</TableHead>
+                    <TableHead className="w-[100px]">模块名称</TableHead>
+                    <TableHead className="w-[160px]">用例标题</TableHead>
+                    <TableHead className="w-[70px]">用例等级</TableHead>
+                    <TableHead className="w-[180px]">前置条件</TableHead>
+                    <TableHead className="w-[200px]">操作步骤</TableHead>
+                    <TableHead className="w-[200px]">预期结果</TableHead>
+                    <TableHead className="w-[60px]">评审</TableHead>
+                    <TableHead className="w-[90px]">操作</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -399,10 +413,10 @@ export default function TestCasePage() {
                           onCheckedChange={() => toggleSelect(r.id)}
                         />
                       </TableCell>
-                      <TableCell className="max-w-[120px] truncate">
+                      <TableCell className="max-w-[100px] truncate">
                         <span className="line-clamp-1">{r.module || '......'}</span>
                       </TableCell>
-                      <TableCell className="max-w-[180px] truncate">
+                      <TableCell className="max-w-[160px] truncate">
                         <span className="line-clamp-1" title={r.title}>{r.title || '......'}</span>
                       </TableCell>
                       <TableCell>
@@ -410,13 +424,13 @@ export default function TestCasePage() {
                           {r.priority}
                         </Badge>
                       </TableCell>
-                      <TableCell className="max-w-[140px] truncate text-xs">
+                      <TableCell className="max-w-[180px] truncate text-xs">
                         <span className="line-clamp-1">{formatNumberedText(r.preconditions).join(' ') || '......'}</span>
                       </TableCell>
-                      <TableCell className="max-w-[160px] truncate text-xs">
+                      <TableCell className="max-w-[200px] truncate text-xs">
                         <span className="line-clamp-1">{formatStepActions(r.steps).join(' ') || '......'}</span>
                       </TableCell>
-                      <TableCell className="max-w-[160px] truncate text-xs">
+                      <TableCell className="max-w-[200px] truncate text-xs">
                         <span className="line-clamp-1">{formatStepExpectations(r.steps, r.expected_result).join(' ') || '......'}</span>
                       </TableCell>
                       <TableCell>
@@ -458,14 +472,15 @@ export default function TestCasePage() {
             </div>
             )}
           </AsyncState>
+            </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="shrink-0 flex items-center justify-between gap-4 pt-2 border-t">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">每页</span>
               <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1) }}>
                 <SelectTrigger className="w-[80px]" size="sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper">
                   {[20, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -477,6 +492,7 @@ export default function TestCasePage() {
               total={data?.total || 0}
               onChange={(p) => setPage(p)}
             />
+          </div>
           </div>
         </div>
       </div>

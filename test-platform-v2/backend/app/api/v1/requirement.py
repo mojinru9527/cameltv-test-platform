@@ -166,11 +166,90 @@ async def extract_features(
     if not doc:
         return R(code=404, msg="需求文档不存在")
 
+    # ── Version diff context (batch-26): if this is an update, only analyze changed pages ──
+    diff_summary = None
+    inherited_from_version = ""
+    inherited_fp_count = 0
+    inherited_fps: list[dict] = []
+
+    diff_json_str = doc.get("diff_json", "")
+    if doc.get("diff_status") == "update" and diff_json_str:
+        try:
+            diff_data = json.loads(diff_json_str) if isinstance(diff_json_str, str) else diff_json_str
+            diff_summary = diff_data.get("summary", {})
+            inherited_from_version = diff_data.get("base_version", "")
+
+            # Load parent's confirmed extraction for inheritance
+            parent_id = doc.get("parent_id")
+            if parent_id:
+                parent_doc = requirement_service.get_requirement(db, parent_id, project_id=current.project_id or 0)
+                if parent_doc and parent_doc.get("extraction_status") == "confirmed" and parent_doc.get("extraction_raw"):
+                    try:
+                        parent_extraction = json.loads(parent_doc["extraction_raw"])
+                    except json.JSONDecodeError:
+                        parent_extraction = {}
+
+                    # Map unchanged page names to parent's function points
+                    unchanged_pages = {
+                        p.get("page_name", "").strip()
+                        for p in diff_data.get("pages", [])
+                        if p.get("change_type") == "unchanged"
+                    }
+
+                    if unchanged_pages:
+                        # Inherit FPs from modules that were associated with unchanged pages
+                        for parent_module in parent_extraction.get("modules", []):
+                            for fp in parent_module.get("function_points", []):
+                                source_page = fp.get("source_page", fp.get("page_name", ""))
+                                if source_page in unchanged_pages:
+                                    fp_copy = dict(fp)
+                                    fp_copy["_inherited"] = True
+                                    fp_copy["_from_version"] = inherited_from_version
+                                    inherited_fps.append(fp_copy)
+                        inherited_fp_count = len(inherited_fps)
+
+                        # Build filtered content: only include text from changed (new/modified) pages
+                        changed_pages_info = []
+                        for p in diff_data.get("pages", []):
+                            if p.get("change_type") in ("new", "modified"):
+                                changed_pages_info.append(
+                                    f"页面: {p.get('page_name', '')}\n"
+                                    f"变更类型: {p.get('change_type', '')}\n"
+                                    + (f"变动描述: {p.get('ocr_diff', '')}" if p.get("ocr_diff") else "")
+                                )
+                        if changed_pages_info:
+                            # Prepend diff context to the document content for AI
+                            diff_context = (
+                                f"## 版本变更摘要 ({diff_data.get('base_version', '?')} → {diff_data.get('current_version', '?')})\n"
+                                f"新增 {diff_summary.get('new_pages', 0)} 页, "
+                                f"修改 {diff_summary.get('modified_pages', 0)} 页, "
+                                f"不变 {diff_summary.get('unchanged_pages', 0)} 页, "
+                                f"删除 {diff_summary.get('deleted_pages', 0)} 页\n\n"
+                                f"### 仅需分析以下变更页面:\n"
+                                + "\n---\n".join(changed_pages_info)
+                                + "\n\n### 以下页面无变更(将继承上版本{v}的功能点):\n".format(v=inherited_from_version)
+                                + ", ".join(sorted(unchanged_pages))
+                                + "\n\n---\n\n"
+                            )
+                            doc_content = diff_context + (doc.get("content") or "")
+                        else:
+                            doc_content = doc.get("content") or ""
+                    else:
+                        doc_content = doc.get("content") or ""
+                else:
+                    doc_content = doc.get("content") or ""
+            else:
+                doc_content = doc.get("content") or ""
+        except Exception:
+            doc_content = doc.get("content") or ""
+    else:
+        doc_content = doc.get("content") or ""
+
     try:
         from app.services.ai_service import extract_features as ai_extract
 
         extraction_result = await ai_extract(
-            content=doc["content"],
+            content=doc_content,
             file_type=doc["file_type"],
             source_ref=doc["source_ref"],
         )
@@ -178,6 +257,19 @@ async def extract_features(
         return R(code=400, msg=str(e))
     except Exception as e:
         return R(code=500, msg=f"功能拆分失败: {str(e)}")
+
+    # ── Merge inherited function points from parent version ──
+    if inherited_fps:
+        existing_modules = extraction_result.get("modules", [])
+        # Add inherited FPs as a separate module or merge into existing modules
+        inherited_module = {
+            "name": f"沿用自 {inherited_from_version}",
+            "description": f"以下功能点在上版本已确认，本版本无变更，直接沿用",
+            "function_points": inherited_fps,
+            "client_scope": [],
+        }
+        existing_modules.append(inherited_module)
+        extraction_result["modules"] = existing_modules
 
     # Store extraction result
     requirement_service.update_extraction(db, document_id, extraction_result)
@@ -217,6 +309,9 @@ async def extract_features(
         extraction_status="pending_review",
         version_info=version_info,
         client_summary=client_summary,
+        diff_summary=diff_summary,
+        inherited_from_version=inherited_from_version,
+        inherited_fp_count=inherited_fp_count,
     ))
 
 
@@ -294,12 +389,63 @@ async def generate_test_cases(
 
     # Determine extraction context
     extraction = None
+    inherited_cases: list[dict] = []
     use_extraction = body.use_extraction if body else False
     if use_extraction and doc.get("extraction_status") == "confirmed":
         try:
             extraction = json.loads(doc.get("extraction_raw", "{}"))
         except json.JSONDecodeError:
             pass
+
+        # ── Inherited function points (batch-26): separate from new FPs to avoid re-generating ──
+        if extraction:
+            inherited_fps = []
+            new_modules = []
+            for m in extraction.get("modules", []):
+                inherited_in_module = []
+                new_fps = []
+                for fp in m.get("function_points", []):
+                    if fp.get("_inherited"):
+                        inherited_in_module.append(fp)
+                    else:
+                        new_fps.append(fp)
+                if inherited_in_module:
+                    inherited_fps.extend(inherited_in_module)
+                # Only keep modules with new FPs for AI generation
+                if new_fps:
+                    new_modules.append({**m, "function_points": new_fps})
+                elif not inherited_in_module:
+                    new_modules.append(m)  # keep module if no FPs at all
+
+            if inherited_fps:
+                # Load parent's test cases for inherited FPs
+                parent_id = doc.get("parent_id")
+                if parent_id:
+                    parent_doc = requirement_service.get_requirement(db, parent_id, project_id=current.project_id or 0)
+                    if parent_doc and parent_doc.get("ai_raw"):
+                        try:
+                            parent_ai = json.loads(parent_doc["ai_raw"])
+                            # Match inherited FPs to parent's functional cases by FP title/name
+                            parent_cases = parent_ai.get("functional_cases", [])
+                            inherited_fp_names = {
+                                fp.get("name", "").strip()
+                                for fp in inherited_fps
+                            }
+                            for pc in parent_cases:
+                                pc_title = pc.get("title", "").strip()
+                                # Simple heuristic: check if case title contains FP name
+                                for fp_name in inherited_fp_names:
+                                    if fp_name and (fp_name in pc_title or pc_title in fp_name):
+                                        pc_copy = dict(pc)
+                                        pc_copy["_inherited"] = True
+                                        pc_copy["_from_version"] = doc.get("version", "")
+                                        inherited_cases.append(pc_copy)
+                                        break
+                        except json.JSONDecodeError:
+                            pass
+
+                # Replace extraction with only new FPs for AI
+                extraction = {**extraction, "modules": new_modules} if new_modules else None
 
     try:
         from app.services.ai_service import generate_test_cases as ai_generate
@@ -327,6 +473,18 @@ async def generate_test_cases(
         if isinstance(c.get("steps"), (list, dict)):
             c["steps"] = json.dumps(c["steps"], ensure_ascii=False)
         func_cases.append(AIGeneratedCase(**c))
+        idx += 1
+
+    # ── Append inherited cases (batch-26): carry forward from previous version ──
+    for ic in inherited_cases:
+        ic["index"] = idx
+        ic["case_type"] = "manual"
+        if isinstance(ic.get("steps"), (list, dict)):
+            ic["steps"] = json.dumps(ic["steps"], ensure_ascii=False) if isinstance(ic["steps"], (list, dict)) else ic.get("steps", "")
+        # Mark as inherited in the title for visibility
+        if ic.get("_inherited") and not ic.get("title", "").startswith("[沿用"):
+            ic["title"] = f"[沿用自{ic.get('_from_version', '上版本')}] {ic.get('title', '')}"
+        func_cases.append(AIGeneratedCase(**ic))
         idx += 1
 
     # api_cases always empty — API testing is handled separately
