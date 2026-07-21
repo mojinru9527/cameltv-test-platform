@@ -23,7 +23,8 @@ class RequirementModule(Base, TimestampMixin):
                  lanhu_page_id, change_type, created_at, updated_at
       v1.1 (+4): parent_module_id, source_version, screenshot_urls, has_visual_only_content
       v1.2 (+1): page_interactions
-      ── Total: 15 ──
+      v1.3 (+2): description, sort_order
+      ── Total: 17 ──
     """
     __tablename__ = "requirement_module"
 
@@ -75,6 +76,14 @@ class RequirementModule(Base, TimestampMixin):
     #   "source_element": "顶部搜索栏",
     #   "admin_config_source": "资讯分类配置"  # only for dynamic_filter
     # }]
+
+    # ── v1.3: content metadata ──
+    description: Mapped[str] = mapped_column(
+        Text, default=""
+    )  # AI-extracted summary or manual description
+    sort_order: Mapped[int] = mapped_column(
+        default=0
+    )  # display ordering within parent (lower = first)
 
 
 class ModuleAdminLink(Base, TimestampMixin):
