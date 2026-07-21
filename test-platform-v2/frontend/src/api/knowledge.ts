@@ -29,6 +29,8 @@ export async function fetchKnowledgeOverview(): Promise<KnowledgeOverview> {
 
 export async function fetchKnowledgeSources(params: {
   source_type?: string
+  para_category?: string
+  knowledge_domain?: string
   status?: string
   keyword?: string
   page?: number

@@ -205,6 +205,13 @@ def run_agent_in_new_session(
             agent_type, run.id, artifact.id, duration_ms,
         )
 
+        # 成功后自动将产出物入库为平台研发知识
+        try:
+            from app.services.knowledge.ingest_service import ingest_agent_task_completed_in_new_session
+            ingest_agent_task_completed_in_new_session(project_id, run.id)
+        except Exception:
+            logger.exception("auto-ingest agent output failed run_id=%s", run.id)
+
         return {"run_id": run.id, "artifact_id": artifact.id, "status": "success"}
 
     except Exception:

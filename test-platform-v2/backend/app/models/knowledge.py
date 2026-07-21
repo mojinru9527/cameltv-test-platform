@@ -29,6 +29,13 @@ class KnowledgeSource(Base, TimestampMixin):
     content_hash: Mapped[str] = mapped_column(default="", index=True)  # 去重与版本识别
     version: Mapped[str] = mapped_column(default="")
     iteration_id: Mapped[int | None] = mapped_column(default=None, index=True)
+    # PARA 分类: inbox/project/area/resource/archive/wiki/skill
+    para_category: Mapped[str] = mapped_column(default="inbox", index=True)
+    # 知识域: project（项目知识）/ platform（平台研发知识）
+    knowledge_domain: Mapped[str] = mapped_column(default="project", index=True)
+    # 保鲜评分: 1.0=fresh, 0.0=stale
+    freshness_score: Mapped[float] = mapped_column(default=1.0)
+    last_verified_at: Mapped[datetime | None] = mapped_column(default=None)
     # pending/parsed/indexed/failed/deprecated
     status: Mapped[str] = mapped_column(default="pending", index=True)
     raw_content: Mapped[str] = mapped_column(Text, default="")
