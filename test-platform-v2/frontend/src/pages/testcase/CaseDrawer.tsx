@@ -275,7 +275,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
   }
 
   return (
-    <div className="max-h-[50vh] overflow-y-auto space-y-4">
+    <div className="max-h-[60vh] overflow-y-auto space-y-4">
       {/* Title */}
       <div>
         <label htmlFor="case-title" className="mb-1 block text-sm font-medium">标题</label>
@@ -486,7 +486,7 @@ function ReviewPanel({
   const statusColor = REVIEW_COLORS[reviewStatus] || 'secondary'
 
   return (
-    <div className="max-h-[50vh] overflow-y-auto space-y-4">
+    <div className="max-h-[60vh] overflow-y-auto space-y-4">
       {/* Current status */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">当前评审状态：</span>
