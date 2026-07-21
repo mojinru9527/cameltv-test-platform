@@ -90,6 +90,9 @@ const ICONS: Record<string, LucideIcon> = {
   AppstoreOutlined: LayoutDashboard,
   BugOutlined: Bug,
   BrainCircuitOutlined: Sparkles,
+  SparklesOutlined: Sparkles,
+  GitBranchOutlined: GitBranch,
+  FolderOpenOutlined: FolderOpen,
   CpuOutlined: Cpu,
 }
 
@@ -189,12 +192,16 @@ export default function MainLayout() {
     })
   }
 
-  // Split menus into primary and secondary groups
-  const mainMenus = menus.filter((m) =>
-    !['system', 'settings'].includes(m.code?.toLowerCase())
+  // Split menus into three groups: knowledge, primary nav, system
+  const knowledgeMenus = menus.filter((m) =>
+    m.code?.startsWith("menu:knowledge")
   )
   const systemMenus = menus.filter((m) =>
     ['system', 'settings'].includes(m.code?.toLowerCase())
+  )
+  const mainMenus = menus.filter((m) =>
+    !['system', 'settings'].includes(m.code?.toLowerCase()) &&
+    !m.code?.startsWith("menu:knowledge")
   )
 
   return (
@@ -221,6 +228,16 @@ export default function MainLayout() {
         </SidebarHeader>
 
         <SidebarContent>
+          {/* ── 知识 (Knowledge) ── */}
+          {knowledgeMenus.length > 0 && (
+            <SidebarGroup>
+              <SidebarGroupLabel>知识</SidebarGroupLabel>
+              <SidebarMenu>
+                {renderMenuItems(knowledgeMenus)}
+              </SidebarMenu>
+            </SidebarGroup>
+          )}
+
           <SidebarGroup>
             <SidebarGroupLabel>导航菜单</SidebarGroupLabel>
             <SidebarMenu>
