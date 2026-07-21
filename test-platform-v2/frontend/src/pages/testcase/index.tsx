@@ -40,7 +40,7 @@ import { AsyncState } from '@/components/state'
 import { Search, RotateCcw, Plus, Edit, Trash2, History } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase } from '@/api/testcase'
-import { formatNumberedText, formatStepActions, formatStepExpectations } from './caseListFormatters'
+import { formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import CaseDrawer from './CaseDrawer'
@@ -56,8 +56,8 @@ export default function TestCasePage() {
   // domains are loaded independently (used for tree + filter dropdowns)
   const [domains, setDomains] = useState<any[]>([])
 
-  // filter state
-  const [actTab, setActTab] = useState('')
+  // filter state (default to manual - api cases managed in apitest module)
+  const [actTab, setActTab] = useState('manual')
   const [selDomain, setSelDomain] = useState('')
   const [selModule, setSelModule] = useState('')
   const [priority, setPriority] = useState('')
@@ -113,6 +113,8 @@ export default function TestCasePage() {
   useEffect(() => { loadDomains() }, [loadDomains])
 
   const items = data?.items || []
+  // Sort newest first (created_at descending, fallback to id descending)
+  const sortedItems = useMemo(() => sortCasesNewestFirst(items), [items])
   const totalPages = data ? Math.ceil(data.total / data.page_size) : 1
 
   // ── Selection helpers ──
@@ -124,10 +126,10 @@ export default function TestCasePage() {
     })
   }
   const toggleSelectAll = () => {
-    if (selected.size === items.length) {
+    if (selected.size === sortedItems.length) {
       setSelected(new Set())
     } else {
-      setSelected(new Set(items.map((r: any) => r.id)))
+      setSelected(new Set(sortedItems.map((r: any) => r.id)))
     }
   }
 
@@ -158,9 +160,12 @@ export default function TestCasePage() {
     } finally { setBatchUpdating(false) }
   }
 
+  // Filter out "接口测试" domain (api cases managed in apitest module)
+  const visibleDomains = useMemo(() => domains.filter((d: any) => d.domain !== '接口测试'), [domains])
+
   // ── Domain tree data ──
   const domainTree = useMemo(() => {
-    return domains.map((d: any) => ({
+    return visibleDomains.map((d: any) => ({
       title: <span className="text-[13px]">{d.domain} <span className="text-muted-foreground">({d.count})</span></span>,
       key: d.domain,
       children: d.modules?.map((m: any) => ({
@@ -174,9 +179,9 @@ export default function TestCasePage() {
   // derived modules list
   const selModules = useMemo(() => {
     if (!selDomain) return []
-    const d = domains.find((x: any) => x.domain === selDomain)
+    const d = visibleDomains.find((x: any) => x.domain === selDomain)
     return d?.modules?.map((m: any) => ({ value: m.module, label: `${m.module} (${m.count})` })) || []
-  }, [selDomain, domains])
+  }, [selDomain, visibleDomains])
 
   // ── Actions ──
   const doDelete = async (id: number) => {
@@ -266,11 +271,11 @@ export default function TestCasePage() {
           <div className="flex flex-wrap items-center gap-2">
             <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); setPage(1) }}>
               <SelectTrigger className="w-[130px]" size="sm">
-                <SelectValue placeholder="按域筛选" />
+                <SelectValue placeholder="全部域" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
-                {domains.map((d: any) => (
+                <SelectItem value="">全部域</SelectItem>
+                {visibleDomains.map((d: any) => (
                   <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
                 ))}
               </SelectContent>
@@ -278,10 +283,10 @@ export default function TestCasePage() {
 
             <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[150px]" size="sm">
-                <SelectValue placeholder="按模块筛选" />
+                <SelectValue placeholder="全部模块" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="">全部模块</SelectItem>
                 {selModules.map((m: any) => (
                   <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                 ))}
@@ -290,17 +295,17 @@ export default function TestCasePage() {
 
             <Select value={priority || undefined} onValueChange={(v) => { setPriority(v || ''); setPage(1) }}>
               <SelectTrigger className="w-[100px]" size="sm">
-                <SelectValue placeholder="优先级" />
+                <SelectValue placeholder="全部优先级" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部</SelectItem>
+                <SelectItem value="">全部优先级</SelectItem>
                 {['P0', 'P1', 'P2', 'P3'].map((v) => (
                   <SelectItem key={v} value={v}>{v}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <InputGroup className="w-[220px]">
+            <InputGroup className="w-[240px]">
               <InputGroupAddon>
                 <Search className="size-3.5" />
               </InputGroupAddon>
@@ -312,7 +317,7 @@ export default function TestCasePage() {
               />
             </InputGroup>
 
-            <Button size="sm" onClick={() => setPage(1)}>
+            <Button size="sm" onClick={() => { setPage(1); refetch() }}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
@@ -371,7 +376,7 @@ export default function TestCasePage() {
                   <TableRow>
                     <TableHead className="w-[40px]">
                       <Checkbox
-                        checked={selected.size === items.length && items.length > 0}
+                        checked={selected.size === sortedItems.length && sortedItems.length > 0}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
@@ -386,7 +391,7 @@ export default function TestCasePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((r: any) => (
+                  {sortedItems.map((r: any) => (
                     <TableRow key={r.id}>
                       <TableCell>
                         <Checkbox
@@ -394,9 +399,11 @@ export default function TestCasePage() {
                           onCheckedChange={() => toggleSelect(r.id)}
                         />
                       </TableCell>
-                      <TableCell className="max-w-[120px] truncate">{r.module || '-'}</TableCell>
-                      <TableCell className="max-w-0 truncate">
-                        <span className="truncate">{r.title}</span>
+                      <TableCell className="max-w-[120px] truncate">
+                        <span className="line-clamp-1">{r.module || '......'}</span>
+                      </TableCell>
+                      <TableCell className="max-w-[180px] truncate">
+                        <span className="line-clamp-1" title={r.title}>{r.title || '......'}</span>
                       </TableCell>
                       <TableCell>
                         <Badge variant={PRIORITY_COLORS[r.priority] === 'red' ? 'destructive' : PRIORITY_COLORS[r.priority] === 'orange' ? 'secondary' : 'default'}>
@@ -404,13 +411,13 @@ export default function TestCasePage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="max-w-[140px] truncate text-xs">
-                        {formatNumberedText(r.preconditions) || '-'}
+                        <span className="line-clamp-1">{formatNumberedText(r.preconditions).join(' ') || '......'}</span>
                       </TableCell>
                       <TableCell className="max-w-[160px] truncate text-xs">
-                        {formatStepActions(r.steps) || '-'}
+                        <span className="line-clamp-1">{formatStepActions(r.steps).join(' ') || '......'}</span>
                       </TableCell>
                       <TableCell className="max-w-[160px] truncate text-xs">
-                        {formatStepExpectations(r.steps, r.expected_result) || '-'}
+                        <span className="line-clamp-1">{formatStepExpectations(r.steps, r.expected_result).join(' ') || '......'}</span>
                       </TableCell>
                       <TableCell>
                         <Badge variant={REVIEW_COLORS[r.review_status] || 'secondary'} className="text-[10px]">
@@ -477,7 +484,7 @@ export default function TestCasePage() {
       <CaseDrawer
         open={drawer}
         editing={editing}
-        domains={domains}
+        domains={visibleDomains}
         onClose={() => { setDrawer(false); setEditing(null) }}
         onSaved={onSaved}
       />
