@@ -8,12 +8,13 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import {
   cancelLanhuEvidenceJob,
+  deleteLanhuEvidenceJob,
   fetchLanhuEvidenceJobs,
   retryLanhuEvidenceJob,
 } from '@/api/lanhuEvidence'
 import type { LanhuEvidenceJob } from '@/api/lanhuEvidence'
 import {
-  Loader2, Plus, RefreshCw, XCircle, CheckCircle2, AlertTriangle, Clock, ExternalLink,
+  Loader2, Plus, RefreshCw, XCircle, CheckCircle2, AlertTriangle, Clock, ExternalLink, Trash2,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
@@ -123,6 +124,19 @@ export default function EvidenceTaskPanel({ onViewExtraction, onNewTask }: Props
       loadJobs()
     } catch (e: any) {
       toast.error(e?.message || '重试失败')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleDelete = async (jobId: number) => {
+    setActionLoading(jobId)
+    try {
+      await deleteLanhuEvidenceJob(jobId)
+      toast.success('已删除任务')
+      loadJobs()
+    } catch (e: any) {
+      toast.error(e?.message || '删除失败')
     } finally {
       setActionLoading(null)
     }
@@ -253,15 +267,33 @@ export default function EvidenceTaskPanel({ onViewExtraction, onNewTask }: Props
                         取消
                       </Button>
                     )}
-                    {isDone && onViewExtraction && (
+                    {isDone && onViewExtraction && (() => {
+                      let hasDocId = false
+                      try {
+                        const ir = job.import_result_json ? JSON.parse(job.import_result_json) : null
+                        hasDocId = !!ir?.requirement_doc_id
+                      } catch { /* parse error, hide button */ }
+                      return hasDocId ? (
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          className="h-6 text-[10px] px-2"
+                          onClick={() => onViewExtraction(job)}
+                        >
+                          <ExternalLink className="size-3 mr-0.5" />
+                          查看功能拆分
+                        </Button>
+                      ) : null
+                    })()}
+                    {!isActive && (
                       <Button
                         size="xs"
-                        variant="outline"
-                        className="h-6 text-[10px] px-2"
-                        onClick={() => onViewExtraction(job)}
+                        variant="ghost"
+                        className="h-6 text-[10px] px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 ml-auto"
+                        disabled={actionLoading === job.id}
+                        onClick={() => handleDelete(job.id)}
                       >
-                        <ExternalLink className="size-3 mr-0.5" />
-                        查看功能拆分
+                        <Trash2 className="size-3" />
                       </Button>
                     )}
                   </div>

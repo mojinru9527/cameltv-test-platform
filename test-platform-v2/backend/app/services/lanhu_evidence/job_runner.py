@@ -227,7 +227,7 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
                 screenshot_service.capture_page_segments(target_url, output_dir, page_key)
             )
         except Exception as exc:  # noqa: BLE001
-            capture = screenshot_service.CaptureResult(error=str(exc)[:300])
+            capture = screenshot_service.CaptureResult(error=f"[页{order+1}/{len(pages)}] {str(exc)[:280]}")
 
         if capture.segments:
             capture_status = "success"

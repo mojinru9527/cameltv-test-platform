@@ -401,18 +401,22 @@ def import_job(
     job = _get_job(db, job_id, project_id)
     if job.status not in ("success", "success_with_warnings"):
         raise APIException(code=400, msg="任务未成功完成，无法导入", http_status=400)
-    # 质量门禁：仅 import_ready=true 的任务可导入；success_with_warnings 一律 409。
     import json as _json
     try:
         quality = _json.loads(job.quality_json or "{}")
     except (_json.JSONDecodeError, TypeError):
         quality = {}
-    if job.status != "success" or not quality.get("import_ready"):
-        raise APIException(
-            code=409,
-            msg="证据包质量未达标（存在缺截图/截断/缺文本/未审 OCR 页），禁止导入",
-            http_status=409,
-        )
+    # 质量门禁调整为 advisory：允许 success_with_warnings 手动导入，但在结果中附带警告
+    quality_warnings: list[str] = []
+    if not quality.get("import_ready"):
+        if quality.get("pages_missing_capture"):
+            quality_warnings.append(f"缺截图页: {quality['pages_missing_capture']}")
+        if quality.get("pages_truncated"):
+            quality_warnings.append(f"截断页: {quality['pages_truncated']}")
+        if quality.get("pages_missing_text"):
+            quality_warnings.append(f"缺文本页: {quality['pages_missing_text']}")
+        if quality.get("pages_missing_ocr_review"):
+            quality_warnings.append(f"待审核 OCR 页: {quality['pages_missing_ocr_review']}")
 
     from app.services.lanhu_evidence import import_service
 
@@ -425,4 +429,56 @@ def import_job(
     job = _get_job(db, job_id, project_id)
     job.import_result_json = _json.dumps(result, ensure_ascii=False, default=str)
     db.commit()
+    if quality_warnings:
+        result["_quality_warnings"] = quality_warnings
     return R.ok(result)
+
+
+@router.delete("/jobs/{job_id}", response_model=R[dict], summary="删除证据包任务及其所有关联数据")
+def delete_job(
+    job_id: int,
+    current: CurrentUser = Depends(require_permission("lanhu_evidence:run")),
+    db: Session = Depends(get_db),
+):
+    """删除证据包任务：级联删除页面、资产、OCR块和任务自身，并清理磁盘存储目录。"""
+    import shutil as _shutil
+    from app.models.lanhu_evidence import LanhuOcrBlock as _OcrBlock
+
+    project_id = current.project_id or 0
+    job = _get_job(db, job_id, project_id)
+
+    # 1. 清理磁盘存储目录（best-effort）
+    if job.storage_dir:
+        try:
+            dir_path = Path(job.storage_dir).resolve()
+            if dir_path.exists():
+                _shutil.rmtree(str(dir_path), ignore_errors=True)
+        except Exception:  # noqa: BLE001
+            pass
+
+    # 2. 级联删除关联数据库记录（子→父）
+    # 先收集关联 page_id
+    page_ids_raw = db.execute(
+        select(LanhuEvidencePage.id).where(LanhuEvidencePage.job_id == job_id)
+    ).scalars().all()
+    page_id_list = list(page_ids_raw)
+
+    # 删除 OCR 块
+    db.query(_OcrBlock).filter(_OcrBlock.job_id == job_id).delete(synchronize_session=False)
+    # 删除页面级资产
+    if page_id_list:
+        db.query(LanhuEvidenceAsset).filter(
+            LanhuEvidenceAsset.page_id.in_(page_id_list)
+        ).delete(synchronize_session=False)
+    # 删除 job 级资产（无 page_id 的资产）
+    db.query(LanhuEvidenceAsset).filter(LanhuEvidenceAsset.job_id == job_id).delete(synchronize_session=False)
+    # 删除页面
+    db.query(LanhuEvidencePage).filter(LanhuEvidencePage.job_id == job_id).delete(synchronize_session=False)
+    # 删除 job
+    db.delete(job)
+    db.commit()
+    return R.ok({"deleted": True, "job_id": job_id})
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Endpoint registry tip: add new routes above this line to keep them discoverable.
+# ══════════════════════════════════════════════════════════════════════════════
