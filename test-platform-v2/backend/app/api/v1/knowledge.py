@@ -271,6 +271,8 @@ def reembed(
 @router.get("/sources", response_model=R[Page[KnowledgeSourceBrief]], summary="知识源列表")
 def list_sources(
     source_type: str | None = Query(None),
+    para_category: str | None = Query(None),
+    knowledge_domain: str | None = Query(None),
     status: str | None = Query(None),
     keyword: str | None = Query(None),
     page: int = Query(1, ge=1),
@@ -280,7 +282,8 @@ def list_sources(
 ):
     rows, total = source_service.list_sources(
         db, current.project_id or 0,
-        source_type=source_type, status=status, keyword=keyword,
+        source_type=source_type, para_category=para_category,
+        knowledge_domain=knowledge_domain, status=status, keyword=keyword,
         page=page, page_size=page_size,
     )
     return R.ok(Page(

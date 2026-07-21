@@ -99,6 +99,8 @@ def list_sources(
     project_id: int,
     *,
     source_type: str | None = None,
+    para_category: str | None = None,
+    knowledge_domain: str | None = None,
     status: str | None = None,
     keyword: str | None = None,
     page: int = 1,
@@ -109,6 +111,12 @@ def list_sources(
     if source_type:
         stmt = stmt.where(KnowledgeSource.source_type == source_type)
         cnt = cnt.where(KnowledgeSource.source_type == source_type)
+    if para_category:
+        stmt = stmt.where(KnowledgeSource.para_category == para_category)
+        cnt = cnt.where(KnowledgeSource.para_category == para_category)
+    if knowledge_domain:
+        stmt = stmt.where(KnowledgeSource.knowledge_domain == knowledge_domain)
+        cnt = cnt.where(KnowledgeSource.knowledge_domain == knowledge_domain)
     if status:
         stmt = stmt.where(KnowledgeSource.status == status)
         cnt = cnt.where(KnowledgeSource.status == status)

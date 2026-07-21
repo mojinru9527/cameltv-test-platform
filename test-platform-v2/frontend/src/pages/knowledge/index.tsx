@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
@@ -11,26 +11,35 @@ import EntityTab from './components/EntityTab'
 import IterationTab from './components/IterationTab'
 import WikiTab from './components/WikiTab'
 import WikiDiffTab from './components/WikiDiffTab'
+import ProjectTab from './components/ProjectTab'
+import PlatformTab from './components/PlatformTab'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 /**
- * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表 / M2 混合检索 / M3 图谱可视化 / M6 迭代知识包）。
- * 概览 / 检索 / 知识源 / AI 审核台 / 图谱 / 实体 / 迭代 / Wiki 知识库 / 知识差异对比 九个 Tab。
+ * 知识中心 — PARA 视角（项目知识 / 平台研发） + RAG 技术视图。
  */
 export default function KnowledgePage() {
   useDocumentTitle('知识中心')
-  const initialTab = new URLSearchParams(window.location.search).get('tab') || 'overview'
+  const initialTab = new URLSearchParams(window.location.search).get('tab') || 'project'
   const [tab, setTab] = useState(initialTab)
 
   return (
     <div className="space-y-4">
       <PageHeader
         title="知识中心"
-        description="需求 / 接口 / 用例 / 缺陷 / 执行结果统一沉淀为可检索、可追溯、可复用的知识。"
+        description="项目知识（需求/接口/用例）+ 平台研发知识（踩坑记录/设计决策/最佳实践）统一沉淀、可检索、可复用。"
       />
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="overflow-x-auto flex-nowrap">
+          <TabsTrigger value="project">
+            <FolderOpen className="size-4 mr-1" />
+            项目知识
+          </TabsTrigger>
+          <TabsTrigger value="platform">
+            <Sparkles className="size-4 mr-1" />
+            平台研发
+          </TabsTrigger>
           <TabsTrigger value="overview">
             <LayoutDashboard className="size-4 mr-1" />
             概览
@@ -69,6 +78,12 @@ export default function KnowledgePage() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="project" className="mt-4">
+          {tab === 'project' && <ProjectTab />}
+        </TabsContent>
+        <TabsContent value="platform" className="mt-4">
+          {tab === 'platform' && <PlatformTab />}
+        </TabsContent>
         <TabsContent value="overview" className="mt-4">
           {tab === 'overview' && <OverviewTab />}
         </TabsContent>

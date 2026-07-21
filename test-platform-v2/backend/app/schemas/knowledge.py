@@ -18,6 +18,10 @@ class KnowledgeSourceOut(BaseModel):
     content_hash: str
     version: str
     iteration_id: int | None = None
+    para_category: str | None = None
+    knowledge_domain: str | None = None
+    freshness_score: float | None = None
+    last_verified_at: datetime | None = None
     status: str
     raw_content: str = ""
     metadata_json: str = "{}"
@@ -36,6 +40,10 @@ class KnowledgeSourceBrief(BaseModel):
     title: str
     source_ref: str
     version: str
+    para_category: str | None = None
+    knowledge_domain: str | None = None
+    freshness_score: float | None = None
+    last_verified_at: datetime | None = None
     status: str
     created_at: datetime | None = None
 
