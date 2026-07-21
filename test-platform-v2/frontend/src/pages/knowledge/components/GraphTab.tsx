@@ -2,12 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Network } from 'vis-network'
 import { DataSet } from 'vis-data'
 import { toast } from 'sonner'
-import { RefreshCw, Maximize2, Plus, MinusCircle } from '@/lib/icons'
+import { RefreshCw, Maximize2, Plus, MinusCircle, GitMerge } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SkeletonText } from '@/components/ui/skeleton'
-import { fetchGraphView, triggerEntityExtract } from '@/api/knowledge'
+import { fetchGraphView, triggerEntityExtract, evolveGraph } from '@/api/knowledge'
+import type { GraphEvolveResult } from '@/api/knowledge'
 import type { GraphView } from '@/types'
 
 // ── 实体类型着色 ──
@@ -47,19 +48,23 @@ export default function GraphTab() {
   const [selected, setSelected] = useState<{ id: string; name: string; type: string; description: string; confidence: number } | null>(null)
   const [extracting, setExtracting] = useState(false)
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set())
+  const [evolving, setEvolving] = useState(false)
+  const [evolveResult, setEvolveResult] = useState<GraphEvolveResult | null>(null)
+  const [domain, setDomain] = useState<string>('project')
 
-  const loadGraph = useCallback(async () => {
+  const loadGraph = useCallback(async (d?: string) => {
+    const dom = d ?? domain
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchGraphView(200)
+      const data = await fetchGraphView(200, dom)
       setGraphData(data)
     } catch (e: any) {
       setError(e?.message || '加载图谱数据失败')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [domain])
 
   // 初始加载
   useEffect(() => {
@@ -210,6 +215,21 @@ export default function GraphTab() {
     }
   }
 
+  const handleEvolve = async () => {
+    setEvolving(true)
+    setEvolveResult(null)
+    try {
+      const result = await evolveGraph()
+      setEvolveResult(result)
+      toast.success(result.message || '演化完成')
+      loadGraph()
+    } catch (e: any) {
+      toast.error(e?.message || '演化失败')
+    } finally {
+      setEvolving(false)
+    }
+  }
+
   // ── Loading ──
   if (loading) {
     return (
@@ -227,7 +247,7 @@ export default function GraphTab() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <p className="text-sm text-muted-foreground">{error}</p>
-        <Button variant="outline" size="sm" onClick={loadGraph}>
+        <Button variant="outline" size="sm" onClick={() => loadGraph()}>
           <RefreshCw className="size-4 mr-1" />
           重试
         </Button>
@@ -264,6 +284,23 @@ export default function GraphTab() {
       <div className="flex-1 relative rounded-lg border overflow-hidden bg-background">
         {/* 工具栏 */}
         <div className="absolute top-2 right-2 z-10 flex gap-1">
+          {/* 知识域切换 */}
+          <div className="flex rounded-md border bg-background mr-1">
+            <button
+              type="button"
+              className={`px-2 py-1 text-xs rounded-l-md transition-colors ${domain === 'project' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+              onClick={() => { setDomain('project'); loadGraph('project') }}
+            >
+              项目知识
+            </button>
+            <button
+              type="button"
+              className={`px-2 py-1 text-xs rounded-r-md transition-colors ${domain === 'platform' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+              onClick={() => { setDomain('platform'); loadGraph('platform') }}
+            >
+              平台研发
+            </button>
+          </div>
           <Button
             variant="secondary"
             size="icon"
@@ -300,6 +337,16 @@ export default function GraphTab() {
           >
             <RefreshCw className={`size-4 mr-1 ${extracting ? 'animate-spin' : ''}`} />
             提取
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleEvolve}
+            disabled={evolving}
+            title="概念地图自演化：合并重复实体、发现隐含关系"
+          >
+            <GitMerge className={`size-4 mr-1 ${evolving ? 'animate-spin' : ''}`} />
+            演化
           </Button>
         </div>
 
@@ -378,6 +425,31 @@ export default function GraphTab() {
                 <p>边 {graphData.edges.length}</p>
               </CardContent>
             </Card>
+
+            {evolveResult && (
+              <Card className="border-primary/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-1.5">
+                    <GitMerge className="size-4 text-primary" />
+                    演化结果
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-sm text-muted-foreground">
+                  {evolveResult.merged > 0 && (
+                    <p>合并重复实体: <span className="font-medium text-foreground">{evolveResult.merged}</span></p>
+                  )}
+                  {evolveResult.confidence_updates > 0 && (
+                    <p>更新置信度: <span className="font-medium text-foreground">{evolveResult.confidence_updates}</span></p>
+                  )}
+                  {evolveResult.new_relations > 0 && (
+                    <p>新隐含关系: <span className="font-medium text-foreground">{evolveResult.new_relations}</span></p>
+                  )}
+                  {evolveResult.merged === 0 && evolveResult.new_relations === 0 && (
+                    <p className="text-xs">图谱已是最优状态，无需演化</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>

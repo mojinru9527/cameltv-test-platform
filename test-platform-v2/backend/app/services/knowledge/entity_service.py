@@ -9,6 +9,7 @@ import json
 import logging
 import re
 from collections import defaultdict
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -455,3 +456,175 @@ def extract_and_build_graph_in_new_session(
         "skipped": skipped,
         "message": f"提取 {extracted} 实体 + {relations_count} 关系，{skipped} 重复跳过",
     }
+
+
+# ── 概念地图自演化 ──
+
+def evolve_graph_in_new_session(project_id: int) -> dict:
+    """概念地图自演化：合并重复实体 + 更新置信度 + 发现隐含关系。
+
+    独立 Session，供定时任务或手动触发调用。
+    返回演化统计信息。
+    """
+    db = SessionLocal()
+    merged = 0
+    confidence_updates = 0
+    new_relations = 0
+    try:
+        # ── 1. 合并重复实体（同类型 + 同名称） ──
+        all_entities = list(
+            db.scalars(
+                select(KnowledgeEntity)
+                .where(KnowledgeEntity.project_id == project_id)
+                .order_by(KnowledgeEntity.id)
+            ).all()
+        )
+
+        # 按 (entity_type, name) 分组，找出重复
+        groups: dict[tuple[str, str], list[KnowledgeEntity]] = defaultdict(list)
+        for e in all_entities:
+            key = (e.entity_type, e.name.strip().lower())
+            groups[key].append(e)
+
+        for (etype, name), group in groups.items():
+            if len(group) <= 1:
+                continue
+            # 保留最早创建的实体为主实体，合并其余
+            master = group[0]
+            for dup in group[1:]:
+                # 将重复实体的关系重定向到主实体
+                rels = list(
+                    db.scalars(
+                        select(KnowledgeRelation).where(
+                            KnowledgeRelation.project_id == project_id,
+                            (KnowledgeRelation.from_entity_id == dup.id)
+                            | (KnowledgeRelation.to_entity_id == dup.id),
+                        )
+                    ).all()
+                )
+                for rel in rels:
+                    if rel.from_entity_id == dup.id:
+                        rel.from_entity_id = master.id
+                    if rel.to_entity_id == dup.id:
+                        rel.to_entity_id = master.id
+                    rel.metadata_json = json.dumps({
+                        **json.loads(rel.metadata_json or "{}"),
+                        "merged_from": dup.id,
+                    })
+
+                # 提高主实体置信度
+                master.confidence = min(1.0, master.confidence + dup.confidence * 0.3)
+                # 标记重复实体为已合并
+                dup.description = f"[已合并至 #{master.id}] {dup.description}"
+                dup.confidence = 0.0
+                merged += 1
+
+        if merged > 0:
+            db.flush()
+
+        # ── 2. 基于关系数量更新置信度 ──
+        from sqlalchemy import func as sa_func
+
+        for entity in all_entities:
+            if entity.confidence <= 0:
+                continue
+            rel_count = db.scalar(
+                sa_func.count(KnowledgeRelation.id).where(
+                    KnowledgeRelation.project_id == project_id,
+                    (KnowledgeRelation.from_entity_id == entity.id)
+                    | (KnowledgeRelation.to_entity_id == entity.id),
+                )
+            ) or 0
+            # 关系越多置信度越高（但上限为已有置信度与基于关系数的置信度的加权平均）
+            rel_confidence = min(1.0, rel_count * 0.15)
+            new_conf = round(entity.confidence * 0.7 + rel_confidence * 0.3, 3)
+            if abs(new_conf - entity.confidence) > 0.01:
+                entity.confidence = new_conf
+                confidence_updates += 1
+
+        if confidence_updates > 0:
+            db.flush()
+
+        # ── 3. 发现隐含关系：共享相同 chunk 来源的实体间建立 related_to 关系 ──
+        # 找出所有 source_id（关联到 knowledge_source 的实体）
+        entity_source_map: dict[int, list[KnowledgeEntity]] = defaultdict(list)
+        for e in all_entities:
+            if e.source_id:
+                entity_source_map[e.source_id].append(e)
+
+        existing_relation_pairs: set[tuple[int, int, str]] = set()
+        for rel in db.scalars(
+            select(KnowledgeRelation).where(KnowledgeRelation.project_id == project_id)
+        ).all():
+            existing_relation_pairs.add((rel.from_entity_id, rel.to_entity_id, rel.relation_type))
+
+        for source_id, entities in entity_source_map.items():
+            if len(entities) < 2:
+                continue
+            for i in range(len(entities)):
+                for j in range(i + 1, len(entities)):
+                    a, b = entities[i], entities[j]
+                    if a.confidence <= 0 or b.confidence <= 0:
+                        continue
+                    # 跳过已有关系
+                    if (a.id, b.id, "related_to") in existing_relation_pairs:
+                        continue
+                    if (b.id, a.id, "related_to") in existing_relation_pairs:
+                        continue
+                    rel = KnowledgeRelation(
+                        project_id=project_id,
+                        from_entity_id=a.id,
+                        relation_type="related_to",
+                        to_entity_id=b.id,
+                        confidence=round(min(a.confidence, b.confidence) * 0.6, 3),
+                        evidence_chunk_ids=json.dumps([source_id]),
+                    )
+                    db.add(rel)
+                    existing_relation_pairs.add((a.id, b.id, "related_to"))
+                    new_relations += 1
+
+        db.commit()
+
+        # ── 4. 记录演化事件为知识源 ──
+        if merged > 0 or new_relations > 0:
+            try:
+                from app.services.knowledge.source_service import record_source
+                event_content = json.dumps({
+                    "merged_entities": merged,
+                    "confidence_updates": confidence_updates,
+                    "new_relations": new_relations,
+                    "timestamp": datetime.now().isoformat(),
+                }, ensure_ascii=False)
+                record_source(
+                    db,
+                    project_id=project_id,
+                    source_type="graph_evolution",
+                    source_id=None,
+                    title=f"图谱自演化 {datetime.now().strftime('%Y-%m-%d %H:%M')}",
+                    source_ref="",
+                    raw_content=event_content,
+                    metadata={
+                        "merged": merged,
+                        "confidence_updates": confidence_updates,
+                        "new_relations": new_relations,
+                    },
+                )
+                db.commit()
+            except Exception:
+                logger.exception("Failed to record evolution event")
+
+        summary = {
+            "merged": merged,
+            "confidence_updates": confidence_updates,
+            "new_relations": new_relations,
+            "message": f"合并 {merged} 重复实体, 更新 {confidence_updates} 置信度, 发现 {new_relations} 隐含关系",
+        }
+        logger.info("Graph evolution project=%s: %s", project_id, summary["message"])
+        return summary
+
+    except Exception:
+        logger.exception("Graph evolution failed for project %s", project_id)
+        db.rollback()
+        return {"merged": 0, "confidence_updates": 0, "new_relations": 0, "error": str(e)}
+    finally:
+        db.close()
