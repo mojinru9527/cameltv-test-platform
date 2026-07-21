@@ -8,7 +8,6 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, Query, Request
-from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -272,8 +271,6 @@ def reembed(
 @router.get("/sources", response_model=R[Page[KnowledgeSourceBrief]], summary="知识源列表")
 def list_sources(
     source_type: str | None = Query(None),
-    para_category: str | None = Query(None),
-    knowledge_domain: str | None = Query(None),
     status: str | None = Query(None),
     keyword: str | None = Query(None),
     page: int = Query(1, ge=1),
@@ -283,8 +280,7 @@ def list_sources(
 ):
     rows, total = source_service.list_sources(
         db, current.project_id or 0,
-        source_type=source_type, para_category=para_category,
-        knowledge_domain=knowledge_domain, status=status, keyword=keyword,
+        source_type=source_type, status=status, keyword=keyword,
         page=page, page_size=page_size,
     )
     return R.ok(Page(
@@ -344,59 +340,6 @@ def deprecate_source(
     _audit(req, current, db, "knowledge:deprecate", f"source#{source_id}")
     db.commit()
     return R.ok({"id": source_id, "status": "deprecated"})
-
-
-@router.post("/sources/{source_id}/verify", response_model=R[KnowledgeSourceBrief], summary="验证知识源保鲜度")
-def verify_source(
-    source_id: int,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("knowledge:view")),
-    db: Session = Depends(get_db),
-):
-    """标记知识源为已验证：设置 last_verified_at = now()，freshness_score = 1.0。"""
-    row = source_service.verify_source(db, source_id, current.project_id or 0)
-    if not row:
-        return R(code=404, msg="知识源不存在")
-    db.commit()
-    _audit(req, current, db, "knowledge:verify", f"source#{source_id}")
-    db.commit()
-    db.refresh(row)
-    return R.ok(KnowledgeSourceBrief.model_validate(row))
-
-
-class ClassifySourceRequest(BaseModel):
-    para_category: str | None = None
-    knowledge_domain: str | None = None
-
-
-@router.patch("/sources/{source_id}/classify", response_model=R[KnowledgeSourceBrief], summary="更新知识源 PARA 分类")
-def classify_source(
-    source_id: int,
-    body: ClassifySourceRequest,
-    req: Request,
-    current: CurrentUser = Depends(require_permission("knowledge:manage")),
-    db: Session = Depends(get_db),
-):
-    """更新知识源的 para_category / knowledge_domain。"""
-    valid_cats = {"inbox", "project", "area", "resource", "archive", "wiki", "skill"}
-    valid_domains = {"project", "platform"}
-    if body.para_category is not None and body.para_category not in valid_cats:
-        return R(code=400, msg=f"无效的 para_category，有效值: {valid_cats}")
-    if body.knowledge_domain is not None and body.knowledge_domain not in valid_domains:
-        return R(code=400, msg=f"无效的 knowledge_domain，有效值: {valid_domains}")
-
-    row = source_service.classify_source(
-        db, source_id, current.project_id or 0,
-        para_category=body.para_category, knowledge_domain=body.knowledge_domain,
-    )
-    if not row:
-        return R(code=404, msg="知识源不存在")
-    db.commit()
-    _audit(req, current, db, "knowledge:classify", f"source#{source_id}",
-           f"para={body.para_category} domain={body.knowledge_domain}")
-    db.commit()
-    db.refresh(row)
-    return R.ok(KnowledgeSourceBrief.model_validate(row))
 
 
 # ═══════════════════════════════════════════════════════

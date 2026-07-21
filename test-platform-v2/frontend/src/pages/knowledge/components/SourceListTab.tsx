@@ -16,17 +16,10 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { fetchKnowledgeSources, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { fetchKnowledgeSources, fetchSourceChunks } from '@/api/knowledge'
 import type { KnowledgeChunk, KnowledgeSource } from '@/types'
-import { Loader2, CheckCircle2 } from '@/lib/icons'
-import { toast } from 'sonner'
+import { Loader2 } from '@/lib/icons'
 
 const TYPES = [
   { v: '_all', l: '全部类型' },
@@ -70,39 +63,13 @@ export default function SourceListTab() {
     load()
   }, [load])
 
-  const [verifying, setVerifying] = useState<Set<number>>(new Set())
-
   const viewChunks = (src: KnowledgeSource) => {
     setSelected(src)
     setChunksLoading(true)
-    setChunks([])
     fetchSourceChunks(src.id)
       .then(setChunks)
       .catch(() => setChunks([]))
       .finally(() => setChunksLoading(false))
-  }
-
-  const closeDetail = () => {
-    setSelected(null)
-    setChunks([])
-  }
-
-  const handleVerify = async (sourceId: number, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setVerifying((prev) => new Set(prev).add(sourceId))
-    try {
-      await verifyKnowledgeSource(sourceId)
-      toast.success('已验证')
-      load()
-    } catch {
-      toast.error('验证失败')
-    } finally {
-      setVerifying((prev) => {
-        const next = new Set(prev)
-        next.delete(sourceId)
-        return next
-      })
-    }
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -175,20 +142,9 @@ export default function SourceListTab() {
                     {s.created_at?.slice(0, 10)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-0.5">
-                      <Button variant="ghost" size="sm" onClick={() => viewChunks(s)}>
-                        查看
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={verifying.has(s.id)}
-                        onClick={(e) => handleVerify(s.id, e)}
-                        title="验证保鲜度"
-                      >
-                        <CheckCircle2 className="size-3.5" />
-                      </Button>
-                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => viewChunks(s)}>
+                      查看切片
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -214,93 +170,40 @@ export default function SourceListTab() {
         </Button>
       </div>
 
-      {/* ── 知识源详情弹窗 ── */}
-      <Dialog open={!!selected} onOpenChange={(open) => { if (!open) closeDetail() }}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base">
-              切片详情 · {selected?.title}
-            </DialogTitle>
-            <DialogDescription>
-              <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                {selected?.source_type && (
-                  <Badge variant="secondary">{TYPE_LABEL[selected.source_type] ?? selected.source_type}</Badge>
-                )}
-                {selected?.para_category && (
-                  <Badge variant="outline">{selected.para_category}</Badge>
-                )}
-                {selected?.knowledge_domain && (
-                  <Badge variant="outline">{selected.knowledge_domain === 'platform' ? '平台研发' : '项目知识'}</Badge>
-                )}
-                {selected?.status && (
-                  <Badge variant={selected.status === 'deprecated' ? 'destructive' : 'default'}>{selected.status}</Badge>
-                )}
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* 元数据摘要 */}
-          {selected && (
-            <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
-              <div>
-                <span className="font-medium text-foreground">保鲜评分</span>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className={`inline-block size-2 rounded-full ${(selected.freshness_score ?? 1) >= 0.8 ? 'bg-green-500' : (selected.freshness_score ?? 1) >= 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`} />
-                  <span>{((selected.freshness_score ?? 1) * 100).toFixed(0)}%</span>
-                </div>
-              </div>
-              <div>
-                <span className="font-medium text-foreground">最后验证</span>
-                <div className="mt-0.5">{selected.last_verified_at ? new Date(selected.last_verified_at).toLocaleDateString('zh-CN') : '未验证'}</div>
-              </div>
-              <div>
-                <span className="font-medium text-foreground">创建时间</span>
-                <div className="mt-0.5">{selected.created_at?.slice(0, 10) || '—'}</div>
-              </div>
-              {selected.version && (
-                <div className="col-span-3">
-                  <span className="font-medium text-foreground">版本</span>
-                  <span className="ml-1">{selected.version}</span>
-                </div>
-              )}
-              {selected.source_ref && (
-                <div className="col-span-3">
-                  <span className="font-medium text-foreground">来源</span>
-                  <span className="ml-1">{selected.source_ref}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <div className="text-xs font-medium text-muted-foreground">
-              切片列表 ({chunks.length})
-            </div>
+      {selected && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">
+              切片 · {selected.title}
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                （embedding 将在 M2 生成）
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
             {chunksLoading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="size-5 animate-spin text-muted-foreground" />
-              </div>
+              <Loader2 className="size-5 animate-spin text-muted-foreground" />
             ) : chunks.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-4 text-center">该知识源暂无切片</div>
+              <div className="text-sm text-muted-foreground">该知识源暂无切片</div>
             ) : (
               chunks.map((c) => (
-                <div key={c.id} className="rounded-md border p-3">
-                  <div className="flex items-center gap-2 mb-1.5">
+                <div key={c.id} className="rounded-md border p-2">
+                  <div className="flex items-center gap-2 mb-1">
                     <Badge variant="secondary">{c.chunk_type}</Badge>
                     <span className="text-xs font-medium">{c.title}</span>
                     <span className="ml-auto text-xs text-muted-foreground">
                       {c.token_count} tokens
                     </span>
                   </div>
-                  <pre className="whitespace-pre-wrap break-words text-xs text-muted-foreground max-h-48 overflow-auto bg-muted/50 rounded p-2">
+                  <pre className="whitespace-pre-wrap break-words text-xs text-muted-foreground max-h-40 overflow-auto">
                     {c.content}
                   </pre>
                 </div>
               ))
             )}
-          </div>
-        </DialogContent>
-      </Dialog>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

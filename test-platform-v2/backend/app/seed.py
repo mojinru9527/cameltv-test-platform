@@ -16,26 +16,20 @@ _MENUS = [
     ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
     ("menu:requirement", "需求文档", "", "/requirement", "FileTextOutlined", 3),
     ("menu:versionmission", "版本测试任务", "", "/version-mission", "GitBranchOutlined", 4),
-    # ── 知识中心（独立分组）──
-    ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 5),
-    ("menu:knowledge:project", "项目知识", "menu:knowledge", "/knowledge?tab=project", "FolderOpenOutlined", 1),
-    ("menu:knowledge:platform", "平台研发", "menu:knowledge", "/knowledge?tab=platform", "SparklesOutlined", 2),
-    ("menu:knowledge:graph", "知识图谱", "menu:knowledge", "/knowledge?tab=graph", "GitBranchOutlined", 3),
-    ("menu:knowledge:artifacts", "AI审核台", "menu:knowledge", "/knowledge?tab=artifacts", "FileTextOutlined", 4),
-    # ── 其余菜单 ──
-    ("menu:mindmap", "用例脑图", "", "/mindmap", "ShareAltOutlined", 6),
-    ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 7),
-    ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 8),
-    ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 9),
-    ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 10),
-    ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 11),
-    ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 12),
-    ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 13),
-    ("menu:system", "系统管理", "", "/system", "SettingOutlined", 14),
-    ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 15),
-    ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 16),
-    ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 17),
-    ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 18),
+    ("menu:mindmap", "用例脑图", "", "/mindmap", "ShareAltOutlined", 5),
+    ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 6),
+    ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 7),
+    ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 8),
+    ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 9),
+    ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 10),
+    ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 11),
+    ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 12),
+    ("menu:system", "系统管理", "", "/system", "SettingOutlined", 13),
+    ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 14),
+    ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 15),
+    ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 16),
+    ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 17),
+    ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 18),
     ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 19),
     ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 20),
 ]
@@ -186,7 +180,6 @@ _TESTER_MENUS = {
     "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
     "menu:perftest",
-    "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
 }
 
 
@@ -212,7 +205,7 @@ def run_seed() -> None:
             db, Permission, defaults={"name": "超级权限", "type": "api"}, code="*",
         )
 
-        # 2) 菜单 + 操作权限点（两遍：先创建全部菜单，再回填 parent_id）
+        # 2) 菜单 + 操作权限点
         code_to_perm: dict[str, Permission] = {}
         for code, name, _parent, path, icon, sort in _MENUS:
             perm, _ = _get_or_create(
@@ -221,11 +214,6 @@ def run_seed() -> None:
                 code=code,
             )
             code_to_perm[code] = perm
-        # 第二遍：回填 parent_id
-        for code, name, parent_code, path, icon, sort in _MENUS:
-            if parent_code and parent_code in code_to_perm:
-                perm = code_to_perm[code]
-                perm.parent_id = code_to_perm[parent_code].id
         for code, name, ptype in _ACTIONS:
             perm, _ = _get_or_create(
                 db, Permission, defaults={"name": name, "type": ptype}, code=code,

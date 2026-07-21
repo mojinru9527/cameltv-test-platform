@@ -163,13 +163,8 @@ git worktree add ../CamelTv-w4 -b feature/batch-{N4}-{name4} origin/develop
 2. **PM**：拆成 30–60 分钟可完成的任务，每个任务含描述/验收标准/涉及文件/参考。**不加 PRD 外的「豪华」需求**。
 3. **Design**：只输出真实代码能落地的规范；若前端已实现则**反向回填**规范并做设计走查（用「文件:行号」锚点）。UI 细节走 `cameltv-ui-conventions` skill。API/模块接口设计不确定时，用 `design-an-interface` skill 并行生成多套方案对比；UI/状态机不确定时，用 `prototype` skill 做一次性原型验证后再写规范。
 4. **Dev**：**TDD 红绿重构为默认编码方法**（使用 `tdd` skill：先写失败测试→最小实现→重构→循环）。按切片（Slice）推进：📝方案→💻编码→🔍自测→✅审批→🚀合入。每 batch 结束更新看板。编码前扫一遍 `cameltv-bug-guard` skill 避免重复踩坑。
-   - **KB 检索**：编码前检索知识库中本次修改模块的历史缺陷和已知问题模式（`chunk_type=platform_knowledge` + `defect_case`）。检索到的每个相关问题须在代码中明确处理或在 commit message 中注明豁免理由。
-5. **QA**：默认立场「需要改进」。证据驱动——每个结论要有截图/日志/指标。首个实现必有 3–5 个问题，「零问题/满分」是红旗。缺陷按 P0–P3 定级。
-   - **KB 辅助定级**：出具 QA 报告前，检索知识库中与被测模块相关的历史缺陷模式。相似历史缺陷须在报告中列出，用于辅助缺陷定级（P0–P3）和评估回归风险。
-   **遇到硬 bug 或性能回归时，走 `diagnose` skill 的纪律化诊断循环**（复现→最小化→假设→插桩→修→回归测试），不靠猜测修。
-6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**合入前对关键模块用 `review` skill 做双轴审查**（Standards 轴：是否遵循项目规范 + Spec 轴：是否匹配 PRD/issue 的验收标准），并行子代理出报告。**每 3–5 个 batch 用 `improve-codebase-architecture` skill 做一次架构体检**（结合 CONTEXT.md 和 ADR 找技术债务和耦合点）。
-   - **知识审计**：合入前验证 (a) 本批次是否产出了可入库的知识（设计决策、踩坑记录、新发现的问题模式）；(b) 如有，是否已通过 `ingest_platform_knowledge` 入库；(c) 本批次决策是否与 KB 中已有知识矛盾，如有矛盾须在 leader-verdict 中记录并说明取舍理由。
-   **跨会话交接时用 `handoff` skill 压缩上下文为交接文档**，避免下一个 session 丢失进度。
+5. **QA**：默认立场「需要改进」。证据驱动——每个结论要有截图/日志/指标。首个实现必有 3–5 个问题，「零问题/满分」是红旗。缺陷按 P0–P3 定级。**遇到硬 bug 或性能回归时，走 `diagnose` skill 的纪律化诊断循环**（复现→最小化→假设→插桩→修→回归测试），不靠猜测修。
+6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**合入前对关键模块用 `review` skill 做双轴审查**（Standards 轴：是否遵循项目规范 + Spec 轴：是否匹配 PRD/issue 的验收标准），并行子代理出报告。**每 3–5 个 batch 用 `improve-codebase-architecture` skill 做一次架构体检**（结合 CONTEXT.md 和 ADR 找技术债务和耦合点）。**跨会话交接时用 `handoff` skill 压缩上下文为交接文档**，避免下一个 session 丢失进度。
 
 ### 第 7 步：合入 + 收尾
 
@@ -192,16 +187,6 @@ git worktree add ../CamelTv-w4 -b feature/batch-{N4}-{name4} origin/develop
 - PM 任务里塞了 PRD 没写的功能 → 范围蔓延，删掉。
 - Dev 连续多 batch 看板「当前位置」没变 → 可能卡住/上下文丢失，先对齐再动手。
 - Design 规范写「基于 Ant Design」→ 过时，真实栈是 shadcn/ui + Radix + Tailwind，见 `cameltv-ui-conventions`。
-
-## KB 自动检索（RAG）
-
-Agent Team 各部门执行任务时自动通过 RAG 检索知识库。检索优先级：
-1. `platform_knowledge` —— 平台研发知识（问题模式、设计决策）
-2. `defect_case` —— 历史缺陷
-3. `test_case` —— 相关测试用例
-4. `api_schema` —— 相关 API 接口
-
-检索关键词从当前批次的 PRD/PM-plan/Design-spec 中的模块名、文件路径、API 端点自动提取。
 
 ## 关联
 

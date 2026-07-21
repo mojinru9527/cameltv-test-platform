@@ -1,4 +1,4 @@
-"""知识源服务 —— 入库（去重）、列表、详情、废弃、验证。
+"""知识源服务 —— 入库（去重）、列表、详情、废弃。
 
 约定：本模块函数只 `db.flush()`，由调用方（ingest_service 自带 Session）负责 commit。
 去重键：(project_id, source_type, source_id, content_hash)。
@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime
 
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
@@ -100,8 +99,6 @@ def list_sources(
     project_id: int,
     *,
     source_type: str | None = None,
-    para_category: str | None = None,
-    knowledge_domain: str | None = None,
     status: str | None = None,
     keyword: str | None = None,
     page: int = 1,
@@ -112,12 +109,6 @@ def list_sources(
     if source_type:
         stmt = stmt.where(KnowledgeSource.source_type == source_type)
         cnt = cnt.where(KnowledgeSource.source_type == source_type)
-    if para_category:
-        stmt = stmt.where(KnowledgeSource.para_category == para_category)
-        cnt = cnt.where(KnowledgeSource.para_category == para_category)
-    if knowledge_domain:
-        stmt = stmt.where(KnowledgeSource.knowledge_domain == knowledge_domain)
-        cnt = cnt.where(KnowledgeSource.knowledge_domain == knowledge_domain)
     if status:
         stmt = stmt.where(KnowledgeSource.status == status)
         cnt = cnt.where(KnowledgeSource.status == status)
@@ -143,99 +134,6 @@ def get_source(db: Session, source_pk: int, project_id: int) -> KnowledgeSource 
     if not row or row.project_id != project_id:
         return None
     return row
-
-
-def verify_source(db: Session, source_pk: int, project_id: int) -> KnowledgeSource | None:
-    """验证知识源：设置 last_verified_at = now()，freshness_score = 1.0。"""
-    from datetime import datetime
-
-    row = get_source(db, source_pk, project_id)
-    if not row:
-        return None
-    row.last_verified_at = datetime.now()
-    row.freshness_score = 1.0
-    db.flush()
-    return row
-
-
-def classify_source(
-    db: Session, source_pk: int, project_id: int,
-    *, para_category: str | None = None, knowledge_domain: str | None = None,
-) -> KnowledgeSource | None:
-    """更新知识源的 PARA 分类 / 知识域。"""
-    row = get_source(db, source_pk, project_id)
-    if not row:
-        return None
-    if para_category is not None:
-        row.para_category = para_category
-    if knowledge_domain is not None:
-        row.knowledge_domain = knowledge_domain
-    db.flush()
-    return row
-
-
-def decay_freshness_in_new_session() -> dict:
-    """保鲜自动退化 + 自动归档（独立 Session，供定时任务调用）。
-
-    规则：
-    - 所有 status='parsed' 且 freshness_score > 0.1 的源，每天递减 0.01
-    - freshness_score < 0.2 且 last_verified_at 距今 > 90 天的源 → status='deprecated'
-    - freshness_score < 0.2 且 last_verified_at 为空的源 → status='deprecated'（从未验证过）
-    """
-    from datetime import datetime, timedelta
-    from app.core.db import SessionLocal
-    from sqlalchemy import update
-
-    db = SessionLocal()
-    try:
-        now = datetime.now()
-        threshold = now - timedelta(days=90)
-
-        # 1) 保鲜退化：所有活跃源每天 -0.01
-        result_decay = db.execute(
-            update(KnowledgeSource)
-            .where(
-                KnowledgeSource.status == "parsed",
-                KnowledgeSource.freshness_score > 0.1,
-            )
-            .values(freshness_score=KnowledgeSource.freshness_score - 0.01)
-        )
-
-        # 2) 自动归档：freshness < 0.2 且长期未验证
-        result_archive_old = db.execute(
-            update(KnowledgeSource)
-            .where(
-                KnowledgeSource.status == "parsed",
-                KnowledgeSource.freshness_score < 0.2,
-                KnowledgeSource.last_verified_at.isnot(None),
-                KnowledgeSource.last_verified_at < threshold,
-            )
-            .values(status="deprecated")
-        )
-
-        # 3) 从未验证且保鲜过低
-        result_archive_never = db.execute(
-            update(KnowledgeSource)
-            .where(
-                KnowledgeSource.status == "parsed",
-                KnowledgeSource.freshness_score < 0.2,
-                KnowledgeSource.last_verified_at.is_(None),
-            )
-            .values(status="deprecated")
-        )
-
-        db.commit()
-
-        return {
-            "decayed": result_decay.rowcount,
-            "archived_old": result_archive_old.rowcount,
-            "archived_never_verified": result_archive_never.rowcount,
-        }
-    except Exception as e:
-        db.rollback()
-        return {"error": str(e)}
-    finally:
-        db.close()
 
 
 def deprecate_source(db: Session, source_pk: int, project_id: int) -> bool:

@@ -806,11 +806,6 @@ export interface KnowledgeSource {
   raw_content?: string
   metadata_json?: string
   updated_at?: string
-  // PARA + domain 字段
-  para_category?: string
-  knowledge_domain?: string
-  freshness_score?: number
-  last_verified_at?: string | null
 }
 
 export interface KnowledgeChunk {

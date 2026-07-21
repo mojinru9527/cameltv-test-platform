@@ -40,12 +40,6 @@ AGENT_META: dict[str, dict] = {
         "icon": "GitCompare",
         "artifact_type": "knowledge_diff",
     },
-    "platform_knowledge": {
-        "label": "平台知识分析",
-        "description": "分析平台研发过程中的踩坑记录、设计决策、问题模式，提取可复用知识",
-        "icon": "BrainCircuit",
-        "artifact_type": "platform_knowledge",
-    },
 }
 
 
@@ -182,19 +176,4 @@ _TYPE_PROMPTS = {
     "knowledge_diff": """## 知识差异对比任务
 你负责把知识片段归一化为「需求契约」，供确定性差异引擎逐维度比对两个知识库。
 严格要求：只依据提供的知识片段，不得编造；无法确定的字段留空数组，不要臆测。""",
-
-    "platform_knowledge": """## 平台知识分析任务
-从提供的 Agent Team 工作日志和平台研发知识中提取：
-1. **问题模式**：反复出现的技术问题及其根因
-2. **设计决策**：ADR 级别的架构选择及权衡
-3. **最佳实践**：已验证有效的编码/测试/部署模式
-4. **避坑指南**：已知陷阱及检查清单
-
-输出 JSON 格式：
-{
-  "problem_patterns": [{"name": "模式名", "frequency": 5, "root_cause": "根因", "affected_modules": ["模块A"]}],
-  "design_decisions": [{"title": "决策标题", "context": "背景", "decision": "决策内容", "tradeoffs": ["权衡1"]}],
-  "best_practices": [{"title": "实践名", "description": "描述", "evidence_batch": "batch-XX"}],
-  "summary": "一句话总结"
-}""",
 }
