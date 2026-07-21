@@ -420,6 +420,18 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
         job.heartbeat_at = datetime.now()
         db.commit()
 
+    # ── Version diff (batch-26): compare against previous version after job completion ──
+    try:
+        from app.services.lanhu_evidence.diff_service import run_diff_after_job_completion
+        run_diff_after_job_completion(
+            job_id=job_id,
+            project_id=project_id,
+            source_url=job_meta.get("source_url", ""),
+            doc_id=job_meta.get("doc_id", ""),
+        )
+    except Exception:
+        logger.exception("Version diff after job #%s failed (non-fatal)", job_id)
+
     if quality["import_ready"]:
         _run_auto_import(factory, job_id, project_id, creator_id, options)
 

@@ -15,6 +15,7 @@ from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.db import SessionLocal
+from app.models.knowledge import KnowledgeSource
 from app.services.knowledge import chunk_service
 from app.services.knowledge.sanitize import sanitize
 from app.services.knowledge.source_service import record_source
@@ -408,6 +409,125 @@ def ingest_ui_test_failure_in_new_session(project_id: int, run_id: int) -> None:
         _post_ingest_hooks(project_id, source_id=src.id)
     except Exception:
         logger.exception("ingest UI test failure run_id=%s failed", run_id)
+        db.rollback()
+    finally:
+        db.close()
+
+
+# ── Lanhu version diff sync (batch-26) ──
+
+def ingest_lanhu_version_diff(
+    project_id: int,
+    doc_id: str,
+    version: str,
+    diff_json: dict | None,
+    source_url: str,
+    evidence_job_id: int,
+) -> None:
+    """Sync lanhu version diff to knowledge center.
+
+    When a new version's evidence pack is captured, compare with previous version
+    and ingest the changed pages as new knowledge sources. Mark previous version
+    sources as superseded rather than deleting them.
+    """
+    if not settings.knowledge_ingest_enabled:
+        return
+    if not diff_json:
+        return  # initial version — regular ingest handles this
+
+    db = SessionLocal()
+    try:
+        pages = diff_json.get("pages", [])
+        changed_pages = [p for p in pages if p.get("change_type") in ("new", "modified")]
+
+        if not changed_pages:
+            return
+
+        source_id = doc_id or source_url
+        title = f"蓝湖版本差异 {diff_json.get('base_version', '?')} → {version}"
+
+        # Build content from changed pages
+        content_parts = [
+            f"## 版本变更: {diff_json.get('base_version', '?')} → {version}",
+            f"",
+            f"**摘要**: 新增 {diff_json['summary']['new_pages']} 页, "
+            f"修改 {diff_json['summary']['modified_pages']} 页, "
+            f"不变 {diff_json['summary']['unchanged_pages']} 页, "
+            f"删除 {diff_json['summary']['deleted_pages']} 页",
+            f"",
+        ]
+        for p in changed_pages:
+            emoji = {"new": "🆕", "modified": "✏️"}.get(p["change_type"], "")
+            page_label = p.get('page_name') or f"第{p.get('page_index', 0) + 1}页"
+            content_parts.append(f"### {emoji} {page_label}")
+            content_parts.append(f"**类型**: {p['change_type']}")
+            if p.get("ocr_diff"):
+                content_parts.append(f"**变动**: {p['ocr_diff']}")
+            content_parts.append("")
+
+        raw = sanitize(_truncate("\n".join(content_parts)))
+
+        # Record as knowledge source
+        src = record_source(
+            db,
+            project_id=project_id,
+            source_type="lanhu_version_diff",
+            source_id=evidence_job_id,
+            title=title,
+            source_ref=source_url,
+            raw_content=raw,
+            version=version,
+            metadata={
+                "base_version": diff_json.get("base_version", ""),
+                "doc_id": doc_id,
+                "evidence_job_id": evidence_job_id,
+                "change_summary": diff_json.get("summary", {}),
+            },
+        )
+        if src is None:
+            db.commit()
+            return
+
+        # Create chunks for changed pages
+        chunks = [
+            {
+                "chunk_type": "lanhu_version_diff",
+                "title": f"{version} — {p.get('page_name', f'Page {i}')}",
+                "content": (
+                    f"页面: {p.get('page_name', '')}\n"
+                    f"变更类型: {p.get('change_type', '')}\n"
+                    f"变动摘要: {p.get('ocr_diff', '')}"
+                ),
+            }
+            for i, p in enumerate(changed_pages)
+        ]
+        chunk_service.make_chunks(db, src, chunks)
+
+        # Mark previous version sources as superseded (not deleted)
+        prev_sources = list(
+            db.execute(
+                select(KnowledgeSource).where(
+                    KnowledgeSource.project_id == project_id,
+                    KnowledgeSource.source_type == "lanhu_version_diff",
+                    KnowledgeSource.source_ref == source_url,
+                    KnowledgeSource.version != version,
+                    KnowledgeSource.status == "active",
+                )
+            ).scalars().all()
+        )
+        for ps in prev_sources:
+            ps.status = "superseded"
+
+        db.commit()
+        _post_ingest_hooks(project_id, source_id=src.id)
+
+        logger.info(
+            "Ingested lanhu version diff: %s → %s, %d changed pages → source #%d",
+            diff_json.get("base_version", "?"), version, len(changed_pages), src.id,
+        )
+
+    except Exception:
+        logger.exception("ingest lanhu version diff failed for doc_id=%s version=%s", doc_id, version)
         db.rollback()
     finally:
         db.close()
