@@ -29,6 +29,12 @@ def _doc_to_dict(r: RequirementDocument, creator_name: str = "") -> dict:
         "imported_api_count": r.imported_api_count,
         "imported_func_indices": r.imported_func_indices,
         "imported_api_indices": r.imported_api_indices,
+        # Version diff fields (batch-26)
+        "doc_id": getattr(r, "doc_id", ""),
+        "version": getattr(r, "version", ""),
+        "parent_id": getattr(r, "parent_id", None),
+        "diff_json": getattr(r, "diff_json", ""),
+        "diff_status": getattr(r, "diff_status", "initial"),
         "parsed_type": "requirement",
         "excel_cases": [],
         "created_at": r.created_at.isoformat() if r.created_at else None,
@@ -106,6 +112,19 @@ def get_requirement(db: Session, doc_id: int, project_id: int) -> dict | None:
         if user:
             creator_name = user.username
     return _doc_to_dict(row, creator_name)
+
+
+def get_requirement_by_source(db: Session, source_ref: str, project_id: int) -> dict | None:
+    """Find a requirement document by its source_ref (URL or filename)."""
+    row = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.source_ref == source_ref,
+            RequirementDocument.project_id == project_id,
+        )
+    )
+    if not row:
+        return None
+    return _doc_to_dict(row)
 
 
 def update_ai_result(db: Session, doc_id: int, ai_result: dict) -> dict | None:

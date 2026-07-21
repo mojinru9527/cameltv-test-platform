@@ -26,3 +26,9 @@ class RequirementDocument(Base, TimestampMixin):
     imported_api_indices: Mapped[str] = mapped_column(default="[]")    # JSON array of imported api case indices
     extraction_raw: Mapped[str] = mapped_column(default="")            # Stage 1 AI extraction JSON (modules + function_points)
     extraction_status: Mapped[str] = mapped_column(default="not_started")  # not_started|pending_review|confirmed
+    # ── Version diff fields (batch-26) ──
+    doc_id: Mapped[str] = mapped_column(default="", index=True)          # stable lanhu document id across versions
+    version: Mapped[str] = mapped_column(default="")                     # parsed version string (e.g. "14.2.0")
+    parent_id: Mapped[int | None] = mapped_column(default=None, index=True)  # previous version's requirement_document.id
+    diff_json: Mapped[str] = mapped_column(default="")                   # structured page-level diff JSON
+    diff_status: Mapped[str] = mapped_column(default="initial")          # "initial" | "update"
