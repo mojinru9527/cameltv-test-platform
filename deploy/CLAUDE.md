@@ -34,7 +34,7 @@ deploy/
 
 ```
 Checkout → Backend Lint → Backend Test → Frontend TypeCheck → Frontend Test+Build
-    → Docker Build → Docker Push (main only) → Deploy Test → Smoke Test → Quality Gate
+    → Docker Build → Docker Push (develop only) → Deploy Test → Smoke Test → Quality Gate
 ```
 
 ## 环境拓扑
@@ -43,7 +43,7 @@ Checkout → Backend Lint → Backend Test → Frontend TypeCheck → Frontend T
 |------|---------|---------|
 | **本地开发** | `uvicorn` + `npm run dev` | 手动 |
 | **Jenkins 本地** | `docker compose up -d` (deploy/jenkins/) | 手动 |
-| **Test** | Jenkins Deploy 阶段自动 | main 分支 push |
+| **Test** | Jenkins Deploy 阶段自动 | develop 分支 push |
 | **Staging** | 手动 `docker compose` | 手动 |
 | **Prod** | 手动触发 + VPN | 手动 |
 
@@ -91,7 +91,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 - **Secret 管理**：凭据通过环境变量注入（`.env` 或 Docker secrets），不硬编码在 Jenkinsfile
 - **构建产物**：pytest HTML 报告 + JUnit XML，由 Jenkins 发布
 - **Git 仓库**：本地开发用 `file:///workspace`（Docker volume 挂载），生产改用远程 Git URL
-- **分支策略**：main 分支触发完整 Pipeline（含 Docker Push），其他分支跳过 Push 阶段
+- **分支策略**：develop 分支触发完整 Pipeline（含 Docker Push），其他分支跳过 Push 阶段
 
 ## 关联文档
 
