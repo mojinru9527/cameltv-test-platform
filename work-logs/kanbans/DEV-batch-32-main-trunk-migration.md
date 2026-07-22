@@ -2,7 +2,7 @@
 title: "DEV Batch 32 单一主干迁移看板"
 owner: "dev"
 last_reviewed: "2026-07-22"
-status: "active"
+status: "completed"
 tags: ["kanban", "git", "worktree"]
 ---
 
@@ -14,9 +14,9 @@ tags: ["kanban", "git", "worktree"]
 | 2 本地核对 | ✅ | reconciliation 工件；原目录不动 |
 | 3 worktree 工具 | ✅ | 自测 PASS |
 | 4 Agent/CI/Jenkins | ✅ | 单一 main 规范、隔离工具、CI 门禁与 Jenkins fail-fast 已落地 |
-| 5 全量测试/PR | 🔄 | 本地后端 653/前端 96 全绿；等待 PR #56 远端 CI |
-| 6 baseline/rename | ⏳ | 等待 PR 合入 |
-| 7 ruleset/legacy | ⏳ | 等待 main 建立 |
-| 8 控制 worktree/验收 | ⏳ | 最后执行 |
+| 5 全量测试/PR | ✅ | 修复后本地后端 654/前端 96；PR #56 六项检查全绿并合入 |
+| 6 baseline/rename | ✅ | baseline 标签验证；develop 原地重命名为 main |
+| 7 ruleset/legacy | ✅ | main 两项 required checks；旧 master 标签归档后删除 |
+| 8 控制 worktree/验收 | ✅ | 控制目录、双 AI、pre-push、递归 clone、1163 指纹均通过；以本收尾 PR 验证 ruleset |
 
-风险：远端分支删除不可先于标签验证；`F:\CamelTv` 与其中 `lanhu-mcp` 禁止 reset/clean/checkout。
+收尾：`F:\CamelTv` 与其中 `lanhu-mcp` 未执行 reset/clean/checkout；今后所有任务从 `origin/main` 使用脚本创建独立 worktree。

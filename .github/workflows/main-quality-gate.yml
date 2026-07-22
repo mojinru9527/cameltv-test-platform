@@ -1,11 +1,10 @@
 name: 主干全新检出质量门禁
 
-# 迁移期同时监听 develop/main；develop 重命名完成后的收尾 PR 会移除兼容项。
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [main]
   push:
-    branches: [develop, main]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
