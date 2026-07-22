@@ -64,6 +64,9 @@ if ($ExpectedExecutor) { $verifyArguments.ExpectedExecutor = $ExpectedExecutor }
 if ($ExpectedOwner) { $verifyArguments.ExpectedOwner = $ExpectedOwner }
 $verifyOutput = @(& (Join-Path $PSScriptRoot "verify-ai-worktree.ps1") @verifyArguments)
 $verification = $verifyOutput[-1]
+if ($RequireSuccessfulChecks -and $verification.Workflow -eq "agent-team" -and $verification.CompletionConfirmation -ne "confirmed") {
+    throw "Final Agent Team PR audit requires the user's completion confirmation. Ask again which executor actually performed the work, wait for the reply, then run confirm-agent-team-completion.ps1."
+}
 
 $branch = (@(Invoke-CheckedGit -Path $root -Arguments @("branch", "--show-current")))[0].Trim()
 Invoke-CheckedGit -Path $root -Arguments @("fetch", "origin", "--prune") | Out-Null
@@ -127,6 +130,8 @@ $result = [pscustomobject]@{
     Url = [string]$pr.url
     Workflow = [string]$verification.Workflow
     Executor = [string]$verification.Executor
+    StartConfirmation = [string]$verification.StartConfirmation
+    CompletionConfirmation = [string]$verification.CompletionConfirmation
     Branch = $branch
     Base = [string]$pr.baseRefName
     Head = $head
@@ -137,6 +142,6 @@ $result = [pscustomobject]@{
     Checks = $checkResults
 }
 
-$result | Format-List PullRequest,Url,Workflow,Executor,Branch,Base,Head,Draft,MergeState,Scope,ChecksRequired
+$result | Format-List PullRequest,Url,Workflow,Executor,StartConfirmation,CompletionConfirmation,Branch,Base,Head,Draft,MergeState,Scope,ChecksRequired
 $checkResults | Format-Table -AutoSize
 $result

@@ -8,6 +8,8 @@ param(
     [ValidateSet("direct", "agent-team")]
     [string]$Workflow = "direct",
 
+    [switch]$UserConfirmedExecutor,
+
     [Parameter(Mandatory)]
     [ValidateSet("feature", "fix", "hotfix", "release")]
     [string]$Kind,
@@ -48,6 +50,9 @@ if ($Task.Length -gt 50 -or $Task -notmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') {
 }
 if ($Workflow -eq "agent-team" -and $Executor -eq "human") {
     throw "Agent Team workflow executor must be claude or codex."
+}
+if ($Workflow -eq "agent-team" -and -not $UserConfirmedExecutor) {
+    throw "Agent Team workflow requires explicit user confirmation before worktree creation. Ask the user whether the executor is Claude Code or Codex, wait for the reply, then pass -UserConfirmedExecutor."
 }
 if ($FrontendPort -eq $BackendPort) {
     throw "Frontend and backend ports must be different."
@@ -92,7 +97,7 @@ New-Item -ItemType Directory -Path $destinationRootFull -Force | Out-Null
 Invoke-CheckedGit -Path $root -Arguments @("worktree", "add", "-b", $branch, $destination, "origin/$BaseBranch") | Out-Null
 
 $metadata = [ordered]@{
-    schema_version = 2
+    schema_version = 3
     workflow = $Workflow
     executor = $Executor
     task = $Task
@@ -102,7 +107,21 @@ $metadata = [ordered]@{
     scope = @($Scope)
     ports = [ordered]@{ frontend = $FrontendPort; backend = $BackendPort }
 }
-$metadata | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $destination ".ai-worktree.json")
+if ($Workflow -eq "agent-team") {
+    $metadata["confirmations"] = [ordered]@{
+        start = [ordered]@{
+            status = "confirmed"
+            executor = $Executor
+            confirmed_at = (Get-Date).ToString("o")
+        }
+        completion = [ordered]@{
+            status = "pending"
+            executor = $null
+            confirmed_at = $null
+        }
+    }
+}
+$metadata | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $destination ".ai-worktree.json")
 
 $frontendEnvPath = Join-Path $destination "test-platform-v2/frontend/.env.local"
 $backendEnvPath = Join-Path $destination "test-platform-v2/backend/.env"

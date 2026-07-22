@@ -4,6 +4,7 @@ param(
     [string]$BaseBranch = "main",
     [switch]$RequireClean,
     [switch]$RequireMetadata,
+    [switch]$RequireCompletionConfirmation,
     [ValidateSet("direct", "agent-team")]
     [string]$ExpectedWorkflow,
     [ValidateSet("claude", "codex", "human")]
@@ -59,7 +60,7 @@ $metadata = $null
 if (Test-Path -LiteralPath $metadataPath) {
     $metadata = Get-Content -Raw -LiteralPath $metadataPath | ConvertFrom-Json
 }
-elseif ($RequireMetadata -or $ExpectedWorkflow -or $ExpectedExecutor -or $ExpectedOwner) {
+elseif ($RequireMetadata -or $RequireCompletionConfirmation -or $ExpectedWorkflow -or $ExpectedExecutor -or $ExpectedOwner) {
     throw "Worktree metadata is required but missing: $metadataPath"
 }
 
@@ -68,18 +69,55 @@ if ($metadata) {
     $allowedExecutors = @("claude", "codex", "human")
     $schemaVersion = 1
     $legacyOwner = $null
+    $startConfirmation = $null
+    $completionConfirmation = $null
     if ($metadata.PSObject.Properties["schema_version"] -or $metadata.PSObject.Properties["workflow"] -or $metadata.PSObject.Properties["executor"]) {
         if (-not $metadata.PSObject.Properties["schema_version"] -or -not $metadata.PSObject.Properties["workflow"] -or -not $metadata.PSObject.Properties["executor"]) {
-            throw "Version 2 metadata must contain schema_version, workflow, and executor together."
+            throw "Versioned metadata must contain schema_version, workflow, and executor together."
         }
         $schemaVersion = [int]$metadata.schema_version
         $workflow = [string]$metadata.workflow
         $executor = [string]$metadata.executor
-        if ($schemaVersion -ne 2) { throw "Unsupported worktree metadata schema_version '$schemaVersion'." }
+        if (@(2, 3) -notcontains $schemaVersion) { throw "Unsupported worktree metadata schema_version '$schemaVersion'." }
         if ($allowedWorkflows -notcontains $workflow) { throw "Unknown metadata workflow '$workflow'." }
         if ($allowedExecutors -notcontains $executor) { throw "Unknown metadata executor '$executor'." }
         if ($workflow -eq "agent-team" -and $executor -eq "human") {
             throw "Agent Team workflow executor must be claude or codex."
+        }
+        if ($schemaVersion -eq 3 -and $workflow -eq "agent-team") {
+            if (-not $metadata.PSObject.Properties["confirmations"] -or
+                -not $metadata.confirmations.PSObject.Properties["start"] -or
+                -not $metadata.confirmations.PSObject.Properties["completion"]) {
+                throw "Schema v3 Agent Team metadata must contain start and completion confirmations."
+            }
+
+            $start = $metadata.confirmations.start
+            $completion = $metadata.confirmations.completion
+            foreach ($field in @("status", "executor", "confirmed_at")) {
+                if (-not $start.PSObject.Properties[$field]) { throw "Schema v3 start confirmation is missing '$field'." }
+                if (-not $completion.PSObject.Properties[$field]) { throw "Schema v3 completion confirmation is missing '$field'." }
+            }
+
+            $startConfirmation = [string]$start.status
+            if ($startConfirmation -ne "confirmed") { throw "Agent Team start confirmation must be 'confirmed'." }
+            if ([string]$start.executor -ne $executor) { throw "Start confirmation executor '$($start.executor)' must match metadata executor '$executor'." }
+            if ([string]::IsNullOrWhiteSpace([string]$start.confirmed_at)) { throw "Start confirmation timestamp is required." }
+            try { [void][DateTimeOffset]::Parse([string]$start.confirmed_at) } catch { throw "Start confirmation timestamp is invalid." }
+
+            $completionConfirmation = [string]$completion.status
+            if (@("pending", "confirmed") -notcontains $completionConfirmation) {
+                throw "Agent Team completion confirmation must be 'pending' or 'confirmed'."
+            }
+            if ($completionConfirmation -eq "pending") {
+                if (-not [string]::IsNullOrWhiteSpace([string]$completion.executor) -or -not [string]::IsNullOrWhiteSpace([string]$completion.confirmed_at)) {
+                    throw "Pending completion confirmation must not contain executor or timestamp evidence."
+                }
+            }
+            else {
+                if ([string]$completion.executor -ne $executor) { throw "Completion confirmation executor '$($completion.executor)' must match metadata executor '$executor'." }
+                if ([string]::IsNullOrWhiteSpace([string]$completion.confirmed_at)) { throw "Completion confirmation timestamp is required." }
+                try { [void][DateTimeOffset]::Parse([string]$completion.confirmed_at) } catch { throw "Completion confirmation timestamp is invalid." }
+            }
         }
         $directoryIdentity = $executor
     }
@@ -93,7 +131,7 @@ if ($metadata) {
         $directoryIdentity = $legacyOwner
     }
     else {
-        throw "Worktree metadata must contain version 2 workflow/executor fields or legacy owner."
+        throw "Worktree metadata must contain versioned workflow/executor fields or legacy owner."
     }
 
     $task = [string]$metadata.task
@@ -115,6 +153,11 @@ if ($metadata) {
         $compatibleOwner = if ($schemaVersion -eq 1) { $legacyOwner } elseif ($workflow -eq "agent-team") { "agent-team" } else { $executor }
         if ($compatibleOwner -ne $ExpectedOwner) {
             throw "Compatible owner '$compatibleOwner' does not match deprecated expected owner '$ExpectedOwner'."
+        }
+    }
+    if ($RequireCompletionConfirmation -and $workflow -eq "agent-team") {
+        if ($schemaVersion -ne 3 -or $completionConfirmation -ne "confirmed") {
+            throw "Final Agent Team delivery requires schema v3 completion confirmation from the user."
         }
     }
     if ($metadataBranch -ne $branch) {
@@ -145,6 +188,8 @@ $result = [pscustomobject]@{
     SchemaVersion = if ($metadata) { $schemaVersion } else { $null }
     Workflow = if ($metadata) { $workflow } else { $null }
     Executor = if ($metadata) { $executor } else { $null }
+    StartConfirmation = if ($metadata) { $startConfirmation } else { $null }
+    CompletionConfirmation = if ($metadata) { $completionConfirmation } else { $null }
     Task = if ($metadata) { $metadata.task } else { $null }
     Scope = if ($metadata) { @($metadata.scope) -join "," } else { $null }
 }

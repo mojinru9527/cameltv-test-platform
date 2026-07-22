@@ -43,12 +43,15 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 ### 标准流程
 
 ```bash
-# 0. 开工前强制拉取最新代码
+# 0. 硬暂停：先在聊天中问用户“本任务由 Claude Code 还是 Codex 执行？”并等待明确答复
+# 未收到答复不得 fetch、创建 worktree 或开始开发；不得从 IDE/客户端/进程自动推断
+
+# 0.1 收到答复后拉取最新代码
 git fetch origin main
 
 # 1. 从最新 main 创建独立 worktree；Agent Team 是 workflow，Executor 是实际宿主
 # 在 Codex 中运行用 codex；在 Claude Code 中运行用 claude
-pwsh scripts/git/start-agent-team-task.ps1 -Executor {claude|codex} -Kind feature -Task batch-{N}-{name} -Scope test-platform-v2 -FrontendPort {独立端口} -BackendPort {独立端口}
+pwsh scripts/git/start-agent-team-task.ps1 -Executor {claude|codex} -UserConfirmedExecutor -Kind feature -Task batch-{N}-{name} -Scope test-platform-v2 -FrontendPort {独立端口} -BackendPort {独立端口}
 
 # 1.1 在新 worktree 开工前验证
 pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex}
@@ -60,17 +63,23 @@ git diff --cached --name-status
 git commit -m "feat(batch-{N}): {切片描述}"
 git push -u origin feature/batch-{N}-{name}
 
-# 3. 全部 Slice 完成 + Leader APPROVED 后，创建 PR
+# 3. 全部 Slice 完成并取得首轮 QA 证据后，创建 Draft PR
 #    ⚠️ 必须先 push 到 feature 分支，再建 PR
 #    ⚠️ 禁止直接 git merge/push 到 main（本地 hook 与远端规则均会拒绝）
 gh pr create \
+  --draft \
   --base main \
   --head feature/batch-{N}-{name} \
   --title "feat: Batch {N} — {一句话摘要}" \
   --body "Agent Team 六部门流水线已完成。工件见 work-logs/batch-{N}-*-*.md"
 
-# 3.1 PR 创建后做基础审计；三项 required checks 全绿后做最终审计
+# 3.1 PR 创建后做基础审计并等待首轮 required checks
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex}
+
+# 3.2 硬暂停：首轮验证后再次问用户实际执行器，并询问是否授权最终审计/合并；等待明确答复
+pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor {claude|codex} -UserConfirmedCompletion
+
+# 3.3 把完成确认证据写入工件并 push；该提交的 required checks 全绿后做最终审计
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex} -RequireSuccessfulChecks
 
 # 4. PR 合入且确认无需继续修复后，从控制 worktree 更新 main 再清理任务 worktree
@@ -82,6 +91,8 @@ git branch -d feature/batch-{N}-{name}
 ### 防冲突规则
 
 每个代码任务从 `origin/main` 独立创建 worktree。仓库内 ADR-0014、`AGENTS.md` 和本文件是共同事实源；路径绑定的个人 Memory 只作辅助。已结束的旧任务分支禁止继续追加 commit。
+
+Claude Code 作为 VS Code 插件、Codex 作为 ChatGPT 桌面客户端可以并行工作，不会改变 Git 隔离语义。隔离依赖不同 worktree、分支、端口和 `.ai-worktree.json`；两个客户端禁止同时修改同一个 worktree。
 
 ### 多窗口并行开发（强制）
 
@@ -108,17 +119,17 @@ git branch -d feature/batch-{N}-{name}
 # ═══════ V1 开发周期 ═══════
 
 # Step 1：每个窗口开工前，在主仓库执行一次
-pwsh scripts/git/start-agent-team-task.ps1 -Executor claude -Kind feature -Task batch-{N1}-{name1} -Scope {模块1} -FrontendPort 5173 -BackendPort 8000
-pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -Kind feature -Task batch-{N2}-{name2} -Scope {模块2} -FrontendPort 5174 -BackendPort 8001
+pwsh scripts/git/start-agent-team-task.ps1 -Executor claude -UserConfirmedExecutor -Kind feature -Task batch-{N1}-{name1} -Scope {模块1} -FrontendPort 5173 -BackendPort 8000
+pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecutor -Kind feature -Task batch-{N2}-{name2} -Scope {模块2} -FrontendPort 5174 -BackendPort 8001
 # 只有不走六部门 Agent Team 的直接任务才使用 start-claude-task.ps1 / start-codex-task.ps1
 
 # Step 2：每个 VSCode 窗口 Open Folder 打开对应的 worktree 目录
 # Step 3：各自独立开发、每切片 commit+push（遵循上方标准流程）
-# Step 4：全部完成后，各自创建 PR 合入 main
+# Step 4：全部完成后各自创建 Draft PR；每个任务分别完成第二次用户确认、最终审计和 Leader 审批后才合入 main
 
-gh pr create --base main --head feature/batch-{N1}-{name1} --title "..."
-gh pr create --base main --head feature/batch-{N2}-{name2} --title "..."
-gh pr create --base main --head feature/batch-{N3}-{name3} --title "..."
+gh pr create --draft --base main --head feature/batch-{N1}-{name1} --title "..."
+gh pr create --draft --base main --head feature/batch-{N2}-{name2} --title "..."
+gh pr create --draft --base main --head feature/batch-{N3}-{name3} --title "..."
 
 # Step 5：所有 PR 合入后，main = V1 完整版本
 # Step 6：清理 worktree
@@ -130,7 +141,7 @@ git branch -d feature/batch-{N1}-{name1} feature/batch-{N2}-{name2} feature/batc
 # ═══════ V2 开发周期 ═══════
 
 # Step 7：V2 窗口从最新 main（已含 V1 全部修复）切出
-pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -Kind feature -Task batch-{N4}-{name4} -Scope {模块4} -FrontendPort 5176 -BackendPort 8003
+pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecutor -Kind feature -Task batch-{N4}-{name4} -Scope {模块4} -FrontendPort 5176 -BackendPort 8003
 # ... 自动继承 V1 全部代码，无需手动拉取 V1 各分支
 ```
 
@@ -175,13 +186,13 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -Kind feature -Task b
    - **禁止静态代替执行**：文件存在、代码目测、工件齐全不能单独判定 PASS。
    - **KB 辅助定级**：出具 QA 报告前，检索知识库中与被测模块相关的历史缺陷模式。相似历史缺陷须在报告中列出，用于辅助缺陷定级（P0–P3）和评估回归风险。
    **遇到硬 bug 或性能回归时，走 `diagnose` skill 的纪律化诊断循环**（复现→最小化→假设→插桩→修→回归测试），不靠猜测修。
-6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**。Leader 只在 QA 硬门禁全绿、`audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过后给 APPROVED；没有运行日志、只有文档结论时必须打回。
+6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**。Leader 只在用户完成二次确认、QA 硬门禁全绿、`audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过后给 APPROVED；没有完成确认、运行日志或只有文档结论时必须打回。
    - **知识审计**：合入前验证 (a) 本批次是否产出了可入库的知识（设计决策、踩坑记录、新发现的问题模式）；(b) 如有，是否已通过 `ingest_platform_knowledge` 入库；(c) 本批次决策是否与 KB 中已有知识矛盾，如有矛盾须在 leader-verdict 中记录并说明取舍理由。
    **跨会话交接时用 `handoff` skill 压缩上下文为交接文档**，避免下一个 session 丢失进度。
 
 ### 第 7 步：合入 + 收尾
 
-- 合入前：QA 判决 PASS + Leader APPROVED + PR 必需检查全部通过。若仓库尚未配置 required checks，禁止自动合并，必须由人工确认检查结果。
+- 合入前：用户二次确认 + QA 判决 PASS + Leader APPROVED + PR 必需检查全部通过。若仓库尚未配置 required checks，禁止自动合并，必须由人工确认检查结果。
 - 合入：**必须通过 PR**（`gh pr create`），禁止直接 `git merge` 到 main 再 push（本地 hook 与分支保护都会拒绝）。详见上方 [Git 工作流](#git-工作流强制)。
 - 合入后：更新看板批次记录（产出+审批+耗时）；本地分支确认无未推送提交后删除，远端分支按仓库自动删除策略或人工决定。
 - ⚠️ 工作树可能被外部进程周期性重置 → **每切片即刻 commit + push**（见 `[[worktree-reset-hazard]]`）。

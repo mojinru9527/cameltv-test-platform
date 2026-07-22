@@ -99,7 +99,7 @@ shadcn/ui + Radix + Tailwind + CVA；Token 走语义类（bg-muted / text-muted-
 
 **强制节奏**：
 1. **多窗口并行检查**：若已有 ≥1 个 Agent Team 窗口活跃，开工前必须用 `git worktree add` 创建独立 worktree（见 SKILL.md「多窗口并行开发」）。**禁止多个窗口共享同一工作目录。**
-2. 开工前：运行 `scripts/git/start-agent-team-task.ps1 -Executor claude|codex`，从最新 `origin/main` 创建独立任务 worktree，再用 `verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex` 验证。
+2. 开工前：先在聊天中问用户本任务由 Claude Code 还是 Codex 执行并停下等待；收到明确答复后运行 `scripts/git/start-agent-team-task.ps1 -Executor claude|codex -UserConfirmedExecutor`，从最新 `origin/main` 创建独立任务 worktree，再用 `verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex` 验证。不得根据 VS Code、ChatGPT 客户端或进程自动猜测。
 3. 开工前先读看板（SKILL.md 第 0 步）。
 4. 编码前扫 `cameltv-bug-guard` skill。
 5. 按切片推进，TDD 先测后码。
@@ -158,11 +158,24 @@ API: {ms}   前端: {s}   覆盖: {%}
 
 ---
 
-## 6. 🎯 全部 Slice 完成 + Leader APPROVED 后：
+## 6. 🎯 全部 Slice 完成后：
 
-gh pr create --base main --head feature/batch-{N}-{name} \
+先创建 Draft PR，执行基础审计并等待首轮 required checks：
+
+```bash
+gh pr create --draft --base main --head feature/batch-{N}-{name} \
   --title "feat: Batch {N} — {摘要}" \
   --body "详见 Agent Team 工件: work-logs/"
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex
+```
+
+Agent Team 必须再次在聊天中问用户实际执行器是否与开始确认一致、是否授权最终审计和合并，并停下等待。收到明确答复后运行：
+
+```powershell
+pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor claude|codex -UserConfirmedCompletion
+```
+
+完成确认证据推送并通过新一轮 required checks 与最终审计后，Leader 才能 APPROVED、将 Draft PR 标为 Ready 并执行合入。
 
 **定位**：总协调 + 质量把关。抽检各部门工件，给判决，并可为下一批次设 Leader 条件（C 编号）。
 

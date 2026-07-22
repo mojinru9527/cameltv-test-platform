@@ -37,6 +37,7 @@ try {
     $claudeStarter = Join-Path $PSScriptRoot "start-claude-task.ps1"
     $codexStarter = Join-Path $PSScriptRoot "start-codex-task.ps1"
     $agentTeamStarter = Join-Path $PSScriptRoot "start-agent-team-task.ps1"
+    $agentTeamCompleter = Join-Path $PSScriptRoot "confirm-agent-team-completion.ps1"
 
     & $installer -RepositoryPath $control -GitHubLogin test-owner -GitHubEmail test-owner@example.com | Out-Null
     Assert-True ((& git -C $control config --local core.autocrlf) -eq "false") "installer must disable core.autocrlf"
@@ -71,17 +72,81 @@ try {
 
     Assert-True (Test-Path -LiteralPath $codexStarter) "Codex fixed-executor entry must exist"
     Assert-True (Test-Path -LiteralPath $agentTeamStarter) "Agent Team workflow entry must exist"
+    Assert-True (Test-Path -LiteralPath $agentTeamCompleter) "Agent Team completion confirmation entry must exist"
     $codexCreated = @(& $codexStarter -Kind fix -Task codex-isolation -Scope backend -FrontendPort 55174 -BackendPort 58001 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
-    $agentTeamCreated = @(& $agentTeamStarter -Executor codex -Kind feature -Task agent-team-isolation -Scope governance -FrontendPort 55175 -BackendPort 58002 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
+    $codexPath = Join-Path $worktrees "codex-codex-isolation"
+    $codexMetadataPath = Join-Path $codexPath ".ai-worktree.json"
+    $codexMetadata = Get-Content -Raw -LiteralPath $codexMetadataPath | ConvertFrom-Json
+    Assert-True ([int]$codexMetadata.schema_version -eq 3) "new direct metadata must use schema v3"
+    $codexMetadata.schema_version = 2
+    $codexMetadata | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 -LiteralPath $codexMetadataPath
+    & $verify -RepositoryPath $codexPath -RequireMetadata -ExpectedWorkflow direct -ExpectedExecutor codex | Out-Null
+    $unconfirmedStartRejected = $false
+    try { & $agentTeamStarter -Executor codex -Kind feature -Task unconfirmed-agent-team -Scope governance -FrontendPort 55175 -BackendPort 58002 -RepositoryPath $control -DestinationRoot $worktrees | Out-Null } catch { $unconfirmedStartRejected = $true }
+    Assert-True $unconfirmedStartRejected "Agent Team start without explicit user confirmation must be rejected"
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $worktrees "codex-unconfirmed-agent-team"))) "rejected Agent Team start must not create a worktree"
+    & git -C $control show-ref --verify --quiet refs/heads/feature/unconfirmed-agent-team
+    Assert-True ($LASTEXITCODE -ne 0) "rejected Agent Team start must not create a branch"
+
+    $agentTeamCreated = @(& $agentTeamStarter -Executor codex -UserConfirmedExecutor -Kind feature -Task agent-team-isolation -Scope governance -FrontendPort 55175 -BackendPort 58002 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
     Assert-True ($codexCreated.Workflow -eq "direct") "Codex entry must fix workflow=direct"
     Assert-True ($codexCreated.Executor -eq "codex") "Codex entry must fix executor=codex"
     Assert-True ($agentTeamCreated.Workflow -eq "agent-team") "Agent Team entry must fix workflow=agent-team"
     Assert-True ($agentTeamCreated.Executor -eq "codex") "Agent Team entry must preserve the selected executor"
     $agentTeamPath = Join-Path $worktrees "codex-agent-team-isolation"
-    & $verify -RepositoryPath $agentTeamPath -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor codex | Out-Null
-    $claudeAgentTeamCreated = @(& $agentTeamStarter -Executor claude -Kind feature -Task agent-team-claude -Scope governance -FrontendPort 55176 -BackendPort 58003 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
+    $agentTeamMetadataPath = Join-Path $agentTeamPath ".ai-worktree.json"
+    $agentTeamMetadata = Get-Content -Raw -LiteralPath $agentTeamMetadataPath | ConvertFrom-Json
+    Assert-True ([int]$agentTeamMetadata.schema_version -eq 3) "new Agent Team metadata must use schema v3"
+    Assert-True ($agentTeamMetadata.confirmations.start.status -eq "confirmed") "Agent Team start confirmation must be recorded"
+    Assert-True ($agentTeamMetadata.confirmations.start.executor -eq "codex") "start confirmation executor must match"
+    Assert-True (-not [string]::IsNullOrWhiteSpace([string]$agentTeamMetadata.confirmations.start.confirmed_at)) "start confirmation timestamp must be recorded"
+    Assert-True ($agentTeamMetadata.confirmations.completion.status -eq "pending") "completion confirmation must initially be pending"
+    $pendingVerification = @(& $verify -RepositoryPath $agentTeamPath -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor codex)[-1]
+    Assert-True ($pendingVerification.StartConfirmation -eq "confirmed") "verification must return confirmed start state"
+    Assert-True ($pendingVerification.CompletionConfirmation -eq "pending") "verification must return pending completion state"
+    $pendingCompletionRejected = $false
+    try { & $verify -RepositoryPath $agentTeamPath -RequireMetadata -RequireCompletionConfirmation | Out-Null } catch { $pendingCompletionRejected = $true }
+    Assert-True $pendingCompletionRejected "strict delivery verification must reject pending completion"
+
+    $unconfirmedCompletionRejected = $false
+    try { & $agentTeamCompleter -RepositoryPath $agentTeamPath -Executor codex | Out-Null } catch { $unconfirmedCompletionRejected = $true }
+    Assert-True $unconfirmedCompletionRejected "completion without explicit user confirmation must be rejected"
+    $mismatchedCompletionRejected = $false
+    try { & $agentTeamCompleter -RepositoryPath $agentTeamPath -Executor claude -UserConfirmedCompletion | Out-Null } catch { $mismatchedCompletionRejected = $true }
+    Assert-True $mismatchedCompletionRejected "completion executor mismatch must be rejected"
+    Set-Content -Encoding UTF8 -LiteralPath (Join-Path $agentTeamPath "dirty-confirmation.txt") -Value "dirty"
+    $dirtyCompletionRejected = $false
+    try { & $agentTeamCompleter -RepositoryPath $agentTeamPath -Executor codex -UserConfirmedCompletion | Out-Null } catch { $dirtyCompletionRejected = $true }
+    Assert-True $dirtyCompletionRejected "completion confirmation must reject a dirty worktree"
+    Remove-Item -LiteralPath (Join-Path $agentTeamPath "dirty-confirmation.txt")
+    $completion = @(& $agentTeamCompleter -RepositoryPath $agentTeamPath -Executor codex -UserConfirmedCompletion)[-1]
+    Assert-True ($completion.CompletionConfirmation -eq "confirmed") "completion command must return confirmed status"
+    $confirmedVerification = @(& $verify -RepositoryPath $agentTeamPath -RequireMetadata -RequireCompletionConfirmation -ExpectedWorkflow agent-team -ExpectedExecutor codex)[-1]
+    Assert-True ($confirmedVerification.CompletionConfirmation -eq "confirmed") "strict delivery verification must accept confirmed completion"
+
+    $claudeAgentTeamCreated = @(& $agentTeamStarter -Executor claude -UserConfirmedExecutor -Kind feature -Task agent-team-claude -Scope governance -FrontendPort 55176 -BackendPort 58003 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
     Assert-True ($claudeAgentTeamCreated.Workflow -eq "agent-team") "Claude-hosted Agent Team must preserve workflow=agent-team"
     Assert-True ($claudeAgentTeamCreated.Executor -eq "claude") "Claude-hosted Agent Team must preserve executor=claude"
+    $claudeAgentTeamMetadata = Get-Content -Raw -LiteralPath (Join-Path $worktrees "claude-agent-team-claude/.ai-worktree.json") | ConvertFrom-Json
+    Assert-True ($claudeAgentTeamMetadata.confirmations.start.executor -eq "claude") "Claude start confirmation executor must match"
+    Assert-True ($claudeAgentTeamMetadata.confirmations.completion.status -eq "pending") "Claude completion confirmation must initially be pending"
+    $claudeAgentTeamPath = Join-Path $worktrees "claude-agent-team-claude"
+    $schemaV2AgentTeamMetadata = [ordered]@{
+        schema_version = 2
+        workflow = "agent-team"
+        executor = "claude"
+        task = "agent-team-claude"
+        branch = "feature/agent-team-claude"
+        base = "origin/main"
+        created_at = (Get-Date).ToString("o")
+        scope = @("governance")
+        ports = [ordered]@{ frontend = 55176; backend = 58003 }
+    }
+    $schemaV2AgentTeamMetadata | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $claudeAgentTeamPath ".ai-worktree.json")
+    & $verify -RepositoryPath $claudeAgentTeamPath -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor claude | Out-Null
+    $schemaV2CompletionRejected = $false
+    try { & $verify -RepositoryPath $claudeAgentTeamPath -RequireMetadata -RequireCompletionConfirmation | Out-Null } catch { $schemaV2CompletionRejected = $true }
+    Assert-True $schemaV2CompletionRejected "schema v2 Agent Team metadata must remain readable but cannot bypass completion confirmation"
 
     & $creator -Owner codex -Kind feature -Task legacy-isolation -Scope governance -FrontendPort 55177 -BackendPort 58004 -RepositoryPath $control -DestinationRoot $worktrees | Out-Null
     $legacyPath = Join-Path $worktrees "codex-legacy-isolation"
@@ -114,6 +179,9 @@ try {
     $unknownLegacyExecutorRejected = $false
     try { & $verify -RepositoryPath $legacyAgentTeamPath -RequireMetadata -ExpectedExecutor codex | Out-Null } catch { $unknownLegacyExecutorRejected = $true }
     Assert-True $unknownLegacyExecutorRejected "Legacy owner=agent-team must not be guessed as codex"
+    $legacyCompletionRejected = $false
+    try { & $verify -RepositoryPath $legacyAgentTeamPath -RequireMetadata -RequireCompletionConfirmation | Out-Null } catch { $legacyCompletionRejected = $true }
+    Assert-True $legacyCompletionRejected "legacy Agent Team metadata must not bypass completion confirmation"
 
     $duplicateRejected = $false
     try { & $creator -Owner codex -Kind feature -Task test-isolation -Scope backend -FrontendPort 55179 -BackendPort 58006 -RepositoryPath $control -DestinationRoot $worktrees | Out-Null } catch { $duplicateRejected = $true }
@@ -149,7 +217,7 @@ try {
     & git -C $control push origin main 2>$null
     Assert-True ($LASTEXITCODE -ne 0) "direct main push must be blocked by pre-push hook"
 
-    Write-Host "PASS: workflow/executor entry, invalid pair rejection, legacy metadata, task push/delete, and protected push guard."
+    Write-Host "PASS: workflow/executor entry, two Agent Team confirmations, legacy metadata, task push/delete, and protected push guard."
 }
 finally {
     if (Test-Path -LiteralPath $testRootFull) {
