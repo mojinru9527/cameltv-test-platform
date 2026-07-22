@@ -2,7 +2,7 @@ name: PR 代码门禁
 
 on:
   pull_request:
-    branches: [main, master]
+    branches: [develop, main]
   workflow_dispatch:
 
 jobs:
@@ -12,6 +12,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -79,6 +81,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -136,6 +140,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -175,6 +181,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

@@ -42,7 +42,7 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 - **版本号**：引用蓝湖「更新日志」页产品手写版本号（用户端 14.1.0 / 运营后台 8.2.0），非系统版本号
 - **用例规范**：所有功能用例和接口用例必须遵循 [tests/test-case-standards/](tests/test-case-standards/) 下的标准
 - **命名规范**：测试用例 `TC-{模块}-{编号}.md`，需求文档 `{系统}-{版本}-需求规格说明书.md`
-- **Git 规范**：功能分支 `feature/xxx`，修复分支 `fix/xxx`，主分支 `develop`（PR 合并，禁止直接 push）
+- **Git 规范**：唯一主干 `main`；功能分支 `feature/xxx`、修复分支 `fix/xxx`，必须使用独立 worktree 和 PR，禁止直接 push 主干
 - **任务完成**：每次任务完成后需明确回复"该任务已完成"
 
 ## 环境速览
@@ -78,6 +78,6 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 ## AI 协作指引
 
 - 本文件为 AI 第一入口。各子项目 CLAUDE.md 包含模块级约定和细节。Agent 工作流规范见 [AGENTS.md](AGENTS.md)
-- Memory 系统位于 `~/.claude/projects/f--CamelTv/memory/`，存储跨会话的偏好和约定
+- 仓库内 `AGENTS.md`、`docs/adr/`、`work-logs/` 是 Claude Code、ChatGPT/Codex 和 Agent Team 的共同事实源；路径绑定的个人 Memory 只能作为辅助，不能替代仓库交付物
 - 蓝湖原型内容通过 lanhu-mcp 工具获取，不要在 CLAUDE.md 中硬编码原型内容
 - 做架构级决策时，先查阅 [docs/adr/](docs/adr/)，并在 PR 中考虑是否需新增 ADR

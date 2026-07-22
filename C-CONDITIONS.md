@@ -105,13 +105,23 @@
 | C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 2026-07-22 |
 | C31-3 | 运营后台验收需补充生产地址和只读测试账号 | P1 | 2026-07-22 |
 
+### batch-32 — 单一主干与双 AI 隔离迁移
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C32-1 | 父仓库与 lanhu-mcp 的 refs/脏文件备份必须通过 bundle、ZIP 和 SHA-256 校验 | P0 | 2026-07-22 |
+| C32-2 | PR #56 全量本地测试与 GitHub 主干质量门禁通过后才允许合并和重命名 | P0 | 2026-07-22 |
+| C32-3 | baseline/legacy 标签远端验证完成后才允许删除 develop/master | P0 | 2026-07-22 |
+| C32-4 | main ruleset、squash-only、自动清理分支、双 AI worktree 和原运行目录不变均需实测 | P1 | 2026-07-22 |
+
 ---
 
 ## In Progress (处理中)
 
 | ID | 内容 | 批次 | 分支 |
 |----|------|------|------|
-| — | — | — | — |
+| C32-1 | 备份已验证，待随迁移 PR 归档证据 | batch-32 | `feature/batch-31-platform-audit` |
+| C32-2 | worktree/CI/Agent Team 规则实现中 | batch-32 | `feature/batch-31-platform-audit` |
 
 ---
 
@@ -175,10 +185,10 @@
 
 ## 统计
 
-- **Open**: 33 (含 2 个 P0 blocking, 10 个孤儿归位)
-- **In Progress**: 0
+- **Open**: 37 (含 5 个 P0 blocking, 10 个孤儿归位)
+- **In Progress**: 2
 - **Closed**: 35 (含 16 个孤儿归位)
-- **Total**: 68
+- **Total**: 72
 
 ## 维护约定
 
