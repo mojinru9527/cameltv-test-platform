@@ -32,6 +32,8 @@ related: ["AGENTS.md", ".claude/skills/cameltv-agent-team/SKILL.md"]
 - pre-push 对任务分支自动执行 verifier，阻断本地遗漏或 metadata 篡改；任务分支删除和标签不受影响。
 - `audit-ai-pr.ps1` 的基础模式允许 completion pending，以便创建 Draft PR 和完成首轮 CI；`-RequireSuccessfulChecks` 对 Agent Team 强制 completion confirmed，并继续核对 workflow/executor、本地/远端 SHA、PR base/head、声明范围、required checks 与 squash-only 策略。
 - GitHub Actions 与 main ruleset 是最终不可绕过层；本地工具负责尽早反馈，不能替代远端门禁。
+- Required workflows 始终对 PR 创建，禁止用顶层 path filter 隐去 required context。`scripts/ci/classify_ci_changes.py` 根据完整 PR diff 选择后端/前端重测试；固定名称汇总 job 始终执行，并在分类或对应重测试失败时失败。
+- 文档/治理变更可跳过双端重测试；单端变更只跑相关域；CI、部署、未知路径、空集合、`main` push 与手动触发均 fail-safe 为双端全量。最新 PR SHA 不复用旧提交检查。
 
 文本文件由 `.gitattributes` 固定 LF（`.bat/.cmd` 除外），仓库配置关闭 `core.autocrlf`，避免 Windows 文件时间或行尾转换制造无内容差异的假脏状态。
 

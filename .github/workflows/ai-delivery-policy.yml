@@ -17,6 +17,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate CI scope classifier contract
+        run: python scripts/ci/test_classify_ci_changes.py
+
       - name: Validate branch, local-only files, and secrets
         shell: bash
         env:
