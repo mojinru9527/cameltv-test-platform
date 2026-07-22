@@ -41,10 +41,13 @@ from app.models.ui_test import UiTestJob, UiTestRun
 from app.models.user import User
 from app.models.version_mission import AgentWorkLog, GeneratedArtifact, VersionMission
 from app.models.wiki import (
+    ExternalWikiConnection,
     WikiDiffItem,
     WikiDiffTask,
     WikiIngestJob,
     WikiLink,
+    WikiLintIssue,
+    WikiLintReport,
     WikiPage,
     WikiRawSource,
 )
@@ -107,6 +110,9 @@ __all__ = [
     "WikiIngestJob",
     "WikiDiffTask",
     "WikiDiffItem",
+    "ExternalWikiConnection",
+    "WikiLintReport",
+    "WikiLintIssue",
     "LanhuEvidenceJob",
     "LanhuEvidencePage",
     "LanhuEvidenceAsset",

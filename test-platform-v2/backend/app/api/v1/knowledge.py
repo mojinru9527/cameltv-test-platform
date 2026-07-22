@@ -606,10 +606,15 @@ def graph_view(
 
     stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
     if knowledge_domain:
-        # JOIN KnowledgeSource 实现知识域过滤（source_id 可能为空，用 left join 保留无关联源的实体）
-        stmt = stmt.outerjoin(
-            KnowledgeSource, KnowledgeEntity.source_id == KnowledgeSource.id
-        ).where(KnowledgeSource.knowledge_domain == knowledge_domain)
+        # 知识域过滤：实体关联的 source 属于该 domain，或实体无关联 source（孤儿实体保留）
+        matching_sources = select(KnowledgeSource.id).where(
+            KnowledgeSource.project_id == pid,
+            KnowledgeSource.knowledge_domain == knowledge_domain,
+        )
+        stmt = stmt.where(
+            KnowledgeEntity.source_id.in_(matching_sources)
+            | KnowledgeEntity.source_id.is_(None)
+        )
     entities = list(db.scalars(stmt.limit(limit)).all())
 
     relations = list(
