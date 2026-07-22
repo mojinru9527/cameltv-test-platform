@@ -171,6 +171,7 @@ class SearchQuery(BaseModel):
 
 
 class SearchResultOut(BaseModel):
+    model_config = {"from_attributes": True}
     chunk_id: int
     chunk_type: str
     title: str

@@ -186,7 +186,7 @@ def search_knowledge(
         chunk_type=body.chunk_type,
         mode=effective_mode,
     )
-    return R.ok([SearchResultOut(**hit.__dict__) for hit in hits])
+    return R.ok([SearchResultOut.model_validate(hit) for hit in hits])
 
 
 @router.get("/search/health", response_model=R[SearchHealthOut], summary="搜索健康检查（RAG）")
@@ -340,7 +340,6 @@ def deprecate_source(
     ok = source_service.deprecate_source(db, source_id, current.project_id or 0)
     if not ok:
         return R(code=404, msg="知识源不存在")
-    db.commit()
     _audit(req, current, db, "knowledge:deprecate", f"source#{source_id}")
     db.commit()
     return R.ok({"id": source_id, "status": "deprecated"})
@@ -357,7 +356,6 @@ def verify_source(
     row = source_service.verify_source(db, source_id, current.project_id or 0)
     if not row:
         return R(code=404, msg="知识源不存在")
-    db.commit()
     _audit(req, current, db, "knowledge:verify", f"source#{source_id}")
     db.commit()
     db.refresh(row)
@@ -391,7 +389,6 @@ def classify_source(
     )
     if not row:
         return R(code=404, msg="知识源不存在")
-    db.commit()
     _audit(req, current, db, "knowledge:classify", f"source#{source_id}",
            f"para={body.para_category} domain={body.knowledge_domain}")
     db.commit()
@@ -479,7 +476,6 @@ def approve_artifact(
     row = artifact_service.approve(db, artifact_id, current.project_id or 0, current.user.id, body.comment)
     if not row:
         return R(code=404, msg="AI 产物不存在")
-    db.commit()
     _audit(req, current, db, "knowledge:approve", f"artifact#{artifact_id}", body.comment)
     db.commit()
     db.refresh(row)
