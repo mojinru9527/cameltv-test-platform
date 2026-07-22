@@ -31,6 +31,8 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import AiResultModal from './AiResultModal'
 import EvidenceTaskPanel from './components/EvidenceTaskPanel'
+import VersionCompare from './components/VersionCompare'
+import PrototypePreview from './components/PrototypePreview'
 import LanhuEvidenceDialog from '@/pages/knowledge/components/LanhuEvidenceDialog'
 import LanhuEvidenceJobDrawer from '@/pages/knowledge/components/LanhuEvidenceJobDrawer'
 
@@ -98,6 +100,12 @@ export default function RequirementPage() {
   const [extracting, setExtracting] = useState(false)
   const [extractingDocId, setExtractingDocId] = useState<number | null>(null)
   const [confirmedExtractionIds, setConfirmedExtractionIds] = useState<Set<number>>(new Set())
+  // ── batch-28: version compare + screenshot preview states ──
+  const [versionDiffData, setVersionDiffData] = useState<any>(null)
+  const [showVersionCompare, setShowVersionCompare] = useState(false)
+  const [screenshotPages, setScreenshotPages] = useState<any[]>([])
+  const [showScreenshotPreview, setShowScreenshotPreview] = useState(false)
+  const [screenshotVersion, setScreenshotVersion] = useState('')
 
   const docPageSize = 10
   const domainPageSize = 8
@@ -269,6 +277,31 @@ export default function RequirementPage() {
     }
   }
 
+  /** Open screenshot preview for an evidence job (batch-28) */
+  const handleViewScreenshots = async (job: any) => {
+    try {
+      const { fetchLanhuEvidenceAssets } = await import('@/api/lanhuEvidence')
+      const assets = await fetchLanhuEvidenceAssets(job.id)
+      const screenshots = (assets || [])
+        .filter((a: any) => a.asset_type === 'screenshot')
+        .map((a: any, i: number) => ({
+          page_name: a.relative_path?.replace(/^.*[\\/]/, '') || `截图 ${i + 1}`,
+          page_index: i,
+          ocr_text: '',
+          screenshot_url: `/api/v1/lanhu-evidence/assets/${a.id}/download`,
+        }))
+      if (screenshots.length > 0) {
+        setScreenshotPages(screenshots)
+        setScreenshotVersion(job.source_url ? (job.source_url.match(/\/updates\/([\d.]+)/) || [])[1] || '' : '')
+        setShowScreenshotPreview(true)
+      } else {
+        toast.info('该任务暂无截图资产')
+      }
+    } catch {
+      toast.error('获取截图失败')
+    }
+  }
+
   const handleViewCases = async (docId: number) => {
     try {
       const result = await fetchGeneratedCases(docId)
@@ -327,6 +360,7 @@ export default function RequirementPage() {
       <div className="flex gap-4 items-start">
         <EvidenceTaskPanel
           onViewExtraction={handleViewExtraction}
+          onViewScreenshots={handleViewScreenshots}
           onNewTask={() => setEvOpen(true)}
         />
 
@@ -699,6 +733,29 @@ export default function RequirementPage() {
                                   )}
                                   {r.extraction_status === 'confirmed' ? '重新拆分' : 'AI 生成'}
                                 </Button>
+
+                                {/* Version compare (batch-28): shown when diff_json exists */}
+                                {r.diff_json && (() => {
+                                  try {
+                                    const diffData = typeof r.diff_json === 'string' ? JSON.parse(r.diff_json) : r.diff_json
+                                    if (diffData?.pages) {
+                                      return (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => {
+                                            setVersionDiffData(diffData)
+                                            setShowVersionCompare(true)
+                                          }}
+                                        >
+                                          <GitCompare className="size-3.5" />
+                                          版本对比
+                                        </Button>
+                                      )
+                                    }
+                                  } catch { /* invalid JSON, hide button */ }
+                                  return null
+                                })()}
                               </>
                             )}
                             {r.status === 'generated' && (
@@ -867,6 +924,21 @@ export default function RequirementPage() {
         onImportSuccess={handleImportSuccess}
         onExtractionConfirmAndGenerate={handleExtractionConfirmAndGenerate}
         onExtractionReject={handleExtractionReject}
+      />
+
+      {/* ── batch-28: Version comparison modal ── */}
+      <VersionCompare
+        open={showVersionCompare}
+        onClose={() => setShowVersionCompare(false)}
+        diffData={versionDiffData}
+      />
+
+      {/* ── batch-28: Screenshot preview modal ── */}
+      <PrototypePreview
+        open={showScreenshotPreview}
+        onClose={() => setShowScreenshotPreview(false)}
+        pages={screenshotPages}
+        version={screenshotVersion}
       />
     </div>
   )

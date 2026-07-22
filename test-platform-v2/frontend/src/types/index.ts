@@ -93,6 +93,9 @@ export interface RequirementDocument {
   imported_count: number
   imported_func_count: number
   imported_api_count: number
+  diff_json?: string       // batch-26: version diff data (JSON string)
+  diff_status?: string     // batch-26: "initial" | "update"
+  version?: string         // batch-26: parsed version
   parsed_type: string
   excel_cases: Record<string, string>[]
   created_at: string | null

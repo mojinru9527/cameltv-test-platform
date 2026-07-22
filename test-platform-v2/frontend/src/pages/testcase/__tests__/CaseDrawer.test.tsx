@@ -31,7 +31,7 @@ describe('新建用例弹窗', () => {
       />,
     )
 
-    expect(screen.getByLabelText('状态').textContent).toContain('草稿')
+    expect(screen.getByLabelText('状态').textContent).toContain('启用')
     expect(screen.queryByLabelText('用例编号')).toBeNull()
     expect(screen.queryByLabelText(/标签/)).toBeNull()
     expect(screen.queryByLabelText('关联引用')).toBeNull()

@@ -90,6 +90,33 @@ function ClientScopeBadges({ clients }: { clients: string[] }) {
   )
 }
 
+/** VersionMarkerBadge — shows version origin for function points (batch-28). */
+function VersionMarkerBadge({ fp, diffStatus, baseVersion }: {
+  fp: { _inherited?: boolean; _from_version?: string }
+  diffStatus?: string
+  baseVersion?: string
+}) {
+  if (fp._inherited) {
+    return (
+      <Badge variant="outline" className="text-[10px] text-blue-600 border-blue-300">
+        ➡️ 沿用自 {fp._from_version || baseVersion || '?'}
+      </Badge>
+    )
+  }
+  if (diffStatus === 'update') {
+    return (
+      <Badge variant="outline" className="text-[10px] text-orange-600 border-orange-300">
+        ✏️ 本版本变更
+      </Badge>
+    )
+  }
+  return (
+    <Badge variant="outline" className="text-[10px] text-green-600 border-green-300">
+      🆕 首次提取
+    </Badge>
+  )
+}
+
 function renderSteps(steps: string) {
   try {
     const arr = JSON.parse(steps)
@@ -684,6 +711,11 @@ export default function AiResultModal({
                                       {TYPE_LABELS[fp.type] || fp.type}
                                     </Badge>
                                     <ClientScopeBadges clients={fp.client_scope} />
+                                    <VersionMarkerBadge
+                                      fp={fp as any}
+                                      diffStatus={extractionResult?.diff_summary ? 'update' : undefined}
+                                      baseVersion={extractionResult?.inherited_from_version}
+                                    />
                                   </div>
                                   {fp.description && (
                                     <p className="text-xs text-muted-foreground mb-2">

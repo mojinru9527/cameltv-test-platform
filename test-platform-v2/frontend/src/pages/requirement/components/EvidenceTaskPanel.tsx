@@ -14,13 +14,15 @@ import {
 } from '@/api/lanhuEvidence'
 import type { LanhuEvidenceJob } from '@/api/lanhuEvidence'
 import {
-  Loader2, Plus, RefreshCw, XCircle, CheckCircle2, AlertTriangle, Clock, ExternalLink, Trash2,
+  Loader2, Plus, RefreshCw, XCircle, CheckCircle2, AlertTriangle, Clock, ExternalLink, Trash2, Image,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
 interface Props {
   /** Fired when user clicks "查看功能拆分" on a successful job */
   onViewExtraction?: (job: LanhuEvidenceJob) => void
+  /** Fired when user clicks "查看截图" on a successful job (batch-28) */
+  onViewScreenshots?: (job: LanhuEvidenceJob) => void
   /** Trigger open the create dialog */
   onNewTask?: () => void
 }
@@ -285,6 +287,17 @@ export default function EvidenceTaskPanel({ onViewExtraction, onNewTask }: Props
                         </Button>
                       ) : null
                     })()}
+                    {isDone && onViewScreenshots && (
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        className="h-6 text-[10px] px-2"
+                        onClick={() => onViewScreenshots(job)}
+                      >
+                        <Image className="size-3 mr-0.5" />
+                        查看截图
+                      </Button>
+                    )}
                     {!isActive && (
                       <Button
                         size="xs"
