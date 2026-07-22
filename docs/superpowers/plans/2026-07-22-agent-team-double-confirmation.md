@@ -65,7 +65,7 @@
 
 - [x] Pass parser, self-test, hook, YAML, documentation, and diff checks locally.
 - [x] Upgrade this Batch 35 ignored metadata to schema v3 with start Codex confirmed and completion pending.
-- [ ] Commit exact Batch 35 files, push the feature branch, create a Draft PR, and wait for first CI.
-- [ ] Prove the basic audit passes and final audit is blocked while completion is pending.
-- [ ] Stop and ask the user to reconfirm the actual executor and authorize final audit/merge.
+- [x] Commit exact Batch 35 files, push the feature branch, create a Draft PR, and wait for first CI.
+- [x] Prove the basic audit passes and final audit is blocked while completion is pending.
+- [x] Stop and ask the user to reconfirm the actual executor and authorize final audit/merge.
 - [ ] Only after that reply, record completion, push evidence, wait for final CI, audit, squash merge, and clean up the verified Batch 35 worktree.

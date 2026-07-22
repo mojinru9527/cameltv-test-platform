@@ -1,7 +1,7 @@
 ---
 title: "Batch 35 Agent Team 双确认门禁 PM 计划"
 owner: "pm"
-last_reviewed: "2026-07-22"
+last_reviewed: "2026-07-23"
 status: "active"
 tags: ["agent-team", "git", "confirmation"]
 ---
@@ -13,8 +13,8 @@ tags: ["agent-team", "git", "confirmation"]
 | 1 需求与接口 | 六部门工件记录开始确认、两次硬暂停及非目标 | 已完成 |
 | 2 红绿测试 | 缺确认、身份错配、脏工作区均拒绝，正确路径通过 | 已完成 |
 | 3 脚本与文档 | schema v3、完成确认命令、最终审计门禁及规范同步 | 已完成 |
-| 4 真实 PR | Draft PR 首轮 CI 后必须停下等待用户第二次确认 | 进行中 |
-| 5 最终交付 | 第二次确认后最终 CI、审计、squash merge 和清理 | 被用户确认阻塞 |
+| 4 真实 PR | Draft PR 首轮 CI 后必须停下等待用户第二次确认 | 已完成 |
+| 5 最终交付 | 第二次确认后最终 CI、审计、squash merge 和清理 | 进行中 |
 
 # 质量要求
 
