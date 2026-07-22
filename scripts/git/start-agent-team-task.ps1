@@ -1,6 +1,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
+    [ValidateSet("claude", "codex")]
+    [string]$Executor,
+    [Parameter(Mandatory)]
     [ValidateSet("feature", "fix", "hotfix", "release")]
     [string]$Kind,
     [Parameter(Mandatory)] [string]$Task,
@@ -13,7 +16,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $arguments = @{
-    Owner = "agent-team"
+    Executor = $Executor
+    Workflow = "agent-team"
     Kind = $Kind
     Task = $Task
     Scope = $Scope

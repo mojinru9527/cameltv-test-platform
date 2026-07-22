@@ -46,11 +46,12 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 # 0. 开工前强制拉取最新代码
 git fetch origin main
 
-# 1. 从最新 main 创建独立 worktree；固定入口自动写入 owner=agent-team
-pwsh scripts/git/start-agent-team-task.ps1 -Kind feature -Task batch-{N}-{name} -Scope test-platform-v2 -FrontendPort {独立端口} -BackendPort {独立端口}
+# 1. 从最新 main 创建独立 worktree；Agent Team 是 workflow，Executor 是实际宿主
+# 在 Codex 中运行用 codex；在 Claude Code 中运行用 claude
+pwsh scripts/git/start-agent-team-task.ps1 -Executor {claude|codex} -Kind feature -Task batch-{N}-{name} -Scope test-platform-v2 -FrontendPort {独立端口} -BackendPort {独立端口}
 
 # 1.1 在新 worktree 开工前验证
-pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedOwner agent-team
+pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex}
 
 # 2. 每切片结束后只暂存本切片文件（防夹带其他任务或生成物）
 git status --short
@@ -69,8 +70,8 @@ gh pr create \
   --body "Agent Team 六部门流水线已完成。工件见 work-logs/batch-{N}-*-*.md"
 
 # 3.1 PR 创建后做基础审计；三项 required checks 全绿后做最终审计
-pwsh scripts/git/audit-ai-pr.ps1 -ExpectedOwner agent-team
-pwsh scripts/git/audit-ai-pr.ps1 -ExpectedOwner agent-team -RequireSuccessfulChecks
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex}
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex} -RequireSuccessfulChecks
 
 # 4. PR 合入且确认无需继续修复后，从控制 worktree 更新 main 再清理任务 worktree
 git -C F:/CamelTv-control pull --ff-only origin main
@@ -96,9 +97,8 @@ git branch -d feature/batch-{N}-{name}
 
 ✅ 正确：每个窗口独立 worktree
    F:\CamelTv-control\      ← 控制 worktree（main，只同步不开发）
-   F:\CamelTv-worktrees\claude-fix-a\ ← Claude：feature/fix-a
-   F:\CamelTv-worktrees\codex-fix-b\  ← Codex：feature/fix-b
-   F:\CamelTv-worktrees\agent-team-c\ ← Agent Team：feature/c
+   F:\CamelTv-worktrees\claude-fix-a\ ← Agent Team workflow + Claude executor：feature/fix-a
+   F:\CamelTv-worktrees\codex-fix-b\  ← Agent Team workflow + Codex executor：feature/fix-b
    → 各自隔离，互不影响
 ```
 
@@ -108,9 +108,9 @@ git branch -d feature/batch-{N}-{name}
 # ═══════ V1 开发周期 ═══════
 
 # Step 1：每个窗口开工前，在主仓库执行一次
-pwsh scripts/git/start-claude-task.ps1 -Kind feature -Task batch-{N1}-{name1} -Scope {模块1} -FrontendPort 5173 -BackendPort 8000
-pwsh scripts/git/start-codex-task.ps1 -Kind feature -Task batch-{N2}-{name2} -Scope {模块2} -FrontendPort 5174 -BackendPort 8001
-pwsh scripts/git/start-agent-team-task.ps1 -Kind feature -Task batch-{N3}-{name3} -Scope {模块3} -FrontendPort 5175 -BackendPort 8002
+pwsh scripts/git/start-agent-team-task.ps1 -Executor claude -Kind feature -Task batch-{N1}-{name1} -Scope {模块1} -FrontendPort 5173 -BackendPort 8000
+pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -Kind feature -Task batch-{N2}-{name2} -Scope {模块2} -FrontendPort 5174 -BackendPort 8001
+# 只有不走六部门 Agent Team 的直接任务才使用 start-claude-task.ps1 / start-codex-task.ps1
 
 # Step 2：每个 VSCode 窗口 Open Folder 打开对应的 worktree 目录
 # Step 3：各自独立开发、每切片 commit+push（遵循上方标准流程）
@@ -130,7 +130,7 @@ git branch -d feature/batch-{N1}-{name1} feature/batch-{N2}-{name2} feature/batc
 # ═══════ V2 开发周期 ═══════
 
 # Step 7：V2 窗口从最新 main（已含 V1 全部修复）切出
-pwsh scripts/git/start-agent-team-task.ps1 -Kind feature -Task batch-{N4}-{name4} -Scope {模块4} -FrontendPort 5176 -BackendPort 8003
+pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -Kind feature -Task batch-{N4}-{name4} -Scope {模块4} -FrontendPort 5176 -BackendPort 8003
 # ... 自动继承 V1 全部代码，无需手动拉取 V1 各分支
 ```
 

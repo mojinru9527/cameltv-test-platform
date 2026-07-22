@@ -13,7 +13,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $arguments = @{
-    Owner = "claude"
+    Executor = "claude"
+    Workflow = "direct"
     Kind = $Kind
     Task = $Task
     Scope = $Scope
