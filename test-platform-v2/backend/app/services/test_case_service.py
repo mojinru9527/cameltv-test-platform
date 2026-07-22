@@ -145,7 +145,11 @@ def list_cases(
 
 def get_case(db: Session, case_id: int, project_id: int = 0) -> dict | None:
     row = db.scalar(
-        select(TestCase).where(TestCase.id == case_id, TestCase.project_id == project_id)
+        select(TestCase).where(
+            TestCase.id == case_id,
+            TestCase.project_id == project_id,
+            TestCase.is_deleted == False,
+        )
     )
     return _row_to_dict(row) if row else None
 
@@ -161,7 +165,9 @@ def create_case(db: Session, data: dict) -> dict:
 
 def update_case(db: Session, case_id: int, data: dict, changed_by: int = 0) -> dict | None:
     data = _sanitize_case_data(data)
-    row = db.get(TestCase, case_id)
+    row = db.scalar(
+        select(TestCase).where(TestCase.id == case_id, TestCase.is_deleted == False)
+    )
     if not row:
         return None
 
@@ -181,7 +187,11 @@ def update_case(db: Session, case_id: int, data: dict, changed_by: int = 0) -> d
 
 def delete_case(db: Session, case_id: int, project_id: int = 0) -> bool:
     row = db.scalar(
-        select(TestCase).where(TestCase.id == case_id, TestCase.project_id == project_id)
+        select(TestCase).where(
+            TestCase.id == case_id,
+            TestCase.project_id == project_id,
+            TestCase.is_deleted == False,
+        )
     )
     if not row:
         return False
@@ -192,7 +202,11 @@ def delete_case(db: Session, case_id: int, project_id: int = 0) -> bool:
 
 def batch_delete(db: Session, ids: list[int], project_id: int = 0) -> int:
     rows = db.scalars(
-        select(TestCase).where(TestCase.id.in_(ids), TestCase.project_id == project_id)
+        select(TestCase).where(
+            TestCase.id.in_(ids),
+            TestCase.project_id == project_id,
+            TestCase.is_deleted == False,
+        )
     ).all()
     for r in rows:
         r.is_deleted = True

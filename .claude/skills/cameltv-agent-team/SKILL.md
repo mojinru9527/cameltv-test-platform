@@ -49,8 +49,10 @@ git fetch origin develop
 # 1. 从最新 develop 切分支
 git checkout -b feature/batch-{N}-{name} origin/develop
 
-# 2. 每切片结束后提交（防工作树重置）
-git add -A
+# 2. 每切片结束后只暂存本切片文件（防夹带其他任务或生成物）
+git status --short
+git add -- path/to/file1 path/to/file2
+git diff --cached --name-status
 git commit -m "feat(batch-{N}): {切片描述}"
 git push -u origin feature/batch-{N}-{name}
 
@@ -63,11 +65,10 @@ gh pr create \
   --title "feat: Batch {N} — {一句话摘要}" \
   --body "Agent Team 六部门流水线已完成。工件见 work-logs/batch-{N}-*-*.md"
 
-# 4. PR 合入后清理本地和远程分支
+# 4. PR 合入且确认无需继续修复后清理本地分支；远端分支按仓库策略处理
 git checkout develop
 git pull origin develop
 git branch -d feature/batch-{N}-{name}
-git push origin --delete feature/batch-{N}-{name}
 ```
 
 ### 防冲突规则
@@ -142,9 +143,9 @@ git worktree add ../CamelTv-w4 -b feature/batch-{N4}-{name4} origin/develop
 - 🚨 在某个 worktree 分支上 `git merge` 其他窗口的分支（而非通过 PR 合入 develop）→ 破坏追溯性
 - 🚨 跳过 worktree 直接用 `git stash` + `git checkout` 切换任务 → 代码覆盖风险极高
 
-### 分类器阻塞处理
+### 权限或安全策略阻塞处理
 
-若 `git push` / `gh pr create` 被 DeepSeek 安全分类器阻塞，使用 `dangerouslyDisableSandbox: true` 参数绕过（见 memory `[[agent-team-safety-bypass]]`）。
+若 `git push` / `gh pr create` 被权限或安全策略阻塞，保留本地提交并向用户报告具体命令、错误和所需授权；禁止绕过安全策略。
 
 ## 标准工作流程
 
@@ -159,23 +160,25 @@ git worktree add ../CamelTv-w4 -b feature/batch-{N4}-{name4} origin/develop
 
 ### 第 1–6 步：逐部门产出工件
 
-1. **Product**：**先读 `C-CONDITIONS.md`**，检查上一批次遗留条件，在 PRD「非目标」段中明确哪些纳入本次、哪些豁免及理由。然后写问题陈述 → 成功指标 → 非目标 → 用户故事+验收标准（Given/When/Then）。先答「为什么用户关心」，再写需求。PRD 完成后用 `grill-with-docs` skill 拷问一遍（对着 domain model 和 ADR 挑战每个假设），用 `ubiquitous-language` skill 提取领域术语表并写入 CONTEXT.md。探索不熟悉的模块时用 `zoom-out` skill 拉高视角理解全局位置后再下笔。
+1. **Product**：**先读 `C-CONDITIONS.md`**，检查上一批次遗留条件，在 PRD「非目标」段中明确哪些纳入本次、哪些豁免及理由。然后写问题陈述 → 成功指标 → 非目标 → 用户故事+验收标准（Given/When/Then）。先答「为什么用户关心」，再写需求。可用技能存在时再调用；技能不可用不得阻断交付，须在工件中记录替代核查方法。
 2. **PM**：拆成 30–60 分钟可完成的任务，每个任务含描述/验收标准/涉及文件/参考。**不加 PRD 外的「豪华」需求**。
 3. **Design**：只输出真实代码能落地的规范；若前端已实现则**反向回填**规范并做设计走查（用「文件:行号」锚点）。UI 细节走 `cameltv-ui-conventions` skill。API/模块接口设计不确定时，用 `design-an-interface` skill 并行生成多套方案对比；UI/状态机不确定时，用 `prototype` skill 做一次性原型验证后再写规范。
-4. **Dev**：**TDD 红绿重构为默认编码方法**（使用 `tdd` skill：先写失败测试→最小实现→重构→循环）。按切片（Slice）推进：📝方案→💻编码→🔍自测→✅审批→🚀合入。每 batch 结束更新看板。编码前扫一遍 `cameltv-bug-guard` skill 避免重复踩坑。
+4. **Dev**：**TDD 红绿重构为默认编码方法**（先写失败测试→最小实现→重构→循环）。按切片（Slice）推进：📝方案→💻编码→🔍自测→✅审批→🚀合入。每 batch 结束更新看板。相关技能存在时用于补充检查，不得把“调用过技能”当作测试证据。
    - **KB 检索**：编码前检索知识库中本次修改模块的历史缺陷和已知问题模式（`chunk_type=platform_knowledge` + `defect_case`）。检索到的每个相关问题须在代码中明确处理或在 commit message 中注明豁免理由。
-5. **QA**：默认立场「需要改进」。证据驱动——每个结论要有截图/日志/指标。首个实现必有 3–5 个问题，「零问题/满分」是红旗。缺陷按 P0–P3 定级。
+5. **QA**：默认立场「需要改进」。证据驱动——每个结论要有截图/日志/指标，不预设缺陷数量；零缺陷结论必须同时提供干净检出、类型检查、构建、自动化测试和关键用户路径证据。缺陷按 P0–P3 定级。
+   - **最小硬门禁**：前端 `npm ci && npm run typecheck && npm run build`；后端 app 导入、`ruff check app --select F821`、Alembic 单头与 revision 长度测试。涉及模块的单元/集成测试必须执行并记录退出码。
+   - **禁止静态代替执行**：文件存在、代码目测、工件齐全不能单独判定 PASS。
    - **KB 辅助定级**：出具 QA 报告前，检索知识库中与被测模块相关的历史缺陷模式。相似历史缺陷须在报告中列出，用于辅助缺陷定级（P0–P3）和评估回归风险。
    **遇到硬 bug 或性能回归时，走 `diagnose` skill 的纪律化诊断循环**（复现→最小化→假设→插桩→修→回归测试），不靠猜测修。
-6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**，确保不会被遗忘。**合入前对关键模块用 `review` skill 做双轴审查**（Standards 轴：是否遵循项目规范 + Spec 轴：是否匹配 PRD/issue 的验收标准），并行子代理出报告。**每 3–5 个 batch 用 `improve-codebase-architecture` skill 做一次架构体检**（结合 CONTEXT.md 和 ADR 找技术债务和耦合点）。
+6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**。Leader 只在 QA 硬门禁全绿且 PR 必需检查可见、通过后给 APPROVED；没有运行日志、只有文档结论时必须打回。
    - **知识审计**：合入前验证 (a) 本批次是否产出了可入库的知识（设计决策、踩坑记录、新发现的问题模式）；(b) 如有，是否已通过 `ingest_platform_knowledge` 入库；(c) 本批次决策是否与 KB 中已有知识矛盾，如有矛盾须在 leader-verdict 中记录并说明取舍理由。
    **跨会话交接时用 `handoff` skill 压缩上下文为交接文档**，避免下一个 session 丢失进度。
 
 ### 第 7 步：合入 + 收尾
 
-- 合入前：QA 判决 PASS + Leader APPROVED。
+- 合入前：QA 判决 PASS + Leader APPROVED + PR 必需检查全部通过。若仓库尚未配置 required checks，禁止自动合并，必须由人工确认检查结果。
 - 合入：**必须通过 PR**（`gh pr create`），禁止直接 `git merge` 到 develop 再 push（分支保护会拒绝）。详见上方 [Git 工作流](#git-工作流强制)。
-- 合入后：更新看板批次记录（产出+审批+耗时），执行分支清理（`git branch -d` + `git push --delete`）。
+- 合入后：更新看板批次记录（产出+审批+耗时）；本地分支确认无未推送提交后删除，远端分支按仓库自动删除策略或人工决定。
 - ⚠️ 工作树可能被外部进程周期性重置 → **每切片即刻 commit + push**（见 `[[worktree-reset-hazard]]`）。
 
 ## 工件命名规范

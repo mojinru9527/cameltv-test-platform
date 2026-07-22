@@ -3,12 +3,8 @@ name: develop 导入冒烟门禁
 # 背景：既有 pr-check.yml 仅 `on: pull_request: branches: [main, master]`，
 # 而团队日常主分支是 develop —— 导致所有 develop PR 绕过代码门禁，
 # 曾使「已提交代码引用未提交模块、全新检出即无法导入」的问题长期潜伏。
-# 本工作流补齐 develop 的最小「全新检出可导入」冒烟，杜绝该类问题复发。
-#
-# 范围有意最小且必然为绿：仅验证后端 tracked 代码在干净检出下可导入 +
-# alembic 版本链单头。前端 tsc / 完整 pytest / alembic upgrade 的门禁留作
-# 后续（依赖先修复共享测试夹具漂移与 alembic 从零升级漂移，详见
-# work-logs/reviews/BATCH-B-repo-hygiene-findings.md）。
+# 本工作流补齐 develop 的可执行门禁：后端可导入、无未定义符号、迁移链有效，
+# 前端必须在全新检出下完成类型检查和生产构建。
 
 on:
   pull_request:
@@ -32,7 +28,13 @@ jobs:
 
       - name: Install Dependencies
         working-directory: test-platform-v2/backend
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install pytest ruff
+
+      - name: 未定义符号检查（阻断运行时 NameError）
+        working-directory: test-platform-v2/backend
+        run: ruff check app/ --select F821 --output-format=github
 
       - name: 导入冒烟（app.main 必须可导入）
         working-directory: test-platform-v2/backend
@@ -44,3 +46,33 @@ jobs:
           heads="$(python -m alembic heads 2>/dev/null | grep -c '(head)')"
           echo "alembic heads = $heads"
           test "$heads" -eq 1
+
+      - name: Alembic revision 长度兼容性
+        working-directory: test-platform-v2/backend
+        run: python -m pytest tests/test_migration_revision_ids.py -q
+
+  frontend-clean-build:
+    name: 前端全新检出类型检查与构建
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: test-platform-v2/frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/frontend
+        run: npm ci
+
+      - name: Type Check
+        working-directory: test-platform-v2/frontend
+        run: npm run typecheck
+
+      - name: Production Build
+        working-directory: test-platform-v2/frontend
+        run: npm run build

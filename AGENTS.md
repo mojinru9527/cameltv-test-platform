@@ -83,8 +83,9 @@ gh pr create --base develop --head feature/{描述} --title "..." --body "..."
 
 ### 3.1 代码质量
 
-- [ ] **Lint 通过**: 后端 `ruff check app/`，前端 `npx tsc --noEmit`
-- [ ] **测试通过**: 后端 `pytest`，前端 `vitest`
+- [ ] **硬门禁通过**: 后端 `ruff check app/ --select F821`，前端 `npm run typecheck && npm run build`
+- [ ] **相关测试通过**: 后端执行受影响模块 Pytest，前端执行受影响模块 Vitest
+- [ ] **全量回归已记录**: PR 前执行后端 `pytest`、前端 `npm test`；若存在已知基线失败，必须列出基线与本分支失败集合，确认无新增失败，禁止只写“历史问题”
 - [ ] **无调试遗留**: 无 `console.log`、`print`、`breakpoint`、`debugger`
 - [ ] **无硬编码密钥**: 无密码、Token、API Key、私钥
 
@@ -126,19 +127,20 @@ gh pr create --base develop --head feature/{描述} --title "..." --body "..."
 | 工作流 | 触发条件 | 覆盖范围 |
 |--------|---------|---------|
 | `pr-check.yml` | PR → `main`/`master` | 完整：lint + typecheck + pytest + vitest + PG 迁移 + a11y |
-| `develop-import-smoke.yml` | PR → `develop` | 最小：后端导入冒烟 + Alembic 单头校验 |
+| `develop-import-smoke.yml` | PR → `develop` | 硬门禁：后端导入/F821/Alembic，前端 typecheck + build |
 
 **重要**: `pr-check.yml` 当前只监听 `main`/`master`，不监听 `develop`。
-因此 PR 合并到 `develop` 时 CI 不会自动执行完整门禁。
+因此 PR 合并到 `develop` 时已有最小硬门禁，但尚未自动阻断完整 pytest/vitest、全量 ruff、PG 迁移和 a11y。
 
 ### 4.2 已知差距
 
-- PR → `develop` 无自动 pytest/vitest/lint/typecheck（见 [pr-check.yml:4](.github/workflows/pr-check.yml#L4)）
+- PR → `develop` 仍无自动完整 pytest/vitest、全量 ruff、PG 迁移和 a11y
 - `pr-check.yml` 多数步骤使用了 `continue-on-error: true`，失败仅警告不阻塞
 - Jenkins `Jenkinsfile` Docker Push 仅允许 `main` 分支（远端实际无此分支）
 - 文档声称 `main` 为主分支，但 GitHub 默认分支为 `develop`，远端无 `main`
+- GitHub `develop` ruleset 当前要求 PR，但审批数和 required status checks 均为 0；在远端规则补齐前禁止自动合并
 
-**Agent 应对**: 在 CI 补齐前，Agent 必须在本地手动执行第 3 节自检清单，不能依赖 CI 发现。
+**Agent 应对**: 在 CI 补齐前，Agent 必须在本地手动执行第 3 节自检清单并把命令、退出码、失败集合写入 QA 报告；不能依赖文档工件或 CI 名称推断质量。
 
 ## 5. 变更摘要模板
 

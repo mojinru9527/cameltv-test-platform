@@ -65,6 +65,26 @@ function composeAssetUrl(baseUrl: string, serviceName: string, modulePath: strin
   return result
 }
 
+function splitAssetPath(path: string, declaredModule: string): { modulePath: string; endpointPath: string } {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  if (declaredModule) {
+    const normalizedModule = declaredModule.startsWith('/') ? declaredModule : `/${declaredModule}`
+    const endpointPath = normalizedPath.startsWith(normalizedModule)
+      ? normalizedPath.slice(normalizedModule.length) || '/'
+      : normalizedPath
+    return { modulePath: normalizedModule, endpointPath }
+  }
+
+  const segments = normalizedPath.split('/').filter(Boolean)
+  if (segments.length >= 4) {
+    return {
+      modulePath: `/${segments.slice(0, 2).join('/')}`,
+      endpointPath: `/${segments.slice(2).join('/')}`,
+    }
+  }
+  return { modulePath: '', endpointPath: normalizedPath }
+}
+
 interface Props {
   endpoint?: ApiEndpoint | null
   serviceName?: string
@@ -113,13 +133,19 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
 
   // Pre-fill from endpoint asset
   useEffect(() => {
-    if (!endpoint) return
+    if (!endpoint) {
+      setServiceName('')
+      setModulePath('')
+      setEndpointPath('')
+      setParamRows([])
+      return
+    }
     setMethod(endpoint.method || 'GET')
 
-    // Use passed serviceName, endpoint.module for modulePath, endpoint.path for endpointPath
-    if (svcName) setServiceName(svcName)
-    if (endpoint.module) setModulePath(endpoint.module.startsWith('/') ? endpoint.module : '/' + endpoint.module)
-    if (endpoint.path) setEndpointPath(endpoint.path.startsWith('/') ? endpoint.path : '/' + endpoint.path)
+    setServiceName(svcName || endpoint.service_name || '')
+    const splitPath = splitAssetPath(endpoint.path || '', endpoint.module || '')
+    setModulePath(splitPath.modulePath)
+    setEndpointPath(splitPath.endpointPath)
 
     // Parse request_schema to pre-fill headers/body/params
     try {
@@ -127,24 +153,36 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
         ? JSON.parse(endpoint.request_schema)
         : endpoint.request_schema || {}
 
-      // Pre-fill query params
-      if (schema.query && Array.isArray(schema.query)) {
-        const qp: ParamRow[] = schema.query
+      const pathParams: ParamRow[] = Array.isArray(schema.path)
+        ? schema.path
           .filter((p: any) => p.required)
           .map((p: any) => ({ key: p.name, value: '' }))
-        if (qp.length > 0) setParamRows(qp)
-      }
+        : []
+      const queryParams: ParamRow[] = Array.isArray(schema.query)
+        ? schema.query
+          .filter((p: any) => p.required)
+          .map((p: any) => ({ key: p.name, value: '' }))
+        : []
+      setParamRows([...pathParams, ...queryParams])
 
       // Pre-fill body from schema (shared util returns JSON string)
+      const schemaHeaders: HeaderRow[] = Array.isArray(schema.header)
+        ? schema.header.map((header: any) => ({ key: header.name, value: '' }))
+        : []
       if (schema.body?.properties) {
         setBody(buildSampleBody(schema.body.properties))
         setBodyType('json')
-        setHeaderRows([{ key: 'Content-Type', value: 'application/json' }])
+        setHeaderRows([
+          { key: 'Content-Type', value: 'application/json' },
+          ...schemaHeaders.filter((header) => header.key.toLowerCase() !== 'content-type'),
+        ])
+      } else if (schemaHeaders.length > 0) {
+        setHeaderRows(schemaHeaders)
       }
     } catch {
       // ignore parse errors
     }
-  }, [endpoint])
+  }, [endpoint, svcName])
 
   const buildHeaders = (): string => {
     if (headerMode === 'json') return headersJson
@@ -166,11 +204,14 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
 
   // Auto-scroll to response when result changes
   useEffect(() => {
-    if (result) {
-      setTimeout(() => {
-        document.getElementById('response-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 100)
-    }
+    if (!result) return
+    const timer = window.setTimeout(() => {
+      const panel = document.getElementById('response-panel')
+      if (typeof panel?.scrollIntoView === 'function') {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
+    return () => window.clearTimeout(timer)
   }, [result])
 
   const runQuick = async () => {
@@ -194,6 +235,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
           dataset_id: datasetId,
         })
         lastResult = res
+        if (res?.status === 'error') break
       }
       setResult(lastResult as any)
       if (isBatchResult(lastResult)) toast.success(`批量执行完成: ${lastResult.passed}/${lastResult.total_rows} 通过`)
@@ -232,7 +274,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   const urlPreview = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="quick-debug-layout">
       {/* Top bar: Env + Dataset + TestCount selectors + Send button */}
       <div className="flex items-center gap-3 flex-wrap">
         {envs.length > 0 && (
@@ -284,6 +326,12 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
         </Button>
       </div>
 
+      {envs.find((environment) => environment.id === envId)?.env_type === 'test' && (
+        <p className="text-xs text-muted-foreground">
+          发送时自动连接 OpenVPN
+        </p>
+      )}
+
       {/* Request Config Card */}
       <Card>
         <CardHeader><CardTitle>请求配置</CardTitle></CardHeader>
@@ -325,7 +373,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
                 placeholder="/ee/search"
                 value={modulePath}
                 onChange={(e) => setModulePath(e.target.value)}
-                aria-label="模块路径"
+                aria-label="模块名"
               />
             </div>
             <div>
@@ -340,11 +388,13 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
           </div>
 
           {/* URL preview */}
-          <div className="bg-muted/50 rounded-md px-3 py-2">
-            <span className="text-xs text-muted-foreground font-mono break-all">
-              {urlPreview || '(未设置)'}
-            </span>
-          </div>
+          <Input
+            readOnly
+            value={urlPreview}
+            placeholder="(未设置)"
+            aria-label="完整请求地址"
+            className="bg-muted/50 font-mono text-xs"
+          />
 
           {/* P2: Params table */}
           <div>
@@ -420,7 +470,9 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
       <AssertionEditor value={assertions} onChange={setAssertions} />
 
       {/* Response panel — full width below config */}
-      <ResponsePanel result={result} loading={loading} />
+      <div data-testid="quick-debug-response">
+        <ResponsePanel result={result} loading={loading} />
+      </div>
     </div>
   )
 }

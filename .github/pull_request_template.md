@@ -34,10 +34,23 @@ tags: ["template", "pull-request", "code-review"]
 ## 自检清单
 
 ### 代码质量
-- [ ] 代码通过 lint 检查（`ruff check` / `npx tsc --noEmit`）
+- [ ] 后端运行时硬门禁通过（`ruff check app --select F821`）
+- [ ] 前端通过 `npm ci && npm run typecheck && npm run build`
 - [ ] 新增/修改代码有对应的测试
-- [ ] 测试全部通过（`pytest` / `vitest`）
+- [ ] 相关测试与全量回归通过（`pytest` / `npm test`），命令和退出码已记录
+- [ ] Alembic 仅一个 head，revision 长度测试通过
 - [ ] 无遗留的调试代码（`console.log`, `print`, `breakpoint`）
+
+### 可执行证据
+
+| 检查 | 命令 | 结果/退出码 | CI 或日志链接 |
+|---|---|---|---|
+| 后端 |  |  |  |
+| 前端 |  |  |  |
+| 迁移 |  |  |  |
+| UI/关键路径 |  |  |  |
+
+> 文件存在、代码目测或工件齐全不能单独作为 PASS 证据。
 
 ### 架构一致性
 - [ ] 未违反架构原则（见 `CLAUDE.md` 架构原则 + [docs/adr/](docs/adr/)）

@@ -105,7 +105,9 @@ shadcn/ui + Radix + Tailwind + CVA；Token 走语义类（bg-muted / text-muted-
 5. 按切片推进，TDD 先测后码。
 6. 每切片结束执行：
    ```bash
-   git add -A
+   git status --short
+   git add -- {本切片明确文件列表}
+   git diff --cached --name-status
    git commit -m "feat(batch-{N}): {切片描述}"
    git push -u origin feature/batch-{N}-{name}
 
@@ -124,7 +126,7 @@ API: {ms}   前端: {s}   覆盖: {%}
 
 ## 5. 🔍 QA 测试部门 → `batch-{name}-qa-report.md`
 
-**定位**：质量守门人，默认立场「NEEDS WORK」，需压倒性证据才翻 READY。证据驱动——每个结论有截图/日志/指标。**「零问题/满分 A+」是红旗，必深查**。
+**定位**：质量守门人，默认立场「NEEDS WORK」，需可复现证据才翻 READY。证据驱动——每个结论有截图/日志/指标；不预设缺陷数量。
 
 ```markdown
 # Batch {name} — QA 报告
@@ -132,6 +134,12 @@ API: {ms}   前端: {s}   覆盖: {%}
 
 ## 测试总览
 | 条件数 | 通过 | 失败 | 阻塞 |
+
+## 可执行门禁（必须记录命令、退出码和日志摘要）
+- 前端：`npm ci`、`npm run typecheck`、`npm run build`、相关 Vitest
+- 后端：app 导入、`ruff check app --select F821`、Alembic 单头/revision、相关 Pytest
+- UI/功能：关键用户路径、桌面与移动端截图、控制台错误
+- 禁止用“文件存在/代码目测/工件齐全”代替上述执行结果
 
 ## 逐条件验证
 ### C{n}: {条件名}
@@ -158,7 +166,7 @@ gh pr create --base develop --head feature/batch-{N}-{name} \
 
 **定位**：总协调 + 质量把关。抽检各部门工件，给判决，并可为下一批次设 Leader 条件（C 编号）。
 
-## 7.PR 合入后删除 feature 分支（本地 + 远程）。
+## 7.PR 合入后确认无未推送提交，再删除本地分支；远端分支按仓库策略处理。
 ## 8.batch 结束更新看板：Slice 状态、当前位置、批次记录（产出+审批+耗时）。
 
 ```markdown
@@ -174,6 +182,7 @@ gh pr create --base develop --head feature/batch-{N}-{name} \
 
 ## 抽检通过
 - ✅ {文件:行} — {核对点}
+- ✅ {PR 检查名称 + 运行链接/日志摘要} — {退出码与结果}
 
 ## 判决
 {APPROVED → 给合入指令；或列出必须修复的条件 C{n}}

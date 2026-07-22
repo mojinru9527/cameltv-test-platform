@@ -5,6 +5,8 @@ import type {
   ReleaseBundleVersionChain,
   VersionDiffRequest,
   VersionDiffConfirmRequest,
+  VersionDiffConfirmResult,
+  VersionDiffResult,
   KnowledgePage,
 } from '@/types'
 
@@ -67,13 +69,13 @@ export async function fetchVersionChain(
 export async function triggerVersionDiff(
   id: number,
   body: VersionDiffRequest,
-): Promise<{ diff_summary: string; warnings: string[] }> {
+): Promise<VersionDiffResult> {
   return api.post(`/release-bundles/${id}/diff`, body)
 }
 
 export async function confirmVersionDiff(
   id: number,
   body?: VersionDiffConfirmRequest,
-): Promise<{ module_count: number; page_count: number }> {
+): Promise<VersionDiffConfirmResult> {
   return api.post(`/release-bundles/${id}/diff/confirm`, body || {})
 }

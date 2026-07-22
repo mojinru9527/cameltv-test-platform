@@ -131,6 +131,11 @@ export {
   Boxes,
   Package,
   PackageOpen,
+  Circle,
+  Focus,
+  GitGraph,
+  List,
+  Move,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"

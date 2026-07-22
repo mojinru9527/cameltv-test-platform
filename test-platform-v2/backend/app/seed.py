@@ -15,7 +15,7 @@ _MENUS = [
     ("menu:workbench", "工作台", "", "/workbench", "DashboardOutlined", 1),
     ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
     ("menu:requirement", "需求文档", "", "/requirement", "FileTextOutlined", 3),
-    ("menu:versionmission", "版本测试任务", "", "/version-mission", "GitBranchOutlined", 4),
+    ("menu:versionmission", "版本测试任务", "", "/release-bundles", "GitBranchOutlined", 4),
     # ── 知识中心（独立分组）──
     ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 5),
     ("menu:knowledge:project", "项目知识", "menu:knowledge", "/knowledge?tab=project", "FolderOpenOutlined", 1),
@@ -220,6 +220,14 @@ def run_seed() -> None:
                 defaults={"name": name, "type": "menu", "path": path, "icon": icon, "sort": sort},
                 code=code,
             )
+            # The seed catalog is the canonical menu definition. Reconcile mutable
+            # fields as well as creating missing records, otherwise renamed routes
+            # stay stale forever in existing environments.
+            perm.name = name
+            perm.type = "menu"
+            perm.path = path
+            perm.icon = icon
+            perm.sort = sort
             code_to_perm[code] = perm
         # 第二遍：回填 parent_id
         for code, name, parent_code, path, icon, sort in _MENUS:
