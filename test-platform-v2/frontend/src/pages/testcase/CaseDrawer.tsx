@@ -39,8 +39,8 @@ const formSchema = z.object({
   api_method: z.string().optional().or(z.literal('')),
   api_endpoint: z.string().optional().or(z.literal('')),
   preconditions: z.string().optional().or(z.literal('')),
-  steps: z.string().min(1, '请填写操作步骤'),
-  expected_result: z.string().min(1, '请填写预期结果'),
+  steps: z.string().min(1, '请输入测试步骤'),
+  expected_result: z.string().min(1, '请输入预期结果'),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -93,9 +93,14 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      title: '',
       case_type: 'manual',
       priority: 'P2',
       status: 'active',
+      domain: '',
+      module: '',
+      steps: '',
+      expected_result: '',
     },
   })
 
@@ -117,9 +122,14 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
         loadReviewHistory(editing.id)
       } else {
         reset({
+          title: '',
           case_type: 'manual',
           priority: 'P2',
           status: 'active',
+          domain: '',
+          module: '',
+          steps: '',
+          expected_result: '',
         })
         setReviewHistory([])
         setActiveTab('form')
@@ -427,7 +437,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
       {/* Steps */}
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label htmlFor="case-steps" className="text-sm font-medium">测试步骤 (JSON)</label>
+          <label htmlFor="case-steps" className="text-sm font-medium">测试步骤</label>
           <div className="flex items-center gap-1">
             <Button
               type="button"
@@ -451,19 +461,52 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             </Button>
           </div>
         </div>
-        {stepsViewMode === 'formatted' && stepsValue ? (
-          <pre id="case-steps" className="text-sm leading-relaxed bg-muted/30 rounded-md p-3 min-h-[120px] whitespace-pre-wrap font-sans">
-            {formatSteps(stepsValue) || '暂无步骤'}
-          </pre>
+        {stepsViewMode === 'formatted' ? (
+          <Textarea
+            id="case-steps"
+            rows={4}
+            placeholder="逐行输入测试步骤"
+            value={formatSteps(stepsValue)}
+            onChange={(event) => setValue('steps', event.target.value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })}
+            aria-invalid={!!errors.steps}
+            aria-describedby={errors.steps ? 'case-steps-error' : undefined}
+          />
         ) : (
-          <Textarea id="case-steps" rows={4} placeholder='[{"step":1,"desc":"操作描述","expected":"预期结果"}]' {...register('steps')} />
+          <Textarea
+            id="case-steps"
+            rows={4}
+            placeholder='[{"step":1,"desc":"操作描述","expected":"预期结果"}]'
+            {...register('steps')}
+            aria-invalid={!!errors.steps}
+            aria-describedby={errors.steps ? 'case-steps-error' : undefined}
+          />
+        )}
+        {errors.steps && (
+          <p id="case-steps-error" className="mt-1 text-xs text-destructive" role="alert">
+            {errors.steps.message}
+          </p>
         )}
       </div>
 
       {/* Expected Result */}
       <div>
         <label htmlFor="case-expected-result" className="mb-1 block text-sm font-medium">预期结果</label>
-        <Textarea id="case-expected-result" rows={2} placeholder="整体预期结果描述" {...register('expected_result')} />
+        <Textarea
+          id="case-expected-result"
+          rows={2}
+          placeholder="整体预期结果描述"
+          {...register('expected_result')}
+          aria-invalid={!!errors.expected_result}
+          aria-describedby={errors.expected_result ? 'case-expected-result-error' : undefined}
+        />
+        {errors.expected_result && (
+          <p id="case-expected-result-error" className="mt-1 text-xs text-destructive" role="alert">
+            {errors.expected_result.message}
+          </p>
+        )}
       </div>
 
       {/* Ref */}

@@ -9,7 +9,7 @@ Extend tables:
   - requirement_document    (+platform, +doc_type)
   - knowledge_source        (+module_id)
 
-Revision ID: 20260722_batch27_m1_knowledge_sphere
+Revision ID: 20260722_b27_knowledge_sphere
 Revises: 20260719_perf_tables, 20260721_knowledge_module_name (merge)
 Create Date: 2026-07-22
 """
@@ -19,7 +19,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "20260722_batch27_m1_knowledge_sphere"
+revision: str = "20260722_b27_knowledge_sphere"
 down_revision: Union[str, tuple[str, ...], None] = ("20260719_perf_tables", "20260721_knowledge_module_name")
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

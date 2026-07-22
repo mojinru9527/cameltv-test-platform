@@ -1,0 +1,88 @@
+name: 主干全新检出质量门禁
+
+# 迁移期同时监听 develop/main；develop 重命名完成后的收尾 PR 会移除兼容项。
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+
+jobs:
+  backend-clean-checkout:
+    name: 后端全新检出与全量回归
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest ruff
+
+      - name: 未定义符号检查
+        working-directory: test-platform-v2/backend
+        run: ruff check app/ --select F821 --output-format=github
+
+      - name: 应用导入冒烟
+        working-directory: test-platform-v2/backend
+        run: |
+          python -c "import app.main; print('import OK: routers/models resolve on clean checkout')"
+
+      - name: Alembic 单头校验
+        working-directory: test-platform-v2/backend
+        run: |
+          heads="$(python -m alembic heads 2>/dev/null | grep -c '(head)')"
+          echo "alembic heads = $heads"
+          test "$heads" -eq 1
+
+      - name: Alembic revision 长度兼容性
+        working-directory: test-platform-v2/backend
+        run: python -m pytest tests/test_migration_revision_ids.py -q
+
+      - name: Backend Full Test Suite
+        working-directory: test-platform-v2/backend
+        run: python -m pytest -q
+
+  frontend-clean-checkout:
+    name: 前端全新检出与全量回归
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: test-platform-v2/frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/frontend
+        run: npm ci
+
+      - name: Type Check
+        working-directory: test-platform-v2/frontend
+        run: npm run typecheck
+
+      - name: Frontend Full Test Suite
+        working-directory: test-platform-v2/frontend
+        run: npm test
+
+      - name: Production Build
+        working-directory: test-platform-v2/frontend
+        run: npm run build

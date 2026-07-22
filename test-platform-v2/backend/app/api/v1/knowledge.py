@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
@@ -53,12 +54,14 @@ from app.schemas.knowledge import (
     SearchQuery,
     SearchResultOut,
 )
+
 from app.services import audit_service
 from app.services.knowledge import artifact_service, chunk_service, search_service, source_service
 from app.services.knowledge.embedding_service import embedding_service
 from app.services.knowledge.entity_service import extract_and_build_graph_in_new_session
 from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
 
+logger = logging.getLogger("knowledge")
 router = APIRouter(prefix="/knowledge", tags=["知识中心"])
 
 

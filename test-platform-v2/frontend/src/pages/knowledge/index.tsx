@@ -51,15 +51,15 @@ export default function KnowledgePage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       <PageHeader
         title="知识中心"
         description="项目知识（需求/接口/用例）+ 平台研发知识（踩坑记录/设计决策/最佳实践）统一沉淀、可检索、可复用。"
       />
 
       {/* ── 常驻搜索栏（所有 Tab 可见）── */}
-      <div className="flex items-center gap-2 px-1 py-1">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-2 px-1 py-1 sm:flex-row sm:items-center">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             className="pl-8 h-9"
@@ -70,7 +70,7 @@ export default function KnowledgePage() {
           />
         </div>
         <Select value={searchMode} onValueChange={setSearchMode}>
-          <SelectTrigger className="h-9 text-xs w-[180px]">
+          <SelectTrigger className="h-9 w-full text-xs sm:w-[180px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -79,13 +79,14 @@ export default function KnowledgePage() {
             <SelectItem value="vector">向量语义</SelectItem>
           </SelectContent>
         </Select>
-        <Button size="sm" className="h-9" disabled={!searchQuery.trim()} onClick={handleSearch}>
+        <Button size="sm" className="h-9 w-full sm:w-auto" disabled={!searchQuery.trim()} onClick={handleSearch}>
           搜索
         </Button>
       </div>
 
       <Tabs value={tab} onValueChange={handleTabChange}>
-        <TabsList className="overflow-x-auto flex-nowrap">
+        <div className="max-w-full overflow-x-auto pb-1">
+        <TabsList className="w-max min-w-full flex-nowrap justify-start">
           <TabsTrigger value="overview">
             <LayoutDashboard className="size-4 mr-1" />
             概览
@@ -139,6 +140,7 @@ export default function KnowledgePage() {
             项目球
           </TabsTrigger>
         </TabsList>
+        </div>
 
         <TabsContent value="project" className="mt-4">
           {tab === 'project' && <ProjectTab />}

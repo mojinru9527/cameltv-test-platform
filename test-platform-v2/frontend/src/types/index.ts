@@ -187,6 +187,8 @@ export interface FeatureExtractionResult {
   extraction_progress?: number     // 0.0-1.0
   versions_total?: number          // Total versions from changelog
   versions_done?: number           // Versions fully extracted
+  diff_summary?: Record<string, unknown>
+  inherited_from_version?: string
 }
 
 export interface ExtractionConfirmRequest {
@@ -676,6 +678,7 @@ export interface ApiEndpoint {
   id: number
   project_id: number
   service_id: number
+  service_name?: string
   module: string
   method: string
   path: string
@@ -1285,6 +1288,32 @@ export interface VersionDiffRequest {
 
 export interface VersionDiffConfirmRequest {
   overrides?: Record<string, unknown> | null
+}
+
+export interface VersionDiffModuleChange {
+  module_name: string
+  parent_module_id?: number | null
+  change: 'modified' | 'unchanged'
+  new_pages: string[]
+  modified_pages: string[]
+  deleted_pages: string[]
+  unchanged_pages: string[]
+}
+
+export interface VersionDiffResult {
+  new_modules: string[]
+  modified_modules: VersionDiffModuleChange[]
+  deleted_modules: string[]
+  unchanged_modules: string[]
+  diff_confidence: number
+  total_pages_diff: number
+  warnings: string[]
+}
+
+export interface VersionDiffConfirmResult {
+  created_modules: number
+  module_ids: number[]
+  module_names: string[]
 }
 
 // ── RequirementModule ──

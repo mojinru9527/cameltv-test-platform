@@ -1,6 +1,7 @@
 """测试计划 Service — 计划 CRUD + 用例关联 + 执行记录 + 进度统计。"""
 from __future__ import annotations
 
+import json
 from datetime import datetime
 
 from sqlalchemy import func, select

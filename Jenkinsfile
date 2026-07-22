@@ -80,11 +80,11 @@ else:
             steps {
                 dir(BACKEND_DIR) {
                     sh '''#!/bin/bash
+                        set -o pipefail
                         source .venv/bin/activate 2>/dev/null || .venv\\Scripts\\activate
                         python -m pytest tests/ -v --tb=short \
                             --html=test-report.html --self-contained-html \
-                            --junitxml=test-results.xml \
-                            || true
+                            --junitxml=test-results.xml
                     '''
                 }
             }
@@ -107,6 +107,7 @@ else:
             steps {
                 dir(FRONTEND_DIR) {
                     sh '''#!/bin/bash
+                        set -o pipefail
                         npm ci
                         npx tsc --noEmit 2>&1 | head -50
                     '''
@@ -120,7 +121,8 @@ else:
             steps {
                 dir(FRONTEND_DIR) {
                     sh '''#!/bin/bash
-                        npx vitest run --reporter=junit --outputFile=test-results.xml 2>&1 || true
+                        set -o pipefail
+                        npx vitest run --reporter=junit --outputFile=test-results.xml
                         npm run build
                     '''
                 }

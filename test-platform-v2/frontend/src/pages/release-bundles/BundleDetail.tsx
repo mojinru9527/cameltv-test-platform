@@ -6,13 +6,13 @@ import {
   updateReleaseBundle,
   fetchVersionChain,
   triggerVersionDiff,
-  confirmVersionDiff,
 } from '@/api/releaseBundles'
 import { fetchModuleTree } from '@/api/requirementModules'
 import type {
   ReleaseBundleOut,
   ReleaseBundleVersionChain,
   ModuleTreeResponse,
+  VersionDiffResult,
 } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -77,7 +77,7 @@ export default function BundleDetailPage() {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [diffing, setDiffing] = useState(false)
-  const [diffResult, setDiffResult] = useState<Record<string, unknown> | null>(null)
+  const [diffResult, setDiffResult] = useState<VersionDiffResult | null>(null)
 
   // ── Edit form ──
   const [editForm, setEditForm] = useState({
@@ -154,17 +154,6 @@ export default function BundleDetailPage() {
       toast.success('差异对比完成')
     } finally {
       setDiffing(false)
-    }
-  }
-
-  const handleConfirmDiff = async () => {
-    try {
-      const result = await confirmVersionDiff(bundleId)
-      toast.success(`模块树已构建：${result.module_count} 个模块，${result.page_count} 个页面`)
-      refetch()
-      setDiffResult(null)
-    } catch {
-      // handled by interceptor
     }
   }
 
@@ -398,11 +387,6 @@ export default function BundleDetailPage() {
               <CardTitle className="text-sm flex items-center justify-between">
                 <span>版本差异对比</span>
                 <div className="flex items-center gap-2">
-                  {diffResult && (
-                    <Button size="sm" onClick={handleConfirmDiff}>
-                      确认差异并构建模块树
-                    </Button>
-                  )}
                   <Button
                     size="sm"
                     variant="outline"
@@ -426,7 +410,10 @@ export default function BundleDetailPage() {
                 <DiffReviewPanel
                   bundleId={bundleId}
                   diffResult={diffResult}
-                  onConfirm={() => setDiffResult(null)}
+                  onConfirm={() => {
+                    setDiffResult(null)
+                    refetch()
+                  }}
                 />
               ) : (
                 <p className="text-sm text-muted-foreground py-8 text-center">

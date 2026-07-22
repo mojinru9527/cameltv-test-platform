@@ -34,10 +34,23 @@ tags: ["template", "pull-request", "code-review"]
 ## 自检清单
 
 ### 代码质量
-- [ ] 代码通过 lint 检查（`ruff check` / `npx tsc --noEmit`）
+- [ ] 后端运行时硬门禁通过（`ruff check app --select F821`）
+- [ ] 前端通过 `npm ci && npm run typecheck && npm run build`
 - [ ] 新增/修改代码有对应的测试
-- [ ] 测试全部通过（`pytest` / `vitest`）
+- [ ] 相关测试与全量回归通过（`pytest` / `npm test`），命令和退出码已记录
+- [ ] Alembic 仅一个 head，revision 长度测试通过
 - [ ] 无遗留的调试代码（`console.log`, `print`, `breakpoint`）
+
+### 可执行证据
+
+| 检查 | 命令 | 结果/退出码 | CI 或日志链接 |
+|---|---|---|---|
+| 后端 |  |  |  |
+| 前端 |  |  |  |
+| 迁移 |  |  |  |
+| UI/关键路径 |  |  |  |
+
+> 文件存在、代码目测或工件齐全不能单独作为 PASS 证据。
 
 ### 架构一致性
 - [ ] 未违反架构原则（见 `CLAUDE.md` 架构原则 + [docs/adr/](docs/adr/)）
@@ -50,7 +63,8 @@ tags: ["template", "pull-request", "code-review"]
 - [ ] **CLAUDE.md**：如有模块/约定变化，已同步更新对应层级的 CLAUDE.md
 - [ ] **README.md**：如有安装/配置/命令变化，已更新相关 README
 - [ ] **ADR**：如涉及架构决策，已新增 ADR 或更新已有 ADR 状态
-- [ ] **Memory**：重要经验/约定变化，已在 Memory 系统中记录
+- [ ] **仓库知识**：重要经验/约定已写入 ADR、常见陷阱或 work-logs；个人 Memory 不作为交付证据
+- [ ] **Worktree 隔离**：分支从最新 `origin/main` 创建，`.ai-worktree.json` 未提交，未在控制 worktree 开发
 - [ ] **常见陷阱**：如发现新的重复性陷阱，已追加至 [docs/common-pitfalls.md](docs/common-pitfalls.md)
 - [ ] **术语表**：如有新业务术语引入，已更新 [docs/business-glossary.md](docs/business-glossary.md)
 

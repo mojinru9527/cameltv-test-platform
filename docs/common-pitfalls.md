@@ -557,6 +557,33 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ---
 
+### 6.4 Vite 同时存在 TS 源配置和过期 JS 生成物
+
+**现象**：`vite.config.ts` 已修改代理或构建配置，但本地服务仍使用旧值，看起来像“代码修改未生效”。
+
+**根因**：仓库同时跟踪 `vite.config.ts` 与历史生成的 `vite.config.js`，Vite 自动发现时可能读取旧 JS 文件。
+
+**解决方案**：
+1. 只跟踪 `vite.config.ts`，忽略 `vite.config.js`、`vite.config.d.ts` 和 `tsconfig.node.tsbuildinfo`。
+2. dev/build/preview 命令显式传入 `--config vite.config.ts`。
+3. 调试代理问题时同时核对实际进程、监听地址和请求最终到达的后端端口。
+
+**修复**：2026-07-22 / Batch 31。
+
+---
+
+### 6.5 功能代码存在但路由或菜单未接线
+
+**现象**：组件、API 和测试都存在，用户点击侧栏却进入占位页或接口全部 404。
+
+**根因**：前端菜单路径、Router 注册、后端聚合 Router 和持久化 seed 数据没有一起更新。
+
+**解决方案**：把“从真实菜单点击进入”和“API 非 404”加入关键路径测试；seed 必须对账已有记录的可变字段，旧 URL 保留兼容重定向。
+
+**修复**：2026-07-22 / Batch 31（版本发布包、性能监控）。
+
+---
+
 ## 排查速查表
 
 | 症状 | 可能原因 | 查阅章节 |
@@ -577,6 +604,8 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 | 端口被占用 | v1/v2 同端口 | 4.3 |
 | docker compose 失败 | 端口映射冲突 | 5.1 |
 | 并发构建互相干扰 | Jenkins 无并发限制 | 5.2 |
+| Vite 配置改了却不生效 | 过期 JS 配置覆盖 TS | 6.4 |
+| 已开发功能显示占位页或 API 404 | 菜单/路由未接线 | 6.5 |
 
 ---
 

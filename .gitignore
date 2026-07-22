@@ -78,6 +78,7 @@ temp_extract_output.txt
 .agents/
 .codex/
 skills-lock.json
+.ai-worktree.json
 
 # Local network / VPN recovery helpers (machine-specific, not for CI)
 # fix_chatgpt_loopback.bat re-adds the ChatGPT/Codex loopback exemption; it
