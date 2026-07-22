@@ -25,6 +25,8 @@ from app.schemas.knowledge import (
     AiArtifactOut,
     ArtifactImportRequest,
     ArtifactReviewRequest,
+    AutoBuildRequest,
+    AutoBuildResult,
     CompareSnapshotsOut,
     EntityExtractRequest,
     EntityExtractResult,
@@ -713,6 +715,47 @@ def evolve_graph(
     _audit(req, current, db, "knowledge:graph_evolve", f"project#{current.project_id}", str(result))
     db.commit()
     return R.ok(GraphEvolveResult(**result))
+
+
+@router.post("/graph/auto-build", response_model=R[AutoBuildResult], summary="自动构建知识图谱（从 ReleaseBundle）")
+def auto_build_graph(
+    body: AutoBuildRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """从 ReleaseBundle + RequirementModule 树构建完整层级知识图谱。
+
+    创建实体类型: project, release_bundle, platform, client_module, admin_module, page, changelog_entry
+    创建关系类型: contains, has_platform, has_module, has_page, belongs_to_version,
+                  navigates_to, links_to_admin, configures, evolves_from, described_by
+
+    幂等：重复调用相同 release_bundle_id 不重复创建（返回 skipped > 0）。
+    使用 force=true 强制重建。
+    """
+    if not settings.knowledge_graph_enabled:
+        raise APIException(code=503, msg="知识图谱未启用（knowledge_graph_enabled=False）", http_status=503)
+
+    from app.services.knowledge.graph_builder import auto_build_graph as do_auto_build
+    try:
+        result = do_auto_build(
+            current.project_id or 0,
+            body.release_bundle_id,
+            force=body.force,
+        )
+    except Exception as e:
+        logger.exception("auto_build_graph failed for bundle %d", body.release_bundle_id)
+        raise APIException(code=500, msg=f"图谱构建失败: {str(e)}") from e
+
+    _audit(req, current, db, "knowledge:graph_auto_build", f"bundle#{body.release_bundle_id}", result.message)
+    db.commit()
+    return R.ok(AutoBuildResult(
+        created_entities=result.created_entities,
+        created_relations=result.created_relations,
+        skipped_entities=result.skipped_entities,
+        skipped_relations=result.skipped_relations,
+        message=result.message,
+    ))
 
 
 # ═══════════════════════════════════════════════════════
