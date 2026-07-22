@@ -72,6 +72,6 @@
 
 - [x] Run the PowerShell parser check and `scripts/git/test-ai-worktree-tools.ps1`; expect exit code 0.
 - [x] Update this worktree's ignored metadata to workflow Agent Team and executor Codex, then verify it with both expected fields.
-- [ ] Stage only Batch 34 files, commit, push, and create a Draft PR targeting main.
-- [ ] Run the basic PR audit, wait for all required checks, then run `-RequireSuccessfulChecks`.
+- [x] Stage only Batch 34 files, commit, push, and create a Draft PR targeting main.
+- [x] Run the basic PR audit, wait for all required checks, then run `-RequireSuccessfulChecks`.
 - [ ] Record evidence, obtain Leader approval, squash merge, verify remote branch deletion, sync control main, and remove only the verified Batch 34 worktree/branch.
