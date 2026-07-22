@@ -14,8 +14,8 @@ tags: ["ci", "github-actions", "agent-team"]
 | 2 分类器实现 | 纯标准库、NUL 输入、GitHub outputs、未知路径 fail-safe | 完成：10 项测试通过 |
 | 3 required jobs 分层 | 固定 context 始终产生结果，重步骤按域执行 | 完成：静态契约通过，待真实 PR |
 | 4 extended jobs 分层 | backend/PG 与 frontend/a11y 分域 | 完成：静态契约通过，待真实 PR |
-| 5 静态与真实 PR 验证 | YAML/契约/本地测试及 Draft PR 首轮检查 | 进行中：本地全绿，待 Draft PR |
-| 6 二次确认与交付 | 用户确认后最终审计、Ready、squash、清理 | 被用户确认阻塞 |
+| 5 静态与真实 PR 验证 | YAML/契约/本地测试及 Draft PR 首轮检查 | 完成：PR #61 首轮 11/11 SUCCESS |
+| 6 二次确认与交付 | 用户确认后最终审计、Ready、squash、清理 | 进行中：Codex 与最终交付授权已确认，待证据提交检查 |
 
 # 质量要求
 

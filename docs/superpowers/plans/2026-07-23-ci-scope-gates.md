@@ -74,6 +74,6 @@
 
 - [x] Document the classification matrix, unknown-path fail-safe, and full tests on `main` push/manual runs.
 - [x] Record that related full suites still rerun on each PR push; unrelated domains skip.
-- [ ] Run local unit/static tests, push a Draft PR, and verify the real CI configuration change takes the conservative full path.
-- [ ] Run the basic audit, wait for first checks, and stop for the user's second Codex/final-delivery confirmation.
+- [x] Run local unit/static tests, push a Draft PR, and verify the real CI configuration change takes the conservative full path.
+- [x] Run the basic audit, wait for first checks, and stop for the user's second Codex/final-delivery confirmation.
 - [ ] After confirmation, complete final audit, mark Ready, squash merge, sync control `main`, and remove only the verified Batch 36 worktree/branch.
