@@ -2,7 +2,7 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-07-22 (batch-31 平台全面审查)
+**最后更新**: 2026-07-22 (batch-32 单一主干迁移)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
@@ -101,18 +101,8 @@
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C31-1 | Batch 31 Draft PR 的 develop CI 全部通过后才允许转 Ready/合并 | P1 | 2026-07-22 |
 | C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 2026-07-22 |
 | C31-3 | 运营后台验收需补充生产地址和只读测试账号 | P1 | 2026-07-22 |
-
-### batch-32 — 单一主干与双 AI 隔离迁移
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C32-1 | 父仓库与 lanhu-mcp 的 refs/脏文件备份必须通过 bundle、ZIP 和 SHA-256 校验 | P0 | 2026-07-22 |
-| C32-2 | PR #56 全量本地测试与 GitHub 主干质量门禁通过后才允许合并和重命名 | P0 | 2026-07-22 |
-| C32-3 | baseline/legacy 标签远端验证完成后才允许删除 develop/master | P0 | 2026-07-22 |
-| C32-4 | main ruleset、squash-only、自动清理分支、双 AI worktree 和原运行目录不变均需实测 | P1 | 2026-07-22 |
 
 ---
 
@@ -120,8 +110,7 @@
 
 | ID | 内容 | 批次 | 分支 |
 |----|------|------|------|
-| C32-1 | 备份已验证，待随迁移 PR 归档证据 | batch-32 | `feature/batch-31-platform-audit` |
-| C32-2 | worktree/CI/Agent Team 规则实现中 | batch-32 | `feature/batch-31-platform-audit` |
+| — | — | — | — |
 
 ---
 
@@ -148,6 +137,11 @@
 | C27-C6 | 修复 entity_service.py:625 except Exception 缺 as e | batch-29 PR | 2026-07-22 |
 | C27-C7 | 修复 import_to_test_case 事务原子性 (artifact_service.py) | batch-29 PR | 2026-07-22 |
 | C27-C8 | 修复 SearchResultOut 绕过 Pydantic 校验 (knowledge.py) | batch-29 PR | 2026-07-22 |
+| C31-1 | PR #56 的 6 项 GitHub 检查全绿后转 Ready 并 squash 合入 | PR #56 / `09386ff` | 2026-07-22 |
+| C32-1 | 父仓库与 lanhu-mcp 的 bundle、脏文件 ZIP 和 SHA-256 备份校验通过 | `F:\CamelTv-safe-backup\20260722-201657` | 2026-07-22 |
+| C32-2 | PR #56 本地 654/96 全量测试与 GitHub 干净检出门禁通过 | PR #56 | 2026-07-22 |
+| C32-3 | baseline/legacy 标签远端验证后才删除 develop/master | `baseline-2026-07-22-audited` / `legacy-master-2026-07-15` | 2026-07-22 |
+| C32-4 | main ruleset、squash-only、自动删分支、双 AI 隔离和原目录指纹均实测通过 | batch-32 收尾 PR | 2026-07-22 |
 
 ### batch-18 — Wiki Diff 孤儿归位 (batch-30 迁移)
 
@@ -185,9 +179,9 @@
 
 ## 统计
 
-- **Open**: 37 (含 5 个 P0 blocking, 10 个孤儿归位)
-- **In Progress**: 2
-- **Closed**: 35 (含 16 个孤儿归位)
+- **Open**: 32 (含 2 个 P0 blocking, 10 个孤儿归位)
+- **In Progress**: 0
+- **Closed**: 40 (含 16 个孤儿归位)
 - **Total**: 72
 
 ## 维护约定
