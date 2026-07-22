@@ -38,7 +38,8 @@ jobs:
 
       - name: 导入冒烟（app.main 必须可导入）
         working-directory: test-platform-v2/backend
-        run: python -c "import app.main; print('import OK: routers/models resolve on clean checkout')"
+        run: |
+          python -c "import app.main; print('import OK: routers/models resolve on clean checkout')"
 
       - name: Alembic 版本链单头校验（链必须连续、无断裂/多头）
         working-directory: test-platform-v2/backend
