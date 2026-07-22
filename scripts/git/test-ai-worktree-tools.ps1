@@ -45,7 +45,12 @@ try {
     try { & $verify -RepositoryPath $control -RequireClean | Out-Null } catch { $mainRejected = $true }
     Assert-True $mainRejected "verify script must reject protected main"
 
-    Assert-True (Test-Path -LiteralPath $claudeStarter) "Claude fixed-owner entry must exist"
+    $humanAgentTeamRejected = $false
+    try { & $creator -Executor human -Workflow agent-team -Kind feature -Task invalid-human-team -Scope governance -FrontendPort 55171 -BackendPort 57998 -RepositoryPath $control -DestinationRoot $worktrees | Out-Null } catch { $humanAgentTeamRejected = $true }
+    Assert-True $humanAgentTeamRejected "Agent Team workflow must reject human as executor"
+    Assert-True (-not (Test-Path -LiteralPath (Join-Path $worktrees "human-invalid-human-team"))) "invalid workflow/executor must not create a worktree"
+
+    Assert-True (Test-Path -LiteralPath $claudeStarter) "Claude fixed-executor entry must exist"
     $createdOutput = @(& $claudeStarter -Kind feature -Task test-isolation -Scope frontend -FrontendPort 55173 -BackendPort 58000 -RepositoryPath $control -DestinationRoot $worktrees)
     $created = $createdOutput[-1]
     $taskPath = Join-Path $worktrees "claude-test-isolation"
@@ -54,21 +59,64 @@ try {
     Assert-True ((Get-Content -Raw -LiteralPath (Join-Path $taskPath "test-platform-v2/backend/.env")) -match 'platform-test-isolation.db') "SQLite env must be isolated"
     Assert-True (@(& git -C $taskPath status --porcelain).Count -eq 0) "metadata must remain ignored"
     Assert-True ($created.Branch -eq "feature/test-isolation") "creator must return the task branch"
-    Assert-True ($created.Owner -eq "claude") "Claude entry must fix owner=claude"
-    & $verify -RepositoryPath $taskPath -RequireMetadata -ExpectedOwner claude | Out-Null
-    $ownerMismatchRejected = $false
-    try { & $verify -RepositoryPath $taskPath -RequireMetadata -ExpectedOwner codex | Out-Null } catch { $ownerMismatchRejected = $true }
-    Assert-True $ownerMismatchRejected "ExpectedOwner mismatch must be rejected"
+    Assert-True ($created.Workflow -eq "direct") "Claude entry must fix workflow=direct"
+    Assert-True ($created.Executor -eq "claude") "Claude entry must fix executor=claude"
+    & $verify -RepositoryPath $taskPath -RequireMetadata -ExpectedWorkflow direct -ExpectedExecutor claude | Out-Null
+    $executorMismatchRejected = $false
+    try { & $verify -RepositoryPath $taskPath -RequireMetadata -ExpectedExecutor codex | Out-Null } catch { $executorMismatchRejected = $true }
+    Assert-True $executorMismatchRejected "ExpectedExecutor mismatch must be rejected"
+    $workflowMismatchRejected = $false
+    try { & $verify -RepositoryPath $taskPath -RequireMetadata -ExpectedWorkflow agent-team | Out-Null } catch { $workflowMismatchRejected = $true }
+    Assert-True $workflowMismatchRejected "ExpectedWorkflow mismatch must be rejected"
 
-    Assert-True (Test-Path -LiteralPath $codexStarter) "Codex fixed-owner entry must exist"
-    Assert-True (Test-Path -LiteralPath $agentTeamStarter) "Agent Team fixed-owner entry must exist"
+    Assert-True (Test-Path -LiteralPath $codexStarter) "Codex fixed-executor entry must exist"
+    Assert-True (Test-Path -LiteralPath $agentTeamStarter) "Agent Team workflow entry must exist"
     $codexCreated = @(& $codexStarter -Kind fix -Task codex-isolation -Scope backend -FrontendPort 55174 -BackendPort 58001 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
-    $agentTeamCreated = @(& $agentTeamStarter -Kind feature -Task agent-team-isolation -Scope governance -FrontendPort 55175 -BackendPort 58002 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
-    Assert-True ($codexCreated.Owner -eq "codex") "Codex entry must fix owner=codex"
-    Assert-True ($agentTeamCreated.Owner -eq "agent-team") "Agent Team entry must fix owner=agent-team"
+    $agentTeamCreated = @(& $agentTeamStarter -Executor codex -Kind feature -Task agent-team-isolation -Scope governance -FrontendPort 55175 -BackendPort 58002 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
+    Assert-True ($codexCreated.Workflow -eq "direct") "Codex entry must fix workflow=direct"
+    Assert-True ($codexCreated.Executor -eq "codex") "Codex entry must fix executor=codex"
+    Assert-True ($agentTeamCreated.Workflow -eq "agent-team") "Agent Team entry must fix workflow=agent-team"
+    Assert-True ($agentTeamCreated.Executor -eq "codex") "Agent Team entry must preserve the selected executor"
+    $agentTeamPath = Join-Path $worktrees "codex-agent-team-isolation"
+    & $verify -RepositoryPath $agentTeamPath -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor codex | Out-Null
+    $claudeAgentTeamCreated = @(& $agentTeamStarter -Executor claude -Kind feature -Task agent-team-claude -Scope governance -FrontendPort 55176 -BackendPort 58003 -RepositoryPath $control -DestinationRoot $worktrees)[-1]
+    Assert-True ($claudeAgentTeamCreated.Workflow -eq "agent-team") "Claude-hosted Agent Team must preserve workflow=agent-team"
+    Assert-True ($claudeAgentTeamCreated.Executor -eq "claude") "Claude-hosted Agent Team must preserve executor=claude"
+
+    & $creator -Owner codex -Kind feature -Task legacy-isolation -Scope governance -FrontendPort 55177 -BackendPort 58004 -RepositoryPath $control -DestinationRoot $worktrees | Out-Null
+    $legacyPath = Join-Path $worktrees "codex-legacy-isolation"
+    $legacyMetadataPath = Join-Path $legacyPath ".ai-worktree.json"
+    $legacyMetadata = [ordered]@{
+        owner = "codex"
+        task = "legacy-isolation"
+        branch = "feature/legacy-isolation"
+        base = "origin/main"
+        created_at = (Get-Date).ToString("o")
+        scope = @("governance")
+        ports = [ordered]@{ frontend = 55177; backend = 58004 }
+    }
+    $legacyMetadata | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 -LiteralPath $legacyMetadataPath
+    & $verify -RepositoryPath $legacyPath -RequireMetadata -ExpectedWorkflow direct -ExpectedExecutor codex | Out-Null
+
+    $legacyAgentTeamPath = Join-Path $worktrees "agent-team-legacy-agent-team"
+    & git -C $control worktree add -b feature/legacy-agent-team $legacyAgentTeamPath origin/main | Out-Null
+    $legacyAgentTeamMetadata = [ordered]@{
+        owner = "agent-team"
+        task = "legacy-agent-team"
+        branch = "feature/legacy-agent-team"
+        base = "origin/main"
+        created_at = (Get-Date).ToString("o")
+        scope = @("governance")
+        ports = [ordered]@{ frontend = 55178; backend = 58005 }
+    }
+    $legacyAgentTeamMetadata | ConvertTo-Json -Depth 4 | Set-Content -Encoding UTF8 -LiteralPath (Join-Path $legacyAgentTeamPath ".ai-worktree.json")
+    & $verify -RepositoryPath $legacyAgentTeamPath -RequireMetadata -ExpectedWorkflow agent-team | Out-Null
+    $unknownLegacyExecutorRejected = $false
+    try { & $verify -RepositoryPath $legacyAgentTeamPath -RequireMetadata -ExpectedExecutor codex | Out-Null } catch { $unknownLegacyExecutorRejected = $true }
+    Assert-True $unknownLegacyExecutorRejected "Legacy owner=agent-team must not be guessed as codex"
 
     $duplicateRejected = $false
-    try { & $creator -Owner codex -Kind feature -Task test-isolation -Scope backend -FrontendPort 55176 -BackendPort 58003 -RepositoryPath $control -DestinationRoot $worktrees | Out-Null } catch { $duplicateRejected = $true }
+    try { & $creator -Owner codex -Kind feature -Task test-isolation -Scope backend -FrontendPort 55179 -BackendPort 58006 -RepositoryPath $control -DestinationRoot $worktrees | Out-Null } catch { $duplicateRejected = $true }
     Assert-True $duplicateRejected "duplicate branch must be rejected"
 
     & git -C $control config core.hooksPath ([System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\..\.githooks")))
@@ -101,7 +149,7 @@ try {
     & git -C $control push origin main 2>$null
     Assert-True ($LASTEXITCODE -ne 0) "direct main push must be blocked by pre-push hook"
 
-    Write-Host "PASS: fixed owner entry, metadata validation, task push/delete, and protected push guard."
+    Write-Host "PASS: workflow/executor entry, invalid pair rejection, legacy metadata, task push/delete, and protected push guard."
 }
 finally {
     if (Test-Path -LiteralPath $testRootFull) {

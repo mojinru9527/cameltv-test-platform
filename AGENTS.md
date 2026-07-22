@@ -56,12 +56,14 @@ git status
 # 2. 拉取远端最新状态
 git fetch origin
 
-# 3. 从唯一主干创建独立 worktree；从哪个 AI 开工就使用哪个固定入口
-pwsh scripts/git/start-codex-task.ps1 -Kind feature -Task {描述} -Scope test-platform-v2/frontend -FrontendPort 5174 -BackendPort 8001
-# Claude: start-claude-task.ps1；Agent Team: start-agent-team-task.ps1
+# 3. 从唯一主干创建独立 worktree
+# Agent Team 是工作流，必须显式声明实际运行它的 Claude Code/Codex 执行器
+pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -Kind feature -Task {描述} -Scope test-platform-v2/frontend -FrontendPort 5174 -BackendPort 8001
+# 在 Claude Code 中运行 Agent Team 时用 -Executor claude
+# 不走 Agent Team 的直接任务才使用 start-claude-task.ps1 / start-codex-task.ps1
 
 # 4. 在新 worktree 开工前执行
-pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedOwner codex
+pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor codex
 
 # 5. 开发 + 频繁提交（遵循 worktree-reset-hazard 策略）
 
@@ -74,8 +76,8 @@ git push -u origin feature/{描述}
 gh pr create --base main --head feature/{描述} --title "..." --body "..."
 
 # 9. Agent Team/Leader 审计 PR；checks 全绿后增加 -RequireSuccessfulChecks
-pwsh scripts/git/audit-ai-pr.ps1
-pwsh scripts/git/audit-ai-pr.ps1 -RequireSuccessfulChecks
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex -RequireSuccessfulChecks
 ```
 
 ### 2.4 多窗口并行（Agent Team）
@@ -84,8 +86,10 @@ pwsh scripts/git/audit-ai-pr.ps1 -RequireSuccessfulChecks
 - 每个 Agent Team 窗口 = 一个 worktree + 独立分支
 - 所有分支从 `origin/main` 切出
 - 每个 worktree 使用独立 `.ai-worktree.json`、前后端端口、SQLite 和 `.env`
-- Claude/Codex/Agent Team 通过各自固定入口写入 owner；Agent Team 从元数据读取身份，不通过进程名猜测
-- 分支按任务命名；AI 所有者只写入忽略的本地元数据，pre-push 自动核对 metadata 与当前目录/分支
+- `.ai-worktree.json` 分开记录 workflow（`direct|agent-team`）和 executor（`claude|codex|human`）
+- Agent Team 入口要求显式选择 `claude|codex` 执行器；Git 无法从进程名、代码风格或 diff 可靠猜测实际 AI
+- 目录按 executor 隔离；分支仍按业务任务命名，pre-push 自动核对 workflow/executor、目录、分支和范围
+- 分支按任务命名；AI 执行器只写入忽略的本地元数据，pre-push 自动核对 metadata 与当前目录/分支
 - 详见 [ADR-0014](docs/adr/0014-single-main-trunk-ai-worktrees.md) 与 `scripts/git/` 可执行工具
 
 ## 3. 提交前自检清单（强制）

@@ -19,15 +19,16 @@ related: ["AGENTS.md", ".claude/skills/cameltv-agent-team/SKILL.md"]
 2. `main` 禁止直接 push、删除和非快进更新，所有代码通过 PR 和 required checks 合入。
 3. 日常分支仅使用 `feature/*`、`fix/*`、`hotfix/*`、`release/*`，默认 squash merge。
 4. 每个 AI 任务使用独立 worktree、独立分支、独立 `.ai-worktree.json` 元数据与本地端口；控制 worktree 不运行开发任务。
-5. 分支按任务命名；Claude、Codex、Agent Team 各自使用固定启动入口写入 owner，本地目录和忽略的元数据是身份事实源，不通过进程名猜测。
+5. 分支按任务命名；元数据分别记录 workflow（direct/agent-team）和实际 executor（Claude/Codex/human）。Agent Team 是流程而不是执行器，必须显式选择 Claude 或 Codex；不通过进程名、代码风格或 diff 猜测。
 6. Agent Team 工件使用唯一 batch 名称和仓库相对路径；仓库文档是共同事实源，路径绑定的 Claude Memory 不作为交付门禁。
 
 ## 自动执行层
 
-- `start-{claude|codex|agent-team}-task.ps1` 固定 owner 并创建 worktree。
-- `verify-ai-worktree.ps1` 校验 owner、目录、branch、base、scope、端口和干净状态。
+- `start-agent-team-task.ps1 -Executor claude|codex` 写入 `workflow=agent-team` 与实际 executor；直接任务入口写入 `workflow=direct`。
+- 新 worktree 使用 schema v2；旧 owner-only 元数据只做兼容读取，旧 `owner=agent-team` 的未知执行器不会被伪造为 Claude 或 Codex。
+- `verify-ai-worktree.ps1` 校验 workflow、executor、目录、branch、base、scope、端口和干净状态。
 - pre-push 对任务分支自动执行 verifier，阻断本地遗漏或 metadata 篡改；任务分支删除和标签不受影响。
-- `audit-ai-pr.ps1` 在 Agent Team Leader 审批前核对本地/远端 SHA、PR base/head、声明范围、required checks 与 squash-only 策略。
+- `audit-ai-pr.ps1` 在 Agent Team Leader 审批前核对 workflow/executor、本地/远端 SHA、PR base/head、声明范围、required checks 与 squash-only 策略。
 - GitHub Actions 与 main ruleset 是最终不可绕过层；本地工具负责尽早反馈，不能替代远端门禁。
 
 文本文件由 `.gitattributes` 固定 LF（`.bat/.cmd` 除外），仓库配置关闭 `core.autocrlf`，避免 Windows 文件时间或行尾转换制造无内容差异的假脏状态。
