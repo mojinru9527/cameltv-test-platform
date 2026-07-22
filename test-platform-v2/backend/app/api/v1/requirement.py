@@ -208,6 +208,19 @@ async def extract_features(
                                     inherited_fps.append(fp_copy)
                         inherited_fp_count = len(inherited_fps)
 
+                        # ── Log inherit match rate for monitoring (batch-28) ──
+                        total_parent_fps = sum(
+                            len(m.get("function_points", []))
+                            for m in parent_extraction.get("modules", [])
+                        )
+                        if total_parent_fps > 0:
+                            logger.info(
+                                "fp_inherit_match_rate: %d/%d (%.1f%%) [doc_id=%d, base_version=%s]",
+                                inherited_fp_count, total_parent_fps,
+                                inherited_fp_count / total_parent_fps * 100,
+                                document_id, inherited_from_version,
+                            )
+
                         # Build filtered content: only include text from changed (new/modified) pages
                         changed_pages_info = []
                         for p in diff_data.get("pages", []):
@@ -443,6 +456,15 @@ async def generate_test_cases(
                                         break
                         except json.JSONDecodeError:
                             pass
+
+                        # ── Log case inherit match rate for monitoring (batch-28) ──
+                        if inherited_fps:
+                            logger.info(
+                                "case_inherit_match_rate: %d/%d (%.1f%%) [doc_id=%d, version=%s]",
+                                len(inherited_cases), len(inherited_fps),
+                                len(inherited_cases) / len(inherited_fps) * 100 if inherited_fps else 0,
+                                document_id, doc.get("version", ""),
+                            )
 
                 # Replace extraction with only new FPs for AI
                 extraction = {**extraction, "modules": new_modules} if new_modules else None
