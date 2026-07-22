@@ -10,7 +10,8 @@ tags: ["template", "pull-request", "code-review"]
 
 ## AI 交付身份
 
-- AI Owner：`claude / codex / agent-team / human`
+- Workflow：`direct / agent-team`
+- Executor：`claude / codex / human`（Agent Team 只能选择 Claude/Codex）
 - Worktree task：
 - 声明范围（与 `.ai-worktree.json` 一致）：
 
@@ -71,8 +72,8 @@ tags: ["template", "pull-request", "code-review"]
 - [ ] **ADR**：如涉及架构决策，已新增 ADR 或更新已有 ADR 状态
 - [ ] **仓库知识**：重要经验/约定已写入 ADR、常见陷阱或 work-logs；个人 Memory 不作为交付证据
 - [ ] **Worktree 隔离**：分支从最新 `origin/main` 创建，`.ai-worktree.json` 未提交，未在控制 worktree 开发
-- [ ] **基础 PR 审计**：`pwsh scripts/git/audit-ai-pr.ps1` 通过，owner/branch/base/remote SHA/scope 一致
-- [ ] **最终 PR 审计**：required checks 全绿后，`pwsh scripts/git/audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过
+- [ ] **基础 PR 审计**：`pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow {direct|agent-team} -ExpectedExecutor {claude|codex|human}` 通过，workflow/executor/branch/base/remote SHA/scope 一致
+- [ ] **最终 PR 审计**：required checks 全绿后，在同一命令增加 `-RequireSuccessfulChecks` 并通过
 - [ ] **常见陷阱**：如发现新的重复性陷阱，已追加至 [docs/common-pitfalls.md](docs/common-pitfalls.md)
 - [ ] **术语表**：如有新业务术语引入，已更新 [docs/business-glossary.md](docs/business-glossary.md)
 

@@ -2,6 +2,10 @@
 param(
     [string]$RepositoryPath = (Get-Location).Path,
     [int]$PrNumber,
+    [ValidateSet("direct", "agent-team")]
+    [string]$ExpectedWorkflow,
+    [ValidateSet("claude", "codex", "human")]
+    [string]$ExpectedExecutor,
     [ValidateSet("claude", "codex", "human", "agent-team")]
     [string]$ExpectedOwner,
     [switch]$RequireSuccessfulChecks
@@ -55,8 +59,11 @@ $verifyArguments = @{
     RequireMetadata = $true
     RequireClean = $true
 }
+if ($ExpectedWorkflow) { $verifyArguments.ExpectedWorkflow = $ExpectedWorkflow }
+if ($ExpectedExecutor) { $verifyArguments.ExpectedExecutor = $ExpectedExecutor }
 if ($ExpectedOwner) { $verifyArguments.ExpectedOwner = $ExpectedOwner }
-& (Join-Path $PSScriptRoot "verify-ai-worktree.ps1") @verifyArguments | Out-Null
+$verifyOutput = @(& (Join-Path $PSScriptRoot "verify-ai-worktree.ps1") @verifyArguments)
+$verification = $verifyOutput[-1]
 
 $branch = (@(Invoke-CheckedGit -Path $root -Arguments @("branch", "--show-current")))[0].Trim()
 Invoke-CheckedGit -Path $root -Arguments @("fetch", "origin", "--prune") | Out-Null
@@ -118,7 +125,8 @@ foreach ($name in $requiredChecks) {
 $result = [pscustomobject]@{
     PullRequest = [int]$pr.number
     Url = [string]$pr.url
-    Owner = [string]$metadata.owner
+    Workflow = [string]$verification.Workflow
+    Executor = [string]$verification.Executor
     Branch = $branch
     Base = [string]$pr.baseRefName
     Head = $head
@@ -129,6 +137,6 @@ $result = [pscustomobject]@{
     Checks = $checkResults
 }
 
-$result | Format-List PullRequest,Url,Owner,Branch,Base,Head,Draft,MergeState,Scope,ChecksRequired
+$result | Format-List PullRequest,Url,Workflow,Executor,Branch,Base,Head,Draft,MergeState,Scope,ChecksRequired
 $checkResults | Format-Table -AutoSize
 $result

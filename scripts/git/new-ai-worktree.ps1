@@ -1,8 +1,12 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [ValidateSet("claude", "codex", "human", "agent-team")]
-    [string]$Owner,
+    [Alias("Owner")]
+    [ValidateSet("claude", "codex", "human")]
+    [string]$Executor,
+
+    [ValidateSet("direct", "agent-team")]
+    [string]$Workflow = "direct",
 
     [Parameter(Mandatory)]
     [ValidateSet("feature", "fix", "hotfix", "release")]
@@ -42,6 +46,9 @@ function Invoke-CheckedGit {
 if ($Task.Length -gt 50 -or $Task -notmatch '^[a-z0-9]+(?:-[a-z0-9]+)*$') {
     throw "Task must be lowercase kebab-case and no longer than 50 characters."
 }
+if ($Workflow -eq "agent-team" -and $Executor -eq "human") {
+    throw "Agent Team workflow executor must be claude or codex."
+}
 if ($FrontendPort -eq $BackendPort) {
     throw "Frontend and backend ports must be different."
 }
@@ -53,7 +60,7 @@ if (-not $DestinationRoot) {
 }
 $destinationRootFull = [System.IO.Path]::GetFullPath($DestinationRoot)
 $branch = "$Kind/$Task"
-$destination = [System.IO.Path]::GetFullPath((Join-Path $destinationRootFull "$Owner-$Task"))
+$destination = [System.IO.Path]::GetFullPath((Join-Path $destinationRootFull "$Executor-$Task"))
 $rootPrefix = $destinationRootFull.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
 if (-not $destination.StartsWith($rootPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
     throw "Destination escaped the approved worktree root."
@@ -85,7 +92,9 @@ New-Item -ItemType Directory -Path $destinationRootFull -Force | Out-Null
 Invoke-CheckedGit -Path $root -Arguments @("worktree", "add", "-b", $branch, $destination, "origin/$BaseBranch") | Out-Null
 
 $metadata = [ordered]@{
-    owner = $Owner
+    schema_version = 2
+    workflow = $Workflow
+    executor = $Executor
     task = $Task
     branch = $branch
     base = "origin/$BaseBranch"
@@ -110,7 +119,7 @@ New-Item -ItemType Directory -Path (Split-Path -Parent $backendEnvPath) -Force |
 ) | Set-Content -Encoding UTF8 -LiteralPath $backendEnvPath
 
 $verifyScript = Join-Path $PSScriptRoot "verify-ai-worktree.ps1"
-& $verifyScript -RepositoryPath $destination -BaseBranch $BaseBranch -RequireClean
+& $verifyScript -RepositoryPath $destination -BaseBranch $BaseBranch -RequireClean -RequireMetadata -ExpectedWorkflow $Workflow -ExpectedExecutor $Executor
 if ($LASTEXITCODE -ne 0) { throw "Created worktree failed verification." }
 
-[pscustomobject]@{ Path=$destination; Branch=$branch; Base="origin/$BaseBranch"; Owner=$Owner; FrontendPort=$FrontendPort; BackendPort=$BackendPort; FrontendEnv=$frontendEnvPath; BackendEnv=$backendEnvPath }
+[pscustomobject]@{ Path=$destination; Branch=$branch; Base="origin/$BaseBranch"; Workflow=$Workflow; Executor=$Executor; FrontendPort=$FrontendPort; BackendPort=$BackendPort; FrontendEnv=$frontendEnvPath; BackendEnv=$backendEnvPath }
