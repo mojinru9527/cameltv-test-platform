@@ -28,6 +28,8 @@ const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const AgentWorkbenchPage = lazy(() => import('@/pages/agent-workbench'))
 const PerftestPage = lazy(() => import('@/pages/perftest'))
+const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
+const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -73,6 +75,8 @@ export const router = createBrowserRouter([
       { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },
       { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
       { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
+      { path: 'release-bundles', element: <PageLoader><ReleaseBundlesPage /></PageLoader> },
+      { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'agent-workbench', element: <PageLoader><AgentWorkbenchPage /></PageLoader> },
       { path: 'perftest', element: <PageLoader><PerftestPage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },

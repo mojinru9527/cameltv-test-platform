@@ -10,3 +10,6 @@ data/
 .pytest_cache/
 .mypy_cache/
 docs/openapi.json
+# Batch 27 M5 — migration snapshots & POC scripts (not for repo)
+backups/*.csv
+scripts/poc_*

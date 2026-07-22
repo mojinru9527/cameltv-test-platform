@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import LargeBinary, Text
+from sqlalchemy import LargeBinary, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -42,6 +42,10 @@ class KnowledgeSource(Base, TimestampMixin):
     metadata_json: Mapped[str] = mapped_column(Text, default="{}")
     # 知识溯源：模块名（从 source_ref 中自动提取，如 "Agent Team", "API层"）
     module_name: Mapped[str | None] = mapped_column(String(200), default=None)
+    # FK to requirement_module (batch-27 M1) — nullable, not all sources are from a module
+    module_id: Mapped[int | None] = mapped_column(
+        default=None, index=True
+    )
 
 
 class KnowledgeChunk(Base):
