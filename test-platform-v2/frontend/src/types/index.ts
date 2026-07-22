@@ -1235,3 +1235,213 @@ export interface WikiLintConvertResult {
   converted: number
   artifact_ids: number[]
 }
+
+// ========== Batch 27: ReleaseBundle / RequirementModule (项目球) ==========
+
+export interface ReleaseBundleOut {
+  id: number
+  project_id: number
+  name: string
+  description: string
+  client_version: string
+  admin_version: string
+  status: string
+  release_date: string | null
+  parent_bundle_id: number | null
+  diff_summary: string
+  global_navigation: string
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface ReleaseBundleListItem {
+  id: number
+  name: string
+  client_version: string
+  admin_version: string
+  status: string
+  release_date: string | null
+  parent_bundle_id: number | null
+  module_count: number
+  page_count: number
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface ReleaseBundleVersionChain {
+  id: number
+  name: string
+  client_version: string
+  admin_version: string
+  status: string
+  release_date: string | null
+  parent_bundle_id: number | null
+}
+
+export interface VersionDiffRequest {
+  parent_bundle_id: number
+  source_version?: string
+}
+
+export interface VersionDiffConfirmRequest {
+  overrides?: Record<string, unknown> | null
+}
+
+// ── RequirementModule ──
+
+export interface RequirementModuleOut {
+  id: number
+  project_id: number
+  release_bundle_id: number
+  name: string
+  node_type: string
+  platform: string
+  lanhu_page_id: string
+  change_type: string
+  parent_module_id: number | null
+  source_version: string
+  description: string
+  screenshot_urls: string
+  has_visual_only_content: boolean
+  page_interactions: string
+  sort_order: number
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface RequirementModuleBrief {
+  id: number
+  name: string
+  node_type: string
+  platform: string
+  change_type: string
+  parent_module_id: number | null
+  description: string
+  created_at: string | null
+}
+
+export interface ModuleTreeNode {
+  id: number
+  name: string
+  node_type: string
+  platform: string
+  change_type: string
+  description: string
+  lanhu_page_id: string
+  page_interactions: string
+  children: ModuleTreeNode[]
+  child_count: number
+}
+
+export interface ModuleTreeResponse {
+  bundle_id: number
+  bundle_name: string
+  client_version: string
+  admin_version: string
+  roots: ModuleTreeNode[]
+  total_modules: number
+  total_pages: number
+  total_attachments: number
+}
+
+export interface ModuleTestSummaryOut {
+  module_id: number
+  module_name: string
+  total_test_cases: number
+  functional: number
+  api: number
+  automation: number
+  coverage_rate: number
+  last_run_status: string
+  linked_case_ids: number[]
+}
+
+// ── ModuleAdminLink ──
+
+export interface ModuleAdminLinkOut {
+  id: number
+  project_id: number
+  client_module_id: number
+  admin_module_id: number
+  relation_type: string
+  confidence: number
+  evidence: string
+  metadata_json: string
+  created_at: string | null
+}
+
+// ── Interactions / Navigation ──
+
+export interface GlobalNavItemOut {
+  trigger: string
+  target_page: string
+  interaction_type: string
+  coverage: number
+  source_element: string
+  description: string
+}
+
+export interface TestLinkingResult {
+  linked_count: number
+  relations_created: number
+  by_strategy: Record<string, number>
+  unmatched_cases: number[]
+  warnings: string[]
+}
+
+export interface AttachmentExtractResultOut {
+  total_attachments: number
+  processed: number
+  failed: number
+  business_rules_created: number
+  function_points_extracted: number
+  errors: string[]
+}
+
+// ── Wiki Sync ──
+
+export interface WikiSyncResultOut {
+  release_bundle_id: number
+  raw_sources_created: number
+  raw_sources_updated: number
+  raw_sources_skipped: number
+  coverage: Record<string, unknown>
+  errors: string[]
+}
+
+export interface WikiTreeDiffOut {
+  only_in_tree: string[]
+  only_in_wiki: string[]
+  in_both: number
+  total_tree_pages: number
+  total_wiki_pages: number
+}
+
+// ── Project Sphere Graph ──
+
+export interface ProjectSphereNode {
+  id: string
+  name: string
+  node_type: string
+  parent_id: string | null
+  version: string
+  platform: string
+  change_type: string
+  metadata: Record<string, unknown>
+}
+
+export interface ProjectSphereEdge {
+  source: string
+  target: string
+  relation_type: string
+  confidence: number
+  label: string
+}
+
+export interface ProjectSphereView {
+  project_id: number
+  project_name: string
+  nodes: ProjectSphereNode[]
+  edges: ProjectSphereEdge[]
+  stats: Record<string, unknown>
+}

@@ -780,6 +780,167 @@ def convert_lint_issues(
     return R.ok({"converted": len(artifacts), "artifact_ids": [a.id for a in artifacts]})
 
 
+# ═══════════════════════════════════════════════════════
+# M3 蓝湖模块树 → Wiki 基线同步（Batch 27 Knowledge Sphere）
+# ═══════════════════════════════════════════════════════
+
+from app.schemas.release_bundle import (
+    WikiSyncRequest,
+    WikiSyncResultOut,
+    WikiTreeDiffOut,
+)
+
+
+@router.post("/sync/bundle/{bundle_id}", response_model=R[WikiSyncResultOut], summary="模块树同步到 Wiki Raw Source")
+def sync_bundle_to_wiki(
+    bundle_id: int,
+    body: WikiSyncRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("wiki:manage")),
+    db: Session = Depends(get_db),
+):
+    """将发布包的模块树同步到 Wiki Raw Source。
+
+    对模块树中每个页面：
+      1. 构建 Wiki 路径（项目/平台/模块/页面）
+      2. 收集 LanhuEvidencePage OCR 内容
+      3. 创建/更新 WikiRawSource（不可变版本键：bundle:{id}:module:{id}）
+      4. 内容不变则跳过（content_hash 幂等）
+
+    这是 Wiki 基线的核心入口——后续的 Wiki 编译和差异对比都基于此基线。
+    """
+    _require_wiki_enabled()
+    pid = current.project_id or 0
+
+    from app.models.release_bundle import ReleaseBundle
+    from app.services.wiki.sync_service import sync_to_wiki
+
+    bundle = db.get(ReleaseBundle, bundle_id)
+    if not bundle or bundle.project_id != pid:
+        from app.core.exceptions import not_found
+        raise not_found("发布包")
+
+    result = sync_to_wiki(
+        db,
+        release_bundle_id=bundle_id,
+        project_id=pid,
+        create_wiki_pages=body.create_wiki_pages,
+    )
+    db.commit()
+
+    _audit(req, current, db, "wiki:sync_bundle", f"bundle#{bundle_id}",
+           f"created={result.raw_sources_created} updated={result.raw_sources_updated} "
+           f"skipped={result.raw_sources_skipped}")
+
+    return R.ok(WikiSyncResultOut(
+        release_bundle_id=result.release_bundle_id,
+        raw_sources_created=result.raw_sources_created,
+        raw_sources_updated=result.raw_sources_updated,
+        raw_sources_skipped=result.raw_sources_skipped,
+        coverage=result.coverage,
+        errors=result.errors,
+    ))
+
+
+@router.get("/sync/bundle/{bundle_id}/coverage", response_model=R[dict], summary="Wiki 同步覆盖率")
+def get_sync_coverage(
+    bundle_id: int,
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    """获取发布包模块树的 Wiki 同步覆盖率统计。
+
+    返回 synced（活跃同步）/ stale（内容过期需重同步）/ missing（未同步）页面的数量。
+    """
+    pid = current.project_id or 0
+
+    from app.models.release_bundle import ReleaseBundle
+    from app.services.wiki.sync_service import get_sync_coverage as get_coverage
+
+    bundle = db.get(ReleaseBundle, bundle_id)
+    if not bundle or bundle.project_id != pid:
+        from app.core.exceptions import not_found
+        raise not_found("发布包")
+
+    stats = get_coverage(db, release_bundle_id=bundle_id, project_id=pid)
+    return R.ok(stats)
+
+
+@router.get("/sync/bundle/{bundle_id}/diff", response_model=R[WikiTreeDiffOut], summary="模块树 vs Wiki 差异对比")
+def diff_bundle_vs_wiki(
+    bundle_id: int,
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    """对比模块树结构与现有 Wiki 页面的差异。
+
+    返回三类差异：
+      - only_in_tree: 模块树中有但 Wiki 中无的页面（需同步）
+      - only_in_wiki: Wiki 中有但模块树中无的页面（可能已过时或手动创建）
+      - in_both: 两边都存在的页面数
+    """
+    pid = current.project_id or 0
+
+    from app.models.release_bundle import ReleaseBundle
+    from app.services.wiki.sync_service import diff_module_tree_vs_wiki
+
+    bundle = db.get(ReleaseBundle, bundle_id)
+    if not bundle or bundle.project_id != pid:
+        from app.core.exceptions import not_found
+        raise not_found("发布包")
+
+    diff = diff_module_tree_vs_wiki(db, release_bundle_id=bundle_id, project_id=pid)
+    return R.ok(WikiTreeDiffOut(
+        only_in_tree=diff["only_in_tree"],
+        only_in_wiki=diff["only_in_wiki"],
+        in_both=diff["in_both"],
+        total_tree_pages=diff["total_tree_pages"],
+        total_wiki_pages=diff["total_wiki_pages"],
+    ))
+
+
+@router.get("/sync/bundle/{bundle_id}/tree", response_model=R[list[dict]], summary="模块树 Wiki 目录预览")
+def preview_wiki_tree(
+    bundle_id: int,
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    """预览模块树将被同步到的 Wiki 目录结构（不实际写入）。
+
+    返回扁平化的 Wiki 路径列表，包含每个页面将要创建的目录路径和标题。
+    """
+    pid = current.project_id or 0
+
+    from app.models.release_bundle import ReleaseBundle
+    from app.services.wiki.sync_service import build_wiki_tree
+
+    bundle = db.get(ReleaseBundle, bundle_id)
+    if not bundle or bundle.project_id != pid:
+        from app.core.exceptions import not_found
+        raise not_found("发布包")
+
+    tree = build_wiki_tree(db, release_bundle_id=bundle_id)
+
+    # Flatten tree to list of path entries
+    def _flatten(node, results: list):
+        results.append({
+            "path": node.path,
+            "title": node.title,
+            "page_type": node.page_type,
+            "module_id": node.module_id,
+            "content_preview": node.content_preview,
+            "child_count": len(node.children),
+        })
+        for child in node.children:
+            _flatten(child, results)
+
+    flat: list[dict] = []
+    for root in tree:
+        _flatten(root, flat)
+
+    return R.ok(flat)
+
+
 def _get_external_connection(db: Session, conn_id: int, project_id: int) -> ExternalWikiConnection | None:
     conn = db.get(ExternalWikiConnection, conn_id)
     if not conn or conn.project_id != project_id:

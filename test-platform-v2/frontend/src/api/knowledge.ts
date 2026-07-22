@@ -18,6 +18,7 @@ import type {
   RegressionPrediction,
   ReembedResult,
   SearchHealth,
+  ProjectSphereView,
 } from '@/types'
 
 // 说明：axios 拦截器已拆包 {code,msg,data}，并自动附带 X-Project-Id 头，
@@ -194,6 +195,15 @@ export async function captureInsight(body: {
   tags?: string[]
 }): Promise<{ id: number; title: string; status: string }> {
   return api.post('/knowledge/capture', body)
+}
+
+// ── M7 项目球层级图谱 ──
+
+export async function fetchGraphHierarchy(params?: {
+  release_bundle_id?: number
+  max_depth?: number
+}): Promise<ProjectSphereView> {
+  return api.get('/knowledge/graph/hierarchy', { params })
 }
 
 // ── 概念地图自演化 ──

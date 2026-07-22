@@ -126,6 +126,11 @@ export {
   AlertCircle,
   GitCompare,
   ListFilter,
+  // Batch 27
+  Box,
+  Boxes,
+  Package,
+  PackageOpen,
 } from "lucide-react"
 
 export type { LucideIcon } from "lucide-react"

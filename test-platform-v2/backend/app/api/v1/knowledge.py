@@ -606,10 +606,15 @@ def graph_view(
 
     stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
     if knowledge_domain:
-        # JOIN KnowledgeSource 实现知识域过滤（source_id 可能为空，用 left join 保留无关联源的实体）
-        stmt = stmt.outerjoin(
-            KnowledgeSource, KnowledgeEntity.source_id == KnowledgeSource.id
-        ).where(KnowledgeSource.knowledge_domain == knowledge_domain)
+        # 知识域过滤：实体关联的 source 属于该 domain，或实体无关联 source（孤儿实体保留）
+        matching_sources = select(KnowledgeSource.id).where(
+            KnowledgeSource.project_id == pid,
+            KnowledgeSource.knowledge_domain == knowledge_domain,
+        )
+        stmt = stmt.where(
+            KnowledgeEntity.source_id.in_(matching_sources)
+            | KnowledgeEntity.source_id.is_(None)
+        )
     entities = list(db.scalars(stmt.limit(limit)).all())
 
     relations = list(
@@ -864,6 +869,249 @@ def compare_iteration(
     if not result:
         return R(code=404, msg="迭代不存在")
     return R.ok(CompareSnapshotsOut(**result))
+
+
+# ═══════════════════════════════════════════════════════
+# M3 项目球层级图谱（Batch 27 Knowledge Sphere）
+# ═══════════════════════════════════════════════════════
+
+from app.models.release_bundle import ReleaseBundle
+from app.models.requirement_module import ModuleAdminLink, RequirementModule
+from app.schemas.release_bundle import ProjectSphereEdge, ProjectSphereNode, ProjectSphereView
+
+
+@router.get("/graph/hierarchy", response_model=R[ProjectSphereView], summary="项目球层级图谱")
+def graph_hierarchy(
+    release_bundle_id: int | None = Query(None, description="指定发布包，不传则返回最新 active"),
+    max_depth: int = Query(4, ge=1, le=6, description="层级深度：1=项目, 2=版本, 3=平台, 4=模块, 5=页面"),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """返回「项目球」层级图谱数据：project → version → platform → module → page。
+
+    包含三种关系边：
+      - contains: 层级包含关系（版本→平台→模块→页面）
+      - configures: 跨系统配置关联（运营后台模块→用户端模块）
+      - tested_by: 测试用例覆盖关系
+    """
+    pid = current.project_id or 0
+
+    # Determine which bundle to use
+    bundle = None
+    if release_bundle_id:
+        bundle = db.get(ReleaseBundle, release_bundle_id)
+        if not bundle or bundle.project_id != pid:
+            return R(code=404, msg="发布包不存在")
+    else:
+        # Use latest active bundle
+        bundle = db.scalar(
+            select(ReleaseBundle)
+            .where(ReleaseBundle.project_id == pid, ReleaseBundle.status == "active")
+            .order_by(ReleaseBundle.id.desc())
+        )
+        if not bundle:
+            # Fall back to latest draft
+            bundle = db.scalar(
+                select(ReleaseBundle)
+                .where(ReleaseBundle.project_id == pid)
+                .order_by(ReleaseBundle.id.desc())
+            )
+
+    if not bundle:
+        return R.ok(ProjectSphereView(project_id=pid, project_name="无发布包"))
+
+    # Get project name
+    from app.models.project import Project
+    project = db.get(Project, pid)
+    project_name = project.name if project else f"Project #{pid}"
+
+    # Load all modules for this bundle
+    all_modules = list(db.scalars(
+        select(RequirementModule).where(
+            RequirementModule.release_bundle_id == bundle.id,
+        ).order_by(RequirementModule.sort_order, RequirementModule.id)
+    ).all())
+
+    nodes: list[ProjectSphereNode] = []
+    edges: list[ProjectSphereEdge] = []
+
+    # ── Node: Project ──
+    project_node_id = f"project:{pid}"
+    nodes.append(ProjectSphereNode(
+        id=project_node_id, name=project_name, node_type="project",
+    ))
+
+    # ── Node: Version (bundle) ──
+    if max_depth >= 2:
+        bundle_node_id = f"bundle:{bundle.id}"
+        nodes.append(ProjectSphereNode(
+            id=bundle_node_id, name=bundle.name, node_type="version",
+            parent_id=project_node_id,
+            version=f"{bundle.client_version} / {bundle.admin_version}",
+            metadata={"client_version": bundle.client_version, "admin_version": bundle.admin_version,
+                       "status": bundle.status, "release_date": str(bundle.release_date) if bundle.release_date else ""},
+        ))
+        edges.append(ProjectSphereEdge(
+            source=project_node_id, target=bundle_node_id,
+            relation_type="contains", label="发布版本",
+        ))
+
+        # ── Nodes: Platforms ──
+        platforms_seen: set[str] = set()
+        top_modules = [m for m in all_modules if m.parent_module_id is None and m.node_type == "module"]
+
+        if max_depth >= 3:
+            for mod in top_modules:
+                plat = mod.platform or "通用"
+                plat_node_id = f"platform:{bundle.id}:{plat}"
+                if plat not in platforms_seen:
+                    platforms_seen.add(plat)
+                    nodes.append(ProjectSphereNode(
+                        id=plat_node_id, name=f"{plat}端", node_type="platform",
+                        parent_id=bundle_node_id, platform=plat,
+                    ))
+                    edges.append(ProjectSphereEdge(
+                        source=bundle_node_id, target=plat_node_id,
+                        relation_type="contains", label="平台",
+                    ))
+
+            # ── Nodes: Modules + Pages ──
+            if max_depth >= 4:
+                # Build parent index
+                children_by_parent: dict[int, list[RequirementModule]] = {}
+                for m in all_modules:
+                    if m.parent_module_id:
+                        children_by_parent.setdefault(m.parent_module_id, []).append(m)
+
+                for mod in top_modules:
+                    plat = mod.platform or "通用"
+                    plat_node_id = f"platform:{bundle.id}:{plat}"
+                    mod_node_id = f"module:{mod.id}"
+
+                    nodes.append(ProjectSphereNode(
+                        id=mod_node_id, name=mod.name, node_type="module",
+                        parent_id=plat_node_id, platform=plat,
+                        version=bundle.client_version,
+                        change_type=mod.change_type,
+                        metadata={"description": (mod.description or "")[:200]},
+                    ))
+                    edges.append(ProjectSphereEdge(
+                        source=plat_node_id, target=mod_node_id,
+                        relation_type="contains", label="模块",
+                    ))
+
+                    # Add pages (depth >= 5)
+                    if max_depth >= 5:
+                        for page in children_by_parent.get(mod.id, []):
+                            if page.node_type == "page":
+                                page_node_id = f"page:{page.id}"
+                                nodes.append(ProjectSphereNode(
+                                    id=page_node_id, name=page.name, node_type="page",
+                                    parent_id=mod_node_id, platform=plat,
+                                    version=bundle.client_version,
+                                    change_type=page.change_type,
+                                ))
+                                edges.append(ProjectSphereEdge(
+                                    source=mod_node_id, target=page_node_id,
+                                    relation_type="contains", label="页面",
+                                ))
+
+        # Also add standalone pages and attachments
+        standalone = [m for m in all_modules if m.parent_module_id is None
+                      and m.node_type in ("page", "attachment")]
+        for m in standalone:
+            plat = m.platform or "通用"
+            plat_node_id = f"platform:{bundle.id}:{plat}"
+            node_id = f"{m.node_type}:{m.id}"
+            nodes.append(ProjectSphereNode(
+                id=node_id, name=m.name, node_type=m.node_type,
+                parent_id=plat_node_id, platform=plat,
+                version=bundle.client_version,
+            ))
+            edges.append(ProjectSphereEdge(
+                source=plat_node_id, target=node_id,
+                relation_type="contains", label=m.node_type,
+            ))
+
+    # ── Edges: Configures (cross-system) ──
+    module_ids = [m.id for m in all_modules]
+    if module_ids:
+        admin_links = list(db.scalars(
+            select(ModuleAdminLink).where(
+                ModuleAdminLink.project_id == pid,
+                ModuleAdminLink.client_module_id.in_(module_ids),
+            )
+        ).all())
+        for link in admin_links:
+            admin_mod = db.get(RequirementModule, link.admin_module_id)
+            edges.append(ProjectSphereEdge(
+                source=f"admin_module:{link.admin_module_id}",
+                target=f"module:{link.client_module_id}",
+                relation_type="configures",
+                confidence=link.confidence,
+                label=f"配置 → {admin_mod.name if admin_mod else '#' + str(link.admin_module_id)}",
+            ))
+
+    # ── Edges: tested_by ──
+    entity_ids = {e.id for e in db.scalars(
+        select(KnowledgeEntity).where(
+            KnowledgeEntity.project_id == pid,
+            KnowledgeEntity.entity_type.in_(["client_module", "admin_module"]),
+        )
+    ).all()} if False else set()  # Simplified: query relations targeting our module entities
+
+    # Get tested_by relations where the target entity corresponds to our modules
+    module_entity_map: dict[int, int] = {}
+    for m in all_modules:
+        entity = db.scalar(
+            select(KnowledgeEntity).where(
+                KnowledgeEntity.project_id == pid,
+                KnowledgeEntity.entity_type == "client_module",
+                KnowledgeEntity.name == m.name,
+            )
+        )
+        if entity:
+            module_entity_map[entity.id] = m.id
+
+    if module_entity_map:
+        test_rels = list(db.scalars(
+            select(KnowledgeRelation).where(
+                KnowledgeRelation.project_id == pid,
+                KnowledgeRelation.relation_type == "tested_by",
+                KnowledgeRelation.to_entity_id.in_(list(module_entity_map.keys())),
+            ).limit(200)
+        ).all())
+        for rel in test_rels:
+            mod_id = module_entity_map.get(rel.to_entity_id)
+            if mod_id:
+                edges.append(ProjectSphereEdge(
+                    source=f"test_case_entity:{rel.from_entity_id}",
+                    target=f"module:{mod_id}",
+                    relation_type="tested_by",
+                    confidence=rel.confidence,
+                    label="测试覆盖",
+                ))
+
+    # ── Stats ──
+    stats = {
+        "versions": 1,
+        "platforms": len(platforms_seen),
+        "modules": sum(1 for m in all_modules if m.node_type == "module"),
+        "pages": sum(1 for m in all_modules if m.node_type == "page"),
+        "attachments": sum(1 for m in all_modules if m.node_type == "attachment"),
+        "configures_links": sum(1 for e in edges if e.relation_type == "configures"),
+        "test_relations": sum(1 for e in edges if e.relation_type == "tested_by"),
+        "total_nodes": len(nodes),
+        "total_edges": len(edges),
+    }
+
+    return R.ok(ProjectSphereView(
+        project_id=pid,
+        project_name=project_name,
+        nodes=nodes,
+        edges=edges,
+        stats=stats,
+    ))
 
 
 # ═══════════════════════════════════════════════════════

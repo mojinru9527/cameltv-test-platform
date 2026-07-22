@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap, Lightbulb } from '@/lib/icons'
+import { LayoutDashboard, Database, FileCheck, Search, GitBranch, Layers, Calendar, BookOpen, GitCompare, FolderOpen, Sparkles, Zap, Lightbulb, Globe } from '@/lib/icons'
 import OverviewTab from './components/OverviewTab'
 import SourceListTab from './components/SourceListTab'
 import ArtifactReviewTab from './components/ArtifactReviewTab'
@@ -25,6 +25,7 @@ import ProjectTab from './components/ProjectTab'
 import PlatformTab from './components/PlatformTab'
 import SkillsTab from './components/SkillsTab'
 import CaptureDialog from './components/CaptureDialog'
+import SphereTab from './components/SphereTab'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 /**
@@ -133,6 +134,10 @@ export default function KnowledgePage() {
             <Zap className="size-4 mr-1" />
             Skills
           </TabsTrigger>
+          <TabsTrigger value="sphere">
+            <Globe className="size-4 mr-1" />
+            项目球
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="project" className="mt-4">
@@ -170,6 +175,9 @@ export default function KnowledgePage() {
         </TabsContent>
         <TabsContent value="skills" className="mt-4">
           {tab === 'skills' && <SkillsTab />}
+        </TabsContent>
+        <TabsContent value="sphere" className="mt-4">
+          {tab === 'sphere' && <SphereTab />}
         </TabsContent>
       </Tabs>
 
