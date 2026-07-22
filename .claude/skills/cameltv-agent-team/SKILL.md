@@ -186,6 +186,7 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecuto
    - **禁止静态代替执行**：文件存在、代码目测、工件齐全不能单独判定 PASS。
    - **KB 辅助定级**：出具 QA 报告前，检索知识库中与被测模块相关的历史缺陷模式。相似历史缺陷须在报告中列出，用于辅助缺陷定级（P0–P3）和评估回归风险。
    **遇到硬 bug 或性能回归时，走 `diagnose` skill 的纪律化诊断循环**（复现→最小化→假设→插桩→修→回归测试），不靠猜测修。
+   - **CI 分层核对**：PR 检查按完整 base/head diff 分类。QA 必须记录 backend/frontend 分类与实际运行/跳过 jobs；未知、CI、部署或分类失败必须双端全量/阻断，禁止把 required job 名称存在当作重测试已执行。
 6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**。Leader 只在用户完成二次确认、QA 硬门禁全绿、`audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过后给 APPROVED；没有完成确认、运行日志或只有文档结论时必须打回。
    - **知识审计**：合入前验证 (a) 本批次是否产出了可入库的知识（设计决策、踩坑记录、新发现的问题模式）；(b) 如有，是否已通过 `ingest_platform_knowledge` 入库；(c) 本批次决策是否与 KB 中已有知识矛盾，如有矛盾须在 leader-verdict 中记录并说明取舍理由。
    **跨会话交接时用 `handoff` skill 压缩上下文为交接文档**，避免下一个 session 丢失进度。

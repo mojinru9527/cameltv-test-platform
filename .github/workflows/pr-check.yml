@@ -6,7 +6,44 @@ on:
   workflow_dispatch:
 
 jobs:
+  detect_changes:
+    name: 变更范围识别
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      backend: ${{ steps.scope.outputs.backend }}
+      frontend: ${{ steps.scope.outputs.frontend }}
+      reason: ${{ steps.scope.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: scope
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files"
+            python scripts/ci/classify_ci_changes.py --files-from "$RUNNER_TEMP/changed-files" --null --github-output "$GITHUB_OUTPUT" | tee "$RUNNER_TEMP/ci-scope.json"
+          else
+            python scripts/ci/classify_ci_changes.py --force-all --github-output "$GITHUB_OUTPUT" | tee "$RUNNER_TEMP/ci-scope.json"
+          fi
+          {
+            echo "### Extended CI scope"
+            echo '~~~json'
+            cat "$RUNNER_TEMP/ci-scope.json"
+            echo '~~~'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   backend-check:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -61,6 +98,8 @@ jobs:
   # PostgreSQL 兼容性验证 — 校验 Alembic 迁移 + 模型导入在 PG 上通过。
   # 与 backend-check (SQLite) 并行运行，确保 PG 升级路径不被破坏。
   backend-check-pg:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -135,6 +174,8 @@ jobs:
   # full component tree (buttons, inputs, headings, landmarks, contrast).
   # Non-blocking initially; threshold tightens after 1-week observation.
   frontend-a11y:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
 
@@ -176,6 +217,8 @@ jobs:
           retention-days: 7
 
   frontend-check:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
