@@ -1,7 +1,7 @@
 ---
 title: "CamelTv Agent 工作流规范"
 owner: "qa-team"
-last_reviewed: "2026-07-22"
+last_reviewed: "2026-07-23"
 status: "active"
 expires: "2027-01-22"
 tags: ["agent", "workflow", "git", "branching", "pr"]
@@ -150,17 +150,26 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 
 | 工作流 | 触发条件 | 覆盖范围 |
 |--------|---------|---------|
-| `main-quality-gate.yml` | PR → `main` | 阻断：后端导入/F821/Alembic/全量 pytest，前端 typecheck/Vitest/build |
-| `pr-check.yml` | PR → `main` | 扩展：覆盖率、PG 迁移、a11y 与 lint 观察 |
-| `ai-delivery-policy.yml` | PR → `main` | 阻断：分支命名、本地 metadata/env/数据库夹带、常见凭据模式 |
+| `main-quality-gate.yml` | PR → `main`、push → `main`、手动 | PR 按文件范围运行相关域全量回归；push/main 与手动始终双端全量；两个 required 汇总名称固定 |
+| `pr-check.yml` | PR → `main`、手动 | 按域运行覆盖率、PG 迁移、a11y 与 lint 观察；手动始终双端 |
+| `ai-delivery-policy.yml` | PR → `main` | 阻断：分支/本地文件/凭据策略，并执行 CI 范围分类与 workflow 契约测试 |
 
-### 4.2 已知差距
+### 4.2 按变更范围分层
+
+- Markdown、`docs/`、`work-logs/`、Agent/Git/CI 本地工具：前后端重测试均跳过，三个 required contexts 仍返回明确结果。
+- `test-platform-v2/backend/**`、`lanhu-mcp` 子模块指针、`.gitmodules`：运行后端 required + backend/PG 扩展检查。
+- `test-platform-v2/frontend/**`：运行前端 required + frontend/a11y 扩展检查。
+- CI workflow、部署、混合、未知或空文件集：保守执行双端全量。
+- 分类使用 PR base/head 的完整差异；同一受影响域每次 push 后仍对最新 SHA 重跑，不复用旧提交结果。
+- 禁止对 required workflow 使用顶层 `paths`/`paths-ignore`；分类器失败必须使固定名称汇总 job 失败。
+
+### 4.3 已知差距
 
 - 全量 Ruff、mypy、覆盖率阈值和 a11y 中仍有历史债务，暂由扩展工作流报告；运行时 F821、全量测试、类型检查和构建必须阻断
 - 单人仓库无法要求 PR 作者自己审批，因此远端以 required checks、禁止强推/删除和 Agent Team PR 审计作为合并门禁
 - `lanhu-mcp` 是后端蓝湖 Provider 的运行/开发依赖，必须通过 `.gitmodules` 在干净检出中初始化
 
-**Agent 应对**: 在 CI 补齐前，Agent 必须在本地手动执行第 3 节自检清单并把命令、退出码、失败集合写入 QA 报告；不能依赖文档工件或 CI 名称推断质量。
+**Agent 应对**: Agent 必须在本地执行与变更范围对应的第 3 节自检，并把命令、退出码、失败集合与 CI 分类结果写入 QA 报告；不能依赖 job 名称或 skipped 状态推断质量。
 
 ## 5. 变更摘要模板
 

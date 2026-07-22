@@ -8,8 +8,45 @@ on:
   workflow_dispatch:
 
 jobs:
-  backend-clean-checkout:
-    name: 后端全新检出与全量回归
+  detect_changes:
+    name: 变更范围识别
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      backend: ${{ steps.scope.outputs.backend }}
+      frontend: ${{ steps.scope.outputs.frontend }}
+      reason: ${{ steps.scope.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: scope
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files"
+            python scripts/ci/classify_ci_changes.py --files-from "$RUNNER_TEMP/changed-files" --null --github-output "$GITHUB_OUTPUT" | tee "$RUNNER_TEMP/ci-scope.json"
+          else
+            python scripts/ci/classify_ci_changes.py --force-all --github-output "$GITHUB_OUTPUT" | tee "$RUNNER_TEMP/ci-scope.json"
+          fi
+          {
+            echo "### CI scope"
+            echo '~~~json'
+            cat "$RUNNER_TEMP/ci-scope.json"
+            echo '~~~'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  backend_tests:
+    name: 后端重型回归执行
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -54,8 +91,40 @@ jobs:
         working-directory: test-platform-v2/backend
         run: python -m pytest -q
 
-  frontend-clean-checkout:
-    name: 前端全新检出与全量回归
+  backend-clean-checkout:
+    name: 后端全新检出与全量回归
+    needs: [detect_changes, backend_tests]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      DETECT_RESULT: ${{ needs.detect_changes.result }}
+      DOMAIN_REQUIRED: ${{ needs.detect_changes.outputs.backend }}
+      TEST_RESULT: ${{ needs.backend_tests.result }}
+      SCOPE_REASON: ${{ needs.detect_changes.outputs.reason }}
+    steps:
+      - name: Enforce backend gate result
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$DETECT_RESULT" != "success" ]]; then
+            echo "::error::CI scope detection failed: $DETECT_RESULT"
+            exit 1
+          fi
+          if [[ "$DOMAIN_REQUIRED" != "true" ]]; then
+            echo "Backend full regression skipped: $SCOPE_REASON" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ "$TEST_RESULT" != "success" ]]; then
+            echo "::error::Backend full regression did not succeed: $TEST_RESULT"
+            exit 1
+          fi
+          echo "Backend full regression passed: $SCOPE_REASON" | tee -a "$GITHUB_STEP_SUMMARY"
+
+  frontend_tests:
+    name: 前端重型回归执行
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -85,3 +154,33 @@ jobs:
       - name: Production Build
         working-directory: test-platform-v2/frontend
         run: npm run build
+
+  frontend-clean-checkout:
+    name: 前端全新检出与全量回归
+    needs: [detect_changes, frontend_tests]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      DETECT_RESULT: ${{ needs.detect_changes.result }}
+      DOMAIN_REQUIRED: ${{ needs.detect_changes.outputs.frontend }}
+      TEST_RESULT: ${{ needs.frontend_tests.result }}
+      SCOPE_REASON: ${{ needs.detect_changes.outputs.reason }}
+    steps:
+      - name: Enforce frontend gate result
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$DETECT_RESULT" != "success" ]]; then
+            echo "::error::CI scope detection failed: $DETECT_RESULT"
+            exit 1
+          fi
+          if [[ "$DOMAIN_REQUIRED" != "true" ]]; then
+            echo "Frontend full regression skipped: $SCOPE_REASON" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ "$TEST_RESULT" != "success" ]]; then
+            echo "::error::Frontend full regression did not succeed: $TEST_RESULT"
+            exit 1
+          fi
+          echo "Frontend full regression passed: $SCOPE_REASON" | tee -a "$GITHUB_STEP_SUMMARY"
