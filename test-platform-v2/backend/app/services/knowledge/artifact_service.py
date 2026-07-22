@@ -118,10 +118,16 @@ def import_to_test_case(db: Session, artifact_id: int, project_id: int) -> dict:
         "status": "draft",
         "source": "ai_generated",
     }
-    case = test_case_service.create_case(db, data)  # commits internally
-
+    # 先标记 artifact 为已导入（占位 ref_id），再调用 create_case。
+    # create_case 内部 db.commit() 会同时提交 artifact 状态和测试用例，保证原子性。
     row.review_status = "imported"
     row.imported_ref_type = "test_case"
+    row.imported_ref_id = 0  # 占位，create_case 成功后更新
+    db.flush()
+
+    case = test_case_service.create_case(db, data)  # commits internally
+
+    # 更新实际 ref_id — 调用方 db.commit() 提交此变更
     row.imported_ref_id = case["id"]
     db.flush()
     return {"artifact_id": row.id, "case_id": case["id"]}
