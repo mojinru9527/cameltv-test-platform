@@ -46,11 +46,11 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 # 0. 开工前强制拉取最新代码
 git fetch origin main
 
-# 1. 从最新 main 创建独立 worktree；禁止在控制目录直接开发
-pwsh scripts/git/new-ai-worktree.ps1 -Owner agent-team -Kind feature -Task batch-{N}-{name} -Scope test-platform-v2 -FrontendPort {独立端口} -BackendPort {独立端口}
+# 1. 从最新 main 创建独立 worktree；固定入口自动写入 owner=agent-team
+pwsh scripts/git/start-agent-team-task.ps1 -Kind feature -Task batch-{N}-{name} -Scope test-platform-v2 -FrontendPort {独立端口} -BackendPort {独立端口}
 
 # 1.1 在新 worktree 开工前验证
-pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean
+pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedOwner agent-team
 
 # 2. 每切片结束后只暂存本切片文件（防夹带其他任务或生成物）
 git status --short
@@ -67,6 +67,10 @@ gh pr create \
   --head feature/batch-{N}-{name} \
   --title "feat: Batch {N} — {一句话摘要}" \
   --body "Agent Team 六部门流水线已完成。工件见 work-logs/batch-{N}-*-*.md"
+
+# 3.1 PR 创建后做基础审计；三项 required checks 全绿后做最终审计
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedOwner agent-team
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedOwner agent-team -RequireSuccessfulChecks
 
 # 4. PR 合入且确认无需继续修复后，从控制 worktree 更新 main 再清理任务 worktree
 git -C F:/CamelTv-control pull --ff-only origin main
@@ -104,9 +108,9 @@ git branch -d feature/batch-{N}-{name}
 # ═══════ V1 开发周期 ═══════
 
 # Step 1：每个窗口开工前，在主仓库执行一次
-pwsh scripts/git/new-ai-worktree.ps1 -Owner claude -Kind feature -Task batch-{N1}-{name1} -Scope {模块1} -FrontendPort 5173 -BackendPort 8000
-pwsh scripts/git/new-ai-worktree.ps1 -Owner codex -Kind feature -Task batch-{N2}-{name2} -Scope {模块2} -FrontendPort 5174 -BackendPort 8001
-pwsh scripts/git/new-ai-worktree.ps1 -Owner agent-team -Kind feature -Task batch-{N3}-{name3} -Scope {模块3} -FrontendPort 5175 -BackendPort 8002
+pwsh scripts/git/start-claude-task.ps1 -Kind feature -Task batch-{N1}-{name1} -Scope {模块1} -FrontendPort 5173 -BackendPort 8000
+pwsh scripts/git/start-codex-task.ps1 -Kind feature -Task batch-{N2}-{name2} -Scope {模块2} -FrontendPort 5174 -BackendPort 8001
+pwsh scripts/git/start-agent-team-task.ps1 -Kind feature -Task batch-{N3}-{name3} -Scope {模块3} -FrontendPort 5175 -BackendPort 8002
 
 # Step 2：每个 VSCode 窗口 Open Folder 打开对应的 worktree 目录
 # Step 3：各自独立开发、每切片 commit+push（遵循上方标准流程）
@@ -126,7 +130,7 @@ git branch -d feature/batch-{N1}-{name1} feature/batch-{N2}-{name2} feature/batc
 # ═══════ V2 开发周期 ═══════
 
 # Step 7：V2 窗口从最新 main（已含 V1 全部修复）切出
-pwsh scripts/git/new-ai-worktree.ps1 -Owner agent-team -Kind feature -Task batch-{N4}-{name4} -Scope {模块4} -FrontendPort 5176 -BackendPort 8003
+pwsh scripts/git/start-agent-team-task.ps1 -Kind feature -Task batch-{N4}-{name4} -Scope {模块4} -FrontendPort 5176 -BackendPort 8003
 # ... 自动继承 V1 全部代码，无需手动拉取 V1 各分支
 ```
 
@@ -171,7 +175,7 @@ pwsh scripts/git/new-ai-worktree.ps1 -Owner agent-team -Kind feature -Task batch
    - **禁止静态代替执行**：文件存在、代码目测、工件齐全不能单独判定 PASS。
    - **KB 辅助定级**：出具 QA 报告前，检索知识库中与被测模块相关的历史缺陷模式。相似历史缺陷须在报告中列出，用于辅助缺陷定级（P0–P3）和评估回归风险。
    **遇到硬 bug 或性能回归时，走 `diagnose` skill 的纪律化诊断循环**（复现→最小化→假设→插桩→修→回归测试），不靠猜测修。
-6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**。Leader 只在 QA 硬门禁全绿且 PR 必需检查可见、通过后给 APPROVED；没有运行日志、只有文档结论时必须打回。
+6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**。Leader 只在 QA 硬门禁全绿、`audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过后给 APPROVED；没有运行日志、只有文档结论时必须打回。
    - **知识审计**：合入前验证 (a) 本批次是否产出了可入库的知识（设计决策、踩坑记录、新发现的问题模式）；(b) 如有，是否已通过 `ingest_platform_knowledge` 入库；(c) 本批次决策是否与 KB 中已有知识矛盾，如有矛盾须在 leader-verdict 中记录并说明取舍理由。
    **跨会话交接时用 `handoff` skill 压缩上下文为交接文档**，避免下一个 session 丢失进度。
 

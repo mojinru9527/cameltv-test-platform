@@ -28,6 +28,7 @@ $settings = [ordered]@{
     "push.default" = "current"
     "rerere.enabled" = "true"
     "core.hooksPath" = ".githooks"
+    "core.autocrlf" = "false"
 }
 foreach ($entry in $settings.GetEnumerator()) {
     & git -C $root config --local $entry.Key $entry.Value

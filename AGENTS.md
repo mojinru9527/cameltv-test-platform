@@ -19,7 +19,7 @@ related: ["CLAUDE.md", ".github/pull_request_template.md", "docs/engineering-sta
 |------|------|------|
 | 功能开发 | `feature/{kebab-case-描述}` | `feature/knowledge-search` |
 | Bug 修复 | `fix/{kebab-case-描述}` | `fix/login-timeout` |
-| 发布分支 | `release/{版本号}` | `release/v2.3.0` |
+| 发布分支 | `release/{kebab-case-版本}` | `release/v2-3-0` |
 | 热修复 | `hotfix/{kebab-case-描述}` | `hotfix/sql-injection` |
 
 **禁止使用**: `codex/xxx`、`agent/xxx`、或任何非标准前缀。分支命名遵循 [CLAUDE.md](CLAUDE.md) 关键约定。
@@ -56,11 +56,12 @@ git status
 # 2. 拉取远端最新状态
 git fetch origin
 
-# 3. 从唯一主干创建独立 worktree（端口和范围必须显式声明）
-pwsh scripts/git/new-ai-worktree.ps1 -Owner codex -Kind feature -Task {描述} -Scope test-platform-v2/frontend -FrontendPort 5174 -BackendPort 8001
+# 3. 从唯一主干创建独立 worktree；从哪个 AI 开工就使用哪个固定入口
+pwsh scripts/git/start-codex-task.ps1 -Kind feature -Task {描述} -Scope test-platform-v2/frontend -FrontendPort 5174 -BackendPort 8001
+# Claude: start-claude-task.ps1；Agent Team: start-agent-team-task.ps1
 
 # 4. 在新 worktree 开工前执行
-pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean
+pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedOwner codex
 
 # 5. 开发 + 频繁提交（遵循 worktree-reset-hazard 策略）
 
@@ -71,6 +72,10 @@ git push -u origin feature/{描述}
 
 # 8. 创建 PR 指向 main
 gh pr create --base main --head feature/{描述} --title "..." --body "..."
+
+# 9. Agent Team/Leader 审计 PR；checks 全绿后增加 -RequireSuccessfulChecks
+pwsh scripts/git/audit-ai-pr.ps1
+pwsh scripts/git/audit-ai-pr.ps1 -RequireSuccessfulChecks
 ```
 
 ### 2.4 多窗口并行（Agent Team）
@@ -79,7 +84,8 @@ gh pr create --base main --head feature/{描述} --title "..." --body "..."
 - 每个 Agent Team 窗口 = 一个 worktree + 独立分支
 - 所有分支从 `origin/main` 切出
 - 每个 worktree 使用独立 `.ai-worktree.json`、前后端端口、SQLite 和 `.env`
-- 分支按任务命名；AI 所有者只写入忽略的本地元数据
+- Claude/Codex/Agent Team 通过各自固定入口写入 owner；Agent Team 从元数据读取身份，不通过进程名猜测
+- 分支按任务命名；AI 所有者只写入忽略的本地元数据，pre-push 自动核对 metadata 与当前目录/分支
 - 详见 [ADR-0014](docs/adr/0014-single-main-trunk-ai-worktrees.md) 与 `scripts/git/` 可执行工具
 
 ## 3. 提交前自检清单（强制）
@@ -133,11 +139,12 @@ gh pr create --base main --head feature/{描述} --title "..." --body "..."
 |--------|---------|---------|
 | `main-quality-gate.yml` | PR → `main` | 阻断：后端导入/F821/Alembic/全量 pytest，前端 typecheck/Vitest/build |
 | `pr-check.yml` | PR → `main` | 扩展：覆盖率、PG 迁移、a11y 与 lint 观察 |
+| `ai-delivery-policy.yml` | PR → `main` | 阻断：分支命名、本地 metadata/env/数据库夹带、常见凭据模式 |
 
 ### 4.2 已知差距
 
 - 全量 Ruff、mypy、覆盖率阈值和 a11y 中仍有历史债务，暂由扩展工作流报告；运行时 F821、全量测试、类型检查和构建必须阻断
-- 单人仓库无法要求 PR 作者自己审批，因此远端以 required checks、禁止强推/删除和人工确认清单作为合并门禁
+- 单人仓库无法要求 PR 作者自己审批，因此远端以 required checks、禁止强推/删除和 Agent Team PR 审计作为合并门禁
 - `lanhu-mcp` 是后端蓝湖 Provider 的运行/开发依赖，必须通过 `.gitmodules` 在干净检出中初始化
 
 **Agent 应对**: 在 CI 补齐前，Agent 必须在本地手动执行第 3 节自检清单并把命令、退出码、失败集合写入 QA 报告；不能依赖文档工件或 CI 名称推断质量。

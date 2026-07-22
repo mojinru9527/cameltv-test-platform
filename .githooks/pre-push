@@ -1,5 +1,8 @@
 #!/bin/sh
 
+zero_sha=0000000000000000000000000000000000000000
+needs_verification=0
+
 while read local_ref local_sha remote_ref remote_sha
 do
   case "$remote_ref" in
@@ -8,7 +11,31 @@ do
       echo "Push a feature/fix/hotfix/release branch and merge it through a pull request." >&2
       exit 1
       ;;
+    refs/heads/feature/*|refs/heads/fix/*|refs/heads/hotfix/*|refs/heads/release/*)
+      if [ "$local_sha" != "$zero_sha" ]; then
+        needs_verification=1
+      fi
+      ;;
+    refs/heads/*)
+      echo "ERROR: branch '$remote_ref' does not use feature/fix/hotfix/release naming." >&2
+      exit 1
+      ;;
   esac
 done
+
+if [ "$needs_verification" -eq 1 ]; then
+  if ! command -v pwsh >/dev/null 2>&1; then
+    echo "ERROR: pwsh is required to validate AI worktree metadata before push." >&2
+    exit 1
+  fi
+
+  hook_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+  verifier="$hook_dir/../scripts/git/verify-ai-worktree.ps1"
+  repository=$(git rev-parse --show-toplevel)
+  if ! pwsh -NoProfile -File "$verifier" -RepositoryPath "$repository" -RequireMetadata -RequireClean >/dev/null; then
+    echo "ERROR: AI worktree verification failed; push was blocked." >&2
+    exit 1
+  fi
+fi
 
 exit 0

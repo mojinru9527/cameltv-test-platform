@@ -1,0 +1,48 @@
+name: AI/Git 交付门禁
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  delivery-policy:
+    name: AI/Git 交付策略
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate branch, local-only files, and secrets
+        shell: bash
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          HEAD_BRANCH: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$BASE_BRANCH" != "main" ]]; then
+            echo "::error::PR base must be main, got '$BASE_BRANCH'."
+            exit 1
+          fi
+          if [[ ! "$HEAD_BRANCH" =~ ^(feature|fix|hotfix|release)/[a-z0-9]+(-[a-z0-9]+)*$ ]]; then
+            echo "::error::PR head '$HEAD_BRANCH' must use feature/fix/hotfix/release kebab-case naming."
+            exit 1
+          fi
+
+          git diff --name-only --diff-filter=ACMR "origin/$BASE_BRANCH...HEAD" > changed-files.txt
+          if grep -E '(^|/)\.ai-worktree\.json$|(^|/)\.env(\.local)?$|\.(db|sqlite|sqlite3)$' changed-files.txt; then
+            echo "::error::PR contains local-only AI metadata, environment, or database files."
+            exit 1
+          fi
+
+          if git diff --unified=0 "origin/$BASE_BRANCH...HEAD" | grep -E '^\+.*(ghp_[A-Za-z0-9]+|github_pat_[A-Za-z0-9_]+|AKIA[0-9A-Z]{16}|BEGIN (RSA|OPENSSH|EC) PRIVATE KEY)'; then
+            echo "::error::Potential credential or private key found in added lines."
+            exit 1
+          fi
+
+          echo "AI/Git delivery policy passed for $HEAD_BRANCH -> $BASE_BRANCH"
