@@ -30,6 +30,7 @@ tags: ["qa", "git", "migration"]
 | 前端 TypeScript | PASS |
 | 前端全量 Vitest | PASS：22 files，96 tests |
 | 前端生产构建 | PASS：8.36s |
+| OpenVPN 跨平台回归 | PASS：8 tests；显式覆盖 Windows 模拟路径和非 Windows 拒绝路径 |
 
 ## 待完成门禁
 
@@ -39,5 +40,7 @@ tags: ["qa", "git", "migration"]
 - 双 AI 真实 worktree 隔离及原运行目录指纹复核。
 
 补充观察：`npm audit` 报告 17 个既有依赖漏洞（2 critical、7 high、8 moderate），不阻断本次 Git 主干迁移，但必须作为独立安全治理项处理。
+
+远端首轮干净检出发现并阻断 2 个仅在 Linux 暴露的 OpenVPN 测试假设：测试此前默认运行器是 Windows。生产行为保持不变；通过 `_is_windows()` 测试缝显式模拟平台并新增非 Windows 回归用例，待第二轮远端门禁确认。
 
 当前判决：`LOCAL PASS / REMOTE IN PROGRESS`，禁止提前删除远端分支。
