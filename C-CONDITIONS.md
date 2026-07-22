@@ -2,7 +2,7 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-07-22 (batch-28)
+**最后更新**: 2026-07-22 (batch-27 + batch-28 合入 develop)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
@@ -47,7 +47,7 @@
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C26-C5 | 用例继承匹配率监控日志 | P2 | 2026-07-21 |
+| — | — | — | — |
 
 ### batch-26-KB — 知识中心 UX 修复
 
@@ -64,7 +64,7 @@
 | CP-C1 | Android 真机采集端到端验证（BLOCKING：需物理设备） | P0 | 2026-07-19 |
 | CP-C2 | iOS 真机采集端到端验证（BLOCKING：需物理设备 + iTunes/tidevice） | P0 | 2026-07-19 |
 
-### batch-27 — Knowledge Sphere (代码未合入)
+### batch-27 — Knowledge Sphere (✅ 代码已合入 PR #52, 8 条件 Open)
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
@@ -72,6 +72,10 @@
 | C27-C2 | 图谱层级视图在 200 节点下渲染时间 <3s | P1 | 2026-07-22 |
 | C27-C3 | release_bundle 创建流程端到端可用 | P1 | 2026-07-22 |
 | C27-C4 | Wiki 基线同步覆盖率 ≥70% | P1 | 2026-07-22 |
+| C27-C5 | 修复 8 处双 db.commit() 为单 commit (knowledge.py P1-1) | P1 | 2026-07-22 |
+| C27-C6 | 修复 entity_service.py:625 except Exception 缺 as e (NameError) | P1 | 2026-07-22 |
+| C27-C7 | 修复 import_to_test_case 事务原子性 (artifact_service.py P1-2) | P1 | 2026-07-22 |
+| C27-C8 | 修复 SearchResultOut 绕过 Pydantic 校验 (knowledge.py P1-3) | P1 | 2026-07-22 |
 
 ---
 
@@ -107,10 +111,10 @@
 
 ## 统计
 
-- **Open**: 17 (含 2 个 P0 blocking)
+- **Open**: 24 (含 2 个 P0 blocking)
 - **In Progress**: 0
 - **Closed**: 15
-- **Total**: 32
+- **Total**: 39
 
 ## 维护约定
 
