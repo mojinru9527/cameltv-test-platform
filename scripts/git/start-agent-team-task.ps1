@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory)]
     [ValidateSet("claude", "codex")]
     [string]$Executor,
+    [switch]$UserConfirmedExecutor,
     [Parameter(Mandatory)]
     [ValidateSet("feature", "fix", "hotfix", "release")]
     [string]$Kind,
@@ -15,6 +16,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+if (-not $UserConfirmedExecutor) {
+    throw "Agent Team must ask the user whether this task runs in Claude Code or Codex and wait for the explicit reply before starting. After confirmation, rerun with -UserConfirmedExecutor."
+}
 $arguments = @{
     Executor = $Executor
     Workflow = "agent-team"
@@ -24,6 +28,7 @@ $arguments = @{
     FrontendPort = $FrontendPort
     BackendPort = $BackendPort
     RepositoryPath = $RepositoryPath
+    UserConfirmedExecutor = $true
 }
 if ($DestinationRoot) { $arguments.DestinationRoot = $DestinationRoot }
 

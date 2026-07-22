@@ -53,12 +53,13 @@ feature/* 或 fix/*
 # 1. 检查工作区状态，保护已有修改
 git status
 
-# 2. 拉取远端最新状态
+# 2. Agent Team 必须先在聊天中问用户“本任务由 Claude Code 还是 Codex 执行？”并停下等待明确答复
+# 收到答复后才允许拉取远端状态和创建 worktree；不得根据 IDE、客户端或进程名猜测
 git fetch origin
 
 # 3. 从唯一主干创建独立 worktree
 # Agent Team 是工作流，必须显式声明实际运行它的 Claude Code/Codex 执行器
-pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -Kind feature -Task {描述} -Scope test-platform-v2/frontend -FrontendPort 5174 -BackendPort 8001
+pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecutor -Kind feature -Task {描述} -Scope test-platform-v2/frontend -FrontendPort 5174 -BackendPort 8001
 # 在 Claude Code 中运行 Agent Team 时用 -Executor claude
 # 不走 Agent Team 的直接任务才使用 start-claude-task.ps1 / start-codex-task.ps1
 
@@ -72,11 +73,17 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 # 7. Push 功能分支（只 push 功能分支！）
 git push -u origin feature/{描述}
 
-# 8. 创建 PR 指向 main
-gh pr create --base main --head feature/{描述} --title "..." --body "..."
+# 8. 创建 Draft PR 指向 main
+gh pr create --draft --base main --head feature/{描述} --title "..." --body "..."
 
-# 9. Agent Team/Leader 审计 PR；checks 全绿后增加 -RequireSuccessfulChecks
+# 9. 先做基础审计并等待 Draft PR 首轮 checks
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex
+
+# 10. 首轮验证完成后，Agent Team 再问用户“实际执行器仍为 Codex/Claude 吗，是否授权最终审计与合并？”并停下等待
+# 收到明确答复后记录完成确认；身份必须与开始确认一致
+pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor codex -UserConfirmedCompletion
+
+# 11. 完成确认证据推送且对应 checks 全绿后，才允许最终审计
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex -RequireSuccessfulChecks
 ```
 
@@ -87,7 +94,9 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 - 所有分支从 `origin/main` 切出
 - 每个 worktree 使用独立 `.ai-worktree.json`、前后端端口、SQLite 和 `.env`
 - `.ai-worktree.json` 分开记录 workflow（`direct|agent-team`）和 executor（`claude|codex|human`）
-- Agent Team 入口要求显式选择 `claude|codex` 执行器；Git 无法从进程名、代码风格或 diff 可靠猜测实际 AI
+- Agent Team 入口要求在聊天中问询并等待用户明确选择 `claude|codex`，然后才可传入 `-UserConfirmedExecutor`；Git 无法从进程名、IDE、客户端、代码风格或 diff 可靠猜测实际 AI
+- Agent Team 在 Draft PR 首轮验证后必须再次问询实际执行器和最终交付授权；未运行 `confirm-agent-team-completion.ps1` 时，最终 PR 审计必定失败
+- Claude Code 位于 VS Code、Codex 位于 ChatGPT 客户端不影响隔离；隔离由独立 worktree、分支、端口和元数据实现，两个客户端不得打开同一任务 worktree 并行修改
 - 目录按 executor 隔离；分支仍按业务任务命名，pre-push 自动核对 workflow/executor、目录、分支和范围
 - 分支按任务命名；AI 执行器只写入忽略的本地元数据，pre-push 自动核对 metadata 与当前目录/分支
 - 详见 [ADR-0014](docs/adr/0014-single-main-trunk-ai-worktrees.md) 与 `scripts/git/` 可执行工具
