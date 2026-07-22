@@ -17,6 +17,8 @@ import type {
   WikiLintReportBrief,
   WikiLintIssue,
   WikiLintConvertResult,
+  WikiSyncResultOut,
+  WikiTreeDiffOut,
   KnowledgePage,
 } from '@/types'
 
@@ -148,6 +150,34 @@ export async function convertWikiLintIssues(reportId: number, body?: {
   issue_ids?: number[]; artifact_type?: string
 }): Promise<WikiLintConvertResult> {
   return api.post(`/wiki/lint/reports/${reportId}/convert`, body || {})
+}
+
+// ── Wiki 基线同步 (Batch 27 M3) ──
+
+export async function syncBundleToWiki(
+  bundleId: number,
+  body?: { create_wiki_pages?: boolean },
+): Promise<WikiSyncResultOut> {
+  return api.post(`/wiki/sync/bundle/${bundleId}`, body || {})
+}
+
+export async function fetchSyncCoverage(
+  bundleId: number,
+): Promise<WikiSyncResultOut> {
+  return api.get(`/wiki/sync/bundle/${bundleId}/coverage`)
+}
+
+export async function fetchWikiTreeDiff(
+  bundleId: number,
+): Promise<WikiTreeDiffOut> {
+  return api.get(`/wiki/sync/bundle/${bundleId}/diff`)
+}
+
+export async function fetchWikiTree(bundleId: number): Promise<{
+  tree: Record<string, unknown>[]
+  total_pages: number
+}> {
+  return api.get(`/wiki/sync/bundle/${bundleId}/tree`)
 }
 
 export type {
