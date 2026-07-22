@@ -278,16 +278,16 @@ export default function MainLayout() {
       {/* ── Main content ── */}
       <SidebarInset className="flex flex-col">
         {/* Header */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b bg-card px-4 glass-card">
-          <div className="flex items-center gap-2">
+        <header className="flex h-14 shrink-0 items-center justify-between gap-1 border-b bg-card px-2 glass-card sm:px-4">
+          <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             <SidebarTrigger className="h-8 w-8" />
-            <Separator orientation="vertical" className="mx-1 h-6" />
-            <span className="text-sm text-muted-foreground">当前项目</span>
+            <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
+            <span className="hidden text-sm text-muted-foreground lg:inline">当前项目</span>
             <Select
               value={currentProjectId ? String(currentProjectId) : undefined}
               onValueChange={(v) => onSwitchProject(Number(v))}
             >
-              <SelectTrigger className="w-[200px] h-8 text-sm">
+              <SelectTrigger className="h-8 w-[150px] min-w-0 text-sm sm:w-[200px]">
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
@@ -300,7 +300,7 @@ export default function MainLayout() {
             </Select>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-0 sm:gap-2">
             {/* Theme dropdown — redesigned as card picker */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -309,7 +309,7 @@ export default function MainLayout() {
                   <span className="hidden sm:inline text-sm font-medium">
                     {getTheme(colorTheme).label}
                   </span>
-                  <ChevronDown className="size-3 opacity-50" />
+                  <ChevronDown className="hidden size-3 opacity-50 sm:block" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-72 p-3">
@@ -386,7 +386,7 @@ export default function MainLayout() {
                     <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
                   </Avatar>
                   <span className="hidden sm:inline text-sm">{user?.nickname || user?.username}</span>
-                  <ChevronDown className="size-3 opacity-50" />
+                  <ChevronDown className="hidden size-3 opacity-50 sm:block" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -417,7 +417,7 @@ export default function MainLayout() {
         </header>
 
         {/* Page content */}
-        <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto p-6 page-enter">
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-auto p-4 page-enter sm:p-6">
           <Outlet />
         </main>
       </SidebarInset>

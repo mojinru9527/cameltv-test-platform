@@ -79,7 +79,7 @@ function parseVersion(sourceUrl: string): string {
   return m ? `v${m[1]}` : ''
 }
 
-export default function EvidenceTaskPanel({ onViewExtraction, onNewTask }: Props) {
+export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots, onNewTask }: Props) {
   const [jobs, setJobs] = useState<LanhuEvidenceJob[]>([])
   const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<number | null>(null)

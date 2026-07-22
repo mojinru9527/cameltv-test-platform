@@ -50,7 +50,7 @@ interface DiffData {
 interface VersionCompareProps {
   open: boolean
   onClose: () => void
-  diffData: DiffData
+  diffData: DiffData | null
 }
 
 // ── Change type config ──
@@ -138,6 +138,21 @@ export default function VersionCompare({ open, onClose, diffData }: VersionCompa
     el.addEventListener('scroll', onScroll)
     return () => el.removeEventListener('scroll', onScroll)
   }, [syncScroll])
+
+  if (!diffData) {
+    return (
+      <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose() }}>
+        <DialogContent className="max-w-[95vw] max-h-[90vh] w-full">
+          <DialogHeader>
+            <DialogTitle>版本对比</DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center justify-center py-12 text-muted-foreground">
+            暂无对比数据
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   const { summary, pages, base_version, current_version } = diffData
 

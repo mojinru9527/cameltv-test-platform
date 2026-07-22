@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, Request, UploadFile
@@ -29,6 +30,7 @@ from app.services.file_parser_service import parse_docx, parse_markdown, parse_x
 from app.services.knowledge import ingest_service
 
 router = APIRouter(prefix="/requirements", tags=["需求文档"])
+logger = logging.getLogger("requirement")
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):

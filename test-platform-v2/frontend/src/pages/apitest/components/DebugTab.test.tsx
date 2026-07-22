@@ -69,9 +69,9 @@ describe('快速调试资产预填', () => {
   it('直接进入快速调试时保持空 URL 和空请求参数', async () => {
     render(<DebugTab endpoint={null} />)
 
-    expect((screen.getByLabelText('服务器地址') as HTMLInputElement).value).toBe(
+    await waitFor(() => expect((screen.getByLabelText('服务器地址') as HTMLInputElement).value).toBe(
       'http://camel-api-gateway05.svc.elelive.cn/',
-    )
+    ))
     expect((screen.getByLabelText('服务名') as HTMLInputElement).value).toBe('')
     expect((screen.getByLabelText('模块名') as HTMLInputElement).value).toBe('')
     expect((screen.getByLabelText('接口路径') as HTMLInputElement).value).toBe('')

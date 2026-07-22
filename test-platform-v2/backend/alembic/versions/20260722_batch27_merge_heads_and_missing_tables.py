@@ -3,7 +3,7 @@
 Merges three heads:
   - 20260719_perf_tables
   - 20260721_knowledge_module_name
-  - 20260722_batch27_m1_knowledge_sphere
+  - 20260722_b27_knowledge_sphere
 
 Adds 4 missing tables:
   - wiki_lint_report: Wiki 健康体检报告
@@ -12,7 +12,7 @@ Adds 4 missing tables:
   - knowledge_snapshot: 知识快照
 
 Revision ID: 20260722_batch27_merge_missing
-Revises: 20260719_perf_tables, 20260721_knowledge_module_name, 20260722_batch27_m1_knowledge_sphere
+Revises: 20260719_perf_tables, 20260721_knowledge_module_name, 20260722_b27_knowledge_sphere
 Create Date: 2026-07-22
 """
 from typing import Sequence, Union
@@ -25,7 +25,7 @@ revision: str = "20260722_batch27_merge_missing"
 down_revision: Union[str, tuple[str, ...], None] = (
     "20260719_perf_tables",
     "20260721_knowledge_module_name",
-    "20260722_batch27_m1_knowledge_sphere",
+    "20260722_b27_knowledge_sphere",
 )
 branch_labels: Union[str, Sequence[str], None] = ("batch27",)
 depends_on: Union[str, Sequence[str], None] = None

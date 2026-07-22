@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Network } from 'vis-network'
+import type { Data, Edge, Node, Options } from 'vis-network'
 import { DataSet } from 'vis-data'
 import { toast } from 'sonner'
 import { fetchGraphHierarchy } from '@/api/knowledge'
@@ -111,7 +112,7 @@ export default function SphereTab() {
     const colors = NODE_COLORS
     const edgeStyle = EDGE_COLORS
 
-    const nodes = sphere.nodes.map((n) => ({
+    const nodes: Node[] = sphere.nodes.map((n) => ({
       id: n.id,
       label: n.name,
       group: n.node_type,
@@ -120,11 +121,9 @@ export default function SphereTab() {
       font: { size: 12, color: '#1e293b' },
       borderWidth: 2,
       margin: { top: 8, bottom: 8, left: 12, right: 12 },
-      // Store data for click
-      _nodeData: n,
     }))
 
-    const edges = sphere.edges
+    const edges: Edge[] = sphere.edges
       .filter((e) => {
         // Filter by hidden types
         const relGroup = RELATION_LABELS[e.relation_type] ?? e.relation_type
@@ -143,8 +142,11 @@ export default function SphereTab() {
         }
       })
 
-    const data = { nodes: new DataSet(nodes), edges: new DataSet(edges) }
-    const options = {
+    const data: Data = {
+      nodes: new DataSet<Node>(nodes),
+      edges: new DataSet<Edge>(edges),
+    }
+    const options: Options = {
       layout: {
         hierarchical: {
           enabled: true,
@@ -163,7 +165,12 @@ export default function SphereTab() {
         keyboard: true,
       },
       edges: {
-        smooth: { type: 'cubicBezier', forceDirection: 'vertical' },
+        smooth: {
+          enabled: true,
+          type: 'cubicBezier',
+          forceDirection: 'vertical',
+          roundness: 0.5,
+        },
       },
     }
 
@@ -172,7 +179,7 @@ export default function SphereTab() {
     network.on('selectNode', (params) => {
       const nodeId = params.nodes[0]
       if (nodeId) {
-        const nodeData = (nodes.find((n) => n.id === nodeId) as Record<string, unknown>)?._nodeData as ProjectSphereNode
+        const nodeData = sphere.nodes.find((node) => node.id === String(nodeId))
         setSelectedNode(nodeData ?? null)
       }
     })
@@ -248,13 +255,14 @@ export default function SphereTab() {
             <SelectItem value="2">深度 2</SelectItem>
             <SelectItem value="3">深度 3</SelectItem>
             <SelectItem value="4">深度 4</SelectItem>
+            <SelectItem value="5">深度 5（页面）</SelectItem>
           </SelectContent>
         </Select>
 
         <ToggleGroup
           type="single"
           value={viewMode}
-          onValueChange={(v) => v && setViewMode(v as 'graph' | 'hierarchy' | 'list')}
+          onValueChange={(v: string) => v && setViewMode(v as 'graph' | 'list')}
         >
           <ToggleGroupItem value="graph" size="sm">
             <GitGraph className="h-4 w-4 mr-1" /> 图谱
@@ -389,8 +397,8 @@ export default function SphereTab() {
                     </Badge>
                   </div>
                 )}
-                {selectedNode.description && (
-                  <p className="text-muted-foreground mt-2">{selectedNode.description}</p>
+                {typeof selectedNode.metadata.description === 'string' && selectedNode.metadata.description && (
+                  <p className="text-muted-foreground mt-2">{selectedNode.metadata.description}</p>
                 )}
               </CardContent>
             </Card>

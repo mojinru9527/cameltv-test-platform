@@ -85,6 +85,15 @@ class Settings(BaseSettings):
     lanhu_mcp_dir: str = ""       # lanhu-mcp module directory
     data_dir: str = ""            # extracted data cache directory
 
+    # ── OpenVPN Connect preflight（仅 test 类型环境；默认关闭）──
+    openvpn_auto_connect_enabled: bool = False
+    openvpn_connect_executable: str = "%ProgramFiles%/OpenVPN Connect/OpenVPNConnect.exe"
+    openvpn_profile_directory: str = "%APPDATA%/OpenVPN Connect/profiles"
+    openvpn_connect_timeout_seconds: float = 30.0
+    openvpn_probe_timeout_seconds: float = 2.0
+    openvpn_doh_timeout_seconds: float = 3.0
+    openvpn_doh_resolver_url: str = "https://dns.google/resolve"
+
     # ── SMTP (optional, for email notifications) ──
     smtp_host: str = ""
     smtp_port: int = 587

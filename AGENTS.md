@@ -31,20 +31,20 @@ related: ["CLAUDE.md", ".github/pull_request_template.md", "docs/engineering-sta
 ```
 feature/* 或 fix/*
     → push 到 GitHub
-    → 创建 PR 指向 develop
-    → 合并到 develop
+    → 创建 PR 指向 main
+    → squash merge 到 main
 ```
 
-- ❌ **禁止直接 push 到 `develop` 或 `master`**
-- ❌ **禁止直接 push 到 `main`**（远端无此分支，文档已过期）
+- ❌ **禁止直接 push 到 `main`**
+- ❌ **禁止在控制 worktree 上开发或用 stash/checkout 切任务**
 - ✅ **只 push 功能分支，通过 PR 合并**
+- ✅ **每个 Claude Code、ChatGPT/Codex、Agent Team 任务使用独立 worktree**
 
 ### 2.2 GitHub 分支保护
 
 | 分支 | 删除 | 强推 | 变更方式 | 审批要求 |
 |------|------|------|---------|---------|
-| `develop` | 禁止 | 禁止 | 必须 PR | 当前不要求 |
-| `master` | 禁止 | 禁止 | 必须 PR | 当前不要求 |
+| `main` | 禁止 | 禁止 | 必须 PR + required checks | 当前单人仓库不强制他人审批 |
 | `feature/*` | 允许 | 允许 | 直接 push | N/A |
 
 ### 2.3 标准操作流程
@@ -56,26 +56,31 @@ git status
 # 2. 拉取远端最新状态
 git fetch origin
 
-# 3. 从最新 origin/develop 创建功能分支
-git checkout -b feature/{描述} origin/develop
+# 3. 从唯一主干创建独立 worktree（端口和范围必须显式声明）
+pwsh scripts/git/new-ai-worktree.ps1 -Owner codex -Kind feature -Task {描述} -Scope test-platform-v2/frontend -FrontendPort 5174 -BackendPort 8001
 
-# 4. 开发 + 频繁提交（遵循 worktree-reset-hazard 策略）
+# 4. 在新 worktree 开工前执行
+pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean
 
-# 5. 提交前本地自检（见第 3 节）
+# 5. 开发 + 频繁提交（遵循 worktree-reset-hazard 策略）
 
-# 6. Push 功能分支（只 push 功能分支！）
+# 6. 提交前本地自检（见第 3 节）
+
+# 7. Push 功能分支（只 push 功能分支！）
 git push -u origin feature/{描述}
 
-# 7. 创建 PR 指向 develop
-gh pr create --base develop --head feature/{描述} --title "..." --body "..."
+# 8. 创建 PR 指向 main
+gh pr create --base main --head feature/{描述} --title "..." --body "..."
 ```
 
 ### 2.4 多窗口并行（Agent Team）
 
 使用 `git worktree` 隔离工作目录，每个窗口独立分支：
 - 每个 Agent Team 窗口 = 一个 worktree + 独立分支
-- 所有分支从 `origin/develop` 切出
-- 详见 memory: [[agent-team-branch-isolation]]
+- 所有分支从 `origin/main` 切出
+- 每个 worktree 使用独立 `.ai-worktree.json`、前后端端口、SQLite 和 `.env`
+- 分支按任务命名；AI 所有者只写入忽略的本地元数据
+- 详见 [ADR-0014](docs/adr/0014-single-main-trunk-ai-worktrees.md) 与 `scripts/git/` 可执行工具
 
 ## 3. 提交前自检清单（强制）
 
@@ -83,8 +88,9 @@ gh pr create --base develop --head feature/{描述} --title "..." --body "..."
 
 ### 3.1 代码质量
 
-- [ ] **Lint 通过**: 后端 `ruff check app/`，前端 `npx tsc --noEmit`
-- [ ] **测试通过**: 后端 `pytest`，前端 `vitest`
+- [ ] **硬门禁通过**: 后端 `ruff check app/ --select F821`，前端 `npm run typecheck && npm run build`
+- [ ] **相关测试通过**: 后端执行受影响模块 Pytest，前端执行受影响模块 Vitest
+- [ ] **全量回归已记录**: PR 前执行后端 `pytest`、前端 `npm test`；若存在已知基线失败，必须列出基线与本分支失败集合，确认无新增失败，禁止只写“历史问题”
 - [ ] **无调试遗留**: 无 `console.log`、`print`、`breakpoint`、`debugger`
 - [ ] **无硬编码密钥**: 无密码、Token、API Key、私钥
 
@@ -99,7 +105,7 @@ gh pr create --base develop --head feature/{描述} --title "..." --body "..."
 - [ ] **CLAUDE.md**: 模块/约定变化已同步更新
 - [ ] **README.md**: 安装/配置/命令变化已更新
 - [ ] **ADR**: 架构决策已新增或更新状态
-- [ ] **Memory**: 重要经验/约定变化已记录
+- [ ] **仓库知识**: 重要经验/约定已写入 `docs/adr/`、`docs/common-pitfalls.md` 或 `work-logs/`；个人 Memory 不是交付证据
 
 ### 3.4 前端额外规则（React）
 
@@ -125,20 +131,16 @@ gh pr create --base develop --head feature/{描述} --title "..." --body "..."
 
 | 工作流 | 触发条件 | 覆盖范围 |
 |--------|---------|---------|
-| `pr-check.yml` | PR → `main`/`master` | 完整：lint + typecheck + pytest + vitest + PG 迁移 + a11y |
-| `develop-import-smoke.yml` | PR → `develop` | 最小：后端导入冒烟 + Alembic 单头校验 |
-
-**重要**: `pr-check.yml` 当前只监听 `main`/`master`，不监听 `develop`。
-因此 PR 合并到 `develop` 时 CI 不会自动执行完整门禁。
+| `main-quality-gate.yml` | PR → `main`（迁移期兼容 `develop`） | 阻断：后端导入/F821/Alembic/全量 pytest，前端 typecheck/Vitest/build |
+| `pr-check.yml` | PR → `main`（迁移期兼容 `develop`） | 扩展：覆盖率、PG 迁移、a11y 与 lint 观察 |
 
 ### 4.2 已知差距
 
-- PR → `develop` 无自动 pytest/vitest/lint/typecheck（见 [pr-check.yml:4](.github/workflows/pr-check.yml#L4)）
-- `pr-check.yml` 多数步骤使用了 `continue-on-error: true`，失败仅警告不阻塞
-- Jenkins `Jenkinsfile` Docker Push 仅允许 `main` 分支（远端实际无此分支）
-- 文档声称 `main` 为主分支，但 GitHub 默认分支为 `develop`，远端无 `main`
+- 全量 Ruff、mypy、覆盖率阈值和 a11y 中仍有历史债务，暂由扩展工作流报告；运行时 F821、全量测试、类型检查和构建必须阻断
+- 单人仓库无法要求 PR 作者自己审批，因此远端以 required checks、禁止强推/删除和人工确认清单作为合并门禁
+- `lanhu-mcp` 是后端蓝湖 Provider 的运行/开发依赖，必须通过 `.gitmodules` 在干净检出中初始化
 
-**Agent 应对**: 在 CI 补齐前，Agent 必须在本地手动执行第 3 节自检清单，不能依赖 CI 发现。
+**Agent 应对**: 在 CI 补齐前，Agent 必须在本地手动执行第 3 节自检清单并把命令、退出码、失败集合写入 QA 报告；不能依赖文档工件或 CI 名称推断质量。
 
 ## 5. 变更摘要模板
 
@@ -147,7 +149,7 @@ gh pr create --base develop --head feature/{描述} --title "..." --body "..."
 ```
 ## 变更摘要
 **分支**: feature/{名称}
-**目标**: develop
+**目标**: main
 **变更文件**:
   - path/to/file1.py — 修改说明
   - path/to/file2.tsx — 修改说明
@@ -166,4 +168,4 @@ gh pr create --base develop --head feature/{描述} --title "..." --body "..."
 - 工程规范: [docs/engineering-standards.md](docs/engineering-standards.md)
 - 测试策略: [docs/testing-strategy.md](docs/testing-strategy.md)
 - CI 流程: [deploy/CLAUDE.md](deploy/CLAUDE.md)
-- Memory: [[agent-team-branch-isolation]], [[worktree-reset-hazard]]
+- ADR: [ADR-0014 单一 main 主干与 AI Worktree 隔离](docs/adr/0014-single-main-trunk-ai-worktrees.md)

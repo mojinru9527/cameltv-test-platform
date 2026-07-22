@@ -1,0 +1,4 @@
+[submodule "lanhu-mcp"]
+	path = lanhu-mcp
+	url = https://github.com/dsphper/lanhu-mcp.git
+	branch = main

@@ -76,6 +76,7 @@ export const router = createBrowserRouter([
       { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },
       { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
       { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
+      { path: 'version-mission', element: <Navigate to="/release-bundles" replace /> },
       { path: 'release-bundles', element: <PageLoader><ReleaseBundlesPage /></PageLoader> },
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },

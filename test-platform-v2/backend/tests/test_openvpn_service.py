@@ -141,6 +141,13 @@ def test_start_openvpn_connect_clicks_single_saved_profile_without_shell(tmp_pat
     popen = Mock()
     monkeypatch.setattr(settings, "openvpn_connect_executable", str(executable))
     monkeypatch.setattr(settings, "openvpn_profile_directory", str(profile_directory))
+    monkeypatch.setattr(openvpn_service, "_is_windows", lambda: True)
+    monkeypatch.setattr(
+        openvpn_service.subprocess,
+        "CREATE_NO_WINDOW",
+        0,
+        raising=False,
+    )
     monkeypatch.setattr(openvpn_service.subprocess, "Popen", popen)
     monkeypatch.setattr(openvpn_service, "_find_openvpn_window", Mock(side_effect=[None, 123]))
     click = Mock(return_value=True)
@@ -172,6 +179,16 @@ def test_start_openvpn_connect_rejects_ambiguous_saved_profiles(tmp_path, monkey
     (profile_directory / "second.ovpn").write_text("client\n", encoding="utf-8")
     monkeypatch.setattr(settings, "openvpn_connect_executable", str(executable))
     monkeypatch.setattr(settings, "openvpn_profile_directory", str(profile_directory))
+    monkeypatch.setattr(openvpn_service, "_is_windows", lambda: True)
 
     with pytest.raises(openvpn_service.VpnConnectionError, match="仅保留项目 VPN"):
+        openvpn_service._start_openvpn_connect()
+
+
+def test_start_openvpn_connect_rejects_non_windows(monkeypatch):
+    from app.services import openvpn_service
+
+    monkeypatch.setattr(openvpn_service, "_is_windows", lambda: False)
+
+    with pytest.raises(openvpn_service.VpnConnectionError, match="仅支持 Windows"):
         openvpn_service._start_openvpn_connect()

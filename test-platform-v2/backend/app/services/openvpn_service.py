@@ -35,6 +35,11 @@ _WM_LBUTTONUP = 0x0202
 _MK_LBUTTON = 0x0001
 
 
+def _is_windows() -> bool:
+    """Return whether Windows-only OpenVPN desktop automation is available."""
+    return os.name == "nt"
+
+
 def ensure_vpn_for_test_environment(
     db: Session,
     environment_id: int | None,
@@ -159,7 +164,7 @@ def _wait_for_target(target_url: str, deadline: float) -> dict | None:
 
 
 def _openvpn_tunnel_connected() -> bool:
-    if os.name != "nt":
+    if not _is_windows():
         return False
     command = (
         "$adapter = Get-NetAdapter -IncludeHidden -ErrorAction SilentlyContinue | "
@@ -238,7 +243,7 @@ def _system_resolves_to_fake_ip(target_url: str) -> bool:
 
 
 def _start_openvpn_connect() -> None:
-    if os.name != "nt":
+    if not _is_windows():
         raise VpnConnectionError("OpenVPN Connect 自动开关目前仅支持 Windows。")
 
     executable = Path(os.path.expandvars(settings.openvpn_connect_executable)).expanduser()
@@ -281,7 +286,7 @@ def _start_openvpn_connect() -> None:
 
 def _find_openvpn_window() -> int | None:
     """Find OpenVPN Connect's Chromium window, including hidden/minimized windows."""
-    if os.name != "nt":
+    if not _is_windows():
         return None
 
     user32 = ctypes.WinDLL("user32", use_last_error=True)
@@ -306,7 +311,7 @@ def _find_openvpn_window() -> int | None:
 
 def _click_openvpn_profile_switch(window_handle: int) -> bool:
     """Click the only saved profile switch without moving the user's mouse."""
-    if os.name != "nt":
+    if not _is_windows():
         return False
 
     user32 = ctypes.WinDLL("user32", use_last_error=True)

@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,18 +14,16 @@ import {
   ChevronRight,
   CheckCircle2,
   XCircle,
-  FileDown,
   FileText,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
+import type { VersionDiffResult } from '@/types'
 
-interface DiffModule {
-  id: number
+interface ReviewModule {
+  id: string
   name: string
-  platform: string
   change_type: 'new' | 'modified' | 'deleted' | 'unchanged'
-  pages?: DiffPage[]
-  changes?: string[]
+  pages: DiffPage[]
 }
 
 interface DiffPage {
@@ -37,24 +34,9 @@ interface DiffPage {
   detail?: string
 }
 
-interface DiffResult {
-  summary?: {
-    new_modules?: number
-    modified_modules?: number
-    deleted_modules?: number
-    unchanged_modules?: number
-    new_pages?: number
-    modified_pages?: number
-    deleted_pages?: number
-  }
-  modules?: DiffModule[]
-  total_modules?: number
-  total_pages?: number
-}
-
 interface DiffReviewPanelProps {
   bundleId: number
-  diffResult: Record<string, unknown> | null
+  diffResult: VersionDiffResult | null
   onConfirm?: () => void
   loading?: boolean
 }
@@ -73,9 +55,9 @@ export default function DiffReviewPanel({
   loading = false,
 }: DiffReviewPanelProps) {
   const [confirming, setConfirming] = useState(false)
-  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set())
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set())
   const [overrides, setOverrides] = useState<
-    Record<number, { action: string; comment: string }>
+    Record<string, { action: 'confirm' | 'reject' }>
   >({})
 
   if (!diffResult && !loading) {
@@ -90,19 +72,62 @@ export default function DiffReviewPanel({
     )
   }
 
-  const data = (diffResult ?? {}) as DiffResult
-  const summary = data.summary ?? {}
-  const modules = data.modules ?? []
-  const totalModules = data.total_modules ?? modules.length
-  const totalPages = data.total_pages ?? 0
+  if (!diffResult) {
+    return (
+      <div className="flex min-h-48 items-center justify-center text-sm text-muted-foreground">
+        {loading ? "正在加载版本差异…" : "暂无版本差异数据"}
+      </div>
+    )
+  }
+
+  const data = diffResult
+  const modules: ReviewModule[] = [
+    ...data.new_modules.map((name) => ({
+      id: `new:${name}`,
+      name,
+      change_type: 'new' as const,
+      pages: [],
+    })),
+    ...data.modified_modules.map((module) => ({
+      id: `modified:${module.module_name}`,
+      name: module.module_name,
+      change_type: 'modified' as const,
+      pages: [
+        ...module.new_pages.map((name) => ({ name, change_type: 'new' as const })),
+        ...module.modified_pages.map((name) => ({ name, change_type: 'modified' as const })),
+        ...module.deleted_pages.map((name) => ({ name, change_type: 'deleted' as const })),
+        ...module.unchanged_pages.map((name) => ({ name, change_type: 'unchanged' as const })),
+      ],
+    })),
+    ...data.deleted_modules.map((name) => ({
+      id: `deleted:${name}`,
+      name,
+      change_type: 'deleted' as const,
+      pages: [],
+    })),
+    ...data.unchanged_modules.map((name) => ({
+      id: `unchanged:${name}`,
+      name,
+      change_type: 'unchanged' as const,
+      pages: [],
+    })),
+  ]
+  const totalModules = modules.length
+  const totalPages = modules.reduce((count, module) => count + module.pages.length, 0)
+  const summary = {
+    new_modules: data.new_modules.length,
+    modified_modules: data.modified_modules.length,
+    deleted_modules: data.deleted_modules.length,
+    unchanged_modules: data.unchanged_modules.length,
+  }
 
   // Group modules by change_type
-  const grouped: Record<string, DiffModule[]> = {}
+  const grouped: Record<string, ReviewModule[]> = {}
   for (const zone of CHANGE_ZONES) {
     grouped[zone.key] = modules.filter((m) => m.change_type === zone.key)
   }
 
-  const toggleModule = (id: number) => {
+  const toggleModule = (id: string) => {
     setExpandedModules((prev) => {
       const next = new Set(prev)
       if (next.has(id)) next.delete(id)
@@ -111,34 +136,23 @@ export default function DiffReviewPanel({
     })
   }
 
-  const setOverride = (moduleId: number, action: string) => {
+  const setOverride = (moduleId: string, action: 'confirm' | 'reject') => {
     setOverrides((prev) => ({
       ...prev,
-      [moduleId]: { ...prev[moduleId], action, comment: prev[moduleId]?.comment ?? '' },
-    }))
-  }
-
-  const setComment = (moduleId: number, comment: string) => {
-    setOverrides((prev) => ({
-      ...prev,
-      [moduleId]: { ...prev[moduleId], action: prev[moduleId]?.action ?? '', comment },
+      [moduleId]: { action },
     }))
   }
 
   const handleConfirmAll = async () => {
     setConfirming(true)
     try {
-      const overrideEntries = Object.entries(overrides).map(
-        ([id, { action, comment }]) => ({
-          module_id: Number(id),
-          action,
-          comment,
-        }),
-      )
-      await confirmVersionDiff(bundleId, {
-        overrides: overrideEntries,
+      const skipModules = modules
+        .filter((module) => overrides[module.id]?.action === 'reject')
+        .map((module) => module.name)
+      const result = await confirmVersionDiff(bundleId, {
+        overrides: { skip_modules: skipModules },
       })
-      toast.success('差异已确认')
+      toast.success(`差异已确认，已构建 ${result.created_modules} 个节点`)
       onConfirm?.()
     } catch {
       toast.error('确认差异失败')
@@ -189,7 +203,7 @@ export default function DiffReviewPanel({
                 未变更 {summary.unchanged_modules ?? 0}
               </Badge>
               <span className="text-xs text-muted-foreground ml-auto">
-                {totalModules} 模块 · {totalPages} 页面
+                {totalModules} 模块 · {totalPages} 个页面变化 · 置信度 {Math.round(data.diff_confidence * 100)}%
               </span>
             </div>
           </CardContent>
@@ -241,9 +255,6 @@ export default function DiffReviewPanel({
                         <span className="font-medium text-sm ml-2 flex-1">
                           {mod.name}
                         </span>
-                        <span className="text-xs text-muted-foreground mr-2">
-                          {mod.platform}
-                        </span>
                         <Badge
                           variant="outline"
                           className={cn(
@@ -263,7 +274,7 @@ export default function DiffReviewPanel({
                     <CollapsibleContent>
                       <div className="px-3 pb-3 space-y-1">
                         {/* Page-level changes */}
-                        {mod.pages?.map((page, idx) => (
+                        {mod.pages.map((page, idx) => (
                           <div
                             key={idx}
                             className="flex items-center gap-2 ml-6 py-1 text-sm"
@@ -295,19 +306,6 @@ export default function DiffReviewPanel({
                           </div>
                         ))}
 
-                        {/* Changes list (text-based) */}
-                        {(!mod.pages || mod.pages.length === 0) &&
-                          mod.changes?.map((ch, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center gap-2 ml-6 py-1 text-sm"
-                            >
-                              <span className="text-xs text-muted-foreground">
-                                • {ch}
-                              </span>
-                            </div>
-                          ))}
-
                         {/* Override controls */}
                         <div className="flex items-center gap-2 mt-3 ml-6 pt-2 border-t">
                           <span className="text-xs text-muted-foreground">
@@ -323,7 +321,7 @@ export default function DiffReviewPanel({
                             className="h-7 text-xs"
                             onClick={() => setOverride(mod.id, 'confirm')}
                           >
-                            <CheckCircle2 className="h-3 w-3 mr-1" /> 确认
+                            <CheckCircle2 className="h-3 w-3 mr-1" /> 接受
                           </Button>
                           <Button
                             variant={
@@ -335,30 +333,8 @@ export default function DiffReviewPanel({
                             className="h-7 text-xs"
                             onClick={() => setOverride(mod.id, 'reject')}
                           >
-                            <XCircle className="h-3 w-3 mr-1" /> 拒绝
+                            <XCircle className="h-3 w-3 mr-1" /> 跳过
                           </Button>
-                          <Button
-                            variant={
-                              overrides[mod.id]?.action === 'correct'
-                                ? 'secondary'
-                                : 'outline'
-                            }
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => setOverride(mod.id, 'correct')}
-                          >
-                            修正
-                          </Button>
-                          {overrides[mod.id]?.action === 'correct' && (
-                            <Textarea
-                              placeholder="修正说明..."
-                              className="h-7 text-xs flex-1 min-h-0 py-1"
-                              value={overrides[mod.id]?.comment ?? ''}
-                              onChange={(e) =>
-                                setComment(mod.id, e.target.value)
-                              }
-                            />
-                          )}
                         </div>
                       </div>
                     </CollapsibleContent>
@@ -376,10 +352,6 @@ export default function DiffReviewPanel({
           <Button onClick={handleConfirmAll} disabled={confirming}>
             <CheckCircle2 className="h-4 w-4 mr-1" />
             {confirming ? '确认中...' : '确认全部'}
-          </Button>
-          <Button variant="outline">
-            <FileDown className="h-4 w-4 mr-1" />
-            导出报告
           </Button>
         </div>
       )}

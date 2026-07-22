@@ -145,35 +145,37 @@ export default function ApiCaseTab() {
               const groupAllSelected = group.cases.length > 0 && group.cases.every((c: any) => selected.has(c.id))
               return (
                 <Collapsible key={group.key} defaultOpen={false}>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full px-4 py-3 hover:bg-muted/50">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); toggleGroup(group.cases) }}
-                        className="shrink-0"
-                      >
-                        {groupAllSelected
-                          ? <ClipboardCheck className="size-4 text-primary" />
-                          : <MinusCircle className="size-4 text-muted-foreground" />
-                        }
-                      </button>
+                  <div className="flex items-center gap-2 px-4 py-3 hover:bg-muted/50">
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.cases)}
+                      className="shrink-0"
+                      aria-label={groupAllSelected ? `取消选择 ${group.endpoint} 分组` : `选择 ${group.endpoint} 分组`}
+                    >
+                      {groupAllSelected
+                        ? <ClipboardCheck className="size-4 text-primary" />
+                        : <MinusCircle className="size-4 text-muted-foreground" />
+                      }
+                    </button>
+                    <CollapsibleTrigger className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left">
+                      <div className="flex min-w-0 items-center gap-2">
                       <ChevronDown className="size-4 transition-transform duration-200 collapsible-chevron group-data-[state=open]:rotate-180" />
                       <Badge className={METHOD_COLORS[group.method] || ''}>{group.method}</Badge>
-                      <code className="font-medium text-sm">{group.endpoint}</code>
-                    </div>
-                    <div className="flex items-center gap-2">
+                        <code className="truncate text-sm font-medium">{group.endpoint}</code>
+                      </div>
                       <Badge variant="secondary" className="text-xs">{group.cases.length} 条用例</Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={(e) => { e.stopPropagation(); runGroup(group.cases) }}
-                        disabled={loading}
-                        data-icon="inline-start"
-                      >
-                        <Play className="size-3.5" />
-                        执行全部
-                      </Button>
-                    </div>
-                  </CollapsibleTrigger>
+                    </CollapsibleTrigger>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => runGroup(group.cases)}
+                      disabled={loading}
+                      data-icon="inline-start"
+                    >
+                      <Play className="size-3.5" />
+                      执行全部
+                    </Button>
+                  </div>
                   <CollapsibleContent>
                     <div className="divide-y border-t">
                       {group.cases.map((c: any) => (

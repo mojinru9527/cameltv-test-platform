@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import threading
 from contextlib import contextmanager
 from datetime import datetime
@@ -37,6 +38,7 @@ from app.services.lanhu_evidence.word_export_service import WordPage, export_wor
 
 
 SessionFactory = Callable[[], Session]
+logger = logging.getLogger("lanhu_evidence.job_runner")
 
 
 class JobCancelled(Exception):

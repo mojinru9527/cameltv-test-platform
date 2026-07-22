@@ -399,38 +399,28 @@ def import_job(
 ):
     project_id = current.project_id or 0
     job = _get_job(db, job_id, project_id)
-    if job.status not in ("success", "success_with_warnings"):
-        raise APIException(code=400, msg="任务未成功完成，无法导入", http_status=400)
+    if job.status != "success":
+        raise APIException(
+            code=409,
+            msg="证据包存在告警或尚未成功完成，禁止导入需求/RAG/Wiki",
+            http_status=409,
+        )
     import json as _json
-    try:
-        quality = _json.loads(job.quality_json or "{}")
-    except (_json.JSONDecodeError, TypeError):
-        quality = {}
-    # 质量门禁调整为 advisory：允许 success_with_warnings 手动导入，但在结果中附带警告
-    quality_warnings: list[str] = []
-    if not quality.get("import_ready"):
-        if quality.get("pages_missing_capture"):
-            quality_warnings.append(f"缺截图页: {quality['pages_missing_capture']}")
-        if quality.get("pages_truncated"):
-            quality_warnings.append(f"截断页: {quality['pages_truncated']}")
-        if quality.get("pages_missing_text"):
-            quality_warnings.append(f"缺文本页: {quality['pages_missing_text']}")
-        if quality.get("pages_missing_ocr_review"):
-            quality_warnings.append(f"待审核 OCR 页: {quality['pages_missing_ocr_review']}")
 
     from app.services.lanhu_evidence import import_service
 
-    result = import_service.execute_requested_imports(
-        db,
-        job=job,
-        options=body.model_dump(),
-        creator_id=current.user.id,
-    )
+    try:
+        result = import_service.execute_requested_imports(
+            db,
+            job=job,
+            options=body.model_dump(),
+            creator_id=current.user.id,
+        )
+    except ValueError as exc:
+        raise APIException(code=409, msg=str(exc), http_status=409) from exc
     job = _get_job(db, job_id, project_id)
     job.import_result_json = _json.dumps(result, ensure_ascii=False, default=str)
     db.commit()
-    if quality_warnings:
-        result["_quality_warnings"] = quality_warnings
     return R.ok(result)
 
 

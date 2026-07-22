@@ -27,12 +27,12 @@ function SheetPortal({
   return <SheetPrimitive.Portal data-slot="sheet-portal" {...props} />
 }
 
-function SheetOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Overlay>) {
-  return (
+const SheetOverlay = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Overlay>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
+>(({ className, ...props }, ref) => (
     <SheetPrimitive.Overlay
+      ref={ref}
       data-slot="sheet-overlay"
       className={cn(
         "fixed inset-0 z-50 bg-black/10 duration-100 supports-[backdrop-filter]:backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
@@ -40,23 +40,20 @@ function SheetOverlay({
       )}
       {...props}
     />
-  )
-}
+  ))
+SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
-function SheetContent({
-  className,
-  children,
-  side = "right",
-  showCloseButton = true,
-  ...props
-}: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  side?: "top" | "right" | "bottom" | "left"
-  showCloseButton?: boolean
-}) {
-  return (
+const SheetContent = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content> & {
+    side?: "top" | "right" | "bottom" | "left"
+    showCloseButton?: boolean
+  }
+>(({ className, children, side = "right", showCloseButton = true, ...props }, ref) => (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Content
+        ref={ref}
         data-slot="sheet-content"
         data-side={side}
         className={cn(
@@ -81,8 +78,8 @@ function SheetContent({
         )}
       </SheetPrimitive.Content>
     </SheetPortal>
-  )
-}
+  ))
+SheetContent.displayName = SheetPrimitive.Content.displayName
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
