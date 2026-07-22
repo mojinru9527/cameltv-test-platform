@@ -12,23 +12,26 @@ vi.mock('@/api/client', () => ({
 
 const { createModule, deleteDomain, deleteModule } = await import('@/api/testcase')
 
-describe('test case category API guards', () => {
+describe('test case category API calls', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('does not send a delete request when a domain id is missing', async () => {
-    await expect(deleteDomain(undefined)).rejects.toThrow('分类接口尚未更新')
-    expect(mockDelete).not.toHaveBeenCalled()
+  it('calls delete endpoint with the given domain id', async () => {
+    mockDelete.mockResolvedValue({ data: {} })
+    await deleteDomain(1)
+    expect(mockDelete).toHaveBeenCalledWith('/test-cases/domains/1')
   })
 
-  it('does not send a create-module request when a domain id is invalid', async () => {
-    await expect(createModule(Number.NaN, '登录模块')).rejects.toThrow('分类接口尚未更新')
-    expect(mockPost).not.toHaveBeenCalled()
+  it('calls create endpoint with the given domain id and module name', async () => {
+    mockPost.mockResolvedValue({ data: {} })
+    await createModule(1, '登录模块')
+    expect(mockPost).toHaveBeenCalledWith('/test-cases/domains/1/modules', { name: '登录模块' })
   })
 
-  it('does not send a delete request when a module id is missing', async () => {
-    await expect(deleteModule(1, undefined)).rejects.toThrow('分类接口尚未更新')
-    expect(mockDelete).not.toHaveBeenCalled()
+  it('calls delete endpoint with the given domain and module id', async () => {
+    mockDelete.mockResolvedValue({ data: {} })
+    await deleteModule(1, 2)
+    expect(mockDelete).toHaveBeenCalledWith('/test-cases/domains/1/modules/2')
   })
 })

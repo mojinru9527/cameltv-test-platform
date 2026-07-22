@@ -416,6 +416,54 @@ def ingest_ui_test_failure_in_new_session(project_id: int, run_id: int) -> None:
 
 # ── Lanhu version diff sync (batch-26) ──
 
+def _ensure_iteration_for_version(
+    db,
+    project_id: int,
+    version: str,
+    diff_json: dict | None,
+) -> None:
+    """Auto-create or update a KnowledgeIteration when a version diff is ingested.
+
+    Idempotent: if an active iteration already exists for this project+version,
+    update its end_date. Otherwise create a new one.
+    """
+    from datetime import datetime
+
+    from app.models.knowledge import KnowledgeIteration
+    from app.services.knowledge.snapshot_service import create_iteration
+
+    try:
+        existing = db.scalar(
+            select(KnowledgeIteration).where(
+                KnowledgeIteration.project_id == project_id,
+                KnowledgeIteration.version == version,
+                KnowledgeIteration.status == "active",
+            )
+        )
+        if existing:
+            existing.end_date = datetime.utcnow()
+            logger.debug("Updated KnowledgeIteration #%s for version=%s", existing.id, version)
+        else:
+            summary = diff_json.get("summary", {}) if diff_json else {}
+            desc = (
+                f"版本差异自动创建 — "
+                f"新增 {summary.get('new_pages', 0)} / "
+                f"修改 {summary.get('modified_pages', 0)} / "
+                f"不变 {summary.get('unchanged_pages', 0)} / "
+                f"删除 {summary.get('deleted_pages', 0)}"
+            )
+            create_iteration(
+                db,
+                project_id=project_id,
+                iteration_name=f"版本 {version}",
+                version=version,
+                description=desc,
+            )
+            logger.info("Created KnowledgeIteration for version=%s", version)
+    except Exception:
+        logger.exception("Failed to auto-create KnowledgeIteration for version=%s", version)
+
+
 def ingest_lanhu_version_diff(
     project_id: int,
     doc_id: str,
@@ -519,6 +567,10 @@ def ingest_lanhu_version_diff(
             ps.status = "superseded"
 
         db.commit()
+
+        # ── Auto-create/update KnowledgeIteration (batch-28) ──
+        _ensure_iteration_for_version(db, project_id, version, diff_json)
+
         _post_ingest_hooks(project_id, source_id=src.id)
 
         logger.info(

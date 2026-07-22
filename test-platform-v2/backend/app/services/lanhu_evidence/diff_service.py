@@ -25,6 +25,7 @@ logger = logging.getLogger("lanhu_evidence.diff")
 # ── Thresholds ──
 TEXT_SIMILARITY_MODIFIED_THRESHOLD = 0.50  # below → new/deleted (no match)
 TEXT_SIMILARITY_UNCHANGED_THRESHOLD = 0.90  # above → unchanged
+IMAGE_SIMILARITY_THRESHOLD = 0.85  # below → visual change detected (upgrade to modified)
 
 
 def _parse_version_from_url(url: str) -> str:
@@ -111,6 +112,13 @@ def compute_page_diff(
         # Determine change_type
         if text_sim >= TEXT_SIMILARITY_UNCHANGED_THRESHOLD:
             change_type = "unchanged"
+            # ── Perceptual hash check (batch-28): text may be identical but visuals different ──
+            curr_hash = curr.get("screenshot_hash", "")
+            prev_hash = prev.get("screenshot_hash", "")
+            if curr_hash and prev_hash:
+                img_sim = _image_similarity(curr_hash, prev_hash)
+                if img_sim < IMAGE_SIMILARITY_THRESHOLD:
+                    change_type = "modified"  # upgrade: visual difference detected
         elif text_sim >= TEXT_SIMILARITY_MODIFIED_THRESHOLD:
             change_type = "modified"
         else:
@@ -168,6 +176,26 @@ def _text_similarity(a: str, b: str) -> float:
     if not a or not b:
         return 0.0
     return SequenceMatcher(None, a, b).ratio()
+
+
+def _image_similarity(hash1: str, hash2: str) -> float:
+    """Compute similarity between two perceptual hashes (0~1).
+
+    Hashes should be imagehash.phash() hex strings. Returns 1.0 if hashes
+    are unavailable or imagehash is not installed (graceful degradation).
+    """
+    if not hash1 or not hash2:
+        return 1.0
+    try:
+        import imagehash
+        h1 = imagehash.hex_to_hash(hash1)
+        h2 = imagehash.hex_to_hash(hash2)
+        max_diff = len(h1.hash) ** 2
+        if max_diff == 0:
+            return 1.0
+        return 1.0 - (h1 - h2) / max_diff
+    except ImportError:
+        return 1.0  # imagehash not available → skip visual comparison
 
 
 def _diff_snippet(old_text: str, new_text: str) -> str:
