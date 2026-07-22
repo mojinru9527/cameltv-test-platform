@@ -622,7 +622,7 @@ def evolve_graph_in_new_session(project_id: int) -> dict:
         logger.info("Graph evolution project=%s: %s", project_id, summary["message"])
         return summary
 
-    except Exception:
+    except Exception as e:
         logger.exception("Graph evolution failed for project %s", project_id)
         db.rollback()
         return {"merged": 0, "confidence_updates": 0, "new_relations": 0, "error": str(e)}
