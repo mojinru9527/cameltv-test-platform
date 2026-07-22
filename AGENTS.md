@@ -131,8 +131,8 @@ gh pr create --base main --head feature/{描述} --title "..." --body "..."
 
 | 工作流 | 触发条件 | 覆盖范围 |
 |--------|---------|---------|
-| `main-quality-gate.yml` | PR → `main`（迁移期兼容 `develop`） | 阻断：后端导入/F821/Alembic/全量 pytest，前端 typecheck/Vitest/build |
-| `pr-check.yml` | PR → `main`（迁移期兼容 `develop`） | 扩展：覆盖率、PG 迁移、a11y 与 lint 观察 |
+| `main-quality-gate.yml` | PR → `main` | 阻断：后端导入/F821/Alembic/全量 pytest，前端 typecheck/Vitest/build |
+| `pr-check.yml` | PR → `main` | 扩展：覆盖率、PG 迁移、a11y 与 lint 观察 |
 
 ### 4.2 已知差距
 

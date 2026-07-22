@@ -2,7 +2,7 @@
 title: "Batch 32 单一主干迁移 QA 报告"
 owner: "qa"
 last_reviewed: "2026-07-22"
-status: "in_progress"
+status: "passed"
 tags: ["qa", "git", "migration"]
 ---
 
@@ -25,22 +25,28 @@ tags: ["qa", "git", "migration"]
 | 后端应用 import | PASS |
 | Alembic 单头 | PASS：`20260722_batch27_merge_missing (batch27)` |
 | 迁移 revision 测试 | PASS：1 passed |
-| 后端全量 pytest | PASS：653 passed，5 warnings，229.01s |
+| 后端全量 pytest | PASS：654 passed，5 warnings，222.95s（修复后复跑） |
 | 前端 clean install | PASS：`npm ci`，897 packages |
 | 前端 TypeScript | PASS |
 | 前端全量 Vitest | PASS：22 files，96 tests |
 | 前端生产构建 | PASS：8.36s |
 | OpenVPN 跨平台回归 | PASS：8 tests；显式覆盖 Windows 模拟路径和非 Windows 拒绝路径 |
+| PR #56 GitHub 检查 | PASS：6/6，含 Linux 干净检出 654 条后端与 96 条前端 |
+| 全新递归 clone | PASS：`lanhu-mcp` 精确检出 `c9f4a43` |
+| 已审计基线标签 | PASS：`baseline-2026-07-22-audited` → `09386ff` |
+| 旧 master 归档 | PASS：`legacy-master-2026-07-15` → `4298aad` |
+| 远端分支 | PASS：默认且唯一永久主干为 `main`；`develop/master` 均不存在 |
+| main ruleset | PASS：PR-only、禁止删除/强推、squash-only、2 项 required checks |
+| 本地 pre-push | PASS：带新提交的 `HEAD:main --dry-run` 被拒绝，远端未改变 |
+| 双 AI worktree | PASS：Claude/Codex 独立分支、目录、端口、env；冲突创建被拒绝 |
+| 原运行目录复核 | PASS：1163 个 SHA-256 指纹，0 mismatch；原分支未切换 |
 
-## 待完成门禁
+## 最终远端门禁
 
-- 子模块全新递归检出。
-- PR #56 远端全量检查。
-- baseline/legacy 标签、分支重命名/删除、ruleset 和 merge policy。
-- 双 AI 真实 worktree 隔离及原运行目录指纹复核。
+本文件所在收尾 PR 必须在 `main` ruleset 下通过“后端全新检出与全量回归”和“前端全新检出与全量回归”，并只能 squash 合入。该 PR 同时移除 CI 对已删除 `develop` 的迁移期兼容配置。
 
 补充观察：`npm audit` 报告 17 个既有依赖漏洞（2 critical、7 high、8 moderate），不阻断本次 Git 主干迁移，但必须作为独立安全治理项处理。
 
-远端首轮干净检出发现并阻断 2 个仅在 Linux 暴露的 OpenVPN 测试假设：测试此前默认运行器是 Windows。生产行为保持不变；通过 `_is_windows()` 测试缝显式模拟平台并新增非 Windows 回归用例，待第二轮远端门禁确认。
+远端首轮干净检出发现并阻断 2 个仅在 Linux 暴露的 OpenVPN 测试假设：测试此前默认运行器是 Windows。生产行为保持不变；通过 `_is_windows()` 测试缝显式模拟平台并新增非 Windows 回归用例，第二轮本地 654 条与 GitHub Linux 全量门禁均已确认通过。
 
-当前判决：`LOCAL PASS / REMOTE IN PROGRESS`，禁止提前删除远端分支。
+当前判决：`PASS`。收尾 PR 全绿并经 ruleset 合入后，迁移闭环成立。

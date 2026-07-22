@@ -2,7 +2,7 @@ name: PR 代码门禁
 
 on:
   pull_request:
-    branches: [develop, main]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
