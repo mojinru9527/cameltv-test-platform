@@ -273,6 +273,22 @@ class EntityExtractResult(BaseModel):
     message: str = ""
 
 
+# ── M3 auto-build ──
+
+class AutoBuildRequest(BaseModel):
+    """触发知识图谱自动构建请求（batch-30）。"""
+    release_bundle_id: int = Field(..., ge=1)
+    force: bool = False  # 强制重建已有图谱
+
+
+class AutoBuildResult(BaseModel):
+    created_entities: int = 0
+    created_relations: int = 0
+    skipped_entities: int = 0
+    skipped_relations: int = 0
+    message: str = ""
+
+
 class RelationApprovalRequest(BaseModel):
     comment: str = ""
 

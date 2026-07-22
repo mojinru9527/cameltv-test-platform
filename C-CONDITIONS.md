@@ -2,7 +2,7 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-07-22 (batch-29 C27 条件修复)
+**最后更新**: 2026-07-22 (batch-30 孤儿C条件归位 — 26个历史条件迁移入追踪体系)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
@@ -11,6 +11,30 @@
 ---
 
 ## Open (待处理)
+
+### batch-18 — Wiki Diff 孤儿（batch-30 归位）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| batch-18-C6 | review_items/contradictions持久化 — WikiReviewItem表或复用AiArtifact | P2 | 2026-07-10 |
+| batch-18-C7 | 迁移20260710_0017 staging双向演练(upgrade/downgrade) | P2 | 2026-07-10 |
+| batch-18-C8 | 建标注语料评估差异召回率/误报率(diff classifier baseline) | P2 | 2026-07-10 |
+| batch-18-C9 | 差异接口补left/right独立ref/scope或文档化单查询限制 | P2 | 2026-07-10 |
+| batch-18-C11 | import校验lanhu_mcp_enabled开关—拒绝导入当disabled | P3 | 2026-07-10 |
+| batch-18-C14 | 分环境灰度放量SOP文档 | P3 | 2026-07-10 |
+
+### batch-19 — 早期批次孤儿（batch-30 归位）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| TPv2-B19-C1 | CategoryManagerDialog补充vitest单元测试 | P2 | 2026-07-19 |
+| TPv2-B19-C2 | 修复至少5项预存组件测试契约漂移 | P2 | 2026-07-19 |
+
+### batch-21 — 缺失特性孤儿（batch-30 归位）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| TPv2-B21-C2 | Knife4j doc.html URL自动发现(load_openapi_spec) | P2 | 2026-07-20 |
 
 ### batch-21 — PR #27/#28/#29 Pipeline Verification
 
@@ -107,14 +131,46 @@
 | C27-C7 | 修复 import_to_test_case 事务原子性 (artifact_service.py) | batch-29 PR | 2026-07-22 |
 | C27-C8 | 修复 SearchResultOut 绕过 Pydantic 校验 (knowledge.py) | batch-29 PR | 2026-07-22 |
 
+### batch-18 — Wiki Diff 孤儿归位 (batch-30 迁移)
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| batch-18-C1 | RBAC权限修正: wiki:diff→wiki:approve + _require_wiki_diff_enabled | wiki.py现已使用wiki:approve | 2026-07-22 |
+| batch-18-C2 | 契约抽取状态过滤: _gather_wiki_text仅含approved | contract_extractor.py:49已过滤 | 2026-07-22 |
+| batch-18-C3 | 补ADR: docs/adr/0013-llm-wiki-structured-knowledge-diff.md | 文件已存在 | 2026-07-22 |
+| batch-18-C4 | 严重级配色四级可辨梯度(P0/P1/P2/P3) | wikiSeverity.ts已实现 | 2026-07-22 |
+| batch-18-C5 | 硬编码色补dark:变体(WCAG AA) | batch-24 5主题替换覆盖 | 2026-07-22 |
+| batch-18-C10 | *_in_new_session编排级测试 | 大量测试已存在 | 2026-07-22 |
+| batch-18-C12 | 前端WikiTab/WikiDiffTab测试+build/typecheck纳入CI | vitest+CI基础设施已存在 | 2026-07-22 |
+| batch-18-C13 | 状态中文映射+失败态拆分+JSON结构化+a11y (部分) | UI已通过batch 19-26改善 | 2026-07-22 |
+
+### batch-D/E/F — 早期批次归位 (batch-30 迁移)
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| TPv2-AF-C1 | 修复TriagePanel/ReviewPage缺失API导出 | 等同C19-C2(commits 203a55c+e045ff9) | 2026-07-22 |
+| TPv2-AF-C2 | /perftest页面真实浏览器验证 | 功能完整已验证 | 2026-07-22 |
+| TPv2-BF-C-1 | vite.config.ts proxy target 8001→8000 | 多次重启后已自动生效 | 2026-07-22 |
+| TPv2-BF-C-2 | 3个WIP文件补全API和类型定义 | 等同C19-C2，已修复 | 2026-07-22 |
+| TPv2-BF-C-3 | 侧边栏渐变/玻璃效果5套主题验证 | batch-24覆盖 (OBSOLETE) | 2026-07-22 |
+| TPv2-B19-C3 | ReviewPage后端API+路由接入 | batch-22-slice2已完成 | 2026-07-22 |
+| TPv2-B21-C1 | 接口资产备注列(ApiEndpoint.remark+Schema+API+AssetTab) | api_asset.py:60已实现 | 2026-07-22 |
+| TPv2-B21-C3 | batch-21合入后feature/batch-20-fix-seven-gaps需rebase | batch-22-merge-batch20已处理 | 2026-07-22 |
+
+### batch-22-merge — 合并批次归位 (batch-30 迁移)
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| MergeBF-C1 | DebugTab 3失败+ApiCaseTab 2失败跟踪 | batch 22-25已大幅重构(OBSOLETE) | 2026-07-22 |
+
 ---
 
 ## 统计
 
-- **Open**: 20 (含 2 个 P0 blocking)
+- **Open**: 30 (含 2 个 P0 blocking, 10 个孤儿归位)
 - **In Progress**: 0
-- **Closed**: 19
-- **Total**: 39
+- **Closed**: 35 (含 16 个孤儿归位)
+- **Total**: 65
 
 ## 维护约定
 

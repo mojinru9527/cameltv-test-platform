@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dialog'
 import { fetchKnowledgeSources, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
 import type { KnowledgeChunk, KnowledgeSource } from '@/types'
-import { Loader2, CheckCircle2 } from '@/lib/icons'
+import { Loader2, CheckCircle2, RefreshCw, AlertCircle, Circle } from '@/lib/icons'
 import { toast } from 'sonner'
 
 const TYPES = [
@@ -139,6 +139,7 @@ export default function SourceListTab() {
               <TableHead>标题</TableHead>
               <TableHead className="w-[160px]">来源</TableHead>
               <TableHead className="w-[80px]">状态</TableHead>
+              <TableHead className="w-[90px]">Wiki同步</TableHead>
               <TableHead className="w-[110px]">创建时间</TableHead>
               <TableHead className="w-[90px]">操作</TableHead>
             </TableRow>
@@ -170,6 +171,9 @@ export default function SourceListTab() {
                     <Badge variant={s.status === 'deprecated' ? 'outline' : 'default'}>
                       {s.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <SyncBadge sourceId={s.id} />
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {s.created_at?.slice(0, 10)}
@@ -341,5 +345,46 @@ export default function SourceListTab() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+// ── Sync Status Badge (batch-30) ──
+
+function SyncBadge({ sourceId }: { sourceId: number }) {
+  // Simple placeholder - shows "未同步" for all sources
+  // TODO: wire to GET /wiki/sync/bundle/{bundleId}/coverage
+  const synced = false
+  const partial = false
+  const failed = false
+
+  if (failed) {
+    return (
+      <Badge variant="outline" className="text-xs border-red-200 bg-red-50 text-red-700 gap-1">
+        <AlertCircle className="h-3 w-3" />
+        失败
+      </Badge>
+    )
+  }
+  if (synced) {
+    return (
+      <Badge variant="outline" className="text-xs border-green-200 bg-green-50 text-green-700 gap-1">
+        <CheckCircle2 className="h-3 w-3" />
+        已同步
+      </Badge>
+    )
+  }
+  if (partial) {
+    return (
+      <Badge variant="outline" className="text-xs border-yellow-200 bg-yellow-50 text-yellow-700 gap-1">
+        <RefreshCw className="h-3 w-3" />
+        部分
+      </Badge>
+    )
+  }
+  return (
+    <Badge variant="outline" className="text-xs text-muted-foreground gap-1">
+      <Circle className="h-3 w-3" />
+      未同步
+    </Badge>
   )
 }

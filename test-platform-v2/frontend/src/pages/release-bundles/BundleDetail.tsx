@@ -45,6 +45,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import ModuleTreeView from './components/ModuleTreeView'
 import VersionChainTimeline from './components/VersionChainTimeline'
+import DiffReviewPanel from './components/DiffReviewPanel'
 
 const PLATFORM_ICONS: Record<string, LucideIcon> = {
   APP: Smartphone,
@@ -422,7 +423,11 @@ export default function BundleDetailPage() {
                   建立版本链后再对比。
                 </p>
               ) : diffResult ? (
-                <DiffResultView result={diffResult} />
+                <DiffReviewPanel
+                  bundleId={bundleId}
+                  diffResult={diffResult}
+                  onConfirm={() => setDiffResult(null)}
+                />
               ) : (
                 <p className="text-sm text-muted-foreground py-8 text-center">
                   点击「触发对比」比较当前版本与父版本的模块/页面变化
@@ -432,87 +437,6 @@ export default function BundleDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
-  )
-}
-
-// ── Diff Result Sub-component ──
-
-function DiffResultView({ result }: { result: Record<string, unknown> }) {
-  const summary = (result.warnings as string[]) ?? []
-  const newMods = (result.new_modules as Array<Record<string, unknown>>) ?? []
-  const modMods = (result.modified_modules as Array<Record<string, unknown>>) ?? []
-  const delMods = (result.deleted_modules as Array<Record<string, unknown>>) ?? []
-  const unchanged = (result.unchanged_modules as Array<Record<string, unknown>>) ?? []
-
-  const changeColor = (change: string) => {
-    switch (change) {
-      case 'new': return 'text-green-600'
-      case 'modified': return 'text-amber-600'
-      case 'deleted': return 'text-red-600'
-      default: return 'text-muted-foreground'
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      {/* Summary */}
-      <div className="grid grid-cols-5 gap-3 text-center">
-        {[
-          { label: '新增模块', count: newMods.length, color: 'text-green-600' },
-          { label: '修改模块', count: modMods.length, color: 'text-amber-600' },
-          { label: '删除模块', count: delMods.length, color: 'text-red-600' },
-          { label: '不变模块', count: unchanged.length, color: 'text-muted-foreground' },
-          { label: '置信度', count: `${Math.round((result.diff_confidence as number ?? 0) * 100)}%`, color: 'text-blue-600' },
-        ].map((item) => (
-          <div key={item.label} className="p-3 bg-muted/50 rounded-lg">
-            <div className={cn('text-xl font-bold', item.color)}>{item.count}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">{item.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Warnings */}
-      {summary.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-          <p className="text-xs font-medium text-amber-800 mb-1">注意事项</p>
-          <ul className="list-disc list-inside text-xs text-amber-700 space-y-0.5">
-            {summary.map((w, i) => (
-              <li key={i}>{w}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Changed modules detail */}
-      {[...newMods, ...modMods, ...delMods].length > 0 && (
-        <div className="space-y-2">
-          <p className="text-sm font-medium">变更详情</p>
-          <div className="max-h-[400px] overflow-auto space-y-1">
-            {[...newMods, ...modMods, ...delMods].map((mod: Record<string, unknown>, i) => {
-              const change = (mod.change ?? mod.__change__ ?? 'modified') as string
-              const name = (mod.module_name ?? mod.name ?? `模块 ${i + 1}`) as string
-              const pages = mod.new_pages
-                ? `+${(mod.new_pages as Array<unknown>)?.length ?? 0} 页面`
-                : ''
-              return (
-                <div
-                  key={i}
-                  className="flex items-center justify-between px-3 py-2 bg-muted/30 rounded text-sm"
-                >
-                  <span className={cn('font-medium', changeColor(change))}>
-                    {change === 'new' ? '+ ' : change === 'deleted' ? '− ' : '~ '}
-                    {name}
-                  </span>
-                  {pages && (
-                    <span className="text-xs text-muted-foreground">{pages}</span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
