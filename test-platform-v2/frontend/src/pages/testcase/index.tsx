@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Table,
   TableBody,
@@ -37,7 +38,7 @@ import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 
-import { Search, RotateCcw, Plus, Edit, Trash2, History } from '@/lib/icons'
+import { Search, RotateCcw, Plus, Edit, Trash2, History, FileCheck, CheckCircle2, XCircle, Send } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase } from '@/api/testcase'
 import { formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
@@ -84,6 +85,13 @@ export default function TestCasePage() {
   const [versionDialog, setVersionDialog] = useState(false)
   const [versionCase, setVersionCase] = useState<any>(null)
   const [versions, setVersions] = useState<TestCaseVersion[]>([])
+
+  // ── Review actions (batch-34) ──
+  const [reviewDialog, setReviewDialog] = useState(false)
+  const [reviewTarget, setReviewTarget] = useState<any>(null)
+  const [reviewAction, setReviewAction] = useState<string>('')
+  const [reviewComment, setReviewComment] = useState('')
+  const [reviewing, setReviewing] = useState(false)
 
   // ── Main data fetching with useApi ──
   const { data, isLoading, isError, error, refetch } = useApi(
@@ -222,6 +230,30 @@ export default function TestCasePage() {
       const data = await fetchVersions(row.id)
       setVersions(data)
     } catch { setVersions([]) }
+  }
+
+  // ── Review handling (batch-34) ──
+  const openReviewDialog = (row: any, action: string) => {
+    setReviewTarget(row)
+    setReviewAction(action)
+    setReviewComment('')
+    setReviewDialog(true)
+  }
+
+  const doReview = async () => {
+    if (!reviewTarget) return
+    setReviewing(true)
+    try {
+      await reviewCase(reviewTarget.id, reviewAction, reviewComment)
+      toast.success(reviewAction === 'submit' ? '已提交评审' : reviewAction === 'approve' ? '已通过' : '已驳回')
+      setReviewDialog(false)
+      setReviewTarget(null)
+      refetch()
+    } catch {
+      toast.error('评审操作失败')
+    } finally {
+      setReviewing(false)
+    }
   }
 
   return (
@@ -443,6 +475,22 @@ export default function TestCasePage() {
                           <Button size="icon-xs" variant="ghost" onClick={() => openVersionHistory(r)} title="版本历史">
                             <History className="size-3" />
                           </Button>
+                          {/* Review actions (batch-34) */}
+                          {r.review_status === 'draft' && (
+                            <Button size="icon-xs" variant="ghost" onClick={() => openReviewDialog(r, 'submit')} title="提交评审">
+                              <Send className="size-3 text-blue-600" />
+                            </Button>
+                          )}
+                          {r.review_status === 'submitted' && (
+                            <>
+                              <Button size="icon-xs" variant="ghost" onClick={() => openReviewDialog(r, 'approve')} title="通过">
+                                <CheckCircle2 className="size-3 text-green-600" />
+                              </Button>
+                              <Button size="icon-xs" variant="ghost" onClick={() => openReviewDialog(r, 'reject')} title="驳回">
+                                <XCircle className="size-3 text-red-600" />
+                              </Button>
+                            </>
+                          )}
                           <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)}>
                             <Edit className="size-3" />
                           </Button>
@@ -511,6 +559,44 @@ export default function TestCasePage() {
         caseData={versionCase}
         versions={versions}
       />
+
+      {/* ── Review Dialog (batch-34) ── */}
+      <AlertDialog open={reviewDialog} onOpenChange={setReviewDialog}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {reviewAction === 'submit' ? '提交评审' : reviewAction === 'approve' ? '通过评审' : '驳回用例'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {reviewAction === 'submit'
+                ? '确认将此用例提交评审？提交后状态变为"已提交"。'
+                : reviewAction === 'approve'
+                  ? '确认通过此用例的评审？'
+                  : '请填写驳回原因：'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {(reviewAction === 'reject') && (
+            <div className="my-3">
+              <Textarea
+                placeholder="驳回原因..."
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+                rows={3}
+              />
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setReviewDialog(false)}>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={doReview}
+              variant={reviewAction === 'reject' ? 'destructive' : 'default'}
+              disabled={reviewing || (reviewAction === 'reject' && !reviewComment.trim())}
+            >
+              {reviewing ? '处理中...' : reviewAction === 'submit' ? '确认提交' : reviewAction === 'approve' ? '确认通过' : '确认驳回'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

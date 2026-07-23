@@ -304,7 +304,13 @@ def delete_task(db: Session, task_id: int, project_id: int) -> bool:
 
 
 def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
-    """触发 AV 质量检测 — 使用 ffprobe 真实探测流媒体。"""
+    """触发 AV 质量检测 — 使用 ffprobe 异步探测流媒体（batch-34: 后台线程化）。
+
+    同步校验 ffprobe 可用性和流地址，然后启动后台线程执行探测，
+    避免阻塞 HTTP 请求线程（探测可能需要 30s+）。
+    """
+    import threading
+    from app.core.db import SessionLocal
     from app.services.ffmpeg_service import probe_stream, _check_ffmpeg_installed
 
     r = db.scalar(select(AvCheckTask).where(AvCheckTask.id == task_id, AvCheckTask.project_id == project_id))
@@ -312,6 +318,7 @@ def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
         raise ValueError("任务不存在")
 
     stream_url = (r.stream_url or "").strip()
+    protocol = r.protocol or "HLS"
 
     # 检查 ffprobe 可用性
     ff_ok, ff_ver = _check_ffmpeg_installed()
@@ -327,61 +334,81 @@ def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
         db.commit()
         return _task_to_dict(r, metrics=[])
 
+    # 立即标记为 running，后台线程执行实际探测
     r.status = "running"
-    db.flush()
-
-    # 执行 ffprobe 探测
-    logger.info(f"AV check #{task_id}: probing {stream_url[:100]}...")
-    probe_result = probe_stream(stream_url, protocol=r.protocol or "HLS")
-
-    if not probe_result["ok"]:
-        # 探测失败
-        r.status = "fail"
-        r.last_result = json.dumps({
-            "error": probe_result.get("error", "探测失败"),
-            "checked_at": datetime.now(timezone.utc).isoformat(),
-        }, ensure_ascii=False)
-        db.commit()
-        return _task_to_dict(r, metrics=[])
-
-    # 保存指标到数据库
-    metrics = []
-    for m in probe_result["metrics"]:
-        db_metric = AvCheckMetric(
-            task_id=task_id,
-            metric_name=f"{m['name']}({m['unit']})" if m.get("unit") else m["name"],
-            metric_value=float(m["value"]) if m["value"] is not None else 0,
-            threshold=float(m["threshold"]),
-            pass_=bool(m["passed"]),
-            detail=json.dumps({
-                "unit": m.get("unit", ""),
-                "recommended": m.get("recommended", ""),
-                "raw_value": m.get("raw_value"),
-            }, ensure_ascii=False),
-        )
-        db.add(db_metric)
-        metrics.append(db_metric)
-
-    pass_count = sum(1 for m in metrics if m.pass_)
-    result_summary = {
-        "total": len(metrics),
-        "pass_count": pass_count,
-        "ffprobe_version": probe_result.get("raw", {}).get("ffprobe_version", ff_ver),
-        "checked_at": datetime.now(timezone.utc).isoformat(),
-        **{f"raw_{k}": v for k, v in (probe_result.get("raw") or {}).items()},
-    }
-    r.last_result = json.dumps(result_summary, ensure_ascii=False)
-    r.status = "done"
-
-    db.flush()
+    r.last_result = json.dumps({"message": "检测已触发，正在后台执行..."}, ensure_ascii=False)
+    db.commit()
     db.refresh(r)
 
-    metric_dicts = [
-        {"id": m.id, "task_id": m.task_id, "metric_name": m.metric_name,
-         "metric_value": m.metric_value, "threshold": m.threshold, "pass_": m.pass_, "detail": m.detail}
-        for m in metrics
-    ]
-    return _task_to_dict(r, metrics=metric_dicts)
+    def _background_probe():
+        """后台线程：执行 ffprobe 并写回结果。"""
+        bg_db = SessionLocal()
+        try:
+            bg_task = bg_db.get(AvCheckTask, task_id)
+            if not bg_task:
+                return
+
+            logger.info(f"AV check #{task_id}: probing {stream_url[:100]}...")
+            probe_result = probe_stream(stream_url, protocol=protocol)
+
+            if not probe_result["ok"]:
+                bg_task.status = "fail"
+                bg_task.last_result = json.dumps({
+                    "error": probe_result.get("error", "探测失败"),
+                    "checked_at": datetime.now(timezone.utc).isoformat(),
+                }, ensure_ascii=False)
+                bg_db.commit()
+                return
+
+            # 保存指标
+            for m in probe_result["metrics"]:
+                bg_metric = AvCheckMetric(
+                    task_id=task_id,
+                    metric_name=f"{m['name']}({m['unit']})" if m.get("unit") else m["name"],
+                    metric_value=float(m["value"]) if m["value"] is not None else 0,
+                    threshold=float(m["threshold"]),
+                    pass_=bool(m["passed"]),
+                    detail=json.dumps({
+                        "unit": m.get("unit", ""),
+                        "recommended": m.get("recommended", ""),
+                        "raw_value": m.get("raw_value"),
+                    }, ensure_ascii=False),
+                )
+                bg_db.add(bg_metric)
+
+            bg_db.flush()
+
+            pass_count = sum(1 for m in probe_result["metrics"] if m.get("passed"))
+            result_summary = {
+                "total": len(probe_result["metrics"]),
+                "pass_count": pass_count,
+                "ffprobe_version": probe_result.get("raw", {}).get("ffprobe_version", ff_ver),
+                "checked_at": datetime.now(timezone.utc).isoformat(),
+                **{f"raw_{k}": v for k, v in (probe_result.get("raw") or {}).items()},
+            }
+            bg_task.last_result = json.dumps(result_summary, ensure_ascii=False)
+            bg_task.status = "done"
+            bg_db.commit()
+            logger.info(f"AV check #{task_id}: completed — {pass_count}/{len(probe_result['metrics'])} passed")
+
+        except Exception as exc:
+            logger.exception(f"AV check #{task_id}: background probe failed")
+            try:
+                bg_task = bg_db.get(AvCheckTask, task_id)
+                if bg_task:
+                    bg_task.status = "fail"
+                    bg_task.last_result = json.dumps({
+                        "error": str(exc),
+                        "checked_at": datetime.now(timezone.utc).isoformat(),
+                    }, ensure_ascii=False)
+                    bg_db.commit()
+            except Exception:
+                pass
+        finally:
+            bg_db.close()
+
+    threading.Thread(target=_background_probe, daemon=True, name=f"av-check-{task_id}").start()
+    return _task_to_dict(r, metrics=[])
 
 
 def get_metrics(db: Session, task_id: int, project_id: int) -> list[dict]:

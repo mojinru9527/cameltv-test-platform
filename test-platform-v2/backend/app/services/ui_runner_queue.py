@@ -32,8 +32,31 @@ def _get_executor() -> ThreadPoolExecutor:
 
 
 def ensure_processor_running() -> None:
-    """确保处理器已就绪（懒初始化线程池）。"""
+    """确保处理器已就绪（懒初始化线程池），并恢复进程重启前的 pending 任务。"""
     _get_executor()
+    _recover_pending_runs()
+
+
+def _recover_pending_runs() -> None:
+    """进程重启恢复：扫描 status='pending' 的 UiTestRun，重新入队。
+
+    仅在进程启动后首次调用时执行（幂等：pending 任务被 claim 后状态变为 running，
+    重复扫描不会重复入队）。
+    """
+    from app.core.db import SessionLocal
+    from app.models.ui_test import UiTestRun
+
+    db = SessionLocal()
+    try:
+        pending = db.query(UiTestRun).filter(UiTestRun.status == "pending").all()
+        if pending:
+            logger.info("Recovering %d pending UI run(s) after restart", len(pending))
+            for run in pending:
+                enqueue_run(run.id, run.job_id, run.project_id)
+    except Exception:
+        logger.exception("Failed to recover pending UI runs")
+    finally:
+        db.close()
 
 
 def enqueue_run(run_id: int, job_id: int, project_id: int) -> None:
