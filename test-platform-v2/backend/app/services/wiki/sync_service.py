@@ -24,11 +24,10 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal
 from app.models.lanhu_evidence import LanhuEvidencePage
 from app.models.requirement_module import RequirementModule
 from app.models.release_bundle import ReleaseBundle
-from app.models.wiki import WikiPage, WikiRawSource
+from app.models.wiki import WikiRawSource
 from app.services.knowledge.sanitize import sanitize
 
 logger = logging.getLogger("wiki.sync")

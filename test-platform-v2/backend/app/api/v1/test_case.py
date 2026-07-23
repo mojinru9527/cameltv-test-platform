@@ -14,7 +14,6 @@ from app.schemas.test_case import (
     DomainNode,
     ModuleCreate,
     TestCaseCreate,
-    TestCaseFilter,
     TestCaseOut,
     TestCaseUpdate,
 )
@@ -370,7 +369,6 @@ def review_case(
 ):
     """提交评审 / 通过 / 驳回 / 撤回。合法流转详见 review_service 状态机。"""
     from app.services import review_service
-    from fastapi import BackgroundTasks as BgTasks
 
     # approve/reject use review:approve permission
     if body.action in ("approve", "reject"):
@@ -585,7 +583,7 @@ def list_versions(
     db: Session = Depends(get_db),
 ):
     """返回用例的所有版本快照列表。"""
-    from app.services.version_service import list_versions, get_version
+    from app.services.version_service import list_versions
 
     case = test_case_service.get_case(db, case_id, project_id=current.project_id or 0)
     if not case:

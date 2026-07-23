@@ -71,7 +71,6 @@ def _run_api_task(task_db_id: int, project_id: int):
     def _runner():
         from app.core.db import SessionLocal
         from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
-        from app.models.test_case import TestCase
         from app.services.api_execution_service import execute_api_case
         import json
 

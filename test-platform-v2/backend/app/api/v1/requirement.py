@@ -279,7 +279,7 @@ async def extract_features(
         # Add inherited FPs as a separate module or merge into existing modules
         inherited_module = {
             "name": f"沿用自 {inherited_from_version}",
-            "description": f"以下功能点在上版本已确认，本版本无变更，直接沿用",
+            "description": "以下功能点在上版本已确认，本版本无变更，直接沿用",
             "function_points": inherited_fps,
             "client_scope": [],
         }

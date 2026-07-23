@@ -6,7 +6,6 @@ Default empty values will cause a startup validation error in production mode.
 """
 from __future__ import annotations
 
-import os
 import secrets
 from functools import cached_property
 

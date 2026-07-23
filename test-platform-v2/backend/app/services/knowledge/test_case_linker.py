@@ -13,14 +13,11 @@ from __future__ import annotations
 
 import json
 import logging
-from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal
 from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
 from app.models.requirement_module import RequirementModule
 from app.models.test_case import TestCase

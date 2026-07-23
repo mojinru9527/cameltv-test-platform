@@ -55,7 +55,7 @@ def _build_content(db: Session, plan_id: int) -> str:
     case_trace_map: dict[int, str] = {}
     pcase_ids = [pc.id for pc, _ in pcases]
     if pcase_ids:
-        from sqlalchemy import and_, desc
+        from sqlalchemy import and_
 
         # Find max executed_at per plan_case_id, then join back to TestExecution
         latest_sub = (
@@ -642,7 +642,7 @@ def _count_open_defects_at(db: Session, project_id: int, plan_id: int, at_time) 
             Defect.project_id == project_id,
             Defect.case_id.in_(case_ids),
             Defect.created_at <= at_time,
-            (Defect.resolved_at == None) | (Defect.resolved_at > at_time),
+            (Defect.resolved_at is None) | (Defect.resolved_at > at_time),
         )
         .group_by(Defect.severity)
     ).all()

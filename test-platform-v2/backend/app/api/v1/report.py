@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
 from sqlalchemy.orm import Session
 
-from app.core.deps import CurrentUser, get_current_user, get_db, require_permission
+from app.core.deps import CurrentUser, get_db, require_permission
 from app.schemas.common import R
 from app.schemas.test_report import ReportCreate, ReportDetailOut, ReportOut, TrendOut
 from app.services import report_service

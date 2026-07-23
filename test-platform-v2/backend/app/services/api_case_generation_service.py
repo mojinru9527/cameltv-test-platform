@@ -1,7 +1,6 @@
 """接口测试用例生成引擎 — 基于接口 schema 生成正向/边界/异常/幂等/极限用例。"""
 from __future__ import annotations
 
-import copy
 import json
 from typing import Any
 
@@ -33,11 +32,11 @@ def generate_cases_from_endpoint(
     properties = body_schema.get("properties", {})
     required_fields = body_schema.get("required", [])
 
-    method = endpoint.get("method", "GET").upper()
-    path = endpoint.get("path", "")
-    module = endpoint.get("module", "")
-    service = endpoint.get("service_name", "")
-    summary = endpoint.get("summary", "")
+    endpoint.get("method", "GET").upper()
+    endpoint.get("path", "")
+    endpoint.get("module", "")
+    endpoint.get("service_name", "")
+    endpoint.get("summary", "")
 
     # Extract query/path/header params
     query_params = schema.get("query", []) if isinstance(schema, dict) else []
@@ -775,7 +774,7 @@ def _build_header_param_cases(ep: dict, header_params: list) -> list[dict]:
 
 def _build_security_cases(ep: dict, properties: dict) -> list[dict]:
     """为 string 字段生成 SQL/XSS/Path Traversal 安全用例。"""
-    method = ep.get("method", "GET").upper()
+    ep.get("method", "GET").upper()
     cases = []
     string_fields = [f for f, p in properties.items() if p.get("type") == "string"]
 
@@ -838,7 +837,7 @@ def _build_extra_boundary_cases(
     Args:
         count: if > 0, only generate up to this many cases (for minimum enforcement).
     """
-    method = ep.get("method", "GET").upper()
+    ep.get("method", "GET").upper()
     cases: list[dict] = []
 
     # Body params
@@ -1087,7 +1086,7 @@ def _make_case(
         "tags": [
             f"service:{service}",
             f"scenario:{scenario}",
-            f"source:ai_generated",
+            "source:ai_generated",
         ],
     }
 

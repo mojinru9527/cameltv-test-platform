@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import json
-import re
 from typing import Any
 
 
@@ -176,7 +175,7 @@ def _suggest_api_fix(category: str, error_msg: str, resp_snapshot: dict, asserti
         status_code = resp_snapshot.get("status_code", 0)
         suggestions = [
             f"服务端返回 HTTP {status_code}，与预期不符",
-            f"检查请求参数和 Header 是否正确",
+            "检查请求参数和 Header 是否正确",
             "查看服务端日志确认错误根因",
             "确认 API 版本和接口契约是否有变更",
         ]
