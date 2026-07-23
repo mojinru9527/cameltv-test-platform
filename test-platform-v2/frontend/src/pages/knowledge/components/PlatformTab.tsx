@@ -205,7 +205,7 @@ export default function PlatformTab() {
 
       {/* ── 知识源详情弹窗 ── */}
       <Dialog open={!!selected} onOpenChange={(open) => { if (!open) closeDetail() }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="text-lg">
               {selected?.title || '知识源详情'}
@@ -288,7 +288,7 @@ export default function PlatformTab() {
                 <span className="inline-block w-1 h-4 bg-primary rounded-full" />
                 原始内容
               </div>
-              <pre className="whitespace-pre-wrap break-words text-sm text-muted-foreground max-h-[500px] overflow-auto bg-muted/30 rounded-lg p-4 leading-relaxed border">
+              <pre className="whitespace-pre-wrap break-words text-sm text-muted-foreground max-h-[60vh] overflow-auto bg-muted/30 rounded-lg p-4 leading-relaxed border">
                 {selected.raw_content}
               </pre>
             </div>

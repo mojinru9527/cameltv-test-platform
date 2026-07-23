@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dialog'
 import { fetchKnowledgeSources, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
 import type { KnowledgeChunk, KnowledgeSource } from '@/types'
-import { Loader2, CheckCircle2, RefreshCw, AlertCircle, Circle } from '@/lib/icons'
+import { Loader2, CheckCircle2, RefreshCw, AlertCircle, Circle, CheckCheck } from '@/lib/icons'
 import { toast } from 'sonner'
 
 const TYPES = [
@@ -39,6 +39,14 @@ const TYPES = [
 ]
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(TYPES.map((t) => [t.v, t.l]))
 const PAGE_SIZE = 20
+
+/** 判断是否今天内验证过 */
+function isVerifiedToday(lastVerifiedAt: string | null | undefined): boolean {
+  if (!lastVerifiedAt) return false
+  const d = new Date(lastVerifiedAt)
+  const now = new Date()
+  return d.toDateString() === now.toDateString()
+}
 
 export default function SourceListTab() {
   const [rows, setRows] = useState<KnowledgeSource[]>([])
@@ -91,9 +99,12 @@ export default function SourceListTab() {
     e.stopPropagation()
     setVerifying((prev) => new Set(prev).add(sourceId))
     try {
-      await verifyKnowledgeSource(sourceId)
+      const updated = await verifyKnowledgeSource(sourceId)
+      // 即时更新本地行状态，不依赖全量 reload
+      setRows((prev) =>
+        prev.map((r) => (r.id === sourceId ? { ...r, ...updated } : r))
+      )
       toast.success('已验证')
-      load()
     } catch {
       toast.error('验证失败')
     } finally {
@@ -186,11 +197,17 @@ export default function SourceListTab() {
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        disabled={verifying.has(s.id)}
+                        disabled={verifying.has(s.id) || isVerifiedToday(s.last_verified_at)}
                         onClick={(e) => handleVerify(s.id, e)}
-                        title="验证保鲜度"
+                        title={isVerifiedToday(s.last_verified_at) ? '今日已验证' : '验证保鲜度'}
                       >
-                        <CheckCircle2 className="size-3.5" />
+                        {verifying.has(s.id) ? (
+                          <Loader2 className="size-3.5 animate-spin" />
+                        ) : isVerifiedToday(s.last_verified_at) ? (
+                          <CheckCheck className="size-3.5 text-green-600" />
+                        ) : (
+                          <CheckCircle2 className="size-3.5" />
+                        )}
                       </Button>
                     </div>
                   </TableCell>
@@ -220,7 +237,7 @@ export default function SourceListTab() {
 
       {/* ── 知识源详情弹窗 ── */}
       <Dialog open={!!selected} onOpenChange={(open) => { if (!open) closeDetail() }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="text-lg">
               {selected?.title || '知识源详情'}

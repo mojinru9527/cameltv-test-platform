@@ -113,8 +113,8 @@ class Settings(BaseSettings):
     # 安全默认：全部 OFF。知识入库为写路径的后台副作用，须由运维在评审脱敏与容量后
     # 显式开启（避免合入即在共享/测试环境自动激活对全量写操作的入库）。
     knowledge_ingest_enabled: bool = False       # M1 知识源入库总开关（默认关，显式开启）
-    rag_enabled: bool = False                    # 是否启用 RAG 检索（M2）
-    knowledge_graph_enabled: bool = False        # 是否启用知识图谱（M3）
+    rag_enabled: bool = True                     # 是否启用 RAG 检索（M2）
+    knowledge_graph_enabled: bool = True         # 是否启用知识图谱（M3）
     ai_artifact_allow_batch_import: bool = False # AI 产物是否允许批量导入正式库
     knowledge_ingest_production_data: bool = False  # 生产环境执行结果是否允许进入知识库
 
@@ -140,7 +140,7 @@ class Settings(BaseSettings):
     embedding_health_required: bool = False      # 是否要求 embedding 健康检查通过后才允许搜索
 
     # ── Lanhu Evidence Pack / OCR ──（默认关，采集+OCR 成本高）
-    lanhu_evidence_enabled: bool = False
+    lanhu_evidence_enabled: bool = True
     lanhu_evidence_worker_enabled: bool = True
     lanhu_evidence_max_concurrent: int = 1
     lanhu_evidence_stale_after_seconds: int = 600
