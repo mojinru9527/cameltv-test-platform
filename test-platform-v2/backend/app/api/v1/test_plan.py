@@ -236,6 +236,38 @@ def execute_case(
 class AutoExecuteBody(BaseModel):
     environment_id: int | None = None
 
+
+class ExecuteAllBody(BaseModel):
+    environment_id: int | None = None
+
+
+@router.post("/{plan_id}/execute-all", response_model=R[dict], summary="一键批量执行计划全部用例")
+def execute_all_cases(
+    plan_id: int,
+    body: ExecuteAllBody | None = None,
+    req: Request = None,
+    current: CurrentUser = Depends(require_permission("testplan:execute")),
+    db: Session = Depends(get_db),
+):
+    """一键执行计划中全部用例：API 用例自动执行，人工/UI 用例标记为 skip。"""
+    try:
+        result = test_plan_service.execute_all_cases(
+            db,
+            plan_id=plan_id,
+            executor_id=current.user.id,
+            environment_id=body.environment_id if body else None,
+            project_id=current.project_id or 0,
+        )
+    except ValueError as e:
+        return R(code=1, msg=str(e))
+    except Exception as e:
+        return R(code=1, msg=f"批量执行失败: {e}")
+
+    _audit(req, current, db, "plan:execute_all", f"plan #{plan_id}",
+           f"total={result['total']}, passed={result['passed']}, failed={result['failed']}, skipped={result['skipped']}")
+    return R.ok(result)
+
+
 @router.post("/{plan_id}/auto-execute", response_model=R[dict], summary="自动执行计划中的 API 用例")
 def auto_execute_api_cases(
     plan_id: int,

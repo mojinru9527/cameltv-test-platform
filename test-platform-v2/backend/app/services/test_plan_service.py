@@ -54,10 +54,15 @@ def list_plans(
     plan_ids = {r.id for r in rows}
     stats_map = _batch_calc_stats(db, plan_ids)
 
+    # Batch load assignee names
+    assignee_ids = {r.assignee_id for r in rows if r.assignee_id}
+    user_map = batch_user_names(db, assignee_ids)
+
     plans = []
     for r in rows:
         d = _plan_to_dict(r)
         d["stats"] = stats_map.get(r.id, {"total": 0, "pending": 0, "pass_": 0, "fail": 0, "skip": 0, "block": 0})
+        d["assignee_name"] = user_map.get(r.assignee_id, "") if r.assignee_id else ""
         plans.append(d)
 
     return plans, total
@@ -460,6 +465,120 @@ def auto_execute_api_cases(
 
 
 # ═══════════════════════════════════════════════════════
+# 批量一键执行 (所有类型)
+# ═══════════════════════════════════════════════════════
+
+def execute_all_cases(
+    db: Session,
+    plan_id: int,
+    *,
+    executor_id: int = 0,
+    environment_id: int | None = None,
+    project_id: int = 0,
+) -> dict:
+    """一键执行计划中全部用例：API 用例自动执行，人工/UI 用例标记 skip。"""
+    from app.services.api_execution_service import execute_api_case
+
+    plan = db.scalar(
+        select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == project_id)
+    )
+    if not plan:
+        raise ValueError("计划不存在")
+
+    pcs = db.scalars(
+        select(TestPlanCase).where(TestPlanCase.plan_id == plan_id)
+    ).all()
+
+    if not pcs:
+        return {"total": 0, "executed": 0, "passed": 0, "failed": 0, "skipped": 0, "details": [], "message": "计划中没有关联用例"}
+
+    now = datetime.now()
+    details = []
+    executed = 0
+    passed = 0
+    failed = 0
+    skipped = 0
+
+    for pc in pcs:
+        tc = db.get(TestCase, pc.case_id)
+        if not tc:
+            skipped += 1
+            details.append({"plan_case_id": pc.id, "case_id": pc.case_id, "case_title": "(已删除)", "case_type": "unknown", "status": "skip", "error": "用例不存在"})
+            continue
+
+        if tc.case_type == "api":
+            try:
+                exec_result = execute_api_case(
+                    db, tc.id,
+                    project_id=project_id,
+                    environment_id=environment_id,
+                )
+                api_pass = exec_result.get("all_pass", False)
+                status = "pass" if api_pass else "fail"
+                actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
+                notes = f"批量自动执行: {tc.api_method or 'GET'} {tc.api_endpoint}"
+            except Exception as e:
+                status = "fail"
+                actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
+                notes = f"批量执行异常: {e}"
+        else:
+            # 人工/UI 用例：标记 skip
+            status = "skip"
+            actual_result = ""
+            notes = "需人工执行"
+
+        # 创建执行记录
+        exec_row = TestExecution(
+            plan_case_id=pc.id,
+            executor_id=executor_id,
+            status=status,
+            actual_result=actual_result,
+            notes=notes,
+            trace_id="",
+            executed_at=now,
+        )
+        db.add(exec_row)
+
+        # 更新 plan_case 状态
+        pc.last_status = status
+        pc.last_executed_at = now
+        pc.executor_id = executor_id
+
+        if status == "pass":
+            passed += 1
+            executed += 1
+        elif status == "fail":
+            failed += 1
+            executed += 1
+        else:
+            skipped += 1
+
+        details.append({
+            "plan_case_id": pc.id,
+            "case_id": tc.id,
+            "case_title": tc.title,
+            "case_type": tc.case_type,
+            "status": status,
+            "error": notes if status == "skip" else ("" if status == "pass" else notes),
+        })
+
+    # 更新计划状态为 active
+    if plan.status == "draft":
+        plan.status = "active"
+
+    db.commit()
+
+    return {
+        "total": len(pcs),
+        "executed": executed,
+        "passed": passed,
+        "failed": failed,
+        "skipped": skipped,
+        "details": details,
+    }
+
+
+# ═══════════════════════════════════════════════════════
 # helpers
 # ═══════════════════════════════════════════════════════
 
@@ -472,8 +591,10 @@ def _plan_to_dict(r: TestPlan) -> dict:
         "description": r.description,
         "status": r.status,
         "creator_id": r.creator_id,
+        "assignee_id": r.assignee_id or 0,
         "start_date": r.start_date.isoformat() if r.start_date else None,
         "end_date": r.end_date.isoformat() if r.end_date else None,
+        "due_date": r.due_date.isoformat() if r.due_date else None,
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "updated_at": r.updated_at.isoformat() if r.updated_at else None,
     }
@@ -495,6 +616,7 @@ def _plan_case_to_dict(pc: TestPlanCase, case: TestCase | None) -> dict:
         "module": case.module if case else "",
         "priority": case.priority if case else "P2",
         "case_type": case.case_type if case else "manual",
+        "source_req_id": case.source_req_id if case else "",
     }
 
 
