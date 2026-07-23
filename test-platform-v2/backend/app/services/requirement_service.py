@@ -373,3 +373,101 @@ def import_cases(
         skipped = len(cases)
 
     return {"imported": imported_func + imported_api, "skipped": skipped, "total": len(cases)}
+
+
+# ═══════════════════════════════════════════════════════
+# B1: 需求-API 语义映射
+# ═══════════════════════════════════════════════════════
+
+def match_api_endpoints(
+    db: Session,
+    *,
+    integration_reqs: list[dict],
+    project_id: int,
+    service_id: int | None = None,
+) -> list[dict]:
+    """将 integration 类型的 REQ 功能点匹配到已导入的 ApiEndpoint。
+
+    匹配策略：
+    1. 关键词匹配 — 功能点标题/描述中的关键词与 endpoint path/method/summary 匹配
+    2. 操作类型匹配 — "列表/查询"→GET, "创建/新增"→POST, "修改/编辑"→PUT, "删除"→DELETE
+
+    Returns: [{req_id, title, endpoint_id, method, path, summary, confidence}]
+    """
+    from app.models.api_asset import ApiEndpoint
+
+    # 查询项目下所有已导入的 endpoint
+    q = db.query(ApiEndpoint).filter(ApiEndpoint.project_id == project_id)
+    if service_id:
+        q = q.filter(ApiEndpoint.service_id == service_id)
+    endpoints = q.all()
+
+    if not endpoints:
+        return []
+
+    # 操作关键词 → HTTP method 映射
+    method_keywords = {
+        "GET": ["列表", "查询", "获取", "搜索", "详情", "list", "get", "query", "search", "read", "fetch"],
+        "POST": ["创建", "新增", "添加", "上传", "提交", "create", "add", "upload", "submit", "post"],
+        "PUT": ["修改", "编辑", "更新", "变更", "update", "edit", "modify", "put", "patch"],
+        "DELETE": ["删除", "移除", "取消", "delete", "remove", "cancel"],
+    }
+
+    results: list[dict] = []
+    for req in integration_reqs:
+        title = (req.get("title") or "").lower()
+        desc = (req.get("description") or "").lower()
+        combined = f"{title} {desc}"
+
+        best_match = None
+        best_score = 0
+
+        for ep in endpoints:
+            ep_method = (ep.method or "GET").upper()
+            ep_path = (ep.path or "").lower()
+            ep_summary = (ep.summary or "").lower()
+            ep_module = (ep.module or "").lower()
+            ep_target = f"{ep_path} {ep_summary} {ep_module}"
+
+            score = 0
+
+            # 1. 操作类型匹配
+            for method, keywords in method_keywords.items():
+                if method == ep_method:
+                    for kw in keywords:
+                        if kw in combined:
+                            score += 3
+                            break
+
+            # 2. 路径关键词匹配
+            path_segments = [s for s in ep_path.split("/") if s and len(s) > 1]
+            for seg in path_segments:
+                if seg in combined:
+                    score += 2
+
+            # 3. 模块关键词匹配
+            if ep_module and ep_module in combined:
+                score += 4
+
+            # 4. summary 匹配
+            summary_words = set(ep_summary.split())
+            req_words = set(combined.split())
+            common = summary_words & req_words
+            score += len(common) * 0.5
+
+            if score > best_score:
+                best_score = score
+                best_match = {
+                    "req_id": req.get("id", ""),
+                    "title": req.get("title", ""),
+                    "endpoint_id": ep.id,
+                    "method": ep.method,
+                    "path": ep.path,
+                    "summary": ep.summary,
+                    "confidence": min(round(best_score / 15, 2), 1.0),
+                }
+
+        if best_match and best_match["confidence"] > 0.15:
+            results.append(best_match)
+
+    return results

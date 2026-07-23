@@ -6,10 +6,11 @@ import logging
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, Request, UploadFile
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, require_permission
+from app.core.deps import CurrentUser, get_current_user, require_permission
 from app.schemas.common import R
 from app.schemas.requirement import (
     AIGenerateResult,
@@ -511,8 +512,14 @@ async def generate_test_cases(
         func_cases.append(AIGeneratedCase(**ic))
         idx += 1
 
-    # api_cases always empty — API testing is handled separately
+    # Parse API cases from AI result (for integration-type requirements)
     api_cases: list[AIGeneratedCase] = []
+    for c in ai_result.get("api_cases", []):
+        c["index"] = len(func_cases) + len(api_cases)
+        c["case_type"] = "api"
+        if isinstance(c.get("steps"), (list, dict)):
+            c["steps"] = json.dumps(c["steps"], ensure_ascii=False)
+        api_cases.append(AIGeneratedCase(**c))
 
     # Build requirement_analysis from AI result
     analysis_data = ai_result.get("requirement_analysis", {})
@@ -536,7 +543,7 @@ async def generate_test_cases(
 
     mode_label = "基于拆分" if extraction else "直接"
     _audit(req, current, db, "requirement:generate", f"doc#{document_id}",
-           f"{mode_label}: 分析 {len(extracted_reqs)} 需求点 + 生成 {len(func_cases)} 功能用例")
+           f"{mode_label}: 分析 {len(extracted_reqs)} 需求点 + 生成 {len(func_cases)} 功能用例 + {len(api_cases)} 接口用例")
     return R.ok(AIGenerateResult(
         document_id=document_id,
         requirement_analysis=req_analysis,
@@ -545,6 +552,40 @@ async def generate_test_cases(
         raw_response=json.dumps(ai_result, ensure_ascii=False),
         extraction_summary=ai_result.get("extraction_summary", ""),
     ))
+
+
+# ── B1: 需求-API 匹配 ──────────────────────────────────
+
+class MatchApiRequest(BaseModel):
+    integration_reqs: list[dict] = []
+    service_id: int | None = None
+
+class ApiMatchItem(BaseModel):
+    req_id: str = ""
+    title: str = ""
+    endpoint_id: int = 0
+    method: str = ""
+    path: str = ""
+    summary: str = ""
+    confidence: float = 0.0
+
+@router.post("/{document_id}/match-api", response_model=R[list[ApiMatchItem]])
+def match_api_endpoints_for_requirement(
+    document_id: int,
+    body: MatchApiRequest,
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """为需求文档中 integration 类型的功能点匹配已导入的 API 接口。"""
+    if not body.integration_reqs:
+        return R.ok([])
+    matches = requirement_service.match_api_endpoints(
+        db,
+        integration_reqs=body.integration_reqs,
+        project_id=current.project_id or 0,
+        service_id=body.service_id,
+    )
+    return R.ok([ApiMatchItem(**m) for m in matches])
 
 
 # ── 导入用例 ──────────────────────────────────────────
@@ -567,12 +608,17 @@ def import_generated_cases(
     except json.JSONDecodeError:
         return R(code=500, msg="AI 响应格式异常，无法解析")
 
-    # Collect selected cases by position-based index (functional cases only)
+    # Collect selected cases by position-based index (functional + API cases)
     selected: list[dict] = []
     idx = 0
     for c in all_data.get("functional_cases", []):
         if idx in body.indices:
             c["case_type"] = "manual"
+            selected.append(c)
+        idx += 1
+    for c in all_data.get("api_cases", []):
+        if idx in body.indices:
+            c["case_type"] = "api"
             selected.append(c)
         idx += 1
 

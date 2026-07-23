@@ -54,9 +54,9 @@ def _load_skill_context_for(kind: str) -> str:
     """Load skill files for a specific case type.
 
     kind = "functional": SKILL.md + case-template.md + functional-checklist.md
-    kind = "api":        Same as functional (API cases deprecated in this module)
+    kind = "api":        Same as functional (API cases generated via dedicated endpoint)
     """
-    # Always use functional context — API test case generation is deprecated here
+    # Use functional skill context — API cases are generated via AI prompt for integration-type requirements
     files = ["SKILL.md", "case-template.md", "functional-checklist.md"]
     parts: list[str] = []
     for fname in files:
@@ -105,13 +105,25 @@ def _build_system_prompt(kind: str = "functional") -> str:
       "client_scope": ["app", "pc"]
     }
   ],
-  "api_cases": []
+  "api_cases": [
+    {
+      "title": "接口用例标题",
+      "priority": "P0",
+      "domain": "业务域",
+      "module": "所属模块",
+      "api_method": "GET",
+      "api_endpoint": "/api/v1/xxx",
+      "preconditions": "前提条件",
+      "expected_result": "预期结果（如返回 200 + 数据列表）",
+      "remark": "关联的功能点 REQ ID"
+    }
+  ]
 }"""
 
-    focus_rule = "- 专注于生成**功能测试用例**，api_cases 返回空数组 []。"
+    focus_rule = "- 专注于生成**功能测试用例**。对于 type=integration 的功能点，同时在 api_cases 中生成对应接口用例建议。"
     kind_rules = (
-        "- 接口用例无需生成，api_cases 必须返回空数组 []。\n"
         "- 功能用例数量不做硬性限制，应覆盖所有功能点，宁多勿少。\n"
+        "- 对于 type=integration 的功能点，在 api_cases 数组中生成对应的接口测试用例，包含 api_method 和 api_endpoint（建议路径）。\n"
         "- 每个用例需标注 client_scope（适用的客户端：app/pc/web），"
         "如需求未明确指定则根据常识推断。"
     )
@@ -141,6 +153,8 @@ def _build_system_prompt(kind: str = "functional") -> str:
 - functional_cases[].priority: P0(关键路径/基本流) / P1(异常流/边界值) / P2(体验/界面)
 - functional_cases[].steps: 每个步骤含 step(序号), desc(操作描述), expected(该步预期)
 - functional_cases[].client_scope: 该用例适用的客户端列表，可选值 "app" / "pc" / "web"
+- api_cases[].api_method: HTTP 方法 "GET" / "POST" / "PUT" / "DELETE"
+- api_cases[].api_endpoint: 建议的 API 路径（如 "/api/v1/matches"）
 
 关键规则：
 - **先分析需求，再生成用例** — 阶段一完成后才能进入阶段二。
@@ -947,10 +961,11 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
 
 async def generate_test_cases(content: str, file_type: str = "", source_ref: str = "",
                               extraction: dict | None = None) -> dict:
-    """Generate functional test cases from requirement content using AI.
+    """Generate test cases from requirement content using AI.
 
-    Generates functional test cases ONLY (api_cases is always empty).
-    API test cases are handled separately via dedicated tooling.
+    Generates functional test cases for all requirement types. For integration-type
+    requirements (type=integration), also generates API test case suggestions with
+    api_method and api_endpoint fields.
 
     When extraction is provided (Stage 2 guided generation), the confirmed
     modules and function points are injected as context.

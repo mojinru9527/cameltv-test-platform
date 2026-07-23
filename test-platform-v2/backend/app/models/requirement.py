@@ -40,3 +40,7 @@ class RequirementDocument(Base, TimestampMixin):
     parent_id: Mapped[int | None] = mapped_column(default=None, index=True)  # previous version's requirement_document.id
     diff_json: Mapped[str] = mapped_column(default="")                   # structured page-level diff JSON
     diff_status: Mapped[str] = mapped_column(default="initial")          # "initial" | "update"
+
+    # ── Module linkage fields (batch-34) ──
+    release_bundle_id: Mapped[int | None] = mapped_column(default=None, index=True)  # FK → ReleaseBundle
+    linked_swagger_id: Mapped[int | None] = mapped_column(default=None)  # linked Swagger service (FK → ApiService)

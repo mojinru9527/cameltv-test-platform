@@ -7,9 +7,10 @@ import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/utils'
 import {
   Link2, Plus, RefreshCw, Settings, Trash2, Wifi, WifiOff,
+  GitBranch, FileCheck, Server, Monitor, ArrowRight, Layers,
 } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -20,12 +21,15 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
 import {
   fetchIntegrations, createIntegration, updateIntegration, deleteIntegration,
   testConnection, syncNow, fetchSyncLogs,
 } from '@/api/integration'
-import type { IntegrationConfig, SyncLog } from '@/types'
+import { fetchRequirements } from '@/api/requirement'
+import { fetchTestCases } from '@/api/testcase'
+import type { IntegrationConfig, SyncLog, RequirementDocument } from '@/types'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 // ── Form schema ──
@@ -79,6 +83,17 @@ export default function IntegrationPage() {
   const [logsOpen, setLogsOpen] = useState<number | null>(null)
   const [logs, setLogs] = useState<SyncLog[]>([])
 
+  // ── Linkage tracking (batch-34) ──
+  const [linkageData, setLinkageData] = useState<{
+    totalRequirements: number
+    totalCases: number
+    linkedCases: number
+    reqsWithCases: number
+    apiEndpoints: number
+    uiScripts: number
+  }>({ totalRequirements: 0, totalCases: 0, linkedCases: 0, reqsWithCases: 0, apiEndpoints: 0, uiScripts: 0 })
+  const [loadingLinkage, setLoadingLinkage] = useState(false)
+
   // fetchIntegrations returns the promise directly; useApi's object contract
   // doesn't fit this "call then setState" usage, so use a plain callback.
   const load = useCallback(() => fetchIntegrations(), [])
@@ -100,6 +115,25 @@ export default function IntegrationPage() {
   }, [load])
 
   useEffect(() => { refresh() }, [refresh])
+
+  // ── Load linkage data ──
+  useEffect(() => {
+    setLoadingLinkage(true)
+    Promise.all([
+      fetchRequirements().catch(() => [] as RequirementDocument[]),
+      fetchTestCases({ page: 1, page_size: 1 }).catch(() => ({ total: 0 })),
+    ]).then(([reqs, casesResult]) => {
+      const caseData = casesResult as { total: number }
+      setLinkageData({
+        totalRequirements: (reqs as RequirementDocument[]).length,
+        totalCases: caseData.total || 0,
+        linkedCases: (reqs as RequirementDocument[]).reduce((sum, r) => sum + (r.imported_count || 0), 0),
+        reqsWithCases: (reqs as RequirementDocument[]).filter(r => (r.imported_count || 0) > 0).length,
+        apiEndpoints: 0,  // would come from apitest API
+        uiScripts: 0,     // would come from uitest API
+      })
+    }).catch(() => {}).finally(() => setLoadingLinkage(false))
+  }, [])
 
   // ── Form actions ──
 
@@ -233,6 +267,116 @@ export default function IntegrationPage() {
         {hasPerm('integration:manage') && (
           <Button onClick={openCreate}><Plus className="size-4 mr-1" />新建集成</Button>
         )}
+      </div>
+
+      {/* ── Linkage Tracking Panel (batch-34) ── */}
+      <Card className="border-blue-200 bg-gradient-to-r from-blue-50/50 to-white">
+        <CardContent className="pt-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <GitBranch className="size-5 text-blue-600" />
+              <h2 className="text-lg font-semibold">模块联动追踪</h2>
+              <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">需求 → 用例 → 执行</Badge>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => {
+              setLoadingLinkage(true)
+              Promise.all([
+                fetchRequirements().catch(() => [] as RequirementDocument[]),
+                fetchTestCases({ page: 1, page_size: 1 }).catch(() => ({ total: 0 })),
+              ]).then(([reqs, casesResult]) => {
+                const caseData = casesResult as { total: number }
+                setLinkageData({
+                  totalRequirements: (reqs as RequirementDocument[]).length,
+                  totalCases: caseData.total || 0,
+                  linkedCases: (reqs as RequirementDocument[]).reduce((sum, r) => sum + (r.imported_count || 0), 0),
+                  reqsWithCases: (reqs as RequirementDocument[]).filter(r => (r.imported_count || 0) > 0).length,
+                  apiEndpoints: linkageData.apiEndpoints,
+                  uiScripts: linkageData.uiScripts,
+                })
+              }).catch(() => {}).finally(() => setLoadingLinkage(false))
+            }} disabled={loadingLinkage}>
+              <RefreshCw className={cn('size-3.5 mr-1', loadingLinkage && 'animate-spin')} />
+              刷新
+            </Button>
+          </div>
+
+          {/* Linkage flow */}
+          <div className="flex items-center gap-2 mb-4 text-sm">
+            <div className="flex items-center gap-1.5 bg-blue-100 rounded-full px-3 py-1">
+              <FileCheck className="size-3.5 text-blue-600" />
+              <span className="font-medium">{linkageData.totalRequirements}</span>
+              <span className="text-muted-foreground">需求</span>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+            <div className="flex items-center gap-1.5 bg-green-100 rounded-full px-3 py-1">
+              <Layers className="size-3.5 text-green-600" />
+              <span className="font-medium">{linkageData.totalCases}</span>
+              <span className="text-muted-foreground">用例</span>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+            <div className="flex items-center gap-1.5 bg-purple-100 rounded-full px-3 py-1">
+              <Server className="size-3.5 text-purple-600" />
+              <span className="font-medium">{linkageData.apiEndpoints || '-'}</span>
+              <span className="text-muted-foreground">API端点</span>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+            <div className="flex items-center gap-1.5 bg-amber-100 rounded-full px-3 py-1">
+              <Monitor className="size-3.5 text-amber-600" />
+              <span className="font-medium">{linkageData.uiScripts || '-'}</span>
+              <span className="text-muted-foreground">UI脚本</span>
+            </div>
+          </div>
+
+          {/* Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">用例关联率</span>
+                <span className="font-medium">
+                  {linkageData.totalRequirements > 0
+                    ? Math.round((linkageData.linkedCases / Math.max(linkageData.totalCases, 1)) * 100)
+                    : 0}%
+                </span>
+              </div>
+              <Progress
+                value={linkageData.totalCases > 0
+                  ? Math.round((linkageData.linkedCases / linkageData.totalCases) * 100)
+                  : 0}
+                className="h-2"
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">需求覆盖率</span>
+                <span className="font-medium">
+                  {linkageData.totalRequirements > 0
+                    ? Math.round((linkageData.reqsWithCases / linkageData.totalRequirements) * 100)
+                    : 0}%
+                </span>
+              </div>
+              <Progress
+                value={linkageData.totalRequirements > 0
+                  ? Math.round((linkageData.reqsWithCases / linkageData.totalRequirements) * 100)
+                  : 0}
+                className="h-2 [&>div]:bg-green-500"
+              />
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <FileCheck className="size-3.5" />
+              <span>已联动用例: <strong className="text-foreground">{linkageData.linkedCases}</strong></span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <GitBranch className="size-3.5" />
+              <span>模块联动状态: <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 text-[10px]">运行中</Badge></span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Section Divider ── */}
+      <div className="flex items-center gap-3">
+        <h3 className="text-sm font-medium text-muted-foreground">外部集成配置</h3>
+        <div className="flex-1 border-t" />
       </div>
 
       {/* ── List ── */}

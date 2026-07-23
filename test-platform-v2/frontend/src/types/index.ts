@@ -142,9 +142,20 @@ export interface AIGenerateResult {
   document_id: number
   requirement_analysis?: RequirementAnalysis | null
   functional_cases: AIGeneratedCase[]
-  api_cases?: AIGeneratedCase[]    // deprecated — always empty
+  api_cases?: AIGeneratedCase[]
   raw_response: string
   extraction_summary?: string      // Lanhu extraction status info
+}
+
+// ── API endpoint matching (batch-34) ──
+
+export interface ApiMatchItem {
+  req_id: string
+  endpoint_id: number
+  method: string
+  path: string
+  summary: string
+  confidence: number
 }
 
 // ── Stage 1: Feature Extraction ──

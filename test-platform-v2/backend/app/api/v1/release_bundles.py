@@ -7,12 +7,16 @@ from __future__ import annotations
 
 import json
 
+import logging
+
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, require_permission
+from app.core.deps import CurrentUser, get_current_user, require_permission
+
+logger = logging.getLogger("release_bundles")
 from app.core.exceptions import APIException
 from app.models.release_bundle import ReleaseBundle
 from app.models.requirement_module import RequirementModule
@@ -356,4 +360,136 @@ async def confirm_diff(
         "created_modules": len(created_modules),
         "module_ids": [m.id for m in created_modules],
         "module_names": [m.name for m in created_modules],
+    })
+
+
+# ═══════════════════════════════════════════════════════
+# B4+B5: 回归范围 + UI 测试触发 (batch-34)
+# ═══════════════════════════════════════════════════════
+
+@router.get("/{bundle_id}/regression-scope", response_model=R[dict], summary="计算 UI 回归范围")
+def get_regression_scope(
+    bundle_id: int,
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """基于 ReleaseBundle 版本差异计算推荐的 UI 回归测试范围。
+
+    流程：
+    1. 沿 parent_bundle_id 找到上一版本
+    2. 从 diff_summary 提取变更模块列表
+    3. 通过 KnowledgeRelation tested_by 反查关联的 P0/P1 TestCase
+    """
+    from app.services.knowledge.test_case_linker import get_module_test_summary
+
+    pid = current.project_id or 0
+    bundle = db.query(ReleaseBundle).filter(
+        ReleaseBundle.id == bundle_id, ReleaseBundle.project_id == pid
+    ).first()
+    if not bundle:
+        return R(code=404, msg="发布包不存在")
+
+    # 获取变更模块名称列表
+    changed_modules: set[str] = set()
+    try:
+        diff = json.loads(bundle.diff_summary or "{}")
+        for mod in diff.get("changed_modules", []):
+            if isinstance(mod, dict):
+                changed_modules.add(mod.get("name", ""))
+            elif isinstance(mod, str):
+                changed_modules.add(mod)
+    except (json.JSONDecodeError, TypeError):
+        pass
+
+    # 从模块树中提取 module 名称（RequirementModule 表）
+    if not changed_modules:
+        modules_rows = db.query(RequirementModule).filter(
+            RequirementModule.release_bundle_id == bundle_id
+        ).all()
+        changed_modules = {m.name for m in modules_rows if m.name}
+
+    if not changed_modules:
+        return R.ok({"changed_modules": [], "regression_cases": [], "coverage": {}})
+
+    # 通过 KnowledgeRelation 查找关联的测试用例
+    test_summaries = []
+    for mod_name in changed_modules:
+        try:
+            summary = get_module_test_summary(db, mod_name, pid)
+            if summary.get("total", 0) > 0:
+                test_summaries.append({"module": mod_name, **summary})
+        except Exception:
+            pass
+
+    return R.ok({
+        "bundle_id": bundle_id,
+        "bundle_name": bundle.name,
+        "client_version": bundle.client_version,
+        "changed_modules": list(changed_modules),
+        "regression_summary": test_summaries,
+        "total_regression_cases": sum(s.get("total", 0) for s in test_summaries),
+    })
+
+
+@router.post("/{bundle_id}/trigger-regression", response_model=R[dict], summary="触发 UI 回归测试")
+def trigger_regression_for_bundle(
+    bundle_id: int,
+    current: CurrentUser = Depends(require_permission("uitest:trigger")),
+    db: Session = Depends(get_db),
+):
+    """为指定发布包触发关联模块的 UI 回归测试。
+
+    根据模块名称匹配 UiTestScript，触发对应的 UiTestJob 执行。
+    """
+    from app.models.ui_test import UiTestJob, UiTestScript
+    from app.services import ui_test_service
+
+    pid = current.project_id or 0
+    bundle = db.query(ReleaseBundle).filter(
+        ReleaseBundle.id == bundle_id, ReleaseBundle.project_id == pid
+    ).first()
+    if not bundle:
+        return R(code=404, msg="发布包不存在")
+
+    # 获取模块名称
+    modules_rows = db.query(RequirementModule).filter(
+        RequirementModule.release_bundle_id == bundle_id
+    ).all()
+    module_names = {m.name for m in modules_rows if m.name}
+
+    if not module_names:
+        return R.ok({"triggered": 0, "message": "没有找到模块数据，请先确认版本差异"})
+
+    # 查找匹配的 UI 脚本
+    scripts = db.query(UiTestScript).filter(
+        UiTestScript.project_id == pid,
+        UiTestScript.module.in_(module_names),
+        UiTestScript.status == "active",
+    ).all()
+
+    triggered_jobs: list[dict] = []
+    for script in scripts:
+        try:
+            job_data = {
+                "name": f"[回归] {bundle.client_version} - {script.module}",
+                "description": f"版本 {bundle.client_version} 回归测试 - {script.name}",
+                "test_spec": script.spec_path,
+                "browser": "chromium",
+                "environment_id": None,
+            }
+            result = ui_test_service.create_job(db, job_data, current.user.id, pid)
+            if result:
+                ui_test_service.trigger_job(db, result["id"], pid, current.user.id)
+                triggered_jobs.append({"job_id": result["id"], "module": script.module, "spec": script.name})
+        except Exception as e:
+            logger.warning(f"Failed to trigger regression for module {script.module}: {e}")
+
+    return R.ok({
+        "bundle_id": bundle_id,
+        "bundle_name": bundle.name,
+        "client_version": bundle.client_version,
+        "matched_modules": list(module_names),
+        "matched_scripts": len(scripts),
+        "triggered": len(triggered_jobs),
+        "jobs": triggered_jobs,
     })
