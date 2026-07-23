@@ -51,3 +51,36 @@ def list_audit(
         ).all()
     )
     return rows, total
+
+
+def export_audit_csv(
+    db: Session,
+    action: str = "", keyword: str = "",
+    project_id: int | None = None,
+    max_rows: int = 10000,
+) -> str:
+    """导出审计日志为 CSV 字符串。"""
+    import csv
+    import io
+
+    q = select(AuditLog)
+    if action:
+        q = q.where(AuditLog.action == action)
+    if keyword:
+        kw = f"%{keyword}%"
+        q = q.where(AuditLog.target.like(kw) | AuditLog.username.like(kw))
+    if project_id is not None:
+        q = q.where(AuditLog.project_id == project_id)
+
+    rows = list(db.scalars(q.order_by(AuditLog.id.desc()).limit(max_rows)).all())
+
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["ID", "用户ID", "用户名", "项目ID", "操作", "目标", "详情", "IP", "时间"])
+    for r in rows:
+        writer.writerow([
+            r.id, r.user_id, r.username, r.project_id,
+            r.action, r.target, r.detail, r.ip,
+            r.created_at.isoformat() if r.created_at else "",
+        ])
+    return buf.getvalue()

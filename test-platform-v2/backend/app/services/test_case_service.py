@@ -158,7 +158,7 @@ def create_case(db: Session, data: dict) -> dict:
     data = _sanitize_case_data(data)
     row = TestCase(**data)
     db.add(row)
-    db.commit()
+    db.flush()
     db.refresh(row)
     return _row_to_dict(row)
 
@@ -180,7 +180,7 @@ def update_case(db: Session, case_id: int, data: dict, changed_by: int = 0) -> d
     for k, v in data.items():
         if v is not None:
             setattr(row, k, v)
-    db.commit()
+    db.flush()
     db.refresh(row)
     return _row_to_dict(row)
 
@@ -196,7 +196,7 @@ def delete_case(db: Session, case_id: int, project_id: int = 0) -> bool:
     if not row:
         return False
     row.is_deleted = True
-    db.commit()
+    db.flush()
     return True
 
 
@@ -210,7 +210,7 @@ def batch_delete(db: Session, ids: list[int], project_id: int = 0) -> int:
     ).all()
     for r in rows:
         r.is_deleted = True
-    db.commit()
+    db.flush()
     return len(rows)
 
 
@@ -306,13 +306,13 @@ def create_domain(db: Session, project_id: int, name: str) -> dict:
     if existing:
         if existing.is_deleted:
             existing.is_deleted = False
-            db.commit()
+            db.flush()
             return _domain_to_dict(existing)
         raise ValueError(f"域 '{name}' 已存在")
 
     domain = TestCaseDomain(project_id=project_id, name=name)
     db.add(domain)
-    db.commit()
+    db.flush()
     db.refresh(domain)
     return _domain_to_dict(domain)
 
@@ -352,7 +352,7 @@ def delete_domain(db: Session, domain_id: int, project_id: int) -> bool:
     for c in case_rows:
         c.is_deleted = True
 
-    db.commit()
+    db.flush()
     return True
 
 
@@ -377,13 +377,13 @@ def create_module(db: Session, domain_id: int, project_id: int, name: str) -> di
     if existing:
         if existing.is_deleted:
             existing.is_deleted = False
-            db.commit()
+            db.flush()
             return {"id": existing.id, "module": existing.name, "count": 0}
         raise ValueError(f"模块 '{name}' 已存在")
 
     module = TestCaseModule(project_id=project_id, domain_id=domain_id, name=name)
     db.add(module)
-    db.commit()
+    db.flush()
     db.refresh(module)
     return {"id": module.id, "module": module.name, "count": 0}
 
@@ -420,7 +420,7 @@ def delete_module(db: Session, domain_id: int, module_id: int) -> bool:
     for c in case_rows:
         c.is_deleted = True
 
-    db.commit()
+    db.flush()
     return True
 
 
