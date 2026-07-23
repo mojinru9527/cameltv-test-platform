@@ -6,7 +6,10 @@ import {
   updateReleaseBundle,
   fetchVersionChain,
   triggerVersionDiff,
+  fetchRegressionScope,
+  triggerRegression,
 } from '@/api/releaseBundles'
+import type { RegressionScopeResult, TriggerRegressionResult } from '@/api/releaseBundles'
 import { fetchModuleTree } from '@/api/requirementModules'
 import type {
   ReleaseBundleOut,
@@ -157,6 +160,39 @@ export default function BundleDetailPage() {
     }
   }
 
+  // ── Regression handlers (batch-34) ──
+  const [regressionScope, setRegressionScope] = useState<RegressionScopeResult | null>(null)
+  const [loadingScope, setLoadingScope] = useState(false)
+  const [triggeringReg, setTriggeringReg] = useState(false)
+
+  const handleViewRegressionScope = async () => {
+    setLoadingScope(true)
+    try {
+      const result = await fetchRegressionScope(bundleId)
+      setRegressionScope(result)
+      toast.success(`回归范围: ${result.total_regression_cases} 条测试用例`)
+    } catch {
+      toast.error('获取回归范围失败')
+    } finally {
+      setLoadingScope(false)
+    }
+  }
+
+  const handleTriggerRegression = async () => {
+    setTriggeringReg(true)
+    try {
+      const result: TriggerRegressionResult = await triggerRegression(bundleId)
+      toast.success(`已触发 ${result.triggered} 个 UI 回归测试任务`)
+      if (result.jobs?.length > 0) {
+        result.jobs.forEach((j) => toast.info(`任务 #${j.job_id}: ${j.module}`))
+      }
+    } catch {
+      toast.error('触发回归测试失败')
+    } finally {
+      setTriggeringReg(false)
+    }
+  }
+
   // ── Render ──
   if (isLoading) {
     return (
@@ -225,6 +261,29 @@ export default function BundleDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Regression actions (batch-34) */}
+          {!editing && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleViewRegressionScope}
+                disabled={loadingScope}
+              >
+                {loadingScope ? <RefreshCw className="size-3.5 mr-1 animate-spin" /> : <Layers className="size-3.5 mr-1" />}
+                回归范围
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTriggerRegression}
+                disabled={triggeringReg}
+              >
+                {triggeringReg ? <RefreshCw className="size-3.5 mr-1 animate-spin" /> : <RefreshCw className="size-3.5 mr-1" />}
+                触发UI回归
+              </Button>
+            </>
+          )}
           {editing ? (
             <>
               <Button variant="outline" size="sm" onClick={() => setEditing(false)} disabled={saving}>
@@ -271,6 +330,58 @@ export default function BundleDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Regression scope result (batch-34) ── */}
+      {regressionScope && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Layers className="size-4 text-blue-600" />
+                UI 回归测试范围
+              </CardTitle>
+              <Button variant="ghost" size="icon-sm" onClick={() => setRegressionScope(null)}>
+                <span className="text-xs">✕</span>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-4 gap-3 mb-3">
+              <div className="text-center">
+                <div className="text-xl font-bold text-blue-700">{regressionScope.changed_modules?.length || 0}</div>
+                <div className="text-xs text-muted-foreground">变更模块</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-green-700">{regressionScope.total_regression_cases}</div>
+                <div className="text-xs text-muted-foreground">回归用例</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-purple-700">{regressionScope.regression_summary?.length || 0}</div>
+                <div className="text-xs text-muted-foreground">有测试覆盖的模块</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-amber-700">{regressionScope.client_version || '-'}</div>
+                <div className="text-xs text-muted-foreground">目标版本</div>
+              </div>
+            </div>
+            {regressionScope.regression_summary?.length > 0 && (
+              <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                {regressionScope.regression_summary.map((s: any, i: number) => (
+                  <div key={i} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white/70">
+                    <span className="font-medium">{s.module}</span>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <span>功能: {s.functional || 0}</span>
+                      <span>API: {s.api || 0}</span>
+                      <span>自动化: {s.automation || 0}</span>
+                      <Badge variant="outline" className="text-[10px]">覆盖率 {s.coverage_rate || 0}%</Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Edit form (expanded) ── */}
       {editing && (

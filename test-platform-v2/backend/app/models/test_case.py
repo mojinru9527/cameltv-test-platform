@@ -48,6 +48,10 @@ class TestCase(Base, TimestampMixin):
     api_body: Mapped[str] = mapped_column(default="")             # JSON: 请求体
     api_assertions: Mapped[str] = mapped_column(default="[]")     # JSON: 断言规则数组
 
+    # API 追溯 (batch-34: FK 链路补齐)
+    api_endpoint_id: Mapped[int | None] = mapped_column(default=None, index=True)  # FK → ApiEndpoint
+    requirement_module_id: Mapped[int | None] = mapped_column(default=None, index=True)  # FK → RequirementModule
+
     # 来源追溯
     source: Mapped[str] = mapped_column(default="migration")      # manual / swagger_import / migration / ai_generated
     source_doc_id: Mapped[int | None] = mapped_column(default=None, index=True)  # 来源需求文档 ID

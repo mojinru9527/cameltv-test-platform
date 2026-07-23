@@ -18,12 +18,15 @@ import StatCard from '@/components/StatCard'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import {
   BookOpen, Trash2, Eye, FileSpreadsheet, FileText,
-  Inbox, Layers, Link2, RotateCcw, Sparkles, Search, XCircle, Loader2, ExternalLink, Cloud, GitCompare,
+  Inbox, Layers, Link2, RotateCcw, Sparkles, Search, XCircle, Loader2, ExternalLink, Cloud, GitCompare, Settings,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
@@ -106,6 +109,30 @@ export default function RequirementPage() {
   const [screenshotPages, setScreenshotPages] = useState<any[]>([])
   const [showScreenshotPreview, setShowScreenshotPreview] = useState(false)
   const [screenshotVersion, setScreenshotVersion] = useState('')
+
+  // ── Lanhu settings (batch-34) ──
+  const [lanhuSettingsOpen, setLanhuSettingsOpen] = useState(false)
+  const [lanhuUserProjectId, setLanhuUserProjectId] = useState(
+    () => localStorage.getItem('lanhu_user_project_id') || ''
+  )
+  const [lanhuUserVersionId, setLanhuUserVersionId] = useState(
+    () => localStorage.getItem('lanhu_user_version_id') || ''
+  )
+  const [lanhuAdminProjectId, setLanhuAdminProjectId] = useState(
+    () => localStorage.getItem('lanhu_admin_project_id') || ''
+  )
+  const [lanhuAdminVersionId, setLanhuAdminVersionId] = useState(
+    () => localStorage.getItem('lanhu_admin_version_id') || ''
+  )
+
+  const saveLanhuSettings = () => {
+    localStorage.setItem('lanhu_user_project_id', lanhuUserProjectId)
+    localStorage.setItem('lanhu_user_version_id', lanhuUserVersionId)
+    localStorage.setItem('lanhu_admin_project_id', lanhuAdminProjectId)
+    localStorage.setItem('lanhu_admin_version_id', lanhuAdminVersionId)
+    toast.success('蓝湖配置已保存')
+    setLanhuSettingsOpen(false)
+  }
 
   const docPageSize = 10
   const domainPageSize = 8
@@ -350,10 +377,16 @@ export default function RequirementPage() {
     <div className="space-y-4">
       {/* Header */}
       <PageHeader title="需求文档" icon={BookOpen} description="上传 PRD / Excel / 蓝湖链接，AI 自动生成测试用例。">
-        <Button variant="outline" size="sm" onClick={refetch} disabled={isLoading || isRefetching}>
-          {isLoading || isRefetching ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
-          刷新
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置">
+            <Settings className="size-4" />
+            蓝湖设置
+          </Button>
+          <Button variant="outline" size="sm" onClick={refetch} disabled={isLoading || isRefetching}>
+            {isLoading || isRefetching ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+            刷新
+          </Button>
+        </div>
       </PageHeader>
 
       {/* Main layout: task panel (left) + content (right) */}
@@ -940,6 +973,69 @@ export default function RequirementPage() {
         pages={screenshotPages}
         version={screenshotVersion}
       />
+
+      {/* ── Lanhu Settings Dialog (batch-34) ── */}
+      <Dialog open={lanhuSettingsOpen} onOpenChange={setLanhuSettingsOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="size-5" />
+              蓝湖项目配置
+            </DialogTitle>
+            <DialogDescription>
+              配置蓝湖用户端和运营后台的项目 ID，用于自动解析设计稿链接。这些设置保存在本地浏览器中。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-blue-700">📱 用户端 (CamelTv)</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Project ID</Label>
+                  <Input
+                    placeholder="蓝湖用户端项目 ID"
+                    value={lanhuUserProjectId}
+                    onChange={(e) => setLanhuUserProjectId(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Version ID (可选)</Label>
+                  <Input
+                    placeholder="默认版本 ID"
+                    value={lanhuUserVersionId}
+                    onChange={(e) => setLanhuUserVersionId(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium text-purple-700">🖥️ 运营后台 (Admin)</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Project ID</Label>
+                  <Input
+                    placeholder="蓝湖运营后台项目 ID"
+                    value={lanhuAdminProjectId}
+                    onChange={(e) => setLanhuAdminProjectId(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Version ID (可选)</Label>
+                  <Input
+                    placeholder="默认版本 ID"
+                    value={lanhuAdminVersionId}
+                    onChange={(e) => setLanhuAdminVersionId(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLanhuSettingsOpen(false)}>取消</Button>
+            <Button onClick={saveLanhuSettings}>保存配置</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
