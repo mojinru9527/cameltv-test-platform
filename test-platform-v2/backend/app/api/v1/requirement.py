@@ -557,7 +557,11 @@ def import_generated_cases(
     current: CurrentUser = Depends(require_permission("requirement:import")),
     db: Session = Depends(get_db),
 ):
-    """Import selected AI-generated cases into the test_case table."""
+    """Import selected AI-generated cases into the test_case table.
+
+    When create_plan=True, a test plan is automatically created and all
+    imported cases are linked to it.
+    """
     doc = requirement_service.get_requirement(db, document_id, project_id=current.project_id or 0)
     if not doc or not doc.get("ai_raw"):
         return R(code=400, msg="请先生成测试用例再导入")
@@ -581,9 +585,11 @@ def import_generated_cases(
 
     result = requirement_service.import_cases(
         db, document_id, selected, project_id=current.project_id or 0,
+        creator_id=current.user.id,
+        create_plan=body.create_plan,
     )
     _audit(req, current, db, "requirement:import", f"doc#{document_id}",
-           f"导入 {result['imported']} 条用例")
+           f"导入 {result['imported']} 条用例" + (f" + 自动创建计划 #{result.get('plan_id')}" if result.get('plan_id') else ""))
 
     return R.ok(CaseImportResult(**result))
 

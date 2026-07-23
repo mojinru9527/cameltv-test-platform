@@ -298,19 +298,26 @@ def import_cases(
     doc_id: int,
     cases: list[dict],
     project_id: int,
+    *,
+    creator_id: int = 0,
+    create_plan: bool = False,
 ) -> dict:
     """Import selected generated cases into the test_case table (transactional).
 
     All cases import atomically — if any case fails, the entire batch rolls back
     so no half-imported data is left behind.
+
+    When create_plan=True, also creates a TestPlan and links all imported cases.
     """
     from app.core.base_service import transaction
+    from app.services.test_plan_service import add_cases as _add_cases, create_plan as _create_plan
 
     imported_func = 0
     imported_api = 0
     skipped = 0
     func_indices: list[int] = []
     api_indices: list[int] = []
+    imported_case_ids: list[int] = []
 
     try:
         with transaction(db):
@@ -321,7 +328,10 @@ def import_cases(
                 steps_raw = c.get("steps", "[]")
                 if isinstance(steps_raw, list):
                     steps_raw = json.dumps(steps_raw, ensure_ascii=False)
-                test_case_service.create_case(db, {
+                # Extract source_req_id from case data (maps to REQ-xxx function point)
+                source_req_id = str(c.get("req_id", c.get("fp_id", ""))) or ""
+
+                result = test_case_service.create_case(db, {
                     "project_id": project_id,
                     "title": c.get("title", ""),
                     "domain": c.get("domain", ""),
@@ -335,7 +345,9 @@ def import_cases(
                     "api_endpoint": c.get("api_endpoint", ""),
                     "source": "ai_generated",
                     "source_doc_id": doc_id,
+                    "source_req_id": source_req_id,
                 })
+                imported_case_ids.append(result["id"] if isinstance(result, dict) else 0)
                 if case_type == "api":
                     imported_api += 1
                     if case_index is not None:
@@ -367,9 +379,27 @@ def import_cases(
                 row.imported_api_indices = json.dumps(new_api, ensure_ascii=False)
                 row.imported_func_count = len(new_func)
                 row.imported_api_count = len(new_api)
+
+            # Auto-create test plan if requested
+            plan_id = None
+            plan_name = ""
+            if create_plan and imported_case_ids:
+                plan_data = {"name": f"{row.title if row else '需求'} - 测试计划", "status": "draft"}
+                plan = _create_plan(db, plan_data, creator_id=creator_id, project_id=project_id)
+                plan_id = plan["id"]
+                plan_name = plan["name"]
+                _add_cases(db, plan_id, imported_case_ids, project_id=project_id)
     except Exception:
         imported_func = 0
         imported_api = 0
         skipped = len(cases)
+        plan_id = None
+        plan_name = ""
 
-    return {"imported": imported_func + imported_api, "skipped": skipped, "total": len(cases)}
+    return {
+        "imported": imported_func + imported_api,
+        "skipped": skipped,
+        "total": len(cases),
+        "plan_id": plan_id,
+        "plan_name": plan_name,
+    }

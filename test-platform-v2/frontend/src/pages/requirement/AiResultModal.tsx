@@ -317,6 +317,7 @@ export default function AiResultModal({
   onImportSuccess, onExtractionConfirmAndGenerate, onExtractionReject,
 }: Props) {
   const [importing, setImporting] = useState(false)
+  const [createPlan, setCreatePlan] = useState(false)
   const [selectedFuncKeys, setSelectedFuncKeys] = useState<number[]>([])
 
   // Inline edit state
@@ -400,10 +401,15 @@ export default function AiResultModal({
     if (documentId == null) return
     setImporting(true)
     try {
-      const res = await importCases(documentId, indices)
-      toast.success(`成功导入 ${res.imported} 条功能用例` + (res.skipped > 0 ? `，${res.skipped} 条跳过` : ''))
+      const res = await importCases(documentId, indices, createPlan)
+      let msg = `成功导入 ${res.imported} 条功能用例` + (res.skipped > 0 ? `，${res.skipped} 条跳过` : '')
+      if (res.plan_id) {
+        msg += ` → 已创建计划「${res.plan_name}」`
+      }
+      toast.success(msg)
       setSelectedFuncKeys([])
       setEditedCases(new Map())
+      setCreatePlan(false)
       onImportSuccess()
     } catch {
       toast.error('导入失败，请重试')
@@ -862,14 +868,24 @@ export default function AiResultModal({
                   </Table>
                 </div>
                 <div className="flex items-center justify-between mt-3">
-                  <span className="text-xs text-muted-foreground">
-                    已选 {selectedFuncKeys.length}/{funcCases.length} 条
-                    {funcCases.filter((c) => c.imported).length > 0 && (
-                      <span className="text-green-600 ml-2">
-                        · 已导入 {funcCases.filter((c) => c.imported).length} 条
-                      </span>
-                    )}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground">
+                      已选 {selectedFuncKeys.length}/{funcCases.length} 条
+                      {funcCases.filter((c) => c.imported).length > 0 && (
+                        <span className="text-green-600 ml-2">
+                          · 已导入 {funcCases.filter((c) => c.imported).length} 条
+                        </span>
+                      )}
+                    </span>
+                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
+                      <Checkbox
+                        checked={createPlan}
+                        onCheckedChange={(v) => setCreatePlan(!!v)}
+                        className="size-3.5"
+                      />
+                      同时创建测试计划
+                    </label>
+                  </div>
                   <Button
                     size="sm"
                     onClick={() => doImport(selectedFuncKeys)}
