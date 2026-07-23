@@ -126,7 +126,7 @@ export default function ProjectTab() {
 
       {/* ── 知识源详情弹窗 ── */}
       <Dialog open={!!selected} onOpenChange={(open) => { if (!open) closeDetail() }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
+        <DialogContent className="max-w-7xl max-h-[94vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="text-lg">
               {selected?.title || '知识源详情'}
@@ -240,7 +240,7 @@ export default function ProjectTab() {
                         {c.token_count} tokens
                       </span>
                     </div>
-                    <pre className="whitespace-pre-wrap break-words text-sm text-muted-foreground max-h-96 overflow-auto bg-muted/40 rounded-md p-4 leading-relaxed">
+                    <pre className="whitespace-pre-wrap break-words text-sm text-muted-foreground max-h-[600px] overflow-auto bg-muted/40 rounded-md p-4 leading-relaxed">
                       {c.content}
                     </pre>
                   </div>
