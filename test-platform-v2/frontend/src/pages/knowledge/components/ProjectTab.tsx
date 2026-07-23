@@ -29,7 +29,7 @@ export default function ProjectTab() {
 
   useEffect(() => {
     let cancelled = false
-    fetchKnowledgeSources({ para_category: 'project', page_size: 100 })
+    fetchKnowledgeSources({ knowledge_domain: 'project', page_size: 100 })
       .then((page) => { if (!cancelled) setSources(page.items) })
       .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false) })
