@@ -292,7 +292,7 @@ export default function SearchTab() {
                 内容
               </div>
               <pre className="whitespace-pre-wrap break-words text-sm text-muted-foreground bg-muted/30 rounded-lg p-4 leading-relaxed border max-h-[60vh] overflow-auto">
-                {detailResult?.snippet || detailResult?.content || '(无内容)'}
+                {detailResult?.snippet || '(无内容)'}
               </pre>
             </div>
           </div>
