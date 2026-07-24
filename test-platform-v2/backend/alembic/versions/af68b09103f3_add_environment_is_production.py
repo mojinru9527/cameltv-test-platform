@@ -1,7 +1,7 @@
 """add_environment_is_production
 
 Revision ID: af68b09103f3
-Revises: 20260723_batch37_plan_assignee
+Revises: 20260722_batch27_merge_missing
 Create Date: 2026-07-24 12:51:33.549562
 
 """
@@ -19,8 +19,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('environment', sa.Column('is_production', sa.Boolean(), nullable=False, server_default=sa.text('0')))
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [c['name'] for c in inspector.get_columns('environment')]
+    if 'is_production' not in columns:
+        op.add_column('environment', sa.Column('is_production', sa.Boolean(), nullable=False, server_default=sa.text('0')))
 
 
 def downgrade() -> None:
-    op.drop_column('environment', 'is_production')
+    conn = op.get_bind()
+    inspector = sa.inspect(conn)
+    columns = [c['name'] for c in inspector.get_columns('environment')]
+    if 'is_production' in columns:
+        op.drop_column('environment', 'is_production')
