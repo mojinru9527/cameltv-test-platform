@@ -735,8 +735,21 @@ def _check_prod_protection(
     env = db.get(Environment, environment_id)
     if not env:
         return True, ""  # 环境不存在由调用方处理
-    if env.env_type != "prod":
+    if env.env_type != "prod" and not env.is_production:
         return True, ""
+
+    # 记录生产环境执行的审计日志
+    try:
+        from app.services.audit_service import write_audit
+        write_audit(
+            db,
+            project_id=env.project_id,
+            action="apitest:execute_prod",
+            target=f"env/{environment_id}",
+            detail=f"Production {method_upper} execution on env #{environment_id} ({env.name})",
+        )
+    except Exception:
+        pass  # 审计日志写入失败不应阻断执行
 
     # 读操作在生产环境始终允许
     if method_upper in READ_METHODS:
