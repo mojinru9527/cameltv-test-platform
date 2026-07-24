@@ -157,7 +157,6 @@ def _do_execute(
         # 提取响应头
         resp_headers = {k: v for k, v in resp.headers.items()}
 
-        request_error = None
     except httpx.TimeoutException:
         return _error_result("请求超时 (30s)", request_snapshot)
     except httpx.ConnectError as e:

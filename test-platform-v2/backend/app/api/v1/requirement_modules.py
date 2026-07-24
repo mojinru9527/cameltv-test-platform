@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
-from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
 from app.models.requirement_module import ModuleAdminLink, RequirementModule
 from app.models.release_bundle import ReleaseBundle
 from app.schemas.common import Page, R
@@ -34,7 +33,6 @@ from app.schemas.release_bundle import (
     ModuleTreeResponse,
     RequirementModuleBrief,
     RequirementModuleOut,
-    TestLinkingResult,
 )
 from app.services import audit_service
 
@@ -207,12 +205,11 @@ def get_child_modules(
     db: Session = Depends(get_db),
 ):
     """获取指定模块的直接子节点（懒加载子节点，适用于大型模块树）。"""
-    pid = current.project_id or 0
     parent = db.get(RequirementModule, parent_id)
     if not parent or parent.release_bundle_id != bundle_id:
         return R(code=404, msg="模块不存在")
 
-    children = list(db.scalars(
+    list(db.scalars(
         select(RequirementModule).where(
             RequirementModule.release_bundle_id == bundle_id,
             RequirementModule.parent_module_id == parent_id,

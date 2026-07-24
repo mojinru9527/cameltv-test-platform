@@ -22,7 +22,6 @@ from dataclasses import dataclass, field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal
 from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
 from app.models.requirement_module import ModuleAdminLink, RequirementModule
 from app.models.release_bundle import ReleaseBundle
@@ -255,7 +254,7 @@ def suggest_configures_links(
     result.suggestions.extend(p1_suggestions)
 
     # Collect unmatched admin sources
-    seen_admin_ids = {s.admin_module_id for s in p1_suggestions if s.admin_module_id}
+    {s.admin_module_id for s in p1_suggestions if s.admin_module_id}
     for page in client_modules:
         if page.node_type != "page":
             continue

@@ -18,8 +18,7 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
 from app.models.knowledge import (
-    AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeIteration,
-    KnowledgeRelation, KnowledgeSnapshot, KnowledgeSource,
+    AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource,
 )
 from app.schemas.common import Page, R
 from app.schemas.knowledge import (
@@ -1095,7 +1094,7 @@ def graph_hierarchy(
             ))
 
     # ── Edges: tested_by ──
-    entity_ids = {e.id for e in db.scalars(
+    {e.id for e in db.scalars(
         select(KnowledgeEntity).where(
             KnowledgeEntity.project_id == pid,
             KnowledgeEntity.entity_type.in_(["client_module", "admin_module"]),

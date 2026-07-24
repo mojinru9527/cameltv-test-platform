@@ -147,7 +147,6 @@ def get_source(db: Session, source_pk: int, project_id: int) -> KnowledgeSource 
 
 def verify_source(db: Session, source_pk: int, project_id: int) -> KnowledgeSource | None:
     """验证知识源：设置 last_verified_at = now()，freshness_score = 1.0。"""
-    from datetime import datetime
 
     row = get_source(db, source_pk, project_id)
     if not row:
@@ -182,7 +181,7 @@ def decay_freshness_in_new_session() -> dict:
     - freshness_score < 0.2 且 last_verified_at 距今 > 90 天的源 → status='deprecated'
     - freshness_score < 0.2 且 last_verified_at 为空的源 → status='deprecated'（从未验证过）
     """
-    from datetime import datetime, timedelta
+    from datetime import timedelta
     from app.core.db import SessionLocal
     from sqlalchemy import update
 

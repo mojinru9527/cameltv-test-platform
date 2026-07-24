@@ -5,7 +5,7 @@ so they work with any SQLAlchemy model without inheritance coupling.
 """
 from __future__ import annotations
 
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session

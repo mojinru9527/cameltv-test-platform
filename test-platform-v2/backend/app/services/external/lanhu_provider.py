@@ -9,14 +9,11 @@ Wiki 编译流水线统一复用。ai_service 通过 `from ... import _extract_l
 """
 from __future__ import annotations
 
-import asyncio
 import hashlib
-import json
 import re
 import sys
 from pathlib import Path
 
-import httpx
 
 from app.core.config import settings
 
@@ -226,7 +223,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
     try:
         from lanhu_mcp_server import (
             LanhuExtractor, LanhuAuthError, fix_html_files, lanhu_login,
-            _get_effective_cookie, _save_cached_cookie,
+            _save_cached_cookie,
         )
 
         _page_id = ''
@@ -603,8 +600,8 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                     return await _do_extract(cookie_override=new_cookie, page_id=_page_id)
                 else:
                     raise ValueError(
-                        f"蓝湖自动登录失败：未获取到有效的 Cookie。"
-                        f"请检查 .env 中的 LANHU_USERNAME 和 LANHU_PASSWORD 是否正确。"
+                        "蓝湖自动登录失败：未获取到有效的 Cookie。"
+                        "请检查 .env 中的 LANHU_USERNAME 和 LANHU_PASSWORD 是否正确。"
                     )
             except LanhuAuthError as login_err:
                 raise ValueError(

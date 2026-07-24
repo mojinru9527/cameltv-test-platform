@@ -5,7 +5,7 @@ M4: Agent 触发端点（POST /run/{agent_type}）— 编排 RAG 检索 + LLM �
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,6 @@ from app.core.exceptions import APIException
 from app.schemas.common import Page, R
 from app.schemas.knowledge import AgentRunOut
 from app.services.knowledge import agent_run_service
-from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
 from app.services.knowledge.agent_prompts import AGENT_META
 from app.services.knowledge.agent_queue import (
     QueueWriteBusy,

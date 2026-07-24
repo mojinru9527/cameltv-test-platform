@@ -43,7 +43,7 @@ def verify_api_token(
     token_hash = hashlib.sha256(plain.encode()).hexdigest()
 
     row = db.scalar(
-        select(ApiToken).where(ApiToken.token_hash == token_hash, ApiToken.enabled == True)
+        select(ApiToken).where(ApiToken.token_hash == token_hash, ApiToken.enabled)
     )
     if not row:
         raise APIException(code=401, msg="无效或已禁用的 API Token", http_status=401)
@@ -132,7 +132,7 @@ def ci_get_run(
     db: Session = Depends(get_db),
 ):
     """外部 CI 查询某次执行的状态与结果。"""
-    from app.models.test_plan import TestExecution, TestPlanCase, TestPlan
+    from app.models.test_plan import TestExecution, TestPlanCase
 
     exec_row = db.scalar(
         select(TestExecution).where(TestExecution.id == run_id)

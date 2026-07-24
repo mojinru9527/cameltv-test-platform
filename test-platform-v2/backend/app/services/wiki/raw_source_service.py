@@ -36,7 +36,6 @@ def record_raw_source(
     - immutable_version 相同但 content_hash 变化 → 旧活跃源置 superseded，写入新版本。
     - immutable_version 为空时退化为按 content_hash 去重（仅同 project + hash 唯一）。
     """
-    key = immutable_version or content_hash
     exists = db.scalar(
         select(WikiRawSource.id).where(
             WikiRawSource.project_id == project_id,

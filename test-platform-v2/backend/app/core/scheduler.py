@@ -170,7 +170,7 @@ def init_scheduler():
     db = SessionLocal()
     try:
         schedules = db.execute(
-            select(TestSchedule).where(TestSchedule.enabled == True)
+            select(TestSchedule).where(TestSchedule.enabled)
         ).scalars().all()
 
         for s in schedules:
@@ -218,7 +218,7 @@ def init_scheduler():
             def _evolve_all_projects():
                 from app.core.db import SessionLocal
                 from app.models.knowledge import KnowledgeEntity
-                from sqlalchemy import select, func
+                from sqlalchemy import select
                 db = SessionLocal()
                 try:
                     pids = list(db.scalars(

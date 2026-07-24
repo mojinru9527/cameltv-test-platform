@@ -7,13 +7,12 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
-from app.core.exceptions import APIException
 from app.models.release_bundle import ReleaseBundle
 from app.models.requirement_module import RequirementModule
 from app.schemas.common import Page, R
