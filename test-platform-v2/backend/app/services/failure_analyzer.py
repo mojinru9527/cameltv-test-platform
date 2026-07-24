@@ -131,14 +131,14 @@ def _classify_ui_error(error_msg: str) -> tuple[str, float]:
     """分类 UI 错误。返回 (category, confidence 0-1)。"""
     msg_lower = error_msg.lower()
 
-    if "超时" in msg_lower or "timeout" in msg_lower:
+    if "超时" in msg_lower or "timeout" in msg_lower or "timed out" in msg_lower:
         return "timeout", 0.95
-    if "不存在" in msg_lower or "not found" in msg_lower:
-        return "spec_missing", 0.9
     if "playwright" in msg_lower and ("不可用" in msg_lower or "not" in msg_lower):
         return "playwright_unavailable", 0.95
     if "npx" in msg_lower:
         return "npx_missing", 0.9
+    if "不存在" in msg_lower or "not found" in msg_lower:
+        return "spec_missing", 0.9
     if "取消" in msg_lower or "cancel" in msg_lower:
         return "cancelled", 0.99
     if any(kw in msg_lower for kw in ("exit", "returncode", "execution")):

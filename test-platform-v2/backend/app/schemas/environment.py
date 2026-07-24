@@ -12,6 +12,7 @@ class EnvironmentCreate(BaseModel):
     env_type: str = Field(default="test", pattern=r"^(dev|test|staging|prod)$")
     base_url: str = Field(default="", max_length=500)
     description: str = Field(default="", max_length=500)
+    is_production: bool = Field(default=False)
 
 
 class EnvironmentUpdate(BaseModel):
@@ -19,6 +20,7 @@ class EnvironmentUpdate(BaseModel):
     env_type: str | None = Field(default=None, pattern=r"^(dev|test|staging|prod)$")
     base_url: str | None = Field(default=None, max_length=500)
     description: str | None = Field(default=None, max_length=500)
+    is_production: bool | None = Field(default=None)
 
 
 class EnvironmentResponse(BaseModel):
@@ -28,6 +30,7 @@ class EnvironmentResponse(BaseModel):
     env_type: str
     base_url: str
     description: str
+    is_production: bool
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

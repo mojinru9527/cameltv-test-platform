@@ -269,27 +269,38 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 
 ---
 
-### 模块 11　API 测试 🧪（演示态）
-**目标**：手动发起 HTTP 请求做接口验证。
+### 模块 11　API 测试 🟡（真实执行，能力待生产化）
+**目标**：管理 API 资产、生成接口用例、批量/单次执行并产出结构化结果。
 **现状实现**
-- **纯前端**：浏览器 `fetch(values.url)` 直接发起请求；请求历史存 **localStorage**（key `STORAGE_KEY`）。
-- **无后端接口、无落库、无团队共享**；受浏览器跨域限制。
-**局限/改进入口**：未用例化、不能纳入测试计划、无环境/变量/断言/前后置脚本/数据驱动，无法被定时任务或 CI 触发。→ 建议升级为**服务端 API 测试引擎**。
+- **服务端真实执行引擎**：后端通过 `httpx` 发起真实 HTTP 请求（`api_execution_service.py`），绕过浏览器跨域限制。
+- **资产四层模型**：ApiService（分组）→ ApiEndpoint（接口定义，含 method/url/headers/body）→ TestCase（用例，含断言 JSONPath）→ ApiExecutionTask（执行批次，含 request/response 快照）。
+- **完整接口**：`/api/v1/apitest/services|endpoints|tasks` CRUD + OpenAPI 导入预览/确认 + AI 用例生成（DeepSeek）+ 批量任务创建/取消/重试失败 + 失败分析 + curl 命令导出。
+- **请求/响应快照**：每次执行保存结构化 `request_snapshot`（method/url/headers/body）和 `response_snapshot`（status_code/headers/body_preview/body_size_bytes/truncated/content_type），可回溯。
+- **断言引擎**：支持 JSONPath 提取 + 比较运算符（equals/contains/regex/gte/lte），结果写入 `assertion_results`。
+- **批量任务工作器**：独立 daemon 线程 `api_task_worker.py`，claim-based 抢占（locked_by/locked_at），支持 cancel 中途取消 + retry-failed 重试。
+- **环境与变量注入**：通过 `environment_id` 关联环境（base_url），支持 AES-128 加密变量 `${VAR_NAME}` 解析；生产环境需 `apitest:execute_prod` 权限 + `confirm_prod` 二次确认。
+- **SSRF 防护**：无环境时校验目标 URL 非内网/回环地址；关联环境则信任 base_url。
+- **前端四 Tab**：Assets（服务+接口管理）、Debug（即时调试，环境选择器+请求构建器+响应查看器）、Cases（用例列表+批量执行）、Tasks（任务列表+详情含请求/响应快照+分析）。
+**局限/改进入口**：任务取消为非即时（仅轮询点检查 cancel_requested）；缺少请求脚本/前置处理器；尚无定时/CI 触发的一等公民集成（需走 Open API token）；生产保护审计日志待补全。
 
 ---
 
-### 模块 12　UI 自动化 🧪（演示态）
-**目标**：管理 UI 自动化任务并查看运行结果。
-**功能点**
-| 操作 | 接口 |
-|------|------|
-| 任务列表 | `GET /ui_test` |
-| 创建/详情/编辑/删除 | `GET/POST/PUT/DELETE /ui_test/{id}` |
-| 触发运行 | `POST /ui_test/{id}/trigger` |
-| 运行历史 | `GET /ui_test/{id}/runs` |
-- 字段：name、description、test_spec（Playwright 规范文本）、browser(chromium/firefox/webkit)、status(idle)；运行含 result、screenshots[]、video_url、trace_id。
-**关键现状**：**运行结果为随机数模拟**（`ui_test_service.py:147` 用 `random.randint/uniform` 伪造 total/pass/duration），**未真实驱动 Playwright**。截图/视频/trace 字段为占位。
-**改进入口**：对接真实 Playwright 执行器，产出真实结果与产物。
+### 模块 12　UI 自动化 🟡（真实执行，能力待生产化）
+**目标**：管理 UI 自动化 Job、真实驱动 Playwright 执行、产出并回看截图/视频/trace 产物。
+**现状实现**
+- **真实 Playwright 执行引擎**：后端 `playwright_executor.py` 通过 `subprocess.Popen` 启动 `npx playwright test {spec} --project {browser} --reporter json --output {artifact_dir}`，在独立 worker 线程中执行。
+- **三层模型**：UiTestJob（任务定义：spec/browser/environment）→ UiTestRun（单次执行：status/result/artifacts/process_id）→ UiTestScript（脚本资产目录）。
+- **完整接口**：`/api/v1/ui-tests/jobs|runs|scripts` CRUD + `/api/v1/ui-tests/jobs/{id}/trigger` 触发 + `/api/v1/ui-tests/runs/{run_id}/cancel` 取消 + `/api/v1/ui-tests/runs/{run_id}/artifacts` 产物列表/下载 + `/api/v1/ui-tests/runner/health` 健康检查。
+- **产物捕获**：执行后自动收集 `artifact_dir` 下所有 `*.png`（截图）、`*.webm`（视频）、`*.zip`（trace），路径写入 `run.screenshots[]`/`video_url`/`trace_id`；支持 Playwright HTML report（`index.html`）在线浏览。
+- **前端产物回看**：Run Detail 弹窗展示截图缩略图三列网格（`<img>` 直接加载）、HTML5 `<video controls>` 播放视频、trace `.zip` 下载链接 + Playwright Trace Viewer 引导、stdout/stderr 终端输出、HTML Report 在线链接。
+- **实时状态追踪**：前端 3 秒轮询刷新 running/pending 状态；process_id 可追踪子进程；cancel_requested 标志 + `proc.kill()` 可中止执行。
+- **并发控制**：`ui_runner_queue.py` ThreadPoolExecutor（max_workers=2）+ 信号量保护；支持重启后恢复 pending runs。
+- **环境变量注入**：执行时注入 `BASE_URL`、解密后的环境变量（`EnvironmentVariable` AES-128），spec 可通过 `process.env` 读取。
+- **任务工作器双通路**：`ui_runner_queue.enqueue_run()` 即时入队 + `task_worker._process_ui_runs()` APScheduler 每 5 秒兜底轮询。
+- **失败分析与知识入库**：`failure_analyzer.analyze_ui_failure()` 分类错误；失败执行自动通过 `ingest_service` 入库知识中心。
+- **可用 Spec**：`production-smoke.spec.ts`（5 用例：首页/登录/导航/API 健康/性能）、`production-web-smoke.spec.ts`（轻量 Web 冒烟）。
+- **用例编译链路**：`case_compiler_service.py` 支持 功能用例 JSON steps → LLM (DeepSeek) → TypeScript `.spec.ts` → tsc 类型检查 → playwright --dry-run 验证 → 可执行文件。
+**局限/改进入口**：Playwright 配置 `screenshot: 'only-on-failure'`（非 always）；无异步执行模式（当前同步等待 subprocess）；STORAGE_DIR 硬编码不可配；spec 需预置于 `backend/tests/playwright/specs/` 非运行时上传。
 
 ---
 

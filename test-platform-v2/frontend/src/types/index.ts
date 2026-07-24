@@ -442,6 +442,7 @@ export interface Environment {
   env_type: string           // dev | test | staging | prod
   base_url: string
   description: string
+  is_production?: boolean
   created_at: string | null
   updated_at: string | null
 }
@@ -510,6 +511,7 @@ export interface QuickExecuteRequest {
   assertions?: string
   environment_id?: number
   dataset_id?: number
+  confirm_prod?: boolean
   service_name?: string  // for asset debug: service name for URL composition
   query_params?: string  // JSON string of query key-value pairs
 }
@@ -754,6 +756,7 @@ export interface ApiExecutionTask {
   skipped: number
   trigger_type: string
   creator_id: number
+  confirm_prod?: boolean
   started_at: string | null
   finished_at: string | null
   created_at: string | null
@@ -796,6 +799,7 @@ export interface ApiTaskCreateRequest {
   environment_id?: number
   service_id?: number
   case_ids: number[]
+  confirm_prod?: boolean
 }
 
 // ========== 知识中心 (RAG / Agent 持续学习) ==========

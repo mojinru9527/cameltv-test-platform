@@ -24,6 +24,16 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import type { Environment, EnvironmentVariable } from '@/types'
@@ -65,6 +75,14 @@ export default function EnvironmentPage() {
   const [envForm, setEnvForm] = useState({ name: '', env_type: 'test' as string, base_url: '', description: '' })
   const [varForm, setVarForm] = useState({ key: '', value: '', encrypted: false, description: '' })
 
+  // Production confirmation dialogs
+  const [deleteProdTarget, setDeleteProdTarget] = useState<Environment | null>(null)
+  const [showProdTypeChangeDialog, setShowProdTypeChangeDialog] = useState(false)
+
+  function isProductionEnv(env: Environment): boolean {
+    return env.is_production === true || env.env_type === 'prod'
+  }
+
   // ── Auto-select first env when data loads ──
   useEffect(() => {
     if (envs && envs.length > 0 && !selectedEnv) {
@@ -100,7 +118,7 @@ export default function EnvironmentPage() {
     setEnvDialog(true)
   }
 
-  const handleEnvSave = async () => {
+  const doEnvSave = async () => {
     if (!envForm.name.trim()) { toast.error('请输入环境名称'); return }
     try {
       if (editEnv) {
@@ -123,7 +141,21 @@ export default function EnvironmentPage() {
     } catch { /* handled by interceptor */ }
   }
 
+  const handleEnvSave = async () => {
+    if (!envForm.name.trim()) { toast.error('请输入环境名称'); return }
+    // When editing a production env and changing type away from prod, confirm first
+    if (editEnv && isProductionEnv(editEnv) && envForm.env_type !== 'prod') {
+      setShowProdTypeChangeDialog(true)
+      return
+    }
+    await doEnvSave()
+  }
+
   const handleEnvDelete = async (env: Environment) => {
+    if (isProductionEnv(env)) {
+      setDeleteProdTarget(env)
+      return
+    }
     if (!confirm(`确定删除环境「${env.name}」？其中的变量也将被删除。`)) return
     try {
       await deleteEnvironment(env.id)
@@ -131,6 +163,17 @@ export default function EnvironmentPage() {
       toast.success('环境已删除')
       refetch()
     } catch { /* handled by interceptor */ }
+  }
+
+  const confirmDeleteProdEnv = async () => {
+    if (!deleteProdTarget) return
+    try {
+      await deleteEnvironment(deleteProdTarget.id)
+      if (selectedEnv?.id === deleteProdTarget.id) setSelectedEnv(null)
+      toast.success('环境已删除')
+      refetch()
+    } catch { /* handled by interceptor */ }
+    finally { setDeleteProdTarget(null) }
   }
 
   // ── Variable handlers ──
@@ -391,6 +434,38 @@ export default function EnvironmentPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Production env delete confirmation */}
+      <AlertDialog open={!!deleteProdTarget} onOpenChange={(open) => { if (!open) setDeleteProdTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>删除生产环境确认</AlertDialogTitle>
+            <AlertDialogDescription>
+              您正在删除生产环境配置「{deleteProdTarget?.name}」，此操作可能影响线上测试。请确认。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={confirmDeleteProdEnv}>确认删除</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Production env type change confirmation */}
+      <AlertDialog open={showProdTypeChangeDialog} onOpenChange={setShowProdTypeChangeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>更改生产环境类型确认</AlertDialogTitle>
+            <AlertDialogDescription>
+              您正在将生产环境「{editEnv?.name}」的类型从"生产"修改为其他类型，这可能影响依赖于该环境的测试计划。请确认。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => { setShowProdTypeChangeDialog(false); doEnvSave() }}>确认修改</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

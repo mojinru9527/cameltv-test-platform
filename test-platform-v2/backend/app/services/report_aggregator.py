@@ -183,14 +183,14 @@ def _categorize_api_errors(items: list) -> dict[str, int]:
 def _classify_ui_error(error_msg: str) -> str:
     """分类 UI 错误。"""
     msg = error_msg.lower()
-    if "超时" in msg or "timeout" in msg:
+    if "超时" in msg or "timeout" in msg or "timed out" in msg:
         return "timeout"
-    if "不存在" in msg or "not found" in msg:
-        return "spec_missing"
     if "playwright" in msg and ("不可用" in msg or "not" in msg):
         return "playwright_unavailable"
     if "npx" in msg:
         return "npx_missing"
+    if "不存在" in msg or "not found" in msg:
+        return "spec_missing"
     if "取消" in msg or "cancel" in msg:
         return "cancelled"
     return "other"

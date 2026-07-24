@@ -12,6 +12,7 @@
  */
 import { RefreshCw } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -47,10 +48,16 @@ export default function EnvironmentBar({
     return type || ''
   }
 
+  const selectedEnv = envs.find(e => e.id === envId)
+  const isProduction = selectedEnv && (selectedEnv.is_production === true || selectedEnv.env_type === 'prod')
+
   return (
     <div>
       <div className="flex items-center gap-1.5">
         <Label className="text-[11px] text-muted-foreground shrink-0">环境</Label>
+        {isProduction && (
+          <Badge variant="destructive" className="text-[10px] px-1 py-0 leading-none">PROD</Badge>
+        )}
         {onRefresh && (
           <Button type="button" size="icon-sm" variant="ghost" onClick={onRefresh} title="刷新环境列表">
             <RefreshCw className="size-3" />
@@ -61,7 +68,7 @@ export default function EnvironmentBar({
         value={envId?.toString() || '_'}
         onValueChange={(v) => onEnvChange(v === '_' ? undefined : Number(v))}
       >
-        <SelectTrigger className="h-8 text-xs mt-1">
+        <SelectTrigger className={`h-8 text-xs mt-1 ${isProduction ? 'border-red-300 dark:border-red-700 ring-1 ring-red-200 dark:ring-red-800' : ''}`}>
           <SelectValue placeholder="选择环境" />
         </SelectTrigger>
         <SelectContent>
@@ -76,7 +83,7 @@ export default function EnvironmentBar({
       </Select>
       {envId && (
         <Input
-          className="h-8 text-xs mt-1 font-mono"
+          className={`h-8 text-xs mt-1 font-mono ${isProduction ? 'border-red-300 dark:border-red-700' : ''}`}
           value={envBaseUrl}
           onChange={(e) => onBaseUrlChange(e.target.value)}
           onBlur={onBaseUrlBlur}

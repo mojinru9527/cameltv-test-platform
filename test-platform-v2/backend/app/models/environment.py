@@ -17,6 +17,7 @@ class Environment(Base, TimestampMixin):
     env_type: Mapped[str] = mapped_column(default="test")        # dev / test / staging / prod
     base_url: Mapped[str] = mapped_column(default="")            # https://api.example.com
     description: Mapped[str] = mapped_column(default="")
+    is_production: Mapped[bool] = mapped_column(default=False)
 
 
 class EnvironmentVariable(Base, TimestampMixin):
