@@ -1,7 +1,6 @@
 """测试用例 Service — CRUD + 域树查询 + 分类管理。"""
 from __future__ import annotations
 
-import json
 import re
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session

@@ -83,7 +83,7 @@ export async function previewOpenApiImport(
 }
 
 export async function confirmOpenApiImport(
-  data: { service_name: string; source_type: string; source_ref?: string; spec_content?: string; generate_cases?: boolean },
+  data: { service_name: string; source_type: string; source_ref?: string; spec_content?: string; generate_cases?: boolean; create_plan?: boolean; plan_name?: string },
 ): Promise<ApiImportResult> {
   return api.post('/apitest/import/confirm', data) as unknown as Promise<ApiImportResult>
 }

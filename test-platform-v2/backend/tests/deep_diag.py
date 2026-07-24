@@ -1,5 +1,6 @@
 """Deep diagnosis: test every combination."""
-import urllib.request, json
+import urllib.request
+import json
 
 # Get a token from 8001
 print("=== Get tokens ===")

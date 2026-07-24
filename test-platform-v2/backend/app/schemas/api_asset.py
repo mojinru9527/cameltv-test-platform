@@ -105,6 +105,8 @@ class OpenApiImportConfirmRequest(BaseModel):
     source_ref: str = ""
     spec_content: str | None = None
     generate_cases: bool = False  # 导入后是否批量生成用例
+    create_plan: bool = False    # 导入后是否自动创建测试计划
+    plan_name: str = ""          # 自动创建计划的名称（为空则自动生成）
 
 
 class ApiImportPreviewOut(BaseModel):

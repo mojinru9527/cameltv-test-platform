@@ -12,16 +12,13 @@ import json
 import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal
 from app.models.lanhu_evidence import LanhuEvidencePage
 from app.models.requirement_module import RequirementModule
 from app.models.release_bundle import ReleaseBundle
-from app.models.requirement import RequirementDocument
 
 logger = logging.getLogger("knowledge.version_differ")
 

@@ -162,7 +162,6 @@ async def _send_email(
     smtp_host: str, smtp_port: int, smtp_user: str, smtp_password: str, smtp_from: str,
 ) -> bool:
     """Send email via SMTP (best-effort)."""
-    import smtplib
     from email.mime.text import MIMEText
 
     try:
@@ -324,7 +323,7 @@ def notify_sync(db: Session, project_id: int, event: str, data: dict) -> dict:
     Prefer BackgroundTasks + _run_notify_in_new_session for fire-and-forget use cases.
     """
     try:
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
     except RuntimeError:
         # No event loop in this thread (e.g., BackgroundTasks thread pool)
         return asyncio.run(notify(db, project_id, event, data))

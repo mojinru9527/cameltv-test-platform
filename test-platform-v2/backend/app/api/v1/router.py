@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, av_check, dashboard, dataset, defect, environment, integration, notify, open_api, perf, perf_ws, project, release_bundles, report, requirement, requirement_modules, schedule, system, test_case, test_plan, token, trace, ui_test, apitest, version_mission, knowledge, agent, wiki, lanhu_evidence
+from app.api.v1 import auth, av_check, dashboard, dataset, defect, environment, integration, notify, open_api, perf, perf_ws, project, release_bundles, report, requirement, requirement_modules, schedule, system, template, test_case, test_plan, token, trace, ui_test, apitest, version_mission, knowledge, agent, wiki, lanhu_evidence
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(auth.router)
@@ -35,3 +35,4 @@ api_router.include_router(requirement_modules.router)
 api_router.include_router(lanhu_evidence.router)
 api_router.include_router(perf.router)
 api_router.include_router(perf_ws.router)
+api_router.include_router(template.router)

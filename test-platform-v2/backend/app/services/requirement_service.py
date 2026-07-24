@@ -379,32 +379,11 @@ def import_cases(
 # B1: 需求-API 语义映射
 # ═══════════════════════════════════════════════════════
 
-def match_api_endpoints(
-    db: Session,
-    *,
+def _match_by_keywords(
     integration_reqs: list[dict],
-    project_id: int,
-    service_id: int | None = None,
+    endpoints: list,
 ) -> list[dict]:
-    """将 integration 类型的 REQ 功能点匹配到已导入的 ApiEndpoint。
-
-    匹配策略：
-    1. 关键词匹配 — 功能点标题/描述中的关键词与 endpoint path/method/summary 匹配
-    2. 操作类型匹配 — "列表/查询"→GET, "创建/新增"→POST, "修改/编辑"→PUT, "删除"→DELETE
-
-    Returns: [{req_id, title, endpoint_id, method, path, summary, confidence}]
-    """
-    from app.models.api_asset import ApiEndpoint
-
-    # 查询项目下所有已导入的 endpoint
-    q = db.query(ApiEndpoint).filter(ApiEndpoint.project_id == project_id)
-    if service_id:
-        q = q.filter(ApiEndpoint.service_id == service_id)
-    endpoints = q.all()
-
-    if not endpoints:
-        return []
-
+    """关键词匹配策略（已有实现）。"""
     # 操作关键词 → HTTP method 映射
     method_keywords = {
         "GET": ["列表", "查询", "获取", "搜索", "详情", "list", "get", "query", "search", "read", "fetch"],
@@ -427,7 +406,6 @@ def match_api_endpoints(
             ep_path = (ep.path or "").lower()
             ep_summary = (ep.summary or "").lower()
             ep_module = (ep.module or "").lower()
-            ep_target = f"{ep_path} {ep_summary} {ep_module}"
 
             score = 0
 
@@ -471,3 +449,128 @@ def match_api_endpoints(
             results.append(best_match)
 
     return results
+
+
+def _match_by_embedding(
+    integration_reqs: list[dict],
+    endpoints: list,
+) -> list[dict]:
+    """LLM embedding 语义相似度匹配策略。
+
+    使用本地 fastembed 模型计算功能点描述与 endpoint summary 的余弦相似度。
+    若 embedding 服务不可用，退回空列表（调用方应 fallback 到关键词匹配）。
+    """
+    import numpy as np
+    import logging
+
+    _logger = logging.getLogger("requirement.embedding")
+
+    try:
+        from app.services.knowledge.embedding_service import embedding_service
+    except ImportError:
+        _logger.warning("embedding_service 不可用，跳过语义匹配")
+        return []
+
+    if not embedding_service.available():
+        _logger.warning("embedding 模型未就绪，跳过语义匹配")
+        return []
+
+    # 构建需求文本列表
+    req_texts: list[str] = []
+    for req in integration_reqs:
+        title = req.get("title", "")
+        desc = req.get("description", "")
+        req_texts.append(f"{title} {desc}".strip() or title or "未命名功能点")
+
+    # 构建 endpoint 文本列表
+    ep_texts: list[str] = []
+    for ep in endpoints:
+        method = ep.method or "GET"
+        path = ep.path or ""
+        summary = ep.summary or ""
+        module = ep.module or ""
+        ep_texts.append(f"[{method}] {path} {summary} ({module})".strip())
+
+    if not req_texts or not ep_texts:
+        return []
+
+    # 批量嵌入
+    req_vecs = embedding_service.embed(req_texts)
+    ep_vecs = embedding_service.embed(ep_texts)
+
+    if req_vecs is None or ep_vecs is None:
+        _logger.warning("嵌入计算失败，退回关键词匹配")
+        return []
+
+    # 计算余弦相似度（向量已 L2 归一化，点积即余弦相似度）
+    try:
+        sim_matrix = np.dot(req_vecs, ep_vecs.T)  # (n_reqs, n_eps)
+    except Exception:
+        _logger.exception("相似度矩阵计算失败")
+        return []
+
+    # 为每个需求找 best match
+    CONFIDENCE_THRESHOLD = 0.3  # embedding 匹配的置信度阈值
+    results: list[dict] = []
+    for i, req in enumerate(integration_reqs):
+        best_idx = int(np.argmax(sim_matrix[i]))
+        best_sim = float(sim_matrix[i][best_idx])
+        if best_sim < CONFIDENCE_THRESHOLD:
+            continue
+        ep = endpoints[best_idx]
+        results.append({
+            "req_id": req.get("id", ""),
+            "title": req.get("title", ""),
+            "endpoint_id": ep.id,
+            "method": ep.method,
+            "path": ep.path,
+            "summary": ep.summary,
+            "confidence": round(best_sim, 2),
+            "match_method": "embedding",
+        })
+
+    return results
+
+
+def match_api_endpoints(
+    db: Session,
+    *,
+    integration_reqs: list[dict],
+    project_id: int,
+    service_id: int | None = None,
+    use_embedding: bool = False,
+) -> list[dict]:
+    """将 integration 类型的 REQ 功能点匹配到已导入的 ApiEndpoint。
+
+    匹配策略：
+    1. LLM embedding 语义相似度（use_embedding=True 时优先）
+    2. 关键词匹配 — 功能点标题/描述中的关键词与 endpoint path/method/summary 匹配
+    3. 操作类型匹配 — "列表/查询"→GET, "创建/新增"→POST, "修改/编辑"→PUT, "删除"→DELETE
+
+    通过 feature flag `use_embedding` 控制是否启用 LLM embedding 分支。
+    Embedding 失败时自动 fallback 到关键词匹配。
+
+    Returns: [{req_id, title, endpoint_id, method, path, summary, confidence, match_method?}]
+    """
+    from app.models.api_asset import ApiEndpoint
+
+    # 查询项目下所有已导入的 endpoint
+    q = db.query(ApiEndpoint).filter(ApiEndpoint.project_id == project_id)
+    if service_id:
+        q = q.filter(ApiEndpoint.service_id == service_id)
+    endpoints = q.all()
+
+    if not endpoints:
+        return []
+
+    # LLM embedding 分支（feature flag 控制）
+    if use_embedding:
+        embedding_results = _match_by_embedding(integration_reqs, endpoints)
+        if embedding_results:
+            return embedding_results
+        # embedding 失败时 fallback 到关键词匹配
+        import logging
+        logging.getLogger("requirement.embedding").info("embedding 匹配无结果或失败，fallback 到关键词匹配")
+
+    # 默认关键词匹配
+    return _match_by_keywords(integration_reqs, endpoints)

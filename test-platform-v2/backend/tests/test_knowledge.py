@@ -978,7 +978,6 @@ class TestGraphIngestHook:
         kdb.commit()
 
         from app.services.knowledge import ingest_service
-        import app.services.knowledge.entity_service as es
         monkeypatch.setattr(ingest_service, "SessionLocal", lambda: kdb)  # 内部调用同 Session
 
         called_with: list = []
@@ -1131,7 +1130,7 @@ class TestArtifactWriteApi:
 
         resp = kclient.post(f"/api/v1/knowledge/ai-artifacts/{a.id}/import-to-test-cases", json={"comment": ""})
         # 治理守卫：仅 approved 才能导入
-        data = resp.json()
+        resp.json()
         assert resp.status_code in (403, 200)  # 拒绝或返回错误
 
     def test_approve_nonexistent_artifact(self, kclient):

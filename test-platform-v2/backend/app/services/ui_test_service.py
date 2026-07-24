@@ -263,7 +263,7 @@ def execute_playwright_async(run_id: int, job_id: int, project_id: int):
             if run:
                 run.status = "fail"
                 run.finished_at = datetime.now(timezone.utc)
-                run.error_message = f"执行器崩溃: 详见日志"
+                run.error_message = "执行器崩溃: 详见日志"
             job = db.get(UiTestJob, job_id)
             if job:
                 job.status = "fail"

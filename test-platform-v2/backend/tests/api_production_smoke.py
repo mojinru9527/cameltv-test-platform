@@ -4,8 +4,6 @@ CamelTv 生产环境 API 冒烟测试
 测试核心 API 端点可达性
 """
 import json
-import re
-import sys
 import time
 import httpx
 
@@ -46,7 +44,7 @@ def run_all():
                 error = f"{type(e).__name__}: {e}"
 
             all_pass = status_ok and error is None
-            status = "✅ PASS" if all_pass else f"❌ FAIL"
+            status = "✅ PASS" if all_pass else "❌ FAIL"
             print(f"  {status} {name} ({duration_ms}ms)" + (f" [{error}]" if error else ""))
 
             results.append({

@@ -9,10 +9,8 @@ Changelog-first extraction pipeline for Lanhu URLs:
 """
 from __future__ import annotations
 
-import asyncio
 import json
 import re
-import sys
 from pathlib import Path
 
 import httpx
@@ -756,7 +754,7 @@ def _parse_ai_response(raw: str) -> dict:
         try:
             repaired = _repair_llm_json(text)
             result = json.loads(repaired)
-        except json.JSONDecodeError as e2:
+        except json.JSONDecodeError:
             try:
                 result = _iterative_json_repair(repaired)
             except json.JSONDecodeError as e3:
@@ -931,7 +929,8 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
             if changelog_info:
                 fallback["changelog"] = changelog_info
             return fallback
-        import tempfile, time
+        import tempfile
+        import time
         dump_path = Path(tempfile.gettempdir()) / f"ai_extraction_failed_{int(time.time())}.json"
         if raw:
             dump_path.write_text(raw, encoding="utf-8")
@@ -1025,7 +1024,8 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
         warnings.append("功能用例生成被截断，结果可能不完整")
 
     if func_resp["result"] is None:
-        import tempfile, time
+        import tempfile
+        import time
         raw = func_resp["raw"]
         dump_path = Path(tempfile.gettempdir()) / f"ai_response_failed_{int(time.time())}.json"
         if raw:

@@ -132,7 +132,7 @@ def ci_get_run(
     db: Session = Depends(get_db),
 ):
     """外部 CI 查询某次执行的状态与结果。"""
-    from app.models.test_plan import TestExecution, TestPlanCase, TestPlan
+    from app.models.test_plan import TestExecution, TestPlanCase
 
     exec_row = db.scalar(
         select(TestExecution).where(TestExecution.id == run_id)
@@ -353,3 +353,36 @@ def ci_get_ui_run(
         "started_at": run.started_at.isoformat() if run.started_at else None,
         "finished_at": run.finished_at.isoformat() if run.finished_at else None,
     })
+
+
+# ── 质量门禁检查 (CI/CD) ──────────────────────────────
+
+@router.get("/reports/{report_id}/gate/check", summary="CI/CD 质量门禁检查")
+def ci_check_report_gate(
+    report_id: int,
+    token: ApiToken = Depends(verify_api_token),
+    db: Session = Depends(get_db),
+):
+    """CI/CD pipeline 质量门禁检查（API Token 鉴权）。
+
+    门禁不通过时返回 HTTP 409 Conflict 阻止构建流水线。
+    返回: {"blocked": bool, "details": [...], "gate_status": "pass"|"fail"|"warn"}
+    """
+    from fastapi.responses import JSONResponse
+
+    from app.services.report_service import get_report_gate
+
+    gate = get_report_gate(db, report_id, token.project_id)
+    if not gate:
+        raise APIException(code=404, msg="报告不存在")
+
+    status = gate.get("gate_status", "unknown")
+    details = gate.get("gate_details", [])
+    blocked = status == "fail"
+
+    if blocked:
+        return JSONResponse(
+            status_code=409,
+            content={"blocked": True, "details": details, "gate_status": status},
+        )
+    return {"blocked": False, "details": details, "gate_status": status}

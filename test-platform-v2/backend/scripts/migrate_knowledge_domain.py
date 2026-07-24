@@ -309,7 +309,7 @@ def main(argv: Sequence[str] | None = None) -> int:
               f"{ch['old_domain']}->{ch['new_domain']}")
 
     if args.dry_run:
-        print(f"\n[DRY-RUN] Above changes would be applied. Add --yes to execute.")
+        print("\n[DRY-RUN] Above changes would be applied. Add --yes to execute.")
         return 0
 
     # 3. Confirm

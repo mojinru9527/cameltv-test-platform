@@ -7,10 +7,8 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.core.base_service import batch_user_names, paginate
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
-from app.models.user import User
 from app.services.elk_service import build_kibana_link, extract_trace_id
 
 

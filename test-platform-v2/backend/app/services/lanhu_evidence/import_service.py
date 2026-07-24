@@ -12,7 +12,6 @@ import json
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.models.lanhu_evidence import (
     LanhuEvidenceAsset,
     LanhuEvidenceJob,

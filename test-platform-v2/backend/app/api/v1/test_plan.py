@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, get_current_user, require_permission
+from app.core.deps import CurrentUser, require_permission
 from app.schemas.common import Page, R
 from app.schemas.test_plan import (
     ExecutionCreate,

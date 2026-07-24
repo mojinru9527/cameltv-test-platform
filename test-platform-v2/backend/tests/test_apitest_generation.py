@@ -1,5 +1,4 @@
 """接口用例生成测试 — 正向/边界/异常/幂等场景。"""
-import pytest
 
 
 class TestApiCaseGeneration:

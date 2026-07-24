@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 // Label inline — no shadcn Label component available
@@ -27,6 +28,8 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
   const [loading, setLoading] = useState(false)
   const [preview, setPreview] = useState<ApiImportPreview | null>(null)
   const [importing, setImporting] = useState(false)
+  const [createPlan, setCreatePlan] = useState(false)
+  const [planName, setPlanName] = useState('')
 
   const doPreview = async () => {
     if (!serviceName.trim()) { toast.error('请输入服务名称'); return }
@@ -58,8 +61,11 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
         source_ref: sourceRef,
         spec_content: specContent || undefined,
         generate_cases: true,
+        create_plan: createPlan,
+        plan_name: createPlan ? planName : '',
       })
-      toast.success(`导入完成: ${preview.total_count} 个接口`)
+      const msg = createPlan ? `导入完成: ${preview.total_count} 个接口，已创建测试计划` : `导入完成: ${preview.total_count} 个接口`
+      toast.success(msg)
       onImported()
       reset()
     } catch (e: any) {
@@ -69,7 +75,8 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
 
   const reset = () => {
     setServiceName(''); setSourceRef(''); setSpecContent('')
-    setPreview(null); onClose()
+    setPreview(null); setCreatePlan(false); setPlanName('')
+    onClose()
   }
 
   return (
@@ -130,6 +137,23 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
                   <p className="text-xs text-muted-foreground text-center">... 还有 {preview.endpoints.length - 20} 个接口</p>
                 )}
               </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="create-plan"
+                  checked={createPlan}
+                  onCheckedChange={(v) => setCreatePlan(v === true)}
+                />
+                <label htmlFor="create-plan" className="text-sm cursor-pointer select-none">
+                  同时创建测试计划
+                </label>
+              </div>
+              {createPlan && (
+                <Input
+                  placeholder="计划名称（留空自动生成）"
+                  value={planName}
+                  onChange={e => setPlanName(e.target.value)}
+                />
+              )}
               <Button onClick={doImport} disabled={importing} className="w-full" variant="default">
                 {importing ? <Loader2 className="animate-spin size-4 mr-2" /> : <Upload className="size-4 mr-2" />}
                 确认导入并生成用例

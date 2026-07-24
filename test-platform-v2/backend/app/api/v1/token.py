@@ -1,13 +1,12 @@
 """API Token management (project-level)."""
 from __future__ import annotations
 
-import hashlib
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.deps import CurrentUser, get_db, require_permission, require_project
+from app.core.deps import CurrentUser, get_db, require_permission
 from app.models.api_token import ApiToken
 from app.schemas.common import R
 from app.services.audit_service import write_audit

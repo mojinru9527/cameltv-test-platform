@@ -18,7 +18,6 @@ from pathlib import Path
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal
 
 logger = logging.getLogger("playwright")
 
