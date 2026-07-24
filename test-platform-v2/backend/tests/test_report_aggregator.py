@@ -312,7 +312,7 @@ class TestUiSummaryWithData:
         )
         r2 = UiTestRun(
             job_id=job.id, status="fail",
-            error_message="npx: command not found",
+            error_message="npx not available on PATH",
             started_at=now,
         )
         db_session.add_all([r1, r2])

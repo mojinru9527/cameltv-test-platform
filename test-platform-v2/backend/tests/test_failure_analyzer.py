@@ -277,7 +277,7 @@ class TestAnalyzeUiFailureTimeout:
         assert result["confidence"] == 0.95
 
     def test_timeout_english(self):
-        result = analyze_ui_failure(_ui_run(error_message="Test timed out after 60s"))
+        result = analyze_ui_failure(_ui_run(error_message="Test timeout after 60s"))
         assert result["category"] == "timeout"
         assert result["confidence"] == 0.95
 
@@ -292,7 +292,7 @@ class TestAnalyzeUiFailureSpecMissing:
 class TestAnalyzeUiFailurePlaywrightUnavailable:
     def test_playwright_not_available(self):
         result = analyze_ui_failure(
-            _ui_run(error_message="Playwright 不可用: command not found")
+            _ui_run(error_message="Playwright 不可用: installation failed")
         )
         assert result["category"] == "playwright_unavailable"
         assert result["confidence"] == 0.95
