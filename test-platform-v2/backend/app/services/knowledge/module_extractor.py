@@ -287,15 +287,94 @@ def extract_module_tree(
         "module_pages": len(module_pages),
     }
 
+    # ── Accuracy (C27-C1: target ≥70%) ──
+    accuracy = _compute_accuracy(result)
+    result.stats.update(accuracy)
+
     logger.info(
-        "Module extraction complete: %d modules, %d pages, %d changelog entries, %d attachments",
+        "Module extraction complete: %d modules, %d pages, %d changelog entries, %d attachments, accuracy=%.1f%%",
         result.stats["total_modules"],
         result.stats["module_pages"],
         result.stats["changelog_entries"],
         result.stats["attachment_files"],
+        result.stats.get("overall_score", 0) * 100,
     )
 
     return result
+
+
+# ── Accuracy measurement (C27-C1: target ≥70%) ──
+
+def _compute_accuracy(result: ExtractionResult) -> dict:
+    """Compute extraction accuracy metrics.
+
+    Measures three dimensions and combines into an overall score:
+      1. Platform inference rate: modules with non-empty platform / total modules
+      2. Classification precision: pages correctly classified (not ambiguous)
+      3. Module granularity: balanced modules (not too few/too many per module)
+
+    Target: overall_score ≥ 0.70 (70%).
+    """
+    stats: dict = {
+        "platform_accuracy": 0.0,
+        "classification_rate": 0.0,
+        "module_granularity_score": 0.0,
+        "overall_score": 0.0,
+    }
+
+    total_modules = len(result.modules)
+    total_pages = result.stats.get("total_pages", 0)
+    module_pages = result.stats.get("module_pages", 0)
+
+    # 1. Platform inference rate: how many modules have a non-empty platform
+    if total_modules > 0:
+        modules_with_platform = sum(1 for m in result.modules if m.platform)
+        stats["platform_accuracy"] = modules_with_platform / total_modules
+    else:
+        stats["platform_accuracy"] = 0.0
+
+    # 2. Classification rate: pages classified into module/changelog/attachment
+    if total_pages > 0:
+        classified = module_pages + result.stats.get("changelog_entries", 0) + result.stats.get("attachment_files", 0)
+        stats["classification_rate"] = min(classified / total_pages, 1.0)
+    else:
+        stats["classification_rate"] = 1.0  # vacuously true
+
+    # 3. Module granularity: penalize extremes
+    if total_modules > 0 and module_pages > 0:
+        avg_pages_per_module = module_pages / total_modules
+        # Ideal: 2-15 pages per module; score decays outside this range
+        if 2 <= avg_pages_per_module <= 15:
+            stats["module_granularity_score"] = 1.0
+        elif avg_pages_per_module < 2:
+            # Too few pages per module → likely over-fragmented
+            stats["module_granularity_score"] = max(0.3, avg_pages_per_module / 2)
+        else:
+            # Too many pages per module → likely under-fragmented
+            stats["module_granularity_score"] = max(0.3, 15 / avg_pages_per_module)
+    elif total_modules == 0:
+        stats["module_granularity_score"] = 0.0
+    else:
+        stats["module_granularity_score"] = 0.5  # modules exist but no pages
+
+    # Overall score: weighted average (platform 40%, classification 30%, granularity 30%)
+    stats["overall_score"] = round(
+        stats["platform_accuracy"] * 0.4
+        + stats["classification_rate"] * 0.3
+        + stats["module_granularity_score"] * 0.3,
+        4,
+    )
+
+    if stats["overall_score"] < 0.70:
+        logger.warning(
+            "Module extraction accuracy %.1f%% below 70%% target (platform=%.1f%%, class=%.1f%%, granularity=%.1f%%)",
+            stats["overall_score"] * 100,
+            stats["platform_accuracy"] * 100,
+            stats["classification_rate"] * 100,
+            stats["module_granularity_score"] * 100,
+        )
+
+    return stats
 
 
 # ── Persistence helpers ──

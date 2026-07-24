@@ -9,6 +9,16 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { quickExecute } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchDatasets } from '@/api/dataset'
@@ -107,6 +117,11 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   const [envs, setEnvs] = useState<Environment[]>([])
   const [datasetId, setDatasetId] = useState<number | undefined>()
   const [datasets, setDatasets] = useState<DatasetListItem[]>([])
+  const [showProdConfirm, setShowProdConfirm] = useState(false)
+
+  function isProductionEnv(env: Environment): boolean {
+    return env.is_production === true || env.env_type === 'prod'
+  }
 
   // P2: Multi-format — header table + params table
   const [headerRows, setHeaderRows] = useState<HeaderRow[]>([{ key: 'Content-Type', value: 'application/json' }])
@@ -214,9 +229,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
     return () => window.clearTimeout(timer)
   }, [result])
 
-  const runQuick = async () => {
-    const composed = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
-    if (!composed) { toast.error('请填写接口地址'); return }
+  const doQuickExecute = async (confirmProd: boolean) => {
     setLoading(true)
     setResult(null)
     try {
@@ -233,6 +246,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
           assertions,
           environment_id: envId,
           dataset_id: datasetId,
+          confirm_prod: confirmProd,
         })
         lastResult = res
         if (res?.status === 'error') break
@@ -245,6 +259,19 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
       toast.error(e?.message || '请求失败')
       setResult(e?.response?.data || { status: 'error', status_code: 0, error: e?.message })
     } finally { setLoading(false) }
+  }
+
+  const runQuick = async () => {
+    const composed = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
+    if (!composed) { toast.error('请填写接口地址'); return }
+
+    const selectedEnv = envs.find(e => e.id === envId)
+    if (selectedEnv && isProductionEnv(selectedEnv)) {
+      setShowProdConfirm(true)
+      return
+    }
+
+    await doQuickExecute(false)
   }
 
   // ── Header table helpers ──
@@ -473,6 +500,22 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
       <div data-testid="quick-debug-response">
         <ResponsePanel result={result} loading={loading} />
       </div>
+
+      {/* Production confirmation dialog */}
+      <AlertDialog open={showProdConfirm} onOpenChange={setShowProdConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>生产环境确认</AlertDialogTitle>
+            <AlertDialogDescription>
+              您正在对生产环境执行 API 测试，此操作将发送真实 HTTP 请求到生产服务器。请确认您了解此操作的风险。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => doQuickExecute(true)}>确认执行</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -299,6 +299,7 @@ def delete_test_case(
 class ExecuteApiBody(BaseModel):
     environment_id: int | None = None
     dataset_id: int | None = None
+    confirm_prod: bool = False
 
 @router.post("/{case_id}/execute", response_model=R[dict], summary="执行 API 用例")
 def execute_test_case(
@@ -311,6 +312,7 @@ def execute_test_case(
     P1: 生产环境执行需要额外 apitest:execute_prod 权限。
     """
     env_id = body.environment_id if body else None
+    confirm_prod = body.confirm_prod if body else False
 
     # P1: 生产环境保护
     if env_id:
@@ -318,7 +320,7 @@ def execute_test_case(
         env = db.query(Environment).filter_by(id=env_id, project_id=current.project_id).first()
         if not env:
             return R(code=404, msg="环境不存在或不属于当前项目")
-        if env.env_type == "prod":
+        if env.env_type == "prod" or env.is_production:
             if "apitest:execute_prod" not in current.permissions and "*" not in current.permissions:
                 return R(code=403, msg="生产环境执行需要 apitest:execute_prod 权限")
 
@@ -328,6 +330,7 @@ def execute_test_case(
             project_id=current.project_id or 0,
             environment_id=env_id,
             dataset_id=body.dataset_id if body else None,
+            confirm_prod=confirm_prod,
         )
     except ValueError as e:
         return R(code=1, msg=str(e))

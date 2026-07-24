@@ -681,7 +681,7 @@ def create_task(
     has_execute_prod = current.is_super or "apitest:execute_prod" in current.permissions
     if body.environment_id:
         env = db.get(Environment, body.environment_id)
-        if env and env.env_type == "prod":
+        if env and (env.env_type == "prod" or env.is_production):
             if not has_execute_prod:
                 raise HTTPException(403, "生产环境执行任务需要 apitest:execute_prod 权限")
             if not body.confirm_prod:

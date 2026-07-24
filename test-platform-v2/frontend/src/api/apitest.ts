@@ -31,6 +31,7 @@ export async function quickExecute(request: {
   dataset_id?: number
   service_name?: string
   query_params?: string
+  confirm_prod?: boolean
 }): Promise<ApiExecutionResult | BatchExecutionResult> {
   return api.post('/apitest/api-execute', {
     method: request.method,
@@ -40,6 +41,9 @@ export async function quickExecute(request: {
     assertions: request.assertions || '[]',
     environment_id: request.environment_id ?? null,
     dataset_id: request.dataset_id ?? null,
+    service_name: request.service_name || undefined,
+    query_params: request.query_params || undefined,
+    confirm_prod: request.confirm_prod ?? false,
   })
 }
 

@@ -32,6 +32,9 @@ def get_environment(db: Session, env_id: int, project_id: int) -> dict | None:
 
 
 def create_environment(db: Session, project_id: int, data: dict) -> dict:
+    # Auto-set is_production=True when env_type=="prod" (unless explicitly provided)
+    if data.get("env_type") == "prod" and "is_production" not in data:
+        data["is_production"] = True
     row = Environment(project_id=project_id, **data)
     db.add(row)
     db.commit()
@@ -43,6 +46,9 @@ def update_environment(db: Session, env_id: int, data: dict) -> dict | None:
     row = db.get(Environment, env_id)
     if not row:
         return None
+    # Auto-set is_production=True when env_type changes to "prod"
+    if data.get("env_type") == "prod" and "is_production" not in data:
+        data["is_production"] = True
     for k, v in data.items():
         if v is not None:
             setattr(row, k, v)
@@ -151,6 +157,7 @@ def _env_to_dict(r: Environment) -> dict:
         "env_type": r.env_type,
         "base_url": r.base_url,
         "description": r.description,
+        "is_production": r.is_production,
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "updated_at": r.updated_at.isoformat() if r.updated_at else None,
     }
