@@ -59,7 +59,7 @@ import {
 import { cn } from '@/lib/utils'
 import EmptyState from '@/components/EmptyState'
 import { SkeletonText, SkeletonPage } from '@/components/ui/skeleton'
-import { deletePlan, executeCase, executeAllCases, fetchExecutions, fetchPlan, removeCasesFromPlan, updatePlan } from '@/api/testplan'
+import { autoExecutePlan, deletePlan, executeCase, executeAllCases, fetchExecutions, fetchPlan, removeCasesFromPlan, updatePlan } from '@/api/testplan'
 import AddCasesModal from './AddCasesModal'
 import PlanDrawer from './PlanDrawer'
 
@@ -104,6 +104,7 @@ export default function PlanDetail() {
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
   const [deletePlanOpen, setDeletePlanOpen] = useState(false)
   const [execAllLoading, setExecAllLoading] = useState(false)
+  const [autoExecuting, setAutoExecuting] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -141,6 +142,18 @@ export default function PlanDetail() {
     toast.success('已移除')
     setDeleteTarget(null)
     load()
+  }
+
+  const doAutoExecute = async () => {
+    setAutoExecuting(true)
+    try {
+      const result: any = await autoExecutePlan(planId)
+      toast.success(`批量执行完成: ${result.executed} 条执行, ${result.passed} 通过, ${result.failed} 失败`)
+      load()
+      loadExecutions()
+    } catch (e: any) {
+      toast.error(e?.message || '批量执行失败')
+    } finally { setAutoExecuting(false) }
   }
 
   const doExecute = async () => {
@@ -201,6 +214,15 @@ export default function PlanDetail() {
         </Badge>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="default"
+            onClick={doAutoExecute}
+            disabled={autoExecuting || !plan.cases?.length}
+          >
+            <Play className="size-3.5" data-icon="inline-start" />
+            {autoExecuting ? '执行中...' : '批量执行'}
+          </Button>
           {plan.status === 'draft' && (
             <Button size="sm" onClick={() => doUpdateStatus('active')}>开始执行</Button>
           )}

@@ -98,6 +98,6 @@ export async function executeAllCases(planId: number, environmentId?: number) {
   return api.post(`/test-plans/${planId}/execute-all`, { environment_id: environmentId || null })
 }
 
-export async function autoExecutePlan(planId: number, environmentId?: number) {
-  return api.post(`/test-plans/${planId}/auto-execute`, { environment_id: environmentId || null })
+export async function autoExecutePlan(planId: number) {
+  return api.post(`/test-plans/${planId}/auto-execute`)
 }

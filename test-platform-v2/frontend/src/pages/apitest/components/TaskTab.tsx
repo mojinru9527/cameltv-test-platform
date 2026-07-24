@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { RefreshCw, XCircle, CheckCircle2, Clock, Loader2, Eye } from '@/lib/icons'
+import { RefreshCw, XCircle, CheckCircle2, Clock, Loader2, Eye, ChevronDown, ChevronRight, ClipboardCheck } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -122,23 +122,9 @@ export default function TaskTab() {
               <div className="bg-red-50 rounded p-2"><div className="text-lg font-bold text-red-600">{detail.failed}</div><div className="text-xs text-muted-foreground">失败</div></div>
               <div className="bg-muted rounded p-2"><div className="text-lg font-bold">{detail.skipped}</div><div className="text-xs text-muted-foreground">跳过</div></div>
             </div>
-            <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
               {detail.items.map((item, i) => (
-                <div key={item.id} className="border rounded p-3 text-xs">
-                  <div className="flex items-center gap-2 mb-1">
-                    {item.status === 'passed' ? <CheckCircle2 className="size-3 text-green-600" /> : <XCircle className="size-3 text-red-600" />}
-                    <span className="font-medium">用例 #{item.case_id}</span>
-                    <span className="text-muted-foreground">{item.duration_ms}ms</span>
-                    <Badge className={STATUS_MAP[item.status]?.className || ''}>{STATUS_MAP[item.status]?.label || item.status}</Badge>
-                  </div>
-                  {item.error_message && <p className="text-red-600 mt-1">{item.error_message}</p>}
-                  {item.assertion_results && item.assertion_results !== '[]' && (
-                    <div className="mt-1">
-                      <p className="text-muted-foreground">断言结果:</p>
-                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-20 overflow-auto">{safeFormatJson(item.assertion_results)}</pre>
-                    </div>
-                  )}
-                </div>
+                <SnapshotCard key={item.id} item={item} />
               ))}
             </div>
           </CardContent>
@@ -150,4 +136,111 @@ export default function TaskTab() {
 
 function safeFormatJson(raw: string): string {
   try { return JSON.stringify(JSON.parse(raw), null, 2) } catch { return raw }
+}
+
+function SnapshotCard({ item }: { item: { id: number; case_id: number; status: string; duration_ms: number; error_message: string; assertion_results: string; request_snapshot: string; response_snapshot: string } }) {
+  const [expanded, setExpanded] = useState(false)
+  const [tab, setTab] = useState<'request' | 'response' | 'assertions'>('request')
+
+  const reqSnap = parseSnapshot(item.request_snapshot)
+  const resSnap = parseSnapshot(item.response_snapshot)
+
+  return (
+    <div className="border rounded p-3 text-xs">
+      <div className="flex items-center gap-2 mb-1">
+        <Button size="icon-xs" variant="ghost" onClick={() => setExpanded(!expanded)} aria-label={expanded ? '收起' : '展开'}>
+          {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+        </Button>
+        {item.status === 'passed' ? <CheckCircle2 className="size-3 text-green-600" /> : <XCircle className="size-3 text-red-600" />}
+        <span className="font-medium">用例 #{item.case_id}</span>
+        <span className="text-muted-foreground">{item.duration_ms}ms</span>
+        <Badge className={STATUS_MAP[item.status]?.className || ''}>{STATUS_MAP[item.status]?.label || item.status}</Badge>
+      </div>
+      {item.error_message && <p className="text-red-600 mt-1">{item.error_message}</p>}
+
+      {expanded && (
+        <div className="mt-2 border-t pt-2">
+          <div className="flex items-center gap-1 mb-2">
+            {(['request', 'response', 'assertions'] as const).map(t => (
+              <Button key={t} size="xs" variant={tab === t ? 'default' : 'ghost'} onClick={() => setTab(t)}>
+                {t === 'request' ? '请求' : t === 'response' ? '响应' : '断言'}
+              </Button>
+            ))}
+          </div>
+          {tab === 'request' && (
+            <div className="space-y-1">
+              {reqSnap ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{reqSnap.method || 'GET'}</Badge>
+                    <span className="font-mono text-[10px] truncate max-w-[300px]">{reqSnap.url || reqSnap.resolved_url || '-'}</span>
+                    <Button size="icon-xs" variant="ghost" onClick={() => { navigator.clipboard.writeText(reqSnap.curl || ''); toast.success('curl 已复制') }} title="复制 curl">
+                      <ClipboardCheck className="size-3" />
+                    </Button>
+                  </div>
+                  {reqSnap.headers && Object.keys(reqSnap.headers).length > 0 && (
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-muted-foreground">请求头 ({Object.keys(reqSnap.headers).length})</summary>
+                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-20 overflow-auto">{safeFormatJson(JSON.stringify(reqSnap.headers))}</pre>
+                    </details>
+                  )}
+                  {reqSnap.body && (
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-muted-foreground">请求体</summary>
+                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-32 overflow-auto">{safeFormatJson(reqSnap.body)}</pre>
+                    </details>
+                  )}
+                </>
+              ) : <span className="text-muted-foreground">无请求快照</span>}
+            </div>
+          )}
+          {tab === 'response' && (
+            <div className="space-y-1">
+              {resSnap ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={resSnap.status_code >= 400 ? 'destructive' : 'default'}>{resSnap.status_code || '-'}</Badge>
+                    <span className="text-muted-foreground">{resSnap.body_size_bytes != null ? `${(resSnap.body_size_bytes / 1024).toFixed(1)} KB` : ''}</span>
+                    {resSnap.truncated && <Badge variant="outline">已截断</Badge>}
+                  </div>
+                  {resSnap.headers && Object.keys(resSnap.headers).length > 0 && (
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-muted-foreground">响应头 ({Object.keys(resSnap.headers).length})</summary>
+                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-20 overflow-auto">{safeFormatJson(JSON.stringify(resSnap.headers))}</pre>
+                    </details>
+                  )}
+                  {resSnap.body_preview && (
+                    <details className="mt-1">
+                      <summary className="cursor-pointer text-muted-foreground">响应体预览{resSnap.truncated ? ' (已截断)' : ''}</summary>
+                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-48 overflow-auto">{formatBodyPreview(resSnap.body_preview, resSnap.content_type)}</pre>
+                    </details>
+                  )}
+                </>
+              ) : <span className="text-muted-foreground">无响应快照</span>}
+            </div>
+          )}
+          {tab === 'assertions' && (
+            item.assertion_results && item.assertion_results !== '[]' ? (
+              <div>
+                <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-32 overflow-auto">{safeFormatJson(item.assertion_results)}</pre>
+              </div>
+            ) : <span className="text-muted-foreground">无断言结果</span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function parseSnapshot(raw: string): Record<string, any> | null {
+  if (!raw || raw === '{}' || raw === 'null') return null
+  try { return JSON.parse(raw) } catch { return null }
+}
+
+function formatBodyPreview(body: string, contentType: string): string {
+  if (!body) return '(空)'
+  if (contentType?.includes('json') || body.trim().startsWith('{') || body.trim().startsWith('[')) {
+    try { return JSON.stringify(JSON.parse(body), null, 2) } catch { return body }
+  }
+  return body
 }

@@ -1,26 +1,28 @@
 [tool.ruff]
-# Ruff configuration for CamelTv test-platform-v2 backend
-line-length = 120
 target-version = "py312"
+line-length = 120
+exclude = [
+    "alembic/versions/*",
+    "__pycache__",
+    ".venv",
+    "venv",
+]
 
 [tool.ruff.lint]
-select = ["E", "F", "W"]
-ignore = ["E501"]  # line-too-long — handled by line-length setting
+select = [
+    "E",     # pycodestyle errors
+    "F",     # pyflakes
+    "B",     # flake8-bugbear
+    "UP",    # pyupgrade
+    "RUF",   # ruff-specific rules
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults
+]
 
-[tool.ruff.lint.per-file-ignores]
-# Intentional: lazy imports to break circular dependency chains
-"app/api/v1/defect.py" = ["E402"]
-"app/api/v1/knowledge.py" = ["E402"]
-"app/api/v1/project.py" = ["E402"]
-"app/api/v1/test_case.py" = ["E402", "E712"]
-"app/api/v1/wiki.py" = ["E402", "E702"]
-# SQLAlchemy filter: `column == True` is idiomatic, not a bool comparison bug
-"app/api/v1/open_api.py" = ["E712"]
-"app/api/v1/requirement.py" = ["E712"]
-"app/services/test_case_service.py" = ["E712"]
-"app/services/report_service.py" = ["E712"]
-# Pre-existing wiki service code — semicolon style inherited from upstream
-"app/services/wiki/*" = ["E702"]
-# Lazy imports to break circular dependency chains
-"app/core/base_service.py" = ["E402"]
-"app/services/perf_collector_service.py" = ["E402"]
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

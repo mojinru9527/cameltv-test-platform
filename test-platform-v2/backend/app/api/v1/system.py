@@ -199,3 +199,23 @@ def list_audit_logs(
         "total": total,
         "list": [AuditLogOut.model_validate(r) for r in rows],
     })
+
+
+@router.get("/audit-logs/export", summary="导出审计日志 CSV")
+def export_audit_logs(
+    action: str = Query(""),
+    keyword: str = Query(""),
+    current: CurrentUser = Depends(require_permission("system:audit:list")),
+    db: Session = Depends(get_db),
+):
+    """导出审计日志为 CSV 文件。"""
+    from fastapi.responses import PlainTextResponse
+    csv_content = audit_service.export_audit_csv(
+        db, action=action, keyword=keyword,
+        project_id=current.project_id,
+    )
+    return PlainTextResponse(
+        content=csv_content,
+        media_type="text/csv; charset=utf-8-sig",
+        headers={"Content-Disposition": "attachment; filename=audit-logs.csv"},
+    )
