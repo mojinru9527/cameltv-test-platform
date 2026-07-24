@@ -288,7 +288,6 @@ def test_service_health_check_timeout_handling(monkeypatch):
 
     # 将httpx默认超时降到极小值，加速测试
     import httpx
-    original_client = httpx.Client
 
     class FastTimeoutClient(httpx.Client):
         def __init__(self, *args, **kwargs):

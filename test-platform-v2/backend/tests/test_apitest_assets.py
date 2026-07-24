@@ -1,6 +1,5 @@
 """接口资产模型 + OpenAPI 导入测试。"""
 import pytest
-from sqlalchemy import text as sa_text
 
 
 class TestApiAssetModels:

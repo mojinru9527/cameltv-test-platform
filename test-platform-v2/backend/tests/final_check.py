@@ -1,5 +1,6 @@
 """Final proxy chain verification."""
-import urllib.request, json
+import urllib.request
+import json
 
 PROXY = "http://localhost:5173"
 
@@ -33,7 +34,7 @@ resp = urllib.request.urlopen(req, timeout=5)
 assert resp.status == 200, f"Favicon status: {resp.status}"
 content = resp.read().decode()
 assert content.startswith("<svg"), "Not SVG"
-print(f"   [PASS] Favicon 200 OK, SVG valid")
+print("   [PASS] Favicon 200 OK, SVG valid")
 
 # 5. HTML has favicon link
 print("4. HTML favicon link...")

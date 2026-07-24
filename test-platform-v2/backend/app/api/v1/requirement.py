@@ -559,6 +559,7 @@ async def generate_test_cases(
 class MatchApiRequest(BaseModel):
     integration_reqs: list[dict] = []
     service_id: int | None = None
+    use_embedding: bool = False  # feature flag: 启用 LLM embedding 语义匹配
 
 class ApiMatchItem(BaseModel):
     req_id: str = ""
@@ -568,6 +569,7 @@ class ApiMatchItem(BaseModel):
     path: str = ""
     summary: str = ""
     confidence: float = 0.0
+    match_method: str = ""  # "keyword" | "embedding"
 
 @router.post("/{document_id}/match-api", response_model=R[list[ApiMatchItem]])
 def match_api_endpoints_for_requirement(
@@ -576,7 +578,12 @@ def match_api_endpoints_for_requirement(
     current: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """为需求文档中 integration 类型的功能点匹配已导入的 API 接口。"""
+    """为需求文档中 integration 类型的功能点匹配已导入的 API 接口。
+
+    支持两种匹配策略：
+    - 关键词匹配（默认）: use_embedding=False
+    - LLM embedding 语义相似度: use_embedding=True（需本地 fastembed 模型就绪）
+    """
     if not body.integration_reqs:
         return R.ok([])
     matches = requirement_service.match_api_endpoints(
@@ -584,6 +591,7 @@ def match_api_endpoints_for_requirement(
         integration_reqs=body.integration_reqs,
         project_id=current.project_id or 0,
         service_id=body.service_id,
+        use_embedding=body.use_embedding,
     )
     return R.ok([ApiMatchItem(**m) for m in matches])
 

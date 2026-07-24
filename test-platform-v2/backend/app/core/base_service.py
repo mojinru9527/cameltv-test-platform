@@ -96,7 +96,7 @@ def batch_field_map(
     ids = {i for i in ids if i and i > 0}
     if not ids:
         return {}
-    col_id = getattr(model, "id")
+    col_id = model.id
     col_field = getattr(model, field)
     rows = db.execute(select(col_id, col_field).where(col_id.in_(ids))).all()
     return {row[0]: row[1] for row in rows}

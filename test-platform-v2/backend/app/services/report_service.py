@@ -671,7 +671,7 @@ def export_report_excel(db: Session, report_id: int, project_id: int) -> bytes:
     """将报告导出为 Excel (.xlsx) 文件，返回字节流。"""
     import io
     from openpyxl import Workbook
-    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from openpyxl.styles import Font
 
     report = get_report(db, report_id, project_id)
     if not report:

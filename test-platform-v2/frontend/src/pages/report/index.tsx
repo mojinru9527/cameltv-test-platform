@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { createReport, deleteReport, exportReportUrl, fetchReport, fetchReports, fetchTrends, type TrendsData } from '@/api/report'
+import { fetchTemplates, type ReportTemplate } from '@/api/reportTemplate'
 import { fetchPlans } from '@/api/testplan'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -135,6 +136,7 @@ export default function ReportPage() {
   const [detail, setDetail] = useState<any>(null)
   const [creating, setCreating] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
+  const [templates, setTemplates] = useState<ReportTemplate[]>([])
 
   const {
     register,
@@ -213,8 +215,16 @@ export default function ReportPage() {
     } catch { /* */ }
   }
 
+  const loadTemplates = async () => {
+    try {
+      const r = await fetchTemplates()
+      setTemplates(r.items || [])
+    } catch { /* */ }
+  }
+
   const openCreate = () => {
     loadPlans()
+    loadTemplates()
     reset({ plan_id: undefined as any, name: '', description: '' })
     setCreateOpen(true)
   }
@@ -448,12 +458,22 @@ export default function ReportPage() {
               {errors.name && <span className="text-xs text-destructive">{errors.name.message}</span>}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">模板 ID <span className="text-muted-foreground font-normal">(可选)</span></label>
-              <Input
-                type="number"
-                placeholder="关联的报告模板 ID，留空则使用默认模板"
-                {...register('template_id')}
-              />
+              <label className="text-sm font-medium">报告模板 <span className="text-muted-foreground font-normal">(可选)</span></label>
+              <Select
+                value={watch('template_id') ? String(watch('template_id')) : undefined}
+                onValueChange={(v) => setValue('template_id', Number(v), { shouldValidate: true })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="选择模板（留空使用默认）" />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map((t) => (
+                    <SelectItem key={t.id} value={String(t.id)}>
+                      {t.name} {t.is_default ? '(默认)' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">备注</label>

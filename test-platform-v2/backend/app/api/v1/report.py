@@ -140,6 +140,37 @@ def get_report_gate(
     return R.ok(gate)
 
 
+@router.get("/{report_id}/gate/check", summary="CI/CD 质量门禁检查")
+def check_report_gate(
+    report_id: int,
+    current: CurrentUser = Depends(require_permission("report:detail")),
+    db: Session = Depends(get_db),
+):
+    """CI/CD pipeline 门禁检查端点。门禁不通过时返回 409 Conflict 阻止构建流水线。
+
+    返回格式: {"blocked": bool, "details": [...], "gate_status": "pass"|"fail"|"warn"}
+    - blocked=true → HTTP 409 (阻止 pipeline)
+    - blocked=false → HTTP 200 (放行)
+    """
+    from fastapi.responses import JSONResponse
+
+    gate = report_service.get_report_gate(db, report_id, current.project_id or 0)
+    if not gate:
+        from app.core.exceptions import not_found
+        raise not_found("报告")
+
+    status = gate.get("gate_status", "unknown")
+    details = gate.get("gate_details", [])
+    blocked = status == "fail"
+
+    if blocked:
+        return JSONResponse(
+            status_code=409,
+            content={"blocked": True, "details": details, "gate_status": status},
+        )
+    return {"blocked": False, "details": details, "gate_status": status}
+
+
 @router.delete("/{report_id}", response_model=R[dict])
 def delete_report(
     req: Request,

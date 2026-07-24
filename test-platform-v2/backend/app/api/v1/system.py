@@ -1,6 +1,8 @@
 """系统管理路由 —— 用户 / 角色 / 权限 / 审计 + 动态菜单。"""
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
@@ -208,14 +210,39 @@ def export_audit_logs(
     current: CurrentUser = Depends(require_permission("system:audit:list")),
     db: Session = Depends(get_db),
 ):
-    """导出审计日志为 CSV 文件。"""
-    from fastapi.responses import PlainTextResponse
-    csv_content = audit_service.export_audit_csv(
+    """导出审计日志为 CSV 文件，支持按操作类型和关键词过滤。"""
+    import csv
+    import io
+
+    from fastapi.responses import StreamingResponse
+
+    # 查询全部匹配记录（不分页，上限 10000）
+    rows, total = audit_service.list_audit(
         db, action=action, keyword=keyword,
         project_id=current.project_id,
+        limit=10000, offset=0,
     )
-    return PlainTextResponse(
-        content=csv_content,
-        media_type="text/csv; charset=utf-8-sig",
-        headers={"Content-Disposition": "attachment; filename=audit-logs.csv"},
+
+    output = io.StringIO()
+    output.write('﻿')  # UTF-8 BOM for Excel compatibility
+    writer = csv.writer(output)
+    writer.writerow(["时间", "操作人", "操作", "目标", "详情", "IP"])
+
+    for r in rows:
+        created_at = r.created_at.isoformat() if r.created_at else ""
+        writer.writerow([
+            created_at,
+            r.username or "",
+            r.action or "",
+            r.target or "",
+            r.detail or "",
+            r.ip or "",
+        ])
+
+    output.seek(0)
+    filename = f"audit-logs-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.csv"
+    return StreamingResponse(
+        io.StringIO(output.getvalue()),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

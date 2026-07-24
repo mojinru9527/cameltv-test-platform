@@ -43,7 +43,7 @@
 | C21-P1-2 | 补三个新服务单测：failure_analyzer / report_aggregator / task_worker | P1 | 2026-07-12 |
 | C21-P1-3 | `现状功能PRD.md` 诚实性修复：模块 11/12 详情段同步为真实执行 | P1 | 2026-07-12 |
 | C21-P1-5 | 迁移 `20260710_0017` staging 双向演练 (upgrade/downgrade) | P1 | 2026-07-12 |
-| C21-P2 | task_worker 双队列竞态 / semaphore 并发上限 / SSRF / Wiki 开关 / 计数器 double-count | P2 | 2026-07-12 |
+| C21-P2 | ~~task_worker 双队列竞态 / semaphore 并发上限 / SSRF / Wiki 开关 / 计数器 double-count~~ | P2 | 2026-07-12 |
 | C21-P3 | migration downgrade / playwright path traversal / diff_classifier docstring / VNext-N 编号 | P3 | 2026-07-12 |
 
 ### batch-22 — Slice 1 Playground
