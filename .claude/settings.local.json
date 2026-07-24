@@ -1,4 +1,10 @@
 {
+  
+  "env": {
+    "API_TIMEOUT_MS": "1800000",
+    "BASH_DEFAULT_TIMEOUT_MS": "1500000"
+  },
+
   "permissions": {
     "allow": [
       "PowerShell(npx skills add https://github.com/obra/superpowers --skill using-superpowers -g -y)",

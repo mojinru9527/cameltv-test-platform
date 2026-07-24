@@ -661,3 +661,78 @@ def delete_report(db: Session, report_id: int, project_id: int) -> bool:
     db.delete(r)
     db.flush()
     return True
+
+
+# ═══════════════════════════════════════════════════════
+# A5: 报告导出 (batch-34)
+# ═══════════════════════════════════════════════════════
+
+def export_report_excel(db: Session, report_id: int, project_id: int) -> bytes:
+    """将报告导出为 Excel (.xlsx) 文件，返回字节流。"""
+    import io
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+
+    report = get_report(db, report_id, project_id)
+    if not report:
+        raise ValueError("报告不存在")
+
+    wb = Workbook()
+
+    # ── Sheet 1: 概览 ──
+    ws = wb.active
+    ws.title = "概览"
+    content = json.loads(report.get("content", "{}")) if isinstance(report.get("content"), str) else report.get("content", {})
+    stats = content.get("stats", {})
+    plan_name = content.get("plan_name", "")
+
+    header_font = Font(bold=True, size=14)
+    ws.cell(row=1, column=1, value="测试报告").font = header_font
+    ws.cell(row=2, column=1, value=f"报告编号: {report.get('report_id', '')}")
+    ws.cell(row=3, column=1, value=f"测试计划: {plan_name}")
+    ws.cell(row=4, column=1, value=f"生成时间: {report.get('created_at', '')}")
+
+    ws.cell(row=6, column=1, value="执行统计").font = Font(bold=True, size=12)
+    stat_headers = ["指标", "数量"]
+    for col, h in enumerate(stat_headers, 1):
+        ws.cell(row=7, column=col, value=h).font = Font(bold=True)
+    stat_rows = [
+        ("总用例数", stats.get("total", 0)),
+        ("通过", stats.get("pass_", 0)),
+        ("失败", stats.get("fail", 0)),
+        ("跳过", stats.get("skip", 0)),
+        ("阻塞", stats.get("block", 0)),
+        ("待执行", stats.get("pending", 0)),
+    ]
+    for i, (label, value) in enumerate(stat_rows):
+        ws.cell(row=8 + i, column=1, value=label)
+        ws.cell(row=8 + i, column=2, value=value)
+
+    # ── Sheet 2: 用例执行明细 ──
+    ws2 = wb.create_sheet("用例明细")
+    case_headers = ["用例编号", "标题", "域", "模块", "优先级", "类型", "执行状态", "执行人", "执行时间"]
+    for col, h in enumerate(case_headers, 1):
+        ws2.cell(row=1, column=col, value=h).font = Font(bold=True)
+
+    case_results = content.get("case_results", [])
+    for i, case in enumerate(case_results):
+        ws2.cell(row=2 + i, column=1, value=case.get("case_id", ""))
+        ws2.cell(row=2 + i, column=2, value=case.get("title", ""))
+        ws2.cell(row=2 + i, column=3, value=case.get("domain", ""))
+        ws2.cell(row=2 + i, column=4, value=case.get("module", ""))
+        ws2.cell(row=2 + i, column=5, value=case.get("priority", ""))
+        ws2.cell(row=2 + i, column=6, value=case.get("case_type", ""))
+        ws2.cell(row=2 + i, column=7, value=case.get("status", ""))
+        ws2.cell(row=2 + i, column=8, value=case.get("executor_name", ""))
+        ws2.cell(row=2 + i, column=9, value=case.get("executed_at", ""))
+
+    # 调整列宽
+    for ws_sheet in [ws, ws2]:
+        for col_letter in ["A", "B", "C", "D", "E", "F", "G", "H", "I"]:
+            if col_letter in str(ws_sheet.column_dimensions):
+                ws_sheet.column_dimensions[col_letter].width = 18
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { confirmExtraction, generateTestCases, importCases } from '@/api/requirement'
+import { confirmExtraction, generateTestCases, importCases, matchApiEndpoints } from '@/api/requirement'
 import type {
-  AIGenerateResult, AIGeneratedCase, FeatureExtractionResult, RequirementAnalysis, TestModule,
+  AIGenerateResult, AIGeneratedCase, FeatureExtractionResult, RequirementAnalysis, TestModule, ApiMatchItem,
 } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,7 +22,7 @@ import {
 import {
   Search, CheckCircle2, Info, Import, Loader2, FileText, Edit,
   Layers, ChevronDown, ChevronRight, AlertTriangle, RefreshCw,
-  Monitor, Smartphone, Globe,
+  Monitor, Smartphone, Globe, Server, Zap, Link2,
 } from '@/lib/icons'
 
 interface Props {
@@ -333,6 +333,11 @@ export default function AiResultModal({
   const [submitting, setSubmitting] = useState(false)
   const [activeTab, setActiveTab] = useState('func')
 
+  // ── API matching & regression state (batch-34) ──
+  const [apiMatches, setApiMatches] = useState<ApiMatchItem[]>([])
+  const [loadingMatches, setLoadingMatches] = useState(false)
+  const [selectedApiKeys, setSelectedApiKeys] = useState<number[]>([])
+
   // Initialize extraction state when extractionResult changes
   useEffect(() => {
     if (extractionResult?.modules) {
@@ -345,6 +350,20 @@ export default function AiResultModal({
   }, [extractionResult])
 
   const funcCases = result?.functional_cases || []
+  const apiCases = result?.api_cases || []
+
+  // ── Fetch API matches when modal opens with result ──
+  useEffect(() => {
+    if (open && documentId && apiCases.length > 0) {
+      setLoadingMatches(true)
+      matchApiEndpoints(documentId)
+        .then((matches) => setApiMatches(matches || []))
+        .catch(() => setApiMatches([]))
+        .finally(() => setLoadingMatches(false))
+    } else {
+      setApiMatches([])
+    }
+  }, [open, documentId, apiCases.length])
   const isViewMode = mode === 'view'
   const isExtractMode = mode === 'extract'
   const analysis = result?.requirement_analysis
@@ -374,6 +393,7 @@ export default function AiResultModal({
   useEffect(() => {
     setEditedCases(new Map())
     setEditingIndex(null)
+    setSelectedApiKeys([])
   }, [result])
 
   if (!result && !hasExtraction) return null
@@ -420,6 +440,7 @@ export default function AiResultModal({
 
   const handleClose = () => {
     setSelectedFuncKeys([])
+    setSelectedApiKeys([])
     setEditedCases(new Map())
     setEditingIndex(null)
     onClose()
@@ -640,6 +661,23 @@ export default function AiResultModal({
                 <TabsTrigger value="func" className="gap-1.5">
                   <CheckCircle2 className="size-3.5 text-blue-600" />
                   功能用例 ({funcCases.length})
+                </TabsTrigger>
+              )}
+              {apiCases.length > 0 && (
+                <TabsTrigger value="api" className="gap-1.5">
+                  <Server className="size-3.5 text-green-600" />
+                  接口用例 ({apiCases.length})
+                  {apiMatches.length > 0 && (
+                    <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 text-[10px] leading-[16px] ml-1">
+                      +{apiMatches.length} 匹配
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              )}
+              {hasExtraction && extractionModules.some((m) => m.function_points?.some((fp) => fp.type === 'integration')) && (
+                <TabsTrigger value="regression" className="gap-1.5">
+                  <Zap className="size-3.5 text-amber-600" />
+                  UI回归建议
                 </TabsTrigger>
               )}
             </TabsList>
@@ -894,6 +932,228 @@ export default function AiResultModal({
                     {importing ? <Loader2 className="size-3.5 animate-spin" /> : <Import className="size-3.5" />}
                     导入功能用例 ({selectedFuncKeys.length})
                   </Button>
+                </div>
+              </TabsContent>
+            )}
+            {/* ── Tab: 接口用例 ── */}
+            {apiCases.length > 0 && (
+              <TabsContent value="api" className="mt-0">
+                <div className="max-h-[55vh] overflow-auto space-y-3 pr-1">
+                  {/* API Matches Banner */}
+                  {apiMatches.length > 0 && (
+                    <Alert className="border-green-200 bg-green-50">
+                      <Link2 className="size-4 text-green-600" />
+                      <AlertTitle className="text-green-800 text-sm">已匹配 {apiMatches.length} 个 API 端点</AlertTitle>
+                      <AlertDescription className="text-green-700 text-xs">
+                        {apiMatches.slice(0, 5).map((m) => (
+                          <Badge key={m.endpoint_id} variant="outline" className="mr-1 mb-1 border-green-200 bg-white text-green-700 text-[10px]">
+                            {m.method} {m.path}
+                          </Badge>
+                        ))}
+                        {apiMatches.length > 5 && <span className="text-muted-foreground">+{apiMatches.length - 5} 更多</span>}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {loadingMatches && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                      <Loader2 className="size-3.5 animate-spin" />
+                      正在匹配 API 端点...
+                    </div>
+                  )}
+
+                  {/* API Cases Table */}
+                  <div className="border rounded-lg">
+                    <Table className="min-w-[900px]">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10">
+                            <Checkbox
+                              checked={selectedApiKeys.length === apiCases.length && apiCases.length > 0}
+                              onCheckedChange={() => {
+                                if (selectedApiKeys.length === apiCases.length) {
+                                  setSelectedApiKeys([])
+                                } else {
+                                  setSelectedApiKeys(apiCases.map((c) => c.index))
+                                }
+                              }}
+                            />
+                          </TableHead>
+                          <TableHead className="w-[80px]">方法</TableHead>
+                          <TableHead className="w-[210px]">接口路径/用例标题</TableHead>
+                          <TableHead className="w-[80px] text-center">优先级</TableHead>
+                          <TableHead className="w-[110px]">模块</TableHead>
+                          <TableHead className="w-[150px]">请求/前置条件</TableHead>
+                          <TableHead className="w-[240px]">预期结果</TableHead>
+                          <TableHead className="w-[60px] text-center">匹配</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {apiCases.map((c) => {
+                          const display = getDisplayCase(c)
+                          const matchedEndpoint = apiMatches.find(
+                            (m) => m.endpoint_id && display.api_endpoint && m.path === display.api_endpoint
+                          )
+                          return (
+                            <TableRow key={c.index}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedApiKeys.includes(c.index)}
+                                  onCheckedChange={() => {
+                                    setSelectedApiKeys((prev) =>
+                                      prev.includes(c.index) ? prev.filter((k) => k !== c.index) : [...prev, c.index]
+                                    )
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant="outline"
+                                  className={`text-[10px] font-mono ${
+                                    display.api_method === 'GET' ? 'border-blue-200 bg-blue-50 text-blue-700' :
+                                    display.api_method === 'POST' ? 'border-green-200 bg-green-50 text-green-700' :
+                                    display.api_method === 'PUT' ? 'border-amber-200 bg-amber-50 text-amber-700' :
+                                    display.api_method === 'DELETE' ? 'border-red-200 bg-red-50 text-red-700' :
+                                    'border-gray-200 bg-gray-50 text-gray-600'
+                                  }`}
+                                >
+                                  {display.api_method || 'GET'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="font-medium align-top whitespace-normal">
+                                <div className="break-words max-w-[200px]">
+                                  {display.api_endpoint ? (
+                                    <span className="font-mono text-xs text-muted-foreground">{display.api_endpoint}</span>
+                                  ) : null}
+                                  <div className="text-sm mt-0.5">{display.title}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant="outline" className={PRIORITY_CLASSES[display.priority] || 'border-gray-200 bg-gray-50 text-gray-500'}>
+                                  {display.priority}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="break-words max-w-[100px] text-xs align-top whitespace-normal">{display.module || '-'}</TableCell>
+                              <TableCell className="break-words max-w-[140px] text-xs align-top whitespace-normal">{display.preconditions || '-'}</TableCell>
+                              <TableCell className="break-words max-w-[230px] text-xs align-top whitespace-normal">{display.expected_result || '-'}</TableCell>
+                              <TableCell className="text-center">
+                                {matchedEndpoint ? (
+                                  <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 text-[10px]" title={`${matchedEndpoint.method} ${matchedEndpoint.path} (${Math.round(matchedEndpoint.confidence * 100)}%)`}>
+                                    <Link2 className="size-3" />
+                                  </Badge>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">-</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      已选 {selectedApiKeys.length}/{apiCases.length} 条接口用例
+                    </span>
+                    <Button
+                      size="sm"
+                      onClick={() => doImport(selectedApiKeys)}
+                      disabled={importing || selectedApiKeys.length === 0}
+                    >
+                      {importing ? <Loader2 className="size-3.5 animate-spin" /> : <Import className="size-3.5" />}
+                      导入接口用例 ({selectedApiKeys.length})
+                    </Button>
+                  </div>
+                </div>
+              </TabsContent>
+            )}
+
+            {/* ── Tab: UI回归建议 ── */}
+            {hasExtraction && extractionModules.some((m) => m.function_points?.some((fp) => fp.type === 'integration')) && (
+              <TabsContent value="regression" className="mt-0">
+                <div className="max-h-[55vh] overflow-auto space-y-3 pr-1">
+                  <Alert className="border-amber-200 bg-amber-50">
+                    <Zap className="size-4 text-amber-600" />
+                    <AlertTitle className="text-amber-800 text-sm">UI 回归测试建议</AlertTitle>
+                    <AlertDescription className="text-amber-700 text-xs">
+                      基于需求的功能拆分结果，以下模块涉及集成/接口类功能点，建议在对应 release-bundle 发版时触发 UI 回归测试。
+                    </AlertDescription>
+                  </Alert>
+
+                  {extractionModules
+                    .filter((mod) => mod.function_points?.some((fp) => fp.type === 'integration'))
+                    .map((mod) => {
+                      const integrationFps = mod.function_points?.filter((fp) => fp.type === 'integration') || []
+                      const otherFps = mod.function_points?.filter((fp) => fp.type !== 'integration') || []
+                      return (
+                        <Card key={mod.id} size="sm" className="border-amber-200/60">
+                          <CardContent className="pt-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant="outline" className="font-mono text-xs">{mod.id}</Badge>
+                              <span className="font-medium text-sm">{mod.name}</span>
+                              <Badge variant="secondary" className="text-xs border-amber-200 bg-amber-50 text-amber-700">
+                                {integrationFps.length} 个集成功能点
+                              </Badge>
+                            </div>
+
+                            {/* Integration function points */}
+                            <div className="space-y-2 mb-3">
+                              <p className="text-xs font-medium text-muted-foreground">🔌 集成功能点（建议回归）:</p>
+                              {integrationFps.map((fp) => (
+                                <div key={fp.id} className="flex items-start gap-2 border rounded p-2 bg-amber-50/50">
+                                  <Badge variant="outline" className="font-mono text-[10px] shrink-0">{fp.id}</Badge>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium">{fp.title}</p>
+                                    <p className="text-xs text-muted-foreground">{fp.description}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <ClientScopeBadges clients={fp.client_scope} />
+                                      <span className="text-[10px] text-muted-foreground">
+                                        建议: Playwright UI 脚本 + API 接口回归
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Related function points */}
+                            {otherFps.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-1">📋 关联功能点:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {otherFps.map((fp) => (
+                                    <Badge key={fp.id} variant="outline" className="text-[10px]">
+                                      {fp.id} {fp.title}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+
+                  {/* Regression Summary */}
+                  <Card size="sm" className="border-blue-200 bg-blue-50/50">
+                    <CardContent className="pt-3">
+                      <p className="text-sm font-medium text-blue-800 mb-2">📊 回归测试清单</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+                        <div className="flex items-center gap-1">
+                          <Monitor className="size-3" /> 建议 UI 自动化回归脚本
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Server className="size-3" /> 建议 API 接口回归用例
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Link2 className="size-3" /> 关联 release-bundle 版本差异
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Zap className="size-3" /> 自动触发回归测试执行
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
             )}

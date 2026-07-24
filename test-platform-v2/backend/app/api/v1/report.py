@@ -194,6 +194,18 @@ def export_report(
         return StreamingResponse(output, media_type="text/csv",
                                  headers={"Content-Disposition": f'attachment; filename="{filename}"'})
 
+    elif fmt == "excel":
+        try:
+            xlsx_bytes = report_service.export_report_excel(db, report_id, current.project_id or 0)
+            filename = f"{r.get('report_id', 'report')}.xlsx"
+            return StreamingResponse(
+                BytesIO(xlsx_bytes),
+                media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+            )
+        except ValueError as e:
+            return R(code=1, msg=str(e))
+
     elif fmt == "pdf":
         from fpdf import FPDF
 

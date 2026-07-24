@@ -79,3 +79,39 @@ export async function confirmVersionDiff(
 ): Promise<VersionDiffConfirmResult> {
   return api.post(`/release-bundles/${id}/diff/confirm`, body || {})
 }
+
+// ── Regression scope & trigger (batch-34) ──
+
+export interface RegressionScopeResult {
+  bundle_id: number
+  bundle_name: string
+  client_version: string
+  changed_modules: string[]
+  regression_summary: Array<{
+    module: string
+    total: number
+    functional: number
+    api: number
+    automation: number
+    coverage_rate: number
+  }>
+  total_regression_cases: number
+}
+
+export async function fetchRegressionScope(bundleId: number): Promise<RegressionScopeResult> {
+  return api.get(`/release-bundles/${bundleId}/regression-scope`)
+}
+
+export interface TriggerRegressionResult {
+  bundle_id: number
+  bundle_name: string
+  client_version: string
+  matched_modules: string[]
+  matched_scripts: number
+  triggered: number
+  jobs: Array<{ job_id: number; module: string; spec: string }>
+}
+
+export async function triggerRegression(bundleId: number): Promise<TriggerRegressionResult> {
+  return api.post(`/release-bundles/${bundleId}/trigger-regression`)
+}

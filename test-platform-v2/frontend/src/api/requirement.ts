@@ -1,6 +1,7 @@
 import api from './client'
 import type {
   AIGenerateResult,
+  ApiMatchItem,
   FeatureExtractionResult,
   ExtractionConfirmRequest,
   RequirementDocument,
@@ -102,3 +103,9 @@ export async function reviewCase(
 }
 
 export { importCases as reviewImportCases }
+
+// ── API endpoint matching (batch-34) ──
+
+export async function matchApiEndpoints(documentId: number): Promise<ApiMatchItem[]> {
+  return api.post(`/requirements/${documentId}/match-api`)
+}

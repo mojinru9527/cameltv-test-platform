@@ -323,3 +323,73 @@ def get_plan_stats(
     if not row:
         return R(code=404, msg="计划不存在")
     return R.ok(PlanStats(**row.get("stats", {})))
+
+
+# ═══════════════════════════════════════════════════════
+# 批量操作
+# ═══════════════════════════════════════════════════════
+
+class BatchExecuteBody(BaseModel):
+    pcase_ids: list[int] = []
+    status: str = "pass"  # pass/fail/skip/block
+    actual_result: str = ""
+    notes: str = ""
+
+@router.post("/{plan_id}/batch-execute", response_model=R[dict], summary="批量执行计划中的用例")
+def batch_execute_cases(
+    plan_id: int,
+    body: BatchExecuteBody,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:execute")),
+    db: Session = Depends(get_db),
+):
+    """批量执行（更新状态）计划中选中的用例，适用于手动测试场景。"""
+    if not body.pcase_ids:
+        return R(code=1, msg="pcase_ids 不能为空")
+    executed = 0
+    errors: list[str] = []
+    for pcase_id in body.pcase_ids:
+        try:
+            test_plan_service.execute_case(
+                db,
+                plan_id=plan_id,
+                pcase_id=pcase_id,
+                executor_id=current.user.id,
+                status=body.status,
+                actual_result=body.actual_result,
+                notes=body.notes,
+                project_id=current.project_id or 0,
+            )
+            executed += 1
+        except Exception as e:
+            errors.append(f"pcase #{pcase_id}: {e}")
+    _audit(req, current, db, "plan:batch_execute", f"plan #{plan_id}",
+           f"executed={executed}, errors={len(errors)}")
+    return R.ok({"executed": executed, "errors": errors})
+
+
+class BatchAssignBody(BaseModel):
+    pcase_ids: list[int] = []
+    assignee_id: int = 0
+
+@router.put("/{plan_id}/cases/assign", response_model=R[dict], summary="批量指派用例")
+def batch_assign_cases(
+    plan_id: int,
+    body: BatchAssignBody,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:update")),
+    db: Session = Depends(get_db),
+):
+    """批量指派计划中的用例给执行人。"""
+    if not body.pcase_ids:
+        return R(code=1, msg="pcase_ids 不能为空")
+    count = test_plan_service.batch_assign(
+        db,
+        plan_id=plan_id,
+        pcase_ids=body.pcase_ids,
+        assignee_id=body.assignee_id,
+        project_id=current.project_id or 0,
+    )
+    _audit(req, current, db, "plan:batch_assign", f"plan #{plan_id}",
+           f"assigned {count} cases to user #{body.assignee_id}")
+    return R.ok({"assigned": count})

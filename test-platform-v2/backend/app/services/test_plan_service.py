@@ -358,6 +358,30 @@ def _calc_stats(db: Session, plan_id: int) -> dict:
 # API 用例自动执行
 # ═══════════════════════════════════════════════════════
 
+def batch_assign(
+    db: Session,
+    plan_id: int,
+    *,
+    pcase_ids: list[int],
+    assignee_id: int,
+    project_id: int = 0,
+) -> int:
+    """批量指派计划中的用例给执行人。返回成功指派的条数。"""
+    from sqlalchemy import update
+
+    result = db.execute(
+        update(TestPlanCase)
+        .where(
+            TestPlanCase.plan_id == plan_id,
+            TestPlanCase.id.in_(pcase_ids),
+            TestPlanCase.plan.has(TestPlan.project_id == project_id),
+        )
+        .values(executor_id=assignee_id)
+    )
+    db.commit()
+    return result.rowcount
+
+
 def auto_execute_api_cases(
     db: Session,
     plan_id: int,
