@@ -6,12 +6,26 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { fetchTestCases } from '@/api/testcase'
 import { executeApiCase, createApiExecutionTask } from '@/api/apitest'
+import { fetchEnvironments } from '@/api/environment'
 import { useAuthStore } from '@/stores/auth'
 import { ResponsePanel } from './DebugTab'
 import { groupApiCases } from './apiCaseGroups'
-import type { ApiExecutionResult, BatchExecutionResult, ApiAssertionResult } from '@/types'
+import type { ApiExecutionResult, BatchExecutionResult, ApiAssertionResult, Environment } from '@/types'
 
 const METHOD_COLORS: Record<string, string> = {
   GET: 'bg-blue-100 text-blue-700', POST: 'bg-green-100 text-green-700',
@@ -31,6 +45,13 @@ export default function ApiCaseTab() {
   const [loading, setLoading] = useState(false)
   const [executingCase, setExecutingCase] = useState<number | null>(null)
   const [responseModalOpen, setResponseModalOpen] = useState(false)
+  const [envs, setEnvs] = useState<Environment[]>([])
+  const [envId, setEnvId] = useState<number | undefined>()
+  const [showProdConfirm, setShowProdConfirm] = useState(false)
+
+  function isProductionEnv(env: Environment): boolean {
+    return env.is_production === true || env.env_type === 'prod'
+  }
 
   const loadCases = useCallback(async () => {
     try {
@@ -40,6 +61,10 @@ export default function ApiCaseTab() {
   }, [])
 
   useEffect(() => { loadCases() }, [loadCases])
+
+  useEffect(() => {
+    fetchEnvironments().then(setEnvs).catch(() => {})
+  }, [])
 
   const toggleSelect = (id: number) => {
     setSelected(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
@@ -98,7 +123,7 @@ export default function ApiCaseTab() {
     finally { setExecutingCase(null); setLoading(false) }
   }
 
-  const runBatch = async () => {
+  const doBatchExecute = async (confirmProd: boolean) => {
     if (!projectId) { toast.error('未选择项目'); return }
     if (selected.size === 0) { toast.error('请至少选择一条用例'); return }
     setLoading(true)
@@ -106,11 +131,26 @@ export default function ApiCaseTab() {
       const task = await createApiExecutionTask({
         name: `批量执行 ${new Date().toLocaleString('zh-CN')}`,
         case_ids: Array.from(selected),
+        environment_id: envId,
+        confirm_prod: confirmProd,
       })
       toast.success(`批量任务已创建: ${task.task_id}，共 ${task.total} 条用例`)
       setTimeout(() => loadCases(), 1000)
     } catch (e: any) { toast.error(e?.message || '创建任务失败') }
     finally { setLoading(false) }
+  }
+
+  const runBatch = async () => {
+    if (!projectId) { toast.error('未选择项目'); return }
+    if (selected.size === 0) { toast.error('请至少选择一条用例'); return }
+
+    const selectedEnv = envs.find(e => e.id === envId)
+    if (selectedEnv && isProductionEnv(selectedEnv)) {
+      setShowProdConfirm(true)
+      return
+    }
+
+    await doBatchExecute(false)
   }
 
   const groups = groupApiCases(apiCases)
@@ -128,6 +168,17 @@ export default function ApiCaseTab() {
             {loading ? <Loader2 className="animate-spin size-4" /> : <Play className="size-4" />}
             批量执行 ({selected.size})
           </Button>
+          {envs.length > 0 && (
+            <Select value={envId?.toString() || '_none'} onValueChange={(v) => setEnvId(v === '_none' ? undefined : Number(v))}>
+              <SelectTrigger className="w-[180px] h-8 text-xs"><SelectValue placeholder="不使用环境" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">不使用环境</SelectItem>
+                {envs.map((e) => (
+                  <SelectItem key={e.id} value={e.id.toString()}>{e.name} ({e.env_type})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         <span className="text-xs text-muted-foreground">{apiCases.length} 条</span>
       </div>
@@ -220,6 +271,22 @@ export default function ApiCaseTab() {
           <ResponsePanel result={result} loading={false} />
         </DialogContent>
       </Dialog>
+
+      {/* Production confirmation dialog */}
+      <AlertDialog open={showProdConfirm} onOpenChange={setShowProdConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>生产环境确认</AlertDialogTitle>
+            <AlertDialogDescription>
+              您正在对生产环境执行 API 测试，此操作将发送真实 HTTP 请求到生产服务器。请确认您了解此操作的风险。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={() => doBatchExecute(true)}>确认执行</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
