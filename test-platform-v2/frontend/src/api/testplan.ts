@@ -91,3 +91,7 @@ export async function executeCase(planId: number, pcaseId: number, body: { statu
 export async function fetchExecutions(planId: number, pcaseId?: number) {
   return api.get(`/test-plans/${planId}/executions`, { params: { pcase_id: pcaseId || 0 } })
 }
+
+export async function autoExecutePlan(planId: number) {
+  return api.post(`/test-plans/${planId}/auto-execute`)
+}

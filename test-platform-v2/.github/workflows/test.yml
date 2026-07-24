@@ -46,7 +46,7 @@ jobs:
           cache-dependency-path: test-platform-v2/frontend/package-lock.json
       - run: npm ci
       - run: npx tsc --noEmit
-      - run: npm run test -- --run 2>/dev/null || echo "⚠️ vitest not fully configured yet"
+      - run: npx vitest run --reporter=verbose
 
   lighthouse-a11y:
     name: Lighthouse Accessibility Audit

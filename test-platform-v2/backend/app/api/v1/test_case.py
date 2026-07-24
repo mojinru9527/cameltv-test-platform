@@ -166,6 +166,7 @@ def create_test_case(
     data = body.model_dump()
     data["project_id"] = current.project_id or 0
     row = test_case_service.create_case(db, data)
+    db.commit()
     _audit(req, current, db, "case:create", f"#{row['id']} {row['title']}")
     if row.get("case_type") == "api":
         background_tasks.add_task(
