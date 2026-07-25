@@ -91,6 +91,11 @@ def _require_wiki_diff_enabled() -> None:
         raise APIException(code=503, msg="知识差异对比未启用（wiki_diff_enabled=False）", http_status=503)
 
 
+def _require_lanhu_mcp_enabled() -> None:
+    if not settings.lanhu_mcp_enabled:
+        raise APIException(code=503, msg="蓝湖 MCP 提取未启用（lanhu_mcp_enabled=False）", http_status=503)
+
+
 def _require_external_llm_wiki_enabled() -> None:
     if not settings.external_llm_wiki_enabled:
         raise APIException(code=503, msg="外部 LLM-Wiki 连接器未启用（external_llm_wiki_enabled=False）", http_status=503)
@@ -137,6 +142,7 @@ async def import_lanhu(
     db: Session = Depends(get_db),
 ):
     _require_wiki_enabled()
+    _require_lanhu_mcp_enabled()
     raise APIException(
         code=409,
         msg="蓝湖链接必须先通过证据包质量门禁，再导入需求/RAG/Wiki",

@@ -156,6 +156,10 @@ class WikiDiffItemOut(BaseModel):
     title: str
     left_value: str = ""
     right_value: str = ""
+    left_ref: str = ""
+    right_ref: str = ""
+    left_scope: str = ""
+    right_scope: str = ""
     evidence_json: str = "[]"
     suggestion: str = ""
     review_status: str = "pending"
@@ -196,6 +200,48 @@ class WikiDiffCreateArtifactRequest(BaseModel):
 class WikiDiffCreateArtifactResult(BaseModel):
     artifact_id: int
     artifact_type: str
+
+
+# ══════════════════════════════════════════════
+# Wiki Review 审查记录（VNext-6）
+# ══════════════════════════════════════════════
+
+class WikiReviewItemOut(BaseModel):
+    id: int
+    task_id: int
+    item_id: int
+    project_id: int
+    reviewer: str = ""
+    decision: str = "pending"
+    reason: str = ""
+    created_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class WikiReviewItemCreateRequest(BaseModel):
+    item_id: int
+    decision: str = "accepted"
+    reason: str = ""
+
+
+class WikiReviewBatchRequest(BaseModel):
+    items: list[WikiReviewItemCreateRequest]
+
+
+class WikiReviewContradictionOut(BaseModel):
+    id: int
+    task_id: int
+    item_a_id: int
+    item_b_id: int
+    project_id: int
+    description: str = ""
+    resolution: str = ""
+    resolved_by: str = ""
+    created_at: datetime | None = None
+    resolved_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
 
 
 # ══════════════════════════════════════════════

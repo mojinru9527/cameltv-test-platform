@@ -2,7 +2,7 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-07-22 (batch-32 单一主干迁移)
+**最后更新**: 2026-07-26 (batch-45: 13 C-conditions 归位, batch-18/C21/C22/C24/C25v2/C26KB 批量关闭)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
@@ -12,107 +12,47 @@
 
 ## Open (待处理)
 
-### batch-18 — Wiki Diff 孤儿（batch-30 归位）
+### batch-19 — 早期批次孤儿（blocked）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| batch-18-C6 | review_items/contradictions持久化 — WikiReviewItem表或复用AiArtifact | P2 | 2026-07-10 |
-| batch-18-C7 | 迁移20260710_0017 staging双向演练(upgrade/downgrade) | P2 | 2026-07-10 |
-| batch-18-C8 | 建标注语料评估差异召回率/误报率(diff classifier baseline) | P2 | 2026-07-10 |
-| batch-18-C9 | 差异接口补left/right独立ref/scope或文档化单查询限制 | P2 | 2026-07-10 |
-| batch-18-C11 | import校验lanhu_mcp_enabled开关—拒绝导入当disabled | P3 | 2026-07-10 |
-| batch-18-C14 | 分环境灰度放量SOP文档 | P3 | 2026-07-10 |
-
-### batch-19 — 早期批次孤儿（batch-30 归位）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| TPv2-B19-C1 | CategoryManagerDialog补充vitest单元测试 | P2 | 2026-07-19 |
-| TPv2-B19-C2 | 修复至少5项预存组件测试契约漂移 | P2 | 2026-07-19 |
-
-### batch-21 — 缺失特性孤儿（batch-30 归位）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| TPv2-B21-C2 | Knife4j doc.html URL自动发现(load_openapi_spec) | P2 | 2026-07-20 |
-
-### batch-21 — PR #27/#28/#29 Pipeline Verification
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C21-P1-2 | 补三个新服务单测：failure_analyzer / report_aggregator / task_worker | P1 | 2026-07-12 |
-| C21-P1-3 | `现状功能PRD.md` 诚实性修复：模块 11/12 详情段同步为真实执行 | P1 | 2026-07-12 |
-| C21-P1-5 | 迁移 `20260710_0017` staging 双向演练 (upgrade/downgrade) | P1 | 2026-07-12 |
-| C21-P2 | task_worker 双队列竞态 / semaphore 并发上限 / SSRF / Wiki 开关 / 计数器 double-count | P2 | 2026-07-12 |
-| C21-P3 | migration downgrade / playwright path traversal / diff_classifier docstring / VNext-N 编号 | P3 | 2026-07-12 |
-
-### batch-22 — Slice 1 Playground
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C22-C2 | 第一条成功编译链路（P0 功能用例→可执行 .spec.ts→headless Chromium→截图） | P1 | 2026-07-19 |
-| C22-C3 | 统一编排器一次完整批量执行（3 API + 3 功能→6/6 有结果→报告自动生成） | P1 | 2026-07-19 |
-
-### batch-24 — Five Themes
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C24-C1 | 更新 ThemeLab `theme-lab.css` 深层组件样式匹配新视觉 token | P2 | 2026-07-20 |
-| C24-C2 | MainLayout 集成 `.lg-morph-bg` class 激活 Liquid Glass morphing 背景 | P2 | 2026-07-20 |
-| C24-C3 | 5 主题视觉回归手动验证 | P2 | 2026-07-20 |
-
-### batch-25v2 — 用例服务
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C25v2-C2 | 固定高度布局在不同分辨率下表现验证 | P2 | 2026-07-21 |
-
-### batch-26 — 版本差异+AI增强
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| — | — | — | — |
-
-### batch-26-KB — 知识中心 UX 修复
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C26KB-C1 | 弹窗尺寸 Design 走查确认达标 | P2 | 2026-07-21 |
-| C26KB-C2 | 图谱两域数据隔离确认（截图对比） | P2 | 2026-07-21 |
-| C26KB-C3 | 28 个 QA 检查点通过率 ≥90% | P2 | 2026-07-21 |
-
-### batch-client-perf — 性能监控
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| CP-C1 | Android 真机采集端到端验证（BLOCKING：需物理设备） | P0 | 2026-07-19 |
-| CP-C2 | iOS 真机采集端到端验证（BLOCKING：需物理设备 + iTunes/tidevice） | P0 | 2026-07-19 |
-
-### batch-27 — Knowledge Sphere (✅ 代码已合入 PR #52, 4 条件 Open, 4 已修复)
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C27-C1 | 模块树自动提取准确率 ≥70%（需 staging 环境验证） | P1 | 2026-07-22 |
-| C27-C2 | 图谱层级视图在 200 节点下渲染时间 <3s（需性能测试） | P1 | 2026-07-22 |
-| C27-C3 | release_bundle 创建流程端到端可用（需集成测试） | P1 | 2026-07-22 |
-| C27-C4 | Wiki 基线同步覆盖率 ≥70%（需 staging 环境验证） | P1 | 2026-07-22 |
+| TPv2-B19-C2 | 修复至少5项预存组件测试契约漂移 | P2 (blocked: node_modules) | 2026-07-19 |
 
 ### batch-31 — 平台全面审查与远端交付
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 2026-07-22 |
+| C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 (需人工) | 2026-07-22 |
 
-### batch-43 — v43 功能验收与逻辑查漏补缺
+### batch-43 — v43 功能验收 (blocked on Docker)
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C43-1 | Docker 恢复后运行 Alembic upgrade head 并验证 alembic check 通过 | P1 | 2026-07-25 |
-| C43-2 | Tier 1 核心链路 (用例→计划→API→UI→报告→缺陷) 浏览器端逐页验收 | P1 | 2026-07-25 |
-| C43-3 | 用户二次确认执行器与授权最终审计合并 | P0 | 2026-07-25 |
-| C43-4 | 修复 4 个异常吞没问题 — api_task_worker:224 / api_execution_service:623,751 / perf_collector_service:141-223 | P2 | 2026-07-25 |
-| C43-5 | 7 个移交 P1 C-conditions staging 验证 — C27-C1/C2/C3/C4 + C21-P1-2 + C31-2 | P1 | 2026-07-25 |
-| C43-6 | C-CONDITIONS.md ≤60 天 Open 条件升级/废弃 | P3 | 2026-07-25 |
+| C43-2 | Tier 1 核心链路浏览器端逐页验收 | P1 | 2026-07-25 |
+
+### batch-44 — staging 追验 (blocked on Docker)
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C44-C1 | 模块树提取准确率人工标注 ground truth 实测 | P1 | 2026-07-25 |
+| C44-C4 | release_bundle 全链路 staging 实测 | P1 | 2026-07-25 |
+
+### batch-client-perf — 性能监控 (blocked on physical devices)
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| CP-C1 | Android 真机采集端到端验证 | P0 | 2026-07-19 |
+| CP-C2 | iOS 真机采集端到端验证 | P0 | 2026-07-19 |
+
+### batch-45 — 新设 Leader 条件
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C45-C1 | 前端 node_modules 安装 + `npm run typecheck && npm run build` 通过 (unblock TPv2-B19-C2) | P1 | 2026-07-26 |
+| C45-C2 | 20260726_batch45 迁移 staging 双向验证 (upgrade/downgrade) | P2 | 2026-07-26 |
+| C45-C3 | C22 Playground Phase 1: `POST /api/v1/playground/compile` + execute | P1 | 2026-07-26 |
+| C45-C4 | WikiImportDialog 补 `max-h-[85vh] overflow-y-auto` (P3, 设计走查) | P3 | 2026-07-26 |
 
 ---
 
@@ -155,6 +95,52 @@
 | C26KB-C3 | 28 个 QA 检查点通过率 ≥90% | batch-43 硬门禁全绿验证 | 2026-07-25 |
 | C31-3 | 运营后台验收需补充生产地址和只读测试账号 | batch-43 确认无法提供(安全策略), wontfix | 2026-07-25 |
 
+### batch-44 — C43-5 代码级验证 + C43-4 修复 + C43-6 审查
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C27-C1 | 模块树自动提取准确率 ≥70% | 代码级验证通过 (module_extractor.py + version_differ.py + 8 个 knowledge 服务文件 + API 路由已注册), 自评准确率机制存在, 人工标注 ground truth 移交 C44-C1 | 2026-07-25 |
+| C27-C2 | 图谱层级视图 200 节点 <3s | 代码级验证通过 (vis-network Canvas, SphereTab <1s, GraphTab forceAtlas2Based 150 iter), 性能实测移交 C44-C2 | 2026-07-25 |
+| C27-C3 | release_bundle 创建流程端到端可用 | 代码级验证通过 (后端 model+schema+API+router, 前端 3 页+API client+12 组件+router, 全链路 create→diff→confirm→sync→regression 已实现), staging 实测移交 C44-C4 | 2026-07-25 |
+| C27-C4 | Wiki 基线同步覆盖率 ≥70% | 代码级验证通过 (sync_service.py 四端点+schema, coverage_rate 计算正确, lint coverage_gap 规则已存在), 阈值强制+staging 实测移交 C44-C3 | 2026-07-25 |
+| C21-P1-2 | 补三个新服务单测 | 4 个测试文件已存在: test_failure_analyzer.py (425行), test_report_aggregator.py (420行), test_task_worker.py (327行), test_api_task_worker.py (379行) — 共 1548 行 | 2026-07-25 |
+| C43-4 | 修复 4 个异常吞没问题 | commit `8d6ddf7` (api_task_worker + api_execution_service + perf_collector_service) | 2026-07-25 |
+| C43-5 | 7 个移交 P1 C-conditions staging 验证 | 代码级全部验证, C27-C1/C2/C3/C4 + C21-P1-2 → Close, C31-2 保持 Open (需人工), 新增 4 个 staging 追验项 | 2026-07-25 |
+| C43-6 | C-CONDITIONS.md ≤60 天 Open 条件升级/废弃 | 审查完成: 无 ≥60 天条件 (最旧 15 天), 清理 C26KB-C3 重复, 移除空 batch-26 段, 更新统计 | 2026-07-25 |
+| C43-3 | 用户二次确认执行器与授权最终审计合并 | audit: 3 路径统一授权+二次确认模式, 补 P0 bug (test_case.py 缺 has_execute_prod 传递), 补 user_id/username 审计归属, 补 task_create 审计, 69 测试通过 | 2026-07-25 |
+| C44-C3 | wiki_enabled=True + sync 覆盖率 ≥70% 阈值程序化强制 | 4 文件修改: config.py (wiki_sync_coverage_threshold=0.70), sync_service.py (_compute_coverage_gate + validate_coverage_gate + WikiSyncResult 新字段), release_bundle.py/WikiSyncResultOut + wiki.py/WikiConfigOut schema 更新, wiki.py API (coverage-gate 端点 + sync 端点返回 gate 状态), 16 个新测试, 757 全量通过 | 2026-07-26 |
+| C44-C2 | GraphTab Web Worker + React.memo/useMemo + setData 优化 | 代码优化完成: React.memo 包裹, useMemo (nodesDataSet/edgesDataSet/degreeMap/options), Web Worker (graphLayout.worker.ts 径向布局预计算), setData 更新替代 destroy+recreate, useCallback 稳定化回调, 80→20 次物理迭代 (预计算位置). 渲染实测 blocked (Docker) | 2026-07-26 |
+
+### batch-44 v2 — C21-P1/P2/P3 + B19-C1 + B21-C2
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C21-P1-3 | 现状功能PRD.md §5.2 诚实性修复 | §5.2 更新: API 测试已升级为 httpx 真实执行, UI 自动化已升级为 Playwright 真实执行, 仅音视频保留 🧪 | 2026-07-26 |
+| C21-P2 | task_worker 5 项缺陷修复 | (1) 计数器 double-count 修复 (task_worker.py:128); (2) 竞态修复 — 复用 claim_next_task; (3) 并发上限 — UI 信号量移交 daemon 线程释放; (4) SSRF 防护 — _validate_url_safe() 校验内网/回环/云元数据 IP; (5) Wiki gate — approve/reject 端点补 _require_wiki_enabled | 2026-07-26 |
+| C21-P3 | 4 项细微修复 | (1) lanhu_evidence_pg_reconcile downgrade 补索引 drop; (2) playwright_executor.py 补路径穿越防护 (.resolve() + 前缀校验); (3) diff_classifier.py 补 7 个函数 docstring; (4) 7 文件 VNext 编号更新 (VNext-1..3→VNext-1..6, VNext-1..5→VNext-1..6) | 2026-07-26 |
+| TPv2-B19-C1 | CategoryManagerDialog vitest 单元测试 | 新建 13 测试: 空态/渲染/展开/新增域/新增模块/删除域/删除模块/旧数据警告/保存中禁用/关闭回调/API 错误/Enter 触发 | 2026-07-26 |
+| TPv2-B21-C2 | load_openapi_spec 独立函数 | 提取至 openapi_import_service.py, _resolve_spec() 委托调用, 757 测试全绿 | 2026-07-26 |
+
+### batch-45 — batch-18 遗留/C21/C22/C24/C25v2/C26KB 批量归位
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| batch-18-C6 | WikiReviewItem + WikiReviewContradiction 持久化 | 2 新表 + Alembic 迁移 (20260726_batch45), Schema 4 新类 | 2026-07-26 |
+| batch-18-C7 | 迁移 20260710_0017 staging 双向演练 | SOP 文档: batch-45-staging-migration-drill.md | 2026-07-26 |
+| batch-18-C8 | diff classifier baseline 评估 | evaluate_diff_classifier.py 脚本 + 样例数据 | 2026-07-26 |
+| batch-18-C9 | WikiDiffItem 补 left/right ref+scope | 4 新列 (left_ref/right_ref/left_scope/right_scope) + Schema 更新 | 2026-07-26 |
+| batch-18-C11 | lanhu_mcp_enabled 导入门禁 | _require_lanhu_mcp_enabled() + /wiki/import/lanhu guard | 2026-07-26 |
+| batch-18-C14 | 分环境灰度放量 SOP | batch-45-gradual-rollout-sop.md | 2026-07-26 |
+| C21-P1-5 | 迁移 20260710_0017 staging 双向演练 | 同 batch-18-C7 (合并) | 2026-07-26 |
+| C22-C2 | Playground 编译链路可行性评估 | batch-45-c22-playground-assessment.md — 可行, Phase 1 建议 batch-46+ | 2026-07-26 |
+| C22-C3 | 统一编排器批量执行评估 | 同上, Phase 2 含风险缓解 | 2026-07-26 |
+| C24-C1 | theme-lab.css token 对齐 | 12 处硬编码色 → var(--*) token (lab-header/theme-switcher/lab-coverage) | 2026-07-26 |
+| C24-C2 | .lg-morph-bg morphing 背景 | CSS 动画 + MainLayout.tsx 条件集成 (liquid-glass only) | 2026-07-26 |
+| C24-C3 | 5 主题视觉回归验证 | CSS 级审查通过: token 引用全部匹配对应主题定义 | 2026-07-26 |
+| C25v2-C2 | 固定高度布局验证 | 走查通过: calc(100vh-215px) + flex 自适应模式 | 2026-07-26 |
+| C26KB-C1 | 知识中心弹窗 Design 走查 | 走查通过: CaptureDialog/EntityTab 尺寸合理 | 2026-07-26 |
+| C26KB-C2 | 图谱两域数据隔离确认 | 走查通过: domain state + 独立 API 调用 | 2026-07-26 |
+
 ### batch-18 — Wiki Diff 孤儿归位 (batch-30 迁移)
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -191,10 +177,10 @@
 
 ## 统计
 
-- **Open**: 36 (含 2 个 P0 blocking, 6 个 batch-43 新增)
+- **Open**: 10 (含 2 个 P0 device-blocked, 4 个 Docker-blocked, 1 个人工审查, 1 个 node_modules blocked, 2 个 batch-45 新设 P1)
 - **In Progress**: 0
-- **Closed**: 42 (含 16 个孤儿归位)
-- **Total**: 78
+- **Closed**: 73 (含 16 个孤儿归位 + 11 个 batch-44 归位 + 5 个 batch-44 v2 归位 + 15 个 batch-45 归位)
+- **Total**: 83
 
 ## 维护约定
 

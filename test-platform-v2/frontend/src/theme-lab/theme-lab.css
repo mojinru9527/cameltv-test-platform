@@ -286,9 +286,9 @@ button:disabled {
   align-items: center;
   gap: 18px;
   padding: 8px 16px;
-  color: #edf2f5;
-  background: #11161c;
-  border-bottom: 1px solid #2d3640;
+  color: var(--ink);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line-strong);
 }
 
 .lab-title,
@@ -338,7 +338,7 @@ button:disabled {
 .lab-title small,
 .lab-coverage small {
   margin-top: 2px;
-  color: #96a4b2;
+  color: var(--muted);
   font-size: 10px;
 }
 
@@ -356,8 +356,8 @@ button:disabled {
   grid-template-columns: repeat(5, minmax(70px, 1fr));
   gap: 3px;
   padding: 3px;
-  background: #1b222b;
-  border: 1px solid #323c48;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
   border-radius: 9px;
 }
 
@@ -368,7 +368,7 @@ button:disabled {
   justify-content: center;
   gap: 6px;
   padding: 0 11px;
-  color: #9da9b6;
+  color: var(--muted-strong);
   background: transparent;
   border: 0;
   border-radius: 6px;
@@ -377,22 +377,22 @@ button:disabled {
 }
 
 .theme-switcher button:hover {
-  color: #ffffff;
+  color: var(--ink-strong);
 }
 
 .theme-switcher button.is-active {
-  color: #ffffff;
-  background: #323d4b;
+  color: var(--ink-strong);
+  background: var(--primary-soft);
 }
 
 .theme-switcher button span {
-  color: #788696;
+  color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 9px;
 }
 
 .theme-switcher button.is-active span {
-  color: #b8c5d2;
+  color: var(--muted-strong);
 }
 
 .lab-coverage {
@@ -400,12 +400,12 @@ button:disabled {
   align-items: baseline;
   justify-content: flex-end;
   gap: 8px;
-  color: #9eaab7;
+  color: var(--muted);
   font-size: 11px;
 }
 
 .lab-coverage b {
-  color: #75dfaa;
+  color: var(--success);
   font-size: 13px;
 }
 
@@ -2563,6 +2563,43 @@ td b {
 @keyframes liquid-view-in {
   from { opacity: 0.84; transform: scale(1.003); }
   to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Liquid Glass Morphing Background ── */
+.lg-morph-bg {
+  position: relative;
+  isolation: isolate;
+}
+
+.lg-morph-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(124, 92, 231, 0.10) 0%, transparent 35%),
+    radial-gradient(circle at 70% 60%, rgba(78, 240, 184, 0.06) 0%, transparent 30%),
+    radial-gradient(circle at 50% 80%, rgba(78, 240, 232, 0.05) 0%, transparent 25%);
+  animation: morph-shift 22s ease-in-out infinite alternate;
+}
+
+@keyframes morph-shift {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.06) rotate(1.5deg);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-morph-bg::before {
+    animation: none;
+    opacity: 0.5;
+  }
 }
 
 @media (max-width: 1080px) {

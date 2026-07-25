@@ -276,7 +276,7 @@ export default function MainLayout() {
       </Sidebar>
 
       {/* ── Main content ── */}
-      <SidebarInset className="flex flex-col">
+      <SidebarInset className={`flex flex-col ${colorTheme === 'liquid-glass' ? 'lg-morph-bg' : ''}`}>
         {/* Header */}
         <header className="flex h-14 shrink-0 items-center justify-between gap-1 border-b bg-card px-2 glass-card sm:px-4">
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
