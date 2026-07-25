@@ -21,21 +21,23 @@
 
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
-| 1 | batch-18 遗留修复 | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置** |
-| 2 | ThemeLab CSS 对齐 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 3 | UX 走查 + 文档 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 4 | 评估脚本 + C22 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
+| 1 | batch-18 遗留修复 | ✅ | ✅ | ✅ | ✅ | ✅ | |
+| 2 | ThemeLab CSS 对齐 | ✅ | ✅ | ✅ | ✅ | ✅ | |
+| 3 | UX 走查 + 文档 | ✅ | ✅ | ✅ | ✅ | ✅ | |
+| 4 | 评估脚本 + C22 | ✅ | ✅ | ✅ | ✅ | ✅ | |
 
 ---
 
 ## 📍 当前位置
 
 ```
-Batch 45 — Slice 1: batch-18 遗留修复
-├── ✅ 已完成: Product PRD / PM Plan / Design Spec 工件
-├── 🔄 进行中: Slice 1 编码 (lanhu guard + wiki ref/scope + review persist)
-├── ⏳ 下一步: 后端 test suite 验证
-└── ⏳ 下一步: Slice 2 ThemeLab CSS
+Batch 45 — ✅ 全部完成
+├── ✅ Slice 1: lanhu_mcp guard + WikiDiffItem ref/scope + WikiReviewItem/Contradiction models
+├── ✅ Slice 2: ThemeLab CSS token 对齐 + .lg-morph-bg morphing 背景
+├── ✅ Slice 3: C25v2-C2/C26KB-C1/C2 UX 走查 + 迁移SOP + 灰度SOP
+├── ✅ Slice 4: diff classifier 评估脚本 + C22 Playground 可行性评估
+├── ✅ QA: 741 后端测试全绿, 0 回归
+└── ✅ Leader: APPROVED — 13 C-conditions 归位, Open 23→10
 ```
 
 ---
