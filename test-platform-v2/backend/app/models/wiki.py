@@ -134,12 +134,47 @@ class WikiDiffItem(Base):
     title: Mapped[str] = mapped_column(default="")
     left_value: Mapped[str] = mapped_column(Text, default="")
     right_value: Mapped[str] = mapped_column(Text, default="")
+    left_ref: Mapped[str] = mapped_column(Text, default="")
+    right_ref: Mapped[str] = mapped_column(Text, default="")
+    left_scope: Mapped[str] = mapped_column(Text, default="")
+    right_scope: Mapped[str] = mapped_column(Text, default="")
     evidence_json: Mapped[str] = mapped_column(Text, default="[]")
     suggestion: Mapped[str] = mapped_column(Text, default="")
     # pending/accepted/rejected/resolved
     review_status: Mapped[str] = mapped_column(default="pending", index=True)
     resolved_artifact_id: Mapped[int | None] = mapped_column(default=None)  # -> ai_artifact.id
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class WikiReviewItem(Base):
+    """Wiki 差异审查记录 —— 批量审查时每项一条，支持审计追溯。"""
+    __tablename__ = "wiki_review_item"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_id: Mapped[int] = mapped_column(index=True)      # -> wiki_diff_task.id
+    item_id: Mapped[int] = mapped_column(index=True)       # -> wiki_diff_item.id
+    project_id: Mapped[int] = mapped_column(index=True)
+    reviewer: Mapped[str] = mapped_column(default="")      # 审查人标识
+    # accepted / rejected / deferred
+    decision: Mapped[str] = mapped_column(default="pending", index=True)
+    reason: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+
+
+class WikiReviewContradiction(Base):
+    """Wiki 差异矛盾记录 —— 两条相互矛盾的差异项，记录矛盾描述和解决方式。"""
+    __tablename__ = "wiki_review_contradiction"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_id: Mapped[int] = mapped_column(index=True)      # -> wiki_diff_task.id
+    item_a_id: Mapped[int] = mapped_column()               # -> wiki_diff_item.id
+    item_b_id: Mapped[int] = mapped_column()               # -> wiki_diff_item.id
+    project_id: Mapped[int] = mapped_column(index=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    resolution: Mapped[str] = mapped_column(Text, default="")
+    resolved_by: Mapped[str] = mapped_column(default="")
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+    resolved_at: Mapped[datetime | None] = mapped_column(default=None)
 
 
 class ExternalWikiConnection(Base, TimestampMixin):
