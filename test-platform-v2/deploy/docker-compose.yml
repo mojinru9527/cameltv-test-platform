@@ -77,9 +77,9 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - tp-data:/data
-    expose:
-      - "8000"
+      - f:/CamelTv-worktrees/dev-data:/data
+    ports:
+      - "8000:8000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -106,7 +106,5 @@ services:
       retries: 3
 
 volumes:
-  tp-data:
-    driver: local
   pg-data:
     driver: local
