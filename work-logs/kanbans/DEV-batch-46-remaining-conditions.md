@@ -4,7 +4,7 @@
 
 ## 当前位置
 
-Slice 2 → ✅ 审批 → commit 待 push（分类器阻塞）
+Slice 2 → ✅ pushed
 Slice 3 → ⏳ → Docker staging 验收（移交 batch-47）
 
 ## 批次记录
@@ -12,7 +12,7 @@ Slice 3 → ⏳ → Docker staging 验收（移交 batch-47）
 | Slice | 内容 | 状态 | 耗时 |
 |-------|------|------|------|
 | Slice 1 | C45-C1 + TPv2-B19-C2 + C45-C4 | ✅ pushed `9ccb413` | ~30min |
-| Slice 2 | C45-C3 Playground API | ✅ 完成，待 push | ~40min |
+| Slice 2 | C45-C3 Playground API | ✅ pushed `8137659` | ~40min |
 | Slice 3 | Docker staging 验收 | ⏳ → batch-47 | — |
 
 ## Slice 1: 前端门禁 + 测试修复 + 设计修复 ✅
@@ -54,7 +54,7 @@ Slice 3 → ⏳ → Docker staging 验收（移交 batch-47）
 
 ### ✅ 审批
 - [x] Leader APPROVED — QA + Leader verdict 已写
-- [ ] ⏳ commit + push（分类器 deepseek-v4-pro 不可用，阻塞中）
+- [x] commit + push — `237cb54` + `8137659` pushed to origin
 
 ## Slice 3: Docker Staging 验收 → batch-47
 
