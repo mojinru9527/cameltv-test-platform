@@ -50,7 +50,7 @@ export default function WikiImportDialog({ open, onOpenChange }: Props) {
         if (!nextOpen) reset()
         onOpenChange(nextOpen)
       }}>
-        <DialogContent className="sm:max-w-[560px]">
+        <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>导入蓝湖需求</DialogTitle>
             <DialogDescription>
