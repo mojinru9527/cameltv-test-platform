@@ -1,17 +1,22 @@
 """需求文档 API 路由 — /api/v1/requirements/*"""
 from __future__ import annotations
 
+import html
 import json
 import logging
+import re
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, File, Form, Request, UploadFile
+from fastapi import (
+    APIRouter, BackgroundTasks, Body, Depends, File, Form, Query, Request, UploadFile,
+)
 from pydantic import BaseModel
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user, require_permission
-from app.schemas.common import R
+from app.schemas.common import Page, R
 from app.schemas.requirement import (
     AIGenerateResult,
     AIGeneratedCase,
@@ -23,9 +28,11 @@ from app.schemas.requirement import (
     GenerateRequest,
     Issue,
     RequirementAnalysis,
+    RequirementDocumentBrief,
     RequirementDocumentOut,
     VersionInfo,
 )
+from app.models.requirement import RequirementDocument
 from app.services import audit_service, requirement_service
 from app.services.file_parser_service import parse_docx, parse_markdown, parse_xlsx
 from app.services.knowledge import ingest_service
@@ -33,29 +40,67 @@ from app.services.knowledge import ingest_service
 router = APIRouter(prefix="/requirements", tags=["需求文档"])
 logger = logging.getLogger("requirement")
 
+# Max upload size: 20 MB
+_MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+# Safe filename pattern: allow Chinese, alphanumeric, spaces, hyphens, underscores, dots
+_SAFE_FILENAME_RE = re.compile(r'[^\w一-鿿\-\.\s]')
 
-def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
+
+def _sanitize_filename(filename: str) -> str:
+    """Strip path separators and dangerous chars (XSS/Path-traversal prevention)."""
+    # Remove any path components
+    name = Path(filename).name
+    # Strip chars that aren't word chars, Chinese chars, hyphens, underscores, dots, or spaces
+    name = _SAFE_FILENAME_RE.sub('', name)
+    return name.strip()[:255] or "untitled"
+
+
+def _audit(
+    req: Request, cu: CurrentUser, db: Session,
+    action: str, target: str, detail: str = "",
+) -> None:
+    """Write audit entry with null-safe user access (P0-5/P1-3 fix)."""
+    username = ""
+    if cu.user:
+        username = cu.user.nickname or cu.user.username
     audit_service.write_audit(
         db,
-        user_id=cu.user.id,
-        username=cu.user.username,
+        user_id=cu.user.id if cu.user else 0,
+        username=username,
         project_id=cu.project_id or 0,
-        action=action,
-        target=target,
-        detail=detail,
+        action=action, target=target, detail=detail,
         ip=req.client.host if req.client else "",
     )
 
 
 # ── 列表 ──────────────────────────────────────────────
 
-@router.get("", response_model=R[list[RequirementDocumentOut]])
+@router.get("", response_model=R[Page[RequirementDocumentBrief]], summary="需求文档列表")
 def list_requirements(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    keyword: str | None = Query(None, description="搜索标题/来源"),
     current: CurrentUser = Depends(require_permission("requirement:upload")),
     db: Session = Depends(get_db),
 ):
-    docs = requirement_service.list_requirements(db, project_id=current.project_id or 0)
-    return R.ok([RequirementDocumentOut(**d) for d in docs])
+    """分页列出项目内的需求文档。P0-1/P1-4: 添加分页 + 列表 schema 不含 content 全量文本。"""
+    pid = current.project_id or 0
+    stmt = select(RequirementDocument).where(RequirementDocument.project_id == pid)
+    if keyword:
+        stmt = stmt.where(
+            RequirementDocument.title.contains(keyword)
+            | RequirementDocument.source_ref.contains(keyword)
+        )
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = db.scalar(count_stmt) or 0
+    rows = list(db.scalars(
+        stmt.order_by(RequirementDocument.id.desc())
+        .offset((page - 1) * page_size).limit(page_size)
+    ).all())
+    return R.ok(Page(
+        total=total, page=page, page_size=page_size,
+        items=[RequirementDocumentBrief.model_validate(r) for r in rows],
+    ))
 
 
 # ── 上传 ──────────────────────────────────────────────
@@ -83,17 +128,25 @@ async def upload_requirement(
         content_length = req.headers.get("content-length")
         if content_length:
             cl = int(content_length)
-            max_bytes = 20 * 1024 * 1024
-            if cl > max_bytes:
+            if cl > _MAX_UPLOAD_BYTES:
                 from app.core.exceptions import APIException
                 raise APIException(
                     f"上传文件超过限制 (max: 20 MB, got: {cl / (1024*1024):.1f} MB)",
                     code=413,
                 )
+        # P1-S6b: 实际读取时也限制大小，防止 Content-Length 伪造绕过
         file_bytes = await file.read()
-        filename = file.filename
+        if len(file_bytes) > _MAX_UPLOAD_BYTES:
+            from app.core.exceptions import APIException
+            raise APIException(
+                f"上传文件超过限制 (max: 20 MB, got: {len(file_bytes) / (1024*1024):.1f} MB)",
+                code=413,
+            )
+        # P1-S6c: XSS 防御 — 净化文件名
+        filename = _sanitize_filename(file.filename)
         source_ref = filename
-        title = Path(filename).stem
+        # HTML-escape title for safe rendering
+        title = html.escape(Path(filename).stem) or "untitled"
         ext = Path(filename).suffix.lower()
 
         if ext == ".md":
@@ -256,7 +309,8 @@ async def extract_features(
                     doc_content = doc.get("content") or ""
             else:
                 doc_content = doc.get("content") or ""
-        except Exception:
+        except Exception as e:
+            logger.warning("Failed to parse diff_json for doc_id=%d: %s", document_id, e)
             doc_content = doc.get("content") or ""
     else:
         doc_content = doc.get("content") or ""
@@ -569,14 +623,14 @@ class ApiMatchItem(BaseModel):
     summary: str = ""
     confidence: float = 0.0
 
-@router.post("/{document_id}/match-api", response_model=R[list[ApiMatchItem]])
+@router.post("/{document_id}/match-api", response_model=R[list[ApiMatchItem]], summary="匹配 API 端点")
 def match_api_endpoints_for_requirement(
     document_id: int,
     body: MatchApiRequest,
-    current: CurrentUser = Depends(get_current_user),
+    current: CurrentUser = Depends(require_permission("requirement:upload")),
     db: Session = Depends(get_db),
 ):
-    """为需求文档中 integration 类型的功能点匹配已导入的 API 接口。"""
+    """为需求文档中 integration 类型的功能点匹配已导入的 API 接口。P2-3: 权限提升为 require_permission。"""
     if not body.integration_reqs:
         return R.ok([])
     matches = requirement_service.match_api_endpoints(

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import traceback
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -9,6 +11,8 @@ from sqlalchemy.orm import Session
 from app.models.requirement import RequirementDocument
 from app.models.user import User
 from app.services import test_case_service
+
+logger = logging.getLogger("requirement_service")
 
 
 def _doc_to_dict(r: RequirementDocument, creator_name: str = "") -> dict:
@@ -367,7 +371,12 @@ def import_cases(
                 row.imported_api_indices = json.dumps(new_api, ensure_ascii=False)
                 row.imported_func_count = len(new_func)
                 row.imported_api_count = len(new_api)
-    except Exception:
+    except Exception as e:
+        # P0-4: Log full traceback instead of silently swallowing
+        logger.error(
+            "import_cases transaction failed for doc_id=%d: %s\n%s",
+            doc_id, e, traceback.format_exc(),
+        )
         imported_func = 0
         imported_api = 0
         skipped = len(cases)
@@ -427,7 +436,6 @@ def match_api_endpoints(
             ep_path = (ep.path or "").lower()
             ep_summary = (ep.summary or "").lower()
             ep_module = (ep.module or "").lower()
-            ep_target = f"{ep_path} {ep_summary} {ep_module}"
 
             score = 0
 
