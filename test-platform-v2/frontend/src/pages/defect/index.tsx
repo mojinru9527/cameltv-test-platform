@@ -5,6 +5,7 @@ import type { DefectItem } from '@/types'
 import PageHeader from '@/components/PageHeader'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useObsidianPage } from '@/ui'
 import DefectStatsCards from './DefectStatsCards'
 import DefectFilterBar from './DefectFilterBar'
 import DefectTable from './DefectTable'
@@ -13,6 +14,11 @@ import DefectDetailSheet from './DefectDetailSheet'
 
 export default function DefectPage() {
   useDocumentTitle('缺陷管理')
+  const { Page } = useObsidianPage({
+    title: '缺陷管理',
+    subtitle: 'DEFECT MANAGEMENT',
+    description: '追踪、归因和闭环所有质量缺陷，支持状态流转与证据关联。',
+  })
   const hasPerm = useAuthStore((s) => s.hasPerm)
 
   // ── Filters ──
@@ -52,8 +58,9 @@ export default function DefectPage() {
   const refetchAll = () => { list.refetch(); refetchStats() }
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="缺陷管理" />
+    <Page>
+      <div className="space-y-4">
+        <PageHeader title="缺陷管理" />
 
       <DefectStatsCards stats={stats} />
 
@@ -102,5 +109,6 @@ export default function DefectPage() {
         />
       )}
     </div>
+    </Page>
   )
 }

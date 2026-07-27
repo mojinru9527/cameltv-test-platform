@@ -1,0 +1,53 @@
+/* ═══════════════════════════════════════════
+   Typography Tokens — 固定 rem 字阶
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* ── 字阶（rem） ── */
+  --text-caption: 0.75rem;     /* 辅助文字、时间戳 */
+  --text-meta: 0.8125rem;      /* 标签、ID、补充信息 */
+  --text-control: 0.875rem;    /* 控件、表格、列表内容 */
+  --text-body: 1rem;           /* 正文、说明、错误信息 */
+  --text-section: 1.125rem;    /* 区块标题 */
+  --text-page: 1.5rem;         /* 页面标题 */
+
+  /* ── 行高 ── */
+  --leading-tight: 1.15;
+  --leading-normal: 1.55;
+  --leading-relaxed: 1.7;
+
+  /* ── 字重 ── */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 580;
+  --weight-bold: 650;
+
+  /* ── 字母间距 ── */
+  --tracking-tight: -0.045em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.09em;
+
+  /* ── 数字表（tabular-nums） ── */
+  --font-mono: "Geist Mono", "SF Mono", "Cascadia Code", "Fira Code", monospace;
+}
+
+/* ── 全局基础排版 ── */
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 数据表格、指标、时间统一 tabular-nums */
+[data-mono],
+.metric-value,
+.time-label {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}

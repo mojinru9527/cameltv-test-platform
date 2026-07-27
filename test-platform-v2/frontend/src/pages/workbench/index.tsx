@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMemo, useState } from 'react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useUiTheme, ObsidianWorkbench } from '@/ui'
+import type { WorkbenchMetric } from '@/ui'
 import {
   BarChart,
   Bar,
@@ -56,6 +58,7 @@ function getDateRange(key: PresetKey, custom: [string, string] | null): { start:
 
 export default function Workbench() {
   useDocumentTitle('工作台')
+  const { uiTheme } = useUiTheme()
   const user = useAuthStore((s) => s.user)
   const projects = useAuthStore((s) => s.projects)
   const currentProjectId = useAuthStore((s) => s.currentProjectId)
@@ -142,41 +145,31 @@ export default function Workbench() {
     )
   }
 
-  return (
-    <div>
-      {/* 标题栏 */}
-      <PageHeader title="工作台" icon={BarChart3}>
-        <span className="text-sm text-muted-foreground">
-          {user?.nickname || user?.username} / {current?.name || '未选择项目'}
-        </span>
-        <Button size="sm" variant="outline" onClick={refetch} disabled={isLoading || isRefetching}>
-          <RotateCcw className="size-4" />
-          刷新
-        </Button>
-      </PageHeader>
+  // ── 黑曜流界指标 ──
+  const obsidianMetrics: WorkbenchMetric[] = stats ? [
+    { label: '用例总数', value: String(stats.total_cases ?? 0), note: `通过率 ${stats.pass_rate ?? 0}%`, tone: 'positive' as const },
+    { label: 'API 用例', value: String(stats.api_cases ?? 0), note: '接口测试资产', tone: 'active' as const },
+    { label: '测试计划', value: String(stats.total_plans ?? 0), note: stats.total_plans > 0 ? '已编排' : '待创建', tone: 'neutral' as const },
+    { label: '通过率', value: `${stats.pass_rate ?? 0}%`, note: '最近周期', tone: stats.pass_rate >= 80 ? 'positive' as const : 'risk' as const },
+  ] : []
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mb-4">
-        <TabsList>
-          <TabsTrigger value="project">项目概览</TabsTrigger>
-          <TabsTrigger value="cross">多项目概览</TabsTrigger>
-        </TabsList>
+  // ── 项目概览内容 ──
+  const renderProjectOverview = () => (
+    <AsyncState
+      isLoading={isLoading}
+      isError={isError}
+      error={error}
+      data={stats}
+      onRetry={refetch}
+      skeletonType="card"
+      loadingText="加载仪表盘数据..."
+      emptyTitle="暂无仪表盘数据"
+    >
+  {(_s) => {
+    const _caseTypes = _s.case_type_stats || []
+    const _priorityData = _s.priority_distribution || []
 
-        <TabsContent value="project">
-          <AsyncState
-            isLoading={isLoading}
-            isError={isError}
-            error={error}
-            data={stats}
-            onRetry={refetch}
-            skeletonType="card"
-            loadingText="加载仪表盘数据..."
-            emptyTitle="暂无仪表盘数据"
-          >
-        {(_s) => {
-          const _caseTypes = _s.case_type_stats || []
-          const _priorityData = _s.priority_distribution || []
-
-          return (
+    return (
             <>
               {/* ─── 摘要指标 ─── */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
@@ -422,12 +415,56 @@ export default function Workbench() {
           )
         }}
       </AsyncState>
-        </TabsContent>
+  )
 
-        <TabsContent value="cross">
-          <CrossProjectDashboard dateRange={dateRange} />
-        </TabsContent>
-      </Tabs>
+  // ── 主渲染 ──
+  const tabsContent = (
+    <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="mb-4">
+      <TabsList>
+        <TabsTrigger value="project">项目概览</TabsTrigger>
+        <TabsTrigger value="cross">多项目概览</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="project">{renderProjectOverview()}</TabsContent>
+
+      <TabsContent value="cross">
+        <CrossProjectDashboard dateRange={dateRange} />
+      </TabsContent>
+    </Tabs>
+  )
+
+  // ── 黑曜流界模式：用 ObsidianWorkbench 包裹 ──
+  if (uiTheme === 'obsidian-flow') {
+    return (
+      <ObsidianWorkbench
+        title="工作台"
+        breadcrumbs={`${current?.name || '项目空间'} / 质量工作台`}
+        description="把测试从页面集合，变成一条可操作的质量链。"
+        metrics={obsidianMetrics}
+        loading={isLoading}
+        onRefresh={() => refetch()}
+        statusLine={[
+          { label: `最后同步 ${format(new Date(), 'HH:mm')}`, live: false },
+          { label: current?.name || '未选择项目', live: false },
+        ]}
+      >
+        {tabsContent}
+      </ObsidianWorkbench>
+    )
+  }
+
+  return (
+    <div>
+      <PageHeader title="工作台" icon={BarChart3}>
+        <span className="text-sm text-muted-foreground">
+          {user?.nickname || user?.username} / {current?.name || '未选择项目'}
+        </span>
+        <Button size="sm" variant="outline" onClick={refetch} disabled={isLoading || isRefetching}>
+          <RotateCcw className="size-4" />
+          刷新
+        </Button>
+      </PageHeader>
+      {tabsContent}
     </div>
   )
 }
