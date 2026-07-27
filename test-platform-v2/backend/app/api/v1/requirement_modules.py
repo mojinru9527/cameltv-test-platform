@@ -348,8 +348,15 @@ def extract_modules(
     提取结果写入 RequirementModule 表，关联到指定发布包。
     """
     pid = current.project_id or 0
-    bundle = db.get(ReleaseBundle, bundle_id)
-    if not bundle or bundle.project_id != pid:
+    bundle = db.scalar(
+        select(ReleaseBundle)
+        .where(
+            ReleaseBundle.id == bundle_id,
+            ReleaseBundle.project_id == pid,
+        )
+        .with_for_update()
+    )
+    if not bundle:
         from app.core.exceptions import not_found
         raise not_found("发布包")
 

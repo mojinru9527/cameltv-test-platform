@@ -387,99 +387,127 @@ def persist_module_tree(
     project_id: int,
     source_version: str,
 ) -> list[int]:
-    """Persist extracted module tree as RequirementModule rows.
+    """Upsert an extracted module tree without deleting manual or historical nodes.
 
-    Returns list of created module IDs.
+    Natural identities are scoped by project, bundle and source version. Lanhu
+    page IDs take precedence where available; name is the fallback identity.
+    Returns the top-level module and attachment IDs, whether reused or created.
     """
     from app.models.requirement_module import RequirementModule
 
-    created_ids: list[int] = []
+    persisted_ids: list[int] = []
+
+    def upsert_node(
+        *,
+        name: str,
+        node_type: str,
+        platform: str,
+        parent_module_id: int | None = None,
+        lanhu_page_id: str = "",
+        screenshot_url: str = "",
+    ) -> RequirementModule:
+        identity = [
+            RequirementModule.project_id == project_id,
+            RequirementModule.release_bundle_id == release_bundle_id,
+            RequirementModule.source_version == source_version,
+            RequirementModule.node_type == node_type,
+            RequirementModule.parent_module_id == parent_module_id,
+        ]
+        if lanhu_page_id:
+            identity.append(RequirementModule.lanhu_page_id == lanhu_page_id)
+        else:
+            identity.append(RequirementModule.name == name)
+        if node_type == "module":
+            identity.append(RequirementModule.platform == platform)
+
+        node = db.scalar(
+            select(RequirementModule)
+            .where(*identity)
+            .order_by(RequirementModule.id)
+        )
+        screenshot_urls = json.dumps(
+            [screenshot_url] if screenshot_url else [],
+            ensure_ascii=False,
+        )
+        if node is None:
+            node = RequirementModule(
+                project_id=project_id,
+                release_bundle_id=release_bundle_id,
+                name=name,
+                node_type=node_type,
+                platform=platform,
+                lanhu_page_id=lanhu_page_id,
+                change_type="new",
+                parent_module_id=parent_module_id,
+                source_version=source_version,
+                screenshot_urls=screenshot_urls,
+            )
+            db.add(node)
+            db.flush()
+            return node
+
+        # Refresh only fields owned by automated extraction. Human-authored
+        # description, interactions and visual-review flags remain untouched.
+        node.name = name
+        node.platform = platform
+        if lanhu_page_id:
+            node.lanhu_page_id = lanhu_page_id
+        if screenshot_url:
+            node.screenshot_urls = screenshot_urls
+        return node
 
     for mod_node in extraction.modules:
-        mod = RequirementModule(
-            project_id=project_id,
-            release_bundle_id=release_bundle_id,
+        mod = upsert_node(
             name=mod_node.name,
             node_type=mod_node.node_type,
             platform=mod_node.platform,
-            change_type="new",
-            source_version=source_version,
         )
-        db.add(mod)
-        db.flush()
-        created_ids.append(mod.id)
+        persisted_ids.append(mod.id)
 
         for page_node in mod_node.pages:
-            page = RequirementModule(
-                project_id=project_id,
-                release_bundle_id=release_bundle_id,
+            page = upsert_node(
                 name=page_node.name,
                 node_type="page",
                 platform=mod_node.platform,
                 lanhu_page_id=page_node.lanhu_page_id,
-                change_type="new",
                 parent_module_id=mod.id,
-                source_version=source_version,
-                screenshot_urls=json.dumps(
-                    [page_node.screenshot_url] if page_node.screenshot_url else [],
-                    ensure_ascii=False,
-                ),
+                screenshot_url=page_node.screenshot_url,
             )
-            db.add(page)
-            db.flush()
 
             # Sub-pages
             for sub_page in page_node.child_pages:
-                sub = RequirementModule(
-                    project_id=project_id,
-                    release_bundle_id=release_bundle_id,
+                upsert_node(
                     name=sub_page.name,
                     node_type="page",
                     platform=mod_node.platform,
                     lanhu_page_id=sub_page.lanhu_page_id,
-                    change_type="new",
                     parent_module_id=page.id,
-                    source_version=source_version,
-                    screenshot_urls=json.dumps(
-                        [sub_page.screenshot_url] if sub_page.screenshot_url else [],
-                        ensure_ascii=False,
-                    ),
+                    screenshot_url=sub_page.screenshot_url,
                 )
-                db.add(sub)
 
             # Function points
             for fp in page_node.function_points:
-                fp_node = RequirementModule(
-                    project_id=project_id,
-                    release_bundle_id=release_bundle_id,
+                upsert_node(
                     name=fp.name,
                     node_type="function_point",
                     platform=mod_node.platform,
-                    change_type="new",
                     parent_module_id=page.id,
-                    source_version=source_version,
                 )
-                db.add(fp_node)
 
     # Attachment nodes
     for att in extraction.attachments:
-        att_node = RequirementModule(
-            project_id=project_id,
-            release_bundle_id=release_bundle_id,
+        att_node = upsert_node(
             name=att["file_name"],
             node_type="attachment",
             platform="",
             lanhu_page_id=att.get("page_id", ""),
-            change_type="new",
-            source_version=source_version,
-            screenshot_urls=json.dumps(
-                [att["screenshot_url"]] if att.get("screenshot_url") else [],
-                ensure_ascii=False,
-            ),
+            screenshot_url=att.get("screenshot_url", ""),
         )
-        db.add(att_node)
-        db.flush()
-        created_ids.append(att_node.id)
+        persisted_ids.append(att_node.id)
 
-    logger.info("Persisted %d module/page nodes for bundle #%d", len(created_ids), release_bundle_id)
-    return created_ids
+    logger.info(
+        "Persisted %d module/attachment roots for bundle #%d",
+        len(persisted_ids),
+        release_bundle_id,
+    )
+    return persisted_ids

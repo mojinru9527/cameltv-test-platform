@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models.api_asset import ApiEndpoint, ApiService
 from app.models.audit import AuditLog
+from app.models.lanhu_evidence import LanhuEvidenceJob, LanhuEvidencePage
 from app.models.requirement import RequirementDocument
 from app.models.requirement_module import ModuleAdminLink, RequirementModule
 from app.models.release_bundle import ReleaseBundle
@@ -304,6 +305,81 @@ def test_module_list_filters_and_count_use_identical_conditions(
     assert repeated_first_page == first_page
     assert roots_only.json()["data"]["total"] == 1
     assert [item["id"] for item in roots_only.json()["data"]["items"]] == [parent.id]
+
+
+def test_repeated_module_extraction_reuses_natural_identity_and_keeps_manual_data(
+    client, auth_headers, db_session,
+):
+    bundle = _bundle(db_session, project_id=1, name="Batch48 extraction")
+    evidence_job = LanhuEvidenceJob(
+        project_id=1,
+        source_url="https://lanhuapp.com/redacted",
+        status="success",
+    )
+    db_session.add(evidence_job)
+    db_session.flush()
+    db_session.add(
+        LanhuEvidencePage(
+            job_id=evidence_job.id,
+            project_id=1,
+            page_id="page-match-list",
+            page_name="比赛列表",
+            page_path="APP端/赛事/比赛列表",
+            folder="APP端/赛事",
+            order_index=0,
+            merged_text="比赛列表正文",
+            local_url="file:///redacted/match-list.html",
+        )
+    )
+    manual = _module(
+        db_session,
+        project_id=1,
+        bundle_id=bundle.id,
+        name="人工补充模块",
+        platform="APP",
+    )
+    manual.description = "不得由自动提取删除"
+    manual.source_version = "manual"
+    db_session.commit()
+
+    payload = {
+        "evidence_job_id": evidence_job.id,
+        "source_version": "14.1.0",
+    }
+    first = client.post(
+        f"/api/v1/requirement-modules/bundle/{bundle.id}/extract",
+        headers=auth_headers,
+        json=payload,
+    )
+    assert first.status_code == 200
+    first_ids = first.json()["data"]["module_ids"]
+    first_count = db_session.scalar(
+        select(func.count(RequirementModule.id)).where(
+            RequirementModule.project_id == 1,
+            RequirementModule.release_bundle_id == bundle.id,
+        )
+    )
+    extracted_root = db_session.get(RequirementModule, first_ids[0])
+    extracted_root.description = "人工审核后的说明"
+    db_session.commit()
+
+    second = client.post(
+        f"/api/v1/requirement-modules/bundle/{bundle.id}/extract",
+        headers=auth_headers,
+        json=payload,
+    )
+
+    assert second.status_code == 200
+    assert second.json()["data"]["module_ids"] == first_ids
+    assert db_session.scalar(
+        select(func.count(RequirementModule.id)).where(
+            RequirementModule.project_id == 1,
+            RequirementModule.release_bundle_id == bundle.id,
+        )
+    ) == first_count
+    db_session.expire_all()
+    assert db_session.get(RequirementModule, extracted_root.id).description == "人工审核后的说明"
+    assert db_session.get(RequirementModule, manual.id).description == "不得由自动提取删除"
 
 
 def test_interactions_reject_non_page_module_and_invalid_merge_state(

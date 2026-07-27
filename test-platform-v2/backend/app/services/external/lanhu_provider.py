@@ -23,6 +23,15 @@ import httpx
 from app.core.config import settings
 
 
+_LANHU_DOWNLOAD_MAX_RESOURCES = 500
+_LANHU_DOWNLOAD_MAX_TOTAL_BYTES = 100 * 1024 * 1024
+_LANHU_DOWNLOAD_TIMEOUT_SECONDS = 120
+
+
+class LanhuManualActionRequired(ValueError):
+    """Resource download was incomplete and must not be treated as usable evidence."""
+
+
 def _resolve_workspace_root() -> Path:
     """Resolve workspace root from config or auto-detect from this file's location.
 
@@ -65,16 +74,63 @@ def _load_lanhu_runtime() -> SimpleNamespace:
     )
 
 
+def _create_lanhu_extractor(runtime: SimpleNamespace, cookie_override: str = ""):
+    """Instantiate pinned or newer extractors without assuming cookie support."""
+    parameters = inspect.signature(runtime.LanhuExtractor).parameters
+    if "cookie" in parameters:
+        return runtime.LanhuExtractor(cookie=cookie_override)
+    return runtime.LanhuExtractor()
+
+
 async def _download_lanhu_resources(
-    extractor, url: str, output_dir: str, target_version_id: str,
+    extractor,
+    url: str,
+    output_dir: str,
+    target_version_id: str,
+    target_page_id: str = "",
 ) -> dict:
-    """Call either the pinned or newer lanhu-mcp download signature."""
+    """Call old or bounded lanhu-mcp downloads with only supported arguments."""
     parameters = inspect.signature(extractor.download_resources).parameters
-    if "target_version_id" in parameters:
-        return await extractor.download_resources(
-            url, output_dir, target_version_id=target_version_id,
+    optional_arguments = {
+        "target_page_id": target_page_id or None,
+        "target_version_id": target_version_id or None,
+        "max_resources": _LANHU_DOWNLOAD_MAX_RESOURCES,
+        "max_total_bytes": _LANHU_DOWNLOAD_MAX_TOTAL_BYTES,
+        "overall_timeout": _LANHU_DOWNLOAD_TIMEOUT_SECONDS,
+    }
+    supported_arguments = {
+        name: value
+        for name, value in optional_arguments.items()
+        if name in parameters
+    }
+    return await extractor.download_resources(
+        url,
+        output_dir,
+        **supported_arguments,
+    )
+
+
+def _ensure_download_is_usable(download_result: dict) -> None:
+    """Reject bounded/partial downloads before they can become formal evidence."""
+    status = str(download_result.get("status") or "")
+    if status in {"downloaded", "updated", "cached"}:
+        return
+    if status in {"limited", "downloaded_with_errors"} or download_result.get(
+        "manual_action_required"
+    ):
+        manual_message = str(download_result.get("manual_action_message") or "").strip()
+        if manual_message:
+            raise LanhuManualActionRequired(manual_message[:300])
+        reason = str(
+            download_result.get("limit_reason")
+            or download_result.get("reason")
+            or status
+            or "resource_failure"
         )
-    return await extractor.download_resources(url, output_dir)
+        raise LanhuManualActionRequired(
+            f"蓝湖资源下载未完整完成（{reason}），请人工处理"
+        )
+    raise ValueError(f"蓝湖资源下载失败（{status or 'unknown'}），请稍后重试")
 
 
 # ── Changelog & Client Detection ──────────────────────────────
@@ -266,7 +322,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                 _page_id = m.group(1)
 
         async def _do_extract(cookie_override: str = "", page_id: str = "") -> dict:
-            extractor = runtime.LanhuExtractor(cookie=cookie_override)
+            extractor = _create_lanhu_extractor(runtime, cookie_override)
 
             params = extractor.parse_url(url)
             doc_id = params["doc_id"]
@@ -317,8 +373,13 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
 
             resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
             download_result = await _download_lanhu_resources(
-                extractor, effective_url, resource_dir, url_version_id,
+                extractor,
+                effective_url,
+                resource_dir,
+                url_version_id,
+                page_id,
             )
+            _ensure_download_is_usable(download_result)
 
             if download_result["status"] in ["downloaded", "updated"]:
                 runtime.fix_html_files(resource_dir)
@@ -801,7 +862,7 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
         runtime = _load_lanhu_runtime()
 
         async def _do(cookie_override: str = "") -> dict:
-            extractor = runtime.LanhuExtractor(cookie=cookie_override)
+            extractor = _create_lanhu_extractor(runtime, cookie_override)
             params = extractor.parse_url(url)
             doc_id = params.get("doc_id", "")
             url_version_id = params.get("version_id", "")
@@ -810,8 +871,13 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
 
             resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
             download_result = await _download_lanhu_resources(
-                extractor, url, resource_dir, url_version_id,
+                extractor,
+                url,
+                resource_dir,
+                url_version_id,
+                params.get("page_id", ""),
             )
+            _ensure_download_is_usable(download_result)
             if download_result.get("status") in ("downloaded", "updated"):
                 runtime.fix_html_files(resource_dir)
 
@@ -857,6 +923,13 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
                     runtime.save_cookie(new_cookie)
                 return await _do(cookie_override=new_cookie)
             return {"status": "failed", "error": "蓝湖认证失败且自动登录未获取到 Cookie", "pages": []}
+    except LanhuManualActionRequired as e:
+        return {
+            "status": "failed",
+            "error": str(e),
+            "manual_action_required": True,
+            "pages": [],
+        }
     except Exception as e:  # noqa: BLE001 — 统一以状态表达失败
         return {"status": "failed", "error": str(e)[:300], "pages": []}
     finally:

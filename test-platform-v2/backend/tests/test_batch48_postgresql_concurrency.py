@@ -27,6 +27,7 @@ from app.core.db import get_db
 from app.core.security import create_access_token, hash_password
 from app.main import app
 from app.models.audit import AuditLog
+from app.models.lanhu_evidence import LanhuEvidenceJob, LanhuEvidencePage
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.release_bundle import ReleaseBundle
 from app.models.requirement import RequirementDocument
@@ -254,3 +255,128 @@ def test_parallel_admin_link_requests_return_one_success_and_conflicts(
                 AuditLog.action == "module:admin_link_create",
             )
         ) == 1
+
+
+def test_parallel_module_extraction_converges_on_one_tree(
+    pg_session_factory,
+) -> None:
+    run_key = uuid4().hex
+    project_id = uuid4().int % 1_000_000_000 + 1
+    with pg_session_factory.begin() as db:
+        user = User(
+            username=f"batch48_extract_{run_key}",
+            password=hash_password(uuid4().hex),
+            nickname="Batch 48 Extract",
+            email=f"extract-{run_key}@integration.invalid",
+            status=1,
+        )
+        wildcard = db.scalar(select(Permission).where(Permission.code == "*"))
+        if wildcard is None:
+            wildcard = Permission(code="*", name="Super", type="api")
+            db.add(wildcard)
+        role = Role(
+            code=f"batch48-extract-{run_key}",
+            name="Batch 48 Extract",
+            data_scope="global",
+        )
+        db.add_all([user, role])
+        db.flush()
+        db.add_all(
+            [
+                RolePermission(role_id=role.id, permission_id=wildcard.id),
+                UserRole(user_id=user.id, role_id=role.id, project_id=0),
+            ]
+        )
+        bundle = ReleaseBundle(
+            project_id=project_id,
+            name=f"batch48-extract-{run_key}",
+            client_version="14.1.0",
+        )
+        evidence_job = LanhuEvidenceJob(
+            project_id=project_id,
+            source_url="https://lanhuapp.com/redacted",
+            status="success",
+        )
+        db.add_all([bundle, evidence_job])
+        db.flush()
+        db.add(
+            LanhuEvidencePage(
+                job_id=evidence_job.id,
+                project_id=project_id,
+                page_id=f"page-{run_key}",
+                page_name="比赛列表",
+                page_path="APP端/赛事/比赛列表",
+                folder="APP端/赛事",
+                order_index=0,
+                merged_text="比赛列表正文",
+                local_url="file:///redacted/match-list.html",
+            )
+        )
+        db.flush()
+        user_id = user.id
+        bundle_id = bundle.id
+        evidence_job_id = evidence_job.id
+
+    def override_get_db():
+        with pg_session_factory() as db:
+            yield db
+
+    previous_overrides = dict(app.dependency_overrides)
+    app.dependency_overrides[get_db] = override_get_db
+    workers = 4
+    start = Barrier(workers)
+    headers = {
+        "Authorization": f"Bearer {create_access_token(user_id)}",
+        "X-Project-Id": str(project_id),
+    }
+    payload = {
+        "evidence_job_id": evidence_job_id,
+        "source_version": "14.1.0",
+    }
+
+    try:
+        with TestClient(app) as client:
+            def extract_once() -> tuple[int, dict]:
+                start.wait(timeout=10)
+                response = client.post(
+                    f"/api/v1/requirement-modules/bundle/{bundle_id}/extract",
+                    headers=headers,
+                    json=payload,
+                )
+                return response.status_code, response.json()
+
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                responses = list(
+                    pool.map(lambda _index: extract_once(), range(workers))
+                )
+    finally:
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(previous_overrides)
+
+    assert all(status == 200 for status, _body in responses)
+    module_id_sets = {
+        tuple(body["data"]["module_ids"])
+        for _status, body in responses
+    }
+    assert len(module_id_sets) == 1
+
+    with pg_session_factory() as db:
+        extracted = list(
+            db.scalars(
+                select(RequirementModule).where(
+                    RequirementModule.project_id == project_id,
+                    RequirementModule.release_bundle_id == bundle_id,
+                    RequirementModule.source_version == "14.1.0",
+                )
+            ).all()
+        )
+        assert len(extracted) == 2
+        assert sum(row.node_type == "module" for row in extracted) == 1
+        assert sum(row.node_type == "page" for row in extracted) == 1
+        assert db.scalar(
+            select(func.count(AuditLog.id)).where(
+                AuditLog.project_id == project_id,
+                AuditLog.action == "module:extract",
+                AuditLog.target == f"bundle#{bundle_id}",
+            )
+        ) == workers
