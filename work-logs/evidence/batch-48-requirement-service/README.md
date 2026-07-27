@@ -1,7 +1,7 @@
 # Batch 48 需求服务验收证据
 
 - 执行日期：2026-07-27
-- 初始实现提交：`d1f7e52be70757c14d4acc153dee17571773b931`；真实外部复测兼容与 PostgreSQL 修复提交：`4dc307ed481fdb9ba01f5b8f949aeed7aef24503`。
+- 初始实现提交：`d1f7e52be70757c14d4acc153dee17571773b931`；真实外部复测兼容与 PostgreSQL 修复提交：`4dc307ed481fdb9ba01f5b8f949aeed7aef24503`；蓝湖三条行为修复提交：`b9a2066d273a097cccbd2456bae062ad45aa297c`。
 - 环境：本机隔离前端端口 5183、headed Chromium；后端使用同分支 TestClient/临时 SQLite、真实 AI 服务与隔离 PostgreSQL 克隆。本文不记录 URL、Cookie、Key 或数据库口令。
 
 截图由 `test-platform-v2/frontend/e2e/requirement.acceptance.spec.ts` 生成，API 数据使用确定性的浏览器契约 fixture；真实后端行为由同批次 Pytest 与迁移测试独立取证，二者不互相替代。
@@ -15,6 +15,6 @@
 | B47-REQ-013 | `work-logs/batch-48-需求服务验收修复-qa-report.md` | 真实 AI：2 模块、15 功能点、13 条功能用例；专项 27/27 |
 | B47-NFR-005、B47-NFR-006 | `postgresql-alembic-drift-audit.md` | 旧卷隔离克隆升级、重复升级、数据保留、唯一 head 与 metadata 零漂移 |
 | B47-REQ-022、B47-MOD-007 | `postgresql-concurrency-audit.md` | 真实 PG 4 路导入和 6 路关联并发；最终各 1 条且无计数漂移 |
-| B47-MOD-004、B47-MOD-006、B47-MOD-010 | `work-logs/batch-48-需求服务验收修复-qa-report.md` | 真实认证 HTTP 200、106 页枚举成功；记录下载边界与损坏附件条件阻塞 |
+| B47-MOD-004、B47-MOD-006、B47-MOD-010 | `lanhu-three-regression-audit.md` | 真实目标页有界下载、4 路 PostgreSQL 并发幂等、附件失败转人工、截图与中文 OCR 均通过；证据不含 URL、Cookie 或 OCR 正文 |
 
-48 条复测为 45 通过、3 阻塞。仅 B47-MOD-004/006/010 的真实蓝湖提取、损坏附件、截图/OCR 关键链路仍未闭环，最终结论保持 `NEEDS WORK`。
+48 条行为复测为 48 通过、0 失败、0 阻塞。最终结论仍为 `NEEDS WORK`，唯一原因是根仓 gitlink 指向的 `lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 尚未发布到可访问上游；dry-run push 返回 HTTP 403，远端干净检出无法取得该提交，A12/交付可追溯保持阻塞。行为全过不等于当前已可交付。

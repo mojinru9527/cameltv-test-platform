@@ -16,7 +16,7 @@ related:
 > 来源基线：Batch 47 在 `origin/main@a68e492` 执行的 48 条验收用例与 21 个缺陷。
 > 目标分支：`feature/batch-48-acceptance-fixes`；实际执行前必须记录完整提交 SHA、隔离环境和数据库版本。
 > 执行标准：[生产级模块验收规则](../../test-case-standards/生产级模块验收规则.md)。
-> 执行状态：45 条通过、3 条真实蓝湖关键链路阻塞；阻塞不计为通过，最终结论为 `NEEDS WORK`。
+> 执行状态：48 条通过、0 失败、0 阻塞；行为验收已全部通过。由于 `lanhu-mcp` 本地提交尚未发布到可访问的上游，根仓 gitlink 当前无法从远端干净检出，A12 交付可追溯仍阻塞，最终结论保持 `NEEDS WORK`。
 
 ## 1. 复测范围与放行规则
 
@@ -28,17 +28,20 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 - `CONDITIONAL`：只剩有责任人、到期日和批准证据的 P2/P3 风险。
 - `NEEDS WORK`：任一 P0/P1 失败，或存在跨项目泄露、部分提交/数据丢失、旧库升级失败、未接受 high/critical 漏洞、外部关键流程阻塞。
 
-真实 AI、旧版 PostgreSQL 升级和 PostgreSQL 多连接并发已取得可复核执行证据。以下真实蓝湖条件在完整关键链路证据具备前保持阻塞：
+真实 AI、旧版 PostgreSQL 升级、PostgreSQL 多连接并发和真实蓝湖三条关键链路均已取得可复核执行证据。行为验收已全部解除阻塞：
 
-| 条件 | 受影响用例 | 解除条件 |
+| 已解除条件 | 受影响用例 | 复测结果 |
 | --- | --- | --- |
-| 可用的蓝湖证据包/Provider | B47-MOD-004、B47-MOD-006、B47-MOD-010 | 完成提取、附件、截图/OCR 浏览器闭环并保存证据 |
+| 蓝湖有界下载、附件失败转人工、截图/OCR | B47-MOD-004、B47-MOD-006、B47-MOD-010 | 三条均通过；见 `lanhu-three-regression-audit.md` |
 
 已解除条件的真实环境证据：
 
 - B47-REQ-013：真实 AI 完成拆分→确认→生成，得到 2 个模块、15 个功能点和 13 条功能用例；专项 27/27 通过。
 - B47-NFR-005/006：从 `codex-cameltv-pg-staging-20260714-data` 的隔离克隆，将 revision `20260714_lanhu_pg_reconcile` 升级至 `20260727_batch48_pg_parity`；重复升级通过，数据计数不变，`alembic check` 零漂移。
 - B47-REQ-022/B47-MOD-007：真实 PostgreSQL 多连接并发分别得到“4 路 1 导入、3 跳过”和“6 路 1×200、5×409”，最终各保留 1 条记录且计数无漂移。
+- B47-MOD-004/006/010：真实蓝湖目标页有界下载、4 路模块提取幂等、附件失败转人工、截图与中文 OCR 闭环通过；证据不含 URL、Cookie 或 OCR 正文。
+
+当前唯一发布阻塞不是用例失败：`lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 仅存在于本地，向既有上游执行 dry-run push 返回 HTTP 403；根仓 gitlink 因而尚不能被远端干净检出。该问题使 A12 交付可追溯不通过，在提交发布到可访问远端或更新为上游可检出提交前，结论不得写为 `READY`。
 
 ## 2. Batch 47 缺陷到 Batch 48 修复/自动化映射
 
@@ -61,7 +64,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-DEF-013 跨项目子节点泄露 | `fix(batch-48): enforce requirement module isolation` | `test_batch48_requirement_modules.py`：跨项目/跨 bundle 不泄露 |
 | B47-DEF-014 懒加载丢孙节点 | `fix(batch-48): enforce requirement module isolation` | `test_batch48_requirement_modules.py`：完整树与三层懒加载一致 |
 | B47-DEF-015 模块/API 关联缺校验 | `fix(batch-48): enforce requirement module isolation` | `test_batch48_requirement_modules.py`：方向、平台、枚举、重复、归属与持久化 |
-| B47-DEF-016 截图地址/OCR 错误 | `fix(batch-48): complete requirement frontend acceptance` | `lanhuEvidence.test.ts` + `PrototypePreview.test.tsx`；真实蓝湖浏览器闭环仍由 B47-MOD-010 阻塞 |
+| B47-DEF-016 截图地址/OCR 错误 | `fix(batch-48): complete requirement frontend acceptance` | `lanhuEvidence.test.ts` + `PrototypePreview.test.tsx`；真实截图与中文 OCR 浏览器闭环见 `lanhu-three-regression-audit.md` |
 | B47-DEF-017 重叠轮询/重复 GET | `fix(batch-48): complete requirement frontend acceptance` | `EvidenceTaskPanel.test.tsx`、`useApi.test.ts`、Playwright 网络记录 |
 | B47-DEF-018 移动端/a11y 不可用 | `fix(batch-48): complete requirement frontend acceptance` | `RequirementPage.test.tsx`；Playwright 桌面/平板/390 px 与键盘 |
 | B47-DEF-019 旧库迁移/metadata 漂移 | `fix(batch-48): reconcile requirement database upgrades` | `test_batch48_requirement_migration.py`、`test_postgresql_migration_defaults.py`、`test_migration_revision_ids.py`、真实 PostgreSQL 旧卷隔离克隆与 metadata 检查 |
@@ -114,13 +117,13 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-MOD-001 | 模块树 | 三层以上完整树与懒加载一致 | P0 | API/树结构 | bundle 含根/子/孙节点 | 请求完整树和 children API | 孙节点存在；children 与 child_count 一致；两种结果结构相同 | 失败 / B47-DEF-014 | DEF-014 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-MOD-002 | 项目隔离 | 他项目 parent/bundle 不可读取 | P0 | API/安全 | 项目 1 用户；项目 999 私有树 | 用项目 1 身份请求项目 999 children/full tree | 403/404；不得泄露名称、数量或结构；日志不含敏感内容 | 失败 / B47-DEF-013 | DEF-013 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-MOD-003 | 列表 | 过滤、分页和 count 使用同一条件 | P1 | API/组合 | 多平台/类型/层级/状态且超过一页 | 逐项和组合筛选，翻页并重复请求 | total 与 items 条件一致；排序稳定；无重复/遗漏 | 未执行 | `test_batch48_requirement_modules.py` 组合矩阵 | 尚未执行 | 未执行 | 无（尚未执行） |
-| B47-MOD-004 | 模块提取 | 同 bundle 重复/并发提取幂等 | P1 | API/并发 | 可用蓝湖证据包 | 连续/并发 extract 并查询最终树/审计 | 不重复插入或明确版本覆盖；失败完整回滚 | 阻塞 / ENV-002 | 模块并发自动化 + 真实蓝湖 E2E | 真实认证 HTTP 200、106 页枚举通过；下载关键链路未完成 | 阻塞 | QA 报告：pinned `lanhu-mcp` 下载忽略 `pageId` 且无资源/字节/总时限限制 |
+| B47-MOD-004 | 模块提取 | 同 bundle 重复/并发提取幂等 | P1 | API/并发 | 可用蓝湖证据包 | 连续/并发 extract 并查询最终树/审计 | 不重复插入或明确版本覆盖；失败完整回滚 | 阻塞 / ENV-002 | 模块并发自动化 + 真实蓝湖 E2E | 目标页有界下载完成；真实 PostgreSQL 4 路并发均返回相同模块 ID，最终仅 1 module + 1 page | 通过 | `lanhu-three-regression-audit.md` |
 | B47-MOD-005 | 交互/导航 | 交互 merge/replace 与全局导航分类 | P1 | API/状态 | 模块树已生成 | 提取、编辑、分类、再次读取；提交非法模块 | JSON 结构和状态持久化；非法模块/状态拒绝且无副作用 | 未执行 | `test_batch48_requirement_modules.py` 状态矩阵 | 尚未执行 | 未执行 | 无（尚未执行） |
-| B47-MOD-006 | 附件 | 附件部分失败可追踪且不污染数据 | P1 | API/异常 | 证据包含正常/损坏附件 | 执行附件提取并核对分项、知识实体、审计 | 分项结果可追踪；知识实体不重复；失败项不污染成功数据 | 阻塞 / ENV-002 | 模块异常自动化 + 真实蓝湖证据包 | 真实认证和页面枚举已通过；损坏附件 URL 未提供 | 阻塞 | QA 报告：缺正常/损坏附件完整闭环证据 |
+| B47-MOD-006 | 附件 | 附件部分失败可追踪且不污染数据 | P1 | API/异常 | 真实证据包；正常附件与受控不可读附件 | 执行附件提取并核对分项、人工处理提示、知识实体和审计 | 分项结果可追踪；不可读项提示人工处理；知识实体不重复；失败项不污染成功数据 | 阻塞 / ENV-002 | 模块异常自动化 + 真实蓝湖证据包 | 正常项成功；不可读项计入 failed 并提示人工处理，失败项无业务副作用，重试无重复 | 通过 | `lanhu-three-regression-audit.md` |
 | B47-MOD-007 | 管理端关联 | 只允许合法 client→ADMIN 关系 | P1 | API/规则 | APP/PC/WEB/ADMIN 模块齐全 | 创建合法、非法方向/平台/枚举、重复和并发关系 | 非法 400/422；合法持久化；重复/并发不产生多条 | 失败 / B47-DEF-015 | DEF-015 映射 + `test_batch48_postgresql_concurrency.py` | 已完成真实 PostgreSQL 6 路并发 | 通过 | `postgresql-concurrency-audit.md` |
 | B47-MOD-008 | API 匹配 | 文档存在/归属与匹配响应准确 | P1 | API/正负面 | integration 需求和 Swagger 资产 | 正常匹配；不存在/他项目 document_id；他项目 endpoint | 正常返回候选；非法文档/endpoint 404；不泄露他项目信息 | 失败 / B47-DEF-015 | DEF-015 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-MOD-009 | API 关联 | 匹配确认后持久化需求→API 关系 | P1 | UI+API/追溯 | 已得到匹配候选 | 用户确认匹配，刷新并查询 coverage/DB | 关系可恢复；供覆盖追溯使用；审计同事务持久化 | 失败 / B47-DEF-012 | DEF-012 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
-| B47-MOD-010 | 截图/OCR | 证据截图可查看且 OCR 文本可用 | P0 | UI+API/主流程 | 蓝湖证据包完成 | 在需求页查看截图、OCR/merged_text 和置信度 | 使用正确 asset URL；图片可见；文本与页面 ID 对应且可追溯 | 失败 / B47-DEF-016 | DEF-016 映射 | 真实认证和 106 页枚举已通过；下载未完成，未进入截图/OCR | 阻塞 | QA 报告：缺真实截图、OCR/merged_text 浏览器闭环证据 |
+| B47-MOD-010 | 截图/OCR | 证据截图可查看且 OCR 文本可用 | P0 | UI+API/主流程 | 蓝湖证据包完成 | 在需求页查看截图、OCR/merged_text 和置信度 | 使用正确 asset URL；图片可见；文本与页面 ID 对应且可追溯 | 失败 / B47-DEF-016 | DEF-016 映射 | 目标页生成 7 段未截断截图；中文 OCR 637 块，merged_text 非空；浏览器控制台和失败请求均为 0 | 通过 | `lanhu-three-regression-audit.md` |
 | B47-MOD-011 | 采集任务 | 轮询不重叠、可停止、故障不刷屏 | P1 | UI/稳定性 | 证据任务面板打开 | 长时间运行；模拟慢响应、网络故障、完成和卸载 | 单次轮询；不重叠；完成/卸载取消；3/6/12/30 秒退避；一次错误提示 | 失败 / B47-DEF-017 | DEF-017 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 
 ### 3.4 UI、迁移、自动化与依赖安全
@@ -174,13 +177,13 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-MOD-001 | full/lazy 根子孙三层结构与计数一致 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
 | B47-MOD-002 | 跨项目 parent/bundle 被拒绝且不泄露结构 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
 | B47-MOD-003 | 过滤、层级、分页、count 与重复请求结果稳定 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
-| B47-MOD-004 | 真实认证 HTTP 200、106 页枚举成功；pinned 下载忽略 `pageId` 且缺资源/字节/总时限限制，无法安全完成重复/并发提取闭环 | 阻塞 | 无 | Codex / 2026-07-27 | QA 报告 / 蓝湖阻塞登记 |
+| B47-MOD-004 | 真实目标页有界下载完成；真实 PostgreSQL 4 路并发全部返回相同模块 ID，最终仅 1 module + 1 page，无重复或半棵树 | 通过 | 无 | Codex / 2026-07-27 | `lanhu-three-regression-audit.md` |
 | B47-MOD-005 | merge/replace、分类和非法模块/状态均符合契约 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
-| B47-MOD-006 | 真实认证和页面枚举通过；损坏附件 URL 未提供，无法验证部分失败与数据不污染 | 阻塞 | 无 | Codex / 2026-07-27 | QA 报告 / 蓝湖阻塞登记 |
+| B47-MOD-006 | 复用真实 URL；正常附件继续处理，不可读附件返回人工处理提示且无业务副作用，重试不产生重复实体 | 通过 | 无 | Codex / 2026-07-27 | `lanhu-three-regression-audit.md` |
 | B47-MOD-007 | 真实 PostgreSQL 6 路并发得到 1×200、5×409；最终仅 1 条关联且无漂移 | 通过 | 无 | Codex / 2026-07-27 | `postgresql-concurrency-audit.md` |
 | B47-MOD-008 | 不存在/他项目文档、服务和 endpoint 均被拒绝 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
 | B47-MOD-009 | 匹配确认去重持久化，审计和 coverage 可追溯 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 + API Vitest |
-| B47-MOD-010 | 真实认证和 106 页枚举通过；资源下载未完成，未取得截图、OCR/merged_text 浏览器闭环证据 | 阻塞 | 无 | Codex / 2026-07-27 | QA 报告 / 蓝湖阻塞登记 |
+| B47-MOD-010 | 目标页生成 7 段未截断截图和 637 个中文 OCR 文本块；merged_text 非空，浏览器可见且控制台错误/失败请求均为 0 | 通过 | 无 | Codex / 2026-07-27 | `lanhu-three-regression-audit.md` |
 | B47-MOD-011 | 轮询不重叠，可取消，按 3/6/12/30 秒退避且只提示一次 | 通过 | 无 | Codex / 2026-07-27 | `EvidenceTaskPanel.test.tsx` |
 | B47-NFR-001 | 390×844 完成上传、分页、搜索、预览和审查入口，无全局溢出 | 通过 | 无 | Codex / 2026-07-27 | Playwright + 截图 |
 | B47-NFR-002 | Enter/Space 均可选择，Axe 无违规 | 通过 | 无 | Codex / 2026-07-27 | Playwright |
@@ -195,15 +198,15 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 
 ## 5. 执行汇总
 
-本轮复测结果如下；阻塞未计入通过：
+本轮 48 条行为复测结果如下：
 
 | Batch 48 状态 | 数量 | 说明 |
 | --- | ---: | --- |
-| 通过 | 45 | P0 27 条、P1 18 条 |
+| 通过 | 48 | P0 28 条、P1 20 条 |
 | 失败 | 0 | 本轮未发现新增失败 |
-| 阻塞 | 3 | 真实蓝湖 3 条（P0 1 条、P1 2 条） |
+| 阻塞 | 0 | 无行为用例阻塞 |
 | 未执行 | 0 | 无 |
-| **总计** | **48** | **`NEEDS WORK`：3 条真实蓝湖关键链路仍阻塞** |
+| **总计** | **48** | **行为验收 48/48；交付可追溯阻塞，最终仍为 `NEEDS WORK`** |
 
 ## 6. 执行与证据回填要求
 
@@ -211,5 +214,5 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 2. 浏览器证据使用确定性 API 契约 fixture；真实后端行为由同批次 Pytest/迁移测试独立证明，二者不能互相替代。
 3. B47-REQ-022、B47-MOD-007 已在真实 PostgreSQL 多连接竞争下通过；并发输出和最终数据库状态见 `postgresql-concurrency-audit.md`。
 4. 旧版 PostgreSQL 卷只使用隔离克隆复测，原卷未修改；升级与 metadata 证据见 `postgresql-alembic-drift-audit.md`。
-5. 外部阻塞责任人：产品/项目负责人；预计时间：蓝湖下载边界修复且损坏附件条件具备后 1 个工作日内复测。
-6. 由于 3 条 P0/P1 真实蓝湖关键链路阻塞，本轮即使其余门禁全绿，结论仍为 `NEEDS WORK`。
+5. B47-MOD-004、B47-MOD-006、B47-MOD-010 的统一脱敏执行证据见 `lanhu-three-regression-audit.md`；不得在文档中记录 URL、Cookie 或 OCR 正文。
+6. 行为回归虽然达到 48/48，但 `lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 尚未发布到可访问远端，根仓 gitlink 无法远端干净检出；A12/交付可追溯仍阻塞，因此最终结论保持 `NEEDS WORK`，不得写为 `READY`。
