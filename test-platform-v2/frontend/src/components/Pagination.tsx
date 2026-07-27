@@ -20,9 +20,9 @@ export default function Pagination({ page, totalPages, total, onChange }: Pagina
   }
 
   return (
-    <div className="flex items-center justify-between pt-4 text-sm text-muted-foreground">
+    <div className="flex flex-col gap-3 pt-4 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
       <span>{total != null ? `共 ${total} 条` : ''}</span>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -45,14 +45,16 @@ export default function Pagination({ page, totalPages, total, onChange }: Pagina
         </Button>
         <span className="ml-2">跳转到</span>
         <input
-          className="w-[50px] rounded-md border px-2 py-1 text-center text-sm"
+          className="min-h-9 w-[50px] rounded-md border bg-background px-2 py-1 text-center text-sm text-foreground placeholder:text-muted-foreground"
           placeholder="..."
           value={jumpValue}
           onChange={(e) => setJumpValue(e.target.value.replace(/\D/g, ''))}
           onKeyDown={(e) => { if (e.key === 'Enter') handleJump() }}
+          aria-label="跳转页码"
+          inputMode="numeric"
         />
         <span>页</span>
-        <Button variant="outline" size="sm" onClick={handleJump}>GO</Button>
+        <Button variant="outline" size="sm" onClick={handleJump} aria-label="确认跳转页码">GO</Button>
       </div>
     </div>
   )

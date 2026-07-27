@@ -12,17 +12,18 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { downloadLanhuEvidenceAsset } from '@/api/lanhuEvidence'
 import {
   Image, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut, RotateCcw,
 } from 'lucide-react'
 
 // ── Types ──
 
-interface ScreenshotPage {
+export interface ScreenshotPage {
   page_name: string
   page_index: number
   ocr_text?: string
-  screenshot_url?: string
+  asset_id?: number
   interactions?: string
 }
 
@@ -49,10 +50,16 @@ export default function PrototypePreview({
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [imageError, setImageError] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [imageLoading, setImageLoading] = useState(false)
   const imageRef = useRef<HTMLDivElement>(null)
 
   const total = pages.length
   const current = pages[currentIndex] || null
+
+  const goTo = useCallback((idx: number) => {
+    if (idx >= 0 && idx < total) setCurrentIndex(idx)
+  }, [total])
 
   // Reset on page change
   useEffect(() => {
@@ -60,6 +67,38 @@ export default function PrototypePreview({
     setPosition({ x: 0, y: 0 })
     setImageError(false)
   }, [currentIndex])
+
+  useEffect(() => {
+    if (!open || current?.asset_id == null) {
+      setImageUrl(null)
+      setImageLoading(false)
+      return
+    }
+
+    const controller = new AbortController()
+    let objectUrl: string | null = null
+    setImageUrl(null)
+    setImageError(false)
+    setImageLoading(true)
+
+    downloadLanhuEvidenceAsset(current.asset_id, controller.signal)
+      .then((blob) => {
+        if (controller.signal.aborted) return
+        objectUrl = URL.createObjectURL(blob)
+        setImageUrl(objectUrl)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setImageError(true)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setImageLoading(false)
+      })
+
+    return () => {
+      controller.abort()
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [open, current?.asset_id])
 
   // Keyboard navigation
   useEffect(() => {
@@ -71,7 +110,7 @@ export default function PrototypePreview({
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [open, currentIndex])
+  }, [open, currentIndex, goTo, onClose])
 
   // Wheel zoom
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -90,10 +129,6 @@ export default function PrototypePreview({
     setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
   }
   const handleMouseUp = () => setIsDragging(false)
-
-  const goTo = (idx: number) => {
-    if (idx >= 0 && idx < total) setCurrentIndex(idx)
-  }
 
   const resetView = () => {
     setScale(1)
@@ -139,18 +174,36 @@ export default function PrototypePreview({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-[1fr_280px] gap-4 h-[70vh]">
+        <div className="grid max-h-[70vh] grid-cols-1 gap-4 overflow-y-auto md:grid-cols-[minmax(0,1fr)_280px]">
           {/* Left: screenshot area */}
-          <div className="relative bg-slate-100 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-lg bg-slate-100 md:h-[70vh]">
             {/* Toolbar */}
             <div className="absolute top-2 right-2 z-10 flex gap-1">
-              <Button size="icon" variant="ghost" className="size-7" onClick={() => setScale((s) => Math.min(3, s + 0.2))}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="min-h-11 min-w-11 sm:size-7 sm:min-h-0 sm:min-w-0"
+                onClick={() => setScale((s) => Math.min(3, s + 0.2))}
+                aria-label="放大截图"
+              >
                 <ZoomIn className="size-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="size-7" onClick={() => setScale((s) => Math.max(0.5, s - 0.2))}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="min-h-11 min-w-11 sm:size-7 sm:min-h-0 sm:min-w-0"
+                onClick={() => setScale((s) => Math.max(0.5, s - 0.2))}
+                aria-label="缩小截图"
+              >
                 <ZoomOut className="size-3.5" />
               </Button>
-              <Button size="icon" variant="ghost" className="size-7" onClick={resetView}>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="min-h-11 min-w-11 sm:size-7 sm:min-h-0 sm:min-w-0"
+                onClick={resetView}
+                aria-label="重置截图缩放"
+              >
                 <RotateCcw className="size-3.5" />
               </Button>
               <span className="text-xs text-muted-foreground self-center px-1 tabular-nums">
@@ -169,9 +222,11 @@ export default function PrototypePreview({
               onMouseLeave={handleMouseUp}
               style={{ transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`, transition: isDragging ? 'none' : 'transform 0.15s' }}
             >
-              {current?.screenshot_url && !imageError ? (
+              {imageLoading ? (
+                <Skeleton className="h-3/4 w-3/4" />
+              ) : imageUrl && !imageError ? (
                 <img
-                  src={current.screenshot_url}
+                  src={imageUrl}
                   alt={current.page_name}
                   className="max-w-full max-h-[65vh] object-contain"
                   onError={() => setImageError(true)}
@@ -181,7 +236,9 @@ export default function PrototypePreview({
                 <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
                   <Image className="size-16 mb-3 opacity-20" />
                   <p className="text-sm">截图不可用</p>
-                  <p className="text-xs mt-1">URL: {current?.screenshot_url || '无'}</p>
+                  <p className="text-xs mt-1">
+                    {current?.asset_id == null ? '该页面没有截图资产' : '截图加载失败，请关闭后重试'}
+                  </p>
                 </div>
               )}
             </div>
@@ -194,6 +251,7 @@ export default function PrototypePreview({
                   className="absolute left-2 top-1/2 -translate-y-1/2 size-8 bg-white/80 shadow"
                   disabled={currentIndex === 0}
                   onClick={() => goTo(currentIndex - 1)}
+                  aria-label="上一张截图"
                 >
                   <ChevronLeft className="size-4" />
                 </Button>
@@ -202,6 +260,7 @@ export default function PrototypePreview({
                   className="absolute right-2 top-1/2 -translate-y-1/2 size-8 bg-white/80 shadow"
                   disabled={currentIndex === total - 1}
                   onClick={() => goTo(currentIndex + 1)}
+                  aria-label="下一张截图"
                 >
                   <ChevronRight className="size-4" />
                 </Button>
@@ -240,8 +299,8 @@ export default function PrototypePreview({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-1">
-          <div className="flex items-center gap-2">
+        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={() => goTo(currentIndex - 1)} disabled={currentIndex === 0}>
               <ChevronLeft className="size-3.5 mr-1" />上一页
             </Button>
@@ -249,9 +308,9 @@ export default function PrototypePreview({
               下一页<ChevronRight className="size-3.5 ml-1" />
             </Button>
           </div>
-          {current?.screenshot_url && (
+          {imageUrl && (
             <Button size="sm" variant="ghost" asChild>
-              <a href={current.screenshot_url} target="_blank" rel="noopener noreferrer" download>
+              <a href={imageUrl} target="_blank" rel="noopener noreferrer" download={`${current?.page_name || 'screenshot'}.png`}>
                 <Download className="size-3.5 mr-1" />下载原图
               </a>
             </Button>

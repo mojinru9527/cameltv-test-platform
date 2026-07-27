@@ -243,12 +243,20 @@ async def extract_all_attachments(
 
     for att in attachments:
         try:
-            content = await extract_attachment_content(
-                db,
-                attachment_module_id=att.id,
-                project_id=project_id,
-                version=version,
-            )
+            with db.begin_nested():
+                content = await extract_attachment_content(
+                    db,
+                    attachment_module_id=att.id,
+                    project_id=project_id,
+                    version=version,
+                )
+            if not content.raw_text.strip():
+                result.failed += 1
+                result.errors.append(
+                    f"Attachment #{att.id} '{att.name}': "
+                    "附件内容不可读取，请人工处理"
+                )
+                continue
             result.processed += 1
             result.business_rules_created += len(content.business_rules)
             result.function_points_extracted += len(content.functional_points)

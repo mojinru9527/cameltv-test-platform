@@ -10,12 +10,17 @@ from pathlib import Path
 from fastapi import (
     APIRouter, BackgroundTasks, Body, Depends, File, Form, Query, Request, UploadFile,
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, get_current_user, require_permission
+from app.core.deps import CurrentUser, require_permission
+from app.core.exceptions import APIException, not_found
+from app.models.api_asset import ApiService
+from app.models.requirement import RequirementDocument
+from app.models.user import User
 from app.schemas.common import Page, R
 from app.schemas.requirement import (
     AIGenerateResult,
@@ -30,9 +35,10 @@ from app.schemas.requirement import (
     RequirementAnalysis,
     RequirementDocumentBrief,
     RequirementDocumentOut,
+    RequirementReviewRequest,
+    RequirementReviewState,
     VersionInfo,
 )
-from app.models.requirement import RequirementDocument
 from app.services import audit_service, requirement_service
 from app.services.file_parser_service import parse_docx, parse_markdown, parse_xlsx
 from app.services.knowledge import ingest_service
@@ -85,22 +91,45 @@ def list_requirements(
 ):
     """分页列出项目内的需求文档。P0-1/P1-4: 添加分页 + 列表 schema 不含 content 全量文本。"""
     pid = current.project_id or 0
-    stmt = select(RequirementDocument).where(RequirementDocument.project_id == pid)
+    filters = [RequirementDocument.project_id == pid]
     if keyword:
-        stmt = stmt.where(
+        filters.append(
             RequirementDocument.title.contains(keyword)
             | RequirementDocument.source_ref.contains(keyword)
         )
-    count_stmt = select(func.count()).select_from(stmt.subquery())
+    count_stmt = select(func.count()).select_from(RequirementDocument).where(*filters)
     total = db.scalar(count_stmt) or 0
-    rows = list(db.scalars(
-        stmt.order_by(RequirementDocument.id.desc())
+    rows = list(db.execute(
+        select(RequirementDocument, User.username)
+        .outerjoin(User, User.id == RequirementDocument.creator_id)
+        .where(*filters)
+        .order_by(RequirementDocument.id.desc())
         .offset((page - 1) * page_size).limit(page_size)
     ).all())
     return R.ok(Page(
         total=total, page=page, page_size=page_size,
-        items=[RequirementDocumentBrief.model_validate(r) for r in rows],
+        items=[
+            RequirementDocumentBrief(
+                **requirement_service._doc_to_dict(row, creator_name or "")
+            )
+            for row, creator_name in rows
+        ],
     ))
+
+
+@router.get("/{document_id}", response_model=R[RequirementDocumentOut], summary="需求文档详情")
+def get_requirement_detail(
+    document_id: int,
+    current: CurrentUser = Depends(require_permission("requirement:upload")),
+    db: Session = Depends(get_db),
+):
+    """Return the full document only when it belongs to the active project."""
+    doc = requirement_service.get_requirement(
+        db, document_id, project_id=current.project_id or 0
+    )
+    if doc is None:
+        raise not_found("需求文档")
+    return R.ok(RequirementDocumentOut(**doc))
 
 
 # ── 上传 ──────────────────────────────────────────────
@@ -124,24 +153,18 @@ async def upload_requirement(
     excel_cases: list[dict] | None = None
 
     if file is not None and file.filename:
-        # P1-S6a: Content-Length 前置检查，避免读取超大文件 (max 20 MB)
-        content_length = req.headers.get("content-length")
-        if content_length:
-            cl = int(content_length)
-            if cl > _MAX_UPLOAD_BYTES:
-                from app.core.exceptions import APIException
-                raise APIException(
-                    f"上传文件超过限制 (max: 20 MB, got: {cl / (1024*1024):.1f} MB)",
-                    code=413,
-                )
-        # P1-S6b: 实际读取时也限制大小，防止 Content-Length 伪造绕过
-        file_bytes = await file.read()
+        # Multipart headers make Content-Length larger than the file itself, so
+        # enforce the limit against the actual payload and read at most one byte
+        # beyond the configured maximum.
+        file_bytes = await file.read(_MAX_UPLOAD_BYTES + 1)
         if len(file_bytes) > _MAX_UPLOAD_BYTES:
-            from app.core.exceptions import APIException
             raise APIException(
-                f"上传文件超过限制 (max: 20 MB, got: {len(file_bytes) / (1024*1024):.1f} MB)",
                 code=413,
+                msg="上传文件超过限制（最大 20 MB）",
+                http_status=413,
             )
+        if not file_bytes:
+            raise APIException(code=400, msg="上传文件不能为空", http_status=400)
         # P1-S6c: XSS 防御 — 净化文件名
         filename = _sanitize_filename(file.filename)
         source_ref = filename
@@ -149,24 +172,36 @@ async def upload_requirement(
         title = html.escape(Path(filename).stem) or "untitled"
         ext = Path(filename).suffix.lower()
 
-        if ext == ".md":
-            file_type = "md"
-            content = parse_markdown(file_bytes)
-        elif ext == ".docx":
-            file_type = "docx"
-            content = parse_docx(file_bytes)
-        elif ext in (".xlsx", ".xls"):
-            file_type = "xlsx"
-            result = parse_xlsx(file_bytes)
-            content = result["content"]
-            parsed_type = result["type"]
-            excel_cases = result.get("cases")
-        else:
-            return R(code=400, msg=f"不支持的文件格式: {ext}，支持 .md / .docx / .xlsx")
+        try:
+            if ext == ".md":
+                file_type = "md"
+                content = parse_markdown(file_bytes)
+            elif ext == ".docx":
+                file_type = "docx"
+                content = parse_docx(file_bytes)
+            elif ext in (".xlsx", ".xls"):
+                file_type = "xlsx"
+                result = parse_xlsx(file_bytes)
+                content = result["content"]
+                parsed_type = result["type"]
+                excel_cases = result.get("cases")
+            else:
+                raise APIException(
+                    code=400,
+                    msg=f"不支持的文件格式: {ext}，支持 .md / .docx / .xlsx",
+                    http_status=400,
+                )
+        except APIException:
+            raise
+        except Exception as exc:
+            logger.info("requirement file parse rejected: %s", exc)
+            raise APIException(
+                code=400,
+                msg=f"{ext or '文件'} 内容损坏或无法解析",
+                http_status=400,
+            ) from exc
 
     elif lanhu_url.strip():
-        from app.core.exceptions import APIException
-
         raise APIException(
             code=409,
             msg="蓝湖链接必须先通过证据包质量门禁，再导入需求/RAG/Wiki",
@@ -175,18 +210,24 @@ async def upload_requirement(
     else:
         return R(code=400, msg="请上传文件或输入蓝湖链接")
 
-    doc = requirement_service.create_requirement(
-        db,
-        project_id=current.project_id or 0,
-        creator_id=current.user.id,
-        title=title,
-        file_type=file_type,
-        source_ref=source_ref,
-        content=content,
-        parsed_type=parsed_type,
-        excel_cases=excel_cases,
-    )
-    _audit(req, current, db, "requirement:upload", f"#{doc['id']} {title}")
+    try:
+        doc = requirement_service.create_requirement(
+            db,
+            project_id=current.project_id or 0,
+            creator_id=current.user.id,
+            title=title,
+            file_type=file_type,
+            source_ref=source_ref,
+            content=content,
+            parsed_type=parsed_type,
+            excel_cases=excel_cases,
+            commit=False,
+        )
+        _audit(req, current, db, "requirement:upload", f"#{doc['id']} {title}")
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     # 知识入库（自带 Session，post-commit，失败不影响主流程）
     background_tasks.add_task(
         ingest_service.ingest_requirement_in_new_session, current.project_id or 0, doc["id"]
@@ -334,15 +375,12 @@ async def extract_features(
         # Add inherited FPs as a separate module or merge into existing modules
         inherited_module = {
             "name": f"沿用自 {inherited_from_version}",
-            "description": f"以下功能点在上版本已确认，本版本无变更，直接沿用",
+            "description": "以下功能点在上版本已确认，本版本无变更，直接沿用",
             "function_points": inherited_fps,
             "client_scope": [],
         }
         existing_modules.append(inherited_module)
         extraction_result["modules"] = existing_modules
-
-    # Store extraction result
-    requirement_service.update_extraction(db, document_id, extraction_result)
 
     module_count = len(extraction_result.get("modules", []))
     fp_count = sum(
@@ -350,8 +388,22 @@ async def extract_features(
         for m in extraction_result.get("modules", [])
     )
 
-    _audit(req, current, db, "requirement:extract", f"doc#{document_id}",
-           f"提取 {module_count} 模块 + {fp_count} 功能点")
+    try:
+        requirement_service.update_extraction(
+            db, document_id, extraction_result, commit=False
+        )
+        _audit(
+            req,
+            current,
+            db,
+            "requirement:extract",
+            f"doc#{document_id}",
+            f"提取 {module_count} 模块 + {fp_count} 功能点",
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
     # Build version_info from changelog if available
     changelog = extraction_result.get("changelog", {})
@@ -392,11 +444,14 @@ def get_extraction(
     db: Session = Depends(get_db),
 ):
     """Get the Stage 1 extraction result (for resuming a review session)."""
+    doc = requirement_service.get_requirement(
+        db, document_id, project_id=current.project_id or 0
+    )
+    if doc is None:
+        raise not_found("需求文档")
     result = requirement_service.get_extraction(db, document_id, current.project_id or 0)
     if not result:
-        # Return code=0 with null data so the frontend doesn't show an error toast.
-        # The frontend treats null as "no extraction yet" and falls through to extractFeatures().
-        return R.ok(None)
+        raise not_found("功能拆分结果")
     return R.ok(FeatureExtractionResult(**result))
 
 
@@ -420,20 +475,42 @@ def confirm_extraction(
     if body.action not in ("confirm", "reject"):
         return R(code=400, msg="action 必须是 confirm 或 reject")
 
-    # Build the data to save
+    try:
+        original = json.loads(doc.get("extraction_raw") or "{}")
+    except (json.JSONDecodeError, TypeError):
+        original = {}
+    if not isinstance(original, dict):
+        original = {}
     confirmed_data = {
+        **original,
         "modules": body.modules,
-        "overall_assessment": doc.get("extraction_raw", ""),
         "rejected_modules": body.rejected_modules,
         "rejected_notes": body.rejected_notes,
     }
 
-    result = requirement_service.confirm_extraction(db, document_id, confirmed_data, body.action)
-    if not result:
-        return R(code=500, msg="操作失败")
-
     audit_detail = "确认功能拆分" if body.action == "confirm" else f"拒绝功能拆分: {body.rejected_notes[:100]}"
-    _audit(req, current, db, "requirement:extract:confirm", f"doc#{document_id}", audit_detail)
+    try:
+        result = requirement_service.confirm_extraction(
+            db,
+            document_id,
+            confirmed_data,
+            body.action,
+            commit=False,
+        )
+        if not result:
+            raise not_found("需求文档")
+        _audit(
+            req,
+            current,
+            db,
+            "requirement:extract:confirm",
+            f"doc#{document_id}",
+            audit_detail,
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return R.ok(result)
 
 
@@ -497,18 +574,24 @@ async def generate_test_cases(
                             parent_ai = json.loads(parent_doc["ai_raw"])
                             # Match inherited FPs to parent's functional cases by FP title/name
                             parent_cases = parent_ai.get("functional_cases", [])
-                            inherited_fp_names = {
-                                fp.get("name", "").strip()
+                            inherited_fp_versions = {
+                                (fp.get("name") or fp.get("title") or "").strip():
+                                (
+                                    fp.get("_from_version")
+                                    or parent_doc.get("version")
+                                    or "上版本"
+                                )
                                 for fp in inherited_fps
+                                if (fp.get("name") or fp.get("title") or "").strip()
                             }
                             for pc in parent_cases:
                                 pc_title = pc.get("title", "").strip()
                                 # Simple heuristic: check if case title contains FP name
-                                for fp_name in inherited_fp_names:
+                                for fp_name, from_version in inherited_fp_versions.items():
                                     if fp_name and (fp_name in pc_title or pc_title in fp_name):
                                         pc_copy = dict(pc)
                                         pc_copy["_inherited"] = True
-                                        pc_copy["_from_version"] = doc.get("version", "")
+                                        pc_copy["_from_version"] = from_version
                                         inherited_cases.append(pc_copy)
                                         break
                         except json.JSONDecodeError:
@@ -540,10 +623,31 @@ async def generate_test_cases(
     except Exception as e:
         return R(code=500, msg=f"AI 生成失败: {str(e)}")
 
-    # Store raw response
-    requirement_service.update_ai_result(db, document_id, ai_result)
+    # Inherited cases are part of the canonical generated result. Persist them
+    # before exposing the response so refresh/import sees the same case set.
+    canonical_functional = [
+        dict(case) for case in ai_result.get("functional_cases", [])
+    ]
+    for inherited_case in inherited_cases:
+        inherited_case = dict(inherited_case)
+        if (
+            inherited_case.get("_inherited")
+            and not inherited_case.get("title", "").startswith("[沿用")
+        ):
+            inherited_case["title"] = (
+                f"[沿用自{inherited_case.get('_from_version') or '上版本'}] "
+                f"{inherited_case.get('title', '')}"
+            )
+        canonical_functional.append(inherited_case)
+    ai_result = {
+        **ai_result,
+        "functional_cases": canonical_functional,
+        "api_cases": [
+            dict(case) for case in ai_result.get("api_cases", [])
+        ],
+    }
 
-    # Build structured result with indices (functional cases only)
+    # Build structured result with canonical indices.
     func_cases: list[AIGeneratedCase] = []
     idx = 0
     for c in ai_result.get("functional_cases", []):
@@ -552,18 +656,6 @@ async def generate_test_cases(
         if isinstance(c.get("steps"), (list, dict)):
             c["steps"] = json.dumps(c["steps"], ensure_ascii=False)
         func_cases.append(AIGeneratedCase(**c))
-        idx += 1
-
-    # ── Append inherited cases (batch-26): carry forward from previous version ──
-    for ic in inherited_cases:
-        ic["index"] = idx
-        ic["case_type"] = "manual"
-        if isinstance(ic.get("steps"), (list, dict)):
-            ic["steps"] = json.dumps(ic["steps"], ensure_ascii=False) if isinstance(ic["steps"], (list, dict)) else ic.get("steps", "")
-        # Mark as inherited in the title for visibility
-        if ic.get("_inherited") and not ic.get("title", "").startswith("[沿用"):
-            ic["title"] = f"[沿用自{ic.get('_from_version', '上版本')}] {ic.get('title', '')}"
-        func_cases.append(AIGeneratedCase(**ic))
         idx += 1
 
     # Parse API cases from AI result (for integration-type requirements)
@@ -595,9 +687,25 @@ async def generate_test_cases(
         overall_assessment=analysis_data.get("overall_assessment", ""),
     )
 
-    mode_label = "基于拆分" if extraction else "直接"
-    _audit(req, current, db, "requirement:generate", f"doc#{document_id}",
-           f"{mode_label}: 分析 {len(extracted_reqs)} 需求点 + 生成 {len(func_cases)} 功能用例 + {len(api_cases)} 接口用例")
+    mode_label = "基于拆分" if use_extraction else "直接"
+    try:
+        requirement_service.update_ai_result(
+            db, document_id, ai_result, commit=False
+        )
+        requirement_service.replace_review_queue(db, document_id, ai_result)
+        _audit(
+            req,
+            current,
+            db,
+            "requirement:generate",
+            f"doc#{document_id}",
+            f"{mode_label}: 分析 {len(extracted_reqs)} 需求点 + "
+            f"生成 {len(func_cases)} 功能用例 + {len(api_cases)} 接口用例",
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return R.ok(AIGenerateResult(
         document_id=document_id,
         requirement_analysis=req_analysis,
@@ -611,8 +719,19 @@ async def generate_test_cases(
 # ── B1: 需求-API 匹配 ──────────────────────────────────
 
 class MatchApiRequest(BaseModel):
-    integration_reqs: list[dict] = []
+    integration_reqs: list[dict] = Field(default_factory=list)
     service_id: int | None = None
+
+
+class ConfirmApiMatchRequest(BaseModel):
+    service_id: int | None = None
+    endpoint_ids: list[int] = Field(default_factory=list)
+
+
+class ApiMatchSelection(BaseModel):
+    service_id: int | None = None
+    endpoint_ids: list[int] = Field(default_factory=list)
+
 
 class ApiMatchItem(BaseModel):
     req_id: str = ""
@@ -630,7 +749,21 @@ def match_api_endpoints_for_requirement(
     current: CurrentUser = Depends(require_permission("requirement:upload")),
     db: Session = Depends(get_db),
 ):
-    """为需求文档中 integration 类型的功能点匹配已导入的 API 接口。P2-3: 权限提升为 require_permission。"""
+    """Return candidate matches without changing the confirmed selection."""
+    doc = requirement_service.get_requirement(
+        db, document_id, project_id=current.project_id or 0
+    )
+    if doc is None:
+        raise not_found("需求文档")
+    if body.service_id is not None:
+        service = db.scalar(
+            select(ApiService).where(
+                ApiService.id == body.service_id,
+                ApiService.project_id == (current.project_id or 0),
+            )
+        )
+        if service is None:
+            raise not_found("API 服务")
     if not body.integration_reqs:
         return R.ok([])
     matches = requirement_service.match_api_endpoints(
@@ -642,7 +775,122 @@ def match_api_endpoints_for_requirement(
     return R.ok([ApiMatchItem(**m) for m in matches])
 
 
+@router.get(
+    "/{document_id}/match-api/selection",
+    response_model=R[ApiMatchSelection],
+    summary="读取已确认的 API 匹配",
+)
+def get_confirmed_api_matches(
+    document_id: int,
+    current: CurrentUser = Depends(require_permission("requirement:upload")),
+    db: Session = Depends(get_db),
+):
+    result = requirement_service.get_api_match_selection(
+        db,
+        doc_id=document_id,
+        project_id=current.project_id or 0,
+    )
+    if result is None:
+        raise not_found("需求文档")
+    return R.ok(ApiMatchSelection(**result))
+
+
+@router.post(
+    "/{document_id}/match-api/confirm",
+    response_model=R[ApiMatchSelection],
+    summary="确认并持久化 API 匹配",
+)
+def confirm_api_matches(
+    document_id: int,
+    body: ConfirmApiMatchRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("requirement:upload")),
+    db: Session = Depends(get_db),
+):
+    try:
+        result = requirement_service.confirm_api_match_selection(
+            db,
+            doc_id=document_id,
+            project_id=current.project_id or 0,
+            service_id=body.service_id,
+            endpoint_ids=body.endpoint_ids,
+            commit=False,
+        )
+        if result is None:
+            raise not_found("需求文档")
+        _audit(
+            req,
+            current,
+            db,
+            "requirement:match-api:confirm",
+            f"doc#{document_id}",
+            f"确认服务 {result['service_id'] or '-'}，接口 {len(result['endpoint_ids'])} 个",
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return R.ok(ApiMatchSelection(**result))
+
+
 # ── 导入用例 ──────────────────────────────────────────
+
+@router.get(
+    "/{document_id}/review-state",
+    response_model=R[RequirementReviewState],
+    summary="读取 AI 用例审查队列",
+)
+def get_requirement_review_state(
+    document_id: int,
+    current: CurrentUser = Depends(require_permission("requirement:upload")),
+    db: Session = Depends(get_db),
+):
+    result = requirement_service.get_review_state(
+        db, document_id, current.project_id or 0
+    )
+    if result is None:
+        raise not_found("需求文档或 AI 用例")
+    return R.ok(RequirementReviewState(**result))
+
+
+@router.post(
+    "/{document_id}/review/{case_index}",
+    response_model=R[dict],
+    summary="审查 AI 生成用例",
+)
+def review_generated_case(
+    document_id: int,
+    case_index: int,
+    body: RequirementReviewRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("requirement:generate")),
+    db: Session = Depends(get_db),
+):
+    try:
+        result = requirement_service.set_review_action(
+            db,
+            doc_id=document_id,
+            project_id=current.project_id or 0,
+            case_index=case_index,
+            action=body.action,
+            reviewer_id=current.user.id,
+            edited_data=body.edited_data,
+            commit=False,
+        )
+        if result is None:
+            raise not_found("需求文档或用例")
+        _audit(
+            req,
+            current,
+            db,
+            f"requirement:review:{body.action}",
+            f"doc#{document_id}/case#{case_index}",
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    return R.ok(result)
 
 @router.post("/{document_id}/import", response_model=R[CaseImportResult])
 def import_generated_cases(
@@ -653,37 +901,50 @@ def import_generated_cases(
     db: Session = Depends(get_db),
 ):
     """Import selected AI-generated cases into the test_case table."""
-    doc = requirement_service.get_requirement(db, document_id, project_id=current.project_id or 0)
-    if not doc or not doc.get("ai_raw"):
-        return R(code=400, msg="请先生成测试用例再导入")
-
     try:
-        all_data = json.loads(doc["ai_raw"])
-    except json.JSONDecodeError:
-        return R(code=500, msg="AI 响应格式异常，无法解析")
-
-    # Collect selected cases by position-based index (functional + API cases)
-    selected: list[dict] = []
-    idx = 0
-    for c in all_data.get("functional_cases", []):
-        if idx in body.indices:
-            c["case_type"] = "manual"
-            selected.append(c)
-        idx += 1
-    for c in all_data.get("api_cases", []):
-        if idx in body.indices:
-            c["case_type"] = "api"
-            selected.append(c)
-        idx += 1
-
-    if not selected:
-        return R(code=400, msg="未找到匹配的用例")
-
-    result = requirement_service.import_cases(
-        db, document_id, selected, project_id=current.project_id or 0,
-    )
-    _audit(req, current, db, "requirement:import", f"doc#{document_id}",
-           f"导入 {result['imported']} 条用例")
+        selected = requirement_service.prepare_cases_for_import(
+            db,
+            doc_id=document_id,
+            project_id=current.project_id or 0,
+            indices=body.indices,
+            edited_cases=[
+                case.model_dump(by_alias=True, exclude_unset=True)
+                for case in body.edited_cases
+            ],
+            reviewer_id=current.user.id,
+        )
+        if not selected:
+            raise APIException(
+                code=400,
+                msg="请先生成测试用例并选择有效用例",
+                http_status=400,
+            )
+        result = requirement_service.import_cases(
+            db,
+            document_id,
+            selected,
+            project_id=current.project_id or 0,
+            commit=False,
+        )
+        _audit(
+            req,
+            current,
+            db,
+            "requirement:import",
+            f"doc#{document_id}",
+            f"导入 {result['imported']} 条用例，跳过 {result['skipped']} 条",
+        )
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise APIException(
+            code=409,
+            msg="用例已导入，请刷新后重试",
+            http_status=409,
+        ) from exc
+    except Exception:
+        db.rollback()
+        raise
 
     return R.ok(CaseImportResult(**result))
 
@@ -718,10 +979,26 @@ def delete_requirement(
     doc = requirement_service.get_requirement(db, document_id, project_id=current.project_id or 0)
     if not doc:
         return R(code=404, msg="需求文档不存在")
-    ok = requirement_service.delete_requirement(db, document_id, project_id=current.project_id or 0)
-    if not ok:
-        return R(code=404, msg="删除失败")
-    _audit(req, current, db, "requirement:delete", f"#{document_id} {doc.get('title', '')}")
+    try:
+        ok = requirement_service.delete_requirement(
+            db,
+            document_id,
+            project_id=current.project_id or 0,
+            commit=False,
+        )
+        if not ok:
+            raise not_found("需求文档")
+        _audit(
+            req,
+            current,
+            db,
+            "requirement:delete",
+            f"#{document_id} {doc.get('title', '')}",
+        )
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return R.ok({"id": document_id})
 
 

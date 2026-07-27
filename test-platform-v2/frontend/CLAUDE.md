@@ -1,7 +1,7 @@
 ---
 title: "test-platform-v2/frontend — React 前端"
 owner: "frontend-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-07-27"
 status: "active"
 expires: "2026-12-26"
 tags: ["frontend", "react", "typescript", "shadcn-ui", "zustand"]
@@ -10,7 +10,7 @@ related: ["../backend/CLAUDE.md", "../../docs/adr/0005-zustand-over-redux.md", "
 
 # test-platform-v2/frontend — React 前端
 
-> React 18 + TypeScript + Vite 5 + shadcn/ui (Radix UI + Tailwind CSS)
+> React 18 + TypeScript + Vite 7 + shadcn/ui (Radix UI + Tailwind CSS)
 
 ## 目录结构
 

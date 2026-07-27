@@ -5,7 +5,7 @@ Represents the "project sphere" knowledge graph backbone:
 """
 from __future__ import annotations
 
-from sqlalchemy import Float, ForeignKey, String, Text
+from sqlalchemy import Float, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -94,6 +94,15 @@ class ModuleAdminLink(Base, TimestampMixin):
       - configures: admin config controls client runtime behavior (v1.3)
     """
     __tablename__ = "module_admin_link"
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id",
+            "client_module_id",
+            "admin_module_id",
+            "relation_type",
+            name="uq_module_admin_link_identity",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(default=0, index=True)

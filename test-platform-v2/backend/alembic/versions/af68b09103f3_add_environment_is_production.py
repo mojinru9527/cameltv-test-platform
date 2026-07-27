@@ -23,7 +23,7 @@ def upgrade() -> None:
     inspector = sa.inspect(conn)
     columns = [c['name'] for c in inspector.get_columns('environment')]
     if 'is_production' not in columns:
-        op.add_column('environment', sa.Column('is_production', sa.Boolean(), nullable=False, server_default=sa.text('0')))
+        op.add_column('environment', sa.Column('is_production', sa.Boolean(), nullable=False, server_default=sa.false()))
 
 
 def downgrade() -> None:

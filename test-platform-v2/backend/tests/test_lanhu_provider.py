@@ -6,6 +6,9 @@
 from __future__ import annotations
 
 import asyncio
+import re
+import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -19,6 +22,114 @@ def _run(url=_URL):
 
 
 class TestParseHelpers:
+    def test_backend_declares_all_pinned_lanhu_runtime_dependencies(self):
+        def requirement_names(path):
+            names = set()
+            for line in path.read_text(encoding="utf-8").splitlines():
+                requirement = line.split("#", 1)[0].strip()
+                if not requirement or requirement.startswith("-"):
+                    continue
+                name = re.split(r"[<>=!~\[\]\s]", requirement, maxsplit=1)[0]
+                names.add(name.lower().replace("_", "-"))
+            return names
+
+        workspace_root = lanhu_provider._resolve_workspace_root()
+        backend_requirements = requirement_names(
+            workspace_root / "test-platform-v2" / "backend" / "requirements.txt"
+        )
+        lanhu_requirements = requirement_names(
+            lanhu_provider._lanhu_mcp_dir() / "requirements.txt"
+        )
+
+        assert lanhu_requirements <= backend_requirements
+
+    def test_pinned_runtime_without_optional_login_symbols_is_supported(self):
+        module_path = str(lanhu_provider._lanhu_mcp_dir())
+        sys.path.insert(0, module_path)
+        try:
+            runtime = lanhu_provider._load_lanhu_runtime()
+        finally:
+            sys.path.remove(module_path)
+
+        assert callable(runtime.LanhuExtractor)
+        assert callable(runtime.fix_html_files)
+        assert runtime.auth_error_types == ()
+        assert runtime.login is None
+        assert runtime.save_cookie is None
+
+    def test_pinned_extractor_without_cookie_constructor_is_supported(self):
+        observed = {"created": 0}
+
+        class Extractor:
+            def __init__(self):
+                observed["created"] += 1
+
+        runtime = SimpleNamespace(LanhuExtractor=Extractor)
+
+        instance = lanhu_provider._create_lanhu_extractor(
+            runtime, "redacted-cookie",
+        )
+
+        assert isinstance(instance, Extractor)
+        assert observed["created"] == 1
+
+    def test_download_resources_supports_pinned_signature(self):
+        class Extractor:
+            async def download_resources(self, url, output_dir, force_update=False):
+                assert force_update is False
+                return {"status": "downloaded"}
+
+        result = asyncio.run(
+            lanhu_provider._download_lanhu_resources(
+                Extractor(), _URL, "tmp", "version-1",
+            )
+        )
+        assert result["status"] == "downloaded"
+
+    def test_download_resources_preserves_newer_target_version_signature(self):
+        class Extractor:
+            async def download_resources(
+                self, url, output_dir, target_version_id="",
+            ):
+                assert target_version_id == "version-1"
+                return {"status": "cached"}
+
+        result = asyncio.run(
+            lanhu_provider._download_lanhu_resources(
+                Extractor(), _URL, "tmp", "version-1",
+            )
+        )
+        assert result["status"] == "cached"
+
+    def test_download_resources_passes_page_and_safety_bounds_to_bounded_signature(self):
+        class Extractor:
+            async def download_resources(
+                self,
+                url,
+                output_dir,
+                force_update=False,
+                *,
+                target_page_id=None,
+                target_version_id=None,
+                max_resources=None,
+                max_total_bytes=None,
+                overall_timeout=None,
+            ):
+                assert force_update is False
+                assert target_page_id == "2b4c4235"
+                assert target_version_id == "version-1"
+                assert max_resources == lanhu_provider._LANHU_DOWNLOAD_MAX_RESOURCES
+                assert max_total_bytes == lanhu_provider._LANHU_DOWNLOAD_MAX_TOTAL_BYTES
+                assert overall_timeout == lanhu_provider._LANHU_DOWNLOAD_TIMEOUT_SECONDS
+                return {"status": "downloaded"}
+
+        result = asyncio.run(
+            lanhu_provider._download_lanhu_resources(
+                Extractor(), _URL, "tmp", "version-1", "2b4c4235",
+            )
+        )
+        assert result["status"] == "downloaded"
+
     def test_parse_url_ids(self):
         doc, ver, page = lanhu_provider._parse_url_ids(_URL)
         assert doc == "e6b5ce1e" and ver == "26af" and page == "2b4c4235"
@@ -75,6 +186,129 @@ class TestExtractStatus:
         monkeypatch.setattr(lanhu_provider, "_extract_lanhu_content", _fake)
         r = _run()  # 不抛异常
         assert r.extraction_status == "failed"
+
+
+class TestEvidenceDownloadContract:
+    @pytest.mark.parametrize(
+        ("download_status", "extra"),
+        [
+            ("limited", {"limit_reason": "max_total_bytes"}),
+            ("downloaded_with_errors", {"failed_resources": [{"path": "broken.png"}]}),
+        ],
+    )
+    def test_incomplete_download_returns_manual_handling_status(
+        self, monkeypatch, tmp_path, download_status, extra,
+    ):
+        class Extractor:
+            def __init__(self, cookie=""):
+                pass
+
+            def parse_url(self, url):
+                return {
+                    "doc_id": "e6b5ce1e",
+                    "version_id": "26af",
+                    "page_id": "2b4c4235",
+                }
+
+            async def download_resources(
+                self,
+                url,
+                output_dir,
+                force_update=False,
+                *,
+                target_page_id=None,
+                target_version_id=None,
+                max_resources=None,
+                max_total_bytes=None,
+                overall_timeout=None,
+            ):
+                return {
+                    "status": download_status,
+                    "manual_action_required": True,
+                    **extra,
+                }
+
+            async def get_pages_list(self, url):
+                raise AssertionError("受限下载不得继续生成页面证据")
+
+        runtime = SimpleNamespace(
+            LanhuExtractor=Extractor,
+            fix_html_files=lambda _: None,
+            auth_error_types=(),
+            login=None,
+            save_cookie=None,
+        )
+        monkeypatch.setattr(lanhu_provider, "_load_lanhu_runtime", lambda: runtime)
+        monkeypatch.setattr(lanhu_provider, "_data_dir", lambda: tmp_path)
+
+        result = asyncio.run(lanhu_provider.get_lanhu_pages_for_evidence(_URL))
+
+        assert result["status"] == "failed"
+        assert result["manual_action_required"] is True
+        assert "请人工处理" in result["error"]
+        assert result["pages"] == []
+
+    def test_target_page_download_exposes_local_page_for_screenshot_ocr(
+        self, monkeypatch, tmp_path,
+    ):
+        observed: dict[str, object] = {}
+
+        class Extractor:
+            def __init__(self, cookie=""):
+                pass
+
+            def parse_url(self, url):
+                return {
+                    "doc_id": "e6b5ce1e",
+                    "version_id": "26af",
+                    "page_id": "2b4c4235",
+                }
+
+            async def download_resources(
+                self,
+                url,
+                output_dir,
+                force_update=False,
+                *,
+                target_page_id=None,
+                target_version_id=None,
+                max_resources=None,
+                max_total_bytes=None,
+                overall_timeout=None,
+            ):
+                observed["target_page_id"] = target_page_id
+                path = lanhu_provider.Path(output_dir) / "target.html"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("<html>可识别文字</html>", encoding="utf-8")
+                return {"status": "downloaded"}
+
+            async def get_pages_list(self, url):
+                return {
+                    "document_name": "Batch48",
+                    "pages": [{
+                        "id": "2b4c4235",
+                        "name": "目标页",
+                        "folder": "APP",
+                        "filename": "target.html",
+                    }],
+                }
+
+        runtime = SimpleNamespace(
+            LanhuExtractor=Extractor,
+            fix_html_files=lambda _: None,
+            auth_error_types=(),
+            login=None,
+            save_cookie=None,
+        )
+        monkeypatch.setattr(lanhu_provider, "_load_lanhu_runtime", lambda: runtime)
+        monkeypatch.setattr(lanhu_provider, "_data_dir", lambda: tmp_path)
+
+        result = asyncio.run(lanhu_provider.get_lanhu_pages_for_evidence(_URL))
+
+        assert result["status"] == "success"
+        assert observed["target_page_id"] == "2b4c4235"
+        assert result["pages"][0]["id"] == "2b4c4235"
+        assert result["pages"][0]["local_url"].startswith("file:")
 
 
 def test_delegation_identity():

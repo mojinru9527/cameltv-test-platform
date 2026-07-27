@@ -6,7 +6,7 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],
-    // D4: Coverage gate — v8 provider (bundled with vitest 2.x)
+    // D4: Coverage gate — v8 provider aligned with the installed Vitest major.
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
