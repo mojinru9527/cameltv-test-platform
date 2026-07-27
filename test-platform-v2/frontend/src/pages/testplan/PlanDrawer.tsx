@@ -24,14 +24,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { createPlan, updatePlan } from '@/api/testplan'
+import { fetchUsers } from '@/api/system'
 
 const formSchema = z.object({
   name: z.string().min(1, '请输入计划名称'),
   plan_id: z.string().optional().or(z.literal('')),
   description: z.string().optional().or(z.literal('')),
   status: z.enum(['draft', 'active', 'completed', 'archived']).default('draft'),
+  assignee_id: z.coerce.number().optional().or(z.literal(0)),
   start_date: z.string().optional().or(z.literal('')),
   end_date: z.string().optional().or(z.literal('')),
+  due_date: z.string().optional().or(z.literal('')),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -64,6 +67,11 @@ function isoToDatetimeLocal(iso?: string): string {
 
 export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
   const [saving, setSaving] = useState(false)
+  const [users, setUsers] = useState<any[]>([])
+
+  useEffect(() => {
+    fetchUsers().then((d: any) => setUsers(d || [])).catch(() => {})
+  }, [])
 
   const {
     register,
@@ -86,12 +94,15 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
           plan_id: editing.plan_id || '',
           description: editing.description || '',
           status: editing.status || 'draft',
+          assignee_id: editing.assignee_id || 0,
           start_date: isoToDatetimeLocal(editing.start_date),
           end_date: isoToDatetimeLocal(editing.end_date),
+          due_date: isoToDatetimeLocal(editing.due_date),
         })
       } else {
         reset({
           status: 'draft',
+          assignee_id: 0,
         })
       }
     }
@@ -102,8 +113,10 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
     try {
       const body: Record<string, any> = {
         ...data,
+        assignee_id: data.assignee_id || null,
         start_date: data.start_date ? new Date(data.start_date).toISOString() : undefined,
         end_date: data.end_date ? new Date(data.end_date).toISOString() : undefined,
+        due_date: data.due_date ? new Date(data.due_date).toISOString() : undefined,
       }
       if (editing?.id) {
         await updatePlan(editing.id, body)
@@ -155,6 +168,39 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
           <div>
             <label htmlFor="plan-description" className="mb-1 block text-sm font-medium">计划描述</label>
             <Textarea id="plan-description" rows={3} placeholder="测试范围、目标、注意事项等" {...register('description')} />
+          </div>
+
+          {/* Row: Assignee, Due Date */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="plan-assignee" className="mb-1 block text-sm font-medium">负责人</label>
+              <Controller
+                name="assignee_id"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={String(field.value || 0)}
+                    onValueChange={(v) => field.onChange(Number(v))}
+                  >
+                    <SelectTrigger id="plan-assignee" size="sm">
+                      <SelectValue placeholder="选择负责人（可选）" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">-</SelectItem>
+                      {users.map((u: any) => (
+                        <SelectItem key={u.id} value={String(u.id)}>
+                          {u.nickname || u.username || u.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div>
+              <label htmlFor="plan-due-date" className="mb-1 block text-sm font-medium">截止日期</label>
+              <Input id="plan-due-date" type="datetime-local" {...register('due_date')} />
+            </div>
           </div>
 
           {/* Row: Status, Start Date, End Date */}

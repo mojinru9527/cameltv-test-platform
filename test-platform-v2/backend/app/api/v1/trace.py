@@ -1,9 +1,9 @@
 """Trace & coverage API — requirement → case → plan → execution → defect matrix."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
-from app.core.deps import CurrentUser, get_current_user, require_project
+from app.core.deps import CurrentUser, require_project
 from app.core.db import get_db
 from app.schemas.common import R
 from app.services import trace_service

@@ -303,7 +303,7 @@ def compute_summary(db: Session, mission_id: int, project_id: int) -> dict:
         "artifact_total": len(artifact_rows),
         "artifact_by_type": _count_by([a.artifact_type for a in artifact_rows]),
         "log_total": len(log_rows),
-        "departments_logged": sorted({l.department for l in log_rows}),
+        "departments_logged": sorted({entry.department for entry in log_rows}),
         "execution_total": executed,
         "execution_passed": passed,
         "execution_failed": failed,

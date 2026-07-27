@@ -88,6 +88,8 @@
     "@redocly/openapi-core": {
       "js-yaml": "4.3.0",
       "minimatch": "10.2.5"
-    }
+    },
+    "js-yaml": ">=4.2.1"
+  }
   }
 }

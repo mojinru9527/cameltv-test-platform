@@ -20,8 +20,15 @@ class TestPlan(Base):
     description: Mapped[str] = mapped_column(default="")
     status: Mapped[str] = mapped_column(default="draft")  # draft/active/completed/archived
     creator_id: Mapped[int] = mapped_column(default=0)
+    assignee_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("sys_user.id"), default=None, index=True,
+        comment="指派执行人",
+    )
     start_date: Mapped[Optional[datetime]] = mapped_column(default=None)
     end_date: Mapped[Optional[datetime]] = mapped_column(default=None)
+    due_date: Mapped[Optional[datetime]] = mapped_column(
+        default=None, comment="截止日期",
+    )
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(default=datetime.now, onupdate=datetime.now)
 

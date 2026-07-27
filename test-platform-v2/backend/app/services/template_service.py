@@ -118,7 +118,7 @@ def get_default_template(db: Session, project_id: int) -> dict | None:
     row = db.scalar(
         select(ReportTemplate).where(
             ReportTemplate.project_id == project_id,
-            ReportTemplate.is_default == True,
+            ReportTemplate.is_default,
         )
     )
     if not row:
@@ -144,7 +144,7 @@ def _clear_other_defaults(db: Session, project_id: int) -> None:
     rows = db.execute(
         select(ReportTemplate).where(
             ReportTemplate.project_id == project_id,
-            ReportTemplate.is_default == True,
+            ReportTemplate.is_default,
         )
     ).scalars().all()
     for r in rows:

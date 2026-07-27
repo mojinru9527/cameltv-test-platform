@@ -1,4 +1,4 @@
-import { Search, RotateCcw } from '@/lib/icons'
+import { Search, RotateCcw, Download } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/select'
 import { format } from 'date-fns'
 import { useState } from 'react'
-import { fetchAuditLogs } from '@/api/system'
+import { fetchAuditLogs, exportAuditLogsCsv } from '@/api/system'
+import { toast } from 'sonner'
 
 const ACTION_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive'> = {
   'user:create': 'default',
@@ -56,6 +57,15 @@ export default function AuditTab() {
   const handleSearch = () => { setPage(0) }
 
   const handleRefresh = () => { refetch() }
+
+  const handleExport = async () => {
+    try {
+      await exportAuditLogsCsv({ action, keyword })
+      toast.success('审计日志导出成功')
+    } catch (e: any) {
+      toast.error(e?.message || '导出失败')
+    }
+  }
 
   const handleActionChange = (v: string) => {
     setAction(v === 'all' ? '' : v)
@@ -148,6 +158,10 @@ export default function AuditTab() {
               </Button>
               <Button size="sm" variant="outline" onClick={handleRefresh}>
                 <RotateCcw className="size-4" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleExport}>
+                <Download className="size-4 mr-1" />
+                导出 CSV
               </Button>
             </div>
           }

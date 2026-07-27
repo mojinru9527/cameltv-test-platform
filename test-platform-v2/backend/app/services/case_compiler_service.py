@@ -12,7 +12,6 @@ import json
 import logging
 import re
 import subprocess
-import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -371,7 +370,7 @@ def _parse_playwright_errors(output: str) -> list[str]:
             errors.append(line)
     if not errors:
         # 没有明确 error 行，取最后几行
-        lines = [l.strip() for l in output.strip().split("\n") if l.strip()]
+        lines = [line.strip() for line in output.strip().split("\n") if line.strip()]
         errors = lines[-5:]
     return errors
 

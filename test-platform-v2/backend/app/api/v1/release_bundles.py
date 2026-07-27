@@ -9,7 +9,7 @@ import json
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -17,7 +17,6 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user, require_permission
 
 logger = logging.getLogger("release_bundles")
-from app.core.exceptions import APIException
 from app.models.release_bundle import ReleaseBundle
 from app.models.requirement_module import RequirementModule
 from app.schemas.common import Page, R
@@ -441,7 +440,7 @@ def trigger_regression_for_bundle(
 
     根据模块名称匹配 UiTestScript，触发对应的 UiTestJob 执行。
     """
-    from app.models.ui_test import UiTestJob, UiTestScript
+    from app.models.ui_test import UiTestScript
     from app.services import ui_test_service
 
     pid = current.project_id or 0

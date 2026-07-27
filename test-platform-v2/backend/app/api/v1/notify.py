@@ -1,10 +1,10 @@
 """Notification channel management API."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
-from app.core.deps import CurrentUser, get_db, require_permission, require_project
+from app.core.deps import CurrentUser, get_db, require_permission
 from app.schemas.common import R
 from app.services import notify_service
 from app.services.audit_service import write_audit

@@ -1,5 +1,6 @@
 """Debug the Vite proxy 500 error with detailed response."""
-import urllib.request, json, sys
+import urllib.request
+import json
 
 # Login through proxy to get token
 print("Logging in through proxy...")

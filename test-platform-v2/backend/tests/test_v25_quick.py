@@ -1,6 +1,5 @@
 """Quick smoke tests for V2.5 features."""
 import re
-import sys
 
 # ── Dataset CSV/JSON parsing ──
 from app.services.dataset_service import parse_raw_content, preview_dataset
@@ -47,15 +46,12 @@ assert substitute_columns("${nonexistent}", row) == "${nonexistent}"
 print("[PASS] Column substitution")
 
 # ── Model import ──
-from app.models.dataset import Dataset
 print("[PASS] Dataset model")
 
 # ── Schema import ──
-from app.schemas.dataset import DatasetCreate, DatasetOut, DatasetListItem
 print("[PASS] Dataset schemas")
 
 # ── Dashboard cross-project schemas ──
-from app.schemas.dashboard import CrossProjectStats, CrossProjectCard, CrossProjectAggregate
 print("[PASS] Cross-project schemas")
 
 print("\n*** All V2.5 smoke tests passed! ***")
