@@ -16,7 +16,7 @@ related:
 > 来源基线：Batch 47 在 `origin/main@a68e492` 执行的 48 条验收用例与 21 个缺陷。
 > 目标分支：`feature/batch-48-acceptance-fixes`；实际执行前必须记录完整提交 SHA、隔离环境和数据库版本。
 > 执行标准：[生产级模块验收规则](../../test-case-standards/生产级模块验收规则.md)。
-> 执行状态：41 条通过、7 条因真实外部条件阻塞；阻塞不计为通过，最终结论为 `NEEDS WORK`。
+> 执行状态：45 条通过、3 条真实蓝湖关键链路阻塞；阻塞不计为通过，最终结论为 `NEEDS WORK`。
 
 ## 1. 复测范围与放行规则
 
@@ -28,18 +28,21 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 - `CONDITIONAL`：只剩有责任人、到期日和批准证据的 P2/P3 风险。
 - `NEEDS WORK`：任一 P0/P1 失败，或存在跨项目泄露、部分提交/数据丢失、旧库升级失败、未接受 high/critical 漏洞、外部关键流程阻塞。
 
-以下真实环境条件在取得可复核执行证据前保持阻塞：
+真实 AI、旧版 PostgreSQL 升级和 PostgreSQL 多连接并发已取得可复核执行证据。以下真实蓝湖条件在完整关键链路证据具备前保持阻塞：
 
 | 条件 | 受影响用例 | 解除条件 |
 | --- | --- | --- |
-| 可用的真实 AI Key/服务 | B47-REQ-013 | 完成拆分→确认→生成闭环并保存请求、响应和持久化证据 |
 | 可用的蓝湖证据包/Provider | B47-MOD-004、B47-MOD-006、B47-MOD-010 | 完成提取、附件、截图/OCR 浏览器闭环并保存证据 |
-| 脱敏真实旧版 PostgreSQL 快照 | B47-NFR-005 | 从旧版升级至唯一 head，数据保留且 `alembic check` 无漂移 |
-| 真实 PostgreSQL 多连接并发环境 | B47-REQ-022、B47-MOD-007 | 并行发起重复写请求，证明一个成功、另一个幂等或冲突且最终无重复 |
+
+已解除条件的真实环境证据：
+
+- B47-REQ-013：真实 AI 完成拆分→确认→生成，得到 2 个模块、15 个功能点和 13 条功能用例；专项 27/27 通过。
+- B47-NFR-005/006：从 `codex-cameltv-pg-staging-20260714-data` 的隔离克隆，将 revision `20260714_lanhu_pg_reconcile` 升级至 `20260727_batch48_pg_parity`；重复升级通过，数据计数不变，`alembic check` 零漂移。
+- B47-REQ-022/B47-MOD-007：真实 PostgreSQL 多连接并发分别得到“4 路 1 导入、3 跳过”和“6 路 1×200、5×409”，最终各保留 1 条记录且计数无漂移。
 
 ## 2. Batch 47 缺陷到 Batch 48 修复/自动化映射
 
-> 实际实现提交：`d1f7e52be70757c14d4acc153dee17571773b931`。下表保留实施切片主题，最终修复均可追溯到该提交。
+> 初始实现提交：`d1f7e52be70757c14d4acc153dee17571773b931`。真实外部复测产生的兼容与 PostgreSQL 修复提交：`4dc307ed481fdb9ba01f5b8f949aeed7aef24503`。
 
 | 历史缺陷 | 计划修复提交 | 行为级自动化/复核 |
 | --- | --- | --- |
@@ -48,7 +51,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-DEF-003 正文预览为空 | `fix(batch-48): harden requirement document behavior` + `fix(batch-48): complete requirement frontend acceptance` | `test_batch48_requirement_acceptance.py` 详情/跨项目；`RequirementPage.test.tsx` 与 Playwright 预览 |
 | B47-DEF-004 审查能力缺失 | `fix(batch-48): make requirement review and import durable` + `fix(batch-48): complete requirement frontend acceptance` | `test_batch48_requirement_acceptance.py`；`ReviewPage.test.tsx`；Playwright 审查路由 |
 | B47-DEF-005 编辑值丢失 | `fix(batch-48): make requirement review and import durable` + `fix(batch-48): complete requirement frontend acceptance` | `test_batch48_requirement_acceptance.py`；`AiResultModal.test.tsx`；`ReviewPage.test.tsx` |
-| B47-DEF-006 重复导入/计数失真 | `fix(batch-48): make requirement review and import durable` | `test_batch48_requirement_acceptance.py`：混合索引、顺序幂等、唯一约束与计数；真实 PG 并发由 B47-REQ-022 阻塞 |
+| B47-DEF-006 重复导入/计数失真 | `fix(batch-48): make requirement review and import durable` | `test_batch48_requirement_acceptance.py`：混合索引、顺序幂等、唯一约束与计数；`test_batch48_postgresql_concurrency.py`：真实 PG 4 路并发最终仅导入 1 条 |
 | B47-DEF-007 审计不落库 | `fix(batch-48): make requirement review and import durable` | `test_batch48_requirement_acceptance.py`：业务/审计同事务 |
 | B47-DEF-008 跨页不可见/创建人缺失 | `fix(batch-48): harden requirement document behavior` + `fix(batch-48): complete requirement frontend acceptance` | `test_batch48_requirement_acceptance.py` 101 条、keyword、creator；`RequirementPage.test.tsx` |
 | B47-DEF-009 抽取恢复/评估污染 | `fix(batch-48): harden requirement document behavior` + `fix(batch-48): complete requirement frontend acceptance` | `test_batch48_requirement_acceptance.py`；`requirement.test.ts` |
@@ -61,7 +64,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-DEF-016 截图地址/OCR 错误 | `fix(batch-48): complete requirement frontend acceptance` | `lanhuEvidence.test.ts` + `PrototypePreview.test.tsx`；真实蓝湖浏览器闭环仍由 B47-MOD-010 阻塞 |
 | B47-DEF-017 重叠轮询/重复 GET | `fix(batch-48): complete requirement frontend acceptance` | `EvidenceTaskPanel.test.tsx`、`useApi.test.ts`、Playwright 网络记录 |
 | B47-DEF-018 移动端/a11y 不可用 | `fix(batch-48): complete requirement frontend acceptance` | `RequirementPage.test.tsx`；Playwright 桌面/平板/390 px 与键盘 |
-| B47-DEF-019 旧库迁移/metadata 漂移 | `fix(batch-48): reconcile requirement database upgrades` | `test_batch48_requirement_migration.py`、`test_migration_revision_ids.py`、真实 PostgreSQL 快照 |
+| B47-DEF-019 旧库迁移/metadata 漂移 | `fix(batch-48): reconcile requirement database upgrades` | `test_batch48_requirement_migration.py`、`test_postgresql_migration_defaults.py`、`test_migration_revision_ids.py`、真实 PostgreSQL 旧卷隔离克隆与 metadata 检查 |
 | B47-DEF-020 行为覆盖不足 | Batch 48 Tasks 1～6 的全部测试提交 | 四组后端验收测试、前端行为测试、Playwright；核对断言与缺陷一一对应 |
 | B47-DEF-021 依赖漏洞 | `fix(batch-48): remediate frontend dependency risk` | `npm audit --omit=dev`、`npm audit`；记录完整结果和批准的残余风险 |
 
@@ -88,7 +91,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 
 | 用例编号 | 模块 | 用例标题 | 重要程度 | 类型 | 前提条件 | 操作步骤/输入 | 可观察预期结果 | Batch 47 基线/缺陷 | 修复/自动化映射 | 执行前预置结果 | 执行前状态 | 执行前证据 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| B47-REQ-013 | 功能拆分 | 首次拆分并恢复待审核状态 | P0 | UI+API/主流程 | 配置真实 AI Key | 上传→拆分→GET extraction→刷新 | 模块/功能点持久化；刷新恢复；请求、响应和状态一致 | 阻塞 / ENV-001 | 真实 AI E2E + `test_batch48_requirement_acceptance.py` | 未执行：真实 AI 条件尚未证明具备 | 阻塞 | 无（缺真实 AI 执行证据） |
+| B47-REQ-013 | 功能拆分 | 首次拆分并恢复待审核状态 | P0 | UI+API/主流程 | 配置真实 AI Key | 上传→拆分→GET extraction→刷新 | 模块/功能点持久化；刷新恢复；请求、响应和状态一致 | 阻塞 / ENV-001 | 真实 AI E2E + `test_batch48_requirement_acceptance.py` | 已完成真实 AI 拆分→确认→生成闭环 | 通过 | QA 报告：2 模块、15 功能点、13 功能用例；专项 27/27 |
 | B47-REQ-014 | 功能拆分 | 仅 404 才触发重新拆分 | P1 | UI/异常 | 已有抽取结果 | 模拟无结果、403、500、超时 | 仅成功响应且无结果时允许发起拆分；403/500/超时保留旧结果并提示 | 失败 / B47-DEF-009 | DEF-009 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-REQ-015 | 功能拆分 | 确认/驳回后状态与评估一致 | P0 | API/状态迁移 | 有待确认抽取结果 | 分别确认、驳回、再次读取 | 状态正确；`overall_assessment` 保留评估文本；审计同事务持久化 | 失败 / B47-DEF-009 | DEF-009、DEF-007 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-REQ-016 | 用例生成 | “基于拆分生成”传递确认结果 | P0 | UI+API/主流程 | extraction_status=confirmed | 点击“生成用例（基于拆分）”并检查请求 | 请求包含 `use_extraction=true`；生成结果来源可追溯 | 失败 / B47-DEF-010 | DEF-010 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
@@ -97,7 +100,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-REQ-019 | 审查 | 批准、驳回、刷新恢复 | P0 | UI+API/状态迁移 | 审查队列存在 | 批准、驳回、编辑后刷新；提交非法 index | 状态持久化；刷新恢复；非法 index 404；计数准确 | 失败 / B47-DEF-004 | DEF-004 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-REQ-020 | 编辑/导入 | 编辑后的用例内容真实入库 | P0 | UI+API/数据一致性 | AI 结果可编辑 | 修改标题/步骤→导入→查询 DB/审查状态 | 入库值等于用户最终确认值；编辑和导入状态可恢复 | 失败 / B47-DEF-005 | DEF-005 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-REQ-021 | 导入 | 精确选择功能/API 用例 | P0 | API/正面 | AI 结果含两类用例 | 分批选择功能/API 索引导入 | 仅选中项入库；分类计数、总数和 indices 准确累计 | 失败 / B47-DEF-006 | DEF-006 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
-| B47-REQ-022 | 导入 | 相同索引重复/并发幂等 | P0 | API/并发 | 同一文档已有可导入用例 | 同索引顺序调用两次并并发两次 | 最多一份用例；重复返回幂等结果或冲突；计数不漂移 | 失败 / B47-DEF-006 | DEF-006 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
+| B47-REQ-022 | 导入 | 相同索引重复/并发幂等 | P0 | API/并发 | 同一文档已有可导入用例 | 同索引顺序调用两次并并发两次 | 最多一份用例；重复返回幂等结果或冲突；计数不漂移 | 失败 / B47-DEF-006 | DEF-006 映射 + `test_batch48_postgresql_concurrency.py` | 已完成真实 PostgreSQL 4 路并发 | 通过 | `postgresql-concurrency-audit.md` |
 | B47-REQ-023 | 导入 | 第 N 条失败时整批回滚 | P0 | API/事务 | 两条用例；第二条注入失败 | 执行批量导入并核对响应、DB、计数、审计 | TestCase=0；状态/计数不变；审计无残留；返回明确失败 | 失败 / B47-DEF-001 | DEF-001 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-REQ-024 | 版本继承 | 未变化功能点保留继承标记 | P1 | API/版本 | 父子版本和已确认抽取 | 对子版本执行拆分/序列化/再次读取 | `inherited/from_version` 正常字段持久化且可序列化 | 失败 / B47-DEF-011 | DEF-011 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-REQ-025 | 版本继承 | 继承用例可查询、选择和导入 | P0 | API/版本 | 父版本已有用例 | 子版本生成→GET cases→选择导入继承项 | `ai_raw` 可读继承项；索引稳定；导入正确历史用例且幂等 | 失败 / B47-DEF-011 | DEF-011 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
@@ -111,13 +114,13 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-MOD-001 | 模块树 | 三层以上完整树与懒加载一致 | P0 | API/树结构 | bundle 含根/子/孙节点 | 请求完整树和 children API | 孙节点存在；children 与 child_count 一致；两种结果结构相同 | 失败 / B47-DEF-014 | DEF-014 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-MOD-002 | 项目隔离 | 他项目 parent/bundle 不可读取 | P0 | API/安全 | 项目 1 用户；项目 999 私有树 | 用项目 1 身份请求项目 999 children/full tree | 403/404；不得泄露名称、数量或结构；日志不含敏感内容 | 失败 / B47-DEF-013 | DEF-013 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-MOD-003 | 列表 | 过滤、分页和 count 使用同一条件 | P1 | API/组合 | 多平台/类型/层级/状态且超过一页 | 逐项和组合筛选，翻页并重复请求 | total 与 items 条件一致；排序稳定；无重复/遗漏 | 未执行 | `test_batch48_requirement_modules.py` 组合矩阵 | 尚未执行 | 未执行 | 无（尚未执行） |
-| B47-MOD-004 | 模块提取 | 同 bundle 重复/并发提取幂等 | P1 | API/并发 | 可用蓝湖证据包 | 连续/并发 extract 并查询最终树/审计 | 不重复插入或明确版本覆盖；失败完整回滚 | 阻塞 / ENV-002 | 模块并发自动化 + 真实蓝湖 E2E | 未执行：真实蓝湖条件尚未证明具备 | 阻塞 | 无（缺真实蓝湖执行证据） |
+| B47-MOD-004 | 模块提取 | 同 bundle 重复/并发提取幂等 | P1 | API/并发 | 可用蓝湖证据包 | 连续/并发 extract 并查询最终树/审计 | 不重复插入或明确版本覆盖；失败完整回滚 | 阻塞 / ENV-002 | 模块并发自动化 + 真实蓝湖 E2E | 真实认证 HTTP 200、106 页枚举通过；下载关键链路未完成 | 阻塞 | QA 报告：pinned `lanhu-mcp` 下载忽略 `pageId` 且无资源/字节/总时限限制 |
 | B47-MOD-005 | 交互/导航 | 交互 merge/replace 与全局导航分类 | P1 | API/状态 | 模块树已生成 | 提取、编辑、分类、再次读取；提交非法模块 | JSON 结构和状态持久化；非法模块/状态拒绝且无副作用 | 未执行 | `test_batch48_requirement_modules.py` 状态矩阵 | 尚未执行 | 未执行 | 无（尚未执行） |
-| B47-MOD-006 | 附件 | 附件部分失败可追踪且不污染数据 | P1 | API/异常 | 证据包含正常/损坏附件 | 执行附件提取并核对分项、知识实体、审计 | 分项结果可追踪；知识实体不重复；失败项不污染成功数据 | 阻塞 / ENV-002 | 模块异常自动化 + 真实蓝湖证据包 | 未执行：真实蓝湖条件尚未证明具备 | 阻塞 | 无（缺真实蓝湖执行证据） |
-| B47-MOD-007 | 管理端关联 | 只允许合法 client→ADMIN 关系 | P1 | API/规则 | APP/PC/WEB/ADMIN 模块齐全 | 创建合法、非法方向/平台/枚举、重复和并发关系 | 非法 400/422；合法持久化；重复/并发不产生多条 | 失败 / B47-DEF-015 | DEF-015 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
+| B47-MOD-006 | 附件 | 附件部分失败可追踪且不污染数据 | P1 | API/异常 | 证据包含正常/损坏附件 | 执行附件提取并核对分项、知识实体、审计 | 分项结果可追踪；知识实体不重复；失败项不污染成功数据 | 阻塞 / ENV-002 | 模块异常自动化 + 真实蓝湖证据包 | 真实认证和页面枚举已通过；损坏附件 URL 未提供 | 阻塞 | QA 报告：缺正常/损坏附件完整闭环证据 |
+| B47-MOD-007 | 管理端关联 | 只允许合法 client→ADMIN 关系 | P1 | API/规则 | APP/PC/WEB/ADMIN 模块齐全 | 创建合法、非法方向/平台/枚举、重复和并发关系 | 非法 400/422；合法持久化；重复/并发不产生多条 | 失败 / B47-DEF-015 | DEF-015 映射 + `test_batch48_postgresql_concurrency.py` | 已完成真实 PostgreSQL 6 路并发 | 通过 | `postgresql-concurrency-audit.md` |
 | B47-MOD-008 | API 匹配 | 文档存在/归属与匹配响应准确 | P1 | API/正负面 | integration 需求和 Swagger 资产 | 正常匹配；不存在/他项目 document_id；他项目 endpoint | 正常返回候选；非法文档/endpoint 404；不泄露他项目信息 | 失败 / B47-DEF-015 | DEF-015 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-MOD-009 | API 关联 | 匹配确认后持久化需求→API 关系 | P1 | UI+API/追溯 | 已得到匹配候选 | 用户确认匹配，刷新并查询 coverage/DB | 关系可恢复；供覆盖追溯使用；审计同事务持久化 | 失败 / B47-DEF-012 | DEF-012 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
-| B47-MOD-010 | 截图/OCR | 证据截图可查看且 OCR 文本可用 | P0 | UI+API/主流程 | 蓝湖证据包完成 | 在需求页查看截图、OCR/merged_text 和置信度 | 使用正确 asset URL；图片可见；文本与页面 ID 对应且可追溯 | 失败 / B47-DEF-016 | DEF-016 映射 | 未执行：真实蓝湖条件尚未证明具备 | 阻塞 | 无（缺真实蓝湖浏览器证据） |
+| B47-MOD-010 | 截图/OCR | 证据截图可查看且 OCR 文本可用 | P0 | UI+API/主流程 | 蓝湖证据包完成 | 在需求页查看截图、OCR/merged_text 和置信度 | 使用正确 asset URL；图片可见；文本与页面 ID 对应且可追溯 | 失败 / B47-DEF-016 | DEF-016 映射 | 真实认证和 106 页枚举已通过；下载未完成，未进入截图/OCR | 阻塞 | QA 报告：缺真实截图、OCR/merged_text 浏览器闭环证据 |
 | B47-MOD-011 | 采集任务 | 轮询不重叠、可停止、故障不刷屏 | P1 | UI/稳定性 | 证据任务面板打开 | 长时间运行；模拟慢响应、网络故障、完成和卸载 | 单次轮询；不重叠；完成/卸载取消；3/6/12/30 秒退避；一次错误提示 | 失败 / B47-DEF-017 | DEF-017 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 
 ### 3.4 UI、迁移、自动化与依赖安全
@@ -128,8 +131,8 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-NFR-002 | 无障碍 | 文档行具备键盘等价操作 | P1 | UI/a11y | 列表有文档 | Tab 聚焦；Enter/Space 选择；检查语义与可见焦点 | 可聚焦并激活；`aria-selected`/语义正确；鼠标与键盘结果一致 | 失败 / B47-DEF-018 | DEF-018 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-NFR-003 | 网络 | 首次进入仅一次有效列表 GET | P1 | UI/性能 | 新浏览器会话/Strict Mode | 进入 `/requirement`，记录网络并卸载页面 | 同一参数只有 1 次有效 GET；卸载取消请求；无重复副作用 | 失败 / B47-DEF-017 | DEF-017 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-NFR-004 | 迁移 | 空库升级到唯一 head | P0 | DB/部署 | 隔离空库 | `alembic upgrade head`；`alembic current`；再次升级 | exit 0；current=唯一 Batch 48 head；重复升级无操作 | 通过（仅空库） | DEF-019 映射 / `test_batch48_requirement_migration.py` | 尚未执行 | 未执行 | 无（尚未执行） |
-| B47-NFR-005 | 迁移 | 真实旧库升级包含新增字段 | P0 | DB/升级 | 脱敏旧生产 PostgreSQL 快照；`AUTO_CREATE_TABLES=false` | 记录升级前数据→升级到 head→查询字段/数据→重复升级 | 新字段/唯一索引存在；历史数据不丢；服务查询可用；重复升级安全 | 失败 / B47-DEF-019 | DEF-019 映射 | 未执行：真实旧版 PostgreSQL 快照尚未证明具备 | 阻塞 | 无（缺真实旧库升级证据） |
-| B47-NFR-006 | 迁移 | head 与 ORM metadata 无漂移 | P0 | DB/部署 | 已 upgrade head；模型完整注册 | `alembic check` 并检查 head 数量 | exit 0；唯一 head；不提议删除真实表/索引/字段 | 失败 / B47-DEF-019 | DEF-019 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
+| B47-NFR-005 | 迁移 | 真实旧库升级包含新增字段 | P0 | DB/升级 | 脱敏旧生产 PostgreSQL 快照；`AUTO_CREATE_TABLES=false` | 记录升级前数据→升级到 head→查询字段/数据→重复升级 | 新字段/唯一索引存在；历史数据不丢；服务查询可用；重复升级安全 | 失败 / B47-DEF-019 | DEF-019 映射 | 已从旧卷隔离克隆升级并重复执行 | 通过 | `postgresql-alembic-drift-audit.md` |
+| B47-NFR-006 | 迁移 | head 与 ORM metadata 无漂移 | P0 | DB/部署 | 已 upgrade head；模型完整注册 | `alembic check` 并检查 head 数量 | exit 0；唯一 head；不提议删除真实表/索引/字段 | 失败 / B47-DEF-019 | DEF-019 映射 | 唯一 head `20260727_batch48_pg_parity`；metadata 零漂移 | 通过 | `postgresql-alembic-drift-audit.md` |
 | B47-NFR-007 | 后端质量 | F821、专项和全量 Pytest | P0 | 自动化/回归 | 依赖已安装 | Ruff；五组 requirement 专项；后端全量 tests | 全绿且记录精确通过/失败数；无新增失败；行为断言覆盖缺陷 | 通过（Batch 47 仅浅覆盖）/ B47-DEF-020 | DEF-020 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-NFR-008 | 前端质量 | typecheck、build、Vitest | P0 | 自动化/回归 | npm 依赖已安装 | 执行 typecheck、build、需求专项和前端全量 Vitest | 命令全绿；需求 API/页面/弹窗/审查/轮询有行为断言；记录精确统计 | 失败 / B47-DEF-020 | DEF-020 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
 | B47-NFR-009 | 依赖安全 | 生产依赖无高危漏洞 | P0 | 安全/供应链 | lockfile 固定 | `npm audit --omit=dev` | high/critical=0；其他问题有处置结论和证据 | 失败 / B47-DEF-021 | DEF-021 映射 | 尚未执行 | 未执行 | 无（尚未执行） |
@@ -153,7 +156,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-REQ-010 | 创建人准确且列表查询无逐条请求 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 + Vitest |
 | B47-REQ-011 | Brief 无正文，详情按需返回完整正文 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 + Vitest |
 | B47-REQ-012 | 删除、关联清理和审计同事务完成 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 + Playwright |
-| B47-REQ-013 | 未提供真实 AI Key/服务，无法执行真实拆分闭环 | 阻塞 | 无 | Codex / 2026-07-27 | 阻塞登记 |
+| B47-REQ-013 | 真实 AI 拆分得到 2 模块/15 功能点；确认后生成 13 条功能用例，状态、DB 与审计一致 | 通过 | 无 | Codex / 2026-07-27 | 真实 AI 专项 27/27 + QA 报告 |
 | B47-REQ-014 | 仅 404/空结果触发新拆分；403/500/超时不覆盖旧结果 | 通过 | 无 | Codex / 2026-07-27 | `requirement.test.ts` |
 | B47-REQ-015 | 确认/驳回可恢复，评估文本与审计正确 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 |
 | B47-REQ-016 | 基于拆分生成传递 `use_extraction=true` | 通过 | 无 | Codex / 2026-07-27 | `RequirementPage.test.tsx` |
@@ -162,7 +165,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-REQ-019 | 批准、驳回、编辑持久化；非法索引 404 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 + Vitest |
 | B47-REQ-020 | 编辑后的最终内容真实入库并可恢复 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 + Vitest |
 | B47-REQ-021 | 功能/API 索引精确导入且计数累计准确 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 |
-| B47-REQ-022 | 顺序重试和 SQLite 唯一约束通过；真实 PostgreSQL 多连接并发未执行 | 阻塞 | 无 | Codex / 2026-07-27 | API 幂等 + 唯一约束；缺 PG 并发证据 |
+| B47-REQ-022 | 真实 PostgreSQL 4 路并发结果为 1 导入、3 跳过；最终仅 1 条且计数无漂移 | 通过 | 无 | Codex / 2026-07-27 | `postgresql-concurrency-audit.md` |
 | B47-REQ-023 | 第二条失败时业务、计数和审计全部回滚 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 |
 | B47-REQ-024 | 继承标记持久化、序列化并可重读 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 |
 | B47-REQ-025 | 继承用例生成、查询、选择导入且幂等 | 通过 | 无 | Codex / 2026-07-27 | 后端验收 |
@@ -171,21 +174,21 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | B47-MOD-001 | full/lazy 根子孙三层结构与计数一致 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
 | B47-MOD-002 | 跨项目 parent/bundle 被拒绝且不泄露结构 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
 | B47-MOD-003 | 过滤、层级、分页、count 与重复请求结果稳定 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
-| B47-MOD-004 | 未提供真实蓝湖 Provider/证据包 | 阻塞 | 无 | Codex / 2026-07-27 | 阻塞登记 |
+| B47-MOD-004 | 真实认证 HTTP 200、106 页枚举成功；pinned 下载忽略 `pageId` 且缺资源/字节/总时限限制，无法安全完成重复/并发提取闭环 | 阻塞 | 无 | Codex / 2026-07-27 | QA 报告 / 蓝湖阻塞登记 |
 | B47-MOD-005 | merge/replace、分类和非法模块/状态均符合契约 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
-| B47-MOD-006 | 未提供包含损坏附件的真实蓝湖证据包 | 阻塞 | 无 | Codex / 2026-07-27 | 阻塞登记 |
-| B47-MOD-007 | 方向/平台/枚举和 SQLite 唯一约束通过；真实 PostgreSQL 并发未执行 | 阻塞 | 无 | Codex / 2026-07-27 | 模块验收；缺 PG 并发证据 |
+| B47-MOD-006 | 真实认证和页面枚举通过；损坏附件 URL 未提供，无法验证部分失败与数据不污染 | 阻塞 | 无 | Codex / 2026-07-27 | QA 报告 / 蓝湖阻塞登记 |
+| B47-MOD-007 | 真实 PostgreSQL 6 路并发得到 1×200、5×409；最终仅 1 条关联且无漂移 | 通过 | 无 | Codex / 2026-07-27 | `postgresql-concurrency-audit.md` |
 | B47-MOD-008 | 不存在/他项目文档、服务和 endpoint 均被拒绝 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 |
 | B47-MOD-009 | 匹配确认去重持久化，审计和 coverage 可追溯 | 通过 | 无 | Codex / 2026-07-27 | 模块验收 + API Vitest |
-| B47-MOD-010 | 未提供真实蓝湖截图/OCR 证据包 | 阻塞 | 无 | Codex / 2026-07-27 | 阻塞登记 |
+| B47-MOD-010 | 真实认证和 106 页枚举通过；资源下载未完成，未取得截图、OCR/merged_text 浏览器闭环证据 | 阻塞 | 无 | Codex / 2026-07-27 | QA 报告 / 蓝湖阻塞登记 |
 | B47-MOD-011 | 轮询不重叠，可取消，按 3/6/12/30 秒退避且只提示一次 | 通过 | 无 | Codex / 2026-07-27 | `EvidenceTaskPanel.test.tsx` |
 | B47-NFR-001 | 390×844 完成上传、分页、搜索、预览和审查入口，无全局溢出 | 通过 | 无 | Codex / 2026-07-27 | Playwright + 截图 |
 | B47-NFR-002 | Enter/Space 均可选择，Axe 无违规 | 通过 | 无 | Codex / 2026-07-27 | Playwright |
 | B47-NFR-003 | Strict Mode 首次仅一次有效 GET，取消请求不提示错误 | 通过 | 无 | Codex / 2026-07-27 | Vitest + Playwright |
 | B47-NFR-004 | 空库升级到唯一 Batch 48 head，重复升级安全 | 通过 | 无 | Codex / 2026-07-27 | 迁移测试 + Alembic |
-| B47-NFR-005 | 未提供脱敏真实旧版 PostgreSQL 快照 | 阻塞 | 无 | Codex / 2026-07-27 | 阻塞登记 |
-| B47-NFR-006 | 唯一 head；`alembic check` 无新增升级操作 | 通过 | 无 | Codex / 2026-07-27 | 迁移测试 + Alembic |
-| B47-NFR-007 | Ruff F821 通过；后端全量 806/806 通过 | 通过 | 无 | Codex / 2026-07-27 | QA 报告 |
+| B47-NFR-005 | 旧卷隔离克隆从 `20260714_lanhu_pg_reconcile` 升至 `20260727_batch48_pg_parity`；重复升级通过且数据计数不变 | 通过 | 无 | Codex / 2026-07-27 | `postgresql-alembic-drift-audit.md` |
+| B47-NFR-006 | 唯一 head `20260727_batch48_pg_parity`；`alembic check` 零漂移 | 通过 | 无 | Codex / 2026-07-27 | `postgresql-alembic-drift-audit.md` |
+| B47-NFR-007 | Ruff F821 通过；后端全量 812 通过、2 条默认跳过的真实 PG 集成用例（显式开启后 2/2 通过） | 通过 | 无 | Codex / 2026-07-27 | QA 报告 |
 | B47-NFR-008 | typecheck/build 通过；前端 29 文件、124 测试通过 | 通过 | 无 | Codex / 2026-07-27 | QA 报告 |
 | B47-NFR-009 | 生产依赖 high=0、critical=0；moderate=2 已登记 | 通过 | 无 | Codex / 2026-07-27 | `npm audit --omit=dev --json` |
 | B47-NFR-010 | 全依赖 high=0、critical=0；moderate=2 已登记 | 通过 | 无 | Codex / 2026-07-27 | `npm audit --json` |
@@ -196,16 +199,17 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 
 | Batch 48 状态 | 数量 | 说明 |
 | --- | ---: | --- |
-| 通过 | 41 | P0 24 条、P1 17 条 |
+| 通过 | 45 | P0 27 条、P1 18 条 |
 | 失败 | 0 | 本轮未发现新增失败 |
-| 阻塞 | 7 | 真实 AI 1 条、蓝湖 3 条、真实旧版 PostgreSQL 1 条、PG 并发 2 条 |
+| 阻塞 | 3 | 真实蓝湖 3 条（P0 1 条、P1 2 条） |
 | 未执行 | 0 | 无 |
-| **总计** | **48** | **`NEEDS WORK`：7 条外部关键链路仍阻塞** |
+| **总计** | **48** | **`NEEDS WORK`：3 条真实蓝湖关键链路仍阻塞** |
 
 ## 6. 执行与证据回填要求
 
-1. 实现提交：`d1f7e52be70757c14d4acc153dee17571773b931`；最终报告提交另行记录。
+1. 初始实现提交：`d1f7e52be70757c14d4acc153dee17571773b931`；真实外部复测兼容与 PostgreSQL 修复提交：`4dc307ed481fdb9ba01f5b8f949aeed7aef24503`。
 2. 浏览器证据使用确定性 API 契约 fixture；真实后端行为由同批次 Pytest/迁移测试独立证明，二者不能互相替代。
-3. SQLite 已验证幂等 API 与唯一约束最后防线；B47-REQ-022、B47-MOD-007 在真实 PostgreSQL 多连接竞争完成前保持阻塞。
-4. 外部阻塞责任人：产品/项目负责人；预计时间：待提供真实 AI、蓝湖证据包和脱敏旧库后 1 个工作日内复测。
-5. 由于 7 条 P0/P1 外部关键链路阻塞，本轮即使本地双端门禁全绿，结论仍为 `NEEDS WORK`。
+3. B47-REQ-022、B47-MOD-007 已在真实 PostgreSQL 多连接竞争下通过；并发输出和最终数据库状态见 `postgresql-concurrency-audit.md`。
+4. 旧版 PostgreSQL 卷只使用隔离克隆复测，原卷未修改；升级与 metadata 证据见 `postgresql-alembic-drift-audit.md`。
+5. 外部阻塞责任人：产品/项目负责人；预计时间：蓝湖下载边界修复且损坏附件条件具备后 1 个工作日内复测。
+6. 由于 3 条 P0/P1 真实蓝湖关键链路阻塞，本轮即使其余门禁全绿，结论仍为 `NEEDS WORK`。

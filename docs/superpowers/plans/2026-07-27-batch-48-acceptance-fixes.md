@@ -8,11 +8,16 @@
 
 **Tech Stack:** FastAPI、SQLAlchemy 2.0、Alembic、Pytest、React 18、TypeScript、Vite、Vitest、Testing Library、Playwright
 
-**Execution result (2026-07-27):** 本地实现已完成于
-`d1f7e52be70757c14d4acc153dee17571773b931`。后端全量 806/806、前端
-29 文件/124 测试、typecheck、build、三视口 headed Playwright、空库迁移和
-high/critical 供应链门禁通过；48 条复测为 41 通过、7 条真实外部链路阻塞，
-最终结论 `NEEDS WORK`。下方复选框保留为原始实施步骤，不作为最终执行账本；
+**Execution result (2026-07-27):** 初始实现提交为
+`d1f7e52be70757c14d4acc153dee17571773b931`；真实外部复测修复提交为
+`4dc307ed481fdb9ba01f5b8f949aeed7aef24503`。最终后端全量为
+812 通过、2 条默认跳过的真实 PG 集成用例（显式开启后 2/2 通过）；前端
+29 文件/124 测试、typecheck、build、三视口 headed Playwright 和 high/critical
+供应链门禁通过；真实 AI 完成 2 模块/15 功能点拆分并生成 13 条功能用例，
+旧 PostgreSQL 隔离克隆从 `20260714_lanhu_pg_reconcile` 升至
+`20260727_batch48_pg_parity` 且重复升级、数据保留和 metadata 检查通过，
+真实 PG 并发得到 4 路 1 导入/3 跳过与 6 路 1×200/5×409。48 条复测为
+45 通过、3 条真实蓝湖关键链路阻塞，最终结论 `NEEDS WORK`。下方复选框保留为原始实施步骤，不作为最终执行账本；
 权威结果见 Batch 48 复测文档和 QA 报告。
 
 ---
