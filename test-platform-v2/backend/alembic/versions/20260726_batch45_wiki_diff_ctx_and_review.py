@@ -27,39 +27,49 @@ def upgrade() -> None:
             op.add_column("wiki_diff_item", sa.Column(col_name, sa.Text(), nullable=False, server_default=""))
 
     # ── WikiReviewItem ──
-    op.create_table(
-        "wiki_review_item",
-        sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("task_id", sa.Integer(), index=True, nullable=False),
-        sa.Column("item_id", sa.Integer(), index=True, nullable=False),
-        sa.Column("project_id", sa.Integer(), index=True, nullable=False),
-        sa.Column("reviewer", sa.String(100), nullable=False, server_default=""),
-        sa.Column("decision", sa.String(20), nullable=False, server_default="pending"),
-        sa.Column("reason", sa.Text(), nullable=False, server_default=""),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
-    )
+    existing_tables = set(inspector.get_table_names())
+    if "wiki_review_item" not in existing_tables:
+        op.create_table(
+            "wiki_review_item",
+            sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
+            sa.Column("task_id", sa.Integer(), index=True, nullable=False),
+            sa.Column("item_id", sa.Integer(), index=True, nullable=False),
+            sa.Column("project_id", sa.Integer(), index=True, nullable=False),
+            sa.Column("reviewer", sa.String(100), nullable=False, server_default=""),
+            sa.Column("decision", sa.String(20), nullable=False, server_default="pending"),
+            sa.Column("reason", sa.Text(), nullable=False, server_default=""),
+            sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
+        )
 
     # ── WikiReviewContradiction ──
-    op.create_table(
-        "wiki_review_contradiction",
-        sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
-        sa.Column("task_id", sa.Integer(), index=True, nullable=False),
-        sa.Column("item_a_id", sa.Integer(), nullable=False),
-        sa.Column("item_b_id", sa.Integer(), nullable=False),
-        sa.Column("project_id", sa.Integer(), index=True, nullable=False),
-        sa.Column("description", sa.Text(), nullable=False, server_default=""),
-        sa.Column("resolution", sa.Text(), nullable=False, server_default=""),
-        sa.Column("resolved_by", sa.String(100), nullable=False, server_default=""),
-        sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
-        sa.Column("resolved_at", sa.DateTime(), nullable=True),
-    )
+    if "wiki_review_contradiction" not in existing_tables:
+        op.create_table(
+            "wiki_review_contradiction",
+            sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
+            sa.Column("task_id", sa.Integer(), index=True, nullable=False),
+            sa.Column("item_a_id", sa.Integer(), nullable=False),
+            sa.Column("item_b_id", sa.Integer(), nullable=False),
+            sa.Column("project_id", sa.Integer(), index=True, nullable=False),
+            sa.Column("description", sa.Text(), nullable=False, server_default=""),
+            sa.Column("resolution", sa.Text(), nullable=False, server_default=""),
+            sa.Column("resolved_by", sa.String(100), nullable=False, server_default=""),
+            sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
+            sa.Column("resolved_at", sa.DateTime(), nullable=True),
+        )
 
 
 def downgrade() -> None:
+    inspector = sa.inspect(op.get_bind())
+    existing_tables = set(inspector.get_table_names())
+
     # ── Drop new tables first (FK-safe order) ──
-    op.drop_table("wiki_review_contradiction")
-    op.drop_table("wiki_review_item")
+    if "wiki_review_contradiction" in existing_tables:
+        op.drop_table("wiki_review_contradiction")
+    if "wiki_review_item" in existing_tables:
+        op.drop_table("wiki_review_item")
 
     # ── Drop added columns ──
+    existing_cols = {c["name"] for c in inspector.get_columns("wiki_diff_item")}
     for col_name in ("right_scope", "left_scope", "right_ref", "left_ref"):
-        op.drop_column("wiki_diff_item", col_name)
+        if col_name in existing_cols:
+            op.drop_column("wiki_diff_item", col_name)
