@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+data/
+*.db
+*.db-wal
+*.db-shm
+.pytest_cache/
+.mypy_cache/
+docs/openapi.json
+# Batch 27 M5 — migration snapshots & POC scripts (not for repo)
+backups/*.csv
+scripts/poc_*
+# Playwright test deps (local only, not in requirements.txt)
+package.json
+package-lock.json
+node_modules/
+playwright-tests/

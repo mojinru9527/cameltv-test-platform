@@ -1,0 +1,261 @@
+name: PR 代码门禁
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  detect_changes:
+    name: 变更范围识别
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      backend: ${{ steps.scope.outputs.backend }}
+      frontend: ${{ steps.scope.outputs.frontend }}
+      reason: ${{ steps.scope.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: scope
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" > "$RUNNER_TEMP/changed-files"
+            python scripts/ci/classify_ci_changes.py --files-from "$RUNNER_TEMP/changed-files" --null --github-output "$GITHUB_OUTPUT" | tee "$RUNNER_TEMP/ci-scope.json"
+          else
+            python scripts/ci/classify_ci_changes.py --force-all --github-output "$GITHUB_OUTPUT" | tee "$RUNNER_TEMP/ci-scope.json"
+          fi
+          {
+            echo "### Extended CI scope"
+            echo '~~~json'
+            cat "$RUNNER_TEMP/ci-scope.json"
+            echo '~~~'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  backend-check:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Lint (ruff)
+        working-directory: test-platform-v2/backend
+        continue-on-error: true
+        run: |
+          pip install ruff
+          ruff check app/ --output-format=github || echo "::warning::ruff 检查发现问题"
+
+      - name: Type Check (mypy)
+        working-directory: test-platform-v2/backend
+        continue-on-error: true
+        run: |
+          pip install mypy
+          mypy app/ --ignore-missing-imports --no-error-summary || echo "::warning::mypy 类型检查发现问题"
+
+      # D4: pytest with coverage.  --cov-fail-under=70 is a soft gate initially
+      # (continue-on-error); will become a hard gate after 2-week observation.
+      - name: Unit Tests + Coverage (pytest)
+        working-directory: test-platform-v2/backend
+        continue-on-error: true
+        run: |
+          python -m pytest tests/ -v --tb=short \
+            --cov=app --cov-report=term --cov-report=json \
+            --cov-fail-under=70
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: test-platform-v2/backend/coverage.json
+          retention-days: 7
+
+  # PostgreSQL 兼容性验证 — 校验 Alembic 迁移 + 模型导入在 PG 上通过。
+  # 与 backend-check (SQLite) 并行运行，确保 PG 升级路径不被破坏。
+  backend-check-pg:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cameltv
+          POSTGRES_PASSWORD: cameltv_test
+          POSTGRES_DB: cameltv_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install psycopg2-binary
+
+      - name: Verify Alembic migrations on PostgreSQL
+        working-directory: test-platform-v2/backend
+        env:
+          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+        run: |
+          alembic upgrade head
+          echo "✅ Alembic migrations applied successfully on PostgreSQL"
+
+      - name: Verify model import on PostgreSQL
+        working-directory: test-platform-v2/backend
+        env:
+          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+          AUTO_CREATE_TABLES: 'false'
+        run: |
+          python -c "
+          from app.main import app
+          from app.core.db import engine, Base
+          # Verify all models are importable and tables exist
+          tables = Base.metadata.tables.keys()
+          print(f'✅ {len(tables)} tables registered: {\", \".join(sorted(tables))}')
+          assert len(tables) >= 30, f'Expected >=30 tables, got {len(tables)}'
+          "
+
+      # D5: Detect schema drift between ORM models and Alembic migrations.
+      # Runs on the same PG service — drops tables between steps so they don't
+      # interfere.  Non-blocking initially (continue-on-error); will become a
+      # hard gate once the team confirms zero false positives over 2 weeks.
+      - name: Check Model-Migration Drift (D5)
+        working-directory: test-platform-v2/backend
+        env:
+          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+        continue-on-error: true
+        run: |
+          python scripts/check_migration_drift.py
+
+  # D2: CI accessibility gate — scans built SPA for WCAG violations using
+  # axe-core.  Scans the login page (no auth needed) which exercises the
+  # full component tree (buttons, inputs, headings, landmarks, contrast).
+  # Non-blocking initially; threshold tightens after 1-week observation.
+  frontend-a11y:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: test-platform-v2/frontend
+        run: npm run build
+
+      - name: A11y Scan (axe-core)
+        working-directory: test-platform-v2/frontend
+        continue-on-error: true
+        run: |
+          npx serve dist -p 4173 &
+          SERVE_PID=$!
+          sleep 3
+          npx @axe-core/cli --stdout http://localhost:4173/login > a11y-results.json 2>&1 || true
+          cat a11y-results.json
+          kill $SERVE_PID 2>/dev/null || true
+
+      - name: Upload A11y Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-results
+          path: test-platform-v2/frontend/a11y-results.json
+          retention-days: 7
+
+  frontend-check:
+    needs: detect_changes
+    if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        working-directory: test-platform-v2/frontend
+        run: npm ci
+
+      - name: Type Check (tsc)
+        working-directory: test-platform-v2/frontend
+        run: npm run typecheck
+
+      - name: Lint (ESLint)
+        working-directory: test-platform-v2/frontend
+        continue-on-error: true
+        run: npx eslint src/ --ext .ts,.tsx || echo "::warning::ESLint 检查发现问题（可能未配置）"
+
+      # D4: vitest with coverage.  Thresholds in vitest.config.ts are a soft gate
+      # initially (continue-on-error); will become a hard gate after observation.
+      - name: Unit Tests + Coverage (vitest)
+        working-directory: test-platform-v2/frontend
+        continue-on-error: true
+        run: npx vitest run --coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: test-platform-v2/frontend/coverage/
+          retention-days: 7

@@ -1,0 +1,14 @@
+{
+  "name": "cameltv-api-tests",
+  "private": true,
+  "description": "CamelTv API \u6d4b\u8bd5 \u2014 Playwright \u81ea\u52a8\u751f\u6210",
+  "devDependencies": {
+    "@playwright/test": "^1.45",
+    "@types/node": "^20",
+    "typescript": "^5"
+  },
+  "scripts": {
+    "test": "npx playwright test",
+    "typecheck": "npx tsc --noEmit"
+  }
+}

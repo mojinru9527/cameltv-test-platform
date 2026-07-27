@@ -1,0 +1,560 @@
+{
+  "document_name": "运营后台",
+  "document_type": "axure",
+  "total_pages": 67,
+  "folder_structure": {
+    "UGC": 9,
+    "内容管理": 7,
+    "商城": 3,
+    "广告管理": 5,
+    "根目录": 3,
+    "消息管理": 4,
+    "球队及联赛": 4,
+    "用户管理": 5,
+    "系统管理": 1,
+    "装扮管理": 5,
+    "财务管理": 10,
+    "赛事预测": 7,
+    "银钻任务": 3,
+    "风控管理": 1
+  },
+  "pages": [
+    {
+      "name": "更新日志",
+      "url": "更新日志.html",
+      "folder": "根目录",
+      "path": "更新日志",
+      "level": 0,
+      "type": "Wireframe"
+    },
+    {
+      "name": "赛事视频流",
+      "url": "赛事视频流.html",
+      "folder": "根目录",
+      "path": "赛事视频流",
+      "level": 0,
+      "type": "Wireframe"
+    },
+    {
+      "name": "推流主播",
+      "url": "推流主播.html",
+      "folder": "根目录",
+      "path": "推流主播",
+      "level": 0,
+      "type": "Wireframe"
+    },
+    {
+      "name": "广告活动管理",
+      "url": "广告活动管理.html",
+      "folder": "广告管理",
+      "path": "广告管理/广告活动管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "新增/编辑广告活动",
+      "url": "新增_编辑广告活动.html",
+      "folder": "广告管理",
+      "path": "广告管理/广告活动管理/新增/编辑广告活动",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "广告素材管理",
+      "url": "广告素材管理.html",
+      "folder": "广告管理",
+      "path": "广告管理/广告素材管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "新增/编辑广告素材",
+      "url": "新增_编辑广告素材.html",
+      "folder": "广告管理",
+      "path": "广告管理/广告素材管理/新增/编辑广告素材",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "广告位管理",
+      "url": "广告位管理.html",
+      "folder": "广告管理",
+      "path": "广告管理/广告位管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "资讯列表",
+      "url": "资讯列表.html",
+      "folder": "内容管理",
+      "path": "内容管理/资讯列表",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "查看资讯",
+      "url": "查看资讯.html",
+      "folder": "内容管理",
+      "path": "内容管理/资讯列表/查看资讯",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "新增/编辑资讯",
+      "url": "新增_编辑资讯.html",
+      "folder": "内容管理",
+      "path": "内容管理/资讯列表/新增/编辑资讯",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "资讯分类",
+      "url": "资讯分类.html",
+      "folder": "内容管理",
+      "path": "内容管理/资讯分类",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "热门搜索管理",
+      "url": "热门搜索管理.html",
+      "folder": "内容管理",
+      "path": "内容管理/热门搜索管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "FAQ管理",
+      "url": "faq管理.html",
+      "folder": "内容管理",
+      "path": "内容管理/FAQ管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "新增/编辑",
+      "url": "新增_编辑.html",
+      "folder": "内容管理",
+      "path": "内容管理/FAQ管理/新增/编辑",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "文章列表",
+      "url": "文章列表.html",
+      "folder": "UGC",
+      "path": "UGC/文章列表",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "创建文章",
+      "url": "创建文章.html",
+      "folder": "UGC",
+      "path": "UGC/文章列表/创建文章",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "查看文章",
+      "url": "查看文章.html",
+      "folder": "UGC",
+      "path": "UGC/文章列表/查看文章",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "订阅记录",
+      "url": "订阅记录.html",
+      "folder": "UGC",
+      "path": "UGC/订阅记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "文章购买记录",
+      "url": "文章购买记录.html",
+      "folder": "UGC",
+      "path": "UGC/文章购买记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "创作者列表",
+      "url": "创作者列表.html",
+      "folder": "UGC",
+      "path": "UGC/创作者列表",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "文章分类管理",
+      "url": "文章分类管理.html",
+      "folder": "UGC",
+      "path": "UGC/文章分类管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "数据统计",
+      "url": "数据统计.html",
+      "folder": "UGC",
+      "path": "UGC/数据统计",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "文章统计",
+      "url": "文章统计.html",
+      "folder": "UGC",
+      "path": "UGC/数据统计/文章统计",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "用户列表",
+      "url": "用户列表.html",
+      "folder": "用户管理",
+      "path": "用户管理/用户列表",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "封禁记录",
+      "url": "封禁记录.html",
+      "folder": "用户管理",
+      "path": "用户管理/用户列表/封禁记录",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "屏蔽记录",
+      "url": "屏蔽记录.html",
+      "folder": "用户管理",
+      "path": "用户管理/屏蔽记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "举报记录",
+      "url": "举报记录.html",
+      "folder": "用户管理",
+      "path": "用户管理/举报记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "意见反馈",
+      "url": "意见反馈.html",
+      "folder": "用户管理",
+      "path": "用户管理/意见反馈",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "用户账户",
+      "url": "用户账户.html",
+      "folder": "财务管理",
+      "path": "财务管理/用户账户",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "账户详情",
+      "url": "账户详情.html",
+      "folder": "财务管理",
+      "path": "财务管理/用户账户/账户详情",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "充值记录",
+      "url": "充值记录.html",
+      "folder": "财务管理",
+      "path": "财务管理/充值记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "骆驼币流水",
+      "url": "骆驼币流水.html",
+      "folder": "财务管理",
+      "path": "财务管理/骆驼币流水",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "绿钻流水",
+      "url": "绿钻流水.html",
+      "folder": "财务管理",
+      "path": "财务管理/绿钻流水",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "提现管理",
+      "url": "提现管理.html",
+      "folder": "财务管理",
+      "path": "财务管理/提现管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "已打款/已拒绝",
+      "url": "已打款_已拒绝.html",
+      "folder": "财务管理",
+      "path": "财务管理/提现管理/已打款/已拒绝",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "银钻流水",
+      "url": "银钻流水.html",
+      "folder": "财务管理",
+      "path": "财务管理/银钻流水",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "充值产品管理",
+      "url": "充值产品管理.html",
+      "folder": "财务管理",
+      "path": "财务管理/充值产品管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "套餐管理",
+      "url": "套餐管理.html",
+      "folder": "财务管理",
+      "path": "财务管理/充值产品管理/套餐管理",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "热门联赛",
+      "url": "热门联赛.html",
+      "folder": "球队及联赛",
+      "path": "球队及联赛/热门联赛",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "管理",
+      "url": "管理.html",
+      "folder": "球队及联赛",
+      "path": "球队及联赛/热门联赛/管理",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "热门球队",
+      "url": "热门球队.html",
+      "folder": "球队及联赛",
+      "path": "球队及联赛/热门球队",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "屏蔽赛事视频",
+      "url": "屏蔽赛事视频.html",
+      "folder": "球队及联赛",
+      "path": "球队及联赛/屏蔽赛事视频",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "任务完成记录",
+      "url": "任务完成记录.html",
+      "folder": "银钻任务",
+      "path": "银钻任务/任务完成记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "邀请好友记录",
+      "url": "邀请好友记录.html",
+      "folder": "银钻任务",
+      "path": "银钻任务/邀请好友记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "任务内容",
+      "url": "任务内容.html",
+      "folder": "银钻任务",
+      "path": "银钻任务/任务内容",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "预测赛事列表",
+      "url": "预测赛事列表.html",
+      "folder": "赛事预测",
+      "path": "赛事预测/预测赛事列表",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "用户参与记录",
+      "url": "用户参与记录.html",
+      "folder": "赛事预测",
+      "path": "赛事预测/用户参与记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "奖励发放记录",
+      "url": "奖励发放记录.html",
+      "folder": "赛事预测",
+      "path": "赛事预测/奖励发放记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "退回记录",
+      "url": "退回记录.html",
+      "folder": "赛事预测",
+      "path": "赛事预测/退回记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "数据统计",
+      "url": "数据统计_1.html",
+      "folder": "赛事预测",
+      "path": "赛事预测/数据统计",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "用户统计",
+      "url": "用户统计.html",
+      "folder": "赛事预测",
+      "path": "赛事预测/数据统计/用户统计",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "风控设置",
+      "url": "风控设置.html",
+      "folder": "赛事预测",
+      "path": "赛事预测/风控设置",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "头像框",
+      "url": "头像框.html",
+      "folder": "装扮管理",
+      "path": "装扮管理/头像框",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "新增/编辑头像框",
+      "url": "新增_编辑头像框.html",
+      "folder": "装扮管理",
+      "path": "装扮管理/头像框/新增/编辑头像框",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "关联用户",
+      "url": "关联用户.html",
+      "folder": "装扮管理",
+      "path": "装扮管理/头像框/关联用户",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "勋章",
+      "url": "勋章.html",
+      "folder": "装扮管理",
+      "path": "装扮管理/勋章",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "新增/编辑勋章",
+      "url": "新增_编辑勋章.html",
+      "folder": "装扮管理",
+      "path": "装扮管理/勋章/新增/编辑勋章",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "商品管理",
+      "url": "商品管理.html",
+      "folder": "商城",
+      "path": "商城/商品管理",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "新增/编辑商品",
+      "url": "新增_编辑商品.html",
+      "folder": "商城",
+      "path": "商城/商品管理/新增/编辑商品",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "购买记录",
+      "url": "购买记录.html",
+      "folder": "商城",
+      "path": "商城/购买记录",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "聊天室消息",
+      "url": "聊天室消息.html",
+      "folder": "消息管理",
+      "path": "消息管理/聊天室消息",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "新增/编辑",
+      "url": "新增_编辑_1.html",
+      "folder": "消息管理",
+      "path": "消息管理/聊天室消息/新增/编辑",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "推送消息",
+      "url": "推送消息.html",
+      "folder": "消息管理",
+      "path": "消息管理/推送消息",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "编辑/查看消息",
+      "url": "编辑_查看消息.html",
+      "folder": "消息管理",
+      "path": "消息管理/推送消息/编辑/查看消息",
+      "level": 2,
+      "type": "Wireframe"
+    },
+    {
+      "name": "头像图片监控",
+      "url": "头像图片监控.html",
+      "folder": "风控管理",
+      "path": "风控管理/头像图片监控",
+      "level": 1,
+      "type": "Wireframe"
+    },
+    {
+      "name": "版本更新",
+      "url": "版本更新.html",
+      "folder": "系统管理",
+      "path": "系统管理/版本更新",
+      "level": 1,
+      "type": "Wireframe"
+    }
+  ],
+  "extracted_at": "20260517_170949"
+}

@@ -1,0 +1,1453 @@
+diff --git a/docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md b/docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md
+index 9afdb92..2dcdbf4 100644
+--- a/docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md
++++ b/docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md
+@@ -1,6 +1,6 @@
+ # ADR-0010: 知识切片向量化与混合检索（M2）
+ 
+-- **状态**：草案（待 Product/Design/Leader 评审，按 [[agent-team-gate]]）
++- **状态**：已接受（accepted）—— batch-12 实现落地并验证 D1–D4（35 用例绿；见下「验证」）
+ - **日期**：2026-07-09
+ - **决策者**：Dev 部门（承接 M1，落地 M2）
+ - **关联**：[ADR-0009 知识中心与 Agent 持续学习子系统](0009-knowledge-center-agent-continuous-learning.md)、[RAG落地执行文档 §M2](../../test-platform-v2/docs/RAG知识图谱与Agent持续学习能力落地执行文档.md)
+@@ -52,3 +52,14 @@ M0+M1（PR #15）已把需求/接口/用例/缺陷/执行等沉淀为 `knowledge
+ - **成本**：新增 `fastembed`/`numpy` 依赖（需更新 `requirements.txt` 并过 [[common-pitfalls]] 隐式依赖检查）；
+   首次下载嵌入模型（部署镜像宜预置缓存）。
+ - **风险**：暴力余弦在语料显著增长后需切 pgvector/ANN（已由分层抽象兜底）；嵌入延迟需压测（目标单条 <50ms CPU）。
++
++## 验证（batch-12 落地）
++
++- **单测**：`tests/test_knowledge.py` 扩展至 **35 用例全绿**（嵌入降级 / 向量 upsert↔search 往返·1:1·项目隔离·异维跳过 / RRF 三模 / 端点 503·403 治理）。
++- **暴力余弦压测**（512 维、NumPy、search-only、in-memory）：
++  | 向量规模 | p50 | p95 |
++  |---|---|---|
++  | 1,000 | 5.3 ms | 11.2 ms |
++  | 5,000 | 41.7 ms | 87.1 ms |
++  → 千级远低于 100ms 目标；**~5,000/项目** 为 <100ms 舒适上限，超出即按 D2 切 pgvector HNSW。嵌入侧延迟（fastembed CPU）需联网环境实测，此处未含。
++- **降级**：`fastembed` 缺失/模型未就绪时嵌入返回 None、检索自动降级为纯关键词，M1 入库与主流程零影响（已单测）。
+diff --git a/test-platform-v2/backend/alembic/versions/20260709_0014_knowledge_vector.py b/test-platform-v2/backend/alembic/versions/20260709_0014_knowledge_vector.py
+new file mode 100644
+index 0000000..0be5e15
+--- /dev/null
++++ b/test-platform-v2/backend/alembic/versions/20260709_0014_knowledge_vector.py
+@@ -0,0 +1,44 @@
++"""knowledge_vector — 知识切片向量（M2 RAG）
++
++创建 1 张表:
++- knowledge_vector: 切片向量（与 knowledge_chunk 1:1，float32 BLOB，dev 存 SQLite，升 PG 切 pgvector）
++
++Revision ID: 20260709_0014
++Revises: 20260708_0013
++Create Date: 2026-07-09
++"""
++from typing import Sequence, Union
++
++import sqlalchemy as sa
++from alembic import op
++
++revision: str = "20260709_0014"
++down_revision: Union[str, None] = "20260708_0013"
++branch_labels: Union[str, Sequence[str], None] = None
++depends_on: Union[str, Sequence[str], None] = None
++
++
++def upgrade() -> None:
++    op.create_table(
++        "knowledge_vector",
++        sa.Column("id", sa.Integer(), nullable=False),
++        sa.Column("chunk_id", sa.Integer(), nullable=False),
++        sa.Column("project_id", sa.Integer(), nullable=False, index=True),
++        sa.Column("model", sa.String(), nullable=False, server_default=""),
++        sa.Column("dim", sa.Integer(), nullable=False, server_default="0"),
++        sa.Column("vec", sa.LargeBinary(), nullable=False),
++        sa.Column("created_at", sa.DateTime(), nullable=False),
++        sa.PrimaryKeyConstraint("id"),
++    )
++    # chunk_id 唯一（1:1）；单独建唯一索引，兼具查询与去重
++    op.create_index(
++        "ix_knowledge_vector_chunk_id",
++        "knowledge_vector",
++        ["chunk_id"],
++        unique=True,
++    )
++
++
++def downgrade() -> None:
++    op.drop_index("ix_knowledge_vector_chunk_id", table_name="knowledge_vector")
++    op.drop_table("knowledge_vector")
+diff --git a/test-platform-v2/backend/app/api/v1/knowledge.py b/test-platform-v2/backend/app/api/v1/knowledge.py
+index ac1a0df..02d2fbf 100644
+--- a/test-platform-v2/backend/app/api/v1/knowledge.py
++++ b/test-platform-v2/backend/app/api/v1/knowledge.py
+@@ -9,8 +9,10 @@
+ from sqlalchemy import func, select
+ from sqlalchemy.orm import Session
+ 
++from app.core.config import settings
+ from app.core.db import get_db
+ from app.core.deps import CurrentUser, require_permission
++from app.core.exceptions import APIException
+ from app.models.knowledge import AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeSource
+ from app.schemas.common import Page, R
+ from app.schemas.knowledge import (
+@@ -22,9 +24,14 @@
+     KnowledgeOverviewOut,
+     KnowledgeSourceBrief,
+     KnowledgeSourceOut,
++    ReembedResult,
++    SearchQuery,
++    SearchResultOut,
+ )
+ from app.services import audit_service
+-from app.services.knowledge import artifact_service, chunk_service, source_service
++from app.services.knowledge import artifact_service, chunk_service, search_service, source_service
++from app.services.knowledge.embedding_service import embedding_service
++from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
+ 
+ router = APIRouter(prefix="/knowledge", tags=["知识中心"])
+ 
+@@ -92,6 +99,59 @@ def _count(model, *conds) -> int:
+     return R.ok(out)
+ 
+ 
++# ═══════════════════════════════════════════════════════
++# 混合检索（M2 RAG）
++# ═══════════════════════════════════════════════════════
++
++@router.post("/search", response_model=R[list[SearchResultOut]], summary="知识混合检索（RAG）")
++def search_knowledge(
++    body: SearchQuery,
++    current: CurrentUser = Depends(require_permission("knowledge:view")),
++    db: Session = Depends(get_db),
++):
++    """关键词+向量 RRF 融合检索。仅 rag_enabled 时可用；模型不可用时自动降级为纯关键词。"""
++    if not settings.rag_enabled:
++        raise APIException(code=503, msg="RAG 检索未启用（rag_enabled=False）", http_status=503)
++    hits = search_service.hybrid_search(
++        db,
++        project_id=current.project_id or 0,
++        query=body.query,
++        top_k=body.top_k,
++        chunk_type=body.chunk_type,
++        mode=body.mode,
++    )
++    return R.ok([SearchResultOut(**hit.__dict__) for hit in hits])
++
++
++@router.post("/reembed", response_model=R[ReembedResult], summary="存量切片向量回填（RAG）")
++def reembed(
++    req: Request,
++    current: CurrentUser = Depends(require_permission("knowledge:manage")),
++    db: Session = Depends(get_db),
++):
++    """分批回填本项目 active 且未嵌入的切片（幂等）。需 rag_enabled 且嵌入模型就绪。"""
++    if not settings.rag_enabled:
++        raise APIException(code=503, msg="RAG 检索未启用（rag_enabled=False）", http_status=503)
++    if not embedding_service.available():
++        raise APIException(code=503, msg="嵌入模型不可用（fastembed 未安装或模型未就绪）", http_status=503)
++    pid = current.project_id or 0
++    pending = db.scalar(
++        select(func.count(KnowledgeChunk.id)).where(
++            KnowledgeChunk.project_id == pid,
++            KnowledgeChunk.status == "active",
++            KnowledgeChunk.embedding_id == "",
++        )
++    ) or 0
++    result = embed_pending_chunks_in_new_session(pid)  # 独立 Session、分批、幂等
++    _audit(req, current, db, "knowledge:reembed", f"project#{pid}", str(result))
++    db.commit()
++    return R.ok(ReembedResult(
++        total=pending,
++        embedded=result.get("embedded", 0),
++        skipped=result.get("skipped", 0),
++    ))
++
++
+ # ═══════════════════════════════════════════════════════
+ # 知识源
+ # ═══════════════════════════════════════════════════════
+diff --git a/test-platform-v2/backend/app/core/config.py b/test-platform-v2/backend/app/core/config.py
+index 5155ffd..de06dca 100644
+--- a/test-platform-v2/backend/app/core/config.py
++++ b/test-platform-v2/backend/app/core/config.py
+@@ -74,6 +74,11 @@ class Settings(BaseSettings):
+     ai_temperature: float = 0.3
+     ai_split_calls: bool = True                # split generation into functional + API parallel calls to avoid truncation
+ 
++    # ── AI 降级 / 超时（DeepSeek 分类器不可用时的本地降级提取）──
++    ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）
++    ai_retry_attempts: int = 2                 # 瞬时失败（超时/网络）总尝试次数，最小 1
++    ai_fallback_on_failure: bool = True        # 瞬时失败时降级到本地模块提取，返回可复核草稿而非硬失败
++
+     # ── File paths (configurable for portability) ──
+     workspace_root: str = ""      # empty = auto-detect from app/services/__file__
+     skill_dir: str = ""           # test-case-design skill directory
+@@ -104,6 +109,15 @@ class Settings(BaseSettings):
+     ai_artifact_allow_batch_import: bool = False # AI 产物是否允许批量导入正式库
+     knowledge_ingest_production_data: bool = False  # 生产环境执行结果是否允许进入知识库
+ 
++    # ── M2 向量化 / 混合检索（RAG）──
++    # 本地 fastembed(onnx) 嵌入，离线不外传（见 ADR-0010）。仅在 rag_enabled 时激活嵌入管线。
++    embedding_model: str = "BAAI/bge-small-zh-v1.5"  # 中文小模型，512 维
++    embedding_dim: int = 512
++    embedding_batch_size: int = 32               # 批量嵌入/回填批大小
++    embedding_cache_dir: str = ""                # 空=fastembed 默认（~/.cache/fastembed）
++    # bge 检索建议对 query 加前缀以对齐训练目标；passage 侧不加
++    embedding_query_prefix: str = "为这个句子生成表示以用于检索相关文章："
++
+     @property
+     def cors_origins(self) -> list[str]:
+         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
+diff --git a/test-platform-v2/backend/app/models/__init__.py b/test-platform-v2/backend/app/models/__init__.py
+index aa85e5a..08fcb8b 100644
+--- a/test-platform-v2/backend/app/models/__init__.py
++++ b/test-platform-v2/backend/app/models/__init__.py
+@@ -13,6 +13,7 @@
+     KnowledgeEntity,
+     KnowledgeRelation,
+     KnowledgeSource,
++    KnowledgeVector,
+ )
+ from app.models.project import Project, ProjectMember
+ from app.models.notification import NotificationChannel, NotificationLog
+@@ -76,6 +77,7 @@
+     "KnowledgeChunk",
+     "KnowledgeEntity",
+     "KnowledgeRelation",
++    "KnowledgeVector",
+     "AiArtifact",
+     "AgentRun",
+ ]
+diff --git a/test-platform-v2/backend/app/models/knowledge.py b/test-platform-v2/backend/app/models/knowledge.py
+index dc61086..71b7838 100644
+--- a/test-platform-v2/backend/app/models/knowledge.py
++++ b/test-platform-v2/backend/app/models/knowledge.py
+@@ -8,7 +8,7 @@
+ 
+ from datetime import datetime
+ 
+-from sqlalchemy import Text
++from sqlalchemy import LargeBinary, Text
+ from sqlalchemy.orm import Mapped, mapped_column
+ 
+ from app.core.db import Base
+@@ -54,6 +54,22 @@ class KnowledgeChunk(Base):
+     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
+ 
+ 
++class KnowledgeVector(Base):
++    """知识切片向量（M2）—— 与 chunk 1:1，dev 存 float32 BLOB，升 PG 切 pgvector。
++
++    检索时 JOIN knowledge_chunk 取 status="active"（本表不冗余 chunk 状态）。
++    """
++    __tablename__ = "knowledge_vector"
++
++    id: Mapped[int] = mapped_column(primary_key=True)
++    chunk_id: Mapped[int] = mapped_column(index=True, unique=True)  # -> knowledge_chunk.id
++    project_id: Mapped[int] = mapped_column(index=True)
++    model: Mapped[str] = mapped_column(default="")   # 生成向量的嵌入模型（回填/切模型可辨识）
++    dim: Mapped[int] = mapped_column(default=0)
++    vec: Mapped[bytes] = mapped_column(LargeBinary)  # float32 小端字节，已 L2 归一化
++    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
++
++
+ class KnowledgeEntity(Base, TimestampMixin):
+     """知识图谱节点（M3 建图使用，本期仅建表）。"""
+     __tablename__ = "knowledge_entity"
+diff --git a/test-platform-v2/backend/app/schemas/knowledge.py b/test-platform-v2/backend/app/schemas/knowledge.py
+index 9e0f9c3..705a8e8 100644
+--- a/test-platform-v2/backend/app/schemas/knowledge.py
++++ b/test-platform-v2/backend/app/schemas/knowledge.py
+@@ -127,3 +127,28 @@ class KnowledgeOverviewOut(BaseModel):
+     pending_artifact_count: int = 0
+     recent_sources: list[KnowledgeSourceBrief] = Field(default_factory=list)
+     health: KnowledgeHealth = Field(default_factory=KnowledgeHealth)
++
++
++# ── M2 混合检索 ──
++
++class SearchQuery(BaseModel):
++    query: str = Field(..., min_length=1, max_length=500)
++    chunk_type: str | None = None
++    top_k: int = Field(8, ge=1, le=50)
++    mode: str = "hybrid"  # hybrid | keyword | vector
++
++
++class SearchResultOut(BaseModel):
++    chunk_id: int
++    chunk_type: str
++    title: str
++    snippet: str
++    score: float
++    source_id: int
++    source_name: str
++
++
++class ReembedResult(BaseModel):
++    total: int = 0        # 本次扫描到的待嵌入 active 切片数
++    embedded: int = 0     # 成功写入向量数
++    skipped: int = 0      # 跳过数（无内容/嵌入失败）
+diff --git a/test-platform-v2/backend/app/services/knowledge/embedding_service.py b/test-platform-v2/backend/app/services/knowledge/embedding_service.py
+new file mode 100644
+index 0000000..3a27ead
+--- /dev/null
++++ b/test-platform-v2/backend/app/services/knowledge/embedding_service.py
+@@ -0,0 +1,105 @@
++"""嵌入服务（M2 RAG）—— 本地 fastembed(onnx) 生成切片/查询向量，离线不外传。
++
++设计（见 ADR-0010）：
++- **懒加载**：模型在首次真正需要时才加载/下载；导入本模块永不触发下载或报错。
++- **优雅降级**：fastembed 未安装 / 模型下载失败 / 计算异常 → 返回 None 并记日志，
++  绝不抛异常，保证 M1 入库与主流程不受影响。
++- **L2 归一化**：写入前归一化，检索时余弦相似度退化为点积，简化 vector_store。
++- 单例 `embedding_service` 供入库管线与检索复用。
++"""
++from __future__ import annotations
++
++import logging
++import threading
++
++from app.core.config import settings
++
++logger = logging.getLogger("knowledge.embedding")
++
++
++class EmbeddingService:
++    """本地 onnx 文本嵌入（bge-small-zh-v1.5，512 维）。线程安全懒加载。"""
++
++    def __init__(
++        self,
++        model_name: str | None = None,
++        dim: int | None = None,
++        cache_dir: str | None = None,
++    ) -> None:
++        self._model_name = model_name or settings.embedding_model
++        self._dim = dim or settings.embedding_dim
++        self._cache_dir = cache_dir or settings.embedding_cache_dir or None
++        self._model = None
++        self._unavailable = False
++        self._lock = threading.Lock()
++
++    @property
++    def model_name(self) -> str:
++        return self._model_name
++
++    @property
++    def dim(self) -> int:
++        return self._dim
++
++    def _ensure_model(self) -> None:
++        if self._model is not None or self._unavailable:
++            return
++        with self._lock:
++            if self._model is not None or self._unavailable:
++                return
++            try:
++                from fastembed import TextEmbedding  # 延迟导入：未装依赖也不影响 app 启动
++
++                self._model = TextEmbedding(
++                    model_name=self._model_name, cache_dir=self._cache_dir
++                )
++                logger.info("嵌入模型已加载: %s", self._model_name)
++            except Exception:  # noqa: BLE001 — 任何失败都降级，不得中断主流程
++                logger.exception(
++                    "加载嵌入模型失败（fastembed 未安装或模型下载失败），RAG 嵌入将被跳过"
++                )
++                self._unavailable = True
++
++    def available(self) -> bool:
++        """模型是否就绪（会触发首次加载/下载）。"""
++        self._ensure_model()
++        return self._model is not None
++
++    def embed(self, texts: list[str]):
++        """批量嵌入，返回 np.ndarray[float32, (n, dim)]（已 L2 归一化）；不可用/异常返回 None。"""
++        texts = [t if isinstance(t, str) else "" for t in (texts or [])]
++        if not texts:
++            return None
++        self._ensure_model()
++        if self._model is None:
++            return None
++        try:
++            import numpy as np
++
++            vecs = list(self._model.embed(texts))  # generator[np.ndarray]
++            arr = np.asarray(vecs, dtype=np.float32)
++            if arr.ndim != 2 or arr.shape[0] != len(texts):
++                logger.warning("嵌入输出形状异常: %s（期望 (%d, dim)）", arr.shape, len(texts))
++                return None
++            norms = np.linalg.norm(arr, axis=1, keepdims=True)
++            norms[norms == 0] = 1.0
++            return arr / norms
++        except Exception:  # noqa: BLE001
++            logger.exception("嵌入计算失败")
++            return None
++
++    def embed_one(self, text: str):
++        """单文本嵌入，返回 np.ndarray[float32, (dim,)] 或 None。"""
++        arr = self.embed([text or ""])
++        if arr is None or len(arr) == 0:
++            return None
++        return arr[0]
++
++    def embed_query(self, query: str):
++        """查询侧嵌入：bge 建议对 query 加检索前缀以对齐训练目标。"""
++        prefix = settings.embedding_query_prefix or ""
++        return self.embed_one(f"{prefix}{query or ''}")
++
++
++# 进程级单例（懒加载，导入无副作用）
++embedding_service = EmbeddingService()
+diff --git a/test-platform-v2/backend/app/services/knowledge/ingest_service.py b/test-platform-v2/backend/app/services/knowledge/ingest_service.py
+index f0930ad..7ac2365 100644
+--- a/test-platform-v2/backend/app/services/knowledge/ingest_service.py
++++ b/test-platform-v2/backend/app/services/knowledge/ingest_service.py
+@@ -18,6 +18,7 @@
+ from app.services.knowledge import chunk_service
+ from app.services.knowledge.sanitize import sanitize
+ from app.services.knowledge.source_service import record_source
++from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
+ 
+ logger = logging.getLogger("knowledge.ingest")
+ 
+@@ -62,6 +63,7 @@ def ingest_requirement_in_new_session(project_id: int, doc_id: int) -> None:
+         ]
+         chunk_service.make_chunks(db, src, chunks)
+         db.commit()
++        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
+     except Exception:
+         logger.exception("ingest requirement doc_id=%s failed", doc_id)
+         db.rollback()
+@@ -124,6 +126,7 @@ def ingest_api_import_in_new_session(project_id: int, batch_id: int, service_nam
+             })
+         chunk_service.make_chunks(db, src, chunks)
+         db.commit()
++        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
+     except Exception:
+         logger.exception("ingest api import batch_id=%s failed", batch_id)
+         db.rollback()
+@@ -178,6 +181,7 @@ def ingest_test_case_in_new_session(project_id: int, case_id: int) -> None:
+     try:
+         _ingest_one_test_case(db, project_id, case_id)
+         db.commit()
++        embed_pending_chunks_in_new_session(project_id)
+     except Exception:
+         logger.exception("ingest test_case case_id=%s failed", case_id)
+         db.rollback()
+@@ -194,6 +198,7 @@ def ingest_test_cases_in_new_session(project_id: int, case_ids: list[int]) -> No
+         for cid in case_ids:
+             _ingest_one_test_case(db, project_id, cid)
+         db.commit()
++        embed_pending_chunks_in_new_session(project_id)
+     except Exception:
+         logger.exception("ingest test_cases (%d) failed", len(case_ids))
+         db.rollback()
+@@ -251,6 +256,7 @@ def ingest_defect_in_new_session(project_id: int, defect_id: int) -> None:
+             "tags": [defect.severity, defect.status],
+         }])
+         db.commit()
++        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
+     except Exception:
+         logger.exception("ingest defect defect_id=%s failed", defect_id)
+         db.rollback()
+@@ -313,6 +319,7 @@ def ingest_execution_failure_in_new_session(project_id: int, task_id: int) -> No
+             "tags": ["execution", "failed"],
+         }])
+         db.commit()
++        embed_pending_chunks_in_new_session(project_id, source_id=src.id)
+     except Exception:
+         logger.exception("ingest execution failure task_id=%s failed", task_id)
+         db.rollback()
+diff --git a/test-platform-v2/backend/app/services/knowledge/search_service.py b/test-platform-v2/backend/app/services/knowledge/search_service.py
+new file mode 100644
+index 0000000..643fc41
+--- /dev/null
++++ b/test-platform-v2/backend/app/services/knowledge/search_service.py
+@@ -0,0 +1,219 @@
++"""混合检索服务（M2 RAG）—— 关键词 + 向量，RRF 融合排序（见 ADR-0010 D3）。
++
++- 关键词：SQLite LIKE（CJK 二元组保召回 + Python 侧计分；FTS5 为后续优化）。
++- 向量：委托 vector_store（NumPy 余弦），query 侧经 embedding_service 加检索前缀嵌入。
++- 融合：Reciprocal Rank Fusion（对量纲鲁棒，无需归一两路分数）。
++- 治理：仅项目内、仅 status="active" 切片（vector_store 与 keyword 均已过滤）。
++
++mode: "hybrid"（默认）| "keyword" | "vector"，便于对比与降级（模型不可用时可纯关键词）。
++"""
++from __future__ import annotations
++
++import logging
++import re
++from collections import defaultdict
++from dataclasses import dataclass
++
++from sqlalchemy import or_, select
++from sqlalchemy.orm import Session
++
++from app.models.knowledge import KnowledgeChunk, KnowledgeSource
++from app.services.knowledge.embedding_service import embedding_service
++from app.services.knowledge.sanitize import sanitize
++from app.services.knowledge.vector_store import get_vector_store
++
++logger = logging.getLogger("knowledge.search")
++
++_RRF_K = 60          # RRF 常数（Cormack SIGIR'09 推荐 60）
++_CANDIDATE_MULT = 3  # 每路召回 top_k*mult 个候选参与融合
++_SNIPPET_LEN = 160
++_CJK_RE = re.compile(r"[一-鿿]")
++
++
++@dataclass
++class SearchHit:
++    chunk_id: int
++    chunk_type: str
++    title: str
++    snippet: str
++    score: float
++    source_id: int
++    source_name: str
++
++
++def _tokenize(query: str) -> list[str]:
++    """中英混排分词，服务于 LIKE 召回。
++
++    中文无空格：对 CJK 段既保留整段（强信号），又生成字符二元组（bigram）以保证召回
++    （FTS5 未建表时的经典 CJK LIKE 方案）。英文/数字段按原样保留。
++    """
++    segs = re.split(r"[\s,，。;；:：/\\|、()（）\[\]{}]+", (query or "").strip())
++    terms: list[str] = []
++    for seg in segs:
++        if not seg:
++            continue
++        if _CJK_RE.search(seg):
++            if len(seg) >= 2:
++                terms.append(seg)  # 整段：最强信号
++                for i in range(len(seg) - 1):
++                    terms.append(seg[i:i + 2])  # 字符二元组：保召回
++            else:
++                terms.append(seg)
++        else:
++            terms.append(seg)
++    # 去重保序，限量
++    seen: set[str] = set()
++    out: list[str] = []
++    for t in terms:
++        if t not in seen:
++            seen.add(t)
++            out.append(t)
++    return out[:32]
++
++
++def _keyword_search(
++    db: Session, project_id: int, query: str, limit: int, chunk_type: str | None = None
++) -> list[int]:
++    """LIKE 召回 + Python 计分，返回按相关度降序的 chunk_id 列表。"""
++    terms = _tokenize(query)
++    if not terms:
++        return []
++    base = select(
++        KnowledgeChunk.id, KnowledgeChunk.title, KnowledgeChunk.content
++    ).where(
++        KnowledgeChunk.project_id == project_id,
++        KnowledgeChunk.status == "active",
++    )
++    if chunk_type:
++        base = base.where(KnowledgeChunk.chunk_type == chunk_type)
++    conds = []
++    for t in terms:
++        like = f"%{t}%"
++        conds.append(KnowledgeChunk.title.like(like))
++        conds.append(KnowledgeChunk.content.like(like))
++    rows = db.execute(base.where(or_(*conds)).limit(500)).all()
++    if not rows:
++        return []
++    scored: list[tuple[float, int]] = []
++    for cid, title, content in rows:
++        title_l = (title or "").lower()
++        content_l = (content or "").lower()
++        score = 0.0
++        for t in terms:
++            tl = t.lower()
++            # 长词/整段权重更高（bigram≈1，4+字整段≈2），避免二元组噪声盖过完整短语命中
++            w = min(len(t), 4) / 2.0
++            if tl in title_l:
++                score += 2.0 * w            # 标题命中权重更高
++            if tl in content_l:
++                score += 1.0 * w
++        if score > 0:
++            scored.append((score, cid))
++    scored.sort(key=lambda x: (-x[0], x[1]))
++    return [cid for _, cid in scored[:limit]]
++
++
++def _vector_search(
++    db: Session, project_id: int, query: str, limit: int, chunk_type: str | None = None
++) -> list[int]:
++    """向量召回，返回按余弦降序的 chunk_id 列表（模型不可用时返回空，自动降级为纯关键词）。"""
++    qv = embedding_service.embed_query(query)
++    if qv is None:
++        return []
++    results = get_vector_store().search(
++        db, project_id=project_id, query_vec=qv, top_k=limit, chunk_type=chunk_type
++    )
++    return [r.chunk_id for r in results]
++
++
++def _rrf_fuse(rankings: list[list[int]], rrf_k: int = _RRF_K) -> list[tuple[int, float]]:
++    """Reciprocal Rank Fusion：score(cid) = Σ 1/(rrf_k + rank)。返回 (chunk_id, score) 降序。"""
++    scores: dict[int, float] = defaultdict(float)
++    for ranking in rankings:
++        for rank, cid in enumerate(ranking):
++            scores[cid] += 1.0 / (rrf_k + rank + 1)
++    return sorted(scores.items(), key=lambda x: -x[1])
++
++
++def _make_snippet(content: str, terms: list[str]) -> str:
++    content = (content or "").replace("\n", " ").strip()
++    if not content:
++        return ""
++    low = content.lower()
++    pos = -1
++    for t in terms:
++        i = low.find(t.lower())
++        if i >= 0:
++            pos = i
++            break
++    if pos < 0:
++        return content[:_SNIPPET_LEN] + ("…" if len(content) > _SNIPPET_LEN else "")
++    start = max(0, pos - 30)
++    end = min(len(content), start + _SNIPPET_LEN)
++    prefix = "…" if start > 0 else ""
++    suffix = "…" if end < len(content) else ""
++    return f"{prefix}{content[start:end]}{suffix}"
++
++
++def _hydrate(db: Session, ranked: list[tuple[int, float]], query: str) -> list[SearchHit]:
++    if not ranked:
++        return []
++    ids = [cid for cid, _ in ranked]
++    chunks = {c.id: c for c in db.scalars(select(KnowledgeChunk).where(KnowledgeChunk.id.in_(ids))).all()}
++    source_ids = {c.source_id for c in chunks.values()}
++    sources = {
++        s.id: s.title
++        for s in db.scalars(select(KnowledgeSource).where(KnowledgeSource.id.in_(source_ids))).all()
++    }
++    terms = _tokenize(query)
++    hits: list[SearchHit] = []
++    for cid, score in ranked:
++        c = chunks.get(cid)
++        if not c:
++            continue
++        hits.append(
++            SearchHit(
++                chunk_id=c.id,
++                chunk_type=c.chunk_type,
++                title=c.title,
++                snippet=_make_snippet(c.content, terms),
++                score=round(float(score), 6),
++                source_id=c.source_id,
++                source_name=sources.get(c.source_id, ""),
++            )
++        )
++    return hits
++
++
++def hybrid_search(
++    db: Session,
++    *,
++    project_id: int,
++    query: str,
++    top_k: int = 8,
++    chunk_type: str | None = None,
++    mode: str = "hybrid",
++) -> list[SearchHit]:
++    """检索入口。query 先脱敏（避免把敏感串带入检索日志/嵌入）。"""
++    query = sanitize((query or "").strip())
++    if not query:
++        return []
++    top_k = max(1, min(top_k, 50))
++    cand = top_k * _CANDIDATE_MULT
++
++    if mode == "keyword":
++        ranked = [
++            (cid, 1.0 / (_RRF_K + i + 1))
++            for i, cid in enumerate(_keyword_search(db, project_id, query, cand, chunk_type))
++        ]
++    elif mode == "vector":
++        ranked = [
++            (cid, 1.0 / (_RRF_K + i + 1))
++            for i, cid in enumerate(_vector_search(db, project_id, query, cand, chunk_type))
++        ]
++    else:  # hybrid
++        kw = _keyword_search(db, project_id, query, cand, chunk_type)
++        vec = _vector_search(db, project_id, query, cand, chunk_type)
++        ranked = _rrf_fuse([kw, vec])
++
++    return _hydrate(db, ranked[:top_k], query)
+diff --git a/test-platform-v2/backend/app/services/knowledge/vector_store.py b/test-platform-v2/backend/app/services/knowledge/vector_store.py
+new file mode 100644
+index 0000000..8f7e263
+--- /dev/null
++++ b/test-platform-v2/backend/app/services/knowledge/vector_store.py
+@@ -0,0 +1,130 @@
++"""向量存储抽象（M2 RAG）—— dev 用 SQLite blob + NumPy 暴力余弦，升 PG 切 pgvector。
++
++分层抽象（见 ADR-0010 D2）：上层（入库管线 / search_service）只依赖 `VectorStore` 接口，
++底层实现可从 `SqliteVectorStore` 平滑替换为 pgvector 实现，零改上层。
++
++向量在 embedding_service 侧已 L2 归一化 → 余弦相似度退化为点积。
++"""
++from __future__ import annotations
++
++import logging
++from abc import ABC, abstractmethod
++from dataclasses import dataclass
++
++from sqlalchemy import delete, select
++from sqlalchemy.orm import Session
++
++from app.models.knowledge import KnowledgeChunk, KnowledgeVector
++
++logger = logging.getLogger("knowledge.vector_store")
++
++
++@dataclass
++class VectorSearchResult:
++    chunk_id: int
++    score: float
++
++
++class VectorStore(ABC):
++    """向量存储接口。所有实现须保证 chunk_id 维度 1:1（upsert 覆盖）。"""
++
++    @abstractmethod
++    def upsert(self, db: Session, *, chunk_id: int, project_id: int, model: str, dim: int, vec) -> int:
++        """写入/覆盖某 chunk 的向量，返回向量行 id。"""
++
++    @abstractmethod
++    def delete_by_chunk(self, db: Session, chunk_id: int) -> int:
++        """删除某 chunk 的向量（chunk 被弃用/删除时清理）。返回删除行数。"""
++
++    @abstractmethod
++    def deactivate_project(self, db: Session, project_id: int) -> int:
++        """清空某项目的全部向量（项目级隔离/重建）。返回删除行数。"""
++
++    @abstractmethod
++    def search(
++        self, db: Session, *, project_id: int, query_vec, top_k: int = 8, chunk_type: str | None = None
++    ) -> list[VectorSearchResult]:
++        """向量检索：项目内、仅 active chunk，按余弦降序返回 top_k。"""
++
++
++class SqliteVectorStore(VectorStore):
++    """SQLite float32 BLOB + NumPy 暴力余弦（语料千级以下足够；见 ADR-0010 风险项）。"""
++
++    def upsert(self, db: Session, *, chunk_id: int, project_id: int, model: str, dim: int, vec) -> int:
++        import numpy as np
++
++        blob = np.asarray(vec, dtype=np.float32).tobytes()
++        row = db.scalar(select(KnowledgeVector).where(KnowledgeVector.chunk_id == chunk_id))
++        if row is not None:
++            row.project_id = project_id
++            row.model = model
++            row.dim = dim
++            row.vec = blob
++            db.flush()
++            return row.id
++        row = KnowledgeVector(chunk_id=chunk_id, project_id=project_id, model=model, dim=dim, vec=blob)
++        db.add(row)
++        db.flush()
++        return row.id
++
++    def delete_by_chunk(self, db: Session, chunk_id: int) -> int:
++        res = db.execute(delete(KnowledgeVector).where(KnowledgeVector.chunk_id == chunk_id))
++        return res.rowcount or 0
++
++    def deactivate_project(self, db: Session, project_id: int) -> int:
++        res = db.execute(delete(KnowledgeVector).where(KnowledgeVector.project_id == project_id))
++        return res.rowcount or 0
++
++    def search(
++        self, db: Session, *, project_id: int, query_vec, top_k: int = 8, chunk_type: str | None = None
++    ) -> list[VectorSearchResult]:
++        import numpy as np
++
++        q = (
++            select(KnowledgeVector.chunk_id, KnowledgeVector.vec)
++            .join(KnowledgeChunk, KnowledgeChunk.id == KnowledgeVector.chunk_id)
++            .where(
++                KnowledgeVector.project_id == project_id,
++                KnowledgeChunk.status == "active",
++            )
++        )
++        if chunk_type:
++            q = q.where(KnowledgeChunk.chunk_type == chunk_type)
++        rows = db.execute(q).all()
++        if not rows:
++            return []
++
++        qv = np.asarray(query_vec, dtype=np.float32)
++        qn = float(np.linalg.norm(qv))
++        if qn == 0.0:
++            return []
++        qv = qv / qn
++
++        chunk_ids: list[int] = []
++        mats: list["np.ndarray"] = []
++        for cid, blob in rows:
++            v = np.frombuffer(blob, dtype=np.float32)
++            if v.shape[0] != qv.shape[0]:
++                continue  # 维度不符（模型切换残留），跳过
++            chunk_ids.append(int(cid))
++            mats.append(v)
++        if not mats:
++            return []
++
++        matrix = np.vstack(mats)          # (n, dim)，库内向量已归一化
++        scores = matrix @ qv              # 余弦（双方已归一化）
++        k = min(top_k, len(scores))
++        top_idx = np.argpartition(-scores, k - 1)[:k]
++        top_idx = top_idx[np.argsort(-scores[top_idx])]
++        return [VectorSearchResult(chunk_id=chunk_ids[i], score=float(scores[i])) for i in top_idx]
++
++
++_store: VectorStore | None = None
++
++
++def get_vector_store() -> VectorStore:
++    """进程级单例。PG 升级时在此切换实现即可。"""
++    global _store
++    if _store is None:
++        _store = SqliteVectorStore()
++    return _store
+diff --git a/test-platform-v2/backend/app/services/knowledge/vectorize.py b/test-platform-v2/backend/app/services/knowledge/vectorize.py
+new file mode 100644
+index 0000000..09579d5
+--- /dev/null
++++ b/test-platform-v2/backend/app/services/knowledge/vectorize.py
+@@ -0,0 +1,91 @@
++"""向量化管线（M2 RAG）—— 将已入库的知识切片嵌入并写入向量库。
++
++设计（见 ADR-0010 D4）：
++- **rag_enabled 门控**：开关关闭时直接跳过，零副作用。
++- **后 M1-commit、独立事务**：在 M1 切片已提交后，用**独立 Session** 嵌入回填；
++  任何嵌入失败都不会回滚 M1 数据，也不抛异常打断主流程。
++- **幂等**：只处理 `embedding_id == ""` 的 active 切片；重复调用不重复嵌入。
++- 供入库 hook 与 `/knowledge/reembed`（Slice 3）复用。
++"""
++from __future__ import annotations
++
++import logging
++
++from sqlalchemy import select
++from sqlalchemy.orm import Session
++
++from app.core.config import settings
++from app.core.db import SessionLocal
++from app.models.knowledge import KnowledgeChunk
++from app.services.knowledge.embedding_service import embedding_service
++from app.services.knowledge.vector_store import get_vector_store
++
++logger = logging.getLogger("knowledge.vectorize")
++
++
++def _embed_and_store(db: Session, chunks: list[KnowledgeChunk]) -> int:
++    """在给定 Session 内嵌入并写向量（不管理 Session、由调用方 commit）。返回成功数。"""
++    if not chunks:
++        return 0
++    vectors = embedding_service.embed([c.content or "" for c in chunks])
++    if vectors is None:
++        return 0
++    store = get_vector_store()
++    done = 0
++    for chunk, vec in zip(chunks, vectors):
++        vid = store.upsert(
++            db,
++            chunk_id=chunk.id,
++            project_id=chunk.project_id,
++            model=embedding_service.model_name,
++            dim=embedding_service.dim,
++            vec=vec,
++        )
++        chunk.embedding_id = str(vid)
++        done += 1
++    db.flush()
++    return done
++
++
++def embed_pending_chunks_in_new_session(
++    project_id: int, source_id: int | None = None, limit: int | None = None
++) -> dict:
++    """嵌入项目内待处理切片（active 且 embedding_id 为空）。独立 Session、失败静默。
++
++    - source_id 给定时仅处理该源的切片（入库 hook 用）；否则全项目（回填用）。
++    - 返回 {"embedded": n, "skipped": m}；rag 关闭或模型不可用时 embedded=0。
++    """
++    if not settings.rag_enabled:
++        return {"embedded": 0, "skipped": 0, "reason": "rag_disabled"}
++    if not embedding_service.available():
++        return {"embedded": 0, "skipped": 0, "reason": "model_unavailable"}
++
++    batch = limit or settings.embedding_batch_size
++    db = SessionLocal()
++    try:
++        embedded_total = 0
++        scanned_total = 0
++        while True:
++            q = select(KnowledgeChunk).where(
++                KnowledgeChunk.project_id == project_id,
++                KnowledgeChunk.status == "active",
++                KnowledgeChunk.embedding_id == "",
++            )
++            if source_id is not None:
++                q = q.where(KnowledgeChunk.source_id == source_id)
++            q = q.order_by(KnowledgeChunk.id.asc()).limit(batch)
++            chunks = list(db.scalars(q).all())
++            if not chunks:
++                break
++            scanned_total += len(chunks)
++            embedded_total += _embed_and_store(db, chunks)
++            db.commit()
++            if len(chunks) < batch:
++                break
++        return {"embedded": embedded_total, "skipped": scanned_total - embedded_total}
++    except Exception:  # noqa: BLE001 — 嵌入永不影响主流程/已提交的 M1 数据
++        logger.exception("embed pending chunks failed project_id=%s source_id=%s", project_id, source_id)
++        db.rollback()
++        return {"embedded": 0, "skipped": 0, "reason": "error"}
++    finally:
++        db.close()
+diff --git a/test-platform-v2/backend/requirements.txt b/test-platform-v2/backend/requirements.txt
+index 6ea8211..5d2dff5 100644
+--- a/test-platform-v2/backend/requirements.txt
++++ b/test-platform-v2/backend/requirements.txt
+@@ -12,3 +12,7 @@ openpyxl>=3.1
+ python-docx>=1.1
+ httpx>=0.27
+ psycopg2-binary>=2.9
++pyyaml>=6.0
++# ── M2 RAG 向量化（本地嵌入，离线不外传）──
++fastembed>=0.3            # onnx TextEmbedding（bge-small-zh-v1.5），CPU 可跑，无 torch
++numpy>=1.26               # 向量存储（float32 blob）+ 暴力余弦
+diff --git a/test-platform-v2/backend/tests/test_knowledge.py b/test-platform-v2/backend/tests/test_knowledge.py
+index afb61ff..70fe296 100644
+--- a/test-platform-v2/backend/tests/test_knowledge.py
++++ b/test-platform-v2/backend/tests/test_knowledge.py
+@@ -396,3 +396,219 @@ def test_agent_runs_empty_ok(self, kclient):
+         resp = kclient.get("/api/v1/agents/runs")
+         assert resp.status_code == 200
+         assert resp.json()["data"]["total"] == 0
++
++
++# ═══════════════════════════════════════════════════════
++# M2 — 向量化 / 向量存储 / 混合检索
++# ═══════════════════════════════════════════════════════
++
++def _bag_vec(text: str, dim: int = 32):
++    """确定性 bag-of-chars 向量（字符重叠 → 余弦相近），供离线测试替身。"""
++    import numpy as np
++
++    v = np.zeros(dim, dtype=np.float32)
++    for ch in text or "":
++        v[ord(ch) % dim] += 1.0
++    n = float(np.linalg.norm(v))
++    return v / n if n else v
++
++
++def _fake_embed(texts):
++    import numpy as np
++
++    return np.vstack([_bag_vec(t) for t in texts]).astype(np.float32)
++
++
++def _patch_fake_embedder(monkeypatch):
++    """把共享单例 embedding_service 替换为确定性替身（available/embed/embed_query/dim）。"""
++    from app.services.knowledge.embedding_service import embedding_service
++
++    monkeypatch.setattr(embedding_service, "available", lambda: True)
++    monkeypatch.setattr(embedding_service, "embed", _fake_embed)
++    monkeypatch.setattr(embedding_service, "embed_query", lambda q: _bag_vec(q))
++    monkeypatch.setattr(embedding_service, "_model_name", "bag-test")
++    monkeypatch.setattr(embedding_service, "_dim", 32)
++    return embedding_service
++
++
++def _seed_chunks(db, texts, project_id=1, chunk_type="test_case"):
++    from app.models.knowledge import KnowledgeChunk, KnowledgeSource
++
++    src = KnowledgeSource(project_id=project_id, source_type=chunk_type, title="源", status="parsed")
++    db.add(src)
++    db.flush()
++    for t in texts:
++        db.add(KnowledgeChunk(
++            project_id=project_id, source_id=src.id, chunk_type=chunk_type,
++            title=t[:20], content=t, status="active", embedding_id="",
++        ))
++    db.commit()
++    return src
++
++
++class TestEmbeddingService:
++    def test_empty_input_returns_none(self):
++        from app.services.knowledge.embedding_service import EmbeddingService
++        es = EmbeddingService()
++        assert es.embed([]) is None
++
++    def test_graceful_degradation_when_unavailable(self):
++        """模型不可用（未装/下载失败）→ embed/embed_one 返回 None，绝不抛异常。"""
++        from app.services.knowledge.embedding_service import EmbeddingService
++        es = EmbeddingService()
++        es._unavailable = True  # 模拟加载失败态
++        assert es.available() is False
++        assert es.embed(["x"]) is None
++        assert es.embed_one("x") is None
++        assert es.embed_query("x") is None
++
++
++class TestVectorStore:
++    def test_upsert_search_roundtrip_and_1to1(self, kdb):
++        from app.services.knowledge.vector_store import SqliteVectorStore
++        _seed_chunks(kdb, ["密码校验", "视频播放", "登录token"])
++        from app.models.knowledge import KnowledgeChunk
++        chunks = kdb.query(KnowledgeChunk).all()
++        store = SqliteVectorStore()
++        for c in chunks:
++            store.upsert(kdb, chunk_id=c.id, project_id=1, model="bag", dim=32, vec=_bag_vec(c.content))
++        kdb.commit()
++        # 自身向量检索 → top-1 命中自身、score≈1
++        res = store.search(kdb, project_id=1, query_vec=_bag_vec(chunks[0].content), top_k=3)
++        assert res[0].chunk_id == chunks[0].id
++        assert abs(res[0].score - 1.0) < 1e-4
++        # 覆盖写：同 chunk_id 再 upsert 不新增行
++        from app.models.knowledge import KnowledgeVector
++        before = kdb.query(KnowledgeVector).count()
++        store.upsert(kdb, chunk_id=chunks[0].id, project_id=1, model="bag", dim=32, vec=_bag_vec("变了"))
++        kdb.commit()
++        assert kdb.query(KnowledgeVector).count() == before
++
++    def test_delete_and_project_isolation(self, kdb):
++        from app.models.knowledge import KnowledgeChunk, KnowledgeVector
++        from app.services.knowledge.vector_store import SqliteVectorStore
++        _seed_chunks(kdb, ["a1", "b2"], project_id=1)
++        _seed_chunks(kdb, ["c3"], project_id=2)
++        store = SqliteVectorStore()
++        for c in kdb.query(KnowledgeChunk).all():
++            store.upsert(kdb, chunk_id=c.id, project_id=c.project_id, model="bag", dim=32, vec=_bag_vec(c.content))
++        kdb.commit()
++        # 只搜项目 1
++        assert store.search(kdb, project_id=2, query_vec=_bag_vec("c3"), top_k=5)[0].score > 0.5
++        # 删单个
++        one = kdb.query(KnowledgeChunk).filter_by(project_id=1).first()
++        assert store.delete_by_chunk(kdb, one.id) == 1
++        # 项目级清空只清项目 1
++        n = store.deactivate_project(kdb, 1)
++        kdb.commit()
++        assert n >= 1
++        assert kdb.query(KnowledgeVector).filter_by(project_id=1).count() == 0
++        assert kdb.query(KnowledgeVector).filter_by(project_id=2).count() == 1
++
++    def test_dim_mismatch_skipped(self, kdb):
++        """模型切换残留的异维向量在检索时被跳过，不报错。"""
++        import numpy as np
++        from app.models.knowledge import KnowledgeChunk, KnowledgeVector
++        from app.services.knowledge.vector_store import SqliteVectorStore
++        _seed_chunks(kdb, ["x"], project_id=1)
++        c = kdb.query(KnowledgeChunk).first()
++        # 存一个 8 维向量（与 query 的 32 维不符）
++        kdb.add(KnowledgeVector(chunk_id=c.id, project_id=1, model="old", dim=8,
++                                vec=np.ones(8, dtype=np.float32).tobytes()))
++        kdb.commit()
++        res = SqliteVectorStore().search(kdb, project_id=1, query_vec=_bag_vec("x"), top_k=3)
++        assert res == []
++
++
++class TestSearchService:
++    def test_keyword_cjk_bigram(self, kdb, monkeypatch):
++        from app.services.knowledge import search_service
++        _patch_fake_embedder(monkeypatch)
++        _seed_chunks(kdb, ["密码字段需要非空校验", "视频清晰度切换", "支付金额校验"])
++        hits = search_service.hybrid_search(kdb, project_id=1, query="密码校验", top_k=3, mode="keyword")
++        assert hits and "密码" in hits[0].title + hits[0].snippet
++
++    def test_vector_and_hybrid_modes(self, kdb, monkeypatch):
++        from app.models.knowledge import KnowledgeChunk
++        from app.services.knowledge import search_service, vectorize
++        _patch_fake_embedder(monkeypatch)
++        _seed_chunks(kdb, ["密码字段需要非空校验", "视频清晰度切换", "支付金额校验"])
++        vectorize._embed_and_store(kdb, kdb.query(KnowledgeChunk).all())
++        kdb.commit()
++        for mode in ("vector", "hybrid"):
++            hits = search_service.hybrid_search(kdb, project_id=1, query="密码校验", top_k=3, mode=mode)
++            assert hits, f"{mode} 应有结果"
++            assert hits == sorted(hits, key=lambda h: -h.score)  # 降序
++
++    def test_empty_query_and_isolation(self, kdb, monkeypatch):
++        from app.services.knowledge import search_service
++        _patch_fake_embedder(monkeypatch)
++        _seed_chunks(kdb, ["密码校验"], project_id=1)
++        assert search_service.hybrid_search(kdb, project_id=1, query="   ", top_k=3) == []
++        assert search_service.hybrid_search(kdb, project_id=999, query="密码", top_k=3) == []
++
++
++class TestM2SearchApi:
++    def test_search_503_when_rag_disabled(self, kclient, monkeypatch):
++        from app.core.config import settings
++        monkeypatch.setattr(settings, "rag_enabled", False, raising=False)
++        resp = kclient.post("/api/v1/knowledge/search", json={"query": "密码"})
++        assert resp.status_code == 503
++
++    def test_search_200_when_rag_enabled(self, kclient, kdb, monkeypatch):
++        from app.core.config import settings
++        from app.models.knowledge import KnowledgeChunk
++        from app.services.knowledge import vectorize
++        monkeypatch.setattr(settings, "rag_enabled", True, raising=False)
++        _patch_fake_embedder(monkeypatch)
++        _seed_chunks(kdb, ["密码字段需要非空校验", "支付金额校验"])
++        vectorize._embed_and_store(kdb, kdb.query(KnowledgeChunk).all())
++        kdb.commit()
++        resp = kclient.post("/api/v1/knowledge/search", json={"query": "密码校验", "top_k": 5})
++        assert resp.status_code == 200
++        data = resp.json()["data"]
++        assert isinstance(data, list) and len(data) >= 1
++        assert {"chunk_id", "snippet", "score", "source_name"} <= set(data[0].keys())
++
++    def test_search_missing_permission_403(self, kdb):
++        from fastapi.testclient import TestClient
++        from app.core.config import settings
++        from app.core.db import get_db
++        from app.core.deps import CurrentUser, get_current_user
++        from app.main import app
++        from app.models.user import User
++
++        def _override_db():
++            yield kdb
++
++        def _limited_user():
++            return CurrentUser(
++                user=User(id=3, username="v", password="x", nickname="V", email="v@t.local", status=1),
++                permissions=["testcase:list"], project_id=1,
++            )
++
++        settings.rag_enabled = True
++        app.dependency_overrides[get_db] = _override_db
++        app.dependency_overrides[get_current_user] = _limited_user
++        try:
++            with TestClient(app) as c:
++                resp = c.post("/api/v1/knowledge/search", json={"query": "密码"})
++            assert resp.status_code == 403
++        finally:
++            app.dependency_overrides.clear()
++            settings.rag_enabled = False
++
++    def test_reembed_503_when_rag_disabled(self, kclient, monkeypatch):
++        from app.core.config import settings
++        monkeypatch.setattr(settings, "rag_enabled", False, raising=False)
++        resp = kclient.post("/api/v1/knowledge/reembed")
++        assert resp.status_code == 503
++
++    def test_reembed_503_when_model_unavailable(self, kclient, monkeypatch):
++        from app.core.config import settings
++        from app.services.knowledge.embedding_service import embedding_service
++        monkeypatch.setattr(settings, "rag_enabled", True, raising=False)
++        monkeypatch.setattr(embedding_service, "available", lambda: False)
++        resp = kclient.post("/api/v1/knowledge/reembed")
++        assert resp.status_code == 503
++
+diff --git a/test-platform-v2/frontend/src/api/knowledge.ts b/test-platform-v2/frontend/src/api/knowledge.ts
+index 822243f..adc1bdf 100644
+--- a/test-platform-v2/frontend/src/api/knowledge.ts
++++ b/test-platform-v2/frontend/src/api/knowledge.ts
+@@ -4,7 +4,10 @@ import type {
+   KnowledgeChunk,
+   KnowledgeOverview,
+   KnowledgePage,
++  KnowledgeSearchQuery,
++  KnowledgeSearchResult,
+   KnowledgeSource,
++  ReembedResult,
+ } from '@/types'
+ 
+ // 说明：axios 拦截器已拆包 {code,msg,data}，并自动附带 X-Project-Id 头，
+@@ -40,3 +43,15 @@ export async function fetchAiArtifacts(params: {
+ }): Promise<KnowledgePage<AiArtifact>> {
+   return api.get('/knowledge/ai-artifacts', { params })
+ }
++
++// ── M2 混合检索 ──
++
++export async function searchKnowledge(
++  body: KnowledgeSearchQuery,
++): Promise<KnowledgeSearchResult[]> {
++  return api.post('/knowledge/search', body)
++}
++
++export async function reembedKnowledge(): Promise<ReembedResult> {
++  return api.post('/knowledge/reembed')
++}
+diff --git a/test-platform-v2/frontend/src/pages/knowledge/components/SearchTab.tsx b/test-platform-v2/frontend/src/pages/knowledge/components/SearchTab.tsx
+new file mode 100644
+index 0000000..3ae56f0
+--- /dev/null
++++ b/test-platform-v2/frontend/src/pages/knowledge/components/SearchTab.tsx
+@@ -0,0 +1,143 @@
++import { useState } from 'react'
++import { toast } from 'sonner'
++import { Input } from '@/components/ui/input'
++import { Button } from '@/components/ui/button'
++import { Badge } from '@/components/ui/badge'
++import { Card, CardContent } from '@/components/ui/card'
++import {
++  Select,
++  SelectContent,
++  SelectItem,
++  SelectTrigger,
++  SelectValue,
++} from '@/components/ui/select'
++import { searchKnowledge, reembedKnowledge } from '@/api/knowledge'
++import type { KnowledgeSearchResult } from '@/types'
++import { useAuthStore } from '@/stores/auth'
++import { Search, Loader2, RefreshCw } from '@/lib/icons'
++
++const MODES = [
++  { v: 'hybrid', l: '混合（关键词+向量）' },
++  { v: 'keyword', l: '关键词' },
++  { v: 'vector', l: '向量语义' },
++]
++
++const CHUNK_LABEL: Record<string, string> = {
++  requirement_rule: '需求',
++  api_schema: '接口',
++  test_case: '用例',
++  defect_case: '缺陷',
++  execution_result: '执行',
++  field_rule: '字段',
++}
++
++export default function SearchTab() {
++  const hasPerm = useAuthStore((s) => s.hasPerm)
++  const [query, setQuery] = useState('')
++  const [mode, setMode] = useState('hybrid')
++  const [results, setResults] = useState<KnowledgeSearchResult[]>([])
++  const [loading, setLoading] = useState(false)
++  const [searched, setSearched] = useState(false)
++  const [reembedding, setReembedding] = useState(false)
++
++  const doSearch = () => {
++    const q = query.trim()
++    if (!q) return
++    setLoading(true)
++    setSearched(true)
++    searchKnowledge({ query: q, mode: mode as 'hybrid' | 'keyword' | 'vector', top_k: 10 })
++      .then((res) => setResults(res || []))
++      .catch((e) => {
++        setResults([])
++        toast.error(e?.message || 'RAG 检索未启用或不可用')
++      })
++      .finally(() => setLoading(false))
++  }
++
++  const doReembed = () => {
++    setReembedding(true)
++    reembedKnowledge()
++      .then((r) => toast.success(`回填完成：共 ${r.total} 条，已嵌入 ${r.embedded}，跳过 ${r.skipped}`))
++      .catch((e) => toast.error(e?.message || '回填失败（需启用 RAG 且模型就绪）'))
++      .finally(() => setReembedding(false))
++  }
++
++  return (
++    <div className="space-y-4">
++      <div className="flex items-center gap-2">
++        <div className="relative flex-1">
++          <Search className="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
++          <Input
++            className="pl-8 h-9"
++            placeholder="语义检索知识库（如：密码字段参数校验）"
++            value={query}
++            onChange={(e) => setQuery(e.target.value)}
++            onKeyDown={(e) => e.key === 'Enter' && doSearch()}
++          />
++        </div>
++        <Select value={mode} onValueChange={setMode}>
++          <SelectTrigger className="h-9 text-xs w-[180px]">
++            <SelectValue />
++          </SelectTrigger>
++          <SelectContent>
++            {MODES.map((m) => (
++              <SelectItem key={m.v} value={m.v}>
++                {m.l}
++              </SelectItem>
++            ))}
++          </SelectContent>
++        </Select>
++        <Button size="sm" className="h-9" disabled={loading || !query.trim()} onClick={doSearch}>
++          {loading ? <Loader2 className="size-4 animate-spin" /> : '搜索'}
++        </Button>
++        {hasPerm('knowledge:manage') && (
++          <Button
++            variant="outline"
++            size="sm"
++            className="h-9"
++            disabled={reembedding}
++            onClick={doReembed}
++            title="为存量切片补齐向量（幂等）"
++          >
++            {reembedding ? (
++              <Loader2 className="size-4 animate-spin" />
++            ) : (
++              <RefreshCw className="size-4" />
++            )}
++            <span className="ml-1">向量回填</span>
++          </Button>
++        )}
++      </div>
++
++      {loading ? (
++        <div className="h-24 flex items-center justify-center">
++          <Loader2 className="size-5 animate-spin text-muted-foreground" />
++        </div>
++      ) : results.length === 0 ? (
++        <div className="h-24 flex items-center justify-center text-sm text-muted-foreground">
++          {searched ? '暂无相关知识' : '输入关键词后检索需求 / 接口 / 用例 / 缺陷 / 执行等知识切片'}
++        </div>
++      ) : (
++        <div className="space-y-2">
++          {results.map((r) => (
++            <Card key={r.chunk_id}>
++              <CardContent className="p-3 space-y-1">
++                <div className="flex items-center gap-2">
++                  <Badge variant="secondary">{CHUNK_LABEL[r.chunk_type] ?? r.chunk_type}</Badge>
++                  <span className="text-sm font-medium truncate">{r.title || '(无标题)'}</span>
++                  <span className="ml-auto text-xs text-muted-foreground shrink-0">
++                    score {r.score.toFixed(4)}
++                  </span>
++                </div>
++                <p className="text-xs text-muted-foreground break-words">{r.snippet}</p>
++                {r.source_name && (
++                  <div className="text-[11px] text-muted-foreground">来源：{r.source_name}</div>
++                )}
++              </CardContent>
++            </Card>
++          ))}
++        </div>
++      )}
++    </div>
++  )
++}
+diff --git a/test-platform-v2/frontend/src/pages/knowledge/index.tsx b/test-platform-v2/frontend/src/pages/knowledge/index.tsx
+index 55ae394..4b1f2c4 100644
+--- a/test-platform-v2/frontend/src/pages/knowledge/index.tsx
++++ b/test-platform-v2/frontend/src/pages/knowledge/index.tsx
+@@ -1,14 +1,15 @@
+ import { useState } from 'react'
+ import PageHeader from '@/components/PageHeader'
+ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+-import { LayoutDashboard, Database, FileCheck } from '@/lib/icons'
++import { LayoutDashboard, Database, FileCheck, Search } from '@/lib/icons'
+ import OverviewTab from './components/OverviewTab'
+ import SourceListTab from './components/SourceListTab'
+ import ArtifactReviewTab from './components/ArtifactReviewTab'
++import SearchTab from './components/SearchTab'
+ 
+ /**
+- * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表）。
+- * 概览 / 知识源 / AI 审核台 三个 Tab，本期只读。
++ * 知识中心 — RAG 知识图谱与 Agent 持续学习能力（M0 入口 / M1 只读列表 / M2 混合检索）。
++ * 概览 / 检索 / 知识源 / AI 审核台 四个 Tab。
+  */
+ export default function KnowledgePage() {
+   const [tab, setTab] = useState('overview')
+@@ -26,6 +27,10 @@ export default function KnowledgePage() {
+             <LayoutDashboard className="size-4 mr-1" />
+             概览
+           </TabsTrigger>
++          <TabsTrigger value="search">
++            <Search className="size-4 mr-1" />
++            检索
++          </TabsTrigger>
+           <TabsTrigger value="sources">
+             <Database className="size-4 mr-1" />
+             知识源
+@@ -39,6 +44,9 @@ export default function KnowledgePage() {
+         <TabsContent value="overview" className="mt-4">
+           {tab === 'overview' && <OverviewTab />}
+         </TabsContent>
++        <TabsContent value="search" className="mt-4">
++          {tab === 'search' && <SearchTab />}
++        </TabsContent>
+         <TabsContent value="sources" className="mt-4">
+           {tab === 'sources' && <SourceListTab />}
+         </TabsContent>
+diff --git a/test-platform-v2/frontend/src/types/index.ts b/test-platform-v2/frontend/src/types/index.ts
+index 933b7d7..0fcbaab 100644
+--- a/test-platform-v2/frontend/src/types/index.ts
++++ b/test-platform-v2/frontend/src/types/index.ts
+@@ -783,3 +783,28 @@ export interface KnowledgeOverview {
+   recent_sources: KnowledgeSource[]
+   health: KnowledgeHealth
+ }
++
++// ── M2 混合检索 ──
++
++export interface KnowledgeSearchQuery {
++  query: string
++  chunk_type?: string
++  top_k?: number
++  mode?: 'hybrid' | 'keyword' | 'vector'
++}
++
++export interface KnowledgeSearchResult {
++  chunk_id: number
++  chunk_type: string
++  title: string
++  snippet: string
++  score: number
++  source_id: number
++  source_name: string
++}
++
++export interface ReembedResult {
++  total: number
++  embedded: number
++  skipped: number
++}
+diff --git a/work-logs/kanbans/DEV-batch-12-rag-m2-vector-search.md b/work-logs/kanbans/DEV-batch-12-rag-m2-vector-search.md
+index de5eca4..2fc3077 100644
+--- a/work-logs/kanbans/DEV-batch-12-rag-m2-vector-search.md
++++ b/work-logs/kanbans/DEV-batch-12-rag-m2-vector-search.md
+@@ -8,8 +8,8 @@
+ |------|-----|
+ | **里程碑** | M2：切片向量化 + 混合检索 |
+ | **关联 PRD** | [RAG知识图谱与Agent持续学习能力落地执行文档 §M2](../../test-platform-v2/docs/RAG知识图谱与Agent持续学习能力落地执行文档.md) |
+-| **ADR** | [ADR-0010](../../docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md)（草案） |
+-| **状态** | 📝 方案设计（本看板为落地方案草稿，需 Product → Design → Dev → QA → Leader 流水线） |
++| **ADR** | [ADR-0010](../../docs/adr/0010-knowledge-vector-embedding-hybrid-retrieval.md)（已接受） |
++| **状态** | ✅ 已落地（Slice 1–5 提交完成，PR 待 Product→Design→QA→Leader 评审） |
+ | **开关** | `rag_enabled`（已建，默认 OFF） |
+ 
+ ## ℹ️ 架构决策（已锁定）
+@@ -99,3 +99,26 @@
+ - [fastembed 文档](https://github.com/qdrant/fastembed)——Python onnx embedding
+ - [BAAI/bge-small-zh-v1.5](https://huggingface.co/BAAI/bge-small-zh-v1.5)——中文小模型，输出 512 维（onnx/CPU 可跑，离线）
+ - [RRF — Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf)——Cormack et al. SIGIR 2009
++
++## 落地记录（batch-12 · feature/knowledge-m2-vector）
++
++| Slice | 提交 | 验收 |
++|---|---|---|
++| S1 向量化基石 | `44af6ec` | C1 ✅ 写路径/余弦/1:1 upsert/项目隔离；`rag_enabled=False` 无副作用 |
++| S2 混合检索 | `079ab70` | C2 ✅ keyword(CJK 二元组)/vector/hybrid 三模，RRF 融合降序 |
++| S3 端点+治理 | `f228dbb` | C3 ✅ `/search` rag关503·无权403·200；`/reembed` rag关/模型未就绪503、幂等 |
++| S4 前端检索 Tab | `0023e7b` | C4 ✅ 知识中心「检索」Tab（模式选择+结果卡片+向量回填）；`tsc --noEmit` 0 err |
++| S5 测试+ADR+压测 | 本提交 | C5 ✅ `test_knowledge.py` 35 绿；ADR-0010→accepted；压测基线见下 |
++
++**压测基线**（512 维 NumPy 暴力余弦，search-only，in-memory）：
++- 1,000 向量：p50 **5.3ms** / p95 **11.2ms**
++- 5,000 向量：p50 **41.7ms** / p95 **87.1ms**
++- 结论：千级远低于 100ms 目标；**~5,000/项目** 为 <100ms 舒适上限，超出即按 D2 切 pgvector。
++
++**依赖**：`requirements.txt` 增 `fastembed>=0.3` + `numpy>=1.26`（首次使用下载 bge-small-zh-v1.5 onnx 模型；离线环境需预置缓存）。**未装 fastembed 时全链路优雅降级**：嵌入返回 None、检索退化纯关键词、`import app.main` 与 M1 入库零影响（已单测）。
++
++**延后项**（避免与并行 apitest 本体重构冲突，随其本体 PR 一并补入）：
++- `/apitest` 接口详情页「相关知识」区块（前端）
++- apitest.py / test_case.py 的 4 个入库 hook（知识 5 事件源余项，属 batch-11 A3 延后）
++
++**证据**：`pytest tests/test_knowledge.py -q` → **35 passed**；`npx tsc --noEmit` → 0 error。

@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Site config",
+  "type": "object",
+  "properties": {
+    "description": {"type": "string"},
+    "extends": {"type": "string"},
+    "apis": {
+      "type": "object",
+      "additionalProperties": {
+        "type": ["object", "null"],
+        "properties": {
+          "path": {"type": "string"},
+          "method": {"enum": ["GET", "POST", "PUT", "DELETE", "PATCH"]},
+          "description": {"type": "string"},
+          "query": {"type": "object"},
+          "body": {"type": "object"},
+          "headers": {"type": "object"},
+          "expect_status": {"type": "integer"},
+          "expect_fields": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "ignore_paths": {"type": "array", "items": {"type": "string"}},
+    "tolerance": {"type": "object"}
+  }
+}

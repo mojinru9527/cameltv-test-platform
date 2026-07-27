@@ -1,0 +1,14 @@
+# camel1 日志源配置（日志聚合器用）。mode: files（多文件 grep 聚合）| elk
+mode: files
+
+# files 模式：列出各服务日志路径（支持通配）
+files:
+  - {service: ugc, path: "F:/logs/camel1/ugc/*.log"}
+  - {service: pay, path: "F:/logs/camel1/pay/*.log"}
+  - {service: order, path: "F:/logs/camel1/order/*.log"}
+
+# elk 模式（mode: elk 时生效，凭据走 .env 的 ELASTIC_URL/ELASTIC_API_KEY）
+elk:
+  index: "camel1-app-*"
+  trace_field: "traceId"
+  time_field: "@timestamp"

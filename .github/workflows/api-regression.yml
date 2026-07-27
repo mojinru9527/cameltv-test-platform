@@ -1,0 +1,54 @@
+name: API 回归测试
+
+on:
+  schedule:
+    - cron: '3 2 * * *'   # 每日 02:03 UTC
+  workflow_dispatch:
+    inputs:
+      env:
+        description: '目标环境'
+        required: true
+        type: choice
+        options: [test, prod]
+        default: test
+
+jobs:
+  api-regression:
+    runs-on: [self-hosted, internal-network]
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          cd test-platform
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Env Health Check
+        run: |
+          cd test-platform
+          tp envcheck --env ${{ inputs.env || 'test' }}
+
+      - name: Run API Tests
+        run: |
+          cd test-platform
+          tp api run --env ${{ inputs.env || 'test' }} --report data/reports/api-${{ github.run_number }}.xml
+
+      - name: Ingest Report
+        if: always()
+        run: |
+          cd test-platform
+          tp report ingest --file data/reports/api-${{ github.run_number }}.xml --build ${{ github.run_number }} --branch main --source api
+
+      - name: ELK Trace Collection
+        if: failure()
+        run: |
+          cd test-platform
+          tp logagg batch --env ${{ inputs.env || 'test' }} --report data/reports/api-${{ github.run_number }}.xml --cluster

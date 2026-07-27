@@ -1,0 +1,10 @@
+# ===== 新增站点模板 =====
+# 复制整个 _template 目录为 <新站点名>/，改下面内容，再到 environments/ 填环境。
+description: 新站点描述
+extends: _base          # 继承共享 API 基线
+
+# 仅写与基线不同的接口（deep-merge；null 删除基线接口）
+apis: {}
+
+ignore_paths: []
+tolerance: {}

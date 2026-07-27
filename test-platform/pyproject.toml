@@ -1,0 +1,20 @@
+[project]
+name = "camel-test-platform"
+version = "0.1.0"
+description = "体育平台本地测试平台 — 多站点多环境的 6 件套测试工具"
+requires-python = ">=3.12"
+readme = "README.md"
+
+[project.scripts]
+tp = "cli.tp:main"
+
+[tool.setuptools.packages.find]
+include = ["core*", "cli*", "tools*", "server*"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["platform_tests"]
+python_files = ["test_*.py"]

@@ -1,0 +1,16 @@
+# camel1 · 生产环境
+name: prod
+kind: prod
+base_url: https://camel1.to
+proxy: "${UPSTREAM_PROXY}"           # 已连接的上游代理；留空则用 platform.default_proxy
+auth_token: "${CAMEL1_PROD_AUTH_TOKEN}"
+expect_version: ""                    # 形如 ">=2.3.0"，留空不校验
+
+# 生产通常不做读写探测，仅 HTTP 健康检查
+https:
+  - {name: 站点首页, url: "https://camel1.to/health", expect_version: ""}
+
+dbs: []
+redis: []
+mqs: []
+preset_data: []

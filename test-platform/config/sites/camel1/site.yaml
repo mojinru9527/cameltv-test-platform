@@ -1,0 +1,17 @@
+# 站点 camel1（camel1.to）
+description: Camel 体育预测平台 - 站点1
+extends: _base
+
+# 本站点对基线接口的差异覆盖示例（相似产品、接口有差异）：
+#   apis:
+#     ugc_list:
+#       query: {categoryId: "FOOTBALL"}   # 改默认查询参数
+#     some_legacy_api: null                # 删除基线里本站点没有的接口
+#     site_special_api:                    # 新增本站点独有接口
+#       path: /api/site1/special
+#       method: GET
+apis: {}
+
+# 本站点追加的忽略字段 / 容差（与 _base 合并）
+ignore_paths: []
+tolerance: {}

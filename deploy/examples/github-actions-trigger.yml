@@ -1,0 +1,58 @@
+# CamelTv 测试平台 — GitHub Actions CI 集成示例
+#
+# 设置 Secrets:
+#   CAMELTV_API_BASE  — 如 https://test.cameltv.com/api/v1
+#   CAMELTV_API_TOKEN — tpat_xxx
+
+name: Trigger CamelTv Test Plan
+
+on:
+  workflow_dispatch:
+    inputs:
+      plan_id:
+        description: '测试计划 ID'
+        required: true
+        type: number
+
+jobs:
+  trigger-and-wait:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health check
+        run: |
+          curl -sS "${CAMELTV_API_BASE}/open/health" | jq .
+        env:
+          CAMELTV_API_BASE: ${{ secrets.CAMELTV_API_BASE }}
+
+      - name: Trigger test plan
+        id: trigger
+        run: |
+          RESP=$(curl -sS -X POST "${CAMELTV_API_BASE}/open/plans/${{ inputs.plan_id }}/trigger" \
+            -H "Authorization: Bearer ${CAMELTV_API_TOKEN}")
+          echo "Trigger response: $RESP"
+          echo "plan_name=$(echo $RESP | jq -r '.data.plan_name')" >> $GITHUB_OUTPUT
+          echo "cases_queued=$(echo $RESP | jq -r '.data.cases_queued')" >> $GITHUB_OUTPUT
+        env:
+          CAMELTV_API_BASE: ${{ secrets.CAMELTV_API_BASE }}
+          CAMELTV_API_TOKEN: ${{ secrets.CAMELTV_API_TOKEN }}
+
+      - name: Run tests (placeholder — replace with your actual test execution)
+        run: |
+          echo "Running test plan: ${{ steps.trigger.outputs.plan_name }}"
+          echo "Cases queued: ${{ steps.trigger.outputs.cases_queued }}"
+          # TODO: Execute your test suite here
+          # ./run-tests.sh
+
+      - name: Post results for a single run (example)
+        if: always()
+        run: |
+          # This is an example — in reality you'd loop over all run_ids
+          # and post individual results via POST /open/results
+          echo "Post results: POST ${CAMELTV_API_BASE}/open/results"
+          curl -sS -X POST "${CAMELTV_API_BASE}/open/results" \
+            -H "Authorization: Bearer ${CAMELTV_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"run_id\": 1, \"status\": \"pass\", \"notes\": \"GitHub Actions ${GITHUB_RUN_ID}\"}"
+        env:
+          CAMELTV_API_BASE: ${{ secrets.CAMELTV_API_BASE }}
+          CAMELTV_API_TOKEN: ${{ secrets.CAMELTV_API_TOKEN }}

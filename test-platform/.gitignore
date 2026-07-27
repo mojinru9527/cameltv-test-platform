@@ -1,0 +1,34 @@
+# 独立 venv
+.venv/
+venv/
+
+# 运行产物
+data/recordings/
+data/reports/
+data/stubs/
+*.sqlite
+*.sqlite3
+*.db
+
+# 生成的 API 测试依赖
+tests/api-testing/generated/node_modules/
+tests/api-testing/generated/test-results/
+tests/api-testing/generated/package-lock.json
+
+# 敏感凭据
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mitmproxy/
+
+# WireMock 运行时
+docker/wiremock/__files/
+docker/wiremock/mappings/_runtime/
+
+# IDE
+.idea/
+.vscode/

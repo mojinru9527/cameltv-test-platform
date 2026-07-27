@@ -1,0 +1,112 @@
+# CamelTv 测试平台 v2 — 一键部署（前端 + 后端 + 可选 PostgreSQL）
+# 用法: docker-compose up -d  → 访问 http://localhost
+# PostgreSQL: 设置 DATABASE_URL=postgresql://cameltv:cameltv123@postgres:5432/cameltv
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cameltv-tp-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cameltv}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-cameltv}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    expose:
+      - "5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cameltv}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: cameltv-tp-backend
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      - TESTER_USERNAME=${TESTER_USERNAME:-tester}
+      - TESTER_PASSWORD=${TESTER_PASSWORD:?TESTER_PASSWORD is required}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - COOKIE_SAMESITE=${COOKIE_SAMESITE:-lax}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN:-}
+      - COOKIE_PATH=${COOKIE_PATH:-/api}
+      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/platform.db}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+      - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-20}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
+      - ELK_BASE_URL=${ELK_BASE_URL:-}
+      - ELK_INDEX=${ELK_INDEX:-*}
+      # ── AI / LLM ──
+      - AI_ENABLED=${AI_ENABLED:-false}
+      - AI_API_BASE_URL=${AI_API_BASE_URL:-https://api.deepseek.com/v1}
+      - AI_API_KEY=${AI_API_KEY:-}
+      - AI_MODEL=${AI_MODEL:-deepseek-chat}
+      - AI_MAX_TOKENS=${AI_MAX_TOKENS:-8192}
+      - AI_TEMPERATURE=${AI_TEMPERATURE:-0.3}
+      # ── 蓝湖自动登录 ──
+      - LANHU_COOKIE=${LANHU_COOKIE:-}
+      - LANHU_USERNAME=${LANHU_USERNAME:-}
+      - LANHU_PASSWORD=${LANHU_PASSWORD:-}
+      # ── 知识库 / RAG / Wiki 功能开关 ──
+      - KNOWLEDGE_INGEST_ENABLED=${KNOWLEDGE_INGEST_ENABLED:-true}
+      - RAG_ENABLED=${RAG_ENABLED:-true}
+      - KNOWLEDGE_GRAPH_ENABLED=${KNOWLEDGE_GRAPH_ENABLED:-true}
+      - WIKI_ENABLED=${WIKI_ENABLED:-true}
+      - WIKI_AUTO_INGEST_ENABLED=${WIKI_AUTO_INGEST_ENABLED:-true}
+      - WIKI_DIFF_ENABLED=${WIKI_DIFF_ENABLED:-true}
+      - KNOWLEDGE_INGEST_PRODUCTION_DATA=${KNOWLEDGE_INGEST_PRODUCTION_DATA:-true}
+      - LANHU_MCP_ENABLED=${LANHU_MCP_ENABLED:-true}
+      - EMBEDDING_CACHE_DIR=${EMBEDDING_CACHE_DIR:-/data/models/fastembed}
+      # ── 蓝湖证据包 OCR ──
+      - LANHU_EVIDENCE_ENABLED=${LANHU_EVIDENCE_ENABLED:-true}
+      - LANHU_OCR_PROVIDER=${LANHU_OCR_PROVIDER:-local}
+      # ── SMTP（可选）──
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - tp-data:/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: cameltv-tp-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  tp-data:
+    driver: local
+  pg-data:
+    driver: local

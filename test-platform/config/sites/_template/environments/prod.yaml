@@ -1,0 +1,15 @@
+# ===== 新站点环境模板 =====
+# 每个环境一个文件：prod.yaml / test1.yaml / test2.yaml ...
+name: prod
+kind: prod              # prod | test
+base_url: https://example.to
+proxy: "${UPSTREAM_PROXY}"
+auth_token: "${SITE_PROD_AUTH_TOKEN}"
+expect_version: ""
+
+dbs: []
+redis: []
+mqs: []
+https:
+  - {name: 站点首页, url: "https://example.to/health"}
+preset_data: []

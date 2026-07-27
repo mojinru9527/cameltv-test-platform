@@ -1,0 +1,27 @@
+# camel1 · 测试环境 1
+name: test1
+kind: test
+base_url: https://test1.camel1.internal      # 占位，按真实测试域名改
+proxy: "${UPSTREAM_PROXY}"                    # 内网测试环境通常无需代理，可置空 ""
+auth_token: "${CAMEL1_TEST1_AUTH_TOKEN}"
+expect_version: ">=1.0.0"
+
+dbs:
+  - name: app_db
+    type: mysql
+    dsn: "mysql+pymysql://test:${CAMEL1_TEST1_DB_PWD}@test1-db.camel1.internal:3306/app"
+    check: rw
+
+redis:
+  - {name: cache, host: test1-redis.camel1.internal, port: 6379, password: "${CAMEL1_TEST1_REDIS_PWD}", db: 0}
+
+mqs:
+  - {name: order_mq, type: rabbitmq, url: "amqp://test1-mq.camel1.internal:5672"}
+
+https:
+  - {name: 文章服务, url: "https://test1.camel1.internal/api/ugc/health", expect_version: ">=1.0.0"}
+  - {name: 支付服务, url: "https://test1.camel1.internal/api/pay/health", expect_version: ""}
+
+preset_data:
+  - {db: app_db, table: t_dict, min_rows: 1}            # 基础字典表不能空
+  - {db: app_db, table: t_user, min_rows: 1, where: "username='qa_test'"}  # 测试账号存在

@@ -1,0 +1,6 @@
+node_modules/
+artifacts/
+playwright-report/
+report.json
+*.zip
+*.webm

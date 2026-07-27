@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CamelTv 测试平台 — 五主题交互设计稿 v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════ RESET ═══════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#0b0d10;color:#e0e0e0;min-height:100vh}
+button{cursor:pointer;font:inherit;border:none;background:none;outline:none}
+
+/* ═══════ PICKER ═══════ */
+.picker{display:flex;gap:8px;padding:12px 20px;background:#111418;border-bottom:1px solid #1e242c;position:sticky;top:0;z-index:1000;align-items:center;flex-wrap:wrap}
+.picker .lbl{font-size:16px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin-right:4px}
+.pk-btn{padding:8px 18px;border-radius:999px;font-size:15px;font-weight:550;transition:all .18s;border:1px solid transparent;color:#94a3b8}
+.pk-btn:hover{color:#e2e8f0;background:rgba(255,255,255,.04)}
+.pk-btn.on{color:#fff}
+.pk-btn.cp.on{background:#11161a;border-color:#00e5ff;box-shadow:0 0 12px rgba(0,229,255,.25);color:#00e5ff}
+.pk-btn.ap.on{background:#f5f5f7;border-color:#0071e3;color:#0071e3;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.pk-btn.cy.on{background:#faf7fd;border-color:#7457cc;color:#7457cc;box-shadow:0 4px 12px rgba(116,87,204,.15)}
+.pk-btn.xl.on{background:#101315;border-color:#4fe4ff;box-shadow:0 0 14px rgba(79,228,255,.2);color:#4fe4ff}
+.pk-btn.lg.on{background:rgba(22,22,56,.75);border-color:rgba(124,92,231,.45);color:#c4b5fd;box-shadow:0 0 16px rgba(124,92,231,.2),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(8px)}
+
+/* ═══════ CANVAS ═══════ */
+.canvas{display:none;min-height:calc(100vh - 54px)}
+.canvas.on{display:block}
+
+/* ═══════ LAYOUT ═══════ */
+.dash{display:flex;flex-direction:column;min-height:calc(100vh - 54px)}
+.topbar{display:flex;align-items:center;padding:0 24px;height:52px;gap:16px;flex-shrink:0}
+.main{display:flex;flex:1}
+.sidebar{width:210px;flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto}
+.content{flex:1;padding:20px 24px 32px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
+
+/* ═══════ CYBERPUNK ═══════ */
+.cp{
+  --bg:#090b0d;--surf:#11161a;--card:#151a1f;--sbar:#06090b;
+  --p:#00e5ff;--ph:#00c8e0;--pi:#090b0d;--s:#b400ff;--a:#ff2d95;
+  --ok:#00ff88;--warn:#ffd600;--err:#ff1744;
+  --mu:#546e7a;--ink:#d0e0ed;--dim:#7a8fa0;
+  --bdr:#1c2833;--bdr2:#152028;
+  --r:2px;--rs:1px;--rl:4px;--rb:3px;
+  --sh:0 0 0 1px rgba(0,229,255,.06);
+  --shh:0 0 20px rgba(0,229,255,.12);
+  --mono:'JetBrains Mono',monospace;
+  --dur:.12s;--ease:steps(8,end);
+  --ff:'Inter',system-ui,sans-serif;
+  color:var(--ink);background:var(--bg);font-family:var(--ff);
+}
+.cp .dash{background:var(--bg)}
+.cp .sidebar{background:var(--sbar);border-right:1px solid #0f1a20;padding:14px 0}
+.cp .side-logo{display:flex;align-items:center;gap:10px;padding:0 14px 14px;border-bottom:1px solid var(--bdr);margin-bottom:6px}
+.cp .side-logo i{width:26px;height:26px;background:var(--p);border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:var(--pi);box-shadow:0 0 10px rgba(0,229,255,.35);font-style:normal}
+.cp .side-logo s{font-size:15px;font-weight:650;letter-spacing:.01em;color:var(--p);text-decoration:none}
+.cp .side-nav{flex:1;padding:0 8px;display:flex;flex-direction:column}
+.cp .side-i{display:flex;align-items:center;gap:8px;padding:6px 10px;margin:1px 0;border-radius:var(--r);font-size:15px;color:var(--dim);transition:all var(--dur) var(--ease);border-left:2px solid transparent;font-family:var(--mono);letter-spacing:.03em;text-decoration:none}
+.cp .side-i:hover{color:var(--ink);background:rgba(0,229,255,.04)}
+.cp .side-i.on{color:var(--p);background:rgba(0,229,255,.06);border-left-color:var(--p);text-shadow:0 0 6px rgba(0,229,255,.3)}
+.cp .side-i b{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.4;flex-shrink:0}
+.cp .side-i.on b{opacity:1;box-shadow:0 0 5px currentColor}
+.cp .topbar{background:var(--surf);border-bottom:1px solid var(--bdr)}
+.cp .tb-title{font-family:var(--mono);font-size:16px;color:var(--p);letter-spacing:.05em}
+.cp .tb-gap{flex:1}
+.cp .tb-tag{font-family:var(--mono);font-size:16px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--bdr);color:var(--mu)}
+.cp .tb-av{width:26px;height:26px;border-radius:var(--r);background:var(--p);color:var(--pi);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;box-shadow:0 0 6px rgba(0,229,255,.2)}
+
+/* CP Cards */
+.cp .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.cp .card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;position:relative}
+.cp .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--p),transparent);opacity:.25}
+.cp .card .l{font-family:var(--mono);font-size:15px;text-transform:uppercase;letter-spacing:.1em;color:var(--mu);margin-bottom:4px}
+.cp .card .v{font-family:var(--mono);font-size:32px;font-weight:650;color:var(--p);text-shadow:0 0 8px rgba(0,229,255,.2)}
+.cp .card .s{font-family:var(--mono);font-size:15px;color:var(--mu);margin-top:1px}
+
+/* CP Buttons */
+.cp .btn{font-family:var(--mono);font-size:15px;padding:6px 16px;border-radius:var(--rb);transition:all .1s;letter-spacing:.02em;font-weight:500;display:inline-flex;align-items:center;gap:5px}
+.cp .btn-pri{background:var(--p);color:var(--pi);border:1px solid var(--p);box-shadow:0 0 8px rgba(0,229,255,.12)}
+.cp .btn-pri:hover{box-shadow:0 0 18px rgba(0,229,255,.3)}
+.cp .btn-pri:active{box-shadow:0 0 28px rgba(0,229,255,.5);transform:scale(.97);transition:all .05s}
+.cp .btn-out{border:1px solid var(--bdr);color:var(--ink);background:transparent}
+.cp .btn-out:hover{border-color:var(--p);color:var(--p);box-shadow:0 0 6px rgba(0,229,255,.08)}
+.cp .btn-ghost{color:var(--mu)}
+.cp .btn-ghost:hover{color:var(--ink);background:rgba(255,255,255,.03)}
+.cp .btn-danger{background:var(--err);color:#fff;box-shadow:0 0 6px rgba(255,23,68,.15)}
+.cp .btn-danger:active{box-shadow:0 0 18px rgba(255,23,68,.4)}
+.cp .btn-sm{font-size:16px;padding:3px 9px}
+.cp .btn-loading{opacity:.7;pointer-events:none}
+.cp .btn-loading::after{content:'';width:10px;height:10px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:cpSpin .6s steps(8) infinite}
+@keyframes cpSpin{to{transform:rotate(360deg)}}
+
+/* CP Tabs */
+.cp .tabs-bar{display:flex;gap:0;border-bottom:1px solid var(--bdr)}
+.cp .tab{font-family:var(--mono);font-size:15px;padding:7px 14px;color:var(--mu);border-bottom:2px solid transparent;transition:all var(--dur);letter-spacing:.03em}
+.cp .tab:hover{color:var(--ink)}
+.cp .tab.on{color:var(--p);border-bottom-color:var(--p);text-shadow:0 0 5px rgba(0,229,255,.25)}
+.cp .tab-panel{display:none;padding:14px 0}
+.cp .tab-panel.on{display:block}
+
+/* CP Dialog */
+.cp .overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center}
+.cp .overlay.on{display:flex}
+.cp .overlay.on .dlg{animation:cpDlgIn .15s steps(6,end)}
+@keyframes cpDlgIn{0%{opacity:0;transform:scale(.95) translateY(8px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+.cp .dlg{background:var(--card);border:1px solid var(--p);border-radius:var(--r);padding:20px 24px;min-width:380px;box-shadow:0 0 30px rgba(0,229,255,.15);position:relative}
+.cp .dlg::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--p),transparent)}
+.cp .dlg h3{font-family:var(--mono);font-size:15px;color:var(--p);letter-spacing:.04em;margin-bottom:10px;text-transform:uppercase}
+.cp .dlg p{font-family:var(--mono);font-size:15px;color:var(--ink);line-height:1.6;margin-bottom:14px}
+.cp .dlg .acts{display:flex;gap:8px;justify-content:flex-end}
+
+/* CP Toast */
+.cp .toast{position:fixed;top:70px;right:16px;z-index:600;font-family:var(--mono);font-size:16px;background:var(--card);border:1px solid var(--p);padding:9px 14px;border-radius:var(--r);color:var(--p);box-shadow:0 0 18px rgba(0,229,255,.12);animation:cpToastIn .15s steps(6,end);display:flex;align-items:center;gap:7px;max-width:340px}
+@keyframes cpToastIn{0%{opacity:0;transform:translateX(20px)}100%{opacity:1;transform:translateX(0)}}
+.cp .toast .td{width:7px;height:7px;background:var(--p);box-shadow:0 0 6px var(--p);animation:cpBlink 1.5s ease-in-out infinite;flex-shrink:0}
+@keyframes cpBlink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* CP Progress Ring */
+.cp .ring-wrap{display:inline-flex;align-items:center;gap:10px}
+.cp .ring-svg{transform:rotate(-90deg);width:52px;height:52px;flex-shrink:0}
+.cp .ring-svg .track{fill:none;stroke:var(--bdr);stroke-width:5}
+.cp .ring-svg .val{fill:none;stroke:var(--p);stroke-width:5;stroke-linecap:butt;filter:drop-shadow(0 0 4px rgba(0,229,255,.45));transition:stroke-dashoffset .8s steps(12)}
+.cp .ring-num{font-family:var(--mono);font-size:16px;font-weight:650;color:var(--p)}
+.cp .ring-lbl{font-family:var(--mono);font-size:15px;color:var(--mu)}
+
+/* CP Table */
+.cp .tbl-wrap{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.cp .tbl-hd{display:flex;padding:6px 12px;background:var(--sbar);border-bottom:1px solid var(--bdr);font-family:var(--mono);font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+.cp .tbl-row{display:flex;padding:5px 12px;border-bottom:1px solid var(--bdr2);font-family:var(--mono);font-size:14.5px;align-items:center;transition:all .08s;cursor:pointer;user-select:none}
+.cp .tbl-row:hover{background:rgba(0,229,255,.025)}
+.cp .tbl-row.sel{background:rgba(0,229,255,.06);border-left:2px solid var(--p);box-shadow:inset 0 0 8px rgba(0,229,255,.04)}
+.cp .tbl-row:last-child{border-bottom:none}
+.cp .cn{flex:2.5}.cp .cs{flex:1.2}.cp .ct{flex:1.2}.cp .cpct{flex:1;text-align:right}
+.cp .tag{display:inline-block;padding:1px 6px;border-radius:var(--rs);font-size:15px;font-weight:600}
+.cp .tag-ok{color:var(--ok);border:1px solid rgba(0,255,136,.3);background:rgba(0,255,136,.05)}
+.cp .tag-err{color:var(--err);border:1px solid rgba(255,23,68,.3);background:rgba(255,23,68,.05)}
+.cp .tag-run{color:var(--warn);border:1px solid rgba(255,214,0,.3);background:rgba(255,214,0,.05)}
+
+/* CP Skeleton */
+.cp .skel-row{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.cp .skel{background:var(--bdr);border-radius:var(--rs);position:relative;overflow:hidden}
+.cp .skel::after{content:'▌';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(0,229,255,.25);font-family:var(--mono);font-size:16px;animation:cpBlink 1s steps(2) infinite}
+
+/* CP Badge */
+.cp .badge{font-family:var(--mono);font-size:15px;padding:2px 7px;border-radius:var(--rs);font-weight:600;letter-spacing:.04em}
+.cp .badge-c{border:1px solid rgba(0,229,255,.4);color:var(--p);background:rgba(0,229,255,.06)}
+.cp .badge-p{border:1px solid rgba(255,45,149,.4);color:var(--a);background:rgba(255,45,149,.06)}
+.cp .badge-g{border:1px solid rgba(0,255,136,.4);color:var(--ok);background:rgba(0,255,136,.06)}
+
+/* CP Text Scramble */
+.cp .scramble{font-family:var(--mono)}
+@keyframes cpFlicker{0%{opacity:.4}20%{opacity:1}40%{opacity:.3}60%{opacity:1}80%{opacity:.6}100%{opacity:1}}
+
+/* CP Section title */
+.cp .sec-t{font-family:var(--mono);font-size:16px;color:var(--p);letter-spacing:.05em;margin-bottom:10px;text-transform:uppercase}
+.cp .ring-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cp .ring-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.cp .prog-bar-row{display:flex;align-items:center;gap:8px}
+.cp .prog-bar-lbl{font-family:var(--mono);font-size:15px;color:var(--mu);min-width:70px}
+.cp .prog-bar{flex:1;height:5px;background:var(--bdr);border-radius:0;overflow:hidden;position:relative}
+.cp .prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--p),#00ffcc);border-radius:0;transition:width .5s steps(10);position:relative}
+.cp .prog-bar-fill::after{content:'';position:absolute;right:0;top:0;bottom:0;width:16px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2))}
+.cp .prog-bar-pct{font-family:var(--mono);font-size:16px;color:var(--p);min-width:32px;text-align:right}
+.cp .demo-section{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px}
+
+/* ═══════ APPLE ═══════ */
+.ap{
+  --bg:#f5f5f7;--surf:#fff;--card:#fff;--sbar:rgba(245,245,247,.78);
+  --p:#0071e3;--ph:#0062c4;--pi:#fff;--s2:#f5f5f7;--ac:#86868b;
+  --ok:#34c759;--warn:#ff9f0a;--err:#ff3b30;
+  --mu:#86868b;--ink:#1d1d1f;--dim:#86868b;
+  --bdr:#d2d2d7;--bdr2:#e8e8ed;
+  --r:10px;--rs:8px;--rl:16px;--rb:999px;
+  --sh:0 1px 3px rgba(0,0,0,.04);
+  --shh:0 8px 30px rgba(0,0,0,.08);
+  --dur:.3s;--ease:cubic-bezier(.25,.1,.25,1);
+  --ff:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;
+  color:var(--ink);background:var(--bg);font-family:var(--ff);
+}
+.ap .dash{background:var(--bg)}
+.ap .sidebar{background:var(--sbar);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-right:.5px solid var(--bdr2);padding:18px 0}
+.ap .side-logo{display:flex;align-items:center;gap:10px;padding:0 18px 18px;margin-bottom:4px}
+.ap .side-logo i{width:28px;height:28px;background:var(--p);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:590;color:#fff;font-style:normal}
+.ap .side-logo s{font-size:16px;font-weight:590;color:var(--ink);letter-spacing:-.01em;text-decoration:none}
+.ap .side-nav{flex:1;padding:0 10px;display:flex;flex-direction:column}
+.ap .side-i{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:1px 0;border-radius:8px;font-size:14.5px;color:var(--dim);transition:all var(--dur) var(--ease);font-weight:450;text-decoration:none}
+.ap .side-i:hover{color:var(--ink);background:rgba(0,0,0,.035)}
+.ap .side-i.on{color:var(--p);background:rgba(0,113,227,.08);font-weight:530}
+.ap .side-i b{display:none}
+.ap .topbar{background:var(--surf);border-bottom:1px solid var(--bdr2)}
+.ap .tb-title{font-size:16px;font-weight:590;color:var(--ink);letter-spacing:-.01em}
+.ap .tb-gap{flex:1}
+.ap .tb-tag{font-size:16px;padding:4px 10px;border-radius:999px;background:var(--s2);color:var(--mu);font-weight:500}
+.ap .tb-av{width:26px;height:26px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:590}
+
+/* AP Cards */
+.ap .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.ap .card{background:var(--card);border-radius:var(--rl);padding:18px;box-shadow:var(--sh);border:1px solid var(--bdr2)}
+.ap .card .l{font-size:16px;color:var(--mu);margin-bottom:3px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+.ap .card .v{font-size:32px;font-weight:590;color:var(--ink);letter-spacing:-.02em;line-height:1.1}
+.ap .card .s{font-size:15px;color:var(--mu);margin-top:1px}
+
+/* AP Buttons */
+.ap .btn{font-size:14.5px;padding:7px 18px;border-radius:var(--rb);transition:all var(--dur) var(--ease);font-weight:500;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:5px}
+.ap .btn-pri{background:var(--p);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.ap .btn-pri:hover{background:var(--ph);box-shadow:0 2px 8px rgba(0,113,227,.22)}
+.ap .btn-pri:active{transform:scale(.97);background:var(--ph)}
+.ap .btn-out{border:1px solid var(--bdr);color:var(--ink);background:#fff}
+.ap .btn-out:hover{border-color:var(--p);color:var(--p)}
+.ap .btn-out:active{background:rgba(0,113,227,.04)}
+.ap .btn-ghost{color:var(--mu)}
+.ap .btn-ghost:hover{color:var(--ink);background:rgba(0,0,0,.03)}
+.ap .btn-danger{background:var(--err);color:#fff}
+.ap .btn-danger:active{transform:scale(.97)}
+.ap .btn-sm{font-size:14.5px;padding:4px 11px}
+.ap .btn-loading{opacity:.65;pointer-events:none}
+.ap .btn-loading::after{content:'';width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:apSpin .7s linear infinite}
+@keyframes apSpin{to{transform:rotate(360deg)}}
+
+/* AP Tabs */
+.ap .tabs-bar{display:flex;gap:3px;padding:3px;background:var(--s2);border-radius:999px;width:fit-content}
+.ap .tab{padding:6px 16px;border-radius:999px;font-size:16px;font-weight:500;color:var(--mu);transition:all var(--dur) var(--ease)}
+.ap .tab:hover{color:var(--ink)}
+.ap .tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08),0 0 0 .5px rgba(0,0,0,.04)}
+.ap .tab-panel{display:none;padding:14px 0}
+.ap .tab-panel.on{display:block}
+
+/* AP Dialog */
+.ap .overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.15);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center}
+.ap .overlay.on{display:flex}
+.ap .overlay.on .dlg{animation:apDlgIn .35s cubic-bezier(.22,1,.36,1)}
+@keyframes apDlgIn{0%{opacity:0;transform:translateY(20px) scale(.95)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.ap .dlg{background:#fff;border-radius:var(--rl);padding:24px 28px;min-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.12);border:.5px solid var(--bdr2)}
+.ap .dlg h3{font-size:16px;font-weight:590;color:var(--ink);letter-spacing:-.01em;margin-bottom:8px}
+.ap .dlg p{font-size:15px;color:var(--mu);line-height:1.6;margin-bottom:18px}
+.ap .dlg .acts{display:flex;gap:8px;justify-content:flex-end}
+
+/* AP Toast */
+.ap .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:600;font-size:14.5px;background:#1d1d1f;color:#fff;padding:11px 22px;border-radius:var(--rl);box-shadow:0 8px 32px rgba(0,0,0,.15);animation:apToastIn .35s var(--ease);display:flex;align-items:center;gap:8px;font-weight:450}
+@keyframes apToastIn{0%{opacity:0;transform:translateX(-50%) translateY(10px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* AP Progress Ring */
+.ap .ring-wrap{display:inline-flex;align-items:center;gap:10px}
+.ap .ring-svg{transform:rotate(-90deg);width:52px;height:52px;flex-shrink:0}
+.ap .ring-svg .track{fill:none;stroke:#e8e8ed;stroke-width:4}
+.ap .ring-svg .val{fill:none;stroke:var(--p);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .8s var(--ease)}
+.ap .ring-num{font-size:15px;font-weight:590;color:var(--ink)}
+.ap .ring-lbl{font-size:16px;color:var(--mu)}
+
+/* AP Table */
+.ap .tbl-wrap{background:var(--card);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh);border:1px solid var(--bdr2)}
+.ap .tbl-hd{display:flex;padding:9px 16px;background:var(--bg);border-bottom:1px solid var(--bdr2);font-size:16px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);font-weight:550}
+.ap .tbl-row{display:flex;padding:10px 16px;border-bottom:1px solid var(--bdr2);font-size:14.5px;align-items:center;transition:background var(--dur);cursor:pointer;user-select:none}
+.ap .tbl-row:hover{background:rgba(0,0,0,.012)}
+.ap .tbl-row.sel{background:rgba(0,113,227,.04)}
+.ap .tbl-row:last-child{border-bottom:none}
+.ap .cn{flex:2.5}.ap .cs{flex:1.2}.ap .ct{flex:1.2}.ap .cpct{flex:1;text-align:right}
+.ap .tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:14.5px;font-weight:550}
+.ap .tag-ok{color:var(--ok);background:rgba(52,199,89,.1)}
+.ap .tag-err{color:var(--err);background:rgba(255,59,48,.08)}
+.ap .tag-run{color:var(--warn);background:rgba(255,159,10,.1)}
+
+/* AP Skeleton */
+.ap .skel-row{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.ap .skel{background:#f0f0f2;border-radius:6px}
+
+/* AP Badge */
+.ap .badge{font-size:14.5px;padding:3px 10px;border-radius:999px;font-weight:550}
+.ap .badge-c{background:rgba(0,113,227,.1);color:var(--p)}
+.ap .badge-p{background:rgba(255,45,85,.08);color:#ff2d55}
+.ap .badge-g{background:rgba(52,199,89,.12);color:var(--ok)}
+
+/* AP Section title */
+.ap .sec-t{font-size:16px;font-weight:590;color:var(--ink);letter-spacing:-.01em;margin-bottom:10px}
+.ap .ring-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.ap .ring-card{background:var(--card);border-radius:var(--rl);padding:18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:var(--sh);border:1px solid var(--bdr2)}
+.ap .prog-bar-row{display:flex;align-items:center;gap:8px}
+.ap .prog-bar-lbl{font-size:15px;color:var(--mu);min-width:70px}
+.ap .prog-bar{flex:1;height:5px;background:#e8e8ed;border-radius:999px;overflow:hidden}
+.ap .prog-bar-fill{height:100%;background:var(--p);border-radius:999px;transition:width .6s var(--ease)}
+.ap .prog-bar-pct{font-size:15px;font-weight:500;color:var(--mu);min-width:30px;text-align:right}
+.ap .demo-section{background:var(--card);border-radius:var(--rl);padding:16px;box-shadow:var(--sh);border:1px solid var(--bdr2)}
+
+/* ═══════ CLAY ═══════ */
+.cy{
+  --bg:#efe9f7;--surf:#faf7fd;--card:#faf7fd;--sbar:rgba(245,241,250,.85);
+  --p:#7457cc;--ph:#6845c0;--pi:#fff;--s2:#f0ebf8;--ac:#a78bfa;
+  --ok:#4ade80;--warn:#fb923c;--err:#f87171;
+  --mu:#8b7fa8;--ink:#332f3a;--dim:#8b7fa8;
+  --bdr:transparent;--bdr2:rgba(116,87,204,.08);
+  --r:14px;--rs:10px;--rl:20px;--rb:999px;
+  --sh:0 8px 16px rgba(83,68,110,.08),inset 0 1px 0 rgba(255,255,255,.7);
+  --shh:0 14px 28px rgba(83,68,110,.14),inset 0 1px 0 rgba(255,255,255,.8);
+  --shp:inset 0 3px 8px rgba(83,68,110,.12);
+  --dur:.28s;--ease:cubic-bezier(.34,1.56,.64,1);
+  --ff:'Inter',system-ui,sans-serif;
+  color:var(--ink);background:var(--bg);font-family:var(--ff);
+}
+.cy .dash{background:var(--bg)}
+.cy .sidebar{background:var(--sbar);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:18px 0}
+.cy .side-logo{display:flex;align-items:center;gap:10px;padding:0 16px 16px;margin-bottom:4px}
+.cy .side-logo i{width:32px;height:32px;background:var(--p);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:650;color:#fff;box-shadow:0 4px 10px rgba(116,87,204,.25),inset 0 1px 0 rgba(255,255,255,.2);font-style:normal}
+.cy .side-logo s{font-size:16px;font-weight:650;color:var(--ink);letter-spacing:.01em;text-decoration:none}
+.cy .side-nav{flex:1;padding:0 10px;display:flex;flex-direction:column}
+.cy .side-i{display:flex;align-items:center;gap:10px;padding:9px 13px;margin:2px 0;border-radius:var(--rb);font-size:14.5px;color:var(--dim);transition:all var(--dur) var(--ease);font-weight:500;text-decoration:none}
+.cy .side-i:hover{color:var(--ink);background:rgba(116,87,204,.06);transform:scale(1.02)}
+.cy .side-i.on{color:var(--p);background:rgba(116,87,204,.12);box-shadow:0 2px 8px rgba(116,87,204,.12);font-weight:600}
+.cy .side-i b{display:none}
+.cy .topbar{background:var(--surf);box-shadow:0 2px 8px rgba(83,68,110,.04)}
+.cy .tb-title{font-size:16px;font-weight:650;color:var(--ink);letter-spacing:.01em}
+.cy .tb-gap{flex:1}
+.cy .tb-tag{font-size:16px;padding:5px 12px;border-radius:999px;background:var(--s2);color:var(--mu);font-weight:550}
+.cy .tb-av{width:28px;height:28px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:650;box-shadow:0 3px 8px rgba(116,87,204,.2),inset 0 1px 0 rgba(255,255,255,.15)}
+
+/* CY Cards */
+.cy .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.cy .card{background:var(--card);border-radius:var(--rl);padding:20px;box-shadow:var(--sh);position:relative;cursor:pointer;user-select:none;transition:all var(--dur) var(--ease)}
+.cy .card:hover{box-shadow:var(--shh);transform:translateY(-2px)}
+.cy .card:active{box-shadow:var(--shp);transform:scale(.98)}
+.cy .card .l{font-size:16px;color:var(--mu);margin-bottom:3px;font-weight:550;letter-spacing:.03em;text-transform:uppercase}
+.cy .card .v{font-size:32px;font-weight:650;color:var(--ink)}
+.cy .card .s{font-size:14.5px;color:var(--mu)}
+
+/* CY Buttons */
+.cy .btn{font-size:14.5px;padding:8px 20px;border-radius:var(--rb);transition:all var(--dur) var(--ease);font-weight:600;letter-spacing:.01em;display:inline-flex;align-items:center;gap:5px}
+.cy .btn-pri{background:var(--p);color:#fff;box-shadow:0 4px 12px rgba(116,87,204,.25),inset 0 1px 0 rgba(255,255,255,.15)}
+.cy .btn-pri:hover{box-shadow:0 6px 20px rgba(116,87,204,.35),inset 0 1px 0 rgba(255,255,255,.2);transform:translateY(-1px)}
+.cy .btn-pri:active{box-shadow:var(--shp);transform:scale(.95)}
+.cy .btn-out{border:1.5px solid rgba(116,87,204,.2);color:var(--p);background:transparent}
+.cy .btn-out:hover{border-color:var(--p);box-shadow:0 4px 10px rgba(116,87,204,.1)}
+.cy .btn-out:active{transform:scale(.96);background:rgba(116,87,204,.04)}
+.cy .btn-ghost{color:var(--mu)}
+.cy .btn-ghost:hover{color:var(--ink);background:rgba(116,87,204,.06)}
+.cy .btn-danger{background:var(--err);color:#fff;box-shadow:0 4px 10px rgba(248,113,113,.2)}
+.cy .btn-danger:active{transform:scale(.95);box-shadow:var(--shp)}
+.cy .btn-sm{font-size:14.5px;padding:5px 13px}
+.cy .btn-loading{opacity:.7;pointer-events:none}
+.cy .btn-loading::after{content:'';width:12px;height:12px;border:2.5px solid currentColor;border-top-color:transparent;border-radius:50%;animation:cySpin .8s var(--ease) infinite}
+@keyframes cySpin{to{transform:rotate(360deg)}}
+
+/* CY Tabs */
+.cy .tabs-bar{display:flex;gap:6px}
+.cy .tab{padding:7px 18px;border-radius:999px;font-size:14.5px;font-weight:550;color:var(--mu);transition:all var(--dur) var(--ease)}
+.cy .tab:hover{color:var(--ink);background:rgba(116,87,204,.05)}
+.cy .tab.on{background:var(--p);color:#fff;box-shadow:0 4px 12px rgba(116,87,204,.25),inset 0 1px 0 rgba(255,255,255,.15);transform:scale(1.04)}
+.cy .tab-panel{display:none;padding:14px 0}
+.cy .tab-panel.on{display:block}
+
+/* CY Dialog */
+.cy .overlay{position:fixed;inset:0;z-index:500;background:rgba(83,68,110,.25);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center}
+.cy .overlay.on{display:flex}
+.cy .overlay.on .dlg{animation:cyDlgIn .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes cyDlgIn{0%{opacity:0;transform:scale(.88) translateY(16px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+.cy .dlg{background:var(--card);border-radius:var(--rl);padding:24px 28px;min-width:380px;box-shadow:var(--shh)}
+.cy .dlg h3{font-size:16px;font-weight:650;color:var(--ink);margin-bottom:8px}
+.cy .dlg p{font-size:15px;color:var(--mu);line-height:1.6;margin-bottom:18px}
+.cy .dlg .acts{display:flex;gap:8px;justify-content:flex-end}
+
+/* CY Toast */
+.cy .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:600;font-size:15px;background:var(--card);color:var(--ink);padding:13px 24px;border-radius:var(--rl);box-shadow:var(--shh);animation:cyToastIn .45s var(--ease);display:flex;align-items:center;gap:10px;font-weight:550}
+@keyframes cyToastIn{0%{opacity:0;transform:translateX(-50%) translateY(16px) scale(.9)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+
+/* CY Progress Ring */
+.cy .ring-wrap{display:inline-flex;align-items:center;gap:10px}
+.cy .ring-svg{transform:rotate(-90deg);width:54px;height:54px;flex-shrink:0}
+.cy .ring-svg .track{fill:none;stroke:rgba(116,87,204,.1);stroke-width:7}
+.cy .ring-svg .val{fill:none;stroke:var(--p);stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset .7s var(--ease);filter:drop-shadow(0 2px 4px rgba(116,87,204,.12))}
+.cy .ring-num{font-size:16px;font-weight:650;color:var(--ink)}
+.cy .ring-lbl{font-size:16px;color:var(--mu)}
+
+/* CY Table */
+.cy .tbl-wrap{display:flex;flex-direction:column;gap:4px}
+.cy .tbl-hd{display:flex;padding:6px 16px;font-size:16px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);font-weight:600}
+.cy .tbl-row{display:flex;padding:10px 16px;background:var(--card);border-radius:var(--r);align-items:center;box-shadow:0 2px 6px rgba(83,68,110,.04),inset 0 1px 0 rgba(255,255,255,.6);transition:all var(--dur) var(--ease);cursor:pointer;user-select:none}
+.cy .tbl-row:hover{box-shadow:0 6px 16px rgba(83,68,110,.1),inset 0 1px 0 rgba(255,255,255,.7);transform:scale(1.01)}
+.cy .tbl-row.sel{box-shadow:0 6px 18px rgba(116,87,204,.18),inset 0 1px 0 rgba(255,255,255,.7),0 0 0 2px rgba(116,87,204,.25);transform:scale(1.01)}
+.cy .cn{flex:2.5;font-weight:550}.cy .cs{flex:1.2}.cy .ct{flex:1.2}.cy .cpct{flex:1;text-align:right}
+.cy .tag{display:inline-block;padding:2px 10px;border-radius:999px;font-size:14.5px;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.cy .tag-ok{color:var(--ok);background:rgba(74,222,128,.15);box-shadow:0 1px 3px rgba(74,222,128,.1)}
+.cy .tag-err{color:var(--err);background:rgba(248,113,113,.15);box-shadow:0 1px 3px rgba(248,113,113,.1)}
+.cy .tag-run{color:var(--warn);background:rgba(251,146,60,.15);box-shadow:0 1px 3px rgba(251,146,60,.1)}
+
+/* CY Skeleton */
+.cy .skel-row{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.cy .skel{background:rgba(116,87,204,.08);border-radius:8px;animation:cyBreathe 1.8s ease-in-out infinite}
+@keyframes cyBreathe{0%,100%{transform:scale(.97);opacity:.4}50%{transform:scale(1);opacity:.75}}
+
+/* CY Badge */
+.cy .badge{font-size:14.5px;padding:3px 11px;border-radius:999px;font-weight:650;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.cy .badge-c{background:rgba(116,87,204,.12);color:var(--p)}
+.cy .badge-p{background:rgba(167,139,250,.15);color:var(--ac)}
+.cy .badge-g{background:rgba(74,222,128,.15);color:var(--ok)}
+
+/* CY Section */
+.cy .sec-t{font-size:16px;font-weight:650;color:var(--ink);letter-spacing:.01em;margin-bottom:10px}
+.cy .ring-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.cy .ring-card{background:var(--card);border-radius:var(--rl);padding:20px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:var(--sh);cursor:pointer;transition:all var(--dur) var(--ease);user-select:none}
+.cy .ring-card:hover{box-shadow:var(--shh);transform:translateY(-2px)}
+.cy .ring-card:active{box-shadow:var(--shp);transform:scale(.97)}
+.cy .prog-bar-row{display:flex;align-items:center;gap:8px}
+.cy .prog-bar-lbl{font-size:15px;color:var(--mu);min-width:70px;font-weight:550}
+.cy .prog-bar{flex:1;height:10px;background:rgba(116,87,204,.08);border-radius:999px;overflow:hidden;box-shadow:inset 0 2px 4px rgba(83,68,110,.06)}
+.cy .prog-bar-fill{height:100%;background:linear-gradient(135deg,var(--p),var(--ac));border-radius:999px;box-shadow:0 2px 6px rgba(116,87,204,.2);transition:width .5s var(--ease)}
+.cy .prog-bar-pct{font-size:15px;font-weight:600;color:var(--p);min-width:30px;text-align:right}
+.cy .demo-section{background:var(--card);border-radius:var(--rl);padding:16px;box-shadow:var(--sh)}
+
+/* ═══════ XLAB ═══════ */
+.xl{
+  --bg:#07090a;--surf:#101315;--card:#15191c;--sbar:#080a0c;
+  --p:#4fe4ff;--ph:#3cc8e0;--pi:#07090a;--s2:#1a242d;--ac:#6366f1;
+  --ok:#34d399;--warn:#fbbf24;--err:#f87171;
+  --mu:#64748b;--ink:#e2e8f0;--dim:#94a3b8;
+  --bdr:#1e293b;--bdr2:#1a2430;
+  --r:6px;--rs:4px;--rl:10px;--rb:6px;
+  --sh:0 1px 2px rgba(0,0,0,.3);
+  --shh:0 4px 16px rgba(79,228,255,.08);
+  --mono:'JetBrains Mono',monospace;
+  --dur:.18s;--ease:cubic-bezier(.4,0,.2,1);
+  --ff:'Inter',system-ui,sans-serif;
+  color:var(--ink);background:var(--bg);font-family:var(--ff);
+}
+.xl .dash{background:var(--bg)}
+.xl .sidebar{background:var(--sbar);border-right:1px solid var(--bdr);padding:16px 0}
+.xl .side-logo{display:flex;align-items:center;gap:10px;padding:0 14px 16px;border-bottom:1px solid var(--bdr);margin-bottom:6px}
+.xl .side-logo i{width:26px;height:26px;background:linear-gradient(135deg,var(--p),var(--ac));border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:var(--pi);box-shadow:0 0 8px rgba(79,228,255,.18);font-style:normal}
+.xl .side-logo s{font-size:15px;font-weight:600;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.xl .side-nav{flex:1;padding:0 8px;display:flex;flex-direction:column}
+.xl .side-i{display:flex;align-items:center;gap:8px;padding:7px 10px;margin:1px 0;border-radius:var(--r);font-size:16px;color:var(--dim);transition:all var(--dur) var(--ease);font-weight:450;text-decoration:none;position:relative}
+.xl .side-i:hover{color:var(--ink);background:rgba(255,255,255,.03)}
+.xl .side-i.on{color:var(--p);background:rgba(79,228,255,.06)}
+.xl .side-i.on::before{content:'';position:absolute;left:0;top:5px;bottom:5px;width:2px;background:var(--p);border-radius:0 2px 2px 0;box-shadow:0 0 5px rgba(79,228,255,.25)}
+.xl .side-i b{width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.35;flex-shrink:0}
+.xl .side-i.on b{opacity:1;box-shadow:0 0 5px var(--p)}
+.xl .topbar{background:var(--surf);border-bottom:1px solid var(--bdr)}
+.xl .tb-title{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+.xl .tb-gap{flex:1}
+.xl .tb-tag{font-size:15px;padding:3px 8px;border-radius:var(--r);background:var(--s2);color:var(--mu);font-family:var(--mono);letter-spacing:.04em}
+.xl .tb-av{width:26px;height:26px;border-radius:var(--r);background:var(--p);color:var(--pi);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;box-shadow:0 0 5px rgba(79,228,255,.12)}
+
+/* XL Cards */
+.xl .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.xl .card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;transition:all var(--dur);cursor:default}
+.xl .card:hover{border-color:rgba(79,228,255,.18);box-shadow:0 0 14px rgba(79,228,255,.05)}
+.xl .card .l{font-size:15px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu);margin-bottom:4px;font-family:var(--mono)}
+.xl .card .v{font-size:32px;font-weight:650;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.xl .card .s{font-size:15px;color:var(--mu);font-family:var(--mono)}
+
+/* XL Buttons */
+.xl .btn{font-size:16px;padding:6px 16px;border-radius:var(--rb);transition:all var(--dur);font-weight:500;letter-spacing:-.01em;display:inline-flex;align-items:center;gap:5px}
+.xl .btn-pri{background:var(--p);color:var(--pi)}
+.xl .btn-pri:hover{box-shadow:0 0 14px rgba(79,228,255,.2)}
+.xl .btn-pri:active{box-shadow:0 0 22px rgba(79,228,255,.35);transform:scale(.97)}
+.xl .btn-out{border:1px solid rgba(79,228,255,.15);color:var(--ink);background:transparent}
+.xl .btn-out:hover{border-color:var(--p);box-shadow:0 0 8px rgba(79,228,255,.08)}
+.xl .btn-out:active{background:rgba(79,228,255,.04)}
+.xl .btn-ghost{color:var(--mu)}
+.xl .btn-ghost:hover{color:var(--ink);background:rgba(255,255,255,.02)}
+.xl .btn-danger{background:var(--err);color:#fff}
+.xl .btn-danger:active{box-shadow:0 0 14px rgba(248,113,113,.25)}
+.xl .btn-sm{font-size:16px;padding:3px 9px}
+.xl .btn-loading{opacity:.65;pointer-events:none}
+.xl .btn-loading::after{content:'';width:10px;height:10px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:xlSpin .6s linear infinite}
+@keyframes xlSpin{to{transform:rotate(360deg)}}
+
+/* XL Tabs */
+.xl .tabs-bar{display:flex;gap:0;border-bottom:1px solid var(--bdr)}
+.xl .tab{padding:7px 16px;font-size:16px;color:var(--dim);border-bottom:2px solid transparent;transition:all var(--dur);font-weight:480;letter-spacing:-.01em}
+.xl .tab:hover{color:var(--ink)}
+.xl .tab.on{color:var(--p);border-bottom-color:var(--p)}
+.xl .tab-panel{display:none;padding:14px 0}
+.xl .tab-panel.on{display:block}
+
+/* XL Dialog */
+.xl .overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center}
+.xl .overlay.on{display:flex}
+.xl .overlay.on .dlg{animation:xlDlgIn .22s var(--ease)}
+@keyframes xlDlgIn{0%{opacity:0;transform:scale(.95);filter:blur(2px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
+.xl .dlg{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:20px 24px;min-width:380px;box-shadow:0 0 20px rgba(79,228,255,.06);position:relative}
+.xl .dlg::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(79,228,255,.3),transparent)}
+.xl .dlg h3{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:-.01em;margin-bottom:8px}
+.xl .dlg p{font-size:16px;color:var(--dim);line-height:1.6;margin-bottom:16px}
+.xl .dlg .acts{display:flex;gap:8px;justify-content:flex-end}
+
+/* XL Toast */
+.xl .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:600;font-size:13.5px;background:var(--card);color:var(--ink);padding:9px 18px;border-radius:var(--r);border:1px solid var(--p);box-shadow:0 0 18px rgba(79,228,255,.08);animation:xlToastIn .2s var(--ease);display:flex;align-items:center;gap:8px}
+@keyframes xlToastIn{0%{opacity:0;transform:translateX(-50%) translateY(6px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* XL Progress Ring */
+.xl .ring-wrap{display:inline-flex;align-items:center;gap:10px}
+.xl .ring-svg{transform:rotate(-90deg);width:50px;height:50px;flex-shrink:0}
+.xl .ring-svg .track{fill:none;stroke:var(--bdr);stroke-width:3}
+.xl .ring-svg .val{fill:none;stroke:var(--p);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .6s var(--ease);filter:drop-shadow(0 0 3px rgba(79,228,255,.2))}
+.xl .ring-num{font-size:16px;font-weight:600;color:var(--ink)}
+.xl .ring-lbl{font-size:15px;color:var(--mu);font-family:var(--mono)}
+
+/* XL Table */
+.xl .tbl-wrap{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.xl .tbl-hd{display:flex;padding:6px 12px;background:var(--surf);border-bottom:1px solid var(--bdr);font-family:var(--mono);font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)}
+.xl .tbl-row{display:flex;padding:6px 12px;border-bottom:1px solid var(--bdr2);font-size:16px;align-items:center;transition:all var(--dur);cursor:pointer;user-select:none}
+.xl .tbl-row:hover{background:rgba(79,228,255,.02)}
+.xl .tbl-row.sel{background:rgba(79,228,255,.04);box-shadow:inset 0 0 0 1px rgba(79,228,255,.1)}
+.xl .tbl-row:last-child{border-bottom:none}
+.xl .cn{flex:2.5}.xl .cs{flex:1.2}.xl .ct{flex:1.2;font-family:var(--mono);font-size:16px;font-variant-numeric:tabular-nums}.xl .cpct{flex:1;text-align:right;font-family:var(--mono);font-size:16px}
+.xl .tag{display:inline-block;padding:1px 6px;border-radius:var(--rs);font-size:13.5px;font-weight:550}
+.xl .tag-ok{color:var(--ok);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.15)}
+.xl .tag-err{color:var(--err);background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15)}
+.xl .tag-run{color:var(--warn);background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.15)}
+
+/* XL Skeleton */
+.xl .skel-row{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.xl .skel{background:var(--bdr);border-radius:3px;position:relative;overflow:hidden}
+.xl .skel::after{content:'';position:absolute;top:0;bottom:0;width:24px;background:linear-gradient(90deg,transparent,rgba(79,228,255,.06),transparent);animation:xlScan 2s ease-in-out infinite}
+@keyframes xlScan{0%{left:-24px}100%{left:calc(100% + 24px)}}
+
+/* XL Badge */
+.xl .badge{font-size:13.5px;padding:2px 7px;border-radius:var(--rs);font-weight:550;font-family:var(--mono)}
+.xl .badge-c{border:1px solid rgba(79,228,255,.18);color:var(--p);background:rgba(79,228,255,.05)}
+.xl .badge-p{border:1px solid rgba(99,102,241,.18);color:var(--ac);background:rgba(99,102,241,.05)}
+.xl .badge-g{border:1px solid rgba(52,211,153,.18);color:var(--ok);background:rgba(52,211,153,.05)}
+
+/* XL Section */
+.xl .sec-t{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:-.01em;margin-bottom:10px}
+.xl .ring-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.xl .ring-card{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.xl .prog-bar-row{display:flex;align-items:center;gap:8px}
+.xl .prog-bar-lbl{font-family:var(--mono);font-size:15px;color:var(--mu);min-width:70px}
+.xl .prog-bar{flex:1;height:4px;background:var(--bdr);border-radius:0;overflow:hidden}
+.xl .prog-bar-fill{height:100%;background:var(--p);border-radius:0;box-shadow:0 0 5px rgba(79,228,255,.15);transition:width .4s var(--ease);position:relative}
+.xl .prog-bar-fill::after{content:'';position:absolute;top:0;bottom:0;width:30px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);animation:xlScan2 1.4s ease-in-out infinite}
+@keyframes xlScan2{0%{left:-30px}100%{left:calc(100% + 30px)}}
+.xl .prog-bar-pct{font-family:var(--mono);font-size:15px;color:var(--mu);min-width:28px;text-align:right}
+.xl .demo-section{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:14px}
+/* XL Text Scramble */
+.xl .scramble{font-family:var(--mono);display:inline-block}
+
+/* ═══════ LIQUID GLASS (液境·全景液态玻璃) ═══════ */
+.lg{
+  --bg:#0a0a1a;--surf:rgba(18,18,48,.55);--card:rgba(24,24,60,.42);--sbar:rgba(7,7,26,.75);
+  --p:#7c5ce7;--ph:#9575f0;--pi:#fff;--s2:rgba(30,30,70,.5);--ac:#4ef0e8;
+  --ok:#4ef0b8;--warn:#f5c842;--err:#f06080;
+  --mu:#7a7aaa;--ink:#e8e8f8;--dim:#9090b8;
+  --bdr:rgba(255,255,255,.09);--bdr2:rgba(255,255,255,.05);
+  --r:12px;--rs:8px;--rl:18px;--rb:999px;
+  --sh:0 8px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);
+  --shh:0 14px 44px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.11),0 0 36px rgba(124,92,231,.1);
+  --shp:inset 0 3px 10px rgba(0,0,0,.25),0 3px 12px rgba(0,0,0,.18);
+  --dur:.35s;--ease:cubic-bezier(.22,1,.36,1);
+  --ff:'Inter',system-ui,sans-serif;
+  color:var(--ink);background:var(--bg);font-family:var(--ff);letter-spacing:.015em;
+}
+/* LG morphing bg */
+.lg .dash{background:var(--bg);position:relative;overflow:hidden}
+.lg .dash::before{
+  content:'';position:absolute;top:-10%;left:-10%;right:-10%;bottom:-10%;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 65% 45% at 15% 8%, rgba(124,92,231,.18),transparent 55%),
+    radial-gradient(ellipse 55% 55% at 85% 92%, rgba(78,240,232,.12),transparent 55%),
+    radial-gradient(ellipse 45% 35% at 50% 50%, rgba(140,100,240,.06),transparent 65%),
+    radial-gradient(ellipse 75% 50% at 95% 4%, rgba(200,180,255,.04),transparent 70%);
+  animation:lgMorph 18s ease-in-out infinite;
+}
+@keyframes lgMorph{0%,100%{opacity:.5}25%{opacity:.9}50%{opacity:.55}75%{opacity:.85}}
+.lg .topbar,.lg .main{position:relative;z-index:1}
+
+/* LG Sidebar */
+.lg .sidebar{background:var(--sbar);backdrop-filter:blur(28px) saturate(150%);-webkit-backdrop-filter:blur(28px) saturate(150%);border-right:1px solid rgba(255,255,255,.08);padding:18px 0}
+.lg .side-logo{display:flex;align-items:center;gap:10px;padding:0 18px 18px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:6px}
+.lg .side-logo i{width:28px;height:28px;background:linear-gradient(135deg,var(--p),var(--ac));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:650;color:#fff;box-shadow:0 0 14px rgba(124,92,231,.3),inset 0 1px 0 rgba(255,255,255,.2);font-style:normal}
+.lg .side-logo s{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:.025em;text-decoration:none}
+.lg .side-nav{flex:1;padding:0 10px;display:flex;flex-direction:column}
+.lg .side-i{display:flex;align-items:center;gap:10px;padding:8px 13px;margin:2px 0;border-radius:10px;font-size:16px;color:var(--dim);transition:all var(--dur) var(--ease);font-weight:480;text-decoration:none;position:relative}
+.lg .side-i:hover{color:var(--ink);background:rgba(255,255,255,.04);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.lg .side-i.on{color:#fff;background:rgba(124,92,231,.18);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 18px rgba(124,92,231,.12)}
+.lg .side-i b{display:none}
+
+/* LG Topbar */
+.lg .topbar{background:var(--surf);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.06);height:52px}
+.lg .tb-title{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:.02em}
+.lg .tb-gap{flex:1}
+.lg .tb-tag{font-size:15px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.04);color:var(--mu);font-weight:500;border:1px solid rgba(255,255,255,.06)}
+.lg .tb-av{width:27px;height:27px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--ac));color:#fff;display:flex;align-items:center;justify-content:center;font-size:14.5px;font-weight:600;box-shadow:0 0 10px rgba(124,92,231,.2),inset 0 1px 0 rgba(255,255,255,.15)}
+
+/* LG Cards */
+.lg .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.lg .card{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px;box-shadow:var(--sh);cursor:pointer;user-select:none;transition:all var(--dur) var(--ease);position:relative}
+.lg .card::after{content:'';position:absolute;top:0;left:12px;right:12px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);opacity:.5;transition:opacity var(--dur)}
+.lg .card:hover{box-shadow:var(--shh);transform:translateY(-2px);border-color:rgba(255,255,255,.15)}
+.lg .card:hover::after{opacity:1}
+.lg .card:active{box-shadow:var(--shp);transform:scale(.98)}
+.lg .card .l{font-size:16px;color:var(--mu);margin-bottom:4px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.lg .card .v{font-size:32px;font-weight:650;color:#fff;letter-spacing:-.01em;text-shadow:0 0 20px rgba(200,190,255,.15)}
+.lg .card .s{font-size:16px;color:var(--mu)}
+
+/* LG Buttons */
+.lg .btn{font-size:16px;padding:7px 18px;border-radius:var(--rb);transition:all var(--dur) var(--ease);font-weight:550;letter-spacing:.02em;display:inline-flex;align-items:center;gap:5px;position:relative}
+.lg .btn-pri{background:linear-gradient(135deg,var(--p),#9170f0);color:#fff;box-shadow:0 4px 16px rgba(124,92,231,.25),inset 0 1px 0 rgba(255,255,255,.15)}
+.lg .btn-pri:hover{box-shadow:0 6px 24px rgba(124,92,231,.4),inset 0 1px 0 rgba(255,255,255,.2);transform:translateY(-1px)}
+.lg .btn-pri:active{box-shadow:var(--shp);transform:scale(.96)}
+.lg .btn-out{border:1px solid rgba(255,255,255,.15);color:var(--ink);background:rgba(255,255,255,.03);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.lg .btn-out:hover{border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.06);box-shadow:0 0 12px rgba(124,92,231,.1)}
+.lg .btn-out:active{background:rgba(124,92,231,.08)}
+.lg .btn-ghost{color:var(--mu)}
+.lg .btn-ghost:hover{color:var(--ink);background:rgba(255,255,255,.04)}
+.lg .btn-danger{background:rgba(240,96,128,.25);color:#ffa0b8;border:1px solid rgba(240,96,128,.25);backdrop-filter:blur(6px)}
+.lg .btn-danger:hover{background:rgba(240,96,128,.35);box-shadow:0 0 16px rgba(240,96,128,.15)}
+.lg .btn-danger:active{transform:scale(.96)}
+.lg .btn-sm{font-size:15px;padding:4px 11px}
+.lg .btn-loading{opacity:.65;pointer-events:none}
+.lg .btn-loading::after{content:'';width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:lgSpin .8s linear infinite}
+@keyframes lgSpin{to{transform:rotate(360deg)}}
+
+/* LG Tabs */
+.lg .tabs-bar{display:flex;gap:6px;padding:4px;background:rgba(255,255,255,.03);border-radius:999px;width:fit-content;border:1px solid rgba(255,255,255,.05)}
+.lg .tab{padding:7px 18px;border-radius:999px;font-size:15px;font-weight:520;color:var(--dim);transition:all var(--dur) var(--ease)}
+.lg .tab:hover{color:var(--ink);background:rgba(255,255,255,.04)}
+.lg .tab.on{background:rgba(124,92,231,.2);color:#fff;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 8px rgba(124,92,231,.2),inset 0 1px 0 rgba(255,255,255,.08)}
+.lg .tab-panel{display:none;padding:14px 0}
+.lg .tab-panel.on{display:block}
+
+/* LG Dialog */
+.lg .overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center}
+.lg .overlay.on{display:flex}
+.lg .overlay.on .dlg{animation:lgDlgIn .4s cubic-bezier(.22,1,.36,1)}
+@keyframes lgDlgIn{0%{opacity:0;transform:scale(.92) translateY(12px);filter:blur(4px)}100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}}
+.lg .dlg{background:rgba(22,22,56,.75);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.12);border-radius:var(--rl);padding:24px 28px;min-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06),0 0 40px rgba(124,92,231,.08);position:relative}
+.lg .dlg::before{content:'';position:absolute;top:0;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent)}
+.lg .dlg h3{font-size:16px;font-weight:600;color:#fff;letter-spacing:.02em;margin-bottom:8px}
+.lg .dlg p{font-size:15px;color:var(--dim);line-height:1.65;margin-bottom:18px}
+.lg .dlg .acts{display:flex;gap:8px;justify-content:flex-end}
+
+/* LG Toast */
+.lg .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:600;font-size:15px;background:rgba(22,22,56,.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);color:#fff;padding:13px 24px;border-radius:var(--rl);border:1px solid rgba(255,255,255,.12);box-shadow:0 12px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06),0 0 30px rgba(124,92,231,.08);animation:lgToastIn .4s var(--ease);display:flex;align-items:center;gap:9px;font-weight:500;letter-spacing:.015em}
+@keyframes lgToastIn{0%{opacity:0;transform:translateX(-50%) translateY(14px) scale(.94)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+
+/* LG Progress Ring */
+.lg .ring-wrap{display:inline-flex;align-items:center;gap:10px}
+.lg .ring-svg{transform:rotate(-90deg);width:52px;height:52px;flex-shrink:0}
+.lg .ring-svg .track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:4}
+.lg .ring-svg .val{fill:none;stroke:var(--p);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .8s var(--ease);filter:drop-shadow(0 0 6px rgba(124,92,231,.3))}
+.lg .ring-num{font-size:15px;font-weight:650;color:#fff;letter-spacing:.02em}
+.lg .ring-lbl{font-size:15px;color:var(--mu);letter-spacing:.02em}
+
+/* LG Table */
+.lg .tbl-wrap{background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden}
+.lg .tbl-hd{display:flex;padding:9px 16px;background:rgba(255,255,255,.02);border-bottom:1px solid rgba(255,255,255,.05);font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);font-weight:550}
+.lg .tbl-row{display:flex;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.03);font-size:16px;align-items:center;transition:all var(--dur);cursor:pointer;user-select:none}
+.lg .tbl-row:hover{background:rgba(255,255,255,.03)}
+.lg .tbl-row.sel{background:rgba(124,92,231,.1);box-shadow:inset 3px 0 0 var(--p)}
+.lg .tbl-row:last-child{border-bottom:none}
+.lg .cn{flex:2.5}.lg .cs{flex:1.2}.lg .ct{flex:1.2}.lg .cpct{flex:1;text-align:right}
+.lg .tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:14.5px;font-weight:550;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.lg .tag-ok{color:var(--ok);background:rgba(78,240,184,.12);border:1px solid rgba(78,240,184,.2)}
+.lg .tag-err{color:var(--err);background:rgba(240,96,128,.1);border:1px solid rgba(240,96,128,.18)}
+.lg .tag-run{color:var(--warn);background:rgba(245,200,66,.1);border:1px solid rgba(245,200,66,.18)}
+
+/* LG Skeleton */
+.lg .skel-row{display:flex;align-items:center;gap:10px;padding:8px 12px}
+.lg .skel{background:rgba(255,255,255,.04);border-radius:6px;position:relative;overflow:hidden}
+.lg .skel::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.05) 45%,rgba(255,255,255,.1) 50%,rgba(255,255,255,.05) 55%,transparent 65%);animation:lgShimmer 2.2s ease-in-out infinite}
+@keyframes lgShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* LG Badge */
+.lg .badge{font-size:14.5px;padding:3px 10px;border-radius:999px;font-weight:550;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.lg .badge-c{background:rgba(124,92,231,.15);color:#c4b5fd;border:1px solid rgba(124,92,231,.2)}
+.lg .badge-p{background:rgba(240,96,128,.12);color:#ffb0c4;border:1px solid rgba(240,96,128,.18)}
+.lg .badge-g{background:rgba(78,240,184,.12);color:var(--ok);border:1px solid rgba(78,240,184,.18)}
+
+/* LG Section */
+.lg .sec-t{font-size:16px;font-weight:600;color:var(--ink);letter-spacing:.025em;margin-bottom:10px}
+.lg .ring-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lg .ring-card{background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--bdr);border-radius:var(--rl);padding:18px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;box-shadow:var(--sh);cursor:pointer;transition:all var(--dur) var(--ease);user-select:none}
+.lg .ring-card:hover{box-shadow:var(--shh);transform:translateY(-2px);border-color:rgba(255,255,255,.12)}
+.lg .ring-card:active{box-shadow:var(--shp);transform:scale(.97)}
+.lg .prog-bar-row{display:flex;align-items:center;gap:8px}
+.lg .prog-bar-lbl{font-size:15px;color:var(--mu);min-width:70px;letter-spacing:.02em}
+.lg .prog-bar{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:999px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.2)}
+.lg .prog-bar-fill{height:100%;background:linear-gradient(90deg,var(--p),var(--ac));border-radius:999px;box-shadow:0 0 8px rgba(124,92,231,.3);transition:width .6s var(--ease)}
+.lg .prog-bar-pct{font-size:15px;font-weight:550;color:var(--mu);min-width:30px;text-align:right}
+.lg .demo-section{background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--bdr);border-radius:var(--rl);padding:16px;box-shadow:var(--sh)}
+.lg .scramble{font-family:'Inter',system-ui,sans-serif;display:inline-block}
+
+/* ═══════ COMMON ═══════ */
+.skel-content{display:none}
+.skel-content.on{display:block}
+#skel-wrap.loading .skel-row{display:flex}
+#skel-wrap.loading .skel-content{display:none}
+#skel-wrap:not(.loading) .skel-row{display:none}
+#skel-wrap:not(.loading) .skel-content{display:block}
+.noselect{user-select:none}
+
+/* ═══════ RESPONSIVE ═══════ */
+@media(max-width:900px){.main{flex-direction:column}.sidebar{display:none}.cards{grid-template-columns:repeat(2,1fr)}.ring-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.cards{grid-template-columns:1fr}.ring-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- PICKER -->
+<div class="picker">
+  <span class="lbl">🎨 主题</span>
+  <button class="pk-btn cp on" data-theme="cp" onclick="switchTheme('cp',this)">⚡ 赛博朋克</button>
+  <button class="pk-btn ap" data-theme="ap" onclick="switchTheme('ap',this)">🍎 Apple 极简</button>
+  <button class="pk-btn cy" data-theme="cy" onclick="switchTheme('cy',this)">🫧 黏土拟态</button>
+  <button class="pk-btn xl" data-theme="xl" onclick="switchTheme('xl',this)">🧪 AI 实验室</button>
+  <button class="pk-btn lg" data-theme="lg" onclick="switchTheme('lg',this)">💎 液境·全景液态玻璃</button>
+  <span style="margin-left:auto;font-size:15px;color:#475569">点击组件交互 — 按钮/标签页/弹窗/Toast/骨架屏/进度环/表格行</span>
+</div>
+
+<!-- ══════════════════════ CYBERPUNK ══════════════════════ -->
+<div class="canvas on" id="cv-cp"><div class="dash cp" id="dash-cp">
+<header class="topbar"><span class="tb-title">[workbench] ~/dashboard</span><span class="tb-gap"></span><span class="tb-tag">v14.1.0</span><span class="tb-tag">STAGING</span><div class="tb-av">JD</div></header>
+<div class="main">
+<aside class="sidebar">
+  <div class="side-logo"><i>CT</i><s>CamelTv</s></div>
+  <nav class="side-nav">
+    <a class="side-i on" data-nav="dashboard" onclick="navClick(this)"><b></b>DASHBOARD</a>
+    <a class="side-i" data-nav="testcases" onclick="navClick(this)"><b></b>TESTCASES</a>
+    <a class="side-i" data-nav="testplans" onclick="navClick(this)"><b></b>TESTPLANS</a>
+    <a class="side-i" data-nav="apitests" onclick="navClick(this)"><b></b>API_TESTS</a>
+    <a class="side-i" data-nav="uitests" onclick="navClick(this)"><b></b>UI_TESTS</a>
+    <a class="side-i" data-nav="agentwb" onclick="navClick(this)"><b></b>AGENT_WB</a>
+    <a class="side-i" data-nav="reports" onclick="navClick(this)"><b></b>REPORTS</a>
+    <a class="side-i" data-nav="defects" onclick="navClick(this)"><b></b>DEFECTS</a>
+    <a class="side-i" data-nav="settings" onclick="navClick(this)"><b></b>SETTINGS</a>
+  </nav>
+</aside>
+<main class="content">
+  <!-- Stat cards — clickable -->
+  <div class="cards">
+    <div class="card" onclick="showToast('cp','STAT CARD: Total Cases = 12,847')"><div class="l">Total Cases</div><div class="v">12,847</div><div class="s">+126 this week</div></div>
+    <div class="card" onclick="showToast('cp','STAT CARD: Pass Rate = 94.2%')"><div class="l">Pass Rate</div><div class="v">94.2%</div><div class="s">↑ 1.8% vs last</div></div>
+    <div class="card" onclick="showToast('cp','STAT CARD: Active Plans = 38')"><div class="l">Active Plans</div><div class="v">38</div><div class="s">8 running now</div></div>
+    <div class="card" onclick="showToast('cp','STAT CARD: Open Defects = 142')"><div class="l">Open Defects</div><div class="v">142</div><div class="s">23 critical</div></div>
+  </div>
+
+  <!-- Progress Rings — click to animate -->
+  <div>
+    <div class="sec-t">▶ Execution Progress <span style="font-size:15px;color:var(--mu)">(click to re-animate)</span></div>
+    <div class="ring-grid">
+      <div class="ring-card" onclick="animateRing(this,90)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="90"/></svg></div>
+        <div class="ring-num scramble">0%</div><div class="ring-lbl">API Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,65)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="65"/></svg></div>
+        <div class="ring-num scramble">0%</div><div class="ring-lbl">UI Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,98)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="98"/></svg></div>
+        <div class="ring-num scramble">0%</div><div class="ring-lbl">CI Smoke</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bars — click to animate -->
+  <div class="demo-section" style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><span class="sec-t" style="margin-bottom:0">Progress Bars</span><button class="btn btn-out btn-sm" onclick="animateBars(this.closest('.demo-section'))">▶ REPLAY</button></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">CORE_MODULE</span><div class="prog-bar"><div class="prog-bar-fill" data-target="96" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">API_LAYER</span><div class="prog-bar"><div class="prog-bar-fill" data-target="78" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">UI_E2E</span><div class="prog-bar"><div class="prog-bar-fill" data-target="42" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+  </div>
+
+  <!-- Tabs — click to switch -->
+  <div class="demo-section">
+    <div class="sec-t">Tabs</div>
+    <div class="tabs-bar" id="tabs-cp">
+      <button class="tab on" data-panel="cp-t1" onclick="switchTab('cp',this)">ALL_RUNS</button>
+      <button class="tab" data-panel="cp-t2" onclick="switchTab('cp',this)">PASSED</button>
+      <button class="tab" data-panel="cp-t3" onclick="switchTab('cp',this)">FAILED</button>
+    </div>
+    <div class="tab-panel on" id="cp-t1"><span style="font-family:var(--mono);font-size:16px;color:var(--mu)">[ALL_RUNS] Showing 47 execution records from the last 7 days. 38 passed, 6 failed, 3 running.</span></div>
+    <div class="tab-panel" id="cp-t2"><span style="font-family:var(--mono);font-size:16px;color:var(--ok)">[PASSED] 38 test plans completed successfully. Avg duration: 8m 24s.</span></div>
+    <div class="tab-panel" id="cp-t3"><span style="font-family:var(--mono);font-size:16px;color:var(--err)">[FAILED] 6 test plans have failures. 3 regression, 2 E2E, 1 integration.</span></div>
+  </div>
+
+  <!-- Table — click to select rows -->
+  <div class="demo-section">
+    <div class="sec-t" style="display:flex;justify-content:space-between;align-items:center">Table <span style="font-family:var(--mono);font-size:15px;color:var(--mu)">(click row to select)</span></div>
+    <div class="tbl-wrap" id="tbl-cp">
+      <div class="tbl-hd"><span class="cn">TEST_PLAN_NAME</span><span class="cs">STATUS</span><span class="ct">ELAPSED</span><span class="cpct">COV%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">regression-smoke-v14</span><span class="cs"><span class="tag tag-ok">PASS</span></span><span class="ct">00:12:34</span><span class="cpct">94%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">api-auth-flow</span><span class="cs"><span class="tag tag-ok">PASS</span></span><span class="ct">00:03:18</span><span class="cpct">100%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">ui-checkout-e2e</span><span class="cs"><span class="tag tag-err">FAIL</span></span><span class="ct">00:08:52</span><span class="cpct">67%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">perf-load-test</span><span class="cs"><span class="tag tag-run">RUN</span></span><span class="ct">00:45:01</span><span class="cpct">--</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">video-playback</span><span class="cs"><span class="tag tag-ok">PASS</span></span><span class="ct">00:20:07</span><span class="cpct">88%</span></div>
+    </div>
+  </div>
+
+  <!-- Buttons — interactive row -->
+  <div class="demo-section">
+    <div class="sec-t">Buttons <span style="font-family:var(--mono);font-size:15px;color:var(--mu)">(click each)</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-pri" onclick="handleBtnClick(this,'cp','Run All','▶')">▶ RUN_ALL</button>
+      <button class="btn btn-out" onclick="handleBtnClick(this,'cp','New Plan')">NEW_PLAN</button>
+      <button class="btn btn-ghost" onclick="handleBtnClick(this,'cp','Import')">IMPORT</button>
+      <button class="btn btn-danger btn-sm" onclick="handleBtnClick(this,'cp','Abort')">ABORT</button>
+      <span style="margin-left:4px;display:flex;gap:5px"><span class="badge badge-c">v14.1.0</span><span class="badge badge-p">P0</span><span class="badge badge-g">AUTO</span></span>
+      <button class="btn btn-out btn-sm" onclick="openDialog('cp')" style="margin-left:auto">OPEN DIALOG</button>
+      <button class="btn btn-pri btn-sm" onclick="showToast('cp','PLAN \'regression-smoke-v14\' EXECUTED — 94% PASS')">TRIGGER TOAST</button>
+    </div>
+  </div>
+
+  <!-- Skeleton toggle -->
+  <div class="demo-section" id="skel-wrap-cp" onclick="toggleSkel('cp')" style="cursor:pointer">
+    <div class="sec-t" style="display:flex;justify-content:space-between">Skeleton Loading <span style="font-family:var(--mono);font-size:15px;color:var(--mu)">(click to toggle)</span></div>
+    <div class="skel-row"><div class="skel" style="width:60%;height:12px"></div><div class="skel" style="width:20%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:45%;height:12px"></div><div class="skel" style="width:18%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:55%;height:12px"></div><div class="skel" style="width:22%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-content on" style="font-family:var(--mono);font-size:16px;color:var(--ok);padding:4px 12px">✓ Data loaded — 47 records retrieved from /api/runs</div>
+  </div>
+</main>
+</div>
+</div></div>
+
+<!-- ══════════════════════ APPLE ══════════════════════ -->
+<div class="canvas" id="cv-ap"><div class="dash ap" id="dash-ap">
+<header class="topbar"><span class="tb-title">Dashboard</span><span class="tb-gap"></span><span class="tb-tag">v14.1.0</span><span class="tb-tag">Staging</span><div class="tb-av">JD</div></header>
+<div class="main">
+<aside class="sidebar">
+  <div class="side-logo"><i>CT</i><s>CamelTv</s></div>
+  <nav class="side-nav">
+    <a class="side-i on" data-nav="dashboard" onclick="navClick(this)">Dashboard</a>
+    <a class="side-i" data-nav="testcases" onclick="navClick(this)">Test Cases</a>
+    <a class="side-i" data-nav="testplans" onclick="navClick(this)">Test Plans</a>
+    <a class="side-i" data-nav="apitests" onclick="navClick(this)">API Tests</a>
+    <a class="side-i" data-nav="uitests" onclick="navClick(this)">UI Tests</a>
+    <a class="side-i" data-nav="agentwb" onclick="navClick(this)">Agent Workbench</a>
+    <a class="side-i" data-nav="reports" onclick="navClick(this)">Reports</a>
+    <a class="side-i" data-nav="defects" onclick="navClick(this)">Defects</a>
+    <a class="side-i" data-nav="settings" onclick="navClick(this)">Settings</a>
+  </nav>
+</aside>
+<main class="content">
+  <div class="cards">
+    <div class="card" onclick="showToast('ap','Total Cases: 12,847 — +126 this week')"><div class="l">Total Cases</div><div class="v">12,847</div><div class="s">+126 this week</div></div>
+    <div class="card" onclick="showToast('ap','Pass Rate: 94.2% — ↑ 1.8% from last run')"><div class="l">Pass Rate</div><div class="v">94.2%</div><div class="s">↑ 1.8% from last run</div></div>
+    <div class="card" onclick="showToast('ap','Active Plans: 38 — 8 running now')"><div class="l">Active Plans</div><div class="v">38</div><div class="s">8 running now</div></div>
+    <div class="card" onclick="showToast('ap','Open Defects: 142 — 23 critical')"><div class="l">Open Defects</div><div class="v">142</div><div class="s">23 critical</div></div>
+  </div>
+
+  <div>
+    <div class="sec-t">Execution Progress</div>
+    <div class="ring-grid">
+      <div class="ring-card" onclick="animateRing(this,90)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="90"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">API Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,65)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="65"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">UI Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,98)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="98"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">CI Smoke</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" style="display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><span class="sec-t" style="margin-bottom:0">Progress Bars</span><button class="btn btn-out btn-sm" onclick="animateBars(this.closest('.demo-section'))">Replay</button></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">Core Module</span><div class="prog-bar"><div class="prog-bar-fill" data-target="96" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">API Layer</span><div class="prog-bar"><div class="prog-bar-fill" data-target="78" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">UI E2E</span><div class="prog-bar"><div class="prog-bar-fill" data-target="42" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t">Tabs</div>
+    <div class="tabs-bar" id="tabs-ap">
+      <button class="tab on" data-panel="ap-t1" onclick="switchTab('ap',this)">All Runs</button>
+      <button class="tab" data-panel="ap-t2" onclick="switchTab('ap',this)">Passed</button>
+      <button class="tab" data-panel="ap-t3" onclick="switchTab('ap',this)">Failed</button>
+    </div>
+    <div class="tab-panel on" id="ap-t1"><span style="font-size:16px;color:var(--mu)">Showing 47 execution records from the last 7 days. 38 passed, 6 failed, 3 running.</span></div>
+    <div class="tab-panel" id="ap-t2"><span style="font-size:16px;color:var(--ok)">38 test plans completed successfully. Average duration: 8m 24s.</span></div>
+    <div class="tab-panel" id="ap-t3"><span style="font-size:16px;color:var(--err)">6 test plans have failures. 3 regression, 2 E2E, 1 integration.</span></div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t" style="display:flex;justify-content:space-between;align-items:center">Table <span style="font-size:16px;color:var(--mu)">(click row to select)</span></div>
+    <div class="tbl-wrap" id="tbl-ap">
+      <div class="tbl-hd"><span class="cn">Test Plan Name</span><span class="cs">Status</span><span class="ct">Elapsed</span><span class="cpct">Coverage</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Regression Smoke v14</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">12m 34s</span><span class="cpct">94%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">API Auth Flow</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">3m 18s</span><span class="cpct">100%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">UI Checkout E2E</span><span class="cs"><span class="tag tag-err">Fail</span></span><span class="ct">8m 52s</span><span class="cpct">67%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Perf Load Test</span><span class="cs"><span class="tag tag-run">Running</span></span><span class="ct">45m 01s</span><span class="cpct">—</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Video Playback</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">20m 07s</span><span class="cpct">88%</span></div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t">Buttons</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-pri" onclick="handleBtnClick(this,'ap','Run All')">Run All</button>
+      <button class="btn btn-out" onclick="handleBtnClick(this,'ap','New Plan')">New Plan</button>
+      <button class="btn btn-ghost" onclick="handleBtnClick(this,'ap','Import')">Import</button>
+      <button class="btn btn-danger btn-sm" onclick="handleBtnClick(this,'ap','Abort')">Abort</button>
+      <span style="margin-left:4px;display:flex;gap:5px"><span class="badge badge-c">v14.1.0</span><span class="badge badge-p">P0</span><span class="badge badge-g">Auto</span></span>
+      <button class="btn btn-out btn-sm" onclick="openDialog('ap')" style="margin-left:auto">Open Dialog</button>
+      <button class="btn btn-pri btn-sm" onclick="showToast('ap','Plan "Regression Smoke v14" completed — 94% pass rate')">Trigger Toast</button>
+    </div>
+  </div>
+
+  <div class="demo-section" id="skel-wrap-ap" onclick="toggleSkel('ap')" style="cursor:pointer">
+    <div class="sec-t" style="display:flex;justify-content:space-between">Skeleton Loading <span style="font-size:16px;color:var(--mu)">(click to toggle)</span></div>
+    <div class="skel-row"><div class="skel" style="width:60%;height:12px"></div><div class="skel" style="width:20%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:45%;height:12px"></div><div class="skel" style="width:18%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:55%;height:12px"></div><div class="skel" style="width:22%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-content on" style="font-size:16px;color:var(--ok);padding:4px 12px">✓ Data loaded — 47 records retrieved</div>
+  </div>
+</main>
+</div>
+</div></div>
+
+<!-- ══════════════════════ CLAY ══════════════════════ -->
+<div class="canvas" id="cv-cy"><div class="dash cy" id="dash-cy">
+<header class="topbar"><span class="tb-title">Dashboard</span><span class="tb-gap"></span><span class="tb-tag">v14.1.0</span><span class="tb-tag">Staging</span><div class="tb-av">JD</div></header>
+<div class="main">
+<aside class="sidebar">
+  <div class="side-logo"><i>CT</i><s>CamelTv</s></div>
+  <nav class="side-nav">
+    <a class="side-i on" data-nav="dashboard" onclick="navClick(this)">Dashboard</a>
+    <a class="side-i" data-nav="testcases" onclick="navClick(this)">Test Cases</a>
+    <a class="side-i" data-nav="testplans" onclick="navClick(this)">Test Plans</a>
+    <a class="side-i" data-nav="apitests" onclick="navClick(this)">API Tests</a>
+    <a class="side-i" data-nav="uitests" onclick="navClick(this)">UI Tests</a>
+    <a class="side-i" data-nav="agentwb" onclick="navClick(this)">Agent Workbench</a>
+    <a class="side-i" data-nav="reports" onclick="navClick(this)">Reports</a>
+    <a class="side-i" data-nav="defects" onclick="navClick(this)">Defects</a>
+    <a class="side-i" data-nav="settings" onclick="navClick(this)">Settings</a>
+  </nav>
+</aside>
+<main class="content">
+  <div class="cards">
+    <div class="card" onclick="showToast('cy','Total Cases: 12,847 — +126 this week')"><div class="l">Total Cases</div><div class="v">12,847</div><div class="s">+126 this week</div></div>
+    <div class="card" onclick="showToast('cy','Pass Rate: 94.2% — ↑ 1.8% from last run')"><div class="l">Pass Rate</div><div class="v">94.2%</div><div class="s">↑ 1.8% from last run</div></div>
+    <div class="card" onclick="showToast('cy','Active Plans: 38 — 8 running now')"><div class="l">Active Plans</div><div class="v">38</div><div class="s">8 running now</div></div>
+    <div class="card" onclick="showToast('cy','Open Defects: 142 — 23 critical')"><div class="l">Open Defects</div><div class="v">142</div><div class="s">23 critical</div></div>
+  </div>
+
+  <div>
+    <div class="sec-t">Execution Progress</div>
+    <div class="ring-grid">
+      <div class="ring-card" onclick="animateRing(this,90)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 54 54"><circle class="track" cx="27" cy="27" r="21"/><circle class="val" cx="27" cy="27" r="21" stroke-dasharray="131.9" stroke-dashoffset="131.9" data-target="90"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">API Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,65)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 54 54"><circle class="track" cx="27" cy="27" r="21"/><circle class="val" cx="27" cy="27" r="21" stroke-dasharray="131.9" stroke-dashoffset="131.9" data-target="65"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">UI Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,98)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 54 54"><circle class="track" cx="27" cy="27" r="21"/><circle class="val" cx="27" cy="27" r="21" stroke-dasharray="131.9" stroke-dashoffset="131.9" data-target="98"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">CI Smoke</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><span class="sec-t" style="margin-bottom:0">Progress Bars</span><button class="btn btn-out btn-sm" onclick="animateBars(this.closest('.demo-section'))">Replay</button></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">Core Module</span><div class="prog-bar"><div class="prog-bar-fill" data-target="96" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">API Layer</span><div class="prog-bar"><div class="prog-bar-fill" data-target="78" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">UI E2E</span><div class="prog-bar"><div class="prog-bar-fill" data-target="42" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t">Tabs</div>
+    <div class="tabs-bar" id="tabs-cy">
+      <button class="tab on" data-panel="cy-t1" onclick="switchTab('cy',this)">All Runs</button>
+      <button class="tab" data-panel="cy-t2" onclick="switchTab('cy',this)">Passed</button>
+      <button class="tab" data-panel="cy-t3" onclick="switchTab('cy',this)">Failed</button>
+    </div>
+    <div class="tab-panel on" id="cy-t1"><span style="font-size:16px;color:var(--mu)">Showing 47 execution records from the last 7 days. 38 passed, 6 failed, 3 running.</span></div>
+    <div class="tab-panel" id="cy-t2"><span style="font-size:16px;color:var(--ok)">38 test plans completed successfully. Average duration: 8m 24s.</span></div>
+    <div class="tab-panel" id="cy-t3"><span style="font-size:16px;color:var(--err)">6 test plans have failures. 3 regression, 2 E2E, 1 integration.</span></div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t" style="display:flex;justify-content:space-between;align-items:center">Table <span style="font-size:16px;color:var(--mu)">(click row to select)</span></div>
+    <div class="tbl-wrap" id="tbl-cy">
+      <div class="tbl-hd"><span class="cn">Test Plan Name</span><span class="cs">Status</span><span class="ct">Elapsed</span><span class="cpct">Coverage</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Regression Smoke v14</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">12m 34s</span><span class="cpct">94%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">API Auth Flow</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">3m 18s</span><span class="cpct">100%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">UI Checkout E2E</span><span class="cs"><span class="tag tag-err">Fail</span></span><span class="ct">8m 52s</span><span class="cpct">67%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Perf Load Test</span><span class="cs"><span class="tag tag-run">Running</span></span><span class="ct">45m 01s</span><span class="cpct">—</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Video Playback</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">20m 07s</span><span class="cpct">88%</span></div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t">Buttons</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-pri" onclick="handleBtnClick(this,'cy','Run All')">Run All</button>
+      <button class="btn btn-out" onclick="handleBtnClick(this,'cy','New Plan')">New Plan</button>
+      <button class="btn btn-ghost" onclick="handleBtnClick(this,'cy','Import')">Import</button>
+      <button class="btn btn-danger btn-sm" onclick="handleBtnClick(this,'cy','Abort')">Abort</button>
+      <span style="margin-left:4px;display:flex;gap:5px"><span class="badge badge-c">v14.1.0</span><span class="badge badge-p">P0</span><span class="badge badge-g">Auto</span></span>
+      <button class="btn btn-out btn-sm" onclick="openDialog('cy')" style="margin-left:auto">Open Dialog</button>
+      <button class="btn btn-pri btn-sm" onclick="showToast('cy','Plan "Regression Smoke v14" completed — 94% pass')">Trigger Toast</button>
+    </div>
+  </div>
+
+  <div class="demo-section" id="skel-wrap-cy" onclick="toggleSkel('cy')" style="cursor:pointer">
+    <div class="sec-t" style="display:flex;justify-content:space-between">Skeleton Loading <span style="font-size:16px;color:var(--mu)">(click to toggle)</span></div>
+    <div class="skel-row"><div class="skel" style="width:60%;height:14px"></div><div class="skel" style="width:20%;height:14px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:45%;height:14px"></div><div class="skel" style="width:18%;height:14px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:55%;height:14px"></div><div class="skel" style="width:22%;height:14px;margin-left:auto"></div></div>
+    <div class="skel-content on" style="font-size:16px;color:var(--ok);padding:4px 12px">✓ Data loaded — 47 records retrieved</div>
+  </div>
+</main>
+</div>
+</div></div>
+
+<!-- ══════════════════════ XLAB ══════════════════════ -->
+<div class="canvas" id="cv-xl"><div class="dash xl" id="dash-xl">
+<header class="topbar"><span class="tb-title">Dashboard</span><span class="tb-gap"></span><span class="tb-tag">v14.1.0</span><span class="tb-tag">STAGING</span><div class="tb-av">JD</div></header>
+<div class="main">
+<aside class="sidebar">
+  <div class="side-logo"><i>CT</i><s>CamelTv</s></div>
+  <nav class="side-nav">
+    <a class="side-i on" data-nav="dashboard" onclick="navClick(this)"><b></b>Dashboard</a>
+    <a class="side-i" data-nav="testcases" onclick="navClick(this)"><b></b>Test Cases</a>
+    <a class="side-i" data-nav="testplans" onclick="navClick(this)"><b></b>Test Plans</a>
+    <a class="side-i" data-nav="apitests" onclick="navClick(this)"><b></b>API Tests</a>
+    <a class="side-i" data-nav="uitests" onclick="navClick(this)"><b></b>UI Tests</a>
+    <a class="side-i" data-nav="agentwb" onclick="navClick(this)"><b></b>Agent WB</a>
+    <a class="side-i" data-nav="reports" onclick="navClick(this)"><b></b>Reports</a>
+    <a class="side-i" data-nav="defects" onclick="navClick(this)"><b></b>Defects</a>
+    <a class="side-i" data-nav="settings" onclick="navClick(this)"><b></b>Settings</a>
+  </nav>
+</aside>
+<main class="content">
+  <div class="cards">
+    <div class="card" onclick="showToast('xl','Total Cases: 12,847')"><div class="l">Total Cases</div><div class="v">12,847</div><div class="s">+126 this week</div></div>
+    <div class="card" onclick="showToast('xl','Pass Rate: 94.2%')"><div class="l">Pass Rate</div><div class="v">94.2%</div><div class="s">↑ 1.8% vs last</div></div>
+    <div class="card" onclick="showToast('xl','Active Plans: 38')"><div class="l">Active Plans</div><div class="v">38</div><div class="s">8 running now</div></div>
+    <div class="card" onclick="showToast('xl','Open Defects: 142')"><div class="l">Open Defects</div><div class="v">142</div><div class="s">23 critical</div></div>
+  </div>
+
+  <div>
+    <div class="sec-t">Execution Progress</div>
+    <div class="ring-grid">
+      <div class="ring-card" onclick="animateRing(this,90)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 50 50"><circle class="track" cx="25" cy="25" r="21"/><circle class="val" cx="25" cy="25" r="21" stroke-dasharray="131.9" stroke-dashoffset="131.9" data-target="90"/></svg></div>
+        <div class="ring-num scramble">0%</div><div class="ring-lbl">API Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,65)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 50 50"><circle class="track" cx="25" cy="25" r="21"/><circle class="val" cx="25" cy="25" r="21" stroke-dasharray="131.9" stroke-dashoffset="131.9" data-target="65"/></svg></div>
+        <div class="ring-num scramble">0%</div><div class="ring-lbl">UI Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,98)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 50 50"><circle class="track" cx="25" cy="25" r="21"/><circle class="val" cx="25" cy="25" r="21" stroke-dasharray="131.9" stroke-dashoffset="131.9" data-target="98"/></svg></div>
+        <div class="ring-num scramble">0%</div><div class="ring-lbl">CI Smoke</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><span class="sec-t" style="margin-bottom:0">Progress Bars</span><button class="btn btn-out btn-sm" onclick="animateBars(this.closest('.demo-section'))">Replay</button></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">CORE_MODULE</span><div class="prog-bar"><div class="prog-bar-fill" data-target="96" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">API_LAYER</span><div class="prog-bar"><div class="prog-bar-fill" data-target="78" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">UI_E2E</span><div class="prog-bar"><div class="prog-bar-fill" data-target="42" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t">Tabs</div>
+    <div class="tabs-bar" id="tabs-xl">
+      <button class="tab on" data-panel="xl-t1" onclick="switchTab('xl',this)">All Runs</button>
+      <button class="tab" data-panel="xl-t2" onclick="switchTab('xl',this)">Passed</button>
+      <button class="tab" data-panel="xl-t3" onclick="switchTab('xl',this)">Failed</button>
+    </div>
+    <div class="tab-panel on" id="xl-t1"><span style="font-family:var(--mono);font-size:16px;color:var(--mu)">Showing 47 execution records from the last 7 days. 38 passed, 6 failed, 3 running.</span></div>
+    <div class="tab-panel" id="xl-t2"><span style="font-family:var(--mono);font-size:16px;color:var(--ok)">38 test plans completed successfully. Average duration: 8m 24s.</span></div>
+    <div class="tab-panel" id="xl-t3"><span style="font-family:var(--mono);font-size:16px;color:var(--err)">6 test plans have failures. 3 regression, 2 E2E, 1 integration.</span></div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t" style="display:flex;justify-content:space-between;align-items:center">Table <span style="font-family:var(--mono);font-size:15px;color:var(--mu)">(click row to select)</span></div>
+    <div class="tbl-wrap" id="tbl-xl">
+      <div class="tbl-hd"><span class="cn">Test Plan</span><span class="cs">Status</span><span class="ct">Elapsed</span><span class="cpct">Cov</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Regression Smoke v14</span><span class="cs"><span class="tag tag-ok">PASS</span></span><span class="ct">00:12:34</span><span class="cpct">94%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">API Auth Flow</span><span class="cs"><span class="tag tag-ok">PASS</span></span><span class="ct">00:03:18</span><span class="cpct">100%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">UI Checkout E2E</span><span class="cs"><span class="tag tag-err">FAIL</span></span><span class="ct">00:08:52</span><span class="cpct">67%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Perf Load Test</span><span class="cs"><span class="tag tag-run">RUN</span></span><span class="ct">00:45:01</span><span class="cpct">—</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Video Playback</span><span class="cs"><span class="tag tag-ok">PASS</span></span><span class="ct">00:20:07</span><span class="cpct">88%</span></div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <div class="sec-t">Buttons</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-pri" onclick="handleBtnClick(this,'xl','Run All')">Run All</button>
+      <button class="btn btn-out" onclick="handleBtnClick(this,'xl','New Plan')">New Plan</button>
+      <button class="btn btn-ghost" onclick="handleBtnClick(this,'xl','Import')">Import</button>
+      <button class="btn btn-danger btn-sm" onclick="handleBtnClick(this,'xl','Abort')">Abort</button>
+      <span style="margin-left:4px;display:flex;gap:5px"><span class="badge badge-c">v14.1.0</span><span class="badge badge-p">P0</span><span class="badge badge-g">Auto</span></span>
+      <button class="btn btn-out btn-sm" onclick="openDialog('xl')" style="margin-left:auto">Open Dialog</button>
+      <button class="btn btn-pri btn-sm" onclick="showToast('xl','Plan "regression-smoke-v14" executed — 94% pass rate')">Trigger Toast</button>
+    </div>
+  </div>
+
+  <div class="demo-section" id="skel-wrap-xl" onclick="toggleSkel('xl')" style="cursor:pointer">
+    <div class="sec-t" style="display:flex;justify-content:space-between">Skeleton Loading <span style="font-family:var(--mono);font-size:15px;color:var(--mu)">(click to toggle)</span></div>
+    <div class="skel-row"><div class="skel" style="width:60%;height:12px"></div><div class="skel" style="width:20%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:45%;height:12px"></div><div class="skel" style="width:18%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:55%;height:12px"></div><div class="skel" style="width:22%;height:12px;margin-left:auto"></div></div>
+    <div class="skel-content on" style="font-family:var(--mono);font-size:16px;color:var(--ok);padding:4px 12px">✓ Data loaded — 47 records retrieved from /api/runs</div>
+  </div>
+</main>
+</div>
+</div></div>
+
+<!-- ══════════════════════ LIQUID GLASS ══════════════════════ -->
+<div class="canvas" id="cv-lg"><div class="dash lg" id="dash-lg">
+<header class="topbar"><span class="tb-title">Dashboard</span><span class="tb-gap"></span><span class="tb-tag">v14.1.0</span><span class="tb-tag">Staging</span><div class="tb-av">JD</div></header>
+<div class="main">
+<aside class="sidebar">
+  <div class="side-logo"><i>CT</i><s>CamelTv</s></div>
+  <nav class="side-nav">
+    <a class="side-i on" data-nav="dashboard" onclick="navClick(this)">Dashboard</a>
+    <a class="side-i" data-nav="testcases" onclick="navClick(this)">Test Cases</a>
+    <a class="side-i" data-nav="testplans" onclick="navClick(this)">Test Plans</a>
+    <a class="side-i" data-nav="apitests" onclick="navClick(this)">API Tests</a>
+    <a class="side-i" data-nav="uitests" onclick="navClick(this)">UI Tests</a>
+    <a class="side-i" data-nav="agentwb" onclick="navClick(this)">Agent Workbench</a>
+    <a class="side-i" data-nav="reports" onclick="navClick(this)">Reports</a>
+    <a class="side-i" data-nav="defects" onclick="navClick(this)">Defects</a>
+    <a class="side-i" data-nav="settings" onclick="navClick(this)">Settings</a>
+  </nav>
+</aside>
+<main class="content">
+  <!-- Stat cards -->
+  <div class="cards">
+    <div class="card" onclick="showToast('lg','Total Cases: 12,847 — +126 this week')"><div class="l">Total Cases</div><div class="v">12,847</div><div class="s">+126 this week</div></div>
+    <div class="card" onclick="showToast('lg','Pass Rate: 94.2% — ↑ 1.8% from last run')"><div class="l">Pass Rate</div><div class="v">94.2%</div><div class="s">↑ 1.8% from last run</div></div>
+    <div class="card" onclick="showToast('lg','Active Plans: 38 — 8 running now')"><div class="l">Active Plans</div><div class="v">38</div><div class="s">8 running now</div></div>
+    <div class="card" onclick="showToast('lg','Open Defects: 142 — 23 critical')"><div class="l">Open Defects</div><div class="v">142</div><div class="s">23 critical</div></div>
+  </div>
+
+  <!-- Progress Rings -->
+  <div>
+    <div class="sec-t">Execution Progress <span style="font-size:14.5px;color:var(--mu)">(click to re-animate)</span></div>
+    <div class="ring-grid">
+      <div class="ring-card" onclick="animateRing(this,90)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="90"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">API Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,65)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="65"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">UI Tests</div>
+      </div>
+      <div class="ring-card" onclick="animateRing(this,98)">
+        <div class="ring-wrap"><svg class="ring-svg" viewBox="0 0 52 52"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="138.2" stroke-dashoffset="138.2" data-target="98"/></svg></div>
+        <div class="ring-num">0%</div><div class="ring-lbl">CI Smoke</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bars -->
+  <div class="demo-section" style="display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px"><span class="sec-t" style="margin-bottom:0">Progress Bars</span><button class="btn btn-out btn-sm" onclick="animateBars(this.closest('.demo-section'))">Replay</button></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">Core Module</span><div class="prog-bar"><div class="prog-bar-fill" data-target="96" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">API Layer</span><div class="prog-bar"><div class="prog-bar-fill" data-target="78" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+    <div class="prog-bar-row"><span class="prog-bar-lbl">UI E2E</span><div class="prog-bar"><div class="prog-bar-fill" data-target="42" style="width:0%"></div></div><span class="prog-bar-pct">0%</span></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="demo-section">
+    <div class="sec-t">Tabs</div>
+    <div class="tabs-bar" id="tabs-lg">
+      <button class="tab on" data-panel="lg-t1" onclick="switchTab('lg',this)">All Runs</button>
+      <button class="tab" data-panel="lg-t2" onclick="switchTab('lg',this)">Passed</button>
+      <button class="tab" data-panel="lg-t3" onclick="switchTab('lg',this)">Failed</button>
+    </div>
+    <div class="tab-panel on" id="lg-t1"><span style="font-size:16px;color:var(--mu)">Showing 47 execution records from the last 7 days. 38 passed, 6 failed, 3 running.</span></div>
+    <div class="tab-panel" id="lg-t2"><span style="font-size:16px;color:var(--ok)">38 test plans completed successfully. Average duration: 8m 24s.</span></div>
+    <div class="tab-panel" id="lg-t3"><span style="font-size:16px;color:var(--err)">6 test plans have failures. 3 regression, 2 E2E, 1 integration.</span></div>
+  </div>
+
+  <!-- Table -->
+  <div class="demo-section">
+    <div class="sec-t" style="display:flex;justify-content:space-between;align-items:center">Table <span style="font-size:14.5px;color:var(--mu)">(click row to select)</span></div>
+    <div class="tbl-wrap" id="tbl-lg">
+      <div class="tbl-hd"><span class="cn">Test Plan Name</span><span class="cs">Status</span><span class="ct">Elapsed</span><span class="cpct">Coverage</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Regression Smoke v14</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">12m 34s</span><span class="cpct">94%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">API Auth Flow</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">3m 18s</span><span class="cpct">100%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">UI Checkout E2E</span><span class="cs"><span class="tag tag-err">Fail</span></span><span class="ct">8m 52s</span><span class="cpct">67%</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Perf Load Test</span><span class="cs"><span class="tag tag-run">Running</span></span><span class="ct">45m 01s</span><span class="cpct">—</span></div>
+      <div class="tbl-row" onclick="toggleRow(this)"><span class="cn">Video Playback</span><span class="cs"><span class="tag tag-ok">Pass</span></span><span class="ct">20m 07s</span><span class="cpct">88%</span></div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="demo-section">
+    <div class="sec-t">Buttons <span style="font-size:14.5px;color:var(--mu)">(click each)</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn btn-pri" onclick="handleBtnClick(this,'lg','Run All')">Run All</button>
+      <button class="btn btn-out" onclick="handleBtnClick(this,'lg','New Plan')">New Plan</button>
+      <button class="btn btn-ghost" onclick="handleBtnClick(this,'lg','Import')">Import</button>
+      <button class="btn btn-danger btn-sm" onclick="handleBtnClick(this,'lg','Abort')">Abort</button>
+      <span style="margin-left:4px;display:flex;gap:5px"><span class="badge badge-c">v14.1.0</span><span class="badge badge-p">P0</span><span class="badge badge-g">Auto</span></span>
+      <button class="btn btn-out btn-sm" onclick="openDialog('lg')" style="margin-left:auto">Open Dialog</button>
+      <button class="btn btn-pri btn-sm" onclick="showToast('lg','Plan "Regression Smoke v14" completed — 94% pass rate')">Trigger Toast</button>
+    </div>
+  </div>
+
+  <!-- Skeleton -->
+  <div class="demo-section" id="skel-wrap-lg" onclick="toggleSkel('lg')" style="cursor:pointer">
+    <div class="sec-t" style="display:flex;justify-content:space-between">Skeleton Loading <span style="font-size:14.5px;color:var(--mu)">(click to toggle)</span></div>
+    <div class="skel-row"><div class="skel" style="width:60%;height:13px"></div><div class="skel" style="width:20%;height:13px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:45%;height:13px"></div><div class="skel" style="width:18%;height:13px;margin-left:auto"></div></div>
+    <div class="skel-row"><div class="skel" style="width:55%;height:13px"></div><div class="skel" style="width:22%;height:13px;margin-left:auto"></div></div>
+    <div class="skel-content on" style="font-size:16px;color:var(--ok);padding:4px 12px">✓ Data loaded — 47 records retrieved</div>
+  </div>
+</main>
+</div>
+</div></div>
+
+<!-- ══════════════════════ DIALOG OVERLAYS ══════════════════════ -->
+<!-- CP Dialog -->
+<div class="overlay" id="dlg-cp" onclick="if(event.target===this)closeDialog('cp')"><div class="dlg"><h3>CONFIRM EXECUTION</h3><p>Are you sure you want to run the full regression suite?<br>Estimated duration: 45 minutes. 847 test cases across 12 modules.</p><div class="acts"><button class="btn btn-ghost" onclick="closeDialog('cp')">CANCEL</button><button class="btn btn-pri" onclick="closeDialog('cp');showToast('cp','▶ EXECUTION STARTED — regression-smoke-v14')">▶ CONFIRM</button></div></div></div>
+<!-- AP Dialog -->
+<div class="overlay" id="dlg-ap" onclick="if(event.target===this)closeDialog('ap')"><div class="dlg"><h3>Confirm Execution</h3><p>Are you sure you want to run the full regression suite?<br>Estimated duration: 45 minutes. 847 test cases across 12 modules.</p><div class="acts"><button class="btn btn-ghost" onclick="closeDialog('ap')">Cancel</button><button class="btn btn-pri" onclick="closeDialog('ap');showToast('ap','Execution started — Regression Smoke v14')">Confirm</button></div></div></div>
+<!-- CY Dialog -->
+<div class="overlay" id="dlg-cy" onclick="if(event.target===this)closeDialog('cy')"><div class="dlg"><h3>Confirm Execution</h3><p>Are you sure you want to run the full regression suite?<br>Estimated duration: 45 minutes. 847 test cases across 12 modules.</p><div class="acts"><button class="btn btn-ghost" onclick="closeDialog('cy')">Cancel</button><button class="btn btn-pri" onclick="closeDialog('cy');showToast('cy','Execution started — Regression Smoke v14')">Confirm</button></div></div></div>
+<!-- XL Dialog -->
+<div class="overlay" id="dlg-xl" onclick="if(event.target===this)closeDialog('xl')"><div class="dlg"><h3>Confirm Execution</h3><p>Are you sure you want to run the full regression suite?<br>Estimated duration: 45 minutes. 847 test cases across 12 modules.</p><div class="acts"><button class="btn btn-ghost" onclick="closeDialog('xl')">Cancel</button><button class="btn btn-pri" onclick="closeDialog('xl');showToast('xl','Execution started — regression-smoke-v14')">Confirm</button></div></div></div>
+<!-- LG Dialog -->
+<div class="overlay" id="dlg-lg" onclick="if(event.target===this)closeDialog('lg')"><div class="dlg"><h3>Confirm Execution</h3><p>Are you sure you want to run the full regression suite?<br>Estimated duration: 45 minutes. 847 test cases across 12 modules.</p><div class="acts"><button class="btn btn-ghost" onclick="closeDialog('lg')">Cancel</button><button class="btn btn-pri" onclick="closeDialog('lg');showToast('lg','Execution started — Regression Smoke v14')">Confirm</button></div></div></div>
+
+<script>
+/* ═══════ THEME SWITCH ═══════ */
+function switchTheme(id, btn) {
+  document.querySelectorAll('.canvas').forEach(c => c.classList.remove('on'));
+  document.getElementById('cv-' + id).classList.add('on');
+  document.querySelectorAll('.pk-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  // Animate rings & bars for the new theme
+  setTimeout(() => {
+    document.querySelectorAll('#cv-'+id+' .ring-card').forEach(c => {
+      const v = c.querySelector('.val');
+      if(v && parseFloat(v.getAttribute('stroke-dashoffset')) > 100) animateRing(c, parseInt(v.dataset.target));
+    });
+    document.querySelectorAll('#cv-'+id+' .prog-bar-fill').forEach(b => {
+      if(parseFloat(b.style.width) < 5) animateBar(b, parseInt(b.dataset.target));
+    });
+  }, 150);
+}
+
+/* ═══════ SIDEBAR NAV ═══════ */
+function navClick(el) {
+  const nav = el.parentElement;
+  nav.querySelectorAll('.side-i').forEach(i => i.classList.remove('on'));
+  el.classList.add('on');
+}
+
+/* ═══════ TABS ═══════ */
+function switchTab(theme, btn) {
+  const bar = btn.parentElement;
+  bar.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  const panelId = btn.dataset.panel;
+  // find all tab-panels within the same demo-section
+  const section = bar.closest('.demo-section');
+  section.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+  document.getElementById(panelId).classList.add('on');
+}
+
+/* ═══════ DIALOG ═══════ */
+function openDialog(theme) {
+  document.getElementById('dlg-' + theme).classList.add('on');
+}
+function closeDialog(theme) {
+  document.getElementById('dlg-' + theme).classList.remove('on');
+}
+
+/* ═══════ TOAST ═══════ */
+let toastTimer;
+function showToast(theme, msg) {
+  const cv = document.getElementById('cv-' + theme);
+  // remove existing
+  const old = cv.querySelector('.toast');
+  if(old) old.remove();
+  clearTimeout(toastTimer);
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = theme === 'cp' ? '<span class="td"></span>' + msg : theme === 'lg' ? '💎 ' + msg : msg;
+  cv.appendChild(t);
+  toastTimer = setTimeout(() => { if(t.parentNode) t.remove(); }, 2500);
+}
+
+/* ═══════ BUTTON CLICK ═══════ */
+function handleBtnClick(btn, theme, label) {
+  btn.classList.add('btn-loading');
+  const orig = btn.innerHTML;
+  setTimeout(() => {
+    btn.classList.remove('btn-loading');
+    btn.innerHTML = orig;
+    showToast(theme, (label === 'Abort' ? '⚠ ' : '✓ ') + label + (label === 'Abort' ? ' — execution halted' : ' — action completed'));
+  }, 800 + Math.random() * 400);
+}
+
+/* ═══════ TABLE ROW SELECT ═══════ */
+function toggleRow(row) {
+  const wasSel = row.classList.contains('sel');
+  // deselect all in same table
+  const tbl = row.closest('.tbl-wrap');
+  tbl.querySelectorAll('.tbl-row').forEach(r => r.classList.remove('sel'));
+  if(!wasSel) row.classList.add('sel');
+}
+
+/* ═══════ SKELETON TOGGLE ═══════ */
+function toggleSkel(theme) {
+  const wrap = document.getElementById('skel-wrap-' + theme);
+  if(wrap.classList.contains('loading')) {
+    wrap.classList.remove('loading');
+  } else {
+    wrap.classList.add('loading');
+    setTimeout(() => wrap.classList.remove('loading'), 2200);
+  }
+}
+
+/* ═══════ PROGRESS RING — animate with optional scramble ═══════ */
+function animateRing(card, target) {
+  const circle = card.querySelector('.val');
+  const numEl = card.querySelector('.ring-num');
+  const total = parseFloat(circle.getAttribute('stroke-dasharray'));
+  const offset = total - (total * target / 100);
+  circle.style.strokeDashoffset = offset;
+
+  // Scramble text effect for cyberpunk + xlab
+  if(numEl.classList.contains('scramble')) {
+    scrambleText(numEl, target);
+  } else {
+    let cur = 0;
+    const step = () => {
+      cur += 2;
+      if(cur > target) cur = target;
+      numEl.textContent = Math.round(cur) + '%';
+      if(cur < target) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+}
+
+/* ═══════ TEXT SCRAMBLE ═══════ */
+function scrambleText(el, target) {
+  const chars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~0123456789ABCDEF';
+  let iterations = 0;
+  const maxIter = 14;
+  const iv = setInterval(() => {
+    iterations++;
+    if(iterations >= maxIter) {
+      el.textContent = target + '%';
+      clearInterval(iv);
+      return;
+    }
+    const progress = iterations / maxIter;
+    const scrambleLen = Math.floor((1 - progress) * 8);
+    let txt = '';
+    for(let i = 0; i < scrambleLen; i++) txt += chars[Math.floor(Math.random() * chars.length)];
+    txt += target + '%';
+    el.textContent = txt;
+  }, 50);
+}
+
+/* ═══════ PROGRESS BARS ═══════ */
+function animateBar(bar, target) {
+  bar.style.width = target + '%';
+  const row = bar.closest('.prog-bar-row');
+  if(row) {
+    const pct = row.querySelector('.prog-bar-pct');
+    if(pct) {
+      let cur = 0;
+      const step = () => {
+        cur += 2;
+        if(cur > target) cur = target;
+        pct.textContent = Math.round(cur) + '%';
+        if(cur < target) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+  }
+}
+function animateBars(section) {
+  section.querySelectorAll('.prog-bar-fill').forEach(b => {
+    b.style.width = '0%';
+    const row = b.closest('.prog-bar-row');
+    if(row) { const p = row.querySelector('.prog-bar-pct'); if(p) p.textContent = '0%'; }
+    setTimeout(() => animateBar(b, parseInt(b.dataset.target)), 80);
+  });
+}
+
+/* ═══════ INIT: animate rings/bars on page load ═══════ */
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.canvas.on .ring-card').forEach(c => {
+    const v = c.querySelector('.val');
+    if(v) { v.style.strokeDashoffset = v.getAttribute('stroke-dasharray'); }
+    setTimeout(() => animateRing(c, parseInt(c.querySelector('.val').dataset.target)), 400);
+  });
+  document.querySelectorAll('.canvas.on .prog-bar-fill').forEach(b => {
+    setTimeout(() => animateBar(b, parseInt(b.dataset.target)), 400);
+  });
+});
+</script>
+</body>
+</html>

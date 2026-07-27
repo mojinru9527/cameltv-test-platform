@@ -1,0 +1,60 @@
+# ============================================================
+# 正式环境（vpn07 tun 模式 + 全局流量）
+# 域名: www.camel1.tv / camell.to / camel2.live / camelscore.live / goals365.live / camellive.top
+# ⚠️ 执行任何 prod 命令前必须已连接 vpn07（当前暂用 direct 模式，接入内网后改回 vpn07）
+# ============================================================
+name: prod
+kind: prod
+
+# 正式环境入口域名
+base_url: "https://api.cameltv.live"
+
+# 代理策略：vpn07 tun 模式全局路由，不设显式 HTTP_PROXY（避免双路由冲突）
+proxy: ""
+vpn_required: true
+tun_name: ""
+proxy_strategy: vpn07
+
+# 期望版本
+expect_version: ""
+
+# 认证
+auth_token: "${CAMELTV_PROD_AUTH_TOKEN}"
+
+# ============================================================
+# 依赖服务
+# ============================================================
+dbs:
+  # 示例 — 替换为正式环境真实地址
+  # - name: main
+  #   type: mysql
+  #   dsn: "mysql+pymysql://${CAMELTV_PROD_DB_USER}:${CAMELTV_PROD_DB_PWD}@prod-db.internal:3306/cameltv"
+
+redis:
+  # - name: cache
+  #   host: prod-redis.internal
+  #   port: 6379
+  #   password: "${CAMELTV_PROD_REDIS_PWD}"
+
+mqs:
+  # - name: main
+  #   type: rabbitmq
+  #   url: "amqp://${CAMELTV_PROD_MQ_USER}:${CAMELTV_PROD_MQ_PWD}@prod-mq.internal:5672/"
+
+https:
+  - name: frontend
+    url: "https://www.camel1.tv/"
+  - name: api-gateway
+    url: "https://api.cameltv.live/"
+  - name: camel-service
+    url: "https://api.cameltv.live/camel-service/ee/sports_live/home_match?day=20260615"
+
+preset_data: []
+
+# ============================================================
+# ELK 日志（内网访问 — 与 test 同一套 ELK）
+# ============================================================
+elk:
+  index: "cameltv-prod-*"
+  trace_field: "traceId"
+  time_field: "@timestamp"

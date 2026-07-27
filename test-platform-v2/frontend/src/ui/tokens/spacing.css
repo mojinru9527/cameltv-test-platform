@@ -1,0 +1,17 @@
+/* ═══════════════════════════════════════════
+   Spacing Tokens — 最小可用的间距值
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* 组件内部优先 4–12，页面区域优先 24–32 */
+  --gap-micro: var(--space-1);   /* 4px — 图标与文字之间 */
+  --gap-tight: var(--space-2);   /* 8px — 紧密关联元素 */
+  --gap-compact: var(--space-3); /* 12px — 列表项、标签组 */
+  --gap-default: var(--space-4); /* 16px — 表单字段、卡片内边距 */
+  --gap-relaxed: var(--space-6); /* 24px — 区块间距 */
+  --gap-section: var(--space-8); /* 32px — 页面分区 */
+  --gap-page: var(--space-12);   /* 48px — 页面级外边距 */
+
+  /* 触摸目标最小尺寸（WCAG 2.5.5） */
+  --touch-min: 44px;
+}

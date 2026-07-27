@@ -1,0 +1,27 @@
+# 场景模板：VIP 老用户（高余额、active、带较多订单）
+# 用法: tp datafactory --site camel1 --env test1 --template vip_user --count 10
+locale: zh_CN
+db: app_db
+table: t_user
+count: 10
+parent_key: id
+
+fields:
+  username: {type: str, length: 10}
+  phone:    {type: phone}
+  email:    {type: email}
+  balance:  {type: int, min: 5000, max: 99999}   # VIP 高余额
+  status:   {type: enum, values: [active]}
+  level:    {type: enum, values: [vip, svip]}
+
+constraints:
+  - "balance >= 5000"
+
+relations:
+  - table: t_order
+    per_parent: 5-10                              # VIP 订单多
+    fk: user_id
+    fields:
+      amount:   {type: int, min: 50, max: 2000}
+      pay_type: {type: enum, values: [fiat, crypto]}
+      status:   {type: enum, values: [paid]}

@@ -1,0 +1,86 @@
+# ============================================================
+# 共享 API 基线（所有站点通用）。站点差异在 sites/<site>/site.yaml 覆盖。
+# 来源：tests/test-cases/体育平台最新版本-测试用例.md 的接口清单（路径为推断占位，联调后校正）。
+# 站点覆盖语法：site.yaml 的 apis.<name> 做 deep-merge；值设为 null 表示删除该接口。
+# ============================================================
+apis:
+  ugc_list:
+    path: /api/ugc/list
+    method: GET
+    description: 文章列表（在售+免费，置顶/比赛时间排序）
+    query: {categoryId: "A", page: 1, size: 20}
+    expect_fields: [data, total]
+
+  ugc_detail:
+    path: /api/ugc/detail
+    method: GET
+    description: 文章详情（含预测项、解锁脱敏）
+    query: {articleId: "X"}
+    expect_fields: [data]
+
+  ugc_unlock:
+    path: /api/ugc/unlock
+    method: POST
+    description: 单篇付费解锁
+    body: {articleId: "X"}
+    expect_fields: [success]
+
+  refund_eligibility:
+    path: /api/refund/eligibility
+    method: GET
+    description: 首单不中退币资格查询
+    expect_fields: [eligible]
+
+  refund_first_bet:
+    path: /api/refund/firstBet
+    method: POST
+    description: 首单不中退币
+    body: {orderId: "O1"}
+    expect_fields: [success]
+
+  pay_packages:
+    path: /api/pay/packages
+    method: GET
+    description: 充值套餐列表（含赠送 Bonus）
+    query: {payType: "fiat", currency: "USD", payMethodId: "M1"}
+    expect_fields: [data]
+
+  pay_order:
+    path: /api/pay/order
+    method: POST
+    description: 创建支付订单
+    body: {packageId: "P1", payMethodId: "M1"}
+    expect_fields: [orderId]
+
+  author_follow:
+    path: /api/author/follow
+    method: POST
+    description: 关注作者
+    body: {authorId: "X"}
+    expect_fields: [success]
+
+  author_unfollow:
+    path: /api/author/unfollow
+    method: POST
+    description: 取消关注
+    body: {authorId: "X"}
+    expect_fields: [success]
+
+  home_recommend:
+    path: /api/home/recommend
+    method: GET
+    description: 首页预测推荐（Yield 前5作者）
+    expect_fields: [data]
+
+  wallet_balance:
+    path: /api/wallet/balance
+    method: GET
+    description: 骆驼币余额
+    expect_fields: [balance]
+
+  wallet_records:
+    path: /api/wallet/records
+    method: GET
+    description: 骆驼币流水记录
+    query: {page: 1, size: 20}
+    expect_fields: [data, total]
