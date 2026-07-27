@@ -85,11 +85,9 @@
     "vitest": "^4.1.10"
   },
   "overrides": {
-    "openapi-typescript": {
-      "@redocly/openapi-core": {
-        "js-yaml": "4.3.0",
-        "minimatch": "10.2.5"
-      }
+    "@redocly/openapi-core": {
+      "js-yaml": "4.3.0",
+      "minimatch": "10.2.5"
     }
   }
 }

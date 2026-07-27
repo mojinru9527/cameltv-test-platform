@@ -3,7 +3,7 @@ title: "DEV 看板 — Batch 48 需求服务验收修复"
 owner: "qa-team"
 created: "2026-07-27"
 last_reviewed: "2026-07-27"
-status: "ready_for_push"
+status: "ci_fix_pending_push"
 tags: ["batch-48", "requirement-service", "acceptance-fixes", "agent-team", "codex"]
 related:
   - "../../docs/superpowers/plans/2026-07-27-batch-48-acceptance-fixes.md"
@@ -48,7 +48,7 @@ Batch 48 — 验收修复与规则沉淀
 | 8 | 生产验收规则与 Batch 48 复测资产 | ✅ | A01～A12、判定、证据、48 条复测字段与索引齐全 |
 | 9 | 全量验证、QA 报告和发布判定 | ✅ | 48/48 行为通过；A01～A12 全部通过，结论 `READY` |
 | 10 | 发布 `lanhu-mcp` 子模块提交 | ✅ | `74bfa7b463ef505008ea25466bc950ad9ed67324` 已从根仓配置的 fork 独立克隆并复核 |
-| 11 | 用户确认后 push / Draft PR | 🔒 | 根仓变更完成提交后，再次取得“无其他变动”与本次 push 授权 |
+| 11 | 用户确认后 push / Draft PR | 🔄 | 根仓已推送并创建 Draft PR #74；首轮 CI 的 npm 10 锁文件兼容修复待再次确认后推送 |
 
 状态：`⏳` 未开始｜`🔄` 进行中｜`✅` 已完成｜`🔒` 等待门禁。
 
@@ -95,4 +95,5 @@ Batch 48 — 验收修复与规则沉淀
 - 结果：48 通过、0 失败、0 阻塞；行为回归全部通过。
 - 已完成外部复测：真实 AI；旧 PG 隔离克隆升级与 metadata；真实 PG 多连接并发；真实蓝湖有界下载、并发提取、附件失败转人工、截图/OCR。
 - 发布结论：`READY`；`lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 已发布到根仓配置的可访问 fork，并通过独立克隆复核。
-- 待执行：提交最终证据更新，重新取得用户对根仓 push 的确认；根仓当前未 push、未建 PR。
+- 已创建 Draft PR #74；首轮 CI 暴露 npm 10 锁文件兼容问题，本地修复已通过干净安装、typecheck、124 项测试、build 与 high/critical=0 门禁。
+- 待执行：提交锁文件兼容修复与证据，重新取得用户对本次追加 push 的确认。
