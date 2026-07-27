@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -30,6 +30,9 @@ class RequirementReview(Base):
     case_index: Mapped[int] = mapped_column(default=0)       # AI 生成用例的 index
     case_type: Mapped[str] = mapped_column(default="func")   # func / api
     status: Mapped[str] = mapped_column(default="pending")   # pending / approved / rejected / edited
-    edited_data: Mapped[str] = mapped_column(default="{}")   # JSON: 编辑后的用例字段（仅 status=edited）
+    edited_data: Mapped[str] = mapped_column(
+        Text,
+        default="{}",
+    )  # JSON: 编辑后的用例字段（仅 status=edited）
     reviewer_id: Mapped[int] = mapped_column(default=0)
     reviewed_at: Mapped[datetime | None] = mapped_column(default=None)

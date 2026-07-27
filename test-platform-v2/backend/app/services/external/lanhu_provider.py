@@ -11,10 +11,12 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import inspect
 import json
 import re
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import httpx
 
@@ -42,6 +44,37 @@ def _data_dir() -> Path:
     if settings.data_dir:
         return Path(settings.data_dir)
     return _resolve_workspace_root() / "test-platform-v2" / "backend" / "data"
+
+
+def _load_lanhu_runtime() -> SimpleNamespace:
+    """Load the pinned lanhu-mcp API while tolerating optional login helpers."""
+    import lanhu_mcp_server as module  # type: ignore
+
+    auth_error = getattr(module, "LanhuAuthError", None)
+    auth_error_types = (
+        (auth_error,)
+        if isinstance(auth_error, type) and issubclass(auth_error, BaseException)
+        else ()
+    )
+    return SimpleNamespace(
+        LanhuExtractor=module.LanhuExtractor,
+        fix_html_files=module.fix_html_files,
+        auth_error_types=auth_error_types,
+        login=getattr(module, "lanhu_login", None),
+        save_cookie=getattr(module, "_save_cached_cookie", None),
+    )
+
+
+async def _download_lanhu_resources(
+    extractor, url: str, output_dir: str, target_version_id: str,
+) -> dict:
+    """Call either the pinned or newer lanhu-mcp download signature."""
+    parameters = inspect.signature(extractor.download_resources).parameters
+    if "target_version_id" in parameters:
+        return await extractor.download_resources(
+            url, output_dir, target_version_id=target_version_id,
+        )
+    return await extractor.download_resources(url, output_dir)
 
 
 # ── Changelog & Client Detection ──────────────────────────────
@@ -224,10 +257,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
     """
     sys.path.insert(0, str(_lanhu_mcp_dir()))
     try:
-        from lanhu_mcp_server import (
-            LanhuExtractor, LanhuAuthError, fix_html_files, lanhu_login,
-            _get_effective_cookie, _save_cached_cookie,
-        )
+        runtime = _load_lanhu_runtime()
 
         _page_id = ''
         if 'pageId=' in url:
@@ -236,7 +266,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                 _page_id = m.group(1)
 
         async def _do_extract(cookie_override: str = "", page_id: str = "") -> dict:
-            extractor = LanhuExtractor(cookie=cookie_override)
+            extractor = runtime.LanhuExtractor(cookie=cookie_override)
 
             params = extractor.parse_url(url)
             doc_id = params["doc_id"]
@@ -286,12 +316,12 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                     )
 
             resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
-            download_result = await extractor.download_resources(
-                effective_url, resource_dir, target_version_id=url_version_id,
+            download_result = await _download_lanhu_resources(
+                extractor, effective_url, resource_dir, url_version_id,
             )
 
             if download_result["status"] in ["downloaded", "updated"]:
-                fix_html_files(resource_dir)
+                runtime.fix_html_files(resource_dir)
 
             pages_info = await extractor.get_pages_list(effective_url)
             all_pages = pages_info["pages"]
@@ -586,19 +616,19 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
         # Try extraction with current cookie
         try:
             return await _do_extract(page_id=_page_id)
-        except LanhuAuthError as e:
-            if not auto_login:
+        except runtime.auth_error_types as e:
+            if not auto_login or runtime.login is None:
                 raise ValueError(
                     f"蓝湖认证失败，Cookie 已过期。"
-                    f"请在 .env 中设置 LANHU_USERNAME 和 LANHU_PASSWORD 以启用自动登录，"
-                    f"或手动获取 Cookie 填入 LANHU_COOKIE。\n"
+                    f"请手动获取 Cookie 填入 LANHU_COOKIE。\n"
                     f"错误详情: {str(e)[:200]}"
                 )
             print(f"[ai_service] Lanhu auth failed: {e}. Attempting auto-login...")
             try:
-                new_cookie = await lanhu_login()
+                new_cookie = await runtime.login()
                 if new_cookie:
-                    _save_cached_cookie(new_cookie)
+                    if runtime.save_cookie is not None:
+                        runtime.save_cookie(new_cookie)
                     print("[ai_service] Auto-login succeeded, retrying extraction with new cookie...")
                     return await _do_extract(cookie_override=new_cookie, page_id=_page_id)
                 else:
@@ -606,7 +636,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                         f"蓝湖自动登录失败：未获取到有效的 Cookie。"
                         f"请检查 .env 中的 LANHU_USERNAME 和 LANHU_PASSWORD 是否正确。"
                     )
-            except LanhuAuthError as login_err:
+            except runtime.auth_error_types as login_err:
                 raise ValueError(
                     f"蓝湖自动登录失败: {str(login_err)[:200]}。"
                     f"请检查 .env 中的 LANHU_USERNAME 和 LANHU_PASSWORD 是否正确，"
@@ -768,16 +798,10 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
     """
     sys.path.insert(0, str(_lanhu_mcp_dir()))
     try:
-        from lanhu_mcp_server import (  # type: ignore
-            LanhuAuthError,
-            LanhuExtractor,
-            fix_html_files,
-            lanhu_login,
-            _save_cached_cookie,
-        )
+        runtime = _load_lanhu_runtime()
 
         async def _do(cookie_override: str = "") -> dict:
-            extractor = LanhuExtractor(cookie=cookie_override)
+            extractor = runtime.LanhuExtractor(cookie=cookie_override)
             params = extractor.parse_url(url)
             doc_id = params.get("doc_id", "")
             url_version_id = params.get("version_id", "")
@@ -785,11 +809,11 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
                 raise ValueError("蓝湖链接缺少 docId，请复制具体设计稿页面链接")
 
             resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
-            download_result = await extractor.download_resources(
-                url, resource_dir, target_version_id=url_version_id,
+            download_result = await _download_lanhu_resources(
+                extractor, url, resource_dir, url_version_id,
             )
             if download_result.get("status") in ("downloaded", "updated"):
-                fix_html_files(resource_dir)
+                runtime.fix_html_files(resource_dir)
 
             pages_info = await extractor.get_pages_list(url)
             document_name = pages_info.get("document_name", "设计稿")
@@ -820,10 +844,17 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
 
         try:
             return await _do()
-        except LanhuAuthError:
-            new_cookie = await lanhu_login()
+        except runtime.auth_error_types:
+            if runtime.login is None:
+                return {
+                    "status": "failed",
+                    "error": "蓝湖认证失败，请更新 LANHU_COOKIE",
+                    "pages": [],
+                }
+            new_cookie = await runtime.login()
             if new_cookie:
-                _save_cached_cookie(new_cookie)
+                if runtime.save_cookie is not None:
+                    runtime.save_cookie(new_cookie)
                 return await _do(cookie_override=new_cookie)
             return {"status": "failed", "error": "蓝湖认证失败且自动登录未获取到 Cookie", "pages": []}
     except Exception as e:  # noqa: BLE001 — 统一以状态表达失败
@@ -831,4 +862,3 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
     finally:
         if str(_lanhu_mcp_dir()) in sys.path:
             sys.path.remove(str(_lanhu_mcp_dir()))
-

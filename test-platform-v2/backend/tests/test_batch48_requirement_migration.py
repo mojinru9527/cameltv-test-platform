@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 PREVIOUS_HEAD = "20260726_batch45"
-BATCH48_HEAD = "20260727_batch48"
+BATCH48_HEAD = "20260727_batch48_pg_parity"
 
 
 def _alembic_environment(database_path: Path) -> dict[str, str]:
@@ -83,10 +83,12 @@ def _create_previous_head_schema(database_path: Path) -> sa.Engine:
         "requirement_review",
         metadata,
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("requirement_id", sa.Integer(), nullable=False),
-        sa.Column("case_index", sa.Integer(), nullable=False),
-        sa.Column("case_type", sa.String(10), nullable=False),
-        sa.Column("status", sa.String(20), nullable=False),
+        sa.Column("requirement_id", sa.Integer(), nullable=True),
+        sa.Column("case_index", sa.Integer(), nullable=True),
+        sa.Column("case_type", sa.String(10), nullable=True),
+        sa.Column("status", sa.String(20), nullable=True),
+        sa.Column("edited_data", sa.Text(), nullable=True),
+        sa.Column("reviewer_id", sa.Integer(), nullable=True),
     )
     metadata.create_all(engine)
 
@@ -141,6 +143,8 @@ def _create_previous_head_schema(database_path: Path) -> sa.Engine:
                 "case_index": 0,
                 "case_type": "func",
                 "status": "approved",
+                "edited_data": "{}",
+                "reviewer_id": 5,
             },
         )
         connection.execute(
@@ -151,6 +155,8 @@ def _create_previous_head_schema(database_path: Path) -> sa.Engine:
                 "case_index": 0,
                 "case_type": "func",
                 "status": "rejected",
+                "edited_data": "{}",
+                "reviewer_id": 5,
             },
         )
 
@@ -219,16 +225,35 @@ def test_upgrade_repairs_stamped_old_schema_without_losing_data(tmp_path: Path) 
         "linked_api_endpoint_ids",
         "extraction_state",
         "extraction_progress",
+        "doc_id",
+        "version",
+        "parent_id",
+        "diff_json",
+        "diff_status",
     } <= requirement_columns.keys()
     assert {
         item["name"] for item in inspector.get_columns("requirement_module")
     } >= {"description", "sort_order"}
-    assert "source_case_index" in {
-        item["name"] for item in inspector.get_columns("test_case")
+    assert {
+        "source_case_index",
+        "api_endpoint_id",
+        "requirement_module_id",
+    } <= {item["name"] for item in inspector.get_columns("test_case")}
+    review_columns = {
+        item["name"]: item for item in inspector.get_columns("requirement_review")
     }
-    assert "reviewed_at" in {
-        item["name"] for item in inspector.get_columns("requirement_review")
-    }
+    assert "reviewed_at" in review_columns
+    assert all(
+        not review_columns[column_name]["nullable"]
+        for column_name in (
+            "requirement_id",
+            "case_index",
+            "case_type",
+            "status",
+            "edited_data",
+            "reviewer_id",
+        )
+    )
     assert "api_token" in inspector.get_table_names()
 
     assert (
@@ -253,6 +278,18 @@ def test_upgrade_repairs_stamped_old_schema_without_losing_data(tmp_path: Path) 
     assert "ix_requirement_document_release_bundle_id" in {
         item["name"] for item in inspector.get_indexes("requirement_document")
     }
+    assert {
+        "ix_requirement_document_doc_id",
+        "ix_requirement_document_parent_id",
+    } <= {
+        item["name"] for item in inspector.get_indexes("requirement_document")
+    }
+    assert {
+        "ix_test_case_api_endpoint_id",
+        "ix_test_case_requirement_module_id",
+    } <= {
+        item["name"] for item in inspector.get_indexes("test_case")
+    }
     assert "ix_api_token_project_id" in {
         item["name"] for item in inspector.get_indexes("api_token")
     }
@@ -261,7 +298,8 @@ def test_upgrade_repairs_stamped_old_schema_without_losing_data(tmp_path: Path) 
         document = connection.execute(
             sa.text(
                 "SELECT title, linked_api_endpoint_ids, extraction_state, "
-                "extraction_progress FROM requirement_document WHERE id = 1"
+                "extraction_progress, doc_id, version, parent_id, diff_json, "
+                "diff_status FROM requirement_document WHERE id = 1"
             )
         ).mappings().one()
         module = connection.execute(
@@ -292,6 +330,11 @@ def test_upgrade_repairs_stamped_old_schema_without_losing_data(tmp_path: Path) 
             "linked_api_endpoint_ids": "[]",
             "extraction_state": "{}",
             "extraction_progress": 0.0,
+            "doc_id": "",
+            "version": "",
+            "parent_id": None,
+            "diff_json": "",
+            "diff_status": "initial",
         }
         assert dict(module) == {
             "name": "旧模块",
@@ -312,8 +355,9 @@ def test_upgrade_repairs_stamped_old_schema_without_losing_data(tmp_path: Path) 
         connection.execute(
             sa.text(
                 "INSERT INTO requirement_review "
-                "(id, requirement_id, case_index, case_type, status, reviewed_at) "
-                "VALUES (3, 1, 1, 'func', 'pending', NULL)"
+                "(id, requirement_id, case_index, case_type, status, edited_data, "
+                "reviewer_id, reviewed_at) "
+                "VALUES (3, 1, 1, 'func', 'pending', '{}', 5, NULL)"
             )
         )
 
@@ -376,8 +420,62 @@ def test_batch48_is_the_only_head_and_target_models_are_registered() -> None:
         "linked_api_endpoint_ids",
         "extraction_state",
         "extraction_progress",
+        "doc_id",
+        "version",
+        "parent_id",
+        "diff_json",
+        "diff_status",
     } <= set(Base.metadata.tables["requirement_document"].columns.keys())
     assert {"description", "sort_order"} <= set(
         Base.metadata.tables["requirement_module"].columns.keys()
     )
-    assert "source_case_index" in Base.metadata.tables["test_case"].columns
+    assert {
+        "source_case_index",
+        "api_endpoint_id",
+        "requirement_module_id",
+    } <= set(Base.metadata.tables["test_case"].columns.keys())
+
+
+def test_pg_parity_stops_without_deleting_rows_when_nulls_need_remediation(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "batch48-null-guard.db"
+    engine = sa.create_engine(f"sqlite:///{database_path.as_posix()}")
+    metadata = sa.MetaData()
+    review = sa.Table(
+        "requirement_review",
+        metadata,
+        sa.Column("id", sa.Integer(), primary_key=True),
+        sa.Column("requirement_id", sa.Integer(), nullable=True),
+        sa.Column("case_index", sa.Integer(), nullable=True),
+        sa.Column("case_type", sa.String(10), nullable=True),
+        sa.Column("status", sa.String(20), nullable=True),
+        sa.Column("edited_data", sa.Text(), nullable=True),
+        sa.Column("reviewer_id", sa.Integer(), nullable=True),
+    )
+    metadata.create_all(engine)
+    with engine.begin() as connection:
+        connection.execute(
+            review.insert(),
+            {
+                "id": 1,
+                "requirement_id": None,
+                "case_index": 0,
+                "case_type": "func",
+                "status": "pending",
+                "edited_data": "{}",
+                "reviewer_id": 5,
+            },
+        )
+
+    _run_alembic(database_path, "stamp", "20260727_batch48")
+    with pytest.raises(subprocess.CalledProcessError) as error:
+        _run_alembic(database_path, "upgrade", "head")
+
+    assert "contains 1 rows with NULL" in error.value.stderr
+    assert "requirement_id" in error.value.stderr
+    assert "20260727_batch48" in _run_alembic(database_path, "current").stdout
+    with engine.connect() as connection:
+        assert connection.execute(
+            sa.select(sa.func.count()).select_from(review)
+        ).scalar_one() == 1

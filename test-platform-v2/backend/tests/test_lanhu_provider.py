@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 
 import pytest
 
@@ -19,6 +20,48 @@ def _run(url=_URL):
 
 
 class TestParseHelpers:
+    def test_pinned_runtime_without_optional_login_symbols_is_supported(self):
+        module_path = str(lanhu_provider._lanhu_mcp_dir())
+        sys.path.insert(0, module_path)
+        try:
+            runtime = lanhu_provider._load_lanhu_runtime()
+        finally:
+            sys.path.remove(module_path)
+
+        assert callable(runtime.LanhuExtractor)
+        assert callable(runtime.fix_html_files)
+        assert runtime.auth_error_types == ()
+        assert runtime.login is None
+        assert runtime.save_cookie is None
+
+    def test_download_resources_supports_pinned_signature(self):
+        class Extractor:
+            async def download_resources(self, url, output_dir, force_update=False):
+                assert force_update is False
+                return {"status": "downloaded"}
+
+        result = asyncio.run(
+            lanhu_provider._download_lanhu_resources(
+                Extractor(), _URL, "tmp", "version-1",
+            )
+        )
+        assert result["status"] == "downloaded"
+
+    def test_download_resources_preserves_newer_target_version_signature(self):
+        class Extractor:
+            async def download_resources(
+                self, url, output_dir, target_version_id="",
+            ):
+                assert target_version_id == "version-1"
+                return {"status": "cached"}
+
+        result = asyncio.run(
+            lanhu_provider._download_lanhu_resources(
+                Extractor(), _URL, "tmp", "version-1",
+            )
+        )
+        assert result["status"] == "cached"
+
     def test_parse_url_ids(self):
         doc, ver, page = lanhu_provider._parse_url_ids(_URL)
         assert doc == "e6b5ce1e" and ver == "26af" and page == "2b4c4235"
