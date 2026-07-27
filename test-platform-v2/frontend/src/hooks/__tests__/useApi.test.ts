@@ -6,6 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
+import { createElement, StrictMode, type ReactNode } from 'react'
 import { useApi } from '../useApi'
 
 // Helper: create a controllable promise
@@ -111,20 +112,40 @@ describe('useApi', () => {
 
   it('aborts in-flight request on unmount', async () => {
     const { promise, reject } = deferred<string>()
-    const fetchFn = vi.fn().mockReturnValue(promise)
+    let receivedSignal: AbortSignal | undefined
+    const fetchFn = vi.fn().mockImplementation((signal: AbortSignal) => {
+      receivedSignal = signal
+      return promise
+    })
 
     const { result, unmount } = renderHook(() => useApi(fetchFn, []))
 
     expect(result.current.isLoading).toBe(true)
+    await waitFor(() => expect(fetchFn).toHaveBeenCalledTimes(1))
 
     // Unmount before resolution
     unmount()
+    expect(receivedSignal?.aborted).toBe(true)
 
     // Reject with AbortError — should not cause state updates
     reject(new DOMException('Aborted', 'AbortError'))
 
     // No assertion needed — if the hook didn't handle abort correctly,
     // React would warn about state updates on unmounted component
+    expect(fetchFn).toHaveBeenCalledTimes(1)
+  })
+
+  it('starts exactly one effective initial request in React StrictMode', async () => {
+    const fetchFn = vi.fn().mockResolvedValue('loaded once')
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(StrictMode, null, children)
+
+    const { result } = renderHook(() => useApi(fetchFn, []), { wrapper })
+
+    await waitFor(() => {
+      expect(result.current.data).toBe('loaded once')
+    })
+
     expect(fetchFn).toHaveBeenCalledTimes(1)
   })
 })

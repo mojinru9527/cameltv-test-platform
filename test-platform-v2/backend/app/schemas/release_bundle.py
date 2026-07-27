@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -205,7 +206,7 @@ class ModuleAdminLinkCreate(BaseModel):
     """手动创建跨系统模块关联请求体。"""
     client_module_id: int
     admin_module_id: int
-    relation_type: str = "configures"
+    relation_type: Literal["links_to_admin", "configures"] = "configures"
 
 
 class ConfiguresLinkRequest(BaseModel):

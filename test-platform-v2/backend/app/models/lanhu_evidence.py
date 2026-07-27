@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Text
+from sqlalchemy import Index, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -23,6 +23,24 @@ from app.models.base import TimestampMixin
 class LanhuEvidenceJob(Base, TimestampMixin):
     """一次证据包采集任务。"""
     __tablename__ = "lanhu_evidence_job"
+    __table_args__ = (
+        Index(
+            "ix_lanhu_evidence_job_project_status",
+            "project_id",
+            "status",
+        ),
+        Index(
+            "ix_lanhu_evidence_job_project_doc_ver",
+            "project_id",
+            "doc_id",
+            "version_id",
+        ),
+        Index(
+            "ix_lanhu_evidence_job_status_heartbeat",
+            "status",
+            "heartbeat_at",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(index=True)
@@ -59,6 +77,23 @@ class LanhuEvidenceJob(Base, TimestampMixin):
 class LanhuEvidencePage(Base, TimestampMixin):
     """页面树中的一个蓝湖页面。"""
     __tablename__ = "lanhu_evidence_page"
+    __table_args__ = (
+        Index(
+            "ix_lanhu_evidence_page_job_order",
+            "job_id",
+            "order_index",
+        ),
+        Index(
+            "ix_lanhu_evidence_page_project_page",
+            "project_id",
+            "page_id",
+        ),
+        Index(
+            "ix_lanhu_evidence_page_job_review",
+            "job_id",
+            "review_status",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     job_id: Mapped[int] = mapped_column(index=True)
@@ -92,6 +127,14 @@ class LanhuEvidencePage(Base, TimestampMixin):
 class LanhuEvidenceAsset(Base, TimestampMixin):
     """截图 / Word / JSON / 文件资产。"""
     __tablename__ = "lanhu_evidence_asset"
+    __table_args__ = (
+        Index(
+            "ix_lanhu_evidence_asset_job_page_type",
+            "job_id",
+            "page_id",
+            "asset_type",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     job_id: Mapped[int] = mapped_column(index=True)

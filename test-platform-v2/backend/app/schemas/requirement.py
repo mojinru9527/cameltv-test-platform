@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── Document ──
@@ -56,12 +56,16 @@ class RequirementDocumentOut(BaseModel):
     parent_id: Optional[int] = None
     diff_json: str = ""
     diff_status: str = "initial"  # initial | update
+    linked_swagger_id: Optional[int] = None
+    linked_api_endpoint_ids: list[int] = Field(default_factory=list)
     created_at: Optional[datetime] = None
 
 
 # ── AI Generated Case ──
 
 class AIGeneratedCase(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     index: int = 0
     title: str = ""
     case_type: str = "manual"       # manual
@@ -76,8 +80,8 @@ class AIGeneratedCase(BaseModel):
     remark: str = ""
     imported: bool = False          # whether this case has been imported
     client_scope: list[str] = []    # ["app", "pc", "web"] — applicable client platforms
-    _inherited: bool = False         # (batch-26) inherited from previous version
-    _from_version: str = ""          # (batch-26) which version this case came from
+    inherited: bool = Field(False, alias="_inherited")
+    from_version: str = Field("", alias="_from_version")
 
 
 # ── Requirement Analysis (two-phase AI output) ──
@@ -113,12 +117,16 @@ class AIGenerateResult(BaseModel):
 # ── Stage 1: Feature Extraction ──
 
 class TestFunctionPoint(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str = ""                    # "FP-1"
     title: str = ""                 # Short label
     description: str = ""           # Detailed description
     type: str = "functional"        # functional | ui | data | integration
     client_scope: list[str] = []    # ["app", "pc", "web"] — applicable client platforms
     issues: list[Issue] = []
+    inherited: bool = Field(False, alias="_inherited")
+    from_version: str = Field("", alias="_from_version")
 
 
 class VersionInfo(BaseModel):
@@ -167,9 +175,27 @@ class GenerateRequest(BaseModel):
 
 class CaseImportRequest(BaseModel):
     indices: list[int]
+    edited_cases: list[AIGeneratedCase] = Field(default_factory=list)
 
 
 class CaseImportResult(BaseModel):
     imported: int
     skipped: int
     total: int
+
+
+class RequirementReviewRequest(BaseModel):
+    action: Literal["approve", "reject", "edit"]
+    edited_data: dict = Field(default_factory=dict)
+
+
+class RequirementReviewCase(AIGeneratedCase):
+    review_status: str = "pending"
+    edited_data: dict | None = None
+
+
+class RequirementReviewState(BaseModel):
+    document_title: str = ""
+    functional_cases: list[RequirementReviewCase] = Field(default_factory=list)
+    api_cases: list[RequirementReviewCase] = Field(default_factory=list)
+    summary: dict[str, int] = Field(default_factory=dict)

@@ -78,7 +78,7 @@ export interface DashboardStats {
 
 // ========== 需求文档 ==========
 
-export interface RequirementDocument {
+export interface RequirementDocumentBrief {
   id: number
   project_id: number
   creator_id: number
@@ -86,7 +86,6 @@ export interface RequirementDocument {
   title: string
   file_type: string
   source_ref: string
-  content: string
   status: string
   extraction_status?: string  // not_started | extracting | pending_review | confirmed
   extraction_progress?: number  // V2: 0.0 - 1.0
@@ -97,8 +96,30 @@ export interface RequirementDocument {
   diff_status?: string     // batch-26: "initial" | "update"
   version?: string         // batch-26: parsed version
   parsed_type: string
-  excel_cases: Record<string, string>[]
   created_at: string | null
+}
+
+export interface RequirementDocument extends RequirementDocumentBrief {
+  content: string
+  excel_cases: Record<string, string>[]
+  linked_swagger_id?: number | null
+  linked_api_endpoint_ids?: number[]
+}
+
+export interface RequirementCoverage {
+  document_id: number
+  title: string
+  status: string
+  total_cases: number
+  imported_count: number
+  cases_in_plans: number
+  cases_executed: number
+  cases_passed: number
+  cases_with_defects: number
+  coverage_rate: number
+  execution_rate: number
+  pass_rate: number
+  cases: Record<string, unknown>[]
 }
 
 export interface AIGeneratedCase {
@@ -151,11 +172,17 @@ export interface AIGenerateResult {
 
 export interface ApiMatchItem {
   req_id: string
+  title?: string
   endpoint_id: number
   method: string
   path: string
   summary: string
   confidence: number
+}
+
+export interface ApiMatchSelection {
+  service_id: number | null
+  endpoint_ids: number[]
 }
 
 // ── Stage 1: Feature Extraction ──

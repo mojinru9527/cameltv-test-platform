@@ -1,7 +1,7 @@
 ---
 title: "CamelTv 测试策略总纲"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-07-27"
 status: "active"
 expires: "2026-12-26"
 tags: ["testing", "strategy", "test-pyramid", "quality"]
@@ -33,7 +33,7 @@ related: ["document-standards.md", "common-pitfalls.md", "repo-map.md", "../test
 |------|------|---------|---------|-----------|
 | **单元测试** | pytest (BE) + vitest (FE) | 核心 Service 80%+ | 每次 PR | ✅ 是 |
 | **集成/API 测试** | pytest + httpx (BE) / tp api (v1 CLI) | 所有公开 API 90%+ | 每次 PR + 每日回归 | ✅ 是 (关键路径) |
-| **E2E / 冒烟** | Playwright / 手动 | P0 用户旅程 100% | 每日 + 部署后 | ⚠️ 告警 |
+| **E2E / 冒烟** | Playwright / 手动 | P0 用户旅程 100% | 每日 + 部署后 + 生产验收 | ✅ P0 生产验收失败即阻塞 |
 
 ---
 
@@ -48,13 +48,13 @@ related: ["document-standards.md", "common-pitfalls.md", "repo-map.md", "../test
 test-platform-v2/backend/tests/
 ├── test_auth.py          # 认证逻辑
 ├── test_testcase.py      # 用例 CRUD
-└── (待补齐各模块...)
+└── test_{module}.py      # 各模块按功能增量维护
 ```
 
 **前端 (vitest)**：
 ```
 test-platform-v2/frontend/src/
-├── __tests__/            # (待建立)
+├── **/__tests__/         # 测试与所属模块就近维护
 ```
 
 **约定**：
@@ -87,6 +87,8 @@ test-platform-v2/frontend/src/
 **范围**：完整用户旅程，跨前端→后端→数据库。
 
 **工具**：Playwright (TypeScript) — `tests/automation/ui/`
+
+**生产验收硬门禁**：任一 P0 浏览器/E2E 用例失败、阻塞或未执行，生产验收结论必须为 `NEEDS WORK`。即使单元测试、API 测试、类型检查和构建全部通过，也不得以此抵消浏览器真实用户旅程失败。外部关键链路只有在真实环境完成且证据可复核后才能标记通过。
 
 **UI 自动化模块 (6 个)**：
 | 模块 | 覆盖范围 | P0 用例数 |

@@ -31,7 +31,7 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 
 > **一句话职责**：生产级全链路测试管理平台，覆盖「需求 → AI 用例 → 用例库 → 测试计划 → 执行 → 报告/缺陷」闭环。
 >
-> **技术栈**：Python 3.12 + FastAPI + SQLAlchemy 2.0 | React 18 + TypeScript + shadcn/ui + Vite 5
+> **技术栈**：Python 3.12 + FastAPI + SQLAlchemy 2.0 | React 18 + TypeScript + shadcn/ui + Vite 7
 
 | 子目录 | 职责 | 关键文件 |
 |--------|------|---------|

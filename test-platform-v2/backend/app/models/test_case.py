@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -14,6 +15,14 @@ if TYPE_CHECKING:
 
 class TestCase(Base, TimestampMixin):
     __tablename__ = "test_case"
+    __table_args__ = (
+        UniqueConstraint(
+            "project_id",
+            "source_doc_id",
+            "source_case_index",
+            name="uq_test_case_ai_source_index",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(default=0, index=True)
@@ -55,6 +64,7 @@ class TestCase(Base, TimestampMixin):
     # 来源追溯
     source: Mapped[str] = mapped_column(default="migration")      # manual / swagger_import / migration / ai_generated
     source_doc_id: Mapped[int | None] = mapped_column(default=None, index=True)  # 来源需求文档 ID
+    source_case_index: Mapped[int | None] = mapped_column(default=None, index=True)  # AI 结果中的稳定全局索引
     old_id: Mapped[int | None] = mapped_column(default=None)      # 旧库原始 ID
 
     # 评审

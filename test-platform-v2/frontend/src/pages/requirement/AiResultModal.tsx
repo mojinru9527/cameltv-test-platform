@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { confirmExtraction, generateTestCases, importCases, matchApiEndpoints } from '@/api/requirement'
+import {
+  confirmApiMatches,
+  confirmExtraction,
+  fetchApiMatchSelection,
+  generateTestCases,
+  importCases,
+  matchApiEndpoints,
+  reviewCase,
+} from '@/api/requirement'
+import { fetchApiServices } from '@/api/apitest'
 import type {
-  AIGenerateResult, AIGeneratedCase, FeatureExtractionResult, RequirementAnalysis, TestModule, ApiMatchItem,
+  AIGenerateResult, AIGeneratedCase, FeatureExtractionResult, RequirementAnalysis,
+  TestModule, ApiMatchItem, ApiService,
 } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -227,7 +237,7 @@ function InlineEditRow({
   onCancel,
 }: {
   initial: AIGeneratedCase
-  onSave: (updated: AIGeneratedCase) => void
+  onSave: (updated: AIGeneratedCase) => Promise<boolean>
   onCancel: () => void
 }) {
   const [title, setTitle] = useState(initial.title || '')
@@ -239,22 +249,28 @@ function InlineEditRow({
   })
   const [expectedResult, setExpectedResult] = useState(initial.expected_result || '')
   const [remark, setRemark] = useState(initial.remark || '')
+  const [saving, setSaving] = useState(false)
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const t = title.trim()
     if (!t) { toast.warning('请输入用例标题'); return }
     let s = steps.trim()
     if (s) { try { JSON.parse(s) } catch { toast.warning('步骤需为有效 JSON 格式'); return } }
-    onSave({
-      ...initial,
-      title: t,
-      priority,
-      module: module.trim(),
-      preconditions: preconditions.trim(),
-      steps: s,
-      expected_result: expectedResult.trim(),
-      remark: remark.trim(),
-    })
+    setSaving(true)
+    try {
+      await onSave({
+        ...initial,
+        title: t,
+        priority,
+        module: module.trim(),
+        preconditions: preconditions.trim(),
+        steps: s,
+        expected_result: expectedResult.trim(),
+        remark: remark.trim(),
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -301,8 +317,11 @@ function InlineEditRow({
             <Textarea rows={2} placeholder="整体预期结果描述" value={expectedResult} onChange={(e) => setExpectedResult(e.target.value)} />
           </div>
           <div className="sm:col-span-2 lg:col-span-3 flex items-center gap-2 pt-1">
-            <Button size="sm" onClick={handleSave}>保存</Button>
-            <Button size="sm" variant="outline" onClick={onCancel}>取消</Button>
+            <Button size="sm" onClick={handleSave} disabled={saving}>
+              {saving && <Loader2 className="size-3.5 animate-spin" />}
+              保存
+            </Button>
+            <Button size="sm" variant="outline" onClick={onCancel} disabled={saving}>取消</Button>
           </div>
         </div>
       </TableCell>
@@ -336,6 +355,10 @@ export default function AiResultModal({
   const [apiMatches, setApiMatches] = useState<ApiMatchItem[]>([])
   const [loadingMatches, setLoadingMatches] = useState(false)
   const [selectedApiKeys, setSelectedApiKeys] = useState<number[]>([])
+  const [apiServices, setApiServices] = useState<ApiService[]>([])
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null)
+  const [confirmedEndpointIds, setConfirmedEndpointIds] = useState<Set<number>>(new Set())
+  const [savingMatches, setSavingMatches] = useState(false)
 
   // Initialize extraction state when extractionResult changes
   useEffect(() => {
@@ -354,19 +377,42 @@ export default function AiResultModal({
   // ── Fetch API matches when modal opens with result ──
   useEffect(() => {
     if (open && documentId && apiCases.length > 0) {
+      const controller = new AbortController()
       setLoadingMatches(true)
-      // P0-2: Pass integration requirements extracted from api cases
       const integrationReqs = apiCases.map((c: any) => ({
         id: c.id || c.title || '',
         title: c.title || '',
         description: c.expected_result || c.api_endpoint || '',
       }))
-      matchApiEndpoints(documentId, integrationReqs)
-        .then((matches) => setApiMatches(matches || []))
-        .catch(() => setApiMatches([]))
-        .finally(() => setLoadingMatches(false))
+      Promise.all([
+        fetchApiServices(),
+        fetchApiMatchSelection(documentId, controller.signal),
+      ])
+        .then(async ([services, selection]) => {
+          if (controller.signal.aborted) return
+          setApiServices(services || [])
+          setSelectedServiceId(selection.service_id)
+          setConfirmedEndpointIds(new Set(selection.endpoint_ids || []))
+          const matches = await matchApiEndpoints(
+            documentId,
+            integrationReqs,
+            selection.service_id ?? undefined,
+            controller.signal,
+          )
+          if (!controller.signal.aborted) setApiMatches(matches || [])
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) setApiMatches([])
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setLoadingMatches(false)
+        })
+      return () => controller.abort()
     } else {
       setApiMatches([])
+      setApiServices([])
+      setSelectedServiceId(null)
+      setConfirmedEndpointIds(new Set())
     }
   }, [open, documentId, apiCases.length])
   const isViewMode = mode === 'view'
@@ -423,10 +469,17 @@ export default function AiResultModal({
       toast.warning('请至少选择一条用例')
       return
     }
+    if (editingIndex !== null) {
+      toast.warning('请先保存或取消正在编辑的用例')
+      return
+    }
     if (documentId == null) return
     setImporting(true)
     try {
-      const res = await importCases(documentId, indices)
+      const finalEdits = indices
+        .map((index) => editedCases.get(index))
+        .filter((item): item is AIGeneratedCase => item != null)
+      const res = await importCases(documentId, indices, finalEdits)
       toast.success(`成功导入 ${res.imported} 条功能用例` + (res.skipped > 0 ? `，${res.skipped} 条跳过` : ''))
       setSelectedFuncKeys([])
       setEditedCases(new Map())
@@ -464,14 +517,73 @@ export default function AiResultModal({
     setEditingIndex(c.index)
   }
 
-  const handleSaveEdit = (updated: AIGeneratedCase) => {
-    setEditedCases((prev) => {
-      const next = new Map(prev)
-      next.set(updated.index, updated)
+  const handleSaveEdit = async (updated: AIGeneratedCase): Promise<boolean> => {
+    if (documentId == null) return false
+    try {
+      await reviewCase(documentId, updated.index, 'edit', updated)
+      setEditedCases((prev) => {
+        const next = new Map(prev)
+        next.set(updated.index, updated)
+        return next
+      })
+      setEditingIndex(null)
+      toast.success(`用例 #${updated.index} 已保存`)
+      return true
+    } catch {
+      toast.error('保存编辑失败，未导入任何旧数据')
+      return false
+    }
+  }
+
+  const handleServiceChange = async (value: string) => {
+    if (documentId == null) return
+    const serviceId = Number(value)
+    setSelectedServiceId(serviceId)
+    setConfirmedEndpointIds(new Set())
+    setLoadingMatches(true)
+    try {
+      const integrationReqs = apiCases.map((c: any) => ({
+        id: c.id || c.title || '',
+        title: c.title || '',
+        description: c.expected_result || c.api_endpoint || '',
+      }))
+      const matches = await matchApiEndpoints(documentId, integrationReqs, serviceId)
+      setApiMatches(matches || [])
+    } catch {
+      setApiMatches([])
+      toast.error('API 端点匹配失败')
+    } finally {
+      setLoadingMatches(false)
+    }
+  }
+
+  const toggleMatchedEndpoint = (endpointId: number) => {
+    setConfirmedEndpointIds((previous) => {
+      const next = new Set(previous)
+      if (next.has(endpointId)) next.delete(endpointId)
+      else next.add(endpointId)
       return next
     })
-    setEditingIndex(null)
-    toast.success(`用例 #${updated.index} 已更新`)
+  }
+
+  const handleConfirmMatches = async () => {
+    if (documentId == null || selectedServiceId == null) {
+      toast.warning('请先选择 API 服务')
+      return
+    }
+    setSavingMatches(true)
+    try {
+      const selection = await confirmApiMatches(documentId, {
+        service_id: selectedServiceId,
+        endpoint_ids: Array.from(confirmedEndpointIds),
+      })
+      setConfirmedEndpointIds(new Set(selection.endpoint_ids || []))
+      toast.success('API 匹配已确认并保存')
+    } catch {
+      toast.error('保存 API 匹配失败')
+    } finally {
+      setSavingMatches(false)
+    }
   }
 
   // ── Extraction handlers ──
@@ -930,20 +1042,66 @@ export default function AiResultModal({
               <TabsContent value="api" className="mt-0">
                 <div className="max-h-[55vh] overflow-auto space-y-3 pr-1">
                   {/* API Matches Banner */}
-                  {apiMatches.length > 0 && (
-                    <Alert className="border-green-200 bg-green-50">
+                  <Alert className="border-green-200 bg-green-50">
                       <Link2 className="size-4 text-green-600" />
-                      <AlertTitle className="text-green-800 text-sm">已匹配 {apiMatches.length} 个 API 端点</AlertTitle>
-                      <AlertDescription className="text-green-700 text-xs">
-                        {apiMatches.slice(0, 5).map((m) => (
-                          <Badge key={m.endpoint_id} variant="outline" className="mr-1 mb-1 border-green-200 bg-white text-green-700 text-[10px]">
-                            {m.method} {m.path}
-                          </Badge>
-                        ))}
-                        {apiMatches.length > 5 && <span className="text-muted-foreground">+{apiMatches.length - 5} 更多</span>}
+                      <AlertTitle className="text-green-800 text-sm">
+                        候选匹配 {apiMatches.length} 个，已确认 {confirmedEndpointIds.size} 个
+                      </AlertTitle>
+                      <AlertDescription className="space-y-2 text-green-700 text-xs">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                          <Select
+                            value={selectedServiceId == null ? '' : String(selectedServiceId)}
+                            onValueChange={handleServiceChange}
+                          >
+                            <SelectTrigger className="h-8 w-full bg-white sm:w-[240px]" aria-label="选择 API 服务">
+                              <SelectValue placeholder="选择 API 服务后确认匹配" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {apiServices.map((service) => (
+                                <SelectItem key={service.id} value={String(service.id)}>
+                                  {service.display_name || service.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-white"
+                            onClick={handleConfirmMatches}
+                            disabled={savingMatches || selectedServiceId == null}
+                          >
+                            {savingMatches && <Loader2 className="size-3.5 animate-spin" />}
+                            确认并保存匹配
+                          </Button>
+                        </div>
+                        <div>
+                          {apiMatches.slice(0, 8).map((m) => {
+                            const selected = confirmedEndpointIds.has(m.endpoint_id)
+                            return (
+                              <button
+                                key={`${m.req_id}-${m.endpoint_id}`}
+                                type="button"
+                                className="mr-1 mb-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                onClick={() => toggleMatchedEndpoint(m.endpoint_id)}
+                                aria-pressed={selected}
+                                aria-label={`${selected ? '取消' : '选择'}匹配 ${m.method} ${m.path}`}
+                              >
+                                <Badge
+                                  variant="outline"
+                                  className={selected
+                                    ? 'border-green-500 bg-green-100 text-green-800 text-[10px]'
+                                    : 'border-green-200 bg-white text-green-700 text-[10px]'}
+                                >
+                                  {m.method} {m.path}
+                                </Badge>
+                              </button>
+                            )
+                          })}
+                          {apiMatches.length > 8 && <span className="text-muted-foreground">+{apiMatches.length - 8} 更多</span>}
+                        </div>
                       </AlertDescription>
                     </Alert>
-                  )}
 
                   {loadingMatches && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
@@ -1028,7 +1186,13 @@ export default function AiResultModal({
                               <TableCell className="break-words max-w-[230px] text-xs align-top whitespace-normal">{display.expected_result || '-'}</TableCell>
                               <TableCell className="text-center">
                                 {matchedEndpoint ? (
-                                  <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 text-[10px]" title={`${matchedEndpoint.method} ${matchedEndpoint.path} (${Math.round(matchedEndpoint.confidence * 100)}%)`}>
+                                  <Badge
+                                    variant="outline"
+                                    className={confirmedEndpointIds.has(matchedEndpoint.endpoint_id)
+                                      ? 'border-green-500 bg-green-100 text-green-800 text-[10px]'
+                                      : 'border-green-200 bg-green-50 text-green-700 text-[10px]'}
+                                    title={`${matchedEndpoint.method} ${matchedEndpoint.path} (${Math.round(matchedEndpoint.confidence * 100)}%)`}
+                                  >
                                     <Link2 className="size-3" />
                                   </Badge>
                                 ) : (

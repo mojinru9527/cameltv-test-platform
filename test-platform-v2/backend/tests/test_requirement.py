@@ -97,27 +97,23 @@ class TestPageSchema:
 # ── P0-4: Exception logging tests ──
 
 class TestImportCasesErrorHandling:
-    """Verify import_cases logs errors instead of silently swallowing them."""
+    """Verify import_cases logs, rolls back, and propagates transaction errors."""
 
     @patch("app.services.requirement_service.logger")
-    @patch("app.core.base_service.transaction")
-    def test_exception_is_logged(self, mock_transaction, mock_logger):
-        mock_transaction.return_value.__enter__.side_effect = RuntimeError("DB crash")
+    def test_exception_is_logged_and_raised(self, mock_logger):
         mock_db = MagicMock()
+        mock_db.scalar.side_effect = RuntimeError("DB crash")
 
         cases = [
             {"title": "case1", "case_type": "manual", "index": 0},
             {"title": "case2", "case_type": "api", "index": 1},
         ]
 
-        result = import_cases(mock_db, doc_id=42, cases=cases, project_id=1)
+        with pytest.raises(RuntimeError, match="DB crash"):
+            import_cases(mock_db, doc_id=42, cases=cases, project_id=1)
 
-        # Should not raise, but should log error
         mock_logger.error.assert_called()
-        # Should report all cases as skipped
-        assert result["imported"] == 0
-        assert result["skipped"] == 2
-        assert result["total"] == 2
+        mock_db.rollback.assert_called_once()
 
 
 # ── Edge cases ──

@@ -1,13 +1,20 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
-import { fetchDomains, fetchTestCases } from '@/api/testcase'
+import { fetchDomains } from '@/api/testcase'
 import {
-  deleteRequirement, extractFeatures, fetchGeneratedCases, fetchRequirements,
-  generateTestCases, getExtraction, uploadRequirement,
+  confirmExtraction, deleteRequirement, extractFeatures, fetchGeneratedCases,
+  fetchRequirement, fetchRequirementCoverage, fetchRequirements,
+  generateTestCases, getOrCreateExtraction, uploadRequirement,
 } from '@/api/requirement'
-import type { AIGenerateResult, FeatureExtractionResult, RequirementDocument } from '@/types'
+import type {
+  AIGenerateResult,
+  FeatureExtractionResult,
+  RequirementDocument,
+  RequirementDocumentBrief,
+  RequirementCoverage,
+} from '@/types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -75,8 +82,6 @@ const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'outline'; classNa
 
 interface RequirementData {
   domains: any[]
-  cases: any[]
-  docs: RequirementDocument[]
 }
 
 export default function RequirementPage() {
@@ -94,9 +99,11 @@ export default function RequirementPage() {
   const [evJobId, setEvJobId] = useState<number | null>(null)
   const [previewExpanded, setPreviewExpanded] = useState(false)
   const navigate = useNavigate()
-  const [deleteTarget, setDeleteTarget] = useState<RequirementDocument | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<RequirementDocumentBrief | null>(null)
   const [docPage, setDocPage] = useState(1)
   const [domainPage, setDomainPage] = useState(1)
+  const [debouncedKeyword, setDebouncedKeyword] = useState('')
+  const [evidenceRefreshKey, setEvidenceRefreshKey] = useState(0)
 
   // ── Stage 1: Feature Extraction state ──
   const [extractionResult, setExtractionResult] = useState<FeatureExtractionResult | null>(null)
@@ -137,30 +144,84 @@ export default function RequirementPage() {
   const docPageSize = 10
   const domainPageSize = 8
 
-  // ── Data fetching with useApi — loads all three data sources in parallel ──
-  const { data, isLoading, isRefetching, isError, error, refetch } = useApi<RequirementData>(
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedKeyword(keyword.trim()), 300)
+    return () => window.clearTimeout(timer)
+  }, [keyword])
+
+  // Domain metadata is independent from the server-paginated document list.
+  const {
+    data: metadata,
+    isLoading: isMetadataLoading,
+    isRefetching: isMetadataRefetching,
+    refetch: refetchMetadata,
+  } = useApi<RequirementData>(
     async () => {
-      const [domainData, caseData, docData]: any[] = await Promise.all([
-        fetchDomains(),
-        fetchTestCases({ page: 1, page_size: 200 }),
-        fetchRequirements({ page: 1, page_size: 100 }),
-      ])
-      return { domains: domainData || [], cases: caseData?.items || [], docs: docData?.items || [] }
+      const domainData = await fetchDomains()
+      return { domains: domainData || [] }
     },
     []
   )
 
-  const domains = data?.domains || []
-  const cases = data?.cases || []
-  const docs = data?.docs || []
+  const {
+    data: documentPage,
+    isLoading,
+    isRefetching,
+    isError,
+    error,
+    refetch: refetchDocuments,
+  } = useApi(
+    (signal) => fetchRequirements({
+      page: docPage,
+      page_size: docPageSize,
+      ...(debouncedKeyword ? { keyword: debouncedKeyword } : {}),
+    }, signal),
+    [docPage, debouncedKeyword],
+  )
+
+  const {
+    data: activeDoc,
+    isLoading: isDetailLoading,
+    isRefetching: isDetailRefetching,
+    isError: isDetailError,
+    error: detailError,
+    refetch: refetchDetail,
+  } = useApi<RequirementDocument | null>(
+    (signal) => activeDocId == null
+      ? Promise.resolve(null)
+      : fetchRequirement(activeDocId, signal),
+    { deps: [activeDocId], showErrorToast: false },
+  )
+
+  const {
+    data: activeCoverage,
+    isLoading: isCoverageLoading,
+    isRefetching: isCoverageRefetching,
+  } = useApi<RequirementCoverage | null>(
+    (signal) => activeDocId == null
+      ? Promise.resolve(null)
+      : fetchRequirementCoverage(activeDocId, signal),
+    { deps: [activeDocId], showErrorToast: false },
+  )
+
+  const refetch = () => {
+    refetchMetadata()
+    refetchDocuments()
+    if (activeDocId != null) {
+      refetchDetail()
+    }
+  }
+
+  const domains = metadata?.domains || []
+  const docs = documentPage?.items || []
+  const totalDocuments = documentPage?.total || 0
 
   // Stats
   const totalModules = useMemo(
     () => domains.reduce((sum: number, item: any) => sum + (item.modules?.length || 0), 0),
     [domains],
   )
-  const automatedCases = 0
-  const coverage = 0
+  const coverage = activeCoverage?.coverage_rate ?? 0
 
   // Dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -203,11 +264,11 @@ export default function RequirementPage() {
   }
 
   // AI Generate
-  const handleGenerate = async (docId: number) => {
+  const handleGenerate = async (docId: number, useExtraction = false) => {
     setGeneratingDocId(docId)
     setGenerating(true)
     try {
-      const result = await generateTestCases(docId)
+      const result = await generateTestCases(docId, { use_extraction: useExtraction })
       setAiResult(result)
       setActiveDocId(docId)
       setModalMode('generate')
@@ -228,17 +289,10 @@ export default function RequirementPage() {
     setExtractingDocId(docId)
     setExtracting(true)
     try {
-      // First try to get existing extraction (resume review)
-      let result: FeatureExtractionResult | null = null
-      try {
-        result = await getExtraction(docId)
-      } catch {
-        // No existing extraction, will run fresh
-      }
-
-      if (!result || !result.modules || result.modules.length === 0) {
-        result = await extractFeatures(docId)
-      }
+      // A code=0/null response is the only valid signal to create a new
+      // extraction. Permission, server and network errors must not overwrite
+      // an existing review session.
+      const result = await getOrCreateExtraction(docId)
 
       setExtractionResult(result)
       setActiveDocId(docId)
@@ -249,6 +303,29 @@ export default function RequirementPage() {
       refetch()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : '功能拆分失败'
+      toast.error(msg)
+    } finally {
+      setExtracting(false)
+      setExtractingDocId(null)
+    }
+  }
+
+  const handleReExtract = async (docId: number) => {
+    setExtractingDocId(docId)
+    setExtracting(true)
+    try {
+      await confirmExtraction(docId, {
+        action: 'reject',
+        rejected_notes: '用户主动重新拆分',
+      })
+      const result = await extractFeatures(docId)
+      setExtractionResult(result)
+      setActiveDocId(docId)
+      setModalMode('extract')
+      setShowAiModal(true)
+      refetch()
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : '重新拆分失败'
       toast.error(msg)
     } finally {
       setExtracting(false)
@@ -307,15 +384,25 @@ export default function RequirementPage() {
   /** Open screenshot preview for an evidence job (batch-28) */
   const handleViewScreenshots = async (job: any) => {
     try {
-      const { fetchLanhuEvidenceAssets } = await import('@/api/lanhuEvidence')
-      const assets = await fetchLanhuEvidenceAssets(job.id)
+      const { fetchLanhuEvidenceAssets, fetchLanhuEvidencePages } = await import('@/api/lanhuEvidence')
+      const [assets, pageData] = await Promise.all([
+        fetchLanhuEvidenceAssets(job.id),
+        fetchLanhuEvidencePages(job.id),
+      ])
+      const pagesById = new Map((pageData.items || []).map((page) => [page.id, page]))
       const screenshots = (assets || [])
         .filter((a: any) => a.asset_type === 'screenshot')
         .map((a: any, i: number) => ({
-          page_name: a.relative_path?.replace(/^.*[\\/]/, '') || `截图 ${i + 1}`,
+          page_name: pagesById.get(a.page_id)?.page_name
+            || a.relative_path?.replace(/^.*[\\/]/, '')
+            || `截图 ${i + 1}`,
           page_index: i,
-          ocr_text: '',
-          screenshot_url: `/api/v1/lanhu-evidence/assets/${a.id}/download`,
+          ocr_text: pagesById.get(a.page_id)?.merged_text
+            || pagesById.get(a.page_id)?.ocr_text
+            || pagesById.get(a.page_id)?.dom_text
+            || '',
+          interactions: pagesById.get(a.page_id)?.quality_json || '',
+          asset_id: a.id,
         }))
       if (screenshots.length > 0) {
         setScreenshotPages(screenshots)
@@ -341,7 +428,7 @@ export default function RequirementPage() {
     }
   }
 
-  const handleDelete = (doc: RequirementDocument) => {
+  const handleDelete = (doc: RequirementDocumentBrief) => {
     setDeleteTarget(doc)
   }
 
@@ -358,20 +445,12 @@ export default function RequirementPage() {
     }
   }
 
-  // Filtered docs
-  const filteredDocs = docs.filter((d) => {
-    const text = `${d.title} ${d.source_ref} ${d.file_type}`.toLowerCase()
-    return text.includes(keyword.toLowerCase())
-  })
-
-  const paginatedDocs = filteredDocs.slice((docPage - 1) * docPageSize, docPage * docPageSize)
-  const totalDocPages = Math.ceil(filteredDocs.length / docPageSize)
+  const totalDocPages = Math.max(1, Math.ceil(totalDocuments / docPageSize))
 
   const paginatedDomains = domains.slice((domainPage - 1) * domainPageSize, domainPage * domainPageSize)
   const totalDomainPages = Math.ceil(domains.length / domainPageSize)
 
-  // Content preview
-  const activeDoc = docs.find((d) => d.id === activeDocId)
+  const activeDocBrief = docs.find((d) => d.id === activeDocId)
 
   return (
     <div className="space-y-4">
@@ -382,19 +461,27 @@ export default function RequirementPage() {
             <Settings className="size-4" />
             蓝湖设置
           </Button>
-          <Button variant="outline" size="sm" onClick={refetch} disabled={isLoading || isRefetching}>
-            {isLoading || isRefetching ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw className="size-4" />}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            disabled={isLoading || isRefetching || isMetadataLoading || isMetadataRefetching}
+          >
+            {isLoading || isRefetching || isMetadataLoading || isMetadataRefetching
+              ? <Loader2 className="size-4 animate-spin" />
+              : <RotateCcw className="size-4" />}
             刷新
           </Button>
         </div>
       </PageHeader>
 
       {/* Main layout: task panel (left) + content (right) */}
-      <div className="flex gap-4 items-start">
+      <div className="flex flex-col gap-4 items-stretch xl:flex-row xl:items-start">
         <EvidenceTaskPanel
           onViewExtraction={handleViewExtraction}
           onViewScreenshots={handleViewScreenshots}
           onNewTask={() => setEvOpen(true)}
+          refreshKey={evidenceRefreshKey}
         />
 
         <div className="flex-1 min-w-0 space-y-4">
@@ -404,7 +491,7 @@ export default function RequirementPage() {
         <StatCard
           icon={BookOpen}
           label="需求文档"
-          value={docs.length}
+          value={totalDocuments}
           variant="glass"
         />
         <StatCard
@@ -416,10 +503,18 @@ export default function RequirementPage() {
         />
         <Card size="sm">
           <CardContent>
-            <div className="text-xs text-muted-foreground mb-1">接口自动化占比</div>
+            <div className="text-xs text-muted-foreground mb-1">
+              {activeDocId == null ? '需求覆盖率（选择文档查看）' : '当前需求覆盖率'}
+            </div>
             <div className="flex items-center gap-2">
-              <Progress value={coverage} className="flex-1 h-2" />
-              <span className="text-sm font-medium tabular-nums">{coverage}%</span>
+              <Progress
+                value={coverage}
+                className="flex-1 h-2"
+                aria-label="当前需求覆盖率"
+              />
+              <span className="text-sm font-medium tabular-nums">
+                {(isCoverageLoading || isCoverageRefetching) && activeDocId != null ? '…' : `${coverage}%`}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -454,7 +549,7 @@ export default function RequirementPage() {
                   uploading && 'opacity-50 cursor-not-allowed',
                 )}
               >
-                <input {...getInputProps()} />
+                <input {...getInputProps({ 'aria-label': '上传需求文档' })} />
                 <Inbox className="size-10 mx-auto text-muted-foreground mb-3" />
                 <p className="text-sm">点击或拖拽文件到此区域上传</p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -463,11 +558,11 @@ export default function RequirementPage() {
               </div>
             </TabsContent>
             <TabsContent value="lanhu" className="pt-4 space-y-3">
-              <div className="flex w-full">
+              <div className="flex w-full flex-col gap-2 sm:flex-row sm:gap-0">
                 <div className="relative flex-1">
                   <Link2 className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-primary pointer-events-none" />
                   <Input
-                    className="pl-8 rounded-r-none border-r-0 focus-visible:z-10"
+                    className="pl-8 sm:rounded-r-none sm:border-r-0 focus-visible:z-10"
                     placeholder="输入蓝湖设计稿链接..."
                     value={lanhuUrl}
                     onChange={(e) => setLanhuUrl(e.target.value)}
@@ -476,14 +571,15 @@ export default function RequirementPage() {
                   {lanhuUrl && (
                     <button
                       type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-1 top-1/2 min-h-11 min-w-11 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                       onClick={() => setLanhuUrl('')}
+                      aria-label="清空蓝湖链接"
                     >
                       <XCircle className="size-4" />
                     </button>
                   )}
                 </div>
-                <Button className="rounded-l-none" onClick={handleLanhuSubmit} disabled={uploading}>
+                <Button className="sm:rounded-l-none" onClick={handleLanhuSubmit} disabled={uploading}>
                   {uploading ? <Loader2 className="size-4 animate-spin" /> : null}
                   证据采集
                 </Button>
@@ -499,17 +595,20 @@ export default function RequirementPage() {
       </Card>
 
       {/* Content Preview */}
-      {activeDoc && (
+      {activeDocId != null && (
         <Card size="sm">
           <CardHeader className="border-b pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Search className="size-4" />
-                内容预览：{activeDoc.title}
-                {activeDoc.file_type && TYPE_TAG[activeDoc.file_type] && (
-                  <Badge variant="outline" className={cn('gap-1', TYPE_TAG[activeDoc.file_type].className)}>
-                    {TYPE_TAG[activeDoc.file_type].icon}
-                    {TYPE_TAG[activeDoc.file_type].label}
+                内容预览：{activeDocBrief?.title || activeDoc?.title || `#${activeDocId}`}
+                {(activeDocBrief?.file_type || activeDoc?.file_type) && TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''] && (
+                  <Badge
+                    variant="outline"
+                    className={cn('gap-1', TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''].className)}
+                  >
+                    {TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''].icon}
+                    {TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''].label}
                   </Badge>
                 )}
               </CardTitle>
@@ -519,13 +618,25 @@ export default function RequirementPage() {
             </div>
           </CardHeader>
           <CardContent className="pt-4">
-            <div className={cn(
-              'whitespace-pre-wrap text-xs bg-muted/50 rounded-md p-3 overflow-auto',
-              !previewExpanded && 'max-h-[200px]',
-            )}>
-              {activeDoc.content}
-            </div>
-            {activeDoc.content && activeDoc.content.length > 400 && (
+            {isDetailLoading || isDetailRefetching ? (
+              <div className="flex min-h-[100px] items-center justify-center text-sm text-muted-foreground">
+                <Loader2 className="mr-2 size-4 animate-spin" />
+                正在加载完整内容…
+              </div>
+            ) : isDetailError ? (
+              <div className="flex min-h-[100px] flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+                <span>{detailError?.message || '文档详情加载失败'}</span>
+                <Button variant="outline" size="sm" onClick={refetchDetail}>重试加载</Button>
+              </div>
+            ) : (
+              <div className={cn(
+                'whitespace-pre-wrap text-xs bg-muted/50 rounded-md p-3 overflow-auto',
+                !previewExpanded && 'max-h-[200px]',
+              )}>
+                {activeDoc?.content || '文档内容为空'}
+              </div>
+            )}
+            {activeDoc?.content && activeDoc.content.length > 400 && (
               <Button
                 variant="link"
                 size="sm"
@@ -558,8 +669,9 @@ export default function RequirementPage() {
               {keyword && (
                 <button
                   type="button"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-0 top-1/2 min-h-9 min-w-9 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   onClick={() => { setKeyword(''); setDocPage(1) }}
+                  aria-label="清空文档搜索"
                 >
                   <XCircle className="size-3.5" />
                 </button>
@@ -572,10 +684,10 @@ export default function RequirementPage() {
             isLoading={isLoading}
             isError={isError}
             error={error}
-            data={filteredDocs.length > 0 ? filteredDocs : ([] as any[])}
+            data={docs.length > 0 ? docs : ([] as any[])}
             onRetry={refetch}
             emptyTitle="暂无需求文档"
-            emptyDescription="请上传需求文档开始使用"
+            emptyDescription={debouncedKeyword ? '没有找到匹配的需求文档' : '请上传需求文档开始使用'}
             emptyIcon={Inbox}
             skeletonType="table"
             loadingRows={3}
@@ -595,18 +707,28 @@ export default function RequirementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedDocs.map((r) => {
+                  {docs.map((r) => {
                     const isActive = r.id === activeDocId
                     return (
                       <TableRow
                         key={r.id}
-                        className={cn('cursor-pointer', isActive && 'bg-accent')}
-                        onClick={() => setActiveDocId(r.id)}
+                        className={cn(isActive && 'bg-accent')}
                         data-state={isActive ? 'selected' : undefined}
                       >
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium truncate max-w-[140px]">{r.title}</span>
+                            <button
+                              type="button"
+                              className="max-w-[140px] truncate rounded-sm text-left font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              onClick={() => {
+                                setActiveDocId(r.id)
+                                setPreviewExpanded(false)
+                              }}
+                              aria-pressed={isActive}
+                              aria-label={`预览需求文档：${r.title}`}
+                            >
+                              {r.title}
+                            </button>
                             {r.file_type && TYPE_TAG[r.file_type] && (
                               <Badge variant="outline" className={cn('gap-1 shrink-0', TYPE_TAG[r.file_type].className)}>
                                 {TYPE_TAG[r.file_type].icon}
@@ -713,7 +835,7 @@ export default function RequirementPage() {
                                     size="sm"
                                     variant="default"
                                     disabled={generating && generatingDocId === r.id}
-                                    onClick={() => handleGenerate(r.id)}
+                                    onClick={() => handleGenerate(r.id, true)}
                                   >
                                     {generating && generatingDocId === r.id ? (
                                       <Loader2 className="size-3.5 animate-spin" />
@@ -756,11 +878,24 @@ export default function RequirementPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  disabled={generating && generatingDocId === r.id}
-                                  onClick={() => handleGenerate(r.id)}
+                                  disabled={
+                                    r.extraction_status === 'confirmed'
+                                      ? extracting && extractingDocId === r.id
+                                      : generating && generatingDocId === r.id
+                                  }
+                                  onClick={() => {
+                                    if (r.extraction_status === 'confirmed') {
+                                      handleReExtract(r.id)
+                                    } else {
+                                      handleGenerate(r.id, false)
+                                    }
+                                  }}
                                 >
-                                  {generating && generatingDocId === r.id ? (
+                                  {(generating && generatingDocId === r.id)
+                                    || (extracting && extractingDocId === r.id) ? (
                                     <Loader2 className="size-3.5 animate-spin" />
+                                  ) : r.extraction_status === 'confirmed' ? (
+                                    <Layers className="size-3.5" />
                                   ) : (
                                     <Sparkles className="size-3.5" />
                                   )}
@@ -797,7 +932,7 @@ export default function RequirementPage() {
                                   size="sm"
                                   variant="outline"
                                   disabled={generating && generatingDocId === r.id}
-                                  onClick={() => handleGenerate(r.id)}
+                                  onClick={() => handleGenerate(r.id, false)}
                                 >
                                   {generating && generatingDocId === r.id ? (
                                     <Loader2 className="size-3.5 animate-spin" />
@@ -818,7 +953,7 @@ export default function RequirementPage() {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleGenerate(r.id)}
+                                  onClick={() => handleGenerate(r.id, false)}
                                 >
                                   <Sparkles className="size-3.5" />
                                   重新生成
@@ -829,14 +964,24 @@ export default function RequirementPage() {
                               </>
                             )}
                             {(r.status === 'generated' || r.status === 'imported') && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleViewCases(r.id)}
-                              >
-                                <Eye className="size-3.5" />
-                                查看用例
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleViewCases(r.id)}
+                                >
+                                  <Eye className="size-3.5" />
+                                  查看用例
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => navigate(`/requirement/${r.id}/review`)}
+                                >
+                                  <Layers className="size-3.5" />
+                                  审查用例
+                                </Button>
+                              </>
                             )}
                             <Button
                               size="sm"
@@ -857,7 +1002,7 @@ export default function RequirementPage() {
               <Pagination
                 page={docPage}
                 totalPages={totalDocPages}
-                total={filteredDocs.length}
+                total={totalDocuments}
                 onChange={(p) => setDocPage(p)}
               />
             </>
@@ -935,7 +1080,10 @@ export default function RequirementPage() {
         onOpenChange={setEvOpen}
         initialUrl={lanhuUrl}
         initialImportRequirement
-        onCreated={(job) => setEvJobId(job.id)}
+        onCreated={(job) => {
+          setEvJobId(job.id)
+          setEvidenceRefreshKey((value) => value + 1)
+        }}
       />
       <LanhuEvidenceJobDrawer
         open={evJobId != null}
@@ -989,7 +1137,7 @@ export default function RequirementPage() {
           <div className="space-y-4 py-2">
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-blue-700">📱 用户端 (CamelTv)</h4>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label>Project ID</Label>
                   <Input
@@ -1010,7 +1158,7 @@ export default function RequirementPage() {
             </div>
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-purple-700">🖥️ 运营后台 (Admin)</h4>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label>Project ID</Label>
                   <Input

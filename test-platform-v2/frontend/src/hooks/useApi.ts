@@ -75,13 +75,7 @@ export function useApi<T>(
       ? { deps: depsOrOptions }
       : depsOrOptions
 
-  const {
-    deps = [],
-    initialData,
-    showErrorToast = true,
-    onSuccess,
-    onError,
-  } = options
+  const { deps = [], initialData, showErrorToast = true, onSuccess, onError } = options
 
   const [data, setData] = useState<T | undefined>(initialData)
   const [isLoading, setIsLoading] = useState(true)
@@ -101,9 +95,12 @@ export function useApi<T>(
   const fetchFnRef = useRef(fetchFn)
   fetchFnRef.current = fetchFn
 
-  // Track the previous deps so we can detect genuine changes and avoid
-  // double-fires in Strict Mode.
-  const depsRef = useRef<any[]>(deps)
+  const onSuccessRef = useRef(onSuccess)
+  const onErrorRef = useRef(onError)
+  const showErrorToastRef = useRef(showErrorToast)
+  onSuccessRef.current = onSuccess
+  onErrorRef.current = onError
+  showErrorToastRef.current = showErrorToast
 
   // -------------------------------------------------------------------
   // Core fetch logic
@@ -136,7 +133,7 @@ export function useApi<T>(
         setIsError(false)
         setError(null)
         hasLoadedOnce.current = true
-        onSuccess?.(result)
+        onSuccessRef.current?.(result)
       })
       .catch((err: unknown) => {
         // AbortError is expected — don't treat it as a real error.
@@ -151,68 +148,34 @@ export function useApi<T>(
         setIsError(true)
         setError(errorObj)
 
-        if (showErrorToast) {
+        if (showErrorToastRef.current) {
           toast.error(errorObj.message || '请求失败，请稍后重试')
         }
 
-        onError?.(errorObj)
+        onErrorRef.current?.(errorObj)
       })
-  }, [showErrorToast, onSuccess, onError])
+  }, [])
 
   // -------------------------------------------------------------------
   // Trigger fetch on mount and when deps change.
   // -------------------------------------------------------------------
 
   useEffect(() => {
-    // Compare deps with previous value to avoid Strict Mode double-fire.
-    const prev = depsRef.current
-    const changed =
-      prev.length !== deps.length ||
-      prev.some((v, i) => !Object.is(v, deps[i]))
+    // React 18 StrictMode runs the first effect setup/cleanup pair
+    // synchronously. Deferring the request lets that discarded setup cancel
+    // itself before any network work starts, while the real setup issues one
+    // effective request.
+    let cancelled = false
+    queueMicrotask(() => {
+      if (!cancelled) execute()
+    })
 
-    depsRef.current = deps
-
-    if (changed) {
-      execute()
-    }
-
-    // Cleanup: abort on unmount.
     return () => {
+      cancelled = true
       controllerRef.current?.abort()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [execute, ...deps])
-
-  // If deps were unchanged on mount, still fire the initial request.
-  // This handles the case where the component mounts and the deps have
-  // not "changed" (the effect above skips when deps match the initial
-  // ref value). We use a separate effect that fires exactly once on mount.
-  // C5: Track whether the initial (empty-deps) fetch has fired. Resets on
-  // unmount to handle React 18 Strict Mode double-mount: Strict Mode
-  // mounts → unmounts → re-mounts the component, and without the reset
-  // the second mount would skip the initial fetch, causing a perpetual
-  // loading state.
-  const didInitialFetch = useRef(false)
-  useEffect(() => {
-    if (!didInitialFetch.current) {
-      didInitialFetch.current = true
-      // Only fire if the main effect didn't already fire because deps changed.
-      const prev = depsRef.current
-      const depsArr = deps as any[]
-      const changed =
-        prev.length !== depsArr.length ||
-        prev.some((v, i) => !Object.is(v, depsArr[i]))
-      if (!changed) {
-        execute()
-      }
-    }
-    // Cleanup: reset on unmount so Strict Mode double-mount re-fires.
-    return () => {
-      controllerRef.current?.abort()
-      didInitialFetch.current = false
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   // -------------------------------------------------------------------
   // Public API

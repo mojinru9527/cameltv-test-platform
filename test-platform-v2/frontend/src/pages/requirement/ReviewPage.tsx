@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -66,24 +67,54 @@ export default function ReviewPage() {
   const [reviewing, setReviewing] = useState<number | null>(null)
   const [tab, setTab] = useState<'func' | 'api'>('func')
   const [generating, setGenerating] = useState(false)
+  const [editDraft, setEditDraft] = useState<Partial<CaseItem> | null>(null)
 
-  const load = () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
+    if (!Number.isInteger(docId) || docId <= 0) {
+      setError('无效的需求文档 ID')
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(null)
-    fetchReviewState(docId)
-      .then((res) => {
-        setData({
-          docTitle: res.document_title,
-          funcCases: (res.functional_cases || []).map((c: any) => ({ ...c, case_type: 'func' })),
-          apiCases: (res.api_cases || []).map((c: any) => ({ ...c, case_type: 'api' })),
-          summary: res.summary,
-        })
+    try {
+      const res = await fetchReviewState(docId, signal)
+      if (signal?.aborted) return
+      const funcCases = (res.functional_cases || []).map((c: any) => ({
+        ...c,
+        ...(c.edited_data || {}),
+        edited_data: c.edited_data,
+        case_type: 'func',
+      }))
+      const apiCases = (res.api_cases || []).map((c: any) => ({
+        ...c,
+        ...(c.edited_data || {}),
+        edited_data: c.edited_data,
+        case_type: 'api',
+      }))
+      setData({
+        docTitle: res.document_title,
+        funcCases,
+        apiCases,
+        summary: res.summary,
       })
-      .catch(() => setError('加载审查数据失败'))
-      .finally(() => setLoading(false))
-  }
+      setActiveCase((current) => current
+        ? [...funcCases, ...apiCases].find((item) => item.index === current.index) || null
+        : null)
+    } catch (loadError) {
+      if (!signal?.aborted) {
+        setError(loadError instanceof Error ? loadError.message : '加载审查数据失败')
+      }
+    } finally {
+      if (!signal?.aborted) setLoading(false)
+    }
+  }, [docId])
 
-  useEffect(() => { load() }, [docId])
+  useEffect(() => {
+    const controller = new AbortController()
+    void load(controller.signal)
+    return () => controller.abort()
+  }, [load])
 
   const cases = tab === 'func' ? (data?.funcCases || []) : (data?.apiCases || [])
 
@@ -118,7 +149,7 @@ export default function ReviewPage() {
     try {
       await reviewCase(docId, caseIndex, action)
       toast.success(action === 'approve' ? '已批准' : '已驳回')
-      load()
+      await load()
     } catch {
       toast.error('操作失败')
     } finally {
@@ -133,7 +164,7 @@ export default function ReviewPage() {
       const res = await reviewImportCases(docId, Array.from(selectedIds))
       toast.success(`成功导入 ${res.imported} 条，跳过 ${res.skipped} 条`)
       setSelectedIds(new Set())
-      load()
+      await load()
     } catch {
       toast.error('导入失败')
     } finally {
@@ -144,13 +175,28 @@ export default function ReviewPage() {
   const handleRegenerate = async () => {
     setGenerating(true)
     try {
-      await generateTestCases(docId)
+      await generateTestCases(docId, { use_extraction: true })
       toast.success('用例已重新生成')
-      load()
+      await load()
     } catch {
       toast.error('重新生成失败')
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const handleEdit = async () => {
+    if (!activeCase || !editDraft) return
+    setReviewing(activeCase.index)
+    try {
+      await reviewCase(docId, activeCase.index, 'edit', editDraft)
+      toast.success('编辑内容已保存')
+      setEditDraft(null)
+      await load()
+    } catch {
+      toast.error('保存编辑失败')
+    } finally {
+      setReviewing(null)
     }
   }
 
@@ -166,7 +212,10 @@ export default function ReviewPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <p className="text-muted-foreground">{error || '数据不存在'}</p>
-        <Button variant="outline" onClick={() => navigate('/requirement')}>返回需求列表</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => load()}>重试</Button>
+          <Button variant="outline" onClick={() => navigate('/requirement')}>返回需求列表</Button>
+        </div>
       </div>
     )
   }
@@ -263,17 +312,25 @@ export default function ReviewPage() {
                   const isActive = activeCase?.index === c.index
                   const rv = REVIEW_STATUS_MAP[c.review_status] || REVIEW_STATUS_MAP.pending
                   return (
-                    <button
+                    <div
                       key={c.index}
-                      className={`w-full text-left px-3 py-2.5 hover:bg-muted/50 transition-colors ${isActive ? 'bg-muted' : ''}`}
-                      onClick={() => setActiveCase(c)}
+                      className={`flex w-full items-start gap-2 px-3 py-2.5 transition-colors hover:bg-muted/50 ${isActive ? 'bg-muted' : ''}`}
                     >
-                      <div className="flex items-start gap-2">
-                        <Checkbox
-                          checked={selectedIds.has(c.index)}
-                          onCheckedChange={() => toggleSelect(c.index)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
+                      <Checkbox
+                        checked={selectedIds.has(c.index)}
+                        onCheckedChange={() => toggleSelect(c.index)}
+                        aria-label={`选择用例：${c.title}`}
+                      />
+                      <button
+                        type="button"
+                        className="min-w-0 flex-1 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => {
+                          setActiveCase(c)
+                          setEditDraft(null)
+                        }}
+                        aria-pressed={isActive}
+                        aria-label={`查看用例：${c.title}`}
+                      >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-sm font-medium truncate">{c.title}</span>
@@ -286,8 +343,8 @@ export default function ReviewPage() {
                             {c.imported && <Badge variant="outline" className="text-[10px] border-green-200 bg-green-50 text-green-700">已导入</Badge>}
                           </div>
                         </div>
-                      </div>
-                    </button>
+                      </button>
+                    </div>
                   )
                 })}
               </div>
@@ -305,8 +362,25 @@ export default function ReviewPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={reviewing === activeCase.index}
+                      onClick={() => setEditDraft({
+                        title: activeCase.title,
+                        priority: activeCase.priority,
+                        module: activeCase.module,
+                        domain: activeCase.domain,
+                        preconditions: activeCase.preconditions,
+                        steps: activeCase.steps,
+                        expected_result: activeCase.expected_result,
+                      })}
+                    >
+                      <Edit className="size-3" />
+                      编辑
+                    </Button>
                     <h3 className="font-semibold">{activeCase.title}</h3>
                     <Badge variant="outline" className={PRIORITY_CLASSES[activeCase.priority] || ''}>{activeCase.priority}</Badge>
                     <Badge variant="outline">{activeCase.domain || activeCase.module || '-'}</Badge>
@@ -331,6 +405,98 @@ export default function ReviewPage() {
                     </Button>
                   </div>
                 </div>
+
+                {editDraft && (
+                  <Card className="border-amber-200 bg-amber-50/40">
+                    <CardContent className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-2">
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-xs font-medium" htmlFor="review-case-title">用例标题</label>
+                        <Input
+                          id="review-case-title"
+                          value={String(editDraft.title || '')}
+                          onChange={(event) => setEditDraft((draft) => ({
+                            ...draft,
+                            title: event.target.value,
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium" htmlFor="review-case-module">模块</label>
+                        <Input
+                          id="review-case-module"
+                          value={String(editDraft.module || '')}
+                          onChange={(event) => setEditDraft((draft) => ({
+                            ...draft,
+                            module: event.target.value,
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium" htmlFor="review-case-priority">优先级</label>
+                        <Input
+                          id="review-case-priority"
+                          value={String(editDraft.priority || '')}
+                          onChange={(event) => setEditDraft((draft) => ({
+                            ...draft,
+                            priority: event.target.value,
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-xs font-medium" htmlFor="review-case-preconditions">前置条件</label>
+                        <Textarea
+                          id="review-case-preconditions"
+                          value={String(editDraft.preconditions || '')}
+                          onChange={(event) => setEditDraft((draft) => ({
+                            ...draft,
+                            preconditions: event.target.value,
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-xs font-medium" htmlFor="review-case-steps">测试步骤</label>
+                        <Textarea
+                          id="review-case-steps"
+                          className="font-mono text-xs"
+                          value={String(editDraft.steps || '')}
+                          onChange={(event) => setEditDraft((draft) => ({
+                            ...draft,
+                            steps: event.target.value,
+                          }))}
+                        />
+                      </div>
+                      <div className="space-y-1 sm:col-span-2">
+                        <label className="text-xs font-medium" htmlFor="review-case-expected">预期结果</label>
+                        <Textarea
+                          id="review-case-expected"
+                          value={String(editDraft.expected_result || '')}
+                          onChange={(event) => setEditDraft((draft) => ({
+                            ...draft,
+                            expected_result: event.target.value,
+                          }))}
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2 sm:col-span-2">
+                        <Button
+                          size="sm"
+                          onClick={handleEdit}
+                          disabled={reviewing === activeCase.index || !String(editDraft.title || '').trim()}
+                        >
+                          {reviewing === activeCase.index && <Loader2 className="size-3 animate-spin" />}
+                          保存编辑
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditDraft(null)}
+                          disabled={reviewing === activeCase.index}
+                        >
+                          取消
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {activeCase.preconditions && (
                   <div>
@@ -372,7 +538,7 @@ export default function ReviewPage() {
       </div>
 
       {/* Bottom bar */}
-      <div className="flex items-center justify-between sticky bottom-0 bg-background border-t pt-3 pb-1">
+      <div className="sticky bottom-0 flex flex-col gap-2 border-t bg-background pt-3 pb-1 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-sm text-muted-foreground">
           已选 {selectedIds.size} 条 · 全部 {allCases.length} 条
           {data.summary.approved > 0 && <span className="text-green-600 ml-2">· {data.summary.approved} 已批准</span>}

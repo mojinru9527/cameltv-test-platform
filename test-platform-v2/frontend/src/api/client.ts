@@ -38,12 +38,20 @@ client.interceptors.response.use(
     return resp.data
   },
   (err) => {
+    // Route changes and superseded queries intentionally abort Axios
+    // requests. They are lifecycle events, not user-facing failures.
+    if (axios.isCancel(err) || err.code === 'ERR_CANCELED') {
+      return Promise.reject(err)
+    }
     const status = err.response?.status
     const msg = err.response?.data?.msg || err.message || '网络错误'
+    const suppressErrorToast = Boolean(
+      (err.config as { suppressErrorToast?: boolean } | undefined)?.suppressErrorToast,
+    )
     if (status === 401) {
       useAuthStore.getState().logout()
       if (location.pathname !== '/login') location.href = '/login'
-    } else {
+    } else if (!suppressErrorToast) {
       toast.error(msg)
     }
     return Promise.reject(err)

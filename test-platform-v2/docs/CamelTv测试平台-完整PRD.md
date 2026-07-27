@@ -1,7 +1,7 @@
 ---
 title: "CamelTv 测试平台 v2 完整产品需求文档"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-07-27"
 status: "active"
 expires: "2026-12-26"
 tags: ["PRD", "产品需求", "架构", "路线图"]
@@ -213,7 +213,7 @@ flowchart LR
 
 ---
 
-### 模块 5　需求管理 + AI 用例生成 ✅（核心亮点）
+### 模块 5　需求管理 + AI 用例生成 🟡（外部链路待验收）
 ```mermaid
 sequenceDiagram
   participant U as 用户
@@ -221,19 +221,23 @@ sequenceDiagram
   participant API as 后端
   participant AI as DeepSeek LLM
   participant DB as 用例库
-  U->>API: POST /requirement/upload (MD/Word/Excel/蓝湖)
-  Note over API: 自动识别 file_type;<br/>Excel 可直接解析为用例
-  U->>API: POST /requirement/{id}/generate
+  U->>API: POST /requirements/upload (MD/Word/Excel)
+  Note over API: 蓝湖正式导入先经过证据包质量门禁
+  U->>API: POST /requirements/{id}/extract
+  API-->>FE: 持久化功能拆分结果
+  U->>API: POST /requirements/{id}/extraction/confirm
+  U->>API: POST /requirements/{id}/generate
   API->>AI: ①需求分析 ②用例生成 (两段式)
   AI-->>API: 需求项+问题清单 / functional_cases / api_cases
-  API-->>FE: AIGenerateResult (预览 AiResultModal)
-  U->>API: POST /{id}/import (indices[])
-  API->>DB: 选择性写入用例
+  API-->>FE: AIGenerateResult + 持久审查队列
+  U->>API: POST /requirements/{id}/review/{case_index}
+  U->>API: POST /requirements/{id}/import (indices[] + edited_cases)
+  API->>DB: 原子、幂等写入最终确认值
   API-->>FE: {imported, skipped, total}
 ```
 **特色**：AI 不仅生成用例，还**反向评审需求文档**（指出 high/medium/low 问题 + 建议）。
-**接口**：`GET /requirement`、`/upload`、`/{id}/generate`、`/{id}/import`、`/{id}/cases`、`DELETE /{id}`。
-**现状/局限**：强依赖 DeepSeek（端点/Key 写死）；蓝湖路径硬编码；导入无事务；无生成历史对比。
+**接口**：`GET /requirements`、`GET /requirements/{id}`、`/upload`、`/{id}/extract`、`/{id}/extraction[/confirm]`、`/{id}/generate`、`/{id}/review-state`、`/{id}/review/{case_index}`、`/{id}/import`、`/{id}/cases`、`/{id}/coverage`、`DELETE /{id}`。
+**现状/局限**：真实 LLM、蓝湖证据包和脱敏旧版 PostgreSQL 快照仍需环境级复测；这些阻塞解除前成熟度保持 🟡。
 
 ---
 

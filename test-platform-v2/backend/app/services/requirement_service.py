@@ -4,15 +4,27 @@ from __future__ import annotations
 import json
 import logging
 import traceback
+from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.models.requirement import RequirementDocument
+from app.models.requirement_review import RequirementReview
 from app.models.user import User
 from app.services import test_case_service
 
 logger = logging.getLogger("requirement_service")
+
+
+def _finish_write(db: Session, row=None, *, commit: bool) -> None:
+    """Flush a unit of work, optionally committing for legacy direct callers."""
+    if commit:
+        db.commit()
+    else:
+        db.flush()
+    if row is not None:
+        db.refresh(row)
 
 
 def _doc_to_dict(r: RequirementDocument, creator_name: str = "") -> dict:
@@ -26,6 +38,7 @@ def _doc_to_dict(r: RequirementDocument, creator_name: str = "") -> dict:
         "source_ref": r.source_ref,
         "content": r.content,
         "ai_raw": r.ai_raw,
+        "extraction_raw": r.extraction_raw,
         "status": r.status,
         "extraction_status": getattr(r, "extraction_status", "not_started"),
         "imported_count": r.imported_count,
@@ -39,6 +52,11 @@ def _doc_to_dict(r: RequirementDocument, creator_name: str = "") -> dict:
         "parent_id": getattr(r, "parent_id", None),
         "diff_json": getattr(r, "diff_json", ""),
         "diff_status": getattr(r, "diff_status", "initial"),
+        "release_bundle_id": getattr(r, "release_bundle_id", None),
+        "linked_swagger_id": getattr(r, "linked_swagger_id", None),
+        "linked_api_endpoint_ids": sorted(
+            _parse_indices(getattr(r, "linked_api_endpoint_ids", "[]"))
+        ),
         "parsed_type": "requirement",
         "excel_cases": [],
         "created_at": r.created_at.isoformat() if r.created_at else None,
@@ -56,6 +74,7 @@ def create_requirement(
     content: str,
     parsed_type: str = "requirement",
     excel_cases: list[dict] | None = None,
+    commit: bool = True,
 ) -> dict:
     """Store a parsed requirement document."""
     row = RequirementDocument(
@@ -68,8 +87,7 @@ def create_requirement(
         status="parsed",
     )
     db.add(row)
-    db.commit()
-    db.refresh(row)
+    _finish_write(db, row, commit=commit)
     # Look up creator name
     creator_name = ""
     if creator_id:
@@ -131,15 +149,20 @@ def get_requirement_by_source(db: Session, source_ref: str, project_id: int) -> 
     return _doc_to_dict(row)
 
 
-def update_ai_result(db: Session, doc_id: int, ai_result: dict) -> dict | None:
+def update_ai_result(
+    db: Session,
+    doc_id: int,
+    ai_result: dict,
+    *,
+    commit: bool = True,
+) -> dict | None:
     """Save AI generation raw response to the document."""
     row = db.get(RequirementDocument, doc_id)
     if not row:
         return None
     row.ai_raw = json.dumps(ai_result, ensure_ascii=False)
     row.status = "generated"
-    db.commit()
-    db.refresh(row)
+    _finish_write(db, row, commit=commit)
     return _doc_to_dict(row)
 
 
@@ -204,7 +227,327 @@ def get_requirement_cases(db: Session, doc_id: int, project_id: int) -> dict | N
     }
 
 
-def delete_requirement(db: Session, doc_id: int, project_id: int) -> bool:
+_EDITABLE_CASE_FIELDS = frozenset({
+    "title",
+    "priority",
+    "domain",
+    "module",
+    "preconditions",
+    "steps",
+    "expected_result",
+    "api_method",
+    "api_endpoint",
+    "remark",
+    "client_scope",
+})
+
+
+def _parse_indices(raw: str) -> set[int]:
+    try:
+        values = json.loads(raw or "[]")
+    except (json.JSONDecodeError, TypeError):
+        return set()
+    return {value for value in values if isinstance(value, int)}
+
+
+def _generated_cases(ai_result: dict) -> list[dict]:
+    """Return AI cases with canonical global indices and server-owned types."""
+    cases: list[dict] = []
+    index = 0
+    for source in ai_result.get("functional_cases", []):
+        case = dict(source)
+        case["index"] = index
+        case["case_type"] = "manual"
+        cases.append(case)
+        index += 1
+    for source in ai_result.get("api_cases", []):
+        case = dict(source)
+        case["index"] = index
+        case["case_type"] = "api"
+        cases.append(case)
+        index += 1
+    return cases
+
+
+def replace_review_queue(
+    db: Session,
+    doc_id: int,
+    ai_result: dict,
+) -> None:
+    """Replace stale review rows when a document is regenerated."""
+    db.execute(
+        delete(RequirementReview).where(
+            RequirementReview.requirement_id == doc_id
+        )
+    )
+    for case in _generated_cases(ai_result):
+        db.add(RequirementReview(
+            requirement_id=doc_id,
+            case_index=case["index"],
+            case_type=case["case_type"],
+            status="pending",
+            edited_data="{}",
+            reviewer_id=0,
+            reviewed_at=None,
+        ))
+    db.flush()
+
+
+def _review_rows(
+    db: Session,
+    doc_id: int,
+) -> dict[tuple[str, int], RequirementReview]:
+    rows = db.scalars(
+        select(RequirementReview).where(
+            RequirementReview.requirement_id == doc_id
+        )
+    ).all()
+    return {(row.case_type, row.case_index): row for row in rows}
+
+
+def get_review_state(
+    db: Session,
+    doc_id: int,
+    project_id: int,
+) -> dict | None:
+    row = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.id == doc_id,
+            RequirementDocument.project_id == project_id,
+        )
+    )
+    if not row or not row.ai_raw:
+        return None
+    try:
+        ai_result = json.loads(row.ai_raw)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+    reviews = _review_rows(db, doc_id)
+    imported_func = _parse_indices(row.imported_func_indices)
+    imported_api = _parse_indices(row.imported_api_indices)
+    functional_cases: list[dict] = []
+    api_cases: list[dict] = []
+    approved = 0
+    rejected = 0
+
+    for case in _generated_cases(ai_result):
+        review = reviews.get((case["case_type"], case["index"]))
+        status = review.status if review else "pending"
+        if status == "approved":
+            approved += 1
+        elif status == "rejected":
+            rejected += 1
+        edited_data: dict | None = None
+        if review and review.edited_data:
+            try:
+                parsed = json.loads(review.edited_data)
+                edited_data = parsed if parsed else None
+            except (json.JSONDecodeError, TypeError):
+                edited_data = None
+        item = dict(case)
+        steps = item.get("steps", "[]")
+        if isinstance(steps, (list, dict)):
+            item["steps"] = json.dumps(steps, ensure_ascii=False)
+        item["review_status"] = status
+        item["edited_data"] = edited_data
+        if case["case_type"] == "api":
+            item["imported"] = case["index"] in imported_api
+            api_cases.append(item)
+        else:
+            item["imported"] = case["index"] in imported_func
+            functional_cases.append(item)
+
+    total = len(functional_cases) + len(api_cases)
+    return {
+        "document_title": row.title,
+        "functional_cases": functional_cases,
+        "api_cases": api_cases,
+        "summary": {
+            "total": total,
+            "approved": approved,
+            "rejected": rejected,
+            "pending": total - approved - rejected,
+        },
+    }
+
+
+def set_review_action(
+    db: Session,
+    *,
+    doc_id: int,
+    project_id: int,
+    case_index: int,
+    action: str,
+    reviewer_id: int,
+    edited_data: dict | None = None,
+    commit: bool = True,
+) -> dict | None:
+    doc = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.id == doc_id,
+            RequirementDocument.project_id == project_id,
+        )
+    )
+    if not doc or not doc.ai_raw:
+        return None
+    try:
+        cases = _generated_cases(json.loads(doc.ai_raw))
+    except (json.JSONDecodeError, TypeError):
+        return None
+    case = next((item for item in cases if item["index"] == case_index), None)
+    if case is None:
+        return None
+
+    review = db.scalar(
+        select(RequirementReview).where(
+            RequirementReview.requirement_id == doc_id,
+            RequirementReview.case_type == case["case_type"],
+            RequirementReview.case_index == case_index,
+        )
+    )
+    if review is None:
+        review = RequirementReview(
+            requirement_id=doc_id,
+            case_index=case_index,
+            case_type=case["case_type"],
+            status="pending",
+            edited_data="{}",
+        )
+        db.add(review)
+
+    if action == "edit":
+        safe_edits = {
+            key: value
+            for key, value in (edited_data or {}).items()
+            if key in _EDITABLE_CASE_FIELDS
+        }
+        if not safe_edits:
+            from app.core.exceptions import APIException
+
+            raise APIException(
+                code=400,
+                msg="edited_data 不包含可编辑字段",
+                http_status=400,
+            )
+        review.edited_data = json.dumps(safe_edits, ensure_ascii=False)
+        review.status = "edited"
+    elif action == "approve":
+        review.status = "approved"
+    elif action == "reject":
+        review.status = "rejected"
+    else:
+        from app.core.exceptions import APIException
+
+        raise APIException(code=400, msg="不支持的审查动作", http_status=400)
+
+    review.reviewer_id = reviewer_id
+    review.reviewed_at = datetime.now()
+    _finish_write(db, review, commit=commit)
+    try:
+        saved_edits = json.loads(review.edited_data or "{}")
+    except json.JSONDecodeError:
+        saved_edits = {}
+    return {
+        "index": case_index,
+        "case_type": case["case_type"],
+        "review_status": review.status,
+        "edited_data": saved_edits or None,
+    }
+
+
+def prepare_cases_for_import(
+    db: Session,
+    *,
+    doc_id: int,
+    project_id: int,
+    indices: list[int],
+    edited_cases: list[dict] | None = None,
+    reviewer_id: int = 0,
+) -> list[dict]:
+    """Resolve selected cases and merge persisted/request edits safely."""
+    doc = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.id == doc_id,
+            RequirementDocument.project_id == project_id,
+        )
+    )
+    if not doc or not doc.ai_raw:
+        return []
+    try:
+        canonical_cases = _generated_cases(json.loads(doc.ai_raw))
+    except (json.JSONDecodeError, TypeError):
+        return []
+
+    requested = list(dict.fromkeys(indices))
+    case_map = {case["index"]: case for case in canonical_cases}
+    missing = [index for index in requested if index not in case_map]
+    if missing:
+        from app.core.exceptions import APIException
+
+        raise APIException(
+            code=400,
+            msg=f"用例索引不存在: {missing}",
+            http_status=400,
+        )
+
+    request_edits: dict[int, dict] = {}
+    for edit in edited_cases or []:
+        index = edit.get("index")
+        if index not in requested:
+            from app.core.exceptions import APIException
+
+            raise APIException(
+                code=400,
+                msg=f"编辑内容未对应已选择用例: {index}",
+                http_status=400,
+            )
+        request_edits[index] = {
+            key: value
+            for key, value in edit.items()
+            if key in _EDITABLE_CASE_FIELDS
+        }
+        if request_edits[index]:
+            set_review_action(
+                db,
+                doc_id=doc_id,
+                project_id=project_id,
+                case_index=index,
+                action="edit",
+                reviewer_id=reviewer_id,
+                edited_data=request_edits[index],
+                commit=False,
+            )
+
+    reviews = _review_rows(db, doc_id)
+    selected: list[dict] = []
+    for index in requested:
+        case = dict(case_map[index])
+        review = reviews.get((case["case_type"], index))
+        if review and review.edited_data:
+            try:
+                persisted_edits = json.loads(review.edited_data)
+            except (json.JSONDecodeError, TypeError):
+                persisted_edits = {}
+            case.update({
+                key: value
+                for key, value in persisted_edits.items()
+                if key in _EDITABLE_CASE_FIELDS
+            })
+        case.update(request_edits.get(index, {}))
+        case["index"] = index
+        case["case_type"] = case_map[index]["case_type"]
+        selected.append(case)
+    return selected
+
+
+def delete_requirement(
+    db: Session,
+    doc_id: int,
+    project_id: int,
+    *,
+    commit: bool = True,
+) -> bool:
     """Delete a requirement document. Returns True if deleted, False if not found."""
     row = db.scalar(
         select(RequirementDocument).where(
@@ -214,20 +557,30 @@ def delete_requirement(db: Session, doc_id: int, project_id: int) -> bool:
     )
     if not row:
         return False
+    db.execute(
+        delete(RequirementReview).where(
+            RequirementReview.requirement_id == doc_id
+        )
+    )
     db.delete(row)
-    db.commit()
+    _finish_write(db, commit=commit)
     return True
 
 
-def update_extraction(db: Session, doc_id: int, extraction_result: dict) -> dict | None:
+def update_extraction(
+    db: Session,
+    doc_id: int,
+    extraction_result: dict,
+    *,
+    commit: bool = True,
+) -> dict | None:
     """Save Stage 1 AI extraction raw response and set status to pending_review."""
     row = db.get(RequirementDocument, doc_id)
     if not row:
         return None
     row.extraction_raw = json.dumps(extraction_result, ensure_ascii=False)
     row.extraction_status = "pending_review"
-    db.commit()
-    db.refresh(row)
+    _finish_write(db, row, commit=commit)
     return _doc_to_dict(row)
 
 
@@ -274,7 +627,14 @@ def get_extraction(db: Session, doc_id: int, project_id: int) -> dict | None:
     }
 
 
-def confirm_extraction(db: Session, doc_id: int, confirmed_data: dict, action: str) -> dict | None:
+def confirm_extraction(
+    db: Session,
+    doc_id: int,
+    confirmed_data: dict,
+    action: str,
+    *,
+    commit: bool = True,
+) -> dict | None:
     """Confirm or reject the Stage 1 extraction result.
 
     action == "confirm": Save confirmed/edited modules, set status to confirmed.
@@ -292,8 +652,7 @@ def confirm_extraction(db: Session, doc_id: int, confirmed_data: dict, action: s
         row.extraction_status = "not_started"
     else:
         return None
-    db.commit()
-    db.refresh(row)
+    _finish_write(db, row, commit=commit)
     return _doc_to_dict(row)
 
 
@@ -302,86 +661,184 @@ def import_cases(
     doc_id: int,
     cases: list[dict],
     project_id: int,
+    *,
+    commit: bool = True,
 ) -> dict:
     """Import selected generated cases into the test_case table (transactional).
 
     All cases import atomically — if any case fails, the entire batch rolls back
     so no half-imported data is left behind.
     """
-    from app.core.base_service import transaction
-
     imported_func = 0
     imported_api = 0
     skipped = 0
-    func_indices: list[int] = []
-    api_indices: list[int] = []
+    requested_func_indices: set[int] = set()
+    requested_api_indices: set[int] = set()
 
     try:
-        with transaction(db):
-            for c in cases:
-                case_type = c.get("case_type", "manual")
-                case_index = c.get("index")
-                # Each case is attempted; any failure breaks the entire batch
-                steps_raw = c.get("steps", "[]")
-                if isinstance(steps_raw, list):
-                    steps_raw = json.dumps(steps_raw, ensure_ascii=False)
-                test_case_service.create_case(db, {
+        row = db.scalar(
+            select(RequirementDocument).where(
+                RequirementDocument.id == doc_id,
+                RequirementDocument.project_id == project_id,
+            ).with_for_update()
+        )
+        if row is None:
+            from app.core.exceptions import not_found
+
+            raise not_found("需求文档")
+
+        previous_func = _parse_indices(row.imported_func_indices)
+        previous_api = _parse_indices(row.imported_api_indices)
+        seen_in_request: set[tuple[str, int]] = set()
+
+        for case in cases:
+            case_type = "api" if case.get("case_type") == "api" else "manual"
+            case_index = case.get("index")
+            if not isinstance(case_index, int):
+                from app.core.exceptions import APIException
+
+                raise APIException(code=400, msg="用例缺少有效索引", http_status=400)
+
+            existing = previous_api if case_type == "api" else previous_func
+            identity = (case_type, case_index)
+            if case_index in existing or identity in seen_in_request:
+                skipped += 1
+                continue
+            seen_in_request.add(identity)
+
+            steps_raw = case.get("steps", "[]")
+            if isinstance(steps_raw, (list, dict)):
+                steps_raw = json.dumps(steps_raw, ensure_ascii=False)
+            test_case_service.create_case(
+                db,
+                {
                     "project_id": project_id,
-                    "title": c.get("title", ""),
-                    "domain": c.get("domain", ""),
-                    "module": c.get("module", ""),
+                    "title": case.get("title", ""),
+                    "domain": case.get("domain", ""),
+                    "module": case.get("module", ""),
                     "case_type": case_type,
-                    "priority": c.get("priority", "P2"),
-                    "preconditions": c.get("preconditions", ""),
+                    "priority": case.get("priority", "P2"),
+                    "preconditions": case.get("preconditions", ""),
                     "steps": steps_raw,
-                    "expected_result": c.get("expected_result", ""),
-                    "api_method": c.get("api_method", ""),
-                    "api_endpoint": c.get("api_endpoint", ""),
+                    "expected_result": case.get("expected_result", ""),
+                    "api_method": case.get("api_method", ""),
+                    "api_endpoint": case.get("api_endpoint", ""),
                     "source": "ai_generated",
                     "source_doc_id": doc_id,
-                })
-                if case_type == "api":
-                    imported_api += 1
-                    if case_index is not None:
-                        api_indices.append(case_index)
-                else:
-                    imported_func += 1
-                    if case_index is not None:
-                        func_indices.append(case_index)
+                    "source_case_index": case_index,
+                },
+                commit=False,
+            )
+            if case_type == "api":
+                imported_api += 1
+                requested_api_indices.add(case_index)
+            else:
+                imported_func += 1
+                requested_func_indices.add(case_index)
 
-            # Update document status with per-type tracking
-            row = db.get(RequirementDocument, doc_id)
-            if row:
-                row.status = "imported"
-                row.imported_count = imported_func + imported_api
-
-                try:
-                    prev_func = json.loads(row.imported_func_indices or "[]")
-                except json.JSONDecodeError:
-                    prev_func = []
-                try:
-                    prev_api = json.loads(row.imported_api_indices or "[]")
-                except json.JSONDecodeError:
-                    prev_api = []
-
-                new_func = list(set(prev_func + func_indices))
-                new_api = list(set(prev_api + api_indices))
-
-                row.imported_func_indices = json.dumps(new_func, ensure_ascii=False)
-                row.imported_api_indices = json.dumps(new_api, ensure_ascii=False)
-                row.imported_func_count = len(new_func)
-                row.imported_api_count = len(new_api)
-    except Exception as e:
-        # P0-4: Log full traceback instead of silently swallowing
+        all_func = previous_func | requested_func_indices
+        all_api = previous_api | requested_api_indices
+        row.status = "imported"
+        row.imported_func_indices = json.dumps(sorted(all_func), ensure_ascii=False)
+        row.imported_api_indices = json.dumps(sorted(all_api), ensure_ascii=False)
+        row.imported_func_count = len(all_func)
+        row.imported_api_count = len(all_api)
+        row.imported_count = len(all_func) + len(all_api)
+        _finish_write(db, row, commit=commit)
+    except Exception as exc:
+        db.rollback()
         logger.error(
             "import_cases transaction failed for doc_id=%d: %s\n%s",
-            doc_id, e, traceback.format_exc(),
+            doc_id, exc, traceback.format_exc(),
         )
-        imported_func = 0
-        imported_api = 0
-        skipped = len(cases)
+        raise
 
     return {"imported": imported_func + imported_api, "skipped": skipped, "total": len(cases)}
+
+
+def get_api_match_selection(
+    db: Session,
+    *,
+    doc_id: int,
+    project_id: int,
+) -> dict | None:
+    row = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.id == doc_id,
+            RequirementDocument.project_id == project_id,
+        )
+    )
+    if row is None:
+        return None
+    return {
+        "service_id": row.linked_swagger_id,
+        "endpoint_ids": sorted(_parse_indices(row.linked_api_endpoint_ids)),
+    }
+
+
+def confirm_api_match_selection(
+    db: Session,
+    *,
+    doc_id: int,
+    project_id: int,
+    service_id: int | None,
+    endpoint_ids: list[int],
+    commit: bool = True,
+) -> dict | None:
+    """Validate and persist an explicitly confirmed API endpoint selection."""
+    from app.core.exceptions import APIException, not_found
+    from app.models.api_asset import ApiEndpoint, ApiService
+
+    row = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.id == doc_id,
+            RequirementDocument.project_id == project_id,
+        )
+    )
+    if row is None:
+        return None
+
+    unique_ids = list(dict.fromkeys(endpoint_ids))
+    if service_id is None:
+        if unique_ids:
+            raise APIException(
+                code=400,
+                msg="选择接口时必须指定 API 服务",
+                http_status=400,
+            )
+    else:
+        service = db.scalar(
+            select(ApiService).where(
+                ApiService.id == service_id,
+                ApiService.project_id == project_id,
+            )
+        )
+        if service is None:
+            raise not_found("API 服务")
+
+        if unique_ids:
+            valid_ids = set(db.scalars(
+                select(ApiEndpoint.id).where(
+                    ApiEndpoint.id.in_(unique_ids),
+                    ApiEndpoint.project_id == project_id,
+                    ApiEndpoint.service_id == service_id,
+                )
+            ).all())
+            invalid_ids = [item for item in unique_ids if item not in valid_ids]
+            if invalid_ids:
+                raise APIException(
+                    code=400,
+                    msg=f"接口不属于当前项目或所选服务: {invalid_ids}",
+                    http_status=400,
+                )
+
+    row.linked_swagger_id = service_id
+    row.linked_api_endpoint_ids = json.dumps(sorted(unique_ids), ensure_ascii=False)
+    _finish_write(db, row, commit=commit)
+    return {
+        "service_id": row.linked_swagger_id,
+        "endpoint_ids": sorted(unique_ids),
+    }
 
 
 # ═══════════════════════════════════════════════════════

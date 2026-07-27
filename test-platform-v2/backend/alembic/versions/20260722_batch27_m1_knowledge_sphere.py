@@ -68,7 +68,7 @@ def upgrade() -> None:
                       nullable=True, index=True),
             sa.Column("source_version", sa.String(50), nullable=False, server_default=""),
             sa.Column("screenshot_urls", sa.Text(), nullable=False, server_default="[]"),
-            sa.Column("has_visual_only_content", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+            sa.Column("has_visual_only_content", sa.Boolean(), nullable=False, server_default=sa.false()),
             sa.Column("page_interactions", sa.Text(), nullable=False, server_default="[]"),
             sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
             sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),

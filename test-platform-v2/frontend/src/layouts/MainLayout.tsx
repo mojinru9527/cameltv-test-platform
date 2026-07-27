@@ -287,7 +287,10 @@ export default function MainLayout() {
               value={currentProjectId ? String(currentProjectId) : undefined}
               onValueChange={(v) => onSwitchProject(Number(v))}
             >
-              <SelectTrigger className="h-8 w-[150px] min-w-0 text-sm sm:w-[200px]">
+              <SelectTrigger
+                className="h-8 w-[150px] min-w-0 text-sm sm:w-[200px]"
+                aria-label="当前项目"
+              >
                 <SelectValue placeholder="选择项目" />
               </SelectTrigger>
               <SelectContent>
@@ -304,7 +307,12 @@ export default function MainLayout() {
             {/* Theme dropdown — redesigned as card picker */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5"
+                  aria-label={`切换主题，当前${getTheme(colorTheme).label}`}
+                >
                   <Palette className="size-4 text-primary" />
                   <span className="hidden sm:inline text-sm font-medium">
                     {getTheme(colorTheme).label}
@@ -321,6 +329,7 @@ export default function MainLayout() {
                       <button
                         key={m}
                         onClick={() => setMode(m)}
+                        aria-label={m === 'light' ? '浅色模式' : m === 'dark' ? '深色模式' : '跟随系统'}
                         className={`px-2.5 py-1 text-xs rounded-sm transition-colors ${
                           mode === m
                             ? 'bg-background text-foreground shadow-sm'
@@ -381,7 +390,12 @@ export default function MainLayout() {
             {/* User dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5"
+                  aria-label={`用户菜单：${user?.nickname || user?.username || '用户'}`}
+                >
                   <Avatar className="size-6">
                     <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
                   </Avatar>
