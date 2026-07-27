@@ -20,8 +20,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # ── WikiDiffItem: add left/right ref + scope columns ──
+    inspector = sa.inspect(op.get_bind())
+    existing_cols = {c["name"] for c in inspector.get_columns("wiki_diff_item")}
     for col_name in ("left_ref", "right_ref", "left_scope", "right_scope"):
-        op.add_column("wiki_diff_item", sa.Column(col_name, sa.Text(), nullable=False, server_default=""))
+        if col_name not in existing_cols:
+            op.add_column("wiki_diff_item", sa.Column(col_name, sa.Text(), nullable=False, server_default=""))
 
     # ── WikiReviewItem ──
     op.create_table(
