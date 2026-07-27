@@ -6,9 +6,14 @@ import type {
   ExtractionConfirmRequest,
   RequirementDocument,
 } from '@/types'
+import type { KnowledgePage } from '@/types'
 
-export async function fetchRequirements(): Promise<RequirementDocument[]> {
-  return api.get('/requirements')
+export async function fetchRequirements(params?: {
+  page?: number
+  page_size?: number
+  keyword?: string
+}): Promise<KnowledgePage<RequirementDocument>> {
+  return api.get('/requirements', { params })
 }
 
 export async function uploadRequirement(data: FormData): Promise<RequirementDocument> {
@@ -97,6 +102,13 @@ export { importCases as reviewImportCases }
 
 // ── API endpoint matching (batch-34) ──
 
-export async function matchApiEndpoints(documentId: number): Promise<ApiMatchItem[]> {
-  return api.post(`/requirements/${documentId}/match-api`)
+export async function matchApiEndpoints(
+  documentId: number,
+  integrationReqs: { id?: string; title?: string; description?: string }[],
+  serviceId?: number,
+): Promise<ApiMatchItem[]> {
+  return api.post(`/requirements/${documentId}/match-api`, {
+    integration_reqs: integrationReqs,
+    service_id: serviceId ?? null,
+  })
 }
