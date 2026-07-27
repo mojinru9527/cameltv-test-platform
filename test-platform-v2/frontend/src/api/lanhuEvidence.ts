@@ -117,20 +117,40 @@ export async function createLanhuEvidenceJob(
 export async function fetchLanhuEvidenceJobs(params?: {
   page?: number
   page_size?: number
-}): Promise<LanhuEvidenceJobList> {
-  return api.get('/lanhu-evidence/jobs', { params })
+}, signal?: AbortSignal, suppressErrorToast = false): Promise<LanhuEvidenceJobList> {
+  return api.get('/lanhu-evidence/jobs', {
+    params,
+    signal,
+    suppressErrorToast,
+  } as any)
 }
 
-export async function fetchLanhuEvidenceJob(jobId: number): Promise<LanhuEvidenceJob> {
-  return api.get(`/lanhu-evidence/jobs/${jobId}`)
+export async function fetchLanhuEvidenceJob(
+  jobId: number,
+  signal?: AbortSignal,
+): Promise<LanhuEvidenceJob> {
+  return api.get(`/lanhu-evidence/jobs/${jobId}`, { signal })
 }
 
-export async function fetchLanhuEvidencePages(jobId: number): Promise<LanhuEvidencePageList> {
-  return api.get(`/lanhu-evidence/jobs/${jobId}/pages`)
+export async function fetchLanhuEvidencePages(
+  jobId: number,
+  signal?: AbortSignal,
+): Promise<LanhuEvidencePageList> {
+  return api.get(`/lanhu-evidence/jobs/${jobId}/pages`, { signal })
 }
 
-export async function fetchLanhuEvidenceAssets(jobId: number): Promise<LanhuEvidenceAsset[]> {
-  return api.get(`/lanhu-evidence/jobs/${jobId}/assets`)
+export async function fetchLanhuEvidenceAssets(
+  jobId: number,
+  signal?: AbortSignal,
+): Promise<LanhuEvidenceAsset[]> {
+  return api.get(`/lanhu-evidence/jobs/${jobId}/assets`, { signal })
+}
+
+export async function downloadLanhuEvidenceAsset(
+  assetId: number,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  return api.get(`/lanhu-evidence/assets/${assetId}`, { responseType: 'blob', signal })
 }
 
 export async function reviewLanhuEvidencePage(
@@ -140,9 +160,6 @@ export async function reviewLanhuEvidencePage(
   return api.post(`/lanhu-evidence/pages/${pageId}/review`, body)
 }
 
-export async function downloadLanhuEvidenceAsset(assetId: number): Promise<Blob> {
-  return api.get(`/lanhu-evidence/assets/${assetId}`, { responseType: 'blob' })
-}
 
 export async function cancelLanhuEvidenceJob(jobId: number): Promise<LanhuEvidenceJob> {
   return api.post(`/lanhu-evidence/jobs/${jobId}/cancel`, {})

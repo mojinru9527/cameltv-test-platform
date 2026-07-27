@@ -25,6 +25,8 @@ interface Props {
   onViewScreenshots?: (job: LanhuEvidenceJob) => void
   /** Trigger open the create dialog */
   onNewTask?: () => void
+  /** Increment after creating a job so stopped polling restarts immediately. */
+  refreshKey?: number
 }
 
 const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'destructive' | 'outline' | 'default'; className?: string; label: string }> = {
@@ -55,6 +57,7 @@ const STAGE_ORDER = [
 ]
 
 const POLL_INTERVAL_MS = 3000
+const POLL_RETRY_DELAYS_MS = [3000, 6000, 12_000, 30_000] as const
 
 function stageProgress(stage: string): number {
   const idx = STAGE_ORDER.indexOf(stage)
@@ -79,28 +82,70 @@ function parseVersion(sourceUrl: string): string {
   return m ? `v${m[1]}` : ''
 }
 
-export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots, onNewTask }: Props) {
+export default function EvidenceTaskPanel({
+  onViewExtraction,
+  onViewScreenshots,
+  onNewTask,
+  refreshKey = 0,
+}: Props) {
   const [jobs, setJobs] = useState<LanhuEvidenceJob[]>([])
   const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<number | null>(null)
+  const [localRefreshKey, setLocalRefreshKey] = useState(0)
 
-  const loadJobs = useCallback(async () => {
-    try {
-      const data = await fetchLanhuEvidenceJobs({ page: 1, page_size: 50 })
-      setJobs(data.items || [])
-    } catch {
-      // silent — interceptor handles auth errors
-    }
-  }, [])
-
-  // Initial load + polling
+  // Initial load + non-overlapping polling. Polling stops when every known job
+  // is terminal, and failures back off without producing a toast storm.
   useEffect(() => {
-    setLoading(true)
-    loadJobs().finally(() => setLoading(false))
+    let disposed = false
+    let timer: number | undefined
+    let retryIndex = 0
+    let failureNotified = false
+    const controller = new AbortController()
 
-    const timer = setInterval(loadJobs, POLL_INTERVAL_MS)
-    return () => clearInterval(timer)
-  }, [loadJobs])
+    const schedule = (delay: number, poll: () => Promise<void>) => {
+      timer = window.setTimeout(() => void poll(), delay)
+    }
+
+    const poll = async () => {
+      try {
+        const data = await fetchLanhuEvidenceJobs(
+          { page: 1, page_size: 50 },
+          controller.signal,
+          true,
+        )
+        if (disposed) return
+        const nextJobs = data.items || []
+        setJobs(nextJobs)
+        retryIndex = 0
+        failureNotified = false
+        const hasActive = nextJobs.some((job) => job.status === 'running' || job.status === 'pending')
+        if (hasActive) schedule(POLL_INTERVAL_MS, poll)
+      } catch {
+        if (disposed || controller.signal.aborted) return
+        if (!failureNotified) {
+          toast.error('证据任务刷新失败，将自动重试')
+          failureNotified = true
+        }
+        schedule(POLL_RETRY_DELAYS_MS[retryIndex], poll)
+        retryIndex = Math.min(retryIndex + 1, POLL_RETRY_DELAYS_MS.length - 1)
+      } finally {
+        if (!disposed) setLoading(false)
+      }
+    }
+
+    setLoading(true)
+    void poll()
+
+    return () => {
+      disposed = true
+      controller.abort()
+      if (timer !== undefined) window.clearTimeout(timer)
+    }
+  }, [refreshKey, localRefreshKey])
+
+  const requestRefresh = useCallback(() => {
+    setLocalRefreshKey((value) => value + 1)
+  }, [])
 
   // Active job (running or pending)
   const activeJob = jobs.find((j) => j.status === 'running' || j.status === 'pending')
@@ -110,7 +155,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
     try {
       await cancelLanhuEvidenceJob(jobId)
       toast.success('已取消任务')
-      loadJobs()
+      requestRefresh()
     } catch (e: any) {
       toast.error(e?.message || '取消失败')
     } finally {
@@ -123,7 +168,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
     try {
       await retryLanhuEvidenceJob(jobId)
       toast.success('已重新提交任务')
-      loadJobs()
+      requestRefresh()
     } catch (e: any) {
       toast.error(e?.message || '重试失败')
     } finally {
@@ -136,7 +181,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
     try {
       await deleteLanhuEvidenceJob(jobId)
       toast.success('已删除任务')
-      loadJobs()
+      requestRefresh()
     } catch (e: any) {
       toast.error(e?.message || '删除失败')
     } finally {
@@ -153,7 +198,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
   })
 
   return (
-    <Card size="sm" className="w-[260px] shrink-0 h-[calc(100vh-215px)] flex flex-col">
+    <Card size="sm" className="flex max-h-[420px] w-full shrink-0 flex-col xl:h-[calc(100vh-215px)] xl:max-h-none xl:w-[260px]">
       <CardHeader className="border-b pb-2 shrink-0">
         <CardTitle className="text-[13px] flex items-center justify-between">
           证据任务
@@ -245,7 +290,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
                       <Button
                         size="xs"
                         variant="outline"
-                        className="h-6 text-[10px] px-2"
+                        className="min-h-11 px-2 text-[10px] sm:min-h-6"
                         disabled={actionLoading === job.id}
                         onClick={() => handleRetry(job.id)}
                       >
@@ -261,7 +306,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
                       <Button
                         size="xs"
                         variant="ghost"
-                        className="h-6 text-[10px] px-2 text-destructive hover:bg-destructive/10"
+                        className="min-h-11 px-2 text-[10px] text-destructive hover:bg-destructive/10 sm:min-h-6"
                         disabled={actionLoading === job.id}
                         onClick={() => handleCancel(job.id)}
                       >
@@ -279,7 +324,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
                         <Button
                           size="xs"
                           variant="outline"
-                          className="h-6 text-[10px] px-2"
+                          className="min-h-11 px-2 text-[10px] sm:min-h-6"
                           onClick={() => onViewExtraction(job)}
                         >
                           <ExternalLink className="size-3 mr-0.5" />
@@ -291,7 +336,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
                       <Button
                         size="xs"
                         variant="outline"
-                        className="h-6 text-[10px] px-2"
+                        className="min-h-11 px-2 text-[10px] sm:min-h-6"
                         onClick={() => onViewScreenshots(job)}
                       >
                         <Image className="size-3 mr-0.5" />
@@ -302,9 +347,10 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
                       <Button
                         size="xs"
                         variant="ghost"
-                        className="h-6 text-[10px] px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 ml-auto"
+                        className="ml-auto min-h-11 min-w-11 px-2 text-[10px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:min-h-6 sm:min-w-6"
                         disabled={actionLoading === job.id}
                         onClick={() => handleDelete(job.id)}
+                        aria-label={`删除证据任务 ${version || `#${job.id}`}`}
                       >
                         <Trash2 className="size-3" />
                       </Button>
@@ -321,7 +367,7 @@ export default function EvidenceTaskPanel({ onViewExtraction, onViewScreenshots,
         <Button
           size="sm"
           variant="outline"
-          className="w-full text-xs h-7"
+          className="min-h-11 w-full text-xs sm:min-h-7"
           onClick={onNewTask}
         >
           <Plus className="size-3.5 mr-1" />

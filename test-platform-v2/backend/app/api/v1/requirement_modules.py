@@ -6,12 +6,16 @@ M3 API 层：对接 M2 ModuleExtractor / TestCaseLinker / NavigatesToExtractor /
 """
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.core.exceptions import APIException, not_found
 from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
 from app.models.requirement_module import ModuleAdminLink, RequirementModule
 from app.models.release_bundle import ReleaseBundle
@@ -50,6 +54,23 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         action=action, target=target, detail=detail,
         ip=req.client.host if req.client else "",
     )
+
+
+def _commit_with_audit(
+    req: Request,
+    current: CurrentUser,
+    db: Session,
+    action: str,
+    target: str,
+    detail: str = "",
+) -> None:
+    """Persist one business operation and its audit row atomically."""
+    try:
+        _audit(req, current, db, action, target, detail)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
 
 # ═══════════════════════════════════════════════════════
@@ -189,6 +210,7 @@ def get_module_tree(
 
     # Load all modules for this bundle
     stmt = select(RequirementModule).where(
+        RequirementModule.project_id == pid,
         RequirementModule.release_bundle_id == bundle_id,
     ).order_by(RequirementModule.sort_order, RequirementModule.id)
 
@@ -229,12 +251,24 @@ def get_child_modules(
     db: Session = Depends(get_db),
 ):
     """获取指定模块的直接子节点（懒加载子节点，适用于大型模块树）。P3: 只加载两层而非全部模块。"""
-    parent = db.get(RequirementModule, parent_id)
-    if not parent or parent.release_bundle_id != bundle_id:
-        return R(code=404, msg="模块不存在")
+    pid = current.project_id or 0
+    bundle = db.get(ReleaseBundle, bundle_id)
+    if not bundle or bundle.project_id != pid:
+        raise not_found("发布包")
+
+    parent = db.scalar(
+        select(RequirementModule).where(
+            RequirementModule.id == parent_id,
+            RequirementModule.project_id == pid,
+            RequirementModule.release_bundle_id == bundle_id,
+        )
+    )
+    if not parent:
+        raise not_found("模块")
 
     children = list(db.scalars(
         select(RequirementModule).where(
+            RequirementModule.project_id == pid,
             RequirementModule.release_bundle_id == bundle_id,
             RequirementModule.parent_module_id == parent_id,
         ).order_by(RequirementModule.sort_order, RequirementModule.id)
@@ -246,6 +280,7 @@ def get_child_modules(
     if child_ids:
         grandchildren = list(db.scalars(
             select(RequirementModule).where(
+                RequirementModule.project_id == pid,
                 RequirementModule.release_bundle_id == bundle_id,
                 RequirementModule.parent_module_id.in_(child_ids),
             ).order_by(RequirementModule.sort_order, RequirementModule.id)
@@ -255,7 +290,7 @@ def get_child_modules(
     nodes: list[ModuleTreeNode] = []
     for child in sorted(children, key=lambda m: (m.sort_order or 0, m.id)):
         gchildren = [gc for gc in grandchildren if gc.parent_module_id == child.id]
-        sub_nodes = _build_tree_nodes_from_list(gchildren)
+        sub_nodes = _build_tree_nodes_from_list(gchildren, parent_id=child.id)
         nodes.append(ModuleTreeNode(
             id=child.id,
             name=child.name,
@@ -337,9 +372,14 @@ def extract_modules(
         source_version=body.source_version or bundle.client_version,
     )
 
-    db.commit()
-    _audit(req, current, db, "module:extract", f"bundle#{bundle_id}",
-           f"{len(module_ids)} modules, {extraction.stats}")
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:extract",
+        f"bundle#{bundle_id}",
+        f"{len(module_ids)} modules, {extraction.stats}",
+    )
 
     return R.ok(ModuleExtractResult(
         module_ids=module_ids,
@@ -377,13 +417,17 @@ def link_test_cases(
         project_id=pid,
         version=bundle.client_version,
     )
-    db.commit()
-
     total_linked = sum(r.linked_count for r in results.values())
     total_relations = sum(r.relations_created for r in results.values())
 
-    _audit(req, current, db, "module:link_tests", f"bundle#{bundle_id}",
-           f"{len(results)} modules, {total_linked} cases linked")
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:link_tests",
+        f"bundle#{bundle_id}",
+        f"{len(results)} modules, {total_linked} cases linked",
+    )
 
     return R.ok({
         "modules_processed": len(results),
@@ -456,10 +500,14 @@ async def extract_interactions(
         preferred_layers=body.preferred_layers,
         save=True,
     )
-    db.commit()
-
-    _audit(req, current, db, "module:extract_interactions", f"bundle#{bundle_id}",
-           f"{report.pages_with_interactions}/{report.total_pages_processed} pages")
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:extract_interactions",
+        f"bundle#{bundle_id}",
+        f"{report.pages_with_interactions}/{report.total_pages_processed} pages",
+    )
 
     return R.ok({
         "total_pages_processed": report.total_pages_processed,
@@ -498,10 +546,14 @@ def save_interactions(
         interactions=body.interactions,
         merge=body.merge,
     )
-    db.commit()
-
-    _audit(req, current, db, "module:save_interactions", f"page#{module_id}",
-           f"{len(merged)} interactions (merge={body.merge})")
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:save_interactions",
+        f"page#{module_id}",
+        f"{len(merged)} interactions (merge={body.merge})",
+    )
 
     return R.ok({"interaction_count": len(merged), "merge": body.merge})
 
@@ -536,10 +588,14 @@ def classify_global_nav(
         threshold=body.threshold,
         save=True,
     )
-    db.commit()
-
-    _audit(req, current, db, "module:classify_global_nav", f"bundle#{bundle_id}",
-           f"{len(result.global_nav_items)} items, removed {result.removed_from_pages} from pages")
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:classify_global_nav",
+        f"bundle#{bundle_id}",
+        f"{len(result.global_nav_items)} items, removed {result.removed_from_pages} from pages",
+    )
 
     return R.ok({
         "total_pages": result.total_pages,
@@ -690,10 +746,14 @@ def confirm_configures(
         client_version=bundle.client_version,
         admin_version=bundle.admin_version,
     )
-    db.commit()
-
-    _audit(req, current, db, "module:confirm_configures", f"bundle#{bundle_id}",
-           f"{confirm_result.links_created} links")
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:confirm_configures",
+        f"bundle#{bundle_id}",
+        f"{confirm_result.links_created} links",
+    )
 
     return R.ok({
         "links_created": confirm_result.links_created,
@@ -704,7 +764,10 @@ def confirm_configures(
 @router.get("/bundle/{bundle_id}/admin-links", response_model=R[list[ModuleAdminLinkOut]], summary="跨系统关联列表")
 def list_admin_links(
     bundle_id: int,
-    relation_type: str | None = Query(None, description="configures / links_to_admin"),
+    relation_type: Literal["configures", "links_to_admin"] | None = Query(
+        None,
+        description="configures / links_to_admin",
+    ),
     current: CurrentUser = Depends(require_permission("knowledge:view")),
     db: Session = Depends(get_db),
 ):
@@ -718,6 +781,7 @@ def list_admin_links(
     # Get all client/admin module IDs in this bundle
     module_ids = list(db.scalars(
         select(RequirementModule.id).where(
+            RequirementModule.project_id == pid,
             RequirementModule.release_bundle_id == bundle_id,
         )
     ).all())
@@ -743,13 +807,30 @@ def create_admin_link(
     """手动创建 client↔admin 模块关联。"""
     pid = current.project_id or 0
 
-    # Validate both modules exist
-    client_mod = db.get(RequirementModule, body.client_module_id)
-    admin_mod = db.get(RequirementModule, body.admin_module_id)
-    if not client_mod or client_mod.project_id != pid:
-        return R(code=404, msg="用户端模块不存在")
-    if not admin_mod or admin_mod.project_id != pid:
-        return R(code=404, msg="运营后台模块不存在")
+    client_mod = db.scalar(
+        select(RequirementModule).where(
+            RequirementModule.id == body.client_module_id,
+            RequirementModule.project_id == pid,
+        )
+    )
+    admin_mod = db.scalar(
+        select(RequirementModule).where(
+            RequirementModule.id == body.admin_module_id,
+            RequirementModule.project_id == pid,
+        )
+    )
+    if not client_mod:
+        raise not_found("用户端模块")
+    if not admin_mod:
+        raise not_found("运营后台模块")
+    if client_mod.id == admin_mod.id:
+        raise APIException(code=400, msg="用户端与运营后台模块不能相同", http_status=400)
+    if client_mod.node_type != "module" or client_mod.platform not in {"APP", "PC", "WEB"}:
+        raise APIException(code=400, msg="用户端必须是 APP、PC 或 WEB 的模块节点", http_status=400)
+    if admin_mod.node_type != "module" or admin_mod.platform != "ADMIN":
+        raise APIException(code=400, msg="运营后台必须是 ADMIN 模块节点", http_status=400)
+    if client_mod.release_bundle_id != admin_mod.release_bundle_id:
+        raise APIException(code=400, msg="关联模块必须属于同一发布包", http_status=400)
 
     # Check duplicate
     existing = db.scalar(
@@ -761,7 +842,7 @@ def create_admin_link(
         )
     )
     if existing:
-        return R(code=409, msg="该关联已存在")
+        raise APIException(code=409, msg="该关联已存在", http_status=409)
 
     link = ModuleAdminLink(
         project_id=pid,
@@ -772,9 +853,18 @@ def create_admin_link(
         evidence="手动创建",
     )
     db.add(link)
-    db.flush()
-    _audit(req, current, db, "module:admin_link_create", f"client#{body.client_module_id}→admin#{body.admin_module_id}")
-    db.commit()
+    try:
+        db.flush()
+        _commit_with_audit(
+            req,
+            current,
+            db,
+            "module:admin_link_create",
+            f"client#{body.client_module_id}→admin#{body.admin_module_id}",
+        )
+    except IntegrityError as exc:
+        db.rollback()
+        raise APIException(code=409, msg="该关联已存在", http_status=409) from exc
     db.refresh(link)
     return R.ok(ModuleAdminLinkOut.model_validate(link))
 
@@ -792,10 +882,15 @@ def delete_admin_link(
     if not link or link.project_id != pid:
         from app.core.exceptions import not_found
         raise not_found("关联")
-    _audit(req, current, db, "module:admin_link_delete",
-           f"link#{link_id} client#{link.client_module_id}→admin#{link.admin_module_id}")
+    detail = f"link#{link_id} client#{link.client_module_id}→admin#{link.admin_module_id}"
     db.delete(link)
-    db.commit()
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:admin_link_delete",
+        detail,
+    )
     return R.ok({"deleted": True})
 
 
@@ -829,10 +924,14 @@ async def extract_attachments(
         project_id=pid,
         version=body.version or bundle.client_version,
     )
-    db.commit()
-
-    _audit(req, current, db, "module:extract_attachments", f"bundle#{bundle_id}",
-           f"{result.processed}/{result.total_attachments} processed")
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:extract_attachments",
+        f"bundle#{bundle_id}",
+        f"{result.processed}/{result.total_attachments} processed",
+    )
 
     return R.ok(AttachmentExtractResultOut(
         total_attachments=result.total_attachments,

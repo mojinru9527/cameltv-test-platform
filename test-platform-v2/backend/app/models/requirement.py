@@ -1,6 +1,7 @@
 """Requirement document model — stores uploaded PRD / xlsx / lanhu links."""
 from __future__ import annotations
 
+from sqlalchemy import Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base
@@ -26,6 +27,8 @@ class RequirementDocument(Base, TimestampMixin):
     imported_api_indices: Mapped[str] = mapped_column(default="[]")    # JSON array of imported api case indices
     extraction_raw: Mapped[str] = mapped_column(default="")            # Stage 1 AI extraction JSON (modules + function_points)
     extraction_status: Mapped[str] = mapped_column(default="not_started")  # not_started|pending_review|confirmed
+    extraction_state: Mapped[str] = mapped_column(Text, default="{}")
+    extraction_progress: Mapped[float] = mapped_column(default=0.0)
     # ── Platform & doc type (batch-27 M1) ──
     platform: Mapped[str] = mapped_column(
         default="", index=True
@@ -44,3 +47,4 @@ class RequirementDocument(Base, TimestampMixin):
     # ── Module linkage fields (batch-34) ──
     release_bundle_id: Mapped[int | None] = mapped_column(default=None, index=True)  # FK → ReleaseBundle
     linked_swagger_id: Mapped[int | None] = mapped_column(default=None)  # linked Swagger service (FK → ApiService)
+    linked_api_endpoint_ids: Mapped[str] = mapped_column(Text, default="[]")  # confirmed ApiEndpoint IDs (JSON array)

@@ -1,7 +1,6 @@
 """测试用例 Service — CRUD + 域树查询 + 分类管理。"""
 from __future__ import annotations
 
-import json
 import re
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -154,11 +153,14 @@ def get_case(db: Session, case_id: int, project_id: int = 0) -> dict | None:
     return _row_to_dict(row) if row else None
 
 
-def create_case(db: Session, data: dict) -> dict:
+def create_case(db: Session, data: dict, *, commit: bool = True) -> dict:
     data = _sanitize_case_data(data)
     row = TestCase(**data)
     db.add(row)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(row)
     return _row_to_dict(row)
 

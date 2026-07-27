@@ -19,6 +19,7 @@ const UiTestPage = lazy(() => import('@/pages/uitest'))
 const ProjectPage = lazy(() => import('@/pages/project'))
 const TracePage = lazy(() => import('@/pages/trace'))
 const RequirementPage = lazy(() => import('@/pages/requirement'))
+const RequirementReviewPage = lazy(() => import('@/pages/requirement/ReviewPage'))
 const MindmapPage = lazy(() => import('@/pages/mindmap'))
 const ApiTestPage = lazy(() => import('@/pages/apitest'))
 const NotifyPage = lazy(() => import('@/pages/notify'))
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
       { path: 'workbench', element: <PageLoader><Workbench /></PageLoader> },
       { path: 'trace', element: <PageLoader><TracePage /></PageLoader> },
       { path: 'requirement', element: <PageLoader><RequirementPage /></PageLoader> },
+      { path: 'requirement/:id/review', element: <PageLoader><RequirementReviewPage /></PageLoader> },
       { path: 'testcase', element: <PageLoader><TestCasePage /></PageLoader> },
       { path: 'testplan', element: <PageLoader><TestPlanPage /></PageLoader> },
       { path: 'testplan/:id', element: <PageLoader><PlanDetail /></PageLoader> },
