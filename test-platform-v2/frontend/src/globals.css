@@ -1,5 +1,13 @@
 @import "@fontsource-variable/geist";
 
+/* ── UI Design System: 三层令牌 + 黑曜流界主题 ── */
+@import "./ui/tokens/primitives.css";
+@import "./ui/tokens/semantics.css";
+@import "./ui/tokens/typography.css";
+@import "./ui/tokens/spacing.css";
+@import "./ui/tokens/motion.css";
+@import "./ui/themes/obsidian-flow.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

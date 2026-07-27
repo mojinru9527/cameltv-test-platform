@@ -9,9 +9,15 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent } from '@/lib/icons'
+import { useObsidianPage } from '@/ui'
 
 export default function TracePage() {
   useDocumentTitle('链路追踪')
+  const { Page } = useObsidianPage({
+    title: '质量追溯',
+    subtitle: 'QUALITY TRACE',
+    description: '追踪需求→用例→计划→执行→缺陷→报告的完整质量链路，定位覆盖缺口。',
+  })
   const chartColors = useChartColors()
   const { data, isLoading, isError, error, refetch } = useApi<CoverageData>(
     () => fetchCoverage(),
@@ -19,7 +25,7 @@ export default function TracePage() {
   )
 
   return (
-    <div className="p-6">
+    <Page>
       <AsyncState
         isLoading={isLoading}
         isError={isError}
@@ -137,7 +143,7 @@ export default function TracePage() {
           )
         }}
       </AsyncState>
-    </div>
+    </Page>
   )
 }
 

@@ -39,6 +39,7 @@ import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
+import { useObsidianPage } from '@/ui'
 import AiResultModal from './AiResultModal'
 import EvidenceTaskPanel from './components/EvidenceTaskPanel'
 import VersionCompare from './components/VersionCompare'
@@ -86,6 +87,11 @@ interface RequirementData {
 
 export default function RequirementPage() {
   useDocumentTitle('需求管理')
+  const { Page } = useObsidianPage({
+    title: '需求管理',
+    subtitle: 'REQUIREMENT MANAGEMENT',
+    description: '管理需求文档与版本基线，AI 辅助提取与评审，支持原型预览与证据溯源。',
+  })
   const [keyword, setKeyword] = useState('')
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -453,9 +459,10 @@ export default function RequirementPage() {
   const activeDocBrief = docs.find((d) => d.id === activeDocId)
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <PageHeader title="需求文档" icon={BookOpen} description="上传 PRD / Excel / 蓝湖链接，AI 自动生成测试用例。">
+    <Page>
+      <div className="space-y-4">
+        {/* Header */}
+        <PageHeader title="需求文档" icon={BookOpen} description="上传 PRD / Excel / 蓝湖链接，AI 自动生成测试用例。">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置">
             <Settings className="size-4" />
@@ -1185,5 +1192,6 @@ export default function RequirementPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </Page>
   )
 }

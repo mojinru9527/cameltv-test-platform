@@ -32,6 +32,7 @@ import { deletePlan, fetchPlans } from '@/api/testplan'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
+import { useObsidianPage } from '@/ui'
 import PlanDrawer from './PlanDrawer'
 
 const STATUS_MAP: Record<string, { variant: 'outline' | 'default' | 'secondary'; className?: string; label: string }> = {
@@ -43,6 +44,11 @@ const STATUS_MAP: Record<string, { variant: 'outline' | 'default' | 'secondary';
 
 export default function TestPlanPage() {
   useDocumentTitle('测试计划')
+  const { Page } = useObsidianPage({
+    title: '测试计划',
+    subtitle: 'TEST PLAN',
+    description: '编排测试执行计划，管理阶段、环境和批次策略。',
+  })
   const navigate = useNavigate()
   const [status, setStatus] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -136,8 +142,9 @@ export default function TestPlanPage() {
   ]
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="测试计划" />
+    <Page>
+      <div className="space-y-4">
+        <PageHeader title="测试计划" />
 
       <AsyncState
         isLoading={isLoading}
@@ -216,5 +223,6 @@ export default function TestPlanPage() {
         onSaved={onSaved}
       />
     </div>
+    </Page>
   )
 }

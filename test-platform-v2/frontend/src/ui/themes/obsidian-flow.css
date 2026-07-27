@@ -1,0 +1,409 @@
+/* ════════════════════════════════════════════════════════
+   黑曜流界 (Obsidian Flow) — 主主题
+   暗黑空间玻璃 · 翡翠绿主强调 · 空间质量链路
+
+   层级规则：
+   - canvas: 最底层画布（近黑稳定表面）
+   - surface: 内容卡（暗色不透明平面，用于表格和数据）
+   - elevated: 浮层（轻微提亮，用于选中态、Popover）
+   - glass: 玻璃材质（仅 chrome、Inspector、空间链路）
+   ════════════════════════════════════════════════════════ */
+
+[data-ui-theme="obsidian-flow"] {
+  /* ── 画布 ── */
+  --_bg: #0b100d;
+  --_canvas: #0b100d;
+  --_surface: #141c17;
+  --_surface-elevated: #1f2923;
+  --_surface-overlay: rgba(7, 12, 9, 0.82);
+
+  /* ── 文本 ── */
+  --_text: #eef6f0;
+  --_text-secondary: #a7b5ab;
+  --_text-muted: #718077;
+  --_text-inverse: #0b100d;
+
+  /* ── 主强调 (翡翠绿) ── */
+  --_primary: #35e68a;
+  --_primary-hover: #53c982;
+  --_primary-text: #0b100d;
+  --_primary-glow: rgba(53, 230, 138, 0.18);
+
+  /* ── 状态 ── */
+  --_success: #35e68a;
+  --_success-bg: rgba(53, 230, 138, 0.1);
+  --_warning: #f5a623;
+  --_warning-bg: rgba(245, 166, 35, 0.1);
+  --_danger: #ff9a90;
+  --_danger-bg: rgba(255, 154, 144, 0.1);
+  --_info: #80c4ff;
+  --_info-bg: rgba(128, 196, 255, 0.1);
+
+  /* ── 边界 ── */
+  --_border-subtle: rgba(218, 239, 224, 0.06);
+  --_border-default: rgba(218, 239, 224, 0.1);
+  --_border-strong: rgba(218, 239, 224, 0.18);
+  --_border-focus: #35e68a;
+
+  /* ── 交互 ── */
+  --_hover-bg: rgba(255, 255, 255, 0.04);
+  --_pressed-bg: rgba(255, 255, 255, 0.08);
+  --_selected-bg: rgba(53, 230, 138, 0.08);
+
+  /* ── 玻璃材质 ── */
+  --_glass-bg: rgba(20, 28, 23, 0.72);
+  --_glass-border: rgba(117, 255, 178, 0.08);
+  --_glass-blur: blur(18px);
+  --_glass-blur-heavy: blur(32px);
+
+  /* ── 应用范围：全局挂载 ── */
+  background: var(--_bg);
+  color: var(--_text);
+}
+
+/* ── 全局基础样式 ── */
+[data-ui-theme="obsidian-flow"] * {
+  border-color: var(--_border-subtle);
+}
+
+[data-ui-theme="obsidian-flow"] ::selection {
+  background: rgba(53, 230, 138, 0.22);
+  color: var(--_text);
+}
+
+/* ── 滚动条风格 ── */
+[data-ui-theme="obsidian-flow"] ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+[data-ui-theme="obsidian-flow"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-ui-theme="obsidian-flow"] ::-webkit-scrollbar-thumb {
+  background: rgba(218, 239, 224, 0.12);
+  border-radius: 3px;
+}
+
+[data-ui-theme="obsidian-flow"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(218, 239, 224, 0.22);
+}
+
+/* ═══════════════════════════════════════════
+   表面层级系统
+   ═══════════════════════════════════════════ */
+
+/* 内容卡 — 稳定暗色平面（表格、表单、数据区域） */
+[data-ui-theme="obsidian-flow"] .ui-surface {
+  background: var(--_surface);
+  border: 1px solid var(--_border-default);
+  border-radius: 12px;
+}
+
+/* 浮层卡 — 轻微提亮（选中态、Popover、Tooltip） */
+[data-ui-theme="obsidian-flow"] .ui-surface-elevated {
+  background: var(--_surface-elevated);
+  border: 1px solid var(--_border-strong);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ── 玻璃表面（仅 chrome / Inspector / 链路覆盖） ── */
+[data-ui-theme="obsidian-flow"] .ui-glass {
+  background: var(--_glass-bg);
+  backdrop-filter: var(--_glass-blur);
+  -webkit-backdrop-filter: var(--_glass-blur);
+  border: 1px solid var(--_glass-border);
+  border-radius: 14px;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-glass-heavy {
+  backdrop-filter: var(--_glass-blur-heavy);
+  -webkit-backdrop-filter: var(--_glass-blur-heavy);
+}
+
+/* ═══════════════════════════════════════════
+   按钮系统
+   ═══════════════════════════════════════════ */
+
+[data-ui-theme="obsidian-flow"] .ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: var(--text-control);
+  font-weight: var(--weight-medium);
+  border-radius: 9px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background var(--motion-fast) var(--ease-out),
+              box-shadow var(--motion-fast) var(--ease-out),
+              transform var(--motion-instant) var(--ease-out);
+  outline: none;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--_border-focus), 0 0 0 4px rgba(53, 230, 138, 0.2);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-btn:active {
+  transform: scale(0.97);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Primary — 翡翠绿主操作 */
+[data-ui-theme="obsidian-flow"] .ui-btn-primary {
+  color: var(--_primary-text);
+  background: linear-gradient(135deg, #67efa9, #29d879);
+  border-color: rgba(117, 255, 178, 0.42);
+  box-shadow: 0 8px 28px rgba(25, 179, 98, 0.14);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-btn-primary:hover {
+  background: linear-gradient(135deg, #80f0b5, #35e68a);
+  box-shadow: 0 12px 36px rgba(25, 179, 98, 0.22);
+}
+
+/* Secondary — 暗色次要操作 */
+[data-ui-theme="obsidian-flow"] .ui-btn-secondary {
+  color: var(--_text);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(218, 239, 224, 0.1);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(218, 239, 224, 0.16);
+}
+
+/* Ghost — 无背景操作 */
+[data-ui-theme="obsidian-flow"] .ui-btn-ghost {
+  color: var(--_text-secondary);
+  background: transparent;
+  border-color: transparent;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-btn-ghost:hover {
+  color: var(--_text);
+  background: var(--_hover-bg);
+}
+
+/* Danger — 危险操作 */
+[data-ui-theme="obsidian-flow"] .ui-btn-danger {
+  color: #fff;
+  background: #d94a41;
+  border-color: rgba(255, 99, 88, 0.3);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-btn-danger:hover {
+  background: #e55b52;
+}
+
+/* ═══════════════════════════════════════════
+   输入框系统
+   ═══════════════════════════════════════════ */
+
+[data-ui-theme="obsidian-flow"] .ui-input {
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: var(--text-control);
+  color: var(--_text);
+  background: var(--_surface);
+  border: 1px solid var(--_border-default);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color var(--motion-fast) var(--ease-out),
+              box-shadow var(--motion-fast) var(--ease-out);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-input::placeholder {
+  color: var(--_text-muted);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-input:hover {
+  border-color: var(--_border-strong);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-input:focus {
+  border-color: var(--_border-focus);
+  box-shadow: 0 0 0 3px rgba(53, 230, 138, 0.12);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-input[aria-invalid="true"],
+[data-ui-theme="obsidian-flow"] .ui-input.is-error {
+  border-color: var(--_danger);
+  box-shadow: 0 0 0 3px rgba(255, 154, 144, 0.12);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-input:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════
+   Badge / 标签系统
+   ═══════════════════════════════════════════ */
+
+[data-ui-theme="obsidian-flow"] .ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  font-size: var(--text-caption);
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-pill);
+  line-height: 1.5;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-badge-success {
+  color: var(--_success);
+  background: var(--_success-bg);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-badge-warning {
+  color: var(--_warning);
+  background: var(--_warning-bg);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-badge-danger {
+  color: var(--_danger);
+  background: var(--_danger-bg);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-badge-info {
+  color: var(--_info);
+  background: var(--_info-bg);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-badge-neutral {
+  color: var(--_text-secondary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ═══════════════════════════════════════════
+   进度条
+   ═══════════════════════════════════════════ */
+
+[data-ui-theme="obsidian-flow"] .ui-progress {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #29d879, #67efa9);
+  border-radius: 2px;
+  transition: width var(--motion-standard) var(--ease-out);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-progress-fill.is-warning {
+  background: linear-gradient(90deg, #f5a623, #ffd080);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-progress-fill.is-danger {
+  background: linear-gradient(90deg, #d94a41, #ff9a90);
+}
+
+/* ═══════════════════════════════════════════
+   表格系统
+   ═══════════════════════════════════════════ */
+
+[data-ui-theme="obsidian-flow"] .ui-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-control);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-table th {
+  padding: 10px 16px;
+  color: var(--_text-muted);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+  border-bottom: 1px solid var(--_border-default);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-table td {
+  padding: 12px 16px;
+  color: var(--_text);
+  border-bottom: 1px solid var(--_border-subtle);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-table tr:hover td {
+  background: var(--_hover-bg);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-table tr.is-selected td {
+  background: var(--_selected-bg);
+}
+
+/* ═══════════════════════════════════════════
+   Spotlight 交互
+   ═══════════════════════════════════════════ */
+
+[data-ui-theme="obsidian-flow"] .ui-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    520px circle at var(--spotlight-x, 50%) var(--spotlight-y, 40%),
+    rgba(53, 230, 138, 0.06),
+    transparent 60%
+  );
+  transition: opacity var(--motion-fast) var(--ease-out);
+}
+
+[data-ui-theme="obsidian-flow"] .ui-spotlight:hover::before,
+[data-ui-theme="obsidian-flow"] .ui-spotlight:focus-within::before {
+  opacity: 1;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-spotlight > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════
+   No Glass 降级
+   ═══════════════════════════════════════════ */
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-ui-theme="obsidian-flow"] .ui-glass,
+  [data-ui-theme="obsidian-flow"] .ui-glass-heavy {
+    background: var(--_surface-elevated) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: var(--_border-default) !important;
+  }
+
+  [data-ui-theme="obsidian-flow"] .ui-spotlight::before {
+    display: none;
+  }
+}
+
+/* ── 减少动效 ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-ui-theme="obsidian-flow"] .ui-btn:active {
+    transform: none;
+  }
+}

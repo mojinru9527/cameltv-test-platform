@@ -35,8 +35,9 @@ import {
 } from '@/lib/icons'
 import { FadeContent } from '../ui-concepts/FadeContent'
 import { DecryptedText } from './DecryptedText'
+import { SpatialGlassPrototype } from './SpatialGlassPrototype'
 
-type ThemeId = 'cyberpunk' | 'apple' | 'clay' | 'xlab' | 'liquid-glass'
+type ThemeId = 'cyberpunk' | 'apple' | 'clay' | 'xlab' | 'liquid-glass' | 'obsidian-flow'
 type TabId = 'overview' | 'cases' | 'logs' | 'artifacts'
 type DialogMode = 'run' | 'command' | null
 
@@ -108,6 +109,15 @@ const themes: ThemeDefinition[] = [
     scene: '跨模块连续操作与沉浸式质量协作',
     tags: ['全景玻璃', '折射层级', 'morphing 背景'],
   },
+  {
+    id: 'obsidian-flow',
+    number: '06',
+    label: '黑曜',
+    name: 'Obsidian Flow',
+    source: '暗黑空间玻璃 × 质量闭环',
+    scene: '多角色在同一工作台追踪风险、证据与执行状态',
+    tags: ['空间质量链', 'Bento 工作台', '风险 Inspector'],
+  },
 ]
 
 const modules: ModuleDefinition[] = [
@@ -157,7 +167,7 @@ const artifactRows = [
 ]
 
 export function ThemeLab() {
-  const [theme, setTheme] = useState<ThemeId>('cyberpunk')
+  const [theme, setTheme] = useState<ThemeId>('obsidian-flow')
   const [activeModule, setActiveModule] = useState('dashboard')
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [dialog, setDialog] = useState<DialogMode>(null)
@@ -278,7 +288,7 @@ export function ThemeLab() {
           <span className="lab-live-dot" />
           <div>
             <strong>测试平台 · 主题实验室</strong>
-            <small>同一功能骨架 / 五种视觉系统</small>
+            <small>同一业务能力 / 六种交互系统</small>
           </div>
         </div>
 
@@ -370,7 +380,7 @@ export function ThemeLab() {
             </div>
 
             <div className="topbar-actions">
-              <button className="global-search" onClick={() => setDialog('command')}>
+              <button className="global-search" aria-label="打开全局搜索" onClick={() => setDialog('command')}>
                 <Search aria-hidden="true" />
                 <span>搜索用例、任务、缺陷</span>
                 <kbd>⌘ K</kbd>
@@ -401,70 +411,83 @@ export function ThemeLab() {
               />
             )}
 
-            <div className="page-heading">
-              <div>
-                <span className="breadcrumbs">项目空间 / {moduleDefinition.label}</span>
-                <h1>{moduleDefinition.label}</h1>
-                <p>{moduleDefinition.description}</p>
-                <div className="system-status">
-                  <span className="status-signal" />
-                  {theme === 'xlab' || theme === 'liquid-glass' ? (
-                    <DecryptedText text={statusLine} activeKey={`${statusLine}-${theme}`} />
-                  ) : (
-                    <span>{statusLine}</span>
-                  )}
+            {theme === 'obsidian-flow' ? (
+              <SpatialGlassPrototype
+                loading={loading}
+                runProgress={runProgress}
+                runState={runState}
+                onStartRun={() => setDialog('run')}
+                onRefresh={simulateLoading}
+                onShowSnackbar={showSnackbar}
+              />
+            ) : (
+              <>
+                <div className="page-heading">
+                  <div>
+                    <span className="breadcrumbs">项目空间 / {moduleDefinition.label}</span>
+                    <h1>{moduleDefinition.label}</h1>
+                    <p>{moduleDefinition.description}</p>
+                    <div className="system-status">
+                      <span className="status-signal" />
+                      {theme === 'xlab' || theme === 'liquid-glass' ? (
+                        <DecryptedText text={statusLine} activeKey={`${statusLine}-${theme}`} />
+                      ) : (
+                        <span>{statusLine}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="heading-actions">
+                    <button className="secondary-action" onClick={simulateLoading} disabled={loading}>
+                      <RefreshCw aria-hidden="true" />
+                      {loading ? '加载中' : '模拟加载'}
+                    </button>
+                    <button className="primary-action" onClick={() => setDialog('run')}>
+                      <Play aria-hidden="true" />
+                      启动回归
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="heading-actions">
-                <button className="secondary-action" onClick={simulateLoading} disabled={loading}>
-                  <RefreshCw aria-hidden="true" />
-                  {loading ? '加载中' : '模拟加载'}
-                </button>
-                <button className="primary-action" onClick={() => setDialog('run')}>
-                  <Play aria-hidden="true" />
-                  启动回归
-                </button>
-              </div>
-            </div>
 
-            <div className="content-tabs" role="tablist" aria-label="质量工作台视图">
-              {tabs.map((item) => (
-                <button
-                  key={item.id}
-                  id={`theme-tab-${item.id}`}
-                  role="tab"
-                  aria-selected={activeTab === item.id}
-                  aria-controls={`theme-panel-${item.id}`}
-                  tabIndex={activeTab === item.id ? 0 : -1}
-                  className={activeTab === item.id ? 'is-active' : ''}
-                  onKeyDown={(event) => onTabKeyDown(event, item.id)}
-                  onClick={() => setActiveTab(item.id)}
-                >
-                  {item.label}
-                  {item.count !== undefined && <span>{item.count}</span>}
-                </button>
-              ))}
-            </div>
+                <div className="content-tabs" role="tablist" aria-label="质量工作台视图">
+                  {tabs.map((item) => (
+                    <button
+                      key={item.id}
+                      id={`theme-tab-${item.id}`}
+                      role="tab"
+                      aria-selected={activeTab === item.id}
+                      aria-controls={`theme-panel-${item.id}`}
+                      tabIndex={activeTab === item.id ? 0 : -1}
+                      className={activeTab === item.id ? 'is-active' : ''}
+                      onKeyDown={(event) => onTabKeyDown(event, item.id)}
+                      onClick={() => setActiveTab(item.id)}
+                    >
+                      {item.label}
+                      {item.count !== undefined && <span>{item.count}</span>}
+                    </button>
+                  ))}
+                </div>
 
-            <FadeContent transitionKey={`${theme}-${activeTab}-${loading}`}>
-              <section
-                className="tab-panel"
-                id={`theme-panel-${activeTab}`}
-                role="tabpanel"
-                aria-labelledby={`theme-tab-${activeTab}`}
-              >
-                {loading ? (
-                  <DashboardSkeleton />
-                ) : (
-                  <TabContent
-                    activeTab={activeTab}
-                    queueBusy={queueBusy}
-                    runProgress={runProgress}
-                    onShowSnackbar={showSnackbar}
-                  />
-                )}
-              </section>
-            </FadeContent>
+                <FadeContent transitionKey={`${theme}-${activeTab}-${loading}`}>
+                  <section
+                    className="tab-panel"
+                    id={`theme-panel-${activeTab}`}
+                    role="tabpanel"
+                    aria-labelledby={`theme-tab-${activeTab}`}
+                  >
+                    {loading ? (
+                      <DashboardSkeleton />
+                    ) : (
+                      <TabContent
+                        activeTab={activeTab}
+                        queueBusy={queueBusy}
+                        runProgress={runProgress}
+                        onShowSnackbar={showSnackbar}
+                      />
+                    )}
+                  </section>
+                </FadeContent>
+              </>
+            )}
           </main>
         </div>
       </div>

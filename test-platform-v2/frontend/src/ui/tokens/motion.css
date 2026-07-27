@@ -1,0 +1,49 @@
+/* ═══════════════════════════════════════════
+   Motion Tokens — 动效时长、缓动与可访问性降级
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* ── 反馈时间窗口 ── */
+  --motion-instant: var(--duration-instant);     /* 100ms — 即时响应 */
+  --motion-fast: var(--duration-fast);           /* 180ms — hover、focus */
+  --motion-standard: var(--duration-standard);   /* 250ms — 展开、切换 */
+  --motion-structural: var(--duration-structural); /* 380ms — 布局变化 */
+
+  /* ── 缓动 ── */
+  --ease-out: var(--ease-out-expo);
+  --ease-standard: var(--ease-in-out);
+  --ease-bounce: var(--ease-spring);
+}
+
+/* ── 减少动效：禁用所有变换和过渡 ── */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-instant: 0ms;
+    --motion-fast: 0ms;
+    --motion-standard: 0ms;
+    --motion-structural: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── 减少透明度：去除毛玻璃和半透明层 ── */
+@media (prefers-reduced-transparency: reduce) {
+  [data-glass] {
+    background: var(--color-surface) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-color: var(--color-border-default) !important;
+  }
+
+  [data-glass]::before {
+    display: none !important;
+  }
+}

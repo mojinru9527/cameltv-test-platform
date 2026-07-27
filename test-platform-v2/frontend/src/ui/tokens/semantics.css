@@ -1,0 +1,51 @@
+/* ═══════════════════════════════════════════
+   Semantic Tokens — 产品语义色
+   表达产品层级含义，业务代码唯一允许直接使用的色值变量
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* ── 画布与表面 ── */
+  --color-canvas: var(--obsidian-950);
+  --color-surface: var(--obsidian-925);
+  --color-surface-elevated: var(--obsidian-900);
+  --color-surface-overlay: rgba(7, 12, 9, 0.82);
+
+  /* ── 文本 ── */
+  --color-text: var(--obsidian-100);
+  --color-text-secondary: var(--obsidian-400);
+  --color-text-muted: var(--obsidian-600);
+  --color-text-inverse: var(--obsidian-950);
+
+  /* ── 主操作 ── */
+  --color-action-primary: var(--green-400);
+  --color-action-primary-hover: var(--green-300);
+  --color-action-primary-text: var(--obsidian-950);
+
+  /* ── 状态 ── */
+  --color-status-success: var(--green-400);
+  --color-status-success-bg: rgba(53, 230, 138, 0.1);
+  --color-status-warning: var(--amber-400);
+  --color-status-warning-bg: rgba(245, 166, 35, 0.1);
+  --color-status-danger: var(--red-400);
+  --color-status-danger-bg: rgba(255, 154, 144, 0.1);
+  --color-status-info: var(--blue-400);
+  --color-status-info-bg: rgba(128, 196, 255, 0.1);
+
+  /* ── 边界 ── */
+  --color-border-subtle: rgba(218, 239, 224, 0.08);
+  --color-border-default: rgba(218, 239, 224, 0.12);
+  --color-border-strong: rgba(218, 239, 224, 0.2);
+  --color-border-focus: var(--green-400);
+
+  /* ── 交互反馈 ── */
+  --color-hover: rgba(255, 255, 255, 0.04);
+  --color-pressed: rgba(255, 255, 255, 0.08);
+  --color-selected: rgba(53, 230, 138, 0.08);
+  --color-focus-ring: rgba(53, 230, 138, 0.5);
+
+  /* ── 覆盖与特殊 ── */
+  --color-glass-bg: rgba(20, 28, 23, 0.72);
+  --color-glass-border: rgba(117, 255, 178, 0.08);
+  --color-glass-blur: blur(18px);
+  --color-glass-blur-heavy: blur(32px);
+}

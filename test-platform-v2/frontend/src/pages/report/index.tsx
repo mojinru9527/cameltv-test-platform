@@ -66,6 +66,7 @@ import { SkeletonText } from '@/components/ui/skeleton'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { ErrorState, AsyncState } from '@/components/state'
+import { useObsidianPage } from '@/ui'
 import StatCard from '@/components/StatCard'
 import {
   ResponsiveContainer,
@@ -127,6 +128,11 @@ type ReportFormData = z.infer<typeof reportSchema>
 
 export default function ReportPage() {
   useDocumentTitle('测试报告')
+  const { Page } = useObsidianPage({
+    title: '报告中心',
+    subtitle: 'REPORT CENTER',
+    description: '聚合测试执行结果，生成多维度质量报告，支持导出与钻取分析。',
+  })
   const chartColors = useChartColors()
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
@@ -267,8 +273,9 @@ export default function ReportPage() {
   ]
 
   return (
-    <div>
-      <PageHeader title="报告中心" />
+    <Page>
+      <div>
+        <PageHeader title="报告中心" />
 
       {/* ── Trend Section ── */}
       <AsyncState
@@ -640,5 +647,6 @@ export default function ReportPage() {
         </SheetContent>
       </Sheet>
     </div>
+    </Page>
   )
 }

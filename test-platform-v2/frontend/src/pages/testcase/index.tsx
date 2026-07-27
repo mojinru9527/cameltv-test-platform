@@ -44,6 +44,7 @@ import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDe
 import { formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useObsidianPage } from '@/ui'
 import CaseDrawer from './CaseDrawer'
 import VersionDialog from './VersionDialog'
 import type { TestCaseVersion } from '@/types'
@@ -54,6 +55,11 @@ const REVIEW_COLORS: Record<string, 'default' | 'secondary' | 'destructive' | 'o
 
 export default function TestCasePage() {
   useDocumentTitle('用例库')
+  const { Page } = useObsidianPage({
+    title: '用例库',
+    subtitle: 'TEST CASE LIBRARY',
+    description: '管理测试用例资产，按领域组织，支持批量操作与版本历史。',
+  })
   // domains are loaded independently (used for tree + filter dropdowns)
   const [domains, setDomains] = useState<any[]>([])
 
@@ -257,8 +263,9 @@ export default function TestCasePage() {
   }
 
   return (
-    <div className="space-y-4">
-      <PageHeader title="用例服务" />
+    <Page>
+      <div className="space-y-4">
+        <PageHeader title="用例服务" />
 
       {/* Top Tabs */}
       <div className="flex items-center gap-2">
@@ -598,5 +605,6 @@ export default function TestCasePage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </Page>
   )
 }

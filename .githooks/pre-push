@@ -32,6 +32,10 @@ if [ "$needs_verification" -eq 1 ]; then
   hook_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
   verifier="$hook_dir/../scripts/git/verify-ai-worktree.ps1"
   repository=$(git rev-parse --show-toplevel)
+  if command -v cygpath >/dev/null 2>&1; then
+    verifier=$(cygpath -w "$verifier")
+    repository=$(cygpath -w "$repository")
+  fi
   if ! pwsh -NoProfile -File "$verifier" -RepositoryPath "$repository" -RequireMetadata -RequireClean >/dev/null; then
     echo "ERROR: AI worktree verification failed; push was blocked." >&2
     exit 1
