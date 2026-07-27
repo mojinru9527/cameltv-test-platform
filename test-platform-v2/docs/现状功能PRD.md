@@ -1,7 +1,7 @@
 ---
 title: "测试平台 v2 现状功能 PRD"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-07-27"
 status: "active"
 expires: "2026-12-26"
 tags: ["PRD", "现状", "功能清单", "基线"]
@@ -47,7 +47,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 2 | 工作台看板 | `/workbench` | ✅ |
 | 3 | 项目管理 | `/project` | ✅ |
 | 4 | 系统管理（用户/角色/权限/审计） | `/system` | ✅ |
-| 5 | 需求管理 + AI 用例生成 | `/requirement` | ✅（依赖外部 LLM） |
+| 5 | 需求管理 + AI 用例生成 | `/requirement` | 🟡（本地链路可用；真实 LLM、蓝湖证据和旧库升级待验收） |
 | 6 | 用例管理 | `/testcase` | ✅ |
 | 7 | 测试计划与执行 | `/testplan` `/testplan/:id` | ✅ |
 | 8 | 测试报告 | `/report` | ✅ |
@@ -144,28 +144,32 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 
 ---
 
-### 模块 5　需求管理 + AI 用例生成 ✅（核心亮点，依赖外部 LLM）
-**目标**：上传需求 → AI 解析并生成测试用例 → 选择性导入用例库。
+### 模块 5　需求管理 + AI 用例生成 🟡（依赖外部 LLM）
+**目标**：上传需求 → 功能拆分与确认 → AI 生成 → 持久审查 → 选择性导入用例库。
 **主流程**
 ```
-上传文档(MD/Word/Excel/蓝湖链接) → AI 生成(两段式) → 预览(AiResultModal) → 勾选导入 → 用例库
+上传文档(MD/Word/Excel)或导入蓝湖证据包 → 功能拆分/确认 → AI 生成
+→ 持久审查(编辑/通过/驳回) → 幂等导入 → 用例库
 ```
 **功能点**
 | 操作 | 接口 | 说明 |
 |------|------|------|
-| 文档列表 | `GET /requirement` | |
-| 上传文档 | `POST /requirement/upload` | file_type 自动识别；Excel 可直接解析为用例(`parsed_type=test_cases`) |
-| AI 生成 | `POST /requirement/{id}/generate` | 两段式：需求分析 + 用例生成 |
-| 导入用例 | `POST /requirement/{id}/import` | 按 `indices[]` 选择性导入 |
-| 查看已生成用例 | `GET /requirement/{id}/cases` | |
-| 删除文档 | `DELETE /requirement/{id}` | |
+| 文档列表/详情 | `GET /requirements`、`GET /requirements/{id}` | 服务端分页/搜索；列表不携带正文，详情按需读取 |
+| 上传文档 | `POST /requirements/upload` | 20 MB 上限；识别 MD/Word/Excel；蓝湖正式导入先走证据包门禁 |
+| 功能拆分/读取/确认 | `POST /requirements/{id}/extract`、`GET /requirements/{id}/extraction`、`POST /requirements/{id}/extraction/confirm` | 拆分结果持久化，支持确认/驳回与刷新恢复 |
+| AI 生成 | `POST /requirements/{id}/generate` | `use_extraction=true` 时基于已确认拆分生成 |
+| 审查 | `GET /requirements/{id}/review-state`、`POST /requirements/{id}/review/{case_index}` | 编辑、通过、驳回状态持久化 |
+| 导入用例 | `POST /requirements/{id}/import` | 按全局 `indices[]` 选择；编辑值真实入库；事务、重复请求和计数受保护 |
+| 查看已生成用例 | `GET /requirements/{id}/cases` | |
+| 覆盖率/API 关联 | `GET /requirements/{id}/coverage`、`POST /requirements/{id}/match-api/confirm` | 关联持久化并可刷新恢复 |
+| 删除文档 | `DELETE /requirements/{id}` | 关联审查状态与业务审计同事务清理/提交 |
 **AI 输出结构**（`AIGenerateResult`）
 - **需求分析** `requirement_analysis`：抽取的需求项（REQ-x，类型 functional/ui/data/integration）+ 每项**问题清单**（severity high/medium/low + 描述 + 建议）+ 总体评估。
 - **功能用例** `functional_cases[]` 与 **接口用例** `api_cases[]`：title、case_type、priority(P0-P3)、domain、module、preconditions、steps(JSON)、expected_result、api_method/endpoint、remark、imported(是否已导入)。
 - 导入结果：imported / skipped / total。
 - 文档状态：uploaded；统计 imported_count / func / api。
 **特色**：除生成用例外，AI 还会**反向评审需求**（指出需求文档自身的问题与建议）。
-**现状与局限**：强依赖 DeepSeek（端点/Key 写死）；蓝湖提取路径硬编码；导入无事务（中途失败留半成品）；无生成历史版本对比。
+**现状与局限**：真实 LLM 和蓝湖 Provider 仍是外部依赖；从脱敏真实旧版 PostgreSQL 快照升级的证据尚未完成，不能据本地自动化直接判定生产就绪。
 
 ---
 

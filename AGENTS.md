@@ -70,24 +70,44 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 
 # 6. 提交前本地自检（见第 3 节）
 
-# 7. Push 功能分支（只 push 功能分支！）
+# 7. Batch 48 起，每一次 push 前先展示第 5 节变更摘要，并向用户明确询问：
+# “当前待推送范围如下。是否还有其他变动需要合并？
+# 如果有，我将暂停推送，完成合并和自检后再重新确认。”
+# 只有用户明确回答“没有其他变动”并授权本次 push 后，才可继续。
+
+# 8. Push 功能分支（只 push 功能分支！）
 git push -u origin feature/{描述}
 
-# 8. 创建 Draft PR 指向 main
+# 9. 创建 Draft PR 指向 main
 gh pr create --draft --base main --head feature/{描述} --title "..." --body "..."
 
-# 9. 先做基础审计并等待 Draft PR 首轮 checks
+# 10. 先做基础审计并等待 Draft PR 首轮 checks
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex
 
-# 10. 首轮验证完成后，Agent Team 再问用户“实际执行器仍为 Codex/Claude 吗，是否授权最终审计与合并？”并停下等待
+# 11. 首轮验证完成后，Agent Team 再问用户“实际执行器仍为 Codex/Claude 吗，是否授权最终审计与合并？”并停下等待
 # 收到明确答复后记录完成确认；身份必须与开始确认一致
 pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor codex -UserConfirmedCompletion
 
-# 11. 完成确认证据推送且对应 checks 全绿后，才允许最终审计
+# 12. 完成确认证据推送前，仍须重新执行第 7 步的 push 确认；对应 checks 全绿后，才允许最终审计
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex -RequireSuccessfulChecks
 ```
 
-### 2.4 多窗口并行（Agent Team）
+### 2.4 Batch 48 起的逐次 Push 确认（强制）
+
+从 Batch 48 开始，**每一次** `git push` 前都必须先展示本次待推送范围和自检结果，并在聊天中逐字询问：
+
+```text
+当前待推送范围如下。是否还有其他变动需要合并？
+如果有，我将暂停推送，完成合并和自检后再重新确认。
+```
+
+- 适用于首次 push、修复后的后续 push、变基/冲突处理后的 push，以及 Agent Team 完成确认证据 push。
+- 只有用户明确回答“没有其他变动”并明确授权**本次** push，才可执行一次与已展示范围一致的 push；沉默、含糊答复或仅确认执行器均不构成授权。
+- 用户表示还有其他变动时，必须暂停 push；合并这些变动并重新完成对应自检后，再展示新范围并重新询问。
+- 获得授权后如果提交、文件范围或目标分支发生变化，原授权立即失效，必须重新确认。
+- 未取得明确授权时，不得 push、创建 PR，或以完成确认证据 push 绕过本门禁。
+
+### 2.5 多窗口并行（Agent Team）
 
 使用 `git worktree` 隔离工作目录，每个窗口独立分支：
 - 每个 Agent Team 窗口 = 一个 worktree + 独立分支
@@ -173,7 +193,7 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 
 ## 5. 变更摘要模板
 
-每次 `git push` 前，Agent 应向用户展示：
+每次 `git push` 前，Agent 应向用户展示以下摘要，然后执行第 2.4 节逐次 Push 确认：
 
 ```
 ## 变更摘要
