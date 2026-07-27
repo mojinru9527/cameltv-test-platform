@@ -95,5 +95,5 @@ Batch 48 — 验收修复与规则沉淀
 - 结果：48 通过、0 失败、0 阻塞；行为回归全部通过。
 - 已完成外部复测：真实 AI；旧 PG 隔离克隆升级与 metadata；真实 PG 多连接并发；真实蓝湖有界下载、并发提取、附件失败转人工、截图/OCR。
 - 发布结论：`READY`；`lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 已发布到根仓配置的可访问 fork，并通过独立克隆复核。
-- 已创建 Draft PR #74；首轮 CI 暴露 npm 10 锁文件兼容问题和后端漏装 `fastmcp`，本地修复已通过干净安装、typecheck、124 项测试、build、high/critical=0 与蓝湖运行时专项。
+- 已创建 Draft PR #74；CI 暴露 npm 10 锁文件兼容问题及后端未同步 `lanhu-mcp` 完整运行依赖，本地修复已通过干净安装、typecheck、124 项测试、build、high/critical=0 与蓝湖运行时专项。
 - 待执行：提交锁文件兼容修复与证据，重新取得用户对本次追加 push 的确认。

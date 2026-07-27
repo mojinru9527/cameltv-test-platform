@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import sys
 from types import SimpleNamespace
 
@@ -21,6 +22,27 @@ def _run(url=_URL):
 
 
 class TestParseHelpers:
+    def test_backend_declares_all_pinned_lanhu_runtime_dependencies(self):
+        def requirement_names(path):
+            names = set()
+            for line in path.read_text(encoding="utf-8").splitlines():
+                requirement = line.split("#", 1)[0].strip()
+                if not requirement or requirement.startswith("-"):
+                    continue
+                name = re.split(r"[<>=!~\[\]\s]", requirement, maxsplit=1)[0]
+                names.add(name.lower().replace("_", "-"))
+            return names
+
+        workspace_root = lanhu_provider._resolve_workspace_root()
+        backend_requirements = requirement_names(
+            workspace_root / "test-platform-v2" / "backend" / "requirements.txt"
+        )
+        lanhu_requirements = requirement_names(
+            lanhu_provider._lanhu_mcp_dir() / "requirements.txt"
+        )
+
+        assert lanhu_requirements <= backend_requirements
+
     def test_pinned_runtime_without_optional_login_symbols_is_supported(self):
         module_path = str(lanhu_provider._lanhu_mcp_dir())
         sys.path.insert(0, module_path)
