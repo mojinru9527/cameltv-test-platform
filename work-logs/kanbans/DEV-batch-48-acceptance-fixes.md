@@ -3,7 +3,7 @@ title: "DEV 看板 — Batch 48 需求服务验收修复"
 owner: "qa-team"
 created: "2026-07-27"
 last_reviewed: "2026-07-27"
-status: "delivery_blocked"
+status: "ready_for_push"
 tags: ["batch-48", "requirement-service", "acceptance-fixes", "agent-team", "codex"]
 related:
   - "../../docs/superpowers/plans/2026-07-27-batch-48-acceptance-fixes.md"
@@ -28,7 +28,7 @@ Batch 48 — 验收修复与规则沉淀
 ├── 已完成：A01～A12 生产验收规则及 Batch 48 复测资产
 ├── 已完成：双端全量、浏览器三视口、真实 AI、旧 PG 升级和 PG 多连接并发复测
 ├── 已完成：真实蓝湖有界下载、并发提取、附件失败转人工和截图/OCR，48/48 行为通过
-├── 交付阻塞：lanhu-mcp 本地提交尚不可从既有上游检出，根仓 gitlink 不可远端复现
+├── 已完成：lanhu-mcp 提交发布到可访问 fork 并通过独立克隆复核，A12 解除
 └── 推送门禁：每一次 push 前重新向用户展示范围并取得明确授权
 ```
 
@@ -46,9 +46,9 @@ Batch 48 — 验收修复与规则沉淀
 | 6 | 前端数据流/审查 UX/移动端/轮询 | ✅ | 29 文件/124 Vitest，三视口 headed Playwright 通过 |
 | 7 | 依赖供应链风险 | ✅ | 生产/全依赖 high=0、critical=0；2 moderate 已登记 |
 | 8 | 生产验收规则与 Batch 48 复测资产 | ✅ | A01～A12、判定、证据、48 条复测字段与索引齐全 |
-| 9 | 全量验证、QA 报告和发布判定 | ✅ | 48/48 行为通过；A12 交付可追溯阻塞，客观结论仍为 `NEEDS WORK` |
-| 10 | 发布 `lanhu-mcp` 子模块提交 | 🔒 | `74bfa7b463ef505008ea25466bc950ad9ed67324` 可从根仓配置的远端检出，并通过干净克隆专项复核 |
-| 11 | 用户确认后 push / Draft PR | 🔒 | 交付阻塞解除，且用户明确无其他变动并授权本次 push |
+| 9 | 全量验证、QA 报告和发布判定 | ✅ | 48/48 行为通过；A01～A12 全部通过，结论 `READY` |
+| 10 | 发布 `lanhu-mcp` 子模块提交 | ✅ | `74bfa7b463ef505008ea25466bc950ad9ed67324` 已从根仓配置的 fork 独立克隆并复核 |
+| 11 | 用户确认后 push / Draft PR | 🔒 | 根仓变更完成提交后，再次取得“无其他变动”与本次 push 授权 |
 
 状态：`⏳` 未开始｜`🔄` 进行中｜`✅` 已完成｜`🔒` 等待门禁。
 
@@ -60,14 +60,14 @@ Batch 48 — 验收修复与规则沉淀
 | Batch 47 基线用例 | `tests/test-cases/functional/BATCH47-测试平台需求服务-生产级验收.md` | 已执行 / NEEDS WORK |
 | Batch 48 复测用例 | `tests/test-cases/functional/BATCH48-测试平台需求服务-生产级复测.md` | 已执行：48 通过 / 0 失败 / 0 阻塞 |
 | 生产验收规则 | `tests/test-case-standards/生产级模块验收规则.md` | 已建立 |
-| Batch 48 QA 报告 | `work-logs/batch-48-需求服务验收修复-qa-report.md` | 已完成 / `NEEDS WORK` |
+| Batch 48 QA 报告 | `work-logs/batch-48-需求服务验收修复-qa-report.md` | 已完成 / `READY` |
 | Batch 48 证据 | `work-logs/evidence/batch-48-requirement-service/` | 已生成三视口、真实 AI、旧 PG、PG 并发和真实蓝湖三条专项的脱敏证据索引 |
 
 ## 阻塞与风险
 
 | 阻塞/风险 | 严重度 | 影响 | 解除条件 |
 | --- | :---: | --- | --- |
-| `lanhu-mcp` 本地提交无法发布到既有上游 | 交付阻断 | 行为 48/48 已通过，但根仓 gitlink 无法在远端干净检出；A12 阻塞，结论不得改为 `READY` | 将 `74bfa7b463ef505008ea25466bc950ad9ed67324` 发布到可访问远端，或由上游合并等价提交后更新 gitlink，并执行干净克隆复核 |
+| 无交付阻塞 | — | `lanhu-mcp` fork 发布、根仓 URL 更新和独立克隆复核均完成；A12 通过 | — |
 | React Router 2 个 moderate | P2 | 不影响 high/critical 门禁 | 路由 major 升级批次完成迁移与全量回归 |
 
 ## Push 确认门禁（Batch 48 起）
@@ -94,5 +94,5 @@ Batch 48 — 验收修复与规则沉淀
 - 已完成：初始实现提交 `d1f7e52be70757c14d4acc153dee17571773b931`、真实外部复测兼容与 PostgreSQL 修复提交 `4dc307ed481fdb9ba01f5b8f949aeed7aef24503`、A01～A12 规则、48 条复测回填、QA 报告、双端全量和三视口浏览器。
 - 结果：48 通过、0 失败、0 阻塞；行为回归全部通过。
 - 已完成外部复测：真实 AI；旧 PG 隔离克隆升级与 metadata；真实 PG 多连接并发；真实蓝湖有界下载、并发提取、附件失败转人工、截图/OCR。
-- 发布结论：`NEEDS WORK`；唯一阻塞为 `lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 尚未发布到可访问上游，根仓 gitlink 不能远端复现。
-- 待维护者动作：发布子模块提交或由上游合并等价提交，完成干净克隆复核后，再进入用户 push 确认；当前未 push、未建 PR。
+- 发布结论：`READY`；`lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 已发布到根仓配置的可访问 fork，并通过独立克隆复核。
+- 待执行：提交最终证据更新，重新取得用户对根仓 push 的确认；根仓当前未 push、未建 PR。

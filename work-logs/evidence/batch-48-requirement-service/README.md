@@ -17,4 +17,4 @@
 | B47-REQ-022、B47-MOD-007 | `postgresql-concurrency-audit.md` | 真实 PG 4 路导入和 6 路关联并发；最终各 1 条且无计数漂移 |
 | B47-MOD-004、B47-MOD-006、B47-MOD-010 | `lanhu-three-regression-audit.md` | 真实目标页有界下载、4 路 PostgreSQL 并发幂等、附件失败转人工、截图与中文 OCR 均通过；证据不含 URL、Cookie 或 OCR 正文 |
 
-48 条行为复测为 48 通过、0 失败、0 阻塞。最终结论仍为 `NEEDS WORK`，唯一原因是根仓 gitlink 指向的 `lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 尚未发布到可访问上游；dry-run push 返回 HTTP 403，远端干净检出无法取得该提交，A12/交付可追溯保持阻塞。行为全过不等于当前已可交付。
+48 条行为复测为 48 通过、0 失败、0 阻塞。根仓 gitlink 指向的 `lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 已发布到根仓配置的可访问 fork；全新临时目录独立克隆得到相同 SHA 且工作区干净，A12/交付可追溯通过，最终结论为 `READY`。

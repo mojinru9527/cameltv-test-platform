@@ -16,7 +16,7 @@ related:
 > 来源基线：Batch 47 在 `origin/main@a68e492` 执行的 48 条验收用例与 21 个缺陷。
 > 目标分支：`feature/batch-48-acceptance-fixes`；实际执行前必须记录完整提交 SHA、隔离环境和数据库版本。
 > 执行标准：[生产级模块验收规则](../../test-case-standards/生产级模块验收规则.md)。
-> 执行状态：48 条通过、0 失败、0 阻塞；行为验收已全部通过。由于 `lanhu-mcp` 本地提交尚未发布到可访问的上游，根仓 gitlink 当前无法从远端干净检出，A12 交付可追溯仍阻塞，最终结论保持 `NEEDS WORK`。
+> 执行状态：48 条通过、0 失败、0 阻塞；`lanhu-mcp` 提交已发布到根仓配置的可访问 fork，并通过独立克隆验证；A01～A12 全部通过，最终结论为 `READY`。
 
 ## 1. 复测范围与放行规则
 
@@ -41,7 +41,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 - B47-REQ-022/B47-MOD-007：真实 PostgreSQL 多连接并发分别得到“4 路 1 导入、3 跳过”和“6 路 1×200、5×409”，最终各保留 1 条记录且计数无漂移。
 - B47-MOD-004/006/010：真实蓝湖目标页有界下载、4 路模块提取幂等、附件失败转人工、截图与中文 OCR 闭环通过；证据不含 URL、Cookie 或 OCR 正文。
 
-当前唯一发布阻塞不是用例失败：`lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 仅存在于本地，向既有上游执行 dry-run push 返回 HTTP 403；根仓 gitlink 因而尚不能被远端干净检出。该问题使 A12 交付可追溯不通过，在提交发布到可访问远端或更新为上游可检出提交前，结论不得写为 `READY`。
+交付可追溯已复核：`lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 已发布到 `mojinru9527/lanhu-mcp` 的 `feature/batch-48-bounded-download` 分支，根仓 `.gitmodules` 已指向该 fork；全新临时目录独立克隆得到相同 SHA 且工作区干净，A12 通过。
 
 ## 2. Batch 47 缺陷到 Batch 48 修复/自动化映射
 
@@ -206,7 +206,7 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 | 失败 | 0 | 本轮未发现新增失败 |
 | 阻塞 | 0 | 无行为用例阻塞 |
 | 未执行 | 0 | 无 |
-| **总计** | **48** | **行为验收 48/48；交付可追溯阻塞，最终仍为 `NEEDS WORK`** |
+| **总计** | **48** | **行为验收 48/48；A01～A12 全部通过，最终为 `READY`** |
 
 ## 6. 执行与证据回填要求
 
@@ -215,4 +215,4 @@ Batch 48 必须完整重跑 Batch 47 的 48 条用例，不得只验证 21 个�
 3. B47-REQ-022、B47-MOD-007 已在真实 PostgreSQL 多连接竞争下通过；并发输出和最终数据库状态见 `postgresql-concurrency-audit.md`。
 4. 旧版 PostgreSQL 卷只使用隔离克隆复测，原卷未修改；升级与 metadata 证据见 `postgresql-alembic-drift-audit.md`。
 5. B47-MOD-004、B47-MOD-006、B47-MOD-010 的统一脱敏执行证据见 `lanhu-three-regression-audit.md`；不得在文档中记录 URL、Cookie 或 OCR 正文。
-6. 行为回归虽然达到 48/48，但 `lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 尚未发布到可访问远端，根仓 gitlink 无法远端干净检出；A12/交付可追溯仍阻塞，因此最终结论保持 `NEEDS WORK`，不得写为 `READY`。
+6. `lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324` 已发布到根仓配置的可访问 fork，并通过独立克隆验证；A12/交付可追溯通过，最终结论为 `READY`。

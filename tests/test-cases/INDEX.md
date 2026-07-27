@@ -30,7 +30,7 @@
 | 批次 | 用例文件 | P0 数 | P1 数 | P2 数 | 执行/证据要求 |
 | --- | --- | ---: | ---: | ---: | --- |
 | Batch 47 | [functional/BATCH47-测试平台需求服务-生产级验收.md](functional/BATCH47-测试平台需求服务-生产级验收.md) | 28 | 20 | 0 | 已执行基线；实际、状态、缺陷和浏览器/命令证据 |
-| Batch 48 | [functional/BATCH48-测试平台需求服务-生产级复测.md](functional/BATCH48-测试平台需求服务-生产级复测.md) | 28 | 20 | 0 | 保留 B47 ID；已执行 48 通过、0 失败、0 阻塞；行为验收全过，A12 子模块交付可追溯阻塞，结论 `NEEDS WORK` |
+| Batch 48 | [functional/BATCH48-测试平台需求服务-生产级复测.md](functional/BATCH48-测试平台需求服务-生产级复测.md) | 28 | 20 | 0 | 保留 B47 ID；已执行 48 通过、0 失败、0 阻塞；A01～A12 全部通过，结论 `READY` |
 
 ---
 
@@ -99,7 +99,7 @@
 | --- | --- |
 | REQUIREMENT 需求服务 | [Batch 47 生产级验收](functional/BATCH47-测试平台需求服务-生产级验收.md) / [Batch 48 生产级复测](functional/BATCH48-测试平台需求服务-生产级复测.md) |
 
-> Batch 48 已执行：48 通过、0 失败、0 阻塞；行为验收全过，但 A12 子模块提交尚不可从远端拉取，交付结论仍为 `NEEDS WORK`。完整证据和 A01～A12 判定见 `work-logs/batch-48-需求服务验收修复-qa-report.md`。
+> Batch 48 已执行：48 通过、0 失败、0 阻塞；子模块提交已发布到根仓配置的可访问 fork，并通过独立克隆验证；A01～A12 全部通过，结论为 `READY`。完整证据和判定见 `work-logs/batch-48-需求服务验收修复-qa-report.md`。
 
 ---
 

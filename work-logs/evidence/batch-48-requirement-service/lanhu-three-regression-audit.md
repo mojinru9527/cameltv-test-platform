@@ -4,7 +4,7 @@
 
 - 执行日期：2026-07-27
 - 根仓实现提交：`b9a2066d273a097cccbd2456bae062ad45aa297c`
-- `lanhu-mcp` 本地提交：`74bfa7b463ef505008ea25466bc950ad9ed67324`
+- `lanhu-mcp` 远端提交：`mojinru9527/lanhu-mcp@74bfa7b463ef505008ea25466bc950ad9ed67324`
 - 真实输入：复用本地忽略配置中的既有蓝湖 URL 与 Cookie。
 - 脱敏：不记录 URL、Cookie、页面名称、页面 ID 原文、响应正文或 OCR 文本。
 - 范围：仅 `B47-MOD-004`、`B47-MOD-006`、`B47-MOD-010`。
@@ -79,8 +79,8 @@
 
 ## 交付说明
 
-三条行为回归均已通过，本地 48 条验收用例达到 48/48。当前账号对上游
-`dsphper/lanhu-mcp` 没有写权限，`git push --dry-run` 返回 HTTP 403。
-因此根仓尚不能安全推送引用该子模块提交；需要先将
-`74bfa7b463ef505008ea25466bc950ad9ed67324` 发布到可访问的子模块远端，
-或由上游合并后更新 gitlink。
+三条行为回归均已通过，48 条验收用例达到 48/48。经用户确认后，
+`74bfa7b463ef505008ea25466bc950ad9ed67324` 已推送到
+`mojinru9527/lanhu-mcp` 的 `feature/batch-48-bounded-download` 分支，
+根仓 `.gitmodules` 已指向该 fork。随后从全新临时目录独立克隆该分支，
+得到相同 SHA 且工作区干净；临时目录已删除，A12/交付可追溯通过。
