@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import type { ColorTheme } from '@/stores/auth'
 import { useTheme } from '@/components/theme-provider'
 import { COLOR_THEMES, getThemeDefinition } from '@/lib/themes'
+import { useUiTheme } from '@/ui'
 import type { MenuItem } from '@/types'
 import {
   Sidebar,
@@ -105,6 +106,7 @@ export default function MainLayout() {
   const { user, projects, currentProjectId, setCurrentProject, projectThemeMap, setProjectTheme, logout } =
     useAuthStore()
   const { mode, colorTheme, setMode, setColorTheme } = useTheme()
+  const { uiTheme, setUiTheme } = useUiTheme()
   const [menus, setMenus] = useState<MenuItem[]>([])
 
   useEffect(() => {
@@ -211,6 +213,21 @@ export default function MainLayout() {
         跳到主内容
       </a>
 
+      {/* ── Glass Sidebar override (obsidian-flow) ── */}
+      {uiTheme === 'obsidian-flow' && (
+        <style>{`
+          [data-sidebar="sidebar"] {
+            background: rgba(20, 28, 23, 0.78) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border-right: 1px solid rgba(117, 255, 178, 0.06) !important;
+          }
+          [data-ui-theme="obsidian-flow"] [data-sidebar="menu-button"]:hover {
+            background: rgba(53, 230, 138, 0.06) !important;
+          }
+        `}</style>
+      )}
+
       {/* ── Sidebar ── */}
       <Sidebar collapsible="icon" aria-label="主导航">
         <SidebarHeader>
@@ -276,9 +293,13 @@ export default function MainLayout() {
       </Sidebar>
 
       {/* ── Main content ── */}
-      <SidebarInset className={`flex flex-col ${colorTheme === 'liquid-glass' ? 'lg-morph-bg' : ''}`}>
+      <SidebarInset className={`flex flex-col ${uiTheme === 'obsidian-flow' ? '' : colorTheme === 'liquid-glass' ? 'lg-morph-bg' : ''}`}>
         {/* Header */}
-        <header className="flex h-14 shrink-0 items-center justify-between gap-1 border-b bg-card px-2 glass-card sm:px-4">
+        <header className={`flex h-14 shrink-0 items-center justify-between gap-1 border-b px-2 sm:px-4 ${
+          uiTheme === 'obsidian-flow'
+            ? 'border-[rgba(218,239,224,0.08)] bg-[rgba(20,28,23,0.72)] backdrop-blur-[18px]'
+            : 'bg-card glass-card'
+        }`}>
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             <SidebarTrigger className="h-8 w-8" />
             <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
@@ -304,6 +325,25 @@ export default function MainLayout() {
           </div>
 
           <div className="flex shrink-0 items-center gap-0 sm:gap-2">
+            {/* Obsidian Flow UI 系统切换 */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => setUiTheme(uiTheme === 'obsidian-flow' ? 'default' : 'obsidian-flow')}
+              aria-label={uiTheme === 'obsidian-flow' ? '切换到默认 UI' : '切换到黑曜流界 UI'}
+              aria-pressed={uiTheme === 'obsidian-flow'}
+            >
+              <span
+                className={`size-2 rounded-full transition-colors ${
+                  uiTheme === 'obsidian-flow' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(53,230,138,0.5)]' : 'bg-muted-foreground'
+                }`}
+              />
+              <span className="hidden sm:inline text-sm font-medium">
+                {uiTheme === 'obsidian-flow' ? '黑曜流界' : '默认 UI'}
+              </span>
+            </Button>
+
             {/* Theme dropdown — redesigned as card picker */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

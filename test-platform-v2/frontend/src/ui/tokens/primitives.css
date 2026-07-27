@@ -1,0 +1,73 @@
+/* ═══════════════════════════════════════════
+   Primitive Tokens — 原始设计值
+   禁止业务代码直接引用，仅供 semantic tokens 和 themes 使用
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* ── 绿色系（主强调） ── */
+  --green-50: #e9fbf0;
+  --green-100: #bbf3d0;
+  --green-200: #80dba6;
+  --green-300: #53c982;
+  --green-400: #35e68a;
+  --green-500: #29d879;
+  --green-600: #1db362;
+  --green-700: #158f4d;
+  --green-800: #0f6b3a;
+  --green-900: #0a4726;
+  --green-950: #062714;
+
+  /* ── 近黑画布（暗色底座，绝不用纯黑） ── */
+  --obsidian-50: #f5faf6;
+  --obsidian-100: #eef6f0;
+  --obsidian-200: #d9e4dc;
+  --obsidian-300: #bcc8bf;
+  --obsidian-400: #a7b5ab;
+  --obsidian-500: #91a398;
+  --obsidian-600: #829087;
+  --obsidian-700: #718077;
+  --obsidian-800: #536159;
+  --obsidian-850: #3a463f;
+  --obsidian-900: #1f2923;
+  --obsidian-925: #141c17;
+  --obsidian-950: #0b100d;
+  --obsidian-975: #070c09;
+
+  /* ── 状态色 ── */
+  --red-400: #ff9a90;
+  --red-500: #ff6358;
+  --red-600: #d94a41;
+  --amber-400: #ffd080;
+  --amber-500: #f5a623;
+  --blue-400: #80c4ff;
+  --blue-500: #3399ff;
+
+  /* ── 间距阶梯 ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── 圆角 ── */
+  --radius-1: 4px;
+  --radius-2: 8px;
+  --radius-3: 12px;
+  --radius-4: 16px;
+  --radius-pill: 9999px;
+
+  /* ── 持续时间 ── */
+  --duration-instant: 100ms;
+  --duration-fast: 180ms;
+  --duration-standard: 250ms;
+  --duration-structural: 380ms;
+
+  /* ── 缓动 ── */
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}

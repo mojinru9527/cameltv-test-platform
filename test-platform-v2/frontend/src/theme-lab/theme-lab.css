@@ -41,6 +41,18 @@ button:disabled {
   --lab-header-height: 58px;
   --sidebar-width: 220px;
   --topbar-height: 58px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --type-caption: 0.75rem;
+  --type-meta: 0.8125rem;
+  --type-control: 0.875rem;
+  --type-body: 1rem;
+  --type-section: 1.125rem;
+  --type-page: 1.5rem;
   --radius-sm: 6px;
   --radius: 10px;
   --radius-lg: 16px;
@@ -353,7 +365,7 @@ button:disabled {
 
 .theme-switcher {
   display: grid;
-  grid-template-columns: repeat(5, minmax(70px, 1fr));
+  grid-template-columns: repeat(6, minmax(64px, 1fr));
   gap: 3px;
   padding: 3px;
   background: var(--surface-soft);
@@ -2736,7 +2748,7 @@ td b {
 
   .theme-switcher {
     width: 100%;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
   .theme-switcher button {
@@ -2959,5 +2971,1370 @@ td b {
   .run-dialog,
   .command-dialog {
     background: var(--surface);
+  }
+}
+
+/* Obsidian Flow — dark spatial glass quality operating system */
+.theme-obsidian-flow {
+  color-scheme: dark;
+  --bg: #050806;
+  --surface: #0b100d;
+  --surface-soft: #101713;
+  --floating: rgba(9, 14, 11, 0.9);
+  --sidebar-bg: rgba(5, 9, 7, 0.94);
+  --ink: #dce7df;
+  --ink-strong: #f7fbf8;
+  --muted: #87958b;
+  --muted-strong: #a8b5ac;
+  --line: rgba(218, 239, 224, 0.09);
+  --line-strong: rgba(218, 239, 224, 0.17);
+  --primary: #35e68a;
+  --primary-hover: #5aeea0;
+  --primary-ink: #031008;
+  --primary-soft: rgba(53, 230, 138, 0.1);
+  --success: #49e49a;
+  --success-soft: rgba(73, 228, 154, 0.1);
+  --warning: #efc75e;
+  --warning-soft: rgba(239, 199, 94, 0.1);
+  --danger: #ff786c;
+  --danger-soft: rgba(255, 120, 108, 0.1);
+  --info: #93d9b4;
+  --focus: #67f3aa;
+  --code-bg: #080d0a;
+  --backdrop: rgba(0, 4, 2, 0.82);
+  --skeleton: #101713;
+  --skeleton-light: #17221b;
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --motion-fast: 150ms;
+  --motion-standard: 220ms;
+  --motion-shape: 360ms;
+  font-variant-numeric: tabular-nums;
+  background:
+    radial-gradient(circle at 52% -14%, rgba(76, 204, 130, 0.12), transparent 40rem),
+    radial-gradient(circle at 96% 68%, rgba(130, 168, 143, 0.05), transparent 32rem),
+    linear-gradient(155deg, #030604 0%, #060a07 46%, #030504 100%);
+  background-attachment: fixed;
+}
+
+.theme-obsidian-flow .lab-header {
+  background: rgba(5, 9, 7, 0.88);
+  border-color: rgba(218, 239, 224, 0.1);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+}
+
+.theme-obsidian-flow .theme-switcher {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: rgba(218, 239, 224, 0.08);
+}
+
+.theme-obsidian-flow .theme-switcher button {
+  border: 1px solid transparent;
+}
+
+.theme-obsidian-flow .theme-switcher button.is-active {
+  color: #f5fff8;
+  background: rgba(53, 230, 138, 0.09);
+  border-color: rgba(53, 230, 138, 0.2);
+}
+
+.theme-obsidian-flow .lab-sidebar,
+.theme-obsidian-flow .platform-topbar {
+  border-color: rgba(218, 239, 224, 0.08);
+  box-shadow: none;
+}
+
+.theme-obsidian-flow .module-nav button {
+  position: relative;
+}
+
+.theme-obsidian-flow .module-nav button.is-active {
+  color: #eff9f2;
+  background: linear-gradient(90deg, rgba(53, 230, 138, 0.11), rgba(53, 230, 138, 0.025));
+}
+
+.theme-obsidian-flow .module-nav button.is-active::before {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: -10px;
+  width: 2px;
+  content: "";
+  background: var(--primary);
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 12px rgba(53, 230, 138, 0.45);
+}
+
+.theme-obsidian-flow .platform-brand b,
+.theme-obsidian-flow .profile-control b {
+  letter-spacing: -0.01em;
+}
+
+.theme-obsidian-flow .brand-symbol {
+  color: #dff9e9;
+  background: linear-gradient(145deg, rgba(53, 230, 138, 0.26), rgba(53, 230, 138, 0.08));
+  border: 1px solid rgba(91, 240, 160, 0.28);
+}
+
+.theme-obsidian-flow .profile-control > span {
+  color: #041108;
+  background: #b7f6d1;
+}
+
+.theme-obsidian-flow .global-search {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.theme-obsidian-flow .theme-manifest {
+  min-height: 46px;
+  grid-template-columns: minmax(250px, 0.9fr) minmax(280px, 1.4fr) auto;
+  margin-bottom: var(--space-6);
+  padding: 7px 0 10px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(218, 239, 224, 0.08);
+  border-radius: 0;
+}
+
+.theme-obsidian-flow .theme-manifest > div {
+  padding-left: 76px;
+}
+
+.theme-obsidian-flow .theme-manifest > div > span,
+.theme-obsidian-flow .theme-manifest small,
+.theme-obsidian-flow .theme-manifest p,
+.theme-obsidian-flow .theme-manifest li {
+  font-size: var(--type-caption);
+}
+
+.theme-obsidian-flow .theme-manifest b {
+  font-size: var(--type-control);
+}
+
+.theme-obsidian-flow .theme-manifest li {
+  color: #b6c5ba;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(218, 239, 224, 0.07);
+}
+
+.obsidian-workbench {
+  --spotlight-x: 50%;
+  --spotlight-y: 40%;
+  position: relative;
+  isolation: isolate;
+  color: var(--ink);
+}
+
+.obsidian-hero {
+  margin-bottom: var(--space-6);
+}
+
+.obsidian-kicker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: #91a398;
+  font-size: var(--type-caption);
+  font-weight: 650;
+  letter-spacing: 0.09em;
+}
+
+.obsidian-kicker > span {
+  width: 22px;
+  height: 1px;
+  background: var(--primary);
+  box-shadow: 0 0 10px rgba(53, 230, 138, 0.55);
+}
+
+.obsidian-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
+.obsidian-title-row > div:first-child {
+  min-width: 0;
+  max-width: 850px;
+}
+
+.obsidian-title-row .breadcrumbs {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: #829087;
+  font-size: var(--type-meta);
+}
+
+.obsidian-title-row h1 {
+  max-width: 32ch;
+  margin: 0;
+  color: #f5faf6;
+  font-size: clamp(1.75rem, 2.4vw, 2.25rem);
+  font-weight: 580;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+  text-wrap: balance;
+}
+
+.obsidian-title-row p {
+  max-width: 70ch;
+  margin: var(--space-4) 0 0;
+  color: #a7b5ab;
+  font-size: var(--type-body);
+  line-height: 1.65;
+}
+
+.obsidian-hero-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: var(--space-2);
+}
+
+.theme-obsidian-flow .obsidian-hero-actions button {
+  min-height: 42px;
+  padding: 0 var(--space-4);
+  border-radius: 9px;
+  font-size: var(--type-control);
+}
+
+.theme-obsidian-flow .obsidian-hero-actions .secondary-action {
+  color: #d9e4dc;
+  background: rgba(255, 255, 255, 0.025);
+  border-color: rgba(218, 239, 224, 0.12);
+}
+
+.theme-obsidian-flow .obsidian-hero-actions .primary-action {
+  color: var(--primary-ink);
+  background: linear-gradient(135deg, #67efa9, #29d879);
+  border-color: rgba(117, 255, 178, 0.42);
+  box-shadow: 0 12px 36px rgba(25, 179, 98, 0.13);
+}
+
+.obsidian-status-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  color: #819086;
+  font-size: var(--type-meta);
+}
+
+.obsidian-status-line > span + span {
+  position: relative;
+  padding-left: var(--space-4);
+}
+
+.obsidian-status-line > span + span::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  content: "";
+  background: #536159;
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
+
+.obsidian-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: #bbf3d0;
+}
+
+.obsidian-live i {
+  width: 7px;
+  height: 7px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(53, 230, 138, 0.09), 0 0 12px rgba(53, 230, 138, 0.4);
+}
+
+.obsidian-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) 0;
+  border-top: 1px solid rgba(218, 239, 224, 0.08);
+  border-bottom: 1px solid rgba(218, 239, 224, 0.08);
+}
+
+.obsidian-metric {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px var(--space-3);
+  padding: var(--space-2) var(--space-6);
+}
+
+.obsidian-metric:first-child {
+  padding-left: 0;
+}
+
+.obsidian-metric + .obsidian-metric {
+  border-left: 1px solid rgba(218, 239, 224, 0.08);
+}
+
+.obsidian-metric > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #909f95;
+  font-size: var(--type-meta);
+}
+
+.obsidian-metric > span svg {
+  width: 15px;
+  height: 15px;
+}
+
+.obsidian-metric > b {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  color: #eef6f0;
+  font-size: 1.75rem;
+  font-weight: 560;
+  letter-spacing: -0.045em;
+}
+
+.obsidian-metric > small {
+  color: #718077;
+  font-size: var(--type-caption);
+}
+
+.obsidian-metric.metric-positive > span,
+.obsidian-metric.metric-active > span {
+  color: #80dba6;
+}
+
+.obsidian-metric.metric-risk > span,
+.obsidian-metric.metric-risk > b {
+  color: #ff9a90;
+}
+
+.obsidian-bento {
+  display: grid;
+  grid-template-columns: minmax(0, 1.72fr) minmax(290px, 0.64fr);
+  gap: var(--space-4);
+}
+
+.obsidian-chain-plane,
+.obsidian-inspector,
+.obsidian-risk-plane,
+.obsidian-timeline-plane {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(218, 239, 224, 0.09);
+  border-radius: var(--radius-lg);
+}
+
+.obsidian-chain-plane,
+.obsidian-inspector {
+  position: relative;
+  background: linear-gradient(145deg, rgba(20, 30, 24, 0.72), rgba(8, 13, 10, 0.84));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 24px 80px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(20px) saturate(115%);
+  -webkit-backdrop-filter: blur(20px) saturate(115%);
+}
+
+.obsidian-spotlight::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: radial-gradient(
+    380px circle at var(--spotlight-x) var(--spotlight-y),
+    rgba(101, 239, 164, 0.075),
+    transparent 64%
+  );
+}
+
+.obsidian-spotlight > * {
+  position: relative;
+  z-index: 1;
+}
+
+.obsidian-risk-plane,
+.obsidian-timeline-plane {
+  background: #0a0f0c;
+}
+
+.obsidian-chain-plane {
+  min-height: 490px;
+  padding: var(--space-6);
+}
+
+.obsidian-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.obsidian-panel-heading > div:first-child > span {
+  display: block;
+  margin-bottom: 5px;
+  color: #759581;
+  font-size: var(--type-caption);
+  font-weight: 680;
+  letter-spacing: 0.1em;
+}
+
+.obsidian-panel-heading h2 {
+  margin: 0;
+  color: #edf5ef;
+  font-size: var(--type-section);
+  font-weight: 620;
+  letter-spacing: -0.02em;
+}
+
+.obsidian-panel-heading p {
+  margin: 6px 0 0;
+  color: #87958b;
+  font-size: var(--type-meta);
+  line-height: 1.5;
+}
+
+.obsidian-filters {
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(218, 239, 224, 0.08);
+  border-radius: 9px;
+}
+
+.obsidian-filters button {
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  color: #91a096;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font-size: var(--type-caption);
+  transition: color var(--motion-fast) ease-out, background var(--motion-fast) ease-out;
+}
+
+.obsidian-filters button:hover {
+  color: #eff7f1;
+}
+
+.obsidian-filters button.is-active {
+  color: #daf7e5;
+  background: rgba(53, 230, 138, 0.11);
+}
+
+.obsidian-chain {
+  min-height: 335px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6) 38px 0 14px;
+  perspective: 1300px;
+  transform-style: preserve-3d;
+}
+
+.obsidian-stage {
+  position: relative;
+  width: clamp(114px, 12.2vw, 154px);
+  height: 244px;
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  flex: 0 0 auto;
+  gap: var(--space-3);
+  margin-left: -28px;
+  padding: var(--space-4);
+  overflow: hidden;
+  color: #dfe9e2;
+  background:
+    linear-gradient(155deg, rgba(222, 235, 226, 0.13), rgba(61, 79, 67, 0.08) 45%, rgba(7, 12, 9, 0.9)),
+    #101713;
+  border: 1px solid rgba(218, 239, 224, 0.22);
+  border-radius: 12px;
+  box-shadow:
+    -16px 20px 34px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  text-align: left;
+  transform: translateY(calc(var(--stage-index) * 6px)) rotateX(3deg) rotateY(-17deg);
+  transform-origin: center center;
+  transition:
+    transform var(--motion-shape) var(--ease-fluid),
+    border-color var(--motion-standard) ease-out,
+    background var(--motion-standard) ease-out,
+    box-shadow var(--motion-standard) ease-out;
+}
+
+.obsidian-stage:first-child {
+  margin-left: 0;
+}
+
+.obsidian-stage::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(112deg, rgba(255, 255, 255, 0.11), transparent 28%, transparent 68%, rgba(255, 255, 255, 0.03));
+}
+
+.obsidian-stage:hover,
+.obsidian-stage:focus-visible {
+  z-index: 4;
+  transform: translateY(calc(var(--stage-index) * 6px - 8px)) rotateX(1deg) rotateY(-8deg);
+  border-color: rgba(218, 239, 224, 0.38);
+}
+
+.obsidian-stage.is-selected {
+  z-index: 5;
+  color: #031109;
+  background: linear-gradient(150deg, #75f3ad, #23d876 58%, #0cb45c);
+  border-color: #8affbd;
+  box-shadow:
+    -12px 24px 48px rgba(5, 184, 88, 0.2),
+    0 0 0 1px rgba(120, 255, 181, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform: translateY(calc(var(--stage-index) * 6px - 18px)) rotateX(0deg) rotateY(-7deg);
+}
+
+.obsidian-stage.stage-risk:not(.is-selected) {
+  border-color: rgba(255, 120, 108, 0.32);
+}
+
+.obsidian-stage-index {
+  justify-self: end;
+  color: #829087;
+  font-size: var(--type-caption);
+  font-weight: 650;
+}
+
+.obsidian-stage.is-selected .obsidian-stage-index {
+  color: rgba(3, 17, 9, 0.58);
+}
+
+.obsidian-stage-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #b4c4b9;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+}
+
+.obsidian-stage-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.obsidian-stage.is-selected .obsidian-stage-icon {
+  color: #04120a;
+  background: rgba(2, 28, 13, 0.09);
+  border-color: rgba(2, 28, 13, 0.12);
+}
+
+.obsidian-stage-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: end;
+}
+
+.obsidian-stage-copy small {
+  color: #a4b2a8;
+  font-size: var(--type-caption);
+}
+
+.obsidian-stage-copy b {
+  margin-top: 2px;
+  color: #f5faf6;
+  font-size: 1.45rem;
+  font-weight: 580;
+  letter-spacing: -0.04em;
+}
+
+.obsidian-stage-copy em {
+  margin-top: 5px;
+  overflow: hidden;
+  color: #849289;
+  font-size: var(--type-caption);
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obsidian-stage.is-selected .obsidian-stage-copy small,
+.obsidian-stage.is-selected .obsidian-stage-copy em {
+  color: rgba(3, 17, 9, 0.62);
+}
+
+.obsidian-stage.is-selected .obsidian-stage-copy b {
+  color: #031109;
+}
+
+.obsidian-stage-progress {
+  height: 3px;
+  overflow: hidden;
+  background: rgba(214, 232, 219, 0.11);
+  border-radius: 999px;
+}
+
+.obsidian-stage-progress i {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #8ba799;
+  border-radius: inherit;
+  transform-origin: left center;
+}
+
+.obsidian-stage.is-selected .obsidian-stage-progress {
+  background: rgba(3, 17, 9, 0.14);
+}
+
+.obsidian-stage.is-selected .obsidian-stage-progress i {
+  background: #062b15;
+}
+
+.obsidian-chain-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+  color: #718077;
+  border-top: 1px solid rgba(218, 239, 224, 0.07);
+  font-size: var(--type-caption);
+}
+
+.obsidian-chain-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.obsidian-chain-foot svg {
+  width: 14px;
+  height: 14px;
+  color: #719b80;
+}
+
+.obsidian-inspector {
+  min-height: 490px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6);
+}
+
+.obsidian-inspector-top {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.obsidian-inspector-top > span:nth-child(2) {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.obsidian-inspector-top small {
+  color: #6f8175;
+  font-size: var(--type-caption);
+  font-weight: 650;
+  letter-spacing: 0.08em;
+}
+
+.obsidian-inspector-top b {
+  margin-top: 2px;
+  color: #f1f7f3;
+  font-size: var(--type-body);
+}
+
+.obsidian-inspector-top > i {
+  grid-column: 1 / -1;
+  width: max-content;
+  padding: 4px 8px;
+  color: #b8c6bc;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(218, 239, 224, 0.08);
+  border-radius: 999px;
+  font-size: var(--type-caption);
+  font-style: normal;
+}
+
+.obsidian-inspector-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  color: #81e7ac;
+  background: rgba(53, 230, 138, 0.1);
+  border: 1px solid rgba(53, 230, 138, 0.17);
+  border-radius: 10px;
+}
+
+.obsidian-inspector-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.obsidian-inspector-value {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-8);
+}
+
+.obsidian-inspector-value > strong {
+  color: #f6fbf7;
+  font-size: 3.25rem;
+  font-weight: 520;
+  letter-spacing: -0.065em;
+  line-height: 0.9;
+}
+
+.obsidian-inspector-value > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.obsidian-inspector-value b {
+  color: #bbcabf;
+  font-size: var(--type-meta);
+}
+
+.obsidian-inspector-value small {
+  color: #6e7d73;
+  font-size: var(--type-caption);
+}
+
+.obsidian-inspector > p {
+  margin: var(--space-6) 0;
+  color: #a5b3a9;
+  font-size: var(--type-control);
+  line-height: 1.65;
+}
+
+.obsidian-inspector-progress > span {
+  display: flex;
+  justify-content: space-between;
+}
+
+.obsidian-inspector-progress b,
+.obsidian-inspector-progress em {
+  color: #8d9b91;
+  font-size: var(--type-caption);
+  font-style: normal;
+}
+
+.obsidian-inspector-progress > span:last-child {
+  height: 4px;
+  margin-top: var(--space-2);
+  overflow: hidden;
+  background: rgba(218, 239, 224, 0.08);
+  border-radius: 999px;
+}
+
+.obsidian-inspector-progress i {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: linear-gradient(90deg, #2bd979, #76f0ac);
+  border-radius: inherit;
+  transform-origin: left center;
+  transition: transform var(--motion-shape) var(--ease-fluid);
+}
+
+.obsidian-inspector > button {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  padding: 0 var(--space-4);
+  color: #dff5e7;
+  background: rgba(53, 230, 138, 0.08);
+  border: 1px solid rgba(53, 230, 138, 0.16);
+  border-radius: 9px;
+  font-size: var(--type-control);
+  font-weight: 620;
+}
+
+.obsidian-inspector > button:hover {
+  background: rgba(53, 230, 138, 0.13);
+  border-color: rgba(53, 230, 138, 0.28);
+}
+
+.obsidian-inspector > button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.obsidian-inspector.inspector-risk .obsidian-inspector-icon {
+  color: #ff9a90;
+  background: rgba(255, 120, 108, 0.09);
+  border-color: rgba(255, 120, 108, 0.18);
+}
+
+.obsidian-risk-plane,
+.obsidian-timeline-plane {
+  min-height: 255px;
+  padding: var(--space-6);
+}
+
+.obsidian-risk-plane .obsidian-panel-heading > b {
+  color: #e89d94;
+  font-size: var(--type-caption);
+  font-weight: 580;
+}
+
+.obsidian-risk-list {
+  display: grid;
+  margin-top: var(--space-4);
+}
+
+.obsidian-risk-list button {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  color: #a5b3aa;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid rgba(218, 239, 224, 0.07);
+  text-align: left;
+}
+
+.obsidian-risk-list button:hover,
+.obsidian-risk-list button.is-active {
+  color: #f0f7f2;
+}
+
+.obsidian-risk-list button > span:first-child {
+  width: 32px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: #ff9a90;
+  background: rgba(255, 120, 108, 0.08);
+  border-radius: 6px;
+  font-size: var(--type-caption);
+  font-weight: 680;
+}
+
+.obsidian-risk-list button > span:nth-child(2) {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.obsidian-risk-list b {
+  overflow: hidden;
+  font-size: var(--type-meta);
+  font-weight: 560;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obsidian-risk-list small {
+  color: #6f7e74;
+  font-size: var(--type-caption);
+}
+
+.obsidian-risk-list svg {
+  width: 15px;
+  height: 15px;
+  color: #58665d;
+  transition: color var(--motion-fast) ease-out, transform var(--motion-fast) ease-out;
+}
+
+.obsidian-risk-list button:hover svg,
+.obsidian-risk-list button.is-active svg {
+  color: #8de9b2;
+  transform: translateX(2px);
+}
+
+.obsidian-decision {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #efc75e;
+  font-size: var(--type-caption);
+}
+
+.obsidian-decision i {
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  border-radius: 50%;
+  box-shadow: 0 0 9px rgba(239, 199, 94, 0.38);
+}
+
+.obsidian-timeline {
+  position: relative;
+  display: grid;
+  margin-top: var(--space-4);
+}
+
+.obsidian-timeline::before {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 88px;
+  width: 1px;
+  content: "";
+  background: rgba(218, 239, 224, 0.09);
+}
+
+.obsidian-timeline button {
+  position: relative;
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: 76px 10px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px 0;
+  color: #92a097;
+  background: transparent;
+  border: 0;
+  text-align: left;
+}
+
+.obsidian-timeline time {
+  color: #7c8981;
+  font-size: var(--type-caption);
+}
+
+.obsidian-timeline button > i {
+  z-index: 1;
+  width: 7px;
+  height: 7px;
+  justify-self: center;
+  background: #27332c;
+  border: 1px solid #55645a;
+  border-radius: 50%;
+}
+
+.obsidian-timeline button > span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.obsidian-timeline b {
+  font-size: var(--type-meta);
+  font-weight: 560;
+}
+
+.obsidian-timeline small {
+  margin-top: 2px;
+  color: #7a887e;
+  font-size: var(--type-caption);
+}
+
+.obsidian-timeline button:hover,
+.obsidian-timeline button.is-active {
+  color: #e6f1e9;
+}
+
+.obsidian-timeline button.is-active > i {
+  background: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(53, 230, 138, 0.08), 0 0 10px rgba(53, 230, 138, 0.4);
+}
+
+.obsidian-timeline button.is-active small {
+  color: #86b99a;
+}
+
+.obsidian-skeleton {
+  min-height: 720px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.72fr) minmax(290px, 0.64fr);
+  grid-template-rows: 86px minmax(400px, 1fr) 220px;
+  gap: var(--space-4);
+}
+
+.obsidian-skeleton > span {
+  display: block;
+  overflow: hidden;
+  background: #0a0f0c;
+  border: 1px solid rgba(218, 239, 224, 0.07);
+  border-radius: var(--radius-lg);
+}
+
+.obsidian-skeleton i {
+  display: block;
+  background: linear-gradient(90deg, #101713, #17221b, #101713);
+  background-size: 240% 100%;
+  border-radius: 8px;
+  animation: obsidian-shimmer 1.5s ease-in-out infinite;
+}
+
+.obsidian-skeleton-metrics {
+  grid-column: 1 / -1;
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-6);
+  padding: var(--space-4);
+}
+
+.obsidian-skeleton-metrics i {
+  height: 48px;
+}
+
+.obsidian-skeleton-chain {
+  display: flex !important;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+}
+
+.obsidian-skeleton-chain i {
+  width: 15%;
+  height: 230px;
+}
+
+.obsidian-skeleton-inspector {
+  display: grid !important;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.obsidian-skeleton-inspector i:nth-child(1) {
+  width: 42%;
+  height: 42px;
+}
+
+.obsidian-skeleton-inspector i:nth-child(2) {
+  width: 68%;
+  height: 58px;
+}
+
+.obsidian-skeleton-inspector i:nth-child(3) {
+  height: 78px;
+}
+
+.obsidian-skeleton-inspector i:nth-child(4) {
+  height: 42px;
+}
+
+.obsidian-skeleton-bottom {
+  grid-column: 1 / -1;
+  display: grid !important;
+  grid-template-columns: 1.72fr 0.64fr;
+  gap: var(--space-4);
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.obsidian-skeleton-bottom i {
+  height: 100%;
+  border: 1px solid rgba(218, 239, 224, 0.07);
+}
+
+@keyframes obsidian-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+@media (max-width: 1220px) {
+  .obsidian-chain {
+    padding-right: 10px;
+  }
+
+  .obsidian-stage {
+    width: clamp(108px, 12vw, 138px);
+    margin-left: -34px;
+  }
+}
+
+@media (max-width: 1120px) {
+  .theme-obsidian-flow .theme-manifest {
+    grid-template-columns: minmax(240px, 0.9fr) minmax(260px, 1.1fr);
+  }
+
+  .obsidian-bento {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.72fr);
+  }
+
+  .obsidian-chain-plane {
+    grid-column: 1 / -1;
+  }
+
+  .obsidian-inspector {
+    min-height: 330px;
+  }
+
+  .obsidian-inspector-value {
+    margin-top: var(--space-6);
+  }
+
+  .obsidian-risk-plane,
+  .obsidian-timeline-plane {
+    min-height: 285px;
+  }
+
+  .obsidian-skeleton {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .obsidian-skeleton-chain {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .theme-obsidian-flow .theme-manifest {
+    margin-top: var(--space-2);
+  }
+
+  .obsidian-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .obsidian-title-row h1 {
+    max-width: 22ch;
+  }
+
+  .obsidian-metric {
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
+  }
+}
+
+@media (max-width: 720px) {
+  .theme-obsidian-flow .theme-manifest {
+    grid-template-columns: 1fr;
+    padding-bottom: var(--space-3);
+  }
+
+  .theme-obsidian-flow .theme-manifest > div {
+    padding-left: 68px;
+  }
+
+  .theme-obsidian-flow .theme-manifest p {
+    padding-left: 40px;
+  }
+
+  .obsidian-hero {
+    margin-bottom: var(--space-6);
+  }
+
+  .obsidian-title-row h1 {
+    font-size: 1.75rem;
+  }
+
+  .obsidian-title-row p {
+    font-size: var(--type-control);
+  }
+
+  .obsidian-hero-actions {
+    width: 100%;
+  }
+
+  .theme-obsidian-flow .obsidian-hero-actions button {
+    min-height: 44px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .obsidian-status-line {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .obsidian-status-line > span + span {
+    padding-left: 15px;
+  }
+
+  .obsidian-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .obsidian-metric {
+    padding: var(--space-3);
+  }
+
+  .obsidian-metric:first-child {
+    padding-left: var(--space-3);
+  }
+
+  .obsidian-metric + .obsidian-metric {
+    border-left: 0;
+  }
+
+  .obsidian-metric:nth-child(even) {
+    border-left: 1px solid rgba(218, 239, 224, 0.08);
+  }
+
+  .obsidian-metric:nth-child(n + 3) {
+    border-top: 1px solid rgba(218, 239, 224, 0.08);
+  }
+
+  .obsidian-metric > b {
+    font-size: 1.45rem;
+  }
+
+  .obsidian-bento,
+  .obsidian-skeleton {
+    grid-template-columns: 1fr;
+  }
+
+  .obsidian-chain-plane,
+  .obsidian-inspector,
+  .obsidian-risk-plane,
+  .obsidian-timeline-plane {
+    grid-column: 1;
+  }
+
+  .obsidian-chain-plane,
+  .obsidian-inspector,
+  .obsidian-risk-plane,
+  .obsidian-timeline-plane {
+    padding: var(--space-4);
+  }
+
+  .obsidian-panel-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .obsidian-filters {
+    align-self: flex-start;
+  }
+
+  .obsidian-filters button {
+    min-height: 40px;
+  }
+
+  .obsidian-chain {
+    min-height: 0;
+    justify-content: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-6) 0 var(--space-4);
+    overflow-x: auto;
+    perspective: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .obsidian-stage,
+  .obsidian-stage:hover,
+  .obsidian-stage:focus-visible,
+  .obsidian-stage.is-selected {
+    width: 142px;
+    height: 210px;
+    margin-left: 0;
+    transform: none;
+    scroll-snap-align: start;
+  }
+
+  .obsidian-stage {
+    padding: var(--space-3);
+  }
+
+  .obsidian-chain-foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .obsidian-inspector {
+    min-height: 360px;
+  }
+
+  .obsidian-inspector-value > strong {
+    font-size: 2.75rem;
+  }
+
+  .obsidian-risk-list button {
+    min-height: 68px;
+  }
+
+  .obsidian-timeline button {
+    min-height: 48px;
+  }
+
+  .obsidian-skeleton {
+    grid-template-rows: auto;
+  }
+
+  .obsidian-skeleton-metrics,
+  .obsidian-skeleton-chain,
+  .obsidian-skeleton-inspector,
+  .obsidian-skeleton-bottom {
+    grid-column: 1;
+  }
+
+  .obsidian-skeleton-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .obsidian-skeleton-bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .obsidian-skeleton-bottom i {
+    height: 180px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obsidian-stage,
+  .obsidian-stage:hover,
+  .obsidian-stage:focus-visible,
+  .obsidian-stage.is-selected {
+    transform: none;
+  }
+
+  .obsidian-skeleton i {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .theme-obsidian-flow .lab-header,
+  .theme-obsidian-flow .lab-sidebar,
+  .theme-obsidian-flow .platform-topbar,
+  .obsidian-chain-plane,
+  .obsidian-inspector {
+    background: #0b100d;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .obsidian-spotlight::before {
+    display: none;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .theme-obsidian-flow .lab-header,
+  .theme-obsidian-flow .lab-sidebar,
+  .theme-obsidian-flow .platform-topbar,
+  .obsidian-chain-plane,
+  .obsidian-inspector {
+    background: #0b100d;
   }
 }
