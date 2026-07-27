@@ -99,6 +99,7 @@ describe('AiResultModal edited import flow', () => {
       5,
       [0],
       [expect.objectContaining({ index: 0, title: 'edited title' })],
+      false,
     ))
   })
 
@@ -113,7 +114,8 @@ describe('AiResultModal edited import flow', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存' }))
     await waitFor(() => expect(mockReviewCase).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('checkbox'))
+    const rowCheckbox = screen.getAllByRole('checkbox')[1]
+    fireEvent.click(rowCheckbox)
     fireEvent.click(screen.getByRole('button', { name: '导入功能用例 (1)' }))
 
     expect(mockImportCases).not.toHaveBeenCalled()

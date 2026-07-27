@@ -10,6 +10,8 @@ import re
 import sys
 from types import SimpleNamespace
 
+import pytest
+
 
 from app.services.external import lanhu_provider
 
