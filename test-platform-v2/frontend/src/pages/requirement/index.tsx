@@ -143,9 +143,9 @@ export default function RequirementPage() {
       const [domainData, caseData, docData]: any[] = await Promise.all([
         fetchDomains(),
         fetchTestCases({ page: 1, page_size: 200 }),
-        fetchRequirements(),
+        fetchRequirements({ page: 1, page_size: 100 }),
       ])
-      return { domains: domainData || [], cases: caseData?.items || [], docs: docData || [] }
+      return { domains: domainData || [], cases: caseData?.items || [], docs: docData?.items || [] }
     },
     []
   )

@@ -92,7 +92,29 @@ def list_modules(
             | RequirementModule.description.contains(keyword)
         )
 
-    count_stmt = select(func.count()).select_from(stmt.subquery())
+    # P0-5: Use a separate count query instead of subquerying the ORM select
+    # to avoid errors with complex ORM expressions
+    count_stmt = select(func.count()).select_from(RequirementModule).where(
+        RequirementModule.project_id == pid
+    )
+    if release_bundle_id:
+        count_stmt = count_stmt.where(RequirementModule.release_bundle_id == release_bundle_id)
+    if node_type:
+        count_stmt = count_stmt.where(RequirementModule.node_type == node_type)
+    if platform:
+        count_stmt = count_stmt.where(RequirementModule.platform == platform)
+    if change_type:
+        count_stmt = count_stmt.where(RequirementModule.change_type == change_type)
+    if parent_module_id is not None:
+        if parent_module_id == 0:
+            count_stmt = count_stmt.where(RequirementModule.parent_module_id.is_(None))
+        else:
+            count_stmt = count_stmt.where(RequirementModule.parent_module_id == parent_module_id)
+    if keyword:
+        count_stmt = count_stmt.where(
+            RequirementModule.name.contains(keyword)
+            | RequirementModule.description.contains(keyword)
+        )
     total = db.scalar(count_stmt) or 0
     rows = list(db.scalars(
         stmt.order_by(RequirementModule.sort_order, RequirementModule.id)
@@ -206,8 +228,7 @@ def get_child_modules(
     current: CurrentUser = Depends(require_permission("knowledge:view")),
     db: Session = Depends(get_db),
 ):
-    """获取指定模块的直接子节点（懒加载子节点，适用于大型模块树）。"""
-    pid = current.project_id or 0
+    """获取指定模块的直接子节点（懒加载子节点，适用于大型模块树）。P3: 只加载两层而非全部模块。"""
     parent = db.get(RequirementModule, parent_id)
     if not parent or parent.release_bundle_id != bundle_id:
         return R(code=404, msg="模块不存在")
@@ -219,15 +240,59 @@ def get_child_modules(
         ).order_by(RequirementModule.sort_order, RequirementModule.id)
     ).all())
 
-    # Load grandchildren too (one level deeper only)
-    all_modules = list(db.scalars(
-        select(RequirementModule).where(
-            RequirementModule.release_bundle_id == bundle_id,
-        )
-    ).all())
+    # Only load grandchildren (one level deeper), not all modules — P3 performance fix
+    child_ids = [c.id for c in children]
+    grandchildren: list[RequirementModule] = []
+    if child_ids:
+        grandchildren = list(db.scalars(
+            select(RequirementModule).where(
+                RequirementModule.release_bundle_id == bundle_id,
+                RequirementModule.parent_module_id.in_(child_ids),
+            ).order_by(RequirementModule.sort_order, RequirementModule.id)
+        ).all())
 
-    nodes = _build_tree_nodes(all_modules, parent_id=parent_id)
+    # Build nodes with two-level depth
+    nodes: list[ModuleTreeNode] = []
+    for child in sorted(children, key=lambda m: (m.sort_order or 0, m.id)):
+        gchildren = [gc for gc in grandchildren if gc.parent_module_id == child.id]
+        sub_nodes = _build_tree_nodes_from_list(gchildren)
+        nodes.append(ModuleTreeNode(
+            id=child.id,
+            name=child.name,
+            node_type=child.node_type,
+            platform=child.platform,
+            change_type=child.change_type,
+            description=child.description or "",
+            lanhu_page_id=child.lanhu_page_id or "",
+            page_interactions=child.page_interactions or "[]",
+            children=sub_nodes,
+            child_count=len(sub_nodes),
+        ))
     return R.ok(nodes)
+
+
+def _build_tree_nodes_from_list(
+    modules: list[RequirementModule],
+    parent_id: int | None = None,
+) -> list[ModuleTreeNode]:
+    """Build tree nodes from a flat list (without recursive DB query — P3 performance fix)."""
+    children = [m for m in modules if m.parent_module_id == parent_id]
+    nodes: list[ModuleTreeNode] = []
+    for child in sorted(children, key=lambda m: (m.sort_order or 0, m.id)):
+        sub_nodes = _build_tree_nodes_from_list(modules, child.id)
+        nodes.append(ModuleTreeNode(
+            id=child.id,
+            name=child.name,
+            node_type=child.node_type,
+            platform=child.platform,
+            change_type=child.change_type,
+            description=child.description or "",
+            lanhu_page_id=child.lanhu_page_id or "",
+            page_interactions=child.page_interactions or "[]",
+            children=sub_nodes,
+            child_count=len(sub_nodes),
+        ))
+    return nodes
 
 
 # ═══════════════════════════════════════════════════════

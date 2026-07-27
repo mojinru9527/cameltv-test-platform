@@ -355,7 +355,13 @@ export default function AiResultModal({
   useEffect(() => {
     if (open && documentId && apiCases.length > 0) {
       setLoadingMatches(true)
-      matchApiEndpoints(documentId)
+      // P0-2: Pass integration requirements extracted from api cases
+      const integrationReqs = apiCases.map((c: any) => ({
+        id: c.id || c.title || '',
+        title: c.title || '',
+        description: c.expected_result || c.api_endpoint || '',
+      }))
+      matchApiEndpoints(documentId, integrationReqs)
         .then((matches) => setApiMatches(matches || []))
         .catch(() => setApiMatches([]))
         .finally(() => setLoadingMatches(false))

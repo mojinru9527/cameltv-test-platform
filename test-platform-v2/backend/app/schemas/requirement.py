@@ -9,6 +9,30 @@ from pydantic import BaseModel, ConfigDict
 
 # ── Document ──
 
+class RequirementDocumentBrief(BaseModel):
+    """需求文档列表项（轻量视图，不含全量 content 文本——P1-4 Schema 过宽修复）。"""
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    project_id: int = 0
+    creator_id: int = 0
+    creator_name: str = ""
+    title: str = ""
+    file_type: str = ""
+    source_ref: str = ""
+    status: str = "uploaded"
+    imported_count: int = 0
+    imported_func_count: int = 0
+    imported_api_count: int = 0
+    parsed_type: str = "requirement"
+    extraction_status: str = "not_started"
+    doc_id: str = ""
+    version: str = ""
+    parent_id: Optional[int] = None
+    diff_json: str = ""
+    diff_status: str = "initial"
+    created_at: Optional[datetime] = None
+
+
 class RequirementDocumentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

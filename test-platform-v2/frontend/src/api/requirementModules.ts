@@ -47,11 +47,14 @@ export async function fetchModuleChildren(
 
 // ── Module Extraction ──
 
-export async function extractModules(body: {
-  evidence_job_id: number
-  document_id?: number | null
-  source_version?: string
-}): Promise<{
+export async function extractModules(
+  bundleId: number,
+  body: {
+    evidence_job_id: number
+    document_id?: number | null
+    source_version?: string
+  }
+): Promise<{
   module_ids: number[]
   module_count: number
   page_count: number
@@ -59,7 +62,7 @@ export async function extractModules(body: {
   changelog_entries: number
   warnings: string[]
 }> {
-  return api.post('/requirement-modules/bundle/extract', body)
+  return api.post(`/requirement-modules/bundle/${bundleId}/extract`, body)
 }
 
 // ── Test Case Linking ──
