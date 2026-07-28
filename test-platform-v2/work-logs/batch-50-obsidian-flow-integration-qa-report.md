@@ -83,15 +83,32 @@
 
 | # | 严重级 | 描述 | 证据 | 状态 |
 |---|--------|------|------|------|
-| 1 | P2 | tsc -b 构建失败（deep-eql 类型定义缺失） | 预存问题，与本次变更无关 | 已知 |
-| 2 | P3 | Button 组件尚未替换为 @/ui 基元 | 设计走查发现，已列为下一 batch 任务 | 延期 |
-| 3 | P3 | PageShell 尚未接入页面 | 已列为 batch-51 任务 | 延期 |
+| 1 | **P0** | **shadcn CSS 变量未映射** — obsidian-flow.css 定义了 `--_bg`/`--_surface`/`--_text` 等自有变量，但从未覆写 shadcn/ui 组件实际引用的 `--background`/`--foreground`/`--card`/`--primary` 等标准变量。导致主应用页面仍以 cyberpunk 霓虹蓝黑渲染，与 ThemeLab 翡翠绿黑参考基准完全不同 | 用户浏览器验收发现。所有 shadcn 组件（Card/Button/Table/Badge）渲染颜色来自 `data-theme`（cyberpunk）而非 obsidian-flow | ✅ **已修复** (c924ee1)，在 globals.css 末尾追加 `[data-ui-theme="obsidian-flow"]` 变量覆写块 |
+| 2 | P2 | tsc -b 构建失败（deep-eql 类型定义缺失） | 预存问题，与本次变更无关 | 已知 |
+| 3 | P3 | Button 组件尚未替换为 @/ui 基元 | 设计走查发现，已列为下一 batch 任务 | 延期 |
+| 4 | P3 | PageShell 尚未接入页面 | 已列为 batch-51 任务 | 延期 |
+
+## 根因分析：shadcn CSS 变量断连
+
+```
+obsidian-flow.css 定义的变量      shadcn/ui 组件实际引用的变量
+─────────────────────────────     ─────────────────────────────
+--_bg: #0b100d                    --background (来自 data-theme)
+--_surface: #141c17               --card (来自 data-theme)
+--_text: #eef6f0                  --foreground (来自 data-theme)
+--_primary: #35e68a               --primary (来自 data-theme)
+--_border-default: rgba(...)      --border (来自 data-theme)
+```
+
+两套变量体系完全平行、从不交叉。`UiThemeProvider` 设置 `data-ui-theme` 属性只触发 obsidian-flow.css 的 `--_*` 变量，但不影响 shadcn 组件读取的 `--*` 变量。
+
+**修复**：在 `globals.css` 末尾（所有 `[data-theme]` 块之后，确保级联优先级）新增 `[data-ui-theme="obsidian-flow"]` 块，将 40+ 个 shadcn 标准 CSS 变量映射为 obsidian-flow 设计 Token。
 
 ## 发布建议
 
-**状态: READY** ✅
+**状态: READY** ✅ (经根因修复后)
 
-- 必修复: 0
+- 必修复: 0 (P0 已修复)
 - 建议修复: 3（均为 P2/P3，可延期）
-- 核心变更: 12 文件，3 commits，零新增类型错误，构建 9.01s
+- 核心变更: 13 文件，5 commits（含根因修复），零新增类型错误，构建 7.41s
 - 关键用户路径可走通: Workbench → Trace(SpatialChain) → TestCase → TestPlan → Report → Environment(ObsidianFlow) → ThemeLab

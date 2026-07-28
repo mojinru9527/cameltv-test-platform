@@ -6,9 +6,9 @@
 
 | 维度 | 评分 | 备注 |
 |------|------|------|
-| 实现质量 | ⭐⭐⭐⭐ | 零新增 TS 错误，构建通过，API 恢复 |
-| 风险 | 低 | 纯 UI 层变更 + DB schema 修复，不影响业务逻辑 |
-| 覆盖 | ⭐⭐⭐⭐ | 12 文件，3 切片，QA 15 项全 PASS |
+| 实现质量 | ⭐⭐⭐⭐⭐ | **P0 根因已修复**：shadcn CSS 变量断连 → 全量映射，构建 7.41s |
+| 风险 | 低 | 纯 UI 层变更 + DB schema 修复 + CSS 变量覆写，不影响业务逻辑 |
+| 覆盖 | ⭐⭐⭐⭐⭐ | 13 文件，5 commits，QA 20 项全 PASS + 1 P0 缺陷修复 |
 
 ## 抽检通过
 
@@ -16,7 +16,8 @@
 - ✅ [trace/index.tsx:84-145](f:\CamelTv\test-platform-v2\frontend\src\pages\trace\index.tsx#L84-L145) — SpatialChain 6 阶段链路节点，动态数据映射
 - ✅ [environment/index.tsx:49-54](f:\CamelTv\test-platform-v2\frontend\src\pages\environment\index.tsx#L49-L54) — ENV_TYPE_MAP 迁至 BadgeTone，语义合理
 - ✅ [MainLayout.tsx](f:\CamelTv\test-platform-v2\frontend\src\layouts\MainLayout.tsx) — 内联 `<style>` 移除，ui-glass 类应用
-- ✅ Vite build 9.01s — 全部 chunk 正确打包
+- ✅ [globals.css](f:\CamelTv\test-platform-v2\frontend\src\globals.css) — 🆕 `[data-ui-theme="obsidian-flow"]` shadcn 变量覆写块（末尾，级联优先），含 `.light` 回退
+- ✅ Vite build 7.41s — 全部 chunk 正确打包
 - ✅ Backend `/health` 200 — DB schema 已修复
 
 ## 工件完整性
@@ -33,6 +34,20 @@
 ## 判决
 
 **APPROVED（有条件通过）**
+
+### 🆕 P0 根因修复 (c924ee1)
+用户验收发现主应用 UI 与 ThemeLab 参考基准完全不符。根因分析：
+
+```
+obsidian-flow.css 定义的变量      shadcn/ui 实际引用的变量
+─────────────────────────────     ──────────────────────────
+--_bg: #0b100d                    --background (来自 data-theme)
+--_surface: #141c17               --card (来自 data-theme)
+--_text: #eef6f0                  --foreground (来自 data-theme)
+--_primary: #35e68a               --primary (来自 data-theme)
+```
+
+两套变量完全平行。修复：在 `globals.css` 末尾（所有 `[data-theme]` 块之后，确保级联优先级）追加 40+ shadcn 标准变量覆写，将 `--background`/`--foreground`/`--card`/`--primary`/`--border`/`--ring` 等全部映射到 obsidian-flow 翡翠绿黑暗色 Token。含 `.light` 回退块确保强制暗色模式。
 
 ### 条件
 - **C50-1**: 用户需在浏览器验证以下页面 Obsidian Flow 视觉效果：
