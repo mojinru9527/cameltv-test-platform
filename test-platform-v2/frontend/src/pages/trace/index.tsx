@@ -8,8 +8,9 @@ import { useChartColors } from '@/hooks/use-chart-colors'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { fetchCoverage, type CoverageData } from '@/api/trace'
-import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent } from '@/lib/icons'
-import { useObsidianPage } from '@/ui'
+import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent, FileText, Calendar, BarChart3 } from '@/lib/icons'
+import { useObsidianPage, SpatialChain } from '@/ui'
+import type { ChainNode } from '@/ui'
 
 export default function TracePage() {
   useDocumentTitle('链路追踪')
@@ -80,6 +81,68 @@ export default function TracePage() {
                   variant="glass"
                 />
               </div>
+
+              {/* ── 空间质量链路 (SpatialChain) ── */}
+              {(() => {
+                const chainNodes: ChainNode[] = [
+                  {
+                    id: 'req', label: '需求文档', shortLabel: '需求',
+                    count: String(d.requirement_count), status: d.requirements_with_cases > 0 ? '已覆盖' : '待覆盖',
+                    progress: d.requirement_coverage_rate ?? 0,
+                    tone: (d.requirement_coverage_rate ?? 0) >= 80 ? 'success' : (d.requirement_coverage_rate ?? 0) >= 50 ? 'active' : 'risk',
+                    icon: FileText,
+                    risk: (d.requirement_coverage_rate ?? 0) < 50,
+                  },
+                  {
+                    id: 'case', label: '测试用例', shortLabel: '用例',
+                    count: String(d.total_cases), status: '已就绪',
+                    progress: 100,
+                    tone: 'success',
+                    icon: FileCheck,
+                    p0: d.total_cases === 0,
+                  },
+                  {
+                    id: 'plan', label: '测试计划', shortLabel: '计划',
+                    count: String(d.cases_in_plans), status: d.cases_in_plans > 0 ? '已编排' : '待编排',
+                    progress: d.coverage_rate,
+                    tone: d.coverage_rate >= 80 ? 'success' : d.coverage_rate >= 40 ? 'active' : 'risk',
+                    icon: Calendar,
+                    risk: d.coverage_rate < 40,
+                  },
+                  {
+                    id: 'exec', label: '执行追踪', shortLabel: '执行',
+                    count: String(d.cases_executed), status: d.cases_executed > 0 ? '执行中' : '未开始',
+                    progress: d.execution_rate,
+                    tone: d.execution_rate >= 80 ? 'success' : d.execution_rate >= 30 ? 'active' : 'risk',
+                    icon: Play,
+                    risk: d.execution_rate < 30,
+                  },
+                  {
+                    id: 'defect', label: '缺陷管理', shortLabel: '缺陷',
+                    count: String(d.cases_with_defects), status: d.cases_with_defects > 0 ? '有缺陷' : '无缺陷',
+                    progress: d.cases_with_defects > 0 ? Math.min(100, (d.cases_with_defects / Math.max(1, d.cases_executed)) * 100) : 0,
+                    tone: d.cases_with_defects === 0 ? 'success' : 'risk',
+                    icon: Bug,
+                    risk: d.cases_with_defects > 0,
+                  },
+                  {
+                    id: 'report', label: '测试报告', shortLabel: '报告',
+                    count: `${d.pass_rate}%`, status: d.pass_rate >= 80 ? '通过' : '关注',
+                    progress: d.pass_rate,
+                    tone: d.pass_rate >= 80 ? 'success' : 'risk',
+                    icon: BarChart3,
+                    risk: d.pass_rate < 80,
+                  },
+                ]
+                return (
+                  <div className="ui-surface p-4">
+                    <SpatialChain
+                      nodes={chainNodes}
+                      variant="chain"
+                    />
+                  </div>
+                )
+              })()}
 
               {/* ── 按用例类型分布 ── */}
               <Card className="ui-surface">
