@@ -99,4 +99,12 @@ Playwright fixture/黑曜命令使用 `BASE_URL=http://127.0.0.1:5178`；真实�
 
 ## 8. QA 判定
 
-**READY / PASS。** Batch 54 P0/P1 全部关闭，P2 残余债务清零；本地代码、UI fixture、真实后端和生产评分门禁均通过。剩余仅为 GitHub 交付流程：最终差异审计、提交、逐次 Push 授权、Draft PR、required checks、Agent Team 完成确认与最终 squash merge。
+**READY / PASS。** Batch 54 P0/P1 全部关闭，P2 残余债务清零；本地代码、UI fixture、真实后端和生产评分门禁均通过。
+
+## 9. GitHub 交付证据
+
+- 初始交付提交：`fe35c72334684b156a19a143de896f998377bb01`。
+- Draft PR：[#81](https://github.com/mojinru9527/cameltv-test-platform/pull/81)，目标分支 `main`。
+- 首轮 checks：AI/Git 交付策略、frontend-check、frontend-a11y、前端重型回归、前端/后端全新检出汇总均通过；后端专项按前端范围正确跳过。
+- 2026-07-29 用户再次确认实际执行器为 Codex，并授权最终审计与合并；`confirm-agent-team-completion.ps1` 验证 completion confirmation 为 `confirmed`。
+- 本节所在提交作为 Agent Team 完成确认证据；推送后须等待该 SHA 的 required checks 全绿，再执行最终审计与 squash merge。
