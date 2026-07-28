@@ -109,12 +109,12 @@ export default function TestPlanPage() {
     { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', className: 'text-muted-foreground', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[140px]', render: (r) => (
       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-        <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)}>
+        <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)} aria-label={`编辑测试计划 ${r.name || r.id}`}>
           <Edit className="size-3" />
         </Button>
         <AlertDialog open={deleteTarget === r.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
           <AlertDialogTrigger asChild>
-            <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
+            <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)} aria-label={`删除测试计划 ${r.name || r.id}`}>
               <Trash2 className="size-3" />
             </Button>
           </AlertDialogTrigger>

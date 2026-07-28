@@ -71,10 +71,9 @@ const DialogContent = React.forwardRef<
               variant="ghost"
               className="absolute top-2 right-2"
               size="icon-sm"
+              aria-label="关闭对话框"
             >
-              <XIcon
-              />
-              <span className="sr-only">Close</span>
+              <XIcon aria-hidden="true" />
             </Button>
           </DialogPrimitive.Close>
         )}

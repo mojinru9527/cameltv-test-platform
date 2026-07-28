@@ -17,8 +17,8 @@ export async function fetchReleaseBundles(params?: {
   keyword?: string
   page?: number
   page_size?: number
-}): Promise<KnowledgePage<ReleaseBundleListItem>> {
-  return api.get('/release-bundles', { params })
+}, signal?: AbortSignal): Promise<KnowledgePage<ReleaseBundleListItem>> {
+  return api.get('/release-bundles', { params, signal })
 }
 
 export async function fetchReleaseBundle(id: number): Promise<ReleaseBundleOut> {

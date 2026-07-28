@@ -3,8 +3,8 @@ import type { IntegrationConfig, SyncLog, TestConnectionResult } from '@/types'
 
 const BASE = '/integrations'
 
-export async function fetchIntegrations(): Promise<{ items: IntegrationConfig[]; total: number }> {
-  return api.get(BASE)
+export async function fetchIntegrations(signal?: AbortSignal): Promise<{ items: IntegrationConfig[]; total: number }> {
+  return api.get(BASE, { signal })
 }
 
 export async function fetchIntegration(id: number): Promise<IntegrationConfig> {

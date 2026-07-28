@@ -94,7 +94,7 @@ describe('接口用例列表', () => {
 
     // Response dialog opens
     expect(await screen.findByRole('dialog')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+    fireEvent.click(screen.getByRole('button', { name: '关闭对话框' }))
 
     // Check batch execute
     fireEvent.click(screen.getByRole('button', { name: '全选' }))

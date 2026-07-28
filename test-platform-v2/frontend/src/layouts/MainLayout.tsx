@@ -99,6 +99,84 @@ const ICONS: Record<string, LucideIcon> = {
 // Theme lookup helper — delegates to themes.ts registry
 const getTheme = (id: ColorTheme) => getThemeDefinition(id)
 
+function NavigationMenuItems({
+  items,
+  pathname,
+  onNavigate,
+}: {
+  items: MenuItem[]
+  pathname: string
+  onNavigate: (path: string) => void
+}) {
+  const { isMobile, setOpenMobile } = useSidebar()
+
+  const goTo = (path: string) => {
+    onNavigate(path)
+    if (isMobile) setOpenMobile(false)
+  }
+
+  return items.map((m) => {
+    const Icon = ICONS[m.icon] ?? LayoutDashboard
+    const isActive = pathname === m.path || (m.path !== '/' && pathname.startsWith(m.path))
+    const hasChildren = m.children && m.children.length > 0
+
+    if (hasChildren) {
+      return (
+        <SidebarMenuItem key={m.path || m.code}>
+          <SidebarMenuButton
+            onClick={() => goTo(m.path)}
+            isActive={isActive}
+            aria-current={isActive ? 'page' : undefined}
+            tooltip={m.name}
+            className="peer/menu-parent"
+          >
+            <Icon aria-hidden="true" />
+            <span>{m.name}</span>
+            <ChevronRight
+              className="ml-auto size-3.5 transition-transform duration-200 group-data-[state=open]/menu-item:rotate-90"
+              aria-hidden="true"
+            />
+          </SidebarMenuButton>
+          <SidebarMenuSub>
+            {m.children!.map((child) => {
+              const ChildIcon = ICONS[child.icon] ?? LayoutDashboard
+              const childActive =
+                pathname === child.path ||
+                (child.path !== '/' && pathname.startsWith(child.path))
+              return (
+                <SidebarMenuSubItem key={child.path || child.code}>
+                  <SidebarMenuSubButton
+                    onClick={() => goTo(child.path)}
+                    isActive={childActive}
+                    aria-current={childActive ? 'page' : undefined}
+                  >
+                    <ChildIcon className="size-3.5" aria-hidden="true" />
+                    <span>{child.name}</span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )
+            })}
+          </SidebarMenuSub>
+        </SidebarMenuItem>
+      )
+    }
+
+    return (
+      <SidebarMenuItem key={m.path || m.code}>
+        <SidebarMenuButton
+          onClick={() => goTo(m.path)}
+          isActive={isActive}
+          aria-current={isActive ? 'page' : undefined}
+          tooltip={m.name}
+        >
+          <Icon aria-hidden="true" />
+          <span>{m.name}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  })
+}
+
 export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -106,6 +184,8 @@ export default function MainLayout() {
     useAuthStore()
   const { mode, colorTheme, setMode, setColorTheme } = useTheme()
   const [menus, setMenus] = useState<MenuItem[]>([])
+  const [menuError, setMenuError] = useState(false)
+  const [menuRequest, setMenuRequest] = useState(0)
   const activeTheme = getTheme(colorTheme)
   const isObsidian = colorTheme === 'obsidian-flow'
   const modeOptions: ThemeMode[] = activeTheme.supportedModes.length === 1
@@ -114,15 +194,21 @@ export default function MainLayout() {
 
   useEffect(() => {
     let cancelled = false
+    setMenuError(false)
     fetchMenus()
-      .then((data) => { if (!cancelled) setMenus(data) })
+      .then((data) => {
+        if (!cancelled) {
+          setMenus(data)
+          setMenuError(false)
+        }
+      })
       .catch(() => {
         if (!cancelled) {
-          toast.error('导航菜单加载失败，请刷新页面重试')
+          setMenuError(true)
         }
       })
     return () => { cancelled = true }
-  }, [])
+  }, [menuRequest])
 
   useEffect(() => {
     document.getElementById('main-content')?.focus()
@@ -152,66 +238,6 @@ export default function MainLayout() {
   }
 
   const userInitials = (user?.nickname || user?.username || 'U')[0].toUpperCase()
-
-  // Build menu tree: top-level items + render children as submenus
-  const renderMenuItems = (items: typeof menus, depth = 0) => {
-    return items.map((m) => {
-      const Icon = ICONS[m.icon] ?? LayoutDashboard
-      const isActive = location.pathname === m.path ||
-        (m.path !== '/' && location.pathname.startsWith(m.path))
-      const hasChildren = m.children && m.children.length > 0
-
-      if (hasChildren && depth === 0) {
-        // Top-level item with children — render as expandable group
-        return (
-          <SidebarMenuItem key={m.path || m.code}>
-            <SidebarMenuButton
-              onClick={() => navigate(m.path)}
-              isActive={isActive}
-              tooltip={m.name}
-              className="peer/menu-parent"
-            >
-              <Icon />
-              <span>{m.name}</span>
-              <ChevronRight className="ml-auto size-3.5 transition-transform duration-200 group-data-[state=open]/menu-item:rotate-90" />
-            </SidebarMenuButton>
-            <SidebarMenuSub>
-              {m.children!.map((child) => {
-                const ChildIcon = ICONS[child.icon] ?? LayoutDashboard
-                const childActive = location.pathname === child.path ||
-                  (child.path !== '/' && location.pathname.startsWith(child.path))
-                return (
-                  <SidebarMenuSubItem key={child.path || child.code}>
-                    <SidebarMenuSubButton
-                      onClick={() => navigate(child.path)}
-                      isActive={childActive}
-                    >
-                      <ChildIcon className="size-3.5" />
-                      <span>{child.name}</span>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                )
-              })}
-            </SidebarMenuSub>
-          </SidebarMenuItem>
-        )
-      }
-
-      // Leaf item or nested child
-      return (
-        <SidebarMenuItem key={m.path || m.code}>
-          <SidebarMenuButton
-            onClick={() => navigate(m.path)}
-            isActive={isActive}
-            tooltip={m.name}
-          >
-            <Icon />
-            <span>{m.name}</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      )
-    })
-  }
 
   // 未完成模块：隐藏在导航菜单，路由仍可访问
   const HIDDEN_MENU_CODES = new Set([
@@ -258,12 +284,33 @@ export default function MainLayout() {
         </SidebarHeader>
 
         <SidebarContent>
+          {menuError && (
+            <div
+              role="alert"
+              className="mx-2 rounded-lg border border-[var(--color-status-danger-border)] bg-[var(--color-status-danger-bg)] p-3 text-sm"
+            >
+              <p className="font-medium text-[var(--color-status-danger)]">导航菜单加载失败</p>
+              <p className="mt-1 text-xs text-muted-foreground">请检查网络后重新加载。</p>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="mt-3 w-full"
+                onClick={() => setMenuRequest((value) => value + 1)}
+              >
+                重新加载导航菜单
+              </Button>
+            </div>
+          )}
           {/* ── 知识 (Knowledge) ── */}
           {knowledgeMenus.length > 0 && (
             <SidebarGroup>
               <SidebarGroupLabel>知识</SidebarGroupLabel>
               <SidebarMenu>
-                {renderMenuItems(knowledgeMenus)}
+                <NavigationMenuItems
+                  items={knowledgeMenus}
+                  pathname={location.pathname}
+                  onNavigate={navigate}
+                />
               </SidebarMenu>
             </SidebarGroup>
           )}
@@ -271,7 +318,11 @@ export default function MainLayout() {
           <SidebarGroup>
             <SidebarGroupLabel>导航菜单</SidebarGroupLabel>
             <SidebarMenu>
-              {renderMenuItems(mainMenus)}
+              <NavigationMenuItems
+                items={mainMenus}
+                pathname={location.pathname}
+                onNavigate={navigate}
+              />
             </SidebarMenu>
           </SidebarGroup>
 
@@ -279,7 +330,11 @@ export default function MainLayout() {
             <SidebarGroup>
               <SidebarGroupLabel>系统</SidebarGroupLabel>
               <SidebarMenu>
-                {renderMenuItems(systemMenus)}
+                <NavigationMenuItems
+                  items={systemMenus}
+                  pathname={location.pathname}
+                  onNavigate={navigate}
+                />
               </SidebarMenu>
             </SidebarGroup>
           )}

@@ -26,8 +26,8 @@ export interface TestCaseDomainCategory {
   modules: TestCaseModuleCategory[]
 }
 
-export async function fetchDomains(): Promise<TestCaseDomainCategory[]> {
-  return api.get('/test-cases/domains')
+export async function fetchDomains(signal?: AbortSignal): Promise<TestCaseDomainCategory[]> {
+  return api.get('/test-cases/domains', { signal })
 }
 
 // ── Category CRUD ──
@@ -48,8 +48,8 @@ export async function deleteModule(domainId: number, moduleId: number) {
   return api.delete(`/test-cases/domains/${domainId}/modules/${moduleId}`)
 }
 
-export async function fetchTestCases(params: TestCaseFilter = {}) {
-  return api.get('/test-cases', { params })
+export async function fetchTestCases(params: TestCaseFilter = {}, signal?: AbortSignal) {
+  return api.get('/test-cases', { params, signal })
 }
 
 export async function fetchTestCase(id: number) {

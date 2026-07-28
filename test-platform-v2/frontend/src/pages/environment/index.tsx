@@ -43,6 +43,7 @@ import { AsyncState } from '@/components/state'
 import EmptyState from '@/components/EmptyState'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import ConfirmActionDialog from '@/components/ConfirmActionDialog'
 
 const ENV_TYPE_MAP: Record<string, { label: string; tone: BadgeTone }> = {
   dev: { label: '开发', tone: 'info' },
@@ -73,8 +74,10 @@ export default function EnvironmentPage() {
   const [envForm, setEnvForm] = useState({ name: '', env_type: 'test' as string, base_url: '', description: '' })
   const [varForm, setVarForm] = useState({ key: '', value: '', encrypted: false, description: '' })
 
-  // Production confirmation dialogs
-  const [deleteProdTarget, setDeleteProdTarget] = useState<Environment | null>(null)
+  // Confirmation dialogs
+  const [deleteEnvTarget, setDeleteEnvTarget] = useState<Environment | null>(null)
+  const [deleteVarTarget, setDeleteVarTarget] = useState<EnvironmentVariable | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [showProdTypeChangeDialog, setShowProdTypeChangeDialog] = useState(false)
 
   function isProductionEnv(env: Environment): boolean {
@@ -150,28 +153,20 @@ export default function EnvironmentPage() {
   }
 
   const handleEnvDelete = async (env: Environment) => {
-    if (isProductionEnv(env)) {
-      setDeleteProdTarget(env)
-      return
-    }
-    if (!confirm(`确定删除环境「${env.name}」？其中的变量也将被删除。`)) return
-    try {
-      await deleteEnvironment(env.id)
-      if (selectedEnv?.id === env.id) setSelectedEnv(null)
-      toast.success('环境已删除')
-      refetch()
-    } catch { /* handled by interceptor */ }
+    setDeleteEnvTarget(env)
   }
 
-  const confirmDeleteProdEnv = async () => {
-    if (!deleteProdTarget) return
+  const confirmDeleteEnv = async () => {
+    if (!deleteEnvTarget) return
+    setDeleting(true)
     try {
-      await deleteEnvironment(deleteProdTarget.id)
-      if (selectedEnv?.id === deleteProdTarget.id) setSelectedEnv(null)
+      await deleteEnvironment(deleteEnvTarget.id)
+      if (selectedEnv?.id === deleteEnvTarget.id) setSelectedEnv(null)
       toast.success('环境已删除')
+      setDeleteEnvTarget(null)
       refetch()
     } catch { /* handled by interceptor */ }
-    finally { setDeleteProdTarget(null) }
+    finally { setDeleting(false) }
   }
 
   // ── Variable handlers ──
@@ -208,13 +203,19 @@ export default function EnvironmentPage() {
   }
 
   const handleVarDelete = async (v: EnvironmentVariable) => {
-    if (!selectedEnv) return
-    if (!confirm(`确定删除变量「${v.key}」？`)) return
+    setDeleteVarTarget(v)
+  }
+
+  const confirmDeleteVar = async () => {
+    if (!selectedEnv || !deleteVarTarget) return
+    setDeleting(true)
     try {
-      await deleteVariable(selectedEnv.id, v.id)
+      await deleteVariable(selectedEnv.id, deleteVarTarget.id)
       toast.success('变量已删除')
+      setDeleteVarTarget(null)
       if (selectedEnv) loadVars(selectedEnv.id)
     } catch { /* handled by interceptor */ }
+    finally { setDeleting(false) }
   }
 
   // ── Render ──
@@ -414,7 +415,7 @@ export default function EnvironmentPage() {
                   variant="ghost" size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 size-7"
                   onClick={() => setVarForm((f) => ({ ...f, encrypted: !f.encrypted }))}
-                  title={varForm.encrypted ? '切换为明文' : '切换为加密'}
+                  aria-label={varForm.encrypted ? '以明文显示变量值' : '隐藏变量值'}
                 >
                   {varForm.encrypted ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                 </Button>
@@ -436,21 +437,27 @@ export default function EnvironmentPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Production env delete confirmation */}
-      <AlertDialog open={!!deleteProdTarget} onOpenChange={(open) => { if (!open) setDeleteProdTarget(null) }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>删除生产环境确认</AlertDialogTitle>
-            <AlertDialogDescription>
-              您正在删除生产环境配置「{deleteProdTarget?.name}」，此操作可能影响线上测试。请确认。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmDeleteProdEnv}>确认删除</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmActionDialog
+        open={deleteEnvTarget !== null}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteEnvTarget(null) }}
+        title={deleteEnvTarget && isProductionEnv(deleteEnvTarget) ? '删除生产环境确认' : '删除环境'}
+        description={
+          deleteEnvTarget && isProductionEnv(deleteEnvTarget)
+            ? `您正在删除生产环境配置「${deleteEnvTarget.name}」，此操作可能影响线上测试，且其中的变量也将被删除。`
+            : `确定删除环境「${deleteEnvTarget?.name ?? ''}」？其中的变量也将被删除。`
+        }
+        pending={deleting}
+        onConfirm={confirmDeleteEnv}
+      />
+
+      <ConfirmActionDialog
+        open={deleteVarTarget !== null}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteVarTarget(null) }}
+        title="删除环境变量"
+        description={`确定删除变量「${deleteVarTarget?.key ?? ''}」？此操作无法撤销。`}
+        pending={deleting}
+        onConfirm={confirmDeleteVar}
+      />
 
       {/* Production env type change confirmation */}
       <AlertDialog open={showProdTypeChangeDialog} onOpenChange={setShowProdTypeChangeDialog}>

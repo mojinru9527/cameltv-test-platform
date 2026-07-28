@@ -336,7 +336,7 @@ export default function ArtifactReviewTab() {
                           size="icon"
                           className="size-8"
                           onClick={() => setDetailArtifact(a)}
-                          title="查看详情"
+                          aria-label={`查看制品 ${a.title || a.id} 详情`}
                         >
                           <Eye className="size-4" />
                         </Button>
@@ -347,7 +347,7 @@ export default function ArtifactReviewTab() {
                               size="icon"
                               className="size-8 text-green-600 hover:text-green-700"
                               onClick={() => setActionTarget({ id: a.id, action: 'approve' })}
-                              title="采纳"
+                              aria-label={`采纳制品 ${a.title || a.id}`}
                             >
                               <CheckCircle2 className="size-4" />
                             </Button>
@@ -356,7 +356,7 @@ export default function ArtifactReviewTab() {
                               size="icon"
                               className="size-8 text-red-600 hover:text-red-700"
                               onClick={() => setActionTarget({ id: a.id, action: 'reject' })}
-                              title="驳回"
+                              aria-label={`驳回制品 ${a.title || a.id}`}
                             >
                               <XCircle className="size-4" />
                             </Button>

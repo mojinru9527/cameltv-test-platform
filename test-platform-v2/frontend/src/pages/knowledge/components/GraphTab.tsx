@@ -42,6 +42,7 @@ const TYPE_LABELS: Record<string, string> = {
 export default function GraphTab() {
   const containerRef = useRef<HTMLDivElement>(null)
   const networkRef = useRef<Network | null>(null)
+  const loadControllerRef = useRef<AbortController | null>(null)
   const [graphData, setGraphData] = useState<GraphView | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -54,21 +55,27 @@ export default function GraphTab() {
 
   const loadGraph = useCallback(async (d?: string) => {
     const dom = d ?? domain
+    loadControllerRef.current?.abort()
+    const controller = new AbortController()
+    loadControllerRef.current = controller
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchGraphView(200, dom)
+      const data = await fetchGraphView(200, dom, controller.signal)
+      if (controller.signal.aborted) return
       setGraphData(data)
     } catch (e: any) {
+      if (controller.signal.aborted) return
       setError(e?.message || '加载图谱数据失败')
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) setLoading(false)
     }
   }, [domain])
 
   // 初始加载
   useEffect(() => {
     loadGraph()
+    return () => loadControllerRef.current?.abort()
   }, [loadGraph])
 
   // 渲染 vis-network
@@ -279,17 +286,18 @@ export default function GraphTab() {
 
   // ── 主视图 ──
   return (
-    <div className="flex gap-4 p-4" style={{ height: 'calc(100vh - 260px)' }}>
+    <div className="flex min-h-[calc(100dvh-260px)] flex-col gap-4 p-3 sm:p-4 lg:h-[calc(100dvh-260px)] lg:flex-row">
       {/* 图谱画布 */}
-      <div className="flex-1 relative rounded-lg border overflow-hidden bg-background">
+      <div className="relative min-h-[420px] min-w-0 flex-1 overflow-hidden rounded-lg border bg-background">
         {/* 工具栏 */}
-        <div className="absolute top-2 right-2 z-10 flex gap-1">
+        <div className="absolute inset-x-2 top-2 z-10 flex max-h-[132px] flex-wrap justify-end gap-1 overflow-auto rounded-lg bg-background/92 p-1 backdrop-blur-sm">
           {/* 知识域切换 */}
           <div className="flex rounded-md border bg-background mr-1">
             <button
               type="button"
               className={`px-2 py-1 text-xs rounded-l-md transition-colors ${domain === 'project' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
               onClick={() => { setDomain('project'); loadGraph('project') }}
+              aria-pressed={domain === 'project'}
             >
               项目知识
             </button>
@@ -297,6 +305,7 @@ export default function GraphTab() {
               type="button"
               className={`px-2 py-1 text-xs rounded-r-md transition-colors ${domain === 'platform' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
               onClick={() => { setDomain('platform'); loadGraph('platform') }}
+              aria-pressed={domain === 'platform'}
             >
               平台研发
             </button>
@@ -306,27 +315,27 @@ export default function GraphTab() {
             size="icon"
             className="size-8"
             onClick={() => networkRef.current?.moveTo({ scale: (networkRef.current as any)?.getScale?.() * 1.3 || 1.3 })}
-            title="放大"
+            aria-label="放大知识图谱"
           >
-            <Plus className="size-4" />
+            <Plus className="size-4" aria-hidden="true" />
           </Button>
           <Button
             variant="secondary"
             size="icon"
             className="size-8"
             onClick={() => networkRef.current?.moveTo({ scale: (networkRef.current as any)?.getScale?.() * 0.7 || 0.7 })}
-            title="缩小"
+            aria-label="缩小知识图谱"
           >
-            <MinusCircle className="size-4" />
+            <MinusCircle className="size-4" aria-hidden="true" />
           </Button>
           <Button
             variant="secondary"
             size="icon"
             className="size-8"
             onClick={() => networkRef.current?.fit({ animation: true })}
-            title="适应画布"
+            aria-label="让知识图谱适应画布"
           >
-            <Maximize2 className="size-4" />
+            <Maximize2 className="size-4" aria-hidden="true" />
           </Button>
           <Button
             variant="secondary"
@@ -351,11 +360,16 @@ export default function GraphTab() {
         </div>
 
         {/* vis 容器 */}
-        <div ref={containerRef} className="w-full h-full" />
+        <div
+          ref={containerRef}
+          className="w-full h-full"
+          role="img"
+          aria-label={`知识图谱，共 ${graphData.nodes.length} 个节点、${graphData.edges.length} 条关系`}
+        />
       </div>
 
       {/* 详情面板 */}
-      <div className="w-64 shrink-0">
+      <div className="w-full shrink-0 lg:w-64">
         {selected ? (
           <Card>
             <CardHeader className="pb-2">
@@ -390,9 +404,10 @@ export default function GraphTab() {
                 {Object.entries(TYPE_LABELS).map(([key, label]) => {
                   const hidden = hiddenTypes.has(key)
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={key}
-                      className={`flex items-center gap-2 text-sm cursor-pointer rounded px-1 py-0.5 hover:bg-muted/50 transition-colors ${hidden ? 'opacity-40' : ''}`}
+                      className={`flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm transition-colors hover:bg-muted/50 ${hidden ? 'opacity-40' : ''}`}
                       onClick={() => {
                         setHiddenTypes((prev) => {
                           const next = new Set(prev)
@@ -401,6 +416,7 @@ export default function GraphTab() {
                           return next
                         })
                       }}
+                      aria-pressed={!hidden}
                     >
                       <span
                         className="inline-block size-3 rounded-full shrink-0"
@@ -410,7 +426,7 @@ export default function GraphTab() {
                       <span className="text-xs text-muted-foreground/60 ml-auto">
                         {graphData.nodes.filter((n) => n.entity_type === key).length}
                       </span>
-                    </div>
+                    </button>
                   )
                 })}
               </CardContent>

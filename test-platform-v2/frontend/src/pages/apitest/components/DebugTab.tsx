@@ -314,7 +314,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
               const env = envs.find(e => e.id === id)
               if (env) setBaseUrl(env.base_url)
             }}>
-              <SelectTrigger className="w-[200px]"><SelectValue placeholder="不使用环境变量" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[200px]" aria-label="选择调试环境"><SelectValue placeholder="不使用环境变量" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="_none">不使用环境变量</SelectItem>
                 {envs.map((e) => (
@@ -328,7 +328,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium whitespace-nowrap">测试数据:</label>
             <Select value={datasetId?.toString() || '_none'} onValueChange={(v) => setDatasetId(v === '_none' ? undefined : Number(v))}>
-              <SelectTrigger className="w-[220px]"><SelectValue placeholder="不使用测试数据" /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[220px]" aria-label="选择测试数据集"><SelectValue placeholder="不使用测试数据" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="_none">不使用测试数据</SelectItem>
                 {datasets.map((d) => (
@@ -341,7 +341,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
         <div className="flex items-center gap-2">
           <label className="text-sm font-medium whitespace-nowrap">次数:</label>
           <Select value={testCount.toString()} onValueChange={(v) => setTestCount(Number(v))}>
-            <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-[80px]" aria-label="选择请求方法"><SelectValue /></SelectTrigger>
             <SelectContent>
               {TEST_COUNTS.map((n) => <SelectItem key={n} value={n.toString()}>{n}</SelectItem>)}
             </SelectContent>
@@ -367,7 +367,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
           <div>
             <label className="text-sm font-medium mb-1.5 block">方法</label>
             <Select value={method} onValueChange={setMethod}>
-              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-[160px]" aria-label="选择数据驱动模式"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {METHODS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
               </SelectContent>
@@ -539,7 +539,7 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
       <Card>
         <CardHeader><CardTitle className="flex items-center gap-2">批量执行 <Badge className={b.failed === 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>{b.passed}/{b.total_rows}</Badge></CardTitle></CardHeader>
         <CardContent className="space-y-2 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-1 gap-2 text-center sm:grid-cols-3">
             <div className="bg-muted rounded p-2"><div className="text-lg font-bold">{b.total_rows}</div><div className="text-xs text-muted-foreground">总行数</div></div>
             <div className="bg-green-50 dark:bg-green-950/20 rounded p-2"><div className="text-lg font-bold text-green-600">{b.passed}</div><div className="text-xs text-muted-foreground">通过</div></div>
             <div className="bg-red-50 dark:bg-red-950/20 rounded p-2"><div className="text-lg font-bold text-red-600">{b.failed}</div><div className="text-xs text-muted-foreground">失败</div></div>

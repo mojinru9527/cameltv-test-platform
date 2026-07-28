@@ -1,5 +1,5 @@
 import { Badge, Button, PageShell } from '@/ui'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Checkbox } from '@/components/ui/checkbox'
@@ -53,14 +53,12 @@ const REVIEW_TONES: Record<string, BadgeTone> = { draft: 'neutral', submitted: '
 
 export default function TestCasePage() {
   useDocumentTitle('用例库')
-  // domains are loaded independently (used for tree + filter dropdowns)
-  const [domains, setDomains] = useState<any[]>([])
-
   // filter state (default to manual - api cases managed in apitest module)
   const [actTab, setActTab] = useState('manual')
   const [selDomain, setSelDomain] = useState('')
   const [selModule, setSelModule] = useState('')
   const [priority, setPriority] = useState('')
+  const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -94,27 +92,24 @@ export default function TestCasePage() {
 
   // ── Main data fetching with useApi ──
   const { data, isLoading, isError, error, refetch } = useApi(
-    () => {
+    (signal) => {
       const params: any = { page, page_size: pageSize }
       if (actTab) params.case_type = actTab
       if (selDomain) params.domain = selDomain
       if (selModule) params.module = selModule
       if (priority) params.priority = priority
       if (keyword) params.keyword = keyword
-      return fetchTestCases(params) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
+      return fetchTestCases(params, signal) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
     },
     [actTab, selDomain, selModule, priority, keyword, page, pageSize]
   )
 
   // ── Domains (secondary data, loaded independently) ──
-  const loadDomains = useCallback(async () => {
-    try {
-      const d: any = await fetchDomains()
-      setDomains(d || [])
-    } catch { /* handled by interceptor */ }
-  }, [])
-
-  useEffect(() => { loadDomains() }, [loadDomains])
+  const { data: domainData, refetch: refetchDomains } = useApi(
+    (signal) => fetchDomains(signal),
+    [],
+  )
+  const domains = domainData || []
 
   const items = data?.items || []
   // Sort newest first (created_at descending, fallback to id descending)
@@ -217,7 +212,7 @@ export default function TestCasePage() {
     setDrawer(false)
     setEditing(null)
     refetch()
-    loadDomains()
+    refetchDomains()
   }
 
   // ── Version history ──
@@ -354,18 +349,30 @@ export default function TestCasePage() {
               </InputGroupAddon>
               <InputGroupInput
                 placeholder="搜索标题/关键字"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') refetch() }}
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const nextKeyword = keywordInput.trim()
+                    setPage(1)
+                    if (nextKeyword === keyword) refetch()
+                    else setKeyword(nextKeyword)
+                  }
+                }}
               />
             </InputGroup>
 
-            <Button size="sm" onClick={() => { setPage(1); refetch() }}>
+            <Button size="sm" onClick={() => {
+              const nextKeyword = keywordInput.trim()
+              setPage(1)
+              if (nextKeyword === keyword) refetch()
+              else setKeyword(nextKeyword)
+            }}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
             <Button size="sm" variant="secondary" onClick={() => {
-              setSelDomain(''); setSelModule(''); setPriority(''); setKeyword(''); setPage(1)
+              setSelDomain(''); setSelModule(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1)
             }}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
               重置
@@ -405,7 +412,12 @@ export default function TestCasePage() {
 
           {/* Table + Pagination — flex-1 scrollable */}
           <div className="flex-1 min-h-0 flex flex-col">
-            <div className="flex-1 min-h-0 overflow-y-auto rounded-md border">
+            <div
+              className="flex-1 min-h-0 overflow-auto rounded-md border"
+              role="region"
+              aria-label="测试用例数据表"
+              tabIndex={0}
+            >
           <AsyncState
             isLoading={isLoading}
             isError={isError}
@@ -418,7 +430,7 @@ export default function TestCasePage() {
             loadingRows={4}
           >
             {() => (
-            <div className="overflow-x-visible">
+            <div className="min-w-0 overflow-x-auto">
               <Table className="ui-table min-w-[900px] [&_td]:py-2.5">
                 <TableHeader>
                   <TableRow>
@@ -426,6 +438,7 @@ export default function TestCasePage() {
                       <Checkbox
                         checked={selected.size === sortedItems.length && sortedItems.length > 0}
                         onCheckedChange={toggleSelectAll}
+                        aria-label="选择当前页全部用例"
                       />
                     </TableHead>
                     <TableHead className="w-[100px]">模块名称</TableHead>
@@ -435,7 +448,9 @@ export default function TestCasePage() {
                     <TableHead className="w-[200px]">操作步骤</TableHead>
                     <TableHead className="w-[200px]">预期结果</TableHead>
                     <TableHead className="w-[60px]">评审</TableHead>
-                    <TableHead className="w-[90px]">操作</TableHead>
+                    <TableHead className="sticky right-0 z-20 w-[132px] bg-card shadow-[-10px_0_18px_-16px_hsl(var(--foreground))]">
+                      操作
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -445,6 +460,7 @@ export default function TestCasePage() {
                         <Checkbox
                           checked={selected.has(r.id)}
                           onCheckedChange={() => toggleSelect(r.id)}
+                          aria-label={`选择用例：${r.title || r.id}`}
                         />
                       </TableCell>
                       <TableCell className="max-w-[100px] truncate">
@@ -468,38 +484,69 @@ export default function TestCasePage() {
                         <span className="line-clamp-1">{formatStepExpectations(r.steps, r.expected_result).join(' ') || '......'}</span>
                       </TableCell>
                       <TableCell>
-                        <Badge tone={REVIEW_TONES[r.review_status] || 'neutral'} className="text-[10px]">
+                        <Badge tone={REVIEW_TONES[r.review_status] || 'neutral'} className="text-xs">
                           {REVIEW_LABELS[r.review_status] || r.review_status || '草稿'}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="sticky right-0 z-10 bg-card shadow-[-10px_0_18px_-16px_hsl(var(--foreground))]">
                         <div className="flex items-center gap-1">
-                          <Button size="icon-xs" variant="ghost" onClick={() => openVersionHistory(r)} title="版本历史">
-                            <History className="size-3" />
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            onClick={() => openVersionHistory(r)}
+                            aria-label={`查看版本历史：${r.title || r.id}`}
+                          >
+                            <History className="size-3" aria-hidden="true" />
                           </Button>
                           {/* Review actions (batch-34) */}
                           {r.review_status === 'draft' && (
-                            <Button size="icon-xs" variant="ghost" onClick={() => openReviewDialog(r, 'submit')} title="提交评审">
-                              <Send className="size-3 text-blue-600" />
+                            <Button
+                              size="icon-xs"
+                              variant="ghost"
+                              onClick={() => openReviewDialog(r, 'submit')}
+                              aria-label={`提交评审：${r.title || r.id}`}
+                            >
+                              <Send className="size-3 text-blue-600" aria-hidden="true" />
                             </Button>
                           )}
                           {r.review_status === 'submitted' && (
                             <>
-                              <Button size="icon-xs" variant="ghost" onClick={() => openReviewDialog(r, 'approve')} title="通过">
-                                <CheckCircle2 className="size-3 text-green-600" />
+                              <Button
+                                size="icon-xs"
+                                variant="ghost"
+                                onClick={() => openReviewDialog(r, 'approve')}
+                                aria-label={`通过评审：${r.title || r.id}`}
+                              >
+                                <CheckCircle2 className="size-3 text-green-600" aria-hidden="true" />
                               </Button>
-                              <Button size="icon-xs" variant="ghost" onClick={() => openReviewDialog(r, 'reject')} title="驳回">
-                                <XCircle className="size-3 text-red-600" />
+                              <Button
+                                size="icon-xs"
+                                variant="ghost"
+                                onClick={() => openReviewDialog(r, 'reject')}
+                                aria-label={`驳回评审：${r.title || r.id}`}
+                              >
+                                <XCircle className="size-3 text-red-600" aria-hidden="true" />
                               </Button>
                             </>
                           )}
-                          <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)}>
-                            <Edit className="size-3" />
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            onClick={() => openEdit(r)}
+                            aria-label={`编辑用例：${r.title || r.id}`}
+                          >
+                            <Edit className="size-3" aria-hidden="true" />
                           </Button>
                           <AlertDialog open={deleteTarget === r.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
                             <AlertDialogTrigger asChild>
-                              <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
-                                <Trash2 className="size-3" />
+                              <Button
+                                size="icon-xs"
+                                variant="ghost"
+                                className="text-destructive hover:bg-destructive/10"
+                                onClick={() => setDeleteTarget(r.id)}
+                                aria-label={`删除用例：${r.title || r.id}`}
+                              >
+                                <Trash2 className="size-3" aria-hidden="true" />
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent size="sm">

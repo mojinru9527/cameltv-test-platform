@@ -156,6 +156,27 @@ export default function InteractionAnnotator({
     if (editingId === id) setEditingId(null)
   }
 
+  const addKeyboardRegion = () => {
+    const newId = `region-${Date.now()}`
+    setRegions((prev) => [
+      ...prev,
+      {
+        id: newId,
+        x: 24,
+        y: 24,
+        width: 140,
+        height: 88,
+        targetPage: '',
+        interactionType: 'navigation',
+        trigger: '',
+        sourceElement: '',
+        adminConfigSource: '',
+        isGlobalNav: false,
+      },
+    ])
+    setEditingId(newId)
+  }
+
   const handleSave = async () => {
     if (!page) return
     setSaving(true)
@@ -183,16 +204,16 @@ export default function InteractionAnnotator({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[90vh] w-[1200px] p-0">
+      <DialogContent className="max-h-[94dvh] w-[min(1200px,96vw)] max-w-[96vw] overflow-hidden p-0">
         <DialogHeader className="p-4 pb-2 border-b">
           <DialogTitle className="text-base flex items-center gap-2">
             页面交互标注 — {page?.name ?? '未知页面'}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex h-[70vh]">
+        <div className="flex h-[82dvh] min-h-0 flex-col lg:h-[70vh] lg:flex-row">
           {/* Screenshot Canvas */}
-          <div className="flex-1 relative bg-muted/20 overflow-hidden">
+          <div className="relative min-h-[34dvh] flex-1 overflow-hidden bg-muted/20">
             {imageUrl ? (
               <div
                 ref={canvasRef}
@@ -263,12 +284,22 @@ export default function InteractionAnnotator({
           </div>
 
           {/* Right Panel: Annotation List */}
-          <div className="w-80 shrink-0 border-l flex flex-col">
+          <div className="flex min-h-0 w-full shrink-0 flex-col border-t lg:w-80 lg:border-t-0 lg:border-l">
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-semibold">标注列表 ({regions.length})</h4>
-                  {editingId && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="text-xs"
+                      onClick={addKeyboardRegion}
+                    >
+                      <Plus className="size-3.5" aria-hidden="true" />
+                      新增标注
+                    </Button>
+                    {editingId && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -277,7 +308,8 @@ export default function InteractionAnnotator({
                     >
                       完成编辑
                     </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
 
                 {regions.length === 0 ? (
@@ -305,22 +337,23 @@ export default function InteractionAnnotator({
                           size="icon"
                           className="h-6 w-6 text-muted-foreground hover:text-destructive"
                           onClick={() => deleteRegion(r.id)}
+                          aria-label={`删除标注区域 ${r.id.slice(-4)}`}
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3 w-3" aria-hidden="true" />
                         </Button>
                       </div>
 
                       {editingId === r.id ? (
                         <>
                           <div>
-                            <Label className="text-xs">目标页面</Label>
+                            <Label htmlFor={`target-page-${r.id}`} className="text-xs">目标页面</Label>
                             <Select
                               value={r.targetPage}
                               onValueChange={(v) =>
                                 updateRegion(r.id, { targetPage: v })
                               }
                             >
-                              <SelectTrigger className="h-8 text-xs">
+                              <SelectTrigger id={`target-page-${r.id}`} className="h-8 text-xs">
                                 <SelectValue placeholder="选择目标页面" />
                               </SelectTrigger>
                               <SelectContent>
@@ -333,14 +366,14 @@ export default function InteractionAnnotator({
                             </Select>
                           </div>
                           <div>
-                            <Label className="text-xs">交互类型</Label>
+                            <Label htmlFor={`interaction-type-${r.id}`} className="text-xs">交互类型</Label>
                             <Select
                               value={r.interactionType}
                               onValueChange={(v) =>
                                 updateRegion(r.id, { interactionType: v })
                               }
                             >
-                              <SelectTrigger className="h-8 text-xs">
+                              <SelectTrigger id={`interaction-type-${r.id}`} className="h-8 text-xs">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -357,8 +390,9 @@ export default function InteractionAnnotator({
                             </Select>
                           </div>
                           <div>
-                            <Label className="text-xs">触发元素</Label>
+                            <Label htmlFor={`source-element-${r.id}`} className="text-xs">触发元素</Label>
                             <Input
+                              id={`source-element-${r.id}`}
                               className="h-8 text-xs"
                               value={r.sourceElement}
                               onChange={(e) =>
@@ -371,8 +405,9 @@ export default function InteractionAnnotator({
                           </div>
                           {r.interactionType === 'dynamic_filter' && (
                             <div>
-                              <Label className="text-xs">运营后台配置源</Label>
+                              <Label htmlFor={`admin-source-${r.id}`} className="text-xs">运营后台配置源</Label>
                               <Input
+                                id={`admin-source-${r.id}`}
                                 className="h-8 text-xs"
                                 value={r.adminConfigSource}
                                 onChange={(e) =>

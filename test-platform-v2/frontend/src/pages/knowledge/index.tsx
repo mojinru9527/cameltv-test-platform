@@ -70,7 +70,10 @@ export default function KnowledgePage() {
           />
         </div>
         <Select value={searchMode} onValueChange={setSearchMode}>
-          <SelectTrigger className="h-9 w-full text-xs sm:w-[180px]">
+          <SelectTrigger
+            className="h-9 w-full text-xs sm:w-[180px]"
+            aria-label="知识检索方式"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

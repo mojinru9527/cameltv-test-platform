@@ -393,7 +393,7 @@ export default function PlanDetail() {
                                 </Button>
                                 <AlertDialog open={deleteTarget === r.case_id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
                                   <AlertDialogTrigger asChild>
-                                    <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.case_id)}>
+                                    <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.case_id)} aria-label={`从计划中移除用例 ${r.title || r.case_id}`}>
                                       <Trash2 className="size-3" />
                                     </Button>
                                   </AlertDialogTrigger>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { fetchModule } from '@/api/requirementModules'
 import { fetchGlobalNav } from '@/api/requirementModules'
 import type { ModuleTreeNode, GlobalNavItemOut } from '@/types'
@@ -69,35 +69,40 @@ export default function PageInteractionPanel({
   const [globalNav, setGlobalNav] = useState<GlobalNavItemOut[]>([])
   const [loading, setLoading] = useState(false)
 
-  const parseData = useCallback(async () => {
+  useEffect(() => {
     if (!page || !open) return
 
-    setLoading(true)
-    try {
-      // Load full module detail for interactions
-      const detail = await fetchModule(page.id)
-      setInteractions(
-        JSON.parse(detail.page_interactions || '[]') as PageInteraction[],
-      )
-
-      // Load global nav
-      const nav = await fetchGlobalNav(bundleId)
-      setGlobalNav(nav.filter((n) => n.target_page === page.name))
-    } catch {
-      // Fallback: parse from tree node
+    const controller = new AbortController()
+    const parseData = async () => {
+      setLoading(true)
       try {
-        setInteractions(JSON.parse(page.page_interactions || '[]') as PageInteraction[])
-      } catch {
-        setInteractions([])
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [page, open, bundleId])
+        // Load full module detail for interactions
+        const detail = await fetchModule(page.id, controller.signal)
+        if (controller.signal.aborted) return
+        setInteractions(
+          JSON.parse(detail.page_interactions || '[]') as PageInteraction[],
+        )
 
-  useEffect(() => {
+        // Load global nav
+        const nav = await fetchGlobalNav(bundleId, controller.signal)
+        if (controller.signal.aborted) return
+        setGlobalNav(nav.filter((n) => n.target_page === page.name))
+      } catch {
+        if (controller.signal.aborted) return
+        // Fallback: parse from tree node
+        try {
+          setInteractions(JSON.parse(page.page_interactions || '[]') as PageInteraction[])
+        } catch {
+          setInteractions([])
+        }
+      } finally {
+        if (!controller.signal.aborted) setLoading(false)
+      }
+    }
+
     parseData()
-  }, [parseData])
+    return () => controller.abort()
+  }, [page, open, bundleId])
 
   const outgoing = interactions.filter(
     (ia) => ia.interaction_type !== 'global_navigation',
@@ -262,7 +267,7 @@ function InteractionRow({ interaction: ia }: { interaction: PageInteraction }) {
             {ia.trigger || '未命名'}
           </span>
           <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
-          <span className="font-medium text-blue-600 truncate">
+        <span className="font-medium text-primary truncate">
             {ia.target_page || '未知页面'}
           </span>
         </div>

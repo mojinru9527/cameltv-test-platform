@@ -59,7 +59,7 @@ export default function EnvironmentBar({
           <Badge tone="danger" className="text-[10px] px-1 py-0 leading-none">PROD</Badge>
         )}
         {onRefresh && (
-          <Button type="button" size="icon-sm" variant="ghost" onClick={onRefresh} title="刷新环境列表">
+          <Button type="button" size="icon-sm" variant="ghost" onClick={onRefresh} aria-label="刷新环境列表">
             <RefreshCw className="size-3" />
           </Button>
         )}

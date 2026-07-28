@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchModuleTree } from '@/api/requirementModules'
 import type { ModuleTreeResponse, ModuleTreeNode } from '@/types'
@@ -24,6 +24,7 @@ export default function VersionPanoramaPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedPage, setSelectedPage] = useState<ModuleTreeNode | null>(null)
   const [interactionPanelOpen, setInteractionPanelOpen] = useState(false)
+  const loadControllerRef = useRef<AbortController | null>(null)
 
   // Sync selected bundle with URL param
   useEffect(() => {
@@ -34,20 +35,26 @@ export default function VersionPanoramaPage() {
 
   const loadTree = useCallback(async () => {
     if (!selectedBundleId) return
+    loadControllerRef.current?.abort()
+    const controller = new AbortController()
+    loadControllerRef.current = controller
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchModuleTree(selectedBundleId)
+      const data = await fetchModuleTree(selectedBundleId, controller.signal)
+      if (controller.signal.aborted) return
       setTree(data)
     } catch (err) {
+      if (controller.signal.aborted) return
       setError(err instanceof Error ? err.message : '加载模块树失败')
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) setLoading(false)
     }
   }, [selectedBundleId])
 
   useEffect(() => {
     loadTree()
+    return () => loadControllerRef.current?.abort()
   }, [loadTree])
 
   // Navigate when selecting a different bundle
@@ -84,13 +91,14 @@ export default function VersionPanoramaPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b bg-card shrink-0">
+      <div className="flex shrink-0 flex-wrap items-center gap-3 border-b bg-card px-3 py-3 sm:gap-4 sm:px-6 sm:py-4">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate('/release-bundles')}
+          aria-label="返回发布包列表"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Button>
         <div className="flex-1">
           <h1 className="text-lg font-bold">
@@ -104,7 +112,7 @@ export default function VersionPanoramaPage() {
           )}
         </div>
         {tree && (
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex w-full items-center gap-3 text-sm text-muted-foreground sm:w-auto">
             <span>
               <Package className="h-4 w-4 inline mr-1" />
               {tree.total_modules} 模块
@@ -117,9 +125,9 @@ export default function VersionPanoramaPage() {
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
         {/* Left Sidebar: Version List */}
-        <aside className="w-64 shrink-0 border-r bg-muted/20 overflow-hidden">
+        <aside className="h-48 w-full shrink-0 overflow-hidden border-b bg-muted/20 lg:h-auto lg:w-64 lg:border-r lg:border-b-0">
           <VersionList
             projectId={0}
             selectedBundleId={selectedBundleId}
@@ -158,17 +166,11 @@ export default function VersionPanoramaPage() {
               </p>
             </div>
           ) : (
-            <div className="p-6 space-y-6">
+            <div className="space-y-6 p-3 sm:p-6">
               {/* Three-column platform cards */}
               <div
                 className={cn(
-                  'grid gap-4',
-                  platformNames.length === 3
-                    ? 'grid-cols-3'
-                    : platformNames.length === 2
-                      ? 'grid-cols-2'
-                      : 'grid-cols-1',
-                  'xl:grid-cols-3',
+                  'grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3',
                 )}
               >
                 {platformNames.map((platform) => (
@@ -185,8 +187,7 @@ export default function VersionPanoramaPage() {
               {adminModules.length > 0 && (
                 <div
                   className={cn(
-                    'grid gap-4',
-                    platformNames.length >= 2 ? 'grid-cols-2' : 'grid-cols-1',
+                    'grid grid-cols-1 gap-4 md:grid-cols-2',
                   )}
                 >
                   <PlatformCard

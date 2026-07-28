@@ -1011,7 +1011,7 @@ export default function AiResultModal({
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                title={edited ? '再次编辑' : '编辑用例'}
+                              aria-label={edited ? '再次编辑用例' : '编辑用例'}
                                 onClick={() => handleStartEdit(c)}
                               >
                                 <Edit className="size-3.5" />
