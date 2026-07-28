@@ -15,7 +15,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'

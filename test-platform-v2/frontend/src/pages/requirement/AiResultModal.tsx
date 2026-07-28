@@ -15,7 +15,7 @@ import type {
   TestModule, ApiMatchItem, ApiService,
 } from '@/types'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'

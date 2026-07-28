@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,

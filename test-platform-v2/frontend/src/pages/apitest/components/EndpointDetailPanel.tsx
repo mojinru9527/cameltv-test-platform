@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BrainCircuit, Loader2 } from '@/lib/icons'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { searchKnowledge } from '@/api/knowledge'

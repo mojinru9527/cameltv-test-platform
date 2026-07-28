@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'

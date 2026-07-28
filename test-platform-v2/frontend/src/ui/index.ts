@@ -29,6 +29,11 @@ export { Button } from './primitives/Button'
 export { Input } from './primitives/Input'
 export { Badge, type BadgeTone } from './primitives/Badge'
 export { Progress } from './primitives/Progress'
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './primitives/Card'
+export { Textarea } from './primitives/Textarea'
+export { Label } from './primitives/Label'
+export { Select } from './primitives/Select'
+export { Skeleton } from './primitives/Skeleton'
 
 // ── 页面模式 ──
 export { ObsidianWorkbench, type ObsidianWorkbenchProps, type WorkbenchMetric } from './patterns/ObsidianWorkbench'

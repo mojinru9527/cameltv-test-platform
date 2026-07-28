@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Input } from '@/ui'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,

@@ -5,7 +5,7 @@ import type { ModuleTreeNode } from '@/types'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   Select,
   SelectContent,
