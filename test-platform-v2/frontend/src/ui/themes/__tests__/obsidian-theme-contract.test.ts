@@ -40,9 +40,20 @@ describe('Obsidian theme contract', () => {
     expect(`${obsidianCss}\n${semanticsCss}\n${globalsCss}`).not.toContain('#718077')
   })
 
-  it('keeps every compact button at least 44px for coarse pointers', () => {
-    expect(obsidianCss).toMatch(
-      /@media \(pointer: coarse\)[\s\S]*?\[data-theme="obsidian-flow"\] \.ui-btn-xs,[\s\S]*?\[data-theme="obsidian-flow"\] \.ui-btn-sm,[\s\S]*?\[data-theme="obsidian-flow"\] \.ui-btn-icon,[\s\S]*?\[data-theme="obsidian-flow"\] \.ui-btn-icon-sm,[\s\S]*?\[data-theme="obsidian-flow"\] \.ui-btn-icon-xs[\s\S]*?min-width: 44px;[\s\S]*?min-height: 44px;/,
+  it('keeps shared interactive controls at least 44px for coarse pointers', () => {
+    expect(globalsCss).toMatch(
+      /@media \(pointer: coarse\)[\s\S]*?\[data-slot="button"\],[\s\S]*?\[data-slot="input"\],[\s\S]*?\[data-slot="select-trigger"\],[\s\S]*?\[data-sidebar="menu-button"\][\s\S]*?min-width: 44px;[\s\S]*?min-height: 44px;/,
+    )
+    expect(obsidianCss).not.toContain('@media (pointer: coarse)')
+  })
+
+  it('uses valid CSS focus and avatar ring properties', () => {
+    expect(globalsCss).not.toMatch(/\bring-(?:width|color|offset)\s*:/)
+    expect(globalsCss).toMatch(
+      /\[data-theme="cyberpunk"\] input:focus-visible[\s\S]*?outline: 2px solid var\(--primary\);/,
+    )
+    expect(globalsCss).toMatch(
+      /\[data-theme="clay"\] input:focus-visible[\s\S]*?outline-offset: 2px;/,
     )
   })
 

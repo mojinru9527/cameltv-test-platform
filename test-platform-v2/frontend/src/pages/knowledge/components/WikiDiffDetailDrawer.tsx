@@ -145,11 +145,11 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
         <div className="space-y-3 py-4 text-sm">
           {/* Left / Right comparison */}
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-md border p-2 bg-red-50/30 dark:bg-red-950/10">
+            <div className="rounded-md border p-2 bg-status-danger-muted dark:bg-status-danger-muted">
               <div className="text-xs text-muted-foreground mb-1 font-medium">左侧 (RAG 知识库)</div>
               <div className="break-words whitespace-pre-wrap text-xs">{item.left_value || '—'}</div>
             </div>
-            <div className="rounded-md border p-2 bg-green-50/30 dark:bg-green-950/10">
+            <div className="rounded-md border p-2 bg-status-success-muted dark:bg-status-success-muted">
               <div className="text-xs text-muted-foreground mb-1 font-medium">右侧 (Wiki 知识库)</div>
               <div className="break-words whitespace-pre-wrap text-xs">{item.right_value || '—'}</div>
             </div>
@@ -157,7 +157,7 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
 
           {/* Suggestion */}
           {item.suggestion && (
-            <div className="rounded-md border border-blue-200 bg-blue-50 p-2.5 text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
+            <div className="rounded-md border border-status-info-border bg-status-info-muted p-2.5 text-status-info dark:border-status-info-border dark:bg-status-info-muted dark:text-status-info">
               <div className="text-xs font-medium mb-0.5">建议操作</div>
               <div className="text-xs">{item.suggestion}</div>
             </div>
@@ -174,7 +174,7 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
               <div className="space-y-1">
                 {evidenceRefs.map((ref, i) => (
                   <div key={i} className="flex items-center gap-1.5 text-xs">
-                    <Badge tone="neutral" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                    <Badge tone="neutral" className="text-xs px-1.5 py-0 h-4 font-normal">
                       {ref.source_type === 'knowledge_chunk' ? '知识片段' :
                        ref.source_type === 'wiki_page' ? 'Wiki 页面' :
                        ref.source_type === 'knowledge_source' ? '知识来源' :

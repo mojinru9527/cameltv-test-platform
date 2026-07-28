@@ -64,8 +64,8 @@ export async function fetchAiArtifacts(params: {
   artifact_type?: string
   page?: number
   page_size?: number
-}): Promise<KnowledgePage<AiArtifact>> {
-  return api.get('/knowledge/ai-artifacts', { params })
+}, signal?: AbortSignal): Promise<KnowledgePage<AiArtifact>> {
+  return api.get('/knowledge/ai-artifacts', { params, ...(signal ? { signal } : {}) })
 }
 
 // ── M2 混合检索 ──

@@ -55,9 +55,9 @@ export default function VersionList({
 
   const statusBadge = (status: string) => {
     const config: Record<string, { className: string; label: string }> = {
-      active: { className: 'border-green-200 bg-green-50 text-green-700', label: '活跃' },
-      draft: { className: 'border-yellow-200 bg-yellow-50 text-yellow-700', label: '草稿' },
-      archived: { className: 'border-gray-200 bg-gray-50 text-gray-500', label: '归档' },
+      active: { className: 'border-status-success-border bg-status-success-muted text-status-success', label: '活跃' },
+      draft: { className: 'border-status-warning-border bg-status-warning-muted text-status-warning', label: '草稿' },
+      archived: { className: 'border-border bg-muted text-muted-foreground', label: '归档' },
     }
     const c = config[status] ?? { className: '', label: status }
     return <Badge tone="neutral" className={cn('text-xs', c.className)}>{c.label}</Badge>

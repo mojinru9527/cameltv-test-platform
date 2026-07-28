@@ -22,6 +22,8 @@ import {
   Sparkles,
   Shield,
   RefreshCw,
+  Smartphone,
+  Monitor,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
@@ -186,24 +188,24 @@ function LinkRow({
   return (
     <div className="flex items-center gap-3 p-3 rounded-md border bg-muted/30">
       <div className="flex items-center gap-2 flex-1 min-w-0">
-        <span className="text-sm font-medium text-blue-700 truncate">
-          📱 客户端模块 #{link.client_module_id}
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-status-info truncate">
+          <Smartphone className="size-3.5" aria-hidden="true" />客户端模块 #{link.client_module_id}
         </span>
         <Badge
           tone="neutral"
           className={cn(
             'text-xs shrink-0',
             isConfigures
-              ? 'border-orange-200 bg-orange-50 text-orange-700'
-              : 'border-blue-200 bg-blue-50 text-blue-700',
+              ? 'border-status-warning-border bg-status-warning-muted text-status-warning'
+              : 'border-status-info-border bg-status-info-muted text-status-info',
           )}
         >
           {isConfigures ? '配置' : '关联'}
         </Badge>
         <span className="text-muted-foreground shrink-0">→</span>
-        <Shield className="h-4 w-4 text-orange-500 shrink-0" />
-        <span className="text-sm font-medium text-orange-700 truncate">
-          🖥️ 运营后台 #{link.admin_module_id}
+        <Shield className="h-4 w-4 text-status-warning shrink-0" />
+        <span className="inline-flex items-center gap-1 text-sm font-medium text-status-warning truncate">
+          <Monitor className="size-4 shrink-0" />运营后台 #{link.admin_module_id}
         </span>
       </div>
       <Badge tone="neutral" className="text-xs shrink-0">

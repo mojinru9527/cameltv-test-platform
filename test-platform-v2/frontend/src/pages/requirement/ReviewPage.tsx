@@ -22,10 +22,10 @@ import { fetchReviewState, reviewCase, reviewImportCases, generateTestCases } fr
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 const PRIORITY_CLASSES: Record<string, string> = {
-  P0: 'border-red-200 bg-red-50 text-red-700',
-  P1: 'border-orange-200 bg-orange-50 text-orange-700',
-  P2: 'border-blue-200 bg-blue-50 text-blue-700',
-  P3: 'border-gray-200 bg-gray-50 text-gray-500',
+  P0: 'border-status-danger-border bg-status-danger-muted text-status-danger',
+  P1: 'border-status-warning-border bg-status-warning-muted text-status-warning',
+  P2: 'border-status-info-border bg-status-info-muted text-status-info',
+  P3: 'border-border bg-muted text-muted-foreground',
 }
 
 const REVIEW_STATUS_MAP: Record<string, { tone: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; label: string }> = {
@@ -234,7 +234,7 @@ export default function ReviewPage() {
           {arr.map((s: any, i: number) => (
             <li key={i} className="text-xs">
               <span>{s.desc || s.action || s.description || `Step ${s.step || i + 1}`}</span>
-              {s.expected && <span className="text-green-600 ml-1">→ {s.expected}</span>}
+              {s.expected && <span className="text-status-success ml-1">→ {s.expected}</span>}
             </li>
           ))}
         </ol>
@@ -335,12 +335,12 @@ export default function ReviewPage() {
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-sm font-medium truncate">{c.title}</span>
                             <Badge tone="neutral" className={PRIORITY_CLASSES[c.priority] || ''}>{c.priority}</Badge>
-                            {c.case_type === 'api' && <Badge tone="neutral" className="text-[10px]">API</Badge>}
+                            {c.case_type === 'api' && <Badge tone="neutral" className="text-xs">API</Badge>}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[11px] text-muted-foreground">{c.module || '-'}</span>
-                            <Badge tone={rv.tone} className="text-[10px] px-1.5 leading-[16px]">{rv.label}</Badge>
-                            {c.imported && <Badge tone="neutral" className="text-[10px] border-green-200 bg-green-50 text-green-700">已导入</Badge>}
+                            <span className="text-xs text-muted-foreground">{c.module || '-'}</span>
+                            <Badge tone={rv.tone} className="text-xs px-1.5 leading-[16px]">{rv.label}</Badge>
+                            {c.imported && <Badge tone="neutral" className="text-xs border-status-success-border bg-status-success-muted text-status-success">已导入</Badge>}
                           </div>
                         </div>
                       </button>
@@ -407,7 +407,7 @@ export default function ReviewPage() {
                 </div>
 
                 {editDraft && (
-                  <Card className="border-amber-200 bg-amber-50/40">
+                  <Card className="border-status-warning-border bg-status-warning-muted">
                     <CardContent className="grid grid-cols-1 gap-3 pt-4 sm:grid-cols-2">
                       <div className="space-y-1 sm:col-span-2">
                         <label className="text-xs font-medium" htmlFor="review-case-title">用例标题</label>
@@ -518,10 +518,10 @@ export default function ReviewPage() {
                 )}
 
                 {activeCase.edited_data && Object.keys(activeCase.edited_data).length > 0 && (
-                  <Card className="border-amber-200 bg-amber-50/50">
+                  <Card className="border-status-warning-border bg-status-warning-muted">
                     <CardContent className="pt-3 text-xs">
-                      <span className="font-medium text-amber-700">已编辑版本:</span>
-                      <pre className="mt-1 whitespace-pre-wrap text-[11px]">{JSON.stringify(activeCase.edited_data, null, 2)}</pre>
+                      <span className="font-medium text-status-warning">已编辑版本:</span>
+                      <pre className="mt-1 whitespace-pre-wrap text-xs">{JSON.stringify(activeCase.edited_data, null, 2)}</pre>
                     </CardContent>
                   </Card>
                 )}
@@ -541,7 +541,7 @@ export default function ReviewPage() {
       <div className="sticky bottom-0 flex flex-col gap-2 border-t bg-background pt-3 pb-1 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-sm text-muted-foreground">
           已选 {selectedIds.size} 条 · 全部 {allCases.length} 条
-          {data.summary.approved > 0 && <span className="text-green-600 ml-2">· {data.summary.approved} 已批准</span>}
+          {data.summary.approved > 0 && <span className="text-status-success ml-2">· {data.summary.approved} 已批准</span>}
         </span>
         <Button onClick={handleImport} disabled={importing || selectedIds.size === 0}>
           {importing ? <Loader2 className="size-4 animate-spin" /> : <Import className="size-4" />}

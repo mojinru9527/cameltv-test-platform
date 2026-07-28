@@ -25,22 +25,22 @@ const NODE_TYPE_CONFIG: Record<
   module: {
     icon: FolderOpen,
     label: '模块',
-    className: 'text-blue-600 bg-blue-50 border-blue-200',
+    className: 'text-status-info bg-status-info-muted border-status-info-border',
   },
   page: {
     icon: FileText,
     label: '页面',
-    className: 'text-green-600 bg-green-50 border-green-200',
+    className: 'text-status-success bg-status-success-muted border-status-success-border',
   },
   function_point: {
     icon: Box,
     label: '功能点',
-    className: 'text-purple-600 bg-purple-50 border-purple-200',
+    className: 'text-status-accent bg-status-accent-muted border-status-accent-border',
   },
   attachment: {
     icon: Paperclip,
     label: '附件',
-    className: 'text-amber-600 bg-amber-50 border-amber-200',
+    className: 'text-status-warning bg-status-warning-muted border-status-warning-border',
   },
 }
 
@@ -52,9 +52,9 @@ const PLATFORM_ICONS: Record<string, LucideIcon> = {
 }
 
 const CHANGE_BADGE: Record<string, { label: string; className: string }> = {
-  new: { label: '新增', className: 'border-green-200 bg-green-50 text-green-700' },
-  modified: { label: '变更', className: 'border-amber-200 bg-amber-50 text-amber-700' },
-  deleted: { label: '删除', className: 'border-red-200 bg-red-50 text-red-700' },
+  new: { label: '新增', className: 'border-status-success-border bg-status-success-muted text-status-success' },
+  modified: { label: '变更', className: 'border-status-warning-border bg-status-warning-muted text-status-warning' },
+  deleted: { label: '删除', className: 'border-status-danger-border bg-status-danger-muted text-status-danger' },
   unchanged: { label: '不变', className: '' },
 }
 
@@ -91,7 +91,7 @@ function InteractionPill({ interactionsJson }: { interactionsJson: string }) {
               <span>→</span>
               <span>{ia.target_page || '?'}</span>
               {ia.interaction_type && (
-                <Badge tone="neutral" className="text-[9px] px-1 py-0">
+                <Badge tone="neutral" className="text-xs px-1 py-0">
                   {ia.interaction_type}
                 </Badge>
               )}
@@ -138,7 +138,7 @@ function TreeNode({ node, depth = 0 }: { node: ModuleTreeNode; depth?: number })
         {/* Node type icon */}
         <Badge
           tone="neutral"
-          className={cn('text-[10px] px-1 py-0 gap-0.5 shrink-0', config.className)}
+          className={cn('text-xs px-1 py-0 gap-0.5 shrink-0', config.className)}
         >
           <config.icon className="size-3" />
           {config.label}
@@ -163,7 +163,7 @@ function TreeNode({ node, depth = 0 }: { node: ModuleTreeNode; depth?: number })
         {node.change_type && node.change_type !== 'unchanged' && (
           <Badge
             tone="neutral"
-            className={cn('text-[9px] px-1 py-0 shrink-0', CHANGE_BADGE[node.change_type]?.className)}
+            className={cn('text-xs px-1 py-0 shrink-0', CHANGE_BADGE[node.change_type]?.className)}
           >
             {CHANGE_BADGE[node.change_type]?.label ?? node.change_type}
           </Badge>
@@ -178,7 +178,7 @@ function TreeNode({ node, depth = 0 }: { node: ModuleTreeNode; depth?: number })
 
         {/* Child count */}
         {hasChildren && !expanded && (
-          <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+          <span className="text-xs text-muted-foreground ml-auto shrink-0">
             {node.child_count || node.children.length}
           </span>
         )}

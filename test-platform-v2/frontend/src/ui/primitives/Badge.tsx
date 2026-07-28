@@ -20,10 +20,10 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const toneClass: Record<BadgeTone, string> = {
-  success: 'ui-badge-success bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  warning: 'ui-badge-warning bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  danger: 'ui-badge-danger bg-destructive/10 text-destructive',
-  info: 'ui-badge-info bg-sky-500/10 text-sky-700 dark:text-sky-400',
+  success: 'ui-badge-success bg-status-success-muted text-status-success',
+  warning: 'ui-badge-warning bg-status-warning-muted text-status-warning',
+  danger: 'ui-badge-danger bg-status-danger-muted text-status-danger',
+  info: 'ui-badge-info bg-status-info-muted text-status-info',
   neutral: 'ui-badge-neutral bg-secondary text-secondary-foreground',
 }
 

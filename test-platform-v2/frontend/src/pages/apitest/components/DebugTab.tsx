@@ -29,13 +29,13 @@ import type { ApiEndpoint, ApiExecutionResult, ApiAssertionResult, BatchExecutio
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  POST: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  PUT: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  PATCH: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  DELETE: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  HEAD: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
-  OPTIONS: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+  GET: 'bg-status-info-muted text-status-info dark:bg-status-info-muted dark:text-status-info',
+  POST: 'bg-status-success-muted text-status-success dark:bg-status-success-muted dark:text-status-success',
+  PUT: 'bg-status-warning-muted text-status-warning dark:bg-status-warning-muted dark:text-status-warning',
+  PATCH: 'bg-status-accent-muted text-status-accent dark:bg-status-accent-muted dark:text-status-accent',
+  DELETE: 'bg-status-danger-muted text-status-danger dark:bg-status-danger-muted dark:text-status-danger',
+  HEAD: 'bg-muted text-muted-foreground',
+  OPTIONS: 'bg-status-info-muted text-status-info dark:bg-status-info-muted dark:text-status-info',
 }
 
 const BODY_TYPES = [
@@ -537,19 +537,19 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
     const b = result as BatchExecutionResult
     return (
       <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2">批量执行 <Badge className={b.failed === 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}>{b.passed}/{b.total_rows}</Badge></CardTitle></CardHeader>
+        <CardHeader><CardTitle className="flex items-center gap-2">批量执行 <Badge className={b.failed === 0 ? 'bg-status-success-muted text-status-success' : 'bg-status-danger-muted text-status-danger'}>{b.passed}/{b.total_rows}</Badge></CardTitle></CardHeader>
         <CardContent className="space-y-2 max-h-[70vh] overflow-y-auto">
           <div className="grid grid-cols-1 gap-2 text-center sm:grid-cols-3">
             <div className="bg-muted rounded p-2"><div className="text-lg font-bold">{b.total_rows}</div><div className="text-xs text-muted-foreground">总行数</div></div>
-            <div className="bg-green-50 dark:bg-green-950/20 rounded p-2"><div className="text-lg font-bold text-green-600">{b.passed}</div><div className="text-xs text-muted-foreground">通过</div></div>
-            <div className="bg-red-50 dark:bg-red-950/20 rounded p-2"><div className="text-lg font-bold text-red-600">{b.failed}</div><div className="text-xs text-muted-foreground">失败</div></div>
+            <div className="bg-status-success-muted dark:bg-status-success-muted rounded p-2"><div className="text-lg font-bold text-status-success">{b.passed}</div><div className="text-xs text-muted-foreground">通过</div></div>
+            <div className="bg-status-danger-muted dark:bg-status-danger-muted rounded p-2"><div className="text-lg font-bold text-status-danger">{b.failed}</div><div className="text-xs text-muted-foreground">失败</div></div>
           </div>
           {b.per_row.map((row) => (
             <div key={row.row_index} className="border rounded p-2 text-xs">
               <span className="font-medium">#{row.row_index + 1}</span>
               <span className="ml-2 text-muted-foreground">{row.result.duration_ms}ms</span>
               {row.result.assertions?.map((a: ApiAssertionResult, i: number) => (
-                <div key={i} className={`flex items-center gap-1 mt-1 ${a.passed ? 'text-green-600' : 'text-red-600'}`}>
+                <div key={i} className={`flex items-center gap-1 mt-1 ${a.passed ? 'text-status-success' : 'text-status-danger'}`}>
                   {a.passed ? <CheckCircle2 className="size-3" /> : <XCircle className="size-3" />}
                   <span>{a.message}</span>
                 </div>
@@ -581,8 +581,8 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground">断言:</p>
                 {result.assertions.map((a: ApiAssertionResult, i: number) => (
-                  <div key={i} className={`flex items-start gap-1.5 text-xs p-1.5 rounded ${a.passed ? 'bg-green-50 dark:bg-green-950/20' : 'bg-red-50 dark:bg-red-950/20'}`}>
-                    {a.passed ? <CheckCircle2 className="size-3 text-green-600 mt-0.5 shrink-0" /> : <XCircle className="size-3 text-red-600 mt-0.5 shrink-0" />}
+                  <div key={i} className={`flex items-start gap-1.5 text-xs p-1.5 rounded ${a.passed ? 'bg-status-success-muted dark:bg-status-success-muted' : 'bg-status-danger-muted dark:bg-status-danger-muted'}`}>
+                    {a.passed ? <CheckCircle2 className="size-3 text-status-success mt-0.5 shrink-0" /> : <XCircle className="size-3 text-status-danger mt-0.5 shrink-0" />}
                     <span>{a.message}</span>
                   </div>
                 ))}

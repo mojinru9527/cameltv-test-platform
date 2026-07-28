@@ -14,9 +14,9 @@ import EndpointDetailPanel from './EndpointDetailPanel'
 import type { ApiService, ApiEndpoint } from '@/types'
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-blue-100 text-blue-700', POST: 'bg-green-100 text-green-700',
-  PUT: 'bg-orange-100 text-orange-700', PATCH: 'bg-purple-100 text-purple-700',
-  DELETE: 'bg-red-100 text-red-700',
+  GET: 'bg-status-info-muted text-status-info', POST: 'bg-status-success-muted text-status-success',
+  PUT: 'bg-status-warning-muted text-status-warning', PATCH: 'bg-status-accent-muted text-status-accent',
+  DELETE: 'bg-status-danger-muted text-status-danger',
 }
 
 interface Props {
@@ -160,7 +160,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <code className="text-sm font-medium truncate" title={ep.path}>{displayPath(ep)}</code>
-            {ep.deprecated && <Badge tone="neutral" className="text-[10px] text-yellow-600">已废弃</Badge>}
+            {ep.deprecated && <Badge tone="neutral" className="text-xs text-status-warning">已废弃</Badge>}
           </div>
           <p className="text-xs text-muted-foreground truncate">
             {ep.summary || '-'}

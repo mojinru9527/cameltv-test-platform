@@ -222,7 +222,7 @@ export default function SkillsTab() {
                     <div key={p.key}>
                       <label className="text-xs font-medium mb-1 block">
                         {p.label}
-                        {p.required && <span className="text-red-500 ml-0.5">*</span>}
+                        {p.required && <span className="text-status-danger ml-0.5">*</span>}
                       </label>
                       {renderParamInput(p)}
                       {p.description && (

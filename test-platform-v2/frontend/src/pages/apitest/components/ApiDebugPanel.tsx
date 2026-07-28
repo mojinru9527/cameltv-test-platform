@@ -14,11 +14,11 @@ import { normalizeJson, defaultAssertions, buildSampleBody } from './utils'
 import type { ApiEndpoint, ApiExecutionResult, Environment } from '@/types'
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-blue-100 text-blue-700',
-  POST: 'bg-green-100 text-green-700',
-  PUT: 'bg-orange-100 text-orange-700',
-  PATCH: 'bg-purple-100 text-purple-700',
-  DELETE: 'bg-red-100 text-red-700',
+  GET: 'bg-status-info-muted text-status-info',
+  POST: 'bg-status-success-muted text-status-success',
+  PUT: 'bg-status-warning-muted text-status-warning',
+  PATCH: 'bg-status-accent-muted text-status-accent',
+  DELETE: 'bg-status-danger-muted text-status-danger',
 }
 
 type QueryRow = { key: string; value: string; enabled: boolean; required: boolean; desc: string }
@@ -233,10 +233,10 @@ export default function ApiDebugPanel({
     <div className="flex flex-col h-full min-h-[520px]">
       <div className="px-3 py-2 border-b bg-muted/20 shrink-0">
         <div className="flex items-center gap-2">
-          <Badge className={`text-[10px] ${METHOD_COLORS[source.method] || ''}`}>{source.method}</Badge>
+          <Badge className={`text-xs ${METHOD_COLORS[source.method] || ''}`}>{source.method}</Badge>
           <code className="text-xs font-medium truncate flex-1">{source.path}</code>
         </div>
-        {source.title && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{source.title}</p>}
+        {source.title && <p className="text-xs text-muted-foreground mt-0.5 truncate">{source.title}</p>}
       </div>
 
       <div className="overflow-y-auto flex-1">
@@ -254,7 +254,7 @@ export default function ApiDebugPanel({
 
           {pathRows.length > 0 && (
             <div>
-              <Label className="text-[11px] text-muted-foreground">Path 参数</Label>
+              <Label className="text-xs text-muted-foreground">Path 参数</Label>
               <div className="space-y-1 mt-1">
                 {pathRows.map((r, i) => (
                   <Input key={`${r.key}-${i}`} className="h-8 text-xs" placeholder={r.key}
@@ -268,7 +268,7 @@ export default function ApiDebugPanel({
 
           {queryRows.length > 0 && (
             <div>
-              <Label className="text-[11px] text-muted-foreground">Query 参数</Label>
+              <Label className="text-xs text-muted-foreground">Query 参数</Label>
               <div className="space-y-1 mt-1">
                 {queryRows.map((r, i) => (
                   <div key={`${r.key}-${i}`} className="grid grid-cols-[18px_1fr] items-center gap-1">
@@ -288,7 +288,7 @@ export default function ApiDebugPanel({
 
           <div>
             <div className="flex items-center justify-between">
-              <Label className="text-[11px] text-muted-foreground">Headers</Label>
+              <Label className="text-xs text-muted-foreground">Headers</Label>
               <Button type="button" size="icon-sm" variant="ghost" onClick={addHeader} aria-label="添加 Header">
                 <Plus className="size-3.5" />
               </Button>
@@ -315,12 +315,12 @@ export default function ApiDebugPanel({
           </div>
 
           <div>
-            <Label className="text-[11px] text-muted-foreground">Body</Label>
+            <Label className="text-xs text-muted-foreground">Body</Label>
             <Textarea className="font-mono text-xs mt-1 min-h-[120px]" value={body} onChange={e => setBody(e.target.value)} aria-label="请求 Body" />
           </div>
 
           <div>
-            <Label className="text-[11px] text-muted-foreground">响应断言</Label>
+            <Label className="text-xs text-muted-foreground">响应断言</Label>
             <Textarea className="font-mono text-xs mt-1 min-h-[96px]" value={assertions} onChange={e => setAssertions(e.target.value)} aria-label="响应断言" />
           </div>
 

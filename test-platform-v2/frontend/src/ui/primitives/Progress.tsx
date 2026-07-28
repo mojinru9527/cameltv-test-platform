@@ -14,6 +14,7 @@ export function Progress({
   value,
   max = 100,
   tone = 'success',
+  'aria-label': ariaLabel = '进度',
   ...props
 }: ProgressProps) {
   const safeMax = Number.isFinite(max) && max > 0 ? max : 100
@@ -22,7 +23,7 @@ export function Progress({
 
   const fillClass = {
     success: 'ui-progress-fill bg-primary',
-    warning: 'ui-progress-fill is-warning bg-amber-500',
+    warning: 'ui-progress-fill is-warning bg-status-warning-solid',
     danger: 'ui-progress-fill is-danger bg-destructive',
   }[tone]
 
@@ -31,6 +32,7 @@ export function Progress({
       data-slot="progress"
       className={cn('ui-progress relative h-1 w-full overflow-hidden rounded-full bg-muted', className)}
       role="progressbar"
+      aria-label={ariaLabel}
       aria-valuenow={safeValue}
       aria-valuemin={0}
       aria-valuemax={safeMax}

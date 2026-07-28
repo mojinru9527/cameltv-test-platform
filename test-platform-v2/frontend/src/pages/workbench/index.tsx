@@ -276,13 +276,13 @@ export default function Workbench() {
                               <RechartsTooltip content={<BarTooltip />} />
                               <Legend content={() => null} />
                               <Bar dataKey="用例总数" fill={chartColors.barTotal} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                                <LabelList dataKey="用例总数" position="top" style={{ fontSize: 11, fontWeight: 600, fill: chartColors.barTotal }} />
+                                <LabelList dataKey="用例总数" position="top" style={{ fontSize: 12, fontWeight: 600, fill: 'var(--foreground)' }} />
                               </Bar>
                               <Bar dataKey="执行通过" fill={chartColors.barPass} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                                <LabelList dataKey="执行通过" position="top" style={{ fontSize: 11, fontWeight: 600, fill: chartColors.barPass }} />
+                                <LabelList dataKey="执行通过" position="top" style={{ fontSize: 12, fontWeight: 600, fill: 'var(--foreground)' }} />
                               </Bar>
                               <Bar dataKey="执行失败" fill={chartColors.barFail} radius={[4, 4, 0, 0]} maxBarSize={48}>
-                                <LabelList dataKey="执行失败" position="top" style={{ fontSize: 11, fontWeight: 600, fill: chartColors.barFail }} />
+                                <LabelList dataKey="执行失败" position="top" style={{ fontSize: 12, fontWeight: 600, fill: 'var(--foreground)' }} />
                               </Bar>
                             </BarChart>
                           </ResponsiveContainer>
@@ -304,7 +304,7 @@ export default function Workbench() {
                                   style={{ background: item.color }}
                                 />
                                 <span className="text-muted-foreground mr-1.5">{item.label}</span>
-                                <span className="font-semibold text-[13px]" style={{ color: item.color }}>
+                                <span className="font-semibold text-[13px] text-foreground">
                                   {item.value}
                                 </span>
                               </div>
@@ -373,8 +373,8 @@ export default function Workbench() {
                         if (pieData.length === 0) {
                           return (
                             <div key={pd.case_type} className="flex flex-col items-center justify-center py-10 text-center">
-                              <span className="text-sm" style={{ color: pd.color }}>{pd.label}</span>
-                              <span className="mt-2 text-muted-foreground/60 text-sm">暂无数据</span>
+                              <span className="text-sm text-foreground">{pd.label}</span>
+                              <span className="mt-2 text-muted-foreground text-sm">暂无数据</span>
                             </div>
                           )
                         }
@@ -383,7 +383,7 @@ export default function Workbench() {
                           <div key={pd.case_type}>
                             {/* 类型标题 */}
                             <div className="text-center mb-1">
-                              <span className="text-sm font-semibold" style={{ color: pd.color }}>
+                              <span className="text-sm font-semibold text-foreground">
                                 {pd.label}
                               </span>
                               <span className="text-xs text-muted-foreground ml-1.5">
@@ -440,10 +440,10 @@ export default function Workbench() {
                                       {key}
                                     </span>
                                     <span>
-                                      <span className="font-semibold" style={{ color: priorityColor(key) }}>
+                                      <span className="font-semibold text-foreground">
                                         {val}
                                       </span>
-                                      <span className="text-muted-foreground ml-1 text-[11px]">{pct}%</span>
+                                      <span className="text-muted-foreground ml-1 text-xs">{pct}%</span>
                                     </span>
                                   </div>
                                 )
@@ -583,8 +583,8 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="text-muted-foreground">用例: <span className="font-semibold text-foreground">{proj.total_cases}</span></div>
                       <div className="text-muted-foreground">计划: <span className="font-semibold text-foreground">{proj.total_plans}</span></div>
-                      <div className="text-muted-foreground">通过率: <span className="font-semibold text-green-600">{proj.pass_rate}%</span></div>
-                      <div className="text-muted-foreground">缺陷: <span className="font-semibold text-red-600">{proj.defect_count}</span></div>
+                      <div className="text-muted-foreground">通过率: <span className="font-semibold text-status-success">{proj.pass_rate}%</span></div>
+                      <div className="text-muted-foreground">缺陷: <span className="font-semibold text-status-danger">{proj.defect_count}</span></div>
                     </div>
                   </CardContent>
                 </Card>

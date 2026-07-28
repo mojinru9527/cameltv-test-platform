@@ -31,9 +31,9 @@ interface Props {
 
 const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'destructive' | 'outline' | 'default'; className?: string; label: string }> = {
   pending:   { variant: 'secondary', label: '等待中' },
-  running:   { variant: 'default', className: 'bg-blue-100 text-blue-700 border-blue-200', label: '采集中' },
-  success:   { variant: 'default', className: 'bg-emerald-100 text-emerald-700 border-emerald-200', label: '已完成' },
-  success_with_warnings: { variant: 'default', className: 'bg-amber-100 text-amber-700 border-amber-200', label: '部分完成' },
+  running:   { variant: 'default', className: 'bg-status-info-muted text-status-info border-status-info-border', label: '采集中' },
+  success:   { variant: 'default', className: 'bg-status-success-muted text-status-success border-status-success-border', label: '已完成' },
+  success_with_warnings: { variant: 'default', className: 'bg-status-warning-muted text-status-warning border-status-warning-border', label: '部分完成' },
   failed:    { variant: 'destructive', label: '失败' },
   cancelled: { variant: 'outline', label: '已取消' },
 }
@@ -204,8 +204,8 @@ export default function EvidenceTaskPanel({
           证据任务
           {activeJob && (
             <span className="relative flex size-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-blue-500" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status-info-solid opacity-75" />
+              <span className="relative inline-flex size-2 rounded-full bg-status-info-solid" />
             </span>
           )}
         </CardTitle>
@@ -237,8 +237,8 @@ export default function EvidenceTaskPanel({
                   key={job.id}
                   className={cn(
                     'px-3 py-2.5 space-y-1.5 transition-colors',
-                    isActive && 'bg-blue-50/50',
-                    isFailed && 'bg-red-50/30',
+                    isActive && 'bg-status-info-muted',
+                    isFailed && 'bg-status-danger-muted',
                   )}
                 >
                   {/* Top row: version + status */}
@@ -249,7 +249,7 @@ export default function EvidenceTaskPanel({
                     <Badge
                       variant={statusInfo.variant}
                       className={cn(
-                        'text-[10px] px-1.5 py-0 h-5',
+                        'text-xs px-1.5 py-0 h-5',
                         statusInfo.className,
                         isActive && 'animate-pulse',
                       )}
@@ -261,7 +261,7 @@ export default function EvidenceTaskPanel({
                   {/* Stage + progress for active jobs */}
                   {isActive && (
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{STAGE_LABELS[job.stage] || job.stage}</span>
                         <span>
                           {job.captured_pages > 0 && `${job.captured_pages}/${job.total_pages} 页`}
@@ -273,13 +273,13 @@ export default function EvidenceTaskPanel({
 
                   {/* Error message for failed */}
                   {isFailed && job.error_message && (
-                    <p className="text-[10px] text-destructive line-clamp-2 leading-tight">
+                    <p className="text-xs text-destructive line-clamp-2 leading-tight">
                       {job.error_message === 'worker_lost' ? 'Worker 丢失，任务超时未响应' : job.error_message}
                     </p>
                   )}
 
                   {/* Timestamp */}
-                  <p className="text-[10px] text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {relativeTime(job.created_at)}
                     {job.attempt_no > 1 && ` · 第 ${job.attempt_no} 次`}
                   </p>
@@ -290,7 +290,7 @@ export default function EvidenceTaskPanel({
                       <Button
                         size="xs"
                         variant="secondary"
-                        className="min-h-11 px-2 text-[10px] sm:min-h-6"
+                        className="min-h-11 px-2 text-xs sm:min-h-6"
                         disabled={actionLoading === job.id}
                         onClick={() => handleRetry(job.id)}
                       >
@@ -306,7 +306,7 @@ export default function EvidenceTaskPanel({
                       <Button
                         size="xs"
                         variant="ghost"
-                        className="min-h-11 px-2 text-[10px] text-destructive hover:bg-destructive/10 sm:min-h-6"
+                        className="min-h-11 px-2 text-xs text-destructive hover:bg-destructive/10 sm:min-h-6"
                         disabled={actionLoading === job.id}
                         onClick={() => handleCancel(job.id)}
                       >
@@ -324,7 +324,7 @@ export default function EvidenceTaskPanel({
                         <Button
                           size="xs"
                           variant="secondary"
-                          className="min-h-11 px-2 text-[10px] sm:min-h-6"
+                          className="min-h-11 px-2 text-xs sm:min-h-6"
                           onClick={() => onViewExtraction(job)}
                         >
                           <ExternalLink className="size-3 mr-0.5" />
@@ -336,7 +336,7 @@ export default function EvidenceTaskPanel({
                       <Button
                         size="xs"
                         variant="secondary"
-                        className="min-h-11 px-2 text-[10px] sm:min-h-6"
+                        className="min-h-11 px-2 text-xs sm:min-h-6"
                         onClick={() => onViewScreenshots(job)}
                       >
                         <Image className="size-3 mr-0.5" />
@@ -347,7 +347,7 @@ export default function EvidenceTaskPanel({
                       <Button
                         size="xs"
                         variant="ghost"
-                        className="ml-auto min-h-11 min-w-11 px-2 text-[10px] text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:min-h-6 sm:min-w-6"
+                        className="ml-auto min-h-11 min-w-11 px-2 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:min-h-6 sm:min-w-6"
                         disabled={actionLoading === job.id}
                         onClick={() => handleDelete(job.id)}
                         aria-label={`删除证据任务 ${version || `#${job.id}`}`}

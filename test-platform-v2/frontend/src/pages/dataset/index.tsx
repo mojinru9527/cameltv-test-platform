@@ -185,6 +185,7 @@ export default function DatasetPage() {
         data={items}
         emptyTitle="暂无数据集"
         emptyDescription="点击「新建数据集」上传 CSV 或 JSON 文件"
+        emptyAction={{ label: '新建数据集', onClick: openCreate }}
         onRetry={refetch}
       >
         <Card>
@@ -228,7 +229,7 @@ export default function DatasetPage() {
                             <FileText className="size-4" />
                           </Button>
                           <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)} aria-label={`删除数据集 ${item.name}`}>
-                            <Trash2 className="size-4 text-red-500" />
+                            <Trash2 className="size-4 text-status-danger" />
                           </Button>
                         </div>
                       </TableCell>

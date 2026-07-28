@@ -195,6 +195,7 @@ export default function RolesTab() {
         onRetry={refetch}
         emptyTitle="暂无角色"
         emptyDescription="点击「新建角色」创建权限角色"
+        emptyAction={{ label: '新建角色', onClick: () => openEdit() }}
         skeletonType="table"
         loadingRows={4}
       >

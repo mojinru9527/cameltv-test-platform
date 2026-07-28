@@ -61,9 +61,9 @@ import {
 } from '@/api/schedule'
 
 const RUN_STATUS_BADGE: Record<string, string> = {
-  running: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  completed: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  running: 'bg-status-info-muted text-status-info dark:bg-status-info-muted dark:text-status-info',
+  completed: 'bg-status-success-muted text-status-success dark:bg-status-success-muted dark:text-status-success',
+  failed: 'bg-status-danger-muted text-status-danger dark:bg-status-danger-muted dark:text-status-danger',
 }
 
 const scheduleSchema = z.object({
@@ -206,6 +206,7 @@ export default function SchedulePage() {
         loadingRows={5}
         emptyTitle="暂无定时任务"
         emptyDescription="点击「新建调度」创建定时测试任务"
+        emptyAction={{ label: '新建调度', onClick: openNew }}
       >
         {(d) => {
           const totalPages = Math.max(1, Math.ceil(d.total / d.page_size))

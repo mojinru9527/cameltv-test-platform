@@ -28,9 +28,9 @@ import { groupApiCases } from './apiCaseGroups'
 import type { ApiExecutionResult, BatchExecutionResult, ApiAssertionResult, Environment } from '@/types'
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-blue-100 text-blue-700', POST: 'bg-green-100 text-green-700',
-  PUT: 'bg-orange-100 text-orange-700', PATCH: 'bg-purple-100 text-purple-700',
-  DELETE: 'bg-red-100 text-red-700',
+  GET: 'bg-status-info-muted text-status-info', POST: 'bg-status-success-muted text-status-success',
+  PUT: 'bg-status-warning-muted text-status-warning', PATCH: 'bg-status-accent-muted text-status-accent',
+  DELETE: 'bg-status-danger-muted text-status-danger',
 }
 
 function isBatchResult(res: ApiExecutionResult | BatchExecutionResult): res is BatchExecutionResult {
@@ -53,17 +53,30 @@ export default function ApiCaseTab() {
     return env.is_production === true || env.env_type === 'prod'
   }
 
-  const loadCases = useCallback(async () => {
+  const loadCases = useCallback(async (signal?: AbortSignal) => {
     try {
-      const data: any = await fetchTestCases({ case_type: 'api', page_size: 100 })
+      const data: any = await fetchTestCases({ case_type: 'api', page_size: 100 }, signal)
       setApiCases(data?.items || [])
-    } catch { setApiCases([]) }
+    } catch (loadError: any) {
+      if (signal?.aborted) return
+      setApiCases([])
+      toast.error(loadError?.message || '接口用例加载失败')
+    }
   }, [])
 
-  useEffect(() => { loadCases() }, [loadCases])
+  useEffect(() => {
+    const controller = new AbortController()
+    loadCases(controller.signal)
+    return () => controller.abort()
+  }, [loadCases])
 
   useEffect(() => {
-    fetchEnvironments().then(setEnvs).catch(() => {})
+    const controller = new AbortController()
+    fetchEnvironments(controller.signal).then(setEnvs).catch((loadError: any) => {
+      if (controller.signal.aborted) return
+      toast.error(loadError?.message || '环境列表加载失败')
+    })
+    return () => controller.abort()
   }, [])
 
   const toggleSelect = (id: number) => {
@@ -104,23 +117,20 @@ export default function ApiCaseTab() {
   }
 
   const runGroup = async (groupCases: any[]) => {
+    if (!projectId) { toast.error('未选择项目'); return }
     setLoading(true)
     try {
-      let passCount = 0
-      let failCount = 0
-      for (const c of groupCases) {
-        try {
-          setExecutingCase(c.id)
-          const res = await executeApiCase(c.id)
-          if (!isBatchResult(res) && res.all_pass) passCount++
-          else failCount++
-        } catch { failCount++ }
-      }
-      toast.success(`分组执行完成: ${passCount} 通过, ${failCount} 失败`)
+      const task = await createApiExecutionTask({
+        name: `分组执行 ${groupCases[0]?.api_endpoint || new Date().toLocaleString('zh-CN')}`,
+        case_ids: groupCases.map((testCase) => testCase.id),
+        environment_id: envId,
+      })
+      toast.success(`分组任务已创建: ${task.task_id}，共 ${task.total} 条用例`)
+      setTimeout(() => loadCases(), 1000)
     } catch (e: any) {
       toast.error(e?.message || '分组执行失败')
     }
-    finally { setExecutingCase(null); setLoading(false) }
+    finally { setLoading(false) }
   }
 
   const doBatchExecute = async (confirmProd: boolean) => {
@@ -257,7 +267,7 @@ export default function ApiCaseTab() {
                             <p className="text-xs text-muted-foreground truncate">{c.api_endpoint}</p>
                           </button>
                           <div className="flex items-center gap-1 shrink-0">
-                            <Badge tone="neutral" className="text-[10px]">{c.priority}</Badge>
+                            <Badge tone="neutral" className="text-xs">{c.priority}</Badge>
                             <Button
                               size="icon-sm"
                               variant="ghost"

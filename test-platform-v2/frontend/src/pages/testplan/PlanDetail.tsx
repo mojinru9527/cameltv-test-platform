@@ -72,9 +72,9 @@ const STATUS_COLORS: Record<string, { tone: 'success' | 'warning' | 'danger' | '
 }
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
-  pass: <CheckCircle2 className="size-3 text-green-600" />,
+  pass: <CheckCircle2 className="size-3 text-status-success" />,
   fail: <XCircle className="size-3 text-destructive" />,
-  skip: <MinusCircle className="size-3 text-orange-500" />,
+  skip: <MinusCircle className="size-3 text-status-warning" />,
   block: <StopCircle className="size-3 text-muted-foreground" />,
   pending: <Pause className="size-3 text-muted-foreground" />,
 }
@@ -280,9 +280,9 @@ export default function PlanDetail() {
             <CardContent className="text-center py-3">
               <div className={cn(
                 'text-xl font-bold',
-                key === 'pass' && 'text-green-600',
+                key === 'pass' && 'text-status-success',
                 key === 'fail' && 'text-destructive',
-                key === 'skip' && 'text-orange-500'
+                key === 'skip' && 'text-status-warning'
               )}>
                 {val as number}
               </div>
@@ -370,7 +370,7 @@ export default function PlanDetail() {
                                   {r.priority}
                                 </Badge>
                                 {r.case_type === 'api' && (
-                                  <Badge tone="neutral" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                  <Badge tone="neutral" className="bg-status-accent-muted text-status-accent dark:bg-status-accent-muted dark:text-status-accent">
                                     接口
                                   </Badge>
                                 )}

@@ -395,9 +395,9 @@ export default function SphereTab() {
                       tone="neutral"
                       className={cn(
                         'text-xs',
-                        selectedNode.change_type === 'new' && 'border-green-200 text-green-700',
-                        selectedNode.change_type === 'modified' && 'border-yellow-200 text-yellow-700',
-                        selectedNode.change_type === 'deleted' && 'border-red-200 text-red-700',
+                        selectedNode.change_type === 'new' && 'border-status-success-border text-status-success',
+                        selectedNode.change_type === 'modified' && 'border-status-warning-border text-status-warning',
+                        selectedNode.change_type === 'deleted' && 'border-status-danger-border text-status-danger',
                       )}
                     >
                       {selectedNode.change_type}
@@ -444,7 +444,7 @@ export default function SphereTab() {
                         <span className="font-medium truncate max-w-[180px]">
                           {sourceNode.platform && (
                             <span className="mr-1">
-                              {sourceNode.platform === 'APP' ? '📱' : sourceNode.platform === 'PC' ? '🖥' : sourceNode.platform === 'WEB' ? '🌐' : '⚙️'}
+                              {sourceNode.platform === 'APP' ? 'APP' : sourceNode.platform === 'PC' ? 'PC' : sourceNode.platform === 'WEB' ? 'Web' : '后台'}
                             </span>
                           )}
                           {sourceNode.name}
@@ -461,7 +461,7 @@ export default function SphereTab() {
                         <span className="font-medium truncate max-w-[180px]">
                           {targetNode.platform && (
                             <span className="mr-1">
-                              {targetNode.platform === 'APP' ? '📱' : targetNode.platform === 'PC' ? '🖥' : targetNode.platform === 'WEB' ? '🌐' : '⚙️'}
+                              {targetNode.platform === 'APP' ? 'APP' : targetNode.platform === 'PC' ? 'PC' : targetNode.platform === 'WEB' ? 'Web' : '后台'}
                             </span>
                           )}
                           {targetNode.name}
