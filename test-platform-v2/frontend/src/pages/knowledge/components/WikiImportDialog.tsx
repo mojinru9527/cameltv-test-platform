@@ -8,10 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import LanhuEvidenceDialog from './LanhuEvidenceDialog'
 import LanhuEvidenceJobDrawer from './LanhuEvidenceJobDrawer'
 
@@ -85,7 +85,7 @@ export default function WikiImportDialog({ open, onOpenChange }: Props) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>关闭</Button>
+            <Button variant="secondary" onClick={() => onOpenChange(false)}>关闭</Button>
             <Button disabled={!url.trim()} onClick={submit}>创建证据任务</Button>
           </DialogFooter>
         </DialogContent>

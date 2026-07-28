@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Inbox } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { cn } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------

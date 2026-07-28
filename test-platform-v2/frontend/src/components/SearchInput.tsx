@@ -1,5 +1,5 @@
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Input } from '@/ui'
+import { Button } from '@/ui'
 import { Search, XCircle } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
@@ -51,7 +51,7 @@ export default function SearchInput({
         )}
       </div>
       {showButton && (
-        <Button variant="outline" size="sm" onClick={onSearch} data-icon="inline-start">
+        <Button variant="secondary" size="sm" onClick={onSearch} data-icon="inline-start">
           <Search />
           {buttonText}
         </Button>

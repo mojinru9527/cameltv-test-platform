@@ -27,7 +27,7 @@ export {
 // 当前阶段：通过 re-export 提供过渡兼容
 export { Button } from './primitives/Button'
 export { Input } from './primitives/Input'
-export { Badge } from './primitives/Badge'
+export { Badge, type BadgeTone } from './primitives/Badge'
 export { Progress } from './primitives/Progress'
 
 // ── 页面模式 ──
@@ -36,7 +36,7 @@ export { ObsidianListPage, type ObsidianListPageProps } from './patterns/Obsidia
 export { Inspector, type InspectorProps } from './patterns/Inspector'
 
 // ── 语义组件 ──
-export { StatusBadge } from './components/StatusBadge'
+export { StatusBadge, type StatusVariant, type SeverityVariant } from './components/StatusBadge'
 export { PageShell } from './components/PageShell'
 export { MetricStrip } from './components/MetricStrip'
 export { SpatialChain, type SpatialChainProps, type ChainNode } from './components/SpatialChain'

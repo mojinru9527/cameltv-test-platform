@@ -10,8 +10,8 @@ import {
   type ChannelCreate,
   type ChannelUpdate,
 } from '@/api/notify'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -218,7 +218,7 @@ export default function NotifyPage() {
     <div>
       <PageHeader title="通知配置" description="管理 Webhook 和邮件通知渠道">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setTestOpen(true)} data-icon="inline-start">
+          <Button variant="secondary" size="sm" onClick={() => setTestOpen(true)} data-icon="inline-start">
             <Play />
             测试发送
           </Button>
@@ -438,7 +438,7 @@ export default function NotifyPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+            <Button variant="secondary" onClick={() => setDialogOpen(false)}>
               取消
             </Button>
             <Button disabled={saving} onClick={handleSave} data-icon="inline-start">
@@ -464,7 +464,7 @@ export default function NotifyPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTestOpen(false)}>
+            <Button variant="secondary" onClick={() => setTestOpen(false)}>
               取消
             </Button>
             <Button disabled={testing} onClick={handleTest} data-icon="inline-start">

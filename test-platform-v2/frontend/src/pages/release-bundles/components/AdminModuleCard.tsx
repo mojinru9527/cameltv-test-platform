@@ -4,7 +4,7 @@ import {
   deleteAdminLink,
 } from '@/api/requirementModules'
 import type { ModuleAdminLinkOut, ModuleTreeNode } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -127,7 +127,7 @@ export default function AdminModuleCard({ bundleId, modules }: AdminModuleCardPr
             ) : error ? (
               <div className="text-center py-2">
                 <p className="text-sm text-destructive mb-2">{error}</p>
-                <Button variant="outline" size="sm" onClick={loadLinks}>
+                <Button variant="secondary" size="sm" onClick={loadLinks}>
                   <RefreshCw className="h-3 w-3 mr-1" /> 重试
                 </Button>
               </div>

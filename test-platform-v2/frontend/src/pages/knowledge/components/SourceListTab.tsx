@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
@@ -219,14 +219,14 @@ export default function SourceListTab() {
       </div>
 
       <div className="flex items-center justify-end gap-2 text-xs">
-        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+        <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
           上一页
         </Button>
         <span className="text-muted-foreground">
           {page} / {totalPages}
         </span>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={page >= totalPages}
           onClick={() => setPage((p) => p + 1)}

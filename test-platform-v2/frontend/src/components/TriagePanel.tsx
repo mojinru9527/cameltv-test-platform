@@ -13,7 +13,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { SkeletonText } from '@/components/ui/skeleton'
@@ -299,7 +299,7 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
                             {item.category === 'bug' && (
                               <Button
                                 size="sm"
-                                variant="destructive"
+                                variant="danger"
                                 onClick={() => handleDraftDefect(item)}
                                 disabled={creatingFor === item.execution_id}
                               >

@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-
+import { Button } from '@/ui'
 interface PaginationProps {
   page: number
   totalPages: number
@@ -24,7 +23,7 @@ export default function Pagination({ page, totalPages, total, onChange }: Pagina
       <span>{total != null ? `共 ${total} 条` : ''}</span>
       <div className="flex flex-wrap items-center gap-2">
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={page <= 1}
           onClick={() => onChange(page - 1)}
@@ -35,7 +34,7 @@ export default function Pagination({ page, totalPages, total, onChange }: Pagina
         <span className="pagination-current">{page}</span>
         <span className="text-muted-foreground">/ {totalPages}</span>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={page >= totalPages}
           onClick={() => onChange(page + 1)}
@@ -54,7 +53,7 @@ export default function Pagination({ page, totalPages, total, onChange }: Pagina
           inputMode="numeric"
         />
         <span>页</span>
-        <Button variant="outline" size="sm" onClick={handleJump} aria-label="确认跳转页码">GO</Button>
+        <Button variant="secondary" size="sm" onClick={handleJump} aria-label="确认跳转页码">GO</Button>
       </div>
     </div>
   )

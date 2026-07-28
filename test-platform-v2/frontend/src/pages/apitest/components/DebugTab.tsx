@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Play, Plus, Trash2, Loader2, CheckCircle2, XCircle } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -447,8 +447,8 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-sm font-medium">Headers</label>
               <div className="flex items-center gap-1">
-                <Button size="sm" variant={headerMode === 'table' ? 'default' : 'outline'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('table')}>表格</Button>
-                <Button size="sm" variant={headerMode === 'json' ? 'default' : 'outline'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('json')}>JSON</Button>
+                <Button size="sm" variant={headerMode === 'table' ? 'primary' : 'secondary'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('table')}>表格</Button>
+                <Button size="sm" variant={headerMode === 'json' ? 'primary' : 'secondary'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('json')}>JSON</Button>
                 {headerMode === 'table' && <Button size="icon-sm" variant="ghost" onClick={addHeaderRow} title="添加 Header"><Plus className="size-3" /></Button>}
               </div>
             </div>

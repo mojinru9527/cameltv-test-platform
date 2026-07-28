@@ -17,10 +17,10 @@ import type {
   ModuleTreeResponse,
   VersionDiffResult,
 } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -206,7 +206,7 @@ export default function BundleDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
         <p className="text-muted-foreground">加载失败或发布包不存在</p>
-        <Button variant="outline" onClick={() => navigate('/release-bundles')}>
+        <Button variant="secondary" onClick={() => navigate('/release-bundles')}>
           <ArrowLeft className="size-4 mr-1" />
           返回列表
         </Button>
@@ -265,7 +265,7 @@ export default function BundleDetailPage() {
           {!editing && (
             <>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={handleViewRegressionScope}
                 disabled={loadingScope}
@@ -274,7 +274,7 @@ export default function BundleDetailPage() {
                 回归范围
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={handleTriggerRegression}
                 disabled={triggeringReg}
@@ -286,7 +286,7 @@ export default function BundleDetailPage() {
           )}
           {editing ? (
             <>
-              <Button variant="outline" size="sm" onClick={() => setEditing(false)} disabled={saving}>
+              <Button variant="secondary" size="sm" onClick={() => setEditing(false)} disabled={saving}>
                 取消
               </Button>
               <Button size="sm" onClick={handleSave} disabled={saving}>
@@ -296,7 +296,7 @@ export default function BundleDetailPage() {
               </Button>
             </>
           ) : (
-            <Button variant="outline" size="sm" onClick={startEdit}>
+            <Button variant="secondary" size="sm" onClick={startEdit}>
               编辑
             </Button>
           )}
@@ -500,7 +500,7 @@ export default function BundleDetailPage() {
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     onClick={handleDiff}
                     disabled={diffing || !bundle.parent_bundle_id}
                   >

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -241,7 +241,7 @@ export default function SkillsTab() {
               )}
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" onClick={() => { setSelected(null); setResult(null) }}>
+                <Button variant="secondary" onClick={() => { setSelected(null); setResult(null) }}>
                   取消
                 </Button>
                 <Button

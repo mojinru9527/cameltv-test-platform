@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -213,8 +213,8 @@ export default function ReviewPage() {
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <p className="text-muted-foreground">{error || '数据不存在'}</p>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => load()}>重试</Button>
-          <Button variant="outline" onClick={() => navigate('/requirement')}>返回需求列表</Button>
+          <Button variant="secondary" onClick={() => load()}>重试</Button>
+          <Button variant="secondary" onClick={() => navigate('/requirement')}>返回需求列表</Button>
         </div>
       </div>
     )
@@ -259,7 +259,7 @@ export default function ReviewPage() {
           <Badge variant="default">{approvedCount} 已通过</Badge>
           <Badge variant="destructive">{rejectedCount} 已驳回</Badge>
           <Badge variant="secondary">{pendingCount} 待审核</Badge>
-          <Button size="sm" variant="outline" onClick={handleRegenerate} disabled={generating}>
+          <Button size="sm" variant="secondary" onClick={handleRegenerate} disabled={generating}>
             {generating ? <Loader2 className="size-3 animate-spin" /> : null}
             重新生成
           </Button>
@@ -366,7 +366,7 @@ export default function ReviewPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       disabled={reviewing === activeCase.index}
                       onClick={() => setEditDraft({
                         title: activeCase.title,
@@ -388,7 +388,7 @@ export default function ReviewPage() {
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
-                      variant="default"
+                      variant="primary"
                       disabled={reviewing === activeCase.index || activeCase.review_status === 'approved'}
                       onClick={() => handleReview(activeCase.index, 'approve')}
                     >
@@ -397,7 +397,7 @@ export default function ReviewPage() {
                     </Button>
                     <Button
                       size="sm"
-                      variant="destructive"
+                      variant="danger"
                       disabled={reviewing === activeCase.index || activeCase.review_status === 'rejected'}
                       onClick={() => handleReview(activeCase.index, 'reject')}
                     >
@@ -487,7 +487,7 @@ export default function ReviewPage() {
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           onClick={() => setEditDraft(null)}
                           disabled={reviewing === activeCase.index}
                         >

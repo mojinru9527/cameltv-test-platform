@@ -11,9 +11,9 @@
  * - onBaseUrlBlur: base_url 失焦保存回调
  */
 import { RefreshCw } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,

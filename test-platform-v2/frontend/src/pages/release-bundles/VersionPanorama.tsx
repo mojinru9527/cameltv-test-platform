@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { fetchModuleTree } from '@/api/requirementModules'
 import type { ModuleTreeResponse, ModuleTreeNode } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, RefreshCw, Package } from '@/lib/icons'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -145,7 +145,7 @@ export default function VersionPanoramaPage() {
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-20">
               <p className="text-destructive mb-3">{error}</p>
-              <Button variant="outline" onClick={loadTree}>
+              <Button variant="secondary" onClick={loadTree}>
                 <RefreshCw className="h-4 w-4 mr-1" /> 重试
               </Button>
             </div>

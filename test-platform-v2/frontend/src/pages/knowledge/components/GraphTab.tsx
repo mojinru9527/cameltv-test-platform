@@ -3,7 +3,7 @@ import { Network } from 'vis-network'
 import { DataSet } from 'vis-data'
 import { toast } from 'sonner'
 import { RefreshCw, Maximize2, Plus, MinusCircle, GitMerge } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SkeletonText } from '@/components/ui/skeleton'
@@ -247,7 +247,7 @@ export default function GraphTab() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <p className="text-sm text-muted-foreground">{error}</p>
-        <Button variant="outline" size="sm" onClick={() => loadGraph()}>
+        <Button variant="secondary" size="sm" onClick={() => loadGraph()}>
           <RefreshCw className="size-4 mr-1" />
           重试
         </Button>

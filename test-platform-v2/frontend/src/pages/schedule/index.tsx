@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Plus, Edit, Trash2, Zap } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
@@ -258,16 +258,16 @@ export default function SchedulePage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
-                                <Button size="sm" variant="outline" onClick={() => doTrigger(row.id)} data-icon="inline-start">
+                                <Button size="sm" variant="secondary" onClick={() => doTrigger(row.id)} data-icon="inline-start">
                                   <Zap />
                                   触发
                                 </Button>
-                                <Button size="sm" variant="outline" onClick={() => openEdit(row)} data-icon="inline-start">
+                                <Button size="sm" variant="secondary" onClick={() => openEdit(row)} data-icon="inline-start">
                                   <Edit />
                                 </Button>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <Button size="sm" variant="destructive" data-icon="inline-start">
+                                    <Button size="sm" variant="danger" data-icon="inline-start">
                                       <Trash2 />
                                     </Button>
                                   </AlertDialogTrigger>
@@ -439,7 +439,7 @@ export default function SchedulePage() {
             </div>
           </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDrawerOpen(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setDrawerOpen(false)}>取消</Button>
             <Button disabled={saving} onClick={form.handleSubmit(doSave)}>
               {saving ? '保存中...' : '保存'}
             </Button>

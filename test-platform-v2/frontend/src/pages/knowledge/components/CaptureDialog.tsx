@@ -7,8 +7,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { captureInsight } from '@/api/knowledge'
 import { Plus, X, Loader2, Lightbulb } from '@/lib/icons'
@@ -153,7 +153,7 @@ export default function CaptureDialog({ onCaptured }: CaptureDialogProps) {
                 placeholder="输入标签后回车"
                 className="h-8 text-xs"
               />
-              <Button variant="outline" size="sm" onClick={addTag} className="h-8 text-xs">
+              <Button variant="secondary" size="sm" onClick={addTag} className="h-8 text-xs">
                 添加
               </Button>
             </div>
@@ -161,7 +161,7 @@ export default function CaptureDialog({ onCaptured }: CaptureDialogProps) {
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="secondary" onClick={() => setOpen(false)}>
             取消
           </Button>
           <Button

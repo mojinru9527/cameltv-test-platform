@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -263,7 +263,7 @@ export default function AgentWorkbenchPage() {
                 )}
               </button>
             </div>
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={runsLoading || queueLoading}>
+            <Button variant="secondary" size="sm" onClick={handleRefresh} disabled={runsLoading || queueLoading}>
               <RefreshCw className={`size-4 mr-1 ${runsLoading || queueLoading ? 'animate-spin' : ''}`} />
               刷新
             </Button>
@@ -525,7 +525,7 @@ export default function AgentWorkbenchPage() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTriggerDialog(null)}>取消</Button>
+            <Button variant="secondary" onClick={() => setTriggerDialog(null)}>取消</Button>
             <Button onClick={handleTrigger} disabled={triggering || !triggerQuery.trim()}>
               {triggering ? (
                 <>

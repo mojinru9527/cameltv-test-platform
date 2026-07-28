@@ -31,8 +31,8 @@ import { z } from 'zod'
 
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -217,18 +217,18 @@ export default function UiTestPage() {
     { key: 'last_run_time', header: '上次执行', headerClassName: 'w-[170px]', render: (r) => r.last_run_time ? new Date(r.last_run_time).toLocaleString('zh-CN') : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[240px]', render: (r) => (
       <div className="flex items-center gap-1">
-        <Button size="xs" variant="outline" onClick={() => openDetail(r)}>
+        <Button size="xs" variant="secondary" onClick={() => openDetail(r)}>
           <Eye className="size-3" />
           详情
         </Button>
         {hasPerm('uitest:update') && (
-          <Button size="xs" variant="outline" onClick={() => openEdit(r)}>
+          <Button size="xs" variant="secondary" onClick={() => openEdit(r)}>
             <Edit className="size-3" />
             编辑
           </Button>
         )}
         {hasPerm('uitest:trigger') && (
-          <Button size="xs" variant="outline" onClick={() => doTrigger(r.id)} disabled={r.status === 'running'}>
+          <Button size="xs" variant="secondary" onClick={() => doTrigger(r.id)} disabled={r.status === 'running'}>
             <Play className="size-3" />
             执行
           </Button>
@@ -236,7 +236,7 @@ export default function UiTestPage() {
         {hasPerm('uitest:delete') && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="xs" variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
+              <Button size="xs" variant="secondary" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
                 <Trash2 className="size-3" />
               </Button>
             </AlertDialogTrigger>
@@ -390,7 +390,7 @@ export default function UiTestPage() {
               </Button>
             </div>
 
-            <Button variant="outline" size="default" onClick={() => load()}>
+            <Button variant="secondary" size="md" onClick={() => load()}>
               <RotateCcw className="size-4" />
               刷新
             </Button>
@@ -470,7 +470,7 @@ export default function UiTestPage() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => { setDrawer(false); setEditing(null); form.reset() }}>
+              <Button type="button" variant="secondary" onClick={() => { setDrawer(false); setEditing(null); form.reset() }}>
                 取消
               </Button>
               <Button type="submit" disabled={saving}>
@@ -631,13 +631,13 @@ export default function UiTestPage() {
               {/* Actions */}
               <div className="flex items-center gap-2 flex-wrap">
                 {(selectedRun.status === 'pending' || selectedRun.status === 'running') && (
-                  <Button variant="outline" size="sm" onClick={handleCancelRun} className="text-destructive border-destructive/20 hover:bg-destructive/10">
+                  <Button variant="secondary" size="sm" onClick={handleCancelRun} className="text-destructive border-destructive/20 hover:bg-destructive/10">
                     <Ban className="size-4" />
                     取消运行
                   </Button>
                 )}
                 {selectedRun.status !== 'pending' && selectedRun.status !== 'running' && (
-                  <Button variant="outline" size="sm" onClick={() => { setRunDetailLoading(true); fetchRunDetail(selectedRun.id).then(setSelectedRun).finally(() => setRunDetailLoading(false)); fetchRunArtifacts(selectedRun.id).then(setRunArtifacts).catch(() => {}) }}>
+                  <Button variant="secondary" size="sm" onClick={() => { setRunDetailLoading(true); fetchRunDetail(selectedRun.id).then(setSelectedRun).finally(() => setRunDetailLoading(false)); fetchRunArtifacts(selectedRun.id).then(setRunArtifacts).catch(() => {}) }}>
                     <RotateCcw className="size-4" />
                     刷新
                   </Button>
@@ -766,7 +766,7 @@ export default function UiTestPage() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setRunDetailOpen(false); setSelectedRun(null); setRunArtifacts([]) }}>关闭</Button>
+            <Button variant="secondary" onClick={() => { setRunDetailOpen(false); setSelectedRun(null); setRunArtifacts([]) }}>关闭</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

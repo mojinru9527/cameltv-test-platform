@@ -14,13 +14,13 @@ import type {
   AIGenerateResult, AIGeneratedCase, FeatureExtractionResult, RequirementAnalysis,
   TestModule, ApiMatchItem, ApiService,
 } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -321,7 +321,7 @@ function InlineEditRow({
               {saving && <Loader2 className="size-3.5 animate-spin" />}
               保存
             </Button>
-            <Button size="sm" variant="outline" onClick={onCancel} disabled={saving}>取消</Button>
+            <Button size="sm" variant="secondary" onClick={onCancel} disabled={saving}>取消</Button>
           </div>
         </div>
       </TableCell>
@@ -1082,7 +1082,7 @@ export default function AiResultModal({
                           </Select>
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="secondary"
                             className="bg-white"
                             onClick={handleConfirmMatches}
                             disabled={savingMatches || selectedServiceId == null}
@@ -1356,7 +1356,7 @@ export default function AiResultModal({
                     关闭
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => setRejectMode(true)}
                     disabled={submitting}
                   >
@@ -1385,7 +1385,7 @@ export default function AiResultModal({
                     取消
                   </Button>
                   <Button
-                    variant="destructive"
+                    variant="danger"
                     onClick={handleExtractionReject}
                     disabled={submitting || !rejectNotes.trim()}
                   >
@@ -1395,7 +1395,7 @@ export default function AiResultModal({
                 </>
               )
             ) : (
-              <Button variant="outline" onClick={handleClose}>
+              <Button variant="secondary" onClick={handleClose}>
                 关闭
               </Button>
             )}

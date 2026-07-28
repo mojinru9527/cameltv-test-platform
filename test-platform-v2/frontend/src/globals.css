@@ -1787,3 +1787,130 @@ html.theme-transition *::after {
     border-radius: var(--radius);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Obsidian Flow — shadcn/ui CSS Variable Override
+   Maps obsidian-flow design tokens → standard shadcn variables.
+   Placed AFTER all [data-theme] blocks so it wins the cascade.
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-ui-theme="obsidian-flow"] {
+  /* ── Canvas & text ── */
+  --background: #0b100d;
+  --foreground: #eef6f0;
+
+  /* ── Card (ui-surface equivalent) ── */
+  --card: #141c17;
+  --card-foreground: #eef6f0;
+
+  /* ── Popover / Dialog (ui-surface-elevated) ── */
+  --popover: #1f2923;
+  --popover-foreground: #eef6f0;
+
+  /* ── Primary (翡翠绿) ── */
+  --primary: #35e68a;
+  --primary-foreground: #0b100d;
+
+  /* ── Secondary ── */
+  --secondary: rgba(255, 255, 255, 0.04);
+  --secondary-foreground: #eef6f0;
+
+  /* ── Muted ── */
+  --muted: #1f2923;
+  --muted-foreground: #718077;
+
+  /* ── Accent ── */
+  --accent: #35e68a;
+  --accent-foreground: #0b100d;
+
+  /* ── Destructive ── */
+  --destructive: #ff9a90;
+  --destructive-foreground: #0b100d;
+
+  /* ── Border & input ── */
+  --border: rgba(218, 239, 224, 0.1);
+  --input: rgba(218, 239, 224, 0.06);
+
+  /* ── Ring ── */
+  --ring: #35e68a;
+
+  /* ── Radius (softer than cyberpunk) ── */
+  --radius: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-lg: 1rem;
+
+  /* ── Charts ── */
+  --chart-1: #35e68a;
+  --chart-2: #80c4ff;
+  --chart-3: #f5a623;
+  --chart-4: #ff9a90;
+  --chart-5: #a7b5ab;
+
+  /* ── Sidebar ── */
+  --sidebar-background: #0b100d;
+  --sidebar-foreground: #a7b5ab;
+  --sidebar-primary: #35e68a;
+  --sidebar-primary-foreground: #0b100d;
+  --sidebar-accent: rgba(53, 230, 138, 0.08);
+  --sidebar-accent-foreground: #eef6f0;
+  --sidebar-border: rgba(218, 239, 224, 0.06);
+  --sidebar-ring: #35e68a;
+
+  /* ── Shadow / Glass / Neon ── */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(53, 230, 138, 0.08);
+  --shadow-header: 0 1px 0 0 rgba(218, 239, 224, 0.06);
+  --glass-bg: rgba(20, 28, 23, 0.72);
+  --glass-border: rgba(117, 255, 178, 0.08);
+  --glass-blur: 18px;
+  --neon-glow: rgba(53, 230, 138, 0.18);
+  --neon-glow-strong: rgba(53, 230, 138, 0.35);
+  --card-radius: 12px;
+
+  /* ── Density & animation ── */
+  --density: 0.95;
+  --animation-duration: 200ms;
+  --text-muted-high-contrast: #a7b5ab;
+  --border-high-contrast: rgba(218, 239, 224, 0.18);
+  --theme-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Obsidian Flow dark — always dark regardless of .light on html */
+.light[data-ui-theme="obsidian-flow"] {
+  --background: #0b100d;
+  --foreground: #eef6f0;
+  --card: #141c17;
+  --card-foreground: #eef6f0;
+  --popover: #1f2923;
+  --popover-foreground: #eef6f0;
+  --primary: #35e68a;
+  --primary-foreground: #0b100d;
+  --secondary: rgba(255, 255, 255, 0.04);
+  --secondary-foreground: #eef6f0;
+  --muted: #1f2923;
+  --muted-foreground: #718077;
+  --accent: #35e68a;
+  --accent-foreground: #0b100d;
+  --destructive: #ff9a90;
+  --destructive-foreground: #0b100d;
+  --border: rgba(218, 239, 224, 0.1);
+  --input: rgba(218, 239, 224, 0.06);
+  --ring: #35e68a;
+  --sidebar-background: #0b100d;
+  --sidebar-foreground: #a7b5ab;
+  --sidebar-primary: #35e68a;
+  --sidebar-primary-foreground: #0b100d;
+  --sidebar-accent: rgba(53, 230, 138, 0.08);
+  --sidebar-accent-foreground: #eef6f0;
+  --sidebar-border: rgba(218, 239, 224, 0.06);
+  --sidebar-ring: #35e68a;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(53, 230, 138, 0.08);
+  --shadow-header: 0 1px 0 0 rgba(218, 239, 224, 0.06);
+  --glass-bg: rgba(20, 28, 23, 0.72);
+  --glass-border: rgba(117, 255, 178, 0.08);
+  --glass-blur: 18px;
+  --neon-glow: rgba(53, 230, 138, 0.18);
+  --neon-glow-strong: rgba(53, 230, 138, 0.35);
+  --text-muted-high-contrast: #a7b5ab;
+  --border-high-contrast: rgba(218, 239, 224, 0.18);
+}

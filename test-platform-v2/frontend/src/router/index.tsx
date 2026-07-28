@@ -32,6 +32,7 @@ const PerftestPage = lazy(() => import('@/pages/perftest'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
 const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
 const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPanorama'))
+const ThemeLabPage = lazy(() => import('@/theme-lab/ThemeLab').then(m => ({ default: m.ThemeLab })))
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -84,6 +85,7 @@ export const router = createBrowserRouter([
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
       { path: 'agent-workbench', element: <PageLoader><AgentWorkbenchPage /></PageLoader> },
       { path: 'perftest', element: <PageLoader><PerftestPage /></PageLoader> },
+      { path: 'theme-lab', element: <PageLoader><ThemeLabPage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
   },

@@ -19,8 +19,8 @@
 
 import type { ReactNode } from 'react'
 import { Search, RotateCcw } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { cn } from '@/lib/utils'
 
 export interface ListToolbarProps {
@@ -74,7 +74,7 @@ export default function ListToolbar({
           onKeyDown={handleKeyDown}
         />
         {onSearch && (
-          <Button variant="outline" size="sm" onClick={onSearch} data-icon="inline-start">
+          <Button variant="secondary" size="sm" onClick={onSearch} data-icon="inline-start">
             <Search />
             搜索
           </Button>

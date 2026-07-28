@@ -7,8 +7,8 @@ import api from '@/api/client'
 import { fetchRoles, fetchUsers } from '@/api/system'
 import { useAuthStore } from '@/stores/auth'
 import type { ProjectDetail } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
@@ -134,13 +134,13 @@ export default function ProjectPage() {
     { key: 'actions', header: '操作', headerClassName: 'w-[200px]', render: (r) => (
       <div className="flex items-center gap-2">
         {hasPerm('project:manage') && (
-          <Button size="sm" variant="outline" onClick={() => openMembers(r)} data-icon="inline-start">
+          <Button size="sm" variant="secondary" onClick={() => openMembers(r)} data-icon="inline-start">
             <Users />
             成员
           </Button>
         )}
         {hasPerm('project:update') && (
-          <Button size="sm" variant="outline" onClick={() => openEdit(r)} data-icon="inline-start">
+          <Button size="sm" variant="secondary" onClick={() => openEdit(r)} data-icon="inline-start">
             <Edit />
             编辑
           </Button>
@@ -148,7 +148,7 @@ export default function ProjectPage() {
         {hasPerm('project:delete') && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="destructive" data-icon="inline-start">
+              <Button size="sm" variant="danger" data-icon="inline-start">
                 <Trash2 />
               </Button>
             </AlertDialogTrigger>
@@ -245,7 +245,7 @@ export default function ProjectPage() {
   return (
     <>
       <PageHeader title="项目管理">
-        <Button variant="outline" size="sm" onClick={refetch} data-icon="inline-start">
+        <Button variant="secondary" size="sm" onClick={refetch} data-icon="inline-start">
           <RotateCcw />
           刷新
         </Button>
@@ -327,7 +327,7 @@ export default function ProjectPage() {
             </div>
           </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setDrawer(false); setEditing(null) }}>
+            <Button variant="secondary" onClick={() => { setDrawer(false); setEditing(null) }}>
               取消
             </Button>
             <Button disabled={saving} onClick={() => handleSubmit(doSave)()} data-icon="inline-start">
@@ -419,7 +419,7 @@ export default function ProjectPage() {
                         <TableCell>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive" data-icon="inline-start">
+                              <Button size="sm" variant="danger" data-icon="inline-start">
                                 <Trash2 />
                               </Button>
                             </AlertDialogTrigger>

@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { fetchGraphHierarchy } from '@/api/knowledge'
 import { fetchReleaseBundles } from '@/api/releaseBundles'
 import type { ProjectSphereView, ProjectSphereNode, ProjectSphereEdge } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -272,7 +272,7 @@ export default function SphereTab() {
           </ToggleGroupItem>
         </ToggleGroup>
 
-        <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+        <Button variant="secondary" size="sm" onClick={() => refetch()} disabled={isLoading}>
           <RefreshCw className={cn('size-4 mr-1', isLoading && 'animate-spin')} />
           刷新
         </Button>
@@ -331,7 +331,7 @@ export default function SphereTab() {
       {isError && (
         <div className="text-center py-12 text-muted-foreground">
           <p className="text-sm">加载失败</p>
-          <Button variant="outline" size="sm" className="mt-2" onClick={() => refetch()}>
+          <Button variant="secondary" size="sm" className="mt-2" onClick={() => refetch()}>
             重试
           </Button>
         </div>

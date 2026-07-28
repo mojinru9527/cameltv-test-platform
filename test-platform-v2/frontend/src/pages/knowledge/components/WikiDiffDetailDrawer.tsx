@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { acceptWikiDiffItem, rejectWikiDiffItem, createWikiDiffArtifact } from '@/api/wiki'
 import type { WikiDiffItem } from '@/types'
@@ -202,11 +202,11 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
 
         {canApprove && item.review_status === 'pending' && (
           <SheetFooter className="flex-row gap-2 sm:justify-start">
-            <Button variant="outline" size="sm" disabled={busy}
+            <Button variant="secondary" size="sm" disabled={busy}
               onClick={() => act(() => rejectWikiDiffItem(item.id), '已忽略', { review_status: 'rejected' })}>
               忽略
             </Button>
-            <Button variant="outline" size="sm" disabled={busy}
+            <Button variant="secondary" size="sm" disabled={busy}
               onClick={() => act(() => acceptWikiDiffItem(item.id), '已确认', { review_status: 'accepted' })}>
               仅确认
             </Button>
@@ -230,7 +230,7 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
 
         {item.review_status === 'rejected' && (
           <SheetFooter className="flex-row gap-2 sm:justify-start pt-2">
-            <Button variant="outline" size="sm" disabled={busy}
+            <Button variant="secondary" size="sm" disabled={busy}
               onClick={() => act(() => acceptWikiDiffItem(item.id), '已重新采纳', { review_status: 'accepted' })}>
               重新采纳
             </Button>

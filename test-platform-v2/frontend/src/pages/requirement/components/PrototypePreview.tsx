@@ -7,7 +7,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
@@ -301,19 +301,18 @@ export default function PrototypePreview({
         {/* Footer */}
         <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => goTo(currentIndex - 1)} disabled={currentIndex === 0}>
+            <Button size="sm" variant="secondary" onClick={() => goTo(currentIndex - 1)} disabled={currentIndex === 0}>
               <ChevronLeft className="size-3.5 mr-1" />上一页
             </Button>
-            <Button size="sm" variant="outline" onClick={() => goTo(currentIndex + 1)} disabled={currentIndex === total - 1}>
+            <Button size="sm" variant="secondary" onClick={() => goTo(currentIndex + 1)} disabled={currentIndex === total - 1}>
               下一页<ChevronRight className="size-3.5 ml-1" />
             </Button>
           </div>
           {imageUrl && (
-            <Button size="sm" variant="ghost" asChild>
-              <a href={imageUrl} target="_blank" rel="noopener noreferrer" download={`${current?.page_name || 'screenshot'}.png`}>
-                <Download className="size-3.5 mr-1" />下载原图
-              </a>
-            </Button>
+            <a href={imageUrl} target="_blank" rel="noopener noreferrer" download={`${current?.page_name || 'screenshot'}.png`}
+               className="ui-btn ui-btn-ghost ui-btn-sm inline-flex">
+              <Download className="size-3.5 mr-1" />下载原图
+            </a>
           )}
         </div>
       </DialogContent>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { fetchTestCases } from '@/api/testcase'
 import { fetchDomains } from '@/api/testcase'
@@ -154,7 +154,7 @@ export default function MindmapPage() {
           </SelectContent>
         </Select>
 
-        <Button size="sm" variant="outline" onClick={refetch} disabled={isLoading}>
+        <Button size="sm" variant="secondary" onClick={refetch} disabled={isLoading}>
           <RotateCcw className="size-3.5" data-icon="inline-start" />
           {isLoading ? '加载中...' : '刷新'}
         </Button>

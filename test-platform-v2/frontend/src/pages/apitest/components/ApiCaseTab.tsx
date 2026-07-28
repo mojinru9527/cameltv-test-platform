@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Play, ClipboardCheck, MinusCircle, Loader2, CheckCircle2, XCircle, RefreshCw, ChevronDown } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -160,7 +160,7 @@ export default function ApiCaseTab() {
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={toggleAll} data-icon="inline-start">
+          <Button size="sm" variant="secondary" onClick={toggleAll} data-icon="inline-start">
             {selected.size === apiCases.length && apiCases.length > 0 ? <ClipboardCheck className="size-4" /> : <MinusCircle className="size-4" />}
             {selected.size > 0 ? `已选 ${selected.size}` : '全选'}
           </Button>

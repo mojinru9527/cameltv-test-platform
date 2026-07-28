@@ -8,10 +8,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { createLanhuEvidenceJob } from '@/api/lanhuEvidence'
 import type { LanhuEvidenceJob } from '@/api/lanhuEvidence'
 import { Loader2 } from '@/lib/icons'
@@ -132,7 +132,7 @@ export default function LanhuEvidenceDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>关闭</Button>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>关闭</Button>
           <Button disabled={loading || !url.trim()} onClick={submit}>
             {loading ? <Loader2 className="size-4 animate-spin mr-1" /> : null}
             开始采集

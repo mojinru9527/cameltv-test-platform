@@ -16,8 +16,8 @@
  */
 import { useEffect, useState } from 'react'
 import { Plus, Trash2 } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
