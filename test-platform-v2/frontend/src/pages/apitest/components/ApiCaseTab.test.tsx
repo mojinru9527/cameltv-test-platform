@@ -78,6 +78,15 @@ describe('接口用例列表', () => {
     const c1Title = await screen.findByText('【正向】接口C - 正常请求')
     expect(c1Title).toBeTruthy()
     expect(screen.getByText('【类型校验】接口C - age - 类型错误')).toBeTruthy()
+    expect(c1Title.closest('button')?.getAttribute('aria-label')).toBe(
+      '执行用例【正向】接口C - 正常请求',
+    )
+    expect(
+      screen.getByRole('button', { name: '选择用例【正向】接口C - 正常请求' }),
+    ).toBeTruthy()
+    expect(
+      screen.getAllByRole('button', { name: '执行用例【正向】接口C - 正常请求' }),
+    ).toHaveLength(2)
 
     // Click case to execute
     fireEvent.click(c1Title)

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -213,19 +213,19 @@ export default function PlatformTab() {
             <DialogDescription>
               <div className="flex flex-wrap items-center gap-1.5 mt-1">
                 {selected?.source_type && (
-                  <Badge variant="secondary">{selected.source_type}</Badge>
+                  <Badge tone="neutral">{selected.source_type}</Badge>
                 )}
                 {selected?.para_category && (
-                  <Badge variant="outline">{selected.para_category}</Badge>
+                  <Badge tone="neutral">{selected.para_category}</Badge>
                 )}
                 {selected?.knowledge_domain && (
-                  <Badge variant="outline">{selected.knowledge_domain === 'platform' ? '平台研发' : '项目知识'}</Badge>
+                  <Badge tone="neutral">{selected.knowledge_domain === 'platform' ? '平台研发' : '项目知识'}</Badge>
                 )}
                 {selected?.status && (
-                  <Badge variant={selected.status === 'deprecated' ? 'destructive' : 'default'}>{selected.status}</Badge>
+                  <Badge tone={selected.status === 'deprecated' ? 'danger' : 'success'}>{selected.status}</Badge>
                 )}
                 {selected?.version && (
-                  <Badge variant="outline" className="text-xs">v{selected.version}</Badge>
+                  <Badge tone="neutral" className="text-xs">v{selected.version}</Badge>
                 )}
               </div>
             </DialogDescription>
@@ -313,7 +313,7 @@ export default function PlatformTab() {
                 {chunks.map((c, idx) => (
                   <div key={c.id} className="rounded-lg border p-4 hover:border-primary/20 transition-colors">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary">{c.chunk_type}</Badge>
+                      <Badge tone="neutral">{c.chunk_type}</Badge>
                       <span className="text-sm font-medium">{c.title || `切片 #${idx + 1}`}</span>
                       <span className="ml-auto text-xs text-muted-foreground">
                         {c.token_count} tokens

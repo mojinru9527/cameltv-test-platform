@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -311,7 +311,7 @@ export default function AgentWorkbenchPage() {
                             onClick={() => setSelectedRun(r)}
                           >
                             <TableCell>
-                              <Badge variant="outline" className="text-xs">
+                              <Badge tone="neutral" className="text-xs">
                                 {r.agent_type.replace(/_/g, ' ')}
                               </Badge>
                             </TableCell>
@@ -394,7 +394,7 @@ export default function AgentWorkbenchPage() {
                           return (
                             <TableRow key={q.id}>
                               <TableCell>
-                                <Badge variant="outline" className="text-xs">
+                                <Badge tone="neutral" className="text-xs">
                                   {q.agent_type.replace(/_/g, ' ')}
                                 </Badge>
                               </TableCell>
@@ -402,7 +402,7 @@ export default function AgentWorkbenchPage() {
                                 {q.priority >= 10 ? (
                                   <Badge className="bg-blue-100 text-blue-700 text-xs">手动</Badge>
                                 ) : (
-                                  <Badge variant="outline" className="text-xs">自动</Badge>
+                                  <Badge tone="neutral" className="text-xs">自动</Badge>
                                 )}
                               </TableCell>
                               <TableCell>

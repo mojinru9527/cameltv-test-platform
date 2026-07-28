@@ -10,7 +10,7 @@ import type { ProjectDetail } from '@/types'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
@@ -127,7 +127,7 @@ export default function ProjectPage() {
     { key: 'description', header: '描述', className: 'truncate', render: (r) => r.description || '-' },
     { key: 'owner_name', header: '负责人', headerClassName: 'w-[100px]', render: (r) => (r as any).owner_name || '-' },
     { key: 'status', header: '状态', headerClassName: 'w-[80px]', render: (r) => (
-      <Badge variant={r.status === 1 ? 'default' : 'secondary'}>
+      <Badge tone={r.status === 1 ? 'success' : 'neutral'}>
         {r.status === 1 ? '启用' : '禁用'}
       </Badge>
     )},
@@ -340,7 +340,7 @@ export default function ProjectPage() {
 
       {/* Members Sheet */}
       <Sheet open={membersOpen} onOpenChange={(open) => { if (!open) { setMembersOpen(false); setActiveProject(null) } }}>
-        <SheetContent side="right" className="w-[600px] sm:max-w-[600px]">
+        <SheetContent side="right" className="w-full sm:max-w-[600px]">
           <SheetHeader>
             <SheetTitle>{activeProject?.name} — 成员管理</SheetTitle>
             <SheetDescription>管理项目成员及其角色</SheetDescription>
@@ -415,7 +415,7 @@ export default function ProjectPage() {
                     members.map((m: any) => (
                       <TableRow key={m.user_id}>
                         <TableCell>{m.username}</TableCell>
-                        <TableCell><Badge variant="secondary">{m.role_name}</Badge></TableCell>
+                        <TableCell><Badge tone="neutral">{m.role_name}</Badge></TableCell>
                         <TableCell>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>

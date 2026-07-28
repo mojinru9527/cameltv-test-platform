@@ -12,7 +12,7 @@
  */
 import { RefreshCw } from '@/lib/icons'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import {
@@ -56,7 +56,7 @@ export default function EnvironmentBar({
       <div className="flex items-center gap-1.5">
         <Label className="text-[11px] text-muted-foreground shrink-0">环境</Label>
         {isProduction && (
-          <Badge variant="destructive" className="text-[10px] px-1 py-0 leading-none">PROD</Badge>
+          <Badge tone="danger" className="text-[10px] px-1 py-0 leading-none">PROD</Badge>
         )}
         {onRefresh && (
           <Button type="button" size="icon-sm" variant="ghost" onClick={onRefresh} title="刷新环境列表">

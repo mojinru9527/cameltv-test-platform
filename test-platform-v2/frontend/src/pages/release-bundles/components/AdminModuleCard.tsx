@@ -6,7 +6,7 @@ import {
 import type { ModuleAdminLinkOut, ModuleTreeNode } from '@/types'
 import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Collapsible,
@@ -110,7 +110,7 @@ export default function AdminModuleCard({ bundleId, modules }: AdminModuleCardPr
               />
               <Link2 className="h-5 w-5 text-muted-foreground" />
               <CardTitle className="text-base">运营后台关联</CardTitle>
-              <Badge variant="secondary" className="text-xs ml-auto">
+              <Badge tone="neutral" className="text-xs ml-auto">
                 {links.length} 链接
               </Badge>
             </button>
@@ -147,7 +147,7 @@ export default function AdminModuleCard({ bundleId, modules }: AdminModuleCardPr
                         {link.clientName}
                       </span>
                       <Badge
-                        variant="outline"
+                        tone="neutral"
                         className={cn(
                           'text-xs shrink-0',
                           link.relation_type === 'configures'
@@ -164,7 +164,7 @@ export default function AdminModuleCard({ bundleId, modules }: AdminModuleCardPr
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge tone="neutral" className="text-xs">
                         {(link.confidence * 100).toFixed(0)}%
                       </Badge>
                       <Button

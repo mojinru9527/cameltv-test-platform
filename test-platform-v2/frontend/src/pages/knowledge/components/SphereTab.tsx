@@ -7,7 +7,7 @@ import { fetchGraphHierarchy } from '@/api/knowledge'
 import { fetchReleaseBundles } from '@/api/releaseBundles'
 import type { ProjectSphereView, ProjectSphereNode, ProjectSphereEdge } from '@/types'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
@@ -359,7 +359,7 @@ export default function SphereTab() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">类型</span>
                   <Badge
-                    variant="outline"
+                    tone="neutral"
                     className="text-[10px]"
                     style={{
                       backgroundColor: (NODE_COLORS[selectedNode.node_type] ?? DEFAULT_NODE_COLOR).background + '20',
@@ -385,7 +385,7 @@ export default function SphereTab() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">变更</span>
                     <Badge
-                      variant="outline"
+                      tone="neutral"
                       className={cn(
                         'text-xs',
                         selectedNode.change_type === 'new' && 'border-green-200 text-green-700',
@@ -439,7 +439,7 @@ export default function SphereTab() {
                         </span>
                         <ArrowRight className="size-3 text-muted-foreground shrink-0" />
                         <Badge
-                          variant="outline"
+                          tone="neutral"
                           className="text-[9px] px-1 py-0 shrink-0"
                           style={{ color: edgeCfg.color, borderColor: edgeCfg.color }}
                         >

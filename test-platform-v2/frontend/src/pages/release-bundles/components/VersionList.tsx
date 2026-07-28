@@ -3,7 +3,7 @@ import { fetchReleaseBundles } from '@/api/releaseBundles'
 import type { ReleaseBundleListItem } from '@/types'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, Package, RefreshCw } from '@/lib/icons'
@@ -53,7 +53,7 @@ export default function VersionList({
       archived: { className: 'border-gray-200 bg-gray-50 text-gray-500', label: '归档' },
     }
     const c = config[status] ?? { className: '', label: status }
-    return <Badge variant="outline" className={cn('text-xs', c.className)}>{c.label}</Badge>
+    return <Badge tone="neutral" className={cn('text-xs', c.className)}>{c.label}</Badge>
   }
 
   return (

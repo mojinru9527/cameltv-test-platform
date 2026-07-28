@@ -70,8 +70,19 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
   const [users, setUsers] = useState<any[]>([])
 
   useEffect(() => {
-    fetchUsers().then((d: any) => setUsers(d || [])).catch(() => {})
-  }, [])
+    if (!open) return
+    const controller = new AbortController()
+
+    fetchUsers(controller.signal)
+      .then((d: any) => setUsers(d || []))
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          toast.error('用户列表加载失败，请稍后重试')
+        }
+      })
+
+    return () => controller.abort()
+  }, [open])
 
   const {
     register,

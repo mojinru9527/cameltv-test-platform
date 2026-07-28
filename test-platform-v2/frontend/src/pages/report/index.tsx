@@ -1,4 +1,4 @@
-import { Badge, Button, useObsidianPage } from '@/ui'
+import { Badge, Button, PageShell } from '@/ui'
 import { useState } from 'react'
 import { useChartColors } from '@/hooks/use-chart-colors'
 import { useForm } from 'react-hook-form'
@@ -61,7 +61,6 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
-import PageHeader from '@/components/PageHeader'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -127,11 +126,6 @@ type ReportFormData = z.infer<typeof reportSchema>
 
 export default function ReportPage() {
   useDocumentTitle('测试报告')
-  const { Page } = useObsidianPage({
-    title: '报告中心',
-    subtitle: 'REPORT CENTER',
-    description: '聚合测试执行结果，生成多维度质量报告，支持导出与钻取分析。',
-  })
   const chartColors = useChartColors()
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
@@ -281,10 +275,12 @@ export default function ReportPage() {
   ]
 
   return (
-    <Page>
+    <PageShell
+      title="报告中心"
+      description="聚合测试执行结果，生成多维度质量报告，支持导出与钻取分析。"
+      glass
+    >
       <div>
-        <PageHeader title="报告中心" />
-
       {/* ── Trend Section ── */}
       <AsyncState
         isLoading={trendsState.isLoading}
@@ -305,7 +301,7 @@ export default function ReportPage() {
           return (
             <div className="mb-6 space-y-4">
               {/* Summary cards */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
                 <StatCard icon={BarChart3} label="报告总数" value={trends.summary.total_reports} variant="glass" />
                 <StatCard icon={Percent} label="平均通过率" value={`${trends.summary.avg_pass_rate}%`} variant="glass" />
                 <StatCard icon={ArrowUp} label="最高通过率" value={`${trends.summary.best_pass_rate}%`} variant="glass" />
@@ -497,7 +493,7 @@ export default function ReportPage() {
 
       {/* Detail Sheet */}
       <Sheet open={detailId !== null} onOpenChange={(open) => { if (!open) { setDetailId(null); setDetail(null) } }}>
-        <SheetContent side="right" className="w-[820px] sm:max-w-[820px] overflow-y-auto">
+        <SheetContent side="right" className="w-full sm:max-w-[820px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>报告: {detail?.name || ''}</SheetTitle>
             <SheetDescription>查看报告详细信息</SheetDescription>
@@ -506,7 +502,7 @@ export default function ReportPage() {
           {detail && content ? (
             <div className="py-4 flex flex-col gap-4">
               {/* Descriptions */}
-              <dl className="grid grid-cols-2 gap-3 text-sm">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div className="flex flex-col gap-0.5">
                   <dt className="text-xs text-muted-foreground">编号</dt>
                   <dd>{detail.report_id}</dd>
@@ -665,6 +661,6 @@ export default function ReportPage() {
         </SheetContent>
       </Sheet>
     </div>
-    </Page>
+    </PageShell>
   )
 }

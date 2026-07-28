@@ -12,7 +12,7 @@ import {
 } from '@/api/notify'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -261,7 +261,7 @@ export default function NotifyPage() {
                     <TableRow key={ch.id}>
                       <TableCell className="font-medium">{ch.name}</TableCell>
                       <TableCell>
-                        <Badge variant={ch.channel_type === 'webhook' ? 'default' : 'secondary'}>
+                        <Badge tone={ch.channel_type === 'webhook' ? 'info' : 'neutral'}>
                           {ch.channel_type === 'webhook' ? 'Webhook' : '邮件'}
                         </Badge>
                       </TableCell>
@@ -274,7 +274,7 @@ export default function NotifyPage() {
                         <div className="flex flex-wrap gap-1">
                           {ch.events && ch.events.length > 0 ? (
                             ch.events.map((ev) => (
-                              <Badge key={ev} variant="outline" className="text-xs">
+                              <Badge key={ev} tone="neutral" className="text-xs">
                                 {EVENT_OPTIONS.find((e) => e.value === ev)?.label || ev}
                               </Badge>
                             ))
@@ -284,7 +284,7 @@ export default function NotifyPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={ch.enabled ? 'default' : 'secondary'}>
+                        <Badge tone={ch.enabled ? 'success' : 'neutral'}>
                           {ch.enabled ? '启用' : '禁用'}
                         </Badge>
                       </TableCell>

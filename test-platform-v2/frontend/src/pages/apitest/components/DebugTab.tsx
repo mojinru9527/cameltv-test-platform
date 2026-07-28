@@ -4,7 +4,7 @@ import { Play, Plus, Trash2, Loader2, CheckCircle2, XCircle } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -560,12 +560,12 @@ export function ResponsePanel({ result, loading }: { result: any; loading: boole
         ) : result ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge className={result.status_code >= 200 && result.status_code < 300 ? 'bg-green-100 text-green-700' : result.status_code > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}>
+              <Badge tone={result.status_code >= 200 && result.status_code < 300 ? 'success' : result.status_code > 0 ? 'danger' : 'neutral'}>
                 {result.status_code || 'ERR'} {result.status === 'error' ? result.error : ''}
               </Badge>
-              <Badge variant="outline">{result.duration_ms || 0} ms</Badge>
-              {result.all_pass ? <Badge className="bg-green-100 text-green-700"><CheckCircle2 className="size-3 mr-1" />全部通过</Badge>
-                : result.assertions?.length ? <Badge className="bg-red-100 text-red-700"><XCircle className="size-3 mr-1" />断言失败</Badge> : null}
+              <Badge tone="neutral">{result.duration_ms || 0} ms</Badge>
+              {result.all_pass ? <Badge tone="success"><CheckCircle2 className="size-3 mr-1" />全部通过</Badge>
+                : result.assertions?.length ? <Badge tone="danger"><XCircle className="size-3 mr-1" />断言失败</Badge> : null}
             </div>
             {result.assertions?.length > 0 && (
               <div className="space-y-1">

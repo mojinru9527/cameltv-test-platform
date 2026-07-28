@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ModuleTreeNode } from '@/types'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   ChevronRight,
   ChevronDown,
@@ -91,7 +91,7 @@ function InteractionPill({ interactionsJson }: { interactionsJson: string }) {
               <span>→</span>
               <span>{ia.target_page || '?'}</span>
               {ia.interaction_type && (
-                <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                <Badge tone="neutral" className="text-[9px] px-1 py-0">
                   {ia.interaction_type}
                 </Badge>
               )}
@@ -137,7 +137,7 @@ function TreeNode({ node, depth = 0 }: { node: ModuleTreeNode; depth?: number })
 
         {/* Node type icon */}
         <Badge
-          variant="outline"
+          tone="neutral"
           className={cn('text-[10px] px-1 py-0 gap-0.5 shrink-0', config.className)}
         >
           <config.icon className="size-3" />
@@ -162,7 +162,7 @@ function TreeNode({ node, depth = 0 }: { node: ModuleTreeNode; depth?: number })
         {/* Change badge */}
         {node.change_type && node.change_type !== 'unchanged' && (
           <Badge
-            variant="outline"
+            tone="neutral"
             className={cn('text-[9px] px-1 py-0 shrink-0', CHANGE_BADGE[node.change_type]?.className)}
           >
             {CHANGE_BADGE[node.change_type]?.label ?? node.change_type}

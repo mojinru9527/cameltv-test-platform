@@ -64,6 +64,7 @@ test-platform-v2/backend/storage/models/
 test-platform-v2/backend/storage/*.json
 test-platform-v2/backend/storage/TASK-REPORT-*.md
 test-platform-v2/backend/tests/playwright/test-results/
+test-platform-v2/frontend/e2e/evidence/*.png
 test-platform-v2/data/
 
 # TypeScript build artifacts

@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { Plus, Search, FileUp, RefreshCw, FlaskConical, Zap, ChevronLeft, ChevronRight, ChevronDown, FolderOpen, ArrowRight } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -160,7 +160,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <code className="text-sm font-medium truncate" title={ep.path}>{displayPath(ep)}</code>
-            {ep.deprecated && <Badge variant="outline" className="text-[10px] text-yellow-600">已废弃</Badge>}
+            {ep.deprecated && <Badge tone="neutral" className="text-[10px] text-yellow-600">已废弃</Badge>}
           </div>
           <p className="text-xs text-muted-foreground truncate">
             {ep.summary || '-'}
@@ -204,7 +204,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
           <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
           <FolderOpen className="size-4 text-muted-foreground" />
           <span>{displaySegment(moduleName)}</span>
-          <Badge variant="secondary" className="ml-auto text-xs">
+          <Badge tone="neutral" className="ml-auto text-xs">
             {Object.values(pathGroups).flat().length}
           </Badge>
         </CollapsibleTrigger>
@@ -248,7 +248,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
                   <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 text-sm font-semibold hover:bg-muted/50 rounded-lg transition-colors group bg-muted/20">
                     <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                     <span>{svcName}</span>
-                    <Badge variant="secondary" className="ml-auto text-xs">{epsCount} 个接口</Badge>
+                    <Badge tone="neutral" className="ml-auto text-xs">{epsCount} 个接口</Badge>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="ml-4 mt-1 space-y-1">
                     {renderModules(modules, svcName)}

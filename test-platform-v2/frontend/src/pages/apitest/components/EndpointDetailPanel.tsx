@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { BrainCircuit, Loader2 } from '@/lib/icons'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { searchKnowledge } from '@/api/knowledge'
@@ -64,7 +64,7 @@ export default function EndpointDetailPanel({ endpoint }: Props) {
         <div className="flex items-center gap-2 mb-1">
           <Badge className={METHOD_COLORS[endpoint.method] || ''}>{endpoint.method}</Badge>
           {endpoint.deprecated && (
-            <Badge variant="outline" className="text-[10px] text-yellow-600">已废弃</Badge>
+            <Badge tone="neutral" className="text-[10px] text-yellow-600">已废弃</Badge>
           )}
         </div>
         <code className="text-sm font-medium break-all block mt-1">{endpoint.path}</code>
@@ -73,10 +73,10 @@ export default function EndpointDetailPanel({ endpoint }: Props) {
         )}
         <div className="flex items-center gap-2 mt-2 flex-wrap">
           {endpoint.module && (
-            <Badge variant="secondary" className="text-[10px]">{endpoint.module}</Badge>
+            <Badge tone="neutral" className="text-[10px]">{endpoint.module}</Badge>
           )}
           {endpoint.auth_required && (
-            <Badge variant="outline" className="text-[10px]">需认证</Badge>
+            <Badge tone="neutral" className="text-[10px]">需认证</Badge>
           )}
           {endpoint.source && (
             <span className="text-[10px] text-muted-foreground">
@@ -128,7 +128,7 @@ export default function EndpointDetailPanel({ endpoint }: Props) {
               <Card key={r.chunk_id}>
                 <CardContent className="p-3 space-y-1">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="shrink-0">
+                    <Badge tone="neutral" className="shrink-0">
                       {CHUNK_LABEL[r.chunk_type] ?? r.chunk_type}
                     </Badge>
                     <span className="text-sm font-medium truncate">{r.title || '(无标题)'}</span>

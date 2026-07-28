@@ -4,7 +4,7 @@ import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { acceptWikiDiffItem, rejectWikiDiffItem, createWikiDiffArtifact } from '@/api/wiki'
 import type { WikiDiffItem } from '@/types'
 import { useAuthStore } from '@/stores/auth'
@@ -133,11 +133,11 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
       <SheetContent className="sm:max-w-[540px] overflow-auto">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 flex-wrap text-left">
-            <Badge variant={sev.variant} className={sev.className} title={SEVERITY_LABEL[item.severity] ?? item.severity}>
+            <Badge tone={sev.tone} className={sev.className} title={SEVERITY_LABEL[item.severity] ?? item.severity}>
               {item.severity}
             </Badge>
-            <Badge variant="secondary">{item.dimension}</Badge>
-            <Badge variant="outline">{item.diff_type}</Badge>
+            <Badge tone="neutral">{item.dimension}</Badge>
+            <Badge tone="neutral">{item.diff_type}</Badge>
           </SheetTitle>
           <SheetDescription className="text-left text-foreground font-medium">{item.title}</SheetDescription>
         </SheetHeader>
@@ -174,7 +174,7 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
               <div className="space-y-1">
                 {evidenceRefs.map((ref, i) => (
                   <div key={i} className="flex items-center gap-1.5 text-xs">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                    <Badge tone="neutral" className="text-[10px] px-1.5 py-0 h-4 font-normal">
                       {ref.source_type === 'knowledge_chunk' ? '知识片段' :
                        ref.source_type === 'wiki_page' ? 'Wiki 页面' :
                        ref.source_type === 'knowledge_source' ? '知识来源' :
@@ -190,7 +190,7 @@ export default function WikiDiffDetailDrawer({ item, onOpenChange, onChanged }: 
           {/* Review status */}
           <div className="flex items-center gap-2 text-xs">
             <span className="text-muted-foreground">处理状态：</span>
-            <Badge variant={item.review_status === 'accepted' ? 'default' : item.review_status === 'rejected' ? 'destructive' : 'outline'}>
+            <Badge tone={item.review_status === 'accepted' ? 'success' : item.review_status === 'rejected' ? 'danger' : 'neutral'}>
               {item.review_status === 'accepted' ? '已采纳' :
                item.review_status === 'rejected' ? '已忽略' : '待处理'}
             </Badge>

@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { confirmExtraction, generateTestCases } from '@/api/requirement'
 import type { FeatureExtractionResult, TestModule, AIGenerateResult } from '@/types'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -210,16 +210,16 @@ export default function ExtractionModal({
                     ) : (
                       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                     )}
-                    <Badge variant="outline" className="font-mono text-xs">
+                    <Badge tone="neutral" className="font-mono text-xs">
                       {mod.id}
                     </Badge>
                     <span className="font-medium text-sm">{mod.name}</span>
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge tone="neutral" className="text-xs">
                       {fpCount} 个功能点
                     </Badge>
                     {issueCount > 0 && (
                       <Badge
-                        variant="outline"
+                        tone="neutral"
                         className="text-xs border-amber-200 bg-amber-50 text-amber-700"
                       >
                         {issueCount} 个问题
@@ -243,12 +243,12 @@ export default function ExtractionModal({
                           className="border rounded-lg p-3 bg-muted/30"
                         >
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="font-mono text-xs">
+                            <Badge tone="neutral" className="font-mono text-xs">
                               {fp.id}
                             </Badge>
                             <span className="text-sm font-medium">{fp.title}</span>
                             <Badge
-                              variant="secondary"
+                              tone="neutral"
                               className="text-xs"
                             >
                               {TYPE_LABELS[fp.type] || fp.type}
@@ -268,11 +268,11 @@ export default function ExtractionModal({
                                 return (
                                   <div
                                     key={i}
-                                    className="text-xs border-l-2 pl-2 py-1"
-                                    style={{ borderLeftColor: sev.color }}
+                                    className="rounded border p-2 text-xs"
+                                    style={{ borderColor: sev.color }}
                                   >
                                     <Badge
-                                      variant="outline"
+                                      tone="neutral"
                                       className={`text-xs mr-1 ${
                                         SEVERITY_BADGE_CLASSES[issue.severity] || ''
                                       }`}

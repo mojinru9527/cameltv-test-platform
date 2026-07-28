@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/ui'
@@ -28,11 +28,11 @@ const PRIORITY_CLASSES: Record<string, string> = {
   P3: 'border-gray-200 bg-gray-50 text-gray-500',
 }
 
-const REVIEW_STATUS_MAP: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
-  pending: { variant: 'secondary', label: '待审核' },
-  approved: { variant: 'default', label: '已通过' },
-  rejected: { variant: 'destructive', label: '已驳回' },
-  edited: { variant: 'outline', label: '已编辑' },
+const REVIEW_STATUS_MAP: Record<string, { tone: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; label: string }> = {
+  pending: { tone: 'neutral', label: '待审核' },
+  approved: { tone: 'success', label: '已通过' },
+  rejected: { tone: 'danger', label: '已驳回' },
+  edited: { tone: 'info', label: '已编辑' },
 }
 
 interface CaseItem {
@@ -256,9 +256,9 @@ export default function ReviewPage() {
           {data.docTitle}
         </h1>
         <div className="flex items-center gap-2 ml-auto">
-          <Badge variant="default">{approvedCount} 已通过</Badge>
-          <Badge variant="destructive">{rejectedCount} 已驳回</Badge>
-          <Badge variant="secondary">{pendingCount} 待审核</Badge>
+          <Badge tone="neutral">{approvedCount} 已通过</Badge>
+          <Badge tone="danger">{rejectedCount} 已驳回</Badge>
+          <Badge tone="neutral">{pendingCount} 待审核</Badge>
           <Button size="sm" variant="secondary" onClick={handleRegenerate} disabled={generating}>
             {generating ? <Loader2 className="size-3 animate-spin" /> : null}
             重新生成
@@ -334,13 +334,13 @@ export default function ReviewPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-sm font-medium truncate">{c.title}</span>
-                            <Badge variant="outline" className={PRIORITY_CLASSES[c.priority] || ''}>{c.priority}</Badge>
-                            {c.case_type === 'api' && <Badge variant="outline" className="text-[10px]">API</Badge>}
+                            <Badge tone="neutral" className={PRIORITY_CLASSES[c.priority] || ''}>{c.priority}</Badge>
+                            {c.case_type === 'api' && <Badge tone="neutral" className="text-[10px]">API</Badge>}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-[11px] text-muted-foreground">{c.module || '-'}</span>
-                            <Badge variant={rv.variant} className="text-[10px] px-1.5 leading-[16px]">{rv.label}</Badge>
-                            {c.imported && <Badge variant="outline" className="text-[10px] border-green-200 bg-green-50 text-green-700">已导入</Badge>}
+                            <Badge tone={rv.tone} className="text-[10px] px-1.5 leading-[16px]">{rv.label}</Badge>
+                            {c.imported && <Badge tone="neutral" className="text-[10px] border-green-200 bg-green-50 text-green-700">已导入</Badge>}
                           </div>
                         </div>
                       </button>
@@ -382,8 +382,8 @@ export default function ReviewPage() {
                       编辑
                     </Button>
                     <h3 className="font-semibold">{activeCase.title}</h3>
-                    <Badge variant="outline" className={PRIORITY_CLASSES[activeCase.priority] || ''}>{activeCase.priority}</Badge>
-                    <Badge variant="outline">{activeCase.domain || activeCase.module || '-'}</Badge>
+                    <Badge tone="neutral" className={PRIORITY_CLASSES[activeCase.priority] || ''}>{activeCase.priority}</Badge>
+                    <Badge tone="neutral">{activeCase.domain || activeCase.module || '-'}</Badge>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -527,7 +527,7 @@ export default function ReviewPage() {
                 )}
 
                 {activeCase.review_status !== 'pending' && (
-                  <Badge variant={REVIEW_STATUS_MAP[activeCase.review_status]?.variant || 'secondary'}>
+                  <Badge tone={REVIEW_STATUS_MAP[activeCase.review_status]?.tone || 'neutral'}>
                     {REVIEW_STATUS_MAP[activeCase.review_status]?.label}
                   </Badge>
                 )}

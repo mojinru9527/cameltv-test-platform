@@ -5,7 +5,7 @@ import type { ModuleTreeNode } from '@/types'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   Select,
   SelectContent,
@@ -410,7 +410,7 @@ export default function InteractionAnnotator({
                               {r.targetPage || '未设置'}
                             </span>
                           </p>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge tone="neutral" className="text-xs">
                             {INTERACTION_TYPES.find(
                               (t) => t.value === r.interactionType,
                             )?.label ?? r.interactionType}

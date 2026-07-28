@@ -1,4 +1,4 @@
-import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
+import { Badge, Button, PageShell, type BadgeTone } from '@/ui'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
@@ -19,7 +19,6 @@ import type {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/ui'
 import Pagination from '@/components/Pagination'
-import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
 import { Progress } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -85,11 +84,6 @@ interface RequirementData {
 
 export default function RequirementPage() {
   useDocumentTitle('需求管理')
-  const { Page } = useObsidianPage({
-    title: '需求管理',
-    subtitle: 'REQUIREMENT MANAGEMENT',
-    description: '管理需求文档与版本基线，AI 辅助提取与评审，支持原型预览与证据溯源。',
-  })
   const [keyword, setKeyword] = useState('')
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -457,11 +451,11 @@ export default function RequirementPage() {
   const activeDocBrief = docs.find((d) => d.id === activeDocId)
 
   return (
-    <Page>
-      <div className="space-y-4">
-        {/* Header */}
-        <PageHeader title="需求文档" icon={BookOpen} description="上传 PRD / Excel / 蓝湖链接，AI 自动生成测试用例。">
-        <div className="flex items-center gap-2">
+    <PageShell
+      title="需求文档"
+      description="上传 PRD、Excel 或蓝湖链接，使用 AI 提取需求并生成测试用例。"
+      actions={(
+        <>
           <Button variant="secondary" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置">
             <Settings className="size-4" />
             蓝湖设置
@@ -477,9 +471,11 @@ export default function RequirementPage() {
               : <RotateCcw className="size-4" />}
             刷新
           </Button>
-        </div>
-      </PageHeader>
-
+        </>
+      )}
+      glass
+    >
+      <div className="space-y-4">
       {/* Main layout: task panel (left) + content (right) */}
       <div className="flex flex-col gap-4 items-stretch xl:flex-row xl:items-start">
         <EvidenceTaskPanel
@@ -1190,6 +1186,6 @@ export default function RequirementPage() {
         </DialogContent>
       </Dialog>
     </div>
-    </Page>
+    </PageShell>
   )
 }
