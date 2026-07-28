@@ -82,6 +82,23 @@ describe('快速调试资产预填', () => {
     expect(screen.getByTestId('quick-debug-response')).toBeTruthy()
   })
 
+  it('为参数和 Header 的图标操作提供明确名称', async () => {
+    render(<DebugTab endpoint={null} />)
+
+    await waitFor(() => expect(fetchEnvironments).toHaveBeenCalled())
+
+    const addParam = screen.getByRole('button', { name: '添加查询参数' })
+    expect(addParam.getAttribute('aria-label')).toBe('添加查询参数')
+    fireEvent.click(addParam)
+    expect(screen.getByRole('button', { name: '删除查询参数 1' })).toBeTruthy()
+
+    const addHeader = screen.getByRole('button', { name: '添加请求 Header' })
+    expect(addHeader.getAttribute('aria-label')).toBe('添加请求 Header')
+    fireEvent.click(addHeader)
+    expect(screen.getByRole('button', { name: '删除请求 Header 1' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '删除请求 Header 2' })).toBeTruthy()
+  })
+
   it('从接口资产进入时默认使用测试5并带入完整 URL 和参数格式', async () => {
     render(
       <DebugTab

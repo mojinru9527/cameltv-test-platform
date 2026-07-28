@@ -223,8 +223,8 @@ export default function BundleDetailPage() {
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/release-bundles')}>
-            <ArrowLeft className="size-5" />
+          <Button variant="ghost" size="icon" onClick={() => navigate('/release-bundles')} aria-label="返回发布包列表">
+            <ArrowLeft className="size-5" aria-hidden="true" />
           </Button>
           <div>
             <h1 className="text-lg font-semibold flex items-center gap-2">
@@ -340,8 +340,8 @@ export default function BundleDetailPage() {
                 <Layers className="size-4 text-blue-600" />
                 UI 回归测试范围
               </CardTitle>
-              <Button variant="ghost" size="icon-sm" onClick={() => setRegressionScope(null)}>
-                <span className="text-xs">✕</span>
+              <Button variant="ghost" size="icon-sm" onClick={() => setRegressionScope(null)} aria-label="关闭回归范围">
+                <span className="text-xs" aria-hidden="true">✕</span>
               </Button>
             </div>
           </CardHeader>

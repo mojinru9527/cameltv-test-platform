@@ -8,6 +8,7 @@ export const COLOR_THEMES = [
     preview: ['#00e5ff', '#090b0d', '#d0e0ed'],
     cssPreset: 'cyberpunk',
     preferredMode: 'dark',
+    supportedModes: ['light', 'dark'],
   },
   {
     id: 'apple',
@@ -18,6 +19,7 @@ export const COLOR_THEMES = [
     preview: ['#0071e3', '#f5f5f7', '#1d1d1f'],
     cssPreset: 'apple',
     preferredMode: 'light',
+    supportedModes: ['light', 'dark'],
   },
   {
     id: 'clay',
@@ -28,6 +30,7 @@ export const COLOR_THEMES = [
     preview: ['#7457cc', '#efe9f7', '#332f3a'],
     cssPreset: 'clay',
     preferredMode: 'light',
+    supportedModes: ['light', 'dark'],
   },
   {
     id: 'xlab',
@@ -38,6 +41,7 @@ export const COLOR_THEMES = [
     preview: ['#4fe4ff', '#07090a', '#e2e8f0'],
     cssPreset: 'xlab',
     preferredMode: 'dark',
+    supportedModes: ['light', 'dark'],
   },
   {
     id: 'liquid-glass',
@@ -48,6 +52,18 @@ export const COLOR_THEMES = [
     preview: ['#7c5ce7', '#0a0a1a', '#e8e8f8'],
     cssPreset: 'liquid-glass',
     preferredMode: 'dark',
+    supportedModes: ['light', 'dark'],
+  },
+  {
+    id: 'obsidian-flow',
+    number: '06',
+    label: '黑曜',
+    name: 'Obsidian Flow',
+    description: '黑曜空间玻璃 × 质量链路工作台',
+    preview: ['#35e68a', '#0b100d', '#eef6f0'],
+    cssPreset: 'obsidian-flow',
+    preferredMode: 'dark',
+    supportedModes: ['dark'],
   },
 ] as const
 
@@ -55,7 +71,7 @@ export type ColorTheme = (typeof COLOR_THEMES)[number]['id']
 export type ThemeCssPreset = (typeof COLOR_THEMES)[number]['cssPreset']
 export type ColorThemeDefinition = (typeof COLOR_THEMES)[number]
 
-export const DEFAULT_COLOR_THEME: ColorTheme = 'cyberpunk'
+export const DEFAULT_COLOR_THEME: ColorTheme = 'obsidian-flow'
 
 const THEME_BY_ID = new Map<ColorTheme, ColorThemeDefinition>(
   COLOR_THEMES.map((theme) => [theme.id, theme]),

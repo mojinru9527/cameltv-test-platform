@@ -62,7 +62,7 @@ describe('semantic primitives', () => {
 
   it('keeps Obsidian selectors while rendering token fallbacks', () => {
     const { container } = render(
-      <div data-ui-theme="obsidian-flow">
+      <div data-theme="obsidian-flow">
         <Button variant="primary">运行</Button>
         <Input aria-label="环境" />
         <Badge tone="success">通过</Badge>
@@ -83,6 +83,18 @@ describe('semantic primitives', () => {
     expect(screen.getByLabelText('备注').classList.contains('border-input')).toBe(true)
     expect(container.querySelector('[data-slot="skeleton"]')?.classList.contains('bg-muted')).toBe(true)
   })
+
+  it.each(['xs', 'sm', 'icon', 'icon-sm', 'icon-xs'] as const)(
+    'marks the %s button size for the coarse-pointer theme contract',
+    (size) => {
+      render(<Button size={size} aria-label={`${size} 操作`} />)
+
+      const button = screen.getByRole('button', { name: `${size} 操作` })
+      expect(button.classList.contains('ui-btn')).toBe(true)
+      expect(button.classList.contains(`ui-btn-${size}`)).toBe(true)
+      expect(button.classList.contains('touch-manipulation')).toBe(true)
+    },
+  )
 
   it('maps the strongly typed Badge compatibility variant without leaking it to the DOM', () => {
     render(

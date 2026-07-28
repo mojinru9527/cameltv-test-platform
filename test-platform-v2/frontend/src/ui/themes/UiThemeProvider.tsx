@@ -1,77 +1,29 @@
 /**
- * UI 主题 Provider — 管理全局设计系统切换
+ * UI 主题兼容适配器
  *
- * 独立于颜色主题（cyberpunk/apple/clay/xlab/liquid-glass），
- * 控制是否启用"黑曜流界"设计系统。
+ * 主题状态由 ThemeProvider 统一管理。此模块只保留旧消费者所需的
+ * useUiTheme API，不再拥有独立状态、存储或 DOM 属性。
  */
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react'
+import { type ReactNode } from 'react'
+import { useTheme } from '@/components/theme-provider'
 
 export type UiThemeId = 'default' | 'obsidian-flow'
 
-interface UiThemeContextValue {
-  uiTheme: UiThemeId
-  setUiTheme: (theme: UiThemeId) => void
-}
-
-const UiThemeContext = createContext<UiThemeContextValue>({
-  uiTheme: 'default',
-  setUiTheme: () => {},
-})
-
-const STORAGE_KEY = 'cameltv-ui-theme'
-
-function getStoredUiTheme(): UiThemeId {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === 'obsidian-flow' || stored === 'default') return stored
-  } catch {
-    // localStorage 不可用时回退
-  }
-  // 新用户默认使用黑曜流界
-  return 'obsidian-flow'
-}
-
-function applyUiTheme(theme: UiThemeId) {
-  const root = document.documentElement
-  if (theme === 'obsidian-flow') {
-    root.setAttribute('data-ui-theme', 'obsidian-flow')
-    root.classList.add('ui-obsidian-flow')
-  } else {
-    root.removeAttribute('data-ui-theme')
-    root.classList.remove('ui-obsidian-flow')
-  }
-}
-
 export function UiThemeProvider({ children }: { children: ReactNode }) {
-  const [uiTheme, setUiThemeState] = useState<UiThemeId>(getStoredUiTheme)
-
-  useEffect(() => {
-    applyUiTheme(uiTheme)
-    try {
-      localStorage.setItem(STORAGE_KEY, uiTheme)
-    } catch {
-      // ignore
-    }
-  }, [uiTheme])
-
-  const setUiTheme = (theme: UiThemeId) => {
-    setUiThemeState(theme)
-  }
-
-  return (
-    <UiThemeContext.Provider value={{ uiTheme, setUiTheme }}>
-      {children}
-    </UiThemeContext.Provider>
-  )
+  return <>{children}</>
 }
 
 export function useUiTheme() {
-  return useContext(UiThemeContext)
+  const { colorTheme, setColorTheme } = useTheme()
+
+  return {
+    uiTheme: colorTheme === 'obsidian-flow' ? 'obsidian-flow' : 'default',
+    setUiTheme: (theme: UiThemeId) => {
+      setColorTheme(theme === 'obsidian-flow' ? 'obsidian-flow' : 'cyberpunk')
+    },
+  } satisfies {
+    uiTheme: UiThemeId
+    setUiTheme: (theme: UiThemeId) => void
+  }
 }
