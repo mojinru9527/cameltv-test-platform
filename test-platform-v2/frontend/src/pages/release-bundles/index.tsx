@@ -7,9 +7,9 @@ import {
   fetchReleaseBundles,
 } from '@/api/releaseBundles'
 import type { ReleaseBundleListItem } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
@@ -36,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/ui'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import {
@@ -210,7 +210,7 @@ export default function ReleaseBundlesPage() {
             </div>
             <DialogFooter>
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setCreateOpen(false)}
                 disabled={creating}
               >

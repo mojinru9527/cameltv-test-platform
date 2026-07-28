@@ -1,3 +1,4 @@
+import { Badge, Button, useObsidianPage } from '@/ui'
 import { useState } from 'react'
 import { useChartColors } from '@/hooks/use-chart-colors'
 import { useForm } from 'react-hook-form'
@@ -7,12 +8,10 @@ import { toast } from 'sonner'
 import { createReport, deleteReport, exportReportUrl, fetchReport, fetchReports, fetchTrends, type TrendsData } from '@/api/report'
 import { fetchTemplates, type ReportTemplate } from '@/api/reportTemplate'
 import { fetchPlans } from '@/api/testplan'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -67,7 +66,6 @@ import { SkeletonText } from '@/components/ui/skeleton'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { ErrorState, AsyncState } from '@/components/state'
-import { useObsidianPage } from '@/ui'
 import StatCard from '@/components/StatCard'
 import {
   ResponsiveContainer,
@@ -184,13 +182,13 @@ export default function ReportPage() {
     { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[120px]', render: (r) => (
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="outline" onClick={() => openDetail(r.id)} data-icon="inline-start">
+        <Button size="sm" variant="secondary" onClick={() => openDetail(r.id)} data-icon="inline-start">
           <Eye />
           查看
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button size="sm" variant="destructive" data-icon="inline-start">
+            <Button size="sm" variant="danger" data-icon="inline-start">
               <Trash2 />
             </Button>
           </AlertDialogTrigger>
@@ -415,7 +413,7 @@ export default function ReportPage() {
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <Button variant="outline" size="sm" onClick={handleSearch} data-icon="inline-start">
+            <Button variant="secondary" size="sm" onClick={handleSearch} data-icon="inline-start">
               <Search />
               搜索
             </Button>
@@ -488,7 +486,7 @@ export default function ReportPage() {
             </div>
           </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setCreateOpen(false)}>取消</Button>
             <Button disabled={creating} onClick={() => handleSubmit(doCreate)()} data-icon="inline-start">
               {creating && <Loader2 className="animate-spin" />}
               生成
@@ -558,7 +556,7 @@ export default function ReportPage() {
               <div className="flex justify-end">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" data-icon="inline-start">
+                    <Button variant="secondary" size="sm" data-icon="inline-start">
                       <Download />
                       导出
                     </Button>

@@ -7,8 +7,8 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import {
   Card,
   CardContent,

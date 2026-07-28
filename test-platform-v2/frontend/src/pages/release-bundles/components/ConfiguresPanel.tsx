@@ -8,7 +8,7 @@ import {
   deleteAdminLink,
 } from '@/api/requirementModules'
 import type { ModuleAdminLinkOut } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -105,7 +105,7 @@ export default function ConfiguresPanel({ bundleId }: ConfiguresPanelProps) {
           </div>
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={handleSuggest}
               disabled={suggesting}
@@ -114,7 +114,7 @@ export default function ConfiguresPanel({ bundleId }: ConfiguresPanelProps) {
               {suggesting ? '推荐中...' : 'AI 推荐'}
             </Button>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={handleConfirm}
               disabled={confirming || links.length === 0}
@@ -135,7 +135,7 @@ export default function ConfiguresPanel({ bundleId }: ConfiguresPanelProps) {
         ) : error ? (
           <div className="text-center py-4">
             <p className="text-sm text-destructive mb-2">{error}</p>
-            <Button variant="outline" size="sm" onClick={loadLinks}>
+            <Button variant="secondary" size="sm" onClick={loadLinks}>
               <RefreshCw className="h-3 w-3 mr-1" /> 重试
             </Button>
           </div>

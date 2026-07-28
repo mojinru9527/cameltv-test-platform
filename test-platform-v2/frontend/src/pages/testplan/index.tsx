@@ -1,10 +1,9 @@
+import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
-import { Badge, type BadgeTone } from '@/ui'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/ui'
 import {
   Select,
   SelectContent,
@@ -32,7 +31,6 @@ import { deletePlan, fetchPlans } from '@/api/testplan'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
-import { useObsidianPage } from '@/ui'
 import PlanDrawer from './PlanDrawer'
 
 const STATUS_MAP: Record<string, { tone: BadgeTone; className?: string; label: string }> = {
@@ -202,7 +200,7 @@ export default function TestPlanPage() {
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
-            <Button size="sm" variant="outline" onClick={refetch}>
+            <Button size="sm" variant="secondary" onClick={refetch}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
             </Button>
             <div className="flex-1" />

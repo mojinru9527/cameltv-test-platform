@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { createUser, deleteUser, fetchRoles, fetchUsers, updateUser } from '@/api/system'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -151,10 +151,10 @@ export default function UsersTab() {
     )},
     { key: 'actions', header: '操作', headerClassName: 'w-[140px]', render: (u) => (
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="outline" onClick={() => openEdit(u)}>编辑</Button>
+        <Button size="sm" variant="secondary" onClick={() => openEdit(u)}>编辑</Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button size="sm" variant="destructive">删除</Button>
+            <Button size="sm" variant="danger">删除</Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -287,7 +287,7 @@ export default function UsersTab() {
             </div>
           </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setDrawer(false); setEditing(null) }}>
+            <Button variant="secondary" onClick={() => { setDrawer(false); setEditing(null) }}>
               取消
             </Button>
             <Button disabled={saving} onClick={() => handleSubmit(doSave)()} data-icon="inline-start">

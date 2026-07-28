@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -133,7 +133,7 @@ export default function IterationTab() {
           </span>
         </h3>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <Button variant="secondary" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`size-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
             刷新
           </Button>
@@ -349,7 +349,7 @@ export default function IterationTab() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setCreateOpen(false)}>取消</Button>
             <Button onClick={handleCreate} disabled={creating || !newName.trim()}>
               {creating ? '创建中…' : '创建'}
             </Button>

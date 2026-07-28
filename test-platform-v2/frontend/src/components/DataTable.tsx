@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { ArrowUp, ArrowDown, Columns2 } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,

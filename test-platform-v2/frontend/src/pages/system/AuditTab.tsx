@@ -1,6 +1,6 @@
 import { Search, RotateCcw, Download } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { AsyncState } from '@/components/state'
@@ -156,10 +156,10 @@ export default function AuditTab() {
                 <Search className="size-4" />
                 搜索
               </Button>
-              <Button size="sm" variant="outline" onClick={handleRefresh}>
+              <Button size="sm" variant="secondary" onClick={handleRefresh}>
                 <RotateCcw className="size-4" />
               </Button>
-              <Button size="sm" variant="outline" onClick={handleExport}>
+              <Button size="sm" variant="secondary" onClick={handleExport}>
                 <Download className="size-4 mr-1" />
                 导出 CSV
               </Button>

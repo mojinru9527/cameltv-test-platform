@@ -1,12 +1,11 @@
+import { Button, ObsidianWorkbench, useUiTheme } from '@/ui'
 import { BarChart3, Bug, Calendar, FileCheck, PieChart, RotateCcw, Percent, Building2, TrendingUp, AlertTriangle } from '@/lib/icons'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMemo, useState } from 'react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { useUiTheme, ObsidianWorkbench } from '@/ui'
 import type { WorkbenchMetric } from '@/ui'
 import {
   BarChart,
@@ -193,7 +192,7 @@ export default function Workbench() {
                         return (
                           <Button
                             key={key}
-                            variant={preset === key ? 'default' : 'ghost'}
+                            variant={preset === key ? 'primary' : 'ghost'}
                             size="sm"
                             className="h-7"
                             onClick={() => handlePresetChange(key)}
@@ -459,7 +458,7 @@ export default function Workbench() {
         <span className="text-sm text-muted-foreground">
           {user?.nickname || user?.username} / {current?.name || '未选择项目'}
         </span>
-        <Button size="sm" variant="outline" onClick={refetch} disabled={isLoading || isRefetching}>
+        <Button size="sm" variant="secondary" onClick={refetch} disabled={isLoading || isRefetching}>
           <RotateCcw className="size-4" />
           刷新
         </Button>

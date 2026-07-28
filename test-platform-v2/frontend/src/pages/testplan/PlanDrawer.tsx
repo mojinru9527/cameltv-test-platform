@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -237,7 +237,7 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline" onClick={onClose}>取消</Button>
+            <Button variant="secondary" onClick={onClose}>取消</Button>
           </DialogClose>
           <Button disabled={saving} onClick={handleSubmit(doSave)}>
             {saving ? '保存中...' : '保存'}

@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Loader2 } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -209,7 +209,7 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>
+            <Button type="button" variant="secondary" onClick={handleClose}>
               取消
             </Button>
             <Button type="submit" disabled={saving}>

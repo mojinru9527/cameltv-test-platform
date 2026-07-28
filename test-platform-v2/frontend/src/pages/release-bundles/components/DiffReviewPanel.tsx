@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { confirmVersionDiff } from '@/api/releaseBundles'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -315,7 +315,7 @@ export default function DiffReviewPanel({
                             variant={
                               overrides[mod.id]?.action === 'confirm'
                                 ? 'default'
-                                : 'outline'
+                                : 'secondary'
                             }
                             size="sm"
                             className="h-7 text-xs"

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { RefreshCw, XCircle, CheckCircle2, Clock, Loader2, Eye, ChevronDown, ChevronRight, ClipboardCheck } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -65,7 +65,7 @@ export default function TaskTab() {
             <SelectItem value="cancelled">已取消</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={loadTasks} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
+        <Button variant="secondary" onClick={loadTasks} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
         <span className="text-xs text-muted-foreground">{total} 个任务</span>
       </div>
 
@@ -162,7 +162,7 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
         <div className="mt-2 border-t pt-2">
           <div className="flex items-center gap-1 mb-2">
             {(['request', 'response', 'assertions'] as const).map(t => (
-              <Button key={t} size="xs" variant={tab === t ? 'default' : 'ghost'} onClick={() => setTab(t)}>
+              <Button key={t} size="xs" variant={tab === t ? 'primary' : 'ghost'} onClick={() => setTab(t)}>
                 {t === 'request' ? '请求' : t === 'response' ? '响应' : '断言'}
               </Button>
             ))}

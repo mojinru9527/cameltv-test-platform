@@ -3,9 +3,9 @@ import { toast } from 'sonner'
 import {
   Card, CardContent, CardFooter, CardHeader, CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/ui'
 import {
   cancelLanhuEvidenceJob,
   deleteLanhuEvidenceJob,
@@ -289,7 +289,7 @@ export default function EvidenceTaskPanel({
                     {isFailed && (
                       <Button
                         size="xs"
-                        variant="outline"
+                        variant="secondary"
                         className="min-h-11 px-2 text-[10px] sm:min-h-6"
                         disabled={actionLoading === job.id}
                         onClick={() => handleRetry(job.id)}
@@ -323,7 +323,7 @@ export default function EvidenceTaskPanel({
                       return hasDocId ? (
                         <Button
                           size="xs"
-                          variant="outline"
+                          variant="secondary"
                           className="min-h-11 px-2 text-[10px] sm:min-h-6"
                           onClick={() => onViewExtraction(job)}
                         >
@@ -335,7 +335,7 @@ export default function EvidenceTaskPanel({
                     {isDone && onViewScreenshots && (
                       <Button
                         size="xs"
-                        variant="outline"
+                        variant="secondary"
                         className="min-h-11 px-2 text-[10px] sm:min-h-6"
                         onClick={() => onViewScreenshots(job)}
                       >
@@ -366,7 +366,7 @@ export default function EvidenceTaskPanel({
       <CardFooter className="border-t pt-2 pb-2 shrink-0">
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           className="min-h-11 w-full text-xs sm:min-h-7"
           onClick={onNewTask}
         >

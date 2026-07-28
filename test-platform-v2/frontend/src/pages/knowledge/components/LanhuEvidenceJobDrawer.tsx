@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -296,7 +296,7 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
                       <Button
                         key={asset.id}
                         size="sm"
-                        variant="outline"
+                        variant="secondary"
                         disabled={downloadingAssetId === asset.id}
                         onClick={() => onDownload(asset)}
                       >
@@ -328,7 +328,7 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
                         && p.review_status !== 'approved' && (
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="secondary"
                             className="shrink-0"
                             onClick={() => {
                               setReviewPage(p)
@@ -346,8 +346,8 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
           )}
 
           <SheetFooter className="gap-2">
-            <Button variant="outline" onClick={onCancel}>取消任务</Button>
-            <Button variant="outline" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>删除任务</Button>
+            <Button variant="secondary" onClick={onCancel}>取消任务</Button>
+            <Button variant="secondary" className="text-destructive hover:bg-destructive/10" onClick={onDelete}>删除任务</Button>
             {hasRequestedImport && !importCompleted
               && hasPerm('lanhu_evidence:import') && (
               <div className="space-y-2">
@@ -356,7 +356,7 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
                     ⚠️ 证据包存在质量问题（缺截图/截断/缺文本/未审 OCR 页），导入结果可能不完整
                   </div>
                 )}
-                <Button variant="outline" disabled={importing} onClick={onImport}>
+                <Button variant="secondary" disabled={importing} onClick={onImport}>
                   {importing && <Loader2 className="size-4 animate-spin" />}
                   执行导入
                 </Button>
@@ -395,7 +395,7 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
+              variant="secondary"
               disabled={reviewing}
               onClick={() => {
                 setReviewPage(null)

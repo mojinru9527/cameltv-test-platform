@@ -1,3 +1,4 @@
+import { Badge, Button } from '@/ui'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -12,8 +13,6 @@ import {
   Send,
   Trash2,
 } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
@@ -196,7 +195,7 @@ export default function DefectDetailSheet({
                       <Button
                         key={toStatus}
                         size="xs"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => openTransition(toStatus)}
                       >
                         <ArrowRight className="size-3 mr-1" />
@@ -241,7 +240,7 @@ export default function DefectDetailSheet({
                 <div className="flex items-center gap-2 mt-4 pt-3 border-t">
                   <span className="text-xs text-muted-foreground">同步:</span>
                   <Button
-                    variant="outline" size="sm"
+                    variant="secondary" size="sm"
                     onClick={async () => {
                       const iid = prompt('请输入集成配置 ID (可在集成配置页查看):')
                       if (!iid) return
@@ -256,7 +255,7 @@ export default function DefectDetailSheet({
                   </Button>
                   {detail.external_id && (
                     <Button
-                      variant="outline" size="sm"
+                      variant="secondary" size="sm"
                       onClick={async () => {
                         const iid = prompt('请输入集成配置 ID:')
                         if (!iid) return
@@ -343,7 +342,7 @@ export default function DefectDetailSheet({
                 />
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                 >

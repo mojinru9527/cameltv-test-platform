@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -106,7 +106,7 @@ export default function WikiTab() {
         </div>
         <span className="ml-2 text-xs text-muted-foreground">来源 {raws.length} · 页面 {pages.length}</span>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8" onClick={load} disabled={loading}>
+          <Button variant="secondary" size="sm" className="h-8" onClick={load} disabled={loading}>
             {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           </Button>
           {canManage && (
@@ -210,7 +210,7 @@ export default function WikiTab() {
                   <span className="text-xs text-muted-foreground">v{selected.version}</span>
                   {canApprove && selected.review_status !== 'approved' && (
                     <div className="ml-auto flex gap-1.5">
-                      <Button size="sm" variant="outline" className="h-7" onClick={() => review(false)}>驳回</Button>
+                      <Button size="sm" variant="secondary" className="h-7" onClick={() => review(false)}>驳回</Button>
                       <Button size="sm" className="h-7" onClick={() => review(true)}>
                         <CheckCircle2 className="size-3.5 mr-1" /> 通过
                       </Button>

@@ -1,9 +1,8 @@
+import { Badge, Button, useObsidianPage } from '@/ui'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/ui'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -44,7 +43,6 @@ import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDe
 import { formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { useObsidianPage } from '@/ui'
 import CaseDrawer from './CaseDrawer'
 import VersionDialog from './VersionDialog'
 import type { TestCaseVersion } from '@/types'
@@ -370,7 +368,7 @@ export default function TestCasePage() {
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
-            <Button size="sm" variant="outline" onClick={() => {
+            <Button size="sm" variant="secondary" onClick={() => {
               setSelDomain(''); setSelModule(''); setPriority(''); setKeyword(''); setPage(1)
             }}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
@@ -397,11 +395,11 @@ export default function TestCasePage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button size="sm" variant="outline" onClick={doBatchUpdate} disabled={batchUpdating || !batchPriority}>
+              <Button size="sm" variant="secondary" onClick={doBatchUpdate} disabled={batchUpdating || !batchPriority}>
                 {batchUpdating ? '更新中...' : '批量更新'}
               </Button>
               <div className="flex-1" />
-              <Button size="sm" variant="destructive" onClick={doBatchDelete} disabled={batchDeleting}>
+              <Button size="sm" variant="danger" onClick={doBatchDelete} disabled={batchDeleting}>
                 <Trash2 className="size-3.5" data-icon="inline-start" />
                 {batchDeleting ? '删除中...' : `批量删除 (${selected.size})`}
               </Button>

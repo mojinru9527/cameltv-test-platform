@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Plus, Search, FileUp, RefreshCw, FlaskConical, Zap, ChevronLeft, ChevronRight, ChevronDown, FolderOpen, ArrowRight } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -296,7 +296,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
           <Search className="size-4 text-muted-foreground shrink-0" />
           <Input placeholder="搜索服务名、模块名、路径..." value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
         </div>
-        <Button variant="outline" onClick={loadEndpoints} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
+        <Button variant="secondary" onClick={loadEndpoints} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
         <Button onClick={onOpenImport} data-icon="inline-start"><FileUp className="size-4" /> 导入接口</Button>
       </div>
 
@@ -353,8 +353,8 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
             <div className="flex items-center justify-between mt-4">
               <span className="text-xs text-muted-foreground">第 {page}/{Math.ceil(total / 20)} 页</span>
               <div className="flex gap-1">
-                <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
-                <Button size="sm" variant="outline" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>下一页</Button>
+                <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>上一页</Button>
+                <Button size="sm" variant="secondary" disabled={page * 20 >= total} onClick={() => setPage(p => p + 1)}>下一页</Button>
               </div>
             </div>
           )}

@@ -1,3 +1,4 @@
+import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
@@ -15,14 +16,12 @@ import type {
   RequirementDocumentBrief,
   RequirementCoverage,
 } from '@/types'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Badge, type BadgeTone } from '@/ui'
+import { Input } from '@/ui'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -39,7 +38,6 @@ import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
-import { useObsidianPage } from '@/ui'
 import AiResultModal from './AiResultModal'
 import EvidenceTaskPanel from './components/EvidenceTaskPanel'
 import VersionCompare from './components/VersionCompare'
@@ -464,12 +462,12 @@ export default function RequirementPage() {
         {/* Header */}
         <PageHeader title="需求文档" icon={BookOpen} description="上传 PRD / Excel / 蓝湖链接，AI 自动生成测试用例。">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置">
+          <Button variant="secondary" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置">
             <Settings className="size-4" />
             蓝湖设置
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={refetch}
             disabled={isLoading || isRefetching || isMetadataLoading || isMetadataRefetching}
@@ -619,7 +617,7 @@ export default function RequirementPage() {
                   </Badge>
                 )}
               </CardTitle>
-              <Button variant="link" size="sm" onClick={() => { setActiveDocId(null); setPreviewExpanded(false) }}>
+              <Button variant="ghost" size="sm" onClick={() => { setActiveDocId(null); setPreviewExpanded(false) }}>
                 收起
               </Button>
             </div>
@@ -633,7 +631,7 @@ export default function RequirementPage() {
             ) : isDetailError ? (
               <div className="flex min-h-[100px] flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
                 <span>{detailError?.message || '文档详情加载失败'}</span>
-                <Button variant="outline" size="sm" onClick={refetchDetail}>重试加载</Button>
+                <Button variant="secondary" size="sm" onClick={refetchDetail}>重试加载</Button>
               </div>
             ) : (
               <div className={cn(
@@ -645,7 +643,7 @@ export default function RequirementPage() {
             )}
             {activeDoc?.content && activeDoc.content.length > 400 && (
               <Button
-                variant="link"
+                variant="ghost"
                 size="sm"
                 className="mt-1"
                 onClick={() => setPreviewExpanded(!previewExpanded)}
@@ -840,7 +838,7 @@ export default function RequirementPage() {
                                 {r.extraction_status === 'confirmed' ? (
                                   <Button
                                     size="sm"
-                                    variant="default"
+                                    variant="primary"
                                     disabled={generating && generatingDocId === r.id}
                                     onClick={() => handleGenerate(r.id, true)}
                                   >
@@ -854,7 +852,7 @@ export default function RequirementPage() {
                                 ) : r.extraction_status === 'pending_review' ? (
                                   <Button
                                     size="sm"
-                                    variant="default"
+                                    variant="primary"
                                     disabled={extracting && extractingDocId === r.id}
                                     onClick={() => handleExtract(r.id)}
                                   >
@@ -868,7 +866,7 @@ export default function RequirementPage() {
                                 ) : (
                                   <Button
                                     size="sm"
-                                    variant="default"
+                                    variant="primary"
                                     disabled={extracting && extractingDocId === r.id}
                                     onClick={() => handleExtract(r.id)}
                                   >
@@ -884,7 +882,7 @@ export default function RequirementPage() {
                                 {/* Stage 2: Direct AI Generation (backward compat) */}
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   disabled={
                                     r.extraction_status === 'confirmed'
                                       ? extracting && extractingDocId === r.id
@@ -917,7 +915,7 @@ export default function RequirementPage() {
                                       return (
                                         <Button
                                           size="sm"
-                                          variant="outline"
+                                          variant="secondary"
                                           onClick={() => {
                                             setVersionDiffData(diffData)
                                             setShowVersionCompare(true)
@@ -937,7 +935,7 @@ export default function RequirementPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   disabled={generating && generatingDocId === r.id}
                                   onClick={() => handleGenerate(r.id, false)}
                                 >
@@ -959,7 +957,7 @@ export default function RequirementPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   onClick={() => handleGenerate(r.id, false)}
                                 >
                                   <Sparkles className="size-3.5" />
@@ -974,7 +972,7 @@ export default function RequirementPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   onClick={() => handleViewCases(r.id)}
                                 >
                                   <Eye className="size-3.5" />
@@ -982,7 +980,7 @@ export default function RequirementPage() {
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   onClick={() => navigate(`/requirement/${r.id}/review`)}
                                 >
                                   <Layers className="size-3.5" />
@@ -992,7 +990,7 @@ export default function RequirementPage() {
                             )}
                             <Button
                               size="sm"
-                              variant="destructive"
+                              variant="danger"
                               onClick={() => handleDelete(r)}
                             >
                               <Trash2 className="size-3.5" />
@@ -1186,7 +1184,7 @@ export default function RequirementPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setLanhuSettingsOpen(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setLanhuSettingsOpen(false)}>取消</Button>
             <Button onClick={saveLanhuSettings}>保存配置</Button>
           </DialogFooter>
         </DialogContent>

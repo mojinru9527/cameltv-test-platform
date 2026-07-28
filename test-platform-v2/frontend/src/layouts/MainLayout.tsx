@@ -30,7 +30,7 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import CommandPalette from '@/components/CommandPalette'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import {
   Select,
   SelectContent,

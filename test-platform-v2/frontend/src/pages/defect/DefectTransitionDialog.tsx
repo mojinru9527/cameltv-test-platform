@@ -1,7 +1,6 @@
+import { Badge, Button } from '@/ui'
 import { useState } from 'react'
 import { ArrowRight, Loader2 } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
@@ -76,7 +75,7 @@ export default function DefectTransitionDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose}>取消</Button>
+          <Button variant="secondary" onClick={handleClose}>取消</Button>
           <Button onClick={handleConfirm} disabled={loading}>
             {loading && <Loader2 className="size-4 animate-spin mr-1" />}
             确认流转

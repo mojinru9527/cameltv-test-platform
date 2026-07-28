@@ -1,3 +1,4 @@
+import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
 /**
  * Environment & Variable management page.
  * E1: Project-level environments (dev/test/staging/prod) + variables with optional encryption.
@@ -12,9 +13,7 @@ import {
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge, useObsidianPage, type BadgeTone } from '@/ui'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -250,7 +249,7 @@ export default function EnvironmentPage() {
               {envList.map((env) => (
                 <Button
                   key={env.id}
-                  variant={selectedEnv?.id === env.id ? 'default' : 'outline'}
+                  variant={selectedEnv?.id === env.id ? 'default' : 'secondary'}
                   size="sm"
                   onClick={() => setSelectedEnv(env)}
                 >
@@ -288,7 +287,7 @@ export default function EnvironmentPage() {
                 <CardContent>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">变量列表</h3>
-                    <Button variant="outline" size="sm" onClick={openVarCreate}>
+                    <Button variant="secondary" size="sm" onClick={openVarCreate}>
                       <Plus className="size-3.5" data-icon="inline-start" />添加变量
                     </Button>
                   </div>
@@ -383,7 +382,7 @@ export default function EnvironmentPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEnvDialog(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setEnvDialog(false)}>取消</Button>
             <Button onClick={handleEnvSave}>{editEnv ? '保存' : '创建'}</Button>
           </DialogFooter>
         </DialogContent>
@@ -431,7 +430,7 @@ export default function EnvironmentPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setVarDialog(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setVarDialog(false)}>取消</Button>
             <Button onClick={handleVarSave}>{editVar ? '保存' : '添加'}</Button>
           </DialogFooter>
         </DialogContent>

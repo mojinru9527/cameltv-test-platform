@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/ui'
 import {
   Select,
   SelectContent,
@@ -216,7 +216,7 @@ export default function PlanDetail() {
         <div className="flex items-center gap-2">
           <Button
             size="sm"
-            variant="default"
+            variant="primary"
             onClick={doAutoExecute}
             disabled={autoExecuting || !plan.cases?.length}
           >
@@ -229,17 +229,17 @@ export default function PlanDetail() {
           {plan.status === 'active' && (
             <Button size="sm" onClick={() => doUpdateStatus('completed')}>标记完成</Button>
           )}
-          <Button size="sm" variant="outline" onClick={load}>
+          <Button size="sm" variant="secondary" onClick={load}>
             <RotateCcw className="size-3.5" data-icon="inline-start" />
           </Button>
-          <Button size="sm" variant="outline" disabled={execAllLoading} onClick={doExecuteAll}>
+          <Button size="sm" variant="secondary" disabled={execAllLoading} onClick={doExecuteAll}>
             <Play className="size-3.5" data-icon="inline-start" />
             {execAllLoading ? '执行中...' : '一键执行'}
           </Button>
-          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>编辑</Button>
+          <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>编辑</Button>
           <AlertDialog open={deletePlanOpen} onOpenChange={setDeletePlanOpen}>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="destructive">删除</Button>
+              <Button size="sm" variant="danger">删除</Button>
             </AlertDialogTrigger>
             <AlertDialogContent size="sm">
               <AlertDialogHeader>
@@ -531,7 +531,7 @@ export default function PlanDetail() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setExecModal({ open: false, pcase: null })}>取消</Button>
+            <Button variant="secondary" onClick={() => setExecModal({ open: false, pcase: null })}>取消</Button>
             <Button disabled={execSaving} onClick={doExecute}>
               {execSaving ? '保存中...' : '确认'}
             </Button>

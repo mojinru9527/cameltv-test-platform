@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { confirmExtraction, generateTestCases } from '@/api/requirement'
 import type { FeatureExtractionResult, TestModule, AIGenerateResult } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -322,7 +322,7 @@ export default function ExtractionModal({
                   关闭
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => setRejectMode(true)}
                   disabled={submitting}
                 >
@@ -351,7 +351,7 @@ export default function ExtractionModal({
                   取消
                 </Button>
                 <Button
-                  variant="destructive"
+                  variant="danger"
                   onClick={handleReject}
                   disabled={submitting || !rejectNotes.trim()}
                 >

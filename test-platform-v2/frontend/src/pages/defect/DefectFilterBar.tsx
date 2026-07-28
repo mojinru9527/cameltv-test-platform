@@ -1,5 +1,5 @@
 import { Plus, RotateCcw } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import {
   Select,
   SelectContent,
@@ -74,7 +74,7 @@ export default function DefectFilterBar({
         clearable
       />
 
-      <Button variant="outline" size="default" onClick={onRefresh}>
+      <Button variant="secondary" size="md" onClick={onRefresh}>
         <RotateCcw className="size-4" />
         刷新
       </Button>

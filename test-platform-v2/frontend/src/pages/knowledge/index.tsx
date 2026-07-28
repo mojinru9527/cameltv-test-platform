@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Input } from '@/ui'
+import { Button } from '@/ui'
 import {
   Select,
   SelectContent,

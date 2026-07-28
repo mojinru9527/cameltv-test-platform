@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { fetchModule } from '@/api/requirementModules'
 import { fetchGlobalNav } from '@/api/requirementModules'
 import type { ModuleTreeNode, GlobalNavItemOut } from '@/types'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -191,7 +191,7 @@ export default function PageInteractionPanel({
               {onAnnotate && page && (
                 <div className="pt-2">
                   <Button
-                    variant="outline"
+                    variant="secondary"
                     className="w-full"
                     onClick={() => onAnnotate(page)}
                   >
