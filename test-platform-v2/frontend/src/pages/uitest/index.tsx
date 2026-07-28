@@ -385,7 +385,7 @@ export default function UiTestPage() {
                 onChange={(e) => setFKeyword(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') load() }}
               />
-              <Button size="icon-sm" variant="ghost" onClick={() => load()}>
+              <Button size="icon-sm" variant="ghost" onClick={() => load()} aria-label="搜索 UI 测试任务">
                 <Search className="size-4" />
               </Button>
             </div>

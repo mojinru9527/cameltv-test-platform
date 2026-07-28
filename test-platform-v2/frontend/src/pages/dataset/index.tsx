@@ -19,6 +19,7 @@ import { Badge } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
+import ConfirmActionDialog from '@/components/ConfirmActionDialog'
 import { AsyncState } from '@/components/state/AsyncState'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -35,6 +36,8 @@ export default function DatasetPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [detailId, setDetailId] = useState<number | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<DatasetListItem | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   // Form state
   const [formName, setFormName] = useState('')
@@ -139,14 +142,18 @@ export default function DatasetPage() {
   }
 
   // ── Delete ──
-  const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此数据集？')) return
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
     try {
-      await deleteDataset(id)
+      await deleteDataset(deleteTarget.id)
       toast.success('已删除')
+      setDeleteTarget(null)
       refetch()
     } catch {
       toast.error('删除失败')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -214,13 +221,13 @@ export default function DatasetPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleViewDetail(item.id)} title="查看详情">
+                          <Button variant="ghost" size="icon" onClick={() => handleViewDetail(item.id)} aria-label={`查看数据集 ${item.name} 详情`}>
                             <Eye className="size-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(item.id)} title="编辑">
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(item.id)} aria-label={`编辑数据集 ${item.name}`}>
                             <FileText className="size-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} title="删除">
+                          <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)} aria-label={`删除数据集 ${item.name}`}>
                             <Trash2 className="size-4 text-red-500" />
                           </Button>
                         </div>
@@ -432,6 +439,14 @@ export default function DatasetPage() {
           </AsyncState>
         </DialogContent>
       </Dialog>
+      <ConfirmActionDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteTarget(null) }}
+        title="删除数据集"
+        description={`确定删除数据集「${deleteTarget?.name ?? ''}」？此操作无法撤销。`}
+        pending={deleting}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

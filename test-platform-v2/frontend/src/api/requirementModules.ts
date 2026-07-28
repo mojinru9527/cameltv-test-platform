@@ -26,16 +26,17 @@ export async function fetchModules(params?: {
   return api.get('/requirement-modules', { params })
 }
 
-export async function fetchModule(id: number): Promise<RequirementModuleOut> {
-  return api.get(`/requirement-modules/${id}`)
+export async function fetchModule(id: number, signal?: AbortSignal): Promise<RequirementModuleOut> {
+  return api.get(`/requirement-modules/${id}`, { signal })
 }
 
 // ── Module Tree ──
 
 export async function fetchModuleTree(
   bundleId: number,
+  signal?: AbortSignal,
 ): Promise<ModuleTreeResponse> {
-  return api.get(`/requirement-modules/bundle/${bundleId}/tree`)
+  return api.get(`/requirement-modules/bundle/${bundleId}/tree`, { signal })
 }
 
 export async function fetchModuleChildren(
@@ -112,8 +113,9 @@ export async function classifyGlobalNav(
 
 export async function fetchGlobalNav(
   bundleId: number,
+  signal?: AbortSignal,
 ): Promise<GlobalNavItemOut[]> {
-  return api.get(`/requirement-modules/bundle/${bundleId}/global-nav`)
+  return api.get(`/requirement-modules/bundle/${bundleId}/global-nav`, { signal })
 }
 
 // ── Configures (Admin Links) ──

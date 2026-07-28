@@ -84,7 +84,7 @@ export default function SphereTab() {
 
   // Fetch bundle list
   const { data: bundlePage } = useApi(
-    (signal) => fetchReleaseBundles({ page_size: 200 }),
+    (signal) => fetchReleaseBundles({ page_size: 200 }, signal),
     [],
   )
 
@@ -99,7 +99,7 @@ export default function SphereTab() {
       fetchGraphHierarchy({
         release_bundle_id: bundleId,
         max_depth: maxDepth,
-      }),
+      }, signal),
     [bundleId, maxDepth],
   )
 
@@ -231,7 +231,7 @@ export default function SphereTab() {
             setBundleId(v === 'all' ? undefined : Number(v))
           }
         >
-          <SelectTrigger className="w-[280px] h-9 text-sm">
+          <SelectTrigger className="h-9 w-full text-sm sm:w-[280px]" aria-label="选择知识球发布包">
             <SelectValue placeholder="选择发布包（全部）" />
           </SelectTrigger>
           <SelectContent>
@@ -248,7 +248,7 @@ export default function SphereTab() {
           value={String(maxDepth)}
           onValueChange={(v) => setMaxDepth(Number(v))}
         >
-          <SelectTrigger className="w-[110px] h-9 text-sm">
+          <SelectTrigger className="h-9 w-full text-sm sm:w-[110px]" aria-label="选择知识球深度">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -264,11 +264,11 @@ export default function SphereTab() {
           value={viewMode}
           onValueChange={(v: string) => v && setViewMode(v as 'graph' | 'list')}
         >
-          <ToggleGroupItem value="graph" size="sm">
-            <GitGraph className="h-4 w-4 mr-1" /> 图谱
+          <ToggleGroupItem value="graph" size="sm" aria-label="图谱视图">
+            <GitGraph className="h-4 w-4 mr-1" aria-hidden="true" /> 图谱
           </ToggleGroupItem>
-          <ToggleGroupItem value="list" size="sm">
-            <List className="h-4 w-4 mr-1" /> 列表
+          <ToggleGroupItem value="list" size="sm" aria-label="列表视图">
+            <List className="h-4 w-4 mr-1" aria-hidden="true" /> 列表
           </ToggleGroupItem>
         </ToggleGroup>
 
@@ -283,39 +283,45 @@ export default function SphereTab() {
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-xs text-muted-foreground mr-1">边筛选:</span>
           {relationGroups.map((group) => (
-            <Badge
+            <button
+              type="button"
               key={group}
-              variant={hiddenTypes.has(group) ? 'outline' : 'default'}
-              className="text-xs cursor-pointer"
+              className={cn(
+                'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                hiddenTypes.has(group)
+                  ? 'border-border text-muted-foreground'
+                  : 'border-primary/40 bg-primary/10 text-foreground',
+              )}
               onClick={() => toggleRelationFilter(group)}
+              aria-pressed={!hiddenTypes.has(group)}
             >
               {group}
-            </Badge>
+            </button>
           ))}
         </div>
       )}
 
       {/* Stats */}
       {sphere && (
-        <div className="grid grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
           {Object.entries(sphere.stats ?? {}).map(([key, value]) => (
             <Card key={key}>
               <CardContent className="p-2 text-center">
                 <div className="text-lg font-bold">{String(value)}</div>
-                <div className="text-[10px] text-muted-foreground">{key}</div>
+                <div className="text-xs text-muted-foreground">{key}</div>
               </CardContent>
             </Card>
           ))}
           <Card>
             <CardContent className="p-2 text-center">
               <div className="text-lg font-bold">{sphere.nodes.length}</div>
-              <div className="text-[10px] text-muted-foreground">节点</div>
+              <div className="text-xs text-muted-foreground">节点</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-2 text-center">
               <div className="text-lg font-bold">{sphere.edges.length}</div>
-              <div className="text-[10px] text-muted-foreground">关系</div>
+              <div className="text-xs text-muted-foreground">关系</div>
             </CardContent>
           </Card>
         </div>
@@ -339,19 +345,20 @@ export default function SphereTab() {
 
       {/* Graph View */}
       {sphere && !isLoading && !isError && viewMode === 'graph' && (
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row">
           {/* Graph container */}
           <div className="flex-1">
             <div
               ref={containerRef}
-              className="w-full rounded-lg border bg-card"
-              style={{ height: '550px' }}
+              className="h-[clamp(420px,62vh,550px)] w-full rounded-lg border bg-card"
+              role="img"
+              aria-label={`项目球知识图谱，共 ${sphere.nodes.length} 个节点、${sphere.edges.length} 条关系`}
             />
           </div>
 
           {/* Detail panel */}
           {selectedNode && (
-            <Card className="w-72 shrink-0">
+            <Card className="w-full shrink-0 lg:w-72">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">{selectedNode.name}</CardTitle>
               </CardHeader>
@@ -360,7 +367,7 @@ export default function SphereTab() {
                   <span className="text-muted-foreground">类型</span>
                   <Badge
                     tone="neutral"
-                    className="text-[10px]"
+                      className="text-xs"
                     style={{
                       backgroundColor: (NODE_COLORS[selectedNode.node_type] ?? DEFAULT_NODE_COLOR).background + '20',
                       borderColor: (NODE_COLORS[selectedNode.node_type] ?? DEFAULT_NODE_COLOR).border,
@@ -417,7 +424,12 @@ export default function SphereTab() {
                   关系列表 ({sphere.edges.length})
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0 max-h-[500px] overflow-auto">
+              <CardContent
+                className="max-h-[500px] overflow-auto p-0"
+                role="region"
+                aria-label="知识球关系列表"
+                tabIndex={0}
+              >
                 <div className="divide-y">
                   {sphere.edges.slice(0, 200).map((edge, idx) => {
                     const sourceNode = sphere.nodes.find((n) => n.id === edge.source)
@@ -440,7 +452,7 @@ export default function SphereTab() {
                         <ArrowRight className="size-3 text-muted-foreground shrink-0" />
                         <Badge
                           tone="neutral"
-                          className="text-[9px] px-1 py-0 shrink-0"
+                          className="shrink-0 px-1 py-0 text-xs"
                           style={{ color: edgeCfg.color, borderColor: edgeCfg.color }}
                         >
                           {edge.relation_type}

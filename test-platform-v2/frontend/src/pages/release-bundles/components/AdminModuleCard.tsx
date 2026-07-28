@@ -173,6 +173,7 @@ export default function AdminModuleCard({ bundleId, modules }: AdminModuleCardPr
                         className="h-7 w-7 text-muted-foreground hover:text-destructive"
                         disabled={deleting === link.id}
                         onClick={() => handleDelete(link.id)}
+                        aria-label={`删除关联 ${link.adminName}`}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

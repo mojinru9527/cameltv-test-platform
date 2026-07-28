@@ -4,11 +4,21 @@ import { cn } from '@/lib/utils'
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'icon' | 'icon-sm' | 'icon-xs'
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+type BaseButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant
-  size?: ButtonSize
   loading?: boolean
 }
+
+type IconButtonProps = BaseButtonProps & {
+  size: Extract<ButtonSize, 'icon' | 'icon-sm' | 'icon-xs'>
+  'aria-label': string
+}
+
+type TextButtonProps = BaseButtonProps & {
+  size?: Exclude<ButtonSize, 'icon' | 'icon-sm' | 'icon-xs'>
+}
+
+export type ButtonProps = IconButtonProps | TextButtonProps
 
 const variantClassMap: Record<ButtonVariant, string> = {
   primary: 'ui-btn-primary bg-primary text-primary-foreground hover:bg-primary/90',

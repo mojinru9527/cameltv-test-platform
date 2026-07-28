@@ -388,6 +388,14 @@
 }
 
 @media (pointer: coarse) {
+  [data-theme="obsidian-flow"] button,
+  [data-theme="obsidian-flow"] input,
+  [data-theme="obsidian-flow"] select,
+  [data-theme="obsidian-flow"] textarea,
+  [data-theme="obsidian-flow"] [role="button"],
+  [data-theme="obsidian-flow"] [role="combobox"],
+  [data-theme="obsidian-flow"] [role="menuitem"],
+  [data-theme="obsidian-flow"] [role="option"],
   [data-theme="obsidian-flow"] .ui-btn,
   [data-theme="obsidian-flow"] .ui-btn-xs,
   [data-theme="obsidian-flow"] .ui-btn-sm,
@@ -396,6 +404,34 @@
   [data-theme="obsidian-flow"] .ui-btn-icon-xs {
     min-width: 44px;
     min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  [data-theme="obsidian-flow"] [data-slot="checkbox"] {
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border-color: transparent;
+  }
+
+  [data-theme="obsidian-flow"] [data-slot="checkbox"]::before {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: color-mix(in srgb, var(--color-surface-elevated) 72%, transparent);
+    border: 1px solid var(--color-border-default);
+    border-radius: 4px;
+    content: "";
+  }
+
+  [data-theme="obsidian-flow"] [data-slot="checkbox"][data-state="checked"]::before {
+    background: var(--color-action-primary);
+    border-color: var(--color-action-primary);
+  }
+
+  [data-theme="obsidian-flow"] [data-slot="checkbox-indicator"] {
+    position: relative;
+    z-index: 1;
   }
 }
 

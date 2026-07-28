@@ -337,6 +337,7 @@ export default function EntityTab() {
                               variant="ghost"
                               className="size-8 text-green-600 hover:text-green-700"
                               onClick={(e) => { e.stopPropagation(); handleApprove(rel.id) }}
+                              aria-label={`通过关系 ${rel.relation_type || rel.id}`}
                             >
                               <CheckCircle2 className="size-4" />
                             </Button>
@@ -345,6 +346,7 @@ export default function EntityTab() {
                               variant="ghost"
                               className="size-8 text-red-600 hover:text-red-700"
                               onClick={(e) => { e.stopPropagation(); handleReject(rel.id) }}
+                              aria-label={`驳回关系 ${rel.relation_type || rel.id}`}
                             >
                               <XCircle className="size-4" />
                             </Button>

@@ -289,7 +289,7 @@ export default function ApiDebugPanel({
           <div>
             <div className="flex items-center justify-between">
               <Label className="text-[11px] text-muted-foreground">Headers</Label>
-              <Button type="button" size="icon-sm" variant="ghost" onClick={addHeader} title="添加 Header">
+              <Button type="button" size="icon-sm" variant="ghost" onClick={addHeader} aria-label="添加 Header">
                 <Plus className="size-3.5" />
               </Button>
             </div>
@@ -306,7 +306,7 @@ export default function ApiDebugPanel({
                   <Input className="h-8 text-xs" placeholder="Value" value={r.value} aria-label={`Header ${i + 1} 值`}
                     onChange={e => setHeaderRows(prev => prev.map((row, idx) => idx === i ? { ...row, value: e.target.value } : row))}
                   />
-                  <Button type="button" size="icon-sm" variant="ghost" className="text-destructive" onClick={() => removeHeader(i)}>
+                  <Button type="button" size="icon-sm" variant="ghost" className="text-destructive" onClick={() => removeHeader(i)} aria-label={`删除 Header ${i + 1}`}>
                     <Trash2 className="size-3.5" />
                   </Button>
                 </div>

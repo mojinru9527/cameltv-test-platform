@@ -176,7 +176,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
             <Button
               size="icon-sm"
               variant="ghost"
-              title="调试"
+              aria-label={`调试接口 ${ep.summary || ep.path}`}
               onClick={(e) => { e.stopPropagation(); onDebugEndpoint(ep, serviceName) }}
             >
               <FlaskConical className="size-4" />
@@ -185,7 +185,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
           <Button
             size="icon-sm"
             variant="ghost"
-            title="生成用例"
+            aria-label={`为接口 ${ep.summary || ep.path} 生成用例`}
             onClick={(e) => { e.stopPropagation(); handleGenerate(ep) }}
             disabled={generating.has(ep.id)}
           >
