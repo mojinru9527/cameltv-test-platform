@@ -10,7 +10,7 @@ import { fetchPlans } from '@/api/testplan'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import {
@@ -102,19 +102,19 @@ import {
 } from '@/lib/icons'
 
 // ── Status config ──
-const STATUS_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  pass: { label: 'pass', icon: CheckCircle2, color: 'text-green-500', variant: 'default' },
-  fail: { label: 'fail', icon: XCircle, color: 'text-red-500', variant: 'destructive' },
-  skip: { label: 'skip', icon: MinusCircle, color: 'text-yellow-500', variant: 'secondary' },
-  block: { label: 'block', icon: StopCircle, color: 'text-muted-foreground', variant: 'outline' },
-  pending: { label: 'pending', icon: Clock, color: 'text-muted-foreground', variant: 'outline' },
+const STATUS_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string; tone: 'neutral' | 'danger' }> = {
+  pass: { label: 'pass', icon: CheckCircle2, color: 'text-green-500', tone: 'neutral' },
+  fail: { label: 'fail', icon: XCircle, color: 'text-red-500', tone: 'danger' },
+  skip: { label: 'skip', icon: MinusCircle, color: 'text-yellow-500', tone: 'neutral' },
+  block: { label: 'block', icon: StopCircle, color: 'text-muted-foreground', tone: 'neutral' },
+  pending: { label: 'pending', icon: Clock, color: 'text-muted-foreground', tone: 'neutral' },
 }
 
-const PRIORITY_CONFIG: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
-  P0: 'destructive',
-  P1: 'secondary',
-  P2: 'default',
-  P3: 'outline',
+const PRIORITY_CONFIG: Record<string, 'neutral' | 'danger'> = {
+  P0: 'danger',
+  P1: 'neutral',
+  P2: 'neutral',
+  P3: 'neutral',
 }
 
 // ── Zod schemas ──
@@ -180,7 +180,7 @@ export default function ReportPage() {
     { key: 'report_id', header: '编号', headerClassName: 'w-[150px]', className: 'max-w-[150px] truncate', render: (r) => r.report_id },
     { key: 'name', header: '名称', className: 'truncate', render: (r) => r.name },
     { key: 'plan_name', header: '关联计划', headerClassName: 'w-[160px]', className: 'max-w-[160px] truncate', render: (r) => r.plan_name || <span className="text-muted-foreground">—</span> },
-    { key: 'template_id', header: '模板', headerClassName: 'w-[60px]', render: (r) => r.template_id ? <Badge variant="secondary" className="text-[10px]">#{r.template_id}</Badge> : <span className="text-muted-foreground">—</span> },
+    { key: 'template_id', header: '模板', headerClassName: 'w-[60px]', render: (r) => r.template_id ? <Badge tone="neutral" className="text-[10px]">#{r.template_id}</Badge> : <span className="text-muted-foreground">—</span> },
     { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[120px]', render: (r) => (
       <div className="flex items-center gap-2">
@@ -318,7 +318,7 @@ export default function ReportPage() {
               {/* Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Pass rate trend */}
-                <Card>
+                <Card className="ui-surface">
                   <CardHeader><CardTitle>通过率趋势</CardTitle></CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -346,7 +346,7 @@ export default function ReportPage() {
                 </Card>
 
                 {/* Defect convergence trend */}
-                <Card>
+                <Card className="ui-surface">
                   <CardHeader><CardTitle>缺陷收敛趋势</CardTitle></CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={300}>
@@ -537,10 +537,10 @@ export default function ReportPage() {
               {detail.gate_status && (
                 <div className="flex items-center gap-2 rounded-md border p-3">
                   <span className="text-sm font-medium">质量门禁：</span>
-                  <Badge variant={
-                    detail.gate_status === 'pass' ? 'default'
-                      : detail.gate_status === 'fail' ? 'destructive'
-                      : 'secondary'
+                  <Badge tone={
+                    detail.gate_status === 'pass' ? 'neutral'
+                      : detail.gate_status === 'fail' ? 'danger'
+                      : 'neutral'
                   }>
                     {detail.gate_status === 'pass' ? '✅ 通过' : detail.gate_status === 'fail' ? '❌ 未通过' : '⚠️ 警告'}
                   </Badge>
@@ -584,7 +584,7 @@ export default function ReportPage() {
               <div className="grid grid-cols-10 gap-2">
                 {/* Total count */}
                 <div className="col-span-2">
-                  <Card size="sm" className="text-center">
+                  <Card size="sm" className="text-center ui-surface">
                     <CardContent className="py-2 px-2">
                       <div className="text-xs text-muted-foreground">总用例</div>
                       <div className="text-2xl font-bold">{dStats.total || 0}</div>
@@ -593,7 +593,7 @@ export default function ReportPage() {
                 </div>
                 {/* Pass rate */}
                 <div className="col-span-2">
-                  <Card size="sm">
+                  <Card size="sm" className="ui-surface">
                     <CardContent className="py-2 px-3">
                       <Progress value={dPassRate} className="h-2" />
                       <div className="text-xs text-muted-foreground mt-1 text-center">{dPassRate}% 通过率</div>
@@ -603,7 +603,7 @@ export default function ReportPage() {
                 {/* Status counts */}
                 {statItems.map((item) => (
                   <div key={item.key} className="col-span-1">
-                    <Card size="sm" className="text-center">
+                    <Card size="sm" className="text-center ui-surface">
                       <CardContent className="py-2 px-1">
                         <div className="text-lg font-bold" style={{ color: item.color }}>{item.value}</div>
                         <div className="text-[10px] text-muted-foreground">{item.key}</div>
@@ -614,13 +614,13 @@ export default function ReportPage() {
               </div>
 
               {/* Case List */}
-              <Card size="sm">
+              <Card size="sm" className="ui-surface">
                 <CardHeader>
                   <CardTitle>用例明细 ({dCases.length})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="rounded-xl border bg-card text-sm -mx-[var(--card-spacing)]">
-                    <Table>
+                    <Table className="ui-table">
                       <TableHeader>
                         <TableRow>
                           <TableHead>标题</TableHead>
@@ -636,7 +636,7 @@ export default function ReportPage() {
                             <TableRow key={c.case_id}>
                               <TableCell className="truncate">
                                 <div className="flex items-center gap-1.5">
-                                  <Badge variant={PRIORITY_CONFIG[c.priority] || 'default'} className="shrink-0">
+                                  <Badge tone={PRIORITY_CONFIG[c.priority] || 'neutral'} className="shrink-0">
                                     {c.priority}
                                   </Badge>
                                   <span className="text-xs text-muted-foreground shrink-0">{c.case_id_code}</span>
@@ -645,7 +645,7 @@ export default function ReportPage() {
                               </TableCell>
                               <TableCell className="max-w-[100px] truncate">{c.module}</TableCell>
                               <TableCell>
-                                <Badge variant={st.variant}>
+                                <Badge tone={st.tone}>
                                   <StatusIcon className={cn('size-3', st.color)} />
                                   <span className="ml-0.5">{st.label}</span>
                                 </Badge>

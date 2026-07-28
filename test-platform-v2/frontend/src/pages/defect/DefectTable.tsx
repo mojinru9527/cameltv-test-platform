@@ -1,7 +1,7 @@
 import { Edit, Eye, Trash2 } from '@/lib/icons'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge, StatusBadge } from '@/ui'
 import Pagination from '@/components/Pagination'
 import { AsyncState } from '@/components/state'
 import {
@@ -60,6 +60,12 @@ export default function DefectTable({
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const getSeverityVariant = (severity: string) => {
+    if (severity === 'P0' || severity === 'P1') return 'fail'
+    if (severity === 'P2') return 'blocked'
+    return 'pending'
+  }
+
   const handleDelete = async () => {
     if (deleteTarget == null) return
     setDeleting(true)
@@ -113,13 +119,13 @@ export default function DefectTable({
                         >
                           {r.title}
                         </button>
-                        <Badge variant="outline" className={severityBadgeClass(SEVERITY_MAP[r.severity]?.color)}>
+                        <StatusBadge variant={getSeverityVariant(r.severity)}>
                           {SEVERITY_MAP[r.severity]?.label || r.severity}
-                        </Badge>
+                        </StatusBadge>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
+                      <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
                         {STATUS_MAP[r.status]?.label || r.status}
                       </Badge>
                     </TableCell>

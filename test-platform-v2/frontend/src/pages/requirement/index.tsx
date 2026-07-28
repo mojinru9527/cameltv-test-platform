@@ -18,7 +18,7 @@ import type {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeTone } from '@/ui'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
@@ -74,11 +74,11 @@ function formatSourceRef(sourceRef: string, fileType: string): { label: string; 
   }
 }
 
-const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'outline'; className?: string; label: string }> = {
-  uploaded: { variant: 'secondary', label: '已上传' },
-  parsed: { variant: 'secondary', label: '已解析' },
-  generated: { variant: 'outline', className: 'border-blue-200 bg-blue-50 text-blue-700', label: '已生成' },
-  imported: { variant: 'outline', className: 'border-green-200 bg-green-50 text-green-700', label: '已导入' },
+const STATUS_VARIANT: Record<string, { tone: BadgeTone; className?: string; label: string }> = {
+  uploaded: { tone: 'neutral', label: '已上传' },
+  parsed: { tone: 'neutral', label: '已解析' },
+  generated: { tone: 'info', className: 'border-blue-200 bg-blue-50 text-blue-700', label: '已生成' },
+  imported: { tone: 'success', className: 'border-green-200 bg-green-50 text-green-700', label: '已导入' },
 }
 
 interface RequirementData {
@@ -508,7 +508,7 @@ export default function RequirementPage() {
           trend={`/ ${totalModules} 模块`}
           variant="glass"
         />
-        <Card size="sm">
+        <Card size="sm" className="ui-surface">
           <CardContent>
             <div className="text-xs text-muted-foreground mb-1">
               {activeDocId == null ? '需求覆盖率（选择文档查看）' : '当前需求覆盖率'}
@@ -534,7 +534,7 @@ export default function RequirementPage() {
       </div>
 
       {/* Upload Area */}
-      <Card size="sm">
+      <Card size="sm" className="ui-surface">
         <CardHeader className="border-b pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
             <Cloud className="size-4" />
@@ -603,7 +603,7 @@ export default function RequirementPage() {
 
       {/* Content Preview */}
       {activeDocId != null && (
-        <Card size="sm">
+        <Card size="sm" className="ui-surface">
           <CardHeader className="border-b pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -658,7 +658,7 @@ export default function RequirementPage() {
       )}
 
       {/* Document Table */}
-      <Card size="sm">
+      <Card size="sm" className="ui-surface">
         <CardHeader className="border-b pb-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -737,7 +737,7 @@ export default function RequirementPage() {
                               {r.title}
                             </button>
                             {r.file_type && TYPE_TAG[r.file_type] && (
-                              <Badge variant="outline" className={cn('gap-1 shrink-0', TYPE_TAG[r.file_type].className)}>
+                              <Badge tone="neutral" className={cn('gap-1 shrink-0', TYPE_TAG[r.file_type].className)}>
                                 {TYPE_TAG[r.file_type].icon}
                                 {TYPE_TAG[r.file_type].label}
                               </Badge>
@@ -782,26 +782,26 @@ export default function RequirementPage() {
                         <TableCell className="text-center">
                           <div className="flex items-center gap-1 flex-wrap justify-center">
                           {r.extraction_status === 'pending_review' && (
-                            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-xs">待审核</Badge>
+                            <Badge tone="neutral" className="border-amber-200 bg-amber-50 text-amber-700 text-xs">待审核</Badge>
                           )}
                           {r.extraction_status === 'confirmed' && (
-                            <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">已拆分</Badge>
+                            <Badge tone="neutral" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">已拆分</Badge>
                           )}
                           {(() => {
                             const t = STATUS_VARIANT[r.status]
-                            if (!t) return <Badge variant="secondary">{r.status}</Badge>
+                            if (!t) return <Badge tone="neutral">{r.status}</Badge>
                             if (r.status === 'imported' || r.status === 'generated') {
                               const hasFunc = r.imported_func_count > 0
                               if (hasFunc) {
                                 return (
-                                  <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                                  <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
                                     功能用例已导入
                                   </Badge>
                                 )
                               }
                             }
                             return (
-                              <Badge variant={t.variant} className={t.className}>
+                              <Badge tone={t.tone} className={t.className}>
                                 {t.label}
                               </Badge>
                             )
@@ -949,7 +949,7 @@ export default function RequirementPage() {
                                   重新生成
                                 </Button>
                                 {r.imported_count > 0 && (
-                                  <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                                  <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
                                     已导入 {r.imported_count} 条
                                   </Badge>
                                 )}
@@ -965,7 +965,7 @@ export default function RequirementPage() {
                                   <Sparkles className="size-3.5" />
                                   重新生成
                                 </Button>
-                                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                                <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
                                   已导入 {r.imported_count} 条
                                 </Badge>
                               </>
@@ -1019,7 +1019,7 @@ export default function RequirementPage() {
       </Card>
 
       {/* Domain Coverage Table */}
-      <Card size="sm">
+      <Card size="sm" className="ui-surface">
         <CardHeader className="border-b pb-3">
           <CardTitle className="text-sm">需求域与用例覆盖</CardTitle>
         </CardHeader>
@@ -1045,7 +1045,7 @@ export default function RequirementPage() {
                         </Badge>
                       ))}
                       {(item.modules || []).length > 8 && (
-                        <Badge variant="secondary">+{(item.modules || []).length - 8}</Badge>
+                        <Badge tone="neutral">+{(item.modules || []).length - 8}</Badge>
                       )}
                     </div>
                   </TableCell>

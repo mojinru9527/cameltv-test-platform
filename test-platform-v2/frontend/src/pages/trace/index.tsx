@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
 import { AsyncState } from '@/components/state'
@@ -82,7 +82,7 @@ export default function TracePage() {
               </div>
 
               {/* ── 按用例类型分布 ── */}
-              <Card>
+              <Card className="ui-surface">
                 <CardHeader><CardTitle>用例类型分布</CardTitle></CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -99,14 +99,14 @@ export default function TracePage() {
               </Card>
 
               {/* ── 按域分布 ── */}
-              <Card>
+              <Card className="ui-surface">
                 <CardHeader><CardTitle>按域覆盖</CardTitle></CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {Object.entries(d.by_domain).map(([domain, count]) => (
                       <div key={domain} className="flex justify-between items-center p-3 rounded-lg border">
                         <span className="text-sm font-medium">{domain || '未分类'}</span>
-                        <Badge variant="outline">{count}</Badge>
+                        <Badge tone="neutral">{count}</Badge>
                       </div>
                     ))}
                   </div>
@@ -114,7 +114,7 @@ export default function TracePage() {
               </Card>
 
               {/* ── 需求覆盖 ── */}
-              <Card>
+              <Card className="ui-surface">
                 <CardHeader><CardTitle>需求覆盖状态</CardTitle></CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-8 mb-4">

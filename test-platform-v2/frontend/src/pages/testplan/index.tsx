@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeTone } from '@/ui'
 import { Progress } from '@/components/ui/progress'
 import {
   Select,
@@ -35,11 +35,11 @@ import { AsyncState } from '@/components/state'
 import { useObsidianPage } from '@/ui'
 import PlanDrawer from './PlanDrawer'
 
-const STATUS_MAP: Record<string, { variant: 'outline' | 'default' | 'secondary'; className?: string; label: string }> = {
-  draft: { variant: 'secondary', label: '草稿' },
-  active: { variant: 'default', label: '进行中' },
-  completed: { variant: 'default', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', label: '已完成' },
-  archived: { variant: 'outline', label: '已归档' },
+const STATUS_MAP: Record<string, { tone: BadgeTone; className?: string; label: string }> = {
+  draft: { tone: 'neutral', label: '草稿' },
+  active: { tone: 'info', label: '进行中' },
+  completed: { tone: 'success', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', label: '已完成' },
+  archived: { tone: 'neutral', label: '已归档' },
 }
 
 export default function TestPlanPage() {
@@ -110,7 +110,7 @@ export default function TestPlanPage() {
       )
     }},
     { key: 'status', header: '状态', headerClassName: 'w-[80px]', render: (r) => (
-      <Badge variant={STATUS_MAP[r.status]?.variant || 'outline'} className={STATUS_MAP[r.status]?.className}>
+      <Badge tone={STATUS_MAP[r.status]?.tone || 'neutral'} className={STATUS_MAP[r.status]?.className}>
         {STATUS_MAP[r.status]?.label || r.status}
       </Badge>
     )},

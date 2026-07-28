@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowRight, Loader2 } from '@/lib/icons'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
@@ -56,11 +56,11 @@ export default function DefectTransitionDialog({
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">当前状态:</span>
-            <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[currentStatus]?.color)}>
+            <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[currentStatus]?.color)}>
               {STATUS_MAP[currentStatus]?.label || currentStatus || '-'}
             </Badge>
             <ArrowRight className="size-4 text-muted-foreground" />
-            <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[targetStatus]?.color)}>
+            <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[targetStatus]?.color)}>
               {STATUS_MAP[targetStatus]?.label || targetStatus}
             </Badge>
           </div>
