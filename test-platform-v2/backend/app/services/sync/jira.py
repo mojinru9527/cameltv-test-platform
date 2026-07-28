@@ -1,7 +1,6 @@
 """Jira Cloud sync provider — REST API v3."""
 from __future__ import annotations
 
-import json
 from base64 import b64encode
 
 from app.services.sync.base import BaseSyncProvider
@@ -44,7 +43,7 @@ class JiraSyncProvider(BaseSyncProvider):
                 return False, "", "Missing project_key in auth config"
 
             severity = self.map_severity_to_external(defect.get("severity", "P2"))
-            status_name = self.map_status_to_external(defect.get("status", "open"))
+            self.map_status_to_external(defect.get("status", "open"))
 
             payload = {
                 "fields": {

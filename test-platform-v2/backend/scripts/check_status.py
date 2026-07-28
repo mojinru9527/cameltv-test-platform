@@ -1,5 +1,6 @@
 """Quick check: wiki job status, wiki pages, KB sources, RAG search."""
-import httpx, json, sys
+import httpx
+import json
 
 TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzgzOTk1MzUzfQ.gW1PlU3TJ0G3Kjcd4hToyRpdV5a1EIxsO7Wgr8ei1C8"
 HEADERS = {"Authorization": f"Bearer {TOKEN}", "X-Project-Id": "1"}

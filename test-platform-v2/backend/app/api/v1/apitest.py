@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -19,7 +18,7 @@ from app.schemas.api_asset import (
     BatchGenerateRequest, GenerateApiCasesRequest,
     OpenApiImportConfirmRequest, OpenApiImportPreviewRequest,
 )
-from app.schemas.common import R, Page
+from app.schemas.common import R
 from app.services.api_execution_service import quick_execute
 from app.services import api_task_worker
 
@@ -377,9 +376,11 @@ def import_confirm(
     )
 
     # 可选：导入后批量生成用例
+    generated_case_ids: list[int] = []
     if body.generate_cases:
         generated, case_ids = _batch_generate_for_endpoints(db, result["batch_id"], pid)
         result["generated_case_count"] = generated
+        generated_case_ids = case_ids
         # 生成的用例一并入库（test_case 切片）
         if case_ids:
             background_tasks.add_task(
@@ -387,6 +388,35 @@ def import_confirm(
             )
     else:
         result["generated_case_count"] = 0
+
+    # 可选：导入后自动创建测试计划并关联用例
+    if body.create_plan and generated_case_ids:
+        plan_name = body.plan_name.strip() or f"{body.service_name} 测试计划"
+        from app.models.test_plan import TestPlan, TestPlanCase
+        from uuid import uuid4
+
+        plan_id_str = f"PLAN-{uuid4().hex[:8].upper()}"
+        plan = TestPlan(
+            project_id=pid,
+            plan_id=plan_id_str,
+            name=plan_name,
+            description=f"由 OpenAPI 导入自动创建 ({body.service_name})",
+            status="draft",
+            creator_id=current.user.id if current.user else 0,
+        )
+        db.add(plan)
+        db.flush()
+
+        # 关联生成的用例到计划
+        for sort_idx, cid in enumerate(generated_case_ids):
+            pc = TestPlanCase(
+                plan_id=plan.id,
+                case_id=cid,
+                sort_order=sort_idx + 1,
+            )
+            db.add(pc)
+
+        result["created_plan"] = {"id": plan.id, "plan_id": plan_id_str, "name": plan_name, "case_count": len(generated_case_ids)}
 
     return R.ok(result)
 

@@ -332,7 +332,7 @@ def sync_diff_to_requirement_document(
         # Find parent (previous version of same doc_id)
         parent_id = None
         if diff_json:
-            prev_version = diff_json.get("base_version", "")
+            diff_json.get("base_version", "")
             # Look up parent by same doc_id pattern in source_ref, ordered by id desc
             parent = db.scalar(
                 select(RequirementDocument)

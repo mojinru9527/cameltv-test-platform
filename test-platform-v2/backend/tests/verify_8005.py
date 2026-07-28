@@ -1,5 +1,6 @@
 """Verify backend on 8005 has the fix."""
-import urllib.request, json
+import urllib.request
+import json
 
 print("Testing backend on port 8005...")
 
@@ -9,7 +10,7 @@ r = json.loads(urllib.request.urlopen(urllib.request.Request(
     data=json.dumps({"username":"admin","password":"admin123"}).encode(),
     headers={"Content-Type":"application/json"}), timeout=10).read())
 token = r['data']['access_token']
-print(f"[PASS] Login OK")
+print("[PASS] Login OK")
 
 # Menus
 r2 = json.loads(urllib.request.urlopen(urllib.request.Request(

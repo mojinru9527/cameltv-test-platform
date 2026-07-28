@@ -155,6 +155,7 @@ describe('Requirement API functions', () => {
     expect(mockPost).toHaveBeenCalledWith('/requirements/5/import', {
       indices: [0],
       edited_cases: edited,
+      create_plan: false,
     })
   })
 

@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
-from typing import Any
 
 from sqlalchemy import select
 
@@ -535,7 +534,6 @@ def _cleanup_bundle_graph(db, project_id: int, bundle_key: str) -> None:
     )
     # 简单起见，这里采用级联删除：删除包含 bundle_name 的 entity_key
     from sqlalchemy import delete
-    import re
     bundle_name_part = bundle_key.split(":p")[0]  # release_bundle:name:version
     # 更精确的删除：找出该 bundle 的所有层级实体
     entities_to_delete = db.scalars(

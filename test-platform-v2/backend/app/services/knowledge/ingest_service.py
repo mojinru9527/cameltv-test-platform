@@ -8,7 +8,6 @@
 """
 from __future__ import annotations
 
-import json
 import logging
 
 from sqlalchemy import select
@@ -491,18 +490,17 @@ def ingest_lanhu_version_diff(
         if not changed_pages:
             return
 
-        source_id = doc_id or source_url
         title = f"蓝湖版本差异 {diff_json.get('base_version', '?')} → {version}"
 
         # Build content from changed pages
         content_parts = [
             f"## 版本变更: {diff_json.get('base_version', '?')} → {version}",
-            f"",
+            "",
             f"**摘要**: 新增 {diff_json['summary']['new_pages']} 页, "
             f"修改 {diff_json['summary']['modified_pages']} 页, "
             f"不变 {diff_json['summary']['unchanged_pages']} 页, "
             f"删除 {diff_json['summary']['deleted_pages']} 页",
-            f"",
+            "",
         ]
         for p in changed_pages:
             emoji = {"new": "🆕", "modified": "✏️"}.get(p["change_type"], "")

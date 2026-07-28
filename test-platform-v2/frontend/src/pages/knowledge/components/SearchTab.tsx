@@ -15,7 +15,13 @@ import {
 import { searchKnowledge, reembedKnowledge, fetchSearchHealth } from '@/api/knowledge'
 import type { KnowledgeSearchResult, SearchHealth } from '@/types'
 import { useAuthStore } from '@/stores/auth'
-import { Search, Loader2, RefreshCw, AlertTriangle, CheckCircle2, Database, BrainCircuit } from '@/lib/icons'
+import { Search, Loader2, RefreshCw, AlertTriangle, CheckCircle2, Database, BrainCircuit, X } from '@/lib/icons'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 const MODES = [
   { v: 'hybrid', l: '混合（关键词+向量）' },
@@ -51,6 +57,7 @@ export default function SearchTab() {
   const [searchError, setSearchError] = useState<string | null>(null)
   const [reembedding, setReembedding] = useState(false)
   const [health, setHealth] = useState<SearchHealth | null>(null)
+  const [detailResult, setDetailResult] = useState<KnowledgeSearchResult | null>(null)
   const autoSearched = useRef(false)
 
   useEffect(() => {
@@ -234,7 +241,11 @@ export default function SearchTab() {
       ) : (
         <div className="space-y-2">
           {results.map((r) => (
-            <Card key={r.chunk_id}>
+            <Card
+              key={r.chunk_id}
+              className="cursor-pointer hover:border-primary/30 transition-colors"
+              onClick={() => setDetailResult(r)}
+            >
               <CardContent className="p-3 space-y-1">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">{CHUNK_LABEL[r.chunk_type] ?? r.chunk_type}</Badge>
@@ -252,6 +263,41 @@ export default function SearchTab() {
           ))}
         </div>
       )}
+
+      {/* ── 检索结果详情弹窗 ── */}
+      <Dialog open={!!detailResult} onOpenChange={(open) => { if (!open) setDetailResult(null) }}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto w-[95vw]">
+          <DialogHeader>
+            <DialogTitle className="text-lg flex items-center gap-2">
+              <Badge variant="secondary">{detailResult ? (CHUNK_LABEL[detailResult.chunk_type] ?? detailResult.chunk_type) : ''}</Badge>
+              <span className="truncate">{detailResult?.title || '(无标题)'}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* 基本信息 */}
+            <div className="grid grid-cols-2 gap-3 text-sm bg-muted/30 rounded-lg p-4">
+              <div>
+                <span className="font-medium text-foreground">相关度</span>
+                <div className="mt-1 text-sm">{(detailResult?.score ?? 0).toFixed(4)}</div>
+              </div>
+              <div>
+                <span className="font-medium text-foreground">来源</span>
+                <div className="mt-1 text-sm">{detailResult?.source_name || '—'}</div>
+              </div>
+            </div>
+            {/* 内容片段 */}
+            <div>
+              <div className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
+                <span className="inline-block w-1 h-4 bg-primary rounded-full" />
+                内容
+              </div>
+              <pre className="whitespace-pre-wrap break-words text-sm text-muted-foreground bg-muted/30 rounded-lg p-4 leading-relaxed border max-h-[60vh] overflow-auto">
+                {detailResult?.snippet || '(无内容)'}
+              </pre>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

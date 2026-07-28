@@ -7,7 +7,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request, UploadF
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from app.core.deps import CurrentUser, get_current_user, get_db, require_permission
+from app.core.deps import CurrentUser, get_db, require_permission
 from app.schemas.common import R
 from app.schemas.defect import DefectCreate, DefectOut, DefectStats, DefectUpdate
 from app.services import defect_service

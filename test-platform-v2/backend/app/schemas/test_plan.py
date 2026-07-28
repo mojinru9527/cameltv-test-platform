@@ -14,8 +14,10 @@ class PlanCreate(BaseModel):
     name: str
     description: str = ""
     status: str = "draft"            # draft / active / completed / archived
+    assignee_id: Optional[int] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    due_date: Optional[datetime] = None
 
 
 class PlanUpdate(BaseModel):
@@ -23,8 +25,10 @@ class PlanUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     status: Optional[str] = None
+    assignee_id: Optional[int] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    due_date: Optional[datetime] = None
 
 
 class PlanOut(BaseModel):
@@ -37,10 +41,13 @@ class PlanOut(BaseModel):
     description: str = ""
     status: str = "draft"
     creator_id: int = 0
+    assignee_id: int = 0
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
+    due_date: Optional[datetime] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    assignee_name: str = ""
 
 
 # ── PlanCase (计划内用例) ──────────────────────────────
@@ -63,6 +70,7 @@ class PlanCaseOut(BaseModel):
     module: str = ""
     priority: str = "P2"
     case_type: str = "manual"
+    source_req_id: str = ""
 
 
 class PlanCaseAdd(BaseModel):

@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 PREVIOUS_HEAD = "20260726_batch45"
-BATCH48_HEAD = "20260727_batch48_pg_parity"
+BATCH48_HEAD = "20260728_merge_batch37_main"
 
 
 def _alembic_environment(database_path: Path) -> dict[str, str]:

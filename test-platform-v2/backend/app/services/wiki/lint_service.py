@@ -15,9 +15,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.knowledge import AiArtifact
@@ -210,7 +208,7 @@ def _check_conflict_rules(db: Session, report_id: int, project_id: int) -> int:
         if len(hashes) <= 1:
             continue  # 内容相同，不冲突
 
-        page_ids = [p.id for p in pages]
+        [p.id for p in pages]
         # 选取内容最长的页面作为参照
         longest = max(pages, key=lambda p: len(p.content_md or ""))
         conflict_ids = [p for p in pages if p.id != longest.id]
@@ -228,7 +226,7 @@ def _check_conflict_rules(db: Session, report_id: int, project_id: int) -> int:
                 related_entity_json={"conflicting_page_ids": [
                     p.id for p in pages if p.id != conflict_page.id
                 ]},
-                suggestion=f"审核这两个规则页面，确定以哪个版本为准，驳回或下架冲突版本。",
+                suggestion="审核这两个规则页面，确定以哪个版本为准，驳回或下架冲突版本。",
             )
             count += 1
 

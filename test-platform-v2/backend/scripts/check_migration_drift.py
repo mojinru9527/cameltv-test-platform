@@ -89,7 +89,7 @@ def _run_alembic_upgrade() -> bool:
 
 def main() -> int:
     db_url = _db_url()
-    print(f"🔍 Checking schema drift on PostgreSQL…")
+    print("🔍 Checking schema drift on PostgreSQL…")
 
     # 1 ── Run Alembic migrations on a fresh DB ───────────────────────
     engine = create_engine(db_url)

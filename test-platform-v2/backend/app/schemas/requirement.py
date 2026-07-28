@@ -176,12 +176,15 @@ class GenerateRequest(BaseModel):
 class CaseImportRequest(BaseModel):
     indices: list[int]
     edited_cases: list[AIGeneratedCase] = Field(default_factory=list)
+    create_plan: bool = False
 
 
 class CaseImportResult(BaseModel):
     imported: int
     skipped: int
     total: int
+    plan_id: int | None = None
+    plan_name: str = ""
 
 
 class RequirementReviewRequest(BaseModel):

@@ -12,6 +12,7 @@ from types import SimpleNamespace
 
 import pytest
 
+
 from app.services.external import lanhu_provider
 
 _URL = "https://lanhuapp.com/web/#/item/project/detail?pid=x&docId=e6b5ce1e&versionId=26af&pageId=2b4c4235"

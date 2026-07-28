@@ -333,7 +333,6 @@ class TestSearchHealth:
     def test_health_rag_enabled_with_vectors(self, kdb, kclient, monkeypatch):
         """RAG 开启且有向量 → vector_search_functional=True。"""
         from app.core.config import settings
-        from app.services.knowledge.embedding_service import embedding_service
 
         monkeypatch.setattr(settings, "rag_enabled", True, raising=False)
         _patch_fake_embedder(monkeypatch)
@@ -341,7 +340,6 @@ class TestSearchHealth:
         # 播种并嵌入一个切片
         c = _make_chunk(kdb, title="测试切片", content="有些内容", embedding_id="")  # empty first
         # 手动填充 embedding_id 模拟已完成向量回填
-        from app.models.knowledge import KnowledgeChunk
         from app.services.knowledge.vector_store import SqliteVectorStore
         store = SqliteVectorStore()
         store.upsert(kdb, chunk_id=c.id, project_id=1, model="bag-test", dim=32, vec=_bag_vec("有些内容"))
@@ -407,7 +405,7 @@ class TestOverviewRagMetrics:
 
         monkeypatch.setattr(settings, "rag_enabled", True, raising=False)
         # 3 个切片，1 个已嵌入
-        c1 = _make_chunk(kdb, title="已嵌入", content="a", embedding_id="v1")
+        _make_chunk(kdb, title="已嵌入", content="a", embedding_id="v1")
         _make_chunk(kdb, title="未嵌入1", content="b", embedding_id="")
         _make_chunk(kdb, title="未嵌入2", content="c", embedding_id="")
 
