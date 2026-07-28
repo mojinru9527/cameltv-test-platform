@@ -1,12 +1,12 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
+import { useTheme } from '@/components/theme-provider'
 
 /**
  * Read CSS custom properties from :root for chart coloring.
  * Returns stable hex-like values derived from the theme's chart-1…chart-5,
  * plus semantic priority colors.
  *
- * The values are read once at call time via getComputedStyle so they match
- * the current theme.
+ * The values are read from computed styles after every theme or mode change.
  */
 function readVar(name: string, fallback: string): string {
   if (typeof window === 'undefined') return fallback
@@ -50,39 +50,49 @@ const FALLBACKS: ChartColors = {
   labelLineColor: '#9ca3af',
 }
 
+function readChartColors(): ChartColors {
+  if (typeof window === 'undefined') return FALLBACKS
+
+  const c1 = readVar('--chart-1', FALLBACKS.chart1)
+  const c2 = readVar('--chart-2', FALLBACKS.chart2)
+  const c3 = readVar('--chart-3', FALLBACKS.chart3)
+  const c4 = readVar('--chart-4', FALLBACKS.chart4)
+  const c5 = readVar('--chart-5', FALLBACKS.chart5)
+  const destructive = readVar('--destructive', FALLBACKS.p0)
+
+  return {
+    chart1: c1,
+    chart2: c2,
+    chart3: c3,
+    chart4: c4,
+    chart5: c5,
+    p0: destructive,
+    p1: c4,
+    p2: c1,
+    p3: readVar('--muted-foreground', FALLBACKS.p3),
+    barTotal: c1,
+    barPass: c2,
+    barFail: destructive,
+    gridColor: readVar('--border', FALLBACKS.gridColor),
+    labelLineColor: readVar('--muted-foreground', FALLBACKS.labelLineColor),
+  }
+}
+
 /**
  * Returns chart colors sourced from CSS custom properties (--chart-1…--chart-5)
  * and semantic overrides. Falls back to a reasonable default palette when
  * the variables are unavailable (SSR / tests).
  */
 export function useChartColors(): ChartColors {
-  return useMemo(() => {
-    if (typeof window === 'undefined') return FALLBACKS
+  const { colorTheme, mode } = useTheme()
+  const [colors, setColors] = useState(readChartColors)
 
-    const c1 = readVar('--chart-1', FALLBACKS.chart1)
-    const c2 = readVar('--chart-2', FALLBACKS.chart2)
-    const c3 = readVar('--chart-3', FALLBACKS.chart3)
-    const c4 = readVar('--chart-4', FALLBACKS.chart4)
-    const c5 = readVar('--chart-5', FALLBACKS.chart5)
+  useEffect(() => {
+    // ThemeProvider updates root attributes in an effect, so defer the
+    // computed-style read until the browser has applied the new cascade.
+    const frame = requestAnimationFrame(() => setColors(readChartColors()))
+    return () => cancelAnimationFrame(frame)
+  }, [colorTheme, mode])
 
-    // Destructive color for P0 failures
-    const destructive = readVar('--destructive', FALLBACKS.p0)
-
-    return {
-      chart1: c1,
-      chart2: c2,
-      chart3: c3,
-      chart4: c4,
-      chart5: c5,
-      p0: destructive,
-      p1: c4,
-      p2: c1,
-      p3: readVar('--muted-foreground', FALLBACKS.p3),
-      barTotal: c1,
-      barPass: c2,
-      barFail: destructive,
-      gridColor: readVar('--border', FALLBACKS.gridColor),
-      labelLineColor: readVar('--muted-foreground', FALLBACKS.labelLineColor),
-    }
-  }, [])
+  return colors
 }

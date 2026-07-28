@@ -127,9 +127,8 @@ async function installBrowserFixtures(page: Page) {
       },
       version: 0,
     }))
-    localStorage.setItem('cameltv-ui-theme', 'obsidian-flow')
     localStorage.setItem('cameltv-theme-mode', 'dark')
-    localStorage.setItem('cameltv-theme-color', 'xlab')
+    localStorage.setItem('cameltv-theme-color', 'obsidian-flow')
   })
 
   await page.route('**/api/v1/**', async (route) => {

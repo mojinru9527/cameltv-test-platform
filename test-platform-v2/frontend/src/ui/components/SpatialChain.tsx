@@ -36,26 +36,30 @@ export interface SpatialChainProps {
   className?: string
 }
 
-const toneStyles: Record<string, { bg: string; border: string; text: string }> = {
+const toneStyles: Record<ChainNode['tone'], { bg: string; border: string; text: string; color: string }> = {
   neutral: {
-    bg: 'bg-[rgba(255,255,255,0.03)]',
-    border: 'border-[rgba(218,239,224,0.1)]',
-    text: 'text-[#909f95]',
+    bg: 'bg-[var(--color-status-neutral-bg)]',
+    border: 'border-[var(--color-border-default)]',
+    text: 'text-[var(--color-status-neutral)]',
+    color: 'var(--color-status-neutral)',
   },
   success: {
-    bg: 'bg-[rgba(53,230,138,0.06)]',
-    border: 'border-[rgba(53,230,138,0.2)]',
-    text: 'text-[#80dba6]',
+    bg: 'bg-[var(--color-status-success-bg)]',
+    border: 'border-[var(--color-status-success-border)]',
+    text: 'text-[var(--color-status-success)]',
+    color: 'var(--color-status-success)',
   },
   active: {
-    bg: 'bg-[rgba(128,196,255,0.06)]',
-    border: 'border-[rgba(128,196,255,0.2)]',
-    text: 'text-[#80c4ff]',
+    bg: 'bg-[var(--color-status-info-bg)]',
+    border: 'border-[var(--color-status-info-border)]',
+    text: 'text-[var(--color-status-info)]',
+    color: 'var(--color-status-info)',
   },
   risk: {
-    bg: 'bg-[rgba(255,154,144,0.06)]',
-    border: 'border-[rgba(255,154,144,0.2)]',
-    text: 'text-[#ff9a90]',
+    bg: 'bg-[var(--color-status-danger-bg)]',
+    border: 'border-[var(--color-status-danger-border)]',
+    text: 'text-[var(--color-status-danger)]',
+    color: 'var(--color-status-danger)',
   },
 }
 
@@ -64,7 +68,7 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
 
   if (nodes.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-[#91a398] text-sm">
+      <div className="flex items-center justify-center h-32 text-[var(--color-text-secondary)] text-sm">
         暂无链路数据
       </div>
     )
@@ -88,14 +92,14 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
               className={cn(
                 'relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors duration-200 text-left',
                 styles.bg, styles.border,
-                isActive && 'ring-2 ring-[#35e68a] ring-offset-1 ring-offset-[#0b100d] scale-[1.02]',
-                isHovered && !isActive && 'border-[rgba(218,239,224,0.2)] translate-y-[-2px]',
+                isActive && 'ring-2 ring-[var(--color-border-focus)] ring-offset-1 ring-offset-[var(--color-canvas)] scale-[1.02]',
+                isHovered && !isActive && 'border-[var(--color-border-strong)] translate-y-[-2px]',
               )}
               aria-pressed={isActive}
               aria-label={`${node.label}：${node.status}`}
             >
               {/* 序号 */}
-              <span className="absolute top-2 right-2 text-[0.625rem] text-[#91a398] font-mono">
+              <span className="absolute top-2 right-2 text-[0.625rem] text-[var(--color-text-muted)] font-mono">
                 {String(i + 1).padStart(2, '0')}
               </span>
 
@@ -103,13 +107,15 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
               {(node.risk || node.p0) && (
                 <span className={cn(
                   'absolute top-2 left-2 w-2 h-2 rounded-full',
-                  node.p0 ? 'bg-[#ff6358] shadow-[0_0_6px_rgba(255,99,88,0.4)]' : 'bg-[#f5a623]',
+                  node.p0
+                    ? 'bg-[var(--color-status-danger)] shadow-[0_0_6px_var(--color-status-danger-glow)]'
+                    : 'bg-[var(--color-status-warning)]',
                 )} />
               )}
 
               <Icon className={cn('size-5', styles.text)} aria-hidden="true" />
-              <b className="text-[1.125rem] font-[560] text-[#eef6f0] tracking-tight">{node.count}</b>
-              <small className="text-[0.6875rem] text-[#91a398] text-center leading-tight">{node.shortLabel}</small>
+              <b className="text-[1.125rem] font-[560] text-[var(--color-text)] tracking-tight">{node.count}</b>
+              <small className="text-[0.6875rem] text-[var(--color-text-muted)] text-center leading-tight">{node.shortLabel}</small>
               <span className={cn('text-[0.625rem]', styles.text)}>{node.status}</span>
             </button>
           )
@@ -136,8 +142,8 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
             className={cn(
               'relative flex items-center gap-3 flex-shrink-0 min-w-[180px] px-4 py-3 rounded-xl border transition-colors duration-200',
               styles.bg, styles.border,
-              isActive && 'ring-2 ring-[#35e68a] ring-offset-1 ring-offset-[#0b100d]',
-              isHovered && !isActive && 'border-[rgba(218,239,224,0.2)]',
+              isActive && 'ring-2 ring-[var(--color-border-focus)] ring-offset-1 ring-offset-[var(--color-canvas)]',
+              isHovered && !isActive && 'border-[var(--color-border-strong)]',
             )}
             style={{ '--stage-index': i } as CSSProperties}
             aria-pressed={isActive}
@@ -146,21 +152,21 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
             {/* 连接线（非最后一个） */}
             {i < nodes.length - 1 && (
               <div className="hidden sm:block absolute -right-[10px] top-1/2 -translate-y-1/2 z-10">
-                <div className="w-2.5 h-0.5 bg-[rgba(218,239,224,0.15)]" />
+                <div className="w-2.5 h-0.5 bg-[var(--color-border-strong)]" />
               </div>
             )}
 
             {/* 序号 */}
-            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-[rgba(255,255,255,0.04)] text-[0.625rem] text-[#91a398] font-mono">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-[var(--color-hover)] text-[0.625rem] text-[var(--color-hover-text)] font-mono">
               {String(i + 1).padStart(2, '0')}
             </span>
 
             <Icon className={cn('size-4 flex-shrink-0', styles.text)} aria-hidden="true" />
 
             <div className="min-w-0">
-              <small className="block text-[0.6875rem] text-[#91a398] truncate">{node.shortLabel}</small>
-              <b className="block text-[0.9375rem] font-[560] text-[#eef6f0] tracking-tight truncate">{node.count}</b>
-              <em className="block text-[0.625rem] not-italic truncate" style={{ color: styles.text.split('text-[')[1]?.replace(']', '') || '#91a398' }}>
+              <small className="block text-[0.6875rem] text-[var(--color-text-muted)] truncate">{node.shortLabel}</small>
+              <b className="block text-[0.9375rem] font-[560] text-[var(--color-text)] tracking-tight truncate">{node.count}</b>
+              <em className="block text-[0.625rem] not-italic truncate" style={{ color: styles.color }}>
                 {node.status}
               </em>
             </div>
@@ -172,8 +178,8 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
                 style={{
                   transform: `scaleX(${Math.min(100, Math.max(0, node.progress)) / 100})`,
                   background: isActive
-                    ? 'linear-gradient(90deg, #35e68a, #67efa9)'
-                    : 'rgba(255,255,255,0.1)',
+                    ? 'var(--color-action-primary)'
+                    : 'var(--color-progress-track)',
                 }}
               />
             </div>

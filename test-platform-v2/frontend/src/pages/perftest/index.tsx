@@ -232,8 +232,8 @@ export default function PerfTestPage() {
               <Card>
                 <CardHeader className="pb-2 flex-row items-center justify-between">
                   <CardTitle className="text-base">已连接设备</CardTitle>
-                  <Button variant="ghost" size="icon" onClick={loadDevices} disabled={loading}>
-                    <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
+                  <Button variant="ghost" size="icon" onClick={loadDevices} disabled={loading} aria-label="刷新设备列表">
+                    <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                   </Button>
                 </CardHeader>
                 <CardContent>
@@ -441,7 +441,9 @@ export default function PerfTestPage() {
             <Card>
               <CardHeader className="pb-2 flex-row items-center justify-between">
                 <CardTitle className="text-base">采集记录 ({totalSessions})</CardTitle>
-                <Button variant="ghost" size="icon" onClick={loadSessions}><RefreshCw className="size-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={loadSessions} aria-label="刷新采集记录">
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                </Button>
               </CardHeader>
               <CardContent>
                 {sessions.length === 0 ? (

@@ -52,78 +52,118 @@ export function Inspector({
 
   useEffect(() => {
     if (!open) return
+
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+        return
+      }
+
+      if (e.key !== 'Tab' || !panelRef.current) return
+
+      const focusable = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getAttribute('aria-hidden') !== 'true')
+
+      if (focusable.length === 0) {
+        e.preventDefault()
+        panelRef.current.focus()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+
+      if (e.shiftKey && (active === first || active === panelRef.current || !panelRef.current.contains(active))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (active === last || active === panelRef.current || !panelRef.current.contains(active))) {
+        e.preventDefault()
+        first.focus()
+      }
     }
+
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [open, onClose])
 
   useEffect(() => {
-    if (open && panelRef.current) {
-      panelRef.current.focus()
+    if (!open) return
+
+    const opener = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+    panelRef.current?.focus()
+
+    return () => {
+      if (opener?.isConnected) opener.focus()
     }
   }, [open])
 
   if (!open) return null
 
   const toneColors: Record<string, string> = {
-    neutral: '#909f95',
-    success: '#35e68a',
-    active: '#80c4ff',
-    risk: '#ff9a90',
+    neutral: 'var(--color-status-neutral)',
+    success: 'var(--color-status-success)',
+    active: 'var(--color-status-info)',
+    risk: 'var(--color-status-danger)',
   }
 
   const toneColor = toneColors[tone] ?? toneColors.neutral
+  const customWidth = width === 380 ? undefined : width
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={title ?? '详情'}>
       {/* 遮罩 */}
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} aria-hidden="true" />
+      <div className="absolute inset-0 bg-[var(--color-overlay-scrim)]" onClick={onClose} aria-hidden="true" />
 
       {/* 面板 */}
       <div
         ref={panelRef}
         tabIndex={-1}
         className={cn(
-          'relative flex flex-col h-full overflow-y-auto',
-          'bg-[#141c17] border-l border-[rgba(218,239,224,0.1)]',
-          'shadow-[-8px_0_32px_rgba(0,0,0,0.4)]',
+          'relative flex h-full w-[min(100vw,380px)] max-w-full flex-col overflow-y-auto',
+          'bg-[var(--color-surface)] border-l border-[var(--color-border-default)]',
+          'shadow-[var(--shadow-inspector)]',
           className,
         )}
-        style={{ width, '--_tone': toneColor } as CSSProperties}
+        style={{ width: customWidth, maxWidth: '100%', '--inspector-tone': toneColor } as CSSProperties}
       >
         {/* 关闭按钮 */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 flex items-center justify-center size-8 rounded-md text-[#718077] hover:text-[#eef6f0] hover:bg-white/5 transition-colors"
+          className="absolute top-1.5 right-1.5 z-10 flex size-11 items-center justify-center rounded-md text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-hover)] hover:text-[var(--color-hover-text)]"
           aria-label="关闭检查器"
         >
           <X className="size-4" />
         </button>
 
         {/* 头部 */}
-        <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-[rgba(218,239,224,0.08)]">
+        <div className="flex items-center gap-3 px-5 pt-5 pb-4 border-b border-[var(--color-border-subtle)]">
           {Icon && (
-            <span className="flex items-center justify-center size-10 rounded-xl bg-white/5" style={{ color: toneColor }}>
+            <span className="flex items-center justify-center size-10 rounded-xl bg-[var(--color-hover)]" style={{ color: toneColor }}>
               <Icon className="size-5" />
             </span>
           )}
           <div className="min-w-0 flex-1">
-            {subtitle && <small className="block text-[0.6875rem] uppercase tracking-[0.08em] text-[#718077]">{subtitle}</small>}
-            <b className="block text-[#eef6f0] text-[1.125rem] font-[580] tracking-tight">{title}</b>
+            {subtitle && <small className="block text-[0.6875rem] uppercase tracking-[0.08em] text-[var(--color-text-muted)]">{subtitle}</small>}
+            <b className="block text-[var(--color-text)] text-[1.125rem] font-[580] tracking-tight">{title}</b>
           </div>
           {statusBadge}
         </div>
 
         {/* 指标 */}
         {metrics && metrics.length > 0 && (
-          <div className="grid grid-cols-3 gap-px bg-[rgba(218,239,224,0.06)] mx-5 mt-4 rounded-lg overflow-hidden">
+          <div className="grid grid-cols-3 gap-px bg-[var(--color-border-subtle)] mx-5 mt-4 rounded-lg overflow-hidden">
             {metrics.map((m, i) => (
-              <div key={i} className="bg-[#141c17] p-3 text-center">
-                <b className="block text-[1.25rem] font-[560] text-[#eef6f0] tracking-tight">{m.value}</b>
-                <small className="text-[0.6875rem] text-[#718077]">{m.label}</small>
-                {m.note && <small className="block text-[0.625rem] text-[#536159] mt-0.5">{m.note}</small>}
+              <div key={i} className="bg-[var(--color-surface)] p-3 text-center">
+                <b className="block text-[1.25rem] font-[560] text-[var(--color-text)] tracking-tight">{m.value}</b>
+                <small className="text-[0.6875rem] text-[var(--color-text-muted)]">{m.label}</small>
+                {m.note && <small className="block text-[0.625rem] text-[var(--color-text-secondary)] mt-0.5">{m.note}</small>}
               </div>
             ))}
           </div>
@@ -131,22 +171,22 @@ export function Inspector({
 
         {/* 摘要 */}
         {summary && (
-          <p className="px-5 mt-4 text-[0.875rem] text-[#a7b5ab] leading-relaxed">{summary}</p>
+          <p className="px-5 mt-4 text-[0.875rem] text-[var(--color-text-secondary)] leading-relaxed">{summary}</p>
         )}
 
         {/* 进度 */}
         {progress !== undefined && (
           <div className="px-5 mt-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[0.75rem] text-[#718077] font-medium">完成度</span>
-              <em className="text-[0.875rem] text-[#eef6f0] font-[560] not-italic">{progress}%</em>
+              <span className="text-[0.75rem] text-[var(--color-text-muted)] font-medium">完成度</span>
+              <em className="text-[0.875rem] text-[var(--color-text)] font-[560] not-italic">{progress}%</em>
             </div>
-            <div className="h-1.5 bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
+            <div className="h-1.5 bg-[var(--color-progress-track)] rounded-full overflow-hidden">
               <span
                 className="block size-full origin-left rounded-full transition-transform duration-200 ease-out"
                 style={{
                   transform: `scaleX(${Math.min(100, Math.max(0, progress)) / 100})`,
-                  background: `linear-gradient(90deg, ${toneColor}, ${toneColor}88)`,
+                  background: toneColor,
                 }}
               />
             </div>
@@ -158,7 +198,7 @@ export function Inspector({
 
         {/* 底部操作 */}
         {actions && (
-          <div className="sticky bottom-0 px-5 py-4 border-t border-[rgba(218,239,224,0.08)] bg-[#141c17]">
+          <div className="sticky bottom-0 px-5 py-4 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface)]">
             {actions}
           </div>
         )}

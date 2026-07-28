@@ -4,9 +4,8 @@ import { toast } from 'sonner'
 import { fetchMenus, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import type { ColorTheme } from '@/stores/auth'
-import { useTheme } from '@/components/theme-provider'
-import { COLOR_THEMES, getThemeDefinition } from '@/lib/themes'
-import { useUiTheme } from '@/ui'
+import { useTheme, type ThemeMode } from '@/components/theme-provider'
+import { COLOR_THEMES, getThemeDefinition, normalizeColorTheme } from '@/lib/themes'
 import type { MenuItem } from '@/types'
 import {
   Sidebar,
@@ -106,8 +105,12 @@ export default function MainLayout() {
   const { user, projects, currentProjectId, setCurrentProject, projectThemeMap, setProjectTheme, logout } =
     useAuthStore()
   const { mode, colorTheme, setMode, setColorTheme } = useTheme()
-  const { uiTheme, setUiTheme } = useUiTheme()
   const [menus, setMenus] = useState<MenuItem[]>([])
+  const activeTheme = getTheme(colorTheme)
+  const isObsidian = colorTheme === 'obsidian-flow'
+  const modeOptions: ThemeMode[] = activeTheme.supportedModes.length === 1
+    ? [...activeTheme.supportedModes]
+    : [...activeTheme.supportedModes, 'system']
 
   useEffect(() => {
     let cancelled = false
@@ -121,18 +124,30 @@ export default function MainLayout() {
     return () => { cancelled = true }
   }, [])
 
+  useEffect(() => {
+    document.getElementById('main-content')?.focus()
+  }, [location.pathname])
+
+  const applyColorTheme = (theme: ColorTheme) => {
+    const definition = getTheme(theme)
+    if (definition.supportedModes.length === 1) {
+      setMode(definition.preferredMode)
+    }
+    setColorTheme(theme)
+  }
+
   const onSwitchProject = (id: number) => {
     const idNum = Number(id)
     setCurrentProject(idNum)
     // Auto-switch theme if this project has a saved theme
     const saved = projectThemeMap[idNum]
-    if (saved) setColorTheme(saved)
+    if (saved) applyColorTheme(normalizeColorTheme(saved))
     const name = projects.find((p) => p.id === idNum)?.name
     toast.success(`已切换到项目：${name}`)
   }
 
   const onSetColorAndProject = (theme: ColorTheme) => {
-    setColorTheme(theme)
+    applyColorTheme(theme)
     if (currentProjectId) setProjectTheme(currentProjectId, theme)
   }
 
@@ -227,7 +242,7 @@ export default function MainLayout() {
       </a>
 
       {/* ── Sidebar ── */}
-      <Sidebar collapsible="icon" aria-label="主导航" className={uiTheme === 'obsidian-flow' ? 'ui-glass' : ''}>
+      <Sidebar collapsible="icon" aria-label="主导航" className={isObsidian ? 'ui-glass' : ''}>
         <SidebarHeader>
           <div className="flex h-14 items-center gap-2.5 px-3 border-b border-sidebar-border">
             {/* Logo icon — always visible, serves as collapsed-state brand */}
@@ -291,15 +306,15 @@ export default function MainLayout() {
       </Sidebar>
 
       {/* ── Main content ── */}
-      <SidebarInset className={`flex flex-col ${uiTheme === 'obsidian-flow' ? '' : colorTheme === 'liquid-glass' ? 'lg-morph-bg' : ''}`}>
+      <SidebarInset className={`flex flex-col ${isObsidian ? '' : colorTheme === 'liquid-glass' ? 'lg-morph-bg' : ''}`}>
         {/* Header */}
         <header className={`flex h-14 shrink-0 items-center justify-between gap-1 border-b px-2 sm:px-4 ${
-          uiTheme === 'obsidian-flow'
+          isObsidian
             ? 'ui-glass'
             : 'bg-card glass-card'
         }`}>
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
-            <SidebarTrigger className="h-8 w-8" />
+            <SidebarTrigger className="!size-11" />
             <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
             <span className="hidden text-sm text-muted-foreground lg:inline">当前项目</span>
             <Select
@@ -307,7 +322,7 @@ export default function MainLayout() {
               onValueChange={(v) => onSwitchProject(Number(v))}
             >
               <SelectTrigger
-                className="h-8 w-[150px] min-w-0 text-sm sm:w-[200px]"
+                className="!h-11 w-[150px] min-w-0 text-sm sm:w-[200px]"
                 aria-label="当前项目"
               >
                 <SelectValue placeholder="选择项目" />
@@ -323,37 +338,18 @@ export default function MainLayout() {
           </div>
 
           <div className="flex shrink-0 items-center gap-0 sm:gap-2">
-            {/* Obsidian Flow UI 系统切换 */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5"
-              onClick={() => setUiTheme(uiTheme === 'obsidian-flow' ? 'default' : 'obsidian-flow')}
-              aria-label={uiTheme === 'obsidian-flow' ? '切换到默认 UI' : '切换到黑曜流界 UI'}
-              aria-pressed={uiTheme === 'obsidian-flow'}
-            >
-              <span
-                className={`size-2 rounded-full transition-colors ${
-                  uiTheme === 'obsidian-flow' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(53,230,138,0.5)]' : 'bg-muted-foreground'
-                }`}
-              />
-              <span className="hidden sm:inline text-sm font-medium">
-                {uiTheme === 'obsidian-flow' ? '黑曜流界' : '默认 UI'}
-              </span>
-            </Button>
-
             {/* Theme dropdown — redesigned as card picker */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-1.5"
-                  aria-label={`切换主题，当前${getTheme(colorTheme).label}`}
+                  className="!min-h-11 !min-w-11 gap-1.5"
+                  aria-label={`切换主题，当前${activeTheme.label}`}
                 >
                   <Palette className="size-4 text-primary" />
                   <span className="hidden sm:inline text-sm font-medium">
-                    {getTheme(colorTheme).label}
+                    {activeTheme.label}
                   </span>
                   <ChevronDown className="hidden size-3 opacity-50 sm:block" />
                 </Button>
@@ -363,12 +359,12 @@ export default function MainLayout() {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-medium text-muted-foreground">外观模式</span>
                   <div className="flex gap-1 bg-muted rounded-md p-0.5">
-                    {(['light', 'dark', 'system'] as const).map((m) => (
+                    {modeOptions.map((m) => (
                       <button
                         key={m}
                         onClick={() => setMode(m)}
                         aria-label={m === 'light' ? '浅色模式' : m === 'dark' ? '深色模式' : '跟随系统'}
-                        className={`px-2.5 py-1 text-xs rounded-sm transition-colors ${
+                        className={`min-h-11 min-w-11 px-2.5 py-1 text-xs rounded-sm transition-colors ${
                           mode === m
                             ? 'bg-background text-foreground shadow-sm'
                             : 'text-muted-foreground hover:text-foreground'
@@ -379,6 +375,11 @@ export default function MainLayout() {
                     ))}
                   </div>
                 </div>
+                {isObsidian && (
+                  <p className="-mt-1 mb-3 text-[11px] text-muted-foreground">
+                    黑曜流界为深色专属
+                  </p>
+                )}
 
                 <DropdownMenuSeparator />
 
@@ -432,7 +433,7 @@ export default function MainLayout() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-1.5"
+                  className="!min-h-11 !min-w-11 gap-1.5"
                   aria-label={`用户菜单：${user?.nickname || user?.username || '用户'}`}
                 >
                   <Avatar className="size-6">
