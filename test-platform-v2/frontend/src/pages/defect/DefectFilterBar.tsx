@@ -79,7 +79,7 @@ export default function DefectFilterBar({
         刷新
       </Button>
       {canCreate && (
-        <Button onClick={onCreate} variant="neon">
+        <Button onClick={onCreate} variant="primary">
           <Plus className="size-4" />
           新建缺陷
         </Button>

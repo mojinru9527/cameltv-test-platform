@@ -442,7 +442,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             <Button
               type="button"
               size="sm"
-              variant={stepsViewMode === 'formatted' ? 'default' : 'secondary'}
+              variant={stepsViewMode === 'formatted' ? 'primary' : 'secondary'}
               className="h-7 text-xs px-2"
               onClick={() => setStepsViewMode('formatted')}
             >
@@ -452,7 +452,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             <Button
               type="button"
               size="sm"
-              variant={stepsViewMode === 'json' ? 'default' : 'secondary'}
+              variant={stepsViewMode === 'json' ? 'primary' : 'secondary'}
               className="h-7 text-xs px-2"
               onClick={() => setStepsViewMode('json')}
             >

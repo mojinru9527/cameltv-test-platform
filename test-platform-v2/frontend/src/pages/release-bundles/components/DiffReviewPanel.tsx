@@ -314,7 +314,7 @@ export default function DiffReviewPanel({
                           <Button
                             variant={
                               overrides[mod.id]?.action === 'confirm'
-                                ? 'default'
+                                ? 'primary'
                                 : 'secondary'
                             }
                             size="sm"
@@ -326,8 +326,8 @@ export default function DiffReviewPanel({
                           <Button
                             variant={
                               overrides[mod.id]?.action === 'reject'
-                                ? 'destructive'
-                                : 'outline'
+                                ? 'danger'
+                                : 'secondary'
                             }
                             size="sm"
                             className="h-7 text-xs"

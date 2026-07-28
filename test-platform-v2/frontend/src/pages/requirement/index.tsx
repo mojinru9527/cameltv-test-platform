@@ -609,7 +609,7 @@ export default function RequirementPage() {
                 内容预览：{activeDocBrief?.title || activeDoc?.title || `#${activeDocId}`}
                 {(activeDocBrief?.file_type || activeDoc?.file_type) && TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''] && (
                   <Badge
-                    variant="outline"
+                    tone="neutral"
                     className={cn('gap-1', TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''].className)}
                   >
                     {TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''].icon}
@@ -1038,7 +1038,7 @@ export default function RequirementPage() {
                   <TableCell>
                     <div className="flex items-center gap-1 flex-wrap">
                       {(item.modules || []).slice(0, 8).map((m: any) => (
-                        <Badge key={m.module} variant="secondary">
+                        <Badge key={m.module} tone="neutral">
                           {m.module} ({m.count})
                         </Badge>
                       ))}

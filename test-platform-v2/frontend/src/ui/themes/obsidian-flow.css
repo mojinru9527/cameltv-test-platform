@@ -240,6 +240,24 @@
   justify-content: center;
 }
 
+[data-ui-theme="obsidian-flow"] .ui-btn-icon-sm {
+  min-height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border-radius: 6px;
+  justify-content: center;
+  font-size: 12px;
+}
+
+[data-ui-theme="obsidian-flow"] .ui-btn-icon-xs {
+  min-height: 22px;
+  min-width: 22px;
+  padding: 0;
+  border-radius: 5px;
+  justify-content: center;
+  font-size: 10px;
+}
+
 /* ═══════════════════════════════════════════
    输入框系统
    ═══════════════════════════════════════════ */

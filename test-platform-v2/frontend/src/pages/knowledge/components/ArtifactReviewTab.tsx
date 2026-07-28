@@ -444,7 +444,7 @@ export default function ArtifactReviewTab() {
           <DialogFooter>
             <Button variant="secondary" onClick={() => setActionTarget(null)}>取消</Button>
             <Button
-              variant={actionTarget?.action === 'approve' ? 'default' : 'destructive'}
+              variant={actionTarget?.action === 'approve' ? 'primary' : 'danger'}
               onClick={handleApproveOrReject}
               disabled={actionLoading}
             >

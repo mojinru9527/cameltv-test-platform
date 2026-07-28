@@ -249,7 +249,7 @@ export default function EnvironmentPage() {
               {envList.map((env) => (
                 <Button
                   key={env.id}
-                  variant={selectedEnv?.id === env.id ? 'default' : 'secondary'}
+                  variant={selectedEnv?.id === env.id ? 'primary' : 'secondary'}
                   size="sm"
                   onClick={() => setSelectedEnv(env)}
                 >
