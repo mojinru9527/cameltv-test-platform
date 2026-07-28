@@ -73,7 +73,7 @@ export default function AssertionEditor({ value, onChange }: Props) {
           size="icon-sm"
           variant="ghost"
           onClick={(e) => { e.stopPropagation(); addRule() }}
-          title="添加断言"
+          aria-label="添加断言"
         >
           <Plus className="size-4" />
         </Button>
@@ -160,6 +160,7 @@ export default function AssertionEditor({ value, onChange }: Props) {
                 variant="ghost"
                 className="text-destructive h-8 w-8"
                 onClick={() => removeRule(i)}
+                aria-label={`删除断言 ${i + 1}`}
               >
                 <Trash2 className="size-3" />
               </Button>

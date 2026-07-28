@@ -199,7 +199,7 @@ export default function SourceListTab() {
                         size="icon-sm"
                         disabled={verifying.has(s.id) || isVerifiedToday(s.last_verified_at)}
                         onClick={(e) => handleVerify(s.id, e)}
-                        title={isVerifiedToday(s.last_verified_at) ? '今日已验证' : '验证保鲜度'}
+                        aria-label={isVerifiedToday(s.last_verified_at) ? `${s.title || s.id} 今日已验证` : `验证知识源 ${s.title || s.id} 保鲜度`}
                       >
                         {verifying.has(s.id) ? (
                           <Loader2 className="size-3.5 animate-spin" />

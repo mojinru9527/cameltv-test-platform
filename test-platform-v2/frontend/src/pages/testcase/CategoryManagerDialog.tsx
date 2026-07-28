@@ -88,7 +88,7 @@ function DomainNode({ domain, onDeleteDomain, onDeleteModule }: DomainNodeProps)
           size="icon-xs"
           variant="ghost"
           className="text-destructive hover:bg-destructive/10"
-          title={domainId ? `删除域 ${domain.domain}` : '分类接口尚未更新，暂不能删除'}
+          aria-label={domainId ? `删除域 ${domain.domain}` : '分类接口尚未更新，暂不能删除域'}
           disabled={!domainId}
           onClick={() => domainId && onDeleteDomain(domain, domainId)}
         >
@@ -115,7 +115,7 @@ function DomainNode({ domain, onDeleteDomain, onDeleteModule }: DomainNodeProps)
                   size="icon-xs"
                   variant="ghost"
                   className="text-destructive hover:bg-destructive/10"
-                  title={domainId && moduleId ? `删除模块 ${module.module}` : '分类接口尚未更新，暂不能删除'}
+                  aria-label={domainId && moduleId ? `删除模块 ${module.module}` : '分类接口尚未更新，暂不能删除模块'}
                   disabled={!domainId || !moduleId}
                   onClick={() => domainId && moduleId && onDeleteModule(domain, module, domainId, moduleId)}
                 >

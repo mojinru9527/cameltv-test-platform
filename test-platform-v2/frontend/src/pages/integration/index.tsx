@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -31,21 +31,23 @@ import { fetchRequirements } from '@/api/requirement'
 import { fetchTestCases } from '@/api/testcase'
 import type { IntegrationConfig, SyncLog, RequirementDocument } from '@/types'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import ConfirmActionDialog from '@/components/ConfirmActionDialog'
+import { useApi } from '@/hooks/useApi'
 
 // ── Form schema ──
 
 const formSchema = z.object({
   name: z.string().min(1, '名称不能为空'),
   provider_type: z.enum(['jira', 'tapd']),
-  base_url: z.string().min(1, 'Base URL 不能为空'),
-  email: z.string().optional(),
+  base_url: z.string().min(1, 'Base URL 不能为空').url('请输入完整的 http(s) URL'),
+  email: z.union([z.literal(''), z.string().email('请输入有效的 Email 地址')]).optional(),
   api_token: z.string().optional(),
   api_user: z.string().optional(),
   api_password: z.string().optional(),
   project_key: z.string().optional(),
   workspace_id: z.string().optional(),
   sync_direction: z.string().default('bidirectional'),
-  sync_interval_minutes: z.coerce.number().min(0).default(0),
+  sync_interval_minutes: z.coerce.number().min(0, '同步间隔不能小于 0').default(0),
   enabled: z.boolean().default(true),
 })
 
@@ -70,15 +72,26 @@ const StatusIcon = ({ status }: { status: string }) => {
   return <span className="text-yellow-600" title="跳过">→</span>
 }
 
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null
+  return (
+    <p id={id} role="alert" className="text-xs text-destructive">
+      {message}
+    </p>
+  )
+}
+
 // ── Component ──
 
 export default function IntegrationPage() {
   useDocumentTitle('集成管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
-  const [integrations, setIntegrations] = useState<IntegrationConfig[]>([])
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<IntegrationConfig | null>(null)
   const [testing, setTesting] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<IntegrationConfig | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [syncing, setSyncing] = useState<number | null>(null)
   const [logsOpen, setLogsOpen] = useState<number | null>(null)
   const [logs, setLogs] = useState<SyncLog[]>([])
@@ -94,9 +107,11 @@ export default function IntegrationPage() {
   }>({ totalRequirements: 0, totalCases: 0, linkedCases: 0, reqsWithCases: 0, apiEndpoints: 0, uiScripts: 0 })
   const [loadingLinkage, setLoadingLinkage] = useState(false)
 
-  // fetchIntegrations returns the promise directly; useApi's object contract
-  // doesn't fit this "call then setState" usage, so use a plain callback.
-  const load = useCallback(() => fetchIntegrations(), [])
+  const { data: integrationData, refetch: refresh } = useApi(
+    (signal) => fetchIntegrations(signal),
+    [],
+  )
+  const integrations = integrationData?.items || []
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -110,29 +125,41 @@ export default function IntegrationPage() {
 
   const providerType = form.watch('provider_type')
 
-  const refresh = useCallback(() => {
-    load().then((r: any) => setIntegrations(r?.items || [])).catch(() => {})
-  }, [load])
-
-  useEffect(() => { refresh() }, [refresh])
-
   // ── Load linkage data ──
   useEffect(() => {
+    const controller = new AbortController()
     setLoadingLinkage(true)
     Promise.all([
-      fetchRequirements().catch(() => [] as RequirementDocument[]),
-      fetchTestCases({ page: 1, page_size: 1 }).catch(() => ({ total: 0 })),
-    ]).then(([reqs, casesResult]) => {
-      const caseData = casesResult as { total: number }
+      fetchRequirements(undefined, controller.signal),
+      fetchTestCases({ page: 1, page_size: 1 }, controller.signal),
+    ]).then(([requirementsPage, casesResult]) => {
+      if (controller.signal.aborted) return
+      const caseData = casesResult as unknown as { total: number }
+      const requirements = requirementsPage.items || []
       setLinkageData({
-        totalRequirements: (reqs as RequirementDocument[]).length,
+        totalRequirements: requirementsPage.total,
         totalCases: caseData.total || 0,
-        linkedCases: (reqs as RequirementDocument[]).reduce((sum, r) => sum + (r.imported_count || 0), 0),
-        reqsWithCases: (reqs as RequirementDocument[]).filter(r => (r.imported_count || 0) > 0).length,
+        linkedCases: requirements.reduce((sum, r) => sum + (r.imported_count || 0), 0),
+        reqsWithCases: requirements.filter(r => (r.imported_count || 0) > 0).length,
         apiEndpoints: 0,  // would come from apitest API
         uiScripts: 0,     // would come from uitest API
       })
-    }).catch(() => {}).finally(() => setLoadingLinkage(false))
+    }).catch(() => {
+      if (!controller.signal.aborted) {
+        setLinkageData({
+          totalRequirements: 0,
+          totalCases: 0,
+          linkedCases: 0,
+          reqsWithCases: 0,
+          apiEndpoints: 0,
+          uiScripts: 0,
+        })
+      }
+    }).finally(() => {
+      if (!controller.signal.aborted) setLoadingLinkage(false)
+    })
+
+    return () => controller.abort()
   }, [])
 
   // ── Form actions ──
@@ -162,47 +189,68 @@ export default function IntegrationPage() {
   }
 
   const handleSave = async (values: FormValues) => {
-    // Build auth JSON from provider-specific fields
-    let authJson = '{}'
-    if (values.provider_type === 'jira') {
-      const extra: Record<string, string> = {}
-      if (values.project_key) extra.project_key = values.project_key
-      authJson = JSON.stringify({ email: values.email || '', api_token: values.api_token || '', ...extra })
-    } else {
-      const extra: Record<string, string> = {}
-      if (values.workspace_id) extra.workspace_id = values.workspace_id
-      authJson = JSON.stringify({ api_user: values.api_user || '', api_password: values.api_password || '', ...extra })
-    }
+    setSaving(true)
+    try {
+      // Build auth JSON from provider-specific fields
+      let authJson = '{}'
+      if (values.provider_type === 'jira') {
+        const extra: Record<string, string> = {}
+        if (values.project_key) extra.project_key = values.project_key
+        authJson = JSON.stringify({ email: values.email || '', api_token: values.api_token || '', ...extra })
+      } else {
+        const extra: Record<string, string> = {}
+        if (values.workspace_id) extra.workspace_id = values.workspace_id
+        authJson = JSON.stringify({ api_user: values.api_user || '', api_password: values.api_password || '', ...extra })
+      }
 
-    const payload = {
-      name: values.name,
-      provider_type: values.provider_type,
-      base_url: values.base_url,
-      auth_json: authJson,
-      sync_direction: values.sync_direction,
-      sync_interval_minutes: values.sync_interval_minutes,
-      enabled: values.enabled,
-    }
+      const payload = {
+        name: values.name,
+        provider_type: values.provider_type,
+        base_url: values.base_url,
+        auth_json: authJson,
+        sync_direction: values.sync_direction,
+        sync_interval_minutes: values.sync_interval_minutes,
+        enabled: values.enabled,
+      }
 
-    if (editing) {
-      await updateIntegration(editing.id, payload)
-      toast.success('集成配置已更新')
-    } else {
-      await createIntegration(payload)
-      toast.success('集成配置已创建')
+      if (editing) {
+        await updateIntegration(editing.id, payload)
+        toast.success('集成配置已更新')
+      } else {
+        await createIntegration(payload)
+        toast.success('集成配置已创建')
+      }
+      setDrawer(false)
+      refresh()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '集成配置保存失败，请重试')
+    } finally {
+      setSaving(false)
     }
-    setDrawer(false)
-    refresh()
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('确定删除此集成配置？')) return
-    await deleteIntegration(id)
-    toast.success('已删除')
-    refresh()
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      await deleteIntegration(deleteTarget.id)
+      toast.success('已删除')
+      setDeleteTarget(null)
+      refresh()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '删除失败，请重试')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const handleTest = async () => {
+    const valid = await form.trigger()
+    if (!valid) {
+      const firstError = Object.keys(form.formState.errors)[0] as keyof FormValues | undefined
+      if (firstError) form.setFocus(firstError)
+      return
+    }
     const values = form.getValues()
     let authJson = '{}'
     if (values.provider_type === 'jira') {
@@ -427,8 +475,13 @@ export default function IntegrationPage() {
                 {hasPerm('integration:manage') && (
                   <>
                     <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>编辑</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(r.id)}>
-                      <Trash2 className="size-3.5 text-red-500" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`删除集成配置 ${r.name}`}
+                      onClick={() => setDeleteTarget(r)}
+                    >
+                      <Trash2 className="size-3.5 text-red-500" aria-hidden="true" />
                     </Button>
                   </>
                 )}
@@ -448,12 +501,19 @@ export default function IntegrationPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4" noValidate>
             {/* Basic */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label htmlFor="integration-name">名称 *</Label>
-                <Input id="integration-name" placeholder="项目Jira连接" {...form.register('name')} />
+                <Input
+                  id="integration-name"
+                  placeholder="项目Jira连接"
+                  aria-invalid={!!form.formState.errors.name}
+                  aria-describedby={form.formState.errors.name ? 'integration-name-error' : undefined}
+                  {...form.register('name')}
+                />
+                <FieldError id="integration-name-error" message={form.formState.errors.name?.message} />
               </div>
               <div className="space-y-1">
                 <Label htmlFor="integration-provider-type">类型 *</Label>
@@ -469,7 +529,14 @@ export default function IntegrationPage() {
 
             <div className="space-y-1">
               <Label htmlFor="integration-base-url">Base URL *</Label>
-              <Input id="integration-base-url" placeholder={providerType === 'jira' ? 'https://your-domain.atlassian.net' : 'https://api.tapd.cn'} {...form.register('base_url')} />
+              <Input
+                id="integration-base-url"
+                placeholder={providerType === 'jira' ? 'https://your-domain.atlassian.net' : 'https://api.tapd.cn'}
+                aria-invalid={!!form.formState.errors.base_url}
+                aria-describedby={form.formState.errors.base_url ? 'integration-base-url-error' : undefined}
+                {...form.register('base_url')}
+              />
+              <FieldError id="integration-base-url-error" message={form.formState.errors.base_url?.message} />
             </div>
 
             {/* Provider-specific auth fields */}
@@ -477,7 +544,14 @@ export default function IntegrationPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="integration-email">Email</Label>
-                  <Input id="integration-email" placeholder="your-email@example.com" {...form.register('email')} />
+                  <Input
+                    id="integration-email"
+                    placeholder="your-email@example.com"
+                    aria-invalid={!!form.formState.errors.email}
+                    aria-describedby={form.formState.errors.email ? 'integration-email-error' : undefined}
+                    {...form.register('email')}
+                  />
+                  <FieldError id="integration-email-error" message={form.formState.errors.email?.message} />
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="integration-api-token">API Token</Label>
@@ -520,7 +594,19 @@ export default function IntegrationPage() {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="integration-sync-interval">自动同步 (分钟)</Label>
-                <Input id="integration-sync-interval" type="number" min={0} placeholder="0=禁用" {...form.register('sync_interval_minutes')} />
+                <Input
+                  id="integration-sync-interval"
+                  type="number"
+                  min={0}
+                  placeholder="0=禁用"
+                  aria-invalid={!!form.formState.errors.sync_interval_minutes}
+                  aria-describedby={form.formState.errors.sync_interval_minutes ? 'integration-sync-interval-error' : undefined}
+                  {...form.register('sync_interval_minutes')}
+                />
+                <FieldError
+                  id="integration-sync-interval-error"
+                  message={form.formState.errors.sync_interval_minutes?.message}
+                />
               </div>
               <div className="space-y-1 flex items-end pb-1">
                 <label className="flex items-center gap-2 text-sm">
@@ -531,8 +617,10 @@ export default function IntegrationPage() {
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button type="submit" disabled={testing}>{editing ? '保存' : '创建'}</Button>
-              <Button type="button" variant="secondary" disabled={testing} onClick={handleTest}>
+              <Button type="submit" loading={saving} disabled={testing || saving}>
+                {editing ? '保存' : '创建'}
+              </Button>
+              <Button type="button" variant="secondary" disabled={testing || saving} onClick={handleTest}>
                 {testing ? '测试中...' : '测试连接'}
               </Button>
             </div>
@@ -569,6 +657,14 @@ export default function IntegrationPage() {
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmActionDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteTarget(null) }}
+        title="删除集成配置"
+        description={`确定删除集成配置「${deleteTarget?.name ?? ''}」？删除后将停止相关同步任务。`}
+        pending={deleting}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

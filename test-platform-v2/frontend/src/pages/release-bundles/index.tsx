@@ -53,6 +53,7 @@ import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
+import ConfirmActionDialog from '@/components/ConfirmActionDialog'
 
 const STATUS_VARIANT: Record<
   string,
@@ -86,6 +87,8 @@ export default function ReleaseBundlesPage() {
   // ── Create dialog ──
   const [createOpen, setCreateOpen] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<ReleaseBundleListItem | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -131,14 +134,18 @@ export default function ReleaseBundlesPage() {
     }
   }
 
-  const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`确定删除「${name}」？关联的模块树节点将一并删除。`)) return
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
     try {
-      await deleteReleaseBundle(id)
+      await deleteReleaseBundle(deleteTarget.id)
       toast.success('已删除')
+      setDeleteTarget(null)
       refetch()
     } catch {
       // error handled by interceptor
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -340,9 +347,10 @@ export default function ReleaseBundlesPage() {
                         variant="ghost"
                         size="icon"
                         className="size-8"
+                        aria-label={`删除发布包 ${bundle.name}`}
                         onClick={(e) => {
                           e.stopPropagation()
-                          handleDelete(bundle.id, bundle.name)
+                          setDeleteTarget(bundle)
                         }}
                       >
                         <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
@@ -366,6 +374,14 @@ export default function ReleaseBundlesPage() {
           />
         </div>
       )}
+      <ConfirmActionDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteTarget(null) }}
+        title="删除发布包"
+        description={`确定删除「${deleteTarget?.name ?? ''}」？关联的模块树节点将一并删除，此操作无法撤销。`}
+        pending={deleting}
+        onConfirm={handleDelete}
+      />
     </div>
   )
 }

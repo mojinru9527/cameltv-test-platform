@@ -86,8 +86,15 @@ export async function fetchSearchHealth(): Promise<SearchHealth> {
 
 // ── M3 知识图谱 ──
 
-export async function fetchGraphView(limit = 200, knowledgeDomain?: string): Promise<GraphView> {
-  return api.get('/knowledge/graph/view', { params: { limit, ...(knowledgeDomain ? { knowledge_domain: knowledgeDomain } : {}) } })
+export async function fetchGraphView(
+  limit = 200,
+  knowledgeDomain?: string,
+  signal?: AbortSignal,
+): Promise<GraphView> {
+  return api.get('/knowledge/graph/view', {
+    params: { limit, ...(knowledgeDomain ? { knowledge_domain: knowledgeDomain } : {}) },
+    signal,
+  })
 }
 
 export async function triggerEntityExtract(sourceId?: number | null, maxChunks = 100): Promise<EntityExtractResult> {
@@ -202,8 +209,8 @@ export async function captureInsight(body: {
 export async function fetchGraphHierarchy(params?: {
   release_bundle_id?: number
   max_depth?: number
-}): Promise<ProjectSphereView> {
-  return api.get('/knowledge/graph/hierarchy', { params })
+}, signal?: AbortSignal): Promise<ProjectSphereView> {
+  return api.get('/knowledge/graph/hierarchy', { params, signal })
 }
 
 // ── 概念地图自演化 ──

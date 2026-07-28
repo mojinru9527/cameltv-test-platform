@@ -74,7 +74,7 @@ export default function Workbench() {
   const dateRange = useMemo(() => getDateRange(preset, rangeValue), [preset, rangeValue])
 
   const { data: stats, isLoading, isRefetching, isError, error, refetch } = useApi<DashboardStats>(
-    () => fetchDashboardStats({ start_date: dateRange.start, end_date: dateRange.end }),
+    (signal) => fetchDashboardStats({ start_date: dateRange.start, end_date: dateRange.end }, signal),
     [dateRange.start, dateRange.end]
   )
 
@@ -171,12 +171,17 @@ export default function Workbench() {
     return (
             <>
               {/* ─── 摘要指标 ─── */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                <StatCard icon={FileCheck} label="用例总数" value={_s.total_cases} variant="glass" />
-                <StatCard icon={BarChart3} label="测试计划" value={_s.total_plans} variant="glass" />
-                <StatCard icon={Percent} label="通过率" value={`${_s.pass_rate}%`} variant="glass" />
-                <StatCard icon={Bug} label="接口用例" value={_s.api_cases} variant="glass" />
-              </div>
+              {uiTheme !== 'obsidian-flow' && (
+                <div
+                  className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4"
+                  data-testid="workbench-summary-cards"
+                >
+                  <StatCard icon={FileCheck} label="用例总数" value={_s.total_cases} variant="glass" />
+                  <StatCard icon={BarChart3} label="测试计划" value={_s.total_plans} variant="glass" />
+                  <StatCard icon={Percent} label="通过率" value={`${_s.pass_rate}%`} variant="glass" />
+                  <StatCard icon={Bug} label="接口用例" value={_s.api_cases} variant="glass" />
+                </div>
+              )}
 
               {/* ─── 时间范围筛选 ─── */}
               <Card size="sm" className="mb-4">
@@ -236,9 +241,15 @@ export default function Workbench() {
                 const sumFail = _caseTypes.reduce((sum, ct) => sum + ct.execution_fail, 0)
 
                 return (
-                  <Card size="sm" className="mb-4">
+                  <Card
+                    size="sm"
+                    className="mb-4"
+                    role="figure"
+                    aria-labelledby="project-overview-title"
+                    aria-describedby="project-overview-summary"
+                  >
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-1.5">
+                      <CardTitle id="project-overview-title" className="flex flex-wrap items-center gap-1.5">
                         <BarChart3 className="size-4" />
                         项目概览
                         <span className="text-xs text-muted-foreground font-normal ml-2">
@@ -247,10 +258,13 @@ export default function Workbench() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex">
+                      <p id="project-overview-summary" className="mb-3 text-sm text-muted-foreground">
+                        共 {sumTotal} 条用例，执行通过 {sumPass} 条，执行失败 {sumFail} 条。
+                      </p>
+                      <div className="flex flex-col lg:flex-row">
                         {/* 柱状图主体 */}
-                        <div className="flex-1 min-w-0">
-                          <ResponsiveContainer width="100%" height={340}>
+                        <div className="min-w-0 flex-1">
+                          <ResponsiveContainer width="100%" height={320}>
                             <BarChart
                               data={barData}
                               margin={{ top: 20, right: 8, left: 0, bottom: 8 }}
@@ -275,15 +289,16 @@ export default function Workbench() {
                         </div>
 
                         {/* 侧边图例（带汇总值） */}
-                        <div className="flex items-center justify-center shrink-0 w-[140px]">
-                          <div className="bg-muted/50 rounded-lg p-4 border m-2">
+                        <div className="flex w-full shrink-0 items-center justify-center lg:w-[140px]">
+                          <div className="m-2 w-full rounded-lg border bg-muted/50 p-3 lg:p-4">
                             <div className="text-xs font-semibold mb-2.5">图例</div>
-                            {([
-                              { label: '用例总数', color: chartColors.barTotal, value: sumTotal },
-                              { label: '执行通过', color: chartColors.barPass, value: sumPass },
-                              { label: '执行失败', color: chartColors.barFail, value: sumFail },
-                            ]).map((item) => (
-                              <div key={item.label} className="flex items-center mb-2 text-xs">
+                            <div className="grid grid-cols-3 gap-2 lg:block">
+                              {([
+                                { label: '用例总数', color: chartColors.barTotal, value: sumTotal },
+                                { label: '执行通过', color: chartColors.barPass, value: sumPass },
+                                { label: '执行失败', color: chartColors.barFail, value: sumFail },
+                              ]).map((item) => (
+                              <div key={item.label} className="flex min-w-0 items-center text-xs lg:mb-2">
                                 <span
                                   className="inline-block size-3 rounded-sm mr-2 shrink-0"
                                   style={{ background: item.color }}
@@ -294,9 +309,32 @@ export default function Workbench() {
                                 </span>
                               </div>
                             ))}
+                            </div>
                           </div>
                         </div>
                       </div>
+                      <table className="sr-only" aria-label="项目概览数据">
+                        <thead>
+                          <tr>
+                            <th>用例类型</th>
+                            <th>用例总数</th>
+                            <th>执行通过</th>
+                            <th>执行失败</th>
+                            <th>通过率</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {barData.map((item) => (
+                            <tr key={item.caseType}>
+                              <th>{item.name}</th>
+                              <td>{item.用例总数}</td>
+                              <td>{item.执行通过}</td>
+                              <td>{item.执行失败}</td>
+                              <td>{item.通过率}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </CardContent>
                   </Card>
                 )
@@ -304,9 +342,14 @@ export default function Workbench() {
 
               {/* ─── P0-P3 优先级分布（饼图） ─── */}
               {_priorityData.length > 0 && (
-                <Card size="sm">
+                <Card
+                  size="sm"
+                  role="figure"
+                  aria-labelledby="priority-distribution-title"
+                  aria-describedby="priority-distribution-summary"
+                >
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-1.5">
+                    <CardTitle id="priority-distribution-title" className="flex flex-wrap items-center gap-1.5">
                       <PieChart className="size-4" />
                       用例优先级分布
                       <span className="text-xs text-muted-foreground font-normal ml-2">
@@ -315,6 +358,9 @@ export default function Workbench() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
+                    <p id="priority-distribution-summary" className="mb-3 text-sm text-muted-foreground">
+                      按用例类型展示 P0 至 P3 的数量与占比，具体数值可在图表数据表中读取。
+                    </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {_priorityData.map((pd: CaseTypePriority) => {
                         const pieData = [
@@ -407,6 +453,30 @@ export default function Workbench() {
                         )
                       })}
                     </div>
+                    <table className="sr-only" aria-label="用例优先级分布数据">
+                      <thead>
+                        <tr>
+                          <th>用例类型</th>
+                          <th>P0</th>
+                          <th>P1</th>
+                          <th>P2</th>
+                          <th>P3</th>
+                          <th>合计</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {_priorityData.map((item) => (
+                          <tr key={item.case_type}>
+                            <th>{item.label}</th>
+                            <td>{item.p0}</td>
+                            <td>{item.p1}</td>
+                            <td>{item.p2}</td>
+                            <td>{item.p3}</td>
+                            <td>{item.total}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </CardContent>
                 </Card>
               )}
@@ -474,7 +544,7 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
   const chartColors = useChartColors()
 
   const { data: crossStats, isLoading, isError, error, refetch } = useApi<CrossProjectStats>(
-    () => fetchCrossProjectStats({ start_date: dateRange.start, end_date: dateRange.end }),
+    (signal) => fetchCrossProjectStats({ start_date: dateRange.start, end_date: dateRange.end }, signal),
     [dateRange.start, dateRange.end]
   )
 
@@ -524,14 +594,22 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
 
           {/* Trends Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card size="sm">
+            <Card
+              size="sm"
+              role="figure"
+              aria-labelledby="cross-pass-rate-title"
+              aria-describedby="cross-pass-rate-summary"
+            >
               <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-1.5">
+                <CardTitle id="cross-pass-rate-title" className="text-sm flex items-center gap-1.5">
                   <TrendingUp className="size-4" />
                   整体通过率趋势（近 7 天）
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                <p id="cross-pass-rate-summary" className="sr-only">
+                  按日期展示整体测试通过率百分比。
+                </p>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={stats.trends.pass_rate}>
                     <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
@@ -541,17 +619,39 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
                     <Line type="monotone" dataKey="pass_rate" stroke={chartColors.barPass} strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
+                <table className="sr-only" aria-label="整体通过率趋势数据">
+                  <thead>
+                    <tr><th>日期</th><th>通过率</th><th>执行数</th></tr>
+                  </thead>
+                  <tbody>
+                    {stats.trends.pass_rate.map((point) => (
+                      <tr key={point.date}>
+                        <th>{point.date}</th>
+                        <td>{point.pass_rate ?? 0}%</td>
+                        <td>{point.total_execs ?? 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </CardContent>
             </Card>
 
-            <Card size="sm">
+            <Card
+              size="sm"
+              role="figure"
+              aria-labelledby="cross-defect-title"
+              aria-describedby="cross-defect-summary"
+            >
               <CardHeader>
-                <CardTitle className="text-sm flex items-center gap-1.5">
+                <CardTitle id="cross-defect-title" className="text-sm flex items-center gap-1.5">
                   <Bug className="size-4" />
                   缺陷趋势（近 7 天）
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                <p id="cross-defect-summary" className="sr-only">
+                  按日期展示新增缺陷数量。
+                </p>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={stats.trends.defects}>
                     <CartesianGrid strokeDasharray="3 3" stroke={chartColors.gridColor} />
@@ -561,6 +661,19 @@ function CrossProjectDashboard({ dateRange }: { dateRange: { start: string; end:
                     <Bar dataKey="count" fill={chartColors.barFail} radius={[4, 4, 0, 0]} maxBarSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
+                <table className="sr-only" aria-label="缺陷趋势数据">
+                  <thead>
+                    <tr><th>日期</th><th>新增缺陷</th></tr>
+                  </thead>
+                  <tbody>
+                    {stats.trends.defects.map((point) => (
+                      <tr key={point.date}>
+                        <th>{point.date}</th>
+                        <td>{point.count ?? 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </CardContent>
             </Card>
           </div>

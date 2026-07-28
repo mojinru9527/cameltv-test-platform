@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { fetchReleaseBundles } from '@/api/releaseBundles'
 import type { ReleaseBundleListItem } from '@/types'
 import { Button } from '@/ui'
@@ -24,8 +24,12 @@ export default function VersionList({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
+  const loadControllerRef = useRef<AbortController | null>(null)
 
-  const loadVersions = async () => {
+  const loadVersions = useCallback(async () => {
+    loadControllerRef.current?.abort()
+    const controller = new AbortController()
+    loadControllerRef.current = controller
     setLoading(true)
     setError(null)
     try {
@@ -33,18 +37,21 @@ export default function VersionList({
         page: 1,
         page_size: 100,
         keyword: search || undefined,
-      })
+      }, controller.signal)
+      if (controller.signal.aborted) return
       setVersions(data.items ?? [])
     } catch (err) {
+      if (controller.signal.aborted) return
       setError(err instanceof Error ? err.message : '加载版本列表失败')
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) setLoading(false)
     }
-  }
+  }, [search])
 
   useEffect(() => {
     loadVersions()
-  }, [projectId, search])
+    return () => loadControllerRef.current?.abort()
+  }, [loadVersions, projectId])
 
   const statusBadge = (status: string) => {
     const config: Record<string, { className: string; label: string }> = {
@@ -92,14 +99,16 @@ export default function VersionList({
           </div>
         ) : (
           <div className="p-2 space-y-1">
-            {versions.map((v) => (
+            {versions.map((v) => {
+              const isSelected = selectedBundleId === v.id
+              return (
               <button
                 key={v.id}
                 onClick={() => onSelect(v.id)}
                 className={cn(
                   'w-full text-left p-3 rounded-md transition-colors',
                   'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  selectedBundleId === v.id
+                  isSelected
                     ? 'bg-accent text-accent-foreground ring-1 ring-ring/10'
                     : 'text-foreground',
                 )}
@@ -109,18 +118,29 @@ export default function VersionList({
                   <span className="font-medium text-sm truncate">{v.name}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1.5 ml-6">
-                  <span className="text-xs text-muted-foreground">
+                  <span
+                    className={cn(
+                      'text-xs',
+                      isSelected ? 'text-accent-foreground/85' : 'text-muted-foreground',
+                    )}
+                  >
                     用户端 {v.client_version ?? '—'}
                   </span>
                   {statusBadge(v.status)}
                 </div>
                 {v.release_date && (
-                  <div className="text-xs text-muted-foreground mt-1 ml-6">
+                  <div
+                    className={cn(
+                      'mt-1 ml-6 text-xs',
+                      isSelected ? 'text-accent-foreground/85' : 'text-muted-foreground',
+                    )}
+                  >
                     {v.release_date}
                   </div>
                 )}
               </button>
-            ))}
+              )
+            })}
           </div>
         )}
       </ScrollArea>

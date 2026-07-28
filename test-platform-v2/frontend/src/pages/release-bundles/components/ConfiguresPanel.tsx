@@ -214,6 +214,7 @@ function LinkRow({
         size="icon"
         className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0"
         onClick={onDelete}
+        aria-label={`删除运营后台模块关联 ${link.admin_module_id}`}
       >
         <Trash2 className="h-3.5 w-3.5" />
       </Button>

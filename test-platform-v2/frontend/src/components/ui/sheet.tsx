@@ -69,10 +69,9 @@ const SheetContent = React.forwardRef<
               variant="ghost"
               className="absolute top-3 right-3"
               size="icon-sm"
+              aria-label="关闭面板"
             >
-              <XIcon
-              />
-              <span className="sr-only">Close</span>
+              <XIcon aria-hidden="true" />
             </Button>
           </SheetPrimitive.Close>
         )}

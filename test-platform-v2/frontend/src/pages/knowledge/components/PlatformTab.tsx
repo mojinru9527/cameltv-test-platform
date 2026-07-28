@@ -190,7 +190,7 @@ export default function PlatformTab() {
                         className="opacity-0 group-hover:opacity-100 transition-opacity"
                         disabled={verifying.has(s.id)}
                         onClick={(e) => handleVerify(s.id, e)}
-                        title="验证此知识源"
+                        aria-label={`验证知识源 ${s.title || s.id}`}
                       >
                         <CheckCircle2 className="size-3.5" />
                       </Button>
