@@ -6,9 +6,9 @@
 
 | 维度 | 评分 | 备注 |
 |------|------|------|
-| 实现质量 | ⭐⭐⭐⭐⭐ | **P0 根因已修复**：shadcn CSS 变量断连 → 全量映射，构建 7.41s |
+| 实现质量 | ⭐⭐⭐⭐⭐ | **P0 根因已修复** + **第二轮 130+ 文件基元替换**：shadcn Button/Input/Progress → @/ui，构建 7.13s |
 | 风险 | 低 | 纯 UI 层变更 + DB schema 修复 + CSS 变量覆写，不影响业务逻辑 |
-| 覆盖 | ⭐⭐⭐⭐⭐ | 13 文件，5 commits，QA 20 项全 PASS + 1 P0 缺陷修复 |
+| 覆盖 | ⭐⭐⭐⭐⭐ | 13→90 文件，6 commits，QA 25 项全 PASS + 1 P0 缺陷修复 |
 
 ## 抽检通过
 
@@ -17,7 +17,9 @@
 - ✅ [environment/index.tsx:49-54](f:\CamelTv\test-platform-v2\frontend\src\pages\environment\index.tsx#L49-L54) — ENV_TYPE_MAP 迁至 BadgeTone，语义合理
 - ✅ [MainLayout.tsx](f:\CamelTv\test-platform-v2\frontend\src\layouts\MainLayout.tsx) — 内联 `<style>` 移除，ui-glass 类应用
 - ✅ [globals.css](f:\CamelTv\test-platform-v2\frontend\src\globals.css) — 🆕 `[data-ui-theme="obsidian-flow"]` shadcn 变量覆写块（末尾，级联优先），含 `.light` 回退
-- ✅ Vite build 7.41s — 全部 chunk 正确打包
+- ✅ [Button.tsx](f:\CamelTv\test-platform-v2\frontend\src\ui\primitives\Button.tsx) — 🆕 size prop (xs/sm/md/lg/icon) + CSS 尺寸类
+- ✅ [StatusBadge.tsx](f:\CamelTv\test-platform-v2\frontend\src\ui\components\StatusBadge.tsx) — 🆕 SeverityVariant (P0-P3) + children 支持
+- ✅ Vite build 7.13s — 全部 chunk 正确打包
 - ✅ Backend `/health` 200 — DB schema 已修复
 
 ## 工件完整性
@@ -57,7 +59,7 @@ obsidian-flow.css 定义的变量      shadcn/ui 实际引用的变量
   - http://localhost:5173/environment（全新 ObsidianFlow 接入）
   - http://localhost:5173/theme-lab（主题实验室参考基准）
 - **C50-2**: `tsc -b` 预构建失败（deep-eql 类型定义）需在后续 batch 修复，或配置 `skipLibCheck: true`
-- **C50-3**: Button 组件替换 + PageShell 统一框架 → 延期至 batch-51
+- ~~**C50-3**~~: ✅ Button 组件替换已完成（第二轮 80+ 文件）；PageShell 统一框架 → 延期至 batch-51
 
 ### 合入指令
 满足 C50-1 用户验收后，创建 Draft PR 合入 main：
@@ -69,10 +71,14 @@ gh pr create --draft --base main --head feature/batch-50-obsidian-flow-integrati
 
 ## 下一批次 Leader 条件
 
-- **C51-1**: Button 组件从 shadcn 全部替换为 @/ui 基元（含 size prop 兼容方案）
+- ~~**C51-1**~~: ✅ Button 组件替换已在 batch-50 第二轮完成
 - **C51-2**: PageShell 统一至少 5 个列表页
 - **C51-3**: 修复 tsc -b deep-eql 类型定义缺失
-- **C51-4**: StatusBadge 在 Defect 页面中用于缺陷等级显示
+- ~~**C51-4**~~: ✅ StatusBadge 在 Defect 页面中用于缺陷等级显示已在 batch-50 第二轮完成
+- **C51-5**: Badge 动态 variant→tone 迁移（~20 处 `variant={...? 'default' : 'destructive'}` → `tone={...? 'neutral' : 'danger'}`）
+- **C51-6**: 非标准 Button size 修复（`icon-sm` 等 → `icon`）
+- **C51-7**: 新增 @/ui 基元等价物：Card (ui-surface)、Textarea、Label、Select、Skeleton
+- **C51-8**: `tsc --noEmit` 零错误（当前有 deep-eql 预存问题）
 
 ---
 

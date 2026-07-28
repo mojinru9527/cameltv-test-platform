@@ -1,12 +1,12 @@
 # Batch 50 — QA 报告
 
-> **QA (🔍)** | Date: 2026-07-28 | Verdict: **PASS**
+> **QA (🔍)** | Date: 2026-07-28 | Verdict: **PASS** | 更新: 第二轮组件适配
 
 ## 测试总览
 
 | 条件数 | 通过 | 失败 | 阻塞 |
 |--------|------|------|------|
-| 15 | 15 | 0 | 0 |
+| 25 | 25 | 0 | 0 |
 
 ## 可执行门禁
 
@@ -15,7 +15,8 @@
 | 检查项 | 命令 | 退出码 | 结果 |
 |--------|------|--------|------|
 | TypeScript 类型检查 | `npx tsc --noEmit` | 2 | ✅ 仅预存 `deep-eql` 类型定义缺失（vitest 依赖），零新增类型错误 |
-| Vite 构建 | `npx vite build` | 0 | ✅ 9.01s，所有 chunk 正确打包（含 ThemeLab 39.10 kB） |
+| Vite 构建 (首轮) | `npx vite build` | 0 | ✅ 7.54s |
+| Vite 构建 (终轮) | `npx vite build` | 0 | ✅ 7.13s，所有 chunk 正确打包 |
 | 前端服务 | `curl localhost:5173` | 0 | ✅ HTTP 200 |
 
 ### 后端
@@ -79,14 +80,52 @@
 | 内联 <style> 移除 | ✅ PASS | 不再重复 obsidian-flow.css |
 | ui-glass 类应用 | ✅ PASS | 侧边栏条件性 + Header 条件性 |
 
+### C7: Button 基元增强 + 批量替换 (第二轮)
+**变更文件**: `ui/primitives/Button.tsx` + `ui/themes/obsidian-flow.css` + 80+ 页面/组件
+| 检查项 | 结果 | 说明 |
+|--------|------|------|
+| size prop (xs/sm/md/lg/icon) | ✅ PASS | ButtonSize 类型 + CSS 类 (.ui-btn-xs/.ui-btn-sm/.ui-btn-lg/.ui-btn-icon) |
+| 80+ 文件导入替换 | ✅ PASS | 页面/组件/layouts 全部替换为 `import { Button } from '@/ui'` |
+| variant 映射 | ✅ PASS | default→primary, destructive→danger, outline→secondary, link→ghost |
+| size 映射 | ✅ PASS | default→md |
+| asChild 兼容 | ✅ PASS | PrototypePreview: `<Button asChild>` → `<a className="ui-btn...">` |
+| 动态 variant 表达式 | ✅ PASS | DebugTab/TaskTab/Workbench 三元表达式全部修复 |
+| Vite 构建 | ✅ PASS | 7.54s → 7.13s |
+
+### C8: Input 批量替换 (第二轮)
+**变更文件**: 43 页面/组件
+| 检查项 | 结果 | 说明 |
+|--------|------|------|
+| 43 文件导入替换 | ✅ PASS | 全部替换为 `import { Input } from '@/ui'` |
+| API 兼容 | ✅ PASS | `@/ui` Input extends InputHTMLAttributes，与 shadcn 兼容 |
+| Vite 构建 | ✅ PASS | 7.61s |
+
+### C9: Progress 批量替换 (第二轮)
+**变更文件**: 7 页面
+| 检查项 | 结果 | 说明 |
+|--------|------|------|
+| 7 文件导入替换 | ✅ PASS | 全部替换为 `import { Progress } from '@/ui'` |
+| Vite 构建 | ✅ PASS | 7.36s |
+
+### C10: StatusBadge 增强 + Defect 页面 (第二轮)
+**变更文件**: `ui/components/StatusBadge.tsx` + `pages/defect/DefectTable.tsx`
+| 检查项 | 结果 | 说明 |
+|--------|------|------|
+| SeverityVariant (P0-P3) | ✅ PASS | P0→danger, P1→warning, P2→info, P3→neutral |
+| children 支持 | ✅ PASS | 可传入 children 或 label prop |
+| DefectTable severity 直连 | ✅ PASS | getSeverityVariant 直接返回 P0/P1/P2/P3，不再映射到执行状态 |
+| Vite 构建 | ✅ PASS | 7.50s |
+
 ## 缺陷列表
 
 | # | 严重级 | 描述 | 证据 | 状态 |
 |---|--------|------|------|------|
 | 1 | **P0** | **shadcn CSS 变量未映射** — obsidian-flow.css 定义了 `--_bg`/`--_surface`/`--_text` 等自有变量，但从未覆写 shadcn/ui 组件实际引用的 `--background`/`--foreground`/`--card`/`--primary` 等标准变量。导致主应用页面仍以 cyberpunk 霓虹蓝黑渲染，与 ThemeLab 翡翠绿黑参考基准完全不同 | 用户浏览器验收发现。所有 shadcn 组件（Card/Button/Table/Badge）渲染颜色来自 `data-theme`（cyberpunk）而非 obsidian-flow | ✅ **已修复** (c924ee1)，在 globals.css 末尾追加 `[data-ui-theme="obsidian-flow"]` 变量覆写块 |
 | 2 | P2 | tsc -b 构建失败（deep-eql 类型定义缺失） | 预存问题，与本次变更无关 | 已知 |
-| 3 | P3 | Button 组件尚未替换为 @/ui 基元 | 设计走查发现，已列为下一 batch 任务 | 延期 |
+| 3 | ~~P3~~ **✅ 已修复** | ~~Button 组件尚未替换为 @/ui 基元~~ | 第二轮已批量替换 80+ 文件 | **已修复** (96d1fe8) |
 | 4 | P3 | PageShell 尚未接入页面 | 已列为 batch-51 任务 | 延期 |
+| 5 | P3 | Badge 动态 variant→tone 迁移不完整 — 部分页面仍用 `variant={...? 'default' : 'destructive'}` 传参给 `@/ui` Badge（`@/ui` Badge 只认 `tone` prop，`variant` 被透传为 DOM 属性无效） | grep 发现 ~20 处动态 variant 表达式 | 延期至 batch-51 |
+| 6 | P3 | `size="icon-sm"` 不被 `@/ui` Button 支持 | DebugTab.tsx 1 处 | 延期至 batch-51 |
 
 ## 根因分析：shadcn CSS 变量断连
 
