@@ -427,7 +427,9 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-sm font-medium">Params (Query)</label>
-              <Button size="icon-sm" variant="ghost" onClick={addParamRow} title="添加参数"><Plus className="size-3" /></Button>
+              <Button size="icon-sm" variant="ghost" onClick={addParamRow} title="添加参数" aria-label="添加查询参数">
+                <Plus className="size-3" aria-hidden="true" />
+              </Button>
             </div>
             {paramRows.length > 0 && (
               <div className="border rounded-md divide-y">
@@ -435,7 +437,9 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
                   <div key={i} className="flex items-center gap-2 px-2 py-1.5">
                     <Input className="flex-1 h-7 text-xs" placeholder="参数名" value={r.key} onChange={(e) => updateParamRow(i, 'key', e.target.value)} aria-label={`参数 ${i + 1} 名称`} />
                     <Input className="flex-1 h-7 text-xs" placeholder="参数值" value={r.value} onChange={(e) => updateParamRow(i, 'value', e.target.value)} aria-label={`参数 ${i + 1} 值`} />
-                    <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeParamRow(i)}><Trash2 className="size-3" /></Button>
+                    <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeParamRow(i)} aria-label={`删除查询参数 ${i + 1}`}>
+                      <Trash2 className="size-3" aria-hidden="true" />
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -449,7 +453,11 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
               <div className="flex items-center gap-1">
                 <Button size="sm" variant={headerMode === 'table' ? 'primary' : 'secondary'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('table')}>表格</Button>
                 <Button size="sm" variant={headerMode === 'json' ? 'primary' : 'secondary'} className="h-7 text-xs px-2" onClick={() => setHeaderMode('json')}>JSON</Button>
-                {headerMode === 'table' && <Button size="icon-sm" variant="ghost" onClick={addHeaderRow} title="添加 Header"><Plus className="size-3" /></Button>}
+                {headerMode === 'table' && (
+                  <Button size="icon-sm" variant="ghost" onClick={addHeaderRow} title="添加 Header" aria-label="添加请求 Header">
+                    <Plus className="size-3" aria-hidden="true" />
+                  </Button>
+                )}
               </div>
             </div>
             {headerMode === 'table' ? (
@@ -458,7 +466,9 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
                   <div key={i} className="flex items-center gap-2 px-2 py-1.5">
                     <Input className="flex-1 h-7 text-xs" placeholder="Header 名" value={r.key} onChange={(e) => updateHeaderRow(i, 'key', e.target.value)} aria-label={`Header ${i + 1} 名称`} />
                     <Input className="flex-1 h-7 text-xs" placeholder="Header 值" value={r.value} onChange={(e) => updateHeaderRow(i, 'value', e.target.value)} aria-label={`Header ${i + 1} 值`} />
-                    <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeHeaderRow(i)}><Trash2 className="size-3" /></Button>
+                    <Button size="icon-sm" variant="ghost" className="text-destructive h-7 w-7 shrink-0" onClick={() => removeHeaderRow(i)} aria-label={`删除请求 Header ${i + 1}`}>
+                      <Trash2 className="size-3" aria-hidden="true" />
+                    </Button>
                   </div>
                 ))}
               </div>

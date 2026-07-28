@@ -28,10 +28,10 @@ export interface ThemeDefinition {
 export const UI_THEMES: ThemeDefinition[] = [
   {
     id: 'obsidian-flow',
-    version: '1.0.0',
+    version: '1.1.0',
     label: 'Obsidian Flow',
     labelZh: '黑曜流界',
-    status: 'beta',
+    status: 'stable',
     supportedModes: ['dark'],
     defaultMode: 'dark',
     density: 'standard',

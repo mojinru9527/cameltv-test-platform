@@ -5,47 +5,60 @@
 
 :root {
   /* ── 画布与表面 ── */
-  --color-canvas: var(--obsidian-950);
-  --color-surface: var(--obsidian-925);
-  --color-surface-elevated: var(--obsidian-900);
-  --color-surface-overlay: rgba(7, 12, 9, 0.82);
+  --color-canvas: var(--background);
+  --color-surface: var(--card);
+  --color-surface-elevated: var(--popover);
+  --color-surface-overlay: color-mix(in srgb, var(--popover) 88%, transparent);
 
   /* ── 文本 ── */
-  --color-text: var(--obsidian-100);
-  --color-text-secondary: var(--obsidian-400);
-  --color-text-muted: var(--obsidian-600);
-  --color-text-inverse: var(--obsidian-950);
+  --color-text: var(--foreground);
+  --color-text-secondary: var(--muted-foreground);
+  --color-text-muted: var(--muted-foreground);
+  --color-text-inverse: var(--primary-foreground);
 
   /* ── 主操作 ── */
-  --color-action-primary: var(--green-400);
-  --color-action-primary-hover: var(--green-300);
-  --color-action-primary-text: var(--obsidian-950);
+  --color-action-primary: var(--primary);
+  --color-action-primary-hover: color-mix(in srgb, var(--primary) 86%, var(--foreground));
+  --color-action-primary-text: var(--primary-foreground);
+  --color-action-danger: var(--destructive);
+  --color-action-danger-text: var(--destructive-foreground);
 
   /* ── 状态 ── */
-  --color-status-success: var(--green-400);
-  --color-status-success-bg: rgba(53, 230, 138, 0.1);
-  --color-status-warning: var(--amber-400);
-  --color-status-warning-bg: rgba(245, 166, 35, 0.1);
-  --color-status-danger: var(--red-400);
-  --color-status-danger-bg: rgba(255, 154, 144, 0.1);
-  --color-status-info: var(--blue-400);
-  --color-status-info-bg: rgba(128, 196, 255, 0.1);
+  --color-status-neutral: var(--muted-foreground);
+  --color-status-neutral-bg: var(--muted);
+  --color-status-success: var(--chart-1);
+  --color-status-success-bg: color-mix(in srgb, var(--chart-1) 10%, transparent);
+  --color-status-success-border: color-mix(in srgb, var(--chart-1) 24%, transparent);
+  --color-status-warning: var(--chart-3);
+  --color-status-warning-bg: color-mix(in srgb, var(--chart-3) 10%, transparent);
+  --color-status-warning-border: color-mix(in srgb, var(--chart-3) 24%, transparent);
+  --color-status-danger: var(--destructive);
+  --color-status-danger-bg: color-mix(in srgb, var(--destructive) 10%, transparent);
+  --color-status-danger-border: color-mix(in srgb, var(--destructive) 24%, transparent);
+  --color-status-danger-glow: color-mix(in srgb, var(--destructive) 40%, transparent);
+  --color-status-info: var(--chart-2);
+  --color-status-info-bg: color-mix(in srgb, var(--chart-2) 10%, transparent);
+  --color-status-info-border: color-mix(in srgb, var(--chart-2) 24%, transparent);
 
   /* ── 边界 ── */
-  --color-border-subtle: rgba(218, 239, 224, 0.08);
-  --color-border-default: rgba(218, 239, 224, 0.12);
-  --color-border-strong: rgba(218, 239, 224, 0.2);
-  --color-border-focus: var(--green-400);
+  --color-border-subtle: color-mix(in srgb, var(--border) 68%, transparent);
+  --color-border-default: var(--border);
+  --color-border-strong: color-mix(in srgb, var(--border) 72%, var(--foreground));
+  --color-border-focus: var(--ring);
 
   /* ── 交互反馈 ── */
-  --color-hover: rgba(255, 255, 255, 0.04);
-  --color-pressed: rgba(255, 255, 255, 0.08);
-  --color-selected: rgba(53, 230, 138, 0.08);
-  --color-focus-ring: rgba(53, 230, 138, 0.5);
+  --color-hover: var(--accent);
+  --color-hover-text: var(--accent-foreground);
+  --color-pressed: color-mix(in srgb, var(--accent) 82%, var(--foreground));
+  --color-selected: color-mix(in srgb, var(--primary) 10%, transparent);
+  --color-focus-ring: var(--ring);
 
   /* ── 覆盖与特殊 ── */
-  --color-glass-bg: rgba(20, 28, 23, 0.72);
-  --color-glass-border: rgba(117, 255, 178, 0.08);
+  --color-overlay-scrim: rgb(0 0 0 / 48%);
+  --color-progress-track: color-mix(in srgb, var(--foreground) 8%, transparent);
+  --color-glass-bg: var(--glass-bg, var(--card));
+  --color-glass-border: var(--glass-border, var(--border));
   --color-glass-blur: blur(18px);
   --color-glass-blur-heavy: blur(32px);
+  --shadow-inspector: -8px 0 32px rgb(0 0 0 / 40%);
 }
