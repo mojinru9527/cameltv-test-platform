@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Input } from '@/ui'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -208,7 +208,7 @@ export default function SearchTab() {
         </Button>
         {hasPerm('knowledge:manage') && (
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             className="h-9"
             disabled={reembedding}

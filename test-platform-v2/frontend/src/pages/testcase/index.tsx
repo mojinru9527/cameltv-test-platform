@@ -1,9 +1,8 @@
+import { Badge, Button, useObsidianPage } from '@/ui'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -44,14 +43,14 @@ import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDe
 import { formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { useObsidianPage } from '@/ui'
 import CaseDrawer from './CaseDrawer'
 import VersionDialog from './VersionDialog'
 import type { TestCaseVersion } from '@/types'
 
-const PRIORITY_COLORS: Record<string, string> = { P0: 'red', P1: 'orange', P2: 'blue', P3: 'default' }
+import type { BadgeTone } from '@/ui'
+const PRIORITY_TONES: Record<string, BadgeTone> = { P0: 'danger', P1: 'warning', P2: 'info', P3: 'neutral' }
 const REVIEW_LABELS: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }
-const REVIEW_COLORS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = { draft: 'secondary', submitted: 'outline', approved: 'default', rejected: 'destructive' }
+const REVIEW_TONES: Record<string, BadgeTone> = { draft: 'neutral', submitted: 'info', approved: 'success', rejected: 'danger' }
 
 export default function TestCasePage() {
   useDocumentTitle('用例库')
@@ -292,7 +291,7 @@ export default function TestCasePage() {
       {/* Body: Tree + Table */}
       <div className="flex gap-4">
         {/* Left: Domain Tree */}
-        <Card size="sm" className="w-[220px] shrink-0 h-[calc(100vh-215px)] overflow-y-auto">
+        <Card size="sm" className="ui-surface w-[220px] shrink-0 h-[calc(100vh-215px)] overflow-y-auto">
           <CardHeader className="border-b pb-2">
             <CardTitle className="text-[13px]">模块分类</CardTitle>
           </CardHeader>
@@ -369,7 +368,7 @@ export default function TestCasePage() {
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
-            <Button size="sm" variant="outline" onClick={() => {
+            <Button size="sm" variant="secondary" onClick={() => {
               setSelDomain(''); setSelModule(''); setPriority(''); setKeyword(''); setPage(1)
             }}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
@@ -396,11 +395,11 @@ export default function TestCasePage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button size="sm" variant="outline" onClick={doBatchUpdate} disabled={batchUpdating || !batchPriority}>
+              <Button size="sm" variant="secondary" onClick={doBatchUpdate} disabled={batchUpdating || !batchPriority}>
                 {batchUpdating ? '更新中...' : '批量更新'}
               </Button>
               <div className="flex-1" />
-              <Button size="sm" variant="destructive" onClick={doBatchDelete} disabled={batchDeleting}>
+              <Button size="sm" variant="danger" onClick={doBatchDelete} disabled={batchDeleting}>
                 <Trash2 className="size-3.5" data-icon="inline-start" />
                 {batchDeleting ? '删除中...' : `批量删除 (${selected.size})`}
               </Button>
@@ -424,7 +423,7 @@ export default function TestCasePage() {
           >
             {() => (
             <div className="overflow-x-visible">
-              <Table className="min-w-[900px] [&_td]:py-2.5">
+              <Table className="ui-table min-w-[900px] [&_td]:py-2.5">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[40px]">
@@ -459,7 +458,7 @@ export default function TestCasePage() {
                         <span className="line-clamp-1" title={r.title}>{r.title || '......'}</span>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={PRIORITY_COLORS[r.priority] === 'red' ? 'destructive' : PRIORITY_COLORS[r.priority] === 'orange' ? 'secondary' : 'default'}>
+                        <Badge tone={PRIORITY_TONES[r.priority] || 'neutral'}>
                           {r.priority}
                         </Badge>
                       </TableCell>
@@ -473,7 +472,7 @@ export default function TestCasePage() {
                         <span className="line-clamp-1">{formatStepExpectations(r.steps, r.expected_result).join(' ') || '......'}</span>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={REVIEW_COLORS[r.review_status] || 'secondary'} className="text-[10px]">
+                        <Badge tone={REVIEW_TONES[r.review_status] || 'neutral'} className="text-[10px]">
                           {REVIEW_LABELS[r.review_status] || r.review_status || '草稿'}
                         </Badge>
                       </TableCell>

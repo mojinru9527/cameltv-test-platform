@@ -30,7 +30,7 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import CommandPalette from '@/components/CommandPalette'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import {
   Select,
   SelectContent,
@@ -222,23 +222,8 @@ export default function MainLayout() {
         跳到主内容
       </a>
 
-      {/* ── Glass Sidebar override (obsidian-flow) ── */}
-      {uiTheme === 'obsidian-flow' && (
-        <style>{`
-          [data-sidebar="sidebar"] {
-            background: rgba(20, 28, 23, 0.78) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            border-right: 1px solid rgba(117, 255, 178, 0.06) !important;
-          }
-          [data-ui-theme="obsidian-flow"] [data-sidebar="menu-button"]:hover {
-            background: rgba(53, 230, 138, 0.06) !important;
-          }
-        `}</style>
-      )}
-
       {/* ── Sidebar ── */}
-      <Sidebar collapsible="icon" aria-label="主导航">
+      <Sidebar collapsible="icon" aria-label="主导航" className={uiTheme === 'obsidian-flow' ? 'ui-glass' : ''}>
         <SidebarHeader>
           <div className="flex h-14 items-center gap-2.5 px-3 border-b border-sidebar-border">
             {/* Logo icon — always visible, serves as collapsed-state brand */}
@@ -306,7 +291,7 @@ export default function MainLayout() {
         {/* Header */}
         <header className={`flex h-14 shrink-0 items-center justify-between gap-1 border-b px-2 sm:px-4 ${
           uiTheme === 'obsidian-flow'
-            ? 'border-[rgba(218,239,224,0.08)] bg-[rgba(20,28,23,0.72)] backdrop-blur-[18px]'
+            ? 'ui-glass'
             : 'bg-card glass-card'
         }`}>
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">

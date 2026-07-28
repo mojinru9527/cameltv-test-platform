@@ -1,3 +1,4 @@
+import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
 /**
  * Environment & Variable management page.
  * E1: Project-level environments (dev/test/staging/prod) + variables with optional encryption.
@@ -12,9 +13,7 @@ import {
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -46,15 +45,20 @@ import EmptyState from '@/components/EmptyState'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
-const ENV_TYPE_MAP: Record<string, { label: string; color: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  dev: { label: '开发', color: 'secondary' },
-  test: { label: '测试', color: 'outline' },
-  staging: { label: '预发布', color: 'default' },
-  prod: { label: '生产', color: 'destructive' },
+const ENV_TYPE_MAP: Record<string, { label: string; tone: BadgeTone }> = {
+  dev: { label: '开发', tone: 'info' },
+  test: { label: '测试', tone: 'neutral' },
+  staging: { label: '预发布', tone: 'warning' },
+  prod: { label: '生产', tone: 'danger' },
 }
 
 export default function EnvironmentPage() {
   useDocumentTitle('环境配置')
+  const { Page } = useObsidianPage({
+    title: '环境与变量管理',
+    subtitle: 'ENVIRONMENT & VARIABLES',
+    description: '项目级测试环境配置与加密变量管理，支持环境切换与变量引用。',
+  })
   // ── Environments (useApi — P1-8) ──
   const { data: envs, isLoading, isError, error, refetch } = useApi<Environment[]>(
     () => fetchEnvironments(),
@@ -222,12 +226,9 @@ export default function EnvironmentPage() {
   // ── Render ──
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">环境与变量管理</h1>
-          <p className="text-sm text-muted-foreground mt-1">项目级测试环境配置与加密变量管理</p>
-        </div>
+    <Page>
+      <div className="space-y-4">
+      <div className="flex items-center justify-end">
         <Button onClick={openEnvCreate}><Plus className="size-4" data-icon="inline-start" />新建环境</Button>
       </div>
 
@@ -248,13 +249,13 @@ export default function EnvironmentPage() {
               {envList.map((env) => (
                 <Button
                   key={env.id}
-                  variant={selectedEnv?.id === env.id ? 'default' : 'outline'}
+                  variant={selectedEnv?.id === env.id ? 'primary' : 'secondary'}
                   size="sm"
                   onClick={() => setSelectedEnv(env)}
                 >
                   <Server className="size-3.5" data-icon="inline-start" />
                   {env.name}
-                  <Badge variant={ENV_TYPE_MAP[env.env_type]?.color ?? 'outline'} className="ml-2 text-[10px] px-1.5 py-0">
+                  <Badge tone={ENV_TYPE_MAP[env.env_type]?.tone ?? 'neutral'} className="ml-2 text-[10px] px-1.5 py-0">
                     {ENV_TYPE_MAP[env.env_type]?.label ?? env.env_type}
                   </Badge>
                 </Button>
@@ -263,7 +264,7 @@ export default function EnvironmentPage() {
 
             {/* Selected environment detail */}
             {selectedEnv && (
-              <Card>
+              <Card className="ui-surface">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -286,7 +287,7 @@ export default function EnvironmentPage() {
                 <CardContent>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">变量列表</h3>
-                    <Button variant="outline" size="sm" onClick={openVarCreate}>
+                    <Button variant="secondary" size="sm" onClick={openVarCreate}>
                       <Plus className="size-3.5" data-icon="inline-start" />添加变量
                     </Button>
                   </div>
@@ -300,7 +301,7 @@ export default function EnvironmentPage() {
                       className="py-8"
                     />
                   ) : (
-                    <Table>
+                    <Table className="ui-table">
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[180px]">变量名</TableHead>
@@ -319,7 +320,7 @@ export default function EnvironmentPage() {
                             </TableCell>
                             <TableCell>
                               {v.encrypted ? (
-                                <Badge variant="secondary" className="text-[10px]">加密</Badge>
+                                <Badge tone="warning" className="text-[10px]">加密</Badge>
                               ) : (
                                 <span className="text-xs text-muted-foreground">明文</span>
                               )}
@@ -381,7 +382,7 @@ export default function EnvironmentPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEnvDialog(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setEnvDialog(false)}>取消</Button>
             <Button onClick={handleEnvSave}>{editEnv ? '保存' : '创建'}</Button>
           </DialogFooter>
         </DialogContent>
@@ -429,7 +430,7 @@ export default function EnvironmentPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setVarDialog(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setVarDialog(false)}>取消</Button>
             <Button onClick={handleVarSave}>{editVar ? '保存' : '添加'}</Button>
           </DialogFooter>
         </DialogContent>
@@ -467,5 +468,6 @@ export default function EnvironmentPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </Page>
   )
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import Pagination from '@/components/Pagination'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -261,7 +261,7 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>取消</Button>
+          <Button variant="secondary" onClick={onClose}>取消</Button>
           <Button disabled={adding} onClick={doAdd}>
             添加选中 ({selRowKeys.length})
           </Button>

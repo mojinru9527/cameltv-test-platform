@@ -1,3 +1,4 @@
+import { Badge, Button } from '@/ui'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import {
@@ -12,8 +13,6 @@ import {
   Send,
   Trash2,
 } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
@@ -186,7 +185,7 @@ export default function DefectDetailSheet({
               {/* Status badge + transition buttons */}
               <div className="flex items-center gap-2 mb-4 flex-wrap">
                 <span className="text-sm text-muted-foreground">状态:</span>
-                <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>
+                <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>
                   {STATUS_MAP[detail.status]?.label || detail.status}
                 </Badge>
                 {STATUS_TRANSITIONS[detail.status]?.length > 0 && (
@@ -196,7 +195,7 @@ export default function DefectDetailSheet({
                       <Button
                         key={toStatus}
                         size="xs"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => openTransition(toStatus)}
                       >
                         <ArrowRight className="size-3 mr-1" />
@@ -211,7 +210,7 @@ export default function DefectDetailSheet({
                 {[
                   ['编号', detail.defect_id],
                   ['标题', detail.title],
-                  ['严重程度', <Badge key="sev" variant="outline" className={severityBadgeClass(SEVERITY_MAP[detail.severity]?.color)}>{SEVERITY_MAP[detail.severity]?.label}</Badge>],
+                  ['严重程度', <Badge key="sev" tone="neutral" className={severityBadgeClass(SEVERITY_MAP[detail.severity]?.color)}>{SEVERITY_MAP[detail.severity]?.label}</Badge>],
                   ['处理人', detail.assignee_name || '-'],
                   ['创建人', detail.creator_name || '-'],
                   ['关联用例', detail.case_title || (detail.case_id ? `#${detail.case_id}` : '-')],
@@ -241,7 +240,7 @@ export default function DefectDetailSheet({
                 <div className="flex items-center gap-2 mt-4 pt-3 border-t">
                   <span className="text-xs text-muted-foreground">同步:</span>
                   <Button
-                    variant="outline" size="sm"
+                    variant="secondary" size="sm"
                     onClick={async () => {
                       const iid = prompt('请输入集成配置 ID (可在集成配置页查看):')
                       if (!iid) return
@@ -256,7 +255,7 @@ export default function DefectDetailSheet({
                   </Button>
                   {detail.external_id && (
                     <Button
-                      variant="outline" size="sm"
+                      variant="secondary" size="sm"
                       onClick={async () => {
                         const iid = prompt('请输入集成配置 ID:')
                         if (!iid) return
@@ -343,7 +342,7 @@ export default function DefectDetailSheet({
                 />
                 <Button
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                 >
@@ -401,11 +400,11 @@ export default function DefectDetailSheet({
                     <div key={t.id} className="relative">
                       <div className="absolute -left-[25px] top-1 size-2.5 rounded-full border-2 border-muted-foreground/30 bg-background" />
                       <div className="flex items-center gap-1.5 text-sm">
-                        <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[t.from_status]?.color)}>
+                        <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[t.from_status]?.color)}>
                           {STATUS_MAP[t.from_status]?.label || t.from_status}
                         </Badge>
                         <ArrowRight className="size-3 text-muted-foreground" />
-                        <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[t.to_status]?.color)}>
+                        <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[t.to_status]?.color)}>
                           {STATUS_MAP[t.to_status]?.label || t.to_status}
                         </Badge>
                       </div>

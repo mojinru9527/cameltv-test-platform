@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Upload, Link2, FileText, Loader2 } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -154,7 +154,7 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
                   onChange={e => setPlanName(e.target.value)}
                 />
               )}
-              <Button onClick={doImport} disabled={importing} className="w-full" variant="default">
+              <Button onClick={doImport} disabled={importing} className="w-full" variant="primary">
                 {importing ? <Loader2 className="animate-spin size-4 mr-2" /> : <Upload className="size-4 mr-2" />}
                 确认导入并生成用例
               </Button>
@@ -163,7 +163,7 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={reset}>取消</Button>
+          <Button variant="secondary" onClick={reset}>取消</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

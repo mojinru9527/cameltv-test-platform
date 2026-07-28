@@ -1,3 +1,4 @@
+import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
@@ -15,14 +16,12 @@ import type {
   RequirementDocumentBrief,
   RequirementCoverage,
 } from '@/types'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import { Input } from '@/ui'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import StatCard from '@/components/StatCard'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -39,7 +38,6 @@ import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
-import { useObsidianPage } from '@/ui'
 import AiResultModal from './AiResultModal'
 import EvidenceTaskPanel from './components/EvidenceTaskPanel'
 import VersionCompare from './components/VersionCompare'
@@ -74,11 +72,11 @@ function formatSourceRef(sourceRef: string, fileType: string): { label: string; 
   }
 }
 
-const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'outline'; className?: string; label: string }> = {
-  uploaded: { variant: 'secondary', label: '已上传' },
-  parsed: { variant: 'secondary', label: '已解析' },
-  generated: { variant: 'outline', className: 'border-blue-200 bg-blue-50 text-blue-700', label: '已生成' },
-  imported: { variant: 'outline', className: 'border-green-200 bg-green-50 text-green-700', label: '已导入' },
+const STATUS_VARIANT: Record<string, { tone: BadgeTone; className?: string; label: string }> = {
+  uploaded: { tone: 'neutral', label: '已上传' },
+  parsed: { tone: 'neutral', label: '已解析' },
+  generated: { tone: 'info', className: 'border-blue-200 bg-blue-50 text-blue-700', label: '已生成' },
+  imported: { tone: 'success', className: 'border-green-200 bg-green-50 text-green-700', label: '已导入' },
 }
 
 interface RequirementData {
@@ -464,12 +462,12 @@ export default function RequirementPage() {
         {/* Header */}
         <PageHeader title="需求文档" icon={BookOpen} description="上传 PRD / Excel / 蓝湖链接，AI 自动生成测试用例。">
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置">
+          <Button variant="secondary" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置">
             <Settings className="size-4" />
             蓝湖设置
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={refetch}
             disabled={isLoading || isRefetching || isMetadataLoading || isMetadataRefetching}
@@ -508,7 +506,7 @@ export default function RequirementPage() {
           trend={`/ ${totalModules} 模块`}
           variant="glass"
         />
-        <Card size="sm">
+        <Card size="sm" className="ui-surface">
           <CardContent>
             <div className="text-xs text-muted-foreground mb-1">
               {activeDocId == null ? '需求覆盖率（选择文档查看）' : '当前需求覆盖率'}
@@ -534,7 +532,7 @@ export default function RequirementPage() {
       </div>
 
       {/* Upload Area */}
-      <Card size="sm">
+      <Card size="sm" className="ui-surface">
         <CardHeader className="border-b pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
             <Cloud className="size-4" />
@@ -603,7 +601,7 @@ export default function RequirementPage() {
 
       {/* Content Preview */}
       {activeDocId != null && (
-        <Card size="sm">
+        <Card size="sm" className="ui-surface">
           <CardHeader className="border-b pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
@@ -611,7 +609,7 @@ export default function RequirementPage() {
                 内容预览：{activeDocBrief?.title || activeDoc?.title || `#${activeDocId}`}
                 {(activeDocBrief?.file_type || activeDoc?.file_type) && TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''] && (
                   <Badge
-                    variant="outline"
+                    tone="neutral"
                     className={cn('gap-1', TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''].className)}
                   >
                     {TYPE_TAG[activeDocBrief?.file_type || activeDoc?.file_type || ''].icon}
@@ -619,7 +617,7 @@ export default function RequirementPage() {
                   </Badge>
                 )}
               </CardTitle>
-              <Button variant="link" size="sm" onClick={() => { setActiveDocId(null); setPreviewExpanded(false) }}>
+              <Button variant="ghost" size="sm" onClick={() => { setActiveDocId(null); setPreviewExpanded(false) }}>
                 收起
               </Button>
             </div>
@@ -633,7 +631,7 @@ export default function RequirementPage() {
             ) : isDetailError ? (
               <div className="flex min-h-[100px] flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
                 <span>{detailError?.message || '文档详情加载失败'}</span>
-                <Button variant="outline" size="sm" onClick={refetchDetail}>重试加载</Button>
+                <Button variant="secondary" size="sm" onClick={refetchDetail}>重试加载</Button>
               </div>
             ) : (
               <div className={cn(
@@ -645,7 +643,7 @@ export default function RequirementPage() {
             )}
             {activeDoc?.content && activeDoc.content.length > 400 && (
               <Button
-                variant="link"
+                variant="ghost"
                 size="sm"
                 className="mt-1"
                 onClick={() => setPreviewExpanded(!previewExpanded)}
@@ -658,7 +656,7 @@ export default function RequirementPage() {
       )}
 
       {/* Document Table */}
-      <Card size="sm">
+      <Card size="sm" className="ui-surface">
         <CardHeader className="border-b pb-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <CardTitle className="text-sm flex items-center gap-2">
@@ -737,7 +735,7 @@ export default function RequirementPage() {
                               {r.title}
                             </button>
                             {r.file_type && TYPE_TAG[r.file_type] && (
-                              <Badge variant="outline" className={cn('gap-1 shrink-0', TYPE_TAG[r.file_type].className)}>
+                              <Badge tone="neutral" className={cn('gap-1 shrink-0', TYPE_TAG[r.file_type].className)}>
                                 {TYPE_TAG[r.file_type].icon}
                                 {TYPE_TAG[r.file_type].label}
                               </Badge>
@@ -782,26 +780,26 @@ export default function RequirementPage() {
                         <TableCell className="text-center">
                           <div className="flex items-center gap-1 flex-wrap justify-center">
                           {r.extraction_status === 'pending_review' && (
-                            <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-xs">待审核</Badge>
+                            <Badge tone="neutral" className="border-amber-200 bg-amber-50 text-amber-700 text-xs">待审核</Badge>
                           )}
                           {r.extraction_status === 'confirmed' && (
-                            <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">已拆分</Badge>
+                            <Badge tone="neutral" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">已拆分</Badge>
                           )}
                           {(() => {
                             const t = STATUS_VARIANT[r.status]
-                            if (!t) return <Badge variant="secondary">{r.status}</Badge>
+                            if (!t) return <Badge tone="neutral">{r.status}</Badge>
                             if (r.status === 'imported' || r.status === 'generated') {
                               const hasFunc = r.imported_func_count > 0
                               if (hasFunc) {
                                 return (
-                                  <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                                  <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
                                     功能用例已导入
                                   </Badge>
                                 )
                               }
                             }
                             return (
-                              <Badge variant={t.variant} className={t.className}>
+                              <Badge tone={t.tone} className={t.className}>
                                 {t.label}
                               </Badge>
                             )
@@ -840,7 +838,7 @@ export default function RequirementPage() {
                                 {r.extraction_status === 'confirmed' ? (
                                   <Button
                                     size="sm"
-                                    variant="default"
+                                    variant="primary"
                                     disabled={generating && generatingDocId === r.id}
                                     onClick={() => handleGenerate(r.id, true)}
                                   >
@@ -854,7 +852,7 @@ export default function RequirementPage() {
                                 ) : r.extraction_status === 'pending_review' ? (
                                   <Button
                                     size="sm"
-                                    variant="default"
+                                    variant="primary"
                                     disabled={extracting && extractingDocId === r.id}
                                     onClick={() => handleExtract(r.id)}
                                   >
@@ -868,7 +866,7 @@ export default function RequirementPage() {
                                 ) : (
                                   <Button
                                     size="sm"
-                                    variant="default"
+                                    variant="primary"
                                     disabled={extracting && extractingDocId === r.id}
                                     onClick={() => handleExtract(r.id)}
                                   >
@@ -884,7 +882,7 @@ export default function RequirementPage() {
                                 {/* Stage 2: Direct AI Generation (backward compat) */}
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   disabled={
                                     r.extraction_status === 'confirmed'
                                       ? extracting && extractingDocId === r.id
@@ -917,7 +915,7 @@ export default function RequirementPage() {
                                       return (
                                         <Button
                                           size="sm"
-                                          variant="outline"
+                                          variant="secondary"
                                           onClick={() => {
                                             setVersionDiffData(diffData)
                                             setShowVersionCompare(true)
@@ -937,7 +935,7 @@ export default function RequirementPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   disabled={generating && generatingDocId === r.id}
                                   onClick={() => handleGenerate(r.id, false)}
                                 >
@@ -949,7 +947,7 @@ export default function RequirementPage() {
                                   重新生成
                                 </Button>
                                 {r.imported_count > 0 && (
-                                  <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                                  <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
                                     已导入 {r.imported_count} 条
                                   </Badge>
                                 )}
@@ -959,13 +957,13 @@ export default function RequirementPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   onClick={() => handleGenerate(r.id, false)}
                                 >
                                   <Sparkles className="size-3.5" />
                                   重新生成
                                 </Button>
-                                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+                                <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
                                   已导入 {r.imported_count} 条
                                 </Badge>
                               </>
@@ -974,7 +972,7 @@ export default function RequirementPage() {
                               <>
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   onClick={() => handleViewCases(r.id)}
                                 >
                                   <Eye className="size-3.5" />
@@ -982,7 +980,7 @@ export default function RequirementPage() {
                                 </Button>
                                 <Button
                                   size="sm"
-                                  variant="outline"
+                                  variant="secondary"
                                   onClick={() => navigate(`/requirement/${r.id}/review`)}
                                 >
                                   <Layers className="size-3.5" />
@@ -992,7 +990,7 @@ export default function RequirementPage() {
                             )}
                             <Button
                               size="sm"
-                              variant="destructive"
+                              variant="danger"
                               onClick={() => handleDelete(r)}
                             >
                               <Trash2 className="size-3.5" />
@@ -1019,7 +1017,7 @@ export default function RequirementPage() {
       </Card>
 
       {/* Domain Coverage Table */}
-      <Card size="sm">
+      <Card size="sm" className="ui-surface">
         <CardHeader className="border-b pb-3">
           <CardTitle className="text-sm">需求域与用例覆盖</CardTitle>
         </CardHeader>
@@ -1040,12 +1038,12 @@ export default function RequirementPage() {
                   <TableCell>
                     <div className="flex items-center gap-1 flex-wrap">
                       {(item.modules || []).slice(0, 8).map((m: any) => (
-                        <Badge key={m.module} variant="secondary">
+                        <Badge key={m.module} tone="neutral">
                           {m.module} ({m.count})
                         </Badge>
                       ))}
                       {(item.modules || []).length > 8 && (
-                        <Badge variant="secondary">+{(item.modules || []).length - 8}</Badge>
+                        <Badge tone="neutral">+{(item.modules || []).length - 8}</Badge>
                       )}
                     </div>
                   </TableCell>
@@ -1186,7 +1184,7 @@ export default function RequirementPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setLanhuSettingsOpen(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setLanhuSettingsOpen(false)}>取消</Button>
             <Button onClick={saveLanhuSettings}>保存配置</Button>
           </DialogFooter>
         </DialogContent>

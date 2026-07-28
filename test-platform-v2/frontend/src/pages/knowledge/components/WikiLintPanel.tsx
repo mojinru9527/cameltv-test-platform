@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -131,7 +131,7 @@ export default function WikiLintPanel() {
         </div>
         <span className="text-xs text-muted-foreground">报告 {reports.length}</span>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8" onClick={loadReports} disabled={loading}>
+          <Button variant="secondary" size="sm" className="h-8" onClick={loadReports} disabled={loading}>
             {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           </Button>
           {canManage && (
@@ -224,7 +224,7 @@ export default function WikiLintPanel() {
                     (i) => i.review_status === 'pending' && !i.resolved_artifact_id,
                   ) && (
                     <Button
-                      size="sm" variant="outline" className="h-7 ml-auto"
+                      size="sm" variant="secondary" className="h-7 ml-auto"
                       onClick={convertAll}
                       disabled={converting.length > 0}
                     >

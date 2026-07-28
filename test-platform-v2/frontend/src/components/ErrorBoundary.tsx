@@ -1,7 +1,6 @@
 import { Component, type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-
+import { Button } from '@/ui'
 interface Props { children: ReactNode }
 interface State { hasError: boolean; error: Error | null }
 
@@ -29,7 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
               {this.state.error?.message || '未知错误'}
             </p>
             <div className="flex justify-center gap-3">
-              <Button variant="outline" onClick={() => window.location.reload()}>
+              <Button variant="secondary" onClick={() => window.location.reload()}>
                 <RefreshCw className="mr-2 h-4 w-4" />
                 刷新页面
               </Button>

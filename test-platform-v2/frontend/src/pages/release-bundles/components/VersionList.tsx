@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { fetchReleaseBundles } from '@/api/releaseBundles'
 import type { ReleaseBundleListItem } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -82,7 +82,7 @@ export default function VersionList({
         ) : error ? (
           <div className="p-4 text-center">
             <p className="text-sm text-destructive mb-2">{error}</p>
-            <Button variant="outline" size="sm" onClick={loadVersions}>
+            <Button variant="secondary" size="sm" onClick={loadVersions}>
               <RefreshCw className="h-3 w-3 mr-1" /> 重试
             </Button>
           </div>

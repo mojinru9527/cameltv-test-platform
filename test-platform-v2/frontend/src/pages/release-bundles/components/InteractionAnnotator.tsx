@@ -2,8 +2,8 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import { saveInteractions } from '@/api/requirementModules'
 import type { ModuleTreeNode } from '@/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -431,7 +431,7 @@ export default function InteractionAnnotator({
             {/* Bottom actions */}
             <div className="p-3 border-t flex gap-2">
               <Button
-                variant="default"
+                variant="primary"
                 size="sm"
                 className="flex-1"
                 onClick={handleSave}
@@ -440,7 +440,7 @@ export default function InteractionAnnotator({
                 {saving ? '保存中...' : '保存'}
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={() => onOpenChange(false)}
               >

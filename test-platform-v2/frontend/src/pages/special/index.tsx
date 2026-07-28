@@ -34,8 +34,8 @@ import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
 import EmptyState from '@/components/EmptyState'
 import { SkeletonText } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -349,7 +349,7 @@ export default function SpecialPage() {
           </Button>
         </div>
 
-        <Button variant="outline" size="default" onClick={() => load()}>
+        <Button variant="secondary" size="md" onClick={() => load()}>
           <RotateCcw className="size-4" />
           刷新
         </Button>
@@ -405,12 +405,12 @@ export default function SpecialPage() {
                   <TableCell>{r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '-'}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Button size="xs" variant="outline" onClick={() => openDetail(r)}>
+                      <Button size="xs" variant="secondary" onClick={() => openDetail(r)}>
                         <Eye className="size-3" />
                         详情
                       </Button>
                       {hasPerm('avcheck:trigger') && (
-                        <Button size="xs" variant="outline" onClick={() => doTrigger(r.id)} disabled={r.status === 'running'}>
+                        <Button size="xs" variant="secondary" onClick={() => doTrigger(r.id)} disabled={r.status === 'running'}>
                           <Play className="size-3" />
                           触发
                         </Button>
@@ -418,7 +418,7 @@ export default function SpecialPage() {
                       {hasPerm('avcheck:delete') && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="xs" variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
+                            <Button size="xs" variant="secondary" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
                               <Trash2 className="size-3" />
                             </Button>
                           </AlertDialogTrigger>
@@ -486,7 +486,7 @@ export default function SpecialPage() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => { setDrawer(false); form.reset() }}>
+              <Button type="button" variant="secondary" onClick={() => { setDrawer(false); form.reset() }}>
                 取消
               </Button>
               <Button type="submit" disabled={saving}>
@@ -701,7 +701,7 @@ export default function SpecialPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setMeasurementOpen(false)}>取消</Button>
+            <Button variant="secondary" onClick={() => setMeasurementOpen(false)}>取消</Button>
             <Button onClick={saveMeasurement} disabled={measurementSaving}>
               {measurementSaving && <Loader2 className="size-4 animate-spin" />}
               保存并统计

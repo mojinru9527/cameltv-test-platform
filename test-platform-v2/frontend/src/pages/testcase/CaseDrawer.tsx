@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -248,7 +248,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline" onClick={onClose}>取消</Button>
+            <Button variant="secondary" onClick={onClose}>取消</Button>
           </DialogClose>
           {activeTab === 'form' && (
             <Button disabled={saving} onClick={handleSubmit(doSave)}>
@@ -442,7 +442,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             <Button
               type="button"
               size="sm"
-              variant={stepsViewMode === 'formatted' ? 'default' : 'outline'}
+              variant={stepsViewMode === 'formatted' ? 'primary' : 'secondary'}
               className="h-7 text-xs px-2"
               onClick={() => setStepsViewMode('formatted')}
             >
@@ -452,7 +452,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             <Button
               type="button"
               size="sm"
-              variant={stepsViewMode === 'json' ? 'default' : 'outline'}
+              variant={stepsViewMode === 'json' ? 'primary' : 'secondary'}
               className="h-7 text-xs px-2"
               onClick={() => setStepsViewMode('json')}
             >
@@ -545,13 +545,13 @@ function ReviewPanel({
         )}
         {reviewStatus === 'submitted' && (
           <>
-            <Button size="sm" variant="default" onClick={() => onReview('approve')} disabled={reviewing}>
+            <Button size="sm" variant="primary" onClick={() => onReview('approve')} disabled={reviewing}>
               {reviewing ? '处理中...' : '通过'}
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onReview('reject')} disabled={reviewing}>
+            <Button size="sm" variant="danger" onClick={() => onReview('reject')} disabled={reviewing}>
               {reviewing ? '处理中...' : '驳回'}
             </Button>
-            <Button size="sm" variant="outline" onClick={() => onReview('withdraw')} disabled={reviewing}>
+            <Button size="sm" variant="secondary" onClick={() => onReview('withdraw')} disabled={reviewing}>
               撤回
             </Button>
           </>

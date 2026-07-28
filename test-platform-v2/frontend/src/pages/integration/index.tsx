@@ -9,19 +9,19 @@ import {
   Link2, Plus, RefreshCw, Settings, Trash2, Wifi, WifiOff,
   GitBranch, FileCheck, Server, Monitor, ArrowRight, Layers,
 } from '@/lib/icons'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Progress } from '@/components/ui/progress'
+import { Progress } from '@/ui'
 import { toast } from 'sonner'
 import {
   fetchIntegrations, createIntegration, updateIntegration, deleteIntegration,
@@ -278,7 +278,7 @@ export default function IntegrationPage() {
               <h2 className="text-lg font-semibold">模块联动追踪</h2>
               <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">需求 → 用例 → 执行</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={() => {
+            <Button variant="secondary" size="sm" onClick={() => {
               setLoadingLinkage(true)
               Promise.all([
                 fetchRequirements().catch(() => [] as RequirementDocument[]),
@@ -385,7 +385,7 @@ export default function IntegrationPage() {
           <Settings className="size-12 mx-auto mb-3 opacity-30" />
           <p>暂无集成配置</p>
           {hasPerm('integration:manage') && (
-            <Button variant="link" onClick={openCreate}>立即创建</Button>
+            <Button variant="ghost" onClick={openCreate}>立即创建</Button>
           )}
         </Card>
       ) : (
@@ -415,7 +415,7 @@ export default function IntegrationPage() {
               <div className="flex items-center gap-1 shrink-0">
                 {hasPerm('integration:sync') && (
                   <Button
-                    variant="outline" size="sm"
+                    variant="secondary" size="sm"
                     disabled={syncing === r.id}
                     onClick={() => handleSync(r.id)}
                   >
@@ -532,7 +532,7 @@ export default function IntegrationPage() {
 
             <div className="flex gap-2 pt-2">
               <Button type="submit" disabled={testing}>{editing ? '保存' : '创建'}</Button>
-              <Button type="button" variant="outline" disabled={testing} onClick={handleTest}>
+              <Button type="button" variant="secondary" disabled={testing} onClick={handleTest}>
                 {testing ? '测试中...' : '测试连接'}
               </Button>
             </div>

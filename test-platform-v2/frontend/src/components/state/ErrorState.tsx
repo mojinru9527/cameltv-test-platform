@@ -9,7 +9,7 @@
 import { useState } from 'react'
 import { AlertTriangle, ChevronDown } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import {
   Collapsible,
   CollapsibleContent,
@@ -126,7 +126,7 @@ export function ErrorState({
         <div className="flex items-center gap-2 mb-4">
           {onRetry && (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={onRetry}
               aria-label="重新加载"

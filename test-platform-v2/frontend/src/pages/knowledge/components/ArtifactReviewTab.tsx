@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -26,7 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { toast } from 'sonner'
 import { fetchAiArtifacts, approveArtifact, rejectArtifact, importArtifact } from '@/api/knowledge'
 import type { AiArtifact } from '@/types'
@@ -194,7 +194,7 @@ export default function ArtifactReviewTab() {
         {/* 批量采纳（pending 选中） */}
         <Button
           size="sm"
-          variant="default"
+          variant="primary"
           onClick={() => doBatchAction('approve', '')}
           disabled={batchLoading || selectedPendingCount === 0}
           title={selectedPendingCount === 0 ? '请先勾选待审核条目' : `批量采纳 ${selectedPendingCount} 条`}
@@ -206,7 +206,7 @@ export default function ArtifactReviewTab() {
         {/* 批量驳回（pending 选中） */}
         <Button
           size="sm"
-          variant="destructive"
+          variant="danger"
           onClick={handleBatchRejectClick}
           disabled={batchLoading || selectedPendingCount === 0}
           title={selectedPendingCount === 0 ? '请先勾选待审核条目' : `批量驳回 ${selectedPendingCount} 条`}
@@ -238,7 +238,7 @@ export default function ArtifactReviewTab() {
         {pendingApproved.length > 0 && (
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             className="ml-auto"
             onClick={handleBatchImport}
             disabled={importing}
@@ -377,14 +377,14 @@ export default function ArtifactReviewTab() {
 
       {/* Pagination */}
       <div className="flex items-center justify-end gap-2 text-xs">
-        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+        <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
           上一页
         </Button>
         <span className="text-muted-foreground">
           {page} / {totalPages}
         </span>
         <Button
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={page >= totalPages}
           onClick={() => setPage((p) => p + 1)}
@@ -415,7 +415,7 @@ export default function ArtifactReviewTab() {
             </pre>
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setDetailArtifact(null)}>关闭</Button>
+            <Button variant="secondary" size="sm" onClick={() => setDetailArtifact(null)}>关闭</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -442,9 +442,9 @@ export default function ArtifactReviewTab() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setActionTarget(null)}>取消</Button>
+            <Button variant="secondary" onClick={() => setActionTarget(null)}>取消</Button>
             <Button
-              variant={actionTarget?.action === 'approve' ? 'default' : 'destructive'}
+              variant={actionTarget?.action === 'approve' ? 'primary' : 'danger'}
               onClick={handleApproveOrReject}
               disabled={actionLoading}
             >
@@ -476,9 +476,9 @@ export default function ArtifactReviewTab() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setBatchAction(null); setBatchComment('') }}>取消</Button>
+            <Button variant="secondary" onClick={() => { setBatchAction(null); setBatchComment('') }}>取消</Button>
             <Button
-              variant="destructive"
+              variant="danger"
               onClick={() => doBatchAction('reject', batchComment)}
               disabled={batchLoading}
             >

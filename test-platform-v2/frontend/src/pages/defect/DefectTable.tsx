@@ -1,7 +1,6 @@
+import { Badge, Button, StatusBadge, type SeverityVariant } from '@/ui'
 import { Edit, Eye, Trash2 } from '@/lib/icons'
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import Pagination from '@/components/Pagination'
 import { AsyncState } from '@/components/state'
 import {
@@ -60,6 +59,11 @@ export default function DefectTable({
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const getSeverityVariant = (severity: string): SeverityVariant => {
+    if (severity === 'P0' || severity === 'P1' || severity === 'P2') return severity as SeverityVariant
+    return 'P3'
+  }
+
   const handleDelete = async () => {
     if (deleteTarget == null) return
     setDeleting(true)
@@ -113,13 +117,13 @@ export default function DefectTable({
                         >
                           {r.title}
                         </button>
-                        <Badge variant="outline" className={severityBadgeClass(SEVERITY_MAP[r.severity]?.color)}>
+                        <StatusBadge variant={getSeverityVariant(r.severity)}>
                           {SEVERITY_MAP[r.severity]?.label || r.severity}
-                        </Badge>
+                        </StatusBadge>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
+                      <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
                         {STATUS_MAP[r.status]?.label || r.status}
                       </Badge>
                     </TableCell>
@@ -128,12 +132,12 @@ export default function DefectTable({
                     <TableCell>{r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '-'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <Button size="xs" variant="outline" onClick={() => onDetail(r)}>
+                        <Button size="xs" variant="secondary" onClick={() => onDetail(r)}>
                           <Eye className="size-3" />
                           详情
                         </Button>
                         {canUpdate && (
-                          <Button size="xs" variant="outline" onClick={() => onEdit(r)}>
+                          <Button size="xs" variant="secondary" onClick={() => onEdit(r)}>
                             <Edit className="size-3" />
                             编辑
                           </Button>
@@ -143,7 +147,7 @@ export default function DefectTable({
                             <AlertDialogTrigger asChild>
                               <Button
                                 size="xs"
-                                variant="outline"
+                                variant="secondary"
                                 className="text-destructive border-destructive/20 hover:bg-destructive/10"
                                 onClick={() => setDeleteTarget(r.id)}
                               >

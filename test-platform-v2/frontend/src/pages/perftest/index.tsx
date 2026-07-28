@@ -9,12 +9,12 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend,
 } from 'recharts'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
+import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import PageHeader from '@/components/PageHeader'
@@ -343,7 +343,7 @@ export default function PerfTestPage() {
                       创建会话
                     </Button>
                     {currentSession && currentSession.status === 'pending' && (
-                      <Button onClick={handleStartMonitor} variant="default" className="gap-1.5">
+                      <Button onClick={handleStartMonitor} variant="primary" className="gap-1.5">
                         <Play className="size-4" />开始采集
                       </Button>
                     )}
@@ -378,7 +378,7 @@ export default function PerfTestPage() {
                       {snapshots.length > 0 && ` · ${snapshots[snapshots.length - 1].elapsed.toFixed(0)}s`}
                     </span>
                     {monitoring ? (
-                      <Button onClick={handleStopMonitor} variant="destructive" size="sm" className="gap-1.5">
+                      <Button onClick={handleStopMonitor} variant="danger" size="sm" className="gap-1.5">
                         <Square className="size-3" />停止采集
                       </Button>
                     ) : (

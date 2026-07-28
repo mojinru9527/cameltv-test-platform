@@ -4,8 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from '@/api/system'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Button } from '@/ui'
+import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -156,10 +156,10 @@ export default function RolesTab() {
     { key: 'perm_count', header: '权限数', headerClassName: 'w-[70px]', render: (r) => r.permission_codes?.length || 0 },
     { key: 'actions', header: '操作', headerClassName: 'w-[140px]', render: (r) => (
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="outline" onClick={() => openEdit(r)}>编辑</Button>
+        <Button size="sm" variant="secondary" onClick={() => openEdit(r)}>编辑</Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button size="sm" variant="destructive">删除</Button>
+            <Button size="sm" variant="danger">删除</Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -299,7 +299,7 @@ export default function RolesTab() {
             </div>
           </form>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setDrawer(false); setEditing(null) }}>
+            <Button variant="secondary" onClick={() => { setDrawer(false); setEditing(null) }}>
               取消
             </Button>
             <Button disabled={saving} onClick={() => handleSubmit(doSave)()} data-icon="inline-start">
