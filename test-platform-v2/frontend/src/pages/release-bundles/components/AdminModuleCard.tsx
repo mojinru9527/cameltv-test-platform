@@ -143,7 +143,7 @@ export default function AdminModuleCard({ bundleId, modules }: AdminModuleCardPr
                     className="flex items-center gap-3 p-3 rounded-md border bg-muted/30"
                   >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <span className="text-sm font-medium text-blue-700 truncate">
+                      <span className="text-sm font-medium text-status-info truncate">
                         {link.clientName}
                       </span>
                       <Badge
@@ -151,15 +151,15 @@ export default function AdminModuleCard({ bundleId, modules }: AdminModuleCardPr
                         className={cn(
                           'text-xs shrink-0',
                           link.relation_type === 'configures'
-                            ? 'border-orange-200 bg-orange-50 text-orange-700'
-                            : 'border-blue-200 bg-blue-50 text-blue-700',
+                            ? 'border-status-warning-border bg-status-warning-muted text-status-warning'
+                            : 'border-status-info-border bg-status-info-muted text-status-info',
                         )}
                       >
                         {link.relation_type === 'configures' ? '配置' : '关联'}
                       </Badge>
                       <span className="text-muted-foreground shrink-0">→</span>
-                      <Shield className="h-4 w-4 text-orange-500 shrink-0" />
-                      <span className="text-sm font-medium text-orange-700 truncate">
+                      <Shield className="h-4 w-4 text-status-warning shrink-0" />
+                      <span className="text-sm font-medium text-status-warning truncate">
                         {link.adminName}
                       </span>
                     </div>

@@ -1,9 +1,16 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ThemeLab } from '../ThemeLab'
+import { ThemeProvider } from '@/components/theme-provider'
+
+function renderThemeLab() {
+  return render(<ThemeProvider><ThemeLab /></ThemeProvider>)
+}
 
 describe('ThemeLab', () => {
   beforeEach(() => {
+    localStorage.clear()
+    localStorage.setItem('cameltv-theme-color', 'obsidian-flow')
     Object.defineProperty(window, 'matchMedia', {
       configurable: true,
       value: vi.fn().mockImplementation((query: string) => ({
@@ -20,7 +27,7 @@ describe('ThemeLab', () => {
   })
 
   it('switches all six themes without losing the active tab', () => {
-    render(<ThemeLab />)
+    renderThemeLab()
 
     expect(document.querySelector('.theme-lab')?.getAttribute('data-theme')).toBe('obsidian-flow')
     fireEvent.click(screen.getByRole('button', { name: /赛博主题/ }))
@@ -44,7 +51,7 @@ describe('ThemeLab', () => {
   })
 
   it('connects the spatial quality chain, filters, and inspector', () => {
-    render(<ThemeLab />)
+    renderThemeLab()
 
     expect(screen.getByRole('region', { name: '黑曜流界交互实验' })).toBeTruthy()
     const inspector = screen.getByLabelText('阶段检查器')
@@ -63,7 +70,7 @@ describe('ThemeLab', () => {
   })
 
   it('reuses existing interactions from the liquid component panorama', () => {
-    render(<ThemeLab />)
+    renderThemeLab()
     fireEvent.click(screen.getByRole('button', { name: /液境主题/ }))
 
     expect(screen.getByRole('region', { name: '液态组件全景' })).toBeTruthy()
@@ -75,7 +82,7 @@ describe('ThemeLab', () => {
 
   it('shows skeleton feedback and a single snackbar', () => {
     vi.useFakeTimers()
-    render(<ThemeLab />)
+    renderThemeLab()
 
     fireEvent.click(screen.getByRole('button', { name: '模拟加载' }))
     expect(screen.getByLabelText('正在加载质量数据')).toBeTruthy()
@@ -88,7 +95,7 @@ describe('ThemeLab', () => {
   })
 
   it('confirms a regression run through a modal backdrop', () => {
-    render(<ThemeLab />)
+    renderThemeLab()
 
     fireEvent.click(screen.getByRole('button', { name: '启动回归' }))
     expect(screen.getByRole('dialog', { name: '启动回归确认' })).toBeTruthy()
@@ -99,7 +106,7 @@ describe('ThemeLab', () => {
   })
 
   it('opens the command palette with Ctrl+K', () => {
-    render(<ThemeLab />)
+    renderThemeLab()
 
     fireEvent.keyDown(window, { key: 'k', ctrlKey: true })
     expect(screen.getByRole('dialog', { name: '全局命令面板' })).toBeTruthy()

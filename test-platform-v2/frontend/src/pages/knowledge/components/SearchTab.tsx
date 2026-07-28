@@ -155,7 +155,7 @@ export default function SearchTab() {
                   <span className="text-muted-foreground shrink-0">覆盖率：</span>
                   <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className={`size-full origin-left rounded-full transition-transform duration-200 ${coveragePct >= 80 ? 'bg-green-500' : coveragePct >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      className={`size-full origin-left rounded-full transition-transform duration-200 ${coveragePct >= 80 ? 'bg-status-success-solid' : coveragePct >= 40 ? 'bg-status-warning-solid' : 'bg-status-danger-solid'}`}
                       style={{ transform: `scaleX(${Math.min(100, Math.max(0, coveragePct)) / 100})` }}
                     />
                   </div>
@@ -231,7 +231,7 @@ export default function SearchTab() {
         </div>
       ) : searchError ? (
         <div className="h-24 flex flex-col items-center justify-center gap-1">
-          <span className="text-sm text-amber-600 font-medium">检索异常</span>
+          <span className="text-sm text-status-warning font-medium">检索异常</span>
           <span className="text-xs text-muted-foreground">{searchError}</span>
         </div>
       ) : results.length === 0 ? (
@@ -256,7 +256,7 @@ export default function SearchTab() {
                 </div>
                 <p className="text-xs text-muted-foreground break-words">{r.snippet}</p>
                 {r.source_name && (
-                  <div className="text-[11px] text-muted-foreground">来源：{r.source_name}</div>
+                  <div className="text-xs text-muted-foreground">来源：{r.source_name}</div>
                 )}
               </CardContent>
             </Card>

@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/table'
 import {
   BookOpen, Trash2, Eye, FileSpreadsheet, FileText,
-  Inbox, Layers, Link2, RotateCcw, Sparkles, Search, XCircle, Loader2, ExternalLink, Cloud, GitCompare, Settings,
+  Inbox, Layers, Link2, RotateCcw, Sparkles, Search, XCircle, Loader2, ExternalLink, Cloud, GitCompare, Settings, Smartphone, Monitor,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
@@ -45,10 +45,10 @@ import LanhuEvidenceDialog from '@/pages/knowledge/components/LanhuEvidenceDialo
 import LanhuEvidenceJobDrawer from '@/pages/knowledge/components/LanhuEvidenceJobDrawer'
 
 const TYPE_TAG: Record<string, { className: string; label: string; icon: React.ReactNode }> = {
-  md: { className: 'border-blue-200 bg-blue-50 text-blue-700', label: 'Markdown', icon: <FileText className="size-3" /> },
-  docx: { className: 'border-cyan-200 bg-cyan-50 text-cyan-700', label: 'Word', icon: <FileText className="size-3" /> },
-  xlsx: { className: 'border-green-200 bg-green-50 text-green-700', label: 'Excel', icon: <FileSpreadsheet className="size-3" /> },
-  lanhu: { className: 'border-purple-200 bg-purple-50 text-purple-700', label: '蓝湖', icon: <Link2 className="size-3" /> },
+  md: { className: 'border-status-info-border bg-status-info-muted text-status-info', label: 'Markdown', icon: <FileText className="size-3" /> },
+  docx: { className: 'border-status-info-border bg-status-info-muted text-status-info', label: 'Word', icon: <FileText className="size-3" /> },
+  xlsx: { className: 'border-status-success-border bg-status-success-muted text-status-success', label: 'Excel', icon: <FileSpreadsheet className="size-3" /> },
+  lanhu: { className: 'border-status-accent-border bg-status-accent-muted text-status-accent', label: '蓝湖', icon: <Link2 className="size-3" /> },
 }
 
 // ── Source ref display helpers ──
@@ -74,8 +74,8 @@ function formatSourceRef(sourceRef: string, fileType: string): { label: string; 
 const STATUS_VARIANT: Record<string, { tone: BadgeTone; className?: string; label: string }> = {
   uploaded: { tone: 'neutral', label: '已上传' },
   parsed: { tone: 'neutral', label: '已解析' },
-  generated: { tone: 'info', className: 'border-blue-200 bg-blue-50 text-blue-700', label: '已生成' },
-  imported: { tone: 'success', className: 'border-green-200 bg-green-50 text-green-700', label: '已导入' },
+  generated: { tone: 'info', className: 'border-status-info-border bg-status-info-muted text-status-info', label: '已生成' },
+  imported: { tone: 'success', className: 'border-status-success-border bg-status-success-muted text-status-success', label: '已导入' },
 }
 
 interface RequirementData {
@@ -747,7 +747,7 @@ export default function RequirementPage() {
                                   href={r.source_ref}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1 truncate"
+                                  className="text-xs text-status-info hover:underline inline-flex items-center gap-1 truncate"
                                   title={r.source_ref}
                                   onClick={(e) => e.stopPropagation()}
                                 >
@@ -776,10 +776,10 @@ export default function RequirementPage() {
                         <TableCell className="text-center">
                           <div className="flex items-center gap-1 flex-wrap justify-center">
                           {r.extraction_status === 'pending_review' && (
-                            <Badge tone="neutral" className="border-amber-200 bg-amber-50 text-amber-700 text-xs">待审核</Badge>
+                            <Badge tone="neutral" className="border-status-warning-border bg-status-warning-muted text-status-warning text-xs">待审核</Badge>
                           )}
                           {r.extraction_status === 'confirmed' && (
-                            <Badge tone="neutral" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">已拆分</Badge>
+                            <Badge tone="neutral" className="border-status-info-border bg-status-info-muted text-status-info text-xs">已拆分</Badge>
                           )}
                           {(() => {
                             const t = STATUS_VARIANT[r.status]
@@ -788,7 +788,7 @@ export default function RequirementPage() {
                               const hasFunc = r.imported_func_count > 0
                               if (hasFunc) {
                                 return (
-                                  <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
+                                  <Badge tone="neutral" className="border-status-success-border bg-status-success-muted text-status-success">
                                     功能用例已导入
                                   </Badge>
                                 )
@@ -804,7 +804,7 @@ export default function RequirementPage() {
                         </TableCell>
                         <TableCell className="text-center">
                           {r.imported_func_count > 0 ? (
-                            <span className="text-sm font-semibold text-green-600 tabular-nums">
+                            <span className="text-sm font-semibold text-status-success tabular-nums">
                               {r.imported_func_count}
                             </span>
                           ) : (
@@ -943,7 +943,7 @@ export default function RequirementPage() {
                                   重新生成
                                 </Button>
                                 {r.imported_count > 0 && (
-                                  <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
+                                  <Badge tone="neutral" className="border-status-success-border bg-status-success-muted text-status-success">
                                     已导入 {r.imported_count} 条
                                   </Badge>
                                 )}
@@ -959,7 +959,7 @@ export default function RequirementPage() {
                                   <Sparkles className="size-3.5" />
                                   重新生成
                                 </Button>
-                                <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700">
+                                <Badge tone="neutral" className="border-status-success-border bg-status-success-muted text-status-success">
                                   已导入 {r.imported_count} 条
                                 </Badge>
                               </>
@@ -1137,7 +1137,7 @@ export default function RequirementPage() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-3">
-              <h4 className="text-sm font-medium text-blue-700">📱 用户端 (CamelTv)</h4>
+              <h4 className="flex items-center gap-1.5 text-sm font-medium text-status-info"><Smartphone className="size-4" aria-hidden="true" />用户端 (CamelTv)</h4>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label>Project ID</Label>
@@ -1158,7 +1158,7 @@ export default function RequirementPage() {
               </div>
             </div>
             <div className="space-y-3">
-              <h4 className="text-sm font-medium text-purple-700">🖥️ 运营后台 (Admin)</h4>
+              <h4 className="flex items-center gap-1.5 text-sm font-medium text-status-accent"><Monitor className="size-4" />运营后台 (Admin)</h4>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label>Project ID</Label>

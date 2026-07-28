@@ -13,6 +13,41 @@ const columns: DataTableColumn<Row>[] = [
 ]
 
 describe('DataTable keyboard accessibility', () => {
+  it('always exposes a named, keyboard-focusable local scroll region', () => {
+    render(
+      <DataTable
+        columns={columns}
+        data={[{ id: 1, name: '计划 A' }]}
+        rowKey={(row) => row.id}
+        ariaLabel="测试计划数据"
+      />,
+    )
+
+    const region = screen.getByRole('region', { name: '测试计划数据' })
+    expect(region.getAttribute('tabindex')).toBe('0')
+    expect(region.className).toContain('overflow-auto')
+  })
+
+  it('marks 50+ row datasets for contained rendering without dropping rows', () => {
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      id: index + 1,
+      name: `计划 ${index + 1}`,
+    }))
+
+    render(
+      <DataTable
+        columns={columns}
+        data={rows}
+        rowKey={(row) => row.id}
+      />,
+    )
+
+    expect(screen.getByRole('region', { name: '数据表格' }).getAttribute('data-density')).toBe(
+      'high',
+    )
+    expect(screen.getAllByRole('row')).toHaveLength(101)
+  })
+
   it('exposes sort state and uses a keyboard-operable sort control', () => {
     render(
       <DataTable

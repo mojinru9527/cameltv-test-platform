@@ -176,11 +176,11 @@ export default function PageInteractionPanel({
                     {globalNav.map((gn, i) => (
                       <div
                         key={`gn-ext-${i}`}
-                        className="flex items-center gap-2 p-2 rounded-md bg-purple-50 dark:bg-purple-950 text-sm"
+                        className="flex items-center gap-2 p-2 rounded-md bg-status-accent-muted dark:bg-status-accent-muted text-sm"
                       >
-                        <Globe className="h-4 w-4 text-purple-500 shrink-0" />
+                        <Globe className="h-4 w-4 text-status-accent shrink-0" />
                         <span className="flex-1">{gn.trigger}</span>
-                        <Badge className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+                        <Badge className="text-xs bg-status-accent-muted text-status-accent dark:bg-status-accent-muted dark:text-status-accent">
                           全局导航
                         </Badge>
                         <span className="text-xs text-muted-foreground">
@@ -256,8 +256,8 @@ function InteractionRow({ interaction: ia }: { interaction: PageInteraction }) {
     <div
       className={cn(
         'flex items-start gap-2 p-2.5 rounded-md border text-sm',
-        isDynamic && 'border-purple-200 bg-purple-50/50 dark:bg-purple-950/50',
-        isGlobalNav && 'border-purple-200 bg-purple-50/50 dark:bg-purple-950/50',
+        isDynamic && 'border-status-accent-border bg-status-accent-muted dark:bg-status-accent-muted',
+        isGlobalNav && 'border-status-accent-border bg-status-accent-muted dark:bg-status-accent-muted',
         !isDynamic && !isGlobalNav && 'bg-muted/30',
       )}
     >
@@ -277,7 +277,7 @@ function InteractionRow({ interaction: ia }: { interaction: PageInteraction }) {
           </p>
         )}
         {ia.admin_config_source && (
-          <p className="text-xs text-purple-600 mt-0.5">
+          <p className="text-xs text-status-accent mt-0.5">
             运营后台配置: {ia.admin_config_source}
           </p>
         )}
@@ -286,10 +286,10 @@ function InteractionRow({ interaction: ia }: { interaction: PageInteraction }) {
         className={cn(
           'text-xs shrink-0',
           isDynamic
-            ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
+            ? 'bg-status-accent-muted text-status-accent dark:bg-status-accent-muted dark:text-status-accent'
             : isGlobalNav
-              ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300'
-              : 'bg-blue-100 text-blue-700',
+              ? 'bg-status-accent-muted text-status-accent dark:bg-status-accent-muted dark:text-status-accent'
+              : 'bg-status-info-muted text-status-info',
         )}
       >
         {typeLabel}

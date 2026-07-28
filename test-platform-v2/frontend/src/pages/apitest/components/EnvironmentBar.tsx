@@ -54,9 +54,9 @@ export default function EnvironmentBar({
   return (
     <div>
       <div className="flex items-center gap-1.5">
-        <Label className="text-[11px] text-muted-foreground shrink-0">环境</Label>
+        <Label className="text-xs text-muted-foreground shrink-0">环境</Label>
         {isProduction && (
-          <Badge tone="danger" className="text-[10px] px-1 py-0 leading-none">PROD</Badge>
+          <Badge tone="danger" className="text-xs px-1 py-0 leading-none">PROD</Badge>
         )}
         {onRefresh && (
           <Button type="button" size="icon-sm" variant="ghost" onClick={onRefresh} aria-label="刷新环境列表">
@@ -68,7 +68,7 @@ export default function EnvironmentBar({
         value={envId?.toString() || '_'}
         onValueChange={(v) => onEnvChange(v === '_' ? undefined : Number(v))}
       >
-        <SelectTrigger className={`h-8 text-xs mt-1 ${isProduction ? 'border-red-300 dark:border-red-700 ring-1 ring-red-200 dark:ring-red-800' : ''}`}>
+        <SelectTrigger className={`h-8 text-xs mt-1 ${isProduction ? 'border-status-danger-border dark:border-status-danger-border ring-1 ring-status-danger dark:ring-status-danger' : ''}`}>
           <SelectValue placeholder="选择环境" />
         </SelectTrigger>
         <SelectContent>
@@ -83,7 +83,7 @@ export default function EnvironmentBar({
       </Select>
       {envId && (
         <Input
-          className={`h-8 text-xs mt-1 font-mono ${isProduction ? 'border-red-300 dark:border-red-700' : ''}`}
+          className={`h-8 text-xs mt-1 font-mono ${isProduction ? 'border-status-danger-border dark:border-status-danger-border' : ''}`}
           value={envBaseUrl}
           onChange={(e) => onBaseUrlChange(e.target.value)}
           onBlur={onBaseUrlBlur}

@@ -237,10 +237,10 @@ export default function InteractionAnnotator({
                     className={cn(
                       'absolute border-2 rounded-sm transition-colors',
                       editingId === r.id
-                        ? 'border-blue-500 bg-blue-500/20'
+                        ? 'border-status-info-border bg-status-info-solid'
                         : r.isGlobalNav
-                          ? 'border-purple-500 bg-purple-500/10'
-                          : 'border-green-500 bg-green-500/10',
+                          ? 'border-status-accent-border bg-status-accent-solid'
+                          : 'border-status-success-border bg-status-success-solid',
                     )}
                     style={{
                       left: r.x,
@@ -263,7 +263,7 @@ export default function InteractionAnnotator({
                 {/* Current drawing rect */}
                 {currentRect && (
                   <div
-                    className="absolute border-2 border-blue-400 bg-blue-400/10 rounded-sm"
+                    className="absolute border-2 border-status-info-border bg-status-info-solid rounded-sm"
                     style={{
                       left: currentRect.x,
                       top: currentRect.y,
@@ -323,7 +323,7 @@ export default function InteractionAnnotator({
                       className={cn(
                         'border rounded-md p-3 space-y-2',
                         editingId === r.id
-                          ? 'border-blue-300 bg-blue-50/50'
+                          ? 'border-status-info-border bg-status-info-muted'
                           : 'border-border',
                       )}
                     >
@@ -441,7 +441,7 @@ export default function InteractionAnnotator({
                         <div className="text-xs space-y-1">
                           <p>
                             →{' '}
-                            <span className="font-medium text-blue-600">
+                            <span className="font-medium text-status-info">
                               {r.targetPage || '未设置'}
                             </span>
                           </p>
@@ -451,7 +451,7 @@ export default function InteractionAnnotator({
                             )?.label ?? r.interactionType}
                           </Badge>
                           {r.isGlobalNav && (
-                            <Badge className="text-xs ml-1 bg-purple-100 text-purple-700">
+                            <Badge className="text-xs ml-1 bg-status-accent-muted text-status-accent">
                               全局导航
                             </Badge>
                           )}

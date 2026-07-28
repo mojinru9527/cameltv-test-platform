@@ -7,9 +7,9 @@ import { searchKnowledge } from '@/api/knowledge'
 import type { ApiEndpoint, KnowledgeSearchResult } from '@/types'
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-blue-100 text-blue-700', POST: 'bg-green-100 text-green-700',
-  PUT: 'bg-orange-100 text-orange-700', PATCH: 'bg-purple-100 text-purple-700',
-  DELETE: 'bg-red-100 text-red-700',
+  GET: 'bg-status-info-muted text-status-info', POST: 'bg-status-success-muted text-status-success',
+  PUT: 'bg-status-warning-muted text-status-warning', PATCH: 'bg-status-accent-muted text-status-accent',
+  DELETE: 'bg-status-danger-muted text-status-danger',
 }
 
 const CHUNK_LABEL: Record<string, string> = {
@@ -64,7 +64,7 @@ export default function EndpointDetailPanel({ endpoint }: Props) {
         <div className="flex items-center gap-2 mb-1">
           <Badge className={METHOD_COLORS[endpoint.method] || ''}>{endpoint.method}</Badge>
           {endpoint.deprecated && (
-            <Badge tone="neutral" className="text-[10px] text-yellow-600">已废弃</Badge>
+            <Badge tone="neutral" className="text-xs text-status-warning">已废弃</Badge>
           )}
         </div>
         <code className="text-sm font-medium break-all block mt-1">{endpoint.path}</code>
@@ -73,13 +73,13 @@ export default function EndpointDetailPanel({ endpoint }: Props) {
         )}
         <div className="flex items-center gap-2 mt-2 flex-wrap">
           {endpoint.module && (
-            <Badge tone="neutral" className="text-[10px]">{endpoint.module}</Badge>
+            <Badge tone="neutral" className="text-xs">{endpoint.module}</Badge>
           )}
           {endpoint.auth_required && (
-            <Badge tone="neutral" className="text-[10px]">需认证</Badge>
+            <Badge tone="neutral" className="text-xs">需认证</Badge>
           )}
           {endpoint.source && (
-            <span className="text-[10px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               来源：{endpoint.source}
             </span>
           )}
@@ -138,7 +138,7 @@ export default function EndpointDetailPanel({ endpoint }: Props) {
                   </div>
                   <p className="text-xs text-muted-foreground break-words">{r.snippet}</p>
                   {r.source_name && (
-                    <div className="text-[11px] text-muted-foreground">来源：{r.source_name}</div>
+                    <div className="text-xs text-muted-foreground">来源：{r.source_name}</div>
                   )}
                 </CardContent>
               </Card>

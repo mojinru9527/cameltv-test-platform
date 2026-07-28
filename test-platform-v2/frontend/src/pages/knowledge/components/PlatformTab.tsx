@@ -21,9 +21,9 @@ const PARA_LABELS: Record<string, { label: string; icon: typeof Sparkles }> = {
 }
 
 function freshnessColor(score: number): string {
-  if (score >= 0.8) return 'bg-green-500'
-  if (score >= 0.4) return 'bg-yellow-500'
-  return 'bg-red-500'
+  if (score >= 0.8) return 'bg-status-success-solid'
+  if (score >= 0.4) return 'bg-status-warning-solid'
+  return 'bg-status-danger-solid'
 }
 
 function daysAgo(dateStr: string | null | undefined): string {
@@ -237,7 +237,7 @@ export default function PlatformTab() {
               <div>
                 <span className="font-medium text-foreground">保鲜评分</span>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`inline-block size-2.5 rounded-full ${(selected.freshness_score ?? 1) >= 0.8 ? 'bg-green-500' : (selected.freshness_score ?? 1) >= 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                  <span className={`inline-block size-2.5 rounded-full ${(selected.freshness_score ?? 1) >= 0.8 ? 'bg-status-success-solid' : (selected.freshness_score ?? 1) >= 0.4 ? 'bg-status-warning-solid' : 'bg-status-danger-solid'}`} />
                   <span className="text-base font-semibold">{((selected.freshness_score ?? 1) * 100).toFixed(0)}%</span>
                 </div>
               </div>

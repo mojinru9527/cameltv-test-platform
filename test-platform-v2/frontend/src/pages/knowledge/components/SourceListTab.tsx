@@ -204,7 +204,7 @@ export default function SourceListTab() {
                         {verifying.has(s.id) ? (
                           <Loader2 className="size-3.5 animate-spin" />
                         ) : isVerifiedToday(s.last_verified_at) ? (
-                          <CheckCheck className="size-3.5 text-green-600" />
+                          <CheckCheck className="size-3.5 text-status-success" />
                         ) : (
                           <CheckCircle2 className="size-3.5" />
                         )}
@@ -269,7 +269,7 @@ export default function SourceListTab() {
               <div>
                 <span className="font-medium text-foreground">保鲜评分</span>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`inline-block size-2.5 rounded-full ${(selected.freshness_score ?? 1) >= 0.8 ? 'bg-green-500' : (selected.freshness_score ?? 1) >= 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                  <span className={`inline-block size-2.5 rounded-full ${(selected.freshness_score ?? 1) >= 0.8 ? 'bg-status-success-solid' : (selected.freshness_score ?? 1) >= 0.4 ? 'bg-status-warning-solid' : 'bg-status-danger-solid'}`} />
                   <span className="text-base font-semibold">{((selected.freshness_score ?? 1) * 100).toFixed(0)}%</span>
                 </div>
               </div>
@@ -376,7 +376,7 @@ function SyncBadge({ sourceId }: { sourceId: number }) {
 
   if (failed) {
     return (
-      <Badge tone="neutral" className="text-xs border-red-200 bg-red-50 text-red-700 gap-1">
+      <Badge tone="neutral" className="text-xs border-status-danger-border bg-status-danger-muted text-status-danger gap-1">
         <AlertCircle className="h-3 w-3" />
         失败
       </Badge>
@@ -384,7 +384,7 @@ function SyncBadge({ sourceId }: { sourceId: number }) {
   }
   if (synced) {
     return (
-      <Badge tone="neutral" className="text-xs border-green-200 bg-green-50 text-green-700 gap-1">
+      <Badge tone="neutral" className="text-xs border-status-success-border bg-status-success-muted text-status-success gap-1">
         <CheckCircle2 className="h-3 w-3" />
         已同步
       </Badge>
@@ -392,7 +392,7 @@ function SyncBadge({ sourceId }: { sourceId: number }) {
   }
   if (partial) {
     return (
-      <Badge tone="neutral" className="text-xs border-yellow-200 bg-yellow-50 text-yellow-700 gap-1">
+      <Badge tone="neutral" className="text-xs border-status-warning-border bg-status-warning-muted text-status-warning gap-1">
         <RefreshCw className="h-3 w-3" />
         部分
       </Badge>

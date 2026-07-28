@@ -96,20 +96,20 @@ const STATUS_MAP: Record<string, { color: string; label: string }> = {
 
 function protocolBadgeClass(c: string) {
   const map: Record<string, string> = {
-    blue: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-400',
-    green: 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400',
-    purple: 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-400',
-    orange: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-400',
+    blue: 'border-status-info-border bg-status-info-muted text-status-info dark:border-status-info-border dark:bg-status-info-muted dark:text-status-info',
+    green: 'border-status-success-border bg-status-success-muted text-status-success dark:border-status-success-border dark:bg-status-success-muted dark:text-status-success',
+    purple: 'border-status-accent-border bg-status-accent-muted text-status-accent dark:border-status-accent-border dark:bg-status-accent-muted dark:text-status-accent',
+    orange: 'border-status-warning-border bg-status-warning-muted text-status-warning dark:border-status-warning-border dark:bg-status-warning-muted dark:text-status-warning',
   }
   return map[c] ?? ''
 }
 
 function statusBadgeClass(c: string) {
   const map: Record<string, string> = {
-    default: 'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-400',
-    processing: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-400',
-    green: 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400',
-    red: 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400',
+    default: 'border-border bg-muted text-muted-foreground',
+    processing: 'border-status-info-border bg-status-info-muted text-status-info dark:border-status-info-border dark:bg-status-info-muted dark:text-status-info',
+    green: 'border-status-success-border bg-status-success-muted text-status-success dark:border-status-success-border dark:bg-status-success-muted dark:text-status-success',
+    red: 'border-status-danger-border bg-status-danger-muted text-status-danger dark:border-status-danger-border dark:bg-status-danger-muted dark:text-status-danger',
   }
   return map[c] ?? ''
 }
@@ -535,13 +535,13 @@ export default function SpecialPage() {
                   <h4 className="text-sm font-medium mb-2">检测指标</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {detail.metrics.map((m: any) => (
-                      <Card key={m.id} size="sm" className={m.pass_ ? 'border-green-300 dark:border-green-800' : 'border-red-300 dark:border-red-800'}>
+                      <Card key={m.id} size="sm" className={m.pass_ ? 'border-status-success-border dark:border-status-success-border' : 'border-status-danger-border dark:border-status-danger-border'}>
                         <CardContent>
                           <div className="flex items-center gap-1.5 mb-1">
-                            {m.pass_ ? <CheckCircle2 className="size-4 text-green-500" /> : <XCircle className="size-4 text-red-500" />}
+                            {m.pass_ ? <CheckCircle2 className="size-4 text-status-success" /> : <XCircle className="size-4 text-status-danger" />}
                             <span className="text-xs text-muted-foreground">{m.metric_name}</span>
                           </div>
-                          <div className={`text-xl font-bold ${m.pass_ ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className={`text-xl font-bold ${m.pass_ ? 'text-status-success' : 'text-status-danger'}`}>
                             {m.metric_value}
                             <span className="text-xs font-normal text-muted-foreground ml-1">/ &le; {m.threshold}</span>
                           </div>

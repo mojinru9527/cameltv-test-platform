@@ -52,6 +52,10 @@ interface DataTableSelection<T> {
 interface DataTableEmptyState {
   title: string
   description?: string
+  action?: {
+    label: string
+    onClick: () => void
+  }
 }
 
 interface DataTableProps<T> {
@@ -72,6 +76,8 @@ interface DataTableProps<T> {
   stickyHeader?: boolean
   columnVisibility?: boolean
   onRowClick?: (row: T) => void
+  /** Accessible name for the keyboard-focusable local scroll region. */
+  ariaLabel?: string
   className?: string
 }
 
@@ -100,6 +106,7 @@ export default function DataTable<T extends Record<string, any>>({
   stickyHeader = false,
   columnVisibility: showColumnToggle = false,
   onRowClick,
+  ariaLabel = '数据表格',
   className,
 }: DataTableProps<T>) {
   const [sortKey, setSortKey] = useState<string | null>(null)
@@ -220,7 +227,16 @@ export default function DataTable<T extends Record<string, any>>({
         </div>
       )}
 
-      <div className={cn(stickyHeader && 'overflow-auto max-h-[70vh]')}>
+      <div
+        className={cn(
+          'overflow-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+          stickyHeader && 'max-h-[70vh]',
+        )}
+        role="region"
+        aria-label={ariaLabel}
+        tabIndex={0}
+        data-density={sortedData.length >= 50 ? 'high' : 'standard'}
+      >
         <Table>
           <TableHeader className={cn(stickyHeader && 'sticky top-0 z-10 bg-card')}>
             <TableRow>
@@ -302,6 +318,7 @@ export default function DataTable<T extends Record<string, any>>({
                   <EmptyState
                     title={emptyState?.title || '暂无数据'}
                     description={emptyState?.description}
+                    action={emptyState?.action}
                     className="py-8"
                   />
                 </TableCell>
@@ -316,6 +333,8 @@ export default function DataTable<T extends Record<string, any>>({
                     className={cn(
                       onRowClick && 'cursor-pointer',
                       isSelected && 'bg-accent',
+                      sortedData.length >= 50 &&
+                        '[content-visibility:auto] [contain-intrinsic-size:auto_44px]',
                     )}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                     onKeyDown={onRowClick ? (event) => {

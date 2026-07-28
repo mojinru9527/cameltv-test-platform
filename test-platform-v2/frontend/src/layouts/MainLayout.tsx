@@ -66,10 +66,10 @@ import {
   GitBranch,
   Share2,
   Palette,
-  ChevronRight,
   TestTube2,
   Sparkles,
   Cpu,
+  CheckCircle2,
   type LucideIcon,
 } from '@/lib/icons'
 
@@ -132,10 +132,6 @@ function NavigationMenuItems({
           >
             <Icon aria-hidden="true" />
             <span>{m.name}</span>
-            <ChevronRight
-              className="ml-auto size-3.5 transition-transform duration-200 group-data-[state=open]/menu-item:rotate-90"
-              aria-hidden="true"
-            />
           </SidebarMenuButton>
           <SidebarMenuSub>
             {m.children!.map((child) => {
@@ -278,7 +274,7 @@ export default function MainLayout() {
             {/* Text brand — hidden when collapsed */}
             <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
               <span className="text-sm font-bold sidebar-brand">CamelTv</span>
-              <span className="text-[10px] text-sidebar-foreground/50">测试平台</span>
+              <span className="text-xs text-sidebar-foreground">测试平台</span>
             </div>
           </div>
         </SidebarHeader>
@@ -352,7 +348,7 @@ export default function MainLayout() {
               <span className="text-sm font-medium truncate text-sidebar-foreground">
                 {user?.nickname || user?.username || '用户'}
               </span>
-              <span className="text-[10px] text-sidebar-foreground/50 truncate">
+              <span className="text-xs text-sidebar-foreground truncate">
                 {user?.email || ''}
               </span>
             </div>
@@ -431,7 +427,7 @@ export default function MainLayout() {
                   </div>
                 </div>
                 {isObsidian && (
-                  <p className="-mt-1 mb-3 text-[11px] text-muted-foreground">
+                  <p className="-mt-1 mb-3 text-xs text-muted-foreground">
                     黑曜流界为深色专属
                   </p>
                 )}
@@ -457,21 +453,21 @@ export default function MainLayout() {
                         }`}
                       >
                         {isActive && (
-                          <span className="absolute top-1.5 right-1.5 text-primary text-xs">✓</span>
+                          <CheckCircle2 className="absolute right-1.5 top-1.5 size-3.5 text-primary" aria-label="当前主题" />
                         )}
                         {/* Color preview dots */}
                         <div className="flex gap-1">
                           {t.preview.map((color, i) => (
                             <span
                               key={i}
-                              className="size-3 rounded-full border border-black/10"
+                              className="size-3 rounded-full border border-border"
                               style={{ backgroundColor: color }}
                             />
                           ))}
                         </div>
                         <div>
                           <div className="text-xs font-semibold">{t.number} {t.label}</div>
-                          <div className="text-[10px] text-muted-foreground leading-tight mt-0.5">
+                          <div className="text-xs text-muted-foreground leading-tight mt-0.5">
                             {t.description}
                           </div>
                         </div>

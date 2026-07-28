@@ -25,10 +25,10 @@ const PLATFORM_LABELS: Record<string, string> = {
 }
 
 const CHANGE_BADGE: Record<string, { className: string; label: string }> = {
-  new: { className: 'bg-green-100 text-green-700 border-green-200', label: '新增' },
-  modified: { className: 'bg-yellow-100 text-yellow-700 border-yellow-200', label: '修改' },
-  deleted: { className: 'bg-red-100 text-red-700 border-red-200', label: '删除' },
-  unchanged: { className: 'bg-gray-100 text-gray-500 border-gray-200', label: '未变更' },
+  new: { className: 'bg-status-success-muted text-status-success border-status-success-border', label: '新增' },
+  modified: { className: 'bg-status-warning-muted text-status-warning border-status-warning-border', label: '修改' },
+  deleted: { className: 'bg-status-danger-muted text-status-danger border-status-danger-border', label: '删除' },
+  unchanged: { className: 'bg-muted text-muted-foreground border-border', label: '未变更' },
 }
 
 interface PageInteraction {
@@ -94,7 +94,7 @@ function PageItem({
           </Badge>
         )}
         {hasDynamicFilter && (
-          <Badge className="text-xs px-1 py-0 bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+          <Badge className="text-xs px-1 py-0 bg-status-accent-muted text-status-accent dark:bg-status-accent-muted dark:text-status-accent">
             动态筛选
           </Badge>
         )}

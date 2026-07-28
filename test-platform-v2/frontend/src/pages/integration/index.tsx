@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth'
 import { cn } from '@/lib/utils'
 import {
   Link2, Plus, RefreshCw, Settings, Trash2, Wifi, WifiOff,
-  GitBranch, FileCheck, Server, Monitor, ArrowRight, Layers,
+  GitBranch, FileCheck, Server, Monitor, ArrowRight, Layers, CheckCircle2, XCircle, MinusCircle,
 } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
@@ -57,19 +57,19 @@ type FormValues = z.infer<typeof formSchema>
 
 const providerBadge = (t: string) => {
   const map: Record<string, { label: string; className: string }> = {
-    jira: { label: 'Jira', className: 'bg-blue-100 text-blue-800' },
-    tapd: { label: 'TAPD', className: 'bg-orange-100 text-orange-800' },
+    jira: { label: 'Jira', className: 'bg-status-info-muted text-status-info' },
+    tapd: { label: 'TAPD', className: 'bg-status-warning-muted text-status-warning' },
   }
-  const m = map[t] || { label: t, className: 'bg-slate-100' }
+  const m = map[t] || { label: t, className: 'bg-muted text-muted-foreground' }
   return <Badge className={m.className} tone="neutral">{m.label}</Badge>
 }
 
 // ── Status icons ──
 
 const StatusIcon = ({ status }: { status: string }) => {
-  if (status === 'success') return <span className="text-green-600" title="成功">✓</span>
-  if (status === 'failed') return <span className="text-red-600" title="失败">✗</span>
-  return <span className="text-yellow-600" title="跳过">→</span>
+  if (status === 'success') return <CheckCircle2 className="size-4 text-status-success" aria-label="成功" />
+  if (status === 'failed') return <XCircle className="size-4 text-status-danger" aria-label="失败" />
+  return <MinusCircle className="size-4 text-status-warning" aria-label="跳过" />
 }
 
 function FieldError({ id, message }: { id: string; message?: string }) {
@@ -318,13 +318,13 @@ export default function IntegrationPage() {
       </div>
 
       {/* ── Linkage Tracking Panel (batch-34) ── */}
-      <Card className="border-blue-200 bg-gradient-to-r from-blue-50/50 to-white">
+      <Card className="border-status-info-border bg-status-info-muted">
         <CardContent className="pt-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <GitBranch className="size-5 text-blue-600" />
+              <GitBranch className="size-5 text-status-info" />
               <h2 className="text-lg font-semibold">模块联动追踪</h2>
-              <Badge tone="neutral" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">需求 → 用例 → 执行</Badge>
+              <Badge tone="neutral" className="border-status-info-border bg-status-info-muted text-status-info text-xs">需求 → 用例 → 执行</Badge>
             </div>
             <Button variant="secondary" size="sm" onClick={() => {
               setLoadingLinkage(true)
@@ -350,28 +350,28 @@ export default function IntegrationPage() {
 
           {/* Linkage flow */}
           <div className="flex items-center gap-2 mb-4 text-sm">
-            <div className="flex items-center gap-1.5 bg-blue-100 rounded-full px-3 py-1">
-              <FileCheck className="size-3.5 text-blue-600" />
+            <div className="flex items-center gap-1.5 bg-status-info-muted rounded-full px-3 py-1">
+              <FileCheck className="size-3.5 text-status-info" />
               <span className="font-medium">{linkageData.totalRequirements}</span>
-              <span className="text-muted-foreground">需求</span>
+              <span className="text-status-info">需求</span>
             </div>
             <ArrowRight className="size-4 text-muted-foreground" />
-            <div className="flex items-center gap-1.5 bg-green-100 rounded-full px-3 py-1">
-              <Layers className="size-3.5 text-green-600" />
+            <div className="flex items-center gap-1.5 bg-status-success-muted rounded-full px-3 py-1">
+              <Layers className="size-3.5 text-status-success" />
               <span className="font-medium">{linkageData.totalCases}</span>
-              <span className="text-muted-foreground">用例</span>
+              <span className="text-status-success">用例</span>
             </div>
             <ArrowRight className="size-4 text-muted-foreground" />
-            <div className="flex items-center gap-1.5 bg-purple-100 rounded-full px-3 py-1">
-              <Server className="size-3.5 text-purple-600" />
+            <div className="flex items-center gap-1.5 bg-status-accent-muted rounded-full px-3 py-1">
+              <Server className="size-3.5 text-status-accent" />
               <span className="font-medium">{linkageData.apiEndpoints || '-'}</span>
-              <span className="text-muted-foreground">API端点</span>
+              <span className="text-status-accent">API端点</span>
             </div>
             <ArrowRight className="size-4 text-muted-foreground" />
-            <div className="flex items-center gap-1.5 bg-amber-100 rounded-full px-3 py-1">
-              <Monitor className="size-3.5 text-amber-600" />
+            <div className="flex items-center gap-1.5 bg-status-warning-muted rounded-full px-3 py-1">
+              <Monitor className="size-3.5 text-status-warning" />
               <span className="font-medium">{linkageData.uiScripts || '-'}</span>
-              <span className="text-muted-foreground">UI脚本</span>
+              <span className="text-status-warning">UI脚本</span>
             </div>
           </div>
 
@@ -406,7 +406,7 @@ export default function IntegrationPage() {
                 value={linkageData.totalRequirements > 0
                   ? Math.round((linkageData.reqsWithCases / linkageData.totalRequirements) * 100)
                   : 0}
-                className="h-2 [&>div]:bg-green-500"
+                className="h-2 [&>div]:bg-status-success-solid"
               />
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -415,7 +415,7 @@ export default function IntegrationPage() {
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <GitBranch className="size-3.5" />
-              <span>模块联动状态: <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700 text-[10px]">运行中</Badge></span>
+              <span>模块联动状态: <Badge tone="neutral" className="border-status-success-border bg-status-success-muted text-status-success text-xs">运行中</Badge></span>
             </div>
           </div>
         </CardContent>
@@ -446,7 +446,7 @@ export default function IntegrationPage() {
                   <span className="font-semibold truncate">{r.name}</span>
                   {providerBadge(r.provider_type)}
                   {r.enabled ? (
-                    <Wifi className="size-3.5 text-green-600" />
+                    <Wifi className="size-3.5 text-status-success" />
                   ) : (
                     <WifiOff className="size-3.5 text-muted-foreground" />
                   )}
@@ -481,7 +481,7 @@ export default function IntegrationPage() {
                       aria-label={`删除集成配置 ${r.name}`}
                       onClick={() => setDeleteTarget(r)}
                     >
-                      <Trash2 className="size-3.5 text-red-500" aria-hidden="true" />
+                      <Trash2 className="size-3.5 text-status-danger" aria-hidden="true" />
                     </Button>
                   </>
                 )}

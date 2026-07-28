@@ -3,8 +3,10 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
+import './theme-lab.css'
 import {
   AlertTriangle,
   BarChart3,
@@ -36,6 +38,7 @@ import {
 import { FadeContent } from '../ui-concepts/FadeContent'
 import { DecryptedText } from './DecryptedText'
 import { SpatialGlassPrototype } from './SpatialGlassPrototype'
+import { useUiTheme } from '@/ui/themes/UiThemeProvider'
 
 type ThemeId = 'cyberpunk' | 'apple' | 'clay' | 'xlab' | 'liquid-glass' | 'obsidian-flow'
 type TabId = 'overview' | 'cases' | 'logs' | 'artifacts'
@@ -167,7 +170,7 @@ const artifactRows = [
 ]
 
 export function ThemeLab() {
-  const [theme, setTheme] = useState<ThemeId>('obsidian-flow')
+  const { uiTheme: theme, setUiTheme: setTheme } = useUiTheme()
   const [activeModule, setActiveModule] = useState('dashboard')
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [dialog, setDialog] = useState<DialogMode>(null)
@@ -177,12 +180,25 @@ export function ThemeLab() {
   const [runProgress, setRunProgress] = useState(68)
   const [runState, setRunState] = useState<'idle' | 'starting' | 'complete'>('idle')
   const [snackbar, setSnackbar] = useState<SnackbarState | null>(null)
+  const dialogTriggerRef = useRef<HTMLElement | null>(null)
 
   const themeDefinition = themes.find((item) => item.id === theme) ?? themes[0]
   const moduleDefinition = modules.find((item) => item.id === activeModule) ?? modules[0]
 
   const showSnackbar = useCallback((message: string, action?: string) => {
     setSnackbar({ message, action })
+  }, [])
+
+  const openDialog = useCallback((nextDialog: Exclude<DialogMode, null>) => {
+    dialogTriggerRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+    setDialog(nextDialog)
+  }, [])
+
+  const closeDialog = useCallback(() => {
+    setDialog(null)
+    window.requestAnimationFrame(() => dialogTriggerRef.current?.focus())
   }, [])
 
   useEffect(() => {
@@ -218,13 +234,12 @@ export function ThemeLab() {
     const onKeyDown = (event: globalThis.KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setDialog('command')
+        openDialog('command')
       }
-      if (event.key === 'Escape') setDialog(null)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [openDialog])
 
   const switchTheme = (next: ThemeId) => {
     const applyTheme = () => setTheme(next)
@@ -252,7 +267,7 @@ export function ThemeLab() {
   }
 
   const confirmStartRun = () => {
-    setDialog(null)
+    closeDialog()
     setRunProgress(8)
     setRunState('starting')
     setQueueBusy(true)
@@ -292,7 +307,7 @@ export function ThemeLab() {
           </div>
         </div>
 
-        <div className="theme-switcher" aria-label="测试平台主题切换">
+        <div className="theme-switcher" role="group" aria-label="测试平台主题切换">
           {themes.map((item) => (
             <button
               key={item.id}
@@ -380,7 +395,7 @@ export function ThemeLab() {
             </div>
 
             <div className="topbar-actions">
-              <button className="global-search" aria-label="打开全局搜索" onClick={() => setDialog('command')}>
+              <button className="global-search" aria-label="打开全局搜索" onClick={() => openDialog('command')}>
                 <Search aria-hidden="true" />
                 <span>搜索用例、任务、缺陷</span>
                 <kbd>⌘ K</kbd>
@@ -407,7 +422,7 @@ export function ThemeLab() {
                 loading={loading}
                 onLoading={simulateLoading}
                 onSnackbar={() => showSnackbar('液态玻璃轻提示已就绪', '查看')}
-                onBackdrop={() => setDialog('run')}
+                onBackdrop={() => openDialog('run')}
               />
             )}
 
@@ -416,7 +431,7 @@ export function ThemeLab() {
                 loading={loading}
                 runProgress={runProgress}
                 runState={runState}
-                onStartRun={() => setDialog('run')}
+                onStartRun={() => openDialog('run')}
                 onRefresh={simulateLoading}
                 onShowSnackbar={showSnackbar}
               />
@@ -441,7 +456,7 @@ export function ThemeLab() {
                       <RefreshCw aria-hidden="true" />
                       {loading ? '加载中' : '模拟加载'}
                     </button>
-                    <button className="primary-action" onClick={() => setDialog('run')}>
+                    <button className="primary-action" onClick={() => openDialog('run')}>
                       <Play aria-hidden="true" />
                       启动回归
                     </button>
@@ -495,17 +510,17 @@ export function ThemeLab() {
       {dialog === 'run' && (
         <RunDialog
           environment={environment}
-          onClose={() => setDialog(null)}
+          onClose={closeDialog}
           onConfirm={confirmStartRun}
         />
       )}
 
       {dialog === 'command' && (
         <CommandDialog
-          onClose={() => setDialog(null)}
+          onClose={closeDialog}
           onNavigate={(tab) => {
             setActiveTab(tab)
-            setDialog(null)
+            closeDialog()
             showSnackbar(`已打开：${tabs.find((item) => item.id === tab)?.label ?? tab}`)
           }}
         />
@@ -559,13 +574,13 @@ function LiquidComponentPanorama({
           <span><b>Spinner</b><small>短时入队</small></span>
         </div>
 
-        <div className="liquid-skeleton-sample" aria-label="Skeleton 结构占位示例">
+        <div className="liquid-skeleton-sample" role="img" aria-label="Skeleton 结构占位示例">
           <span><i /><i /><i /></span>
           <span><b>Skeleton</b><small>保留数据布局</small></span>
         </div>
       </div>
 
-      <div className="liquid-panorama-actions" aria-label="液态组件交互演示">
+      <div className="liquid-panorama-actions" role="group" aria-label="液态组件交互演示">
         <span>Tabs · 主视图已启用</span>
         <span>Decode · 状态揭示</span>
         <button className="secondary-action" onClick={onLoading} disabled={loading}>
@@ -617,7 +632,7 @@ function OverviewView({ queueBusy, runProgress, onShowSnackbar }: { queueBusy: b
       <section className="queue-panel surface-panel">
         <div className="panel-heading"><div><span>执行队列</span><h2>实时调度</h2></div><span className="live-chip">LIVE</span></div>
         <div className="queue-current">
-          {queueBusy ? <span className="local-spinner" aria-label="正在加入执行队列" /> : <CheckCircle2 aria-hidden="true" />}
+          {queueBusy ? <span className="local-spinner" role="status" aria-label="正在加入执行队列" /> : <CheckCircle2 aria-hidden="true" />}
           <div><b>{queueBusy ? '正在准备运行容器' : '执行队列准备完成'}</b><small>{queueBusy ? '短时未知进度使用 Spinner' : '节点已分配 · 可开始执行'}</small></div>
         </div>
         <div className="queue-list">
@@ -640,7 +655,7 @@ function OverviewView({ queueBusy, runProgress, onShowSnackbar }: { queueBusy: b
           <div><span>运行与证据</span><h2>最近执行</h2><p>统一查看 E2E、API 与 UI 自动化结果</p></div>
           <div className="panel-actions"><button onClick={() => onShowSnackbar('筛选视图“今日高风险”已保存', '撤销')}>保存视图</button><button><FileText aria-hidden="true" />导出</button></div>
         </div>
-        <div className="data-table-wrap">
+        <div className="data-table-wrap" role="region" aria-label="最近执行数据表" tabIndex={0}>
           <table>
             <thead><tr><th>运行编号</th><th>任务</th><th>类型</th><th>状态</th><th>进度</th><th>耗时</th><th>负责人</th><th><span className="sr-only">操作</span></th></tr></thead>
             <tbody>{runRows.map((row, index) => {
@@ -695,7 +710,7 @@ function LogsView() {
   return (
     <section className="surface-panel logs-view">
       <div className="log-toolbar"><div><span className="terminal-mark"><Terminal aria-hidden="true" /></span><div><h2>RUN-5128 / 实时日志</h2><small>自动跟随已开启 · 18 条事件</small></div></div><div><button className="filter-chip is-active">全部</button><button className="filter-chip">WARN</button><button className="filter-chip">ERROR</button></div></div>
-      <div className="log-console" aria-label="实时执行日志">
+      <div className="log-console" role="log" aria-label="实时执行日志">
         {logRows.map(([level, time, message]) => <div key={`${time}-${level}`} className={`log-${level.toLowerCase()}`}><span>{level}</span><time>{time}</time><code>{message}</code></div>)}
         <div className="log-cursor"><span className="local-spinner" aria-hidden="true" /><code>等待下一条运行事件…</code></div>
       </div>
@@ -753,10 +768,55 @@ function DashboardSkeleton() {
   )
 }
 
+function useDialogKeyboard(onClose: () => void) {
+  const dialogRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+
+    const focusableSelector = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+    const focusable = () => [...dialog.querySelectorAll<HTMLElement>(focusableSelector)]
+      .filter((element) => !element.hasAttribute('hidden'))
+    const firstTarget = dialog.querySelector<HTMLElement>('[autofocus]') ?? focusable()[0]
+    firstTarget?.focus()
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab') return
+
+      const targets = focusable()
+      if (targets.length === 0) {
+        event.preventDefault()
+        return
+      }
+      const first = targets[0]
+      const last = targets[targets.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    dialog.addEventListener('keydown', onKeyDown)
+    return () => dialog.removeEventListener('keydown', onKeyDown)
+  }, [onClose])
+
+  return dialogRef
+}
+
 function RunDialog({ environment, onClose, onConfirm }: { environment: string; onClose: () => void; onConfirm: () => void }) {
+  const dialogRef = useDialogKeyboard(onClose)
   return (
     <div className="tl-backdrop" onMouseDown={onClose}>
-      <section className="run-dialog" role="dialog" aria-modal="true" aria-label="启动回归确认" onMouseDown={(event) => event.stopPropagation()}>
+      <section ref={dialogRef} className="run-dialog" role="dialog" aria-modal="true" aria-label="启动回归确认" onMouseDown={(event) => event.stopPropagation()}>
         <span className="dialog-icon"><FlaskConical aria-hidden="true" /></span>
         <div className="dialog-copy"><span>新建运行批次</span><h2>启动核心链路回归？</h2><p>系统将在本地原型中演示编排、短时 Spinner、确定进度和 Snackbar，不会连接生产数据。</p></div>
         <dl><div><dt>执行环境</dt><dd>{environment}</dd></div><div><dt>测试范围</dt><dd>2,345 条用例 / 12 个服务</dd></div><div><dt>预计耗时</dt><dd>34–42 分钟</dd></div></dl>
@@ -768,9 +828,10 @@ function RunDialog({ environment, onClose, onConfirm }: { environment: string; o
 }
 
 function CommandDialog({ onClose, onNavigate }: { onClose: () => void; onNavigate: (tab: TabId) => void }) {
+  const dialogRef = useDialogKeyboard(onClose)
   return (
     <div className="tl-backdrop" onMouseDown={onClose}>
-      <section className="command-dialog" role="dialog" aria-modal="true" aria-label="全局命令面板" onMouseDown={(event) => event.stopPropagation()}>
+      <section ref={dialogRef} className="command-dialog" role="dialog" aria-modal="true" aria-label="全局命令面板" onMouseDown={(event) => event.stopPropagation()}>
         <label className="command-search"><Search aria-hidden="true" /><input autoFocus aria-label="搜索全局命令" placeholder="输入页面或操作名称…" /><kbd>ESC</kbd></label>
         <div className="command-group"><span>快速前往</span>
           <button onClick={() => onNavigate('overview')}><LayoutDashboard aria-hidden="true" /><span><b>运行概览</b><small>查看质量趋势与执行队列</small></span><kbd>↵</kbd></button>

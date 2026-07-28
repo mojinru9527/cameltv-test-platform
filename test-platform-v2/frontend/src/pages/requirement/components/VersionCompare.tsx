@@ -56,10 +56,10 @@ interface VersionCompareProps {
 // ── Change type config ──
 
 const CHANGE_CONFIG: Record<string, { icon: typeof Plus; label: string; color: string; bg: string }> = {
-  new:       { icon: Plus,       label: '新增',   color: 'text-green-600',  bg: 'bg-green-50 border-green-200' },
-  modified:  { icon: Pencil,     label: '修改',   color: 'text-amber-600',  bg: 'bg-amber-50 border-amber-200' },
-  unchanged: { icon: ArrowRight, label: '不变',   color: 'text-slate-500',  bg: 'bg-slate-50 border-slate-200' },
-  deleted:   { icon: Trash2,     label: '已删除', color: 'text-red-600',    bg: 'bg-red-50 border-red-200' },
+  new:       { icon: Plus,       label: '新增',   color: 'text-status-success',  bg: 'bg-status-success-muted border-status-success-border' },
+  modified:  { icon: Pencil,     label: '修改',   color: 'text-status-warning',  bg: 'bg-status-warning-muted border-status-warning-border' },
+  unchanged: { icon: ArrowRight, label: '不变',   color: 'text-muted-foreground',  bg: 'bg-muted border-border' },
+  deleted:   { icon: Trash2,     label: '已删除', color: 'text-status-danger',    bg: 'bg-status-danger-muted border-status-danger-border' },
 }
 
 // ── Sub-component: single page diff row ──
@@ -90,10 +90,10 @@ function PageDiffRow({ page, syncScrollRef }: { page: DiffPage; syncScrollRef?: 
             const isRemove = part.startsWith('移除:')
             const isAdd = part.startsWith('新增:')
             const cn = isRemove
-              ? 'text-red-600 line-through'
+              ? 'text-status-danger line-through'
               : isAdd
-                ? 'text-green-600'
-                : 'text-amber-600'
+                ? 'text-status-success'
+                : 'text-status-warning'
             return (
               <div key={i} className={cn}>
                 {part}
@@ -108,7 +108,7 @@ function PageDiffRow({ page, syncScrollRef }: { page: DiffPage; syncScrollRef?: 
         <p className="text-xs text-muted-foreground pl-5 mt-1">页面无变更</p>
       )}
       {!page.ocr_diff && page.change_type === 'deleted' && (
-        <p className="text-xs text-red-500 pl-5 mt-1">此页面在新版本中已删除</p>
+        <p className="text-xs text-status-danger pl-5 mt-1">此页面在新版本中已删除</p>
       )}
     </div>
   )
@@ -168,10 +168,10 @@ export default function VersionCompare({ open, onClose, diffData }: VersionCompa
 
         {/* Summary bar */}
         <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
-          <span className="text-green-600">🆕 {summary.new_pages} 新增</span>
-          <span className="text-amber-600">✏️ {summary.modified_pages} 修改</span>
-          <span className="text-slate-500">➡️ {summary.unchanged_pages} 不变</span>
-          <span className="text-red-600">❌ {summary.deleted_pages} 删除</span>
+          <span className="inline-flex items-center gap-1 text-status-success"><Plus className="size-3.5" />{summary.new_pages} 新增</span>
+          <span className="inline-flex items-center gap-1 text-status-warning"><Pencil className="size-3.5" />{summary.modified_pages} 修改</span>
+          <span className="inline-flex items-center gap-1 text-muted-foreground"><ArrowRight className="size-3.5" />{summary.unchanged_pages} 不变</span>
+          <span className="inline-flex items-center gap-1 text-status-danger"><Trash2 className="size-3.5" />{summary.deleted_pages} 删除</span>
           <span className="ml-auto flex items-center gap-2">
             <Switch
               id="sync-scroll"

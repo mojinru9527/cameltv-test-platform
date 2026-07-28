@@ -11,6 +11,7 @@ import { fetchPlans } from '@/api/testplan'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import ChartFrame from '@/components/charts/ChartFrame'
 import { Progress } from '@/ui'
 import {
   Dialog,
@@ -96,13 +97,14 @@ import {
   Percent,
   ArrowUp,
   ArrowDown,
+  AlertTriangle,
 } from '@/lib/icons'
 
 // ── Status config ──
 const STATUS_CONFIG: Record<string, { label: string; icon: typeof CheckCircle2; color: string; tone: 'neutral' | 'danger' }> = {
-  pass: { label: 'pass', icon: CheckCircle2, color: 'text-green-500', tone: 'neutral' },
-  fail: { label: 'fail', icon: XCircle, color: 'text-red-500', tone: 'danger' },
-  skip: { label: 'skip', icon: MinusCircle, color: 'text-yellow-500', tone: 'neutral' },
+  pass: { label: 'pass', icon: CheckCircle2, color: 'text-status-success', tone: 'neutral' },
+  fail: { label: 'fail', icon: XCircle, color: 'text-status-danger', tone: 'danger' },
+  skip: { label: 'skip', icon: MinusCircle, color: 'text-status-warning', tone: 'neutral' },
   block: { label: 'block', icon: StopCircle, color: 'text-muted-foreground', tone: 'neutral' },
   pending: { label: 'pending', icon: Clock, color: 'text-muted-foreground', tone: 'neutral' },
 }
@@ -172,7 +174,7 @@ export default function ReportPage() {
     { key: 'report_id', header: '编号', headerClassName: 'w-[150px]', className: 'max-w-[150px] truncate', render: (r) => r.report_id },
     { key: 'name', header: '名称', className: 'truncate', render: (r) => r.name },
     { key: 'plan_name', header: '关联计划', headerClassName: 'w-[160px]', className: 'max-w-[160px] truncate', render: (r) => r.plan_name || <span className="text-muted-foreground">—</span> },
-    { key: 'template_id', header: '模板', headerClassName: 'w-[60px]', render: (r) => r.template_id ? <Badge tone="neutral" className="text-[10px]">#{r.template_id}</Badge> : <span className="text-muted-foreground">—</span> },
+    { key: 'template_id', header: '模板', headerClassName: 'w-[60px]', render: (r) => r.template_id ? <Badge tone="neutral" className="text-xs">#{r.template_id}</Badge> : <span className="text-muted-foreground">—</span> },
     { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[120px]', render: (r) => (
       <div className="flex items-center gap-2">
@@ -315,8 +317,17 @@ export default function ReportPage() {
                 <Card className="ui-surface">
                   <CardHeader><CardTitle>通过率趋势</CardTitle></CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={passRateData}>
+                    <ChartFrame
+                      title="通过率趋势"
+                      summary={`共 ${trends.summary.total_reports} 份报告，平均通过率 ${trends.summary.avg_pass_rate}%，范围 ${trends.summary.worst_pass_rate}%–${trends.summary.best_pass_rate}%。`}
+                      data={passRateData}
+                      columns={[
+                        { key: 'dateLabel', label: '日期' },
+                        { key: 'pass_rate', label: '通过率', format: (value) => `${value}%` },
+                      ]}
+                    >
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={passRateData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="dateLabel" />
                         <YAxis domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
@@ -334,8 +345,9 @@ export default function ReportPage() {
                           dot={{ r: 4 }}
                           activeDot={{ r: 6 }}
                         />
-                      </LineChart>
-                    </ResponsiveContainer>
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartFrame>
                   </CardContent>
                 </Card>
 
@@ -343,8 +355,19 @@ export default function ReportPage() {
                 <Card className="ui-surface">
                   <CardHeader><CardTitle>缺陷收敛趋势</CardTitle></CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={passRateData}>
+                    <ChartFrame
+                      title="缺陷收敛趋势"
+                      summary={`当前最新待处理缺陷 ${trends.summary.latest_open_defects} 个，可按日期查看 P0、P1、P2 的变化。`}
+                      data={passRateData}
+                      columns={[
+                        { key: 'dateLabel', label: '日期' },
+                        { key: 'open_p0', label: 'P0 缺陷' },
+                        { key: 'open_p1', label: 'P1 缺陷' },
+                        { key: 'open_p2', label: 'P2 缺陷' },
+                      ]}
+                    >
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={passRateData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="dateLabel" />
                         <YAxis allowDecimals={false} />
@@ -374,8 +397,9 @@ export default function ReportPage() {
                           strokeWidth={2}
                           dot={{ r: 4 }}
                         />
-                      </LineChart>
-                    </ResponsiveContainer>
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </ChartFrame>
                   </CardContent>
                 </Card>
               </div>
@@ -536,7 +560,11 @@ export default function ReportPage() {
                       : detail.gate_status === 'fail' ? 'danger'
                       : 'neutral'
                   }>
-                    {detail.gate_status === 'pass' ? '✅ 通过' : detail.gate_status === 'fail' ? '❌ 未通过' : '⚠️ 警告'}
+                    {detail.gate_status === 'pass'
+                      ? <><CheckCircle2 className="size-3" />通过</>
+                      : detail.gate_status === 'fail'
+                        ? <><XCircle className="size-3" />未通过</>
+                        : <><AlertTriangle className="size-3" />警告</>}
                   </Badge>
                   {detail.gate_details && detail.gate_details.length > 0 && (
                     <div className="ml-2 text-xs text-muted-foreground">
@@ -600,7 +628,7 @@ export default function ReportPage() {
                     <Card size="sm" className="text-center ui-surface">
                       <CardContent className="py-2 px-1">
                         <div className="text-lg font-bold" style={{ color: item.color }}>{item.value}</div>
-                        <div className="text-[10px] text-muted-foreground">{item.key}</div>
+                        <div className="text-xs text-muted-foreground">{item.key}</div>
                       </CardContent>
                     </Card>
                   </div>
