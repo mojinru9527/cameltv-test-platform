@@ -1,4 +1,4 @@
-import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
+import { Badge, Button, type BadgeTone, useObsidianPage, PageShell } from '@/ui'
 /**
  * Environment & Variable management page.
  * E1: Project-level environments (dev/test/staging/prod) + variables with optional encryption.
@@ -227,10 +227,8 @@ export default function EnvironmentPage() {
 
   return (
     <Page>
-      <div className="space-y-4">
-      <div className="flex items-center justify-end">
-        <Button onClick={openEnvCreate}><Plus className="size-4" data-icon="inline-start" />新建环境</Button>
-      </div>
+      <PageShell title="环境管理" description="项目级测试环境配置与加密变量管理，支持环境切换与变量引用。" actions={<Button onClick={openEnvCreate}><Plus className="size-4" data-icon="inline-start" />新建环境</Button>} glass>
+        <div className="space-y-4">
 
       <AsyncState
         isLoading={isLoading}
@@ -467,7 +465,8 @@ export default function EnvironmentPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+        </div>
+      </PageShell>
     </Page>
   )
 }
