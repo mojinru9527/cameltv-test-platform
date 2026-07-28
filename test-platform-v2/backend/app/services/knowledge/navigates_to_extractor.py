@@ -19,7 +19,6 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal
 from app.models.lanhu_evidence import LanhuEvidencePage
 from app.models.requirement_module import RequirementModule
 
@@ -88,7 +87,7 @@ def _p3_cv_heuristic(page: RequirementModule, evidence_page: LanhuEvidencePage |
     if not ocr_text:
         return interactions
 
-    text_lower = ocr_text.lower()
+    ocr_text.lower()
 
     # Detect action verbs in OCR text
     found_actions: set[str] = set()
@@ -118,7 +117,7 @@ def _p3_cv_heuristic(page: RequirementModule, evidence_page: LanhuEvidencePage |
                     trigger=f"点击Tab-{tab}",
                     target_page=f"{tab}页",
                     interaction_type="tab_switch",
-                    source_element=f"底部/顶部Tab栏",
+                    source_element="底部/顶部Tab栏",
                     description=f"OCR检测到'{tab}'出现在Tab模式中",
                     extraction_source="cv_heuristic",
                 ))

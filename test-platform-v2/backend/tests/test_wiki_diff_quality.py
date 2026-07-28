@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 
-from app.models.knowledge import AiArtifact, KnowledgeChunk
+from app.models.knowledge import KnowledgeChunk
 from app.models.wiki import WikiDiffItem, WikiDiffTask
 from app.services.wiki import compare_service, contract_extractor, diff_classifier
 
@@ -220,7 +220,7 @@ class TestEvidenceTracking:
         for it in field_items:
             assert len(it["evidence"]) > 0, "missing_in_left 应引用右侧证据"
             # evidence should have wiki_page source from the right side
-            ev_types = {e.get("source_type", e.get("wiki_page_id") and "wiki_page") for e in it["evidence"]}
+            {e.get("source_type", e.get("wiki_page_id") and "wiki_page") for e in it["evidence"]}
             # at minimum, some evidence must be present
             assert any(e.get("wiki_page_id") == 42 for e in it["evidence"] if isinstance(e, dict)), \
                 f"证据应包含右侧 wiki_page_id=42，实际: {it['evidence']}"

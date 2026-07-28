@@ -1,5 +1,6 @@
 """Compare backend versions on different ports."""
-import urllib.request, json
+import urllib.request
+import json
 
 TOKEN = None
 # Login to 8002 (fixed backend)

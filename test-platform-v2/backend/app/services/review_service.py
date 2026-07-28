@@ -7,14 +7,12 @@ Follows the same pattern as defect_service.py transition logic:
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.test_case import TestCase
 from app.models.test_case_review import TestCaseReviewTransition
-from app.models.user import User
 
 # ── State machine ─────────────────────────────────────
 

@@ -1,7 +1,6 @@
 """切片 1 (VNext-1) —— Wiki Raw Source 去重 / supersede / 列表 / 详情。"""
 from __future__ import annotations
 
-from app.models.wiki import WikiRawSource
 from app.services.wiki import raw_source_service as rs
 
 

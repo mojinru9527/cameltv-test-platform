@@ -1,5 +1,6 @@
 """Quick proxy chain verification."""
-import urllib.request, json, sys
+import urllib.request
+import json
 
 def post(url, data):
     req = urllib.request.Request(url, data=json.dumps(data).encode(),

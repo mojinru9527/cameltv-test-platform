@@ -1,5 +1,7 @@
 """Auto-commit and push all 2026-07-13 changes."""
-import subprocess, sys, os
+import subprocess
+import sys
+import os
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 

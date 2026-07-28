@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 
-import pytest
 
 from app.services.external import lanhu_provider
 

@@ -192,29 +192,46 @@ export default function ArtifactReviewTab() {
         <span className="text-xs text-muted-foreground">共 {total} 条</span>
 
         {/* 批量采纳（pending 选中） */}
-        {selectedPendingCount > 0 && (
-          <Button
-            size="sm"
-            variant="default"
-            onClick={() => doBatchAction('approve', '')}
-            disabled={batchLoading}
-          >
-            <CheckCircle2 className="size-4 mr-1" />
-            {batchLoading && batchAction === 'approve' ? '采纳中…' : `批量采纳 (${selectedPendingCount})`}
-          </Button>
-        )}
+        <Button
+          size="sm"
+          variant="default"
+          onClick={() => doBatchAction('approve', '')}
+          disabled={batchLoading || selectedPendingCount === 0}
+          title={selectedPendingCount === 0 ? '请先勾选待审核条目' : `批量采纳 ${selectedPendingCount} 条`}
+        >
+          <CheckCircle2 className="size-4 mr-1" />
+          {batchLoading && batchAction === 'approve' ? '采纳中…' : `批量采纳${selectedPendingCount > 0 ? ` (${selectedPendingCount})` : ''}`}
+        </Button>
 
         {/* 批量驳回（pending 选中） */}
-        {selectedPendingCount > 0 && (
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={handleBatchRejectClick}
-            disabled={batchLoading}
-          >
-            <XCircle className="size-4 mr-1" />
-            {batchLoading && batchAction === 'reject' ? '驳回中…' : `批量驳回 (${selectedPendingCount})`}
-          </Button>
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={handleBatchRejectClick}
+          disabled={batchLoading || selectedPendingCount === 0}
+          title={selectedPendingCount === 0 ? '请先勾选待审核条目' : `批量驳回 ${selectedPendingCount} 条`}
+        >
+          <XCircle className="size-4 mr-1" />
+          {batchLoading && batchAction === 'reject' ? '驳回中…' : `批量驳回${selectedPendingCount > 0 ? ` (${selectedPendingCount})` : ''}`}
+        </Button>
+
+        {/* 快捷全选/取消 */}
+        {pendingItemsCount > 0 && (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={() => setSelectedIds(new Set(rows.filter((r) => r.review_status === 'pending' || r.review_status === 'approved').map((r) => r.id)))}
+            >
+              全选可操作
+            </Button>
+            {selectedIds.size > 0 && (
+              <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedIds(new Set())}>
+                取消全选
+              </Button>
+            )}
+          </>
         )}
 
         {/* 批量导入（approved 选中） */}
@@ -378,7 +395,7 @@ export default function ArtifactReviewTab() {
 
       {/* Detail Dialog */}
       <Dialog open={!!detailArtifact} onOpenChange={(open) => { if (!open) setDetailArtifact(null) }}>
-        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto w-[95vw]">
+        <DialogContent className="max-w-7xl max-h-[94vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="text-sm">{detailArtifact?.title}</DialogTitle>
             <DialogDescription className="text-xs">
@@ -387,7 +404,7 @@ export default function ArtifactReviewTab() {
             </DialogDescription>
           </DialogHeader>
           <div className="text-xs">
-            <pre className="bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-words max-h-96">
+            <pre className="bg-muted p-3 rounded-md overflow-x-auto whitespace-pre-wrap break-words max-h-[600px]">
               {(() => {
                 try {
                   return JSON.stringify(JSON.parse(detailArtifact?.content_json || '{}'), null, 2)

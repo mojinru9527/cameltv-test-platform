@@ -978,7 +978,6 @@ class TestGraphIngestHook:
         kdb.commit()
 
         from app.services.knowledge import ingest_service
-        import app.services.knowledge.entity_service as es
         monkeypatch.setattr(ingest_service, "SessionLocal", lambda: kdb)  # 内部调用同 Session
 
         called_with: list = []
@@ -1055,11 +1054,14 @@ class TestAgentOrchestrator:
         result = run_agent_in_new_session(1, "invalid_agent_type")
         assert result["status"] == "invalid_type"
 
-    def test_run_without_ai_key(self, monkeypatch):
+    def test_run_without_ai_key(self, monkeypatch, db_session):
         from app.core.config import settings
         monkeypatch.setattr(settings, "ai_api_key", "", raising=False)
-        from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
-        result = run_agent_in_new_session(1, "requirement_analysis", user_input="测试需求")
+        from app.services.knowledge import agent_orchestrator
+        # run_agent_in_new_session uses SessionLocal() which points at the global
+        # engine; patch it to use the fixture's session instead.
+        monkeypatch.setattr(agent_orchestrator, "SessionLocal", lambda: db_session)
+        result = agent_orchestrator.run_agent_in_new_session(1, "requirement_analysis", user_input="测试需求")
         assert result["status"] == "failed"
         assert "error" in result
         assert result["run_id"] > 0
@@ -1131,7 +1133,7 @@ class TestArtifactWriteApi:
 
         resp = kclient.post(f"/api/v1/knowledge/ai-artifacts/{a.id}/import-to-test-cases", json={"comment": ""})
         # 治理守卫：仅 approved 才能导入
-        data = resp.json()
+        resp.json()
         assert resp.status_code in (403, 200)  # 拒绝或返回错误
 
     def test_approve_nonexistent_artifact(self, kclient):

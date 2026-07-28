@@ -14,15 +14,14 @@ from __future__ import annotations
 import json
 import logging
 import time
-from datetime import datetime
 
 import httpx
 
 from app.core.config import settings
 from app.core.db import SessionLocal
-from app.models.knowledge import AgentRun, AiArtifact, KnowledgeChunk
+from app.models.knowledge import AiArtifact
 from app.services.knowledge.agent_prompts import AGENT_META, build_system_prompt
-from app.services.knowledge import agent_run_service, search_service, artifact_service
+from app.services.knowledge import agent_run_service, search_service
 
 logger = logging.getLogger("knowledge.orchestrator")
 

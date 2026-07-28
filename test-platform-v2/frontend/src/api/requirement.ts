@@ -89,14 +89,24 @@ export async function generateTestCases(
   return api.post(`/requirements/${documentId}/generate`, options || {})
 }
 
+export interface ImportCasesResult {
+  imported: number
+  skipped: number
+  total: number
+  plan_id: number | null
+  plan_name: string
+}
+
 export async function importCases(
   documentId: number,
   indices: number[],
   editedCases?: AIGeneratedCase[],
-): Promise<{ imported: number; skipped: number; total: number }> {
+  createPlan: boolean = false,
+): Promise<ImportCasesResult> {
   return api.post(`/requirements/${documentId}/import`, {
     indices,
     ...(editedCases && editedCases.length > 0 ? { edited_cases: editedCases } : {}),
+    create_plan: createPlan,
   })
 }
 

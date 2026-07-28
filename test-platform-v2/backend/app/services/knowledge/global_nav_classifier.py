@@ -19,7 +19,6 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal
 from app.models.requirement_module import RequirementModule
 from app.models.release_bundle import ReleaseBundle
 

@@ -59,7 +59,7 @@ import {
 import { cn } from '@/lib/utils'
 import EmptyState from '@/components/EmptyState'
 import { SkeletonText, SkeletonPage } from '@/components/ui/skeleton'
-import { deletePlan, executeCase, fetchExecutions, fetchPlan, removeCasesFromPlan, updatePlan } from '@/api/testplan'
+import { autoExecutePlan, deletePlan, executeCase, executeAllCases, fetchExecutions, fetchPlan, removeCasesFromPlan, updatePlan } from '@/api/testplan'
 import AddCasesModal from './AddCasesModal'
 import PlanDrawer from './PlanDrawer'
 
@@ -103,6 +103,8 @@ export default function PlanDetail() {
   const [execLoading, setExecLoading] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
   const [deletePlanOpen, setDeletePlanOpen] = useState(false)
+  const [execAllLoading, setExecAllLoading] = useState(false)
+  const [autoExecuting, setAutoExecuting] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -142,6 +144,18 @@ export default function PlanDetail() {
     load()
   }
 
+  const doAutoExecute = async () => {
+    setAutoExecuting(true)
+    try {
+      const result: any = await autoExecutePlan(planId)
+      toast.success(`批量执行完成: ${result.executed} 条执行, ${result.passed} 通过, ${result.failed} 失败`)
+      load()
+      loadExecutions()
+    } catch (e: any) {
+      toast.error(e?.message || '批量执行失败')
+    } finally { setAutoExecuting(false) }
+  }
+
   const doExecute = async () => {
     if (!execModal.pcase) return
     setExecSaving(true)
@@ -160,6 +174,18 @@ export default function PlanDetail() {
     setExecModal({ open: true, pcase })
     setExecStatus('pass')
     setExecNotes('')
+  }
+
+  const doExecuteAll = async () => {
+    setExecAllLoading(true)
+    try {
+      const result: any = await executeAllCases(planId)
+      toast.success(`批量执行完成: ${result.passed} 通过, ${result.failed} 失败, ${result.skipped} 跳过`)
+      load()
+      loadExecutions()
+    } catch {
+      // handled by interceptor
+    } finally { setExecAllLoading(false) }
   }
 
   if (!plan) {
@@ -188,6 +214,15 @@ export default function PlanDetail() {
         </Badge>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="default"
+            onClick={doAutoExecute}
+            disabled={autoExecuting || !plan.cases?.length}
+          >
+            <Play className="size-3.5" data-icon="inline-start" />
+            {autoExecuting ? '执行中...' : '批量执行'}
+          </Button>
           {plan.status === 'draft' && (
             <Button size="sm" onClick={() => doUpdateStatus('active')}>开始执行</Button>
           )}
@@ -196,6 +231,10 @@ export default function PlanDetail() {
           )}
           <Button size="sm" variant="outline" onClick={load}>
             <RotateCcw className="size-3.5" data-icon="inline-start" />
+          </Button>
+          <Button size="sm" variant="outline" disabled={execAllLoading} onClick={doExecuteAll}>
+            <Play className="size-3.5" data-icon="inline-start" />
+            {execAllLoading ? '执行中...' : '一键执行'}
           </Button>
           <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>编辑</Button>
           <AlertDialog open={deletePlanOpen} onOpenChange={setDeletePlanOpen}>
@@ -254,26 +293,28 @@ export default function PlanDetail() {
       </div>
 
       {/* Description (Descriptions) */}
-      {plan.description && (
-        <Card size="sm">
-          <CardContent className="pt-[var(--card-spacing)]">
-            <dl className="grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <dt className="text-muted-foreground">描述</dt>
-                <dd className="mt-0.5">{plan.description}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">开始</dt>
-                <dd className="mt-0.5">{plan.start_date ? new Date(plan.start_date).toLocaleDateString() : '-'}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">结束</dt>
-                <dd className="mt-0.5">{plan.end_date ? new Date(plan.end_date).toLocaleDateString() : '-'}</dd>
-              </div>
-            </dl>
-          </CardContent>
-        </Card>
-      )}
+      <Card size="sm">
+        <CardContent className="pt-[var(--card-spacing)]">
+          <dl className="grid grid-cols-4 gap-4 text-sm">
+            <div>
+              <dt className="text-muted-foreground">描述</dt>
+              <dd className="mt-0.5">{plan.description || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">负责人</dt>
+              <dd className="mt-0.5">{plan.assignee_name || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">开始</dt>
+              <dd className="mt-0.5">{plan.start_date ? new Date(plan.start_date).toLocaleDateString() : '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">截止</dt>
+              <dd className="mt-0.5">{plan.due_date ? new Date(plan.due_date).toLocaleDateString() : (plan.end_date ? new Date(plan.end_date).toLocaleDateString() : '-')}</dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
 
       {/* Cases + Executions Tabs */}
       <Card size="sm">

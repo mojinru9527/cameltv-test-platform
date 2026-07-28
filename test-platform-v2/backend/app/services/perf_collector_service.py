@@ -14,7 +14,7 @@ logger = logging.getLogger("perf")
 
 # ── SoloX 可选导入 ──
 try:
-    from solox.public.apm import AppPerformanceMonitor, initPerformanceService
+    from solox.public.apm import AppPerformanceMonitor
     from solox.public.common import Devices
     SOLOX_AVAILABLE = True
 except ImportError:

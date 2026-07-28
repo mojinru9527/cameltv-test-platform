@@ -40,6 +40,25 @@ feature/* 或 fix/*
 - ✅ **只 push 功能分支，通过 PR 合并**
 - ✅ **每个 Claude Code、ChatGPT/Codex、Agent Team 任务使用独立 worktree**
 
+### 2.1.1 版本批次生命周期（强制）
+
+> **每个版本批次开发完成后，必须先合入主干，再从主干拉取最新代码开始下一版本。禁止在未合并的情况下基于旧代码启动新批次。**
+
+```
+版本批次 N 完成 (开发 + QA + Review + Leader Verdict)
+    → 合并 feature/batch-N 到 develop/main
+    → push develop/main 到远程
+    → 验证 CI 通过
+    → 从最新 develop/main 创建 feature/batch-(N+1) 分支
+    → 开始版本批次 N+1 开发
+```
+
+- ❌ **禁止在上一批次未合并的情况下启动新批次**
+- ❌ **禁止基于旧 develop/main 创建新批次分支**（必须先 `git fetch && git merge` 或从最新远程分支切出）
+- ✅ **每个批次完成后立即合并到主干，保持主干为最新稳定状态**
+- ✅ **新批次 worktree 必须从合并后的最新 develop/main 创建**
+- ✅ **多个并行批次（如 batch-37-platform-ga 与 batch-37-platform-polish-and-review）完成时，按交付顺序逐个合并，冲突在合并时解决**
+
 ### 2.2 GitHub 分支保护
 
 | 分支 | 删除 | 强推 | 变更方式 | 审批要求 |

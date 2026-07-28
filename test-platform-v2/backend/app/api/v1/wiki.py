@@ -17,16 +17,13 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
 from app.models.wiki import WikiDiffItem, WikiDiffTask, WikiIngestJob, ExternalWikiConnection
-from app.models.wiki import WikiLintIssue, WikiLintReport
 from app.schemas.common import Page, R
 from app.schemas.wiki import (
     ExternalWikiConnectionCreate,
     ExternalWikiConnectionOut,
     ExternalWikiConnectionUpdate,
-    ExternalWikiGraphRequest,
     ExternalWikiGraphResult,
     ExternalWikiHealthResult,
-    ExternalWikiPageRequest,
     ExternalWikiPageResult,
     ExternalWikiSearchRequest,
     ExternalWikiSearchResult,
@@ -56,7 +53,7 @@ from app.schemas.wiki import (
 )
 from app.services import audit_service
 from app.services.wiki import (
-    compare_service, import_service, ingest_service, lint_service, page_service,
+    compare_service, ingest_service, lint_service, page_service,
     raw_source_service,
 )
 from app.services.wiki.external_llm_wiki import (

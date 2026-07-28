@@ -124,6 +124,13 @@ def _do_execute(
     # 2. 解析最终 URL
     resolved_url = _resolve_url(db, environment_id, url)
 
+    # 2.5 SSRF 防护检查
+    if environment_id:
+        # 环境内 URL 允许（已配置的 base_url），直接请求跳过 SSRF 检查
+        pass
+    else:
+        _validate_url_no_ssrf(resolved_url)
+
     # 3. 构建请求快照（执行前）
     request_snapshot = _build_request_snapshot(
         method=method,
@@ -157,7 +164,6 @@ def _do_execute(
         # 提取响应头
         resp_headers = {k: v for k, v in resp.headers.items()}
 
-        request_error = None
     except httpx.TimeoutException:
         return _error_result("请求超时 (30s)", request_snapshot)
     except httpx.ConnectError as e:
@@ -648,6 +654,63 @@ def _resolve_url(db: Session, environment_id: int | None, url: str) -> str:
             return env.base_url.rstrip("/") + "/" + url.lstrip("/")
 
     return url if url.startswith("http") else f"http://{url}"
+
+
+# ── SSRF 防护 ────────────────────────────────────────────
+
+import ipaddress
+import socket
+from urllib.parse import urlparse
+
+# 禁止访问的 IP 范围（RFC 1918 + 回环 + 链路本地 + 特殊用途）
+_SSRF_BLOCKED_NETWORKS = [
+    ipaddress.ip_network("127.0.0.0/8"),      # 回环
+    ipaddress.ip_network("10.0.0.0/8"),       # RFC 1918 A 类
+    ipaddress.ip_network("172.16.0.0/12"),    # RFC 1918 B 类
+    ipaddress.ip_network("192.168.0.0/16"),   # RFC 1918 C 类
+    ipaddress.ip_network("169.254.0.0/16"),   # 链路本地
+    ipaddress.ip_network("0.0.0.0/8"),        # 当前网络
+    ipaddress.ip_network("::1/128"),          # IPv6 回环
+    ipaddress.ip_network("fc00::/7"),         # IPv6 唯一本地
+    ipaddress.ip_network("fe80::/10"),        # IPv6 链路本地
+]
+
+
+def _is_private_ip(host: str) -> bool:
+    """检查 host 是否指向私有/内部 IP（SSRF 防护）。"""
+    try:
+        # 尝试直接解析为 IP
+        addr = ipaddress.ip_address(host)
+    except ValueError:
+        # DNS 解析 → 获取第一个 IP
+        try:
+            addr = ipaddress.ip_address(socket.gethostbyname(host))
+        except (socket.gaierror, OSError):
+            return False  # 无法解析，放行（后续 httpx 会报错）
+
+    return any(addr in net for net in _SSRF_BLOCKED_NETWORKS)
+
+
+def _validate_url_no_ssrf(url: str, allow_env_urls: bool = True) -> None:
+    """验证 URL 不指向内部/私有 IP，防止 SSRF 攻击。
+
+    Raises:
+        ValueError: URL 指向被禁止的内部 IP
+    """
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        raise ValueError(f"无法解析 URL: {url}")
+
+    host = parsed.hostname
+    if not host:
+        raise ValueError(f"URL 缺少主机名: {url}")
+
+    if _is_private_ip(host):
+        raise ValueError(
+            f"SSRF 防护：禁止访问内部地址 {host}。"
+            f"如需访问内部服务，请配置测试环境 base_url。"
+        )
 
 
 def _error_result(message: str, request_snapshot: dict | None = None) -> dict:

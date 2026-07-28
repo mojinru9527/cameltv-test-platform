@@ -88,7 +88,7 @@ async def lifespan(_: FastAPI):
         _sync_db = SessionLocal()
         try:
             _configs = _sync_db.query(IntegrationConfig).filter(
-                IntegrationConfig.enabled == True,
+                IntegrationConfig.enabled,
                 IntegrationConfig.sync_interval_minutes > 0,
             ).all()
             for _cfg in _configs:

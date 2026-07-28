@@ -99,6 +99,7 @@ describe('AiResultModal edited import flow', () => {
       5,
       [0],
       [expect.objectContaining({ index: 0, title: 'edited title' })],
+      false,
     ))
   })
 
@@ -113,7 +114,10 @@ describe('AiResultModal edited import flow', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存' }))
     await waitFor(() => expect(mockReviewCase).toHaveBeenCalled())
 
-    fireEvent.click(screen.getByRole('checkbox'))
+    // When the row is still in edit mode (save failed), the row checkbox is absent;
+    // use the select-all checkbox [0] instead — it selects all indices regardless.
+    const selectAll = screen.getAllByRole('checkbox')[0]
+    fireEvent.click(selectAll)
     fireEvent.click(screen.getByRole('button', { name: '导入功能用例 (1)' }))
 
     expect(mockImportCases).not.toHaveBeenCalled()

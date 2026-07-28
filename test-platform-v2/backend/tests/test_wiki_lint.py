@@ -17,7 +17,6 @@ import pytest
 
 from app.core.config import settings
 from app.models.wiki import (
-    WikiLintIssue,
     WikiLintReport,
     WikiLink,
     WikiPage,

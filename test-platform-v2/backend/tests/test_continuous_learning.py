@@ -475,7 +475,7 @@ class TestSnapshotService:
         kdb.add_all([s1, s2, s3, s4])
         kdb.commit()
 
-        resp = kclient.get(f"/api/v1/knowledge/iterations/1002/compare?base_iteration_id=1001")
+        resp = kclient.get("/api/v1/knowledge/iterations/1002/compare?base_iteration_id=1001")
         assert resp.status_code == 200
         body = resp.json()
         assert body["code"] == 0

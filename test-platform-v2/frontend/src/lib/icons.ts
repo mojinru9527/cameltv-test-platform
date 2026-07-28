@@ -29,6 +29,7 @@ export {
   ExternalLink,
   LogOut,
   // Status
+  CheckCheck,
   CheckCircle2,
   XCircle,
   AlertTriangle,

@@ -1,7 +1,7 @@
 """Dashboard service — aggregate project-level statistics with time-range support."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session

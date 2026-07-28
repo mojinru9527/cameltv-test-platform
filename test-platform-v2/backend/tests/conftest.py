@@ -1,6 +1,7 @@
 """Shared test fixtures — in-memory SQLite, test client, seeded data."""
 from __future__ import annotations
 
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -9,9 +10,28 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.db import Base
 from app.core.security import hash_password
-from app.main import app
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.user import User
+
+# ── Disable production DB touch during tests ──
+from app.core import config
+config.settings.auto_create_tables = False
+
+# Patch run_seed + init_scheduler at source — lifespan imports them fresh
+from unittest.mock import patch as _patch
+_seed_patch = _patch("app.seed.run_seed", lambda: None)
+_seed_patch.start()
+_sched_patch = _patch("app.core.scheduler.init_scheduler", lambda: None)
+_sched_patch.start()
+_shutdown_patch = _patch("app.core.scheduler.shutdown_scheduler", lambda: None)
+_shutdown_patch.start()
+
+# Disable login rate limiter for tests — all test clients share localhost IP
+_rate_limit_patch = _patch("app.core.rate_limit.login_limiter.is_allowed", return_value=(True, 0))
+_rate_limit_patch.start()
+
+# Import app AFTER patching seed
+from app.main import app  # noqa: E402
 
 
 @pytest.fixture(scope="function")

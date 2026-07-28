@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.environment import Environment, EnvironmentVariable

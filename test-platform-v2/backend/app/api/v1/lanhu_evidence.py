@@ -327,7 +327,7 @@ def cancel_job(
 ):
     job = _get_job(db, job_id, current.project_id or 0)
     if job.status in ("pending", "running"):
-        from datetime import datetime, timedelta
+        from datetime import datetime
         stale_seconds = int(getattr(settings, 'lanhu_evidence_stale_after_seconds', None) or 600)
         last_seen = job.heartbeat_at or job.started_at or job.updated_at or job.created_at
         if last_seen is not None and (datetime.now() - last_seen).total_seconds() > stale_seconds:
@@ -353,7 +353,7 @@ def retry_job(
     project_id = current.project_id or 0
     old = _get_job(db, job_id, project_id)
     if old.status in ("pending", "running"):
-        from datetime import datetime, timedelta
+        from datetime import datetime
         stale_seconds = int(getattr(settings, 'lanhu_evidence_stale_after_seconds', None) or 600)
         last_seen = old.heartbeat_at or old.started_at or old.updated_at or old.created_at
         if last_seen is None or (datetime.now() - last_seen).total_seconds() > stale_seconds:

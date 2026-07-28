@@ -19,16 +19,13 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal
 from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
 from app.models.lanhu_evidence import LanhuEvidencePage
 from app.models.requirement_module import RequirementModule
-from app.models.release_bundle import ReleaseBundle
 
 logger = logging.getLogger("knowledge.attachment_extractor")
 

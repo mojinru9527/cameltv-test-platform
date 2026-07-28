@@ -1,5 +1,6 @@
 """Simple proxy chain test."""
-import urllib.request, json
+import urllib.request
+import json
 
 # Login through proxy
 print("1. Proxy login...")

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.models.requirement import RequirementDocument
 from app.models.requirement_review import RequirementReview
+from app.models.test_case import TestCase
 from app.models.user import User
 from app.services import test_case_service
 
@@ -663,11 +664,15 @@ def import_cases(
     project_id: int,
     *,
     commit: bool = True,
+    creator_id: int = 0,
+    create_plan: bool = False,
 ) -> dict:
     """Import selected generated cases into the test_case table (transactional).
 
     All cases import atomically — if any case fails, the entire batch rolls back
     so no half-imported data is left behind.
+
+    When create_plan=True, also creates a TestPlan and links all imported cases.
     """
     imported_func = 0
     imported_api = 0
@@ -745,6 +750,27 @@ def import_cases(
         row.imported_api_count = len(all_api)
         row.imported_count = len(all_func) + len(all_api)
         _finish_write(db, row, commit=commit)
+
+        # Auto-create test plan if requested
+        plan_id = None
+        plan_name = ""
+        if create_plan and (imported_func > 0 or imported_api > 0):
+            from app.services.test_plan_service import add_cases as _add_cases, create_plan as _create_plan
+            plan_data = {"name": f"{row.title} - 测试计划", "status": "draft"}
+            plan = _create_plan(db, plan_data, creator_id=creator_id, project_id=project_id)
+            plan_id = plan["id"]
+            plan_name = plan["name"]
+            imported_case_ids = [
+                tc.id for tc in db.scalars(
+                    select(TestCase).where(
+                        TestCase.project_id == project_id,
+                        TestCase.source_doc_id == doc_id,
+                        TestCase.source_case_index.in_(list(requested_func_indices | requested_api_indices)),
+                    )
+                ).all()
+            ]
+            if imported_case_ids:
+                _add_cases(db, plan_id, imported_case_ids, project_id=project_id)
     except Exception as exc:
         db.rollback()
         logger.error(
@@ -753,7 +779,7 @@ def import_cases(
         )
         raise
 
-    return {"imported": imported_func + imported_api, "skipped": skipped, "total": len(cases)}
+    return {"imported": imported_func + imported_api, "skipped": skipped, "total": len(cases), "plan_id": plan_id, "plan_name": plan_name}
 
 
 def get_api_match_selection(

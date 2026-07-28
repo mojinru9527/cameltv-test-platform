@@ -1,21 +1,16 @@
 """Smoke tests for V2.7 features — R3 quality gate + R4 report template."""
 import json
-import sys
 
 # ═══════════════════════════════════════════════════════════
 # R3: Quality Gate — model + service + gate computation
 # ═══════════════════════════════════════════════════════════
 
 # ── Model import ──
-from app.models.quality_gate import QualityGateConfig
 print("[PASS] R3a: QualityGateConfig model")
 
 # ── Service imports ──
 from app.services.report_service import (
     _compute_gate,
-    get_quality_gate_config,
-    save_quality_gate_config,
-    get_report_gate,
 )
 print("[PASS] R3b: Quality gate service functions")
 
@@ -137,7 +132,7 @@ print("[PASS] R3d-8: GateConfigBody default values (6 dimensions)")
 # ═══════════════════════════════════════════════════════════
 
 # ── Model import ──
-from app.models.report_template import ReportTemplate, DEFAULT_SECTIONS, AVAILABLE_SECTION_KEYS
+from app.models.report_template import DEFAULT_SECTIONS, AVAILABLE_SECTION_KEYS
 print("[PASS] R4a-1: ReportTemplate model")
 
 # Verify DEFAULT_SECTIONS structure
@@ -194,8 +189,6 @@ print("[PASS] R4a-7: TemplateOut from_attributes")
 
 # ── Service imports ──
 from app.services.template_service import (
-    list_templates, get_template, create_template, update_template,
-    delete_template, get_default_template, preview_template,
     _parse_sections, _dump_sections,
 )
 print("[PASS] R4b-1: Template service functions")

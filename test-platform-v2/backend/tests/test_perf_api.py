@@ -1,9 +1,7 @@
 """Performance monitoring API tests — CRUD + WebSocket lifecycle in Mock mode."""
 from __future__ import annotations
 
-import json
 import time
-import pytest
 
 from app.services import perf_service
 

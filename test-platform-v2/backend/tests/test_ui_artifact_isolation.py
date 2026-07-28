@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 from pathlib import Path
 from types import SimpleNamespace
@@ -107,7 +106,7 @@ class TestExecutorArtifactIsolation:
 
     def test_executor_collects_only_from_artifact_dir(self, db_session, ui_job_factory, ui_run_factory, tmp_path):
         """After execution, artifacts should only come from storage/ui-runs/{run_id}."""
-        from app.services.playwright_executor import PLAYWRIGHT_DIR, STORAGE_DIR
+        from app.services.playwright_executor import PLAYWRIGHT_DIR
 
         job = ui_job_factory(test_spec="specs/example.spec.ts")
 

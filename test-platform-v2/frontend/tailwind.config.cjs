@@ -59,7 +59,15 @@ module.exports = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      fontFamily: {
+      fontSize: {
+	        xs: '0.8125rem',   // 13px
+	        sm: '0.9375rem',   // 15px
+	        base: '1.0625rem', // 17px
+	        lg: '1.1875rem',   // 19px
+	        xl: '1.3125rem',   // 21px
+	        '2xl': '1.625rem', // 26px
+	      },
+	      fontFamily: {
         sans: [
           "-apple-system",
           "BlinkMacSystemFont",

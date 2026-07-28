@@ -7,7 +7,6 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -297,7 +296,7 @@ class TestPlaywrightExecutorTimeout:
                     # Force timeout by using a very short timeout
                     with patch("app.services.playwright_executor.DEFAULT_TIMEOUT", 0):
                         from app.services.playwright_executor import run_playwright_test
-                        result = run_playwright_test(db_session, run.id, job.id, job.project_id)
+                        run_playwright_test(db_session, run.id, job.id, job.project_id)
 
         db_session.refresh(run)
         # Process should have been killed

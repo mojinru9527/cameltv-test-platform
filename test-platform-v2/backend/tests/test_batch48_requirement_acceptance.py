@@ -371,7 +371,7 @@ def test_import_edited_values_is_idempotent_and_tracks_cumulative_indices(
         json=body,
     )
     assert first.status_code == 200
-    assert first.json()["data"] == {"imported": 2, "skipped": 0, "total": 2}
+    assert first.json()["data"] == {"imported": 2, "skipped": 0, "total": 2, "plan_id": None, "plan_name": ""}
 
     second = client.post(
         f"/api/v1/requirements/{doc.id}/import",
@@ -379,7 +379,7 @@ def test_import_edited_values_is_idempotent_and_tracks_cumulative_indices(
         json=body,
     )
     assert second.status_code == 200
-    assert second.json()["data"] == {"imported": 0, "skipped": 2, "total": 2}
+    assert second.json()["data"] == {"imported": 0, "skipped": 2, "total": 2, "plan_id": None, "plan_name": ""}
 
     rows = list(
         db_session.scalars(
@@ -783,7 +783,7 @@ def test_generate_persists_inherited_cases_before_cases_get_and_import(
         json={"indices": [0]},
     )
     assert imported.status_code == 200
-    assert imported.json()["data"] == {"imported": 1, "skipped": 0, "total": 1}
+    assert imported.json()["data"] == {"imported": 1, "skipped": 0, "total": 1, "plan_id": None, "plan_name": ""}
 
     db_session.expire_all()
     imported_case = db_session.scalar(
@@ -803,7 +803,7 @@ def test_generate_persists_inherited_cases_before_cases_get_and_import(
         json={"indices": [0]},
     )
     assert repeated.status_code == 200
-    assert repeated.json()["data"] == {"imported": 0, "skipped": 1, "total": 1}
+    assert repeated.json()["data"] == {"imported": 0, "skipped": 1, "total": 1, "plan_id": None, "plan_name": ""}
 
 
 def test_match_api_requires_ownership_and_confirmed_selection_survives_refresh(

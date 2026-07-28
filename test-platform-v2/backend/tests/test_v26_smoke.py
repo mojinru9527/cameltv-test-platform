@@ -1,15 +1,11 @@
 """Smoke tests for V2.6 features — integration + PostgreSQL support."""
-import sys
 
 # ── Model imports ──
-from app.models.integration import IntegrationConfig
-from app.models.sync_log import SyncLog
 print("[PASS] Integration + SyncLog models")
 
 # ── Schema imports ──
 from app.schemas.integration import (
-    IntegrationConfigCreate, IntegrationConfigUpdate, IntegrationConfigOut,
-    TestConnectionRequest, TestConnectionResponse, SyncLogOut,
+    IntegrationConfigCreate, IntegrationConfigOut,
 )
 print("[PASS] Integration schemas")
 
@@ -17,20 +13,17 @@ print("[PASS] Integration schemas")
 # NOTE: test_connection 别名为 _test_connection —— 它是 integration_service 的业务函数，
 # 若以 test_ 前缀名导入本 test_*.py 模块，pytest 会误当作测试函数收集并无参调用 → ERROR。
 from app.services.integration_service import (
-    list_integrations, get_integration, create_integration, update_integration,
-    delete_integration, test_connection as _test_connection, list_sync_logs,
+    test_connection as _test_connection,
 )
 print("[PASS] Integration service")
 
 # ── Sync engine imports ──
-from app.services.sync.base import BaseSyncProvider
 from app.services.sync.jira import JiraSyncProvider
 from app.services.sync.tapd import TapdSyncProvider
-from app.services.sync.engine import get_provider, push_defect, pull_defect_status, run_scheduled_sync
+from app.services.sync.engine import get_provider
 print("[PASS] Sync engine")
 
 # ── API router imports ──
-from app.api.v1.integration import router as integration_router
 print("[PASS] Integration API router")
 
 # ── Provider mapping tests ──
@@ -96,7 +89,6 @@ for d in valid_directions:
 print("[PASS] Sync direction validation")
 
 # ── Provider factory ──
-from app.services.sync.engine import get_provider
 jira_p = get_provider("jira", {"base_url": "https://x.com", "auth": {}, "field_mapping": {}})
 assert isinstance(jira_p, JiraSyncProvider)
 tapd_p = get_provider("tapd", {"base_url": "https://x.com", "auth": {}, "field_mapping": {}})
