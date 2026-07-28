@@ -6,7 +6,7 @@ import {
 import type { ModuleAdminLinkOut, ModuleTreeNode } from '@/types'
 import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Collapsible,

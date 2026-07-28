@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { captureInsight } from '@/api/knowledge'
 import { Plus, X, Loader2, Lightbulb } from '@/lib/icons'
 import { toast } from 'sonner'

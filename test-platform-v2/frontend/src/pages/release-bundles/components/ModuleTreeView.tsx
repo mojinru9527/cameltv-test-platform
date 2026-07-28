@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { ModuleTreeNode } from '@/types'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   ChevronRight,
   ChevronDown,

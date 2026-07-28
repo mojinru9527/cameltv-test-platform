@@ -12,7 +12,7 @@
  */
 import { RefreshCw } from '@/lib/icons'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import {

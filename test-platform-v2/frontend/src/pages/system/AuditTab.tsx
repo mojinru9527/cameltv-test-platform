@@ -1,7 +1,7 @@
 import { Search, RotateCcw, Download } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'

@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react'
-import type { Badge } from '@/components/ui/badge'
+import type { Badge } from '@/ui'
 
 type BadgeVariant = NonNullable<ComponentProps<typeof Badge>['variant']>
 

@@ -4,7 +4,7 @@ import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { acceptWikiDiffItem, rejectWikiDiffItem, createWikiDiffArtifact } from '@/api/wiki'
 import type { WikiDiffItem } from '@/types'
 import { useAuthStore } from '@/stores/auth'

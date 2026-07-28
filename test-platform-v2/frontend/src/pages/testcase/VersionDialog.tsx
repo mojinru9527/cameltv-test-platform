@@ -4,7 +4,7 @@
  */
 import { useState, useEffect } from 'react'
 import { History, ChevronRight } from '@/lib/icons'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Button } from '@/ui'
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,

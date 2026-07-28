@@ -3,7 +3,7 @@ import { fetchModule } from '@/api/requirementModules'
 import { fetchGlobalNav } from '@/api/requirementModules'
 import type { ModuleTreeNode, GlobalNavItemOut } from '@/types'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   Sheet,

@@ -7,7 +7,7 @@ import { createRole, deleteRole, fetchPermissions, fetchRoles, updateRole } from
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
