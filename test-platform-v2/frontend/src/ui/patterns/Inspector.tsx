@@ -143,9 +143,9 @@ export function Inspector({
             </div>
             <div className="h-1.5 bg-[rgba(255,255,255,0.06)] rounded-full overflow-hidden">
               <span
-                className="block h-full rounded-full transition-all duration-500 ease-out"
+                className="block size-full origin-left rounded-full transition-transform duration-200 ease-out"
                 style={{
-                  width: `${progress}%`,
+                  transform: `scaleX(${Math.min(100, Math.max(0, progress)) / 100})`,
                   background: `linear-gradient(90deg, ${toneColor}, ${toneColor}88)`,
                 }}
               />

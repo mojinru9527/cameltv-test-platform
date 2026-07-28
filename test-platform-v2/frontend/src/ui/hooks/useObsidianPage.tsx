@@ -22,7 +22,8 @@
  */
 
 import { type ReactNode } from 'react'
-import { useUiTheme, ObsidianListPage, type ObsidianListPageProps } from '@/ui'
+import { ObsidianListPage, type ObsidianListPageProps } from '../patterns/ObsidianListPage'
+import { useUiTheme } from '../themes/UiThemeProvider'
 
 interface UseObsidianPageOptions extends Omit<ObsidianListPageProps, 'children'> {
   /** 在非黑曜流界模式下的备选内容（如自定义 PageHeader） */

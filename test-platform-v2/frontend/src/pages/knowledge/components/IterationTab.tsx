@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -241,7 +241,7 @@ export default function IterationTab() {
                       <Card key={snap.id} className="border border-muted">
                         <CardContent className="p-3">
                           <div className="flex items-center justify-between mb-1">
-                            <Badge variant="outline" className="text-xs">{snap.snapshot_type}</Badge>
+                            <Badge tone="neutral" className="text-xs">{snap.snapshot_type}</Badge>
                           </div>
                           <pre className="text-xs text-muted-foreground max-h-24 overflow-auto">
                             {JSON.stringify(data, null, 2)}

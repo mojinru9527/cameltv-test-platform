@@ -56,7 +56,7 @@ export function ObsidianListPage({
     >
       {/* Spotlight 光晕 */}
       <div
-        className="fixed inset-0 pointer-events-none transition-opacity duration-[180ms] z-0"
+        className="fixed inset-0 pointer-events-none transition-opacity duration-200 z-0"
         style={{
           opacity: hovered ? 1 : 0,
           background: `radial-gradient(520px circle at var(--spotlight-x, 50%) var(--spotlight-y, 40%), rgba(53,230,138,0.02), transparent 60%)`,
@@ -74,7 +74,7 @@ export function ObsidianListPage({
 
         <div className="flex items-center justify-between gap-6">
           <div className="min-w-0">
-            <h1 className="text-[clamp(1.75rem,2.4vw,2.25rem)] font-[580] tracking-[-0.045em] leading-[1.08] text-[#f5faf6] text-balance">
+            <h1 className="text-[clamp(1.75rem,2.4vw,2.25rem)] font-[580] tracking-[-0.03em] leading-[1.08] text-[#f5faf6] text-balance">
               {title}
             </h1>
             {description && (

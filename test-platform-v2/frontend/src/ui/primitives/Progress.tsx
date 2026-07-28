@@ -16,24 +16,35 @@ export function Progress({
   tone = 'success',
   ...props
 }: ProgressProps) {
-  const pct = Math.min(100, Math.max(0, (value / max) * 100))
+  const safeMax = Number.isFinite(max) && max > 0 ? max : 100
+  const safeValue = Number.isFinite(value) ? Math.min(safeMax, Math.max(0, value)) : 0
+  const scale = safeValue / safeMax
 
   const fillClass = {
-    success: 'ui-progress-fill',
-    warning: 'ui-progress-fill is-warning',
-    danger: 'ui-progress-fill is-danger',
+    success: 'ui-progress-fill bg-primary',
+    warning: 'ui-progress-fill is-warning bg-amber-500',
+    danger: 'ui-progress-fill is-danger bg-destructive',
   }[tone]
 
   return (
     <div
-      className={cn('ui-progress', className)}
+      data-slot="progress"
+      className={cn('ui-progress relative h-1 w-full overflow-hidden rounded-full bg-muted', className)}
       role="progressbar"
-      aria-valuenow={value}
+      aria-valuenow={safeValue}
       aria-valuemin={0}
-      aria-valuemax={max}
+      aria-valuemax={safeMax}
       {...props}
     >
-      <span className={fillClass} style={{ width: `${pct}%` }} />
+      <span
+        data-slot="progress-indicator"
+        className={cn('block size-full origin-left transition-transform duration-200 ease-out', fillClass)}
+        style={{
+          transform: `scaleX(${scale})`,
+          transformOrigin: 'left',
+          transitionProperty: 'transform',
+        }}
+      />
     </div>
   )
 }

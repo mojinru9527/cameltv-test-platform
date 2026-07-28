@@ -15,7 +15,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import Pagination from '@/components/Pagination'
 import PageHeader from '@/components/PageHeader'
@@ -201,7 +201,7 @@ export default function DatasetPage() {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>
-                        <Badge variant={item.source_type === 'json' ? 'secondary' : 'outline'}>
+                        <Badge tone="neutral">
                           {item.source_type.toUpperCase()}
                         </Badge>
                       </TableCell>

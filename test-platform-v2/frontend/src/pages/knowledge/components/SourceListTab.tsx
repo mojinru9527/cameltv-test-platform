@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   Dialog,
   DialogContent,
@@ -172,14 +172,14 @@ export default function SourceListTab() {
               rows.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell>
-                    <Badge variant="secondary">{TYPE_LABEL[s.source_type] ?? s.source_type}</Badge>
+                    <Badge tone="neutral">{TYPE_LABEL[s.source_type] ?? s.source_type}</Badge>
                   </TableCell>
                   <TableCell className="max-w-[320px] truncate">{s.title}</TableCell>
                   <TableCell className="max-w-[160px] truncate text-xs text-muted-foreground">
                     {s.source_ref || '—'}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={s.status === 'deprecated' ? 'outline' : 'default'}>
+                    <Badge tone={s.status === 'deprecated' ? 'neutral' : 'success'}>
                       {s.status}
                     </Badge>
                   </TableCell>
@@ -245,19 +245,19 @@ export default function SourceListTab() {
             <DialogDescription>
               <div className="flex flex-wrap items-center gap-1.5 mt-1">
                 {selected?.source_type && (
-                  <Badge variant="secondary">{TYPE_LABEL[selected.source_type] ?? selected.source_type}</Badge>
+                  <Badge tone="neutral">{TYPE_LABEL[selected.source_type] ?? selected.source_type}</Badge>
                 )}
                 {selected?.para_category && (
-                  <Badge variant="outline">{selected.para_category}</Badge>
+                  <Badge tone="neutral">{selected.para_category}</Badge>
                 )}
                 {selected?.knowledge_domain && (
-                  <Badge variant="outline">{selected.knowledge_domain === 'platform' ? '平台研发' : '项目知识'}</Badge>
+                  <Badge tone="neutral">{selected.knowledge_domain === 'platform' ? '平台研发' : '项目知识'}</Badge>
                 )}
                 {selected?.status && (
-                  <Badge variant={selected.status === 'deprecated' ? 'destructive' : 'default'}>{selected.status}</Badge>
+                  <Badge tone={selected.status === 'deprecated' ? 'danger' : 'success'}>{selected.status}</Badge>
                 )}
                 {selected?.version && (
-                  <Badge variant="outline" className="text-xs">v{selected.version}</Badge>
+                  <Badge tone="neutral" className="text-xs">v{selected.version}</Badge>
                 )}
               </div>
             </DialogDescription>
@@ -345,7 +345,7 @@ export default function SourceListTab() {
                 {chunks.map((c, idx) => (
                   <div key={c.id} className="rounded-lg border p-4 hover:border-primary/20 transition-colors">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary">{c.chunk_type}</Badge>
+                      <Badge tone="neutral">{c.chunk_type}</Badge>
                       <span className="text-sm font-medium">{c.title || `切片 #${idx + 1}`}</span>
                       <span className="ml-auto text-xs text-muted-foreground">
                         {c.token_count} tokens
@@ -376,7 +376,7 @@ function SyncBadge({ sourceId }: { sourceId: number }) {
 
   if (failed) {
     return (
-      <Badge variant="outline" className="text-xs border-red-200 bg-red-50 text-red-700 gap-1">
+      <Badge tone="neutral" className="text-xs border-red-200 bg-red-50 text-red-700 gap-1">
         <AlertCircle className="h-3 w-3" />
         失败
       </Badge>
@@ -384,7 +384,7 @@ function SyncBadge({ sourceId }: { sourceId: number }) {
   }
   if (synced) {
     return (
-      <Badge variant="outline" className="text-xs border-green-200 bg-green-50 text-green-700 gap-1">
+      <Badge tone="neutral" className="text-xs border-green-200 bg-green-50 text-green-700 gap-1">
         <CheckCircle2 className="h-3 w-3" />
         已同步
       </Badge>
@@ -392,14 +392,14 @@ function SyncBadge({ sourceId }: { sourceId: number }) {
   }
   if (partial) {
     return (
-      <Badge variant="outline" className="text-xs border-yellow-200 bg-yellow-50 text-yellow-700 gap-1">
+      <Badge tone="neutral" className="text-xs border-yellow-200 bg-yellow-50 text-yellow-700 gap-1">
         <RefreshCw className="h-3 w-3" />
         部分
       </Badge>
     )
   }
   return (
-    <Badge variant="outline" className="text-xs text-muted-foreground gap-1">
+    <Badge tone="neutral" className="text-xs text-muted-foreground gap-1">
       <Circle className="h-3 w-3" />
       未同步
     </Badge>

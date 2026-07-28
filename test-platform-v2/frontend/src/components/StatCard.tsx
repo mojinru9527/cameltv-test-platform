@@ -14,6 +14,8 @@ interface StatCardProps {
 }
 
 export default function StatCard({ icon: Icon, label, value, trend, trendUp, className, variant = 'default' }: StatCardProps) {
+  const displayValue = typeof value === 'number' && !Number.isFinite(value) ? '—' : value
+
   return (
     <Card
       size="sm"
@@ -28,7 +30,7 @@ export default function StatCard({ icon: Icon, label, value, trend, trendUp, cla
         </div>
         <div className="flex flex-col min-w-0">
           <span className="text-xs text-muted-hc truncate">{label}</span>
-          <span className="text-xl font-bold tracking-tight">{value}</span>
+          <span className="text-xl font-bold tracking-tight">{displayValue}</span>
           {trend && (
             <span
               className={cn(

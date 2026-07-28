@@ -695,7 +695,7 @@
   box-shadow: var(--shadow-card);
   border: none;
   cursor: pointer;
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s var(--ease-out-expo), box-shadow 0.2s var(--ease-out-expo);
 }
 [data-theme="clay"] .card-lift:hover {
   transform: translateY(-2px);
@@ -721,7 +721,7 @@
   background: var(--card);
   border-radius: var(--radius);
   box-shadow: 0 2px 6px oklch(0.3 0.02 285 / 0.04), inset 0 1px 0 rgb(255 255 255 / 0.6);
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background-color 0.2s var(--ease-out-expo), box-shadow 0.2s var(--ease-out-expo);
 }
 [data-theme="clay"] table tbody tr:hover {
   box-shadow: 0 6px 16px oklch(0.3 0.02 285 / 0.1), inset 0 1px 0 rgb(255 255 255 / 0.7);
@@ -937,36 +937,8 @@
   transition: color 0.2s ease;
 }
 
-/* Menu item entrance animation (staggered via animation-delay) */
-@keyframes menu-item-enter {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-[data-sidebar="menu-item"] {
-  animation: menu-item-enter 0.3s ease-out both;
-}
-[data-sidebar="menu-item"]:nth-child(1) { animation-delay: 0.02s; }
-[data-sidebar="menu-item"]:nth-child(2) { animation-delay: 0.06s; }
-[data-sidebar="menu-item"]:nth-child(3) { animation-delay: 0.10s; }
-[data-sidebar="menu-item"]:nth-child(4) { animation-delay: 0.14s; }
-[data-sidebar="menu-item"]:nth-child(5) { animation-delay: 0.18s; }
-[data-sidebar="menu-item"]:nth-child(6) { animation-delay: 0.22s; }
-[data-sidebar="menu-item"]:nth-child(7) { animation-delay: 0.26s; }
-[data-sidebar="menu-item"]:nth-child(8) { animation-delay: 0.30s; }
-[data-sidebar="menu-item"]:nth-child(9) { animation-delay: 0.34s; }
-[data-sidebar="menu-item"]:nth-child(10) { animation-delay: 0.38s; }
-
 .sidebar-brand {
-  background: linear-gradient(135deg, var(--sidebar-primary), var(--sidebar-ring));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--sidebar-primary);
 }
 
 /* ── Sidebar footer ── */
@@ -993,20 +965,8 @@
   box-shadow: var(--shadow-header);
 }
 
-/* ── Page enter animation ── */
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.page-enter {
-  animation: page-enter 0.3s ease-out;
-}
+/* Product pages render directly into the task; no decorative page-load sequence. */
+.page-enter { animation: none; }
 
 /* ── Stat card variant ── */
 .stat-card-icon {
@@ -1027,12 +987,9 @@ html.theme-transition *::after {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease !important;
 }
 
-/* ── Gradient text utility ── */
+/* ── Solid emphasis utility ── */
 .gradient-text {
-  background: linear-gradient(135deg, var(--primary), var(--ring));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--primary);
 }
 
 /* ── Shimmer loading ── */
@@ -1338,7 +1295,7 @@ html.theme-transition *::after {
 }
 /* Clay: scale up row + enhanced shadow */
 [data-theme="clay"] tbody tr {
-  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s var(--ease-out-expo), box-shadow 0.2s var(--ease-out-expo);
 }
 [data-theme="clay"] tbody tr:hover {
   /* scale removed to prevent horizontal scrollbar on hover */
@@ -1534,7 +1491,7 @@ html.theme-transition *::after {
   transform: scale(1.02);
   background: oklch(0.46 0.15 285 / 0.06);
   border-radius: 999px;
-  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.2s var(--ease-out-expo), background-color 0.2s var(--ease-out-expo);
 }
 /* xLab: dim→bright transition */
 [data-theme="xlab"] [data-sidebar="menu-button"]:not([data-active="true"]):hover {
@@ -1816,7 +1773,7 @@ html.theme-transition *::after {
 
   /* ── Muted ── */
   --muted: #1f2923;
-  --muted-foreground: #718077;
+  --muted-foreground: #91a398;
 
   /* ── Accent ── */
   --accent: #35e68a;

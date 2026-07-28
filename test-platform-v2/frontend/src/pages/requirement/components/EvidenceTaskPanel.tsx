@@ -4,7 +4,7 @@ import {
   Card, CardContent, CardFooter, CardHeader, CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Progress } from '@/ui'
 import {
   cancelLanhuEvidenceJob,

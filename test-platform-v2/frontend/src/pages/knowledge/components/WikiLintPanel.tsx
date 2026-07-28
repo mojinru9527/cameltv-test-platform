@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -27,11 +27,11 @@ const RULE_ICON: Record<string, string> = {
   coverage_gap: 'ShieldCheck',
 }
 
-const SEVERITY_VARIANT: Record<string, 'destructive' | 'default' | 'secondary' | 'outline'> = {
-  P0: 'destructive',
-  P1: 'default',
-  P2: 'secondary',
-  P3: 'outline',
+const SEVERITY_TONE: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  P0: 'danger',
+  P1: 'warning',
+  P2: 'info',
+  P3: 'neutral',
 }
 
 export default function WikiLintPanel() {
@@ -280,10 +280,10 @@ export default function WikiLintPanel() {
                         className="border border-border rounded-md p-3 space-y-1.5"
                       >
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <Badge variant="outline" className="text-[10px] font-mono">
+                          <Badge tone="neutral" className="text-[10px] font-mono">
                             {RULE_LABEL[issue.rule] || issue.rule}
                           </Badge>
-                          <Badge variant={SEVERITY_VARIANT[issue.severity] ?? 'outline'} className="text-[10px]">
+                          <Badge tone={SEVERITY_TONE[issue.severity] ?? 'neutral'} className="text-[10px]">
                             {issue.severity}
                           </Badge>
                           <Badge
@@ -297,7 +297,7 @@ export default function WikiLintPanel() {
                             {issue.review_status}
                           </Badge>
                           {issue.resolved_artifact_id && (
-                            <Badge variant="secondary" className="text-[10px] font-mono">
+                            <Badge tone="neutral" className="text-[10px] font-mono">
                               产物#{issue.resolved_artifact_id}
                             </Badge>
                           )}
@@ -311,7 +311,7 @@ export default function WikiLintPanel() {
                         )}
                         <div className="flex items-center gap-2 pt-1">
                           {issue.entity_type && issue.entity_id && (
-                            <Badge variant="secondary" className="text-[10px] font-mono">
+                            <Badge tone="neutral" className="text-[10px] font-mono">
                               {issue.entity_type}#{issue.entity_id}
                             </Badge>
                           )}

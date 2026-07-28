@@ -1,4 +1,4 @@
-import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
+import { Badge, Button, PageShell, type BadgeTone } from '@/ui'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -26,7 +26,6 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/in
 
 import { Search, RotateCcw, Plus, Edit, Trash2 } from '@/lib/icons'
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
-import PageHeader from '@/components/PageHeader'
 import { deletePlan, fetchPlans } from '@/api/testplan'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -42,11 +41,6 @@ const STATUS_MAP: Record<string, { tone: BadgeTone; className?: string; label: s
 
 export default function TestPlanPage() {
   useDocumentTitle('测试计划')
-  const { Page } = useObsidianPage({
-    title: '测试计划',
-    subtitle: 'TEST PLAN',
-    description: '编排测试执行计划，管理阶段、环境和批次策略。',
-  })
   const navigate = useNavigate()
   const [status, setStatus] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -140,10 +134,12 @@ export default function TestPlanPage() {
   ]
 
   return (
-    <Page>
+    <PageShell
+      title="测试计划"
+      description="编排测试执行计划，管理阶段、环境和批次策略。"
+      glass
+    >
       <div className="space-y-4">
-        <PageHeader title="测试计划" />
-
       <AsyncState
         isLoading={isLoading}
         isError={isError}
@@ -221,6 +217,6 @@ export default function TestPlanPage() {
         onSaved={onSaved}
       />
     </div>
-    </Page>
+    </PageShell>
   )
 }

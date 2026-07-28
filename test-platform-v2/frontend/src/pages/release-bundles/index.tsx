@@ -10,7 +10,7 @@ import type { ReleaseBundleListItem } from '@/types'
 import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   Dialog,
   DialogContent,

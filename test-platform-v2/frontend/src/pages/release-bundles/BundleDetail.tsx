@@ -19,7 +19,7 @@ import type {
 } from '@/types'
 import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -373,7 +373,7 @@ export default function BundleDetailPage() {
                       <span>功能: {s.functional || 0}</span>
                       <span>API: {s.api || 0}</span>
                       <span>自动化: {s.automation || 0}</span>
-                      <Badge variant="outline" className="text-[10px]">覆盖率 {s.coverage_rate || 0}%</Badge>
+                      <Badge tone="neutral" className="text-[10px]">覆盖率 {s.coverage_rate || 0}%</Badge>
                     </div>
                   </div>
                 ))}

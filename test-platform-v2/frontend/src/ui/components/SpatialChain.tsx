@@ -64,7 +64,7 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
 
   if (nodes.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-[#718077] text-sm">
+      <div className="flex items-center justify-center h-32 text-[#91a398] text-sm">
         暂无链路数据
       </div>
     )
@@ -86,7 +86,7 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
               onMouseEnter={() => setHoveredId(node.id)}
               onMouseLeave={() => setHoveredId(null)}
               className={cn(
-                'relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-[180ms] text-left',
+                'relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-colors duration-200 text-left',
                 styles.bg, styles.border,
                 isActive && 'ring-2 ring-[#35e68a] ring-offset-1 ring-offset-[#0b100d] scale-[1.02]',
                 isHovered && !isActive && 'border-[rgba(218,239,224,0.2)] translate-y-[-2px]',
@@ -95,7 +95,7 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
               aria-label={`${node.label}：${node.status}`}
             >
               {/* 序号 */}
-              <span className="absolute top-2 right-2 text-[0.625rem] text-[#536159] font-mono">
+              <span className="absolute top-2 right-2 text-[0.625rem] text-[#91a398] font-mono">
                 {String(i + 1).padStart(2, '0')}
               </span>
 
@@ -109,7 +109,7 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
 
               <Icon className={cn('size-5', styles.text)} aria-hidden="true" />
               <b className="text-[1.125rem] font-[560] text-[#eef6f0] tracking-tight">{node.count}</b>
-              <small className="text-[0.6875rem] text-[#718077] text-center leading-tight">{node.shortLabel}</small>
+              <small className="text-[0.6875rem] text-[#91a398] text-center leading-tight">{node.shortLabel}</small>
               <span className={cn('text-[0.625rem]', styles.text)}>{node.status}</span>
             </button>
           )
@@ -120,7 +120,7 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
 
   // Chain variant: horizontal stack with connecting lines
   return (
-    <div className={cn('flex overflow-x-auto gap-2 pb-2 scrollbar-thin', className)} role="list" aria-label="质量链路">
+    <div className={cn('flex overflow-x-auto gap-2 pb-2 scrollbar-thin', className)} aria-label="质量链路">
       {nodes.map((node, i) => {
         const Icon = node.icon
         const isActive = activeId === node.id
@@ -130,12 +130,11 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
         return (
           <button
             key={node.id}
-            role="listitem"
             onClick={() => onSelect?.(node)}
             onMouseEnter={() => setHoveredId(node.id)}
             onMouseLeave={() => setHoveredId(null)}
             className={cn(
-              'relative flex items-center gap-3 flex-shrink-0 min-w-[180px] px-4 py-3 rounded-xl border transition-all duration-[180ms]',
+              'relative flex items-center gap-3 flex-shrink-0 min-w-[180px] px-4 py-3 rounded-xl border transition-colors duration-200',
               styles.bg, styles.border,
               isActive && 'ring-2 ring-[#35e68a] ring-offset-1 ring-offset-[#0b100d]',
               isHovered && !isActive && 'border-[rgba(218,239,224,0.2)]',
@@ -152,16 +151,16 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
             )}
 
             {/* 序号 */}
-            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-[rgba(255,255,255,0.04)] text-[0.625rem] text-[#718077] font-mono">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-[rgba(255,255,255,0.04)] text-[0.625rem] text-[#91a398] font-mono">
               {String(i + 1).padStart(2, '0')}
             </span>
 
             <Icon className={cn('size-4 flex-shrink-0', styles.text)} aria-hidden="true" />
 
             <div className="min-w-0">
-              <small className="block text-[0.6875rem] text-[#718077] truncate">{node.shortLabel}</small>
+              <small className="block text-[0.6875rem] text-[#91a398] truncate">{node.shortLabel}</small>
               <b className="block text-[0.9375rem] font-[560] text-[#eef6f0] tracking-tight truncate">{node.count}</b>
-              <em className="block text-[0.625rem] not-italic truncate" style={{ color: styles.text.split('text-[')[1]?.replace(']', '') || '#718077' }}>
+              <em className="block text-[0.625rem] not-italic truncate" style={{ color: styles.text.split('text-[')[1]?.replace(']', '') || '#91a398' }}>
                 {node.status}
               </em>
             </div>
@@ -169,9 +168,9 @@ export function SpatialChain({ nodes, activeId, onSelect, variant = 'chain', cla
             {/* 进度条 */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full overflow-hidden mx-3 mb-1.5">
               <div
-                className="h-full rounded-full transition-all duration-500 ease-out"
+                className="size-full origin-left rounded-full transition-transform duration-200 ease-out"
                 style={{
-                  width: `${node.progress}%`,
+                  transform: `scaleX(${Math.min(100, Math.max(0, node.progress)) / 100})`,
                   background: isActive
                     ? 'linear-gradient(90deg, #35e68a, #67efa9)'
                     : 'rgba(255,255,255,0.1)',

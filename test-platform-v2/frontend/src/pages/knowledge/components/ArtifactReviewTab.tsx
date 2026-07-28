@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
@@ -39,11 +39,11 @@ const STATUSES = [
   { v: 'rejected', l: '已驳回' },
   { v: 'imported', l: '已导入' },
 ]
-const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'secondary',
-  approved: 'default',
-  rejected: 'destructive',
-  imported: 'outline',
+const STATUS_TONE: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  pending: 'neutral',
+  approved: 'success',
+  rejected: 'danger',
+  imported: 'info',
 }
 const TYPE_LABELS: Record<string, string> = {
   test_case: '测试用例',
@@ -316,7 +316,7 @@ export default function ArtifactReviewTab() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">
+                      <Badge tone="neutral">
                         {TYPE_LABELS[a.artifact_type] || a.artifact_type}
                       </Badge>
                     </TableCell>
@@ -325,7 +325,7 @@ export default function ArtifactReviewTab() {
                       {(a.confidence * 100).toFixed(0)}%
                     </TableCell>
                     <TableCell>
-                      <Badge variant={STATUS_VARIANT[a.review_status] ?? 'secondary'}>
+                      <Badge tone={STATUS_TONE[a.review_status] ?? 'neutral'}>
                         {a.review_status}
                       </Badge>
                     </TableCell>

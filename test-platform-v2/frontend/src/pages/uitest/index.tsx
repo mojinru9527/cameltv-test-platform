@@ -41,7 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Sheet,
@@ -204,13 +204,13 @@ export default function UiTestPage() {
     )},
     { key: 'test_spec', header: '测试文件', headerClassName: 'w-[200px]', className: 'max-w-[200px] truncate', render: (r) => r.test_spec || '-' },
     { key: 'browser', header: '浏览器', headerClassName: 'w-[100px]', render: (r) => (
-      <Badge variant="outline" className={browserBadgeClass(BROWSER_MAP[r.browser]?.color)}>
+      <Badge tone="neutral" className={browserBadgeClass(BROWSER_MAP[r.browser]?.color)}>
         <Monitor className="size-3" />
         {r.browser}
       </Badge>
     )},
     { key: 'status', header: '状态', headerClassName: 'w-[100px]', render: (r) => (
-      <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
+      <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
         {STATUS_MAP[r.status]?.label || r.status}
       </Badge>
     )},
@@ -493,8 +493,8 @@ export default function UiTestPage() {
               <dl className="grid grid-cols-2 border rounded-lg">
                 {[
                   ['名称', detail.name],
-                  ['浏览器', <Badge key="br" variant="outline" className={browserBadgeClass(BROWSER_MAP[detail.browser]?.color)}><Monitor className="size-3" />{detail.browser}</Badge>],
-                  ['状态', <Badge key="st" variant="outline" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>{STATUS_MAP[detail.status]?.label}</Badge>],
+                  ['浏览器', <Badge key="br" tone="neutral" className={browserBadgeClass(BROWSER_MAP[detail.browser]?.color)}><Monitor className="size-3" />{detail.browser}</Badge>],
+                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>{STATUS_MAP[detail.status]?.label}</Badge>],
                   ['测试文件', detail.test_spec || '-'],
                 ].map(([label, value]) => (
                   <div key={label as string} className="flex flex-col border-b border-r p-2 even:border-r-0 [&:nth-last-child(-n+2)]:border-b-0">
@@ -543,7 +543,7 @@ export default function UiTestPage() {
                           runs.items.map((run) => (
                             <TableRow key={run.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openRunDetail(run)}>
                               <TableCell>
-                                <Badge variant="outline" className={statusBadgeClass(RUN_STATUS_MAP[run.status]?.color)}>
+                                <Badge tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[run.status]?.color)}>
                                   {RUN_STATUS_MAP[run.status]?.label || run.status}
                                 </Badge>
                               </TableCell>
@@ -586,7 +586,7 @@ export default function UiTestPage() {
             <DialogTitle className="flex items-center gap-2">
               运行详情 #{selectedRun?.id}
               {selectedRun && (
-                <Badge variant="outline" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>
+                <Badge tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>
                   {RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}
                 </Badge>
               )}
@@ -602,8 +602,8 @@ export default function UiTestPage() {
               {/* Info grid */}
               <dl className="grid grid-cols-2 border rounded-lg">
                 {[
-                  ['状态', <Badge key="st" variant="outline" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>{RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}</Badge>],
-                  ['浏览器', selectedRun.browser ? <Badge key="br" variant="outline" className={browserBadgeClass(BROWSER_MAP[selectedRun.browser]?.color)}><Monitor className="size-3" />{selectedRun.browser}</Badge> : '-'],
+                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>{RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}</Badge>],
+                  ['浏览器', selectedRun.browser ? <Badge key="br" tone="neutral" className={browserBadgeClass(BROWSER_MAP[selectedRun.browser]?.color)}><Monitor className="size-3" />{selectedRun.browser}</Badge> : '-'],
                   ['Base URL', selectedRun.base_url || '-'],
                   ['耗时', selectedRun.duration != null ? `${selectedRun.duration}s` : '-'],
                   ['开始时间', selectedRun.started_at ? new Date(selectedRun.started_at).toLocaleString() : '-'],

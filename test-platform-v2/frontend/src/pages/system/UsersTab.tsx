@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { createUser, deleteUser, fetchRoles, fetchUsers, updateUser } from '@/api/system'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Switch } from '@/components/ui/switch'
 import { Checkbox } from '@/components/ui/checkbox'
 import { AsyncState } from '@/components/state'
@@ -138,14 +138,14 @@ export default function UsersTab() {
     { key: 'nickname', header: '昵称', render: (u) => u.nickname || '-' },
     { key: 'email', header: '邮箱', render: (u) => u.email || '-' },
     { key: 'status', header: '状态', headerClassName: 'w-[60px]', render: (u) => (
-      <Badge variant={u.status ? 'default' : 'destructive'}>
+      <Badge tone={u.status ? 'success' : 'danger'}>
         {u.status ? '启用' : '禁用'}
       </Badge>
     )},
     { key: 'roles', header: '角色', render: (u) => (
       <div className="flex flex-wrap gap-1">
         {u.role_codes?.map((c: string) => (
-          <Badge key={c} variant="secondary">{c}</Badge>
+          <Badge key={c} tone="neutral">{c}</Badge>
         )) || '-'}
       </div>
     )},

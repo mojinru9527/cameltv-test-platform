@@ -237,35 +237,49 @@ export default function DataTable<T extends Record<string, any>>({
               {visibleColumns.map((col) => {
                 const isSorted = sortKey === col.key && sortDir
                 const canSort = col.sortable
+                const ariaSort = canSort
+                  ? sortKey === col.key
+                    ? sortDir === 'asc'
+                      ? 'ascending'
+                      : sortDir === 'desc'
+                        ? 'descending'
+                        : 'none'
+                    : 'none'
+                  : undefined
                 return (
                   <TableHead
                     key={col.key}
                     style={col.width ? { width: col.width } : undefined}
-                    className={cn(
-                      canSort && 'cursor-pointer select-none hover:bg-muted/50 transition-colors',
-                      col.headerClassName,
-                    )}
-                    onClick={canSort ? () => toggleSort(col.key) : undefined}
+                    className={col.headerClassName}
+                    aria-sort={ariaSort}
                   >
-                    <span className="inline-flex items-center gap-1">
-                      {col.header}
-                      {canSort && (
+                    {canSort ? (
+                      <button
+                        type="button"
+                        className="inline-flex min-h-10 w-full items-center gap-1 rounded-sm text-left select-none transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={() => toggleSort(col.key)}
+                      >
+                        {col.header}
                         <span className="inline-flex flex-col -space-y-1.5 text-muted-foreground/60">
                           <ArrowUp
                             className={cn(
                               'size-2.5',
                               isSorted && sortDir === 'asc' && 'text-foreground',
                             )}
+                            aria-hidden="true"
                           />
                           <ArrowDown
                             className={cn(
                               'size-2.5',
                               isSorted && sortDir === 'desc' && 'text-foreground',
                             )}
+                            aria-hidden="true"
                           />
                         </span>
-                      )}
-                    </span>
+                      </button>
+                    ) : (
+                      <span>{col.header}</span>
+                    )}
                   </TableHead>
                 )
               })}
@@ -304,6 +318,15 @@ export default function DataTable<T extends Record<string, any>>({
                       isSelected && 'bg-accent',
                     )}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    onKeyDown={onRowClick ? (event) => {
+                      if (event.target !== event.currentTarget) return
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        onRowClick(row)
+                      }
+                    } : undefined}
+                    role={onRowClick ? 'button' : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
                     data-state={isSelected ? 'selected' : undefined}
                   >
                     {selection && (

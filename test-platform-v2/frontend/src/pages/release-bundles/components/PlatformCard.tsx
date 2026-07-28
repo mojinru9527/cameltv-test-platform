@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ModuleTreeNode } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   Collapsible,
   CollapsibleContent,
@@ -85,11 +85,11 @@ function PageItem({
     >
       <span className="truncate flex-1">{page.name}</span>
       <div className="flex items-center gap-1 shrink-0">
-        <Badge variant="outline" className={cn('text-xs px-1 py-0', changeConfig.className)}>
+        <Badge tone="neutral" className={cn('text-xs px-1 py-0', changeConfig.className)}>
           {changeConfig.label}
         </Badge>
         {outgoing > 0 && (
-          <Badge variant="secondary" className="text-xs px-1 py-0">
+          <Badge tone="neutral" className="text-xs px-1 py-0">
             →{outgoing}
           </Badge>
         )}
@@ -128,7 +128,7 @@ function ModuleCard({
             )}
           />
           <span className="font-medium text-sm ml-2 truncate">{mod.name}</span>
-          <Badge variant="outline" className="ml-auto text-xs shrink-0">
+          <Badge tone="neutral" className="ml-auto text-xs shrink-0">
             {mod.child_count ?? mod.children?.length ?? 0} 页
           </Badge>
         </button>
@@ -164,7 +164,7 @@ export default function PlatformCard({
           <CardTitle className="text-base">
             {PLATFORM_LABELS[platform] ?? platform}
           </CardTitle>
-          <Badge variant="secondary" className="text-xs">
+          <Badge tone="neutral" className="text-xs">
             {modules.length} 模块
           </Badge>
         </div>

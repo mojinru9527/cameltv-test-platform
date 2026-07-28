@@ -4,7 +4,7 @@ import {
   Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -223,12 +223,12 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="w-[520px] sm:max-w-[520px] overflow-y-auto">
+        <SheetContent className="w-full overflow-y-auto sm:max-w-[520px]">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               证据包任务 {job ? `#${job.id}` : ''}
               {job && (
-                <Badge variant="outline" className={STATUS_VARIANT[job.status] || ''}>
+                <Badge tone="neutral" className={STATUS_VARIANT[job.status] || ''}>
                   {job.status}
                 </Badge>
               )}
@@ -250,7 +250,7 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
                 <div>
                   导入状态：
                   <Badge
-                    variant="outline"
+                    tone="neutral"
                     className={quality.import_ready
                       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                       : 'border-red-200 bg-red-50 text-red-700'}

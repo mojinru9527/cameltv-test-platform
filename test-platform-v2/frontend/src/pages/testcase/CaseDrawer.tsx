@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -73,7 +73,12 @@ const STATUSES = [
 ]
 
 const REVIEW_LABELS: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }
-const REVIEW_COLORS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = { draft: 'secondary', submitted: 'outline', approved: 'default', rejected: 'destructive' }
+const REVIEW_TONES: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  draft: 'neutral',
+  submitted: 'info',
+  approved: 'success',
+  rejected: 'danger',
+}
 
 export default function CaseDrawer({ open, editing, domains, onClose, onSaved }: Props) {
   const [saving, setSaving] = useState(false)
@@ -526,14 +531,14 @@ function ReviewPanel({
   onReview: (action: string) => void
 }) {
   const statusLabel = REVIEW_LABELS[reviewStatus] || reviewStatus
-  const statusColor = REVIEW_COLORS[reviewStatus] || 'secondary'
+  const statusTone = REVIEW_TONES[reviewStatus] || 'neutral'
 
   return (
     <div className="max-h-[60vh] overflow-y-auto space-y-4">
       {/* Current status */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">当前评审状态：</span>
-        <Badge variant={statusColor}>{statusLabel}</Badge>
+        <Badge tone={statusTone}>{statusLabel}</Badge>
       </div>
 
       {/* Action buttons */}
@@ -585,11 +590,11 @@ function ReviewPanel({
             {reviewHistory.map((t) => (
               <div key={t.id} className="rounded-md border p-3 text-sm">
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant={REVIEW_COLORS[t.from_status] || 'secondary'} className="text-[10px]">
+                  <Badge tone={REVIEW_TONES[t.from_status] || 'neutral'} className="text-[10px]">
                     {t.from_label}
                   </Badge>
                   <span className="text-muted-foreground">→</span>
-                  <Badge variant={REVIEW_COLORS[t.to_status] || 'default'} className="text-[10px]">
+                  <Badge tone={REVIEW_TONES[t.to_status] || 'neutral'} className="text-[10px]">
                     {t.to_label}
                   </Badge>
                   <span className="text-muted-foreground ml-auto text-xs">

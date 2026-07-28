@@ -4,7 +4,7 @@ import { DataSet } from 'vis-data'
 import { toast } from 'sonner'
 import { RefreshCw, Maximize2, Plus, MinusCircle, GitMerge } from '@/lib/icons'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { fetchGraphView, triggerEntityExtract, evolveGraph } from '@/api/knowledge'
@@ -364,7 +364,7 @@ export default function GraphTab() {
             <CardContent className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">类型</span>
-                <Badge variant="secondary">
+                <Badge tone="neutral">
                   {TYPE_LABELS[selected.type] || selected.type}
                 </Badge>
               </div>

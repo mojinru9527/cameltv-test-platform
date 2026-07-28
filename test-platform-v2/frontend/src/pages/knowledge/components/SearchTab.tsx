@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Input } from '@/ui'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
@@ -120,12 +120,12 @@ export default function SearchTab() {
   const ragStatusBadge = () => {
     if (!health) return null
     if (health.rag_enabled && health.vector_search_functional) {
-      return <Badge variant="default" className="text-xs gap-1"><CheckCircle2 className="size-3" />RAG 已启用</Badge>
+      return <Badge tone="neutral" className="text-xs gap-1"><CheckCircle2 className="size-3" />RAG 已启用</Badge>
     }
     if (health.rag_enabled) {
-      return <Badge variant="secondary" className="text-xs gap-1"><AlertTriangle className="size-3" />RAG 降级</Badge>
+      return <Badge tone="neutral" className="text-xs gap-1"><AlertTriangle className="size-3" />RAG 降级</Badge>
     }
-    return <Badge variant="outline" className="text-xs gap-1"><Database className="size-3" />仅关键词</Badge>
+    return <Badge tone="neutral" className="text-xs gap-1"><Database className="size-3" />仅关键词</Badge>
   }
 
   const coveragePct = health?.embedding_coverage != null
@@ -155,8 +155,8 @@ export default function SearchTab() {
                   <span className="text-muted-foreground shrink-0">覆盖率：</span>
                   <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${coveragePct >= 80 ? 'bg-green-500' : coveragePct >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
-                      style={{ width: `${coveragePct}%` }}
+                      className={`size-full origin-left rounded-full transition-transform duration-200 ${coveragePct >= 80 ? 'bg-green-500' : coveragePct >= 40 ? 'bg-amber-500' : 'bg-red-500'}`}
+                      style={{ transform: `scaleX(${Math.min(100, Math.max(0, coveragePct)) / 100})` }}
                     />
                   </div>
                   <span className="font-medium tabular-nums">{coveragePct}%</span>
@@ -248,7 +248,7 @@ export default function SearchTab() {
             >
               <CardContent className="p-3 space-y-1">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{CHUNK_LABEL[r.chunk_type] ?? r.chunk_type}</Badge>
+                  <Badge tone="neutral">{CHUNK_LABEL[r.chunk_type] ?? r.chunk_type}</Badge>
                   <span className="text-sm font-medium truncate">{r.title || '(无标题)'}</span>
                   <span className="ml-auto text-xs text-muted-foreground shrink-0">
                     相关度 {r.score.toFixed(4)}
@@ -269,7 +269,7 @@ export default function SearchTab() {
         <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto w-[95vw]">
           <DialogHeader>
             <DialogTitle className="text-lg flex items-center gap-2">
-              <Badge variant="secondary">{detailResult ? (CHUNK_LABEL[detailResult.chunk_type] ?? detailResult.chunk_type) : ''}</Badge>
+              <Badge tone="neutral">{detailResult ? (CHUNK_LABEL[detailResult.chunk_type] ?? detailResult.chunk_type) : ''}</Badge>
               <span className="truncate">{detailResult?.title || '(无标题)'}</span>
             </DialogTitle>
           </DialogHeader>

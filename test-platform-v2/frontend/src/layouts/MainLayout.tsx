@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import CommandPalette from '@/components/CommandPalette'
 import { Button } from '@/ui'
 import {
@@ -113,7 +113,11 @@ export default function MainLayout() {
     let cancelled = false
     fetchMenus()
       .then((data) => { if (!cancelled) setMenus(data) })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) {
+          toast.error('导航菜单加载失败，请刷新页面重试')
+        }
+      })
     return () => { cancelled = true }
   }, [])
 
@@ -388,8 +392,9 @@ export default function MainLayout() {
                     return (
                       <button
                         key={t.id}
+                        type="button"
                         onClick={() => onSetColorAndProject(t.id)}
-                        className={`relative flex flex-col items-start gap-1.5 p-2.5 rounded-lg border-2 transition-all text-left ${
+                        className={`relative flex flex-col items-start gap-1.5 p-2.5 rounded-lg border-2 transition-colors duration-200 text-left ${
                           isActive
                             ? 'border-primary bg-primary/5 shadow-sm'
                             : 'border-border hover:border-muted-foreground/30 hover:bg-muted/50'

@@ -44,7 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import {
   Sheet,
@@ -393,12 +393,12 @@ export default function SpecialPage() {
                   <TableCell className="max-w-[160px] truncate">{r.task_id}</TableCell>
                   <TableCell className="max-w-0 truncate">{r.name}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={protocolBadgeClass(PROTOCOL_MAP[r.protocol]?.color)}>
+                    <Badge tone="neutral" className={protocolBadgeClass(PROTOCOL_MAP[r.protocol]?.color)}>
                       {r.protocol}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
+                    <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
                       {STATUS_MAP[r.status]?.label || r.status}
                     </Badge>
                   </TableCell>
@@ -506,12 +506,12 @@ export default function SpecialPage() {
           </SheetHeader>
           {detail && (
             <div className="flex flex-col gap-4 mt-4 overflow-y-auto flex-1">
-              <dl className="grid grid-cols-2 border rounded-lg">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 border rounded-lg">
                 {[
                   ['编号', detail.task_id],
                   ['名称', detail.name],
-                  ['协议', <Badge key="proto" variant="outline" className={protocolBadgeClass(PROTOCOL_MAP[detail.protocol]?.color)}>{detail.protocol}</Badge>],
-                  ['状态', <Badge key="st" variant="outline" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>{STATUS_MAP[detail.status]?.label}</Badge>],
+                  ['协议', <Badge key="proto" tone="neutral" className={protocolBadgeClass(PROTOCOL_MAP[detail.protocol]?.color)}>{detail.protocol}</Badge>],
+                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>{STATUS_MAP[detail.status]?.label}</Badge>],
                   ['流地址', detail.stream_url || '-'],
                   ['创建时间', detail.created_at ? new Date(detail.created_at).toLocaleString('zh-CN') : '-'],
                   ['更新时间', detail.updated_at ? new Date(detail.updated_at).toLocaleString('zh-CN') : '-'],
@@ -533,7 +533,7 @@ export default function SpecialPage() {
               {detail.metrics && detail.metrics.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">检测指标</h4>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {detail.metrics.map((m: any) => (
                       <Card key={m.id} size="sm" className={m.pass_ ? 'border-green-300 dark:border-green-800' : 'border-red-300 dark:border-red-800'}>
                         <CardContent>
@@ -580,10 +580,10 @@ export default function SpecialPage() {
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">{m.metric_name}</span>
-                              <Badge variant={m.passed ? 'default' : 'destructive'}>
+                              <Badge tone={m.passed ? 'success' : 'danger'}>
                                 {m.passed ? '达标' : '未达标'}
                               </Badge>
-                              <Badge variant="outline">真实样本 {m.sample_count} 个</Badge>
+                              <Badge tone="neutral">真实样本 {m.sample_count} 个</Badge>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
                               {m.scenario || '未填写场景'} · {m.method || '未填写方法'}
@@ -616,7 +616,7 @@ export default function SpecialPage() {
                             )}
                           </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3 text-xs">
                           <div className="rounded bg-muted/40 p-2">平均值 <strong>{m.mean} {m.unit}</strong></div>
                           <div className="rounded bg-muted/40 p-2">P95 <strong>{m.p95} {m.unit}</strong></div>
                           <div className="rounded bg-muted/40 p-2">最大值 <strong>{m.max} {m.unit}</strong></div>
@@ -650,11 +650,11 @@ export default function SpecialPage() {
           <DialogHeader>
             <DialogTitle>{editingMeasurement ? '编辑专项测量' : '录入专项测量'}</DialogTitle>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="text-sm font-medium mb-1 block">指标类型</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
+              <label htmlFor="measurement-metric-type" className="text-sm font-medium mb-1 block">指标类型</label>
               <Select value={measurementForm.metric_type} onValueChange={changeMetricType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger id="measurement-metric-type"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {measurementTemplates.map((item) => (
                     <SelectItem key={item.metric_type} value={item.metric_type}>{item.name}</SelectItem>
@@ -668,36 +668,36 @@ export default function SpecialPage() {
               ) : null}
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">测试场景</label>
-              <Input value={measurementForm.scenario} onChange={(e) => setMeasurementForm((p) => ({ ...p, scenario: e.target.value }))} placeholder="如：公司 5GHz WiFi" />
+              <label htmlFor="measurement-scenario" className="text-sm font-medium mb-1 block">测试场景</label>
+              <Input id="measurement-scenario" value={measurementForm.scenario} onChange={(e) => setMeasurementForm((p) => ({ ...p, scenario: e.target.value }))} placeholder="如：公司 5GHz WiFi" />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">采集方法</label>
-              <Input value={measurementForm.method} onChange={(e) => setMeasurementForm((p) => ({ ...p, method: e.target.value }))} />
+              <label htmlFor="measurement-method" className="text-sm font-medium mb-1 block">采集方法</label>
+              <Input id="measurement-method" value={measurementForm.method} onChange={(e) => setMeasurementForm((p) => ({ ...p, method: e.target.value }))} />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">环境</label>
-              <Input value={measurementForm.environment} onChange={(e) => setMeasurementForm((p) => ({ ...p, environment: e.target.value }))} placeholder="测试5 / 生产" />
+              <label htmlFor="measurement-environment" className="text-sm font-medium mb-1 block">环境</label>
+              <Input id="measurement-environment" value={measurementForm.environment} onChange={(e) => setMeasurementForm((p) => ({ ...p, environment: e.target.value }))} placeholder="测试5 / 生产" />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">阈值</label>
-              <Input inputMode="decimal" value={measurementForm.threshold} onChange={(e) => setMeasurementForm((p) => ({ ...p, threshold: e.target.value }))} />
+              <label htmlFor="measurement-threshold" className="text-sm font-medium mb-1 block">阈值</label>
+              <Input id="measurement-threshold" inputMode="decimal" value={measurementForm.threshold} onChange={(e) => setMeasurementForm((p) => ({ ...p, threshold: e.target.value }))} />
             </div>
-            <div className="col-span-2">
-              <label className="text-sm font-medium mb-1 block">真实样本 *</label>
-              <Textarea rows={4} value={measurementForm.samples_text} onChange={(e) => setMeasurementForm((p) => ({ ...p, samples_text: e.target.value }))} placeholder="例如：1200, 1350, 1420；支持逗号、空格或换行分隔" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">网络条件</label>
-              <Input value={measurementForm.network_condition} onChange={(e) => setMeasurementForm((p) => ({ ...p, network_condition: e.target.value }))} placeholder="带宽、延迟、丢包、抖动" />
+            <div className="sm:col-span-2">
+              <label htmlFor="measurement-samples" className="text-sm font-medium mb-1 block">真实样本 *</label>
+              <Textarea id="measurement-samples" rows={4} value={measurementForm.samples_text} onChange={(e) => setMeasurementForm((p) => ({ ...p, samples_text: e.target.value }))} placeholder="例如：1200, 1350, 1420；支持逗号、空格或换行分隔" />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1 block">设备信息</label>
-              <Input value={measurementForm.device_info} onChange={(e) => setMeasurementForm((p) => ({ ...p, device_info: e.target.value }))} placeholder="主播端 / 观众端 / 工具版本" />
+              <label htmlFor="measurement-network" className="text-sm font-medium mb-1 block">网络条件</label>
+              <Input id="measurement-network" value={measurementForm.network_condition} onChange={(e) => setMeasurementForm((p) => ({ ...p, network_condition: e.target.value }))} placeholder="带宽、延迟、丢包、抖动" />
             </div>
-            <div className="col-span-2">
-              <label className="text-sm font-medium mb-1 block">备注</label>
-              <Textarea rows={2} value={measurementForm.notes} onChange={(e) => setMeasurementForm((p) => ({ ...p, notes: e.target.value }))} placeholder="异常、正负偏差方向、素材和录制文件说明" />
+            <div>
+              <label htmlFor="measurement-device" className="text-sm font-medium mb-1 block">设备信息</label>
+              <Input id="measurement-device" value={measurementForm.device_info} onChange={(e) => setMeasurementForm((p) => ({ ...p, device_info: e.target.value }))} placeholder="主播端 / 观众端 / 工具版本" />
+            </div>
+            <div className="sm:col-span-2">
+              <label htmlFor="measurement-notes" className="text-sm font-medium mb-1 block">备注</label>
+              <Textarea id="measurement-notes" rows={2} value={measurementForm.notes} onChange={(e) => setMeasurementForm((p) => ({ ...p, notes: e.target.value }))} placeholder="异常、正负偏差方向、素材和录制文件说明" />
             </div>
           </div>
           <DialogFooter>

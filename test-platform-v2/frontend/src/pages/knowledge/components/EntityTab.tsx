@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/ui'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -222,9 +222,9 @@ export default function EntityTab() {
                       <div className="flex items-center gap-2">
                         <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full transition-all"
+                            className="size-full origin-left rounded-full transition-transform duration-200"
                             style={{
-                              width: `${Math.round(r.confidence * 100)}%`,
+                              transform: `scaleX(${Math.min(1, Math.max(0, r.confidence))})`,
                               backgroundColor: r.confidence >= 0.8 ? '#22c55e' : r.confidence >= 0.6 ? '#f59e0b' : '#ef4444',
                             }}
                           />
@@ -306,7 +306,7 @@ export default function EntityTab() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
+                            <Badge tone="neutral" className="text-xs">
                               {REL_LABELS[rel.relation_type] ?? rel.relation_type}
                             </Badge>
                             <span className="text-xs text-muted-foreground">
@@ -317,7 +317,7 @@ export default function EntityTab() {
                             <span>置信度: {(rel.confidence * 100).toFixed(0)}%</span>
                             <span>|</span>
                             <Badge
-                              variant="secondary"
+                              tone="neutral"
                               className={
                                 rel.review_status === 'approved'
                                   ? 'bg-green-100 text-green-700'
