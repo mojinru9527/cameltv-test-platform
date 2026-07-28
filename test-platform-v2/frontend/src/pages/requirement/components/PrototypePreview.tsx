@@ -10,7 +10,7 @@ import {
 import { Button } from '@/ui'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { cn } from '@/lib/utils'
 import { downloadLanhuEvidenceAsset } from '@/api/lanhuEvidence'
 import {

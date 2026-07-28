@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import type { ReleaseBundleVersionChain } from '@/types'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/ui'
 import { Package, ChevronRight, ExternalLink, ArrowUp } from '@/lib/icons'

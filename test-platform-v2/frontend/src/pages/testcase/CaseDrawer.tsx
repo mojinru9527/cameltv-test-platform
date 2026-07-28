@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,

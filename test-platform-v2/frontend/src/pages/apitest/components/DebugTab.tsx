@@ -4,7 +4,7 @@ import { Play, Plus, Trash2, Loader2, CheckCircle2, XCircle } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,

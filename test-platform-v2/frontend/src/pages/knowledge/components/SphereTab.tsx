@@ -7,7 +7,7 @@ import { fetchGraphHierarchy } from '@/api/knowledge'
 import { fetchReleaseBundles } from '@/api/releaseBundles'
 import type { ProjectSphereView, ProjectSphereNode, ProjectSphereEdge } from '@/types'
 import { Button } from '@/ui'
-import { Badge } from '@/components/ui/badge'
+import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
