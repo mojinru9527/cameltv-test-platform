@@ -40,8 +40,8 @@ const METRIC_UNITS: Record<string, string> = {
 const STATUS_LABELS: Record<string, string> = {
   pending: '等待中', running: '采集中', completed: '已完成', failed: '失败', cancelled: '已取消',
 }
-const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'secondary', running: 'default', completed: 'outline', failed: 'destructive', cancelled: 'secondary',
+const STATUS_TONES: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  pending: 'neutral', running: 'info', completed: 'success', failed: 'danger', cancelled: 'neutral',
 }
 
 // ── Page ──
@@ -262,7 +262,7 @@ export default function PerfTestPage() {
                             <p className="text-sm font-medium truncate">{d.device_name || d.device_id}</p>
                             <p className="text-xs text-muted-foreground">{d.device_model} · {d.os_version}</p>
                           </div>
-                          <Badge variant="outline" className="text-xs">{d.platform}</Badge>
+                          <Badge tone="neutral" className="text-xs">{d.platform}</Badge>
                         </button>
                       ))}
                     </div>
@@ -370,7 +370,7 @@ export default function PerfTestPage() {
                   <div className="flex items-center gap-2">
                     {wsMode === 'websocket' ? <Wifi className="size-4 text-emerald-500" /> : wsMode === 'polling' ? <WifiOff className="size-4 text-amber-500" /> : <Loader2 className="size-4 animate-spin" />}
                     <span className="text-sm">{wsMode === 'websocket' ? 'WebSocket 实时' : wsMode === 'polling' ? 'HTTP 轮询(降级)' : '连接中…'}</span>
-                    {reconnectCount > 0 && <Badge variant="outline" className="text-xs">重连 {reconnectCount}/3</Badge>}
+                    {reconnectCount > 0 && <Badge tone="neutral" className="text-xs">重连 {reconnectCount}/3</Badge>}
                   </div>
                   <div className="ml-auto flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
@@ -472,7 +472,7 @@ export default function PerfTestPage() {
                             <td className="py-2 pr-4 font-mono text-xs max-w-[150px] truncate">{s.pkg_name}</td>
                             <td className="py-2 pr-4">{s.actual_duration_s || s.duration}s</td>
                             <td className="py-2 pr-4">
-                              <Badge variant={STATUS_VARIANTS[s.status] ?? 'secondary'} className="text-xs">
+                              <Badge tone={STATUS_TONES[s.status] ?? 'neutral'} className="text-xs">
                                 {STATUS_LABELS[s.status] ?? s.status}
                               </Badge>
                             </td>
@@ -519,7 +519,7 @@ export default function PerfTestPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base">
                       采集报告: {report.session.session_id}
-                      <Badge variant="outline" className="ml-2 text-xs">
+                      <Badge tone="neutral" className="ml-2 text-xs">
                         {STATUS_LABELS[report.session.status] ?? report.session.status}
                       </Badge>
                     </CardTitle>
@@ -546,7 +546,7 @@ export default function PerfTestPage() {
                             <div key={i} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
                               <AlertCircle className="size-4 text-amber-500 shrink-0" />
                               <span className="text-xs text-muted-foreground font-mono">{new Date(a.timestamp * 1000).toLocaleTimeString()}</span>
-                              <Badge variant="outline" className="text-xs">{a.event_type}</Badge>
+                              <Badge tone="neutral" className="text-xs">{a.event_type}</Badge>
                               <span className="text-xs flex-1 truncate">{a.detail}</span>
                             </div>
                           ))}

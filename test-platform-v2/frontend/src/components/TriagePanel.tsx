@@ -82,35 +82,30 @@ const CATEGORY_CONFIG: Record<string, {
   icon: React.ReactNode
   color: string
   bgClass: string
-  borderClass: string
 }> = {
   bug: {
     label: 'Bug',
     icon: <Bug className="size-4" />,
     color: 'text-destructive',
     bgClass: 'bg-destructive/5 border-destructive/20',
-    borderClass: 'border-l-destructive',
   },
   flaky_env: {
     label: '环境抖动',
     icon: <AlertTriangle className="size-4" />,
     color: 'text-orange-500',
     bgClass: 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800',
-    borderClass: 'border-l-orange-400',
   },
   case_defect: {
     label: '用例缺陷',
     icon: <FlaskConical className="size-4" />,
     color: 'text-blue-500',
     bgClass: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
-    borderClass: 'border-l-blue-400',
   },
   known_issue: {
     label: '已知问题',
     icon: <Info className="size-4" />,
     color: 'text-muted-foreground',
     bgClass: 'bg-muted/30 border-border',
-    borderClass: 'border-l-muted-foreground',
   },
 }
 
@@ -245,13 +240,13 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
               if (count === 0) return null
               const cfg = CATEGORY_CONFIG[cat]
               return (
-                <Badge key={cat} variant="outline" className={cn('gap-1', cfg.color)}>
+                <Badge key={cat} tone="neutral" className={cn('gap-1', cfg.color)}>
                   {cfg.icon}
                   {cfg.label} × {count}
                 </Badge>
               )
             })}
-            <Badge variant="secondary" className="text-[11px]">
+            <Badge tone="neutral" className="text-[11px]">
               {result.analysis_method === 'llm' ? 'AI 深度分析' : '规则引擎'}
             </Badge>
             <Button variant="ghost" size="sm" onClick={handleTriage} disabled={loading} className="ml-auto">
@@ -276,7 +271,7 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
                     <Card
                       key={item.execution_id}
                       size="sm"
-                      className={cn('border-l-4', cfg.borderClass, cfg.bgClass)}
+                      className={cfg.bgClass}
                     >
                       <CardContent className="py-3 space-y-2">
                         {/* Header */}
@@ -286,10 +281,10 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
                               <span className="text-sm font-medium truncate">
                                 {item.case_title}
                               </span>
-                              <Badge variant="outline" className="text-[10px]">
+                              <Badge tone="neutral" className="text-[10px]">
                                 {item.priority}
                               </Badge>
-                              <Badge variant="secondary" className="text-[10px]">
+                              <Badge tone="neutral" className="text-[10px]">
                                 置信度 {(item.confidence * 100).toFixed(0)}%
                               </Badge>
                             </div>
@@ -335,7 +330,7 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
                             <span>执行时间：{new Date(item.executed_at).toLocaleString()}</span>
                           )}
                           {item.case_type && (
-                            <Badge variant="outline" className="text-[10px]">
+                            <Badge tone="neutral" className="text-[10px]">
                               {item.case_type === 'api' ? '接口' : item.case_type === 'func' ? '功能' : item.case_type}
                             </Badge>
                           )}

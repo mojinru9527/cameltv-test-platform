@@ -79,12 +79,12 @@ export default function VersionChainTimeline({ chain, currentId }: Props) {
                         {STATUS_VARIANT[item.status]?.label ?? item.status}
                       </Badge>
                       {isCurrent && (
-                        <Badge variant="outline" className="text-[10px] border-primary/50 text-primary">
+                        <Badge tone="neutral" className="text-[10px] border-primary/50 text-primary">
                           当前
                         </Badge>
                       )}
                       {isLatest && !isCurrent && (
-                        <Badge variant="outline" className="text-[10px]">
+                        <Badge tone="neutral" className="text-[10px]">
                           最新
                         </Badge>
                       )}

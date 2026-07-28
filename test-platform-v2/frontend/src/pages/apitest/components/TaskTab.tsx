@@ -56,7 +56,7 @@ export default function TaskTab() {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Select value={statusFilter || '_all'} onValueChange={v => setStatusFilter(v === '_all' ? '' : v)}>
-          <SelectTrigger className="w-[150px]"><SelectValue placeholder="全部状态" /></SelectTrigger>
+          <SelectTrigger className="w-[150px]" aria-label="任务状态筛选"><SelectValue placeholder="全部状态" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="_all">全部状态</SelectItem>
             <SelectItem value="running">执行中</SelectItem>
@@ -65,7 +65,7 @@ export default function TaskTab() {
             <SelectItem value="cancelled">已取消</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="secondary" onClick={loadTasks} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
+        <Button variant="secondary" onClick={loadTasks} data-icon="inline-start" aria-label="刷新执行任务"><RefreshCw className="size-4" /></Button>
         <span className="text-xs text-muted-foreground">{total} 个任务</span>
       </div>
 
@@ -96,9 +96,22 @@ export default function TaskTab() {
               </div>
               <Badge className={STATUS_MAP[task.status]?.className || ''}>{STATUS_MAP[task.status]?.label || task.status}</Badge>
               <div className="flex items-center gap-1 shrink-0">
-                <Button size="icon-sm" variant="ghost" onClick={() => viewDetail(task.id)}><Eye className="size-4" /></Button>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  onClick={() => viewDetail(task.id)}
+                  aria-label={`查看任务${task.name}详情`}
+                >
+                  <Eye className="size-4" />
+                </Button>
                 {(task.status === 'pending' || task.status === 'running') && (
-                  <Button size="icon-sm" variant="ghost" className="text-destructive" onClick={() => cancelTask(task.id)}>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    className="text-destructive"
+                    onClick={() => cancelTask(task.id)}
+                    aria-label={`取消任务${task.name}`}
+                  >
                     <XCircle className="size-4" />
                   </Button>
                 )}
@@ -172,9 +185,15 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
               {reqSnap ? (
                 <>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline">{reqSnap.method || 'GET'}</Badge>
+                    <Badge tone="neutral">{reqSnap.method || 'GET'}</Badge>
                     <span className="font-mono text-[10px] truncate max-w-[300px]">{reqSnap.url || reqSnap.resolved_url || '-'}</span>
-                    <Button size="icon-xs" variant="ghost" onClick={() => { navigator.clipboard.writeText(reqSnap.curl || ''); toast.success('curl 已复制') }} title="复制 curl">
+                    <Button
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => { navigator.clipboard.writeText(reqSnap.curl || ''); toast.success('curl 已复制') }}
+                      aria-label="复制 curl"
+                      title="复制 curl"
+                    >
                       <ClipboardCheck className="size-3" />
                     </Button>
                   </div>
@@ -199,9 +218,9 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
               {resSnap ? (
                 <>
                   <div className="flex items-center gap-2">
-                    <Badge variant={resSnap.status_code >= 400 ? 'destructive' : 'default'}>{resSnap.status_code || '-'}</Badge>
+                    <Badge tone={resSnap.status_code >= 400 ? 'danger' : 'success'}>{resSnap.status_code || '-'}</Badge>
                     <span className="text-muted-foreground">{resSnap.body_size_bytes != null ? `${(resSnap.body_size_bytes / 1024).toFixed(1)} KB` : ''}</span>
-                    {resSnap.truncated && <Badge variant="outline">已截断</Badge>}
+                    {resSnap.truncated && <Badge tone="neutral">已截断</Badge>}
                   </div>
                   {resSnap.headers && Object.keys(resSnap.headers).length > 0 && (
                     <details className="mt-1">

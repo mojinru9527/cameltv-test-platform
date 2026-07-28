@@ -17,13 +17,13 @@ import { useState } from 'react'
 import { fetchAuditLogs, exportAuditLogsCsv } from '@/api/system'
 import { toast } from 'sonner'
 
-const ACTION_VARIANTS: Record<string, 'default' | 'secondary' | 'destructive'> = {
-  'user:create': 'default',
-  'user:update': 'secondary',
-  'user:delete': 'destructive',
-  'role:create': 'default',
-  'role:update': 'secondary',
-  'role:delete': 'destructive',
+const ACTION_TONES: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  'user:create': 'success',
+  'user:update': 'info',
+  'user:delete': 'danger',
+  'role:create': 'success',
+  'role:update': 'info',
+  'role:delete': 'danger',
 }
 
 const ACTION_LABELS: Record<string, string> = {
@@ -94,7 +94,7 @@ export default function AuditTab() {
     { key: 'created_at', header: '时间', headerClassName: 'w-[170px]', render: (item) => formatDate(item.created_at) },
     { key: 'username', header: '操作人', headerClassName: 'w-[100px]', render: (item) => item.username },
     { key: 'action', header: '操作', headerClassName: 'w-[100px]', render: (item) => (
-      <Badge variant={ACTION_VARIANTS[item.action] || 'outline'}>
+      <Badge tone={ACTION_TONES[item.action] || 'neutral'}>
         {ACTION_LABELS[item.action] || item.action}
       </Badge>
     )},

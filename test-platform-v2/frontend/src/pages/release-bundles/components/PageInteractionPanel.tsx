@@ -108,7 +108,7 @@ export default function PageInteractionPanel({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[400px] sm:w-[540px] p-0">
+      <SheetContent className="w-full p-0 sm:max-w-[540px]">
         <SheetHeader className="p-6 pb-2">
           <SheetTitle className="text-lg flex items-center gap-2">
             {page?.name ?? '页面交互'}
@@ -225,7 +225,7 @@ function Section({
         <Icon className="h-4 w-4 text-muted-foreground" />
         <h4 className="text-sm font-semibold">{title}</h4>
         {count > 0 && (
-          <Badge variant="secondary" className="text-xs">
+          <Badge tone="neutral" className="text-xs">
             {count}
           </Badge>
         )}

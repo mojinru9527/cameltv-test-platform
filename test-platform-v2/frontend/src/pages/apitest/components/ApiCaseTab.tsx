@@ -214,7 +214,7 @@ export default function ApiCaseTab() {
                       <Badge className={METHOD_COLORS[group.method] || ''}>{group.method}</Badge>
                         <code className="truncate text-sm font-medium">{group.endpoint}</code>
                       </div>
-                      <Badge variant="secondary" className="text-xs">{group.cases.length} 条用例</Badge>
+                      <Badge tone="neutral" className="text-xs">{group.cases.length} 条用例</Badge>
                     </CollapsibleTrigger>
                     <Button
                       size="sm"
@@ -232,22 +232,39 @@ export default function ApiCaseTab() {
                       {group.cases.map((c: any) => (
                         <div
                           key={c.id}
-                          className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/50 cursor-pointer ${selected.has(c.id) ? 'bg-muted/30' : ''}`}
+                          className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/50 ${selected.has(c.id) ? 'bg-muted/30' : ''}`}
                         >
-                          <button onClick={() => toggleSelect(c.id)} className="shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => toggleSelect(c.id)}
+                            className="shrink-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            aria-label={`${selected.has(c.id) ? '取消选择' : '选择'}用例${c.title}`}
+                            aria-pressed={selected.has(c.id)}
+                          >
                             {selected.has(c.id)
                               ? <ClipboardCheck className="size-4 text-primary" />
                               : <MinusCircle className="size-4 text-muted-foreground" />
                             }
                           </button>
                           <Badge className={METHOD_COLORS[c.api_method || 'GET'] || ''}>{c.api_method || 'GET'}</Badge>
-                          <div className="flex-1 min-w-0" onClick={() => runSingle(c.id)}>
+                          <button
+                            type="button"
+                            className="min-w-0 flex-1 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            onClick={() => runSingle(c.id)}
+                            aria-label={`执行用例${c.title}`}
+                          >
                             <p className="text-sm font-medium truncate">{c.title}</p>
                             <p className="text-xs text-muted-foreground truncate">{c.api_endpoint}</p>
-                          </div>
+                          </button>
                           <div className="flex items-center gap-1 shrink-0">
-                            <Badge variant="outline" className="text-[10px]">{c.priority}</Badge>
-                            <Button size="icon-sm" variant="ghost" onClick={() => runSingle(c.id)} disabled={executingCase === c.id}>
+                            <Badge tone="neutral" className="text-[10px]">{c.priority}</Badge>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
+                              onClick={() => runSingle(c.id)}
+                              disabled={executingCase === c.id}
+                              aria-label={`执行用例${c.title}`}
+                            >
                               {executingCase === c.id ? <Loader2 className="animate-spin size-4" /> : <Play className="size-4" />}
                             </Button>
                           </div>

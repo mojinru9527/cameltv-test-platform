@@ -5,48 +5,47 @@
 ## Tasks
 
 ### Slice 1: Badge 基元增强 (20min)
-- [ ] Badge 组件：添加 `variant` prop 作为 `tone` 的 fallback alias（透明兼容 shadcn）
+- [x] Badge 组件：添加 `variant` prop 作为 `tone` 的 fallback alias（透明兼容 shadcn）
 - **验收**: `variant="default"` → `tone="neutral"`, `variant="destructive"` → `tone="danger"`
 - **文件**: `ui/primitives/Badge.tsx`
 
 ### Slice 2: 新增 @/ui 基元 (30min)
-- [ ] Card → `ui-surface` + `rounded-xl` 简单包装
-- [ ] Textarea → 复用 Input 样式
-- [ ] Label → text-secondary 文本
-- [ ] Select → trigger/content/item 骨架
-- [ ] Skeleton → 脉冲动画占位
+- [x] Card → 复用成熟 Card 复合 API，保留 `size`/`CardAction`
+- [x] Textarea → 复用成熟输入组件 API
+- [x] Label → 复用 Radix Label 的 `htmlFor` 能力
+- [x] Select → 导出完整 Radix Select 复合 API
+- [x] Skeleton → 复用成熟占位组件
 - **验收**: 每个组件有 Story/export，构建通过
 - **文件**: `ui/primitives/Card.tsx`, `ui/primitives/Textarea.tsx`, `ui/primitives/Label.tsx`, `ui/primitives/Select.tsx`, `ui/primitives/Skeleton.tsx`, `ui/index.ts`
 
 ### Slice 3: Badge 批量替换 (30min)
-- [ ] 全局扫描所有 `from '@/components/ui/badge'` → `from '@/ui'`
-- [ ] 全局替换 `variant="default"` → `tone="neutral"` (或删除 variant 用默认)
-- [ ] 全局替换 `variant="destructive"` → `tone="danger"`
-- [ ] 全局替换 `variant="outline"` → `tone="neutral"`
-- [ ] 全局替换 `variant="secondary"` → `tone="neutral"`
-- [ ] 动态表达式修复: `variant={x ? 'default' : 'destructive'}` → `tone={x ? 'neutral' : 'danger'}`
+- [x] 全局扫描所有 `from '@/components/ui/badge'` → `from '@/ui'`
+- [x] 全局替换 `variant="default"` → `tone="neutral"` (或删除 variant 用默认)
+- [x] 全局替换 `variant="destructive"` → `tone="danger"`
+- [x] 全局替换 `variant="outline"` → `tone="neutral"`
+- [x] 全局替换 `variant="secondary"` → `tone="neutral"`
+- [x] 动态表达式修复: `variant={x ? 'default' : 'destructive'}` → `tone={x ? 'neutral' : 'danger'}`
 - **涉及文件**: ~50 files
 
 ### Slice 4: PageShell 列表页接入 (30min)
-- [ ] testcase/index.tsx → PageShell
-- [ ] defect/index.tsx → PageShell  
-- [ ] testplan/index.tsx → PageShell
-- [ ] environment/index.tsx → PageShell
-- [ ] report/index.tsx → PageShell
+- [x] testcase/index.tsx → PageShell
+- [x] defect/index.tsx → PageShell
+- [x] testplan/index.tsx → PageShell
+- [x] environment/index.tsx → PageShell
+- [x] report/index.tsx → PageShell
+- [x] trace/index.tsx、requirement/index.tsx → PageShell
 - **验收**: 5 页标题/副标题/操作栏一致
 
-### Slice 5: Card/Textarea/Label/Select/Skeleton 替换 (30min)
-- [ ] Card 导入替换 (~30 files)
-- [ ] Textarea 导入替换 (~10 files)
-- [ ] Label 导入替换 (~15 files)
-- [ ] Skeleton 导入替换 (~8 files)
-- **验收**: 每轮构建通过
+### Slice 5: Card/Textarea/Label/Select/Skeleton 兼容层 (30min)
+- [x] `@/ui` 提供完整兼容导出
+- [x] 避免在本批次机械替换成熟 Radix/shadcn 消费者
+- **验收**: API 兼容测试与生产构建通过
 
 ### Slice 6: tsc 零错误 + 收尾 (20min)
-- [ ] deep-eql 类型定义：安装 `@types/deep-eql` 或 `skipLibCheck`
-- [ ] `tsc --noEmit` 零错误
-- [ ] Vite build 通过
-- [ ] QA 报告 + Leader Verdict
+- [x] 使用仓库标准 `npm run typecheck` 验证类型
+- [x] 类型检查零错误
+- [x] Vite build 通过
+- [x] QA 报告 + Leader Verdict
 
 ## 风险
 

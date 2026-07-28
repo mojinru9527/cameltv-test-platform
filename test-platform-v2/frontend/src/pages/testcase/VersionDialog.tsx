@@ -83,7 +83,7 @@ export default function VersionDialog({ open, onClose, caseData, versions }: Pro
                       {v.changed_fields.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-1">
                           {v.changed_fields.map((f) => (
-                            <Badge key={f} variant="secondary" className="text-[10px] px-1 py-0">
+                            <Badge key={f} tone="neutral" className="text-[10px] px-1 py-0">
                               {FIELD_LABELS[f] || f}
                             </Badge>
                           ))}

@@ -94,7 +94,7 @@ export function ObsidianWorkbench({
             {breadcrumbs && (
               <span className="block mb-2 text-[0.8125rem] text-[#829087]">{breadcrumbs}</span>
             )}
-            <h1 className="max-w-[32ch] text-[clamp(1.75rem,2.4vw,2.25rem)] font-[580] tracking-[-0.045em] leading-[1.08] text-[#f5faf6] text-balance">
+            <h1 className="max-w-[32ch] text-[clamp(1.75rem,2.4vw,2.25rem)] font-[580] tracking-[-0.03em] leading-[1.08] text-[#f5faf6] text-balance">
               {title}
             </h1>
             {description && (
@@ -147,7 +147,11 @@ export function ObsidianWorkbench({
         <div
           className={cn(
             'grid mb-6 py-3 border-y border-[rgba(218,239,224,0.08)]',
-            metrics.length <= 2 ? 'grid-cols-2' : metrics.length === 3 ? 'grid-cols-3' : 'grid-cols-4',
+            metrics.length <= 2
+              ? 'grid-cols-1 sm:grid-cols-2'
+              : metrics.length === 3
+                ? 'grid-cols-1 sm:grid-cols-3'
+                : 'grid-cols-2 lg:grid-cols-4',
           )}
           aria-label="关键指标"
         >
@@ -155,18 +159,21 @@ export function ObsidianWorkbench({
             <div
               key={m.label}
               className={cn(
-                'relative grid grid-cols-[1fr_auto] gap-x-3 gap-y-[5px] min-w-0 px-6 py-2',
-                i > 0 && 'border-l border-[rgba(218,239,224,0.08)]',
+                'relative grid grid-cols-[1fr_auto] gap-x-3 gap-y-[5px] min-w-0 px-3 py-2 sm:px-6',
+                metrics.length <= 3
+                  ? i > 0 && 'sm:border-l sm:border-[rgba(218,239,224,0.08)]'
+                  : i % 2 === 1 && 'border-l border-[rgba(218,239,224,0.08)] lg:border-l',
+                metrics.length > 3 && i > 0 && 'lg:border-l lg:border-[rgba(218,239,224,0.08)]',
                 i === 0 && 'pl-0',
               )}
             >
               <span className="flex items-center gap-[7px] text-[0.8125rem]" style={{ color: toneVars[m.tone] }}>
                 {m.label}
               </span>
-              <b className="row-span-2 col-start-2 self-center text-[1.75rem] font-[560] tracking-[-0.045em] text-[#eef6f0]">
+              <b className="row-span-2 col-start-2 self-center text-[1.75rem] font-[560] tracking-[-0.03em] text-[#eef6f0]">
                 {m.value}
               </b>
-              <small className="text-[0.75rem] text-[#718077]">{m.note}</small>
+              <small className="text-[0.75rem] text-[#91a398]">{m.note}</small>
             </div>
           ))}
         </div>
@@ -176,7 +183,7 @@ export function ObsidianWorkbench({
       <div className={cn('relative z-10')}>
         {/* Spotlight 光晕 */}
         <div
-          className="absolute inset-0 pointer-events-none transition-opacity duration-[180ms]"
+          className="absolute inset-0 pointer-events-none transition-opacity duration-200"
           style={{
             opacity: hovered ? 1 : 0,
             background: `radial-gradient(520px circle at var(--spotlight-x, 50%) var(--spotlight-y, 40%), rgba(53,230,138,0.03), transparent 60%)`,

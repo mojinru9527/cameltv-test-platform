@@ -42,10 +42,10 @@ interface DiffReviewPanelProps {
 }
 
 const CHANGE_ZONES: { key: string; label: string; color: string }[] = [
-  { key: 'new', label: '新增', color: 'border-l-green-500 bg-green-50/30' },
-  { key: 'modified', label: '修改', color: 'border-l-yellow-500 bg-yellow-50/30' },
-  { key: 'deleted', label: '删除', color: 'border-l-red-500 bg-red-50/30' },
-  { key: 'unchanged', label: '未变更', color: 'border-l-muted' },
+  { key: 'new', label: '新增', color: 'border-emerald-500/40 bg-emerald-500/5' },
+  { key: 'modified', label: '修改', color: 'border-amber-500/40 bg-amber-500/5' },
+  { key: 'deleted', label: '删除', color: 'border-destructive/40 bg-destructive/5' },
+  { key: 'unchanged', label: '未变更', color: 'border-border bg-card' },
 ]
 
 export default function DiffReviewPanel({
@@ -182,24 +182,24 @@ export default function DiffReviewPanel({
                 差异总览:
               </span>
               <Badge
-                variant="outline"
+                tone="neutral"
                 className="border-green-200 bg-green-50 text-green-700"
               >
                 新增 {summary.new_modules ?? 0}
               </Badge>
               <Badge
-                variant="outline"
+                tone="neutral"
                 className="border-yellow-200 bg-yellow-50 text-yellow-700"
               >
                 修改 {summary.modified_modules ?? 0}
               </Badge>
               <Badge
-                variant="outline"
+                tone="neutral"
                 className="border-red-200 bg-red-50 text-red-700"
               >
                 删除 {summary.deleted_modules ?? 0}
               </Badge>
-              <Badge variant="outline" className="text-muted-foreground">
+              <Badge tone="neutral" className="text-muted-foreground">
                 未变更 {summary.unchanged_modules ?? 0}
               </Badge>
               <span className="text-xs text-muted-foreground ml-auto">
@@ -235,7 +235,7 @@ export default function DiffReviewPanel({
                 >
                   <div
                     className={cn(
-                      'border border-l-4 rounded-md bg-card',
+                      'border rounded-md',
                       zone.color,
                     )}
                   >
@@ -256,7 +256,7 @@ export default function DiffReviewPanel({
                           {mod.name}
                         </span>
                         <Badge
-                          variant="outline"
+                          tone="neutral"
                           className={cn(
                             'text-xs',
                             mod.change_type === 'new' &&
@@ -280,7 +280,7 @@ export default function DiffReviewPanel({
                             className="flex items-center gap-2 ml-6 py-1 text-sm"
                           >
                             <Badge
-                              variant="outline"
+                              tone="neutral"
                               className={cn(
                                 'text-xs px-1',
                                 page.change_type === 'new' &&

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 
 export interface PageShellProps {
   /** 页面标题 */
-  title?: string
+  title: string
   /** 面包屑路径 */
   breadcrumbs?: string
   /** 副标题描述 */
@@ -30,42 +30,44 @@ export function PageShell({
   className,
 }: PageShellProps) {
   return (
-    <div className={cn('flex flex-col gap-6', className)}>
-      {/* ── 页头 ── */}
-      {(title || breadcrumbs || actions) && (
-        <header className={cn(glass && 'ui-glass p-4')}>
-          {breadcrumbs && (
-            <span className="block mb-2 text-[0.8125rem] text-[#829087]">
-              {breadcrumbs}
-            </span>
-          )}
-          <div className="flex items-center justify-between gap-8">
-            <div className="min-w-0">
-              {title && (
-                <h1 className="text-[clamp(1.75rem,2.4vw,2.25rem)] font-[580] tracking-tight leading-[1.08] text-[#f5faf6] text-balance">
-                  {title}
-                </h1>
-              )}
-              {description && (
-                <p className="mt-4 max-w-[70ch] text-[1rem] leading-relaxed text-[#a7b5ab]">
-                  {description}
-                </p>
-              )}
-            </div>
-            {actions && (
-              <div className="flex flex-shrink-0 gap-2">{actions}</div>
+    <div className={cn('flex min-w-0 flex-col gap-4 sm:gap-6', className)}>
+      <header
+        className={cn(
+          'rounded-xl border border-border bg-card px-4 py-4 text-card-foreground sm:px-5',
+          glass && 'ui-glass',
+        )}
+      >
+        {breadcrumbs && (
+          <p className="mb-2 text-sm text-muted-hc">{breadcrumbs}</p>
+        )}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-xl font-semibold leading-tight tracking-[-0.02em] text-foreground text-balance sm:text-2xl">
+              {title}
+            </h1>
+            {description && (
+              <p className="mt-2 max-w-[70ch] text-sm leading-relaxed text-muted-hc text-pretty">
+                {description}
+              </p>
             )}
           </div>
-          {statusLine && (
-            <div className="flex items-center gap-4 mt-4 text-[0.8125rem] text-[#819086]">
-              {statusLine}
+          {actions && (
+            <div
+              data-testid="page-shell-actions"
+              className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-shrink-0 sm:justify-end"
+            >
+              {actions}
             </div>
           )}
-        </header>
-      )}
+        </div>
+        {statusLine && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-hc">
+            {statusLine}
+          </div>
+        )}
+      </header>
 
-      {/* ── 内容 ── */}
-      {children}
+      <div className="min-w-0">{children}</div>
     </div>
   )
 }

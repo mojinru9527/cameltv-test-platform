@@ -4,18 +4,18 @@
 
 ## 问题陈述
 
-Batch-50 完成了 Obsidian Flow CSS 主题变量覆写 + Button/Input/Progress 三大基元替换。但 CI `tsc --noEmit` 揭示大量遗漏：
-- **187 处** Badge 仍用 shadcn `variant` prop（`@/ui` Badge 只认 `tone`）
-- **0 页面**使用 PageShell（统一列表页框架未落地）
+Batch-50 完成了 Obsidian Flow CSS 主题变量覆写 + Button/Input/Progress 三大基元替换，但仍遗留以下 UI 缺口：
+- Badge 消费者仍混用 shadcn `variant` 与 `@/ui` `tone`
+- 列表页没有统一 PageShell，部分主题路径会出现重复页头
 - **Card/Textarea/Label/Select/Skeleton** 等高频 shadcn 组件尚无 `@/ui` 等价物
-- `tsc --noEmit` 有预存 `deep-eql` 类型定义缺失
+- 小屏布局、表格键盘操作、筛选器可访问名称、进度动效和错误态仍不完整
 
 ## 成功指标
 
-1. `@/ui` Badge `tone` 替代 shadcn Badge `variant`，覆盖率 ≥90%
+1. `@/ui` Badge `tone` 替代 shadcn Badge `variant`，生产消费者覆盖率 100%
 2. 新增 ≥5 个 `@/ui` 基元（Card/Textarea/Label/Select/Skeleton）
 3. PageShell 覆盖 ≥5 个列表页
-4. `tsc --noEmit` 零错误（处理 deep-eql）
+4. `npm run typecheck` 零错误
 5. Vite 构建零错误
 
 ## 非目标
@@ -57,10 +57,10 @@ Batch-50 完成了 Obsidian Flow CSS 主题变量覆写 + Button/Input/Progress 
 - Given 列表页（testcase/environment/defect/testplan/report），When 访问，Then 使用 PageShell 布局
 - Given PageShell，When 渲染，Then 提供 title/subtitle/actions 插槽
 
-### US-4: tsc 零错误
+### US-4: 类型检查零错误
 **作为** 开发者  
 **我想要** `tsc --noEmit` 无错误  
 **以便** CI 门禁可以通过
 
 **验收标准**:
-- Given `npx tsc --noEmit`，When 执行，Then 退出码 0
+- Given `npm run typecheck`，When 执行，Then 退出码 0

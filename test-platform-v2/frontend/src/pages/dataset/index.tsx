@@ -201,7 +201,7 @@ export default function DatasetPage() {
                     <TableRow key={item.id}>
                       <TableCell className="font-medium">{item.name}</TableCell>
                       <TableCell>
-                        <Badge variant={item.source_type === 'json' ? 'secondary' : 'outline'}>
+                        <Badge tone="neutral">
                           {item.source_type.toUpperCase()}
                         </Badge>
                       </TableCell>

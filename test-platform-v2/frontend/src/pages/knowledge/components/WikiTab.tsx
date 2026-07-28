@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   fetchWikiConfig, fetchWikiRawSources, fetchWikiPages, fetchWikiPage,
-  fetchWikiPageLinks, createWikiIngestJob, approveWikiPage, rejectWikiPage,
+  fetchWikiPageLinks, fetchWikiRawSource, createWikiIngestJob, approveWikiPage, rejectWikiPage,
 } from '@/api/wiki'
 import type { WikiConfig, WikiRawSource, WikiPageBrief, WikiPage, WikiLink } from '@/types'
 import { useAuthStore } from '@/stores/auth'
@@ -18,8 +18,8 @@ const PAGE_TYPE_LABEL: Record<string, string> = {
   api: '接口', entity: '实体', comparison: '对比', query: '查询',
   overview: '总览', index: '索引', log: '日志',
 }
-const REVIEW_VARIANT: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  approved: 'default', pending: 'secondary', rejected: 'destructive', draft: 'outline',
+const REVIEW_TONE: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  approved: 'success', pending: 'neutral', rejected: 'danger', draft: 'neutral',
 }
 
 export default function WikiTab() {
@@ -101,7 +101,7 @@ export default function WikiTab() {
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <BookOpen className="size-4" /> Wiki 知识库
           {config && !config.wiki_enabled && (
-            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">未启用</Badge>
+            <Badge tone="neutral" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">未启用</Badge>
           )}
         </div>
         <span className="ml-2 text-xs text-muted-foreground">来源 {raws.length} · 页面 {pages.length}</span>
@@ -129,7 +129,7 @@ export default function WikiTab() {
                 <div key={r.id} className="space-y-1.5 text-sm py-1 border-b last:border-0 border-border/40">
                   <div className="flex items-center gap-2">
                     <span className="truncate flex-1 font-medium" title={r.title}>{r.title || '(无标题)'}</span>
-                    <Badge variant={r.status === 'active' ? 'secondary' : 'outline'} className="shrink-0 text-[10px]">{r.status}</Badge>
+                    <Badge tone={r.status === 'active' ? 'success' : 'neutral'} className="shrink-0 text-[10px]">{r.status}</Badge>
                     {canManage && (
                       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs shrink-0"
                         disabled={compiling === r.id} onClick={() => compile(r.id)}>
@@ -146,9 +146,9 @@ export default function WikiTab() {
                         </div>
                       )}
                       <div className="flex flex-wrap gap-1">
-                        {r.doc_id && <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">docId:{r.doc_id.slice(0,12)}...</Badge>}
-                        {r.version_id && <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">ver:{r.version_id.slice(0,8)}...</Badge>}
-                        {r.page_id && <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">page:{r.page_id.slice(0,8)}...</Badge>}
+                        {r.doc_id && <Badge tone="neutral" className="text-[9px] h-4 px-1 font-mono">docId:{r.doc_id.slice(0,12)}...</Badge>}
+                        {r.version_id && <Badge tone="neutral" className="text-[9px] h-4 px-1 font-mono">ver:{r.version_id.slice(0,8)}...</Badge>}
+                        {r.page_id && <Badge tone="neutral" className="text-[9px] h-4 px-1 font-mono">page:{r.page_id.slice(0,8)}...</Badge>}
                       </div>
                       {r.source_ref && (
                         <a href={r.source_ref} target="_blank" rel="noopener noreferrer"
@@ -179,7 +179,7 @@ export default function WikiTab() {
                         selected?.id === p.id ? 'bg-muted' : ''}`}>
                       <FileText className="size-3.5 text-muted-foreground shrink-0" />
                       <span className="truncate flex-1">{p.title}</span>
-                      <Badge variant={REVIEW_VARIANT[p.review_status] ?? 'outline'} className="shrink-0 text-[10px]">
+                      <Badge tone={REVIEW_TONE[p.review_status] ?? 'neutral'} className="shrink-0 text-[10px]">
                         {p.review_status}
                       </Badge>
                     </button>
@@ -205,8 +205,8 @@ export default function WikiTab() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{selected.title}</span>
-                  <Badge variant="secondary">{PAGE_TYPE_LABEL[selected.page_type] || selected.page_type}</Badge>
-                  <Badge variant={REVIEW_VARIANT[selected.review_status] ?? 'outline'}>{selected.review_status}</Badge>
+                  <Badge tone="neutral">{PAGE_TYPE_LABEL[selected.page_type] || selected.page_type}</Badge>
+                  <Badge tone={REVIEW_TONE[selected.review_status] ?? 'neutral'}>{selected.review_status}</Badge>
                   <span className="text-xs text-muted-foreground">v{selected.version}</span>
                   {canApprove && selected.review_status !== 'approved' && (
                     <div className="ml-auto flex gap-1.5">
@@ -233,12 +233,12 @@ export default function WikiTab() {
                         {refs.map((ref: any, i: number) => (
                           <div key={i} className="flex items-center gap-1.5 ml-1">
                             {ref.raw_source_id && (
-                              <Badge variant="outline" className="text-[10px] font-mono">
+                              <Badge tone="neutral" className="text-[10px] font-mono">
                                 Raw Source #{ref.raw_source_id}
                               </Badge>
                             )}
                             {ref.knowledge_source_id && (
-                              <Badge variant="outline" className="text-[10px] font-mono">
+                              <Badge tone="neutral" className="text-[10px] font-mono">
                                 知识源 #{ref.knowledge_source_id}
                               </Badge>
                             )}
@@ -247,7 +247,6 @@ export default function WikiTab() {
                                 className="text-blue-600 dark:text-blue-400 hover:underline text-[10px]"
                                 onClick={async () => {
                                   try {
-                                    const { fetchWikiRawSource } = await import('@/api/wiki')
                                     const raw = await fetchWikiRawSource(ref.raw_source_id)
                                     if (raw?.immutable_version) {
                                       const el = document.getElementById('wiki-raw-version')
@@ -271,7 +270,7 @@ export default function WikiTab() {
                 {links.length > 0 && (
                   <div className="text-xs text-muted-foreground">
                     关联页面：{links.map((l) => (
-                      <Badge key={l.id} variant="outline" className="mr-1">
+                      <Badge key={l.id} tone="neutral" className="mr-1">
                         {l.link_type} #{l.from_page_id === selected.id ? l.to_page_id : l.from_page_id}
                       </Badge>
                     ))}

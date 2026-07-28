@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/ui'
-import PageHeader from '@/components/PageHeader'
+import { Badge, PageShell, SpatialChain, type ChainNode } from '@/ui'
 import StatCard from '@/components/StatCard'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
@@ -9,16 +8,9 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent, FileText, Calendar, BarChart3 } from '@/lib/icons'
-import { useObsidianPage, SpatialChain } from '@/ui'
-import type { ChainNode } from '@/ui'
 
 export default function TracePage() {
   useDocumentTitle('链路追踪')
-  const { Page } = useObsidianPage({
-    title: '质量追溯',
-    subtitle: 'QUALITY TRACE',
-    description: '追踪需求→用例→计划→执行→缺陷→报告的完整质量链路，定位覆盖缺口。',
-  })
   const chartColors = useChartColors()
   const { data, isLoading, isError, error, refetch } = useApi<CoverageData>(
     () => fetchCoverage(),
@@ -26,7 +18,11 @@ export default function TracePage() {
   )
 
   return (
-    <Page>
+    <PageShell
+      title="质量追溯"
+      description="追踪需求→用例→计划→执行→缺陷→报告的完整质量链路，定位覆盖缺口。"
+      glass
+    >
       <AsyncState
         isLoading={isLoading}
         isError={isError}
@@ -43,11 +39,6 @@ export default function TracePage() {
           const typeChart = Object.entries(d.by_type).map(([k, v]) => ({ name: typeLabel(k), 数量: v }))
           return (
             <div className="space-y-6">
-              <PageHeader
-                title="质量追溯"
-                description="需求 → 用例 → 计划 → 执行 → 缺陷，全链路质量可视化"
-              />
-
               {/* ── 统计卡片 ── */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <StatCard icon={FileCheck} label="用例总数" value={d.total_cases} variant="glass" />
@@ -206,7 +197,7 @@ export default function TracePage() {
           )
         }}
       </AsyncState>
-    </Page>
+    </PageShell>
   )
 }
 

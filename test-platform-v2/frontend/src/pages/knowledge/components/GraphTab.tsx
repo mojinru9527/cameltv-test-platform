@@ -364,7 +364,7 @@ export default function GraphTab() {
             <CardContent className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">类型</span>
-                <Badge variant="secondary">
+                <Badge tone="neutral">
                   {TYPE_LABELS[selected.type] || selected.type}
                 </Badge>
               </div>

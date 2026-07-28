@@ -1,4 +1,4 @@
-import { Badge, Button, type BadgeTone, useObsidianPage } from '@/ui'
+import { Badge, Button, Input, PageShell, type BadgeTone } from '@/ui'
 /**
  * Environment & Variable management page.
  * E1: Project-level environments (dev/test/staging/prod) + variables with optional encryption.
@@ -13,7 +13,6 @@ import {
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card'
-import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import {
@@ -54,11 +53,6 @@ const ENV_TYPE_MAP: Record<string, { label: string; tone: BadgeTone }> = {
 
 export default function EnvironmentPage() {
   useDocumentTitle('环境配置')
-  const { Page } = useObsidianPage({
-    title: '环境与变量管理',
-    subtitle: 'ENVIRONMENT & VARIABLES',
-    description: '项目级测试环境配置与加密变量管理，支持环境切换与变量引用。',
-  })
   // ── Environments (useApi — P1-8) ──
   const { data: envs, isLoading, isError, error, refetch } = useApi<Environment[]>(
     () => fetchEnvironments(),
@@ -226,12 +220,18 @@ export default function EnvironmentPage() {
   // ── Render ──
 
   return (
-    <Page>
+    <PageShell
+      title="环境与变量管理"
+      description="项目级测试环境配置与加密变量管理，支持环境切换与变量引用。"
+      actions={(
+        <Button onClick={openEnvCreate}>
+          <Plus className="size-4" data-icon="inline-start" />
+          新建环境
+        </Button>
+      )}
+      glass
+    >
       <div className="space-y-4">
-      <div className="flex items-center justify-end">
-        <Button onClick={openEnvCreate}><Plus className="size-4" data-icon="inline-start" />新建环境</Button>
-      </div>
-
       <AsyncState
         isLoading={isLoading}
         isError={isError}
@@ -275,10 +275,10 @@ export default function EnvironmentPage() {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEnvEdit(selectedEnv)} title="编辑环境">
+                      <Button variant="ghost" size="icon" onClick={() => openEnvEdit(selectedEnv)} aria-label="编辑环境" title="编辑环境">
                         <Edit className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEnvDelete(selectedEnv)} title="删除环境">
+                      <Button variant="ghost" size="icon" onClick={() => handleEnvDelete(selectedEnv)} aria-label="删除环境" title="删除环境">
                         <Trash2 className="size-4 text-destructive" />
                       </Button>
                     </div>
@@ -328,10 +328,10 @@ export default function EnvironmentPage() {
                             <TableCell className="text-sm text-muted-foreground">{v.description}</TableCell>
                             <TableCell>
                               <div className="flex gap-1">
-                                <Button variant="ghost" size="icon" onClick={() => openVarEdit(v)} title="编辑">
+                                <Button variant="ghost" size="icon" onClick={() => openVarEdit(v)} aria-label={`编辑变量 ${v.key}`} title="编辑">
                                   <Edit className="size-3.5" />
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleVarDelete(v)} title="删除">
+                                <Button variant="ghost" size="icon" onClick={() => handleVarDelete(v)} aria-label={`删除变量 ${v.key}`} title="删除">
                                   <Trash2 className="size-3.5 text-destructive" />
                                 </Button>
                               </div>
@@ -468,6 +468,6 @@ export default function EnvironmentPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </Page>
+    </PageShell>
   )
 }

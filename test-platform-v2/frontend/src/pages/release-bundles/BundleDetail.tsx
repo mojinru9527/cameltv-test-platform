@@ -373,7 +373,7 @@ export default function BundleDetailPage() {
                       <span>功能: {s.functional || 0}</span>
                       <span>API: {s.api || 0}</span>
                       <span>自动化: {s.automation || 0}</span>
-                      <Badge variant="outline" className="text-[10px]">覆盖率 {s.coverage_rate || 0}%</Badge>
+                      <Badge tone="neutral" className="text-[10px]">覆盖率 {s.coverage_rate || 0}%</Badge>
                     </div>
                   </div>
                 ))}

@@ -410,7 +410,7 @@ export default function InteractionAnnotator({
                               {r.targetPage || '未设置'}
                             </span>
                           </p>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge tone="neutral" className="text-xs">
                             {INTERACTION_TYPES.find(
                               (t) => t.value === r.interactionType,
                             )?.label ?? r.interactionType}

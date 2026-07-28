@@ -39,7 +39,7 @@ export default function DefectFilterBar({
         value={severity ?? '__all__'}
         onValueChange={(v) => onSeverityChange(v === '__all__' ? undefined : v)}
       >
-        <SelectTrigger className="w-[130px]">
+        <SelectTrigger className="w-[130px]" aria-label="按严重程度筛选">
           <SelectValue placeholder="严重程度" />
         </SelectTrigger>
         <SelectContent>
@@ -54,7 +54,7 @@ export default function DefectFilterBar({
         value={status ?? '__all__'}
         onValueChange={(v) => onStatusChange(v === '__all__' ? undefined : v)}
       >
-        <SelectTrigger className="w-[130px]">
+        <SelectTrigger className="w-[130px]" aria-label="按缺陷状态筛选">
           <SelectValue placeholder="状态" />
         </SelectTrigger>
         <SelectContent>

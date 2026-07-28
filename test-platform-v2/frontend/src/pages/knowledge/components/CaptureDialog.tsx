@@ -129,7 +129,7 @@ export default function CaptureDialog({ onCaptured }: CaptureDialogProps) {
             </label>
             <div className="flex items-center gap-1 mb-1.5 flex-wrap">
               {tags.map((t) => (
-                <Badge key={t} variant="secondary" className="gap-1 pr-1">
+                <Badge key={t} tone="neutral" className="gap-1 pr-1">
                   {t}
                   <button
                     onClick={() => removeTag(t)}

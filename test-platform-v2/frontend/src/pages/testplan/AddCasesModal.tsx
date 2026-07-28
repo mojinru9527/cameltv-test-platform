@@ -42,8 +42,8 @@ interface Props {
   onAdded: () => void
 }
 
-const PRIORITY_BADGES: Record<string, 'default' | 'destructive' | 'secondary' | 'outline'> = {
-  P0: 'destructive', P1: 'secondary', P2: 'default', P3: 'outline',
+const PRIORITY_BADGES: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+  P0: 'danger', P1: 'warning', P2: 'info', P3: 'neutral',
 }
 
 export default function AddCasesModal({ open, planId, onClose, onAdded }: Props) {
@@ -233,9 +233,9 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
                         </TableCell>
                         <TableCell className="max-w-0 truncate">
                           <div className="flex items-center gap-1">
-                            <Badge variant={PRIORITY_BADGES[r.priority] || 'outline'}>{r.priority}</Badge>
+                            <Badge tone={PRIORITY_BADGES[r.priority] || 'neutral'}>{r.priority}</Badge>
                             {r.case_type === 'api' && (
-                              <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                              <Badge tone="neutral" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                                 接口
                               </Badge>
                             )}

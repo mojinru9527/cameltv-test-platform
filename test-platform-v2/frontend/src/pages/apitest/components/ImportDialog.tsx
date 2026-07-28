@@ -119,7 +119,7 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
           {preview && (
             <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline">版本: {preview.version || 'N/A'}</Badge>
+                <Badge tone="neutral">版本: {preview.version || 'N/A'}</Badge>
                 <Badge className="bg-blue-100 text-blue-700">总计: {preview.total_count}</Badge>
                 <Badge className="bg-green-100 text-green-700">新增: {preview.new_count}</Badge>
                 {preview.existing_count > 0 && <Badge className="bg-yellow-100 text-yellow-700">已存在: {preview.existing_count}</Badge>}
@@ -130,7 +130,7 @@ export default function ImportDialog({ open, onClose, onImported }: Props) {
                     <Badge className="text-[10px] px-1 py-0">{ep.method}</Badge>
                     <code className="flex-1 truncate">{ep.path}</code>
                     <span className="text-muted-foreground truncate max-w-[120px]">{ep.summary}</span>
-                    {ep._exists && <Badge variant="outline" className="text-[10px]">已存在</Badge>}
+                    {ep._exists && <Badge tone="neutral" className="text-[10px]">已存在</Badge>}
                   </div>
                 ))}
                 {preview.endpoints.length > 20 && (

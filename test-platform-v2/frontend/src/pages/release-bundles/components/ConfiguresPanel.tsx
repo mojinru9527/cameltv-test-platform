@@ -99,7 +99,7 @@ export default function ConfiguresPanel({ bundleId }: ConfiguresPanelProps) {
           <div className="flex items-center gap-2">
             <Link2 className="h-5 w-5 text-muted-foreground" />
             <CardTitle className="text-base">配置链路</CardTitle>
-            <Badge variant="secondary" className="text-xs">
+            <Badge tone="neutral" className="text-xs">
               {links.length}
             </Badge>
           </div>
@@ -190,7 +190,7 @@ function LinkRow({
           📱 客户端模块 #{link.client_module_id}
         </span>
         <Badge
-          variant="outline"
+          tone="neutral"
           className={cn(
             'text-xs shrink-0',
             isConfigures
@@ -206,7 +206,7 @@ function LinkRow({
           🖥️ 运营后台 #{link.admin_module_id}
         </span>
       </div>
-      <Badge variant="secondary" className="text-xs shrink-0">
+      <Badge tone="neutral" className="text-xs shrink-0">
         {(link.confidence * 100).toFixed(0)}%
       </Badge>
       <Button

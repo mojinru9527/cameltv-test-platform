@@ -149,7 +149,7 @@ export default function RolesTab() {
     { key: 'code', header: '编码', headerClassName: 'w-[100px]', render: (r) => r.code },
     { key: 'name', header: '名称', render: (r) => r.name },
     { key: 'data_scope', header: '数据范围', headerClassName: 'w-[80px]', render: (r) => (
-      <Badge variant="secondary">
+      <Badge tone="neutral">
         {r.data_scope === 'global' ? '全局' : '本项目'}
       </Badge>
     )},

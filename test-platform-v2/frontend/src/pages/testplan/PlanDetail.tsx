@@ -63,12 +63,12 @@ import { autoExecutePlan, deletePlan, executeCase, executeAllCases, fetchExecuti
 import AddCasesModal from './AddCasesModal'
 import PlanDrawer from './PlanDrawer'
 
-const STATUS_COLORS: Record<string, { variant: 'default' | 'destructive' | 'secondary' | 'outline'; className?: string }> = {
-  pass: { variant: 'default', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-  fail: { variant: 'destructive' },
-  skip: { variant: 'secondary', className: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
-  block: { variant: 'outline' },
-  pending: { variant: 'outline' },
+const STATUS_COLORS: Record<string, { tone: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; className?: string }> = {
+  pass: { tone: 'success' },
+  fail: { tone: 'danger' },
+  skip: { tone: 'warning' },
+  block: { tone: 'neutral' },
+  pending: { tone: 'neutral' },
 }
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
@@ -79,11 +79,11 @@ const STATUS_ICONS: Record<string, React.ReactNode> = {
   pending: <Pause className="size-3 text-muted-foreground" />,
 }
 
-const PLAN_STATUS: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }> = {
-  draft: { variant: 'secondary', label: '草稿' },
-  active: { variant: 'default', label: '进行中' },
-  completed: { variant: 'destructive', label: '已完成' },
-  archived: { variant: 'outline', label: '已归档' },
+const PLAN_STATUS: Record<string, { tone: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; label: string }> = {
+  draft: { tone: 'neutral', label: '草稿' },
+  active: { tone: 'success', label: '进行中' },
+  completed: { tone: 'neutral', label: '已完成' },
+  archived: { tone: 'neutral', label: '已归档' },
 }
 
 export default function PlanDetail() {
@@ -208,8 +208,8 @@ export default function PlanDetail() {
           返回
         </Button>
         <h2 className="text-lg font-semibold tracking-tight">{plan.name}</h2>
-        {plan.plan_id && <Badge variant="outline">{plan.plan_id}</Badge>}
-        <Badge variant={PLAN_STATUS[plan.status]?.variant || 'outline'}>
+        {plan.plan_id && <Badge tone="neutral">{plan.plan_id}</Badge>}
+        <Badge tone={PLAN_STATUS[plan.status]?.tone || 'neutral'}>
           {PLAN_STATUS[plan.status]?.label || plan.status}
         </Badge>
         <div className="flex-1" />
@@ -360,17 +360,17 @@ export default function PlanDetail() {
                       </TableRow>
                     ) : (
                       (plan.cases || []).map((r: any) => {
-                        const sc = STATUS_COLORS[r.last_status] || { variant: 'outline' as const }
+                        const sc = STATUS_COLORS[r.last_status] || { tone: 'neutral' as const }
                         return (
                           <TableRow key={r.id}>
                             <TableCell className="text-muted-foreground">{r.sort_order}</TableCell>
                             <TableCell className="max-w-0 truncate">
                               <div className="flex items-center gap-1">
-                                <Badge variant={r.priority === 'P0' ? 'destructive' : r.priority === 'P1' ? 'secondary' : 'default'}>
+                                <Badge tone={r.priority === 'P0' ? 'danger' : r.priority === 'P1' ? 'warning' : 'neutral'}>
                                   {r.priority}
                                 </Badge>
                                 {r.case_type === 'api' && (
-                                  <Badge variant="secondary" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                                  <Badge tone="neutral" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
                                     接口
                                   </Badge>
                                 )}
@@ -380,7 +380,7 @@ export default function PlanDetail() {
                             </TableCell>
                             <TableCell className="max-w-[100px] truncate">{r.module}</TableCell>
                             <TableCell>
-                              <Badge variant={sc.variant} className={sc.className}>
+                              <Badge tone={sc.tone} className={sc.className}>
                                 {STATUS_ICONS[r.last_status]}
                                 <span className="ml-0.5">{r.last_status || '-'}</span>
                               </Badge>
@@ -447,12 +447,12 @@ export default function PlanDetail() {
                       </TableRow>
                     ) : (
                       (executions.items || []).map((r: any) => {
-                        const sc = STATUS_COLORS[r.status] || { variant: 'outline' as const }
+                        const sc = STATUS_COLORS[r.status] || { tone: 'neutral' as const }
                         return (
                           <TableRow key={r.id}>
                             <TableCell className="max-w-0 truncate">{r.case_title}</TableCell>
                             <TableCell>
-                              <Badge variant={sc.variant} className={sc.className}>{r.status}</Badge>
+                              <Badge tone={sc.tone} className={sc.className}>{r.status}</Badge>
                             </TableCell>
                             <TableCell className="max-w-[200px] truncate">{r.notes || '-'}</TableCell>
                             <TableCell className="text-muted-foreground">
@@ -465,7 +465,7 @@ export default function PlanDetail() {
                                   Kibana
                                 </a>
                               ) : r.trace_id ? (
-                                <Badge variant="outline">{r.trace_id}</Badge>
+                                <Badge tone="neutral">{r.trace_id}</Badge>
                               ) : (
                                 '-'
                               )}

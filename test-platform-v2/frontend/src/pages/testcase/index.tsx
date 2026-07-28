@@ -1,4 +1,4 @@
-import { Badge, Button, useObsidianPage } from '@/ui'
+import { Badge, Button, PageShell } from '@/ui'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
@@ -34,7 +34,6 @@ import {
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
 import DomainTree from '@/components/DomainTree'
 import Pagination from '@/components/Pagination'
-import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 
 import { Search, RotateCcw, Plus, Edit, Trash2, History, FileCheck, CheckCircle2, XCircle, Send } from '@/lib/icons'
@@ -54,11 +53,6 @@ const REVIEW_TONES: Record<string, BadgeTone> = { draft: 'neutral', submitted: '
 
 export default function TestCasePage() {
   useDocumentTitle('用例库')
-  const { Page } = useObsidianPage({
-    title: '用例库',
-    subtitle: 'TEST CASE LIBRARY',
-    description: '管理测试用例资产，按领域组织，支持批量操作与版本历史。',
-  })
   // domains are loaded independently (used for tree + filter dropdowns)
   const [domains, setDomains] = useState<any[]>([])
 
@@ -262,10 +256,12 @@ export default function TestCasePage() {
   }
 
   return (
-    <Page>
+    <PageShell
+      title="用例服务"
+      description="管理测试用例资产，按领域组织，支持批量操作与版本历史。"
+      glass
+    >
       <div className="space-y-4">
-        <PageHeader title="用例服务" />
-
       {/* Top Tabs */}
       <div className="flex items-center gap-2">
         {([
@@ -291,7 +287,7 @@ export default function TestCasePage() {
       {/* Body: Tree + Table */}
       <div className="flex gap-4">
         {/* Left: Domain Tree */}
-        <Card size="sm" className="ui-surface w-[220px] shrink-0 h-[calc(100vh-215px)] overflow-y-auto">
+        <Card size="sm" className="ui-surface hidden w-[220px] shrink-0 h-[calc(100vh-215px)] overflow-y-auto lg:block">
           <CardHeader className="border-b pb-2">
             <CardTitle className="text-[13px]">模块分类</CardTitle>
           </CardHeader>
@@ -313,11 +309,11 @@ export default function TestCasePage() {
         </Card>
 
         {/* Right: Filter + Table */}
-        <div className="flex-1 min-w-0 flex flex-col" style={{ height: 'calc(100vh - 215px)' }}>
+        <div className="flex min-h-[540px] min-w-0 flex-1 flex-col lg:h-[calc(100vh-215px)]">
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); setPage(1) }}>
-              <SelectTrigger className="w-[130px]" size="sm">
+              <SelectTrigger className="w-full sm:w-[130px]" size="sm" aria-label="按用例域筛选">
                 <SelectValue placeholder="全部域" />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -329,7 +325,7 @@ export default function TestCasePage() {
             </Select>
 
             <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); setPage(1) }}>
-              <SelectTrigger className="w-[150px]" size="sm">
+              <SelectTrigger className="w-full sm:w-[150px]" size="sm" aria-label="按用例模块筛选">
                 <SelectValue placeholder="全部模块" />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -341,7 +337,7 @@ export default function TestCasePage() {
             </Select>
 
             <Select value={priority || undefined} onValueChange={(v) => { setPriority(v || ''); setPage(1) }}>
-              <SelectTrigger className="w-[100px]" size="sm">
+              <SelectTrigger className="w-full sm:w-[100px]" size="sm" aria-label="按用例优先级筛选">
                 <SelectValue placeholder="全部优先级" />
               </SelectTrigger>
               <SelectContent position="popper">
@@ -352,7 +348,7 @@ export default function TestCasePage() {
               </SelectContent>
             </Select>
 
-            <InputGroup className="w-[240px]">
+            <InputGroup className="w-full sm:w-[240px]">
               <InputGroupAddon>
                 <Search className="size-3.5" />
               </InputGroupAddon>
@@ -374,8 +370,8 @@ export default function TestCasePage() {
               <RotateCcw className="size-3.5" data-icon="inline-start" />
               重置
             </Button>
-            <div className="flex-1" />
-            <Button size="sm" onClick={() => openEdit()}>
+            <div className="hidden flex-1 sm:block" />
+            <Button size="sm" className="w-full sm:w-auto" onClick={() => openEdit()}>
               <Plus className="size-3.5" data-icon="inline-start" />
               新建用例
             </Button>
@@ -386,7 +382,7 @@ export default function TestCasePage() {
             <div className="flex items-center gap-2 rounded-md border bg-accent/30 px-3 py-2">
               <span className="text-sm font-medium">已选 {selected.size} 条</span>
               <Select value={batchPriority || undefined} onValueChange={setBatchPriority}>
-                <SelectTrigger className="w-[100px]" size="sm">
+                <SelectTrigger className="w-[100px]" size="sm" aria-label="批量设置优先级">
                   <SelectValue placeholder="优先级" />
                 </SelectTrigger>
                 <SelectContent position="popper">
@@ -529,11 +525,11 @@ export default function TestCasePage() {
             </div>
 
           {/* Pagination */}
-          <div className="shrink-0 flex items-center justify-between gap-4 pt-2 border-t">
+          <div className="flex shrink-0 flex-col items-stretch justify-between gap-3 border-t pt-2 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">每页</span>
               <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1) }}>
-                <SelectTrigger className="w-[80px]" size="sm"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-[80px]" size="sm" aria-label="每页显示条数"><SelectValue /></SelectTrigger>
                 <SelectContent position="popper">
                   {[20, 50, 100].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
                 </SelectContent>
@@ -604,6 +600,6 @@ export default function TestCasePage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    </Page>
+    </PageShell>
   )
 }

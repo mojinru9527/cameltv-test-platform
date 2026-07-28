@@ -1,7 +1,7 @@
 import client from './client'
 
 // ── 用户 ──
-export function fetchUsers() { return client.get('/system/users') }
+export function fetchUsers(signal?: AbortSignal) { return client.get('/system/users', { signal }) }
 export function fetchUser(id: number) { return client.get(`/system/users/${id}`) }
 export function createUser(body: any) { return client.post('/system/users', body) }
 export function updateUser(id: number, body: any) { return client.put(`/system/users/${id}`, body) }

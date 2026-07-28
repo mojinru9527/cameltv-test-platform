@@ -164,7 +164,7 @@ export default function PrototypePreview({
             <Image className="size-4" />
             蓝湖原型截图
             {version && (
-              <Badge variant="secondary" className="text-xs ml-1">{version}</Badge>
+              <Badge tone="neutral" className="text-xs ml-1">{version}</Badge>
             )}
             {current && (
               <span className="text-muted-foreground font-normal text-sm ml-2 truncate">

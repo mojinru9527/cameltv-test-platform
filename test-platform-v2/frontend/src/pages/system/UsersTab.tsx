@@ -138,14 +138,14 @@ export default function UsersTab() {
     { key: 'nickname', header: '昵称', render: (u) => u.nickname || '-' },
     { key: 'email', header: '邮箱', render: (u) => u.email || '-' },
     { key: 'status', header: '状态', headerClassName: 'w-[60px]', render: (u) => (
-      <Badge variant={u.status ? 'default' : 'destructive'}>
+      <Badge tone={u.status ? 'success' : 'danger'}>
         {u.status ? '启用' : '禁用'}
       </Badge>
     )},
     { key: 'roles', header: '角色', render: (u) => (
       <div className="flex flex-wrap gap-1">
         {u.role_codes?.map((c: string) => (
-          <Badge key={c} variant="secondary">{c}</Badge>
+          <Badge key={c} tone="neutral">{c}</Badge>
         )) || '-'}
       </div>
     )},

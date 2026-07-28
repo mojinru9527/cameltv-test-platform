@@ -90,7 +90,7 @@ function ClientScopeBadges({ clients }: { clients: string[] }) {
         if (!cfg) return null
         const Icon = cfg.icon
         return (
-          <Badge key={c} variant="outline" className={`text-[10px] leading-[16px] px-1 gap-0.5 ${cfg.className}`} title={cfg.label + '端'}>
+          <Badge key={c} tone="neutral" className={`text-[10px] leading-[16px] px-1 gap-0.5 ${cfg.className}`} title={cfg.label + '端'}>
             <Icon className="size-3" />
             {cfg.label}
           </Badge>
@@ -108,20 +108,20 @@ function VersionMarkerBadge({ fp, diffStatus, baseVersion }: {
 }) {
   if (fp._inherited) {
     return (
-      <Badge variant="outline" className="text-[10px] text-blue-600 border-blue-300">
+      <Badge tone="neutral" className="text-[10px] text-blue-600 border-blue-300">
         ➡️ 沿用自 {fp._from_version || baseVersion || '?'}
       </Badge>
     )
   }
   if (diffStatus === 'update') {
     return (
-      <Badge variant="outline" className="text-[10px] text-orange-600 border-orange-300">
+      <Badge tone="neutral" className="text-[10px] text-orange-600 border-orange-300">
         ✏️ 本版本变更
       </Badge>
     )
   }
   return (
-    <Badge variant="outline" className="text-[10px] text-green-600 border-green-300">
+    <Badge tone="neutral" className="text-[10px] text-green-600 border-green-300">
       🆕 首次提取
     </Badge>
   )
@@ -178,13 +178,13 @@ function AnalysisPanel({ analysis }: { analysis: RequirementAnalysis }) {
           <Card key={er.id} size="sm" className="mb-3">
             <CardContent className="pt-3">
               <div className="flex items-center gap-2 flex-wrap mb-2">
-                <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700">
+                <Badge tone="neutral" className="border-purple-200 bg-purple-50 text-purple-700">
                   {er.id}
                 </Badge>
                 <span className="font-medium text-sm">{er.title}</span>
-                <Badge variant="secondary">{typeLabels[er.type] || er.type}</Badge>
+                <Badge tone="neutral">{typeLabels[er.type] || er.type}</Badge>
                 {issueCount > 0 && (
-                  <Badge variant="outline" className={issueBadgeClass}>
+                  <Badge tone="neutral" className={issueBadgeClass}>
                     {issueCount} 问题
                   </Badge>
                 )}
@@ -194,12 +194,12 @@ function AnalysisPanel({ analysis }: { analysis: RequirementAnalysis }) {
               {(er.issues || []).map((iss, idx) => (
                 <div
                   key={idx}
-                  style={{ borderLeft: `3px solid ${SEVERITY_CONFIG[iss.severity]?.color || '#d9d9d9'}` }}
-                  className="p-1.5 pl-3 mb-2 bg-muted/50 rounded"
+                  style={{ borderColor: SEVERITY_CONFIG[iss.severity]?.color || 'var(--border)' }}
+                  className="mb-2 rounded border bg-muted/50 p-2"
                 >
                   <div className="flex items-center gap-2">
                     <Badge
-                      variant="outline"
+                      tone="neutral"
                       className={SEVERITY_BADGE_CLASSES[iss.severity] || 'border-gray-200 bg-gray-50 text-gray-500'}
                     >
                       {SEVERITY_CONFIG[iss.severity]?.label || iss.severity}
@@ -687,7 +687,7 @@ export default function AiResultModal({
                 <Layers className="size-5 text-primary" />
                 功能拆分 — 共 {extractionModules.length} 个模块, {totalFps} 个功能点
                 {clientSummary && (
-                  <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">
+                  <Badge tone="neutral" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">
                     {clientSummary}
                   </Badge>
                 )}
@@ -700,7 +700,7 @@ export default function AiResultModal({
                   共 <span className="text-blue-600 font-medium">{funcCases.length} 条功能用例</span>
                 </span>
                 {editedCount > 0 && (
-                  <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700">
+                  <Badge tone="neutral" className="border-amber-200 bg-amber-50 text-amber-700">
                     已修改 {editedCount} 条
                   </Badge>
                 )}
@@ -758,7 +758,7 @@ export default function AiResultModal({
                   <Layers className="size-3.5 text-primary" />
                   测试点 ({extractionModules.length} 模块{totalFps > 0 ? ` · ${totalFps} 功能点` : ''})
                   {extractionTotalIssues > 0 && (
-                    <Badge variant="outline" className="border-amber-200 bg-amber-50 text-amber-700 text-[10px] leading-[16px] ml-1">
+                    <Badge tone="neutral" className="border-amber-200 bg-amber-50 text-amber-700 text-[10px] leading-[16px] ml-1">
                       {extractionTotalIssues} 问题
                     </Badge>
                   )}
@@ -769,7 +769,7 @@ export default function AiResultModal({
                   <Search className="size-3.5 text-purple-600" />
                   需求分析 ({analysis!.extracted_requirements.length} 功能点{totalIssues > 0 ? ` · ${totalIssues} 问题` : ''})
                   {highIssueCount > 0 && (
-                    <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700 text-[10px] leading-[16px] ml-1">
+                    <Badge tone="neutral" className="border-red-200 bg-red-50 text-red-700 text-[10px] leading-[16px] ml-1">
                       {highIssueCount} 高
                     </Badge>
                   )}
@@ -786,7 +786,7 @@ export default function AiResultModal({
                   <Server className="size-3.5 text-green-600" />
                   接口用例 ({apiCases.length})
                   {apiMatches.length > 0 && (
-                    <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 text-[10px] leading-[16px] ml-1">
+                    <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700 text-[10px] leading-[16px] ml-1">
                       +{apiMatches.length} 匹配
                     </Badge>
                   )}
@@ -833,16 +833,16 @@ export default function AiResultModal({
                             ) : (
                               <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                             )}
-                            <Badge variant="outline" className="font-mono text-xs">
+                            <Badge tone="neutral" className="font-mono text-xs">
                               {mod.id}
                             </Badge>
                             <span className="font-medium text-sm">{mod.name}</span>
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge tone="neutral" className="text-xs">
                               {fpCount} 个功能点
                             </Badge>
                             {issueCount > 0 && (
                               <Badge
-                                variant="outline"
+                                tone="neutral"
                                 className="text-xs border-amber-200 bg-amber-50 text-amber-700"
                               >
                                 {issueCount} 个问题
@@ -865,11 +865,11 @@ export default function AiResultModal({
                                   className="border rounded-lg p-3 bg-muted/30"
                                 >
                                   <div className="flex items-center gap-2 mb-2">
-                                    <Badge variant="outline" className="font-mono text-xs">
+                                    <Badge tone="neutral" className="font-mono text-xs">
                                       {fp.id}
                                     </Badge>
                                     <span className="text-sm font-medium">{fp.title}</span>
-                                    <Badge variant="secondary" className="text-xs">
+                                    <Badge tone="neutral" className="text-xs">
                                       {TYPE_LABELS[fp.type] || fp.type}
                                     </Badge>
                                     <ClientScopeBadges clients={fp.client_scope} />
@@ -893,11 +893,11 @@ export default function AiResultModal({
                                         return (
                                           <div
                                             key={i}
-                                            className="text-xs border-l-2 pl-2 py-1"
-                                            style={{ borderLeftColor: sev.color }}
+                                            className="rounded border p-2 text-xs"
+                                            style={{ borderColor: sev.color }}
                                           >
                                             <Badge
-                                              variant="outline"
+                                              tone="neutral"
                                               className={`text-xs mr-1 ${
                                                 SEVERITY_BADGE_CLASSES[issue.severity] || ''
                                               }`}
@@ -988,14 +988,14 @@ export default function AiResultModal({
                                 {edited && <span className="text-amber-600 mr-1" title="已修改">*</span>}
                                 {display.title}
                                 {display.imported && (
-                                  <Badge variant="outline" className="ml-1.5 border-green-200 bg-green-50 text-green-700 text-[10px] leading-[16px]">
+                                  <Badge tone="neutral" className="ml-1.5 border-green-200 bg-green-50 text-green-700 text-[10px] leading-[16px]">
                                     已导入
                                   </Badge>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
-                              <Badge variant="outline" className={PRIORITY_CLASSES[display.priority] || 'border-gray-200 bg-gray-50 text-gray-500'}>
+                              <Badge tone="neutral" className={PRIORITY_CLASSES[display.priority] || 'border-gray-200 bg-gray-50 text-gray-500'}>
                                 {display.priority}
                               </Badge>
                             </TableCell>
@@ -1104,7 +1104,7 @@ export default function AiResultModal({
                                 aria-label={`${selected ? '取消' : '选择'}匹配 ${m.method} ${m.path}`}
                               >
                                 <Badge
-                                  variant="outline"
+                                  tone="neutral"
                                   className={selected
                                     ? 'border-green-500 bg-green-100 text-green-800 text-[10px]'
                                     : 'border-green-200 bg-white text-green-700 text-[10px]'}
@@ -1172,7 +1172,7 @@ export default function AiResultModal({
                               </TableCell>
                               <TableCell>
                                 <Badge
-                                  variant="outline"
+                                  tone="neutral"
                                   className={`text-[10px] font-mono ${
                                     display.api_method === 'GET' ? 'border-blue-200 bg-blue-50 text-blue-700' :
                                     display.api_method === 'POST' ? 'border-green-200 bg-green-50 text-green-700' :
@@ -1193,7 +1193,7 @@ export default function AiResultModal({
                                 </div>
                               </TableCell>
                               <TableCell className="text-center">
-                                <Badge variant="outline" className={PRIORITY_CLASSES[display.priority] || 'border-gray-200 bg-gray-50 text-gray-500'}>
+                                <Badge tone="neutral" className={PRIORITY_CLASSES[display.priority] || 'border-gray-200 bg-gray-50 text-gray-500'}>
                                   {display.priority}
                                 </Badge>
                               </TableCell>
@@ -1203,7 +1203,7 @@ export default function AiResultModal({
                               <TableCell className="text-center">
                                 {matchedEndpoint ? (
                                   <Badge
-                                    variant="outline"
+                                    tone="neutral"
                                     className={confirmedEndpointIds.has(matchedEndpoint.endpoint_id)
                                       ? 'border-green-500 bg-green-100 text-green-800 text-[10px]'
                                       : 'border-green-200 bg-green-50 text-green-700 text-[10px]'}
@@ -1259,9 +1259,9 @@ export default function AiResultModal({
                         <Card key={mod.id} size="sm" className="border-amber-200/60">
                           <CardContent className="pt-3">
                             <div className="flex items-center gap-2 mb-2">
-                              <Badge variant="outline" className="font-mono text-xs">{mod.id}</Badge>
+                              <Badge tone="neutral" className="font-mono text-xs">{mod.id}</Badge>
                               <span className="font-medium text-sm">{mod.name}</span>
-                              <Badge variant="secondary" className="text-xs border-amber-200 bg-amber-50 text-amber-700">
+                              <Badge tone="neutral" className="text-xs border-amber-200 bg-amber-50 text-amber-700">
                                 {integrationFps.length} 个集成功能点
                               </Badge>
                             </div>
@@ -1271,7 +1271,7 @@ export default function AiResultModal({
                               <p className="text-xs font-medium text-muted-foreground">🔌 集成功能点（建议回归）:</p>
                               {integrationFps.map((fp) => (
                                 <div key={fp.id} className="flex items-start gap-2 border rounded p-2 bg-amber-50/50">
-                                  <Badge variant="outline" className="font-mono text-[10px] shrink-0">{fp.id}</Badge>
+                                  <Badge tone="neutral" className="font-mono text-[10px] shrink-0">{fp.id}</Badge>
                                   <div className="min-w-0">
                                     <p className="text-sm font-medium">{fp.title}</p>
                                     <p className="text-xs text-muted-foreground">{fp.description}</p>
@@ -1292,7 +1292,7 @@ export default function AiResultModal({
                                 <p className="text-xs font-medium text-muted-foreground mb-1">📋 关联功能点:</p>
                                 <div className="flex flex-wrap gap-1">
                                   {otherFps.map((fp) => (
-                                    <Badge key={fp.id} variant="outline" className="text-[10px]">
+                                    <Badge key={fp.id} tone="neutral" className="text-[10px]">
                                       {fp.id} {fp.title}
                                     </Badge>
                                   ))}

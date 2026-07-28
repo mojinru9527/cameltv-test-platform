@@ -85,7 +85,7 @@ export default function ModuleTimeline({
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-sm font-semibold">{v.version}</span>
                     {vi === 0 && (
-                      <Badge variant="outline" className="text-xs border-primary/30 text-primary">
+                      <Badge tone="neutral" className="text-xs border-primary/30 text-primary">
                         当前
                       </Badge>
                     )}
@@ -125,7 +125,7 @@ export default function ModuleTimeline({
                               {ch.detail}
                             </span>
                           )}
-                          <Badge variant="outline" className="text-xs">
+                          <Badge tone="neutral" className="text-xs">
                             {CHANGE_COLORS[ch.type]?.label ?? ch.type}
                           </Badge>
                         </div>

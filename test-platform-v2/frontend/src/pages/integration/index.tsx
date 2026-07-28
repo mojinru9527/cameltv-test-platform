@@ -59,7 +59,7 @@ const providerBadge = (t: string) => {
     tapd: { label: 'TAPD', className: 'bg-orange-100 text-orange-800' },
   }
   const m = map[t] || { label: t, className: 'bg-slate-100' }
-  return <Badge className={m.className} variant="outline">{m.label}</Badge>
+  return <Badge className={m.className} tone="neutral">{m.label}</Badge>
 }
 
 // ── Status icons ──
@@ -276,7 +276,7 @@ export default function IntegrationPage() {
             <div className="flex items-center gap-2">
               <GitBranch className="size-5 text-blue-600" />
               <h2 className="text-lg font-semibold">模块联动追踪</h2>
-              <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">需求 → 用例 → 执行</Badge>
+              <Badge tone="neutral" className="border-blue-200 bg-blue-50 text-blue-700 text-xs">需求 → 用例 → 执行</Badge>
             </div>
             <Button variant="secondary" size="sm" onClick={() => {
               setLoadingLinkage(true)
@@ -328,7 +328,7 @@ export default function IntegrationPage() {
           </div>
 
           {/* Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">用例关联率</span>
@@ -367,7 +367,7 @@ export default function IntegrationPage() {
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <GitBranch className="size-3.5" />
-              <span>模块联动状态: <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 text-[10px]">运行中</Badge></span>
+              <span>模块联动状态: <Badge tone="neutral" className="border-green-200 bg-green-50 text-green-700 text-[10px]">运行中</Badge></span>
             </div>
           </div>
         </CardContent>
@@ -450,15 +450,15 @@ export default function IntegrationPage() {
 
           <form onSubmit={form.handleSubmit(handleSave)} className="space-y-4">
             {/* Basic */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <Label>名称 *</Label>
-                <Input placeholder="项目Jira连接" {...form.register('name')} />
+                <Label htmlFor="integration-name">名称 *</Label>
+                <Input id="integration-name" placeholder="项目Jira连接" {...form.register('name')} />
               </div>
               <div className="space-y-1">
-                <Label>类型 *</Label>
+                <Label htmlFor="integration-provider-type">类型 *</Label>
                 <Select value={providerType} onValueChange={(v) => form.setValue('provider_type', v as 'jira' | 'tapd')}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="integration-provider-type"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="jira">Jira Cloud</SelectItem>
                     <SelectItem value="tapd">TAPD</SelectItem>
@@ -468,49 +468,49 @@ export default function IntegrationPage() {
             </div>
 
             <div className="space-y-1">
-              <Label>Base URL *</Label>
-              <Input placeholder={providerType === 'jira' ? 'https://your-domain.atlassian.net' : 'https://api.tapd.cn'} {...form.register('base_url')} />
+              <Label htmlFor="integration-base-url">Base URL *</Label>
+              <Input id="integration-base-url" placeholder={providerType === 'jira' ? 'https://your-domain.atlassian.net' : 'https://api.tapd.cn'} {...form.register('base_url')} />
             </div>
 
             {/* Provider-specific auth fields */}
             {providerType === 'jira' ? (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label>Email</Label>
-                  <Input placeholder="your-email@example.com" {...form.register('email')} />
+                  <Label htmlFor="integration-email">Email</Label>
+                  <Input id="integration-email" placeholder="your-email@example.com" {...form.register('email')} />
                 </div>
                 <div className="space-y-1">
-                  <Label>API Token</Label>
-                  <Input type="password" placeholder="Jira API Token" {...form.register('api_token')} />
+                  <Label htmlFor="integration-api-token">API Token</Label>
+                  <Input id="integration-api-token" type="password" placeholder="Jira API Token" {...form.register('api_token')} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Project Key</Label>
-                  <Input placeholder="PROJ (Jira项目键)" {...form.register('project_key')} />
+                  <Label htmlFor="integration-project-key">Project Key</Label>
+                  <Input id="integration-project-key" placeholder="PROJ (Jira项目键)" {...form.register('project_key')} />
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <Label>API User</Label>
-                  <Input placeholder="TAPD API 用户名" {...form.register('api_user')} />
+                  <Label htmlFor="integration-api-user">API User</Label>
+                  <Input id="integration-api-user" placeholder="TAPD API 用户名" {...form.register('api_user')} />
                 </div>
                 <div className="space-y-1">
-                  <Label>API Password</Label>
-                  <Input type="password" placeholder="TAPD API 密码" {...form.register('api_password')} />
+                  <Label htmlFor="integration-api-password">API Password</Label>
+                  <Input id="integration-api-password" type="password" placeholder="TAPD API 密码" {...form.register('api_password')} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Workspace ID</Label>
-                  <Input placeholder="TAPD 项目 ID" {...form.register('workspace_id')} />
+                  <Label htmlFor="integration-workspace-id">Workspace ID</Label>
+                  <Input id="integration-workspace-id" placeholder="TAPD 项目 ID" {...form.register('workspace_id')} />
                 </div>
               </div>
             )}
 
             {/* Sync settings */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1">
-                <Label>同步方向</Label>
+                <Label htmlFor="integration-sync-direction">同步方向</Label>
                 <Select value={form.watch('sync_direction')} onValueChange={(v) => form.setValue('sync_direction', v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger id="integration-sync-direction"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="bidirectional">双向同步</SelectItem>
                     <SelectItem value="push_only">仅推送</SelectItem>
@@ -519,8 +519,8 @@ export default function IntegrationPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>自动同步 (分钟)</Label>
-                <Input type="number" min={0} placeholder="0=禁用" {...form.register('sync_interval_minutes')} />
+                <Label htmlFor="integration-sync-interval">自动同步 (分钟)</Label>
+                <Input id="integration-sync-interval" type="number" min={0} placeholder="0=禁用" {...form.register('sync_interval_minutes')} />
               </div>
               <div className="space-y-1 flex items-end pb-1">
                 <label className="flex items-center gap-2 text-sm">
@@ -555,7 +555,7 @@ export default function IntegrationPage() {
                   <StatusIcon status={l.status} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">{l.direction === 'push' ? '推送' : '拉取'}</Badge>
+                      <Badge tone="neutral" className="text-xs">{l.direction === 'push' ? '推送' : '拉取'}</Badge>
                       <span className="font-mono text-xs">{l.external_id || '-'}</span>
                       <span className="text-xs text-muted-foreground">
                         {l.created_at ? new Date(l.created_at).toLocaleString('zh-CN') : ''}

@@ -105,7 +105,7 @@ export default function WikiDiffTab() {
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <GitCompare className="size-4" /> 知识差异对比
           {config && !config.wiki_diff_enabled && (
-            <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">未启用</Badge>
+            <Badge tone="neutral" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">未启用</Badge>
           )}
         </div>
       </div>
@@ -174,12 +174,12 @@ export default function WikiDiffTab() {
                   className="w-full text-left rounded-md border p-2 hover:bg-muted space-y-1">
                   <div className="flex items-center gap-1.5">
                     {(() => { const s = severityBadge(it.severity); return (
-                      <Badge variant={s.variant} className={`text-[10px] ${s.className ?? ''}`}>{it.severity}</Badge>
+                      <Badge tone={s.tone} className={`text-[10px] ${s.className ?? ''}`}>{it.severity}</Badge>
                     ) })()}
-                    <Badge variant="secondary" className="text-[10px]">{it.dimension}</Badge>
-                    <Badge variant="outline" className="text-[10px]">{it.diff_type}</Badge>
+                    <Badge tone="neutral" className="text-[10px]">{it.dimension}</Badge>
+                    <Badge tone="neutral" className="text-[10px]">{it.diff_type}</Badge>
                     {it.review_status !== 'pending' && (
-                      <Badge variant="outline" className="text-[10px] ml-auto">{it.review_status}</Badge>
+                      <Badge tone="neutral" className="text-[10px] ml-auto">{it.review_status}</Badge>
                     )}
                   </div>
                   <div className="text-sm truncate">{it.title}</div>

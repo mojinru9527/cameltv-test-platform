@@ -2,9 +2,9 @@
 
 > 🎨 Design | Date: 2026-07-28
 
-## 核心策略：Badge variant→tone 透明兼容
+## 核心策略：兼容层兜底 + 消费者显式迁移
 
-**不替换消费者，只增强组件。** 在 `@/ui` Badge 中新增 `variant` prop 作为 `tone` 的 alias，让所有 shadcn `variant="..."` 自动映射到 `tone`。
+在 `@/ui` Badge 中保留 `variant` 兼容别名，同时把生产消费者显式迁移到 `tone`。兼容别名只用于过渡和回归测试，避免后续代码继续混用两套语义。
 
 ### variant → tone 映射表
 
@@ -20,7 +20,7 @@
 
 ### Card
 ```tsx
-<Card className="...">  // ← 自动应用 ui-surface + rounded-xl + border
+<Card className="...">  // ← 保留成熟 Card API，可按页面添加 ui-surface
   <CardHeader><CardTitle>...</CardTitle><CardDescription>...</CardDescription></CardHeader>
   <CardContent>...</CardContent>
   <CardFooter>...</CardFooter>
@@ -30,19 +30,19 @@
 ### Textarea
 ```tsx
 <Textarea className="..." placeholder="..." rows={4} />
-// 自动应用 ui-input 样式类
+// 保留成熟输入组件的焦点、禁用和无障碍行为
 ```
 
 ### Label
 ```tsx
 <Label htmlFor="id" className="...">字段名</Label>
-// text-sm font-medium text-(--_text-secondary)
+// 保留 Radix Label 与 htmlFor 关联能力
 ```
 
 ### Select
 ```tsx
 <Select value={v} onValueChange={setV}>
-  <SelectTrigger><SelectValue placeholder="..." /></SelectTrigger>
+  <SelectTrigger aria-label="选择项"><SelectValue placeholder="..." /></SelectTrigger>
   <SelectContent>
     <SelectItem value="x">X</SelectItem>
   </SelectContent>
@@ -60,9 +60,9 @@
 ```
 PageShell
 ├─ title: string | ReactNode
-├─ subtitle?: string
+├─ description?: string
 ├─ actions?: ReactNode (工具栏按钮)
 └─ children (列表内容)
 ```
 
-接入页面: testcase, defect, testplan, environment, report
+接入页面: testcase, defect, testplan, environment, report, trace, requirement

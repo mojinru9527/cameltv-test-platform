@@ -241,7 +241,7 @@ export default function IterationTab() {
                       <Card key={snap.id} className="border border-muted">
                         <CardContent className="p-3">
                           <div className="flex items-center justify-between mb-1">
-                            <Badge variant="outline" className="text-xs">{snap.snapshot_type}</Badge>
+                            <Badge tone="neutral" className="text-xs">{snap.snapshot_type}</Badge>
                           </div>
                           <pre className="text-xs text-muted-foreground max-h-24 overflow-auto">
                             {JSON.stringify(data, null, 2)}

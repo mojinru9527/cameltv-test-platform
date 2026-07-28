@@ -72,7 +72,7 @@ function PageDiffRow({ page, syncScrollRef }: { page: DiffPage; syncScrollRef?: 
     <div className={cn('border rounded-lg p-3 mb-2', cfg.bg)}>
       <div className="flex items-center gap-2 mb-1">
         <Icon className={cn('size-3.5', cfg.color)} />
-        <Badge variant="outline" className={cn('text-xs', cfg.color)}>
+        <Badge tone="neutral" className={cn('text-xs', cfg.color)}>
           {cfg.label}
         </Badge>
         <span className="text-sm font-medium truncate flex-1">{page.page_name}</span>
