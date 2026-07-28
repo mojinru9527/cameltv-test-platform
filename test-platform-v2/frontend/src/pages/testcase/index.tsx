@@ -417,6 +417,7 @@ export default function TestCasePage() {
               role="region"
               aria-label="测试用例数据表"
               tabIndex={0}
+              data-density={sortedItems.length >= 50 ? 'high' : 'standard'}
             >
           <AsyncState
             isLoading={isLoading}
@@ -426,6 +427,12 @@ export default function TestCasePage() {
             onRetry={refetch}
             emptyTitle="暂无测试用例"
             emptyDescription="点击「新建用例」开始创建"
+            emptyAction={{
+              label: keyword || selDomain || selModule || priority ? '清除筛选' : '新建用例',
+              onClick: keyword || selDomain || selModule || priority
+                ? () => { setSelDomain(''); setSelModule(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1) }
+                : () => openEdit(),
+            }}
             skeletonType="table"
             loadingRows={4}
           >
@@ -455,7 +462,10 @@ export default function TestCasePage() {
                 </TableHeader>
                 <TableBody>
                   {sortedItems.map((r: any) => (
-                    <TableRow key={r.id}>
+                    <TableRow
+                      key={r.id}
+                      className={sortedItems.length >= 50 ? '[content-visibility:auto] [contain-intrinsic-size:auto_44px]' : undefined}
+                    >
                       <TableCell>
                         <Checkbox
                           checked={selected.has(r.id)}
@@ -506,7 +516,7 @@ export default function TestCasePage() {
                               onClick={() => openReviewDialog(r, 'submit')}
                               aria-label={`提交评审：${r.title || r.id}`}
                             >
-                              <Send className="size-3 text-blue-600" aria-hidden="true" />
+                              <Send className="size-3 text-status-info" aria-hidden="true" />
                             </Button>
                           )}
                           {r.review_status === 'submitted' && (
@@ -517,7 +527,7 @@ export default function TestCasePage() {
                                 onClick={() => openReviewDialog(r, 'approve')}
                                 aria-label={`通过评审：${r.title || r.id}`}
                               >
-                                <CheckCircle2 className="size-3 text-green-600" aria-hidden="true" />
+                                <CheckCircle2 className="size-3 text-status-success" aria-hidden="true" />
                               </Button>
                               <Button
                                 size="icon-xs"
@@ -525,7 +535,7 @@ export default function TestCasePage() {
                                 onClick={() => openReviewDialog(r, 'reject')}
                                 aria-label={`驳回评审：${r.title || r.id}`}
                               >
-                                <XCircle className="size-3 text-red-600" aria-hidden="true" />
+                                <XCircle className="size-3 text-status-danger" aria-hidden="true" />
                               </Button>
                             </>
                           )}

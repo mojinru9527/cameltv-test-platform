@@ -101,7 +101,7 @@ export default function WikiTab() {
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <BookOpen className="size-4" /> Wiki 知识库
           {config && !config.wiki_enabled && (
-            <Badge tone="neutral" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700">未启用</Badge>
+            <Badge tone="neutral" className="text-status-warning dark:text-status-warning border-status-warning-border dark:border-status-warning-border">未启用</Badge>
           )}
         </div>
         <span className="ml-2 text-xs text-muted-foreground">来源 {raws.length} · 页面 {pages.length}</span>
@@ -129,7 +129,7 @@ export default function WikiTab() {
                 <div key={r.id} className="space-y-1.5 text-sm py-1 border-b last:border-0 border-border/40">
                   <div className="flex items-center gap-2">
                     <span className="truncate flex-1 font-medium" title={r.title}>{r.title || '(无标题)'}</span>
-                    <Badge tone={r.status === 'active' ? 'success' : 'neutral'} className="shrink-0 text-[10px]">{r.status}</Badge>
+                    <Badge tone={r.status === 'active' ? 'success' : 'neutral'} className="shrink-0 text-xs">{r.status}</Badge>
                     {canManage && (
                       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs shrink-0"
                         disabled={compiling === r.id} onClick={() => compile(r.id)}>
@@ -138,7 +138,7 @@ export default function WikiTab() {
                     )}
                   </div>
                   {r.source_type === 'lanhu' && (
-                    <div className="text-[10px] text-muted-foreground space-y-0.5">
+                    <div className="text-xs text-muted-foreground space-y-0.5">
                       {r.immutable_version && (
                         <div className="flex items-center gap-1">
                           <GitBranch className="size-3 shrink-0" />
@@ -146,13 +146,13 @@ export default function WikiTab() {
                         </div>
                       )}
                       <div className="flex flex-wrap gap-1">
-                        {r.doc_id && <Badge tone="neutral" className="text-[9px] h-4 px-1 font-mono">docId:{r.doc_id.slice(0,12)}...</Badge>}
-                        {r.version_id && <Badge tone="neutral" className="text-[9px] h-4 px-1 font-mono">ver:{r.version_id.slice(0,8)}...</Badge>}
-                        {r.page_id && <Badge tone="neutral" className="text-[9px] h-4 px-1 font-mono">page:{r.page_id.slice(0,8)}...</Badge>}
+                        {r.doc_id && <Badge tone="neutral" className="text-xs h-4 px-1 font-mono">docId:{r.doc_id.slice(0,12)}...</Badge>}
+                        {r.version_id && <Badge tone="neutral" className="text-xs h-4 px-1 font-mono">ver:{r.version_id.slice(0,8)}...</Badge>}
+                        {r.page_id && <Badge tone="neutral" className="text-xs h-4 px-1 font-mono">page:{r.page_id.slice(0,8)}...</Badge>}
                       </div>
                       {r.source_ref && (
                         <a href={r.source_ref} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-0.5 text-blue-600 dark:text-blue-400 hover:underline truncate">
+                          className="flex items-center gap-0.5 text-status-info dark:text-status-info hover:underline truncate">
                           <ExternalLink className="size-3 shrink-0" />
                           <span className="truncate">蓝湖源链接</span>
                         </a>
@@ -171,7 +171,7 @@ export default function WikiTab() {
                 <div className="text-xs text-muted-foreground py-2">暂无页面，点击来源「编译」生成</div>
               ) : Object.keys(grouped).map((type) => (
                 <div key={type} className="space-y-1">
-                  <div className="text-[11px] text-muted-foreground mt-1">{PAGE_TYPE_LABEL[type] || type}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{PAGE_TYPE_LABEL[type] || type}</div>
                   {grouped[type].map((p) => (
                     <button key={p.id}
                       onClick={() => openPage(p.id)}
@@ -179,7 +179,7 @@ export default function WikiTab() {
                         selected?.id === p.id ? 'bg-muted' : ''}`}>
                       <FileText className="size-3.5 text-muted-foreground shrink-0" />
                       <span className="truncate flex-1">{p.title}</span>
-                      <Badge tone={REVIEW_TONE[p.review_status] ?? 'neutral'} className="shrink-0 text-[10px]">
+                      <Badge tone={REVIEW_TONE[p.review_status] ?? 'neutral'} className="shrink-0 text-xs">
                         {p.review_status}
                       </Badge>
                     </button>
@@ -233,18 +233,18 @@ export default function WikiTab() {
                         {refs.map((ref: any, i: number) => (
                           <div key={i} className="flex items-center gap-1.5 ml-1">
                             {ref.raw_source_id && (
-                              <Badge tone="neutral" className="text-[10px] font-mono">
+                              <Badge tone="neutral" className="text-xs font-mono">
                                 Raw Source #{ref.raw_source_id}
                               </Badge>
                             )}
                             {ref.knowledge_source_id && (
-                              <Badge tone="neutral" className="text-[10px] font-mono">
+                              <Badge tone="neutral" className="text-xs font-mono">
                                 知识源 #{ref.knowledge_source_id}
                               </Badge>
                             )}
                             {ref.raw_source_id && (
                               <button
-                                className="text-blue-600 dark:text-blue-400 hover:underline text-[10px]"
+                                className="text-status-info dark:text-status-info hover:underline text-xs"
                                 onClick={async () => {
                                   try {
                                     const raw = await fetchWikiRawSource(ref.raw_source_id)

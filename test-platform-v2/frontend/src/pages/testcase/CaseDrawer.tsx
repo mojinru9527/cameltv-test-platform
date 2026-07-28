@@ -590,11 +590,11 @@ function ReviewPanel({
             {reviewHistory.map((t) => (
               <div key={t.id} className="rounded-md border p-3 text-sm">
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge tone={REVIEW_TONES[t.from_status] || 'neutral'} className="text-[10px]">
+                  <Badge tone={REVIEW_TONES[t.from_status] || 'neutral'} className="text-xs">
                     {t.from_label}
                   </Badge>
                   <span className="text-muted-foreground">→</span>
-                  <Badge tone={REVIEW_TONES[t.to_status] || 'neutral'} className="text-[10px]">
+                  <Badge tone={REVIEW_TONES[t.to_status] || 'neutral'} className="text-xs">
                     {t.to_label}
                   </Badge>
                   <span className="text-muted-foreground ml-auto text-xs">

@@ -256,7 +256,7 @@ export default function EnvironmentPage() {
                 >
                   <Server className="size-3.5" data-icon="inline-start" />
                   {env.name}
-                  <Badge tone={ENV_TYPE_MAP[env.env_type]?.tone ?? 'neutral'} className="ml-2 text-[10px] px-1.5 py-0">
+                  <Badge tone={ENV_TYPE_MAP[env.env_type]?.tone ?? 'neutral'} className="ml-2 text-xs px-1.5 py-0">
                     {ENV_TYPE_MAP[env.env_type]?.label ?? env.env_type}
                   </Badge>
                 </Button>
@@ -321,7 +321,7 @@ export default function EnvironmentPage() {
                             </TableCell>
                             <TableCell>
                               {v.encrypted ? (
-                                <Badge tone="warning" className="text-[10px]">加密</Badge>
+                                <Badge tone="warning" className="text-xs">加密</Badge>
                               ) : (
                                 <span className="text-xs text-muted-foreground">明文</span>
                               )}

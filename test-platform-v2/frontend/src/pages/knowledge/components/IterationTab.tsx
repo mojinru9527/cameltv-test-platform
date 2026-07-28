@@ -30,7 +30,7 @@ import {
 import { Plus, Inbox, RefreshCw, ArrowLeftRight, TrendingUp, ArrowDown } from '@/lib/icons'
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
-  active: { label: '进行中', color: 'bg-green-100 text-green-700' },
+  active: { label: '进行中', color: 'bg-status-success-muted text-status-success' },
   closed: { label: '已关闭', color: 'bg-muted text-muted-foreground' },
 }
 
@@ -196,7 +196,7 @@ export default function IterationTab() {
                             快照
                           </Button>
                           {it.status === 'active' && (
-                            <Button variant="ghost" size="sm" className="h-7 text-xs text-amber-600" onClick={() => handleClose(it.id)}>
+                            <Button variant="ghost" size="sm" className="h-7 text-xs text-status-warning" onClick={() => handleClose(it.id)}>
                               <Inbox className="size-3 mr-1" />
                               关闭
                             </Button>
@@ -285,7 +285,7 @@ export default function IterationTab() {
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-md bg-muted p-3">
                       <div className="text-xs text-muted-foreground mb-1">实体变化</div>
-                      <div className={`text-lg font-bold flex items-center gap-1 ${(compareResult.deltas.entity_total ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`text-lg font-bold flex items-center gap-1 ${(compareResult.deltas.entity_total ?? 0) >= 0 ? 'text-status-success' : 'text-status-danger'}`}>
                         {(compareResult.deltas.entity_total ?? 0) >= 0 ? <TrendingUp className="size-4" /> : <ArrowDown className="size-4" />}
                         {(compareResult.deltas.entity_total ?? 0) > 0 ? '+' : ''}{compareResult.deltas.entity_total ?? 0}
                       </div>
@@ -295,7 +295,7 @@ export default function IterationTab() {
                     </div>
                     <div className="rounded-md bg-muted p-3">
                       <div className="text-xs text-muted-foreground mb-1">关系变化</div>
-                      <div className={`text-lg font-bold flex items-center gap-1 ${(compareResult.deltas.relation_total ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      <div className={`text-lg font-bold flex items-center gap-1 ${(compareResult.deltas.relation_total ?? 0) >= 0 ? 'text-status-success' : 'text-status-danger'}`}>
                         {(compareResult.deltas.relation_total ?? 0) >= 0 ? <TrendingUp className="size-4" /> : <ArrowDown className="size-4" />}
                         {(compareResult.deltas.relation_total ?? 0) > 0 ? '+' : ''}{compareResult.deltas.relation_total ?? 0}
                       </div>

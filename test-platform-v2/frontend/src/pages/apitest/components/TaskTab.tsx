@@ -9,11 +9,11 @@ import { fetchApiExecutionTasks, fetchApiExecutionTask, cancelApiExecutionTask }
 import type { ApiExecutionTask, ApiTaskDetail } from '@/types'
 
 const STATUS_MAP: Record<string, { label: string; className: string }> = {
-  pending: { label: '待执行', className: 'bg-gray-100 text-gray-700' },
-  running: { label: '执行中', className: 'bg-blue-100 text-blue-700' },
-  success: { label: '成功', className: 'bg-green-100 text-green-700' },
-  failed: { label: '失败', className: 'bg-red-100 text-red-700' },
-  cancelled: { label: '已取消', className: 'bg-yellow-100 text-yellow-700' },
+  pending: { label: '待执行', className: 'bg-muted text-muted-foreground' },
+  running: { label: '执行中', className: 'bg-status-info-muted text-status-info' },
+  success: { label: '成功', className: 'bg-status-success-muted text-status-success' },
+  failed: { label: '失败', className: 'bg-status-danger-muted text-status-danger' },
+  cancelled: { label: '已取消', className: 'bg-status-warning-muted text-status-warning' },
 }
 
 export default function TaskTab() {
@@ -79,19 +79,19 @@ export default function TaskTab() {
           tasks.map(task => (
             <div key={task.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
               <div className="shrink-0">
-                {task.status === 'success' ? <CheckCircle2 className="size-5 text-green-600" />
-                  : task.status === 'failed' ? <XCircle className="size-5 text-red-600" />
-                  : task.status === 'running' ? <Loader2 className="size-5 text-blue-600 animate-spin" />
-                  : task.status === 'cancelled' ? <XCircle className="size-5 text-yellow-600" />
-                  : <Clock className="size-5 text-gray-400" />}
+                {task.status === 'success' ? <CheckCircle2 className="size-5 text-status-success" />
+                  : task.status === 'failed' ? <XCircle className="size-5 text-status-danger" />
+                  : task.status === 'running' ? <Loader2 className="size-5 text-status-info animate-spin" />
+                  : task.status === 'cancelled' ? <XCircle className="size-5 text-status-warning" />
+                  : <Clock className="size-5 text-muted-foreground" />}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{task.name}</p>
                 <p className="text-xs text-muted-foreground">{task.task_id} · {task.trigger_type}</p>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-green-600">{task.passed} 通过</span>
-                <span className="text-red-600">{task.failed} 失败</span>
+                <span className="text-status-success">{task.passed} 通过</span>
+                <span className="text-status-danger">{task.failed} 失败</span>
                 {task.skipped > 0 && <span className="text-muted-foreground">{task.skipped} 跳过</span>}
               </div>
               <Badge className={STATUS_MAP[task.status]?.className || ''}>{STATUS_MAP[task.status]?.label || task.status}</Badge>
@@ -131,8 +131,8 @@ export default function TaskTab() {
           <CardContent>
             <div className="grid grid-cols-4 gap-3 mb-4 text-center">
               <div className="bg-muted rounded p-2"><div className="text-lg font-bold">{detail.total}</div><div className="text-xs text-muted-foreground">总数</div></div>
-              <div className="bg-green-50 rounded p-2"><div className="text-lg font-bold text-green-600">{detail.passed}</div><div className="text-xs text-muted-foreground">通过</div></div>
-              <div className="bg-red-50 rounded p-2"><div className="text-lg font-bold text-red-600">{detail.failed}</div><div className="text-xs text-muted-foreground">失败</div></div>
+              <div className="bg-status-success-muted rounded p-2"><div className="text-lg font-bold text-status-success">{detail.passed}</div><div className="text-xs text-muted-foreground">通过</div></div>
+              <div className="bg-status-danger-muted rounded p-2"><div className="text-lg font-bold text-status-danger">{detail.failed}</div><div className="text-xs text-muted-foreground">失败</div></div>
               <div className="bg-muted rounded p-2"><div className="text-lg font-bold">{detail.skipped}</div><div className="text-xs text-muted-foreground">跳过</div></div>
             </div>
             <div className="space-y-2 max-h-[60vh] overflow-y-auto">
@@ -164,12 +164,12 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
         <Button size="icon-xs" variant="ghost" onClick={() => setExpanded(!expanded)} aria-label={expanded ? '收起' : '展开'}>
           {expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
         </Button>
-        {item.status === 'passed' ? <CheckCircle2 className="size-3 text-green-600" /> : <XCircle className="size-3 text-red-600" />}
+        {item.status === 'passed' ? <CheckCircle2 className="size-3 text-status-success" /> : <XCircle className="size-3 text-status-danger" />}
         <span className="font-medium">用例 #{item.case_id}</span>
         <span className="text-muted-foreground">{item.duration_ms}ms</span>
         <Badge className={STATUS_MAP[item.status]?.className || ''}>{STATUS_MAP[item.status]?.label || item.status}</Badge>
       </div>
-      {item.error_message && <p className="text-red-600 mt-1">{item.error_message}</p>}
+      {item.error_message && <p className="text-status-danger mt-1">{item.error_message}</p>}
 
       {expanded && (
         <div className="mt-2 border-t pt-2">
@@ -186,7 +186,7 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
                 <>
                   <div className="flex items-center gap-2">
                     <Badge tone="neutral">{reqSnap.method || 'GET'}</Badge>
-                    <span className="font-mono text-[10px] truncate max-w-[300px]">{reqSnap.url || reqSnap.resolved_url || '-'}</span>
+                    <span className="font-mono text-xs truncate max-w-[300px]">{reqSnap.url || reqSnap.resolved_url || '-'}</span>
                     <Button
                       size="icon-xs"
                       variant="ghost"
@@ -200,13 +200,13 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
                   {reqSnap.headers && Object.keys(reqSnap.headers).length > 0 && (
                     <details className="mt-1">
                       <summary className="cursor-pointer text-muted-foreground">请求头 ({Object.keys(reqSnap.headers).length})</summary>
-                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-20 overflow-auto">{safeFormatJson(JSON.stringify(reqSnap.headers))}</pre>
+                      <pre className="text-xs bg-muted p-1 rounded mt-0.5 max-h-20 overflow-auto">{safeFormatJson(JSON.stringify(reqSnap.headers))}</pre>
                     </details>
                   )}
                   {reqSnap.body && (
                     <details className="mt-1">
                       <summary className="cursor-pointer text-muted-foreground">请求体</summary>
-                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-32 overflow-auto">{safeFormatJson(reqSnap.body)}</pre>
+                      <pre className="text-xs bg-muted p-1 rounded mt-0.5 max-h-32 overflow-auto">{safeFormatJson(reqSnap.body)}</pre>
                     </details>
                   )}
                 </>
@@ -225,13 +225,13 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
                   {resSnap.headers && Object.keys(resSnap.headers).length > 0 && (
                     <details className="mt-1">
                       <summary className="cursor-pointer text-muted-foreground">响应头 ({Object.keys(resSnap.headers).length})</summary>
-                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-20 overflow-auto">{safeFormatJson(JSON.stringify(resSnap.headers))}</pre>
+                      <pre className="text-xs bg-muted p-1 rounded mt-0.5 max-h-20 overflow-auto">{safeFormatJson(JSON.stringify(resSnap.headers))}</pre>
                     </details>
                   )}
                   {resSnap.body_preview && (
                     <details className="mt-1">
                       <summary className="cursor-pointer text-muted-foreground">响应体预览{resSnap.truncated ? ' (已截断)' : ''}</summary>
-                      <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-48 overflow-auto">{formatBodyPreview(resSnap.body_preview, resSnap.content_type)}</pre>
+                      <pre className="text-xs bg-muted p-1 rounded mt-0.5 max-h-48 overflow-auto">{formatBodyPreview(resSnap.body_preview, resSnap.content_type)}</pre>
                     </details>
                   )}
                 </>
@@ -241,7 +241,7 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
           {tab === 'assertions' && (
             item.assertion_results && item.assertion_results !== '[]' ? (
               <div>
-                <pre className="text-[10px] bg-muted p-1 rounded mt-0.5 max-h-32 overflow-auto">{safeFormatJson(item.assertion_results)}</pre>
+                <pre className="text-xs bg-muted p-1 rounded mt-0.5 max-h-32 overflow-auto">{safeFormatJson(item.assertion_results)}</pre>
               </div>
             ) : <span className="text-muted-foreground">无断言结果</span>
           )}

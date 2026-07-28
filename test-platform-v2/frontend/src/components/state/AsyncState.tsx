@@ -44,7 +44,7 @@ export interface AsyncStateProps<T> {
 
   // ── Loading configuration ────────────────────────────────────────
 
-  /** Override loading variant. Defaults to 'spinner' for first load. */
+  /** Override loading variant. Defaults to a structure-preserving skeleton. */
   loadingVariant?: LoadingStateProps['variant']
   /** Rows for skeleton. @default 5 */
   loadingRows?: number
@@ -100,7 +100,7 @@ export function AsyncState<T>({
   error,
   data,
 
-  loadingVariant = 'spinner',
+  loadingVariant = 'skeleton',
   loadingRows = 5,
   skeletonType = 'table',
   loadingText,

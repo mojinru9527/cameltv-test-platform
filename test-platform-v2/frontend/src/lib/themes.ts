@@ -77,7 +77,7 @@ const THEME_BY_ID = new Map<ColorTheme, ColorThemeDefinition>(
   COLOR_THEMES.map((theme) => [theme.id, theme]),
 )
 
-const LEGACY_THEME_MAP: Record<string, ColorTheme> = {
+export const LEGACY_THEME_ALIASES = {
   blue: 'apple',
   crystal: 'apple',
   'dark-minimal': 'xlab',
@@ -85,12 +85,13 @@ const LEGACY_THEME_MAP: Record<string, ColorTheme> = {
   column: 'clay',
   nature: 'clay',
   liquid: 'liquid-glass',
-}
+} as const satisfies Record<string, ColorTheme>
 
 export function normalizeColorTheme(value: unknown): ColorTheme {
   if (typeof value !== 'string') return DEFAULT_COLOR_THEME
   if (THEME_BY_ID.has(value as ColorTheme)) return value as ColorTheme
-  return LEGACY_THEME_MAP[value] ?? DEFAULT_COLOR_THEME
+  return LEGACY_THEME_ALIASES[value as keyof typeof LEGACY_THEME_ALIASES]
+    ?? DEFAULT_COLOR_THEME
 }
 
 export function getThemeDefinition(theme: ColorTheme): ColorThemeDefinition {

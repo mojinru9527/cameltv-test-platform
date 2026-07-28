@@ -24,21 +24,32 @@
   --color-action-danger-text: var(--destructive-foreground);
 
   /* ── 状态 ── */
+  --status-success-base: oklch(0.62 0.17 150);
+  --status-warning-base: oklch(0.68 0.15 75);
+  --status-info-base: oklch(0.60 0.15 245);
   --color-status-neutral: var(--muted-foreground);
   --color-status-neutral-bg: var(--muted);
-  --color-status-success: var(--chart-1);
-  --color-status-success-bg: color-mix(in srgb, var(--chart-1) 10%, transparent);
-  --color-status-success-border: color-mix(in srgb, var(--chart-1) 24%, transparent);
-  --color-status-warning: var(--chart-3);
-  --color-status-warning-bg: color-mix(in srgb, var(--chart-3) 10%, transparent);
-  --color-status-warning-border: color-mix(in srgb, var(--chart-3) 24%, transparent);
-  --color-status-danger: var(--destructive);
+  --color-status-success: color-mix(in srgb, var(--status-success-base) 35%, var(--foreground));
+  --color-status-success-solid: var(--status-success-base);
+  --color-status-success-bg: color-mix(in srgb, var(--status-success-base) 10%, transparent);
+  --color-status-success-border: color-mix(in srgb, var(--status-success-base) 24%, transparent);
+  --color-status-warning: color-mix(in srgb, var(--status-warning-base) 35%, var(--foreground));
+  --color-status-warning-solid: var(--status-warning-base);
+  --color-status-warning-bg: color-mix(in srgb, var(--status-warning-base) 10%, transparent);
+  --color-status-warning-border: color-mix(in srgb, var(--status-warning-base) 24%, transparent);
+  --color-status-danger: color-mix(in srgb, var(--destructive) 58%, var(--foreground));
+  --color-status-danger-solid: var(--destructive);
   --color-status-danger-bg: color-mix(in srgb, var(--destructive) 10%, transparent);
   --color-status-danger-border: color-mix(in srgb, var(--destructive) 24%, transparent);
   --color-status-danger-glow: color-mix(in srgb, var(--destructive) 40%, transparent);
-  --color-status-info: var(--chart-2);
-  --color-status-info-bg: color-mix(in srgb, var(--chart-2) 10%, transparent);
-  --color-status-info-border: color-mix(in srgb, var(--chart-2) 24%, transparent);
+  --color-status-info: color-mix(in srgb, var(--status-info-base) 35%, var(--foreground));
+  --color-status-info-solid: var(--status-info-base);
+  --color-status-info-bg: color-mix(in srgb, var(--status-info-base) 10%, transparent);
+  --color-status-info-border: color-mix(in srgb, var(--status-info-base) 24%, transparent);
+  --color-status-accent: color-mix(in srgb, var(--primary) 35%, var(--foreground));
+  --color-status-accent-solid: var(--primary);
+  --color-status-accent-bg: color-mix(in srgb, var(--primary) 10%, transparent);
+  --color-status-accent-border: color-mix(in srgb, var(--primary) 24%, transparent);
 
   /* ── 边界 ── */
   --color-border-subtle: color-mix(in srgb, var(--border) 68%, transparent);

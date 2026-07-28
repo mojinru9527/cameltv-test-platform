@@ -235,7 +235,7 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
                           <div className="flex items-center gap-1">
                             <Badge tone={PRIORITY_BADGES[r.priority] || 'neutral'}>{r.priority}</Badge>
                             {r.case_type === 'api' && (
-                              <Badge tone="neutral" className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                              <Badge tone="neutral" className="bg-status-accent-muted text-status-accent dark:bg-status-accent-muted dark:text-status-accent">
                                 接口
                               </Badge>
                             )}

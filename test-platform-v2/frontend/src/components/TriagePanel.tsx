@@ -92,14 +92,14 @@ const CATEGORY_CONFIG: Record<string, {
   flaky_env: {
     label: '环境抖动',
     icon: <AlertTriangle className="size-4" />,
-    color: 'text-orange-500',
-    bgClass: 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800',
+    color: 'text-status-warning',
+    bgClass: 'bg-status-warning-muted dark:bg-status-warning-muted border-status-warning-border dark:border-status-warning-border',
   },
   case_defect: {
     label: '用例缺陷',
     icon: <FlaskConical className="size-4" />,
-    color: 'text-blue-500',
-    bgClass: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800',
+    color: 'text-status-info',
+    bgClass: 'bg-status-info-muted dark:bg-status-info-muted border-status-info-border dark:border-status-info-border',
   },
   known_issue: {
     label: '已知问题',
@@ -246,7 +246,7 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
                 </Badge>
               )
             })}
-            <Badge tone="neutral" className="text-[11px]">
+            <Badge tone="neutral" className="text-xs">
               {result.analysis_method === 'llm' ? 'AI 深度分析' : '规则引擎'}
             </Badge>
             <Button variant="ghost" size="sm" onClick={handleTriage} disabled={loading} className="ml-auto">
@@ -281,10 +281,10 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
                               <span className="text-sm font-medium truncate">
                                 {item.case_title}
                               </span>
-                              <Badge tone="neutral" className="text-[10px]">
+                              <Badge tone="neutral" className="text-xs">
                                 {item.priority}
                               </Badge>
-                              <Badge tone="neutral" className="text-[10px]">
+                              <Badge tone="neutral" className="text-xs">
                                 置信度 {(item.confidence * 100).toFixed(0)}%
                               </Badge>
                             </div>
@@ -318,19 +318,19 @@ export default function TriagePanel({ planId, hasFailures }: TriagePanelProps) {
                         {item.suggested_action && (
                           <div className="text-xs space-y-0.5">
                             <span className="font-medium text-muted-foreground">建议操作：</span>
-                            <pre className="whitespace-pre-wrap text-muted-foreground text-[11px]">
+                            <pre className="whitespace-pre-wrap text-muted-foreground text-xs">
                               {item.suggested_action}
                             </pre>
                           </div>
                         )}
 
                         {/* Footer: time + case type */}
-                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           {item.executed_at && (
                             <span>执行时间：{new Date(item.executed_at).toLocaleString()}</span>
                           )}
                           {item.case_type && (
-                            <Badge tone="neutral" className="text-[10px]">
+                            <Badge tone="neutral" className="text-xs">
                               {item.case_type === 'api' ? '接口' : item.case_type === 'func' ? '功能' : item.case_type}
                             </Badge>
                           )}

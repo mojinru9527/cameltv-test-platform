@@ -176,7 +176,7 @@ export default function PrototypePreview({
 
         <div className="grid max-h-[70vh] grid-cols-1 gap-4 overflow-y-auto md:grid-cols-[minmax(0,1fr)_280px]">
           {/* Left: screenshot area */}
-          <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-lg bg-slate-100 md:h-[70vh]">
+          <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-lg bg-muted md:h-[70vh]">
             {/* Toolbar */}
             <div className="absolute top-2 right-2 z-10 flex gap-1">
               <Button
@@ -248,7 +248,7 @@ export default function PrototypePreview({
               <>
                 <Button
                   size="icon" variant="ghost"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 size-8 bg-white/80 shadow"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 size-8 bg-card/80 shadow"
                   disabled={currentIndex === 0}
                   onClick={() => goTo(currentIndex - 1)}
                   aria-label="上一张截图"
@@ -257,7 +257,7 @@ export default function PrototypePreview({
                 </Button>
                 <Button
                   size="icon" variant="ghost"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 size-8 bg-white/80 shadow"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 size-8 bg-card/80 shadow"
                   disabled={currentIndex === total - 1}
                   onClick={() => goTo(currentIndex + 1)}
                   aria-label="下一张截图"
@@ -268,7 +268,7 @@ export default function PrototypePreview({
             )}
 
             {/* Page counter */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full">
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-[var(--color-overlay-scrim)] text-[var(--color-text-inverse)] text-xs px-2.5 py-1 rounded-full">
               {currentIndex + 1} / {total}
             </div>
           </div>

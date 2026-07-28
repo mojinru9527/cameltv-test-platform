@@ -50,12 +50,13 @@ describe('semantic primitives', () => {
     expect(input.classList.contains('aria-invalid:ring-3')).toBe(true)
     expect(input.getAttribute('aria-invalid')).toBe('true')
     expect(input.disabled).toBe(true)
-    expect(screen.getByText('失败').classList.contains('bg-destructive/10')).toBe(true)
+    expect(screen.getByText('失败').classList.contains('bg-status-danger-muted')).toBe(true)
 
     const progress = screen.getByRole('progressbar')
     const indicator = container.querySelector('[data-slot="progress-indicator"]') as HTMLElement
     expect(progress.classList.contains('bg-muted')).toBe(true)
     expect(progress.getAttribute('aria-valuenow')).toBe('50')
+    expect(progress.getAttribute('aria-label')).toBe('进度')
     expect(indicator.style.transform).toBe('scaleX(0.5)')
     expect(indicator.style.width).toBe('')
   })

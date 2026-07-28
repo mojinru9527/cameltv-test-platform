@@ -38,6 +38,7 @@ import {
   ChevronDown,
   Monitor,
   Smartphone,
+  X,
   Globe,
   Shield,
   type LucideIcon,
@@ -65,8 +66,8 @@ const PLATFORM_LABELS: Record<string, string> = {
 }
 
 const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'outline'; className?: string; label: string }> = {
-  draft: { variant: 'secondary', className: 'border-yellow-200 bg-yellow-50 text-yellow-700', label: '草稿' },
-  active: { variant: 'outline', className: 'border-green-200 bg-green-50 text-green-700', label: '活跃' },
+  draft: { variant: 'secondary', className: 'border-status-warning-border bg-status-warning-muted text-status-warning', label: '草稿' },
+  active: { variant: 'outline', className: 'border-status-success-border bg-status-success-muted text-status-success', label: '活跃' },
   archived: { variant: 'secondary', label: '已归档' },
 }
 
@@ -221,17 +222,17 @@ export default function BundleDetailPage() {
   return (
     <div className="space-y-4">
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/release-bundles')} aria-label="返回发布包列表">
             <ArrowLeft className="size-5" aria-hidden="true" />
           </Button>
-          <div>
-            <h1 className="text-lg font-semibold flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <h1 className="flex min-w-0 items-center gap-2 text-lg font-semibold">
               <Package className="size-5 text-primary" />
               {editing ? (
                 <Input
-                  className="h-8 w-[400px] text-lg font-semibold"
+                  className="h-11 min-w-0 w-full max-w-[400px] text-lg font-semibold"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                 />
@@ -239,20 +240,22 @@ export default function BundleDetailPage() {
                 bundle.name
               )}
             </h1>
-            <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               {bundle.client_version && (
-                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                  📱 用户端 {bundle.client_version}
+                <code className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs">
+                  <Smartphone className="size-3.5" aria-hidden="true" />
+                  用户端 {bundle.client_version}
                 </code>
               )}
               {bundle.admin_version && (
-                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                  ⚙️ 运营后台 {bundle.admin_version}
+                <code className="inline-flex items-center gap-1 rounded bg-muted px-1.5 py-0.5 text-xs">
+                  <Settings className="size-3.5" aria-hidden="true" />
+                  运营后台 {bundle.admin_version}
                 </code>
               )}
               <Badge
                 variant={STATUS_VARIANT[bundle.status]?.variant ?? 'secondary'}
-                className={cn('text-[11px]', STATUS_VARIANT[bundle.status]?.className)}
+                className={cn('text-xs', STATUS_VARIANT[bundle.status]?.className)}
               >
                 {STATUS_VARIANT[bundle.status]?.label ?? bundle.status}
               </Badge>
@@ -260,7 +263,7 @@ export default function BundleDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 sm:justify-end">
           {/* Regression actions (batch-34) */}
           {!editing && (
             <>
@@ -274,7 +277,6 @@ export default function BundleDetailPage() {
                 回归范围
               </Button>
               <Button
-                variant="secondary"
                 size="sm"
                 onClick={handleTriggerRegression}
                 disabled={triggeringReg}
@@ -296,7 +298,7 @@ export default function BundleDetailPage() {
               </Button>
             </>
           ) : (
-            <Button variant="secondary" size="sm" onClick={startEdit}>
+            <Button variant="ghost" size="sm" onClick={startEdit}>
               编辑
             </Button>
           )}
@@ -304,7 +306,7 @@ export default function BundleDetailPage() {
       </div>
 
       {/* ── Stats cards ── */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Card>
           <CardContent className="p-3 text-center">
             <div className="text-2xl font-bold">{totalNodes}</div>
@@ -333,47 +335,47 @@ export default function BundleDetailPage() {
 
       {/* ── Regression scope result (batch-34) ── */}
       {regressionScope && (
-        <Card className="border-blue-200 bg-blue-50/50">
+        <Card className="border-status-info-border bg-status-info-muted">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Layers className="size-4 text-blue-600" />
+                <Layers className="size-4 text-status-info" />
                 UI 回归测试范围
               </CardTitle>
               <Button variant="ghost" size="icon-sm" onClick={() => setRegressionScope(null)} aria-label="关闭回归范围">
-                <span className="text-xs" aria-hidden="true">✕</span>
+                <X className="size-4" aria-hidden="true" />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-4 gap-3 mb-3">
+            <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
               <div className="text-center">
-                <div className="text-xl font-bold text-blue-700">{regressionScope.changed_modules?.length || 0}</div>
+                <div className="text-xl font-bold text-status-info">{regressionScope.changed_modules?.length || 0}</div>
                 <div className="text-xs text-muted-foreground">变更模块</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-green-700">{regressionScope.total_regression_cases}</div>
+                <div className="text-xl font-bold text-status-success">{regressionScope.total_regression_cases}</div>
                 <div className="text-xs text-muted-foreground">回归用例</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-purple-700">{regressionScope.regression_summary?.length || 0}</div>
+                <div className="text-xl font-bold text-status-accent">{regressionScope.regression_summary?.length || 0}</div>
                 <div className="text-xs text-muted-foreground">有测试覆盖的模块</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-amber-700">{regressionScope.client_version || '-'}</div>
+                <div className="text-xl font-bold text-status-warning">{regressionScope.client_version || '-'}</div>
                 <div className="text-xs text-muted-foreground">目标版本</div>
               </div>
             </div>
             {regressionScope.regression_summary?.length > 0 && (
               <div className="space-y-1 max-h-[200px] overflow-y-auto">
                 {regressionScope.regression_summary.map((s: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white/70">
+                  <div key={i} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-muted/70">
                     <span className="font-medium">{s.module}</span>
                     <div className="flex items-center gap-3 text-muted-foreground">
                       <span>功能: {s.functional || 0}</span>
                       <span>API: {s.api || 0}</span>
                       <span>自动化: {s.automation || 0}</span>
-                      <Badge tone="neutral" className="text-[10px]">覆盖率 {s.coverage_rate || 0}%</Badge>
+                      <Badge tone="neutral" className="text-xs">覆盖率 {s.coverage_rate || 0}%</Badge>
                     </div>
                   </div>
                 ))}
@@ -389,7 +391,7 @@ export default function BundleDetailPage() {
           <CardHeader>
             <CardTitle className="text-sm">编辑发布包信息</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-1.5">
               <Label>描述</Label>
               <Textarea

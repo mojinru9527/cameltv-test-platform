@@ -45,7 +45,8 @@ export function DecryptedText({ text, activeKey, className = '' }: DecryptedText
   }, [activeKey, text])
 
   return (
-    <span className={className} aria-label={text}>
+    <span className={className}>
+      <span className="sr-only">{text}</span>
       <span aria-hidden="true">{visibleText}</span>
     </span>
   )

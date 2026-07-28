@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import PageHeader from '@/components/PageHeader'
 import DataTable from '@/components/DataTable'
+import ChartFrame from '@/components/charts/ChartFrame'
 import { usePerfWebSocket } from '@/hooks/usePerfWebSocket'
 import {
   fetchDevices, fetchSessions, fetchSession, createSession,
@@ -257,7 +258,7 @@ export default function PerfTestPage() {
                             selectedDevice?.device_id === d.device_id ? 'border-primary ring-2 ring-primary/20' : ''
                           }`}
                         >
-                          <div className={`size-2.5 rounded-full ${d.status === 'online' ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                          <div className={`size-2.5 rounded-full ${d.status === 'online' ? 'bg-status-success-solid' : 'bg-status-danger-solid'}`} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{d.device_name || d.device_id}</p>
                             <p className="text-xs text-muted-foreground">{d.device_model} · {d.os_version}</p>
@@ -368,7 +369,7 @@ export default function PerfTestPage() {
               <Card>
                 <CardContent className="flex items-center gap-4 py-3">
                   <div className="flex items-center gap-2">
-                    {wsMode === 'websocket' ? <Wifi className="size-4 text-emerald-500" /> : wsMode === 'polling' ? <WifiOff className="size-4 text-amber-500" /> : <Loader2 className="size-4 animate-spin" />}
+                    {wsMode === 'websocket' ? <Wifi className="size-4 text-status-success" /> : wsMode === 'polling' ? <WifiOff className="size-4 text-status-warning" /> : <Loader2 className="size-4 animate-spin" />}
                     <span className="text-sm">{wsMode === 'websocket' ? 'WebSocket 实时' : wsMode === 'polling' ? 'HTTP 轮询(降级)' : '连接中…'}</span>
                     {reconnectCount > 0 && <Badge tone="neutral" className="text-xs">重连 {reconnectCount}/3</Badge>}
                   </div>
@@ -546,7 +547,7 @@ export default function PerfTestPage() {
                         <div className="space-y-1">
                           {report.anomalies.map((a, i) => (
                             <div key={i} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                              <AlertCircle className="size-4 text-amber-500 shrink-0" />
+                              <AlertCircle className="size-4 text-status-warning shrink-0" />
                               <span className="text-xs text-muted-foreground font-mono">{new Date(a.timestamp * 1000).toLocaleTimeString()}</span>
                               <Badge tone="neutral" className="text-xs">{a.event_type}</Badge>
                               <span className="text-xs flex-1 truncate">{a.detail}</span>
@@ -570,7 +571,7 @@ export default function PerfTestPage() {
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                       {compareResult.deltas.map((d) => (
-                        <Card key={d.metric_type} className={`p-3 ${d.significant ? (d.direction === 'degraded' ? 'border-red-500/30 bg-red-50/30' : 'border-emerald-500/30 bg-emerald-50/30') : ''}`}>
+                        <Card key={d.metric_type} className={`p-3 ${d.significant ? (d.direction === 'degraded' ? 'border-status-danger-border bg-status-danger-muted' : 'border-status-success-border bg-status-success-muted') : ''}`}>
                           <p className="text-xs text-muted-foreground">{METRIC_LABELS[d.metric_type] ?? d.metric_type}</p>
                           <div className="flex items-baseline gap-2 mt-1">
                             <span className="text-lg font-bold tabular-nums">{d.session_a_mean}</span>
@@ -578,12 +579,20 @@ export default function PerfTestPage() {
                             <span className="text-sm tabular-nums">{d.session_b_mean}</span>
                           </div>
                           <p className={`text-xs mt-0.5 ${
-                            d.direction === 'degraded' ? 'text-red-600' :
-                            d.direction === 'improved' ? 'text-emerald-600' :
+                            d.direction === 'degraded' ? 'text-status-danger' :
+                            d.direction === 'improved' ? 'text-status-success' :
                             'text-muted-foreground'
                           }`}>
                             {d.delta_absolute > 0 ? '+' : ''}{d.delta_absolute} ({d.delta_percent > 0 ? '+' : ''}{d.delta_percent}%)
-                            {d.significant && (d.direction === 'degraded' ? ' ⚠️ 恶化' : d.direction === 'improved' ? ' ✅ 改善' : '')}
+                            {d.significant && (
+                              <span className="ml-1 inline-flex items-center gap-1">
+                                {d.direction === 'degraded'
+                                  ? <><AlertCircle className="size-3.5" />恶化</>
+                                  : d.direction === 'improved'
+                                    ? <><CheckCircle2 className="size-3.5" />改善</>
+                                    : null}
+                              </span>
+                            )}
                           </p>
                         </Card>
                       ))}
@@ -658,20 +667,30 @@ function PerfTrendChart({
             <CardTitle className="text-sm">帧率 FPS</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[220px] w-full">
+            <ChartFrame
+              title="帧率 FPS"
+              summary={`共 ${chartData.length} 个采样点，展示帧率与卡顿次数随采集时间的变化。`}
+              data={chartData}
+              columns={[
+                { key: 'elapsed', label: '采集时间', format: (value) => `${value}s` },
+                { key: 'fps', label: 'FPS', format: (value) => value == null ? '—' : `${value} fps` },
+                { key: 'jank', label: '卡顿', format: (value) => value == null ? '—' : `${value} 次` },
+              ]}
+            >
+              <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
                   <XAxis
                     dataKey="elapsed"
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 12 }}
                     tickFormatter={(v: number) => `${v}s`}
                     className="text-muted-foreground"
                   />
                   <YAxis
                     yAxisId="fps"
                     domain={[0, 'auto']}
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 12 }}
                     className="text-muted-foreground"
                   />
                   <Tooltip
@@ -707,7 +726,8 @@ function PerfTrendChart({
                   )}
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+              </div>
+            </ChartFrame>
           </CardContent>
         </Card>
       )}
@@ -719,19 +739,28 @@ function PerfTrendChart({
             <CardTitle className="text-sm">CPU 使用率</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[220px] w-full">
+            <ChartFrame
+              title="CPU 使用率"
+              summary={`共 ${chartData.length} 个采样点，单位为百分比。`}
+              data={chartData}
+              columns={[
+                { key: 'elapsed', label: '采集时间', format: (value) => `${value}s` },
+                { key: 'cpu', label: 'CPU 使用率', format: (value) => value == null ? '—' : `${value}%` },
+              ]}
+            >
+              <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
                   <XAxis
                     dataKey="elapsed"
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 12 }}
                     tickFormatter={(v: number) => `${v}s`}
                     className="text-muted-foreground"
                   />
                   <YAxis
                     domain={[0, 100]}
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 12 }}
                     className="text-muted-foreground"
                   />
                   <Tooltip
@@ -750,7 +779,8 @@ function PerfTrendChart({
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+              </div>
+            </ChartFrame>
           </CardContent>
         </Card>
       )}
@@ -762,19 +792,28 @@ function PerfTrendChart({
             <CardTitle className="text-sm">内存</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[220px] w-full">
+            <ChartFrame
+              title="内存"
+              summary={`共 ${chartData.length} 个采样点，单位为 MB。`}
+              data={chartData}
+              columns={[
+                { key: 'elapsed', label: '采集时间', format: (value) => `${value}s` },
+                { key: 'memory', label: '内存', format: (value) => value == null ? '—' : `${value} MB` },
+              ]}
+            >
+              <div className="h-[220px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
                   <XAxis
                     dataKey="elapsed"
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 12 }}
                     tickFormatter={(v: number) => `${v}s`}
                     className="text-muted-foreground"
                   />
                   <YAxis
                     domain={[0, 'auto']}
-                    tick={{ fontSize: 11 }}
+                    tick={{ fontSize: 12 }}
                     className="text-muted-foreground"
                   />
                   <Tooltip
@@ -793,7 +832,8 @@ function PerfTrendChart({
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </div>
+              </div>
+            </ChartFrame>
           </CardContent>
         </Card>
       )}
@@ -808,11 +848,11 @@ function MetricStatCard({ stat }: { stat: MetricStatsItem }) {
   const unit = stat.unit || METRIC_UNITS[stat.metric_type] || ''
   return (
     <div className={`rounded-lg border p-3 ${
-      stat.passed ? 'border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-950/10' : 'border-red-500/30 bg-red-50/30 dark:bg-red-950/10'
+      stat.passed ? 'border-status-success-border bg-status-success-muted dark:bg-status-success-muted' : 'border-status-danger-border bg-status-danger-muted dark:bg-status-danger-muted'
     }`}>
       <div className="flex items-center gap-1.5 mb-1">
         <span className="text-xs font-medium">{label}</span>
-        {stat.passed ? <CheckCircle2 className="size-3 text-emerald-500" /> : <XCircle className="size-3 text-red-500" />}
+        {stat.passed ? <CheckCircle2 className="size-3 text-status-success" /> : <XCircle className="size-3 text-status-danger" />}
       </div>
       <p className="text-2xl font-bold tabular-nums">
         {stat.mean}

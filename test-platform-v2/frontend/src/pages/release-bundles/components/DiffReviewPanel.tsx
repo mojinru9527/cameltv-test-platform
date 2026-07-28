@@ -42,8 +42,8 @@ interface DiffReviewPanelProps {
 }
 
 const CHANGE_ZONES: { key: string; label: string; color: string }[] = [
-  { key: 'new', label: '新增', color: 'border-emerald-500/40 bg-emerald-500/5' },
-  { key: 'modified', label: '修改', color: 'border-amber-500/40 bg-amber-500/5' },
+  { key: 'new', label: '新增', color: 'border-status-success-border bg-status-success-solid' },
+  { key: 'modified', label: '修改', color: 'border-status-warning-border bg-status-warning-solid' },
   { key: 'deleted', label: '删除', color: 'border-destructive/40 bg-destructive/5' },
   { key: 'unchanged', label: '未变更', color: 'border-border bg-card' },
 ]
@@ -183,19 +183,19 @@ export default function DiffReviewPanel({
               </span>
               <Badge
                 tone="neutral"
-                className="border-green-200 bg-green-50 text-green-700"
+                className="border-status-success-border bg-status-success-muted text-status-success"
               >
                 新增 {summary.new_modules ?? 0}
               </Badge>
               <Badge
                 tone="neutral"
-                className="border-yellow-200 bg-yellow-50 text-yellow-700"
+                className="border-status-warning-border bg-status-warning-muted text-status-warning"
               >
                 修改 {summary.modified_modules ?? 0}
               </Badge>
               <Badge
                 tone="neutral"
-                className="border-red-200 bg-red-50 text-red-700"
+                className="border-status-danger-border bg-status-danger-muted text-status-danger"
               >
                 删除 {summary.deleted_modules ?? 0}
               </Badge>
@@ -260,11 +260,11 @@ export default function DiffReviewPanel({
                           className={cn(
                             'text-xs',
                             mod.change_type === 'new' &&
-                              'border-green-200 text-green-700',
+                              'border-status-success-border text-status-success',
                             mod.change_type === 'modified' &&
-                              'border-yellow-200 text-yellow-700',
+                              'border-status-warning-border text-status-warning',
                             mod.change_type === 'deleted' &&
-                              'border-red-200 text-red-700',
+                              'border-status-danger-border text-status-danger',
                           )}
                         >
                           {zone.label}
@@ -284,11 +284,11 @@ export default function DiffReviewPanel({
                               className={cn(
                                 'text-xs px-1',
                                 page.change_type === 'new' &&
-                                  'border-green-200 text-green-700',
+                                  'border-status-success-border text-status-success',
                                 page.change_type === 'modified' &&
-                                  'border-yellow-200 text-yellow-700',
+                                  'border-status-warning-border text-status-warning',
                                 page.change_type === 'deleted' &&
-                                  'border-red-200 text-red-700',
+                                  'border-status-danger-border text-status-danger',
                               )}
                             >
                               {page.change_type === 'new'

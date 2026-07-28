@@ -190,6 +190,7 @@ export default function UsersTab() {
         onRetry={refetch}
         emptyTitle="暂无用户"
         emptyDescription="点击「新建用户」添加系统用户"
+        emptyAction={{ label: '新建用户', onClick: () => openEdit() }}
         skeletonType="table"
         loadingRows={4}
       >

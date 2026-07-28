@@ -25,7 +25,7 @@ function ThemeHarness() {
 function UiThemeHarness() {
   const { uiTheme, setUiTheme } = useUiTheme()
   return (
-    <button type="button" onClick={() => setUiTheme('obsidian-flow')}>
+    <button type="button" onClick={() => setUiTheme('apple')}>
       {uiTheme}
     </button>
   )
@@ -89,7 +89,7 @@ describe('ThemeProvider', () => {
     expect(screen.getByTestId('mode').textContent).toBe('dark')
   })
 
-  it('derives the compatibility UI theme without independent storage', async () => {
+  it('preserves every canonical theme through the compatibility adapter', async () => {
     localStorage.setItem('cameltv-theme-color', 'cyberpunk')
     render(
       <ThemeProvider>
@@ -99,13 +99,14 @@ describe('ThemeProvider', () => {
       </ThemeProvider>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'default' }))
+    expect(screen.getByRole('button', { name: 'cyberpunk' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'cyberpunk' }))
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'obsidian-flow' })).toBeTruthy()
+      expect(screen.getByRole('button', { name: 'apple' })).toBeTruthy()
     })
-    expect(document.documentElement.dataset.themeId).toBe('obsidian-flow')
-    expect(localStorage.getItem('cameltv-theme-color')).toBe('obsidian-flow')
+    expect(document.documentElement.dataset.themeId).toBe('apple')
+    expect(localStorage.getItem('cameltv-theme-color')).toBe('apple')
     expect(localStorage.getItem('cameltv-ui-theme')).toBeNull()
   })
 

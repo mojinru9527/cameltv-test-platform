@@ -35,7 +35,7 @@ export default function StatCard({ icon: Icon, label, value, trend, trendUp, cla
             <span
               className={cn(
                 'text-xs mt-0.5 font-medium',
-                trendUp === true && 'text-green-600 dark:text-green-400',
+                trendUp === true && 'text-status-success dark:text-status-success',
                 trendUp === false && 'text-destructive',
                 trendUp == null && 'text-muted-foreground',
               )}

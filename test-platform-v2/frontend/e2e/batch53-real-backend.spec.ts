@@ -129,9 +129,9 @@ test.describe('Batch 53 real-backend production acceptance', () => {
       expect(pageErrors).toEqual([])
       expect(failedRequests).toEqual([])
     } finally {
-      await page.evaluate(async ({ projectId, ids }) => {
+      const cleanup = await page.evaluate(async ({ projectId, ids }) => {
         if (ids.length === 0) return
-        await fetch('/api/v1/test-cases/batch-delete', {
+        const response = await fetch('/api/v1/test-cases/batch-delete', {
           method: 'POST',
           credentials: 'include',
           headers: {
@@ -140,7 +140,11 @@ test.describe('Batch 53 real-backend production acceptance', () => {
           },
           body: JSON.stringify({ ids }),
         })
+        return { ok: response.ok, status: response.status, body: await response.json() }
       }, { projectId, ids: createdIds })
+      expect(cleanup?.ok).toBe(true)
+      expect(cleanup?.body?.code).toBe(0)
+      expect(cleanup?.body?.data?.deleted).toBe(createdIds.length)
     }
   })
 })

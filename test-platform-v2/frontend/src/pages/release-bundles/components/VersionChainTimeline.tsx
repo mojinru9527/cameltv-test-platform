@@ -3,12 +3,12 @@ import type { ReleaseBundleVersionChain } from '@/types'
 import { Badge } from '@/ui'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/ui'
-import { Package, ChevronRight, ExternalLink, ArrowUp } from '@/lib/icons'
+import { Package, ChevronRight, ExternalLink, ArrowUp, Smartphone, Settings } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
 const STATUS_VARIANT: Record<string, { variant: 'secondary' | 'outline'; className?: string; label: string }> = {
-  draft: { variant: 'secondary', className: 'border-yellow-200 bg-yellow-50 text-yellow-700', label: '草稿' },
-  active: { variant: 'outline', className: 'border-green-200 bg-green-50 text-green-700', label: '活跃' },
+  draft: { variant: 'secondary', className: 'border-status-warning-border bg-status-warning-muted text-status-warning', label: '草稿' },
+  active: { variant: 'outline', className: 'border-status-success-border bg-status-success-muted text-status-success', label: '活跃' },
   archived: { variant: 'secondary', label: '已归档' },
 }
 
@@ -72,19 +72,19 @@ export default function VersionChainTimeline({ chain, currentId }: Props) {
                       <Badge
                         variant={STATUS_VARIANT[item.status]?.variant ?? 'secondary'}
                         className={cn(
-                          'text-[10px] shrink-0',
+                          'text-xs shrink-0',
                           STATUS_VARIANT[item.status]?.className,
                         )}
                       >
                         {STATUS_VARIANT[item.status]?.label ?? item.status}
                       </Badge>
                       {isCurrent && (
-                        <Badge tone="neutral" className="text-[10px] border-primary/50 text-primary">
+                        <Badge tone="neutral" className="text-xs border-primary/50 text-primary">
                           当前
                         </Badge>
                       )}
                       {isLatest && !isCurrent && (
-                        <Badge tone="neutral" className="text-[10px]">
+                        <Badge tone="neutral" className="text-xs">
                           最新
                         </Badge>
                       )}
@@ -92,13 +92,13 @@ export default function VersionChainTimeline({ chain, currentId }: Props) {
 
                     <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                       {item.client_version && (
-                        <span>
-                          📱 用户端 {item.client_version}
+                        <span className="inline-flex items-center gap-1">
+                          <Smartphone className="size-3.5" aria-hidden="true" />用户端 {item.client_version}
                         </span>
                       )}
                       {item.admin_version && (
-                        <span>
-                          ⚙️ 运营后台 {item.admin_version}
+                        <span className="inline-flex items-center gap-1">
+                          <Settings className="size-3.5" aria-hidden="true" />运营后台 {item.admin_version}
                         </span>
                       )}
                       {item.release_date && (

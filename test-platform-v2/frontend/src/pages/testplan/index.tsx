@@ -35,7 +35,7 @@ import PlanDrawer from './PlanDrawer'
 const STATUS_MAP: Record<string, { tone: BadgeTone; className?: string; label: string }> = {
   draft: { tone: 'neutral', label: '草稿' },
   active: { tone: 'info', label: '进行中' },
-  completed: { tone: 'success', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', label: '已完成' },
+  completed: { tone: 'success', className: 'bg-status-success-muted text-status-success dark:bg-status-success-muted dark:text-status-success', label: '已完成' },
   archived: { tone: 'neutral', label: '已归档' },
 }
 
@@ -148,6 +148,7 @@ export default function TestPlanPage() {
         onRetry={refetch}
         emptyTitle="暂无测试计划"
         emptyDescription="点击「新建计划」开始创建"
+        emptyAction={{ label: keyword ? '清除筛选' : '新建计划', onClick: keyword ? () => { setKeyword(''); setPage(1) } : () => openEdit() }}
         skeletonType="table"
         loadingRows={4}
       >

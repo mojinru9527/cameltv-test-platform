@@ -8,6 +8,7 @@ import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { RotateCcw, Download, Maximize2, Minimize2 } from '@/lib/icons'
+import { toast } from 'sonner'
 
 /**
  * MindmapView — interactive test case mindmap.
@@ -29,15 +30,22 @@ export default function MindmapPage() {
 
   // Load domains dynamically (not hardcoded)
   useEffect(() => {
-    fetchDomains().then((d: any) => setDomains(d || [])).catch(() => {})
+    const controller = new AbortController()
+    fetchDomains(controller.signal)
+      .then((d: any) => setDomains(d || []))
+      .catch((fetchError: unknown) => {
+        if (controller.signal.aborted) return
+        toast.error(fetchError instanceof Error ? fetchError.message : '领域列表加载失败')
+      })
+    return () => controller.abort()
   }, [])
 
   // Data fetching
   const { data: rawData, isLoading, isError, error, refetch } = useApi<any>(
-    () => {
+    (signal) => {
       const params: any = { page_size: 10000 }
       if (domain) params.domain = domain
-      return fetchTestCases(params)
+      return fetchTestCases(params, signal)
     },
     [domain],
   )
@@ -172,9 +180,9 @@ export default function MindmapPage() {
       </div>
 
       {renderError && (
-        <div className="rounded-md bg-amber-50 border border-amber-200 p-2 text-xs text-amber-700">
+        <div className="rounded-md bg-status-warning-muted border border-status-warning-border p-2 text-xs text-status-warning">
           npm packages not available, using fallback renderer.
-          Run: <code className="font-mono bg-amber-100 px-1">npm install markmap-lib markmap-view</code>
+          Run: <code className="font-mono bg-status-warning-muted px-1">npm install markmap-lib markmap-view</code>
         </div>
       )}
 

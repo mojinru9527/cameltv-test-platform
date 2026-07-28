@@ -103,4 +103,17 @@ describe('接口用例列表', () => {
       case_ids: [1, 2],
     })))
   })
+
+  it('分组执行只创建一个批量任务，不逐条调用执行接口', async () => {
+    render(<ApiCaseTab />)
+
+    await screen.findByText('/api/c')
+    fireEvent.click(screen.getByRole('button', { name: '执行全部' }))
+
+    await waitFor(() => expect(createApiExecutionTask).toHaveBeenCalledTimes(1))
+    expect(createApiExecutionTask).toHaveBeenCalledWith(expect.objectContaining({
+      case_ids: [1, 2],
+    }))
+    expect(executeApiCase).not.toHaveBeenCalled()
+  })
 })

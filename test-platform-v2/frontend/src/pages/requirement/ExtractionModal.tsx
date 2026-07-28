@@ -21,15 +21,15 @@ interface Props {
 }
 
 const SEVERITY_CONFIG: Record<string, { color: string; label: string }> = {
-  high: { color: '#ff4d4f', label: '高' },
-  medium: { color: '#fa8c16', label: '中' },
-  low: { color: '#1890ff', label: '低' },
+  high: { color: 'var(--color-status-danger)', label: '高' },
+  medium: { color: 'var(--color-status-warning)', label: '中' },
+  low: { color: 'var(--color-status-info)', label: '低' },
 }
 
 const SEVERITY_BADGE_CLASSES: Record<string, string> = {
-  high: 'border-red-200 bg-red-50 text-red-700',
-  medium: 'border-orange-200 bg-orange-50 text-orange-700',
-  low: 'border-blue-200 bg-blue-50 text-blue-700',
+  high: 'border-status-danger-border bg-status-danger-muted text-status-danger',
+  medium: 'border-status-warning-border bg-status-warning-muted text-status-warning',
+  low: 'border-status-info-border bg-status-info-muted text-status-info',
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -172,8 +172,8 @@ export default function ExtractionModal({
         )}
 
         {result.extraction_summary && (
-          <Alert variant="default" className="shrink-0 border-purple-200 bg-purple-50">
-            <AlertDescription className="text-xs text-purple-700">
+          <Alert variant="default" className="shrink-0 border-status-accent-border bg-status-accent-muted">
+            <AlertDescription className="text-xs text-status-accent">
               {result.extraction_summary}
             </AlertDescription>
           </Alert>
@@ -220,7 +220,7 @@ export default function ExtractionModal({
                     {issueCount > 0 && (
                       <Badge
                         tone="neutral"
-                        className="text-xs border-amber-200 bg-amber-50 text-amber-700"
+                        className="text-xs border-status-warning-border bg-status-warning-muted text-status-warning"
                       >
                         {issueCount} 个问题
                       </Badge>

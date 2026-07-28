@@ -101,20 +101,20 @@ const RUN_STATUS_MAP: Record<string, { color: string; label: string }> = {
 
 function browserBadgeClass(c: string) {
   const map: Record<string, string> = {
-    blue: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-400',
-    orange: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-400',
-    purple: 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-400',
+    blue: 'border-status-info-border bg-status-info-muted text-status-info dark:border-status-info-border dark:bg-status-info-muted dark:text-status-info',
+    orange: 'border-status-warning-border bg-status-warning-muted text-status-warning dark:border-status-warning-border dark:bg-status-warning-muted dark:text-status-warning',
+    purple: 'border-status-accent-border bg-status-accent-muted text-status-accent dark:border-status-accent-border dark:bg-status-accent-muted dark:text-status-accent',
   }
   return map[c] ?? ''
 }
 
 function statusBadgeClass(c: string) {
   const map: Record<string, string> = {
-    default: 'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-400',
-    processing: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-400',
-    green: 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400',
-    red: 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400',
-    yellow: 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-400',
+    default: 'border-border bg-muted text-muted-foreground',
+    processing: 'border-status-info-border bg-status-info-muted text-status-info dark:border-status-info-border dark:bg-status-info-muted dark:text-status-info',
+    green: 'border-status-success-border bg-status-success-muted text-status-success dark:border-status-success-border dark:bg-status-success-muted dark:text-status-success',
+    red: 'border-status-danger-border bg-status-danger-muted text-status-danger dark:border-status-danger-border dark:bg-status-danger-muted dark:text-status-danger',
+    yellow: 'border-status-warning-border bg-status-warning-muted text-status-warning dark:border-status-warning-border dark:bg-status-warning-muted dark:text-status-warning',
   }
   return map[c] ?? ''
 }
@@ -619,12 +619,12 @@ export default function UiTestPage() {
 
               {/* Error message */}
               {selectedRun.error_message && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950">
-                  <div className="flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
+                <div className="rounded-lg border border-status-danger-border bg-status-danger-muted p-3 dark:border-status-danger-border dark:bg-status-danger-muted">
+                  <div className="flex items-center gap-2 text-sm font-medium text-status-danger dark:text-status-danger">
                     <AlertTriangle className="size-4" />
                     错误信息
                   </div>
-                  <pre className="mt-1 whitespace-pre-wrap text-xs text-red-600 dark:text-red-300">{selectedRun.error_message}</pre>
+                  <pre className="mt-1 whitespace-pre-wrap text-xs text-status-danger dark:text-status-danger">{selectedRun.error_message}</pre>
                 </div>
               )}
 
@@ -651,13 +651,13 @@ export default function UiTestPage() {
                     <div className="text-xs text-muted-foreground">总计</div>
                     <div className="text-lg font-semibold">{selectedRun.result.total}</div>
                   </div>
-                  <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-center min-w-[70px] dark:border-green-800 dark:bg-green-950">
-                    <div className="text-xs text-green-600 dark:text-green-400">通过</div>
-                    <div className="text-lg font-semibold text-green-700 dark:text-green-300">{selectedRun.result.pass_ ?? '-'}</div>
+                  <div className="rounded-lg border border-status-success-border bg-status-success-muted px-3 py-2 text-center min-w-[70px] dark:border-status-success-border dark:bg-status-success-muted">
+                    <div className="text-xs text-status-success dark:text-status-success">通过</div>
+                    <div className="text-lg font-semibold text-status-success dark:text-status-success">{selectedRun.result.pass_ ?? '-'}</div>
                   </div>
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center min-w-[70px] dark:border-red-800 dark:bg-red-950">
-                    <div className="text-xs text-red-600 dark:text-red-400">失败</div>
-                    <div className="text-lg font-semibold text-red-700 dark:text-red-300">{selectedRun.result.fail ?? '-'}</div>
+                  <div className="rounded-lg border border-status-danger-border bg-status-danger-muted px-3 py-2 text-center min-w-[70px] dark:border-status-danger-border dark:bg-status-danger-muted">
+                    <div className="text-xs text-status-danger dark:text-status-danger">失败</div>
+                    <div className="text-lg font-semibold text-status-danger dark:text-status-danger">{selectedRun.result.fail ?? '-'}</div>
                   </div>
                   <div className="rounded-lg border px-3 py-2 text-center min-w-[70px]">
                     <div className="text-xs text-muted-foreground">跳过</div>
@@ -686,7 +686,7 @@ export default function UiTestPage() {
                   <TabsContent value="stderr" className="mt-3">
                     <Card size="sm">
                       <CardContent>
-                        <pre className="whitespace-pre-wrap m-0 text-xs max-h-[300px] overflow-y-auto font-mono text-red-600 dark:text-red-400">{selectedRun.stderr}</pre>
+                        <pre className="whitespace-pre-wrap m-0 text-xs max-h-[300px] overflow-y-auto font-mono text-status-danger dark:text-status-danger">{selectedRun.stderr}</pre>
                       </CardContent>
                     </Card>
                   </TabsContent>
@@ -708,7 +708,7 @@ export default function UiTestPage() {
                         {runArtifacts.filter(a => a.type === 'png').slice(0, 9).map((a) => (
                           <a key={a.path} href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} target="_blank" rel="noreferrer" className="block rounded border overflow-hidden hover:ring-2 hover:ring-primary">
                             <img src={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} alt={a.name} className="w-full h-24 object-cover" />
-                            <div className="text-[10px] p-1 truncate">{a.name}</div>
+                            <div className="text-xs p-1 truncate">{a.name}</div>
                           </a>
                         ))}
                       </div>

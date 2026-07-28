@@ -5,8 +5,8 @@ const BASE = '/environments'
 
 // ── Environment CRUD ──
 
-export async function fetchEnvironments(): Promise<Environment[]> {
-  return api.get(BASE)
+export async function fetchEnvironments(signal?: AbortSignal): Promise<Environment[]> {
+  return api.get(BASE, { signal })
 }
 
 export async function createEnvironment(body: {

@@ -61,16 +61,16 @@ const AGENT_ICONS: Record<string, React.ComponentType<any>> = {
   failure_analysis: Bug,
 }
 const AGENT_COLORS: Record<string, string> = {
-  requirement_analysis: 'bg-purple-100 text-purple-700 border-purple-200',
-  impact_analysis: 'bg-amber-100 text-amber-700 border-amber-200',
-  case_generation: 'bg-blue-100 text-blue-700 border-blue-200',
-  failure_analysis: 'bg-red-100 text-red-700 border-red-200',
+  requirement_analysis: 'bg-status-accent-muted text-status-accent border-status-accent-border',
+  impact_analysis: 'bg-status-warning-muted text-status-warning border-status-warning-border',
+  case_generation: 'bg-status-info-muted text-status-info border-status-info-border',
+  failure_analysis: 'bg-status-danger-muted text-status-danger border-status-danger-border',
 }
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
   pending: { label: '等待中', color: 'bg-muted text-muted-foreground' },
-  running: { label: '执行中', color: 'bg-blue-100 text-blue-700' },
-  success: { label: '成功', color: 'bg-green-100 text-green-700' },
-  failed: { label: '失败', color: 'bg-red-100 text-red-700' },
+  running: { label: '执行中', color: 'bg-status-info-muted text-status-info' },
+  success: { label: '成功', color: 'bg-status-success-muted text-status-success' },
+  failed: { label: '失败', color: 'bg-status-danger-muted text-status-danger' },
   cancelled: { label: '已取消', color: 'bg-muted text-muted-foreground' },
 }
 
@@ -181,10 +181,10 @@ export default function AgentWorkbenchPage() {
   }
 
   const QUEUE_STATUS_BADGE: Record<string, { label: string; color: string }> = {
-    pending: { label: '等待', color: 'bg-amber-100 text-amber-700' },
-    running: { label: '执行', color: 'bg-blue-100 text-blue-700' },
-    completed: { label: '完成', color: 'bg-green-100 text-green-700' },
-    failed: { label: '失败', color: 'bg-red-100 text-red-700' },
+    pending: { label: '等待', color: 'bg-status-warning-muted text-status-warning' },
+    running: { label: '执行', color: 'bg-status-info-muted text-status-info' },
+    completed: { label: '完成', color: 'bg-status-success-muted text-status-success' },
+    failed: { label: '失败', color: 'bg-status-danger-muted text-status-danger' },
     cancelled: { label: '取消', color: 'bg-muted text-muted-foreground' },
   }
 
@@ -257,7 +257,7 @@ export default function AgentWorkbenchPage() {
               >
                 任务队列
                 {queueStats.pending > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px]">
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-status-warning-muted text-status-warning text-xs">
                     {queueStats.pending}
                   </span>
                 )}
@@ -400,7 +400,7 @@ export default function AgentWorkbenchPage() {
                               </TableCell>
                               <TableCell className="text-xs">
                                 {q.priority >= 10 ? (
-                                  <Badge className="bg-blue-100 text-blue-700 text-xs">手动</Badge>
+                                  <Badge className="bg-status-info-muted text-status-info text-xs">手动</Badge>
                                 ) : (
                                   <Badge tone="neutral" className="text-xs">自动</Badge>
                                 )}
@@ -419,7 +419,7 @@ export default function AgentWorkbenchPage() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    className="h-7 text-status-danger hover:text-status-danger hover:bg-status-danger-muted"
                                     onClick={() => handleCancelQueue(q.id)}
                                   >
                                     <XCircle className="size-4" />
@@ -463,8 +463,8 @@ export default function AgentWorkbenchPage() {
               </div>
 
               {runDetail.error_message && (
-                <div className="rounded-md bg-red-50 border border-red-200 p-3">
-                  <p className="text-red-700 text-xs font-mono">{runDetail.error_message}</p>
+                <div className="rounded-md bg-status-danger-muted border border-status-danger-border p-3">
+                  <p className="text-status-danger text-xs font-mono">{runDetail.error_message}</p>
                 </div>
               )}
 

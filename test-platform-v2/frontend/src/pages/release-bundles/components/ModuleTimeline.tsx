@@ -22,21 +22,21 @@ interface ModuleTimelineProps {
 
 const CHANGE_COLORS: Record<string, { dot: string; line: string; badge: string; label: string }> = {
   new: {
-    dot: 'bg-green-500',
-    line: 'border-green-200 bg-green-50/30',
-    badge: 'bg-green-100 text-green-700',
+    dot: 'bg-status-success-solid',
+    line: 'border-status-success-border bg-status-success-muted',
+    badge: 'bg-status-success-muted text-status-success',
     label: '新增',
   },
   modified: {
-    dot: 'bg-yellow-500',
-    line: 'border-yellow-200 bg-yellow-50/30',
-    badge: 'bg-yellow-100 text-yellow-700',
+    dot: 'bg-status-warning-solid',
+    line: 'border-status-warning-border bg-status-warning-muted',
+    badge: 'bg-status-warning-muted text-status-warning',
     label: '修改',
   },
   deleted: {
-    dot: 'bg-red-500',
-    line: 'border-red-200 bg-red-50/30',
-    badge: 'bg-red-100 text-red-700',
+    dot: 'bg-status-danger-solid',
+    line: 'border-status-danger-border bg-status-danger-muted',
+    badge: 'bg-status-danger-muted text-status-danger',
     label: '删除',
   },
 }

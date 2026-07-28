@@ -41,6 +41,38 @@ module.exports = {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
+        status: {
+          success: {
+            DEFAULT: "var(--color-status-success)",
+            solid: "var(--color-status-success-solid)",
+            muted: "var(--color-status-success-bg)",
+            border: "var(--color-status-success-border)",
+          },
+          warning: {
+            DEFAULT: "var(--color-status-warning)",
+            solid: "var(--color-status-warning-solid)",
+            muted: "var(--color-status-warning-bg)",
+            border: "var(--color-status-warning-border)",
+          },
+          danger: {
+            DEFAULT: "var(--color-status-danger)",
+            solid: "var(--color-status-danger-solid)",
+            muted: "var(--color-status-danger-bg)",
+            border: "var(--color-status-danger-border)",
+          },
+          info: {
+            DEFAULT: "var(--color-status-info)",
+            solid: "var(--color-status-info-solid)",
+            muted: "var(--color-status-info-bg)",
+            border: "var(--color-status-info-border)",
+          },
+          accent: {
+            DEFAULT: "var(--color-status-accent)",
+            solid: "var(--color-status-accent-solid)",
+            muted: "var(--color-status-accent-bg)",
+            border: "var(--color-status-accent-border)",
+          },
+        },
         'muted-hc': 'var(--text-muted-high-contrast)',
         'border-hc': 'var(--border-high-contrast)',
         sidebar: {

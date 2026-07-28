@@ -265,6 +265,7 @@ export default function ProjectPage() {
         onRetry={refetch}
         emptyTitle="暂无项目"
         emptyDescription="点击「新建项目」开始创建"
+        emptyAction={hasPerm('project:create') ? { label: '新建项目', onClick: openCreate } : undefined}
         skeletonType="table"
         loadingRows={4}
       >

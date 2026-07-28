@@ -178,7 +178,7 @@ export default function WikiLintPanel() {
                       <span className="text-xs text-muted-foreground font-mono">#{r.id}</span>
                       <Badge
                         variant={r.status === 'success' ? 'default' : r.status === 'failed' ? 'destructive' : 'secondary'}
-                        className="text-[10px]"
+                        className="text-xs"
                       >
                         {r.status}
                       </Badge>
@@ -246,7 +246,7 @@ export default function WikiLintPanel() {
                       <Badge
                         key={s || 'all'}
                         variant={filters.severity === s || (!filters.severity && !s) ? 'default' : 'outline'}
-                        className="text-[10px] cursor-pointer"
+                        className="text-xs cursor-pointer"
                         onClick={() => {
                           const next = { ...filters, severity: s || undefined }
                           setFilters(next)
@@ -261,7 +261,7 @@ export default function WikiLintPanel() {
 
                 {/* 问题列表 */}
                 {selected.status === 'failed' && selected.error_message && (
-                  <div className="text-sm p-3 bg-red-50 dark:bg-red-950/30 rounded-md text-red-700 dark:text-red-300">
+                  <div className="text-sm p-3 bg-status-danger-muted dark:bg-status-danger-muted rounded-md text-status-danger dark:text-status-danger">
                     <AlertTriangle className="size-4 inline mr-1" />
                     {selected.error_message}
                   </div>
@@ -269,7 +269,7 @@ export default function WikiLintPanel() {
 
                 {!selected.issues || selected.issues.length === 0 ? (
                   <div className="text-center py-8 text-sm text-muted-foreground">
-                    <ShieldCheck className="size-8 mx-auto mb-2 text-green-500" />
+                    <ShieldCheck className="size-8 mx-auto mb-2 text-status-success" />
                     未发现问题，Wiki 健康状态良好
                   </div>
                 ) : (
@@ -280,10 +280,10 @@ export default function WikiLintPanel() {
                         className="border border-border rounded-md p-3 space-y-1.5"
                       >
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <Badge tone="neutral" className="text-[10px] font-mono">
+                          <Badge tone="neutral" className="text-xs font-mono">
                             {RULE_LABEL[issue.rule] || issue.rule}
                           </Badge>
-                          <Badge tone={SEVERITY_TONE[issue.severity] ?? 'neutral'} className="text-[10px]">
+                          <Badge tone={SEVERITY_TONE[issue.severity] ?? 'neutral'} className="text-xs">
                             {issue.severity}
                           </Badge>
                           <Badge
@@ -292,12 +292,12 @@ export default function WikiLintPanel() {
                               issue.review_status === 'rejected' ? 'destructive' :
                               'outline'
                             }
-                            className="text-[10px]"
+                            className="text-xs"
                           >
                             {issue.review_status}
                           </Badge>
                           {issue.resolved_artifact_id && (
-                            <Badge tone="neutral" className="text-[10px] font-mono">
+                            <Badge tone="neutral" className="text-xs font-mono">
                               产物#{issue.resolved_artifact_id}
                             </Badge>
                           )}
@@ -305,13 +305,13 @@ export default function WikiLintPanel() {
                         <div className="text-sm font-medium">{issue.title}</div>
                         <div className="text-xs text-muted-foreground">{issue.description}</div>
                         {issue.suggestion && (
-                          <div className="text-xs text-blue-600 dark:text-blue-400">
+                          <div className="text-xs text-status-info dark:text-status-info">
                             建议：{issue.suggestion}
                           </div>
                         )}
                         <div className="flex items-center gap-2 pt-1">
                           {issue.entity_type && issue.entity_id && (
-                            <Badge tone="neutral" className="text-[10px] font-mono">
+                            <Badge tone="neutral" className="text-xs font-mono">
                               {issue.entity_type}#{issue.entity_id}
                             </Badge>
                           )}

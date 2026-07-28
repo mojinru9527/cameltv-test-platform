@@ -77,7 +77,7 @@ export default function CaptureDialog({ onCaptured }: CaptureDialogProps) {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Lightbulb className="size-5 text-yellow-500" />
+            <Lightbulb className="size-5 text-status-warning" />
             灵感快速捕获
           </DialogTitle>
           <DialogDescription>
@@ -88,7 +88,7 @@ export default function CaptureDialog({ onCaptured }: CaptureDialogProps) {
         <div className="space-y-3 pt-2">
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">
-              标题 <span className="text-red-500">*</span>
+              标题 <span className="text-status-danger">*</span>
             </label>
             <Input
               value={title}
@@ -100,7 +100,7 @@ export default function CaptureDialog({ onCaptured }: CaptureDialogProps) {
 
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">
-              内容 <span className="text-red-500">*</span>
+              内容 <span className="text-status-danger">*</span>
             </label>
             <textarea
               className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -133,7 +133,7 @@ export default function CaptureDialog({ onCaptured }: CaptureDialogProps) {
                   {t}
                   <button
                     onClick={() => removeTag(t)}
-                    className="hover:text-red-500 transition-colors"
+                    className="hover:text-status-danger transition-colors"
                   >
                     <X className="size-3" />
                   </button>

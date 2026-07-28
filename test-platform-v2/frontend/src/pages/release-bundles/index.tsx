@@ -61,12 +61,12 @@ const STATUS_VARIANT: Record<
 > = {
   draft: {
     variant: 'secondary',
-    className: 'border-yellow-200 bg-yellow-50 text-yellow-700',
+    className: 'border-status-warning-border bg-status-warning-muted text-status-warning',
     label: '草稿',
   },
   active: {
     variant: 'outline',
-    className: 'border-green-200 bg-green-50 text-green-700',
+    className: 'border-status-success-border bg-status-success-muted text-status-success',
     label: '活跃',
   },
   archived: {
@@ -275,6 +275,7 @@ export default function ReleaseBundlesPage() {
             data={items.length > 0 ? items : undefined}
             emptyTitle="暂无发布包"
             emptyDescription="点击「新建发布包」创建第一个版本"
+            emptyAction={{ label: '新建发布包', onClick: () => setCreateOpen(true) }}
             onRetry={refetch}
           >
             <Table>
@@ -305,7 +306,7 @@ export default function ReleaseBundlesPage() {
                         </span>
                         {bundle.parent_bundle_id && (
                           <span title="有父版本">
-                            <GitBranch className="size-3 text-blue-500 shrink-0" />
+                            <GitBranch className="size-3 text-status-info shrink-0" />
                           </span>
                         )}
                       </div>
@@ -324,7 +325,7 @@ export default function ReleaseBundlesPage() {
                       <Badge
                         variant={STATUS_VARIANT[bundle.status]?.variant ?? 'secondary'}
                         className={cn(
-                          'text-[11px]',
+                          'text-xs',
                           STATUS_VARIANT[bundle.status]?.className,
                         )}
                       >

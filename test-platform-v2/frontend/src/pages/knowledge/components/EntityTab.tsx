@@ -41,11 +41,11 @@ const ENTITY_TYPES = [
 ]
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(ENTITY_TYPES.map((t) => [t.v, t.l]))
 const TYPE_COLORS: Record<string, string> = {
-  api: 'bg-blue-100 text-blue-700',
-  field: 'bg-emerald-100 text-emerald-700',
-  requirement: 'bg-purple-100 text-purple-700',
-  test_case: 'bg-amber-100 text-amber-700',
-  defect: 'bg-red-100 text-red-700',
+  api: 'bg-status-info-muted text-status-info',
+  field: 'bg-status-success-muted text-status-success',
+  requirement: 'bg-status-accent-muted text-status-accent',
+  test_case: 'bg-status-warning-muted text-status-warning',
+  defect: 'bg-status-danger-muted text-status-danger',
 }
 const REL_LABELS: Record<string, string> = {
   contains: '包含',
@@ -225,7 +225,11 @@ export default function EntityTab() {
                             className="size-full origin-left rounded-full transition-transform duration-200"
                             style={{
                               transform: `scaleX(${Math.min(1, Math.max(0, r.confidence))})`,
-                              backgroundColor: r.confidence >= 0.8 ? '#22c55e' : r.confidence >= 0.6 ? '#f59e0b' : '#ef4444',
+                              backgroundColor: r.confidence >= 0.8
+                                ? 'var(--color-status-success-solid)'
+                                : r.confidence >= 0.6
+                                  ? 'var(--color-status-warning-solid)'
+                                  : 'var(--color-status-danger-solid)',
                             }}
                           />
                         </div>
@@ -320,9 +324,9 @@ export default function EntityTab() {
                               tone="neutral"
                               className={
                                 rel.review_status === 'approved'
-                                  ? 'bg-green-100 text-green-700'
+                                  ? 'bg-status-success-muted text-status-success'
                                   : rel.review_status === 'rejected'
-                                  ? 'bg-red-100 text-red-700'
+                                  ? 'bg-status-danger-muted text-status-danger'
                                   : 'bg-muted text-muted-foreground'
                               }
                             >
@@ -335,7 +339,7 @@ export default function EntityTab() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="size-8 text-green-600 hover:text-green-700"
+                              className="size-8 text-status-success hover:text-status-success"
                               onClick={(e) => { e.stopPropagation(); handleApprove(rel.id) }}
                               aria-label={`通过关系 ${rel.relation_type || rel.id}`}
                             >
@@ -344,7 +348,7 @@ export default function EntityTab() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="size-8 text-red-600 hover:text-red-700"
+                              className="size-8 text-status-danger hover:text-status-danger"
                               onClick={(e) => { e.stopPropagation(); handleReject(rel.id) }}
                               aria-label={`驳回关系 ${rel.relation_type || rel.id}`}
                             >

@@ -26,7 +26,7 @@ import type {
   LanhuEvidencePage,
   LanhuEvidenceQuality,
 } from '@/api/lanhuEvidence'
-import { Loader2, RefreshCw } from '@/lib/icons'
+import { AlertTriangle, Loader2, RefreshCw } from '@/lib/icons'
 import { useAuthStore } from '@/stores/auth'
 
 interface Props {
@@ -36,12 +36,12 @@ interface Props {
 }
 
 const STATUS_VARIANT: Record<string, string> = {
-  success: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  success_with_warnings: 'bg-amber-50 text-amber-700 border-amber-200',
-  running: 'bg-blue-50 text-blue-700 border-blue-200',
-  pending: 'bg-slate-50 text-slate-600 border-slate-200',
-  failed: 'bg-red-50 text-red-700 border-red-200',
-  cancelled: 'bg-slate-50 text-slate-500 border-slate-200',
+  success: 'bg-status-success-muted text-status-success border-status-success-border',
+  success_with_warnings: 'bg-status-warning-muted text-status-warning border-status-warning-border',
+  running: 'bg-status-info-muted text-status-info border-status-info-border',
+  pending: 'bg-muted text-muted-foreground border-border',
+  failed: 'bg-status-danger-muted text-status-danger border-status-danger-border',
+  cancelled: 'bg-muted text-muted-foreground border-border',
 }
 
 function parseQuality(job: LanhuEvidenceJob | null): LanhuEvidenceQuality {
@@ -252,26 +252,26 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
                   <Badge
                     tone="neutral"
                     className={quality.import_ready
-                      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                      : 'border-red-200 bg-red-50 text-red-700'}
+                      ? 'border-status-success-border bg-status-success-muted text-status-success'
+                      : 'border-status-danger-border bg-status-danger-muted text-status-danger'}
                   >
                     {quality.import_ready ? '可导入' : '不可导入'}
                   </Badge>
                 </div>
               </div>
-              {job.error_message && <div className="text-xs text-red-600 break-all">错误：{job.error_message}</div>}
+              {job.error_message && <div className="text-xs text-status-danger break-all">错误：{job.error_message}</div>}
               <div className="space-y-1 text-xs" aria-label="质量阻断原因">
                 {!!quality.pages_missing_capture?.length && (
-                  <div className="text-red-600">缺少截图：{formatPageNumbers(quality.pages_missing_capture)}</div>
+                  <div className="text-status-danger">缺少截图：{formatPageNumbers(quality.pages_missing_capture)}</div>
                 )}
                 {!!quality.pages_truncated?.length && (
-                  <div className="text-red-600">滚动截断：{formatPageNumbers(quality.pages_truncated)}</div>
+                  <div className="text-status-danger">滚动截断：{formatPageNumbers(quality.pages_truncated)}</div>
                 )}
                 {!!quality.pages_missing_text?.length && (
-                  <div className="text-red-600">缺少有效文本：{formatPageNumbers(quality.pages_missing_text)}</div>
+                  <div className="text-status-danger">缺少有效文本：{formatPageNumbers(quality.pages_missing_text)}</div>
                 )}
                 {!!quality.pages_missing_ocr_review?.length && (
-                  <div className="text-amber-700">
+                  <div className="text-status-warning">
                     缺少 OCR 或人工审核：{formatPageNumbers(quality.pages_missing_ocr_review)}
                   </div>
                 )}
@@ -279,7 +279,7 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
 
               {!!Object.keys(importResult).length && (
                 <div
-                  className={`rounded border px-2 py-1 text-xs ${importResult.error ? 'border-red-200 text-red-700' : 'border-emerald-200 text-emerald-700'}`}
+                  className={`rounded border px-2 py-1 text-xs ${importResult.error ? 'border-status-danger-border text-status-danger' : 'border-status-success-border text-status-success'}`}
                   aria-label="导入结果"
                 >
                   {importResult.error
@@ -352,8 +352,9 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
               && hasPerm('lanhu_evidence:import') && (
               <div className="space-y-2">
                 {!quality.import_ready && (
-                  <div className="rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-700">
-                    ⚠️ 证据包存在质量问题（缺截图/截断/缺文本/未审 OCR 页），导入结果可能不完整
+                  <div className="flex items-start gap-1.5 rounded border border-status-warning-border bg-status-warning-muted px-2 py-1.5 text-xs text-status-warning">
+                    <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                    <span>证据包存在质量问题（缺截图/截断/缺文本/未审 OCR 页），导入结果可能不完整</span>
                   </div>
                 )}
                 <Button variant="secondary" disabled={importing} onClick={onImport}>

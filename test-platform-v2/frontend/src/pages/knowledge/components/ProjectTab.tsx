@@ -13,9 +13,9 @@ import type { KnowledgeChunk, KnowledgeSource } from '@/types'
 import { Loader2, FolderOpen } from '@/lib/icons'
 
 function freshnessBadge(score: number): { color: string; label: string } {
-  if (score >= 0.8) return { color: 'bg-green-100 text-green-700', label: '新鲜' }
-  if (score >= 0.4) return { color: 'bg-yellow-100 text-yellow-700', label: '待关注' }
-  return { color: 'bg-red-100 text-red-700', label: '过期' }
+  if (score >= 0.8) return { color: 'bg-status-success-muted text-status-success', label: '新鲜' }
+  if (score >= 0.4) return { color: 'bg-status-warning-muted text-status-warning', label: '待关注' }
+  return { color: 'bg-status-danger-muted text-status-danger', label: '过期' }
 }
 
 export default function ProjectTab() {
@@ -110,7 +110,7 @@ export default function ProjectTab() {
                     {s.title.split(' — ')[1] || s.title}
                   </span>
                   <span className="flex items-center gap-2 shrink-0 ml-2">
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded ${badge.color}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${badge.color}`}>
                       {badge.label}
                     </span>
                     <span className="text-xs text-muted-foreground w-16 text-right">
@@ -158,7 +158,7 @@ export default function ProjectTab() {
               <div>
                 <span className="font-medium text-foreground">保鲜评分</span>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className={`inline-block size-2.5 rounded-full ${(selected.freshness_score ?? 1) >= 0.8 ? 'bg-green-500' : (selected.freshness_score ?? 1) >= 0.4 ? 'bg-yellow-500' : 'bg-red-500'}`} />
+                  <span className={`inline-block size-2.5 rounded-full ${(selected.freshness_score ?? 1) >= 0.8 ? 'bg-status-success-solid' : (selected.freshness_score ?? 1) >= 0.4 ? 'bg-status-warning-solid' : 'bg-status-danger-solid'}`} />
                   <span className="text-base font-semibold">{((selected.freshness_score ?? 1) * 100).toFixed(0)}%</span>
                 </div>
               </div>

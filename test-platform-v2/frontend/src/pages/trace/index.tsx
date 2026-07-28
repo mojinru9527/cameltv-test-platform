@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge, PageShell, SpatialChain, type ChainNode } from '@/ui'
 import StatCard from '@/components/StatCard'
+import ChartFrame from '@/components/charts/ChartFrame'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useChartColors } from '@/hooks/use-chart-colors'
@@ -139,16 +140,26 @@ export default function TracePage() {
               <Card className="ui-surface">
                 <CardHeader><CardTitle>用例类型分布</CardTitle></CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={typeChart}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="数量" fill={chartColors.chart1} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <ChartFrame
+                    title="用例类型分布"
+                    summary={`当前共 ${d.total_cases} 条用例，按功能、接口和自动化类型分组。`}
+                    data={typeChart}
+                    columns={[
+                      { key: 'name', label: '用例类型' },
+                      { key: '数量', label: '数量' },
+                    ]}
+                  >
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={typeChart}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis allowDecimals={false} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="数量" fill={chartColors.chart1} radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartFrame>
                 </CardContent>
               </Card>
 
@@ -173,15 +184,15 @@ export default function TracePage() {
                 <CardContent>
                   <div className="flex items-center gap-8 mb-4">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-blue-600">{d.requirement_count}</div>
+                      <div className="text-3xl font-bold text-status-info">{d.requirement_count}</div>
                       <div className="text-sm text-muted-foreground">需求文档总数</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-green-600">{d.requirements_with_cases}</div>
+                      <div className="text-3xl font-bold text-status-success">{d.requirements_with_cases}</div>
                       <div className="text-sm text-muted-foreground">已导入用例的需求</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-orange-600">{d.requirement_count - d.requirements_with_cases}</div>
+                      <div className="text-3xl font-bold text-status-warning">{d.requirement_count - d.requirements_with_cases}</div>
                       <div className="text-sm text-muted-foreground">待覆盖的需求</div>
                     </div>
                     <div className="text-center">
