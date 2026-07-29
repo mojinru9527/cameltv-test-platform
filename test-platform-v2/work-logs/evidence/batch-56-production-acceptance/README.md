@@ -2,7 +2,7 @@
 title: "Batch 56 生产级验收证据索引"
 owner: "qa-team"
 created: "2026-07-29"
-last_reviewed: "2026-07-29"
+last_reviewed: "2026-07-30"
 status: "indexed-needs-work"
 tags: ["batch-56", "evidence", "redacted", "production-acceptance"]
 related:
@@ -45,8 +45,8 @@ related:
 | `B56-R0-AI` | `BLOCKED` | `B56-B05` | 仅证明无 Key 时诚实失败；没有真实 AI/OCR 成功证据 |
 | `R0-MEDIA-DEVICE` | `BLOCKED` | `B56-B06` | 没有授权真机、固定 SoloX 运行时或真实采样 |
 | `B56-R0-ELK` | `BLOCKED` | `B56-B07` | 没有当前只读索引和脱敏 trace 关联 |
-| `B56-R0-LEGACY-PG` | `BLOCKED` | `B56-B08` | 没有真实旧库脱敏快照、基线和隔离恢复副本 |
-| `B56-R0-USER-DESIGN`、`B56-R0-ADMIN-DESIGN` | `BLOCKED` | `B56-B09` | 没有当前可追溯原始或脱敏设计源证据包 |
+| `B56-R0-LEGACY-PG` | `WAIVED` | `B56-B08` | 没有真实旧库脱敏快照；开发于 2026-07-30 接受未验证风险。不是 `PASS`，未来真实迁移前补测 |
+| `B56-R0-USER-DESIGN`、`B56-R0-ADMIN-DESIGN` | `PARTIAL` | `B56-B09` | APP_UI/WEB_UI 项目权限、241/102 页面树及三个用户端 PC 路由映射已复核；运营后台源和版本/SHA 证据仍缺 |
 | `B56-R0-PROD-SITES` | `FAIL` | `B56-B10` | 已记录超时/内容不足；缺批准窗口内全节点复测证据 |
 
 ## 4. 证据补录要求

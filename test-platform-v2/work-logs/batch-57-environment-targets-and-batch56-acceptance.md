@@ -1,7 +1,7 @@
 ---
 title: "Batch 57 固定运行环境与 Batch 56 验收遗留"
 owner: "qa-team"
-last_reviewed: "2026-07-29"
+last_reviewed: "2026-07-30"
 status: "active"
 expires: "2027-01-29"
 tags: ["batch-57", "runtime-profile", "production-acceptance", "agent-team"]
@@ -42,8 +42,9 @@ related:
 ## 3. Batch 56 权威结论
 
 Batch 56 的最终 Verdict 是 `NEEDS WORK`，不得宣称全功能生产 `READY`。
-本地全路由、RBAC、构建、回归、容器与供应链门禁已经通过，但外部真实环境
-仍有 7 个 P0、3 个 P1 阻断。
+本地全路由、RBAC、构建、回归、容器与供应链门禁已经通过；原始登记包含
+7 个 P0、3 个 P1，其中 B56-B08 已于 2026-07-30 正式豁免但不计作通过，
+其余真实环境缺口继续阻断。
 
 ### P0
 
@@ -54,8 +55,8 @@ Batch 56 的最终 Verdict 是 `NEEDS WORK`，不得宣称全功能生产 `READY
 | B56-B03 | 无效 Bearer 仍返回成功 | 对齐公开/受保护边界、实现与 OpenAPI |
 | B56-B04 | 运营后台登录未形成浏览器会话 | 修复 Cookie/storage 与重定向后复测 |
 | B56-B05 | 真实 AI/OCR 未配置 | 提供授权服务与无 fallback 证据 |
-| B56-B08 | 缺真实旧 PostgreSQL 脱敏快照 | 提供基线、SHA 与隔离恢复副本 |
-| B56-B09 | 设计源证据包不可复核 | 提供当前导出、来源、时间与 SHA |
+| B56-B08 | `WAIVED`：无真实旧 PostgreSQL 脱敏快照 | 开发于 2026-07-30 接受旧库升级兼容性未经实证的剩余风险；未来真实迁移前补测 |
+| B56-B09 | `PARTIAL`：用户端设计源页面树已复核，运营后台源和版本证据仍缺 | 补运营后台源、两端版本/时间/SHA 和 PC 视觉差异表 |
 
 ### P1
 
