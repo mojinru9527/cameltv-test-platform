@@ -69,6 +69,9 @@ test-platform-v2/
 | local | `http://localhost:5173` | 独立 SQLite `platform-local.db` | `scripts/start-platform-environment.ps1` |
 | production | `config/runtime/production.env` 中配置的 HTTPS 地址 | 独立生产 PostgreSQL | 显式确认后启动的独立 Compose project |
 
+生产固定配置的逐项填写方法，以及体育测试 OpenVPN 与生产 vpn07 的互斥切换
+流程，见 [生产测试平台固定配置与双 VPN 切换验收手册](docs/生产测试平台固定配置与双VPN切换验收手册.md)。
+
 首次使用时只需把对应的 `*.env.example` 复制为同目录、受 Git 忽略的
 `*.env` 并填写密钥。此后直接访问各自的固定书签，不需要反复编辑地址或
 切换数据库。
