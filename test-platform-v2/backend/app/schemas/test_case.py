@@ -32,6 +32,7 @@ class TestCaseOut(BaseModel):
     api_body: str = ""
     api_assertions: str = "[]"
     source: str = "migration"
+    source_req_id: str = ""
     source_doc_id: Optional[int] = None
     old_id: Optional[int] = None
     review_status: str = "draft"
@@ -74,6 +75,7 @@ class TestCaseCreate(BaseModel):
     api_body: str = ""
     api_assertions: str = "[]"
     source: str = "manual"
+    source_req_id: str = ""
 
 
 class TestCaseUpdate(BaseModel):
@@ -94,6 +96,7 @@ class TestCaseUpdate(BaseModel):
     api_headers: Optional[str] = None
     api_body: Optional[str] = None
     api_assertions: Optional[str] = None
+    source_req_id: Optional[str] = None
 
 
 # ── 查询参数 ──────────────────────────────────────────

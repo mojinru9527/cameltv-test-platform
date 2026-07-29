@@ -196,6 +196,9 @@ git commit -m "test: verify proxy and login shell in a real browser"
 
 - Create: `test-platform-v2/backend/alembic/README.md`
 - Create: `test-platform-v2/backend/tests/test_alembic_runbook.py`
+- Modify: `test-platform-v2/backend/app/models/test_case.py`
+- Modify: `test-platform-v2/backend/app/schemas/test_case.py`
+- Modify: `test-platform-v2/backend/tests/test_testplan.py`
 
 - [ ] Write a failing documentation-contract test that requires the runbook to include:
   - backup and restore;
@@ -207,6 +210,7 @@ git commit -m "test: verify proxy and login shell in a real browser"
   - staging rehearsal before any production action;
   - a statement that an empty temporary database is not A10 old-database evidence.
 - [ ] Write the migration runbook without fixed revision counts or head names that immediately become stale.
+- [ ] Run `alembic check` before declaring the runbook complete. If it finds drift, add a failing behavior/metadata test and repair the model-to-migration contract instead of documenting the drift as acceptable.
 - [ ] Use a disposable database only for the Batch 55 migration contract. Run:
 
 ```powershell
