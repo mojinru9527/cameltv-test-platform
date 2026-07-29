@@ -2,7 +2,7 @@
 title: "Batch 56 生产级验收缺陷登记"
 owner: "qa-team"
 created: "2026-07-29"
-last_reviewed: "2026-07-29"
+last_reviewed: "2026-07-30"
 status: "active-needs-work"
 tags: ["batch-56", "production-acceptance", "issue-register", "real-input"]
 related:
@@ -31,12 +31,12 @@ related:
 | `B56-B02` | P0 | `FAIL` | `B56-R0-TEST-OPENAPI`、`R0-OAS-SIX-LIVE` | 实际网关仅 15 paths / 17 operations，不能证明六服务完整契约 | 六服务负责人 / QA | 提供六份当前实时契约，或六份带来源、采集时间、SHA-256 和脱敏记录的 R1 快照；六份均可解析并完成覆盖对账 |
 | `B56-B03` | P0 | `FAIL` | `B56-R0-TEST-OPENAPI` | 声明受保护的测试 API 对无效 Bearer 仍返回成功，安全声明与实现不一致 | API/安全负责人 / QA | 明确公开与受保护接口清单；OpenAPI 与实现一致；受保护接口拒绝无效凭据，合法最小权限凭据成功，公开接口不虚假声明鉴权 |
 | `B56-B04` | P0 | `FAIL` | `B56-R0-ADMIN-TEST` | 验证码和短信接口返回业务成功，但浏览器未形成 Cookie/storage 会话且停留登录页 | 运营后台负责人 / QA | 真实浏览器登录后建立预期会话并跳转到受保护页面；刷新仍有效，注销后会话失效；全程保留脱敏网络证据 |
-| `B56-B05` | P0 | `BLOCKED` | `B56-R0-AI` | 未配置获授权的真实 AI/OCR，当前只能证明无 Key 时诚实失败 | AI/OCR 服务负责人 / QA | 使用获授权、可追溯 provider 完成最小脱敏输入；记录真实调用和输出来源；AI/OCR 主断言不依赖规则 fallback 或 mock |
+| `B56-B05` | P0 | `BLOCKED` | `B56-R0-AI` | 已确认只允许脱敏文本和脱敏图片外发，但真实 API Key 和本地 OCR 运行时尚未配置 | AI/OCR 服务负责人 / QA | 使用获授权、可追溯 provider 完成最小脱敏输入；记录真实调用和输出来源；AI/OCR 主断言不依赖规则 fallback 或 mock |
 | `B56-B06` | P1 | `BLOCKED` | `R0-MEDIA-DEVICE` | 无获授权设备代理、ADB/SoloX 固定运行时和采样窗口 | 性能/设备负责人 / QA | 部署经鉴权设备代理并锁定采集版本；在授权设备和窗口完成真实启动、采样、停止、持久化与清理，指标可回溯到设备 |
-| `B56-B07` | P1 | `BLOCKED` | `B56-R0-ELK`、`R0-ELK-READONLY` | 缺 ELK/Kibana 只读权限、索引范围和当前 trace 证据 | 可观测性负责人 / QA | 在批准时间窗用只读权限完成平台 traceId 到日志的脱敏关联；记录索引范围、查询时间和可复核结果 |
-| `B56-B08` | P0 | `BLOCKED` | `B56-R0-LEGACY-PG`、`R0-LEGACY-PG` | 未提供真实旧 PostgreSQL 脱敏快照，不能证明升级保真 | 数据库负责人 / QA | 提供来源、版本、SHA-256、行数基线和隔离恢复副本；完成升级、数据保留、重复升级、唯一 Alembic head 和零漂移验证 |
-| `B56-B09` | P0 | `BLOCKED` | `B56-R0-USER-DESIGN`、`B56-R0-ADMIN-DESIGN` | 用户端和运营后台设计源缺当前可复核原始或脱敏证据包 | 产品/设计负责人 / QA | 提供当前只读源或带来源、采集时间、SHA-256 和脱敏日志的导出；页面树、截图/OCR 与需求引用可追溯复核 |
-| `B56-B10` | P1 | `FAIL` | `B56-R0-PROD-SITES` | vpn07 只读检查中仍有一个生产节点浏览器超时，另一个节点有效内容不足 | 生产环境所有者 / QA | 在批准窗口和 vpn07 边界内仅用 GET/HEAD 复测；全部登记节点可加载有效业务内容且无阻断性控制台/网络错误 |
+| `B56-B07` | P1 | `BLOCKED` | `B56-R0-ELK`、`R0-ELK-READONLY` | 已给出执行时刻向前 15 天的数据查询范围和向后 15 天的执行授权窗口；仍缺 ELK 入口、只读身份、索引/服务名和当前 trace 证据 | 可观测性负责人 / QA | 在批准时间窗用只读权限完成平台 traceId 到日志的脱敏关联；记录索引范围、查询时间和可复核结果 |
+| `B56-B08` | P0 | `BLOCKED` | `B56-R0-LEGACY-PG`、`R0-LEGACY-PG` | 无旧 PostgreSQL 脱敏快照，用户已选择正式豁免；批准人、批准日期和风险接受说明尚未签署 | 产品/数据库风险负责人 / QA | 形成范围明确的豁免记录；签署后状态记为 `WAIVED` 而非 `PASS`，并保留未来真实迁移前补测触发条件 |
+| `B56-B09` | P0 | `BLOCKED` | `B56-R0-USER-DESIGN`、`B56-R0-ADMIN-DESIGN` | 已提供 3 个用户端 PC 页面和 APP_UI/WEB_UI 蓝湖入口；用户页面可加载，但蓝湖需要登录/权限，运营后台设计源仍未确认 | 产品/设计负责人 / QA | 登录后确认项目权限和版本，采集页面树、截图/OCR、来源时间与 SHA-256；补充或确认当前运营后台设计源 |
+| `B56-B10` | P1 | `FAIL` | `B56-R0-PROD-SITES` | 新提供的 3 个用户端核心页面在 PC 视口可加载，但未在本轮切换 vpn07 或覆盖全部登记节点，不能替代原失败集合复测 | 生产环境所有者 / QA | 在批准窗口和 vpn07 边界内仅用 GET/HEAD 复测；全部登记节点可加载有效业务内容且无阻断性控制台/网络错误 |
 
 ## 3. 状态治理
 
