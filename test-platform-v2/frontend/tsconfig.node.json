@@ -9,7 +9,8 @@
     "strict": true,
     "declaration": true,
     "emitDeclarationOnly": true,
+    "outDir": "./node_modules/.tmp/tsconfig-node-output",
     "types": ["node"]
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "config/devProxy.ts"]
 }

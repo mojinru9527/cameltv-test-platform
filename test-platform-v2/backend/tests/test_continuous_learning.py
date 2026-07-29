@@ -290,12 +290,22 @@ class TestAgentQueue:
         assert resp.json()["data"]["status"] == "cancelled"
 
     def test_ensure_processor_running_idempotent(self):
-        """启动处理器幂等。"""
-        from app.services.knowledge.agent_queue import ensure_processor_running
-        ensure_processor_running()
-        ensure_processor_running()  # 第二次调用不应报错
-        from app.services.knowledge.agent_queue import _processor_started
-        assert _processor_started
+        """启动处理器幂等，关闭后不遗留守护线程。"""
+        from app.services.knowledge import agent_queue
+
+        agent_queue.ensure_processor_running()
+        first_thread = agent_queue._processor_thread
+        agent_queue.ensure_processor_running()
+
+        assert agent_queue._processor_started
+        assert agent_queue._processor_thread is first_thread
+
+        agent_queue.shutdown_processor()
+
+        assert not agent_queue._processor_started
+        assert agent_queue._processor_thread is None
+        assert first_thread is not None
+        assert not first_thread.is_alive()
 
 
 # ═══════════════════════════════════════════════════════

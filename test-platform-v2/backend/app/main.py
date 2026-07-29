@@ -66,7 +66,8 @@ async def lifespan(_: FastAPI):
         if settings.environment == "production":
             raise SystemExit(
                 "\n[security] FATAL — refusing to start in production with insecure configuration.\n"
-                + "  Set SECRET_KEY, ADMIN_PASSWORD, and AI_API_KEY via environment or .env file.\n"
+                + "  Set SECRET_KEY, ADMIN_PASSWORD, TESTER_PASSWORD, and AI_API_KEY "
+                + "via environment or .env file.\n"
             )
 
     if settings.auto_create_tables:
@@ -112,8 +113,19 @@ async def lifespan(_: FastAPI):
         finally:
             _sync_db.close()
 
-    yield
-    shutdown_scheduler()
+    try:
+        yield
+    finally:
+        from app.services.api_task_worker import (
+            shutdown_processor as shutdown_api_task_worker,
+        )
+        from app.services.knowledge.agent_queue import (
+            shutdown_processor as shutdown_agent_queue,
+        )
+
+        shutdown_api_task_worker()
+        shutdown_agent_queue()
+        shutdown_scheduler()
 
 
 app = FastAPI(
