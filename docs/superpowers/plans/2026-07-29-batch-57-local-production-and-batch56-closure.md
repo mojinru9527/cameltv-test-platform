@@ -68,10 +68,17 @@ URL 不计为 Batch 57 缺陷；真实部署验收移入基础设施就绪后的
 - Create: `test-platform-v2/work-logs/evidence/batch-56-production-acceptance/README.md`
 - Modify: `C-CONDITIONS.md`
 - Modify: `docs/work-logs/batch-56-production-acceptance-execution-matrix.md`
+- Modify: `docs/superpowers/plans/2026-07-29-batch-56-full-platform-production-acceptance.md`
+- Modify: `test-platform-v2/work-logs/batch-56-production-acceptance-qa-report.md`
 - Modify: `test-platform-v2/work-logs/batch-57-environment-targets-and-batch56-acceptance.md`
 
 - [x] 将 B56-B01～B10 逐项登记优先级、状态、责任边界、输入、复测和关闭标准。
-- [x] 将 G56-011/G56-016 与实际代码和交付物重新对账；不满足时恢复为 OPEN。
+- [x] 将 G56-011/G56-012/G56-013/G56-014/G56-015/G56-016 与实际代码和交付物
+  重新对账；G56-013 已由 B57-PC-01 的 11/11 PC P0 矩阵关闭，
+  G56-011/G56-012/G56-014/G56-015 保持 OPEN，G56-016 只关闭交付物对账且
+  不等于 A12 PASS。
+- [x] 按用户最新口径将 C55-5/G56-013 的 P0 视口限定为 PC `1440×900`；
+  tablet `768×1024` 与 mobile `390×844` 登记为 P2 非阻断项。
 - [x] Leader Verdict 与 QA 报告保持同一机械结论：存在 P0/P1 阻断即
   `NEEDS WORK`。
 - [x] 证据索引只登记可复现路径、命令、退出码、环境与脱敏状态。
@@ -86,12 +93,27 @@ URL 不计为 Batch 57 缺陷；真实部署验收移入基础设施就绪后的
 - `test-platform-v2/backend/app/services/attachment_extractor.py`
 - `test-platform-v2/backend/app/services/navigates_to_extractor.py`
 
-- [ ] 逐项确认固定“未同步”、AI diff fallback、附件 AI stub、多模态/DOM
+- [x] 逐项确认固定“未同步”、AI diff fallback、附件 AI stub、多模态/DOM
   简化逻辑是否有现成真实 provider 契约。
-- [ ] 有仓库内真实数据源和 provider 契约的，补测试后实现。
-- [ ] 依赖真实 AI/OCR/设计源的，保持明确 unavailable 状态并归入
+- [x] 有仓库内真实数据源和 provider 契约的，补测试后实现；Wiki 同步覆盖率
+  已改为读取最新 active 发布包真实 coverage。
+- [x] 依赖真实 AI/OCR/设计源的，保持明确 unavailable 状态并归入
   B56-B05/B56-B09，不把规则 fallback 标成 AI 成功。
-- [ ] 更新 G56-011 状态及验收证据。
+- [x] 更新 G56-011 状态及验收证据。
+
+## Task 4.5：缩小 C55-4 本地生命周期缺口
+
+- [x] 计划、执行、报告、调度、缺陷和通知配置的审计记录显式提交并以请求
+  结束后 rollback 模拟验证持久化。
+- [x] 缺陷创建/更新联合验证 case、execution 和 project 归属及一致性。
+- [x] 为计划补齐失败分诊路由和可见 UI，一键缺陷草稿保留 case/execution。
+- [x] 调度从“创建 pending 后误报完成”改为真实执行计划，并记录 completed/
+  failed 终态。
+- [x] 使用 DB running claim、APScheduler `max_instances=1` 和 coalesce 拒绝
+  当前运行中的重复触发；完成通知只在整份计划无 pending 时发送。
+- [x] 13 项生命周期专项测试和双端全量回归通过。
+- [ ] G56-012 仍需真实 UI/API/DB/报告/通知的完整正负面旅程，不因单元/
+  集成测试自动关闭。
 
 ## Task 5：逐项执行外部阻断复测
 
@@ -112,10 +134,10 @@ URL 不计为 Batch 57 缺陷；真实部署验收移入基础设施就绪后的
 
 - [x] 后端：F821、受影响模块 Pytest、全量 Pytest。
 - [x] 前端：typecheck、受影响 Vitest、全量 Vitest、build。
-- [ ] 运行：local 启动/status/幂等复用，production profile 静态校验与
+- [x] 运行：local 启动/status/幂等复用，production profile 静态校验与
   Compose config。
-- [ ] 浏览器：`http://localhost:5173` 登录、工作台、console/network。
-- [ ] 安全：秘密、调试遗留、数据库、运行产物和提交范围扫描。
-- [ ] 更新 QA、issue register、evidence index 和 Leader Verdict；只按真实
+- [x] 浏览器：`http://localhost:5173` 登录、工作台、console/network。
+- [x] 安全：秘密、调试遗留、数据库、运行产物和提交范围扫描。
+- [x] 更新 QA、issue register、evidence index 和 Leader Verdict；只按真实
   结果关闭条目。
 - [ ] 本地提交后停止；push 前按 AGENTS.md 展示新范围并重新获取逐次授权。

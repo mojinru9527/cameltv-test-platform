@@ -2,6 +2,13 @@
 
 > **For agentic workers:** Execute this plan task-by-task with Agent Team. Production verdicts must use real customer-derived inputs and real application services; mock-only evidence never closes a release gate.
 
+> **Acceptance-scope amendment (2026-07-29):** C55-5/G56-013 uses PC
+> `1440×900` as the only P0 blocking viewport. Tablet `768×1024` and mobile
+> `390×844` remain required P2 follow-up coverage but do not block the P0
+> production verdict. All other PC requirements—six themes, supported modes,
+> static/dynamic routes, real data, keyboard, Axe, overflow, console and
+> network—remain P0.
+
 **Goal:** Validate and harden every test-platform-v2 module to a production-deliverable standard, expose the latest UI at `http://localhost:5173/`, and produce an A01–A12 verdict backed by realistic customer inputs, real React → FastAPI → PostgreSQL journeys, and authorized external-environment evidence.
 
 **Architecture:** Run the local acceptance stack in the isolated Batch 56 worktree on Vite `5173`, FastAPI `8000`, and a dedicated PostgreSQL database. Use repository customer/requirements artifacts as source-preserving R1 inputs, authorized live pages and contracts as R0 inputs, and schema-faithful R2 data only for boundary, concurrency, and pagination expansion. All primary browser journeys call the real backend. External production systems are read-only; controlled writes occur only in explicitly authorized test environments and must be cleaned up and verified.
@@ -104,7 +111,8 @@
 - [ ] For each critical action, verify UI state, HTTP/JSON contract, DB/audit state, background task completion, refresh persistence, and cleanup.
 - [ ] Capture `console.error`, `pageerror`, `requestfailed`, duplicate effective GETs, and unexpected non-GET requests.
 - [ ] Verify keyboard equivalents, visible focus, dialog focus trapping/restoration, labels/names, and Axe serious/critical violations.
-- [ ] Run `1440×900`, `768×1024`, and `390×844`; check global and component overflow and full operability.
+- [ ] Run the PC `1440×900` P0 matrix; record tablet `768×1024` and mobile
+  `390×844` overflow/operability as P2 non-blocking follow-up results.
 
 ## Task 5: Validate all six themes and supported modes
 
@@ -117,7 +125,7 @@
 - [ ] Cover cyberpunk, apple, clay, xlab, liquid-glass, and obsidian-flow.
 - [ ] Cover supported light/dark behavior and document theme-specific mode constraints.
 - [ ] On every route, verify heading, navigation, primary action, tables/forms/dialogs, focus ring, contrast, overflow, and screenshot.
-- [ ] Detect transparent/unreadable text, clipped controls, fixed-width mobile failures, missing empty/error/loading states, and theme-token bypasses.
+- [ ] Detect transparent/unreadable text, clipped controls, missing empty/error/loading states, and theme-token bypasses on PC as P0; track fixed-width tablet/mobile failures as P2.
 - [ ] Store screenshots/traces only in ignored temporary evidence locations; commit only redacted evidence indexes and selected safe artifacts.
 
 ## Task 6: Execute authorized external comparisons

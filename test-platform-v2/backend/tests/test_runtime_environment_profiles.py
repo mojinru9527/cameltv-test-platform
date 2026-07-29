@@ -78,3 +78,27 @@ def test_launcher_only_accepts_two_targets_and_rejects_stale_local_processes() -
     assert '$manifest.gitSha -ceq (Get-GitSha)' in launcher
     assert "Production origins must exactly match PLATFORM_FRONTEND_URL." in launcher
     assert "DATABASE_URL database must match POSTGRES_DB." in launcher
+
+
+def test_local_status_requires_and_displays_a_verified_runtime_manifest() -> None:
+    launcher = LAUNCHER_PATH.read_text(encoding="utf-8")
+
+    assert "Assert-LocalReuseManifest `\n            -Profile $Profile `\n            -Database $Database `\n            -RequireRunning" in launcher
+    assert "Local runtime status is stale/unverified:" in launcher
+    assert '$manifest.target -ceq "local"' in launcher
+    assert '$manifest.frontendUrl -ceq $Profile["PLATFORM_FRONTEND_URL"]' in launcher
+    assert "$manifest.backendUrl -ceq $expectedBackendUrl" in launcher
+    assert '$manifest.database.backend -ceq $Database["backend"]' in launcher
+    assert '$manifest.database.name -ceq $Database["name"]' in launcher
+    assert "[int]$manifest.ports.backend -eq $backendPort" in launcher
+    assert "[int]$manifest.ports.frontend -eq $frontendPort" in launcher
+    assert "[int]$manifest.pids.backend -notin $backendListeners.ProcessId" in launcher
+    assert "[int]$manifest.pids.frontend -notin $frontendListeners.ProcessId" in launcher
+    assert 'Write-Host "Runtime manifest: verified"' in launcher
+    assert 'Write-Host "Manifest target: $($manifest.target)"' in launcher
+    assert 'Write-Host "Manifest frontend URL: $($manifest.frontendUrl)"' in launcher
+    assert 'Write-Host "Manifest backend URL: $($manifest.backendUrl)"' in launcher
+    assert 'Write-Host "Manifest database: $($manifest.database.backend)/$($manifest.database.name)"' in launcher
+    assert 'Write-Host "Manifest ports: backend=$($manifest.ports.backend), frontend=$($manifest.ports.frontend)"' in launcher
+    assert 'Write-Host "Manifest Git SHA: $($manifest.gitSha)"' in launcher
+    assert 'Write-Host "Manifest PIDs: backend=$($manifest.pids.backend), frontend=$($manifest.pids.frontend)"' in launcher

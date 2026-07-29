@@ -8,7 +8,9 @@ tags: ["batch-57", "runtime-profile", "production-acceptance", "agent-team"]
 related:
   - "../../docs/work-logs/batch-56-production-acceptance-execution-matrix.md"
   - "batch-56-production-acceptance-qa-report.md"
-  - "../../docs/superpowers/plans/2026-07-29-batch-57-environment-targets-and-acceptance.md"
+  - "batch-57-license-audit.md"
+  - "../docs/Batch57生产验收输入补充操作单.md"
+  - "../../docs/superpowers/plans/2026-07-29-batch-57-local-production-and-batch56-closure.md"
 ---
 
 # Batch 57 固定运行环境与 Batch 56 验收遗留
@@ -68,17 +70,19 @@ Batch 56 的最终 Verdict 是 `NEEDS WORK`，不得宣称全功能生产 `READY
 
 ## 4. 证据闭环复核
 
-Batch 56 计划要求的独立 issue register、evidence README、Leader Verdict 和
+Batch 57 开工时，Batch 56 计划要求的独立 issue register、evidence README、Leader Verdict 和
 `C-CONDITIONS.md` 更新未随 PR #83 完整落库，B56-B01～B10 只登记在 QA 报告。
-执行矩阵声明 `G56-016` 已关闭，与实际交付物存在不一致。
+当时执行矩阵声明 `G56-016` 已关闭，与实际交付物存在不一致；该文档缺口现已
+由 B57-DOC-01 补齐。
 
-知识模块仍存在未完成实现：
+Batch 57 开工审计还发现知识模块存在以下未完成或不诚实展示：
 
 - `SourceListTab.tsx` 的同步覆盖率仍为固定“未同步”。
 - `version_differ.py` 的 AI diff 仍回退为规则结果。
 - `attachment_extractor.py` 的附件 AI 分析仍为 stub。
 - `navigates_to_extractor.py` 的多模态/DOM 提取仍为 stub 或简化正则。
 
+其中同步覆盖率展示已由 B57-WIKI-01 修复；其余真实 AI/OCR 与设计源缺口仍在。
 因此 `G56-011` 的“Knowledge/Wiki/Trace 深层功能已关闭”证据不足，应在真实
 AI/OCR、设计源证据和跨项目隔离条件具备后重新验收。
 
@@ -88,20 +92,37 @@ AI/OCR、设计源证据和跨项目隔离条件具备后重新验收。
 | --- | --- | --- |
 | B57-SEC-01 | 环境/变量跨项目 IDOR 已修复 | 项目、环境、变量联合归属；跨项目 list/create/update/delete/resolve 4 组回归通过，秘密不回显 |
 | B57-WIKI-01 | Wiki 同步 Badge 不再固定“未同步” | 最新 active 发布包真实 coverage；loading/synced/partial/failed/error；两条数据仍各 1 次 bundle/coverage 请求 |
-| B57-DEP-01 | React Router 风险已修复 | React 19.2.8、React Router 8.3.0、Node 22.22；`npm audit` 0 vulnerability，216 项 Vitest、typecheck、build 通过 |
+| B57-DEP-01 | React Router 风险已修复 | React 19.2.8、React Router 8.3.0、Node 22.22；`npm audit` 0 vulnerability，219 项 Vitest、typecheck、build 通过 |
 | B57-DOC-01 | Batch 56 交付物对账已补齐 | issue register、evidence README、Leader Verdict、C tracker 和 execution matrix 一致；G56-016 仅按文档对账关闭 |
+| B57-PC-01 | C55-5 PC 生产验收矩阵已闭环 | 11/11 主题/模式组合；全静态/有效动态路由；真实登录/后端/临时实体；键盘、Axe、溢出、console/network 通过并清理 |
+| B57-LIFE-01 | C55-4 关键引用和审计安全已补齐 | 用例/执行/模板/计划跨项目校验；执行状态枚举；计划、缺陷、报告、调度、通知审计显式提交 |
+| B57-LIFE-02 | 失败转缺陷与调度真实执行已接通 | 计划详情挂载失败分诊；缺陷草稿保留 case/execution；调度执行真实计划并拒绝 running 重复触发，不再把 pending 队列误报 completed |
+| B57-LIC-01 | 双端许可证审计已形成独立证据 | 前端 235 个 production 包实例通过；后端 111 锁定包因 Windows 不能完整物化，G56-015 保持 PARTIAL |
 
 `G56-011` 仍保持 `OPEN`：Wiki coverage 展示已修复，但真实 AI diff、附件 AI
 分析、多模态/DOM 提取仍需要真实 AI/OCR 与设计源输入，不能用规则结果或 stub
 冒充闭环。
 
-## 6. Batch 57 新增审计发现
+### Batch 56 P0 Gap 承接
 
-环境 API 的若干读取、更新、删除和变量解析路径需要重新验证
-`project_id + environment_id + variable_id` 的联合隔离。当前服务层按裸 ID
-操作的路径可能形成跨项目越权，尤其变量 resolve 可能返回解密值。该问题不在
-Batch 56 的十项正式阻断中，必须补隔离测试后再确定缺陷等级；本批不以环境
-profile 改造掩盖该风险。
+| Gap | 当前状态 | 关闭标准 |
+| --- | --- | --- |
+| `G56-011` | `OPEN` | J06/J07/J13 使用真实设计源和真实 AI/OCR 完成正负面闭环 |
+| `G56-012` | `OPEN` | 本地引用、审计、失败转缺陷和调度语义已修；仍需完整真实 UI/API/DB/报告/通知正负面证据 |
+| `G56-013` | `CLOSED` | B57-PC-01 已完成 PC `1440×900` 的 11/11 支持组合和完整路由/a11y/network 矩阵 |
+| `G56-014` | `OPEN` | J01–J22 逐功能点关联正负面原子结果、现有用例 ID 和 API 三类校验 |
+| `G56-015` | `PARTIAL` | 前端生产依赖已通过；后端需 Linux lock 全量扫描及 psycopg2-binary LGPL 分发/NOTICE 决策 |
+
+Tablet `768×1024` 与 mobile `390×844` 响应式回归已降为 P2 非阻断项，
+不作为 G56-013 的 P0 关闭前置。B57-PC-01 已替代此前只有 desktop
+路由可达性与登录/workbench 的局部证据，并关闭 C55-5/J20/G56-013。
+
+## 6. Batch 57 新增审计发现与处置
+
+Batch 57 开工审计发现环境 API 若干路径未联合验证
+`project_id + environment_id + variable_id`，存在跨项目 IDOR 和变量泄露风险。
+该风险现已由 B57-SEC-01 修复并以跨项目 list/create/update/delete/resolve
+回归覆盖；本节保留发现过程，不再将其描述为待验证缺陷。
 
 ## 7. Batch 57 自检
 
@@ -109,18 +130,25 @@ profile 改造掩盖该风险。
 | --- | --- | --- |
 | Runtime profile + Compose + 隔离定向测试 | 20 passed | PASS |
 | 后端 F821 | 0 项 | PASS |
-| 后端全量 Pytest | 869 collected；866 passed、3 skipped、0 failed | PASS |
+| 后端全量 Pytest | 883 collected；880 passed、3 skipped、0 failed | PASS |
 | 前端 TypeScript | `npm run typecheck` 退出码 0 | PASS |
-| 前端生产构建 | Vite 7.3.6；3350 modules transformed | PASS |
-| 前端全量 Vitest | 54 files、216 tests、0 failed | PASS |
+| 前端生产构建 | Vite 7.3.6；3412 modules transformed | PASS |
+| 前端全量 Vitest | 55 files、219 tests、0 failed | PASS |
 | 前端供应链 | `npm audit`：0 vulnerability | PASS |
+| 前端许可证 | 235 个 production 包实例；无第三方 GPL/AGPL/LGPL/UNKNOWN/Proprietary | PASS |
+| 后端许可证 | 111 个锁定包；Windows 无法完整物化；Linux 全量扫描和 LGPL 决策待完成 | PARTIAL |
 | Compose 解析 | production profile `docker compose config --quiet` 退出码 0 | PASS |
 | PowerShell 启动器 | 语法通过；首次安全初始化、启动、status 和幂等复用通过 | PASS |
 | 浏览器登录页 | 标题、2 个输入框、提交按钮、代理健康 200 | PASS |
 | 浏览器真实登录 | admin 登录后进入 `/workbench`；工作台加载完成 | PASS |
 | 浏览器控制台/网络 | console error 0；failed request 0 | PASS |
+| PC 六主题生产矩阵 | 11/11 支持组合；全静态/有效动态路由；键盘/Axe/溢出/console/network | PASS |
 | worktree 元数据 | agent-team / codex / start confirmed | PASS |
 | 凭据与运行产物 | local profile、SQLite、manifest 均受 Git 忽略且未跟踪 | PASS |
+
+浏览器登录、工作台、console/network 的早期 PASS 只覆盖 Batch 57 本地走查；
+B57-PC-01 的 11/11 独立矩阵构成 G56-013/C55-5 的关闭证据，但不构成
+G56-012 业务生命周期关闭证据。
 
 3 个 skip 均来自 `test_batch48_postgresql_concurrency.py`，需要显式 Batch 48
 PostgreSQL 集成环境；Batch 56 已单独记录对应 PG 专项 3/3 通过，不是隐藏失败。

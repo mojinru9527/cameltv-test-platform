@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models.defect import Defect
 from app.models.quality_gate import QualityGateConfig
+from app.models.report_template import ReportTemplate
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.test_report import TestReport
@@ -210,6 +211,16 @@ def create_report(
     )
     if not plan:
         raise ValueError("计划不存在")
+
+    if data.template_id is not None:
+        template_exists = db.scalar(
+            select(ReportTemplate.id).where(
+                ReportTemplate.id == data.template_id,
+                ReportTemplate.project_id == project_id,
+            )
+        )
+        if not template_exists:
+            raise ValueError("报告模板不存在或不属于当前项目")
 
     report_id = _generate_report_id(db, project_id)
     content = _build_content(db, data.plan_id)

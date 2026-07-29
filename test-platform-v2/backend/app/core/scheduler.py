@@ -18,18 +18,44 @@ def _execute_schedule(schedule_id: int):
     Opens a dedicated DB session to avoid interfering with the request session.
     """
     from app.core.db import SessionLocal
-    from app.models.test_plan import TestPlanCase
     from app.models.test_schedule import TestSchedule, TestScheduleRun
+    from app.services.test_plan_service import execute_all_cases
     from sqlalchemy import select
 
     db = SessionLocal()
     try:
-        sched = db.scalar(select(TestSchedule).where(TestSchedule.id == schedule_id))
+        # Serialize the claim in PostgreSQL. SQLite also serializes the
+        # following write transaction, which keeps the local profile honest.
+        sched = db.scalar(
+            select(TestSchedule)
+            .where(TestSchedule.id == schedule_id)
+            .with_for_update()
+        )
         if not sched:
             logger.warning(f"[scheduler] Schedule #{schedule_id} not found, skipping")
-            return
+            return {"triggered": False, "reason": "not_found"}
 
-        # Create a run record
+        active_run = db.scalar(
+            select(TestScheduleRun)
+            .where(
+                TestScheduleRun.schedule_id == schedule_id,
+                TestScheduleRun.status == "running",
+            )
+            .order_by(TestScheduleRun.id.desc())
+        )
+        if active_run:
+            db.rollback()
+            logger.info(
+                "[scheduler] Schedule #%s already running as run #%s; duplicate trigger ignored",
+                schedule_id,
+                active_run.id,
+            )
+            return {
+                "triggered": False,
+                "reason": "already_running",
+                "run_id": active_run.id,
+            }
+
         run = TestScheduleRun(
             schedule_id=schedule_id,
             status="running",
@@ -37,83 +63,100 @@ def _execute_schedule(schedule_id: int):
         )
         db.add(run)
         db.flush()
+        run_id = run.id
+        db.commit()
 
-        total_cases_count = 0
-        pass_count = 0
-        fail_count = 0
-        skip_count = 0
-        block_count = 0
-        pending_count = 0
-
-        # Get all plan cases and create execution records
-        pcases = db.execute(
-            select(TestPlanCase).where(TestPlanCase.plan_id == sched.plan_id)
-        ).scalars().all()
-
-        # Import here to avoid circular imports
-        from app.models.test_plan import TestExecution
-
-        for pc in pcases:
-            total_cases_count += 1
-            status = "pending"
-            # Create an execution record
-            exec_ = TestExecution(
-                plan_case_id=pc.id,
-                executor_id=0,  # system
-                status=status,
-                actual_result="",
-                notes=f"[定时任务自动执行] schedule #{schedule_id}",
-            )
-            db.add(exec_)
-            pending_count += 1
-
-        db.flush()
-
-        # Update run record
+        execution_result = execute_all_cases(
+            db,
+            sched.plan_id,
+            executor_id=0,
+            project_id=sched.project_id,
+        )
         result = {
-            "total": total_cases_count,
-            "pass_": pass_count,
-            "fail": fail_count,
-            "skip": skip_count,
-            "block": block_count,
-            "pending": pending_count,
+            "total": execution_result["total"],
+            "pass_": execution_result["passed"],
+            "fail": execution_result["failed"],
+            "skip": execution_result["skipped"],
+            "block": 0,
+            "pending": 0,
         }
+        run = db.get(TestScheduleRun, run_id)
+        sched = db.get(TestSchedule, schedule_id)
+        if run is None or sched is None:
+            raise RuntimeError("调度运行记录在执行期间被删除")
         run.status = "completed"
         run.result = json.dumps(result, ensure_ascii=False)
         run.finished_at = datetime.now(timezone.utc)
-
-        # Update schedule
         sched.last_run = datetime.now(timezone.utc)
-
         db.commit()
         logger.info(
-            f"[scheduler] Schedule #{schedule_id} '{sched.name}' completed: "
-            f"{total_cases_count} cases queued"
+            "[scheduler] Schedule #%s '%s' completed: %s",
+            schedule_id,
+            sched.name,
+            result,
         )
+
+        # Success notification is best-effort and cannot change the completed
+        # execution result. notify_sync records its own delivery outcome.
+        try:
+            from app.services.notify_service import notify_sync
+
+            _ndb = SessionLocal()
+            try:
+                notify_sync(
+                    _ndb,
+                    sched.project_id,
+                    "plan_done",
+                    {
+                        "plan_name": sched.plan.name if sched.plan else sched.name,
+                        "result_summary": (
+                            f"通过 {result['pass_']} / 失败 {result['fail']} / "
+                            f"跳过 {result['skip']}"
+                        ),
+                        "link": "",
+                    },
+                )
+            finally:
+                _ndb.close()
+        except Exception as notify_err:
+            logger.warning(
+                "[scheduler] Failed to send completion notification: %s",
+                notify_err,
+            )
+
+        return {"triggered": True, "run_id": run_id, "result": result}
 
     except Exception as e:
         logger.exception(f"[scheduler] Schedule #{schedule_id} failed: {e}")
+        db.rollback()
         try:
-            if 'run' in locals():
-                run.status = "failed"
-                run.error_message = str(e)[:500]
-                run.finished_at = datetime.now(timezone.utc)
+            if "run_id" in locals():
+                failed_run = db.get(TestScheduleRun, run_id)
+                if failed_run is None:
+                    raise RuntimeError("调度失败后无法找到运行记录")
+                failed_run.status = "failed"
+                failed_run.error_message = str(e)[:500]
+                failed_run.finished_at = datetime.now(timezone.utc)
                 db.commit()
         except Exception:
-            pass
+            logger.exception(
+                "[scheduler] Failed to persist failure for schedule #%s",
+                schedule_id,
+            )
 
         # Fire notification on schedule failure (with a fresh session)
         try:
-            if 'sched' in locals() and sched:
+            failed_sched = db.get(TestSchedule, schedule_id)
+            if failed_sched:
                 from app.services.notify_service import notify_sync
                 _ndb = SessionLocal()
                 try:
                     notify_sync(
                         _ndb,
-                        sched.project_id,
+                        failed_sched.project_id,
                         "schedule_failed",
                         {
-                            "schedule_name": sched.name,
+                            "schedule_name": failed_sched.name,
                             "error": str(e)[:200],
                             "link": "",
                         },
@@ -122,6 +165,11 @@ def _execute_schedule(schedule_id: int):
                     _ndb.close()
         except Exception as notify_err:
             logger.warning(f"[scheduler] Failed to send failure notification: {notify_err}")
+        return {
+            "triggered": False,
+            "reason": "execution_failed",
+            "error": str(e)[:200],
+        }
     finally:
         db.close()
 
@@ -135,6 +183,8 @@ def add_schedule_job(schedule_id: int, cron_expression: str):
             args=[schedule_id],
             id=f"schedule_{schedule_id}",
             replace_existing=True,
+            max_instances=1,
+            coalesce=True,
         )
         logger.info(f"[scheduler] Job added: schedule_{schedule_id} ({cron_expression})")
     except (ValueError, TypeError) as e:

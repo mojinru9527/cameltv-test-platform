@@ -296,7 +296,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
       {/* Toolbar */}
       <div className="flex items-center gap-3 flex-wrap">
         <Select value={methodFilter || '_all'} onValueChange={v => { setMethodFilter(v === '_all' ? '' : v); setPage(1) }}>
-          <SelectTrigger className="w-[120px]"><SelectValue placeholder="全部方法" /></SelectTrigger>
+          <SelectTrigger className="w-[120px]" aria-label="按接口方法筛选"><SelectValue placeholder="全部方法" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="_all">全部方法</SelectItem>
             {['GET','POST','PUT','PATCH','DELETE'].map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
@@ -306,7 +306,14 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
           <Search className="size-4 text-muted-foreground shrink-0" />
           <Input placeholder="搜索服务名、模块名、路径..." value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
         </div>
-        <Button variant="secondary" onClick={() => void loadEndpoints()} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
+        <Button
+          variant="secondary"
+          onClick={() => void loadEndpoints()}
+          data-icon="inline-start"
+          aria-label="刷新接口资产"
+        >
+          <RefreshCw className="size-4" />
+        </Button>
         <Button onClick={onOpenImport} data-icon="inline-start"><FileUp className="size-4" /> 导入接口</Button>
       </div>
 

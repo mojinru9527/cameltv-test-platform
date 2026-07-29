@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page, type Request, type TestInfo } from '@playwright/test'
 
 const credentials = {
@@ -61,10 +62,31 @@ type RouteResult = {
   path: string
   actualPath: string
   viewport: 'desktop' | 'mobile'
+  theme?: string
+  mode?: 'light' | 'dark'
   issues: string[]
   controlledBlockers: string[]
   runtime: RuntimeSnapshot
 }
+
+type ThemeContext = {
+  theme: 'cyberpunk' | 'apple' | 'clay' | 'xlab' | 'liquid-glass' | 'obsidian-flow'
+  mode: 'light' | 'dark'
+}
+
+const pcThemeModes: readonly ThemeContext[] = [
+  { theme: 'cyberpunk', mode: 'light' },
+  { theme: 'cyberpunk', mode: 'dark' },
+  { theme: 'apple', mode: 'light' },
+  { theme: 'apple', mode: 'dark' },
+  { theme: 'clay', mode: 'light' },
+  { theme: 'clay', mode: 'dark' },
+  { theme: 'xlab', mode: 'light' },
+  { theme: 'xlab', mode: 'dark' },
+  { theme: 'liquid-glass', mode: 'light' },
+  { theme: 'liquid-glass', mode: 'dark' },
+  { theme: 'obsidian-flow', mode: 'dark' },
+]
 
 const desktopRoutes: RouteExpectation[] = [
   { path: '/', expectedPath: '/workbench', heading: '工作台', navLabel: '工作台' },
@@ -109,7 +131,7 @@ const desktopRoutes: RouteExpectation[] = [
   },
   {
     path: '/theme-lab',
-    heading: '把测试从页面集合，变成一条可操作的质量链。',
+    fallbackText: '测试平台 · 主题实验室',
   },
   { path: '/batch56-route-not-found', heading: '页面建设中' },
 ]
@@ -520,6 +542,7 @@ async function inspectRoute(
   route: RouteExpectation,
   viewport: 'desktop' | 'mobile',
   probe: ReturnType<typeof attachRuntimeProbe>,
+  themeContext?: ThemeContext,
 ): Promise<RouteResult> {
   const issues: string[] = []
   const controlledBlockers: string[] = []
@@ -613,11 +636,54 @@ async function inspectRoute(
     }
   }
 
-  if (viewport === 'mobile') {
-    const hasDocumentOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
+  const hasDocumentOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1,
+  )
+  if (hasDocumentOverflow) {
+    issues.push(`${viewport === 'desktop' ? 'PC' : '移动端'}出现页面级横向溢出`)
+  }
+
+  if (themeContext) {
+    const renderedTheme = await page.locator('html').getAttribute('data-theme')
+    const renderedClasses = (await page.locator('html').getAttribute('class')) || ''
+    if (renderedTheme !== themeContext.theme) {
+      issues.push(`主题未生效：期望 ${themeContext.theme}，实际 ${renderedTheme || '空'}`)
+    }
+    if (!renderedClasses.split(/\s+/).includes(themeContext.mode)) {
+      issues.push(`明暗模式未生效：期望 ${themeContext.mode}，实际 class="${renderedClasses}"`)
+    }
+
+    await page.keyboard.press('Tab')
+    const focusState = await page.evaluate(() => {
+      const active = document.activeElement
+      return {
+        tag: active?.tagName || '',
+        hidden: active instanceof HTMLElement
+          ? active.getClientRects().length === 0
+          : true,
+      }
+    })
+    if (!focusState.tag || ['BODY', 'HTML'].includes(focusState.tag) || focusState.hidden) {
+      issues.push('键盘 Tab 未落在可见的可聚焦元素')
+    }
+
+    const axe = await new AxeBuilder({ page })
+      .include('#main-content')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+    const blockingViolations = axe.violations.filter(
+      (violation) => violation.impact === 'serious' || violation.impact === 'critical',
     )
-    if (hasDocumentOverflow) issues.push('移动端出现页面级横向溢出')
+    if (blockingViolations.length > 0) {
+      issues.push(
+        `Axe serious/critical：${blockingViolations
+          .map((violation) => {
+            const firstTarget = violation.nodes[0]?.target.join(' ') || 'unknown'
+            return `${violation.id}(${violation.nodes.length})[${firstTarget}]`
+          })
+          .join(' | ')}`,
+      )
+    }
   }
 
   const runtime = probe.snapshot()
@@ -688,7 +754,16 @@ async function inspectRoute(
     issues.push(`重复有效 GET：${runtime.duplicateGets.join(' | ')}`)
   }
 
-  return { path: route.path, actualPath, viewport, issues, controlledBlockers, runtime }
+  return {
+    path: route.path,
+    actualPath,
+    viewport,
+    theme: themeContext?.theme,
+    mode: themeContext?.mode,
+    issues,
+    controlledBlockers,
+    runtime,
+  }
 }
 
 async function runRouteMatrix(
@@ -697,6 +772,7 @@ async function runRouteMatrix(
   viewport: 'desktop' | 'mobile',
   fixtures: DynamicFixtures,
   probe: ReturnType<typeof attachRuntimeProbe>,
+  themeContext?: ThemeContext,
 ) {
   await page.setViewportSize(
     viewport === 'desktop'
@@ -713,10 +789,13 @@ async function runRouteMatrix(
   const results: RouteResult[] = []
 
   for (const route of routes) {
-    results.push(await inspectRoute(page, route, viewport, probe))
+    results.push(await inspectRoute(page, route, viewport, probe, themeContext))
   }
 
-  await testInfo.attach(`batch56-${viewport}-route-matrix.json`, {
+  const evidenceSuffix = themeContext
+    ? `${viewport}-${themeContext.theme}-${themeContext.mode}`
+    : viewport
+  await testInfo.attach(`batch57-${evidenceSuffix}-route-matrix.json`, {
     body: Buffer.from(JSON.stringify(results, null, 2)),
     contentType: 'application/json',
   })
@@ -728,7 +807,14 @@ async function runAcceptanceViewport(
   page: Page,
   testInfo: TestInfo,
   viewport: 'desktop' | 'mobile',
+  themeContext?: ThemeContext,
 ) {
+  if (themeContext) {
+    await page.addInitScript(({ theme, mode }) => {
+      localStorage.setItem('cameltv-theme-color', theme)
+      localStorage.setItem('cameltv-theme-mode', mode)
+    }, themeContext)
+  }
   const probe = attachRuntimeProbe(page)
   const projectId = await login(page, probe)
   const loginRuntime = probe.snapshot()
@@ -748,7 +834,14 @@ async function runAcceptanceViewport(
   const fixtures = await createDynamicFixtures(page, projectId)
   let routeResults: RouteResult[] = []
   try {
-    routeResults = await runRouteMatrix(page, testInfo, viewport, fixtures, probe)
+    routeResults = await runRouteMatrix(
+      page,
+      testInfo,
+      viewport,
+      fixtures,
+      probe,
+      themeContext,
+    )
   } finally {
     await cleanupDynamicFixtures(page, projectId, fixtures)
   }
@@ -765,11 +858,11 @@ async function runAcceptanceViewport(
   ]
   expect(
     failures,
-    `Batch56 ${viewport} 真实后端生产验收失败：\n${failures.join('\n')}`,
+    `Batch57 ${viewport}${themeContext ? ` ${themeContext.theme}/${themeContext.mode}` : ''} 真实后端生产验收失败：\n${failures.join('\n')}`,
   ).toEqual([])
 }
 
-test.describe.serial('Batch 56 全平台真实后端生产验收', () => {
+test.describe.serial('Batch 57 PC 真实后端生产验收', () => {
   test.beforeAll(() => {
     expect(
       credentials.username,
@@ -781,10 +874,11 @@ test.describe.serial('Batch 56 全平台真实后端生产验收', () => {
     ).not.toBe('')
   })
 
-  for (const viewport of ['desktop', 'mobile'] as const) {
-    test(`${viewport} 真实登录全路由生产矩阵`, async ({ page }, testInfo) => {
+  for (const themeContext of pcThemeModes) {
+    test(`PC P0 ${themeContext.theme}/${themeContext.mode} 真实登录全路由生产矩阵`, async ({ page }, testInfo) => {
       test.setTimeout(660_000)
-      await runAcceptanceViewport(page, testInfo, viewport)
+      await runAcceptanceViewport(page, testInfo, 'desktop', themeContext)
     })
   }
+
 })

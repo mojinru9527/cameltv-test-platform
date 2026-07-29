@@ -84,10 +84,14 @@ export default function TestPlanPage() {
   // ── DataTable column definitions ──
   const planColumns: DataTableColumn<any>[] = [
     { key: 'name', header: '名称', className: 'max-w-0 truncate', render: (r) => (
-      <span className="font-medium text-foreground hover:underline cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/testplan/${r.id}`) }}>
+      <button
+        type="button"
+        className="font-medium text-foreground hover:underline"
+        onClick={() => navigate(`/testplan/${r.id}`)}
+      >
         {r.plan_id ? <span className="text-muted-foreground mr-1.5 text-xs">{r.plan_id}</span> : null}
         {r.name}
-      </span>
+      </button>
     )},
     { key: 'progress', header: '进度', headerClassName: 'w-[200px]', render: (r) => {
       const s = r.stats || {}
@@ -165,11 +169,10 @@ export default function TestPlanPage() {
             total: data?.total || 0,
             onChange: (p) => setPage(p),
           }}
-          onRowClick={(r) => navigate(`/testplan/${r.id}`)}
           toolbar={
           <div className="flex flex-wrap items-center gap-2">
             <Select value={status || undefined} onValueChange={(v) => { setStatus(v || ''); setPage(1) }}>
-              <SelectTrigger className="w-[120px]" size="sm">
+              <SelectTrigger className="w-[120px]" size="sm" aria-label="按测试计划状态筛选">
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
               <SelectContent>
@@ -197,7 +200,7 @@ export default function TestPlanPage() {
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
-            <Button size="sm" variant="secondary" onClick={refetch}>
+            <Button size="sm" variant="secondary" onClick={refetch} aria-label="刷新测试计划">
               <RotateCcw className="size-3.5" data-icon="inline-start" />
             </Button>
             <div className="flex-1" />

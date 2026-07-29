@@ -318,7 +318,7 @@ export default function SpecialPage() {
       {/* Filter bar */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <Select value={fProtocol ?? '__all__'} onValueChange={(v) => setFProtocol(v === '__all__' ? undefined : v)}>
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[130px]" aria-label="按专项测试协议筛选">
             <SelectValue placeholder="协议" />
           </SelectTrigger>
           <SelectContent>
@@ -330,7 +330,7 @@ export default function SpecialPage() {
         </Select>
 
         <Select value={fStatus ?? '__all__'} onValueChange={(v) => setFStatus(v === '__all__' ? undefined : v)}>
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[130px]" aria-label="按专项测试状态筛选">
             <SelectValue placeholder="状态" />
           </SelectTrigger>
           <SelectContent>

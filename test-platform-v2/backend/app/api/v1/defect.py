@@ -30,6 +30,7 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
+    db.commit()
 
 
 def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
@@ -91,7 +92,11 @@ def create_defect(
     current: CurrentUser = Depends(require_permission("defect:create")),
     db: Session = Depends(get_db),
 ):
-    r = defect_service.create_defect(db, body, current.user.id, current.project_id or 0)
+    try:
+        r = defect_service.create_defect(db, body, current.user.id, current.project_id or 0)
+    except ValueError as e:
+        from app.core.exceptions import APIException
+        raise APIException(msg=str(e))
     db.commit()
     _audit(req, current, db, "defect:create", f"#{r['id']} {r['title']}")
     # 知识入库：缺陷 → 知识源/切片（post-commit，自带 Session）
@@ -142,7 +147,11 @@ def update_defect(
     current: CurrentUser = Depends(require_permission("defect:update")),
     db: Session = Depends(get_db),
 ):
-    r = defect_service.update_defect(db, defect_id, body, current.project_id or 0)
+    try:
+        r = defect_service.update_defect(db, defect_id, body, current.project_id or 0)
+    except ValueError as e:
+        from app.core.exceptions import APIException
+        raise APIException(msg=str(e))
     if not r:
         from app.core.exceptions import not_found
         raise not_found("缺陷")

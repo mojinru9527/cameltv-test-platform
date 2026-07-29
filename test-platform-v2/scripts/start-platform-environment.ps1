@@ -416,7 +416,8 @@ function Assert-LocalListenerOwnership {
 function Assert-LocalReuseManifest {
     param(
         [Parameter(Mandatory)][hashtable]$Profile,
-        [Parameter(Mandatory)][hashtable]$Database
+        [Parameter(Mandatory)][hashtable]$Database,
+        [switch]$RequireRunning
     )
 
     $backendPort = ConvertTo-ProfilePort -Profile $Profile -Key "BACKEND_PORT"
@@ -424,17 +425,25 @@ function Assert-LocalReuseManifest {
     $backendListeners = @(Get-ListeningProcesses -Port $backendPort)
     $frontendListeners = @(Get-ListeningProcesses -Port $frontendPort)
     if ($backendListeners.Count -eq 0 -and $frontendListeners.Count -eq 0) {
+        if ($RequireRunning) {
+            throw "The backend and frontend listeners are stopped."
+        }
         return
+    }
+    if ($RequireRunning -and ($backendListeners.Count -ne 1 -or $frontendListeners.Count -ne 1)) {
+        throw "A complete backend/frontend listener pair is not running."
     }
     if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
         throw "Existing local listeners have no matching runtime manifest. Stop the old processes before starting this profile."
     }
 
+    $expectedBackendUrl = "http://127.0.0.1:$backendPort"
     try {
         $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding utf8 | ConvertFrom-Json
         $manifestMatches = (
             $manifest.target -ceq "local" -and
             $manifest.frontendUrl -ceq $Profile["PLATFORM_FRONTEND_URL"] -and
+            $manifest.backendUrl -ceq $expectedBackendUrl -and
             $manifest.database.backend -ceq $Database["backend"] -and
             $manifest.database.name -ceq $Database["name"] -and
             [int]$manifest.ports.backend -eq $backendPort -and
@@ -467,6 +476,23 @@ function Assert-LocalReuseManifest {
     ) {
         throw "Existing frontend listener does not match the runtime manifest PID. Stop the old process before starting this profile."
     }
+
+    if ($RequireRunning) {
+        $backendProcess = @(
+            $backendListeners | Where-Object { $_.ProcessId -eq [int]$manifest.pids.backend }
+        )[0]
+        $frontendProcess = @(
+            $frontendListeners | Where-Object { $_.ProcessId -eq [int]$manifest.pids.frontend }
+        )[0]
+        if (-not (Test-ProcessBelongsToPath -CommandLine $backendProcess.CommandLine -ExpectedPath $backendRoot)) {
+            throw "The manifest backend PID does not belong to this worktree."
+        }
+        if (-not (Test-ProcessBelongsToPath -CommandLine $frontendProcess.CommandLine -ExpectedPath $frontendRoot)) {
+            throw "The manifest frontend PID does not belong to this worktree."
+        }
+    }
+
+    return $manifest
 }
 
 function Test-HttpEndpoint {
@@ -513,6 +539,15 @@ function Show-LocalStatus {
 
     $backendListeners = @(Get-ListeningProcesses -Port $backendPort)
     $frontendListeners = @(Get-ListeningProcesses -Port $frontendPort)
+    try {
+        $manifest = Assert-LocalReuseManifest `
+            -Profile $Profile `
+            -Database $Database `
+            -RequireRunning
+    }
+    catch {
+        throw "Local runtime status is stale/unverified: $($_.Exception.Message)"
+    }
     $backendOwned = $backendListeners.Count -gt 0 -and @(
         $backendListeners | Where-Object {
             Test-ProcessBelongsToPath -CommandLine $_.CommandLine -ExpectedPath $backendRoot
@@ -527,6 +562,14 @@ function Show-LocalStatus {
     Write-Host "Target: local"
     Write-Host "Access: $($Profile["PLATFORM_FRONTEND_URL"])"
     Write-Host "Database: $($Database["backend"])/$($Database["name"])"
+    Write-Host "Runtime manifest: verified"
+    Write-Host "Manifest target: $($manifest.target)"
+    Write-Host "Manifest frontend URL: $($manifest.frontendUrl)"
+    Write-Host "Manifest backend URL: $($manifest.backendUrl)"
+    Write-Host "Manifest database: $($manifest.database.backend)/$($manifest.database.name)"
+    Write-Host "Manifest ports: backend=$($manifest.ports.backend), frontend=$($manifest.ports.frontend)"
+    Write-Host "Manifest Git SHA: $($manifest.gitSha)"
+    Write-Host "Manifest PIDs: backend=$($manifest.pids.backend), frontend=$($manifest.pids.frontend)"
     Write-Host "Backend listener: $(if ($backendOwned) { "this worktree" } elseif ($backendListeners.Count) { "foreign process" } else { "stopped" })"
     Write-Host "Frontend listener: $(if ($frontendOwned) { "this worktree" } elseif ($frontendListeners.Count) { "foreign process" } else { "stopped" })"
     Write-Host "Backend health: $(if (Test-HttpEndpoint -Url $backendUrl) { "healthy" } else { "unavailable" })"
@@ -552,7 +595,7 @@ function Start-LocalEnvironment {
     New-Item -ItemType Directory -Path $runtimeDirectory -Force | Out-Null
     Assert-LocalListenerOwnership -Port $backendPort -ExpectedPath $backendRoot -Label "Backend"
     Assert-LocalListenerOwnership -Port $frontendPort -ExpectedPath $frontendRoot -Label "Frontend"
-    Assert-LocalReuseManifest -Profile $Profile -Database $Database
+    $null = Assert-LocalReuseManifest -Profile $Profile -Database $Database
 
     $previousEnvironment = @{}
     try {

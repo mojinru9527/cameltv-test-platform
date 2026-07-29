@@ -48,8 +48,8 @@ RBAC、桌面/移动全路由和容器验收，证据链有效。全平台仍有
 | 项目隔离 | tester 访问非成员项目返回 403；性能 REST/WS 跨项目返回拒绝 | PASS |
 | 真实需求 | 用户端和运营后台两份 R1 文档上传、解析、回读、审计均成功 | PASS |
 | AI 提取 | 未配置 Key 时返回明确业务 400，不产生 fallback | BLOCKED |
-| 全路由 UI | desktop 30 路由、mobile 16 路由，真实后端 2/2 passed | PASS |
-| 主题/响应式/a11y | Batch 53/54/55 四组专项 4/4 passed | PASS |
+| 全路由可达性 | desktop 30 路由、mobile 16 路由，真实后端 2/2 passed | PASS（可达性范围） |
+| 历史主题/响应式/a11y 专项 | Batch 53/54/55 四组专项 4/4 passed | PASS（历史专项范围） |
 | 网络请求 | StrictMode 有效 GET 单次；取消请求无 pageerror；真实错误不被吞掉 | PASS |
 | 脑图 | 卸载后无 `translate(NaN,NaN)`，无跨路由异步污染 | PASS |
 | 性能真实性 | 无 Mock 设备和随机指标；缺采集器时 devices/start 为 503 | PASS |
@@ -57,6 +57,19 @@ RBAC、桌面/移动全路由和容器验收，证据链有效。全平台仍有
 | 性能安全 | Cookie、Origin、成员、权限、项目隔离、重复连接和 URL 无 JWT | PASS |
 | 性能传输 | Vite 真实 101；无采集器时 `collector_error` 并清理 | PASS |
 | PostgreSQL | Alembic 唯一 head、无 schema 漂移、并发回归 3/3 | PASS |
+
+验收口径补充：C55-5/G56-013 的 P0 仅以 PC `1440×900` 为阻断视口；
+tablet `768×1024` 与 mobile `390×844` 降为 P2 非阻断项。Batch 57 已在
+真实登录和真实后端下分批完成 11/11 个支持组合：Cyberpunk、Apple、Clay、
+xLab、Liquid Glass 各 light/dark，Obsidian Flow dark。每组遍历全部静态和
+有效动态路由，以公开 API 创建并清理临时计划/发布包实体，并检查键盘焦点、
+Axe serious/critical、页面级溢出、console、失败请求和重复有效 GET。
+因此 C55-5/J20/G56-013 已关闭；tablet/mobile 继续作为 C55-5-P2 跟踪。
+
+Batch 57 后续修复补充：计划、执行、报告、调度、缺陷和通知配置的审计日志
+现已显式提交；失败执行可在计划详情完成分诊并生成带 case/execution 关联的
+缺陷；调度改为真实执行计划并拒绝已有 running run 的重复触发。以上缩小了
+G56-012，但尚不能替代完整真实 UI/API/DB/报告/通知正负面旅程。
 
 ## 4. 外部真实环境验收
 
@@ -93,7 +106,7 @@ RBAC、桌面/移动全路由和容器验收，证据链有效。全平台仍有
 | 前端单测 | 52 files、210 tests | PASS |
 | TypeScript | `npm run typecheck` | PASS |
 | 前端构建 | `npm run build` | PASS |
-| Batch 56 E2E | clean SHA；desktop/mobile 2/2 passed | PASS |
+| Batch 56 E2E 路由可达性 | clean SHA；desktop/mobile 2/2 passed | PASS（desktop 为 PC 部分证据；mobile 为 P2） |
 | 迁移 | current=head；单 head；`alembic check` 无操作 | PASS |
 | Compose | production/Secure Cookie/no create_all；config 通过 | PASS |
 | Backend 镜像 | hash lock、非 root、Playwright/Chromium/ffprobe/lanhu 探针 | PASS |

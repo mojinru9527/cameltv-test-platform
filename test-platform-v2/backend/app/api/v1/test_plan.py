@@ -20,7 +20,7 @@ from app.schemas.test_plan import (
     PlanStats,
     PlanUpdate,
 )
-from app.services import audit_service, test_plan_service
+from app.services import audit_service, test_plan_service, triage_service
 
 import logging
 logger = logging.getLogger("test_plan")
@@ -44,6 +44,33 @@ def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
         db.close()
 
 
+def _queue_plan_done_if_complete(
+    db: Session,
+    background_tasks: BackgroundTasks,
+    *,
+    project_id: int,
+    plan_id: int,
+) -> None:
+    """Notify only when the whole plan has no pending cases."""
+    plan = test_plan_service.get_plan(db, plan_id, project_id)
+    stats = plan.get("stats", {}) if plan else {}
+    if not plan or not stats.get("total") or stats.get("pending", 0) > 0:
+        return
+    background_tasks.add_task(
+        _run_notify_in_new_session,
+        project_id,
+        "plan_done",
+        {
+            "plan_name": plan.get("name", ""),
+            "result_summary": (
+                f"通过 {stats.get('pass_', 0)} / 失败 {stats.get('fail', 0)} / "
+                f"跳过 {stats.get('skip', 0)}"
+            ),
+            "link": "",
+        },
+    )
+
+
 router = APIRouter(prefix="/test-plans", tags=["测试计划"])
 
 
@@ -58,6 +85,10 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
+    # Most plan services commit their business mutation before returning.  The
+    # audit insert therefore starts a new transaction and must be committed
+    # explicitly; get_db() only closes the session and would roll it back.
+    db.commit()
 
 
 # ═══════════════════════════════════════════════════════════
@@ -215,19 +246,11 @@ def execute_case(
         return R(code=404, msg="关联不存在或无权操作")
     _audit(req, current, db, "plan:execute", f"plan #{plan_id} case #{pcase_id}", f"status={body.status}")
 
-    # P1-4: Background notification via BackgroundTasks (replaces fire-and-forget
-    # asyncio.create_task — runs in its own DB session to avoid session-closed errors).
-    plan = test_plan_service.get_plan(db, plan_id, current.project_id or 0)
-    stats = plan.get("stats", {}) if plan else {}
-    background_tasks.add_task(
-        _run_notify_in_new_session,
-        current.project_id or 0,
-        "plan_done",
-        {
-            "plan_name": plan.get("name", "") if plan else "",
-            "result_summary": f"通过 {stats.get('pass_',0)} / 失败 {stats.get('fail',0)} / 跳过 {stats.get('skip',0)}",
-            "link": "",
-        },
+    _queue_plan_done_if_complete(
+        db,
+        background_tasks,
+        project_id=current.project_id or 0,
+        plan_id=plan_id,
     )
 
     return R.ok(ExecutionOut(**row))
@@ -244,6 +267,7 @@ class ExecuteAllBody(BaseModel):
 @router.post("/{plan_id}/execute-all", response_model=R[dict], summary="一键批量执行计划全部用例")
 def execute_all_cases(
     plan_id: int,
+    background_tasks: BackgroundTasks,
     body: ExecuteAllBody | None = None,
     req: Request = None,
     current: CurrentUser = Depends(require_permission("testplan:execute")),
@@ -265,12 +289,19 @@ def execute_all_cases(
 
     _audit(req, current, db, "plan:execute_all", f"plan #{plan_id}",
            f"total={result['total']}, passed={result['passed']}, failed={result['failed']}, skipped={result['skipped']}")
+    _queue_plan_done_if_complete(
+        db,
+        background_tasks,
+        project_id=current.project_id or 0,
+        plan_id=plan_id,
+    )
     return R.ok(result)
 
 
 @router.post("/{plan_id}/auto-execute", response_model=R[dict], summary="自动执行计划中的 API 用例")
 def auto_execute_api_cases(
     plan_id: int,
+    background_tasks: BackgroundTasks,
     body: AutoExecuteBody | None = None,
     req: Request = None,
     current: CurrentUser = Depends(require_permission("testplan:execute")),
@@ -292,6 +323,12 @@ def auto_execute_api_cases(
 
     _audit(req, current, db, "plan:auto_execute", f"plan #{plan_id}",
            f"executed={result['executed']}, passed={result['passed']}, failed={result['failed']}")
+    _queue_plan_done_if_complete(
+        db,
+        background_tasks,
+        project_id=current.project_id or 0,
+        plan_id=plan_id,
+    )
     return R.ok(result)
 
 
@@ -311,6 +348,67 @@ def list_executions(
         project_id=current.project_id or 0,
     )
     return R.ok(Page(total=total, page=page, page_size=page_size, items=[ExecutionOut(**it) for it in items]))
+
+
+@router.post("/{plan_id}/triage", response_model=R[dict], summary="分析计划中的失败执行")
+def triage_plan_failures(
+    plan_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:execute")),
+    db: Session = Depends(get_db),
+):
+    result = triage_service.triage_failed_cases(
+        db,
+        plan_id,
+        project_id=current.project_id or 0,
+    )
+    if result.get("error"):
+        return R(code=404, msg=result["error"])
+    _audit(
+        req,
+        current,
+        db,
+        "plan:triage",
+        f"plan #{plan_id}",
+        f"failures={result['total_failures']}, method={result['analysis_method']}",
+    )
+    return R.ok(result)
+
+
+@router.post(
+    "/{plan_id}/triage/{execution_id}/draft-defect",
+    response_model=R[dict],
+    summary="从失败执行生成缺陷草稿",
+)
+def draft_defect_from_failure(
+    plan_id: int,
+    execution_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("defect:create")),
+    db: Session = Depends(get_db),
+):
+    result = triage_service.triage_failed_cases(
+        db,
+        plan_id,
+        project_id=current.project_id or 0,
+        use_llm=False,
+    )
+    failure = next(
+        (item for item in result.get("classified", []) if item["execution_id"] == execution_id),
+        None,
+    )
+    if failure is None:
+        return R(code=404, msg="失败执行记录不存在或不属于当前计划")
+
+    draft = triage_service.generate_defect_draft(failure)
+    _audit(
+        req,
+        current,
+        db,
+        "plan:triage:draft_defect",
+        f"plan #{plan_id} execution #{execution_id}",
+    )
+    return R.ok(draft)
 
 
 @router.get("/{plan_id}/stats", response_model=R[PlanStats])

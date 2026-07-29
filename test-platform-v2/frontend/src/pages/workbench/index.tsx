@@ -114,8 +114,13 @@ export default function Workbench() {
       <div className="bg-background rounded-lg border px-3.5 py-2.5 shadow-md text-sm">
         <div className="font-semibold mb-1.5">{label}</div>
         {payload.map((p: any) => (
-          <div key={p.dataKey} className="text-[13px]" style={{ color: p.color }}>
-            {p.dataKey}：{p.value}
+          <div key={p.dataKey} className="flex items-center gap-1.5 text-[13px] text-foreground">
+            <span
+              className="size-2.5 shrink-0 rounded-sm"
+              style={{ backgroundColor: p.color }}
+              aria-hidden="true"
+            />
+            <span>{p.dataKey}：{p.value}</span>
           </div>
         ))}
         {entry && (
