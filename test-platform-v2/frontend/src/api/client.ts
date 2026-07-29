@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import { API_BASE_URL } from './baseUrl'
 
 /** 统一返回体 { code, msg, data }。 */
 interface ApiEnvelope<T> {
@@ -10,7 +11,7 @@ interface ApiEnvelope<T> {
 }
 
 const client = axios.create({
-  baseURL: '/api/v1',
+  baseURL: API_BASE_URL,
   timeout: 600000,
   withCredentials: true, // P1-1: 携带 httpOnly 鉴权 cookie
 })
