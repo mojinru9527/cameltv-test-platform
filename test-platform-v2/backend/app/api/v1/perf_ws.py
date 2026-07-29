@@ -15,16 +15,81 @@ import time
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.db import SessionLocal
+from app.core.security import decode_token
 from app.models.perf import PerfSession
+from app.models.user import User
 from app.services import perf_collector_service as collector
-from app.services import perf_service
+from app.services import perf_service, project_service, rbac_service
 
 logger = logging.getLogger("perf.ws")
 router = APIRouter()
 
 # 活跃的采集任务: {session_id: {"stop": Event, "ws": WebSocket}}
 _active_tasks: dict[int, dict] = {}
+
+
+async def _authorize_stream(
+    ws: WebSocket,
+    db: Session,
+    session_id: int,
+) -> PerfSession | None:
+    """Authenticate the socket and scope the requested session to one project."""
+    origin = (ws.headers.get("origin") or "").rstrip("/")
+    allowed_origins = (
+        [
+            item.strip().rstrip("/")
+            for item in settings.csrf_allowed_origins.split(",")
+            if item.strip()
+        ]
+        if settings.csrf_allowed_origins
+        else [item.rstrip("/") for item in settings.cors_origins]
+    )
+    if not origin or origin not in allowed_origins:
+        await ws.close(code=4403, reason="Origin not allowed")
+        return None
+
+    token = ws.cookies.get(settings.cookie_name)
+    if not token:
+        authorization = ws.headers.get("authorization", "")
+        if authorization.lower().startswith("bearer "):
+            token = authorization[7:].strip()
+    payload = decode_token(token) if token else None
+    if not payload or "sub" not in payload:
+        await ws.close(code=4401, reason="Authentication required")
+        return None
+
+    try:
+        user_id = int(payload["sub"])
+        project_id = int(
+            ws.headers.get("x-project-id")
+            or ws.query_params.get("project_id", "")
+        )
+    except (TypeError, ValueError):
+        await ws.close(code=4403, reason="Project context required")
+        return None
+
+    user = db.get(User, user_id)
+    if not user or user.status != 1:
+        await ws.close(code=4401, reason="Authentication required")
+        return None
+
+    system_permissions = rbac_service.permission_codes(db, user.id)
+    project_permissions = rbac_service.permission_codes(db, user.id, project_id)
+    is_super = "*" in system_permissions
+    if (
+        not (is_super or project_service.is_member(db, user.id, project_id))
+        or not rbac_service.has_permission(project_permissions, "perftest:execute")
+    ):
+        await ws.close(code=4403, reason="Forbidden")
+        return None
+
+    session = db.get(PerfSession, session_id)
+    if not session or session.project_id != project_id:
+        await ws.close(code=4404, reason="Session not found")
+        return None
+    return session
 
 
 async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int) -> None:
@@ -42,6 +107,7 @@ async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int)
     platform = session.platform
     start_ts = time.time()
     sample_count = 0
+    collection_error = ""
     stop_event: asyncio.Event = _active_tasks[session_id]["stop"]
 
     try:
@@ -60,9 +126,20 @@ async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int)
                     collector.collect_single_snapshot,
                     device_id, pkg_name, platform,
                 )
+            except collector.CollectorUnavailableError as exc:
+                collection_error = str(exc)
+                logger.error(
+                    "Performance collector unavailable for session %d: %s",
+                    session_id,
+                    exc,
+                )
+                await ws.send_json({"type": "error", "detail": collection_error})
+                break
             except Exception as exc:
                 logger.warning("Snapshot %d failed for session %d: %s", sample_count, session_id, exc)
-                snapshot = {"error": str(exc), "events": []}
+                collection_error = f"真实性能采集失败: {exc}"
+                await ws.send_json({"type": "error", "detail": collection_error})
+                break
 
             now = time.time()
             elapsed_s = now - start_ts
@@ -74,6 +151,10 @@ async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int)
                 )
             except Exception as exc:
                 logger.error("DB save failed for session %d: %s", session_id, exc)
+                db.rollback()
+                collection_error = f"性能指标持久化失败: {exc}"
+                await ws.send_json({"type": "error", "detail": collection_error})
+                break
 
             # WebSocket 推送
             try:
@@ -99,7 +180,7 @@ async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int)
         # 标记采集结束
         reason = "duration_reached" if planned_duration_s > 0 and (time.time() - start_ts) >= planned_duration_s else "user_stop"
         try:
-            perf_service.stop_session(db, session_id)
+            perf_service.stop_session(db, session_id, error=collection_error)
         except Exception as exc:
             logger.error("Failed to stop session %d: %s", session_id, exc)
 
@@ -108,7 +189,7 @@ async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int)
             await ws.send_json({
                 "type": "session_end",
                 "session_id": session.session_id if session else "",
-                "reason": reason,
+                "reason": "collector_error" if collection_error else reason,
                 "total_samples": sample_count,
                 "duration_s": round(time.time() - start_ts, 1),
             })
@@ -128,16 +209,13 @@ async def perf_stream(ws: WebSocket, session_id: int) -> None:
     客户端可发送 {"action": "stop"} 主动停止采集。
     采集达到计划时长或客户端断开时自动结束。
     """
-    await ws.accept()
-
-    # 校验会话状态
     db: Session = SessionLocal()
-    session = db.get(PerfSession, session_id)
+    session = await _authorize_stream(ws, db, session_id)
     if not session:
-        await ws.send_json({"type": "error", "detail": "会话不存在"})
-        await ws.close()
         db.close()
         return
+
+    await ws.accept()
 
     if session.status != "running":
         await ws.send_json({"type": "error", "detail": f"会话状态为 {session.status}，无法开始采集"})
@@ -146,6 +224,11 @@ async def perf_stream(ws: WebSocket, session_id: int) -> None:
         return
 
     db.close()
+
+    if session_id in _active_tasks:
+        await ws.send_json({"type": "error", "detail": "该会话已有采集连接"})
+        await ws.close(code=4409)
+        return
 
     # 创建停止信号
     stop_event = asyncio.Event()

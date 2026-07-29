@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
@@ -60,6 +60,7 @@ import { cn } from '@/lib/utils'
 import EmptyState from '@/components/EmptyState'
 import { SkeletonText, SkeletonPage } from '@/components/ui/skeleton'
 import { autoExecutePlan, deletePlan, executeCase, executeAllCases, fetchExecutions, fetchPlan, removeCasesFromPlan, updatePlan } from '@/api/testplan'
+import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
 import AddCasesModal from './AddCasesModal'
 import PlanDrawer from './PlanDrawer'
 
@@ -106,24 +107,32 @@ export default function PlanDetail() {
   const [execAllLoading, setExecAllLoading] = useState(false)
   const [autoExecuting, setAutoExecuting] = useState(false)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
     try {
-      const d: any = await fetchPlan(planId)
-      setPlan(d)
-    } finally { setLoading(false) }
+      const d: any = await fetchPlan(planId, signal)
+      if (!signal?.aborted) setPlan(d)
+    } catch (error) {
+      rethrowUnlessAborted(error, signal)
+    } finally {
+      if (!signal?.aborted) setLoading(false)
+    }
   }, [planId])
 
-  const loadExecutions = useCallback(async () => {
+  const loadExecutions = useCallback(async (signal?: AbortSignal) => {
     setExecLoading(true)
     try {
-      const d: any = await fetchExecutions(planId)
-      setExecutions(d)
-    } finally { setExecLoading(false) }
+      const d: any = await fetchExecutions(planId, undefined, signal)
+      if (!signal?.aborted) setExecutions(d)
+    } catch (error) {
+      rethrowUnlessAborted(error, signal)
+    } finally {
+      if (!signal?.aborted) setExecLoading(false)
+    }
   }, [planId])
 
-  useEffect(() => { load() }, [load])
-  useEffect(() => { loadExecutions() }, [loadExecutions])
+  useAbortableEffect((signal) => { void load(signal) }, [load])
+  useAbortableEffect((signal) => { void loadExecutions(signal) }, [loadExecutions])
 
   const doDeletePlan = async () => {
     await deletePlan(planId)
@@ -229,7 +238,7 @@ export default function PlanDetail() {
           {plan.status === 'active' && (
             <Button size="sm" onClick={() => doUpdateStatus('completed')}>标记完成</Button>
           )}
-          <Button size="sm" variant="secondary" onClick={load}>
+          <Button size="sm" variant="secondary" onClick={() => void load()}>
             <RotateCcw className="size-3.5" data-icon="inline-start" />
           </Button>
           <Button size="sm" variant="secondary" disabled={execAllLoading} onClick={doExecuteAll}>

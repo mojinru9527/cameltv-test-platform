@@ -14,7 +14,8 @@ export function fetchMe() {
   return client.get<unknown, MeResult>('/auth/me')
 }
 
-export function fetchMenus() {
+export function fetchMenus(signal?: AbortSignal) {
+  if (signal) return client.get<unknown, MenuItem[]>('/system/menus', { signal })
   return client.get<unknown, MenuItem[]>('/system/menus')
 }
 

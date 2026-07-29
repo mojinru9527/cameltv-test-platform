@@ -14,7 +14,8 @@ httpx>=0.27
 # lanhu-mcp 固定子模块运行时；后端 Provider 会直接导入该模块。
 fastmcp>=2.0
 beautifulsoup4>=4.12.0
-playwright>=1.48.0
+# 与 backend/tests/playwright/package-lock.json 对齐；两端共用 Chromium。
+playwright==1.61.0
 lxml>=5.0.0
 python-dotenv>=1.0.0
 htmlmin2>=0.1.12

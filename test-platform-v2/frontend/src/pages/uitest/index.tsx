@@ -23,6 +23,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts } from '@/api/uitest'
 import { fetchEnvironments } from '@/api/environment'
 import { useAuthStore } from '@/stores/auth'
+import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
 import type { Environment, UiJobItem, UiRunItem, UiRunArtifact } from '@/types'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
@@ -139,8 +140,16 @@ export default function UiTestPage() {
   const [scripts, setScripts] = useState<string[]>([])
   const [environments, setEnvironments] = useState<Environment[]>([])
 
-  useEffect(() => { fetchScripts().then(setScripts).catch(() => setScripts([])) }, [])
-  useEffect(() => { fetchEnvironments().then(setEnvironments).catch(() => setEnvironments([])) }, [])
+  useAbortableEffect((signal) => {
+    fetchScripts(signal)
+      .then((rows) => { if (!signal.aborted) setScripts(rows) })
+      .catch(() => { if (!signal.aborted) setScripts([]) })
+  }, [])
+  useAbortableEffect((signal) => {
+    fetchEnvironments(signal)
+      .then((rows) => { if (!signal.aborted) setEnvironments(rows) })
+      .catch(() => { if (!signal.aborted) setEnvironments([]) })
+  }, [])
 
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<UiJobItem | null>(null)
@@ -256,18 +265,22 @@ export default function UiTestPage() {
     )},
   ]
 
-  const load = useCallback(async (page = 1) => {
+  const load = useCallback(async (page = 1, signal?: AbortSignal) => {
     setLoading(true)
     try {
       const params: any = { page, page_size: 20 }
       if (fStatus) params.status = fStatus
       if (fKeyword) params.keyword = fKeyword
-      const r: any = await fetchUiJobs(params)
-      setData(r)
-    } finally { setLoading(false) }
+      const r: any = await fetchUiJobs(params, signal)
+      if (!signal?.aborted) setData(r)
+    } catch (error) {
+      rethrowUnlessAborted(error, signal)
+    } finally {
+      if (!signal?.aborted) setLoading(false)
+    }
   }, [fStatus, fKeyword])
 
-  useEffect(() => { load() }, [load])
+  useAbortableEffect((signal) => { void load(1, signal) }, [load])
 
   const doSave = async (vals: UiJobFormValues) => {
     setSaving(true)
@@ -780,7 +793,11 @@ function ScriptSelector({ value, onChange }: { value: string; onChange: (v: stri
   const [scripts, setScripts] = useState<string[]>([])
   const [custom, setCustom] = useState(false)
 
-  useEffect(() => { fetchScripts().then(setScripts).catch(() => setScripts([])) }, [])
+  useAbortableEffect((signal) => {
+    fetchScripts(signal)
+      .then((rows) => { if (!signal.aborted) setScripts(rows) })
+      .catch(() => { if (!signal.aborted) setScripts([]) })
+  }, [])
 
   if (scripts.length === 0 || custom) {
     return (

@@ -21,6 +21,7 @@ import PageHeader from '@/components/PageHeader'
 import DataTable from '@/components/DataTable'
 import ChartFrame from '@/components/charts/ChartFrame'
 import { usePerfWebSocket } from '@/hooks/usePerfWebSocket'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
 import {
   fetchDevices, fetchSessions, fetchSession, createSession,
   deleteSession, startSession, stopSession,
@@ -45,6 +46,12 @@ const STATUS_TONES: Record<string, 'success' | 'warning' | 'danger' | 'info' | '
   pending: 'neutral', running: 'info', completed: 'success', failed: 'danger', cancelled: 'neutral',
 }
 
+function isCollectorUnavailable(error: unknown): boolean {
+  if (!error || typeof error !== 'object' || !('response' in error)) return false
+  const response = (error as { response?: { status?: number } }).response
+  return response?.status === 503
+}
+
 // ── Page ──
 
 export default function PerfTestPage() {
@@ -55,6 +62,7 @@ export default function PerfTestPage() {
 
   // Device state
   const [devices, setDevices] = useState<PerfDevice[]>([])
+  const [collectorUnavailable, setCollectorUnavailable] = useState(false)
   const [selectedDevice, setSelectedDevice] = useState<PerfDevice | null>(null)
   const [selectedApp, setSelectedApp] = useState('')
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['cpu', 'memory', 'fps', 'jank'])
@@ -78,43 +86,54 @@ export default function PerfTestPage() {
   // mounted guard — prevents state updates after unmount (engineering-standards §4.1)
   const mountedRef = useRef(true)
   useEffect(() => {
+    mountedRef.current = true
     return () => { mountedRef.current = false }
   }, [])
 
   // ── Device ──
 
-  const loadDevices = useCallback(async () => {
+  const loadDevices = useCallback(async (signal?: AbortSignal) => {
     if (!mountedRef.current) return
     setLoading(true)
+    setCollectorUnavailable(false)
     try {
-      const list = await fetchDevices()
+      const list = await fetchDevices(signal)
       if (!mountedRef.current) return
       setDevices(list)
-    } catch {
+    } catch (error) {
+      if (signal?.aborted) return
       if (!mountedRef.current) return
-      toast.error('获取设备列表失败')
+      setDevices([])
+      setSelectedDevice(null)
+      setSelectedApp('')
+      if (isCollectorUnavailable(error)) {
+        setCollectorUnavailable(true)
+      } else {
+        toast.error('获取设备列表失败')
+      }
     } finally {
       if (mountedRef.current) setLoading(false)
     }
   }, [])
 
-  useEffect(() => { loadDevices() }, [loadDevices])
+  useAbortableEffect((signal) => { void loadDevices(signal) }, [loadDevices])
 
   // ── Session ──
 
-  const loadSessions = useCallback(async () => {
+  const loadSessions = useCallback(async (signal?: AbortSignal) => {
     if (!mountedRef.current) return
     try {
-      const data = await fetchSessions({ page: 1, page_size: 50 })
+      const data = await fetchSessions({ page: 1, page_size: 50 }, signal)
       if (!mountedRef.current) return
       setSessions(data.items)
       setTotalSessions(data.total)
     } catch {
+      if (signal?.aborted) return
       // ignore
     }
   }, [])
 
-  useEffect(() => { loadSessions() }, [loadSessions])
+  useAbortableEffect((signal) => { void loadSessions(signal) }, [loadSessions])
 
   const handleCreateSession = async () => {
     if (!selectedDevice || !selectedApp || selectedMetrics.length === 0) {
@@ -217,6 +236,34 @@ export default function PerfTestPage() {
     <div className="space-y-4">
       <PageHeader title="性能测试" description="客户端性能采集（Android / iOS）——对标 PerfDog 数据口径，基于 SoloX 引擎" />
 
+      {collectorUnavailable && (
+        <div
+          role="alert"
+          aria-labelledby="perf-collector-unavailable-title"
+          className="flex flex-col gap-3 rounded-lg border border-status-warning/40 bg-status-warning/10 p-4 text-sm sm:flex-row sm:items-start"
+        >
+          <AlertCircle className="mt-0.5 size-5 shrink-0 text-status-warning" aria-hidden="true" />
+          <div className="min-w-0 flex-1 space-y-1">
+            <h2 id="perf-collector-unavailable-title" className="font-semibold">
+              真实性能采集不可用
+            </h2>
+            <p className="text-muted-foreground">
+              当前服务未安装或未启用 SoloX。平台不会生成模拟数据；请完成 SoloX 部署并连接已授权设备后重试。
+            </p>
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => { void loadDevices() }}
+            disabled={loading}
+            className="shrink-0"
+          >
+            {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+            重新检测采集器
+          </Button>
+        </div>
+      )}
+
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setSearchParams({ tab: v }) }}>
         <TabsList>
           <TabsTrigger value="device" className="gap-1.5"><Smartphone className="size-4" />设备与采集</TabsTrigger>
@@ -233,13 +280,17 @@ export default function PerfTestPage() {
               <Card>
                 <CardHeader className="pb-2 flex-row items-center justify-between">
                   <CardTitle className="text-base">已连接设备</CardTitle>
-                  <Button variant="ghost" size="icon" onClick={loadDevices} disabled={loading} aria-label="刷新设备列表">
+                  <Button variant="ghost" size="icon" onClick={() => { void loadDevices() }} disabled={loading} aria-label="刷新设备列表">
                     <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
                   </Button>
                 </CardHeader>
                 <CardContent>
                   {loading && devices.length === 0 ? (
                     <div className="grid min-h-[120px] place-items-center"><Loader2 className="size-6 animate-spin text-muted-foreground" /></div>
+                  ) : collectorUnavailable ? (
+                    <div className="grid min-h-[120px] place-items-center text-sm text-muted-foreground">
+                      <p>采集器恢复后，可在此选择真实设备。</p>
+                    </div>
                   ) : devices.length === 0 ? (
                     <div className="grid min-h-[120px] place-items-center text-sm text-muted-foreground">
                       <div className="text-center space-y-2">
@@ -442,7 +493,7 @@ export default function PerfTestPage() {
             <Card>
               <CardHeader className="pb-2 flex-row items-center justify-between">
                 <CardTitle className="text-base">采集记录 ({totalSessions})</CardTitle>
-                <Button variant="ghost" size="icon" onClick={loadSessions} aria-label="刷新采集记录">
+                <Button variant="ghost" size="icon" onClick={() => { void loadSessions() }} aria-label="刷新采集记录">
                   <RefreshCw className="size-4" aria-hidden="true" />
                 </Button>
               </CardHeader>

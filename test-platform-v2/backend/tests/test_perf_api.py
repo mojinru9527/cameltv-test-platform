@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import time
 
+import pytest
+from starlette.websockets import WebSocketDisconnect
+
+from app.models.perf import PerfSession
 from app.services import perf_service
 
 
@@ -17,6 +21,15 @@ SESSION_PAYLOAD = {
     "metrics": ["cpu", "memory", "fps", "jank"],
     "duration": 10,
 }
+
+
+@pytest.fixture(autouse=True)
+def _real_collector_contract_available(monkeypatch):
+    """Lifecycle tests exercise orchestration while SoloX calls stay explicitly stubbed."""
+    monkeypatch.setattr(
+        "app.api.v1.perf.collector.is_available",
+        lambda: True,
+    )
 
 
 def _create_session(client, headers, **overrides):
@@ -60,19 +73,23 @@ def _inject_mock_snapshots(db_session, session_id: int, count: int = 5):
 
 
 class TestDeviceList:
-    def test_list_devices_returns_mock_devices(self, client, auth_headers):
-        """No SoloX installed → should return Mock devices (Pixel 7 + iPhone 15 Pro)."""
+    def test_list_devices_reports_real_collector_unavailable(
+        self,
+        client,
+        auth_headers,
+        monkeypatch,
+    ):
+        """Missing SoloX must never be represented as real device data."""
+        monkeypatch.setattr(
+            "app.api.v1.perf.collector.is_available",
+            lambda: False,
+        )
         resp = client.get("/api/v1/perf-sessions/devices", headers=auth_headers)
-        assert resp.status_code == 200
+        assert resp.status_code == 503
         body = resp.json()
-        assert body["code"] == 0
-        data = body["data"]
-        assert data is not None
-        assert "devices" in data
-        devices = data["devices"]
-        assert len(devices) >= 1
-        platforms = {d["platform"] for d in devices}
-        assert "Android" in platforms
+        assert body["code"] == 503
+        assert "真实性能采集不可用" in body["msg"]
+        assert body["data"] is None
 
 
 # ── Session CRUD ──
@@ -181,6 +198,28 @@ class TestSessionDelete:
 
 
 class TestSessionLifecycle:
+    def test_start_keeps_session_pending_when_collector_unavailable(
+        self,
+        client,
+        auth_headers,
+        monkeypatch,
+        db_session,
+    ):
+        created = _create_session(client, auth_headers)
+        monkeypatch.setattr(
+            "app.api.v1.perf.collector.is_available",
+            lambda: False,
+        )
+
+        response = client.post(
+            f"/api/v1/perf-sessions/{created['id']}/start",
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 503
+        db_session.expire_all()
+        assert db_session.get(PerfSession, created["id"]).status == "pending"
+
     def test_start_and_stop_session(self, client, auth_headers):
         created = _create_session(client, auth_headers, duration=0)  # unlimited
         session_id = created["id"]
@@ -401,12 +440,207 @@ class TestPermissions:
         resp = client.get("/api/v1/perf-sessions/devices")
         assert resp.status_code == 401
 
+    @pytest.mark.parametrize(
+        ("method", "path_suffix", "json_body"),
+        [
+            ("get", "", None),
+            ("delete", "", None),
+            ("post", "/start", None),
+            ("post", "/stop", None),
+            ("get", "/metrics", None),
+            ("get", "/report", None),
+        ],
+    )
+    def test_session_endpoints_hide_other_projects(
+        self,
+        client,
+        auth_headers,
+        db_session,
+        method,
+        path_suffix,
+        json_body,
+    ):
+        foreign = PerfSession(
+            project_id=2,
+            session_id="PERF-FOREIGN",
+            device_id="foreign-device",
+            pkg_name="com.example.foreign",
+            status="pending",
+        )
+        db_session.add(foreign)
+        db_session.commit()
+
+        response = client.request(
+            method,
+            f"/api/v1/perf-sessions/{foreign.id}{path_suffix}",
+            headers=auth_headers,
+            json=json_body,
+        )
+        assert response.json()["code"] == 404
+        db_session.refresh(foreign)
+        assert foreign.project_id == 2
+        assert foreign.status == "pending"
+
+    def test_compare_hides_other_project_session(
+        self,
+        client,
+        auth_headers,
+        db_session,
+    ):
+        own = _create_session(client, auth_headers)
+        foreign = PerfSession(
+            project_id=2,
+            session_id="PERF-FOREIGN-COMPARE",
+            device_id="foreign-device",
+            pkg_name="com.example.foreign",
+        )
+        db_session.add(foreign)
+        db_session.commit()
+
+        response = client.post(
+            "/api/v1/perf-sessions/compare",
+            json={"session_a_id": own["id"], "session_b_id": foreign.id},
+            headers=auth_headers,
+        )
+        assert response.json()["code"] == 404
+
+    def test_stream_requires_authentication(self, client, monkeypatch, db_session):
+        monkeypatch.setattr("app.api.v1.perf_ws.SessionLocal", lambda: db_session)
+        client.cookies.clear()
+        with pytest.raises(WebSocketDisconnect) as exc:
+            with client.websocket_connect(
+                "/api/v1/perf-sessions/1/stream",
+                headers={
+                    "Origin": "http://localhost:5173",
+                    "X-Project-Id": "1",
+                },
+            ):
+                pass
+        assert exc.value.code == 4401
+
+    def test_stream_rejects_untrusted_origin(
+        self,
+        client,
+        auth_headers,
+        monkeypatch,
+        db_session,
+    ):
+        monkeypatch.setattr("app.api.v1.perf_ws.SessionLocal", lambda: db_session)
+        with pytest.raises(WebSocketDisconnect) as exc:
+            with client.websocket_connect(
+                "/api/v1/perf-sessions/1/stream?project_id=1",
+                headers={**auth_headers, "Origin": "https://evil.example"},
+            ):
+                pass
+        assert exc.value.code == 4403
+
+    def test_stream_hides_other_project_session(
+        self,
+        client,
+        auth_headers,
+        monkeypatch,
+        db_session,
+    ):
+        monkeypatch.setattr("app.api.v1.perf_ws.SessionLocal", lambda: db_session)
+        foreign = PerfSession(
+            project_id=2,
+            session_id="PERF-FOREIGN-STREAM",
+            device_id="foreign-device",
+            pkg_name="com.example.foreign",
+            status="running",
+        )
+        db_session.add(foreign)
+        db_session.commit()
+
+        with pytest.raises(WebSocketDisconnect) as exc:
+            with client.websocket_connect(
+                f"/api/v1/perf-sessions/{foreign.id}/stream",
+                headers={
+                    **auth_headers,
+                    "Origin": "http://localhost:5173",
+                    "X-Project-Id": "1",
+                },
+            ):
+                pass
+        assert exc.value.code == 4404
+
+    def test_stream_authenticates_and_persists_one_real_contract_sample(
+        self,
+        client,
+        auth_headers,
+        monkeypatch,
+        db_session,
+    ):
+        from app.api.v1 import perf_ws
+
+        perf_ws._active_tasks.clear()
+        monkeypatch.setattr(perf_ws, "SessionLocal", lambda: db_session)
+        monkeypatch.setattr(
+            perf_ws.collector,
+            "collect_single_snapshot",
+            lambda *_args: {
+                "cpu": {"appCpuRate": 12.5},
+                "memory": {"total": 256.0},
+                "fps": {"fps": 60.0},
+                "events": [],
+            },
+        )
+        created = _create_session(client, auth_headers)
+        _start_session(client, auth_headers, created["id"])
+
+        with client.websocket_connect(
+            f"/api/v1/perf-sessions/{created['id']}/stream?project_id=1",
+            headers={
+                **auth_headers,
+                "Origin": "http://localhost:5173",
+            },
+        ) as socket:
+            snapshot = socket.receive_json()
+            assert snapshot["type"] == "metrics_snapshot"
+            assert snapshot["metrics"]["fps"]["fps"] == 60.0
+            socket.send_json({"action": "stop"})
+            while True:
+                message = socket.receive_json()
+                if message["type"] == "session_end":
+                    break
+
+        db_session.expire_all()
+        session = db_session.get(PerfSession, created["id"])
+        assert session.status == "completed"
+        assert perf_service.get_metrics(db_session, created["id"])
+
 
 # ── Device endpoint detail ──
 
 
 class TestDeviceEndpointDetail:
-    def test_device_list_includes_required_fields(self, client, auth_headers):
+    def test_device_list_includes_required_fields(
+        self,
+        client,
+        auth_headers,
+        monkeypatch,
+    ):
+        monkeypatch.setattr(
+            "app.api.v1.perf.collector.is_available",
+            lambda: True,
+        )
+        monkeypatch.setattr(
+            perf_service.collector,
+            "get_connected_devices",
+            lambda: [{
+                "device_id": "real-device-id",
+                "device_name": "Authorized test device",
+                "device_model": "Test model",
+                "platform": "Android",
+                "os_version": "Android",
+                "status": "online",
+            }],
+        )
+        monkeypatch.setattr(
+            perf_service.collector,
+            "get_device_apps",
+            lambda _device_id, _platform: ["com.example.authorized"],
+        )
         resp = client.get("/api/v1/perf-sessions/devices", headers=auth_headers)
         assert resp.status_code == 200
         body = resp.json()

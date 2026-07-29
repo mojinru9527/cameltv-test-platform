@@ -4,20 +4,26 @@
 
 - Docker 20.10+
 - Docker Compose v2
+- 已初始化根仓 `lanhu-mcp` 子模块：
+
+```bash
+git submodule update --init --recursive lanhu-mcp
+```
 
 ## 快速开始
 
 ```bash
 # 1. 配置环境变量（真实值只保存在本机 .env）
 cp .env.example .env
-# 编辑 .env：至少设置 SECRET_KEY、ADMIN_PASSWORD、TESTER_PASSWORD、POSTGRES_PASSWORD
+# 编辑 .env：至少设置 SECRET_KEY、账号密码、POSTGRES_PASSWORD、DATABASE_URL
+# ALLOWED_ORIGINS 必须填写最终 HTTPS 站点来源
 
 # 2. 启动全栈
 docker compose up -d
 
 # 3. 验证
-curl http://localhost/health   # 后端健康检查
-# 浏览器打开 http://localhost
+curl http://localhost/api/v1/open/health
+# 登录验收必须通过部署在该端口之前的 HTTPS 入口访问
 ```
 
 ## 首次登录凭据
@@ -32,8 +38,9 @@ curl http://localhost/health   # 后端健康检查
 | `ADMIN_PASSWORD` | 无 | 初始管理员密码，必填 |
 | `TESTER_PASSWORD` | 无 | 初始测试账号密码，必填 |
 | `POSTGRES_PASSWORD` | 无 | PostgreSQL 密码，必填 |
+| `DATABASE_URL` | 无 | PostgreSQL URL，必填；密码须 URL 编码 |
 | `FRONTEND_PORT` | `80` | 前端访问端口 |
-| `ALLOWED_ORIGINS` | `*` | CORS 允许的来源 |
+| `ALLOWED_ORIGINS` | 无 | 最终 HTTPS 入口的精确来源 |
 | `ELK_BASE_URL` | (空) | Kibana 地址，用于 traceId 链路 |
 | `ELK_INDEX` | `*` | ELK 索引 pattern |
 
@@ -59,8 +66,88 @@ docker compose down -v
 
 ## 数据持久化
 
-- 数据库文件 `platform.db` 存储在 Docker volume `tp-data` 中
-- 使用 `docker compose down -v` 会**永久删除**所有数据
+- PostgreSQL 数据存储在 Docker volume `pg-data` 中
+- UI 自动化执行产物和蓝湖证据包存储在 Docker volume `tp-artifacts` 中，
+  对应容器目录 `/app/storage`
+- 蓝湖下载缓存使用 `/data/lanhu`，由 `tp-data` 持久化
+- 使用 `docker compose down -v` 会**永久删除数据库和验收产物**
+
+## Backend 执行器运行时
+
+backend 镜像从仓库根目录构建，Dockerfile 因而可以同时复制：
+
+- `test-platform-v2/backend/tests/playwright`：平台 UI Runner 的锁文件、配置和测试脚本；
+- `lanhu-mcp/lanhu_mcp_server.py`：根仓固定子模块中的蓝湖 Provider 运行模块。
+
+镜像包含 Node.js、npm、Chromium Playwright 运行时和 ffmpeg/ffprobe。
+UI Runner 严格使用提交的 `package-lock.json` 执行 `npm ci`，不会以
+`npm install` 绕过锁文件。构建时还会把 Python Playwright 对齐到 npm
+锁定版本，使 UI Runner 和蓝湖截图共用 `/ms-playwright` 下的 Chromium。
+Python 依赖安装在 `/opt/venv`，最终进程以固定 UID/GID `10001:10001`
+的 `cameltv` 用户运行，不依赖或访问 `/root/.local`。镜像构建阶段会把
+`/app`、`/data`、`/ms-playwright`、`/app/storage` 和运行用户缓存目录
+设置为可读写。
+
+这些依赖会显著增大 backend 镜像。未完成完整构建时应按“数百 MB 的浏览器
+与系统库增量”评估，最终压缩/展开体积必须以实际 `docker image inspect`
+结果回填，不能引用估算值作为交付证据。
+
+### 静态构建检查
+
+在仓库根目录执行：
+
+```bash
+docker build --check \
+  -f test-platform-v2/backend/Dockerfile \
+  .
+```
+
+或在本目录配置好未跟踪的 `.env` 后执行：
+
+```bash
+docker compose config --quiet
+docker compose build --check backend
+```
+
+### 完整镜像构建后的运行时探针
+
+```bash
+docker compose run --rm --no-deps backend sh -c \
+  'test "$(id -u)" = 10001 &&
+   test -w /app &&
+   test -w /data &&
+   test -w /ms-playwright &&
+   test -w /app/storage'
+
+docker compose run --rm --no-deps backend sh -c \
+  "node --version &&
+   npm --version &&
+   /app/tests/playwright/node_modules/.bin/playwright --version &&
+   ffprobe -version | head -n 1"
+
+docker compose run --rm --no-deps backend python -c \
+  "import sys; sys.path.insert(0, '/app/lanhu-mcp'); import lanhu_mcp_server; print('lanhu-mcp import ok')"
+
+docker compose run --rm --no-deps backend python -c \
+  "from playwright.sync_api import sync_playwright; p=sync_playwright().start(); b=p.chromium.launch(headless=True); print(b.version); b.close(); p.stop()"
+```
+
+### 既有 volume 的权限迁移
+
+新创建的 `tp-data` 和 `tp-artifacts` 会继承镜像目录的非 root 所有权。
+Compose 在 backend 启动前运行一次 `volume-permissions` 服务，只对
+`tp-data:/data` 与 `tp-artifacts:/app/storage` 执行
+`chown -R 10001:10001`。它不会挂载或递归修改任意宿主机目录。
+
+### 本镜像仍未解决的能力
+
+- `LANHU_OCR_PROVIDER=local` 仍需要另行提供真实 OCR 命令/引擎；Chromium
+  截图能力不等于 OCR 已可用。
+- 镜像未安装 ADB，也没有获得 USB/网络设备授权。
+- 镜像未安装或配置 SoloX；性能采集会明确返回 503，不会生成 Mock 设备
+  或随机指标。生产启用前必须部署经鉴权的设备代理（或受限
+  ADB-over-TCP + 固定 SoloX 运行时）并完成真机验收。
+- 是否能访问蓝湖、外部站点、媒体流和设备仍取决于当前网络与授权配置。
 
 ## 升级
 
@@ -68,6 +155,10 @@ docker compose down -v
 git pull
 docker compose up -d --build
 ```
+
+Compose 固定 `ENVIRONMENT=production`、`COOKIE_SECURE=true` 和
+`AUTO_CREATE_TABLES=false`。必须由外层负载均衡器或反向代理终止 TLS；
+直接通过明文 HTTP 打开容器端口只用于健康探测，Secure Cookie 登录不会工作。
 
 ## 排障
 

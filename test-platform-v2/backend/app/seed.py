@@ -307,11 +307,22 @@ def run_seed() -> None:
                        defaults={"role_id": admin_role.id})
         _get_or_create(db, UserRole, user_id=admin_user.id, role_id=admin_role.id, project_id=0)
 
-        # 7.5) 测试用户分配 tester 角色（全局）
-        _, already = _get_or_create(db, UserRole, user_id=tester_user.id, role_id=tester_role.id, project_id=0)
-        if not already:
-            _get_or_create(db, ProjectMember, project_id=project.id, user_id=tester_user.id,
-                           defaults={"role_id": tester_role.id})
+        # 7.5) 测试用户分配 tester 角色并加入默认项目。两条关系必须
+        # 独立幂等创建，确保全新数据库第一次启动后账号即可使用。
+        _get_or_create(
+            db,
+            UserRole,
+            user_id=tester_user.id,
+            role_id=tester_role.id,
+            project_id=0,
+        )
+        _get_or_create(
+            db,
+            ProjectMember,
+            project_id=project.id,
+            user_id=tester_user.id,
+            defaults={"role_id": tester_role.id},
+        )
 
         db.commit()
         if created_admin:

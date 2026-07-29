@@ -5,6 +5,7 @@ import { fetchMenus, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import type { ColorTheme } from '@/stores/auth'
 import { useTheme, type ThemeMode } from '@/components/theme-provider'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { COLOR_THEMES, getThemeDefinition, normalizeColorTheme } from '@/lib/themes'
 import type { MenuItem } from '@/types'
 import {
@@ -188,22 +189,20 @@ export default function MainLayout() {
     ? [...activeTheme.supportedModes]
     : [...activeTheme.supportedModes, 'system']
 
-  useEffect(() => {
-    let cancelled = false
+  useAbortableEffect((signal) => {
     setMenuError(false)
-    fetchMenus()
+    fetchMenus(signal)
       .then((data) => {
-        if (!cancelled) {
+        if (!signal.aborted) {
           setMenus(data)
           setMenuError(false)
         }
       })
       .catch(() => {
-        if (!cancelled) {
+        if (!signal.aborted) {
           setMenuError(true)
         }
       })
-    return () => { cancelled = true }
   }, [menuRequest])
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -15,6 +15,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -83,7 +84,7 @@ export default function ProjectPage() {
   const [page, setPage] = useState(1)
 
   const { data, isLoading, isError, error, refetch } = useApi<any>(
-    () => api.get('/projects/all', { params: { page, page_size: 20 } }),
+    (signal) => api.get('/projects/all', { params: { page, page_size: 20 }, signal }),
     { deps: [page], initialData: { total: 0, items: [] as ProjectDetail[], page: 1, page_size: 20 } },
   )
 
@@ -460,22 +461,23 @@ function QualityGateCard() {
   const [config, setConfig] = useState<any>(null)
   const [form, setForm] = useState({ pass_rate_threshold: 80, p0_max: 0, p1_max: 5, enabled: true })
 
-  useEffect(() => {
-    loadConfig()
-  }, [])
-
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async (signal?: AbortSignal) => {
     try {
-      const r: any = await api.get('/projects/current')
+      const r: any = await api.get('/projects/current', signal ? { signal } : undefined)
       const projectId = r.id
       if (!projectId) return
-      const g: any = await api.get(`/projects/${projectId}/quality-gate`)
-      if (g) {
+      const g: any = await api.get(
+        `/projects/${projectId}/quality-gate`,
+        signal ? { signal } : undefined,
+      )
+      if (g && !signal?.aborted) {
         setConfig(g)
         setForm({ pass_rate_threshold: g.pass_rate_threshold, p0_max: g.p0_max, p1_max: g.p1_max, enabled: g.enabled })
       }
     } catch { /* no gate config yet */ }
-  }
+  }, [])
+
+  useAbortableEffect((signal) => { void loadConfig(signal) }, [loadConfig])
 
   const saveConfig = async () => {
     setLoading(true)

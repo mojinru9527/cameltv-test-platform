@@ -16,6 +16,7 @@ from app.core import db as db_module
 from app.core.config import Settings
 from app.core.db import Base
 from app.core.security import verify_password
+from app.models.project import Project, ProjectMember
 from app.models.user import User
 
 
@@ -62,6 +63,24 @@ def _user_password_hash(session_factory, username: str) -> str:
         return user.password
 
 
+def _assert_tester_has_default_project(
+    session_factory,
+    username: str,
+) -> None:
+    with session_factory() as db:
+        user = db.scalar(select(User).where(User.username == username))
+        project = db.scalar(select(Project).where(Project.code == "cameltv"))
+        assert user is not None
+        assert project is not None
+        membership = db.scalar(
+            select(ProjectMember).where(
+                ProjectMember.user_id == user.id,
+                ProjectMember.project_id == project.id,
+            )
+        )
+        assert membership is not None
+
+
 def test_configured_seed_credentials_are_hashed_only_for_initial_creation(
     seed_session_factory,
     monkeypatch: pytest.MonkeyPatch,
@@ -95,6 +114,10 @@ def test_configured_seed_credentials_are_hashed_only_for_initial_creation(
     )
     assert verify_password(admin_password, admin_hash)
     assert verify_password(tester_password, tester_hash)
+    _assert_tester_has_default_project(
+        seed_session_factory,
+        local_settings.tester_username,
+    )
     assert hashed_plaintexts == [admin_password, tester_password]
 
     hashed_plaintexts.clear()

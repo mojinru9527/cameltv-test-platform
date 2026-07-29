@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { fetchApiServices, fetchApiEndpoints, generateApiCases } from '@/api/apitest'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
 import EndpointDetailPanel from './EndpointDetailPanel'
 import type { ApiService, ApiEndpoint } from '@/types'
 
@@ -44,25 +45,34 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
-  const loadServices = useCallback(async () => {
-    try { setServices(await fetchApiServices()) } catch { setServices([]) }
+  const loadServices = useCallback(async (signal: AbortSignal) => {
+    try {
+      const result = await fetchApiServices(signal)
+      if (!signal.aborted) setServices(result)
+    } catch {
+      if (!signal.aborted) setServices([])
+    }
   }, [])
 
-  const loadEndpoints = useCallback(async () => {
+  const loadEndpoints = useCallback(async (signal?: AbortSignal) => {
     try {
       const result = await fetchApiEndpoints({
         service_id: selectedService,
         method: methodFilter || undefined,
         keyword: keyword || undefined,
         page, page_size: 20,
-      })
-      setEndpoints(result.items)
-      setTotal(result.total)
-    } catch { setEndpoints([]) }
+      }, signal)
+      if (!signal?.aborted) {
+        setEndpoints(result.items)
+        setTotal(result.total)
+      }
+    } catch {
+      if (!signal?.aborted) setEndpoints([])
+    }
   }, [selectedService, methodFilter, keyword, page, refreshKey])
 
-  useEffect(() => { loadServices() }, [loadServices])
-  useEffect(() => { loadEndpoints() }, [loadEndpoints])
+  useAbortableEffect((signal) => { void loadServices(signal) }, [loadServices])
+  useAbortableEffect((signal) => { void loadEndpoints(signal) }, [loadEndpoints])
 
   // Service → Module → PathGroup → Endpoints (four-level hierarchy)
   const hierarchy = useMemo(() => {
@@ -296,7 +306,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
           <Search className="size-4 text-muted-foreground shrink-0" />
           <Input placeholder="搜索服务名、模块名、路径..." value={keyword} onChange={e => { setKeyword(e.target.value); setPage(1) }} className="border-0 shadow-none" />
         </div>
-        <Button variant="secondary" onClick={loadEndpoints} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
+        <Button variant="secondary" onClick={() => void loadEndpoints()} data-icon="inline-start"><RefreshCw className="size-4" /></Button>
         <Button onClick={onOpenImport} data-icon="inline-start"><FileUp className="size-4" /> 导入接口</Button>
       </div>
 

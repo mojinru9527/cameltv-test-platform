@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { fetchKnowledgeOverview } from '@/api/knowledge'
 import type { KnowledgeOverview } from '@/types'
 import { Loader2 } from '@/lib/icons'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
 
 const SOURCE_TYPE_LABELS: Record<string, string> = {
   requirement: '需求',
@@ -17,12 +18,10 @@ export default function OverviewTab() {
   const [data, setData] = useState<KnowledgeOverview | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    let cancelled = false
-    fetchKnowledgeOverview()
-      .then((data) => { if (!cancelled) { setData(data); setLoading(false) } })
-      .catch(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
+  useAbortableEffect((signal) => {
+    fetchKnowledgeOverview(signal)
+      .then((data) => { if (!signal.aborted) { setData(data); setLoading(false) } })
+      .catch(() => { if (!signal.aborted) setLoading(false) })
   }, [])
 
   if (loading) {

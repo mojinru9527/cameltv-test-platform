@@ -45,11 +45,12 @@ export async function fetchAgentRuns(params: {
   status?: string
   page?: number
   page_size?: number
-}): Promise<AgentRunPage> {
-  return api.get('/agents/runs', { params })
+}, signal?: AbortSignal): Promise<AgentRunPage> {
+  return api.get('/agents/runs', { params, ...(signal ? { signal } : {}) })
 }
 
-export async function fetchAgentRun(id: number): Promise<AgentRun> {
+export async function fetchAgentRun(id: number, signal?: AbortSignal): Promise<AgentRun> {
+  if (signal) return api.get(`/agents/runs/${id}`, { signal })
   return api.get(`/agents/runs/${id}`)
 }
 
@@ -61,7 +62,8 @@ export async function triggerAgent(
   return api.post(`/agents/run/${agentType}`, { query, params: params ?? {} })
 }
 
-export async function fetchAgentTypes(): Promise<AgentTypeMeta[]> {
+export async function fetchAgentTypes(signal?: AbortSignal): Promise<AgentTypeMeta[]> {
+  if (signal) return api.get('/agents/types', { signal })
   return api.get('/agents/types')
 }
 
@@ -95,11 +97,12 @@ export async function fetchQueueItems(params: {
   status?: string
   page?: number
   page_size?: number
-}): Promise<KnowledgePage<AgentQueueItem>> {
-  return api.get('/agents/queue', { params })
+}, signal?: AbortSignal): Promise<KnowledgePage<AgentQueueItem>> {
+  return api.get('/agents/queue', { params, ...(signal ? { signal } : {}) })
 }
 
-export async function fetchQueueStats(): Promise<QueueStats> {
+export async function fetchQueueStats(signal?: AbortSignal): Promise<QueueStats> {
+  if (signal) return api.get('/agents/queue/stats', { signal })
   return api.get('/agents/queue/stats')
 }
 
