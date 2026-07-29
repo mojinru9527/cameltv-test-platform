@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { API_V1_PROXY_PATTERN } from './devProxy'
+import { API_V1_PROXY_PATTERN } from '../../config/devProxy'
 
 describe('API v1 development proxy matcher', () => {
   const matcher = new RegExp(API_V1_PROXY_PATTERN)
