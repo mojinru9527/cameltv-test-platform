@@ -12,19 +12,27 @@ git submodule update --init --recursive lanhu-mcp
 
 ## 快速开始
 
+长期运行环境使用独立 profile 和 Compose project。真实 profile 位于
+`../config/runtime/*.env`，已被 Git 忽略；仓库只提交不含真实凭据的
+`*.env.example`。
+
 ```bash
-# 1. 配置环境变量（真实值只保存在本机 .env）
-cp .env.example .env
-# 编辑 .env：至少设置 SECRET_KEY、账号密码、POSTGRES_PASSWORD、DATABASE_URL
-# ALLOWED_ORIGINS 必须填写最终 HTTPS 站点来源
+# 1. 测试环境只配置一次
+cp ../config/runtime/test.env.example ../config/runtime/test.env
+# 编辑 test.env：设置独立密钥、账号密码、PostgreSQL 和最终 HTTPS 来源
 
-# 2. 启动全栈
-docker compose up -d
+# 2. 以后用固定 profile 启动或查询
+pwsh ../scripts/start-platform-environment.ps1 -Target test -Action start
+pwsh ../scripts/start-platform-environment.ps1 -Target test -Action status
 
-# 3. 验证
-curl http://localhost/api/v1/open/health
-# 登录验收必须通过部署在该端口之前的 HTTPS 入口访问
+# 3. 生产环境需要额外显式确认
+pwsh ../scripts/start-platform-environment.ps1 `
+  -Target production -Action start -ConfirmProduction
 ```
+
+local、test、production 使用不同 `COMPOSE_PROJECT_NAME`、端口、数据库名和
+Docker volume，可以在同一宿主机共存。浏览器始终通过各自 HTTPS 入口访问，
+前端继续同源请求 `/api/v1`；不得把浏览器临时改为直连另一环境后端。
 
 ## 首次登录凭据
 
@@ -39,6 +47,8 @@ curl http://localhost/api/v1/open/health
 | `TESTER_PASSWORD` | 无 | 初始测试账号密码，必填 |
 | `POSTGRES_PASSWORD` | 无 | PostgreSQL 密码，必填 |
 | `DATABASE_URL` | 无 | PostgreSQL URL，必填；密码须 URL 编码 |
+| `COMPOSE_PROJECT_NAME` | 无 | 每个环境唯一，用于隔离容器、网络和 volume |
+| `PLATFORM_FRONTEND_URL` | 无 | 用户固定访问的完整 HTTPS 来源 |
 | `FRONTEND_PORT` | `80` | 前端访问端口 |
 | `ALLOWED_ORIGINS` | 无 | 最终 HTTPS 入口的精确来源 |
 | `ELK_BASE_URL` | (空) | Kibana 地址，用于 traceId 链路 |
@@ -48,20 +58,24 @@ curl http://localhost/api/v1/open/health
 
 ```bash
 # 查看状态
-docker compose ps
+docker compose --project-name cameltv-tp-test \
+  --env-file ../config/runtime/test.env ps
 
 # 查看日志
-docker compose logs -f backend
-docker compose logs -f frontend
+docker compose --project-name cameltv-tp-test \
+  --env-file ../config/runtime/test.env logs -f backend
 
 # 重启
-docker compose restart
+docker compose --project-name cameltv-tp-test \
+  --env-file ../config/runtime/test.env restart
 
 # 停止
-docker compose down
+docker compose --project-name cameltv-tp-test \
+  --env-file ../config/runtime/test.env down
 
 # 停止并清除数据
-docker compose down -v
+docker compose --project-name cameltv-tp-test \
+  --env-file ../config/runtime/test.env down -v
 ```
 
 ## 数据持久化
@@ -156,8 +170,8 @@ git pull
 docker compose up -d --build
 ```
 
-Compose 固定 `ENVIRONMENT=production`、`COOKIE_SECURE=true` 和
-`AUTO_CREATE_TABLES=false`。必须由外层负载均衡器或反向代理终止 TLS；
+共享环境 profile 必须设置 `ENVIRONMENT=production`、`COOKIE_SECURE=true`；
+Compose 固定 `AUTO_CREATE_TABLES=false`。必须由外层负载均衡器或反向代理终止 TLS；
 直接通过明文 HTTP 打开容器端口只用于健康探测，Secure Cookie 登录不会工作。
 
 ## 排障

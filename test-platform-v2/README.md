@@ -59,6 +59,33 @@ test-platform-v2/
 
 ## 快速启动（本地开发）
 
+### 固定环境入口
+
+测试平台自身采用三套独立实例，不在页面内热切数据库。浏览器地址即环境，
+每个实例只连接自己的数据库：
+
+| 环境 | 固定入口 | 数据库 | 启动方式 |
+|------|----------|--------|----------|
+| local | `http://localhost:5173` | 独立 SQLite `platform-local.db` | `scripts/start-platform-environment.ps1` |
+| test | `config/runtime/test.env` 中配置的 HTTPS 地址 | 独立测试 PostgreSQL | 独立 Compose project |
+| production | `config/runtime/production.env` 中配置的 HTTPS 地址 | 独立生产 PostgreSQL | 显式确认后启动的独立 Compose project |
+
+首次使用时只需把对应的 `*.env.example` 复制为同目录、受 Git 忽略的
+`*.env` 并填写密钥。此后直接访问各自的固定书签，不需要反复编辑地址或
+切换数据库。
+
+```powershell
+# 首次运行：安全生成受 Git 忽略的 local.env 和固定本地凭据
+pwsh scripts/start-platform-environment.ps1 `
+  -Target local -Action start -InitializeLocal
+
+# 后续运行
+pwsh scripts/start-platform-environment.ps1 -Target local -Action start
+```
+
+> 页面 `/environment` 管理的是**被测系统**的 dev/test/staging/prod 地址和
+> 变量，不会也不应切换测试平台自身的数据库。
+
 ### 后端
 ```bash
 cd backend
@@ -80,8 +107,9 @@ npm run dev
 
 ```bash
 cd deploy
-cp .env.example .env     # 填写本机密钥和首批账号密码，禁止提交 .env
-docker compose up -d     # 访问 http://localhost
+cp ../config/runtime/test.env.example ../config/runtime/test.env
+# 一次性填写测试环境的密钥、HTTPS 来源和 PostgreSQL 密码
+pwsh ../scripts/start-platform-environment.ps1 -Target test -Action start
 ```
 
 详见 [deploy/README.md](deploy/README.md)

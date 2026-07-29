@@ -31,6 +31,10 @@ def test_compose_keeps_production_knowledge_ingest_opt_in() -> None:
     backend_environment = compose["services"]["backend"]["environment"]
     postgres_environment = compose["services"]["postgres"]["environment"]
 
+    assert all(
+        "container_name" not in service
+        for service in compose["services"].values()
+    )
     assert (
         "KNOWLEDGE_INGEST_PRODUCTION_DATA="
         "${KNOWLEDGE_INGEST_PRODUCTION_DATA:-false}"
@@ -42,8 +46,12 @@ def test_compose_keeps_production_knowledge_ingest_opt_in() -> None:
     assert (
         "TESTER_PASSWORD=${TESTER_PASSWORD:?TESTER_PASSWORD is required}"
     ) in backend_environment
-    assert "ENVIRONMENT=production" in backend_environment
-    assert "COOKIE_SECURE=true" in backend_environment
+    assert (
+        "ENVIRONMENT=${ENVIRONMENT:?ENVIRONMENT is required}"
+    ) in backend_environment
+    assert (
+        "COOKIE_SECURE=${COOKIE_SECURE:?COOKIE_SECURE is required}"
+    ) in backend_environment
     assert "AUTO_CREATE_TABLES=false" in backend_environment
     assert "DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}" in backend_environment
     assert (
