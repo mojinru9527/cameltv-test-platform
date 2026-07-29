@@ -17,22 +17,21 @@ git submodule update --init --recursive lanhu-mcp
 `*.env.example`。
 
 ```bash
-# 1. 测试环境只配置一次
-cp ../config/runtime/test.env.example ../config/runtime/test.env
-# 编辑 test.env：设置独立密钥、账号密码、PostgreSQL 和最终 HTTPS 来源
+# 1. 生产环境只配置一次
+cp ../config/runtime/production.env.example ../config/runtime/production.env
+# 编辑 production.env：设置独立密钥、账号密码、PostgreSQL 和最终 HTTPS 来源
 
-# 2. 以后用固定 profile 启动或查询
-pwsh ../scripts/start-platform-environment.ps1 -Target test -Action start
-pwsh ../scripts/start-platform-environment.ps1 -Target test -Action status
-
-# 3. 生产环境需要额外显式确认
+# 2. 以后用固定 profile 启动或查询；启动需要额外显式确认
 pwsh ../scripts/start-platform-environment.ps1 `
   -Target production -Action start -ConfirmProduction
+pwsh ../scripts/start-platform-environment.ps1 `
+  -Target production -Action status
 ```
 
-local、test、production 使用不同 `COMPOSE_PROJECT_NAME`、端口、数据库名和
-Docker volume，可以在同一宿主机共存。浏览器始终通过各自 HTTPS 入口访问，
-前端继续同源请求 `/api/v1`；不得把浏览器临时改为直连另一环境后端。
+测试平台自身只保留 local 与 production。两者使用不同
+`COMPOSE_PROJECT_NAME`、端口、数据库和存储，可以在同一宿主机共存。浏览器
+始终通过各自固定入口访问，前端继续同源请求 `/api/v1`；不得把浏览器临时
+改为直连另一实例后端。
 
 ## 首次登录凭据
 
@@ -58,24 +57,24 @@ Docker volume，可以在同一宿主机共存。浏览器始终通过各自 HTT
 
 ```bash
 # 查看状态
-docker compose --project-name cameltv-tp-test \
-  --env-file ../config/runtime/test.env ps
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env ps
 
 # 查看日志
-docker compose --project-name cameltv-tp-test \
-  --env-file ../config/runtime/test.env logs -f backend
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env logs -f backend
 
 # 重启
-docker compose --project-name cameltv-tp-test \
-  --env-file ../config/runtime/test.env restart
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env restart
 
 # 停止
-docker compose --project-name cameltv-tp-test \
-  --env-file ../config/runtime/test.env down
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env down
 
 # 停止并清除数据
-docker compose --project-name cameltv-tp-test \
-  --env-file ../config/runtime/test.env down -v
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env down -v
 ```
 
 ## 数据持久化
@@ -170,7 +169,7 @@ git pull
 docker compose up -d --build
 ```
 
-共享环境 profile 必须设置 `ENVIRONMENT=production`、`COOKIE_SECURE=true`；
+production profile 必须设置 `ENVIRONMENT=production`、`COOKIE_SECURE=true`；
 Compose 固定 `AUTO_CREATE_TABLES=false`。必须由外层负载均衡器或反向代理终止 TLS；
 直接通过明文 HTTP 打开容器端口只用于健康探测，Secure Cookie 登录不会工作。
 

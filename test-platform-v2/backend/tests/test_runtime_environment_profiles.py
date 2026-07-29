@@ -1,4 +1,4 @@
-"""Contracts for fixed local, test, and production runtime profiles."""
+"""Contracts for the fixed local and production runtime profiles."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -6,7 +6,8 @@ from pathlib import Path
 
 PLATFORM_ROOT = Path(__file__).resolve().parents[2]
 PROFILE_ROOT = PLATFORM_ROOT / "config" / "runtime"
-PROFILE_NAMES = ("local", "test", "production")
+LAUNCHER_PATH = PLATFORM_ROOT / "scripts" / "start-platform-environment.ps1"
+PROFILE_NAMES = ("local", "production")
 
 
 def read_profile(name: str) -> dict[str, str]:
@@ -27,14 +28,16 @@ def test_runtime_profiles_have_unique_identity_and_storage() -> None:
 
     assert {profile["PLATFORM_TARGET"] for profile in profiles.values()} == {
         "local",
-        "test",
         "production",
     }
-    assert len({profile["COMPOSE_PROJECT_NAME"] for profile in profiles.values()}) == 3
-    assert len({profile["FRONTEND_PORT"] for profile in profiles.values()}) == 3
-    assert len({profile["BACKEND_PORT"] for profile in profiles.values()}) == 3
-    assert len({profile["PLATFORM_FRONTEND_URL"] for profile in profiles.values()}) == 3
-    assert len({profile["DATABASE_URL"] for profile in profiles.values()}) == 3
+    assert {path.stem.removesuffix(".env") for path in PROFILE_ROOT.glob("*.env.example")} == {
+        "local",
+        "production",
+    }
+    assert len({profile["COMPOSE_PROJECT_NAME"] for profile in profiles.values()}) == 2
+    assert len({profile["FRONTEND_PORT"] for profile in profiles.values()}) == 2
+    assert len({profile["PLATFORM_FRONTEND_URL"] for profile in profiles.values()}) == 2
+    assert len({profile["DATABASE_URL"] for profile in profiles.values()}) == 2
 
 
 def test_local_profile_is_development_only() -> None:
@@ -49,25 +52,29 @@ def test_local_profile_is_development_only() -> None:
     assert profile["VITE_PROXY_TARGET"] == "http://127.0.0.1:8000"
 
 
-def test_shared_profiles_are_production_like_and_isolated() -> None:
-    shared_profiles = {name: read_profile(name) for name in ("test", "production")}
+def test_production_profile_is_secure_and_isolated_from_local() -> None:
+    local = read_profile("local")
+    production = read_profile("production")
 
-    for profile in shared_profiles.values():
-        assert profile["ENVIRONMENT"] == "production"
-        assert profile["DATABASE_URL"].startswith("postgresql://")
-        assert profile["AUTO_CREATE_TABLES"] == "false"
-        assert profile["COOKIE_SECURE"] == "true"
-        assert profile["PLATFORM_FRONTEND_URL"].startswith("https://")
-        assert profile["ALLOWED_ORIGINS"] == profile["PLATFORM_FRONTEND_URL"]
-        assert profile["CSRF_ALLOWED_ORIGINS"] == profile["PLATFORM_FRONTEND_URL"]
+    assert production["ENVIRONMENT"] == "production"
+    assert production["DATABASE_URL"].startswith("postgresql://")
+    assert production["AUTO_CREATE_TABLES"] == "false"
+    assert production["COOKIE_SECURE"] == "true"
+    assert production["PLATFORM_FRONTEND_URL"].startswith("https://")
+    assert production["ALLOWED_ORIGINS"] == production["PLATFORM_FRONTEND_URL"]
+    assert production["CSRF_ALLOWED_ORIGINS"] == production["PLATFORM_FRONTEND_URL"]
+    assert production["POSTGRES_DB"] == "cameltv_production"
+    assert "cameltv_production" in production["DATABASE_URL"]
+    assert production["BACKEND_PORT"] == "8000"
+    assert production["DATABASE_URL"] != local["DATABASE_URL"]
+    assert production["PLATFORM_FRONTEND_URL"] != local["PLATFORM_FRONTEND_URL"]
 
-    assert (
-        shared_profiles["test"]["POSTGRES_DB"]
-        != shared_profiles["production"]["POSTGRES_DB"]
-    )
-    assert (
-        shared_profiles["test"]["POSTGRES_PASSWORD"]
-        != shared_profiles["production"]["POSTGRES_PASSWORD"]
-    )
-    assert "cameltv_test" in shared_profiles["test"]["DATABASE_URL"]
-    assert "cameltv_production" in shared_profiles["production"]["DATABASE_URL"]
+
+def test_launcher_only_accepts_two_targets_and_rejects_stale_local_processes() -> None:
+    launcher = LAUNCHER_PATH.read_text(encoding="utf-8")
+
+    assert '[ValidateSet("local", "production")]' in launcher
+    assert '[ValidateSet("local", "test", "production")]' not in launcher
+    assert '$manifest.gitSha -ceq (Get-GitSha)' in launcher
+    assert "Production origins must exactly match PLATFORM_FRONTEND_URL." in launcher
+    assert "DATABASE_URL database must match POSTGRES_DB." in launcher

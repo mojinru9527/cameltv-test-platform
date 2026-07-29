@@ -17,7 +17,7 @@ related: ["test-platform-v2/backend/README.md", "test-platform-v2/frontend/READM
 ```
 test-platform-v2/
 ├── backend/     # FastAPI + SQLAlchemy + SQLite
-├── frontend/    # React 18 + shadcn/ui (Radix + Tailwind) + Vite
+├── frontend/    # React 19 + shadcn/ui (Radix + Tailwind) + Vite
 └── deploy/      # docker-compose 一键部署
 ```
 
@@ -52,7 +52,7 @@ test-platform-v2/
 | 数据库 | SQLite (WAL, 可升 PostgreSQL) |
 | 鉴权 | JWT + BCrypt |
 | 调度 | APScheduler |
-| 前端框架 | React 18 + TypeScript |
+| 前端框架 | React 19 + React Router 8 + TypeScript |
 | UI | shadcn/ui (Radix UI + Tailwind CSS) |
 | 构建 | Vite 5 |
 | 部署 | Docker + Nginx |
@@ -61,13 +61,12 @@ test-platform-v2/
 
 ### 固定环境入口
 
-测试平台自身采用三套独立实例，不在页面内热切数据库。浏览器地址即环境，
+测试平台自身只采用两套独立实例，不在页面内热切数据库。浏览器地址即环境，
 每个实例只连接自己的数据库：
 
 | 环境 | 固定入口 | 数据库 | 启动方式 |
 |------|----------|--------|----------|
 | local | `http://localhost:5173` | 独立 SQLite `platform-local.db` | `scripts/start-platform-environment.ps1` |
-| test | `config/runtime/test.env` 中配置的 HTTPS 地址 | 独立测试 PostgreSQL | 独立 Compose project |
 | production | `config/runtime/production.env` 中配置的 HTTPS 地址 | 独立生产 PostgreSQL | 显式确认后启动的独立 Compose project |
 
 首次使用时只需把对应的 `*.env.example` 复制为同目录、受 Git 忽略的
@@ -107,9 +106,10 @@ npm run dev
 
 ```bash
 cd deploy
-cp ../config/runtime/test.env.example ../config/runtime/test.env
-# 一次性填写测试环境的密钥、HTTPS 来源和 PostgreSQL 密码
-pwsh ../scripts/start-platform-environment.ps1 -Target test -Action start
+cp ../config/runtime/production.env.example ../config/runtime/production.env
+# 一次性填写生产环境的密钥、HTTPS 来源和 PostgreSQL 密码
+pwsh ../scripts/start-platform-environment.ps1 \
+  -Target production -Action start -ConfirmProduction
 ```
 
 详见 [deploy/README.md](deploy/README.md)

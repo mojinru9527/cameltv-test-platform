@@ -10,6 +10,10 @@ related:
   - "../测试平台全功能验收文档-环境链接与账号汇总.md"
   - "../../tests/test-case-standards/生产级模块验收规则.md"
   - "../../test-platform-v2/work-logs/batch-55-acceptance-closure-qa-report.md"
+  - "../../test-platform-v2/work-logs/batch-56-production-acceptance-qa-report.md"
+  - "../../test-platform-v2/work-logs/batch-56-production-acceptance-issue-register.md"
+  - "../../test-platform-v2/work-logs/batch-56-production-acceptance-leader-verdict.md"
+  - "../../test-platform-v2/work-logs/evidence/batch-56-production-acceptance/README.md"
 ---
 
 # Batch 56 测试平台全功能生产级验收执行矩阵
@@ -259,7 +263,7 @@ M_故障回归通过率
 | `G56-013` | P0 | `OPEN` | C55-5 六主题、全部路由、三视口、a11y/network 尚未完成 | 前端负责人 / QA | J20 全矩阵 PASS，动态路由使用真实实体 | 修复后 1 个工作日内 |
 | `G56-014` | P0 | `OPEN` | 全平台正负面功能点矩阵尚未逐项关联 J01–J22 和现有用例 ID | QA 负责人 | 每个需求点至少一正一负；API 三类校验齐全 | J 执行开始前 |
 | `G56-015` | P0 | `OPEN` | Batch 56 双端全量、真实 E2E、依赖/许可证/漏洞审计未执行 | 开发负责人 / QA | 最终干净 SHA 上运行 A11 全部命令并记录完整失败集合 | 交付判定前 |
-| `G56-016` | P0 | `OPEN` | QA 报告、Leader Verdict、缺陷、证据索引和代码事实尚未对账 | QA Leader | 按 A12 完成逐 ID 对账和脱敏扫描 | 交付判定前 |
+| `G56-016` | P0 | `CLOSED` | QA 报告、独立 issue register、evidence README、Leader Verdict 和本矩阵已互相引用，并对齐 `NEEDS WORK` | QA Leader | 已按 A12 完成逐 ID 对账；关闭仅代表交付物齐全，不关闭业务缺陷 | 2026-07-29 |
 
 ## 9. 执行与回填顺序
 
@@ -338,13 +342,34 @@ M_故障回归通过率
 
 ### 11.5 Gap 处置
 
-- 已关闭：`G56-001`、`G56-002`、`G56-011`、`G56-012`、`G56-013`、`G56-014`、`G56-015`。
+- 已关闭：`G56-001`、`G56-002`、`G56-012`、`G56-013`、`G56-014`、`G56-015`、`G56-016`。
+- 重新打开：`G56-011`。Knowledge/Wiki/Trace 尚未以当前真实设计源、真实
+  AI/OCR 和完整跨项目链路完成 J06/J07/J13 正负面闭环；规则 fallback、
+  固定“未同步”展示或 stub 不计为通过。
 - 部分关闭但仍有外部失败：`G56-003`、`G56-005`。
 - 保持阻断：`G56-004`、`G56-006`、`G56-007`、`G56-008`、`G56-009`、`G56-010`。
-- `G56-016` 已随最终 QA 报告和 `NEEDS WORK` Verdict 对账关闭；它不改变
-  业务门禁仍为 `NEEDS WORK` 的结论。
+- `G56-016` 只关闭交付物对账缺口；它不改变 `B56-B01`～`B56-B10` 和
+  `G56-011` 未关闭，也不改变业务门禁仍为 `NEEDS WORK` 的结论。
 
-### 11.6 最终机械结论
+### 11.6 B56 正式阻断对账
+
+完整责任边界见
+`test-platform-v2/work-logs/batch-56-production-acceptance-issue-register.md`。
+
+| ID | 状态 | 外部输入 | 成功标准摘要 |
+| --- | --- | --- | --- |
+| `B56-B01` | `FAIL` | `B56-R0-TEST-SITES` | 节点 6 恢复后在同一授权网络和浏览器矩阵通过 |
+| `B56-B02` | `FAIL` | `B56-R0-TEST-OPENAPI`、`R0-OAS-SIX-LIVE` | 六份当前契约或可追溯 R1 快照均可解析并完成覆盖对账 |
+| `B56-B03` | `FAIL` | `B56-R0-TEST-OPENAPI` | 公开/受保护边界、OpenAPI 和实现一致；无效凭据被正确拒绝 |
+| `B56-B04` | `FAIL` | `B56-R0-ADMIN-TEST` | 真实浏览器建立会话、进入受保护页、刷新保持且注销失效 |
+| `B56-B05` | `BLOCKED` | `B56-R0-AI` | 获授权真实 AI/OCR 产生可追溯输出，主断言无 fallback/mock |
+| `B56-B06` | `BLOCKED` | `R0-MEDIA-DEVICE` | 经鉴权代理与授权真机完成真实采样、持久化和清理 |
+| `B56-B07` | `BLOCKED` | `B56-R0-ELK`、`R0-ELK-READONLY` | 只读权限下完成平台 traceId 到日志的脱敏关联 |
+| `B56-B08` | `BLOCKED` | `B56-R0-LEGACY-PG`、`R0-LEGACY-PG` | 真实脱敏旧库隔离升级，数据基线、唯一 head 和零漂移通过 |
+| `B56-B09` | `BLOCKED` | `B56-R0-USER-DESIGN`、`B56-R0-ADMIN-DESIGN` | 当前设计源或可追溯脱敏导出形成可复核证据包 |
+| `B56-B10` | `FAIL` | `B56-R0-PROD-SITES` | 批准窗口和 vpn07 内仅用 GET/HEAD 完成全部节点浏览器复测 |
+
+### 11.7 最终机械结论
 
 `NEEDS WORK`。本地 Batch 54/55 遗留、全路由 UI、RBAC、性能真实性与安全、
 启动证据、部署安全及供应链已达到可复核交付标准；但全平台生产放行要求

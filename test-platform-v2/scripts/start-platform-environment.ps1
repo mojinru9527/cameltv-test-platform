@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("local", "test", "production")]
+    [ValidateSet("local", "production")]
     [string]$Target = "local",
 
     [ValidateSet("start", "status")]
@@ -214,19 +214,40 @@ function Assert-RuntimeProfile {
     }
 
     if ($Profile["ENVIRONMENT"] -cne "production") {
-        throw "Shared profiles must set ENVIRONMENT=production."
+        throw "The production profile must set ENVIRONMENT=production."
     }
     if (-not $Profile["DATABASE_URL"].StartsWith("postgresql://", [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Shared profiles must use PostgreSQL."
+        throw "The production profile must use PostgreSQL."
     }
     if ($Profile["COOKIE_SECURE"] -cne "true") {
-        throw "Shared profiles must set COOKIE_SECURE=true."
+        throw "The production profile must set COOKIE_SECURE=true."
     }
     if ($Profile["AUTO_CREATE_TABLES"] -cne "false") {
-        throw "Shared profiles must set AUTO_CREATE_TABLES=false."
+        throw "The production profile must set AUTO_CREATE_TABLES=false."
     }
     if ($frontendUri.Scheme -cne "https") {
-        throw "Shared profiles must use an HTTPS PLATFORM_FRONTEND_URL."
+        throw "The production profile must use an HTTPS PLATFORM_FRONTEND_URL."
+    }
+    foreach ($key in @("ALLOWED_ORIGINS", "CSRF_ALLOWED_ORIGINS", "POSTGRES_DB")) {
+        if (-not $Profile.ContainsKey($key) -or [string]::IsNullOrWhiteSpace($Profile[$key])) {
+            throw "The production profile must set non-empty $key."
+        }
+    }
+    if (
+        $Profile["ALLOWED_ORIGINS"] -cne $Profile["PLATFORM_FRONTEND_URL"] -or
+        $Profile["CSRF_ALLOWED_ORIGINS"] -cne $Profile["PLATFORM_FRONTEND_URL"]
+    ) {
+        throw "Production origins must exactly match PLATFORM_FRONTEND_URL."
+    }
+    try {
+        $databaseUri = [uri]$Profile["DATABASE_URL"]
+        $databaseName = [uri]::UnescapeDataString($databaseUri.AbsolutePath.TrimStart("/"))
+    }
+    catch {
+        throw "The production DATABASE_URL is invalid."
+    }
+    if ($databaseName -cne $Profile["POSTGRES_DB"]) {
+        throw "The production DATABASE_URL database must match POSTGRES_DB."
     }
 }
 
@@ -417,14 +438,15 @@ function Assert-LocalReuseManifest {
             $manifest.database.backend -ceq $Database["backend"] -and
             $manifest.database.name -ceq $Database["name"] -and
             [int]$manifest.ports.backend -eq $backendPort -and
-            [int]$manifest.ports.frontend -eq $frontendPort
+            [int]$manifest.ports.frontend -eq $frontendPort -and
+            $manifest.gitSha -ceq (Get-GitSha)
         )
     }
     catch {
         throw "Existing local listeners have an unreadable or incomplete runtime manifest. Stop the old processes before starting this profile."
     }
     if (-not $manifestMatches) {
-        throw "Existing local listeners do not match the requested profile target, URL, database, or ports. Stop the old processes before starting this profile."
+        throw "Existing local listeners do not match the requested profile target, URL, database, ports, or Git SHA. Stop the old processes before starting this profile."
     }
 
     if (

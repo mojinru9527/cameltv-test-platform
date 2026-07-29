@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import {
   Smartphone, Play, Square, History, BarChart3, RefreshCw,

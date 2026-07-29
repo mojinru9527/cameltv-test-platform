@@ -1,6 +1,6 @@
 import { Badge, Button, PageShell, type BadgeTone } from '@/ui'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { Progress } from '@/ui'

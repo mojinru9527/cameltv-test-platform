@@ -232,7 +232,7 @@ def test_frontend_proxies_forward_performance_websockets() -> None:
     assert "proxy_http_version 1.1;" in nginx_config
     assert "proxy_set_header Upgrade $http_upgrade;" in nginx_config
     assert 'proxy_set_header Connection "upgrade";' in nginx_config
-    assert "node:20-alpine@sha256:" in frontend_dockerfile
+    assert "node:22.22-alpine@sha256:" in frontend_dockerfile
     assert "nginx:alpine@sha256:" in frontend_dockerfile
 
 

@@ -1,5 +1,9 @@
 # Batch 57 Environment Targets and Acceptance Implementation Plan
 
+> **Superseded on 2026-07-29:** 用户将运行拓扑从 local/test/production
+> 调整为仅 local/production。后续实施与验收以
+> `2026-07-29-batch-57-local-production-and-batch56-closure.md` 为准。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 让测试平台 local/test/production 三套实例分别绑定固定访问地址和独立数据库，配置一次后通过固定地址访问，不再运行中手动切换数据库，并如实承接 Batch 56 的生产验收遗留。

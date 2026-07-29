@@ -269,6 +269,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "GET", "url": "/health"},
+            project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=False,
         )
@@ -283,6 +284,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "POST", "url": "/api/create"},
+            project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=False,
             has_execute_prod=True,
@@ -297,6 +299,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "POST", "url": "/api/create"},
+            project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=True,
             has_execute_prod=False,
@@ -311,6 +314,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "POST", "url": "https://httpbin.org/post"},
+            project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=True,
             has_execute_prod=True,
@@ -326,6 +330,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "PUT", "url": "/api/update/1"},
+            project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=False,
             has_execute_prod=True,
@@ -340,6 +345,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "DELETE", "url": "/api/items/1"},
+            project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=False,
             has_execute_prod=True,
@@ -380,6 +386,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "POST", "url": "https://httpbin.org/post"},
+            project_id=1,
             environment_id=env.id,
             confirm_prod=False,
             has_execute_prod=False,

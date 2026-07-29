@@ -1,6 +1,6 @@
 import { Badge, Button, PageShell, type BadgeTone } from '@/ui'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import { fetchDomains } from '@/api/testcase'

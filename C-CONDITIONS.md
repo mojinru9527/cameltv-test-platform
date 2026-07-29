@@ -2,7 +2,7 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-07-29 (Batch 55 验收真值收尾)
+**最后更新**: 2026-07-29 (Batch 56 交付物与生产验收阻断对账)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
@@ -112,6 +112,12 @@
 | C55-4 | 真实浏览器完成用例→计划→执行→报告、定时任务和缺陷生命周期 | P0 | 2026-07-29 |
 | C55-5 | 六主题×支持的明暗模式×全部路由×三视口，并通过键盘、Axe、溢出、控制台和网络门禁 | P0 | 2026-07-29 |
 
+### batch-56 — 全平台生产级验收
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| G56-011 | Knowledge/Wiki/Trace 仍缺真实设计源、真实 AI/OCR 和 J06/J07/J13 正负面闭环；规则 fallback、固定“未同步”展示和 stub 不计为通过 | P0 | 2026-07-29 |
+
 ---
 
 ## In Progress (处理中)
@@ -126,6 +132,7 @@
 
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
+| G56-016 | Batch 56 QA 报告、独立 issue register、evidence README、Leader Verdict 和 execution matrix 已互相引用并完成 `NEEDS WORK` 对账；仅关闭交付物缺口 | Batch 57 文档闭环 | 2026-07-29 |
 | C55-1 | `/apitest` 保持前端路由且仅 `/api/v1` 进入 Vite 代理 | commits `df8a4b7` + `b77b53b` + `7d2aff1`；Vitest 13/13 + Playwright 1/1 | 2026-07-29 |
 | C55-2 | Alembic 显式修订恢复手册、一次性库双向演练及 ORM 漂移修复 | commit `1f9a06a`；upgrade/downgrade/re-upgrade/check 退出码 0 | 2026-07-29 |
 | C19-C1 | 验收数据清理 | commit `9200a7b` | 2026-07-20 |
@@ -189,10 +196,10 @@
 
 ## 统计
 
-- **Open**: 34 (含 5 个 P0 blocking)
+- **Open**: 35 (含 6 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 43
-- **Total**: 77
+- **Closed**: 44
+- **Total**: 79
 
 ## 维护约定
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router'
 import { fetchModuleTree } from '@/api/requirementModules'
 import type { ModuleTreeResponse, ModuleTreeNode } from '@/types'
 import { Button } from '@/ui'

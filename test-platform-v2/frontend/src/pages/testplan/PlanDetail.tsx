@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/ui'
