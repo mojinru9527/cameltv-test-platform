@@ -251,12 +251,22 @@ def kick() -> None:
 def shutdown_processor(timeout: float = 5.0) -> None:
     """优雅关闭 worker 线程（用于测试和进程退出）。"""
     global _processor_thread
-    _shutdown_event.set()
-    _wake_event.set()  # 唤醒以检查 shutdown_event
-    if _processor_thread is not None:
-        _processor_thread.join(timeout=timeout)
-        _processor_thread = None
-        logger.info("API task worker processor shut down")
+    with _processor_lock:
+        thread = _processor_thread
+        if thread is None:
+            return
+        _shutdown_event.set()
+        _wake_event.set()  # 唤醒以检查 shutdown_event
+
+    thread.join(timeout=timeout)
+    if thread.is_alive():
+        logger.warning("API task worker did not stop within %.1fs", timeout)
+        return
+
+    with _processor_lock:
+        if _processor_thread is thread:
+            _processor_thread = None
+            logger.info("API task worker processor shut down")
 
 
 # ═══════════════════════════════════════════════════════════

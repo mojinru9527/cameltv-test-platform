@@ -113,11 +113,19 @@ async def lifespan(_: FastAPI):
         finally:
             _sync_db.close()
 
-    yield
-    from app.services.knowledge.agent_queue import shutdown_processor
+    try:
+        yield
+    finally:
+        from app.services.api_task_worker import (
+            shutdown_processor as shutdown_api_task_worker,
+        )
+        from app.services.knowledge.agent_queue import (
+            shutdown_processor as shutdown_agent_queue,
+        )
 
-    shutdown_processor()
-    shutdown_scheduler()
+        shutdown_api_task_worker()
+        shutdown_agent_queue()
+        shutdown_scheduler()
 
 
 app = FastAPI(
