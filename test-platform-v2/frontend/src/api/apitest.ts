@@ -49,7 +49,10 @@ export async function quickExecute(request: {
 
 // ── 服务管理 ──
 
-export async function fetchApiServices(): Promise<ApiService[]> {
+export async function fetchApiServices(signal?: AbortSignal): Promise<ApiService[]> {
+  if (signal) {
+    return api.get('/apitest/services', { signal }) as unknown as Promise<ApiService[]>
+  }
   return api.get('/apitest/services') as unknown as Promise<ApiService[]>
 }
 
@@ -66,8 +69,8 @@ export async function fetchApiEndpoints(params: {
   keyword?: string
   page?: number
   page_size?: number
-}): Promise<{ total: number; page: number; page_size: number; items: ApiEndpoint[] }> {
-  return api.get('/apitest/endpoints', { params }) as unknown as Promise<{ total: number; page: number; page_size: number; items: ApiEndpoint[] }>
+}, signal?: AbortSignal): Promise<{ total: number; page: number; page_size: number; items: ApiEndpoint[] }> {
+  return api.get('/apitest/endpoints', { params, ...(signal ? { signal } : {}) }) as unknown as Promise<{ total: number; page: number; page_size: number; items: ApiEndpoint[] }>
 }
 
 export async function createApiEndpoint(data: Partial<ApiEndpoint>): Promise<ApiEndpoint> {

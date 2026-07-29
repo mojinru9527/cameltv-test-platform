@@ -24,7 +24,8 @@ import type {
 // 说明：axios 拦截器已拆包 {code,msg,data}，并自动附带 X-Project-Id 头，
 // 因此这里返回的即是 data，无需再传 project_id。
 
-export async function fetchKnowledgeOverview(): Promise<KnowledgeOverview> {
+export async function fetchKnowledgeOverview(signal?: AbortSignal): Promise<KnowledgeOverview> {
+  if (signal) return api.get('/knowledge/overview', { signal })
   return api.get('/knowledge/overview')
 }
 

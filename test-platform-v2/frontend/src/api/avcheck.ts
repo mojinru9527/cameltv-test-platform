@@ -1,8 +1,8 @@
 import api from './client'
 import type { AvMeasurementItem, AvMeasurementTemplate, AvTaskItem } from '@/types'
 
-export async function fetchAvTasks(params: Record<string, any> = {}) {
-  return api.get('/av-checks', { params })
+export async function fetchAvTasks(params: Record<string, any> = {}, signal?: AbortSignal) {
+  return api.get('/av-checks', { params, ...(signal ? { signal } : {}) })
 }
 
 export async function fetchAvTask(id: number) {

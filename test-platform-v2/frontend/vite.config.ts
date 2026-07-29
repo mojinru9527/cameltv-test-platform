@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: devPort,
       proxy: {
-        [API_V1_PROXY_PATTERN]: { target: proxyTarget, changeOrigin: true },
+        [API_V1_PROXY_PATTERN]: { target: proxyTarget, changeOrigin: true, ws: true },
       },
     },
   }

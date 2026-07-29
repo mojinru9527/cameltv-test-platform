@@ -3,7 +3,7 @@
 SoloX (https://github.com/smart-test-ti/SoloX) 是开源 Android/iOS 实时性能采集工具。
 本服务通过 SoloX 的 Python API (AppPerformanceMonitor) 进行封装，提供统一接口。
 
-未安装 SoloX 时自动降级为 Mock 模式，允许在无设备环境下开发和测试。
+未安装 SoloX 时明确报告采集器不可用，不生成或返回伪造性能数据。
 """
 from __future__ import annotations
 
@@ -19,7 +19,11 @@ try:
     SOLOX_AVAILABLE = True
 except ImportError:
     SOLOX_AVAILABLE = False
-    logger.warning("solox not installed; perf collector running in MOCK mode")
+    logger.warning("solox not installed; real performance collection is unavailable")
+
+
+class CollectorUnavailableError(RuntimeError):
+    """Raised when a real device collector is required but unavailable."""
 
 
 # ── 指标定义（对标 PerfDog 取值口径）──
@@ -76,60 +80,17 @@ METRIC_DEFS: dict[str, dict] = {
 }
 
 
-# ── Mock 数据生成 ──
-
-import math
-import random
-import time
-
-class MockCollector:
-    """无 SoloX / 无设备时的模拟采集器，用于开发调试。"""
-
-    def __init__(self) -> None:
-        self._start_ts = time.time()
-        self._fps_base = random.uniform(55, 60)
-        self._cpu_base = random.uniform(15, 25)
-        self._mem_base = random.uniform(200, 350)
-        self._jank_count = 0
-        self._anr_count = 0
-
-    def snapshot(self) -> dict:
-        """生成一次模拟采样。"""
-        t = time.time() - self._start_ts
-        # 模拟周期性波动
-        wave = math.sin(t * 0.3) * 5
-        fps = max(5, min(60, self._fps_base + wave + random.uniform(-2, 2)))
-        cpu = max(0, min(100, self._cpu_base + wave + random.uniform(-3, 3)))
-        mem = max(50, self._mem_base + wave * 3 + random.uniform(-5, 5))
-
-        # 偶发 Jank (5% 概率)
-        events = []
-        if random.random() < 0.05:
-            self._jank_count += 1
-            fps = max(5, fps - random.uniform(15, 30))
-            events.append({"event_type": "jank", "detail": f"Jank #{self._jank_count}: fps dropped to {fps:.1f}"})
-
-        # 极低概率 ANR (1%)
-        if random.random() < 0.01:
-            self._anr_count += 1
-            events.append({"event_type": "anr", "detail": f"ANR #{self._anr_count}: main thread blocked >5s"})
-
-        return {
-            "cpu": {"appCpuRate": round(cpu, 1), "systemCpuRate": round(cpu + random.uniform(5, 15), 1)},
-            "memory": {"total": round(mem, 1), "swap": round(random.uniform(0, 10), 1)},
-            "fps": {"fps": round(fps, 1), "jank": self._jank_count},
-            "battery": {"level": max(60, 100 - int(t / 30)), "temperature": round(28 + random.uniform(0, 8), 1)},
-            "network": {"send": round(random.uniform(1, 15), 2), "recv": round(random.uniform(10, 200), 2)},
-            "events": events,
-        }
-
-
 # ── 公共接口 ──
+
+def is_available() -> bool:
+    """Return whether the real SoloX collector can be used."""
+    return SOLOX_AVAILABLE
+
 
 def get_connected_devices() -> list[dict[str, Any]]:
     """返回当前连接的 Android/iOS 设备列表。"""
     if not SOLOX_AVAILABLE:
-        return _mock_devices()
+        return []
 
     try:
         devices = Devices()
@@ -178,7 +139,7 @@ def get_connected_devices() -> list[dict[str, Any]]:
 def get_device_apps(device_id: str, platform: str = "Android") -> list[str]:
     """返回指定设备已安装的应用包名列表。"""
     if not SOLOX_AVAILABLE:
-        return _mock_apps()
+        return []
 
     try:
         devices = Devices()
@@ -198,8 +159,9 @@ def get_device_apps(device_id: str, platform: str = "Android") -> list[str]:
 def collect_single_snapshot(device_id: str, pkg_name: str, platform: str = "Android") -> dict:
     """单次采样——返回所有已激活指标的快照数据。"""
     if not SOLOX_AVAILABLE:
-        mock = MockCollector()
-        return mock.snapshot()
+        raise CollectorUnavailableError(
+            "SoloX 未安装，无法执行真实性能采集",
+        )
 
     try:
         apm = AppPerformanceMonitor(
@@ -210,26 +172,32 @@ def collect_single_snapshot(device_id: str, pkg_name: str, platform: str = "Andr
             noLog=True,
         )
         result: dict[str, Any] = {"events": []}
-        try:
-            result["cpu"] = apm.collectCpu() or {}
-        except Exception:
-            result["cpu"] = {}
-        try:
-            result["memory"] = apm.collectMemory() or {}
-        except Exception:
-            result["memory"] = {}
-        try:
-            result["fps"] = apm.collectFps() or {}
-        except Exception:
-            result["fps"] = {}
-        try:
-            result["battery"] = apm.collectBattery() or {}
-        except Exception:
-            result["battery"] = {}
-        try:
-            result["network"] = apm.collectNetwork(wifi=True) or {}
-        except Exception:
-            result["network"] = {}
+        failures: dict[str, str] = {}
+        collectors = {
+            "cpu": apm.collectCpu,
+            "memory": apm.collectMemory,
+            "fps": apm.collectFps,
+            "battery": apm.collectBattery,
+            "network": lambda: apm.collectNetwork(wifi=True),
+        }
+        for metric, collect in collectors.items():
+            try:
+                result[metric] = collect() or {}
+            except Exception as exc:
+                logger.warning("SoloX %s collection failed: %s", metric, exc)
+                result[metric] = {}
+                failures[metric] = str(exc)
+
+        populated = any(result[name] for name in collectors)
+        if not populated:
+            detail = "; ".join(
+                f"{name}: {message}" for name, message in failures.items()
+            )
+            raise RuntimeError(
+                f"SoloX 未返回任何真实性能指标{': ' + detail if detail else ''}",
+            )
+        if failures:
+            result["collection_errors"] = failures
         return result
     except Exception as exc:
         logger.error("SoloX snapshot failed: %s", exc)
@@ -238,8 +206,14 @@ def collect_single_snapshot(device_id: str, pkg_name: str, platform: str = "Andr
 
 def measure_startup_time(device_id: str, pkg_name: str, platform: str = "Android") -> dict:
     """测量 App 冷启动耗时（单位 ms）。Android 通过 adb am start -W。"""
-    if not SOLOX_AVAILABLE or platform != "Android":
-        return {"startup_ms": random.randint(800, 2500)}
+    if not SOLOX_AVAILABLE:
+        raise CollectorUnavailableError(
+            "SoloX 未安装，无法执行真实启动耗时测量",
+        )
+    if platform != "Android":
+        raise CollectorUnavailableError(
+            "当前仅支持 Android 真实启动耗时测量",
+        )
 
     import subprocess
     try:
@@ -288,21 +262,3 @@ def _android_os_version(device_id: str) -> str:
         return f"Android {r.stdout.strip()}" if r.stdout.strip() else ""
     except Exception:
         return ""
-
-
-def _mock_devices() -> list[dict[str, Any]]:
-    return [
-        {"device_id": "mock-android-001", "device_name": "Pixel 7 (Mock)", "device_model": "Pixel 7",
-         "platform": "Android", "os_version": "Android 14", "status": "online"},
-        {"device_id": "mock-ios-001", "device_name": "iPhone 15 Pro (Mock)", "device_model": "iPhone 15 Pro",
-         "platform": "iOS", "os_version": "iOS 17.4", "status": "online"},
-    ]
-
-
-def _mock_apps() -> list[str]:
-    return [
-        "com.cameltv.app",
-        "com.cameltv.app.debug",
-        "com.example.sportlive",
-        "com.google.android.youtube",
-    ]
