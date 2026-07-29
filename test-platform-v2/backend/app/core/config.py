@@ -54,10 +54,12 @@ class Settings(BaseSettings):
 
     # ── Default admin ──
     admin_username: str = "admin"
-    admin_password: str = ""                   # production: required; dev auto-generates
+    # Required in production; generated in development only for initial creation.
+    admin_password: str = ""
 
     # ── Seed users ──
-    tester_password: str = ""                  # empty = auto-generate in dev; required in prod
+    # Required in production; generated in development only for initial creation.
+    tester_password: str = ""
     tester_username: str = "tester"
 
     # ── ELK ──
@@ -161,16 +163,16 @@ class Settings(BaseSettings):
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
 
-    @cached_property
-    def effective_admin_password(self) -> str:
-        """Dev: auto-generate a random password when unconfigured (logged to console)."""
+    def get_initial_admin_password(self) -> str:
+        """Return the configured password or generate one for initial admin creation."""
         if self.admin_password:
             return self.admin_password
         if self.environment == "development":
             pwd = secrets.token_urlsafe(12)
             import logging
             logging.getLogger("uvicorn").warning(
-                "[security] ADMIN_PASSWORD not set — auto-generated dev password: %s (valid this session only)",
+                "[security] ADMIN_PASSWORD not set — generated for "
+                "initial admin creation: %s (shown once; save it now)",
                 pwd,
             )
             return pwd
@@ -199,6 +201,8 @@ class Settings(BaseSettings):
                 issues.append("SECRET_KEY 未设置或仍为开发默认值，请通过环境变量/secret 管理设置强密钥")
             if not self.admin_password or self.admin_password == "admin123":
                 issues.append("ADMIN_PASSWORD 未设置或仍为默认值，请设置强密码")
+            if not self.tester_password:
+                issues.append("TESTER_PASSWORD 未设置，请为种子测试用户设置强密码")
             if self.ai_enabled and not self.ai_api_key:
                 issues.append("AI_API_KEY 未设置，AI 功能将不可用")
             if not self.cookie_secure:

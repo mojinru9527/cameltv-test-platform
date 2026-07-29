@@ -66,7 +66,8 @@ async def lifespan(_: FastAPI):
         if settings.environment == "production":
             raise SystemExit(
                 "\n[security] FATAL — refusing to start in production with insecure configuration.\n"
-                + "  Set SECRET_KEY, ADMIN_PASSWORD, and AI_API_KEY via environment or .env file.\n"
+                + "  Set SECRET_KEY, ADMIN_PASSWORD, TESTER_PASSWORD, and AI_API_KEY "
+                + "via environment or .env file.\n"
             )
 
     if settings.auto_create_tables:
