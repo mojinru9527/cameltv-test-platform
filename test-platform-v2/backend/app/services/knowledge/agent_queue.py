@@ -40,6 +40,8 @@ _RETRY_DELAY = 30
 # 全局处理器状态
 _processor_started = False
 _processor_lock = threading.Lock()
+_processor_stop = threading.Event()
+_processor_thread: threading.Thread | None = None
 
 _SQLITE_LOCK_RETRY_ATTEMPTS = 3
 _SQLITE_LOCK_RETRY_BASE_DELAY = 0.05
@@ -312,20 +314,50 @@ def _execute_queue_item(item_id: int, project_id: int) -> None:
 def _queue_loop() -> None:
     """后台队列处理循环（运行在守护线程中）。"""
     logger.info("Agent queue processor started")
-    while True:
+    while not _processor_stop.is_set():
         try:
             _process_queue_once()
         except Exception:
             logger.exception("Queue loop iteration error")
-        time.sleep(_PROCESS_INTERVAL)
+        _processor_stop.wait(_PROCESS_INTERVAL)
 
 
 def ensure_processor_running() -> None:
     """确保队列处理器已启动（幂等）。"""
-    global _processor_started
+    global _processor_started, _processor_thread
     with _processor_lock:
-        if not _processor_started:
-            t = threading.Thread(target=_queue_loop, daemon=True, name="agent-queue-processor")
-            t.start()
+        if _processor_thread is not None and _processor_thread.is_alive():
             _processor_started = True
-            logger.info("Agent queue processor thread started")
+            return
+
+        _processor_stop.clear()
+        _processor_thread = threading.Thread(
+            target=_queue_loop,
+            daemon=True,
+            name="agent-queue-processor",
+        )
+        _processor_thread.start()
+        _processor_started = True
+        logger.info("Agent queue processor thread started")
+
+
+def shutdown_processor(timeout: float = 5.0) -> None:
+    """停止队列处理器并等待线程退出，供应用关闭和测试清理使用。"""
+    global _processor_started, _processor_thread
+
+    with _processor_lock:
+        thread = _processor_thread
+        if thread is None:
+            _processor_started = False
+            return
+        _processor_stop.set()
+
+    thread.join(timeout=timeout)
+    if thread.is_alive():
+        logger.warning("Agent queue processor did not stop within %.1fs", timeout)
+        return
+
+    with _processor_lock:
+        if _processor_thread is thread:
+            _processor_thread = None
+            _processor_started = False
