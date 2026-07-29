@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -51,5 +51,33 @@ describe('performance page icon actions', () => {
 
     expect(screen.getByRole('button', { name: '刷新采集记录' })).toBeTruthy()
     expect(await screen.findByText('暂无采集记录')).toBeTruthy()
+  })
+
+  it('shows a persistent truthful unavailable state when SoloX is missing and recovers on retry', async () => {
+    api.fetchDevices
+      .mockRejectedValueOnce({
+        response: {
+          status: 503,
+          data: { msg: 'SoloX 未安装，真实性能采集不可用' },
+        },
+      })
+      .mockResolvedValueOnce([])
+
+    render(
+      <MemoryRouter initialEntries={['/perftest?tab=device']}>
+        <PerfTestPage />
+      </MemoryRouter>,
+    )
+
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain('真实性能采集不可用')
+    expect(alert.textContent).toContain('不会生成模拟数据')
+    expect(screen.queryByText('未检测到设备')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: '重新检测采集器' }))
+
+    expect(await screen.findByText('未检测到设备')).toBeTruthy()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(api.fetchDevices).toHaveBeenCalledTimes(2)
   })
 })

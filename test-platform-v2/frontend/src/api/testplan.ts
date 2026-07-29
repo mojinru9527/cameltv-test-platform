@@ -13,7 +13,8 @@ export async function fetchPlans(params: PlanFilter = {}) {
   return api.get('/test-plans', { params })
 }
 
-export async function fetchPlan(id: number) {
+export async function fetchPlan(id: number, signal?: AbortSignal) {
+  if (signal) return api.get(`/test-plans/${id}`, { signal })
   return api.get(`/test-plans/${id}`)
 }
 
@@ -88,8 +89,11 @@ export async function executeCase(planId: number, pcaseId: number, body: { statu
   return api.post(`/test-plans/${planId}/cases/${pcaseId}/execute`, body)
 }
 
-export async function fetchExecutions(planId: number, pcaseId?: number) {
-  return api.get(`/test-plans/${planId}/executions`, { params: { pcase_id: pcaseId || 0 } })
+export async function fetchExecutions(planId: number, pcaseId?: number, signal?: AbortSignal) {
+  return api.get(`/test-plans/${planId}/executions`, {
+    params: { pcase_id: pcaseId || 0 },
+    ...(signal ? { signal } : {}),
+  })
 }
 
 // ── Batch execution ──

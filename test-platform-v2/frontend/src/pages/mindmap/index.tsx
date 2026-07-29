@@ -23,6 +23,7 @@ export default function MindmapPage() {
   useDocumentTitle('思维导图')
   const containerRef = useRef<HTMLDivElement>(null)
   const mmRef = useRef<any>(null)
+  const renderVersionRef = useRef(0)
   const [domain, setDomain] = useState('')
   const [domains, setDomains] = useState<any[]>([])
   const [fullscreen, setFullscreen] = useState(false)
@@ -79,11 +80,25 @@ export default function MindmapPage() {
     return md
   }, [rawData])
 
+  const destroyMindmap = useCallback(() => {
+    const markmap = mmRef.current
+    mmRef.current = null
+    markmap?.svg?.interrupt?.()
+    markmap?.destroy?.()
+  }, [])
+
   // Render mindmap — try npm packages first, fall back to CDN
   const renderMindmap = useCallback(async () => {
     if (!containerRef.current || !markdown) return
 
+    const renderVersion = ++renderVersionRef.current
     const container = containerRef.current
+    const isCurrentRender = () =>
+      renderVersionRef.current === renderVersion
+      && containerRef.current === container
+      && container.isConnected
+
+    destroyMindmap()
 
     const renderCDN = () => {
       const M = (window as any).__Markmap
@@ -91,7 +106,7 @@ export default function MindmapPage() {
       if (M && T) {
         const { root } = T.transform(markdown)
         container.innerHTML = ''
-        M.create(container, undefined, root)
+        mmRef.current = M.create(container, undefined, root)
         setRenderError(null)
         return true
       }
@@ -108,6 +123,8 @@ export default function MindmapPage() {
       // @ts-ignore
       const markmapView = await import('markmap-view')
 
+      if (!isCurrentRender()) return
+
       const transformer = new markmapLib.Transformer()
       const { root } = transformer.transform(markdown)
       container.innerHTML = ''
@@ -115,14 +132,41 @@ export default function MindmapPage() {
       svg.setAttribute('width', '100%')
       svg.setAttribute('height', fullscreen ? '85vh' : '55vh')
       container.appendChild(svg)
-      mmRef.current = markmapView.Markmap.create(
+      const markmap = markmapView.Markmap.create(
         svg,
-        { autoFit: true, duration: 300, maxWidth: 320, initialExpandLevel: 2 },
-        root,
+        { autoFit: false, duration: 300, maxWidth: 320, initialExpandLevel: 2 },
       )
+      mmRef.current = markmap
+      await markmap.setData(root)
+
+      if (!isCurrentRender() || mmRef.current !== markmap) {
+        if (mmRef.current === markmap) {
+          mmRef.current = null
+          markmap.svg?.interrupt?.()
+          markmap.destroy()
+        }
+        return
+      }
+
+      const viewport = svg.getBoundingClientRect()
+      const rect = markmap.state?.rect
+      const contentWidth = rect ? rect.x2 - rect.x1 : 0
+      const contentHeight = rect ? rect.y2 - rect.y1 : 0
+      const canFit = [
+        viewport.width,
+        viewport.height,
+        contentWidth,
+        contentHeight,
+      ].every((value) => Number.isFinite(value) && value > 0)
+
+      if (canFit) {
+        await markmap.fit()
+      }
       setRenderError(null)
     } catch {
+      if (!isCurrentRender()) return
       // Ultimate fallback: plain text
+      destroyMindmap()
       container.innerHTML = ''
       const pre = document.createElement('pre')
       pre.style.whiteSpace = 'pre-wrap'
@@ -132,15 +176,21 @@ export default function MindmapPage() {
       container.appendChild(pre)
       setRenderError('markmap not available — install with: npm install markmap-lib markmap-view')
     }
-  }, [markdown, fullscreen])
+  }, [destroyMindmap, markdown, fullscreen])
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined
     if (!isLoading) {
       // Small delay to ensure DOM is ready
-      const timer = setTimeout(renderMindmap, 100)
-      return () => clearTimeout(timer)
+      timer = setTimeout(() => { void renderMindmap() }, 100)
     }
-  }, [isLoading, renderMindmap])
+
+    return () => {
+      if (timer) clearTimeout(timer)
+      renderVersionRef.current += 1
+      destroyMindmap()
+    }
+  }, [destroyMindmap, isLoading, renderMindmap])
 
   return (
     <div className="p-6 space-y-4">

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import { Button } from '@/ui'
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { useAuthStore } from '@/stores/auth'
 import Placeholder from '@/pages/Placeholder'
 import {
@@ -100,48 +101,50 @@ export default function AgentWorkbenchPage() {
   const [queueStats, setQueueStats] = useState<QueueStats>({ pending: 0, running: 0, completed: 0, failed: 0 })
   const [queueLoading, setQueueLoading] = useState(false)
 
-  const loadRuns = useCallback(() => {
+  const loadRuns = useCallback((signal?: AbortSignal) => {
     setRunsLoading(true)
-    fetchAgentRuns({ page_size: 50 })
-      .then((res) => setRuns(res.items))
-      .catch(() => toast.error('加载执行记录失败'))
-      .finally(() => setRunsLoading(false))
+    fetchAgentRuns({ page_size: 50 }, signal)
+      .then((res) => { if (!signal?.aborted) setRuns(res.items) })
+      .catch(() => { if (!signal?.aborted) toast.error('加载执行记录失败') })
+      .finally(() => { if (!signal?.aborted) setRunsLoading(false) })
   }, [])
 
-  const loadTypes = useCallback(() => {
-    fetchAgentTypes()
-      .then(setAgentTypes)
-      .catch(() => {})
+  const loadTypes = useCallback((signal?: AbortSignal) => {
+    fetchAgentTypes(signal)
+      .then((types) => { if (!signal?.aborted) setAgentTypes(types) })
+      .catch(() => undefined)
   }, [])
 
-  const loadQueue = useCallback(() => {
+  const loadQueue = useCallback((signal?: AbortSignal) => {
     setQueueLoading(true)
     Promise.all([
-      fetchQueueItems({ page_size: 100 }),
-      fetchQueueStats(),
+      fetchQueueItems({ page_size: 100 }, signal),
+      fetchQueueStats(signal),
     ])
       .then(([items, stats]) => {
-        setQueueItems(items.items)
-        setQueueStats(stats)
+        if (!signal?.aborted) {
+          setQueueItems(items.items)
+          setQueueStats(stats)
+        }
       })
-      .catch(() => toast.error('加载队列失败'))
-      .finally(() => setQueueLoading(false))
+      .catch(() => { if (!signal?.aborted) toast.error('加载队列失败') })
+      .finally(() => { if (!signal?.aborted) setQueueLoading(false) })
   }, [])
 
-  useEffect(() => {
-    loadTypes()
-    loadRuns()
-    loadQueue()
+  useAbortableEffect((signal) => {
+    loadTypes(signal)
+    loadRuns(signal)
+    loadQueue(signal)
   }, [loadTypes, loadRuns, loadQueue])
 
   // Load run detail when selected
-  useEffect(() => {
+  useAbortableEffect((signal) => {
     if (!selectedRun?.id) return
     setDetailLoading(true)
-    fetchAgentRun(selectedRun.id)
-      .then(setRunDetail)
-      .catch(() => toast.error('加载详情失败'))
-      .finally(() => setDetailLoading(false))
+    fetchAgentRun(selectedRun.id, signal)
+      .then((run) => { if (!signal.aborted) setRunDetail(run) })
+      .catch(() => { if (!signal.aborted) toast.error('加载详情失败') })
+      .finally(() => { if (!signal.aborted) setDetailLoading(false) })
   }, [selectedRun?.id])
 
   const handleTrigger = async () => {

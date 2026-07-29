@@ -12,8 +12,8 @@ export interface PerfDevice {
   installed_apps?: string[]
 }
 
-export async function fetchDevices(): Promise<PerfDevice[]> {
-  const res: any = await api.get('/perf-sessions/devices')
+export async function fetchDevices(signal?: AbortSignal): Promise<PerfDevice[]> {
+  const res: any = await api.get('/perf-sessions/devices', { signal })
   return res.devices ?? []
 }
 
@@ -49,13 +49,16 @@ export interface PerfSessionCreate {
   duration: number
 }
 
-export async function fetchSessions(params: Record<string, any> = {}): Promise<{
+export async function fetchSessions(
+  params: Record<string, any> = {},
+  signal?: AbortSignal,
+): Promise<{
   items: PerfSession[]
   total: number
   page: number
   page_size: number
 }> {
-  return api.get('/perf-sessions', { params }) as any
+  return api.get('/perf-sessions', { params, signal }) as any
 }
 
 export async function fetchSession(id: number): Promise<PerfSession> {

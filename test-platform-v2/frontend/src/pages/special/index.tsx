@@ -10,7 +10,7 @@ import {
   Loader2,
   Edit,
 } from '@/lib/icons'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import {
   createAvMeasurement,
   createAvTask,
@@ -24,6 +24,7 @@ import {
   type AvMeasurementPayload,
 } from '@/api/avcheck'
 import { useAuthStore } from '@/stores/auth'
+import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
 import type { AvMeasurementItem, AvMeasurementTemplate, AvTaskItem } from '@/types'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
@@ -173,19 +174,23 @@ export default function SpecialPage() {
     defaultValues: { name: '', stream_url: '', protocol: 'HLS' },
   })
 
-  const load = useCallback(async (page = 1) => {
+  const load = useCallback(async (page = 1, signal?: AbortSignal) => {
     setLoading(true)
     try {
       const params: any = { page, page_size: 20 }
       if (fProtocol) params.protocol = fProtocol
       if (fStatus) params.status = fStatus
       if (fKeyword) params.keyword = fKeyword
-      const r: any = await fetchAvTasks(params)
-      setData(r)
-    } finally { setLoading(false) }
+      const r: any = await fetchAvTasks(params, signal)
+      if (!signal?.aborted) setData(r)
+    } catch (error) {
+      rethrowUnlessAborted(error, signal)
+    } finally {
+      if (!signal?.aborted) setLoading(false)
+    }
   }, [fProtocol, fStatus, fKeyword])
 
-  useEffect(() => { load() }, [load])
+  useAbortableEffect((signal) => { void load(1, signal) }, [load])
 
   const doCreate = async (vals: AvTaskFormValues) => {
     setSaving(true)

@@ -1,9 +1,9 @@
 # CamelTv 测试平台 v2 — 一键部署（前端 + 后端 + 可选 PostgreSQL）
 # 用法: docker-compose up -d  → 访问 http://localhost
-# PostgreSQL: 设置 DATABASE_URL=postgresql://cameltv:cameltv123@postgres:5432/cameltv
+# PostgreSQL: 在 .env 中设置 DATABASE_URL，并由密码管理器注入数据库密码。
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
     container_name: cameltv-tp-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-cameltv}
@@ -23,21 +23,22 @@ services:
 
   backend:
     build:
-      context: ../backend
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: test-platform-v2/backend/Dockerfile
     container_name: cameltv-tp-backend
     environment:
-      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - ENVIRONMENT=production
       - SECRET_KEY=${SECRET_KEY:?SECRET_KEY is required}
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
       - TESTER_USERNAME=${TESTER_USERNAME:-tester}
       - TESTER_PASSWORD=${TESTER_PASSWORD:?TESTER_PASSWORD is required}
-      - COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - COOKIE_SECURE=true
       - COOKIE_SAMESITE=${COOKIE_SAMESITE:-lax}
       - COOKIE_DOMAIN=${COOKIE_DOMAIN:-}
       - COOKIE_PATH=${COOKIE_PATH:-/api}
-      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/platform.db}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - AUTO_CREATE_TABLES=false
       - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
       - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-20}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost}
@@ -54,6 +55,9 @@ services:
       - LANHU_COOKIE=${LANHU_COOKIE:-}
       - LANHU_USERNAME=${LANHU_USERNAME:-}
       - LANHU_PASSWORD=${LANHU_PASSWORD:-}
+      - WORKSPACE_ROOT=/app
+      - LANHU_MCP_DIR=/app/lanhu-mcp
+      - DATA_DIR=/data/lanhu
       # ── 知识库 / RAG / Wiki 功能开关 ──
       - KNOWLEDGE_INGEST_ENABLED=${KNOWLEDGE_INGEST_ENABLED:-true}
       - RAG_ENABLED=${RAG_ENABLED:-true}
@@ -61,7 +65,7 @@ services:
       - WIKI_ENABLED=${WIKI_ENABLED:-true}
       - WIKI_AUTO_INGEST_ENABLED=${WIKI_AUTO_INGEST_ENABLED:-true}
       - WIKI_DIFF_ENABLED=${WIKI_DIFF_ENABLED:-true}
-      - KNOWLEDGE_INGEST_PRODUCTION_DATA=${KNOWLEDGE_INGEST_PRODUCTION_DATA:-true}
+      - KNOWLEDGE_INGEST_PRODUCTION_DATA=${KNOWLEDGE_INGEST_PRODUCTION_DATA:-false}
       - LANHU_MCP_ENABLED=${LANHU_MCP_ENABLED:-true}
       - EMBEDDING_CACHE_DIR=${EMBEDDING_CACHE_DIR:-/data/models/fastembed}
       # ── 蓝湖证据包 OCR ──
@@ -76,8 +80,11 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      volume-permissions:
+        condition: service_completed_successfully
     volumes:
       - tp-data:/data
+      - tp-artifacts:/app/storage
     expose:
       - "8000"
     restart: unless-stopped
@@ -87,6 +94,20 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  volume-permissions:
+    build:
+      context: ../..
+      dockerfile: test-platform-v2/backend/Dockerfile
+    user: "0:0"
+    command:
+      - sh
+      - -c
+      - chown -R 10001:10001 /data /app/storage
+    volumes:
+      - tp-data:/data
+      - tp-artifacts:/app/storage
+    restart: "no"
 
   frontend:
     build:
@@ -107,6 +128,8 @@ services:
 
 volumes:
   tp-data:
+    driver: local
+  tp-artifacts:
     driver: local
   pg-data:
     driver: local

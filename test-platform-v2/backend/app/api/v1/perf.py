@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_current_user, get_db, require_permission
 from app.core.exceptions import APIException
+from app.models.perf import PerfSession
 from app.schemas.common import R
 from app.schemas.perf import (
     CompareRequest,
@@ -22,10 +23,23 @@ from app.schemas.perf import (
     PerfSessionListResponse,
     PerfSessionOut,
 )
+from app.services import perf_collector_service as collector
 from app.services import perf_service
 
 logger = logging.getLogger("perf")
 router = APIRouter(prefix="/perf-sessions", tags=["性能测试"])
+
+
+def _get_project_session(
+    db: Session,
+    session_id: int,
+    current: CurrentUser,
+) -> PerfSession:
+    """Resolve a session only inside the caller's selected project."""
+    session = db.get(PerfSession, session_id)
+    if not session or session.project_id != (current.project_id or 0):
+        raise APIException(code=404, msg="会话不存在")
+    return session
 
 
 # ── Device ──
@@ -36,6 +50,12 @@ def list_devices(
     _current: CurrentUser = Depends(get_current_user),
 ) -> Any:
     """列出当前 PC 连接的 Android/iOS 设备。"""
+    if not collector.is_available():
+        raise APIException(
+            code=503,
+            msg="SoloX 未安装，真实性能采集不可用",
+            http_status=503,
+        )
     devices = perf_service.list_devices(db)
     device_outs = [PerfDeviceOut(**d) for d in devices]
     return R.ok(data=DeviceListResponse(devices=device_outs))
@@ -81,12 +101,10 @@ def list_sessions(
 def get_session(
     session_id: int,
     db: Session = Depends(get_db),
-    _current: CurrentUser = Depends(require_permission("perftest:list")),
+    current: CurrentUser = Depends(require_permission("perftest:list")),
 ) -> Any:
     """获取指定会话详情。"""
-    session = perf_service.get_session(db, session_id)
-    if not session:
-        raise APIException(code=404, msg="会话不存在")
+    session = _get_project_session(db, session_id, current)
     return R.ok(data=session)
 
 
@@ -94,12 +112,10 @@ def get_session(
 def delete_session(
     session_id: int,
     db: Session = Depends(get_db),
-    _current: CurrentUser = Depends(require_permission("perftest:delete")),
+    current: CurrentUser = Depends(require_permission("perftest:delete")),
 ) -> Any:
     """删除采集会话及关联指标数据。"""
-    session = perf_service.get_session(db, session_id)
-    if not session:
-        raise APIException(code=404, msg="会话不存在")
+    session = _get_project_session(db, session_id, current)
     db.delete(session)
     db.commit()
     return R.ok(data={"detail": "ok"})
@@ -111,9 +127,16 @@ def delete_session(
 def start_session(
     session_id: int,
     db: Session = Depends(get_db),
-    _current: CurrentUser = Depends(require_permission("perftest:execute")),
+    current: CurrentUser = Depends(require_permission("perftest:execute")),
 ) -> Any:
     """启动采集会话。"""
+    _get_project_session(db, session_id, current)
+    if not collector.is_available():
+        raise APIException(
+            code=503,
+            msg="SoloX 未安装，真实性能采集不可用",
+            http_status=503,
+        )
     session = perf_service.start_session(db, session_id)
     if not session:
         raise APIException(code=400, msg="会话不存在或状态不允许启动")
@@ -127,9 +150,10 @@ def start_session(
 def stop_session(
     session_id: int,
     db: Session = Depends(get_db),
-    _current: CurrentUser = Depends(require_permission("perftest:execute")),
+    current: CurrentUser = Depends(require_permission("perftest:execute")),
 ) -> Any:
     """停止采集会话。"""
+    _get_project_session(db, session_id, current)
     session = perf_service.stop_session(db, session_id)
     if not session:
         raise APIException(code=404, msg="会话不存在")
@@ -146,12 +170,10 @@ def get_metrics(
     session_id: int,
     since_ts: float = Query(0, alias="sinceTs"),
     db: Session = Depends(get_db),
-    _current: CurrentUser = Depends(require_permission("perftest:list")),
+    current: CurrentUser = Depends(require_permission("perftest:list")),
 ) -> Any:
     """获取会话时序数据点。"""
-    session = perf_service.get_session(db, session_id)
-    if not session:
-        raise APIException(code=404, msg="会话不存在")
+    session = _get_project_session(db, session_id, current)
 
     metrics = perf_service.get_metrics(db, session_id, since_ts=since_ts)
     points = []
@@ -179,9 +201,10 @@ def get_metrics(
 def get_report(
     session_id: int,
     db: Session = Depends(get_db),
-    _current: CurrentUser = Depends(require_permission("perftest:report")),
+    current: CurrentUser = Depends(require_permission("perftest:report")),
 ) -> Any:
     """获取采集报告。"""
+    _get_project_session(db, session_id, current)
     report = perf_service.get_report(db, session_id)
     if not report:
         raise APIException(code=404, msg="会话不存在或无数据")
@@ -194,9 +217,11 @@ def get_report(
 def compare_sessions(
     data: CompareRequest,
     db: Session = Depends(get_db),
-    _current: CurrentUser = Depends(require_permission("perftest:report")),
+    current: CurrentUser = Depends(require_permission("perftest:report")),
 ) -> Any:
     """对比两次采集会话。"""
+    _get_project_session(db, data.session_a_id, current)
+    _get_project_session(db, data.session_b_id, current)
     result = perf_service.compare_sessions(db, data.session_a_id, data.session_b_id)
     if not result:
         raise APIException(code=404, msg="会话不存在或无数据")

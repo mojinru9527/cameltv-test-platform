@@ -1,18 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchMetrics } from '@/api/perftest'
 import type { MetricDataPoint } from '@/api/perftest'
-
-// 从 JWT token 中提取（与 Axios client 一致）
-function getJwtToken(): string {
-  const raw = localStorage.getItem('auth-storage')
-  if (!raw) return ''
-  try {
-    const state = JSON.parse(raw)?.state
-    return state?.token ?? ''
-  } catch {
-    return ''
-  }
-}
+import { useAuthStore } from '@/stores/auth'
 
 type ConnectionMode = 'websocket' | 'polling' | 'disconnected'
 
@@ -87,13 +76,13 @@ export function usePerfWebSocket({
   const connectWebSocket = useCallback(() => {
     if (wsRef.current) return
 
-    const token = getJwtToken()
+    const projectId = useAuthStore.getState().currentProjectId
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
 
     try {
       const ws = new WebSocket(
-        `${protocol}//${host}/api/v1/perf-sessions/${sessionId}/stream?token=${token}`,
+        `${protocol}//${host}/api/v1/perf-sessions/${sessionId}/stream?project_id=${projectId ?? ''}`,
       )
       wsRef.current = ws
 

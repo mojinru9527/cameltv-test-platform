@@ -1,8 +1,8 @@
 import api from './client'
 import type { UiJobItem, UiRunItem, UiRunArtifact, RunnerHealth } from '@/types'
 
-export async function fetchUiJobs(params: Record<string, any> = {}) {
-  return api.get('/ui-tests', { params })
+export async function fetchUiJobs(params: Record<string, any> = {}, signal?: AbortSignal) {
+  return api.get('/ui-tests', { params, ...(signal ? { signal } : {}) })
 }
 
 export async function fetchUiJob(id: number) {
@@ -45,7 +45,9 @@ export async function fetchRunnerHealth(): Promise<RunnerHealth> {
   return api.get('/ui-tests/runner/health')
 }
 
-export async function fetchScripts(): Promise<string[]> {
-  const res: any = await api.get('/ui-tests/scripts')
+export async function fetchScripts(signal?: AbortSignal): Promise<string[]> {
+  const res: any = signal
+    ? await api.get('/ui-tests/scripts', { signal })
+    : await api.get('/ui-tests/scripts')
   return res?.available_specs ?? []
 }
