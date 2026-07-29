@@ -334,6 +334,11 @@ git commit -m "test: record batch 55 closure gates"
 - [ ] Fetch `origin` and verify `origin/main` contains the merged Batch 55 closure.
 - [ ] Use `scripts/git/start-agent-team-task.ps1` with executor `codex`, branch `feature/batch-56-full-platform-production-acceptance`, frontend port `5173`, backend port `8000`, and a new isolated worktree.
 - [ ] Create a separate Batch 56 implementation plan covering:
+  - production acceptance inputs derived from the customer-facing PRDs, Blue Lake requirement evidence, baseline/admin functional cases, traceability matrices, OpenAPI specification, and environment/account index referenced by `docs/测试平台全功能验收文档-环境链接与账号汇总.md`;
+  - an input manifest classifying evidence as R0 (authorized live customer input), R1 (redacted source-preserving snapshot with provenance and SHA-256), R2 (schema-faithful generated boundary/load data), or M (mock); every P0/P1 primary journey requires R0 or R1, while R2/M results are reported separately and never close a production gate;
+  - realistic document imports, API definitions, requirement text, test cases, plans, schedules, defects, search terms, pagination volumes, and role/project boundaries that preserve the structure and constraints of those customer inputs;
+  - real React → FastAPI → database journeys for every release verdict; mocks may cover otherwise unreachable third-party failure branches, but mock-only, status-only, or synthetic no-data results never count as production acceptance evidence;
+  - an isolated PostgreSQL acceptance database for production-grade journeys; SQLite remains a fast regression layer and cannot substitute for PostgreSQL concurrency or migration evidence;
   - A01–A12 across all static and dynamic routes;
   - real backend, admin/tester RBAC, cross-project isolation, transactions, rollback, idempotency, concurrency, pagination, search, and count consistency;
   - six themes and supported light/dark modes at `1440x900`, `768x1024`, and `390x844`;
@@ -341,5 +346,7 @@ git commit -m "test: record batch 55 closure gates"
   - local user acceptance at `http://localhost:5173`;
   - read-only production sports-site comparison;
   - controlled write journeys only in explicitly authorized test environments;
+  - unique acceptance-data prefixes, state readback, audit/database verification, and proven cleanup for every controlled write journey;
+  - `BATCH56_ACCEPTANCE_REQUIRED=1` semantics: missing real inputs, PostgreSQL, or required credentials produces `FAIL`/`BLOCKED`, never a passing skip;
   - user-side and operations-side requirement comparison;
   - truthful `BLOCKED` status for missing VPN, credentials, Blue Lake URLs, AI key, ELK access, production admin access, or legacy database snapshot.
