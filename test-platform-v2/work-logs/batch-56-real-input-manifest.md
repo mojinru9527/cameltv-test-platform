@@ -27,7 +27,7 @@ related:
 
 | 输入 ID | 来源 | 字节 | SHA-256 | 业务用途 | 脱敏/读写说明 |
 |---|---|---:|---|---|---|
-| B56-R1-ENV | `docs/测试平台全功能验收文档-环境链接与账号汇总.md` | 28836 | `23986b0d00e28750d10a6e100f4cc618d830fae8bec2f2d6a4999b7194a53549` | 环境、公开账号名、凭证槽位、资源索引和外部操作边界 | 不含实际凭据；只读取环境变量名 |
+| B56-R1-ENV | `docs/测试平台全功能验收文档-环境链接与账号汇总.md` | 28867 | `5150002a36625131ddd10951791553dcf8ad24099a759a040f68b564c5c3b10a` | 环境、公开账号名、凭证槽位、资源索引和外部操作边界 | 不含实际凭据；只读取环境变量名 |
 | B56-R1-PRD-FULL | `test-platform-v2/docs/CamelTv测试平台-完整PRD.md` | 21229 | `cefc99292ab1b92563368e82ae0449057affa443ac895323456eb5b3169b2ddf` | 测试平台模块、业务闭环与验收期望 | 仓库固定快照 |
 | B56-R1-PRD-ASIS | `test-platform-v2/docs/现状功能PRD.md` | 23528 | `ce46bf066183459601dd4283802f602aba1faca69e65096f218a4477879147e2` | 现状能力与宣称事实核对 | 仓库固定快照 |
 | B56-R1-PRD-API | `test-platform-v2/docs/接口测试模块优化PRD.md` | 15307 | `71f4f2fb8d238620202923603e258f2be6495a683c492ed2ca7bdafda8cfe0ce` | API 资产、调试、任务、快照、取消与生产保护 | 仓库固定快照 |
@@ -42,15 +42,16 @@ related:
 
 | 输入 ID | 来源类别 | 允许操作 | 当前状态 | 阻塞/失效条件 |
 |---|---|---|---|---|
-| B56-R0-PROD-SITES | 体育平台生产镜像 | GET/HEAD、页面导航、公开内容与运行时检查 | NOT RUN | 网络/VPN/安全策略 |
-| B56-R0-TEST-SITES | 体育平台测试节点 | 真实登录与只读浏览；写入需明确授权和可恢复数据 | NOT RUN | 内网、凭证或写权限缺失 |
-| B56-R0-TEST-OPENAPI | 测试环境 Swagger/OpenAPI | GET 并与 R1 spec 比较 | NOT RUN | 内网不可达 |
-| B56-R0-ADMIN-TEST | 运营后台测试环境 | 按文档登录规则进行只读核对 | NOT RUN | 内网不可达或共享状态风险 |
-| B56-R0-USER-DESIGN | 用户端需求/设计源 | 只读提取、对照和脱敏截图 | NOT RUN | 蓝湖地址或合法凭据缺失 |
-| B56-R0-ADMIN-DESIGN | 运营后台需求/设计源 | 只读提取、对照和脱敏截图 | NOT RUN | 蓝湖地址或合法凭据缺失 |
-| B56-R0-AI | 配置的真实 AI 服务 | 需求拆分、生成、反向评审 | NOT RUN | `AI_API_KEY` 缺失或服务不可达 |
-| B56-R0-ELK | ELK/Kibana | 只读 trace 和日志关联 | NOT RUN | VPN/凭据/索引权限缺失 |
-| B56-R0-LEGACY-PG | 脱敏真实旧 PostgreSQL 快照 | 隔离克隆升级和只读前后核对 | NOT RUN | 快照或验收连接缺失 |
+| B56-R0-LOCAL-PLATFORM | Batch 56 独立本地平台 | 真实登录、R1 上传、RBAC、全路由、迁移、容器与清理 | PASS | 固定 SHA `30c76a4ddeebf485e8285ae1e8b0effc2ff71fcf`，PostgreSQL 16 |
+| B56-R0-PROD-SITES | 体育平台生产镜像 | GET/HEAD、页面导航、公开内容与运行时检查 | FAIL | vpn07 下 7 个端点 HEAD/TLS 通过；仍有一个浏览器超时和一个内容不足节点 |
+| B56-R0-TEST-SITES | 体育平台测试节点 | 真实登录与只读浏览；写入需明确授权和可恢复数据 | FAIL | OpenVPN 下 5 个节点通过；第 6 节点浏览器返回 503 |
+| B56-R0-TEST-OPENAPI | 测试环境 Swagger/OpenAPI | GET 并与 R1 spec 比较 | FAIL | 旧文档入口 404；实际网关契约仅 15 paths/17 operations，未覆盖六服务 |
+| B56-R0-ADMIN-TEST | 运营后台测试环境 | 按文档登录规则进行只读核对 | FAIL | 登录接口响应成功但浏览器未形成 Cookie/storage 会话，仍停留登录页 |
+| B56-R0-USER-DESIGN | 用户端需求/设计源 | 只读提取、对照和脱敏截图 | BLOCKED | 当前缺可复核原始或脱敏证据包 |
+| B56-R0-ADMIN-DESIGN | 运营后台需求/设计源 | 只读提取、对照和脱敏截图 | BLOCKED | 当前缺可复核原始或脱敏证据包 |
+| B56-R0-AI | 配置的真实 AI 服务 | 需求拆分、生成、反向评审 | BLOCKED | `AI_API_KEY` 未配置；平台诚实返回业务错误，无 fallback |
+| B56-R0-ELK | ELK/Kibana | 只读 trace 和日志关联 | BLOCKED | 缺少当前只读授权与索引证据 |
+| B56-R0-LEGACY-PG | 脱敏真实旧 PostgreSQL 快照 | 隔离克隆升级和只读前后核对 | BLOCKED | 未提供旧库脱敏快照；仅新建 PostgreSQL 并发门禁 3/3 通过 |
 
 ## R2 与 M 使用边界
 
