@@ -1,4 +1,5 @@
 import client from './client'
+import { API_BASE_URL } from './baseUrl'
 
 // ── 用户 ──
 export function fetchUsers(signal?: AbortSignal) { return client.get('/system/users', { signal }) }
@@ -26,7 +27,7 @@ export async function exportAuditLogsCsv(params?: { action?: string; keyword?: s
   const searchParams = new URLSearchParams()
   if (params?.action) searchParams.set('action', params.action)
   if (params?.keyword) searchParams.set('keyword', params.keyword)
-  const url = `${import.meta.env.VITE_API_BASE}/system/audit-logs/export?${searchParams.toString()}`
+  const url = `${API_BASE_URL}/system/audit-logs/export?${searchParams.toString()}`
   const resp = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   })

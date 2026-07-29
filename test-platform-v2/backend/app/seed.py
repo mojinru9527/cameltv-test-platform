@@ -1,6 +1,8 @@
 """首次启动初始化数据 —— 权限/角色/管理员/测试用户/默认项目（幂等）。"""
 from __future__ import annotations
 
+import secrets as _secrets
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -259,31 +261,39 @@ def run_seed() -> None:
                 _get_or_create(db, RolePermission, role_id=tester_role.id, permission_id=code_to_perm[code].id)
 
         # 5) 管理员用户
-        admin_user, created_admin = _get_or_create(
-            db, User,
-            defaults={
-                "password": hash_password(settings.effective_admin_password),
-                "nickname": "超级管理员",
-                "email": "admin@cameltv.local",
-                "status": 1,
-                "must_change_password": settings.admin_password == "",
-            },
-            username=settings.admin_username,
+        admin_user = db.scalar(
+            select(User).filter_by(username=settings.admin_username)
         )
+        created_admin = admin_user is None
+        if created_admin:
+            admin_user = User(
+                username=settings.admin_username,
+                password=hash_password(settings.get_initial_admin_password()),
+                nickname="超级管理员",
+                email="admin@cameltv.local",
+                status=1,
+                must_change_password=settings.admin_password == "",
+            )
+            db.add(admin_user)
+            db.flush()
 
         # 5.5) 测试用户（方便验证角色隔离）
-        import secrets as _secrets
-        tester_pwd = settings.tester_password or _secrets.token_urlsafe(10)
-        tester_user, created_tester = _get_or_create(
-            db, User,
-            defaults={
-                "password": hash_password(tester_pwd),
-                "nickname": "测试同学",
-                "email": "tester@cameltv.local",
-                "status": 1,
-            },
-            username=settings.tester_username,
+        tester_pwd: str | None = None
+        tester_user = db.scalar(
+            select(User).filter_by(username=settings.tester_username)
         )
+        created_tester = tester_user is None
+        if created_tester:
+            tester_pwd = settings.tester_password or _secrets.token_urlsafe(10)
+            tester_user = User(
+                username=settings.tester_username,
+                password=hash_password(tester_pwd),
+                nickname="测试同学",
+                email="tester@cameltv.local",
+                status=1,
+            )
+            db.add(tester_user)
+            db.flush()
 
         # 6) 默认项目
         project, _ = _get_or_create(
@@ -312,7 +322,7 @@ def run_seed() -> None:
                 print("[seed] 管理员使用自动生成密码（见启动日志），首次登录需修改")
         if created_tester:
             print(f"[seed] 测试用户已创建：{settings.tester_username}")
-            if not settings.tester_password:
+            if not settings.tester_password and tester_pwd is not None:
                 print(f"[seed] 测试用户自动生成密码：{tester_pwd}")
     finally:
         db.close()

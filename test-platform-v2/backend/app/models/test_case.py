@@ -63,6 +63,7 @@ class TestCase(Base, TimestampMixin):
 
     # 来源追溯
     source: Mapped[str] = mapped_column(default="migration")      # manual / swagger_import / migration / ai_generated
+    source_req_id: Mapped[str] = mapped_column(default="", index=True)  # 外部需求标识
     source_doc_id: Mapped[int | None] = mapped_column(default=None, index=True)  # 来源需求文档 ID
     source_case_index: Mapped[int | None] = mapped_column(default=None, index=True)  # AI 结果中的稳定全局索引
     old_id: Mapped[int | None] = mapped_column(default=None)      # 旧库原始 ID

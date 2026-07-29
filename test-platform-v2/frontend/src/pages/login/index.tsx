@@ -58,10 +58,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gradient-to-br from-primary/80 to-primary">
-      <Card className="w-[380px] shadow-2xl">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-8">
+      <Card className="w-full max-w-[380px] border border-border/60 shadow-lg">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">CamelTv 测试平台</CardTitle>
+          <CardTitle role="heading" aria-level={1} className="text-2xl">
+            CamelTv 测试平台
+          </CardTitle>
           <CardDescription>前后端分离 · 多项目测试管理</CardDescription>
         </CardHeader>
         <CardContent>

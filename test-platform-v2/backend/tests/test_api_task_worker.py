@@ -7,8 +7,46 @@
 """
 from __future__ import annotations
 
+import threading
 from unittest.mock import patch
 
+
+class TestApiTaskWorkerLifecycle:
+    """Worker 生命周期必须和应用生命周期保持一致。"""
+
+    def test_shutdown_joins_processor_thread(self):
+        """关闭处理器后不应留下访问旧测试数据库的守护线程。"""
+        from app.services import api_task_worker
+
+        api_task_worker.shutdown_processor()
+
+        def wait_for_shutdown():
+            api_task_worker._shutdown_event.wait(timeout=1)
+
+        with patch.object(api_task_worker, "_processor_loop", wait_for_shutdown):
+            api_task_worker.ensure_processor_running()
+            thread = api_task_worker._processor_thread
+            assert isinstance(thread, threading.Thread)
+            assert thread.is_alive()
+
+            api_task_worker.shutdown_processor(timeout=1)
+
+        assert not thread.is_alive()
+        assert api_task_worker._processor_thread is None
+
+    def test_app_lifespan_shuts_down_api_task_worker(self):
+        """FastAPI TestClient 退出时必须关闭 API 任务处理器。"""
+        from fastapi.testclient import TestClient
+
+        from app.main import app
+
+        with patch(
+            "app.services.api_task_worker.shutdown_processor",
+        ) as shutdown_api_task_worker:
+            with TestClient(app):
+                pass
+
+        shutdown_api_task_worker.assert_called_once_with()
 
 
 class TestApiTaskWorkerClaim:

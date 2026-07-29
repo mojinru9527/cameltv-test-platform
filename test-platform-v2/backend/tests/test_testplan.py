@@ -32,6 +32,43 @@ class TestPlanCRUD:
         assert resp.status_code == 200
         assert resp.json()["data"]["name"] == "详情测试计划"
 
+    def test_plan_case_detail_includes_requirement_trace_id(self, client, auth_headers):
+        case_resp = client.post(
+            "/api/v1/test-cases",
+            json={
+                "title": "需求追溯用例",
+                "domain": "用户端",
+                "module": "登录",
+                "source_req_id": "REQ-B55-001",
+            },
+            headers=auth_headers,
+        )
+        assert case_resp.status_code == 200
+        case_id = case_resp.json()["data"]["id"]
+
+        plan_resp = client.post(
+            "/api/v1/test-plans",
+            json={"name": "需求追溯计划"},
+            headers=auth_headers,
+        )
+        assert plan_resp.status_code == 200
+        plan_id = plan_resp.json()["data"]["id"]
+
+        add_resp = client.post(
+            f"/api/v1/test-plans/{plan_id}/cases",
+            json={"case_ids": [case_id]},
+            headers=auth_headers,
+        )
+        assert add_resp.status_code == 200
+        assert add_resp.json()["data"]["added"] == 1
+
+        detail_resp = client.get(
+            f"/api/v1/test-plans/{plan_id}",
+            headers=auth_headers,
+        )
+        assert detail_resp.status_code == 200
+        assert detail_resp.json()["data"]["cases"][0]["source_req_id"] == "REQ-B55-001"
+
     def test_update_plan(self, client, auth_headers):
         r = client.post("/api/v1/test-plans", json={"name": "旧名称"}, headers=auth_headers)
         plan_id = r.json()["data"]["id"]
