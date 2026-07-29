@@ -16,6 +16,12 @@ git submodule update --init --recursive lanhu-mcp
 `../config/runtime/*.env`，已被 Git 忽略；仓库只提交不含真实凭据的
 `*.env.example`。
 
+> **当前状态（2026-07-29）**：production 服务器尚未采购，未分配域名、
+> TLS 或 PostgreSQL。`production.env.example` 只用于验证未来部署契约；
+> 当前不要创建 `production.env`，也不要执行 production 启动命令。
+
+基础设施就绪后再执行：
+
 ```bash
 # 1. 生产环境只配置一次
 cp ../config/runtime/production.env.example ../config/runtime/production.env
@@ -28,10 +34,10 @@ pwsh ../scripts/start-platform-environment.ps1 `
   -Target production -Action status
 ```
 
-测试平台自身只保留 local 与 production。两者使用不同
-`COMPOSE_PROJECT_NAME`、端口、数据库和存储，可以在同一宿主机共存。浏览器
-始终通过各自固定入口访问，前端继续同源请求 `/api/v1`；不得把浏览器临时
-改为直连另一实例后端。
+测试平台自身只保留 local 与 production 两种身份。当前只有 local 已运行；
+production 在基础设施就绪后使用不同 `COMPOSE_PROJECT_NAME`、端口、数据库
+和存储。浏览器始终通过各自入口访问，前端继续同源请求 `/api/v1`；不得把
+浏览器临时改为直连另一实例后端。
 
 ## 首次登录凭据
 

@@ -67,14 +67,11 @@ test-platform-v2/
 | 环境 | 固定入口 | 数据库 | 启动方式 |
 |------|----------|--------|----------|
 | local | `http://localhost:5173` | 独立 SQLite `platform-local.db` | `scripts/start-platform-environment.ps1` |
-| production | `config/runtime/production.env` 中配置的 HTTPS 地址 | 独立生产 PostgreSQL | 显式确认后启动的独立 Compose project |
+| production | **未部署；保留独立 profile 身份** | 未来独立生产 PostgreSQL | 服务器采购后再配置并显式确认启动 |
 
-生产固定配置的逐项填写方法，以及体育测试 OpenVPN 与生产 vpn07 的互斥切换
-流程，见 [生产测试平台固定配置与双 VPN 切换验收手册](docs/生产测试平台固定配置与双VPN切换验收手册.md)。
-
-首次使用时只需把对应的 `*.env.example` 复制为同目录、受 Git 忽略的
-`*.env` 并填写密钥。此后直接访问各自的固定书签，不需要反复编辑地址或
-切换数据库。
+当前只初始化 local。production 的模板用于锁定未来实例与 local 的隔离契约，
+不是可访问地址；在服务器、域名、TLS 和 PostgreSQL 就绪前不创建
+`production.env`，也不启动 production。
 
 ```powershell
 # 首次运行：安全生成受 Git 忽略的 local.env 和固定本地凭据
@@ -105,7 +102,10 @@ npm run dev
 
 浏览器打开 http://localhost:5173，使用管理员分配的账号登录。平台不预填或公开通用默认密码。
 
-## 一键部署（Docker）
+## 未来生产部署（Docker）
+
+当前生产服务器尚未采购，以下命令不属于 Batch 57 的当前操作步骤。只有在
+服务器、域名、TLS、PostgreSQL、备份和回滚窗口均已确认后才执行：
 
 ```bash
 cd deploy

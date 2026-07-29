@@ -136,7 +136,16 @@ React Router 8.3.0；同时升级 React 19.2.8 和 Node 22.22 运行基线。当
 - 本地实例当前运行在 `http://localhost:5173/`。
 - 后端固定为 `http://127.0.0.1:8000`。
 - 本地数据库固定为 `platform-local.db`。
+- production 服务器尚未采购，本批不要求真实生产测试平台 URL，也不创建
+  `production.env` 或启动 production；该状态记为 `DEFERRED / UNPROVISIONED`，
+  不是 Batch 57 代码缺陷。
+- production 与 local 已通过 profile 名称、Compose project、数据库类型和
+  安全门禁保持逻辑隔离；模板中的 HTTPS 地址不构成可访问地址或部署证据。
 - 重复执行启动命令会复用相同进程；数据库、端口或 manifest 不匹配时
   fail closed，不会把旧进程误报为当前 profile。
 - production profile 示例中的 `change-me` 和 `example.com` 值在启动前
   强制阻断，并且必须显式提供 `-ConfirmProduction`。
+
+真实 production 部署验收延后到服务器、域名、TLS、PostgreSQL、备份和回滚
+窗口就绪后的独立批次。该延期不关闭 B56-B01～B10；这些条目验证的是体育
+业务平台、外部服务和真实数据链路，与测试平台自身是否已购买生产服务器无关。

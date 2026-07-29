@@ -3,14 +3,19 @@
 > **For agentic workers:** 按任务顺序实施；外部输入未提供时只标记
 > `BLOCKED`，不得构造通过证据。
 
-**Goal:** 测试平台自身只保留 local 与 production 两套固定实例；每套实例的
-URL 与数据库一一绑定。修复所有仓库内可复现的 Batch 56 遗留，并为外部环境
-阻断建立可执行、可复核的输入清单和证据闭环。
+**Goal:** 测试平台自身只保留 local 与 production 两种固定身份；当前运行
+local，production 在服务器采购后再绑定真实 URL 与数据库。修复所有仓库内
+可复现的 Batch 56 遗留，并为外部环境阻断建立可执行、可复核的输入清单和
+证据闭环。
 
 **Architecture:** local 固定使用 `http://localhost:5173` 与隔离 SQLite；
-production 使用受 Git 忽略的固定 HTTPS URL 与独立 PostgreSQL。启动器只接受
+production 当前只保留模板、独立 Compose project 和 PostgreSQL 安全契约，
+服务器采购后才创建受 Git 忽略的真实 profile。启动器只接受
 `local|production`，页面 `/environment` 仍管理被测系统的
 dev/test/staging/prod 地址和变量，不切换测试平台自身数据库。
+
+**Provisioning decision (2026-07-29):** production 服务器尚未采购，缺少真实
+URL 不计为 Batch 57 缺陷；真实部署验收移入基础设施就绪后的独立批次。
 
 **Boundary:** 外部业务系统的 503、鉴权、登录会话、VPN、ELK、真机、AI/OCR、
 蓝湖和旧库问题，只有在对应服务、授权或数据进入本任务范围后才能修复或复测。

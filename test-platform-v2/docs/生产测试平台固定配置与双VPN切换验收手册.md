@@ -3,7 +3,7 @@ title: "生产测试平台固定配置与双 VPN 切换验收手册"
 owner: "qa-team"
 created: "2026-07-29"
 last_reviewed: "2026-07-29"
-status: "active"
+status: "paused"
 expires: "2027-01-29"
 tags: ["production", "runtime-profile", "vpn07", "openvpn", "acceptance"]
 related:
@@ -14,6 +14,10 @@ related:
 ---
 
 # 生产测试平台固定配置与双 VPN 切换验收手册
+
+> **暂停使用（2026-07-29）**：用户已暂停本手册。当前 production 服务器尚未
+> 采购，且双 VPN 切换不作为 Batch 57 操作流程。除非用户后续明确重新启用，
+> 不按本文初始化 production、不执行网络切换，也不运行 production 启动命令。
 
 ## 1. 结论
 
@@ -57,16 +61,16 @@ test/staging/prod 配置。
 
 | 序号 | 字段 | 示例格式 | 你的值 | 状态 |
 | ---: | --- | --- | --- | --- |
-| P01 | 最终 HTTPS URL | `https://<正式域名>` | 未提供 | BLOCKED |
-| P02 | 部署宿主机/集群逻辑名称 | 主机别名或集群名，不写密码 | 未提供 | BLOCKED |
-| P03 | TLS 终止位置 | Nginx / LB / Ingress | 未提供 | BLOCKED |
-| P04 | 对外前端端口 | 通常 `443` | 未提供 | BLOCKED |
-| P05 | PostgreSQL 主机逻辑名称 | 主机名或服务名 | 未提供 | BLOCKED |
-| P06 | PostgreSQL 端口 | 通常 `5432` | 未提供 | BLOCKED |
-| P07 | PostgreSQL 数据库名 | 建议 `cameltv_production` | 未提供 | BLOCKED |
-| P08 | PostgreSQL 用户名 | 最小权限应用用户 | 未提供 | BLOCKED |
-| P09 | 备份保存位置/保留期 | 逻辑位置 + 天数 | 未提供 | BLOCKED |
-| P10 | 发布与回滚窗口 | 日期、时区、时长 | 未提供 | BLOCKED |
+| P01 | 最终 HTTPS URL | `https://<正式域名>` | 服务器采购后提供 | DEFERRED |
+| P02 | 部署宿主机/集群逻辑名称 | 主机别名或集群名，不写密码 | 服务器采购后提供 | DEFERRED |
+| P03 | TLS 终止位置 | Nginx / LB / Ingress | 基础设施设计后提供 | DEFERRED |
+| P04 | 对外前端端口 | 通常 `443` | 基础设施设计后提供 | DEFERRED |
+| P05 | PostgreSQL 主机逻辑名称 | 主机名或服务名 | 数据库采购后提供 | DEFERRED |
+| P06 | PostgreSQL 端口 | 通常 `5432` | 数据库采购后提供 | DEFERRED |
+| P07 | PostgreSQL 数据库名 | 建议 `cameltv_production` | 数据库采购后提供 | DEFERRED |
+| P08 | PostgreSQL 用户名 | 最小权限应用用户 | 数据库采购后提供 | DEFERRED |
+| P09 | 备份保存位置/保留期 | 逻辑位置 + 天数 | 基础设施设计后提供 | DEFERRED |
+| P10 | 发布与回滚窗口 | 日期、时区、时长 | 首次部署前提供 | DEFERRED |
 
 ### 3.2 敏感信息
 
