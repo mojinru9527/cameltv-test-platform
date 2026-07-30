@@ -9,6 +9,7 @@ related:
   - "../../docs/work-logs/batch-56-production-acceptance-execution-matrix.md"
   - "batch-56-production-acceptance-qa-report.md"
   - "batch-57-license-audit.md"
+  - "batch-57-j01-j22-atomic-evidence.md"
   - "../docs/Batch57生产验收输入补充操作单.md"
   - "../../docs/superpowers/plans/2026-07-29-batch-57-local-production-and-batch56-closure.md"
 ---
@@ -76,16 +77,18 @@ Batch 57 开工时，Batch 56 计划要求的独立 issue register、evidence RE
 当时执行矩阵声明 `G56-016` 已关闭，与实际交付物存在不一致；该文档缺口现已
 由 B57-DOC-01 补齐。
 
-Batch 57 开工审计还发现知识模块存在以下未完成或不诚实展示：
+Batch 57 开工审计发现知识模块存在以下未完成或不诚实展示：
 
 - `SourceListTab.tsx` 的同步覆盖率仍为固定“未同步”。
 - `version_differ.py` 的 AI diff 仍回退为规则结果。
 - `attachment_extractor.py` 的附件 AI 分析仍为 stub。
 - `navigates_to_extractor.py` 的多模态/DOM 提取仍为 stub 或简化正则。
 
-其中同步覆盖率展示已由 B57-WIKI-01 修复；其余真实 AI/OCR 与设计源缺口仍在。
-因此 `G56-011` 的“Knowledge/Wiki/Trace 深层功能已关闭”证据不足，应在真实
-AI/OCR、设计源证据和跨项目隔离条件具备后重新验收。
+同步覆盖率展示已由 B57-WIKI-01 修复；三个后端 placeholder 已由
+B57-KNOW-01 替换为可验证实现：缺少 Key 时显式降级并留证，附件不再生成假
+摘要，DOM 使用真实属性解析，DeepSeek 只接收本地 OCR/DOM 产生并再次脱敏的
+文本。真实 AI/OCR 与设计源验收仍未执行，因此 `G56-011` 继续保持 `OPEN`，
+但阻断项已从“代码仍是 stub”收敛为外部凭据和真实证据链。
 
 ## 5. Batch 57 仓库内修复
 
@@ -98,11 +101,12 @@ AI/OCR、设计源证据和跨项目隔离条件具备后重新验收。
 | B57-PC-01 | C55-5 PC 生产验收矩阵已闭环 | 11/11 主题/模式组合；全静态/有效动态路由；真实登录/后端/临时实体；键盘、Axe、溢出、console/network 通过并清理 |
 | B57-LIFE-01 | C55-4 关键引用和审计安全已补齐 | 用例/执行/模板/计划跨项目校验；执行状态枚举；计划、缺陷、报告、调度、通知审计显式提交 |
 | B57-LIFE-02 | 失败转缺陷与调度真实执行已接通 | 计划详情挂载失败分诊；缺陷草稿保留 case/execution；调度执行真实计划并拒绝 running 重复触发，不再把 pending 队列误报 completed |
-| B57-LIC-01 | 双端许可证审计已形成独立证据 | 前端 235 个 production 包实例通过；后端 111 锁定包因 Windows 不能完整物化，G56-015 保持 PARTIAL |
+| B57-LIC-01 | 双端许可证审计已形成独立证据 | 前端 235 个 production 包实例通过；后端 Linux 111/111 精确物化，许可证 JSON、SHA、psycopg2 LICENSE 和 NOTICE 已归档 |
+| B57-KNOW-01 | 知识中心三个 placeholder 已替换 | JSON-only 模型客户端先脱敏；附件空结果失败；版本 AI 不可用显式 warning；真实 DOM target；10 项定向回归通过 |
+| B57-TRACE-01 | J01–J22 证据缺口已原子化 | 两组 509 项本地测试全绿；逐项登记 H/S/B、现有测试索引、内部缺口和外部 blocker；不再用 `covered` 冒充已执行 |
 
-`G56-011` 仍保持 `OPEN`：Wiki coverage 展示已修复，但真实 AI diff、附件 AI
-分析、多模态/DOM 提取仍需要真实 AI/OCR 与设计源输入，不能用规则结果或 stub
-冒充闭环。
+`G56-011` 仍保持 `OPEN`：代码不再用规则结果或 stub 冒充 AI 成功，但真实
+DeepSeek/OCR/设计源输入尚未执行，不能把单元测试或显式降级记为真实 AI 通过。
 
 ### Batch 56 P0 Gap 承接
 
@@ -111,8 +115,8 @@ AI/OCR、设计源证据和跨项目隔离条件具备后重新验收。
 | `G56-011` | `OPEN` | J06/J07/J13 使用真实设计源和真实 AI/OCR 完成正负面闭环 |
 | `G56-012` | `OPEN` | 本地引用、审计、失败转缺陷和调度语义已修；仍需完整真实 UI/API/DB/报告/通知正负面证据 |
 | `G56-013` | `CLOSED` | B57-PC-01 已完成 PC `1440×900` 的 11/11 支持组合和完整路由/a11y/network 矩阵 |
-| `G56-014` | `OPEN` | J01–J22 逐功能点关联正负面原子结果、现有用例 ID 和 API 三类校验 |
-| `G56-015` | `PARTIAL` | 前端生产依赖已通过；后端需 Linux lock 全量扫描及 psycopg2-binary LGPL 分发/NOTICE 决策 |
+| `G56-014` | `OPEN` | B57-TRACE-01 已完成逐项证据盘点；J02/J03/J04/J08–J10/J12–J17/J19 仍有内部原子证据缺口，详见 `batch-57-j01-j22-atomic-evidence.md` |
+| `G56-015` | `CLOSED-WITH-NOTICE` | Linux lock 111/111 与机器清单已归档；psycopg2-binary LGPLv3+/OpenSSL exception 必须随外部分发制品保留 |
 
 Tablet `768×1024` 与 mobile `390×844` 响应式回归已降为 P2 非阻断项，
 不作为 G56-013 的 P0 关闭前置。B57-PC-01 已替代此前只有 desktop
@@ -131,13 +135,13 @@ Batch 57 开工审计发现环境 API 若干路径未联合验证
 | --- | --- | --- |
 | Runtime profile + Compose + 隔离定向测试 | 20 passed | PASS |
 | 后端 F821 | 0 项 | PASS |
-| 后端全量 Pytest | 883 collected；880 passed、3 skipped、0 failed | PASS |
+| 后端全量 Pytest | 892 collected；889 passed、3 skipped、0 failed | PASS |
 | 前端 TypeScript | `npm run typecheck` 退出码 0 | PASS |
 | 前端生产构建 | Vite 7.3.6；3412 modules transformed | PASS |
 | 前端全量 Vitest | 55 files、219 tests、0 failed | PASS |
 | 前端供应链 | `npm audit`：0 vulnerability | PASS |
 | 前端许可证 | 235 个 production 包实例；无第三方 GPL/AGPL/LGPL/UNKNOWN/Proprietary | PASS |
-| 后端许可证 | 111 个锁定包；Windows 无法完整物化；Linux 全量扫描和 LGPL 决策待完成 | PARTIAL |
+| 后端许可证 | Linux 精确物化 111/111；JSON/SHA/许可证原文已归档；LGPL NOTICE 策略已建立 | PASS-WITH-NOTICE |
 | Compose 解析 | production profile `docker compose config --quiet` 退出码 0 | PASS |
 | PowerShell 启动器 | 语法通过；首次安全初始化、启动、status 和幂等复用通过 | PASS |
 | 浏览器登录页 | 标题、2 个输入框、提交按钮、代理健康 200 | PASS |

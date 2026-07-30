@@ -2,8 +2,8 @@
 title: "Batch 57 前后端生产依赖许可证审计"
 owner: "qa-team"
 created: "2026-07-29"
-last_reviewed: "2026-07-29"
-status: "partial"
+last_reviewed: "2026-07-30"
+status: "closed-with-notice"
 expires: "2027-01-29"
 tags: ["batch-57", "license", "supply-chain", "production"]
 related:
@@ -15,18 +15,19 @@ related:
 
 ## 1. 结论
 
-`G56-015` 保持 `OPEN / PARTIAL`，本次不能关闭。
+`G56-015` 的许可证审计证据已完成，可以关闭；但发布责任人仍必须遵循
+`psycopg2-binary` 的归档与 NOTICE 要求。
 
 - 前端 production dependency 清单已完整扫描，没有发现第三方
   GPL、AGPL、LGPL、UNKNOWN 或 Proprietary 包。
-- 后端 `requirements.lock` 有 111 个精确锁定包，但当前 Windows Python
-  环境只有 67 个版本完全匹配、41 个版本漂移、3 个缺失，不能用当前环境的
-  `pip-licenses` 结果冒充锁文件全量结论。
+- 后端在干净 Linux Python 3.12 容器中以 `--require-hashes` 完整物化
+  `requirements.lock` 的 111 个包，机器可读清单与 SHA 已归档；Windows
+  环境的版本漂移不再作为锁文件审计证据。
 - `psycopg2-binary==2.9.12` 是直接生产依赖，采用 LGPL with exceptions。
-  发布负责人仍需确认分发/归档方式，并保留适用的许可证和 NOTICE。
-- `uvloop==0.22.1` 在锁文件中没有平台条件，当前 Windows 无可用发行物，
-  导致按锁文件的完整 hash 下载在解析阶段退出。最终扫描必须在干净 Linux
-  CI/部署环境执行。
+  本批已确定工程分发策略：外部分发必须随制品保留适用许可证、LGPLv3+
+  正文、OpenSSL linking exception 和 NOTICE；实际发布仍需负责人做最终合规判断。
+- `uvloop==0.22.1` 无 Windows 可用发行物，但已在 Linux 完整物化；以后在
+  Linux CI/部署环境复跑同一命令即可。
 
 ## 2. 前端证据
 
@@ -59,11 +60,11 @@ related:
 | 检查 | 结果 |
 | --- | --- |
 | 锁定包 | 111 |
-| 当前环境精确匹配 | 67 |
-| 当前环境版本漂移 | 41 |
-| 当前环境缺失 | 3 |
-| `pip-licenses` 当前环境扫描 | 退出码 0，仅作差异分析 |
-| 锁文件 hash 下载 | 退出码 1；`uvloop==0.22.1` 不支持当前 Windows |
+| Linux 精确安装 | 111 / 111，版本逐项匹配 |
+| 安装命令 | `python -m pip install --require-hashes -r requirements.lock` |
+| 安装与导出退出码 | 0 |
+| 机器可读清单 | `evidence/batch-57-license-audit/backend-requirements-lock-linux-licenses.json` |
+| lock SHA-256 | `c52df71d6a82a12b1b0e8c5d90dd6fb99cc529e6001253516613cd68ccfefcd3` |
 
 对扫描器异常元数据及缺失项进行了精确包复核：
 
@@ -75,7 +76,7 @@ related:
 | `SecretStorage==3.5.0` | BSD-3-Clause | 精确发行物已复核 |
 | `jeepney==0.9.0` | MIT | 精确发行物已复核 |
 | `uvloop==0.22.1` | MIT / Apache-2.0 | 官方发行说明；需 Linux 物化 |
-| `psycopg2-binary==2.9.12` | LGPL with exceptions | 需负责人确认分发与 NOTICE 策略 |
+| `psycopg2-binary==2.9.12` | LGPL with exceptions | 已归档原文并建立强制 NOTICE/许可证随制品分发策略 |
 
 官方复核入口：
 
@@ -86,12 +87,24 @@ related:
 - <https://pypi.org/project/jeepney/0.9.0/>
 - <https://pypi.org/project/uvloop/0.22.1/>
 
-## 4. 关闭条件
+Linux 扫描器仍会原样标出 `fastembed==0.8.0` 的 Other/Proprietary 和
+`py-rust-stemmers==0.1.8` 的 UNKNOWN 元数据；已用其精确发行包 LICENSE
+复核为 Apache-2.0 和 MIT，故它们不是未评估许可证。`psycopg2-binary`
+是唯一 LGPL 标记项。
 
-1. 在干净 Linux CI/部署环境按 `requirements.lock` 精确安装或下载全部 111
-   个包，并产出机器可读许可证清单。
-2. 核对清单中无未评估的 GPL/AGPL/UNKNOWN/Proprietary。
-3. 发布负责人确认 `psycopg2-binary` 的 LGPL 分发/归档方式。
-4. 将许可证文本、NOTICE、命令、退出码、固定 lock SHA 和报告一并归档。
+已归档 `psycopg2_binary-2.9.12.dist-info/licenses/LICENSE` 的正文与来源
+路径/哈希，并在 `../THIRD_PARTY_NOTICES.md` 写入外部分发时保留 LGPLv3+
+及 OpenSSL linking exception 的工程要求。该记录不是法律意见；发布责任人
+应按实际发行方式完成最终合规判断。
 
-完成以上四项后才能关闭 `G56-015`。
+## 4. 已完成的关闭证据
+
+1. Linux 容器精确安装与机器可读清单：
+   `evidence/batch-57-license-audit/README.md`。
+2. 111 项 JSON 清单及自身 SHA：
+   `evidence/batch-57-license-audit/backend-requirements-lock-linux-licenses.json`。
+3. psycopg2-binary LICENSE 正文与容器来源哈希：
+   `evidence/batch-57-license-audit/psycopg2-binary-2.9.12-LICENSE`。
+4. 外部分发 NOTICE 策略：`../THIRD_PARTY_NOTICES.md`。
+
+以上是可复核的工程许可证审计证据；法律责任和实际发布决定仍由发布负责人承担。

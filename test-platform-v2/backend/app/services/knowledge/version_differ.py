@@ -19,6 +19,11 @@ from sqlalchemy.orm import Session
 from app.models.lanhu_evidence import LanhuEvidencePage
 from app.models.requirement_module import RequirementModule
 from app.models.release_bundle import ReleaseBundle
+from app.services.knowledge.llm_json_client import (
+    LLMResponseError,
+    LLMUnavailableError,
+    call_json_model,
+)
 
 logger = logging.getLogger("knowledge.version_differ")
 
@@ -174,7 +179,7 @@ def _rule_diff(
     return result
 
 
-# ── Phase B: AI Assisted (stub) ──
+# ── Phase B: AI Assisted ──
 
 async def _ai_diff(
     db: Session,
@@ -182,24 +187,100 @@ async def _ai_diff(
     parent_modules: list[RequirementModule],
     rule_result: VersionDiffResult,
 ) -> VersionDiffResult:
-    """Phase B — AI-assisted diff for cases the rule engine can't resolve.
+    """Use sanitized OCR text to resolve renames and content-level changes."""
+    try:
+        payload = await call_json_model(
+            system_prompt=(
+                "比较两个需求版本。只根据提供的数据判断模块重命名和页面内容变化，"
+                "不得补造。返回 JSON：module_matches 数组，每项包含 current_module、"
+                "parent_module、modified_pages、confidence；以及 confidence。"
+            ),
+            user_payload={
+                "rule_result": {
+                    "new_modules": rule_result.new_modules,
+                    "deleted_modules": rule_result.deleted_modules,
+                    "modified_modules": [
+                        {
+                            "module": item.module_name,
+                            "new_pages": item.new_pages,
+                            "deleted_pages": item.deleted_pages,
+                            "unchanged_pages": item.unchanged_pages,
+                        }
+                        for item in rule_result.modified_modules
+                    ],
+                },
+                "current_pages": [
+                    {
+                        "folder": page.folder,
+                        "page": page.page_name,
+                        "text": page.merged_text or page.ocr_text or "",
+                    }
+                    for page in current_pages
+                ],
+                "parent_modules": [
+                    {"id": module.id, "name": module.name, "type": module.node_type}
+                    for module in parent_modules
+                ],
+            },
+        )
+    except (LLMUnavailableError, LLMResponseError) as exc:
+        warning = f"AI semantic diff unavailable: {exc}"
+        logger.warning(warning)
+        rule_result.warnings.append(warning)
+        rule_result.diff_confidence = min(rule_result.diff_confidence, 0.85)
+        return rule_result
 
-    Scenarios needing AI:
-      - Module renamed (e.g. "资讯模块" → "资讯管理")
-      - Module split/merged
-      - Content-level page changes within same-named pages
+    parent_by_name = {_normalize(module.name): module for module in parent_modules}
+    for match in payload.get("module_matches", []):
+        if not isinstance(match, dict):
+            continue
+        current_name = str(match.get("current_module", "")).strip()
+        parent_name = str(match.get("parent_module", "")).strip()
+        parent = parent_by_name.get(_normalize(parent_name))
+        if (
+            not current_name
+            or not parent
+            or current_name not in rule_result.new_modules
+            or parent.name not in rule_result.deleted_modules
+        ):
+            continue
+        rule_result.new_modules.remove(current_name)
+        rule_result.deleted_modules.remove(parent.name)
+        current_page_names = sorted(
+            {
+                _normalize(page.page_name)
+                for page in current_pages
+                if _normalize(page.folder) == _normalize(current_name)
+            }
+        )
+        modified_pages = [
+            str(name).strip()
+            for name in match.get("modified_pages", [])
+            if str(name).strip()
+        ]
+        rule_result.total_pages_diff = max(
+            0,
+            rule_result.total_pages_diff
+            - len(current_page_names)
+            + len(modified_pages),
+        )
+        rule_result.modified_modules.append(
+            ModuleChange(
+                module_name=current_name,
+                parent_module_id=parent.id,
+                change="modified",
+                modified_pages=modified_pages,
+                unchanged_pages=[
+                    name for name in current_page_names if name not in modified_pages
+                ],
+            )
+        )
 
-    Currently a stub that returns the rule result unchanged.
-    Full implementation requires DeepSeek API integration with OCR text comparison.
-    """
-    # TODO: Integrate DeepSeek for:
-    #   1. For unmatched folders → search parent module names via embedding similarity
-    #   2. For common pages → compare OCR text to detect content-level modifications
-    #   3. Reclassify confidence based on AI agreement
-    logger.info(
-        "Phase B AI diff not yet implemented — returning rule result (confidence=%.2f)",
-        rule_result.diff_confidence,
-    )
+    try:
+        ai_confidence = float(payload.get("confidence", rule_result.diff_confidence))
+    except (TypeError, ValueError):
+        ai_confidence = rule_result.diff_confidence
+    rule_result.diff_confidence = min(1.0, max(0.0, ai_confidence))
     return rule_result
 
 
@@ -268,13 +349,14 @@ def _build_module_tree(
     # 2. Modified modules
     for mc in diff_result.modified_modules:
         parent_mod = parent_by_name.get(_normalize(mc.module_name))
+        parent_module_id = mc.parent_module_id or (parent_mod.id if parent_mod else None)
         mod = RequirementModule(
             project_id=project_id,
             release_bundle_id=release_bundle_id,
             name=mc.module_name,
             node_type="module",
             change_type="modified",
-            parent_module_id=parent_mod.id if parent_mod else None,
+            parent_module_id=parent_module_id,
             source_version=source_version,
         )
         db.add(mod)

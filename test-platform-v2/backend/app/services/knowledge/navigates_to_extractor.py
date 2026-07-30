@@ -16,11 +16,17 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from bs4 import BeautifulSoup
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.lanhu_evidence import LanhuEvidencePage
 from app.models.requirement_module import RequirementModule
+from app.services.knowledge.llm_json_client import (
+    LLMResponseError,
+    LLMUnavailableError,
+    call_json_model,
+)
 
 logger = logging.getLogger("knowledge.navigates_to_extractor")
 
@@ -136,25 +142,66 @@ def _classify_action_type(action: str) -> str:
     return "navigation"
 
 
-# ── P2: AI Multimodal (stub) ──
+# ── P2: AI semantic analysis over locally extracted text ──
 
 async def _p2_ai_multimodal(
     page: RequirementModule,
-    screenshot_url: str,
+    evidence_page: LanhuEvidencePage | None,
 ) -> list[PageInteraction]:
-    """P2 — AI multimodal screenshot analysis via DeepSeek.
+    """P2 — infer interactions from sanitized OCR/DOM text.
 
-    Currently a stub. Full implementation would:
-      1. Send screenshot to DeepSeek Vision API
-      2. Ask: "Identify clickable elements, buttons, tabs, and navigation items.
-         For each, infer the target page name."
-      3. Parse structured JSON response into PageInteraction list.
+    DeepSeek is used for semantic analysis only. Screenshot OCR is performed
+    locally before this layer, so no raw image is uploaded by this function.
     """
-    logger.debug("P2 AI multimodal not implemented for page #%d", page.id)
-    return []
+    if not evidence_page:
+        return []
+    extracted_text = (
+        evidence_page.merged_text
+        or evidence_page.ocr_text
+        or BeautifulSoup(evidence_page.dom_text or "", "html.parser").get_text(" ", strip=True)
+    )
+    if not extracted_text:
+        return []
+
+    payload = await call_json_model(
+        system_prompt=(
+            "根据页面名称和本地 OCR/DOM 文本识别明确的点击跳转。不得把普通正文猜成按钮。"
+            "返回 JSON 对象，字段 interactions 为数组；每项包含 trigger、target_page、"
+            "target_lanhu_page_id、interaction_type、source_element、description。"
+        ),
+        user_payload={
+            "page_name": page.name,
+            "extracted_text": extracted_text,
+        },
+    )
+    interactions: list[PageInteraction] = []
+    for item in payload.get("interactions", []):
+        if not isinstance(item, dict):
+            continue
+        trigger = str(item.get("trigger", "")).strip()
+        target_page = str(item.get("target_page", "")).strip()
+        if not trigger or not target_page:
+            continue
+        interactions.append(
+            PageInteraction(
+                trigger=trigger,
+                target_page=target_page,
+                target_lanhu_page_id=str(
+                    item.get("target_lanhu_page_id", "")
+                ).strip(),
+                interaction_type=str(
+                    item.get("interaction_type", "navigation")
+                ).strip()
+                or "navigation",
+                source_element=str(item.get("source_element", "")).strip(),
+                description=str(item.get("description", "")).strip(),
+                extraction_source="ai_text",
+            )
+        )
+    return interactions
 
 
-# ── P1: DOM Parsing (stub) ──
+# ── P1: DOM Parsing ──
 
 def _p1_dom_extraction(
     evidence_page: LanhuEvidencePage | None,
@@ -166,27 +213,58 @@ def _p1_dom_extraction(
       - data-click / data-link custom attributes
       - Axure hotspot component markers
 
-    Currently a stub — requires lanhu-mcp to fetch the actual HTML DOM.
+    Requires lanhu-mcp to have stored the actual HTML DOM in the evidence page.
     """
     if not evidence_page or not evidence_page.dom_text:
         return []
 
-    dom = evidence_page.dom_text
     interactions: list[PageInteraction] = []
+    soup = BeautifulSoup(evidence_page.dom_text, "html.parser")
+    candidate_attributes = ("href", "data-link", "data-click", "data-target")
 
-    # Try to extract links from DOM text (simple regex as stub)
-    link_pattern = re.findall(r'<a[^>]*>(.*?)</a>', dom, re.IGNORECASE)
-    for i, link_text in enumerate(link_pattern[:20]):
-        text = re.sub(r'<[^>]+>', '', link_text).strip()
-        if text:
-            interactions.append(PageInteraction(
+    for element in soup.find_all(True):
+        target = ""
+        source_attribute = ""
+        for attribute in candidate_attributes:
+            value = str(element.get(attribute, "")).strip()
+            if value and value not in {"#", "javascript:void(0)"}:
+                target = value
+                source_attribute = attribute
+                break
+        if not target:
+            onclick = str(element.get("onclick", "")).strip()
+            match = re.search(
+                r"(?:location(?:\.href)?|window\.open)\s*(?:=|\()\s*['\"]([^'\"]+)",
+                onclick,
+                re.IGNORECASE,
+            )
+            if match:
+                target = match.group(1)
+                source_attribute = "onclick"
+        if not target:
+            continue
+
+        text = element.get_text(" ", strip=True)
+        text = (
+            text
+            or str(element.get("aria-label", "")).strip()
+            or str(element.get("title", "")).strip()
+            or str(element.get("value", "")).strip()
+        )
+        if not text:
+            continue
+        interactions.append(
+            PageInteraction(
                 trigger=f"点击{text}",
-                target_page=f"{text}页",
-                interaction_type="navigation",
+                target_page=target,
+                interaction_type="external" if target.startswith(("http://", "https://")) else "navigation",
                 source_element=text,
-                description=f"DOM <a> 标签: {text}",
+                description=f"DOM {source_attribute}={target}",
                 extraction_source="dom",
-            ))
+            )
+        )
+        if len(interactions) >= 20:
+            break
 
     return interactions
 
@@ -231,14 +309,12 @@ async def extract_page_interactions(
         if layer == "dom":
             layer_interactions = _p1_dom_extraction(evidence_page)
         elif layer == "ai":
-            screenshot_url = ""
-            if page.screenshot_urls:
-                try:
-                    urls = json.loads(page.screenshot_urls)
-                    screenshot_url = urls[0] if urls else ""
-                except (json.JSONDecodeError, IndexError):
-                    pass
-            layer_interactions = await _p2_ai_multimodal(page, screenshot_url)
+            try:
+                layer_interactions = await _p2_ai_multimodal(page, evidence_page)
+            except (LLMUnavailableError, LLMResponseError) as exc:
+                warning = f"Page #{page.id} AI semantic extraction unavailable: {exc}"
+                logger.warning(warning)
+                report.warnings.append(warning)
         elif layer == "cv":
             layer_interactions = _p3_cv_heuristic(page, evidence_page)
 
@@ -366,6 +442,8 @@ def _interaction_to_dict(interaction: PageInteraction) -> dict[str, Any]:
     }
     if interaction.admin_config_source:
         d["admin_config_source"] = interaction.admin_config_source
+    if interaction.extraction_source:
+        d["extraction_source"] = interaction.extraction_source
     return d
 
 
@@ -386,6 +464,7 @@ def parse_page_interactions(json_str: str) -> list[PageInteraction]:
             source_element=item.get("source_element", ""),
             description=item.get("description", ""),
             admin_config_source=item.get("admin_config_source", ""),
+            extraction_source=item.get("extraction_source", ""),
         ))
     return interactions
 

@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
 from app.models.lanhu_evidence import LanhuEvidencePage
 from app.models.requirement_module import RequirementModule
+from app.services.knowledge.llm_json_client import call_json_model
 
 logger = logging.getLogger("knowledge.attachment_extractor")
 
@@ -114,30 +115,72 @@ def _extract_text_from_evidence(
     return ""
 
 
-# ── AI Analysis (stub) ──
+# ── AI Analysis ──
 
 async def _ai_analyze_attachment(
     raw_text: str,
     attachment_name: str,
 ) -> AttachmentContent:
-    """AI analysis of attachment text via DeepSeek.
-
-    Currently a stub. Full implementation would:
-      1. Send raw_text to DeepSeek with structured prompt:
-         "Extract from this document:
-          - A 1-2 sentence summary
-          - List of functional points (name, description, category)
-          - List of business rules (rule text, condition, action)
-          - Related module names"
-      2. Parse structured JSON response.
-      3. Return AttachmentContent.
-    """
-    logger.debug("AI analysis stub for attachment '%s' (%d chars)", attachment_name, len(raw_text))
-    return AttachmentContent(
-        summary=f"附件 '{attachment_name}' 的内容摘要（AI分析待实现）",
-        raw_text=raw_text,
-        extraction_confidence=0.0,
+    """Analyze already-extracted, sanitized text with the configured model."""
+    payload = await call_json_model(
+        system_prompt=(
+            "你是需求分析助手。仅根据提供的附件文本提取信息，不补造内容。"
+            "返回 JSON 对象，字段为 summary、functional_points、business_rules、"
+            "related_modules、confidence。functional_points 每项包含 name、description、"
+            "category、priority；business_rules 每项包含 rule、condition、action、"
+            "category、confidence。"
+        ),
+        user_payload={
+            "attachment_name": attachment_name,
+            "attachment_text": raw_text,
+        },
     )
+
+    functional_points = [
+        AttachmentFunctionPoint(
+            name=str(item.get("name", "")).strip(),
+            description=str(item.get("description", "")).strip(),
+            category=str(item.get("category", "")).strip(),
+            priority=str(item.get("priority", "")).strip(),
+        )
+        for item in payload.get("functional_points", [])
+        if isinstance(item, dict) and str(item.get("name", "")).strip()
+    ]
+    business_rules = [
+        BusinessRule(
+            rule=str(item.get("rule", "")).strip(),
+            condition=str(item.get("condition", "")).strip(),
+            action=str(item.get("action", "")).strip(),
+            category=str(item.get("category", "")).strip(),
+            confidence=_confidence(item.get("confidence")),
+        )
+        for item in payload.get("business_rules", [])
+        if isinstance(item, dict) and str(item.get("rule", "")).strip()
+    ]
+    summary = str(payload.get("summary", "")).strip()
+    related_modules = [
+        str(item).strip()
+        for item in payload.get("related_modules", [])
+        if str(item).strip()
+    ]
+    if not summary and not functional_points and not business_rules:
+        raise ValueError("AI attachment analysis returned no usable content")
+
+    return AttachmentContent(
+        summary=summary,
+        functional_points=functional_points,
+        business_rules=business_rules,
+        related_modules=related_modules,
+        raw_text=raw_text,
+        extraction_confidence=_confidence(payload.get("confidence")),
+    )
+
+
+def _confidence(value: object) -> float:
+    try:
+        return min(1.0, max(0.0, float(value)))
+    except (TypeError, ValueError):
+        return 0.0
 
 
 # ── Entity Key Helpers ──
