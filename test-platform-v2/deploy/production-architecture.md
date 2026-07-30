@@ -44,12 +44,14 @@ tags: ["production", "architecture", "cloudflare", "vercel", "supabase", "batch-
 - **配置**: `frontend/vercel.json`
 - **框架**: Vite 7
 - **Node**: 22.x
+- **部署域名**: `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app` ✅
 - **文档**: `frontend/vercel.json`
 
 ### Supabase — PostgreSQL Database
 - **用途**: 生产数据库 (替代自托管 PostgreSQL 容器)
 - **版本**: PostgreSQL 16
-- **连接池**: PgBouncer (端口 6543)
+- **Project Ref**: `myhwdpjmxdsodqgeecpn` ✅
+- **连接池**: PgBouncer `aws-0-ap-southeast-1.pooler.supabase.com:6543`
 - **迁移工具**: Alembic
 - **文档**: `deploy/supabase-setup.md`
 

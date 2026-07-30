@@ -53,16 +53,17 @@ cd test-platform-v2/backend
 alembic upgrade head
 ```
 
-## 4. 注册后回填
+## 4. 注册后回填 (已完成 2026-07-30)
 
 | 字段 | 值 |
 |------|-----|
-| Supabase 账号邮箱 | `<registered-email>` |
-| Supabase 项目名 | `<project-name>` |
-| Supabase Project Ref | `<project-ref>` |
-| 数据库连接串 | `postgresql://cameltv:<password>@<project-ref>.supabase.co:6543/cameltv_production` |
-| Region | `<selected-region>` |
+| Supabase 账号 | GitHub OAuth (`mojinru9527`) |
+| Supabase 项目名 | `cameltv-platform` |
+| Supabase Project Ref | `myhwdpjmxdsodqgeecpn` |
+| 数据库连接串 (Pooler) | `postgresql://postgres.myhwdpjmxdsodqgeecpn:<password>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres` |
+| Region | Southeast Asia (Singapore) |
 | PostgreSQL 版本 | `16` |
+| 密码状态 | ⚠️ 待用户填入 `production.env` |
 
 ⚠️ **安全提示**: 数据库密码和完整连接串不要写入 Git 仓库。
 只通过 `test-platform-v2/config/runtime/production.env` 注入（该文件已 .gitignore）。
