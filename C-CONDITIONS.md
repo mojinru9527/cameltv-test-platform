@@ -197,12 +197,25 @@
 
 ---
 
+### batch-58 — 生产基础设施云注册 (2026-07-30)
+
+| ID | 内容 | 优先级 | 创建日期 | 状态 |
+|----|------|--------|---------|------|
+| C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | ✅ Closed — 生产域名使用 Vercel 部署地址 `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app`，Cloudflare CDN 待自定义域名时再配置 |
+| C58-02 | Vercel 注册 + 导入仓库 + 前端部署到 `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app` | P1 | 2026-07-30 | ✅ Closed |
+| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库密码填入 | P0 | 2026-07-30 | ✅ Closed |
+| C58-04 | `production.env` 中 0 个 `<...>` 占位符 (全部 4 个已由用户手动生成填入) | P0 | 2026-07-30 | ✅ Closed |
+| C58-05 | 验收文档 §2.5 和 §5.6-5.8 注册信息回填完毕 | P1 | 2026-07-30 | ✅ Closed |
+| C58-06 | 确定后端托管方案并配置 `/api` 反代目标 | P2 | 2026-07-30 | OPEN — 待后续批次 |
+
+---
+
 ## 统计
 
-- **Open**: 40 (含 10 个 P0 blocking)
+- **Open**: 41 (含 8 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 44
-- **Total**: 84
+- **Closed**: 49
+- **Total**: 90
 
 ## 维护约定
 
