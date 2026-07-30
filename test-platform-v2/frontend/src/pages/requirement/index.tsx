@@ -210,7 +210,7 @@ export default function RequirementPage() {
     }
   }
 
-  const domains = metadata?.domains || []
+  const domains = useMemo(() => metadata?.domains || [], [metadata?.domains])
   const docs = documentPage?.items || []
   const totalDocuments = documentPage?.total || 0
 

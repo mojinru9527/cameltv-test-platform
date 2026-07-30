@@ -1,4 +1,4 @@
-# CamelTv Jenkins Controller — 预装 Python 3.12 + Node 18 + Docker CLI
+# CamelTv Jenkins Controller — 预装 Python 3.12 + Node 22 + Docker CLI
 FROM jenkins/jenkins:lts
 
 USER root
@@ -16,8 +16,8 @@ RUN curl -fsSL https://get.docker.com -o /tmp/get-docker.sh \
     && rm /tmp/get-docker.sh \
     || echo "Docker CLI install skipped (will use host socket)"
 
-# ── Node 18 ──
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+# ── Node 22 (Jenkinsfile also fails closed below the Batch 59 minimum) ──
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm@latest \
     && rm -rf /var/lib/apt/lists/*

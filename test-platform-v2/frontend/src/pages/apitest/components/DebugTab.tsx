@@ -115,6 +115,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   const [assertions, setAssertions] = useState('[]')
   const [envId, setEnvId] = useState<number | undefined>()
   const [envs, setEnvs] = useState<Environment[]>([])
+  const initialEnvIdRef = useRef(envId)
   const [datasetId, setDatasetId] = useState<number | undefined>()
   const [datasets, setDatasets] = useState<DatasetListItem[]>([])
   const [showProdConfirm, setShowProdConfirm] = useState(false)
@@ -134,7 +135,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
       if (cancelled) return
       setEnvs(data)
       // 默认选中「测试5」环境
-      if (envId === undefined) {
+      if (initialEnvIdRef.current === undefined) {
         const defaultEnv = data.find((e: Environment) => e.name === '测试5')
         if (defaultEnv) {
           setEnvId(defaultEnv.id)

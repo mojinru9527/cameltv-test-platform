@@ -73,7 +73,12 @@ def update_dataset(
     current: CurrentUser = Depends(require_permission("dataset:update")),
     db: Session = Depends(get_db),
 ):
-    row = dataset_service.update_dataset(db, dataset_id, body.model_dump(exclude_none=True))
+    row = dataset_service.update_dataset(
+        db,
+        dataset_id,
+        body.model_dump(exclude_none=True),
+        project_id=current.project_id or 0,
+    )
     if not row:
         return R(code=404, msg="数据集不存在")
     return R.ok(DatasetOut(**row))

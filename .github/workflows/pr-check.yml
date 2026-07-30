@@ -157,6 +157,13 @@ jobs:
           assert len(tables) >= 30, f'Expected >=30 tables, got {len(tables)}'
           "
 
+      - name: PostgreSQL concurrency regressions
+        working-directory: test-platform-v2/backend
+        env:
+          BATCH48_RUN_PG_INTEGRATION: '1'
+          BATCH48_PG_INTEGRATION_URL: postgresql+psycopg2://cameltv:cameltv_test@localhost:5432/cameltv_test
+        run: python -m pytest -q tests/test_batch48_postgresql_concurrency.py
+
       # D5: Detect schema drift between ORM models and Alembic migrations.
       # Runs on the same PG service — drops tables between steps so they don't
       # interfere.  Non-blocking initially (continue-on-error); will become a
@@ -169,15 +176,13 @@ jobs:
         run: |
           python scripts/check_migration_drift.py
 
-  # D2: CI accessibility gate — scans built SPA for WCAG violations using
-  # axe-core.  Scans the login page (no auth needed) which exercises the
-  # full component tree (buttons, inputs, headings, landmarks, contrast).
-  # Non-blocking initially; threshold tightens after 1-week observation.
+  # D2: Deterministic WCAG gate. Playwright owns the Chromium version, while
+  # axe scans the login surface and the five-theme production fixture matrix.
   frontend-a11y:
     needs: detect_changes
     if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
 
     steps:
       - uses: actions/checkout@v4
@@ -197,23 +202,22 @@ jobs:
         working-directory: test-platform-v2/frontend
         run: npm run build
 
-      - name: A11y Scan (axe-core)
+      - name: Install Playwright Chromium
         working-directory: test-platform-v2/frontend
-        continue-on-error: true
-        run: |
-          npx serve dist -p 4173 &
-          SERVE_PID=$!
-          sleep 3
-          npx @axe-core/cli --stdout http://localhost:4173/login > a11y-results.json 2>&1 || true
-          cat a11y-results.json
-          kill $SERVE_PID 2>/dev/null || true
+        run: npx playwright install --with-deps chromium
+
+      - name: A11y Scan
+        working-directory: test-platform-v2/frontend
+        run: npm run test:a11y:ci
 
       - name: Upload A11y Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: a11y-results
-          path: test-platform-v2/frontend/a11y-results.json
+          path: |
+            test-platform-v2/frontend/playwright-report/
+            test-platform-v2/frontend/test-results/
           retention-days: 7
 
   frontend-check:
@@ -240,17 +244,15 @@ jobs:
         working-directory: test-platform-v2/frontend
         run: npm run typecheck
 
-      - name: Lint (ESLint)
+      - name: Lint
         working-directory: test-platform-v2/frontend
-        continue-on-error: true
-        run: npx eslint src/ --ext .ts,.tsx || echo "::warning::ESLint 检查发现问题（可能未配置）"
+        run: npm run lint
 
-      # D4: vitest with coverage.  Thresholds in vitest.config.ts are a soft gate
-      # initially (continue-on-error); will become a hard gate after observation.
-      - name: Unit Tests + Coverage (vitest)
+      # D4: Vitest coverage uses the committed Batch 58 baseline as a hard
+      # non-regression floor. Raising the floor remains a separate tested change.
+      - name: Unit Tests + Coverage
         working-directory: test-platform-v2/frontend
-        continue-on-error: true
-        run: npx vitest run --coverage
+        run: npm run test:coverage
 
       - name: Upload coverage report
         if: always()

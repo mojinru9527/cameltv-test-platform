@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
   confirmApiMatches,
@@ -373,7 +373,7 @@ export default function AiResultModal({
   }, [extractionResult])
 
   const funcCases = result?.functional_cases || []
-  const apiCases = result?.api_cases || []
+  const apiCases = useMemo(() => result?.api_cases || [], [result?.api_cases])
 
   // ── Fetch API matches when modal opens with result ──
   useEffect(() => {
@@ -415,7 +415,7 @@ export default function AiResultModal({
       setSelectedServiceId(null)
       setConfirmedEndpointIds(new Set())
     }
-  }, [open, documentId, apiCases.length])
+  }, [open, documentId, apiCases])
   const isViewMode = mode === 'view'
   const isExtractMode = mode === 'extract'
   const analysis = result?.requirement_analysis

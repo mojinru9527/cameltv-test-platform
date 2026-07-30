@@ -103,8 +103,16 @@ def create_dataset(db: Session, project_id: int, data: dict) -> dict:
     return _to_dict(row)
 
 
-def update_dataset(db: Session, dataset_id: int, data: dict) -> dict | None:
-    row = db.get(Dataset, dataset_id)
+def update_dataset(
+    db: Session,
+    dataset_id: int,
+    data: dict,
+    *,
+    project_id: int,
+) -> dict | None:
+    row = db.scalar(
+        select(Dataset).where(Dataset.id == dataset_id, Dataset.project_id == project_id)
+    )
     if not row:
         return None
     # If raw_content changed, re-parse columns_meta and row_count
@@ -135,13 +143,20 @@ def delete_dataset(db: Session, dataset_id: int, project_id: int = 0) -> bool:
 
 # ── Parameterized Execution Support ──────────────────────
 
-def get_dataset_rows(db: Session, dataset_id: int) -> list[dict]:
+def get_dataset_rows(
+    db: Session,
+    dataset_id: int,
+    *,
+    project_id: int,
+) -> list[dict]:
     """Return all rows for a dataset as a list of dicts.
 
     For CSV/JSON: parse raw_content.
     SQL type is deferred for future implementation.
     """
-    row = db.get(Dataset, dataset_id)
+    row = db.scalar(
+        select(Dataset).where(Dataset.id == dataset_id, Dataset.project_id == project_id)
+    )
     if not row:
         raise ValueError(f"Dataset #{dataset_id} not found")
     if row.source_type in ("csv", "json"):

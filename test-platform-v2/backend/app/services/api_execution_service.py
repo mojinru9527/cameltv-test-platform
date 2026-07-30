@@ -865,8 +865,8 @@ def _execute_with_dataset(
     """遍历数据集每一行，逐行替换 ${column_name} 并执行，返回批量结果。"""
     from app.services.dataset_service import get_dataset_rows, get_dataset
 
-    rows = get_dataset_rows(db, dataset_id)
-    dataset = get_dataset(db, dataset_id)
+    rows = get_dataset_rows(db, dataset_id, project_id=project_id)
+    dataset = get_dataset(db, dataset_id, project_id=project_id)
     columns = json.loads(dataset["columns_meta"]) if dataset else []
 
     per_row_results = []
