@@ -196,7 +196,8 @@ def export_report(
     db: Session = Depends(get_db),
 ):
     """导出报告为 CSV 或 Excel（.xlsx）文件。"""
-    from io import BytesIO
+    from io import BytesIO, StringIO
+    from urllib.parse import quote
 
     from fastapi.responses import StreamingResponse
 
@@ -212,19 +213,32 @@ def export_report(
     if fmt == "csv":
         import csv
 
-        output = BytesIO()
-        writer = csv.writer(output)
+        text_output = StringIO(newline="")
+        writer = csv.writer(text_output)
         writer.writerow(["用例标题", "优先级", "域", "模块", "执行状态", "执行人", "备注"])
         for c in cases:
             writer.writerow([
-                c.get("case_title", ""), c.get("priority", ""), c.get("domain", ""),
-                c.get("module", ""), c.get("last_status", ""), c.get("executor_name", ""),
-                c.get("notes", ""),
+                report_service.escape_spreadsheet_formula(c.get("title", "")),
+                report_service.escape_spreadsheet_formula(c.get("priority", "")),
+                report_service.escape_spreadsheet_formula(c.get("domain", "")),
+                report_service.escape_spreadsheet_formula(c.get("module", "")),
+                report_service.escape_spreadsheet_formula(c.get("last_status", "")),
+                report_service.escape_spreadsheet_formula(c.get("executor_name", "")),
+                report_service.escape_spreadsheet_formula(c.get("notes", "")),
             ])
-        output.seek(0)
+        output = BytesIO(text_output.getvalue().encode("utf-8-sig"))
         filename = f"{r.get('name', 'report')}.csv"
-        return StreamingResponse(output, media_type="text/csv",
-                                 headers={"Content-Disposition": f'attachment; filename="{filename}"'})
+        encoded_filename = quote(filename, safe="")
+        return StreamingResponse(
+            output,
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": (
+                    f"attachment; filename=report-{report_id}.csv; "
+                    f"filename*=UTF-8''{encoded_filename}"
+                ),
+            },
+        )
 
     elif fmt == "excel":
         try:
@@ -272,7 +286,7 @@ def export_report(
         pdf.cell(0, 10, r.get("name", "Test Report"), ln=True, align="C")
         pdf.ln(4)
         pdf.set_font_size(10)
-        stats = r.get("stats") or {}
+        stats = content.get("stats") or {}
         info_lines = [
             f"Plan: {r.get('plan_name', '')}  |  Date: {r.get('created_at', '')}",
             f"Total: {stats.get('total',0)}  |  Pass: {stats.get('pass',0)}  |  Fail: {stats.get('fail',0)}  |  Skip: {stats.get('skip',0)}  |  Block: {stats.get('block',0)}",
@@ -293,7 +307,7 @@ def export_report(
         # Table rows
         for c in cases:
             row = [
-                str(c.get("case_title", ""))[:30],
+                str(c.get("title", ""))[:30],
                 str(c.get("priority", ""))[:6],
                 str(c.get("domain", ""))[:15],
                 str(c.get("module", ""))[:18],
@@ -311,43 +325,5 @@ def export_report(
         filename = f"{r.get('name', 'report')}.pdf"
         return StreamingResponse(
             output, media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-        )
-
-    else:  # excel
-        import openpyxl
-
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "执行明细"
-        ws.append(["用例标题", "优先级", "域", "模块", "执行状态", "执行人", "备注"])
-        for c in cases:
-            ws.append([
-                c.get("case_title", ""), c.get("priority", ""), c.get("domain", ""),
-                c.get("module", ""), c.get("last_status", ""), c.get("executor_name", ""),
-                c.get("notes", ""),
-            ])
-
-        # Summary sheet
-        ws2 = wb.create_sheet("统计概览")
-        stats = r.get("stats") or {}
-        ws2.append(["指标", "值"])
-        ws2.append(["用例总数", stats.get("total", 0)])
-        ws2.append(["通过", stats.get("pass", 0)])
-        ws2.append(["失败", stats.get("fail", 0)])
-        ws2.append(["跳过", stats.get("skip", 0)])
-        ws2.append(["阻塞", stats.get("block", 0)])
-        ws2.append(["待执行", stats.get("pending", 0)])
-        ws2.append(["报告名称", r.get("name", "")])
-        ws2.append(["计划名称", r.get("plan_name", "")])
-        ws2.append(["创建时间", str(r.get("created_at", ""))])
-
-        output = BytesIO()
-        wb.save(output)
-        output.seek(0)
-        filename = f"{r.get('name', 'report')}.xlsx"
-        return StreamingResponse(
-            output,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             headers={"Content-Disposition": f'attachment; filename="{filename}"'},
         )

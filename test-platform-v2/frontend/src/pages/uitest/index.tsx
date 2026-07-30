@@ -166,20 +166,22 @@ export default function UiTestPage() {
   const [runArtifacts, setRunArtifacts] = useState<UiRunArtifact[]>([])
   const [runDetailLoading, setRunDetailLoading] = useState(false)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const selectedRunId = selectedRun?.id
+  const selectedRunStatus = selectedRun?.status
 
   // Auto-poll run detail while running/pending
   useEffect(() => {
-    if (!selectedRun || !runDetailOpen) return
-    if (selectedRun.status !== 'pending' && selectedRun.status !== 'running') return
+    if (!selectedRunId || !runDetailOpen) return
+    if (selectedRunStatus !== 'pending' && selectedRunStatus !== 'running') return
 
     pollRef.current = setInterval(async () => {
       try {
-        const fresh = await fetchRunDetail(selectedRun.id)
+        const fresh = await fetchRunDetail(selectedRunId)
         setSelectedRun(fresh)
         if (fresh.status !== 'pending' && fresh.status !== 'running') {
           // Load artifacts when done
           try {
-            const arts = await fetchRunArtifacts(selectedRun.id)
+            const arts = await fetchRunArtifacts(selectedRunId)
             setRunArtifacts(arts)
           } catch { /* ignore */ }
         }
@@ -189,7 +191,7 @@ export default function UiTestPage() {
     return () => {
       if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
     }
-  }, [selectedRun?.id, selectedRun?.status, runDetailOpen])
+  }, [selectedRunId, selectedRunStatus, runDetailOpen])
 
   // Cleanup polling on unmount
   useEffect(() => {

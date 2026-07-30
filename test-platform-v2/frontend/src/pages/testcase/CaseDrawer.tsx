@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -149,17 +149,27 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
     } catch { setReviewHistory([]) }
   }
 
-  const selModules = domains
-    .find((d: any) => d.domain === selDomain)?.modules
-    ?.map((m: any) => ({ value: m.module, label: `${m.module}` })) || []
+  const selectedDomain = useMemo(
+    () => domains.find((d: any) => d.domain === selDomain),
+    [domains, selDomain],
+  )
+  const selModules = useMemo(
+    () => selectedDomain?.modules
+      ?.map((m: any) => ({ value: m.module, label: `${m.module}` })) || [],
+    [selectedDomain],
+  )
+  const selectedModule = watch('module')
 
   useEffect(() => {
-    if (selDomain && editing?.module) {
-      // keep existing module if domain matches
-    } else if (selDomain && !selModules.some((m: any) => m.value === watch('module'))) {
+    if (
+      selDomain
+      && selectedDomain
+      && selectedModule
+      && !selModules.some((m: any) => m.value === selectedModule)
+    ) {
       setValue('module', '')
     }
-  }, [selDomain])
+  }, [selDomain, selectedDomain, selectedModule, selModules, setValue])
 
   const doSave = async (data: FormData) => {
     setSaving(true)

@@ -44,30 +44,51 @@ export default function WikiDiffTab() {
   const [running, setRunning] = useState(false)
   const [tasks, setTasks] = useState<WikiDiffTaskBrief[]>([])
   const [task, setTask] = useState<WikiDiffTask | null>(null)
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null)
   const [sevFilter, setSevFilter] = useState<string>('all')
   const [dimFilter, setDimFilter] = useState<string>('all')
   const [active, setActive] = useState<WikiDiffItem | null>(null)
 
-  const loadTasks = useCallback(async () => {
+  const loadTasks = useCallback(async (signal?: AbortSignal) => {
     const [cfg, page] = await Promise.all([
-      fetchWikiConfig().catch(() => null),
-      fetchWikiDiffTasks({ page: 1, page_size: 30 }).catch(() => null),
+      fetchWikiConfig(signal).catch(() => null),
+      fetchWikiDiffTasks({ page: 1, page_size: 30 }, signal).catch(() => null),
     ])
+    if (signal?.aborted) return
     if (cfg) setConfig(cfg)
     if (page) setTasks(page.items || [])
   }, [])
 
-  useEffect(() => { loadTasks() }, [loadTasks])
+  useEffect(() => {
+    const controller = new AbortController()
+    void loadTasks(controller.signal)
+    return () => controller.abort()
+  }, [loadTasks])
 
-  const openTask = useCallback(async (id: number) => {
+  useEffect(() => {
+    if (!selectedTaskId) return
+    const controller = new AbortController()
     const filters: Record<string, string> = {}
     if (sevFilter !== 'all') filters.severity = sevFilter
     if (dimFilter !== 'all') filters.dimension = dimFilter
-    const t = await fetchWikiDiffTask(id, filters).catch(() => null)
-    if (t) setTask(t)
-  }, [sevFilter, dimFilter])
 
-  useEffect(() => { if (task) openTask(task.id) /* eslint-disable-next-line */ }, [sevFilter, dimFilter])
+    const pollTask = async () => {
+      for (let attempt = 0; attempt < 8 && !controller.signal.aborted; attempt += 1) {
+        const current = await fetchWikiDiffTask(
+          selectedTaskId,
+          filters,
+          controller.signal,
+        ).catch(() => null)
+        if (!current || controller.signal.aborted) return
+        setTask(current)
+        if (current.status === 'success' || current.status === 'failed') return
+        await new Promise((resolve) => setTimeout(resolve, 1200))
+      }
+    }
+
+    void pollTask()
+    return () => controller.abort()
+  }, [selectedTaskId, sevFilter, dimFilter])
 
   const run = async () => {
     const q = query.trim()
@@ -76,14 +97,9 @@ export default function WikiDiffTab() {
     try {
       const created = await createWikiDiffTask({ query: q, left_kb_type: leftKb, right_kb_type: rightKb })
       toast.success(`已发起对比任务 #${created.id}`)
-      // 轮询直到完成（后台执行）
-      for (let i = 0; i < 8; i++) {
-        await new Promise((r) => setTimeout(r, 1200))
-        const t = await fetchWikiDiffTask(created.id).catch(() => null)
-        if (t && (t.status === 'success' || t.status === 'failed')) { setTask(t); break }
-        if (t) setTask(t)
-      }
-      loadTasks()
+      setTask(created)
+      setSelectedTaskId(created.id)
+      void loadTasks()
     } catch (e: any) {
       toast.error(e?.message || '发起对比失败（需启用 wiki_diff 且有 wiki:diff 权限）')
     } finally {
@@ -126,7 +142,10 @@ export default function WikiDiffTab() {
           {running ? <Loader2 className="size-4 animate-spin mr-1" /> : null} 发起对比
         </Button>
         {tasks.length > 0 && (
-          <Select value={task ? String(task.id) : ''} onValueChange={(v) => openTask(Number(v))}>
+          <Select
+            value={selectedTaskId ? String(selectedTaskId) : ''}
+            onValueChange={(v) => setSelectedTaskId(Number(v))}
+          >
             <SelectTrigger className="h-9 w-[220px] text-xs ml-auto"><SelectValue placeholder="历史任务" /></SelectTrigger>
             <SelectContent>
               {tasks.map((t) => <SelectItem key={t.id} value={String(t.id)}>#{t.id} {t.title} · {t.status}</SelectItem>)}

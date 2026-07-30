@@ -116,7 +116,10 @@ export default function ReviewPage() {
     return () => controller.abort()
   }, [load])
 
-  const cases = tab === 'func' ? (data?.funcCases || []) : (data?.apiCases || [])
+  const cases = useMemo(
+    () => tab === 'func' ? (data?.funcCases || []) : (data?.apiCases || []),
+    [data?.apiCases, data?.funcCases, tab],
+  )
 
   const filteredCases = useMemo(() => {
     let result = cases

@@ -118,8 +118,18 @@
 |----|------|--------|---------|
 | G56-011 | Knowledge/Wiki/Trace 仍缺真实设计源、真实 AI/OCR 和 J06/J07/J13 正负面闭环；规则 fallback、固定“未同步”展示和 stub 不计为通过 | P0 | 2026-07-29 |
 | G56-012 | C55-4 的本地引用、审计、失败转缺陷和调度语义已修；尚缺完整真实 UI/API/DB/报告/通知正负面证据 | P0 | 2026-07-29 |
-| G56-014 | J01–J22 尚未逐功能点关联正负面原子结果、现有用例 ID 和 API 三类校验 | P0 | 2026-07-29 |
-| G56-015 | 前端生产依赖许可证审计已通过；后端需 Linux 按 111 个 lock 包完成全量清单，并确认 psycopg2-binary LGPL 分发/NOTICE 策略 | P0 | 2026-07-29 |
+| G56-014 | Batch 59 已补 J02/J04/J10/J12/J17 的部分 HTTP/schema/业务与隔离证据；J03/J08/J09/J15/J16、真实 UI 主链及 J19 全资源横向矩阵仍未闭环 | P0 | 2026-07-29 |
+
+### batch-58 — 生产基础设施云注册
+
+| ID | 内容 | 优先级 | 创建日期 | 状态 |
+|----|------|--------|---------|------|
+| C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | OPEN — 直接使用 Vercel 受保护地址不等于完成原 Cloudflare 条件 |
+| C58-02 | Vercel 注册 + 导入仓库 + 前端部署到 `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app` | P1 | 2026-07-30 | PARTIAL — 2026-07-30 匿名 HEAD 返回 302 到 Vercel SSO，尚无公开前端 HTTP 200 证据 |
+| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库连接可用 | P0 | 2026-07-30 | UNVERIFIED — clean checkout 无非秘密连接证据，不能仅凭项目 ref 关闭 |
+| C58-04 | `production.env` 中 0 个 `<...>` 占位符且运行所需值完整 | P0 | 2026-07-30 | UNVERIFIED — 文件受 Git 忽略且 Batch 59 clean worktree 中不存在，无法复现此前声明 |
+| C58-05 | 验收文档 §2.5 和 §5.6-5.8 注册信息回填完毕并与可访问状态一致 | P1 | 2026-07-30 | PARTIAL — 文档已回填，但 C58-01～04 的运行证据尚不成立 |
+| C58-06 | 确定后端托管方案并配置 `/api` 反代目标 | P2 | 2026-07-30 | OPEN — `vercel.json` 仍指向 `backend.cameltv-platform.example.com` 占位域名 |
 
 ---
 
@@ -135,6 +145,7 @@
 
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
+| G56-015 | 前后端生产依赖许可证清单与 psycopg2-binary LGPL/OpenSSL NOTICE 策略已归档 | Batch 57 `batch-57-license-audit.md`，CLOSED-WITH-NOTICE | 2026-07-30 |
 | G56-016 | Batch 56 QA 报告、独立 issue register、evidence README、Leader Verdict 和 execution matrix 已互相引用并完成 `NEEDS WORK` 对账；仅关闭交付物缺口 | Batch 57 文档闭环 | 2026-07-29 |
 | C55-1 | `/apitest` 保持前端路由且仅 `/api/v1` 进入 Vite 代理 | commits `df8a4b7` + `b77b53b` + `7d2aff1`；Vitest 13/13 + Playwright 1/1 | 2026-07-29 |
 | C55-2 | Alembic 显式修订恢复手册、一次性库双向演练及 ORM 漂移修复 | commit `1f9a06a`；upgrade/downgrade/re-upgrade/check 退出码 0 | 2026-07-29 |
@@ -197,24 +208,11 @@
 
 ---
 
-### batch-58 — 生产基础设施云注册 (2026-07-30)
-
-| ID | 内容 | 优先级 | 创建日期 | 状态 |
-|----|------|--------|---------|------|
-| C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | ✅ Closed — 生产域名使用 Vercel 部署地址 `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app`，Cloudflare CDN 待自定义域名时再配置 |
-| C58-02 | Vercel 注册 + 导入仓库 + 前端部署到 `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app` | P1 | 2026-07-30 | ✅ Closed |
-| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库密码填入 | P0 | 2026-07-30 | ✅ Closed |
-| C58-04 | `production.env` 中 0 个 `<...>` 占位符 (全部 4 个已由用户手动生成填入) | P0 | 2026-07-30 | ✅ Closed |
-| C58-05 | 验收文档 §2.5 和 §5.6-5.8 注册信息回填完毕 | P1 | 2026-07-30 | ✅ Closed |
-| C58-06 | 确定后端托管方案并配置 `/api` 反代目标 | P2 | 2026-07-30 | OPEN — 待后续批次 |
-
----
-
 ## 统计
 
-- **Open**: 41 (含 8 个 P0 blocking)
+- **Open / 非关闭**: 45 (含 9 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 49
+- **Closed**: 45
 - **Total**: 90
 
 ## 维护约定

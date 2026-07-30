@@ -55,6 +55,8 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
   }, [])
 
   const loadEndpoints = useCallback(async (signal?: AbortSignal) => {
+    // refreshKey deliberately invalidates this request callback.
+    void refreshKey
     try {
       const result = await fetchApiEndpoints({
         service_id: selectedService,

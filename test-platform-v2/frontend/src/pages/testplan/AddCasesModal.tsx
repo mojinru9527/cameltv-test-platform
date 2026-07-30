@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/ui'
@@ -33,7 +33,7 @@ import DomainTree from '@/components/DomainTree'
 
 import { Search } from '@/lib/icons'
 import { addCasesToPlan } from '@/api/testplan'
-import { fetchDomains, fetchTestCases } from '@/api/testcase'
+import { fetchDomains, fetchTestCases, type TestCaseFilter } from '@/api/testcase'
 
 interface Props {
   open: boolean
@@ -55,27 +55,59 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
   const [selModule, setSelModule] = useState('')
   const [keyword, setKeyword] = useState('')
   const [selRowKeys, setSelRowKeys] = useState<number[]>([])
+  const requestRef = useRef<AbortController | null>(null)
 
-  const loadDomains = useCallback(async () => {
+  const loadDomains = useCallback(async (signal: AbortSignal) => {
     try {
-      const d: any = await fetchDomains()
-      setDomains(d || [])
+      const d: any = await fetchDomains(signal)
+      if (!signal.aborted) setDomains(d || [])
     } catch { /* */ }
   }, [])
 
-  const load = useCallback(async (page = 1) => {
+  const load = useCallback(async (
+    page = 1,
+    filters: Pick<TestCaseFilter, 'domain' | 'module' | 'keyword'> = {},
+  ) => {
+    requestRef.current?.abort()
+    const controller = new AbortController()
+    requestRef.current = controller
     setLoading(true)
     try {
-      const params: any = { page, page_size: 10 }
-      if (selDomain) params.domain = selDomain
-      if (selModule) params.module = selModule
-      if (keyword) params.keyword = keyword
-      const r: any = await fetchTestCases(params)
-      setData(r)
-    } finally { setLoading(false) }
-  }, [selDomain, selModule, keyword])
+      const params: TestCaseFilter = { page, page_size: 10 }
+      if (filters.domain) params.domain = filters.domain
+      if (filters.module) params.module = filters.module
+      if (filters.keyword) params.keyword = filters.keyword
+      const r: any = await fetchTestCases(params, controller.signal)
+      if (!controller.signal.aborted) setData(r)
+    } catch {
+      // The shared API interceptor reports non-abort failures.
+    } finally {
+      if (requestRef.current === controller) {
+        requestRef.current = null
+        setLoading(false)
+      }
+    }
+  }, [])
 
-  useEffect(() => { if (open) { loadDomains(); load() } }, [open, loadDomains])
+  useEffect(() => {
+    if (!open) {
+      requestRef.current?.abort()
+      requestRef.current = null
+      return
+    }
+    const controller = new AbortController()
+    setSelDomain('')
+    setSelModule('')
+    setKeyword('')
+    setSelRowKeys([])
+    void loadDomains(controller.signal)
+    void load()
+    return () => {
+      controller.abort()
+      requestRef.current?.abort()
+      requestRef.current = null
+    }
+  }, [open, loadDomains, load])
 
   const domainTree = useMemo(() => {
     return domains.map((d: any) => ({
@@ -125,6 +157,7 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
 
   const allChecked = data.items.length > 0 && data.items.every((r: any) => selRowKeys.includes(r.id))
   const totalPages = Math.ceil(data.total / data.page_size)
+  const activeFilters = { domain: selDomain, module: selModule, keyword }
 
   return (
     <Dialog open={open} onOpenChange={(open) => { if (!open) onClose() }}>
@@ -140,15 +173,21 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
             <DomainTree
               treeData={domainTree}
               onSelect={(keys) => {
-                if (!keys.length) { setSelDomain(''); setSelModule(''); load(); return }
+                if (!keys.length) {
+                  setSelDomain('')
+                  setSelModule('')
+                  void load(1, { keyword })
+                  return
+                }
                 const key = keys[0]
                 if (key.includes('::')) {
                   const [d, m] = key.split('::')
                   setSelDomain(d); setSelModule(m)
+                  void load(1, { domain: d, module: m, keyword })
                 } else {
                   setSelDomain(key); setSelModule('')
+                  void load(1, { domain: key, keyword })
                 }
-                load()
               }}
             />
           </div>
@@ -157,7 +196,12 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
           <div className="flex-1 min-w-0 space-y-3">
             {/* Filters */}
             <div className="flex flex-wrap items-center gap-2">
-              <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); load() }}>
+              <Select value={selDomain || undefined} onValueChange={(v) => {
+                const domain = v || ''
+                setSelDomain(domain)
+                setSelModule('')
+                void load(1, { domain, keyword })
+              }}>
                 <SelectTrigger className="w-[110px]" size="sm">
                   <SelectValue placeholder="域" />
                 </SelectTrigger>
@@ -168,7 +212,11 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
                 </SelectContent>
               </Select>
 
-              <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); load() }}>
+              <Select value={selModule || undefined} onValueChange={(v) => {
+                const module = v || ''
+                setSelModule(module)
+                void load(1, { domain: selDomain, module, keyword })
+              }}>
                 <SelectTrigger className="w-[130px]" size="sm">
                   <SelectValue placeholder="模块" />
                 </SelectTrigger>
@@ -187,7 +235,9 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
                   placeholder="搜索标题"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') load() }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') void load(1, activeFilters)
+                  }}
                 />
               </InputGroup>
             </div>
@@ -255,7 +305,7 @@ export default function AddCasesModal({ open, planId, onClose, onAdded }: Props)
               page={data.page}
               totalPages={totalPages}
               total={data.total}
-              onChange={(p) => load(p)}
+              onChange={(p) => { void load(p, activeFilters) }}
             />
           </div>
         </div>

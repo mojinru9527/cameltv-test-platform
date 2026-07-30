@@ -61,7 +61,7 @@ type FailedResponse = {
 type RouteResult = {
   path: string
   actualPath: string
-  viewport: 'desktop' | 'mobile'
+  viewport: AcceptanceViewport
   theme?: string
   mode?: 'light' | 'dark'
   issues: string[]
@@ -72,6 +72,14 @@ type RouteResult = {
 type ThemeContext = {
   theme: 'cyberpunk' | 'apple' | 'clay' | 'xlab' | 'liquid-glass' | 'obsidian-flow'
   mode: 'light' | 'dark'
+}
+
+type AcceptanceViewport = 'desktop' | 'tablet' | 'mobile'
+
+const viewportSizes: Record<AcceptanceViewport, { width: number; height: number }> = {
+  desktop: { width: 1440, height: 900 },
+  tablet: { width: 768, height: 1024 },
+  mobile: { width: 390, height: 844 },
 }
 
 const pcThemeModes: readonly ThemeContext[] = [
@@ -540,7 +548,7 @@ async function navigateInApp(page: Page, path: string) {
 async function inspectRoute(
   page: Page,
   route: RouteExpectation,
-  viewport: 'desktop' | 'mobile',
+  viewport: AcceptanceViewport,
   probe: ReturnType<typeof attachRuntimeProbe>,
   themeContext?: ThemeContext,
 ): Promise<RouteResult> {
@@ -640,7 +648,8 @@ async function inspectRoute(
     () => document.documentElement.scrollWidth > window.innerWidth + 1,
   )
   if (hasDocumentOverflow) {
-    issues.push(`${viewport === 'desktop' ? 'PC' : '移动端'}出现页面级横向溢出`)
+    const viewportLabel = viewport === 'desktop' ? 'PC' : viewport === 'tablet' ? '平板' : '移动端'
+    issues.push(`${viewportLabel}出现页面级横向溢出`)
   }
 
   if (themeContext) {
@@ -769,19 +778,15 @@ async function inspectRoute(
 async function runRouteMatrix(
   page: Page,
   testInfo: TestInfo,
-  viewport: 'desktop' | 'mobile',
+  viewport: AcceptanceViewport,
   fixtures: DynamicFixtures,
   probe: ReturnType<typeof attachRuntimeProbe>,
   themeContext?: ThemeContext,
 ) {
-  await page.setViewportSize(
-    viewport === 'desktop'
-      ? { width: 1440, height: 900 }
-      : { width: 390, height: 844 },
-  )
+  await page.setViewportSize(viewportSizes[viewport])
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const routes = [
-    ...(viewport === 'desktop'
+    ...(viewport !== 'mobile'
       ? desktopRoutes
       : desktopRoutes.filter((route) => mobileRoutePaths.has(route.path))),
     ...dynamicRoutes(fixtures),
@@ -806,7 +811,7 @@ async function runRouteMatrix(
 async function runAcceptanceViewport(
   page: Page,
   testInfo: TestInfo,
-  viewport: 'desktop' | 'mobile',
+  viewport: AcceptanceViewport,
   themeContext?: ThemeContext,
 ) {
   if (themeContext) {
@@ -881,4 +886,29 @@ test.describe.serial('Batch 57 PC 真实后端生产验收', () => {
     })
   }
 
+})
+
+test.describe.serial('Batch 59 平板与移动端遗留验收', () => {
+  test.beforeAll(() => {
+    expect(
+      credentials.username,
+      '缺少 E2E_USERNAME：Batch59 平板/移动端验收禁止跳过凭据门禁',
+    ).not.toBe('')
+    expect(
+      credentials.password,
+      '缺少 E2E_PASSWORD：Batch59 平板/移动端验收禁止跳过凭据门禁',
+    ).not.toBe('')
+  })
+
+  for (const viewport of ['tablet', 'mobile'] as const) {
+    test(`${viewport} P0 obsidian-flow/dark 真实登录路由矩阵`, async ({ page }, testInfo) => {
+      test.setTimeout(660_000)
+      await runAcceptanceViewport(
+        page,
+        testInfo,
+        viewport,
+        { theme: 'obsidian-flow', mode: 'dark' },
+      )
+    })
+  }
 })
