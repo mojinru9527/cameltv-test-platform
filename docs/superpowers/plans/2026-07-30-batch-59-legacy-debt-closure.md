@@ -1,3 +1,16 @@
+---
+title: "Batch 59 Legacy Debt Closure Implementation Plan"
+owner: "qa-team"
+created: "2026-07-30"
+last_reviewed: "2026-07-30"
+status: "active"
+expires: "2027-01-30"
+tags: ["batch-59", "legacy-debt", "implementation-plan", "agent-team"]
+related:
+  - "../../../test-platform-v2/work-logs/batch-59-legacy-debt-issue-register.md"
+  - "../../../test-platform-v2/work-logs/batch-59-legacy-debt-qa-report.md"
+---
+
 # Batch 59 Legacy Debt Closure Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
