@@ -203,8 +203,8 @@
 |----|------|--------|---------|------|
 | C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | OPEN — 待域名 |
 | C58-02 | Vercel 注册 + 导入仓库 + 前端部署到 `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app` | P1 | 2026-07-30 | ✅ Closed |
-| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库密码填入 | P0 | 2026-07-30 | OPEN — 项目已创建，密码待填入 |
-| C58-04 | `production.env` 中 0 个 `<...>` 占位符 (剩余 4 个: DB密码+SECRET_KEY+ADMIN_PASSWORD+TESTER_PASSWORD) | P0 | 2026-07-30 | OPEN — 平台占位符已替换，密钥待生成 |
+| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库密码填入 | P0 | 2026-07-30 | ✅ Closed |
+| C58-04 | `production.env` 中 0 个 `<...>` 占位符 (全部 4 个已由用户手动生成填入) | P0 | 2026-07-30 | ✅ Closed |
 | C58-05 | 验收文档 §2.5 和 §5.6-5.8 注册信息回填完毕 | P1 | 2026-07-30 | ✅ Closed |
 | C58-06 | 确定后端托管方案并配置 `/api` 反代目标 | P2 | 2026-07-30 | OPEN — 待后续批次 |
 
@@ -212,9 +212,9 @@
 
 ## 统计
 
-- **Open**: 44 (含 11 个 P0 blocking)
+- **Open**: 42 (含 9 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 46
+- **Closed**: 48
 - **Total**: 90
 
 ## 维护约定

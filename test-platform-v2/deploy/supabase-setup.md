@@ -63,7 +63,7 @@ alembic upgrade head
 | 数据库连接串 (Pooler) | `postgresql://postgres.myhwdpjmxdsodqgeecpn:<password>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres` |
 | Region | Southeast Asia (Singapore) |
 | PostgreSQL 版本 | `16` |
-| 密码状态 | ⚠️ 待用户填入 `production.env` |
+| 密码状态 | ✅ 已填入 `production.env` |
 
 ⚠️ **安全提示**: 数据库密码和完整连接串不要写入 Git 仓库。
 只通过 `test-platform-v2/config/runtime/production.env` 注入（该文件已 .gitignore）。
