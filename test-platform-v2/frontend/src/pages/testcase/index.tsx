@@ -109,9 +109,9 @@ export default function TestCasePage() {
     (signal) => fetchDomains(signal),
     [],
   )
-  const domains = domainData || []
+  const domains = useMemo(() => domainData || [], [domainData])
 
-  const items = data?.items || []
+  const items = useMemo(() => data?.items || [], [data?.items])
   // Sort newest first (created_at descending, fallback to id descending)
   const sortedItems = useMemo(() => sortCasesNewestFirst(items), [items])
   const totalPages = data ? Math.ceil(data.total / data.page_size) : 1
@@ -173,7 +173,7 @@ export default function TestCasePage() {
         isLeaf: true,
       })) || [],
     }))
-  }, [domains])
+  }, [visibleDomains])
 
   // derived modules list — returns all modules when no domain selected so the
   // "全部模块" Select always has enough options for Radix to open it.

@@ -13,7 +13,17 @@ from app.models.report_template import ReportTemplate
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.test_report import TestReport
+from app.models.user import User
 from app.services.elk_service import build_kibana_link
+
+
+def escape_spreadsheet_formula(value):
+    """Keep user-controlled CSV/XLSX cells from being interpreted as formulas."""
+    if not isinstance(value, str):
+        return value
+    if value.lstrip().startswith(("=", "+", "-", "@")):
+        return f"'{value}"
+    return value
 
 
 def _generate_report_id(db: Session, project_id: int) -> str:
@@ -53,7 +63,7 @@ def _build_content(db: Session, plan_id: int) -> str:
     ).all()
 
     # Get latest trace_id per plan case from executions (batch query — was N+1)
-    case_trace_map: dict[int, str] = {}
+    case_execution_map: dict[int, TestExecution] = {}
     pcase_ids = [pc.id for pc, _ in pcases]
     if pcase_ids:
         from sqlalchemy import and_
@@ -79,14 +89,30 @@ def _build_content(db: Session, plan_id: int) -> str:
             )
         ).scalars().all()
 
-        for e in latest_execs:
-            if e.trace_id:
-                case_trace_map[e.plan_case_id] = e.trace_id
+        case_execution_map = {e.plan_case_id: e for e in latest_execs}
+
+    executor_ids = {
+        execution.executor_id
+        for execution in case_execution_map.values()
+        if execution.executor_id
+    }
+    executor_ids.update(pc.executor_id for pc, _ in pcases if pc.executor_id)
+    executor_names: dict[int, str] = {}
+    if executor_ids:
+        users = db.execute(
+            select(User.id, User.nickname, User.username).where(User.id.in_(executor_ids))
+        ).all()
+        executor_names = {
+            user_id: nickname or username
+            for user_id, nickname, username in users
+        }
 
     cases = []
     stats = {"total": 0, "pass": 0, "fail": 0, "skip": 0, "block": 0, "pending": 0}
     for pc, tc in pcases:
-        trace_id = case_trace_map.get(pc.id, "")
+        latest_execution = case_execution_map.get(pc.id)
+        trace_id = latest_execution.trace_id if latest_execution else ""
+        executor_id = latest_execution.executor_id if latest_execution else pc.executor_id
         cases.append({
             "pcase_id": pc.id,
             "case_id": tc.id,
@@ -99,6 +125,9 @@ def _build_content(db: Session, plan_id: int) -> str:
             "sort_order": pc.sort_order,
             "last_status": pc.last_status,
             "last_executed_at": pc.last_executed_at.isoformat() if pc.last_executed_at else None,
+            "executor_id": executor_id,
+            "executor_name": executor_names.get(executor_id, ""),
+            "notes": latest_execution.notes if latest_execution else "",
             "trace_id": trace_id,
             "kibana_link": build_kibana_link(trace_id) if trace_id else "",
         })
@@ -695,12 +724,16 @@ def export_report_excel(db: Session, report_id: int, project_id: int) -> bytes:
     ws.title = "概览"
     content = json.loads(report.get("content", "{}")) if isinstance(report.get("content"), str) else report.get("content", {})
     stats = content.get("stats", {})
-    plan_name = content.get("plan_name", "")
+    plan_name = (content.get("plan_info") or {}).get("name", "")
 
     header_font = Font(bold=True, size=14)
     ws.cell(row=1, column=1, value="测试报告").font = header_font
     ws.cell(row=2, column=1, value=f"报告编号: {report.get('report_id', '')}")
-    ws.cell(row=3, column=1, value=f"测试计划: {plan_name}")
+    ws.cell(
+        row=3,
+        column=1,
+        value=escape_spreadsheet_formula(f"测试计划: {plan_name}"),
+    )
     ws.cell(row=4, column=1, value=f"生成时间: {report.get('created_at', '')}")
 
     ws.cell(row=6, column=1, value="执行统计").font = Font(bold=True, size=12)
@@ -709,7 +742,7 @@ def export_report_excel(db: Session, report_id: int, project_id: int) -> bytes:
         ws.cell(row=7, column=col, value=h).font = Font(bold=True)
     stat_rows = [
         ("总用例数", stats.get("total", 0)),
-        ("通过", stats.get("pass_", 0)),
+        ("通过", stats.get("pass", 0)),
         ("失败", stats.get("fail", 0)),
         ("跳过", stats.get("skip", 0)),
         ("阻塞", stats.get("block", 0)),
@@ -725,17 +758,25 @@ def export_report_excel(db: Session, report_id: int, project_id: int) -> bytes:
     for col, h in enumerate(case_headers, 1):
         ws2.cell(row=1, column=col, value=h).font = Font(bold=True)
 
-    case_results = content.get("case_results", [])
+    case_results = content.get("cases", [])
     for i, case in enumerate(case_results):
-        ws2.cell(row=2 + i, column=1, value=case.get("case_id", ""))
-        ws2.cell(row=2 + i, column=2, value=case.get("title", ""))
-        ws2.cell(row=2 + i, column=3, value=case.get("domain", ""))
-        ws2.cell(row=2 + i, column=4, value=case.get("module", ""))
-        ws2.cell(row=2 + i, column=5, value=case.get("priority", ""))
-        ws2.cell(row=2 + i, column=6, value=case.get("case_type", ""))
-        ws2.cell(row=2 + i, column=7, value=case.get("status", ""))
-        ws2.cell(row=2 + i, column=8, value=case.get("executor_name", ""))
-        ws2.cell(row=2 + i, column=9, value=case.get("executed_at", ""))
+        values = [
+            case.get("case_id_code", ""),
+            case.get("title", ""),
+            case.get("domain", ""),
+            case.get("module", ""),
+            case.get("priority", ""),
+            case.get("case_type", ""),
+            case.get("last_status", ""),
+            case.get("executor_name", ""),
+            case.get("last_executed_at", ""),
+        ]
+        for column, value in enumerate(values, 1):
+            ws2.cell(
+                row=2 + i,
+                column=column,
+                value=escape_spreadsheet_formula(value),
+            )
 
     # 调整列宽
     for ws_sheet in [ws, ws2]:

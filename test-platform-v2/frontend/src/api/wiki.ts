@@ -25,8 +25,8 @@ import type {
 
 // ── 配置 / 开关 ──
 
-export async function fetchWikiConfig(): Promise<WikiConfig> {
-  return api.get('/wiki/config')
+export async function fetchWikiConfig(signal?: AbortSignal): Promise<WikiConfig> {
+  return api.get('/wiki/config', { signal })
 }
 
 // ── Raw Source / 蓝湖导入 (VNext-1) ──
@@ -107,14 +107,14 @@ export async function createWikiDiffTask(body: WikiDiffCreateRequest): Promise<W
 
 export async function fetchWikiDiffTasks(params?: {
   status?: string; page?: number; page_size?: number
-}): Promise<KnowledgePage<WikiDiffTaskBrief>> {
-  return api.get('/wiki/diff/tasks', { params })
+}, signal?: AbortSignal): Promise<KnowledgePage<WikiDiffTaskBrief>> {
+  return api.get('/wiki/diff/tasks', { params, signal })
 }
 
 export async function fetchWikiDiffTask(taskId: number, filters?: {
   dimension?: string; diff_type?: string; severity?: string; review_status?: string
-}): Promise<WikiDiffTask> {
-  return api.get(`/wiki/diff/tasks/${taskId}`, { params: filters })
+}, signal?: AbortSignal): Promise<WikiDiffTask> {
+  return api.get(`/wiki/diff/tasks/${taskId}`, { params: filters, signal })
 }
 
 export async function acceptWikiDiffItem(itemId: number): Promise<WikiDiffItem> {

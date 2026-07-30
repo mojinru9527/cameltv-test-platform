@@ -6,6 +6,7 @@ import time
 import pytest
 from starlette.websockets import WebSocketDisconnect
 
+from app.core.config import settings
 from app.models.perf import PerfSession
 from app.services import perf_service
 
@@ -21,6 +22,7 @@ SESSION_PAYLOAD = {
     "metrics": ["cpu", "memory", "fps", "jank"],
     "duration": 10,
 }
+ALLOWED_WS_ORIGIN = settings.cors_origins[0]
 
 
 @pytest.fixture(autouse=True)
@@ -511,7 +513,7 @@ class TestPermissions:
             with client.websocket_connect(
                 "/api/v1/perf-sessions/1/stream",
                 headers={
-                    "Origin": "http://localhost:5173",
+                    "Origin": ALLOWED_WS_ORIGIN,
                     "X-Project-Id": "1",
                 },
             ):
@@ -557,7 +559,7 @@ class TestPermissions:
                 f"/api/v1/perf-sessions/{foreign.id}/stream",
                 headers={
                     **auth_headers,
-                    "Origin": "http://localhost:5173",
+                    "Origin": ALLOWED_WS_ORIGIN,
                     "X-Project-Id": "1",
                 },
             ):
@@ -592,7 +594,7 @@ class TestPermissions:
             f"/api/v1/perf-sessions/{created['id']}/stream?project_id=1",
             headers={
                 **auth_headers,
-                "Origin": "http://localhost:5173",
+                "Origin": ALLOWED_WS_ORIGIN,
             },
         ) as socket:
             snapshot = socket.receive_json()

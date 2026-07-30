@@ -89,4 +89,41 @@ describe('新建用例弹窗', () => {
       )
     })
   })
+
+  it('编辑用例时域列表尚未加载也不会清空原模块', async () => {
+    const editing = {
+      id: 10,
+      title: '延迟加载域列表',
+      case_type: 'manual',
+      priority: 'P1',
+      status: 'active',
+      domain: '用户端',
+      module: '登录',
+      steps: '1、打开页面',
+      expected_result: '加载成功',
+    }
+    const { rerender } = render(
+      <CaseDrawer
+        open
+        editing={editing}
+        domains={[]}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+    )
+
+    rerender(
+      <CaseDrawer
+        open
+        editing={editing}
+        domains={domains}
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/所属模块/).textContent).toContain('登录')
+    })
+  })
 })
