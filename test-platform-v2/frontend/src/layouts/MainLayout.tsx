@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { fetchMenus, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'

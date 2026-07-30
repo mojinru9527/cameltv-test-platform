@@ -25,13 +25,12 @@ import { createDefect, updateDefect } from '@/api/defect'
 import { fetchTestCases } from '@/api/testcase'
 import { fetchUsers } from '@/api/system'
 import type { DefectItem } from '@/types'
-import { SEVERITY_MAP, STATUS_MAP } from './constants'
+import { SEVERITY_MAP } from './constants'
 
 const defectFormSchema = z.object({
   title: z.string().min(1, '请输入标题'),
   description: z.string().optional().default(''),
   severity: z.string().default('P2'),
-  status: z.string().optional(),
   assignee_id: z.coerce.number().nullable().optional(),
   case_id: z.coerce.number().nullable().optional(),
   external_id: z.string().optional().default(''),
@@ -54,7 +53,7 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
 
   const form = useForm<DefectFormValues>({
     resolver: zodResolver(defectFormSchema),
-    defaultValues: { title: '', description: '', severity: 'P2', status: undefined, assignee_id: null, case_id: null, external_id: '', external_url: '' },
+    defaultValues: { title: '', description: '', severity: 'P2', assignee_id: null, case_id: null, external_id: '', external_url: '' },
   })
 
   // Fetch options and reset form when dialog opens
@@ -68,14 +67,13 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
           title: editing.title ?? '',
           description: editing.description ?? '',
           severity: editing.severity ?? 'P2',
-          status: editing.status,
           assignee_id: editing.assignee_id ?? null,
           case_id: editing.case_id ?? null,
           external_id: editing.external_id ?? '',
           external_url: editing.external_url ?? '',
         })
       } else {
-        form.reset({ title: '', description: '', severity: 'P2', status: undefined, assignee_id: null, case_id: null, external_id: '', external_url: '' })
+        form.reset({ title: '', description: '', severity: 'P2', assignee_id: null, case_id: null, external_id: '', external_url: '' })
       }
     }
   }, [open, editing, form])
@@ -124,7 +122,7 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
             <Textarea id="defect-description" rows={3} placeholder="缺陷描述" {...form.register('description')} />
           </div>
 
-          {/* Severity + Status */}
+          {/* Severity */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="defect-severity" className="text-sm font-medium mb-1 block">严重程度</label>
@@ -138,23 +136,6 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            <div>
-              {editing?.id ? (
-                <>
-                  <label htmlFor="defect-status" className="text-sm font-medium mb-1 block">状态</label>
-                  <Select value={form.watch('status') ?? ''} onValueChange={(v) => form.setValue('status', v || undefined)}>
-                    <SelectTrigger id="defect-status">
-                      <SelectValue placeholder="选择状态" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(STATUS_MAP).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </>
-              ) : null}
             </div>
           </div>
 

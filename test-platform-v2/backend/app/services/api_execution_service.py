@@ -62,8 +62,10 @@ def execute_api_case(
 
     if dataset_id:
         return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id,
+                                     project_id=project_id,
                                      confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
     return _do_execute(db, request_def, assertions, environment_id=environment_id,
+                       project_id=project_id,
                        confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
 
 
@@ -72,6 +74,7 @@ def quick_execute(
     request_def: dict,
     *,
     assertions: list[dict] | None = None,
+    project_id: int = 0,
     environment_id: int | None = None,
     dataset_id: int | None = None,
     confirm_prod: bool = False,
@@ -80,8 +83,10 @@ def quick_execute(
     """即时执行（不依赖已保存用例），用于调试面板。若提供 dataset_id 则批量执行。"""
     if dataset_id:
         return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id,
+                                     project_id=project_id,
                                      confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
     return _do_execute(db, request_def, assertions or [], environment_id=environment_id,
+                       project_id=project_id,
                        confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
 
 
@@ -95,6 +100,7 @@ def _do_execute(
     assertions: list[dict],
     *,
     environment_id: int | None = None,
+    project_id: int = 0,
     dataset_row_index: int | None = None,
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
@@ -105,19 +111,28 @@ def _do_execute(
     headers = request_def.get("headers") or {}
     body = request_def.get("body") or ""
 
-    # 0. 生产环境保护检查
+    # 0. 环境必须属于当前项目；内部调用也不得退回裸 environment_id。
+    if environment_id:
+        from app.services.environment_service import get_environment
+
+        if not project_id or not get_environment(db, environment_id, project_id):
+            return _error_result("环境不存在或不属于当前项目")
+
+    # 0.1 生产环境保护检查
     allowed, prod_msg = _check_prod_protection(db, method, environment_id, confirm_prod, has_execute_prod)
     if not allowed:
         return _error_result(prod_msg)
 
     # 1. 变量替换
     if environment_id:
-        url = resolve_variables(db, environment_id, url)
-        body = resolve_variables(db, environment_id, body)
+        url = resolve_variables(db, environment_id, project_id, url)
+        body = resolve_variables(db, environment_id, project_id, body)
         resolved_headers = {}
         for k, v in headers.items():
-            k2 = resolve_variables(db, environment_id, k)
-            v2 = resolve_variables(db, environment_id, str(v))
+            k2 = resolve_variables(db, environment_id, project_id, k)
+            v2 = resolve_variables(db, environment_id, project_id, str(v))
+            if k2 is None or v2 is None:
+                return _error_result("环境不存在或不属于当前项目")
             resolved_headers[k2] = v2
         headers = resolved_headers
 
@@ -843,6 +858,7 @@ def _execute_with_dataset(
     assertions: list[dict],
     environment_id: int | None,
     dataset_id: int,
+    project_id: int = 0,
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
 ) -> dict:
@@ -869,7 +885,8 @@ def _execute_with_dataset(
 
         # Execute
         result = _do_execute(db, row_req, row_assertions, environment_id=environment_id,
-                            dataset_row_index=row_idx, confirm_prod=confirm_prod,
+                            project_id=project_id, dataset_row_index=row_idx,
+                            confirm_prod=confirm_prod,
                             has_execute_prod=has_execute_prod)
         per_row_results.append({
             "row_index": row_idx,

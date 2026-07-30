@@ -199,7 +199,7 @@ export default function MindmapPage() {
 
         {/* Domain filter — dynamic from API */}
         <Select value={domain || undefined} onValueChange={(v) => setDomain(v || '')}>
-          <SelectTrigger className="w-[160px]" size="sm">
+          <SelectTrigger className="w-[160px]" size="sm" aria-label="按用例域筛选">
             <SelectValue placeholder="按域筛选" />
           </SelectTrigger>
           <SelectContent>

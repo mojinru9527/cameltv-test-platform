@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -84,7 +84,7 @@ class PlanCaseSort(BaseModel):
 # ── Execution ─────────────────────────────────────────
 
 class ExecutionCreate(BaseModel):
-    status: str                   # pass / fail / skip / block
+    status: Literal["pass", "fail", "skip", "block"]
     actual_result: str = ""
     notes: str = ""
 
@@ -104,6 +104,7 @@ class ExecutionOut(BaseModel):
     created_at: Optional[datetime] = None
 
     # 内联
+    case_id: int = 0
     case_title: str = ""
     executor_name: str = ""
 

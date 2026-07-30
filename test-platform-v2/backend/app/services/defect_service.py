@@ -13,6 +13,7 @@ from app.core.base_service import batch_field_map, batch_user_names, paginate
 from app.core.config import settings
 from app.models.defect import Defect, DefectAttachment, DefectComment, DefectTransition
 from app.models.test_case import TestCase
+from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.user import User
 
 
@@ -119,7 +120,50 @@ def get_defect(db: Session, defect_id: int, project_id: int) -> dict | None:
     return _defect_to_dict(r, creator_name, assignee_name, case_title)
 
 
+def _validate_defect_references(
+    db: Session,
+    *,
+    project_id: int,
+    case_id: int | None,
+    execution_id: int | None,
+) -> None:
+    """Keep case/execution references inside one project and one case."""
+    if case_id is not None:
+        case_exists = db.scalar(
+            select(TestCase.id).where(
+                TestCase.id == case_id,
+                TestCase.project_id == project_id,
+            )
+        )
+        if not case_exists:
+            raise ValueError("用例不存在或不属于当前项目")
+
+    if execution_id is not None:
+        execution_case_id = db.scalar(
+            select(TestPlanCase.case_id)
+            .join(TestExecution, TestExecution.plan_case_id == TestPlanCase.id)
+            .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
+            .join(TestCase, TestCase.id == TestPlanCase.case_id)
+            .where(
+                TestExecution.id == execution_id,
+                TestPlan.project_id == project_id,
+                TestCase.project_id == project_id,
+            )
+        )
+        if execution_case_id is None:
+            raise ValueError("执行记录不存在或不属于当前项目")
+        if case_id is not None and case_id != execution_case_id:
+            raise ValueError("执行记录与关联用例不一致")
+
+
 def create_defect(db: Session, data, creator_id: int, project_id: int) -> dict:
+    _validate_defect_references(
+        db,
+        project_id=project_id,
+        case_id=data.case_id,
+        execution_id=data.execution_id,
+    )
+
     defect_id = _generate_defect_id(db, project_id)
     r = Defect(
         project_id=project_id,
@@ -151,6 +195,12 @@ def update_defect(db: Session, defect_id: int, data, project_id: int) -> dict | 
         "external_id", "external_url", "resolved_at",
     ]
     update_data = data.model_dump(exclude_none=True)
+    _validate_defect_references(
+        db,
+        project_id=project_id,
+        case_id=update_data.get("case_id", r.case_id),
+        execution_id=update_data.get("execution_id", r.execution_id),
+    )
     for k in update_fields:
         if k in update_data:
             setattr(r, k, update_data[k])

@@ -24,6 +24,7 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
+    db.commit()
 
 
 @router.get("/channels", response_model=R[list], summary="通知渠道列表")

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import {
   Smartphone, Play, Square, History, BarChart3, RefreshCw,
@@ -331,7 +331,7 @@ export default function PerfTestPage() {
                     <Label className="text-sm">目标应用</Label>
                     {selectedDevice ? (
                       <Select value={selectedApp} onValueChange={setSelectedApp}>
-                        <SelectTrigger className="mt-1.5 h-9">
+                        <SelectTrigger className="mt-1.5 h-9" aria-label="选择性能采集目标应用">
                           <SelectValue placeholder="选择或输入包名…" />
                         </SelectTrigger>
                         <SelectContent>
@@ -377,7 +377,7 @@ export default function PerfTestPage() {
                   <div>
                     <Label className="text-sm">采集时长 (秒)</Label>
                     <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
-                      <SelectTrigger className="mt-1.5 h-9 w-40">
+                      <SelectTrigger className="mt-1.5 h-9 w-40" aria-label="选择性能采集时长">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

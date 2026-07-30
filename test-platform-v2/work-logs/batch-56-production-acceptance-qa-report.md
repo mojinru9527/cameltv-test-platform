@@ -2,7 +2,7 @@
 title: "Batch 56 测试平台全功能生产级验收 QA 报告"
 owner: "qa-team"
 created: "2026-07-29"
-last_reviewed: "2026-07-29"
+last_reviewed: "2026-07-30"
 status: "needs-work"
 tags: ["batch-56", "production-acceptance", "real-input", "agent-team", "qa"]
 related:
@@ -28,7 +28,9 @@ WebSocket、WebSocket 代理、启动证据错绑、生产 Compose 安全默认�
 RBAC、桌面/移动全路由和容器验收，证据链有效。全平台仍有外部 P0/P1
 失败或阻断：体育测试第 6 节点 503、六服务实时 OpenAPI 缺失、测试 API
 鉴权声明与实际不一致、运营后台登录未形成浏览器会话，以及真实 AI/OCR、
-真机性能、ELK、设计源证据包和旧 PostgreSQL 快照缺失。
+真机性能、ELK、设计源证据包和旧 PostgreSQL 快照缺失。2026-07-30
+Batch 57 补录中，旧库快照缺口已正式接受风险并记为 `WAIVED`，用户端设计源
+推进为 `PARTIAL`；其余缺口不变，因此 Verdict 仍为 `NEEDS WORK`。
 
 ## 2. 执行边界
 
@@ -48,8 +50,8 @@ RBAC、桌面/移动全路由和容器验收，证据链有效。全平台仍有
 | 项目隔离 | tester 访问非成员项目返回 403；性能 REST/WS 跨项目返回拒绝 | PASS |
 | 真实需求 | 用户端和运营后台两份 R1 文档上传、解析、回读、审计均成功 | PASS |
 | AI 提取 | 未配置 Key 时返回明确业务 400，不产生 fallback | BLOCKED |
-| 全路由 UI | desktop 30 路由、mobile 16 路由，真实后端 2/2 passed | PASS |
-| 主题/响应式/a11y | Batch 53/54/55 四组专项 4/4 passed | PASS |
+| 全路由可达性 | desktop 30 路由、mobile 16 路由，真实后端 2/2 passed | PASS（可达性范围） |
+| 历史主题/响应式/a11y 专项 | Batch 53/54/55 四组专项 4/4 passed | PASS（历史专项范围） |
 | 网络请求 | StrictMode 有效 GET 单次；取消请求无 pageerror；真实错误不被吞掉 | PASS |
 | 脑图 | 卸载后无 `translate(NaN,NaN)`，无跨路由异步污染 | PASS |
 | 性能真实性 | 无 Mock 设备和随机指标；缺采集器时 devices/start 为 503 | PASS |
@@ -57,6 +59,19 @@ RBAC、桌面/移动全路由和容器验收，证据链有效。全平台仍有
 | 性能安全 | Cookie、Origin、成员、权限、项目隔离、重复连接和 URL 无 JWT | PASS |
 | 性能传输 | Vite 真实 101；无采集器时 `collector_error` 并清理 | PASS |
 | PostgreSQL | Alembic 唯一 head、无 schema 漂移、并发回归 3/3 | PASS |
+
+验收口径补充：C55-5/G56-013 的 P0 仅以 PC `1440×900` 为阻断视口；
+tablet `768×1024` 与 mobile `390×844` 降为 P2 非阻断项。Batch 57 已在
+真实登录和真实后端下分批完成 11/11 个支持组合：Cyberpunk、Apple、Clay、
+xLab、Liquid Glass 各 light/dark，Obsidian Flow dark。每组遍历全部静态和
+有效动态路由，以公开 API 创建并清理临时计划/发布包实体，并检查键盘焦点、
+Axe serious/critical、页面级溢出、console、失败请求和重复有效 GET。
+因此 C55-5/J20/G56-013 已关闭；tablet/mobile 继续作为 C55-5-P2 跟踪。
+
+Batch 57 后续修复补充：计划、执行、报告、调度、缺陷和通知配置的审计日志
+现已显式提交；失败执行可在计划详情完成分诊并生成带 case/execution 关联的
+缺陷；调度改为真实执行计划并拒绝已有 running run 的重复触发。以上缩小了
+G56-012，但尚不能替代完整真实 UI/API/DB/报告/通知正负面旅程。
 
 ## 4. 外部真实环境验收
 
@@ -93,7 +108,7 @@ RBAC、桌面/移动全路由和容器验收，证据链有效。全平台仍有
 | 前端单测 | 52 files、210 tests | PASS |
 | TypeScript | `npm run typecheck` | PASS |
 | 前端构建 | `npm run build` | PASS |
-| Batch 56 E2E | clean SHA；desktop/mobile 2/2 passed | PASS |
+| Batch 56 E2E 路由可达性 | clean SHA；desktop/mobile 2/2 passed | PASS（desktop 为 PC 部分证据；mobile 为 P2） |
 | 迁移 | current=head；单 head；`alembic check` 无操作 | PASS |
 | Compose | production/Secure Cookie/no create_all；config 通过 | PASS |
 | Backend 镜像 | hash lock、非 root、Playwright/Chromium/ffprobe/lanhu 探针 | PASS |
@@ -133,8 +148,8 @@ PostgreSQL 上单独执行 3/3，通过后未从失败集合中排除任何测�
 | B56-B05 | P0 | 真实 AI/OCR 未配置 | 提供授权服务、输出来源和无 fallback 证据 |
 | B56-B06 | P1 | 无真机设备代理/SoloX | 部署认证设备代理，锁定运行时并完成真实采样 |
 | B56-B07 | P1 | 缺 ELK 只读证据 | 提供索引权限并完成脱敏 trace 关联 |
-| B56-B08 | P0 | 缺真实旧库快照 | 提供脱敏快照、基线、SHA 和隔离恢复副本 |
-| B56-B09 | P0 | 设计源证据包不可复核 | 提供当前原始或脱敏导出及来源/时间/SHA |
+| B56-B08 | P0 | `WAIVED`：缺真实旧库快照 | 开发于 2026-07-30 接受旧库升级兼容性未经真实快照验证的剩余风险；未来真实迁移前补测 |
+| B56-B09 | P0 | `PARTIAL`：用户端项目和页面树已复核，运营后台源及版本证据仍缺 | 补运营后台源、两端版本/时间/SHA 和 PC 视觉差异表 |
 | B56-B10 | P1 | 生产节点浏览器超时/内容不足 | 切回 vpn07 后在批准窗口复测，不扩大写权限 |
 
 ## 8. 风险说明
@@ -161,3 +176,16 @@ PostgreSQL 上单独执行 3/3，通过后未从失败集合中排除任何测�
 本分支可以交付其**缺陷修复、生产安全加固和验收证据**，但不能宣称测试平台
 全功能已达到生产 `READY`。外部阻断关闭并在正确 VPN 边界复测前，Leader
 Verdict 必须保持 `NEEDS WORK`。
+
+## 11. 2026-07-30 Batch 57 补录
+
+- 六服务名称确认仍为 `camel/live/payment/studio/konfi/account`；
+- 六服务重新发现必须严格分网：体育测试环境使用 OpenVPN，体育正式环境使用
+  VPN07；双 VPN 自动切换仍暂停，未执行本轮网络复测；
+- APP_UI、WEB_UI 蓝湖项目登录可用，分别读取到 241、102 个设计页；
+- 三个用户端 PC 路由已映射到 `首页-PC/PC端首页`、`联赛详情-*`、
+  `资讯-文章详细*` 设计节点；
+- 运营后台设计源仍未提供，蓝湖精确版本、采集时间和资产 SHA-256 未固定，
+  因此 B56-B09 只调整为 `PARTIAL`；
+- B56-B08 按用户提供的批准角色“开发”、日期 2026-07-30 和明确风险接受记为
+  `WAIVED`，不回写为 `PASS`。

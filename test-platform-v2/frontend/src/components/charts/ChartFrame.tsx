@@ -33,7 +33,7 @@ export default function ChartFrame<T extends Record<string, unknown>>({
       aria-describedby={summaryId}
       className={cn('min-w-0', className)}
     >
-      <div aria-hidden="true">{children}</div>
+      <div aria-hidden="true" inert>{children}</div>
       <figcaption id={summaryId} className="mt-3 text-sm text-muted-foreground">
         {summary}
       </figcaption>

@@ -24,7 +24,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { fetchKnowledgeSources, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
-import type { KnowledgeChunk, KnowledgeSource } from '@/types'
+import { fetchReleaseBundles } from '@/api/releaseBundles'
+import { fetchSyncCoverage } from '@/api/wiki'
+import { useAbortableEffect } from '@/hooks/useAbortableEffect'
+import type { KnowledgeChunk, KnowledgeSource, WikiSyncCoverage } from '@/types'
 import { Loader2, CheckCircle2, RefreshCw, AlertCircle, Circle, CheckCheck } from '@/lib/icons'
 import { toast } from 'sonner'
 
@@ -40,6 +43,26 @@ const TYPES = [
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(TYPES.map((t) => [t.v, t.l]))
 const PAGE_SIZE = 20
 
+type WikiSyncState = {
+  kind: 'loading' | 'synced' | 'partial' | 'failed' | 'error'
+  bundleName?: string
+}
+
+function toWikiSyncState(coverage: WikiSyncCoverage, bundleName: string): WikiSyncState {
+  if (
+    coverage.total_pages > 0
+    && coverage.synced_pages === coverage.total_pages
+    && coverage.stale_pages === 0
+    && coverage.missing_pages === 0
+  ) {
+    return { kind: 'synced', bundleName }
+  }
+  if (coverage.synced_pages > 0 || coverage.stale_pages > 0) {
+    return { kind: 'partial', bundleName }
+  }
+  return { kind: 'failed', bundleName }
+}
+
 /** 判断是否今天内验证过 */
 function isVerifiedToday(lastVerifiedAt: string | null | undefined): boolean {
   if (!lastVerifiedAt) return false
@@ -54,6 +77,7 @@ export default function SourceListTab() {
   const [page, setPage] = useState(1)
   const [type, setType] = useState('_all')
   const [loading, setLoading] = useState(true)
+  const [wikiSync, setWikiSync] = useState<WikiSyncState>({ kind: 'loading' })
 
   const [selected, setSelected] = useState<KnowledgeSource | null>(null)
   const [chunks, setChunks] = useState<KnowledgeChunk[]>([])
@@ -77,6 +101,30 @@ export default function SourceListTab() {
   useEffect(() => {
     load()
   }, [load])
+
+  useAbortableEffect((signal) => {
+    setWikiSync({ kind: 'loading' })
+    void (async () => {
+      const bundles = await fetchReleaseBundles(
+        { status: 'active', page: 1, page_size: 1 },
+        signal,
+      )
+      if (signal.aborted) return
+
+      const bundle = bundles.items[0]
+      if (!bundle) {
+        setWikiSync({ kind: 'failed' })
+        return
+      }
+
+      const coverage = await fetchSyncCoverage(bundle.id, signal)
+      if (!signal.aborted) {
+        setWikiSync(toWikiSyncState(coverage, bundle.name))
+      }
+    })().catch(() => {
+      if (!signal.aborted) setWikiSync({ kind: 'error' })
+    })
+  }, [])
 
   const [verifying, setVerifying] = useState<Set<number>>(new Set())
 
@@ -120,7 +168,7 @@ export default function SourceListTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Select
           value={type}
           onValueChange={(v) => {
@@ -140,6 +188,10 @@ export default function SourceListTab() {
           </SelectContent>
         </Select>
         <span className="text-xs text-muted-foreground">共 {total} 条</span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">最新发布包 Wiki</span>
+          <SyncBadge state={wikiSync} />
+        </div>
       </div>
 
       <div className="rounded-md border">
@@ -150,7 +202,6 @@ export default function SourceListTab() {
               <TableHead>标题</TableHead>
               <TableHead className="w-[160px]">来源</TableHead>
               <TableHead className="w-[80px]">状态</TableHead>
-              <TableHead className="w-[90px]">Wiki同步</TableHead>
               <TableHead className="w-[110px]">创建时间</TableHead>
               <TableHead className="w-[90px]">操作</TableHead>
             </TableRow>
@@ -182,9 +233,6 @@ export default function SourceListTab() {
                     <Badge tone={s.status === 'deprecated' ? 'neutral' : 'success'}>
                       {s.status}
                     </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <SyncBadge sourceId={s.id} />
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {s.created_at?.slice(0, 10)}
@@ -365,43 +413,65 @@ export default function SourceListTab() {
   )
 }
 
-// ── Sync Status Badge (batch-30) ──
+function SyncBadge({ state }: { state: WikiSyncState }) {
+  const title = state.bundleName ? `发布包 ${state.bundleName}` : undefined
 
-function SyncBadge({ sourceId }: { sourceId: number }) {
-  // Simple placeholder - shows "未同步" for all sources
-  // TODO: wire to GET /wiki/sync/bundle/{bundleId}/coverage
-  const synced = false
-  const partial = false
-  const failed = false
-
-  if (failed) {
+  if (state.kind === 'loading') {
     return (
-      <Badge tone="neutral" className="text-xs border-status-danger-border bg-status-danger-muted text-status-danger gap-1">
-        <AlertCircle className="h-3 w-3" />
-        失败
+      <Badge
+        tone="neutral"
+        className="text-xs text-muted-foreground gap-1"
+        aria-label="Wiki 同步状态加载中"
+      >
+        <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+        同步中
       </Badge>
     )
   }
-  if (synced) {
+  if (state.kind === 'error') {
     return (
-      <Badge tone="neutral" className="text-xs border-status-success-border bg-status-success-muted text-status-success gap-1">
-        <CheckCircle2 className="h-3 w-3" />
+      <Badge
+        tone="neutral"
+        className="text-xs border-status-danger-border bg-status-danger-muted text-status-danger gap-1"
+        aria-label="Wiki 同步状态加载失败"
+      >
+        <AlertCircle className="h-3 w-3" aria-hidden="true" />
+        状态异常
+      </Badge>
+    )
+  }
+  if (state.kind === 'synced') {
+    return (
+      <Badge
+        tone="neutral"
+        className="text-xs border-status-success-border bg-status-success-muted text-status-success gap-1"
+        title={title}
+      >
+        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
         已同步
       </Badge>
     )
   }
-  if (partial) {
+  if (state.kind === 'partial') {
     return (
-      <Badge tone="neutral" className="text-xs border-status-warning-border bg-status-warning-muted text-status-warning gap-1">
-        <RefreshCw className="h-3 w-3" />
-        部分
+      <Badge
+        tone="neutral"
+        className="text-xs border-status-warning-border bg-status-warning-muted text-status-warning gap-1"
+        title={title}
+      >
+        <RefreshCw className="h-3 w-3" aria-hidden="true" />
+        部分同步
       </Badge>
     )
   }
   return (
-    <Badge tone="neutral" className="text-xs text-muted-foreground gap-1">
-      <Circle className="h-3 w-3" />
-      未同步
+    <Badge
+      tone="neutral"
+      className="text-xs border-status-danger-border bg-status-danger-muted text-status-danger gap-1"
+      title={title}
+    >
+      <Circle className="h-3 w-3" aria-hidden="true" />
+      同步失败
     </Badge>
   )
 }

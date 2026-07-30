@@ -9,6 +9,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent, FileText, Calendar, BarChart3 } from '@/lib/icons'
+import { cn } from '@/lib/utils'
 
 export default function TracePage() {
   useDocumentTitle('链路追踪')
@@ -196,7 +197,16 @@ export default function TracePage() {
                       <div className="text-sm text-muted-foreground">待覆盖的需求</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold" style={{ color: (d.requirement_coverage_rate ?? 0) >= 80 ? chartColors.barPass : (d.requirement_coverage_rate ?? 0) >= 50 ? chartColors.chart4 : chartColors.barFail }}>
+                      <div
+                        className={cn(
+                          'text-3xl font-bold',
+                          (d.requirement_coverage_rate ?? 0) >= 80
+                            ? 'text-status-success'
+                            : (d.requirement_coverage_rate ?? 0) >= 50
+                              ? 'text-status-warning'
+                              : 'text-destructive',
+                        )}
+                      >
                         {d.requirement_coverage_rate ?? 0}%
                       </div>
                       <div className="text-sm text-muted-foreground">需求覆盖率</div>
