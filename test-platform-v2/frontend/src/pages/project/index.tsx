@@ -149,7 +149,7 @@ export default function ProjectPage() {
         {hasPerm('project:delete') && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="danger" data-icon="inline-start">
+              <Button size="sm" variant="danger" data-icon="inline-start" aria-label={`删除项目 ${r.name}`}>
                 <Trash2 />
               </Button>
             </AlertDialogTrigger>
@@ -421,7 +421,7 @@ export default function ProjectPage() {
                         <TableCell>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="danger" data-icon="inline-start">
+                              <Button size="sm" variant="danger" data-icon="inline-start" aria-label={`从项目中移除用户 ${m.username}`}>
                                 <Trash2 />
                               </Button>
                             </AlertDialogTrigger>

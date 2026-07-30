@@ -145,6 +145,7 @@ def api_quick_execute(
         result = quick_execute(
             db, request_def,
             assertions=assertions,
+            project_id=current.project_id or 0,
             environment_id=body.environment_id,
             dataset_id=body.dataset_id,
             confirm_prod=body.confirm_prod,

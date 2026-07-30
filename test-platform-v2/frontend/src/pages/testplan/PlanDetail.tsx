@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/ui'
@@ -58,6 +58,7 @@ import {
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import EmptyState from '@/components/EmptyState'
+import TriagePanel from '@/components/TriagePanel'
 import { SkeletonText, SkeletonPage } from '@/components/ui/skeleton'
 import { autoExecutePlan, deletePlan, executeCase, executeAllCases, fetchExecutions, fetchPlan, removeCasesFromPlan, updatePlan } from '@/api/testplan'
 import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
@@ -238,7 +239,7 @@ export default function PlanDetail() {
           {plan.status === 'active' && (
             <Button size="sm" onClick={() => doUpdateStatus('completed')}>标记完成</Button>
           )}
-          <Button size="sm" variant="secondary" onClick={() => void load()}>
+          <Button size="sm" variant="secondary" onClick={() => void load()} aria-label="刷新测试计划详情">
             <RotateCcw className="size-3.5" data-icon="inline-start" />
           </Button>
           <Button size="sm" variant="secondary" disabled={execAllLoading} onClick={doExecuteAll}>
@@ -339,6 +340,7 @@ export default function PlanDetail() {
             <TabsList>
               <TabsTrigger value="cases">用例列表 ({stats.total})</TabsTrigger>
               <TabsTrigger value="executions">执行历史 ({executions.total})</TabsTrigger>
+              <TabsTrigger value="triage">失败分诊 ({stats.fail || 0})</TabsTrigger>
             </TabsList>
 
             {/* Cases Tab */}
@@ -486,6 +488,10 @@ export default function PlanDetail() {
                   </TableBody>
                 </Table>
               </div>
+            </TabsContent>
+
+            <TabsContent value="triage" className="mt-3">
+              <TriagePanel planId={planId} hasFailures={(stats.fail || 0) > 0} />
             </TabsContent>
           </Tabs>
         </CardContent>

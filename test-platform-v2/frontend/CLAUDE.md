@@ -10,7 +10,7 @@ related: ["../backend/CLAUDE.md", "../../docs/adr/0005-zustand-over-redux.md", "
 
 # test-platform-v2/frontend — React 前端
 
-> React 18 + TypeScript + Vite 7 + shadcn/ui (Radix UI + Tailwind CSS)
+> React 19 + React Router 8 + TypeScript + Vite 7 + shadcn/ui (Radix UI + Tailwind CSS)
 
 ## 目录结构
 

@@ -178,6 +178,14 @@ def update_schedule(
         s.description = data.description
         changed = True
     if data.plan_id is not None:
+        plan = db.scalar(
+            select(TestPlan).where(
+                TestPlan.id == data.plan_id,
+                TestPlan.project_id == project_id,
+            )
+        )
+        if not plan:
+            raise ValueError("计划不存在")
         s.plan_id = data.plan_id
         changed = True
     if data.cron_expression is not None:
@@ -199,7 +207,12 @@ def update_schedule(
     if changed:
         db.flush()
 
-    plan = db.scalar(select(TestPlan).where(TestPlan.id == s.plan_id))
+    plan = db.scalar(
+        select(TestPlan).where(
+            TestPlan.id == s.plan_id,
+            TestPlan.project_id == project_id,
+        )
+    )
     return {
         "id": s.id,
         "project_id": s.project_id,
@@ -234,7 +247,7 @@ def delete_schedule(db: Session, schedule_id: int, project_id: int) -> bool:
 
 
 def trigger_schedule(db: Session, schedule_id: int, project_id: int) -> dict:
-    """Manually trigger a schedule. Creates a run record and executes."""
+    """Manually trigger a schedule and return the actual run result."""
     s = db.scalar(
         select(TestSchedule).where(
             TestSchedule.id == schedule_id,
@@ -245,9 +258,8 @@ def trigger_schedule(db: Session, schedule_id: int, project_id: int) -> dict:
         raise ValueError("调度不存在")
 
     db.commit()  # release session state before background execution
-    _execute_schedule(schedule_id)
-
-    return {"triggered": True, "schedule_id": schedule_id}
+    result = _execute_schedule(schedule_id)
+    return {"schedule_id": schedule_id, **(result or {"triggered": False})}
 
 
 def get_runs(

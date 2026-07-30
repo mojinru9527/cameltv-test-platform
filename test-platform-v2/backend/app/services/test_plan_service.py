@@ -656,6 +656,7 @@ def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
         "kibana_link": build_kibana_link(trace_id) if trace_id else "",
         "executed_at": r.executed_at.isoformat() if r.executed_at else None,
         "created_at": r.created_at.isoformat() if r.created_at else None,
+        "case_id": case.id if case else 0,
         "case_title": case.title if case else "",
         "executor_name": "",
     }

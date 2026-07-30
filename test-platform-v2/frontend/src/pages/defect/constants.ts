@@ -12,29 +12,20 @@ export const SEVERITY_MAP: Record<string, { color: string; label: string }> = {
 
 export const STATUS_MAP: Record<string, { color: string; label: string }> = {
   open: { color: 'red', label: '待处理' },
-  acknowledged: { color: 'orange', label: '已确认' },
-  fixing: { color: 'processing', label: '修复中' },
-  reviewing: { color: 'purple', label: '待审核' },
-  verified: { color: 'green', label: '已验证' },
-  closed: { color: 'default', label: '已关闭' },
-  reopened: { color: 'red', label: '已重开' },
-  // legacy compatibility (backend normalizes these)
   confirmed: { color: 'orange', label: '已确认' },
+  fixing: { color: 'processing', label: '修复中' },
   pending_review: { color: 'purple', label: '待回归' },
+  closed: { color: 'default', label: '已关闭' },
   rejected: { color: 'default', label: '已拒绝' },
-  in_progress: { color: 'processing', label: '处理中' },
-  resolved: { color: 'green', label: '已解决' },
-  wontfix: { color: 'default', label: '不修复' },
 }
 
 export const STATUS_TRANSITIONS: Record<string, string[]> = {
-  'open': ['acknowledged', 'closed'],
-  'acknowledged': ['fixing', 'closed'],
-  'fixing': ['reviewing', 'closed'],
-  'reviewing': ['verified', 'reopened'],
-  'verified': ['closed', 'reopened'],
-  'closed': ['reopened'],
-  'reopened': ['acknowledged', 'closed'],
+  open: ['confirmed', 'rejected'],
+  confirmed: ['fixing', 'rejected'],
+  fixing: ['pending_review'],
+  pending_review: ['closed', 'fixing'],
+  closed: [],
+  rejected: ['open'],
 }
 
 export function formatFileSize(bytes: number): string {

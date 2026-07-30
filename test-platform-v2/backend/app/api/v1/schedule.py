@@ -28,6 +28,7 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
+    db.commit()
 
 
 @router.get("", response_model=R[dict])
@@ -62,7 +63,7 @@ def create_schedule(
         return R.ok(ScheduleOut(**r))
     except ValueError as e:
         from app.core.exceptions import APIException
-        raise APIException(str(e))
+        raise APIException(msg=str(e))
 
 
 @router.get("/{schedule_id}", response_model=R[ScheduleOut])
@@ -86,7 +87,11 @@ def update_schedule(
     current: CurrentUser = Depends(require_permission("schedule:update")),
     db: Session = Depends(get_db),
 ):
-    r = schedule_service.update_schedule(db, schedule_id, body, current.project_id or 0)
+    try:
+        r = schedule_service.update_schedule(db, schedule_id, body, current.project_id or 0)
+    except ValueError as e:
+        from app.core.exceptions import APIException
+        raise APIException(msg=str(e))
     if not r:
         from app.core.exceptions import not_found
         raise not_found("调度")

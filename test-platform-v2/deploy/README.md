@@ -12,19 +12,32 @@ git submodule update --init --recursive lanhu-mcp
 
 ## 快速开始
 
+长期运行环境使用独立 profile 和 Compose project。真实 profile 位于
+`../config/runtime/*.env`，已被 Git 忽略；仓库只提交不含真实凭据的
+`*.env.example`。
+
+> **当前状态（2026-07-29）**：production 服务器尚未采购，未分配域名、
+> TLS 或 PostgreSQL。`production.env.example` 只用于验证未来部署契约；
+> 当前不要创建 `production.env`，也不要执行 production 启动命令。
+
+基础设施就绪后再执行：
+
 ```bash
-# 1. 配置环境变量（真实值只保存在本机 .env）
-cp .env.example .env
-# 编辑 .env：至少设置 SECRET_KEY、账号密码、POSTGRES_PASSWORD、DATABASE_URL
-# ALLOWED_ORIGINS 必须填写最终 HTTPS 站点来源
+# 1. 生产环境只配置一次
+cp ../config/runtime/production.env.example ../config/runtime/production.env
+# 编辑 production.env：设置独立密钥、账号密码、PostgreSQL 和最终 HTTPS 来源
 
-# 2. 启动全栈
-docker compose up -d
-
-# 3. 验证
-curl http://localhost/api/v1/open/health
-# 登录验收必须通过部署在该端口之前的 HTTPS 入口访问
+# 2. 以后用固定 profile 启动或查询；启动需要额外显式确认
+pwsh ../scripts/start-platform-environment.ps1 `
+  -Target production -Action start -ConfirmProduction
+pwsh ../scripts/start-platform-environment.ps1 `
+  -Target production -Action status
 ```
+
+测试平台自身只保留 local 与 production 两种身份。当前只有 local 已运行；
+production 在基础设施就绪后使用不同 `COMPOSE_PROJECT_NAME`、端口、数据库
+和存储。浏览器始终通过各自入口访问，前端继续同源请求 `/api/v1`；不得把
+浏览器临时改为直连另一实例后端。
 
 ## 首次登录凭据
 
@@ -39,6 +52,8 @@ curl http://localhost/api/v1/open/health
 | `TESTER_PASSWORD` | 无 | 初始测试账号密码，必填 |
 | `POSTGRES_PASSWORD` | 无 | PostgreSQL 密码，必填 |
 | `DATABASE_URL` | 无 | PostgreSQL URL，必填；密码须 URL 编码 |
+| `COMPOSE_PROJECT_NAME` | 无 | 每个环境唯一，用于隔离容器、网络和 volume |
+| `PLATFORM_FRONTEND_URL` | 无 | 用户固定访问的完整 HTTPS 来源 |
 | `FRONTEND_PORT` | `80` | 前端访问端口 |
 | `ALLOWED_ORIGINS` | 无 | 最终 HTTPS 入口的精确来源 |
 | `ELK_BASE_URL` | (空) | Kibana 地址，用于 traceId 链路 |
@@ -48,20 +63,24 @@ curl http://localhost/api/v1/open/health
 
 ```bash
 # 查看状态
-docker compose ps
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env ps
 
 # 查看日志
-docker compose logs -f backend
-docker compose logs -f frontend
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env logs -f backend
 
 # 重启
-docker compose restart
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env restart
 
 # 停止
-docker compose down
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env down
 
 # 停止并清除数据
-docker compose down -v
+docker compose --project-name cameltv-tp-production \
+  --env-file ../config/runtime/production.env down -v
 ```
 
 ## 数据持久化
@@ -156,8 +175,8 @@ git pull
 docker compose up -d --build
 ```
 
-Compose 固定 `ENVIRONMENT=production`、`COOKIE_SECURE=true` 和
-`AUTO_CREATE_TABLES=false`。必须由外层负载均衡器或反向代理终止 TLS；
+production profile 必须设置 `ENVIRONMENT=production`、`COOKIE_SECURE=true`；
+Compose 固定 `AUTO_CREATE_TABLES=false`。必须由外层负载均衡器或反向代理终止 TLS；
 直接通过明文 HTTP 打开容器端口只用于健康探测，Secure Cookie 登录不会工作。
 
 ## 排障

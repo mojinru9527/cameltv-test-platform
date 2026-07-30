@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, get_current_user, require_permission
+from app.core.deps import CurrentUser, require_permission, require_project
+from app.core.exceptions import not_found
 from app.schemas.common import R
 from app.schemas.environment import (
     EnvironmentCreate, EnvironmentUpdate, EnvironmentResponse,
@@ -21,7 +22,7 @@ router = APIRouter(prefix="/environments", tags=["环境变量管理"])
 
 @router.get("", response_model=R[list[EnvironmentResponse]], summary="环境列表")
 def list_environments(
-    current: CurrentUser = Depends(get_current_user),
+    current: CurrentUser = Depends(require_project),
     db: Session = Depends(get_db),
 ):
     rows = svc.list_environments(db, current.project_id or 0)
@@ -45,8 +46,14 @@ def update_environment(
     current: CurrentUser = Depends(require_permission("project:manage")),
     db: Session = Depends(get_db),
 ):
-    svc.get_environment(db, env_id, current.project_id or 0)  # 404 if not found
-    row = svc.update_environment(db, env_id, body.model_dump(exclude_none=True))
+    row = svc.update_environment(
+        db,
+        env_id,
+        current.project_id or 0,
+        body.model_dump(exclude_none=True),
+    )
+    if not row:
+        raise not_found("环境")
     return R.ok(row)
 
 
@@ -56,8 +63,8 @@ def delete_environment(
     current: CurrentUser = Depends(require_permission("project:manage")),
     db: Session = Depends(get_db),
 ):
-    svc.get_environment(db, env_id, current.project_id or 0)  # 404 if not found
-    svc.delete_environment(db, env_id)
+    if not svc.delete_environment(db, env_id, current.project_id or 0):
+        raise not_found("环境")
     return R.ok({"deleted": True})
 
 
@@ -66,11 +73,12 @@ def delete_environment(
 @router.get("/{env_id}/variables", response_model=R[list[VariableResponse]], summary="变量列表")
 def list_variables(
     env_id: int,
-    current: CurrentUser = Depends(get_current_user),
+    current: CurrentUser = Depends(require_project),
     db: Session = Depends(get_db),
 ):
-    svc.get_environment(db, env_id, current.project_id or 0)  # 404 if not found
-    rows = svc.list_variables(db, env_id)
+    rows = svc.list_variables(db, env_id, current.project_id or 0)
+    if rows is None:
+        raise not_found("环境")
     return R.ok(rows)
 
 
@@ -81,8 +89,14 @@ def create_variable(
     current: CurrentUser = Depends(require_permission("project:manage")),
     db: Session = Depends(get_db),
 ):
-    svc.get_environment(db, env_id, current.project_id or 0)  # 404 if not found
-    row = svc.create_variable(db, env_id, body.model_dump())
+    row = svc.create_variable(
+        db,
+        env_id,
+        current.project_id or 0,
+        body.model_dump(),
+    )
+    if not row:
+        raise not_found("环境")
     return R.ok(row)
 
 
@@ -94,10 +108,15 @@ def update_variable(
     current: CurrentUser = Depends(require_permission("project:manage")),
     db: Session = Depends(get_db),
 ):
-    svc.get_environment(db, env_id, current.project_id or 0)  # 404 if not found
-    row = svc.update_variable(db, var_id, body.model_dump(exclude_none=True))
+    row = svc.update_variable(
+        db,
+        env_id,
+        var_id,
+        current.project_id or 0,
+        body.model_dump(exclude_none=True),
+    )
     if not row:
-        return R.err(code=404, msg="变量不存在")
+        raise not_found("变量")
     return R.ok(row)
 
 
@@ -108,10 +127,14 @@ def delete_variable(
     current: CurrentUser = Depends(require_permission("project:manage")),
     db: Session = Depends(get_db),
 ):
-    svc.get_environment(db, env_id, current.project_id or 0)  # 404 if not found
-    ok = svc.delete_variable(db, var_id)
+    ok = svc.delete_variable(
+        db,
+        env_id,
+        var_id,
+        current.project_id or 0,
+    )
     if not ok:
-        return R.err(code=404, msg="变量不存在")
+        raise not_found("变量")
     return R.ok({"deleted": True})
 
 
@@ -120,9 +143,15 @@ def delete_variable(
 @router.post("/resolve", response_model=R[VariableResolveResponse], summary="解析变量引用")
 def resolve_variables(
     body: VariableResolveRequest,
-    current: CurrentUser = Depends(get_current_user),
+    current: CurrentUser = Depends(require_project),
     db: Session = Depends(get_db),
 ):
-    svc.get_environment(db, body.environment_id, current.project_id or 0)  # 404 if not found
-    resolved = svc.resolve_variables(db, body.environment_id, body.template)
+    resolved = svc.resolve_variables(
+        db,
+        body.environment_id,
+        current.project_id or 0,
+        body.template,
+    )
+    if resolved is None:
+        raise not_found("环境")
     return R.ok({"resolved": resolved})

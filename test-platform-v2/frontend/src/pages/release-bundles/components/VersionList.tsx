@@ -53,14 +53,26 @@ export default function VersionList({
     return () => loadControllerRef.current?.abort()
   }, [loadVersions, projectId])
 
-  const statusBadge = (status: string) => {
+  const statusBadge = (status: string, isSelected: boolean) => {
     const config: Record<string, { className: string; label: string }> = {
       active: { className: 'border-status-success-border bg-status-success-muted text-status-success', label: '活跃' },
       draft: { className: 'border-status-warning-border bg-status-warning-muted text-status-warning', label: '草稿' },
       archived: { className: 'border-border bg-muted text-muted-foreground', label: '归档' },
     }
     const c = config[status] ?? { className: '', label: status }
-    return <Badge tone="neutral" className={cn('text-xs', c.className)}>{c.label}</Badge>
+    return (
+      <Badge
+        tone="neutral"
+        className={cn(
+          'text-xs',
+          isSelected
+            ? 'border-accent-foreground/30 bg-accent-foreground/15 text-accent-foreground'
+            : c.className,
+        )}
+      >
+        {c.label}
+      </Badge>
+    )
   }
 
   return (
@@ -126,7 +138,7 @@ export default function VersionList({
                   >
                     用户端 {v.client_version ?? '—'}
                   </span>
-                  {statusBadge(v.status)}
+                  {statusBadge(v.status, isSelected)}
                 </div>
                 {v.release_date && (
                   <div

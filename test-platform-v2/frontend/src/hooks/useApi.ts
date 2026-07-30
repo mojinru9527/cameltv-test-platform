@@ -161,7 +161,7 @@ export function useApi<T>(
   // -------------------------------------------------------------------
 
   useEffect(() => {
-    // React 18 StrictMode runs the first effect setup/cleanup pair
+    // React StrictMode runs the first effect setup/cleanup pair
     // synchronously. Deferring the request lets that discarded setup cancel
     // itself before any network work starts, while the real setup issues one
     // effective request.

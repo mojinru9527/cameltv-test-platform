@@ -42,8 +42,18 @@ def create_environment(db: Session, project_id: int, data: dict) -> dict:
     return _env_to_dict(row)
 
 
-def update_environment(db: Session, env_id: int, data: dict) -> dict | None:
-    row = db.get(Environment, env_id)
+def update_environment(
+    db: Session,
+    env_id: int,
+    project_id: int,
+    data: dict,
+) -> dict | None:
+    row = db.scalar(
+        select(Environment).where(
+            Environment.id == env_id,
+            Environment.project_id == project_id,
+        )
+    )
     if not row:
         return None
     # Auto-set is_production=True when env_type changes to "prod"
@@ -57,8 +67,13 @@ def update_environment(db: Session, env_id: int, data: dict) -> dict | None:
     return _env_to_dict(row)
 
 
-def delete_environment(db: Session, env_id: int) -> bool:
-    row = db.get(Environment, env_id)
+def delete_environment(db: Session, env_id: int, project_id: int) -> bool:
+    row = db.scalar(
+        select(Environment).where(
+            Environment.id == env_id,
+            Environment.project_id == project_id,
+        )
+    )
     if not row:
         return False
     # Cascade delete variables
@@ -74,7 +89,13 @@ def delete_environment(db: Session, env_id: int) -> bool:
 
 # ── Variable CRUD ──
 
-def list_variables(db: Session, environment_id: int) -> list[dict]:
+def list_variables(
+    db: Session,
+    environment_id: int,
+    project_id: int,
+) -> list[dict] | None:
+    if not get_environment(db, environment_id, project_id):
+        return None
     rows = db.scalars(
         select(EnvironmentVariable)
         .where(EnvironmentVariable.environment_id == environment_id)
@@ -83,8 +104,15 @@ def list_variables(db: Session, environment_id: int) -> list[dict]:
     return [_var_to_dict(r, mask_sensitive=False) for r in rows]
 
 
-def create_variable(db: Session, environment_id: int, data: dict) -> dict:
+def create_variable(
+    db: Session,
+    environment_id: int,
+    project_id: int,
+    data: dict,
+) -> dict | None:
     """Create a variable, encrypting the value if encrypted=True."""
+    if not get_environment(db, environment_id, project_id):
+        return None
     encrypted = data.get("encrypted", False)
     value = data.get("value", "")
     if encrypted and value:
@@ -96,8 +124,25 @@ def create_variable(db: Session, environment_id: int, data: dict) -> dict:
     return _var_to_dict(row, mask_sensitive=True)
 
 
-def update_variable(db: Session, var_id: int, data: dict) -> dict | None:
-    row = db.get(EnvironmentVariable, var_id)
+def update_variable(
+    db: Session,
+    environment_id: int,
+    var_id: int,
+    project_id: int,
+    data: dict,
+) -> dict | None:
+    row = db.scalar(
+        select(EnvironmentVariable)
+        .join(
+            Environment,
+            Environment.id == EnvironmentVariable.environment_id,
+        )
+        .where(
+            EnvironmentVariable.id == var_id,
+            EnvironmentVariable.environment_id == environment_id,
+            Environment.project_id == project_id,
+        )
+    )
     if not row:
         return None
     encrypted = data.get("encrypted", row.encrypted)
@@ -113,8 +158,24 @@ def update_variable(db: Session, var_id: int, data: dict) -> dict | None:
     return _var_to_dict(row, mask_sensitive=True)
 
 
-def delete_variable(db: Session, var_id: int) -> bool:
-    row = db.get(EnvironmentVariable, var_id)
+def delete_variable(
+    db: Session,
+    environment_id: int,
+    var_id: int,
+    project_id: int,
+) -> bool:
+    row = db.scalar(
+        select(EnvironmentVariable)
+        .join(
+            Environment,
+            Environment.id == EnvironmentVariable.environment_id,
+        )
+        .where(
+            EnvironmentVariable.id == var_id,
+            EnvironmentVariable.environment_id == environment_id,
+            Environment.project_id == project_id,
+        )
+    )
     if not row:
         return False
     db.delete(row)
@@ -124,8 +185,15 @@ def delete_variable(db: Session, var_id: int) -> bool:
 
 # ── Variable Resolution ──
 
-def resolve_variables(db: Session, environment_id: int, template: str) -> str:
+def resolve_variables(
+    db: Session,
+    environment_id: int,
+    project_id: int,
+    template: str,
+) -> str | None:
     """Replace ${VAR_NAME} in template with variable values from the given environment."""
+    if not get_environment(db, environment_id, project_id):
+        return None
     vars_ = db.scalars(
         select(EnvironmentVariable).where(
             EnvironmentVariable.environment_id == environment_id

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import {
   createReleaseBundle,
@@ -253,7 +253,7 @@ export default function ReleaseBundlesPage() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="h-9 w-[120px] text-xs">
+          <SelectTrigger className="h-9 w-[120px] text-xs" aria-label="按发布包状态筛选">
             <SelectValue placeholder="全部状态" />
           </SelectTrigger>
           <SelectContent>

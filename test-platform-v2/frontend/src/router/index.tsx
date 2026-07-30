@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router'
 import { Loader2 } from '@/lib/icons'
 import MainLayout from '@/layouts/MainLayout'
 import Placeholder from '@/pages/Placeholder'

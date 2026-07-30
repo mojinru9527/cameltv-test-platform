@@ -18,6 +18,7 @@ import type {
   WikiLintIssue,
   WikiLintConvertResult,
   WikiSyncResultOut,
+  WikiSyncCoverage,
   WikiTreeDiffOut,
   KnowledgePage,
 } from '@/types'
@@ -163,8 +164,9 @@ export async function syncBundleToWiki(
 
 export async function fetchSyncCoverage(
   bundleId: number,
-): Promise<WikiSyncResultOut> {
-  return api.get(`/wiki/sync/bundle/${bundleId}/coverage`)
+  signal?: AbortSignal,
+): Promise<WikiSyncCoverage> {
+  return api.get(`/wiki/sync/bundle/${bundleId}/coverage`, { signal })
 }
 
 export async function fetchWikiTreeDiff(

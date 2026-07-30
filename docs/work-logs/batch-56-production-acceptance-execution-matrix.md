@@ -10,6 +10,10 @@ related:
   - "../测试平台全功能验收文档-环境链接与账号汇总.md"
   - "../../tests/test-case-standards/生产级模块验收规则.md"
   - "../../test-platform-v2/work-logs/batch-55-acceptance-closure-qa-report.md"
+  - "../../test-platform-v2/work-logs/batch-56-production-acceptance-qa-report.md"
+  - "../../test-platform-v2/work-logs/batch-56-production-acceptance-issue-register.md"
+  - "../../test-platform-v2/work-logs/batch-56-production-acceptance-leader-verdict.md"
+  - "../../test-platform-v2/work-logs/evidence/batch-56-production-acceptance/README.md"
 ---
 
 # Batch 56 测试平台全功能生产级验收执行矩阵
@@ -70,7 +74,7 @@ related:
 | 创建本文时 HEAD | `457d159c49b3eae9c2099cdde85cba0791ddadc2` | 非最终执行 SHA | 开发完成且工作区干净后重新冻结 |
 | 前端/后端端口 | `5173` / `8000` | 元数据已配置，运行未验证 | 健康检查、登录和受保护路由均需真实通过 |
 | 数据库 | 独立 PostgreSQL | 未验证 | 记录类型、版本、逻辑库 ID、迁移状态，不记录密码 |
-| 浏览器 | Playwright Chromium | 未执行 | 记录实际版本和三视口结果 |
+| 浏览器 | Playwright Chromium | 未执行 | 记录实际版本；PC `1440×900` 为 P0，tablet/mobile 结果按 P2 单列 |
 | 外部访问 | 由授权环境和 ignored 配置注入 | 未预检 | 不读取或提交凭据；按 R0 逻辑 ID 留证 |
 
 ## 4. R0/R1/R2/M 真实输入清单
@@ -173,7 +177,7 @@ related:
 | J17 | P0 | 版本任务、发布包、详情、全景；`/release-bundles` 及动态路由 | R1 V13/V14、J05–J13 同源数据 | P：创建版本任务/发布包，详情和全景展示同一需求、用例、执行、缺陷和风险。N：不完整链、跨项目引用、重复发布被拒 | A03–A09/A12 | `NOT RUN` | R1 版本需求已登记；未执行 | 依赖 J05–J13 完整关联链 |
 | J18 | P1 | 性能、设备、历史、WebSocket；`/perftest` | 测试环境安全端点、真实设备、R2 本地负载 | P：测试环境或本地受控负载可启动、观测、停止并持久化。N：无权限、断连、取消、重复启动和阈值失败状态准确 | A03/A04/A07/A09/A11 | `BLOCKED` | 无获授权目标和本批次运行证据 | 指定非生产安全端点、负载上限和停止条件 |
 | J19 | P0 | 跨模块 RBAC、分页、搜索、count、幂等 | `R2-RBAC-PROJECT-AB`、`R2-PAGINATION-LARGE`、`R2-CONCURRENCY-IDEMPOTENCY` | P：所有列表/详情/写接口在同一过滤条件下 UI/API/DB/count 一致。N：跨项目 ID、N+1 页、重复/并发请求不泄露、不重复、不漂移 | A05–A08/A12 | `NOT RUN` | 无 Batch 56 横向矩阵证据 | J03–J18 主流程可用后执行横向专项 |
-| J20 | P0 | 六主题、全部静态/动态路由、三视口、a11y、network；含 `/theme-lab` | J01–J18 的真实填充数据、真实浏览器 | P：六主题和支持模式下页面语义、主要操作、表单/表格/弹窗可用。N：空/错/加载状态仍可理解；无 serious/critical Axe、溢出、控制台错误、重复有效 GET | A03/A06/A09/A12 | `NOT RUN` | C55-5 仍 Open；Batch 55 仅登录壳局部证据 | 先准备有效动态路由实体，再执行 1440/768/390 三视口 |
+| J20 | P0 | PC `1440×900` 下的六主题、全部静态/动态路由、a11y、network；含 `/theme-lab` | 本地固定环境、真实登录、公开 API 创建并清理的计划/发布包动态实体 | P：六主题和支持模式下页面语义可达。N：无 serious/critical Axe、页面级溢出、控制台错误、失败请求或重复有效 GET | A03/A06/A09/A12 | `PASS` | 2026-07-29 分批执行 11/11：Cyberpunk、Apple、Clay、xLab、Liquid Glass 各 light/dark，Obsidian Flow dark；每组全静态/有效动态路由，临时实体均清理 | Tablet `768×1024`、mobile `390×844` 继续作为 C55-5-P2 非阻断项跟踪 |
 | J21 | P0 | 体育生产只读、体育测试、运营后台测试和需求源对照 | 对应外部 R0 + 用户/后台 R1 | P：生产只读页面、测试用户端、后台和需求预期逐项对照。N：未授权动作不执行；访问失败明确阻断，不以测试成功推断生产写可用 | A01/A03/A04/A09/A12 | `BLOCKED` | 环境索引存在；未读取凭据、未执行外部访问 | 完成 VPN、会话、只读/写授权边界预检 |
 | J22 | P0 | PostgreSQL 迁移、双端全量、构建、供应链和文档一致性 | `R0-LEGACY-PG`/`R1-LEGACY-PG-SNAPSHOT`、当前代码 | P：旧库升级、数据保留、重复升级、唯一 head、零漂移；双端全量和构建通过。N：升级失败可恢复；新增回归和 high/critical 风险阻断 | A01/A02/A10–A12 | `BLOCKED` | Batch 55 历史门禁不继承；当前缺旧 PG 快照，Batch 56 全量未执行 | 先补旧库输入，再在最终干净 SHA 执行全部命令和审计 |
 
@@ -191,7 +195,7 @@ related:
 | A06 UI/API/DB/审计一致 | 页面、响应、DB、计数、审计同时成功或回滚 | J01–J20 | `NOT RUN` | 无本批次端到端事务证据 | 需要至少一条完整客户链并覆盖所有写域 |
 | A07 幂等/并发/重试 | 重复点击、并发写、超时重试、恢复和最终唯一状态 | J03–J19 | `NOT RUN` | R2 并发输入设计完成 | 未在真实 PostgreSQL 多连接执行 |
 | A08 跨页查询一致 | 超过一页，搜索/筛选/排序/page/total/count 同条件 | J02/J04/J05/J08–J20 | `NOT RUN` | R2 大分页输入设计完成 | 尚未从 R1 约束生成并通过 UI/API/DB 核对 |
-| A09 浏览器/a11y/network | 三视口、键盘、焦点、Axe、控制台、网络、完整 P0 旅程 | J01–J21 | `NOT RUN` | Batch 55 登录壳历史结果不计当前通过 | 六主题、全部动态路由和真实数据旅程未执行 |
+| A09 浏览器/a11y/network | PC `1440×900` 的键盘、焦点、Axe、控制台、网络和完整 P0 旅程；tablet/mobile 为 P2 | J01–J21 | `PARTIAL` | J20 的 PC 六主题、支持模式、全静态/有效动态路由矩阵 11/11 PASS | J01–J19/J21 的完整业务旅程仍未全部闭环；tablet/mobile 不阻断 P0 |
 | A10 真实旧库迁移 | 真实旧版脱敏快照升级、数据保留、重复升级、唯一 head、零漂移 | `R0-LEGACY-PG`/`R1-LEGACY-PG-SNAPSHOT`；J22 | `BLOCKED` | 仅有历史空库/旧批次材料 | 当前没有可用旧 PostgreSQL 脱敏快照 |
 | A11 自动化/供应链 | F821、Pytest、typecheck、Vitest、build、Playwright、依赖/许可证/漏洞 | J14–J22 | `NOT RUN` | Batch 55 历史全量不继承 | 在最终干净 SHA 执行并记录命令、退出码和完整失败集合 |
 | A12 文档/证据一致 | PRD、OAS、README、ADR、用例、报告、代码事实和脱敏证据一致 | 全部输入；J01–J22 | `NOT RUN` | 本文件建立了预执行索引 | 执行、缺陷、QA、Leader Verdict 和最终 SHA 尚未生成/核对 |
@@ -255,11 +259,11 @@ M_故障回归通过率
 | `G56-009` | P0 | `BLOCKED` | 缺真实旧 PostgreSQL 脱敏快照；A10/J22 必然阻断 | 数据库负责人 / QA | 提供隔离脱敏快照、版本、SHA、行数基线和恢复副本 | 条件具备后 1 个工作日内 |
 | `G56-010` | P1 | `BLOCKED` | 性能测试缺少获授权非生产目标、负载上限和停止条件；J18 阻断 | 性能负责人 / 环境所有者 | 明确安全端点、负载模型、上限、停止和清理规则 | 条件具备后 1 个工作日内 |
 | `G56-011` | P0 | `OPEN` | C55-3 Knowledge/Wiki/Trace 深层功能尚未以当前真实输入闭环 | 开发负责人 / QA | J06/J07/J13 的 P/N 原子结果全部 PASS | 修复后 1 个工作日内 |
-| `G56-012` | P0 | `OPEN` | C55-4 真实浏览器关键业务旅程尚未完成 | 开发负责人 / QA | J05/J08/J09/J10/J11/J12 的真实 UI/API/DB/审计链全部 PASS | 修复后 1 个工作日内 |
-| `G56-013` | P0 | `OPEN` | C55-5 六主题、全部路由、三视口、a11y/network 尚未完成 | 前端负责人 / QA | J20 全矩阵 PASS，动态路由使用真实实体 | 修复后 1 个工作日内 |
+| `G56-012` | P0 | `OPEN` | Batch 57 已修本地引用、审计持久化、失败转缺陷和调度真实执行/重复触发；完整真实旅程仍未闭环 | 开发负责人 / QA | J05/J08/J09/J10/J11/J12 的真实 UI/API/DB/报告/通知链全部 PASS | 修复后 1 个工作日内 |
+| `G56-013` | P0 | `CLOSED` | C55-5 的 PC `1440×900` 六主题、支持模式、全部静态/有效动态路由、a11y/network 已完成 11/11 | 前端负责人 / QA | J20 PC P0 全矩阵 PASS；真实计划/发布包实体按组创建并清理；P2 视口不作为关闭前置 | 2026-07-29 |
 | `G56-014` | P0 | `OPEN` | 全平台正负面功能点矩阵尚未逐项关联 J01–J22 和现有用例 ID | QA 负责人 | 每个需求点至少一正一负；API 三类校验齐全 | J 执行开始前 |
-| `G56-015` | P0 | `OPEN` | Batch 56 双端全量、真实 E2E、依赖/许可证/漏洞审计未执行 | 开发负责人 / QA | 最终干净 SHA 上运行 A11 全部命令并记录完整失败集合 | 交付判定前 |
-| `G56-016` | P0 | `OPEN` | QA 报告、Leader Verdict、缺陷、证据索引和代码事实尚未对账 | QA Leader | 按 A12 完成逐 ID 对账和脱敏扫描 | 交付判定前 |
+| `G56-015` | P0 | `PARTIAL` | 前端 235 个 production 包实例许可证扫描通过；后端 111 锁定包在 Windows 无法完整物化 | 开发负责人 / QA | Linux 按 lock 全量扫描，并确认 psycopg2-binary LGPL 分发/NOTICE 策略 | 交付判定前 |
+| `G56-016` | P0 | `CLOSED` | QA 报告、独立 issue register、evidence README、Leader Verdict 和本矩阵已互相引用，并对齐 `NEEDS WORK` | QA Leader | 最低交付物清单和 B56 ID 对账已完成；不代表 A12 PASS，也不关闭业务缺陷 | 2026-07-29 |
 
 ## 9. 执行与回填顺序
 
@@ -269,7 +273,7 @@ M_故障回归通过率
 4. 按 J01 → J03 → J05 → J08 → J09 → J12 → J13 → J10 建立第一条真实关联链。
 5. 执行 J02/J17 验证工作台、发布包和全景对同一链的统计与展示。
 6. 执行 J04/J06/J07/J14/J15/J16/J18/J21 的授权外部或专项链；缺条件保持 `BLOCKED`。
-7. 执行 J11、J19、J20 的通知、横向 RBAC/分页/并发和六主题全路由矩阵。
+7. 执行 J11、J19 的通知、横向 RBAC/分页/并发；J20 六主题全路由矩阵已完成。
 8. 执行 J22 的真实旧库迁移、双端全量、真实 Playwright 和供应链审计。
 9. 回填每个 `Jxx-P/Jxx-N` 的实际结果、证据、缺陷和清理；重新计算四个分层通过率。
 10. 逐项更新 A01–A12；任何非 PASS 门禁都使最终结论保持 `NEEDS WORK`。
@@ -307,7 +311,8 @@ M_故障回归通过率
 | PostgreSQL 并发回归 | 3/3 passed | PASS |
 | 前端 Vitest | 52 files、210 tests、0 failed | PASS |
 | TypeScript / build | typecheck 与 Vite production build 均成功 | PASS |
-| 真实后端 Playwright | desktop 30 路由、mobile 16 路由，2/2 passed；无 route fulfill/mock/skip | PASS |
+| 真实后端 Playwright | desktop 30 路由、mobile 16 路由，2/2 passed；无 route fulfill/mock/skip | PASS（路由可达性）；desktop 不是 C55-5 PC 全矩阵，mobile 为 P2 附加证据 |
+| Batch 57 PC P0 Playwright | 六主题 11 个支持模式；每组全静态/有效动态路由、真实登录/后端、键盘、Axe、溢出、console/network；11/11 passed | PASS（关闭 C55-5/G56-013/J20） |
 | 历史 UI 专项 | Batch 53、54、55 的需求模块、主题、未授权和代理/a11y 共 4/4 passed | PASS |
 | 性能 WS 传输 | Vite 真实 101、Cookie/Origin/项目权限通过；无 SoloX 时返回 `collector_error` 并清理 | PASS（传输）/ BLOCKED（真机采集） |
 | 容器 | backend/frontend 实际构建成功；Nginx 配置通过；非 root UID 10001、volume 初始化及写入探针通过 | PASS |
@@ -336,15 +341,61 @@ M_故障回归通过率
 | 用户端/后台设计源 | 只读 | 缺当前可复核的原始或脱敏证据包 | BLOCKED |
 | ELK、真实 OCR/AI、旧库 | 专项授权 | 未取得必要配置、只读授权或脱敏快照 | BLOCKED |
 
-### 11.5 Gap 处置
+### 11.5 A01–A12 最终证据处置
 
-- 已关闭：`G56-001`、`G56-002`、`G56-011`、`G56-012`、`G56-013`、`G56-014`、`G56-015`。
+下表按完整门禁判定，不把局部子项 PASS 提升为整项 PASS。`G56-016` 只证明
+最低交付物齐全，不等于 A12 通过。
+
+| 门禁 | 最终状态 | 当前证据与未满足项 |
+| --- | --- | --- |
+| A01 基线可追溯 | `FAIL` | 最终 SHA 与 R1 哈希已固定，但缺 J01–J22 逐功能点正负面映射和完整差异清单 |
+| A02 隔离环境 | `PASS` | 独立 worktree、5173/8000、PostgreSQL、迁移、登录和清理证据已形成 |
+| A03 主/备选/异常流 | `NOT RUN` | 多个 P0/P1 旅程仍为 NOT RUN/BLOCKED，未形成逐功能点原子结果 |
+| A04 API 三类校验 | `FAIL` | 六服务契约不完整，且测试 API 鉴权声明与实际不一致 |
+| A05 RBAC/项目隔离 | `NOT RUN` | 已有登录和性能域隔离证据，但未覆盖 J01–J04/J06–J19 全域身份矩阵 |
+| A06 UI/API/DB/审计一致 | `NOT RUN` | 缺用例→计划→执行→报告→缺陷等完整同源事务链 |
+| A07 幂等/并发/重试 | `NOT RUN` | 局部并发回归通过，未覆盖 J03–J19 的完整重试和最终唯一状态 |
+| A08 跨页查询一致 | `NOT RUN` | 未完成真实大分页下 UI/API/DB/count 同条件核对 |
+| A09 浏览器/a11y/network | `PARTIAL` | C55-5/J20 的 PC `1440×900` 六主题 P0 矩阵 11/11 PASS；J01–J19/J21 的完整业务旅程仍未全部闭环；tablet/mobile 为 P2 |
+| A10 真实旧库迁移 | `BLOCKED` | 缺真实旧 PostgreSQL 脱敏快照、基线和隔离恢复副本 |
+| A11 自动化/供应链 | `NOT RUN` | 双端测试、构建和漏洞扫描已有结果，但未单独形成完整许可证审计证据 |
+| A12 文档/证据一致 | `FAIL` | 最低交付物已补齐，但 PRD/OAS/代码事实、全部旅程证据与未完成 stub 仍未完全一致 |
+
+### 11.6 Gap 处置
+
+- 已关闭：`G56-001`、`G56-002`、`G56-013`、`G56-016`。
+- 重新打开：`G56-011`。Knowledge/Wiki/Trace 尚未以当前真实设计源、真实
+  AI/OCR 和完整跨项目链路完成 J06/J07/J13 正负面闭环；规则 fallback、
+  固定“未同步”展示或 stub 不计为通过。
+- 保持打开：`G56-012`（C55-4 真实业务生命周期未闭环）和 `G56-014`
+  （J01–J22 正负面功能点映射未完成）。Tablet/mobile 继续作为
+  `C55-5-P2` 跟踪，不回退 `G56-013` 的关闭结论。
+- 重新打开：`G56-015`。双端回归、真实 E2E 和漏洞扫描已有记录，但 A11
+  要求的独立许可证审计证据未形成，不能把局部供应链结果提升为整项 PASS。
 - 部分关闭但仍有外部失败：`G56-003`、`G56-005`。
 - 保持阻断：`G56-004`、`G56-006`、`G56-007`、`G56-008`、`G56-009`、`G56-010`。
-- `G56-016` 已随最终 QA 报告和 `NEEDS WORK` Verdict 对账关闭；它不改变
-  业务门禁仍为 `NEEDS WORK` 的结论。
+- `G56-016` 只关闭交付物对账缺口；它不改变 `B56-B01`～`B56-B10` 和
+  `G56-011` 未关闭，也不改变业务门禁仍为 `NEEDS WORK` 的结论。
 
-### 11.6 最终机械结论
+### 11.7 B56 正式阻断对账
+
+完整责任边界见
+`test-platform-v2/work-logs/batch-56-production-acceptance-issue-register.md`。
+
+| ID | 状态 | 外部输入 | 成功标准摘要 |
+| --- | --- | --- | --- |
+| `B56-B01` | `FAIL` | `B56-R0-TEST-SITES` | 节点 6 恢复后在同一授权网络和浏览器矩阵通过 |
+| `B56-B02` | `FAIL` | `B56-R0-TEST-OPENAPI`、`R0-OAS-SIX-LIVE` | 六份当前契约或可追溯 R1 快照均可解析并完成覆盖对账 |
+| `B56-B03` | `FAIL` | `B56-R0-TEST-OPENAPI` | 公开/受保护边界、OpenAPI 和实现一致；无效凭据被正确拒绝 |
+| `B56-B04` | `FAIL` | `B56-R0-ADMIN-TEST` | 真实浏览器建立会话、进入受保护页、刷新保持且注销失效 |
+| `B56-B05` | `BLOCKED` | `B56-R0-AI` | 获授权真实 AI/OCR 产生可追溯输出，主断言无 fallback/mock |
+| `B56-B06` | `BLOCKED` | `R0-MEDIA-DEVICE` | 经鉴权代理与授权真机完成真实采样、持久化和清理 |
+| `B56-B07` | `BLOCKED` | `B56-R0-ELK`、`R0-ELK-READONLY` | 只读权限下完成平台 traceId 到日志的脱敏关联 |
+| `B56-B08` | `BLOCKED` | `B56-R0-LEGACY-PG`、`R0-LEGACY-PG` | 真实脱敏旧库隔离升级，数据基线、唯一 head 和零漂移通过 |
+| `B56-B09` | `BLOCKED` | `B56-R0-USER-DESIGN`、`B56-R0-ADMIN-DESIGN` | 当前设计源或可追溯脱敏导出形成可复核证据包 |
+| `B56-B10` | `FAIL` | `B56-R0-PROD-SITES` | 批准窗口和 vpn07 内仅用 GET/HEAD 完成全部节点浏览器复测 |
+
+### 11.8 最终机械结论
 
 `NEEDS WORK`。本地 Batch 54/55 遗留、全路由 UI、RBAC、性能真实性与安全、
 启动证据、部署安全及供应链已达到可复核交付标准；但全平台生产放行要求

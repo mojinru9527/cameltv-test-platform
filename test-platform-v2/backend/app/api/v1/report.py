@@ -28,6 +28,7 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         detail=detail,
         ip=req.client.host if req.client else "",
     )
+    db.commit()
 
 
 def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
@@ -110,7 +111,7 @@ def create_report(
         return R.ok(ReportOut(**r))
     except ValueError as e:
         from app.core.exceptions import APIException
-        raise APIException(str(e))
+        raise APIException(msg=str(e))
 
 
 @router.get("/{report_id}", response_model=R[ReportDetailOut])

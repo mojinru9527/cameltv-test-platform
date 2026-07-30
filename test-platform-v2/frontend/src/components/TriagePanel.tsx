@@ -10,7 +10,7 @@
  * 3. bug 类显示「一键提缺陷」按钮 → 生成草稿 → 创建缺陷
  */
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 
 import { Button } from '@/ui'

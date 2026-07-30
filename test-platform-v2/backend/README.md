@@ -41,7 +41,7 @@ uvicorn app.main:app --reload --port 8000
 
 Local development keeps `AUTO_CREATE_TABLES=true` so a fresh SQLite database starts without extra steps.
 
-For production or shared test environments:
+For production deployments:
 
 ```bash
 set AUTO_CREATE_TABLES=false

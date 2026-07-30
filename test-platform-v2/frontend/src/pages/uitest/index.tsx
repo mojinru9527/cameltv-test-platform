@@ -379,7 +379,7 @@ export default function UiTestPage() {
         toolbar={
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={fStatus ?? '__all__'} onValueChange={(v) => setFStatus(v === '__all__' ? undefined : v)}>
-              <SelectTrigger className="w-[130px]">
+              <SelectTrigger className="w-[130px]" aria-label="按 UI 测试任务状态筛选">
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
               <SelectContent>

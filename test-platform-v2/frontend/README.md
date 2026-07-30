@@ -10,11 +10,11 @@ related: ["test-platform-v2/backend/README.md", "test-platform-v2/frontend/CLAUD
 
 # cameltv-test-frontend
 
-CamelTv 测试平台前端（React 18 + Ant Design 5 + Vite + TypeScript）。
+CamelTv 测试平台前端（React 19 + React Router 8 + shadcn/ui + Vite + TypeScript）。
 
 ## 技术栈
 
-- React 18 · Ant Design 5 · Vite · TypeScript
+- React 19 · React Router 8 · shadcn/ui · Vite · TypeScript
 - 状态：Zustand（鉴权态/当前项目，持久化到 localStorage）
 - 路由：React Router 6（登录守卫 + 动态菜单）
 - 请求：axios（JWT 拦截器 + 统一 envelope 拆包）

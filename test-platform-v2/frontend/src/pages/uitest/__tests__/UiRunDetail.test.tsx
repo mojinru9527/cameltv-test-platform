@@ -111,7 +111,7 @@ vi.mock('@/stores/auth', () => ({
   },
 }))
 
-// Mock react-router-dom
+// Router hooks are not used by this component.
 vi.mock('@/hooks/useDocumentTitle', () => ({
   useDocumentTitle: vi.fn(),
 }))

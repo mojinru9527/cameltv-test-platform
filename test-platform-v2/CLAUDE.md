@@ -17,7 +17,7 @@ related: ["backend/CLAUDE.md", "frontend/CLAUDE.md", "docs/CamelTv测试平台-�
 ```
 test-platform-v2/
 ├── backend/          FastAPI + SQLAlchemy 2.0 + SQLite (WAL)
-├── frontend/         React 18 + shadcn/ui (Radix + Tailwind) + Vite 5
+├── frontend/         React 19 + React Router 8 + shadcn/ui (Radix + Tailwind) + Vite 7
 ├── deploy/           docker-compose 一键部署 (Nginx 反代)
 └── docs/             PRD + 架构图 + 接入指南 + Backlog
 ```

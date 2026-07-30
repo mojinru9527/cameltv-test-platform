@@ -1480,6 +1480,14 @@ export interface WikiSyncResultOut {
   errors: string[]
 }
 
+export interface WikiSyncCoverage {
+  total_pages: number
+  synced_pages: number
+  stale_pages: number
+  missing_pages: number
+  coverage_rate: number
+}
+
 export interface WikiTreeDiffOut {
   only_in_tree: string[]
   only_in_wiki: string[]
