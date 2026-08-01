@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { FlaskConical, Plus, Trash2 } from '@/lib/icons'
 import { Button } from '@/ui'
@@ -6,11 +6,14 @@ import { Input } from '@/ui'
 import { Badge } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import ProductionOperationDialog from '@/components/ProductionOperationDialog'
 import { fetchEnvironments, updateEnvironment } from '@/api/environment'
 import { quickExecute } from '@/api/apitest'
+import { useAuthStore } from '@/stores/auth'
 import { ResponsePanel } from './DebugTab'
 import EnvironmentBar from './EnvironmentBar'
 import { normalizeJson, defaultAssertions, buildSampleBody } from './utils'
+import { buildApiExecutionRequest } from '../apiExecutionRequest'
 import type { ApiEndpoint, ApiExecutionResult, Environment } from '@/types'
 
 const METHOD_COLORS: Record<string, string> = {
@@ -90,14 +93,19 @@ export default function ApiDebugPanel({
   const [assertions, setAssertions] = useState('[]')
   const [result, setResult] = useState<ApiExecutionResult | null>(null)
   const [loading, setLoading] = useState(false)
+  const [operationDialogOpen, setOperationDialogOpen] = useState(false)
+  const executionInFlightRef = useRef(false)
+  const currentProjectId = useAuthStore((state) => state.currentProjectId)
+  const projects = useAuthStore((state) => state.projects)
+  const currentProject = projects.find(project => project.id === currentProjectId)
+  const selectedEnvironment = envs.find(environment => environment.id === envId)
+  const isProductionEnvironment = selectedEnvironment?.is_production === true || selectedEnvironment?.env_type === 'prod'
 
   useEffect(() => {
     let cancelled = false
     fetchEnvironments().then((rows) => {
       if (cancelled) return
       setEnvs(rows)
-      const testEnv = rows.find(e => e.env_type === 'test') || rows[0]
-      if (testEnv) setEnvId(testEnv.id)
     }).catch(() => { if (!cancelled) setEnvs([]) })
     return () => { cancelled = true }
   }, [])
@@ -172,10 +180,17 @@ export default function ApiDebugPanel({
   const addHeader = () => setHeaderRows(prev => [...prev, { key: '', value: '', enabled: true }])
   const removeHeader = (index: number) => setHeaderRows(prev => prev.filter((_, i) => i !== index))
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!source) return
     if (!envId) { toast.error('请先选择环境'); return }
+    setOperationDialogOpen(true)
+  }
 
+  const executeRequest = async () => {
+    if (!source || !envId) return
+    if (executionInFlightRef.current) return
+    executionInFlightRef.current = true
+    setOperationDialogOpen(false)
     setLoading(true)
     setResult(null)
     try {
@@ -189,17 +204,23 @@ export default function ApiDebugPanel({
       pathRows.forEach(r => {
         if (r.key && r.value) finalPath = finalPath.replace(`{${r.key}}`, r.value)
       })
+      const servicePath = effectiveServiceName && !/^https?:\/\//i.test(finalPath)
+        ? `/${effectiveServiceName.replace(/^\/+|\/+$/g, '')}/${finalPath.replace(/^\/+/, '')}`
+        : finalPath
 
-      const res = await quickExecute({
-        method: source.method,
-        url: finalPath,
-        headers: JSON.stringify(enabledHeaders),
-        body: bodyType === 'none' ? '' : body,
-        assertions,
-        environment_id: envId,
-        service_name: effectiveServiceName,
-        query_params: JSON.stringify(enabledQueries),
-      })
+      const res = await quickExecute(buildApiExecutionRequest({
+        source: endpoint ? 'asset' : 'quick',
+        environmentId: envId,
+        request: {
+          method: source.method,
+          url: servicePath,
+          headers: enabledHeaders,
+          body: bodyType === 'none' ? '' : body,
+          assertions,
+          queryParams: enabledQueries,
+        },
+        confirmProd: isProductionEnvironment,
+      }))
       setResult(res as ApiExecutionResult)
     } catch (e: any) {
       setResult({
@@ -213,6 +234,7 @@ export default function ApiDebugPanel({
         error: e?.message || '请求失败',
       } as any)
     } finally {
+      executionInFlightRef.current = false
       setLoading(false)
     }
   }
@@ -332,6 +354,20 @@ export default function ApiDebugPanel({
           <ResponsePanel result={result} loading={loading} />
         </div>
       </div>
+
+      <ProductionOperationDialog
+        open={operationDialogOpen}
+        onOpenChange={setOperationDialogOpen}
+        project={currentProject?.name || `项目 #${selectedEnvironment?.project_id ?? currentProjectId ?? '-'}`}
+        environment={selectedEnvironment?.name || '未选择环境'}
+        baseUrl={envBaseUrl || selectedEnvironment?.base_url || '未配置'}
+        operation={`发送 ${source.method.toUpperCase()} ${source.path} 请求`}
+        classification={['GET', 'HEAD', 'OPTIONS'].includes(source.method.toUpperCase()) ? 'read' : 'write'}
+        affectedCount={1}
+        isProduction={isProductionEnvironment}
+        pending={loading}
+        onConfirm={executeRequest}
+      />
     </div>
   )
 }

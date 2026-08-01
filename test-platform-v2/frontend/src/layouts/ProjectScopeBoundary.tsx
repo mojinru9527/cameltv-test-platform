@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 interface ProjectScopeBoundaryProps {
   projectId: number | null
@@ -6,5 +6,13 @@ interface ProjectScopeBoundaryProps {
 }
 
 export function ProjectScopeBoundary({ projectId, children }: ProjectScopeBoundaryProps) {
-  return <Fragment key={projectId ?? 'no-project'}>{children}</Fragment>
+  return (
+    <div
+      key={projectId ?? 'no-project'}
+      className="contents"
+      data-project-scope={projectId ?? 'none'}
+    >
+      {children}
+    </div>
+  )
 }

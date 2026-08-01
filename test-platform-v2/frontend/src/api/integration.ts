@@ -40,10 +40,20 @@ export async function testConnection(body: {
   return api.post(`${BASE}/test-connection`, body)
 }
 
-export async function syncNow(id: number, direction?: string): Promise<{
+export async function syncNow(id: number, operation: {
+  environment_id: number
+  direction?: string
+  confirm_prod?: boolean
+}): Promise<{
   pushed: number; pulled: number; errors: number; message: string
 }> {
-  return api.post(`${BASE}/${id}/sync-now`, null, { params: direction ? { direction } : {} })
+  return api.post(`${BASE}/${id}/sync-now`, null, {
+    params: {
+      environment_id: operation.environment_id,
+      confirm_prod: operation.confirm_prod ?? false,
+      ...(operation.direction ? { direction: operation.direction } : {}),
+    },
+  })
 }
 
 export async function fetchSyncLogs(id: number, params: { page?: number; page_size?: number } = {}): Promise<{

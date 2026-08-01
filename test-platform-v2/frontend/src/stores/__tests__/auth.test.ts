@@ -13,6 +13,7 @@ const MOCK_LOGIN = {
     { id: 2, code: 'proj2', name: 'Project 2' },
   ],
   permissions: ['testcase:list', 'testcase:create', 'testplan:list'],
+  must_change_password: false,
 }
 
 describe('useAuthStore', () => {
@@ -37,6 +38,11 @@ describe('useAuthStore', () => {
       useAuthStore.getState().setLogin({ ...MOCK_LOGIN, projects: [] })
       expect(useAuthStore.getState().currentProjectId).toBeNull()
     })
+
+    it('preserves the server forced-password-change requirement', () => {
+      useAuthStore.getState().setLogin({ ...MOCK_LOGIN, must_change_password: true })
+      expect(useAuthStore.getState().mustChangePassword).toBe(true)
+    })
   })
 
   describe('logout', () => {
@@ -59,6 +65,13 @@ describe('useAuthStore', () => {
       useAuthStore.getState().setCurrentProject(2)
 
       expect(useAuthStore.getState().currentProjectId).toBe(2)
+    })
+
+    it('rejects a project id outside the authenticated project list', () => {
+      useAuthStore.getState().setLogin(MOCK_LOGIN)
+      useAuthStore.getState().setCurrentProject(999)
+
+      expect(useAuthStore.getState().currentProjectId).toBe(1)
     })
   })
 

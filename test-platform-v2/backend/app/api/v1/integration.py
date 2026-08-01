@@ -17,6 +17,7 @@ from app.schemas.integration import (
 )
 from app.services import integration_service
 from app.services.audit_service import write_audit
+from app.services.production_operation_guard import ProductionOperation, require_allowed_operation
 
 logger = logging.getLogger("integration")
 router = APIRouter(prefix="/integrations", tags=["集成配置"])
@@ -121,6 +122,8 @@ def test_connection(
 def sync_now(
     integration_id: int,
     direction: str | None = Query(None, description="push | pull | bidirectional (default uses config setting)"),
+    environment_id: int = Query(..., description="Project-owned execution environment"),
+    confirm_prod: bool = Query(False, description="Explicit production confirmation"),
     current: CurrentUser = Depends(require_permission("integration:sync")),
     db: Session = Depends(get_db),
 ):
@@ -131,6 +134,18 @@ def sync_now(
     if not cfg:
         from app.core.exceptions import not_found
         raise not_found("集成配置")
+
+    require_allowed_operation(
+        db,
+        ProductionOperation(
+            action=f"Synchronize integration #{integration_id} ({cfg['name']})",
+            project_id=current.project_id or 0,
+            environment_id=environment_id,
+            permission="integration:sync_prod",
+            confirmed=confirm_prod,
+        ),
+        set(current.permissions),
+    )
 
     if direction is None:
         direction = cfg["sync_direction"]

@@ -11,6 +11,7 @@ interface AuthState {
   projects: Project[]
   permissions: string[]
   currentProjectId: number | null
+  mustChangePassword: boolean
   /** projectId → colorTheme mapping for per-project theme switching */
   projectThemeMap: Record<number, ColorTheme>
 
@@ -18,6 +19,7 @@ interface AuthState {
   setProjects: (projects: Project[]) => void
   setPermissions: (permissions: string[]) => void
   setCurrentProject: (id: number) => void
+  completePasswordChange: () => void
   setProjectTheme: (projectId: number, theme: ColorTheme) => void
   logout: () => void
   hasPerm: (code: string) => boolean
@@ -31,6 +33,7 @@ export const useAuthStore = create<AuthState>()(
       projects: [],
       permissions: [],
       currentProjectId: null,
+      mustChangePassword: false,
       projectThemeMap: {},
 
       setLogin: (data) =>
@@ -40,6 +43,9 @@ export const useAuthStore = create<AuthState>()(
           projects: data.projects,
           permissions: data.permissions,
           currentProjectId: data.projects[0]?.id ?? null,
+          mustChangePassword: Boolean(
+            (data as LoginResult & { must_change_password?: boolean }).must_change_password,
+          ),
         }),
       setProjects: (projects) =>
         set((state) => ({
@@ -49,11 +55,23 @@ export const useAuthStore = create<AuthState>()(
             : (projects[0]?.id ?? null),
         })),
       setPermissions: (permissions) => set({ permissions }),
-      setCurrentProject: (id) => set({ currentProjectId: id }),
+      setCurrentProject: (id) =>
+        set((state) => state.projects.some((project) => project.id === id)
+          ? { currentProjectId: id }
+          : state),
+      completePasswordChange: () => set({ mustChangePassword: false }),
       setProjectTheme: (projectId, theme) =>
         set((s) => ({ projectThemeMap: { ...s.projectThemeMap, [projectId]: theme } })),
       logout: () =>
-        set({ token: null, user: null, projects: [], permissions: [], currentProjectId: null, projectThemeMap: {} }),
+        set({
+          token: null,
+          user: null,
+          projects: [],
+          permissions: [],
+          currentProjectId: null,
+          mustChangePassword: false,
+          projectThemeMap: {},
+        }),
       hasPerm: (code) => {
         const perms = get().permissions
         return perms.includes('*') || perms.includes(code)
@@ -67,6 +85,7 @@ export const useAuthStore = create<AuthState>()(
         projects: s.projects,
         permissions: s.permissions,
         currentProjectId: s.currentProjectId,
+        mustChangePassword: s.mustChangePassword,
         projectThemeMap: s.projectThemeMap,
       }),
     },

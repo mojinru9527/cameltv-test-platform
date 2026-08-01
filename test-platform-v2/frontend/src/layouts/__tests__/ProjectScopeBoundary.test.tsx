@@ -39,6 +39,8 @@ describe('ProjectScopeBoundary', () => {
     )
 
     expect(screen.getByLabelText('项目草稿')).toHaveProperty('value', '')
+    expect(document.querySelector('[data-project-scope="2"]')).toBeTruthy()
+    expect(document.querySelector('[data-project-scope="1"]')).toBeNull()
     expect(onMount).toHaveBeenCalledTimes(2)
   })
 })

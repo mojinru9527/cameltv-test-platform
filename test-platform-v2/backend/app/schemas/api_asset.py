@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from pydantic import BaseModel, Field, computed_field
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field, computed_field, model_validator
 
 
 # ── ApiService ──
@@ -133,12 +135,62 @@ class ApiImportResultOut(BaseModel):
 
 # ── API Execution Task ──
 
-class ApiTaskCreateRequest(BaseModel):
-    name: str = Field(..., min_length=1)
+class ApiRequestDefinition(BaseModel):
+    method: str = Field(default="GET", pattern="^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)$")
+    url: str = Field(..., min_length=1)
+    headers: dict[str, Any] = Field(default_factory=dict)
+    body: str = ""
+    query_params: dict[str, Any] = Field(default_factory=dict)
+    assertions: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ApiExecutionRequest(BaseModel):
+    """Shared request contract for all API execution entry points.
+
+    The pre-validator keeps the former flat quick-execute payload readable while
+    new callers use the nested request definition consistently.
+    """
+
+    source: Literal["quick", "asset", "single", "group", "batch"] = "single"
     environment_id: int | None = None
+    dataset_id: int | None = None
+    case_ids: list[int] = Field(default_factory=list, max_length=500)
+    request: ApiRequestDefinition | None = None
+    confirm_prod: bool = False
+
+    @model_validator(mode="before")
+    @classmethod
+    def accept_legacy_quick_payload(cls, value: Any) -> Any:
+        if not isinstance(value, dict) or "request" in value or "url" not in value:
+            return value
+
+        def parse_json(raw: Any, default: Any) -> Any:
+            if not isinstance(raw, str):
+                return raw if raw is not None else default
+            try:
+                return json.loads(raw) if raw.strip() else default
+            except json.JSONDecodeError:
+                return default
+
+        normalized = dict(value)
+        normalized["source"] = normalized.get("source") or "quick"
+        normalized["request"] = {
+            "method": normalized.pop("method", "GET"),
+            "url": normalized.pop("url"),
+            "headers": parse_json(normalized.pop("headers", {}), {}),
+            "body": normalized.pop("body", ""),
+            "query_params": parse_json(normalized.pop("query_params", {}), {}),
+            "assertions": parse_json(normalized.pop("assertions", []), []),
+        }
+        normalized.pop("service_name", None)
+        return normalized
+
+
+class ApiTaskCreateRequest(ApiExecutionRequest):
+    source: Literal["group", "batch"] = "batch"
+    name: str = Field(..., min_length=1)
     service_id: int | None = None
     case_ids: list[int] = Field(..., min_length=1, max_length=500)
-    confirm_prod: bool = False  # 生产环境写操作必须为 True
 
 
 class ApiTaskOut(BaseModel):

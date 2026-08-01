@@ -476,10 +476,15 @@ def test_page_interactions_merge_replace_and_audit_persist(
             "merge": False,
             "interactions": [
                 {
+                    "id": "saved-region-61",
                     "trigger": "打开筛选",
                     "target_page": "",
                     "interaction_type": "dynamic_filter",
                     "admin_config_source": "筛选配置",
+                    "x": 12,
+                    "y": 18,
+                    "width": 220,
+                    "height": 64,
                 }
             ],
         },
@@ -493,6 +498,14 @@ def test_page_interactions_merge_replace_and_audit_persist(
     db_session.refresh(page)
     assert "打开筛选" in page.page_interactions
     assert "点击详情" not in page.page_interactions
+    saved = json.loads(page.page_interactions)
+    assert saved[0]["id"] == "saved-region-61"
+    assert {key: saved[0][key] for key in ("x", "y", "width", "height")} == {
+        "x": 12.0,
+        "y": 18.0,
+        "width": 220.0,
+        "height": 64.0,
+    }
     assert db_session.scalar(
         select(func.count()).select_from(AuditLog).where(
             AuditLog.action == "module:save_interactions"
