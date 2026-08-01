@@ -1,9 +1,13 @@
-import { lazy, Suspense, type ReactNode } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router'
+import { lazy, Suspense, useState, type FormEvent, type ReactNode } from 'react'
+import { createBrowserRouter, Navigate, useNavigate } from 'react-router'
 import { Loader2 } from '@/lib/icons'
 import MainLayout from '@/layouts/MainLayout'
 import Placeholder from '@/pages/Placeholder'
 import RequireAuth from './guard'
+import client from '@/api/client'
+import { logoutApi } from '@/api/auth'
+import { useAuthStore } from '@/stores/auth'
+import { Button, Input } from '@/ui'
 
 const LoginPage = lazy(() => import('@/pages/login'))
 const SystemPage = lazy(() => import('@/pages/system'))
@@ -48,13 +52,130 @@ function PageLoader({ children }: { children: ReactNode }) {
   )
 }
 
+export function PasswordChangeBoundary({ children }: { children: ReactNode }) {
+  const mustChangePassword = useAuthStore((state) => state.mustChangePassword)
+  if (mustChangePassword) return <Navigate to="/change-password" replace />
+  return <>{children}</>
+}
+
+function ForcedPasswordChangePage() {
+  const navigate = useNavigate()
+  const mustChangePassword = useAuthStore((state) => state.mustChangePassword)
+  const completePasswordChange = useAuthStore((state) => state.completePasswordChange)
+  const logout = useAuthStore((state) => state.logout)
+  const [oldPassword, setOldPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmation, setConfirmation] = useState('')
+  const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
+
+  if (!mustChangePassword) return <Navigate to="/workbench" replace />
+
+  const signOut = async () => {
+    await logoutApi().catch(() => undefined)
+    logout()
+    navigate('/login', { replace: true })
+  }
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (pending) return
+    if (newPassword.length < 6) {
+      setError('新密码至少 6 位')
+      return
+    }
+    if (newPassword !== confirmation) {
+      setError('两次输入的新密码不一致')
+      return
+    }
+    setPending(true)
+    setError('')
+    try {
+      await client.post('/auth/change-password', {
+        old_password: oldPassword,
+        new_password: newPassword,
+      })
+      completePasswordChange()
+      await signOut()
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '修改密码失败')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  return (
+    <main className="grid min-h-screen place-items-center bg-background p-4">
+      <section className="w-full max-w-md rounded-xl border bg-card p-6 text-card-foreground">
+        <h1 className="text-xl font-semibold tracking-[-0.02em]">首次登录，请修改密码</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          完成修改前，仅可执行修改密码或退出登录。修改成功后需使用新密码重新登录。
+        </p>
+        <form className="mt-6 space-y-4" onSubmit={submit} noValidate>
+          <div className="space-y-1.5">
+            <label htmlFor="forced-old-password" className="text-sm font-medium">原密码</label>
+            <Input
+              id="forced-old-password"
+              type="password"
+              autoComplete="current-password"
+              value={oldPassword}
+              onChange={(event) => setOldPassword(event.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="forced-new-password" className="text-sm font-medium">新密码</label>
+            <Input
+              id="forced-new-password"
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              aria-describedby="forced-password-help"
+              required
+              minLength={6}
+            />
+            <p id="forced-password-help" className="text-xs text-muted-foreground">至少 6 位，且不能与原密码相同。</p>
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="forced-confirm-password" className="text-sm font-medium">确认新密码</label>
+            <Input
+              id="forced-confirm-password"
+              type="password"
+              autoComplete="new-password"
+              value={confirmation}
+              onChange={(event) => setConfirmation(event.target.value)}
+              required
+            />
+          </div>
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button type="submit" className="flex-1" disabled={pending}>
+              {pending ? '修改中…' : '修改密码'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => void signOut()} disabled={pending}>
+              退出登录
+            </Button>
+          </div>
+        </form>
+      </section>
+    </main>
+  )
+}
+
 export const router = createBrowserRouter([
   { path: '/login', element: <PageLoader><LoginPage /></PageLoader> },
+  {
+    path: '/change-password',
+    element: <RequireAuth><ForcedPasswordChangePage /></RequireAuth>,
+  },
   {
     path: '/',
     element: (
       <RequireAuth>
-        <MainLayout />
+        <PasswordChangeBoundary>
+          <MainLayout />
+        </PasswordChangeBoundary>
       </RequireAuth>
     ),
     children: [

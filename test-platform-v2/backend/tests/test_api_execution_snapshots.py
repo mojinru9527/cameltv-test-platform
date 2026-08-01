@@ -105,7 +105,7 @@ class TestRequestSnapshot:
         """超长请求体应在快照中被截断。"""
         from app.services.api_execution_service import _build_request_snapshot
 
-        big_body = "x" * 15000
+        big_body = json.dumps({"payload": "x" * 15000})
         snapshot = _build_request_snapshot(
             method="POST",
             original_url="/api/bulk",
@@ -128,7 +128,7 @@ class TestResponseSnapshot:
         result = quick_execute(
             db_session,
             {"method": "GET", "url": "https://httpbin.org/get"},
-            assertions=[],
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
         )
         resp_snap = result.get("response_snapshot", {})
         assert "body_preview" in resp_snap, f"Missing body_preview in {json.dumps(resp_snap)}"
@@ -141,7 +141,7 @@ class TestResponseSnapshot:
         result = quick_execute(
             db_session,
             {"method": "GET", "url": "https://httpbin.org/get"},
-            assertions=[],
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
         )
         resp_snap = result.get("response_snapshot", {})
         assert "truncated" in resp_snap
@@ -154,7 +154,7 @@ class TestResponseSnapshot:
         result = quick_execute(
             db_session,
             {"method": "GET", "url": "https://httpbin.org/get"},
-            assertions=[],
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
         )
         resp_snap = result.get("response_snapshot", {})
         assert "body_size_bytes" in resp_snap
@@ -167,7 +167,7 @@ class TestResponseSnapshot:
         result = quick_execute(
             db_session,
             {"method": "GET", "url": "https://httpbin.org/get"},
-            assertions=[],
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
         )
         resp_snap = result.get("response_snapshot", {})
         assert "content_type" in resp_snap
@@ -269,6 +269,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "GET", "url": "/health"},
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
             project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=False,
@@ -284,6 +285,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "POST", "url": "/api/create"},
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
             project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=False,
@@ -299,6 +301,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "POST", "url": "/api/create"},
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
             project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=True,
@@ -314,6 +317,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "POST", "url": "https://httpbin.org/post"},
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
             project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=True,
@@ -330,6 +334,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "PUT", "url": "/api/update/1"},
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
             project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=False,
@@ -345,6 +350,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "DELETE", "url": "/api/items/1"},
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
             project_id=1,
             environment_id=self.prod_env_id,
             confirm_prod=False,
@@ -386,6 +392,7 @@ class TestProductionWriteProtection:
         result = quick_execute(
             db_session,
             {"method": "POST", "url": "https://httpbin.org/post"},
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
             project_id=1,
             environment_id=env.id,
             confirm_prod=False,
@@ -524,7 +531,7 @@ class TestResponseBodyTruncation:
         result = quick_execute(
             db_session,
             {"method": "GET", "url": "https://httpbin.org/get"},
-            assertions=[],
+            assertions=[{"type": "status_code", "expected": 200, "operator": "eq"}],
         )
         resp_snap = result.get("response_snapshot", {})
         # Body preview should contain the response

@@ -1,7 +1,7 @@
 ---
 title: "test-platform-v2 — 测试平台 v2 前后端分离"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-08-01"
 status: "active"
 expires: "2026-12-26"
 tags: ["test-platform", "v2", "fastapi", "react"]
@@ -17,37 +17,44 @@ related: ["backend/CLAUDE.md", "frontend/CLAUDE.md", "docs/CamelTv测试平台-�
 ```
 test-platform-v2/
 ├── backend/          FastAPI + SQLAlchemy 2.0 + SQLite (WAL)
-├── frontend/         React 19 + React Router 8 + shadcn/ui (Radix + Tailwind) + Vite 7
+├── frontend/         React 19.2.8 + React Router 8.3.0 + shadcn/ui + Vite 7.3.6
 ├── deploy/           docker-compose 一键部署 (Nginx 反代)
 └── docs/             PRD + 架构图 + 接入指南 + Backlog
 ```
 
 - **角色**：一体化测试管理平台，覆盖「需求 → AI 用例 → 用例库 → 测试计划 → 执行 → 报告/缺陷」主链路
 - **通信**：前后端仅通过 REST API 通信，前端 Nginx 反代 `/api` 到后端
-- **认证**：JWT + BCrypt，完整 RBAC（权限点 + 三级数据范围：global/project/self）
+- **认证**：BCrypt + JWT；浏览器以 `httpOnly` Cookie 为主会话，登录响应和内存 Token 仅保留 Bearer 过渡兼容；RBAC 使用权限点和 global/project/self 数据范围
 
 ## 功能模块成熟度
 
+> `✅` 仅表示本地受控链路已有可复核证据；`🟡` 表示真实实现但生产级矩阵不完整；`⛔` 表示缺外部条件或明确延期。Batch 60 总体判定为 `NEEDS WORK`，production 发布为 `DEFERRED`，不得把单模块实现直接写成“生产可用”。
+
 | 模块 | 路由 | 成熟度 | 说明 |
 |------|------|--------|------|
-| 登录鉴权 / 项目切换 | `/login` | ✅ 生产可用 | bcrypt + JWT，多项目隔离 |
-| 用户/角色/权限 RBAC | `/system` | ✅ 生产可用 | 三级数据范围 + 审计日志 |
-| 用例服务 CRUD + 域树 | `/testcase` | ✅ 生产可用 | 批量操作、域/模块树、Excel/Xmind 导出入、版本历史 |
-| 测试计划 + 执行闭环 | `/testplan` | ✅ 生产可用 | pass/fail/skip/block，ELK traceId |
-| 工作台看板 | `/workbench` | ✅ 生产可用 | Recharts 图表 |
-| 报告中心 | `/report` | ✅ 生产可用 | JSON 快照，CSV/Excel 导出 |
-| 定时任务 | `/schedule` | ✅ 生产可用 | APScheduler + Cron 表达式 |
-| 需求管理 + AI 生成 | `/requirement` | ✅ 生产可用 | DeepSeek LLM 两段式生成+反向评审 |
-| 质量追溯矩阵 | `/trace` | ✅ 生产可用 | 项目覆盖率 + 单用例全链路追溯 |
-| 缺陷管理 | `/defect` | ✅ 生产可用 | 6 状态状态机 + 评论 + 附件 |
-| 开放 API | `/open` | ✅ 生产可用 | Token 鉴权 + 触发 + 查询 + 结果回写 |
-| 通知中心 | `/notify` | ✅ 生产可用 | Webhook + 邮件，4 事件触发，重试/日志 |
-| 环境/变量管理 | `/environment` | ✅ 生产可用 | 项目级 dev/test/staging/prod，AES-128 加密变量 |
-| 项目管理 | `/project` | ✅ 生产可用 | 多项目 + 成员 + 主题 |
-| API 测试 | `/apitest` | 🟡 真实执行，能力待生产化 | httpx 真实 HTTP 请求，缺请求快照/任务取消/生产保护 |
-| UI 自动化 | `/uitest` | 🟡 真实执行，能力待生产化 | npx playwright test 真实执行，缺异步/环境注入/产物归档 |
-| 音视频专项 | `/special` | 🧪 演示态 | 指标为 random 模拟 |
-| 性能监控 | `/perftest` | 🟡 功能完整待发布 | WebSocket 实时指标 + 会话管理 + 报告对比 |
+| 登录鉴权 / 项目切换 | `/login` | 🟡 | Cookie 主会话 + Bearer 兼容回退；全模块项目切换、会话失效和强制改密门禁仍待矩阵验收 |
+| 用户/角色/权限 RBAC | `/system` | 🟡 | 三级数据范围与审计存在；admin/tester/viewer 全能力矩阵未完成 |
+| 项目管理 | `/project` | ✅ | 多项目、成员、主题与停用语义已有本地证据 |
+| 工作台 / 用例 / 计划 / 报告 | `/workbench` `/testcase` `/testplan` `/report` | 🟡 | 核心本地闭环真实可用；跨页查询、批量破坏操作、全路由权限和可访问性仍需回归 |
+| 缺陷 / 定时 / 追溯 | `/defect` `/schedule` `/trace` | 🟡 | 状态流、定时和追溯链存在；全量 UI/API/DB/审计一致性与三身份矩阵未完成 |
+| 需求 / 脑图 | `/requirement` `/mindmap` | 🟡 / ⛔ | 本地持久化与展示可用；真实 LLM、蓝湖与旧 PostgreSQL 快照验收受外部输入阻塞 |
+| API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 导入、httpx 执行、任务/快照已实现；五入口一致性、生产保护与 Test5 当前契约待验收 |
+| UI 自动化 | `/uitest` | 🟡 | 本地 Runner、环境注入和产物闭环已验证；不能替代体育 Test5/生产业务 E2E |
+| 音视频专项 | `/special` | 🟡 | 已从随机模拟改为真实样本/ffprobe 指标；外部真实流矩阵未完成 |
+| 环境 / 数据集 | `/environment` `/dataset` | 🟡 | 项目级数据和变量链可用；生产目标防误触发仍需统一验证 |
+| 通知 / 集成 | `/notify` `/integration` | ⛔ | 本地模型和错误路径存在；真实 SMTP/Webhook/Jira/TAPD/ELK 缺非生产凭据与端点 |
+| 知识 / Agent / 发布包 | `/knowledge` `/agent-workbench` `/release-bundles` | 🟡 / ⛔ | 无 AI/Wiki/活动发布包时已 fail closed；外部链路和交互标注回归未全部完成 |
+| 开放 API | API-only `/api/v1/open` | 🟡 | 独立 API Token Bearer 鉴权；属于 API-only 能力，前端入口和生产级契约验收不完整 |
+| 性能监控 | `/perftest` | ⛔ | 缺 SoloX、授权真机与采集窗口；不得按页面或 WebSocket 存在判定通过 |
+| 主题实验室 | `/theme-lab` | ✅ | 本地设计/响应式验证工具，不是业务生产能力 |
+| 运维发布控制 | 独立项目，无产品路由 | ⛔ | Batch 61 在 `../deploy/release-control/` 建设 test-only CLI/领域库；生产适配拒绝，控制面 API/UI 延后到 Batch 62 |
+
+## 契约与测试证据边界
+
+- FastAPI 版本以 `backend/requirements.lock` 的 `0.140.13` 为可复现基线；`requirements.txt` 的 `>=0.110` 只是声明下限。前端锁文件基线为 React `19.2.8`、React Router `8.3.0`、Vite `7.3.6`。
+- FastAPI 在 `/openapi.json` 生成运行时契约，文档入口为 `/docs` 与 `/redoc`；业务 API 前缀为 `/api/v1`，`/health` 独立。`npm run gen:api` 需要显式刷新前端生成类型，生成文件不能代替运行时契约检查。
+- API 资产导入支持 OpenAPI 3.x / Swagger 2.0 的 JSON/YAML 文本或 URL，以及 Knife4j/Swagger 文档来源的预览/确认；导入成功不等于目标环境接口回归通过。
+- `backend/tests/playwright/specs/` 验证测试平台本地 Runner；`../tests/automation/ui/` 才是体育用户端/运营后台业务 E2E。两类结果必须分开统计和索引。
 
 ## 关键架构决策
 

@@ -423,6 +423,7 @@ export default function ReportPage() {
       <DataTable
         columns={reportColumns}
         data={items}
+        className="[&_[role=status]_h3]:text-foreground"
         rowKey={(r) => r.id}
         loading={isLoading || isRefetching}
         loadingRows={4}

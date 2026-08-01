@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import unauthorized
-from app.core.security import create_access_token, verify_password
+from app.core.security import create_access_token, password_token_version, verify_password
 from app.models.user import User
 from app.schemas.auth import LoginOut, ProjectBrief, UserBrief
 from app.services import project_service, rbac_service
@@ -31,7 +31,13 @@ def login(db: Session, username: str, password: str) -> LoginOut:
     is_super = "*" in codes
     projects = project_service.projects_for_user(db, user.id, is_superadmin=is_super)
 
-    token = create_access_token(user.id)
+    token = create_access_token(
+        user.id,
+        {
+            "type": "access",
+            "pwdv": password_token_version(user.password),
+        },
+    )
     return LoginOut(
         access_token=token,
         user=UserBrief.model_validate(user),

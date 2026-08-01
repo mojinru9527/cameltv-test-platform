@@ -112,6 +112,12 @@ export interface TriggerRegressionResult {
   jobs: Array<{ job_id: number; module: string; spec: string }>
 }
 
-export async function triggerRegression(bundleId: number): Promise<TriggerRegressionResult> {
-  return api.post(`/release-bundles/${bundleId}/trigger-regression`)
+export async function triggerRegression(
+  bundleId: number,
+  operation: { environment_id: number; confirm_prod?: boolean },
+): Promise<TriggerRegressionResult> {
+  return api.post(`/release-bundles/${bundleId}/trigger-regression`, {
+    environment_id: operation.environment_id,
+    confirm_prod: operation.confirm_prod ?? false,
+  })
 }

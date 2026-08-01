@@ -24,7 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Trash2, Move, Plus } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
-interface AnnotatedRegion {
+export interface AnnotatedRegion {
   id: string
   x: number
   y: number
@@ -36,39 +36,93 @@ interface AnnotatedRegion {
   sourceElement: string
   adminConfigSource: string
   isGlobalNav: boolean
+  coordinateStatus: 'verified' | 'missing'
 }
 
-function finiteNumber(value: unknown, fallback: number): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+export interface ParsedSavedRegions {
+  regions: AnnotatedRegion[]
+  error: string
 }
 
-export function parseSavedRegions(rawJson: string): AnnotatedRegion[] {
+function optionalFiniteNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function hasValidCoordinates(region: Pick<AnnotatedRegion, 'x' | 'y' | 'width' | 'height'>) {
+  return [region.x, region.y, region.width, region.height].every(Number.isFinite)
+    && region.x >= 0
+    && region.y >= 0
+    && region.width > 0
+    && region.height > 0
+}
+
+export function parseSavedRegions(rawJson: string): ParsedSavedRegions {
   let parsed: unknown
   try {
     parsed = JSON.parse(rawJson || '[]')
   } catch {
-    return []
+    return { regions: [], error: '历史交互标注 JSON 已损坏，请先修复或迁移后再保存。' }
   }
-  if (!Array.isArray(parsed)) return []
+  if (!Array.isArray(parsed)) {
+    return { regions: [], error: '历史交互标注不是数组格式，请先完成数据迁移。' }
+  }
 
-  return parsed.flatMap((value, index) => {
-    if (!value || typeof value !== 'object') return []
+  let invalidEntries = 0
+  const regions = parsed.flatMap((value, index) => {
+    if (!value || typeof value !== 'object') {
+      invalidEntries += 1
+      return []
+    }
+
     const item = value as Record<string, unknown>
     const interactionType = String(item.interaction_type || 'navigation')
+    const x = optionalFiniteNumber(item.x)
+    const y = optionalFiniteNumber(item.y)
+    const width = optionalFiniteNumber(item.width)
+    const height = optionalFiniteNumber(item.height)
+    const coordinateStatus: AnnotatedRegion['coordinateStatus'] = x !== null && y !== null && width !== null && height !== null
+      && x >= 0 && y >= 0 && width > 0 && height > 0
+      ? 'verified'
+      : 'missing'
     return [{
       id: String(item.id || `saved-region-${index}`),
-      x: finiteNumber(item.x, 24 + (index % 3) * 180),
-      y: finiteNumber(item.y, 24 + Math.floor(index / 3) * 100),
-      width: finiteNumber(item.width, 140),
-      height: finiteNumber(item.height, 56),
+      x: x ?? 0,
+      y: y ?? 0,
+      width: width ?? 0,
+      height: height ?? 0,
       targetPage: String(item.target_page || ''),
       interactionType,
       trigger: String(item.trigger || ''),
       sourceElement: String(item.source_element || ''),
       adminConfigSource: String(item.admin_config_source || ''),
       isGlobalNav: interactionType === 'global_navigation' || item.is_global_nav === true,
+      coordinateStatus,
     }]
   })
+
+  const error = invalidEntries > 0 ? `${invalidEntries} 条无效历史记录未载入，请先完成数据迁移。` : ''
+  return { regions, error }
+}
+
+export function serializeRegions(regions: AnnotatedRegion[]) {
+  if (regions.some((region) => !region.targetPage)) {
+    throw new Error('每个交互标注都必须选择目标页面')
+  }
+  if (regions.some((region) => region.coordinateStatus !== 'verified' || !hasValidCoordinates(region))) {
+    throw new Error('存在缺少真实坐标的旧标注，请重新定位后再保存')
+  }
+  return regions.map((region) => ({
+    id: region.id,
+    trigger: region.trigger || '点击交互区域',
+    target_page: region.targetPage,
+    interaction_type: region.isGlobalNav ? 'global_navigation' : region.interactionType,
+    source_element: region.sourceElement || undefined,
+    admin_config_source: region.adminConfigSource || undefined,
+    x: region.x,
+    y: region.y,
+    width: region.width,
+    height: region.height,
+  }))
 }
 
 interface InteractionAnnotatorProps {
@@ -103,10 +157,13 @@ export default function InteractionAnnotator({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [historyError, setHistoryError] = useState('')
 
   // Parse existing interactions
   useEffect(() => {
-    setRegions(parseSavedRegions(page?.page_interactions ?? '[]'))
+    const parsed = parseSavedRegions(page?.page_interactions ?? '[]')
+    setRegions(parsed.regions)
+    setHistoryError(parsed.error)
     setEditingId(null)
   }, [page])
 
@@ -163,6 +220,7 @@ export default function InteractionAnnotator({
       sourceElement: '',
       adminConfigSource: '',
       isGlobalNav: false,
+      coordinateStatus: 'verified',
     }
     setRegions((prev) => [...prev, newRegion])
     setEditingId(newId)
@@ -171,7 +229,14 @@ export default function InteractionAnnotator({
 
   const updateRegion = (id: string, updates: Partial<AnnotatedRegion>) => {
     setRegions((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, ...updates } : r)),
+      prev.map((region) => {
+        if (region.id !== id) return region
+        const next = { ...region, ...updates }
+        return {
+          ...next,
+          coordinateStatus: hasValidCoordinates(next) ? 'verified' : 'missing',
+        }
+      }),
     )
   }
 
@@ -196,6 +261,7 @@ export default function InteractionAnnotator({
         sourceElement: '',
         adminConfigSource: '',
         isGlobalNav: false,
+        coordinateStatus: 'verified',
       },
     ])
     setEditingId(newId)
@@ -205,20 +271,12 @@ export default function InteractionAnnotator({
     if (!page) return
     setSaving(true)
     try {
-      const interactions = regions
-        .filter((r) => r.targetPage)
-        .map((r) => ({
-          trigger: r.trigger || '点击交互区域',
-          target_page: r.targetPage,
-          interaction_type: r.isGlobalNav ? 'global_navigation' : r.interactionType,
-          source_element: r.sourceElement || undefined,
-          admin_config_source: r.adminConfigSource || undefined,
-        }))
-      await saveInteractions(page.id, { interactions, merge: true })
+      const interactions = serializeRegions(regions)
+      await saveInteractions(page.id, { interactions, merge: false })
       toast.success(`已保存 ${interactions.length} 个交互标注`)
       onOpenChange(false)
-    } catch {
-      toast.error('保存失败')
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : '保存失败')
     } finally {
       setSaving(false)
     }
@@ -255,7 +313,7 @@ export default function InteractionAnnotator({
                   draggable={false}
                 />
                 {/* Saved regions */}
-                {regions.map((r) => (
+                {regions.filter((region) => region.coordinateStatus === 'verified').map((r) => (
                   <div
                     key={r.id}
                     className={cn(
@@ -335,6 +393,17 @@ export default function InteractionAnnotator({
                     )}
                   </div>
                 </div>
+
+                {historyError && (
+                  <p role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-2 text-xs text-destructive">
+                    {historyError}
+                  </p>
+                )}
+                {regions.some((region) => region.coordinateStatus === 'missing') && (
+                  <p role="alert" className="rounded-md border border-status-warning-border bg-status-warning-muted p-2 text-xs text-status-warning">
+                    {regions.filter((region) => region.coordinateStatus === 'missing').length} 条旧标注缺少真实坐标，保存前必须重新定位。
+                  </p>
+                )}
 
                 {regions.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-8">
@@ -427,6 +496,35 @@ export default function InteractionAnnotator({
                               placeholder="如: 顶部搜索栏"
                             />
                           </div>
+                          <fieldset className="space-y-2 rounded-md border p-2">
+                            <legend className="px-1 text-xs font-medium">真实截图坐标</legend>
+                            {r.coordinateStatus === 'missing' && (
+                              <p className="text-xs text-destructive">旧数据缺少有效坐标，请根据截图重新填写。</p>
+                            )}
+                            <div className="grid grid-cols-2 gap-2">
+                              {([
+                                ['x', 'X'],
+                                ['y', 'Y'],
+                                ['width', '宽度'],
+                                ['height', '高度'],
+                              ] as const).map(([field, label]) => (
+                                <div key={field}>
+                                  <Label htmlFor={`${field}-${r.id}`} className="text-xs">{label}</Label>
+                                  <Input
+                                    id={`${field}-${r.id}`}
+                                    type="number"
+                                    min={field === 'width' || field === 'height' ? 1 : 0}
+                                    step="1"
+                                    className="h-8 text-xs"
+                                    value={r[field]}
+                                    onChange={(event) => updateRegion(r.id, {
+                                      [field]: Number(event.target.value),
+                                    })}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </fieldset>
                           {r.interactionType === 'dynamic_filter' && (
                             <div>
                               <Label htmlFor={`admin-source-${r.id}`} className="text-xs">运营后台配置源</Label>

@@ -1,7 +1,7 @@
 ---
 title: "CamelTv 测试平台 v2（前后端分离重构）"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-08-01"
 status: "active"
 expires: "2026-12-26"
 tags: ["test-platform", "v2", "fullstack", "fastapi", "react"]
@@ -23,38 +23,32 @@ test-platform-v2/
 
 ## 功能清单与成熟度
 
-> 成熟度标记：✅ 生产可用（真数据/真逻辑）｜🟡 能力有限（可用但关键能力缺）｜🧪 **演示态（数据/结果为随机数模拟，不具生产能力）**
+> 成熟度只描述当前证据，不等同于生产放行：✅ 为本地受控链路已验证；🟡 为真实实现但验收不完整；⛔ 为缺外部条件或明确延期。Batch 60 总结论仍是 `NEEDS WORK`，production 发布仍是 `DEFERRED`。
 
-| 模块 | 路由 | 成熟度 | 说明 |
-|------|------|--------|------|
-| 登录鉴权 / JWT / 项目切换 | `/login` | ✅ | bcrypt + JWT，多项目隔离 |
-| 用户/角色/权限 RBAC + 审计日志 | `/system` | ✅ | global/project/self 三级数据范围 |
-| 用例服务 CRUD + 域树 | `/testcase` | ✅ | 支持批量操作、域/模块树 |
-| 测试计划 + 用例关联 + 执行闭环 | `/testplan` | ✅ | 执行→pass/fail/skip/block，ELK traceId 联动 |
-| 工作台看板 | `/workbench` | ✅ | Recharts 图表，按类型/优先级分布 |
-| 报告中心 | `/report` | ✅ | JSON 快照，支持 CSV/Excel 导出 |
-| 定时任务 (APScheduler) | `/schedule` | ✅ | Cron 表达式校验，手动/定时触发 |
-| 需求管理 + AI 生成用例 | `/requirement` | ✅ | MD/Word/Excel/蓝湖上传，DeepSeek LLM 两段式生成+反向评审 |
-| 质量追溯矩阵 | `/trace` | ✅ | 项目覆盖率 + 单用例全链路追溯 |
-| 缺陷管理 + 内建工作流 | `/defect` | ✅ | 6 状态状态机（open→confirmed→fixing→pending_review→closed/rejected） |
-| 通知中心 (Webhook/SMTP) | `/notify` | ✅ | 飞书/钉钉/企微，任务发起/结束/结果通知与发送日志 |
-| 项目管理 | `/project` | ✅ | 多项目 + 成员 + 项目级主题 |
-| API 测试 | `/apitest` | ✅ | OpenAPI 导入、服务端真实请求、加密环境变量、异步任务和结果快照 |
-| UI 自动化 | `/uitest` | ✅ | 服务端真实 Playwright、环境注入、截图/视频/Trace/报告归档 |
-| 音视频专项 | `/special` | ✅ | 真实样本记录、ffprobe 帧率探测、统计与阈值判定 |
+| 模块 | 路由 | 成熟度 | 当前事实 |
+|------|------|--------|----------|
+| 登录、项目、系统管理 | `/login` `/project` `/system` | 🟡 | bcrypt + JWT；浏览器以 httpOnly Cookie 会话为主，Bearer 仅作过渡回退；全模块三身份 RBAC/项目隔离矩阵与强制改密门禁仍待完成 |
+| 工作台、用例、计划、报告、缺陷、定时、追溯 | `/workbench` `/testcase` `/testplan` `/report` `/defect` `/schedule` `/trace` | 🟡 | 本地真实 CRUD/状态流/审计主链已验证，但跨页查询、全路由权限、响应式和无障碍验收尚未完整 |
+| 需求、脑图、知识、Agent、发布包 | `/requirement` `/mindmap` `/knowledge` `/agent-workbench` `/release-bundles` | 🟡 / ⛔ | 本地持久化链存在；真实 LLM、蓝湖、Wiki 等依赖缺授权凭据时必须 fail closed，不能据本地回归宣称外部链路通过 |
+| API 测试 | `/apitest` | 🟡 | OpenAPI/Swagger 预览与导入、httpx 真实执行、任务和快照已实现；五入口一致性、生产保护、当前 Test5 六服务契约与业务回归仍待验收 |
+| UI 自动化 | `/uitest` | 🟡 | 本地 Runner 可启动真实 Playwright 并持久化结果/产物；这不等于 `tests/automation/ui/` 的体育 Test5/生产业务 E2E 已通过 |
+| 音视频专项 | `/special` | 🟡 | 已有真实媒体样本与 ffprobe 指标链；外部真实流、设备和完整发布矩阵仍未覆盖 |
+| 环境、数据集、通知、集成 | `/environment` `/dataset` `/notify` `/integration` | 🟡 / ⛔ | 本地数据模型和错误路径可用；SMTP/Webhook/Jira/TAPD/ELK 等真实链路缺非生产端点与凭据时保持阻塞 |
+| 性能监控 | `/perftest` | ⛔ | 服务可 fail closed；缺 SoloX、授权真机和采集窗口，不能标为已验收 |
+| 运维发布控制 | 独立项目，无产品路由 | ⛔ | Batch 61 在 `deploy/release-control/` 建设 test-only 领域库/CLI；production adapter 明确拒绝，控制面 API/UI 属于 Batch 62 |
 
 ## 技术栈
 
 | 层 | 技术 |
 |----|------|
-| 后端框架 | FastAPI 0.110+ |
-| ORM | SQLAlchemy 2.0 |
+| 后端框架 | FastAPI 0.140.13（`requirements.lock`；声明下限 `>=0.110`） |
+| ORM | SQLAlchemy 2.0.51（`requirements.lock`） |
 | 数据库 | SQLite (WAL, 可升 PostgreSQL) |
-| 鉴权 | JWT + BCrypt |
+| 鉴权 | BCrypt + JWT；httpOnly Cookie 主会话，Bearer 兼容回退 |
 | 调度 | APScheduler |
-| 前端框架 | React 19 + React Router 8 + TypeScript |
+| 前端框架 | React 19.2.8 + React Router 8.3.0 + TypeScript 5.6 |
 | UI | shadcn/ui (Radix UI + Tailwind CSS) |
-| 构建 | Vite 5 |
+| 构建 | Vite 7.3.6 |
 | 部署 | Docker + Nginx |
 
 ## 快速启动（本地开发）
@@ -89,14 +83,14 @@ pwsh scripts/start-platform-environment.ps1 -Target local -Action start
 ```bash
 cd backend
 python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements.lock
 uvicorn app.main:app --reload --port 8000
 ```
 
 ### 前端（另开终端）
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
@@ -151,7 +145,19 @@ Pipeline 流程：Checkout → Backend Lint → Backend Test(pytest) → Fronten
 
 ## API 文档
 
-后端启动后访问 http://localhost:8000/docs (Swagger UI) 或 http://localhost:8000/redoc
+后端由 FastAPI 运行时生成 OpenAPI：`/openapi.json`、`/docs`（Swagger UI）和 `/redoc`。业务路由统一位于 `/api/v1`，健康检查位于 `/health`。前端类型需在后端契约可访问时显式运行 `npm run gen:api` 生成，仓库中的生成文件不能替代运行时契约核对。
+
+API 测试资产导入支持 OpenAPI 3.x 与 Swagger 2.0 的 JSON/YAML 文本或 URL，并提供预览/确认流程；Knife4j/Swagger 文档 URL 作为来源类型记录。该导入能力只证明契约解析与资产入库，不代表当前 Test5 六服务或生产接口已经执行通过。
+
+## UI 自动化证据边界
+
+- `backend/tests/playwright/specs/` 是测试平台 UI Runner 的本地 smoke 资产，验证 Runner、浏览器、状态和产物闭环。
+- `tests/automation/ui/` 是体育用户端/运营后台业务 E2E 资产，必须在获授权的 Test5/生产只读目标上以当前契约、账号和稳定数据单独执行。
+- 脚本可收集、本地 Runner 绿色、历史截图或历史接口数量，均不能换算成体育业务 E2E 通过。
+
+## 运维发布项目边界
+
+Batch 61 运维发布 MVP 是仓库内独立项目 `deploy/release-control/`，提供不可变 manifest、test-only 发布状态机、Jenkins/Compose 适配、回滚和防篡改证据；它不是 `test-platform-v2` 的新页面。Batch 61 不配置 production 发布，生产目标必须返回 `PRODUCTION_NOT_CONFIGURED`；控制面 API/UI 延后到 Batch 62。
 
 ## 凭据管理
 

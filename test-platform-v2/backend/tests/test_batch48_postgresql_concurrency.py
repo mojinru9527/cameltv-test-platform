@@ -24,7 +24,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.orm import sessionmaker
 
 from app.core.db import get_db
-from app.core.security import create_access_token, hash_password
+from app.core.security import create_access_token, hash_password, password_token_version
 from app.main import app
 from app.models.audit import AuditLog
 from app.models.lanhu_evidence import LanhuEvidenceJob, LanhuEvidencePage
@@ -198,6 +198,7 @@ def test_parallel_admin_link_requests_return_one_success_and_conflicts(
         db.add_all([client_module, admin_module])
         db.flush()
         user_id = user.id
+        user_password_version = password_token_version(user.password)
         client_module_id = client_module.id
         admin_module_id = admin_module.id
 
@@ -215,7 +216,7 @@ def test_parallel_admin_link_requests_return_one_success_and_conflicts(
         "relation_type": "links_to_admin",
     }
     headers = {
-        "Authorization": f"Bearer {create_access_token(user_id)}",
+        "Authorization": f"Bearer {create_access_token(user_id, {'type': 'access', 'pwdv': user_password_version})}",
         "X-Project-Id": str(project_id),
     }
 
@@ -329,6 +330,7 @@ def test_parallel_module_extraction_converges_on_one_tree(
         )
         db.flush()
         user_id = user.id
+        user_password_version = password_token_version(user.password)
         bundle_id = bundle.id
         evidence_job_id = evidence_job.id
 
@@ -341,7 +343,7 @@ def test_parallel_module_extraction_converges_on_one_tree(
     workers = 4
     start = Barrier(workers)
     headers = {
-        "Authorization": f"Bearer {create_access_token(user_id)}",
+        "Authorization": f"Bearer {create_access_token(user_id, {'type': 'access', 'pwdv': user_password_version})}",
         "X-Project-Id": str(project_id),
     }
     payload = {

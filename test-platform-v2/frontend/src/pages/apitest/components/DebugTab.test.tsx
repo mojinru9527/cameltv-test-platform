@@ -18,7 +18,13 @@ vi.mock('@/api/dataset', () => ({
 import DebugTab from './DebugTab'
 
 describe('快速调试资产预填', () => {
+  async function selectTest5Environment() {
+    fireEvent.click(await screen.findByLabelText('选择调试环境'))
+    fireEvent.click(await screen.findByRole('option', { name: /测试5/ }))
+  }
+
   beforeEach(() => {
+    Element.prototype.scrollIntoView = vi.fn()
     fetchEnvironments.mockReset().mockResolvedValue([
       {
         id: 5,
@@ -56,11 +62,14 @@ describe('快速调试资产预填', () => {
     })
     render(<DebugTab endpoint={null} />)
 
+    await selectTest5Environment()
     await screen.findByText('发送时自动连接 OpenVPN')
     fireEvent.change(screen.getByLabelText('接口路径'), { target: { value: '/health' } })
     fireEvent.click(screen.getByRole('button', { name: '发送' }))
+    fireEvent.click(await screen.findByRole('button', { name: '确认执行测试操作' }))
 
     await waitFor(() => expect(quickExecute).toHaveBeenCalledWith(expect.objectContaining({
+      source: 'quick',
       environment_id: 5,
     })))
     expect((await screen.findAllByText(/OpenVPN 自动连接失败/)).length).toBeGreaterThan(0)
@@ -69,15 +78,14 @@ describe('快速调试资产预填', () => {
   it('直接进入快速调试时保持空 URL 和空请求参数', async () => {
     render(<DebugTab endpoint={null} />)
 
-    await waitFor(() => expect((screen.getByLabelText('服务器地址') as HTMLInputElement).value).toBe(
-      'http://camel-api-gateway05.svc.elelive.cn/',
-    ))
+    await waitFor(() => expect(fetchEnvironments).toHaveBeenCalled())
+    expect((screen.getByLabelText('服务器地址') as HTMLInputElement).value).toBe('')
     expect((screen.getByLabelText('服务名') as HTMLInputElement).value).toBe('')
     expect((screen.getByLabelText('模块名') as HTMLInputElement).value).toBe('')
     expect((screen.getByLabelText('接口路径') as HTMLInputElement).value).toBe('')
     expect(screen.queryByLabelText('参数 1 名称')).toBeNull()
     await waitFor(() => expect(fetchEnvironments).toHaveBeenCalled())
-    expect(await screen.findByText('发送时自动连接 OpenVPN')).toBeTruthy()
+    expect(screen.queryByText('发送时自动连接 OpenVPN')).toBeNull()
     expect(screen.getByTestId('quick-debug-layout').className).not.toContain('grid-cols')
     expect(screen.getByTestId('quick-debug-response')).toBeTruthy()
   })
@@ -133,11 +141,10 @@ describe('快速调试资产预填', () => {
       />,
     )
 
-    await waitFor(() => {
-      expect((screen.getByLabelText('服务器地址') as HTMLInputElement).value).toBe(
-        'http://camel-api-gateway05.svc.elelive.cn/',
-      )
-    })
+    await selectTest5Environment()
+    expect((screen.getByLabelText('服务器地址') as HTMLInputElement).value).toBe(
+      'http://camel-api-gateway05.svc.elelive.cn/',
+    )
     expect((screen.getByLabelText('服务名') as HTMLInputElement).value).toBe('camel-service')
     expect((screen.getByLabelText('模块名') as HTMLInputElement).value).toBe('/ee/search')
     expect((screen.getByLabelText('接口路径') as HTMLInputElement).value).toBe('/synonyms/cou')

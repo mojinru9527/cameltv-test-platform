@@ -146,6 +146,7 @@ _ACTIONS = [
     ("integration:list", "查看集成配置", "button"),
     ("integration:manage", "管理集成配置", "button"),
     ("integration:sync", "执行同步操作", "button"),
+    ("integration:sync_prod", "执行生产环境同步操作", "button"),
     # 知识中心 (RAG / Agent 持续学习 — M0)
     ("knowledge:view", "查看知识中心", "button"),
     ("knowledge:manage", "管理知识源（重解析/废弃）", "button"),

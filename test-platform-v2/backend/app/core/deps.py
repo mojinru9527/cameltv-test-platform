@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.exceptions import forbidden, not_found, unauthorized
-from app.core.security import decode_token
+from app.core.security import decode_token, password_token_version
 from app.models.user import User
 from app.services import project_service, rbac_service
 
@@ -52,6 +52,8 @@ def get_current_user(
     payload = decode_token(token)
     if not payload or "sub" not in payload:
         raise unauthorized()
+    if payload.get("type") not in (None, "access"):
+        raise unauthorized("令牌类型无效")
     # S1b: log deprecation warning when Authorization header fallback is used
     if used_fallback:
         logger.warning(
@@ -61,6 +63,16 @@ def get_current_user(
     user = db.get(User, int(payload["sub"]))
     if not user or user.status != 1:
         raise unauthorized("用户不存在或已禁用")
+    token_password_version = payload.get("pwdv")
+    if not token_password_version:
+        raise unauthorized("会话版本过旧，请重新登录")
+    if token_password_version != password_token_version(user.password):
+        raise unauthorized("密码已变更，会话已失效，请重新登录")
+    if user.must_change_password and request.url.path not in {
+        "/api/v1/auth/change-password",
+        "/api/v1/auth/logout",
+    }:
+        raise forbidden("必须先修改密码后才能访问业务功能")
 
     codes = rbac_service.permission_codes(db, user.id, x_project_id)
     system_codes = rbac_service.permission_codes(db, user.id)

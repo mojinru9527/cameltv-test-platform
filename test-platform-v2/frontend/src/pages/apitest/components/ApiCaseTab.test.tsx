@@ -90,7 +90,14 @@ describe('接口用例列表', () => {
 
     // Click case to execute
     fireEvent.click(c1Title)
-    await waitFor(() => expect(executeApiCase).toHaveBeenCalledWith(1))
+    await waitFor(() => expect(executeApiCase).toHaveBeenCalledWith({
+      source: 'single',
+      environment_id: null,
+      dataset_id: null,
+      case_ids: [1],
+      request: null,
+      confirm_prod: false,
+    }))
 
     // Response dialog opens
     expect(await screen.findByRole('dialog')).toBeTruthy()
@@ -100,7 +107,9 @@ describe('接口用例列表', () => {
     fireEvent.click(screen.getByRole('button', { name: '全选' }))
     fireEvent.click(screen.getByRole('button', { name: /批量执行/ }))
     await waitFor(() => expect(createApiExecutionTask).toHaveBeenCalledWith(expect.objectContaining({
+      source: 'batch',
       case_ids: [1, 2],
+      environment_id: null,
     })))
   })
 
@@ -112,7 +121,9 @@ describe('接口用例列表', () => {
 
     await waitFor(() => expect(createApiExecutionTask).toHaveBeenCalledTimes(1))
     expect(createApiExecutionTask).toHaveBeenCalledWith(expect.objectContaining({
+      source: 'group',
       case_ids: [1, 2],
+      environment_id: null,
     }))
     expect(executeApiCase).not.toHaveBeenCalled()
   })

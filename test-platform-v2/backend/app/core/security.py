@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import hashlib
 
 import bcrypt
 from jose import JWTError, jwt
@@ -23,6 +24,11 @@ def verify_password(plain: str, hashed: str) -> bool:
         return bcrypt.checkpw(_encode(plain), hashed.encode("utf-8"))
     except (ValueError, TypeError):
         return False
+
+
+def password_token_version(hashed_password: str) -> str:
+    """Return a non-secret version marker that changes with the password hash."""
+    return hashlib.sha256(hashed_password.encode("utf-8")).hexdigest()[:16]
 
 
 def create_access_token(subject: str | int, extra: dict | None = None) -> str:

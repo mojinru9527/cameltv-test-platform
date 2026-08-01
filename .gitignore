@@ -64,6 +64,14 @@ test-results.xml
 *-report.html
 *-results.xml
 
+# Browser test output and raw traffic captures (runtime-only)
+**/test-results/
+**/playwright-report/
+**/blob-report/
+tests/reports/
+tests/automation/ui/captured/
+*.har
+
 # Test Platform V2 runtime artifacts
 test-platform-v2/backend/storage/lanhu-evidence/
 test-platform-v2/backend/storage/ui-runs/

@@ -5,14 +5,14 @@ import json
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.core.exceptions import APIException
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiService
 from app.schemas.api_asset import (
-    ApiEndpointCreate, ApiEndpointOut, ApiEndpointUpdate,
+    ApiEndpointCreate, ApiEndpointOut, ApiEndpointUpdate, ApiExecutionRequest,
     ApiServiceCreate, ApiServiceOut, ApiServiceUpdate,
     ApiTaskCreateRequest, ApiTaskDetailOut, ApiTaskItemOut, ApiTaskOut,
     BatchGenerateRequest, GenerateApiCasesRequest,
@@ -21,6 +21,7 @@ from app.schemas.api_asset import (
 from app.schemas.common import R
 from app.services.api_execution_service import quick_execute
 from app.services import api_task_worker
+from app.services.production_operation_guard import ProductionOperation, require_allowed_operation
 
 router = APIRouter(prefix="/apitest", tags=["接口测试"])
 
@@ -109,20 +110,9 @@ def _paginate(query, db: Session, page: int, page_size: int):
 # 即时执行（保留原有功能）
 # ═══════════════════════════════════════════════════════
 
-class QuickExecuteRequest(BaseModel):
-    method: str = Field(default="GET", pattern="^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)$")
-    url: str = Field(..., min_length=1)
-    headers: str = Field(default="{}")
-    body: str = Field(default="")
-    assertions: str = Field(default="[]")
-    environment_id: int | None = None
-    dataset_id: int | None = None
-    confirm_prod: bool = False  # 生产环境写操作必须为 True
-
-
 @router.post("/api-execute", response_model=R[dict], summary="即时执行（调试）")
 def api_quick_execute(
-    body: QuickExecuteRequest,
+    body: ApiExecutionRequest,
     current: CurrentUser = Depends(require_permission("apitest:execute")),
     db: Session = Depends(get_db),
 ):
@@ -130,22 +120,36 @@ def api_quick_execute(
 
     生产环境写操作需要 apitest:execute_prod 权限 + confirm_prod=true。
     """
-    request_def = {
-        "method": body.method,
-        "url": body.url,
-        "headers": _safe_json(body.headers, {}),
-        "body": body.body,
-    }
-    assertions = _safe_json(body.assertions, [])
+    if body.source not in {"quick", "asset"} or body.request is None:
+        raise HTTPException(422, "quick/asset 执行必须提供 request 定义")
 
-    # 判断用户是否有生产环境执行权限
+    request_def = body.request.model_dump(exclude={"assertions"})
+    assertions = body.request.assertions
+
+    pid = _current_project_id(current)
     has_execute_prod = current.is_super or "apitest:execute_prod" in current.permissions
+    if body.environment_id is not None:
+        require_allowed_operation(
+            db,
+            ProductionOperation(
+                action=f"Execute API {body.source} request ({body.request.method})",
+                project_id=pid,
+                environment_id=body.environment_id,
+                permission=(
+                    "apitest:execute_prod"
+                    if body.request.method in {"POST", "PUT", "PATCH", "DELETE"}
+                    else ""
+                ),
+                confirmed=body.confirm_prod,
+            ),
+            set(current.permissions),
+        )
 
     try:
         result = quick_execute(
             db, request_def,
             assertions=assertions,
-            project_id=current.project_id or 0,
+            project_id=pid,
             environment_id=body.environment_id,
             dataset_id=body.dataset_id,
             confirm_prod=body.confirm_prod,
@@ -693,7 +697,6 @@ def create_task(
     生产环境任务需要 apitest:execute_prod 权限 + confirm_prod=true。
     """
     from app.models.test_case import TestCase
-    from app.models.environment import Environment
 
     pid = _current_project_id(current)
     task_id_str = f"API-{uuid.uuid4().hex[:8].upper()}"
@@ -708,20 +711,26 @@ def create_task(
     if len(cases) != len(body.case_ids):
         raise HTTPException(400, "部分用例不存在或不是 API 类型")
 
-    # 生产环境保护检查：若目标环境为 prod，验证权限和二次确认
     has_execute_prod = current.is_super or "apitest:execute_prod" in current.permissions
-    if body.environment_id:
-        env = db.query(Environment).filter(
-            Environment.id == body.environment_id,
-            Environment.project_id == pid,
-        ).first()
-        if not env:
-            raise HTTPException(404, "环境不存在或不属于当前项目")
-        if env.env_type == "prod" or env.is_production:
-            if not has_execute_prod:
-                raise HTTPException(403, "生产环境执行任务需要 apitest:execute_prod 权限")
-            if not body.confirm_prod:
-                raise HTTPException(400, "生产环境执行任务需要 confirm_prod=true 确认")
+    if body.environment_id is not None:
+        has_write_case = any(
+            (case.api_method or "GET").upper() in {"POST", "PUT", "PATCH", "DELETE"}
+            for case in cases
+        )
+        try:
+            require_allowed_operation(
+                db,
+                ProductionOperation(
+                    action=f"Create API execution task ({len(cases)} cases)",
+                    project_id=pid,
+                    environment_id=body.environment_id,
+                    permission="apitest:execute_prod" if has_write_case else "",
+                    confirmed=body.confirm_prod,
+                ),
+                set(current.permissions),
+            )
+        except APIException as exc:
+            raise HTTPException(exc.http_status, exc.msg) from exc
 
     task = ApiExecutionTask(
         project_id=pid,

@@ -1,5 +1,5 @@
 import { Badge, Button, PageShell } from '@/ui'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Checkbox } from '@/components/ui/checkbox'
@@ -60,6 +60,10 @@ export default function TestCasePage() {
   const canDelete = hasPerm('testcase:delete')
   const canSubmitReview = hasPerm('review:submit')
   const canApproveReview = hasPerm('review:approve')
+  const projects = useAuthStore((state) => state.projects)
+  const currentProjectId = useAuthStore((state) => state.currentProjectId)
+  const currentProjectName = projects.find((project) => project.id === currentProjectId)?.name
+    || (currentProjectId ? `项目 #${currentProjectId}` : '未选择项目')
   const canBatchSelect = canUpdate || canDelete
   // filter state (default to manual - api cases managed in apitest module)
   const [actTab, setActTab] = useState('manual')
@@ -81,6 +85,7 @@ export default function TestCasePage() {
   const [batchUpdating, setBatchUpdating] = useState(false)
   const [batchPriority, setBatchPriority] = useState('')
   const [batchDeleteDialog, setBatchDeleteDialog] = useState(false)
+  const batchDeleteInFlight = useRef(false)
 
   // delete dialog
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
@@ -144,6 +149,8 @@ export default function TestCasePage() {
 
   // ── Batch operations ──
   const doBatchDelete = async () => {
+    if (batchDeleteInFlight.current || selected.size === 0) return
+    batchDeleteInFlight.current = true
     setBatchDeleting(true)
     try {
       await batchDeleteCases(Array.from(selected))
@@ -153,7 +160,10 @@ export default function TestCasePage() {
       refetch()
     } catch {
       toast.error('批量删除失败')
-    } finally { setBatchDeleting(false) }
+    } finally {
+      batchDeleteInFlight.current = false
+      setBatchDeleting(false)
+    }
   }
 
   const doBatchUpdate = async () => {
@@ -639,14 +649,18 @@ export default function TestCasePage() {
           <AlertDialogHeader>
             <AlertDialogTitle>确认批量删除用例？</AlertDialogTitle>
             <AlertDialogDescription>
-              将删除当前项目中选中的 {selected.size} 条用例。此操作不可撤销，请确认删除范围后继续。
+              将从「{currentProjectName}」删除选中的 {selected.size} 条用例。此操作不可撤销，
+              服务端将以原子事务处理全部范围，请确认后继续。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={batchDeleting}>取消</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              onClick={doBatchDelete}
+              onClick={(event) => {
+                event.preventDefault()
+                void doBatchDelete()
+              }}
               disabled={batchDeleting || selected.size === 0}
             >
               {batchDeleting ? '删除中...' : '确认删除'}

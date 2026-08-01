@@ -10,6 +10,7 @@ import json
 import logging
 
 from fastapi import APIRouter, Depends, Query, Request
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -30,6 +31,7 @@ from app.schemas.release_bundle import (
     VersionDiffRequest,
 )
 from app.services import audit_service
+from app.services.production_operation_guard import ProductionOperation, require_allowed_operation
 
 router = APIRouter(prefix="/release-bundles", tags=["发布包"])
 
@@ -437,9 +439,15 @@ def get_regression_scope(
     })
 
 
+class TriggerRegressionRequest(BaseModel):
+    environment_id: int
+    confirm_prod: bool = False
+
+
 @router.post("/{bundle_id}/trigger-regression", response_model=R[dict], summary="触发 UI 回归测试")
 def trigger_regression_for_bundle(
     bundle_id: int,
+    body: TriggerRegressionRequest,
     current: CurrentUser = Depends(require_permission("uitest:trigger")),
     db: Session = Depends(get_db),
 ):
@@ -456,6 +464,18 @@ def trigger_regression_for_bundle(
     ).first()
     if not bundle:
         return R(code=404, msg="发布包不存在")
+
+    target_environment = require_allowed_operation(
+        db,
+        ProductionOperation(
+            action=f"Trigger UI regression for release bundle #{bundle_id}",
+            project_id=pid,
+            environment_id=body.environment_id,
+            permission="uitest:trigger_prod",
+            confirmed=body.confirm_prod,
+        ),
+        set(current.permissions),
+    )
 
     # 获取模块名称
     modules_rows = db.query(RequirementModule).filter(
@@ -481,7 +501,7 @@ def trigger_regression_for_bundle(
                 "description": f"版本 {bundle.client_version} 回归测试 - {script.name}",
                 "test_spec": script.spec_path,
                 "browser": "chromium",
-                "environment_id": None,
+                "environment_id": target_environment.id,
             }
             result = ui_test_service.create_job(db, job_data, current.user.id, pid)
             if result:

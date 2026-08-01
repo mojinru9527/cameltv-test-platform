@@ -483,6 +483,7 @@ export default function UiTestPage() {
       <DataTable
         columns={uiJobColumns}
         data={data.items}
+        className="[&_[data-slot=table-container]]:overflow-visible"
         rowKey={(r) => r.id}
         loading={loading}
         loadingRows={4}

@@ -8,7 +8,9 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user, require_permission
+from app.core.exceptions import APIException
 from app.schemas.common import Page, R
+from app.schemas.api_asset import ApiExecutionRequest
 from app.schemas.test_case import (
     DomainCreate,
     DomainNode,
@@ -20,6 +22,7 @@ from app.schemas.test_case import (
 from app.services import audit_service, rbac_service, test_case_service
 from app.services.api_execution_service import execute_api_case
 from app.services.knowledge import ingest_service
+from app.services.production_operation_guard import ProductionOperation, require_allowed_operation
 
 router = APIRouter(prefix="/test-cases", tags=["测试用例"])
 
@@ -296,15 +299,10 @@ def delete_test_case(
 
 # ── API 执行 ──────────────────────────────────────────
 
-class ExecuteApiBody(BaseModel):
-    environment_id: int | None = None
-    dataset_id: int | None = None
-    confirm_prod: bool = False
-
 @router.post("/{case_id}/execute", response_model=R[dict], summary="执行 API 用例")
 def execute_test_case(
     case_id: int,
-    body: ExecuteApiBody | None = None,
+    body: ApiExecutionRequest | None = None,
     current: CurrentUser = Depends(require_permission("apitest:execute")),
     db: Session = Depends(get_db),
 ):
@@ -313,16 +311,33 @@ def execute_test_case(
     """
     env_id = body.environment_id if body else None
     confirm_prod = body.confirm_prod if body else False
+    if body and body.case_ids and body.case_ids != [case_id]:
+        return R(code=400, msg="请求 case_ids 与路径用例不一致")
 
-    # P1: 生产环境保护
-    if env_id:
-        from app.models.environment import Environment
-        env = db.query(Environment).filter_by(id=env_id, project_id=current.project_id).first()
-        if not env:
-            return R(code=404, msg="环境不存在或不属于当前项目")
-        if env.env_type == "prod" or env.is_production:
-            if not current.is_super and not rbac_service.has_permission(current.permissions, "apitest:execute_prod"):
-                return R(code=403, msg="生产环境执行需要 apitest:execute_prod 权限")
+    if env_id is not None:
+        from app.models.test_case import TestCase
+
+        case = db.query(TestCase).filter_by(
+            id=case_id,
+            project_id=current.project_id or 0,
+        ).first()
+        if not case:
+            return R(code=404, msg="用例不存在或不属于当前项目")
+        method = (case.api_method or "GET").upper()
+        try:
+            require_allowed_operation(
+                db,
+                ProductionOperation(
+                    action=f"Execute API case #{case_id} ({method})",
+                    project_id=current.project_id or 0,
+                    environment_id=env_id,
+                    permission="apitest:execute_prod" if method in {"POST", "PUT", "PATCH", "DELETE"} else "",
+                    confirmed=confirm_prod,
+                ),
+                set(current.permissions),
+            )
+        except APIException as exc:
+            return R(code=exc.code, msg=exc.msg)
 
     try:
         result = execute_api_case(

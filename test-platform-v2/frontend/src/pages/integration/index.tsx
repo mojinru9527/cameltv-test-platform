@@ -27,11 +27,13 @@ import {
   fetchIntegrations, createIntegration, updateIntegration, deleteIntegration,
   testConnection, syncNow, fetchSyncLogs,
 } from '@/api/integration'
+import { fetchEnvironments } from '@/api/environment'
 import { fetchRequirements } from '@/api/requirement'
 import { fetchTestCases } from '@/api/testcase'
-import type { IntegrationConfig, SyncLog, RequirementDocument } from '@/types'
+import type { Environment, IntegrationConfig, SyncLog, RequirementDocument } from '@/types'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import ConfirmActionDialog from '@/components/ConfirmActionDialog'
+import ProductionOperationDialog from '@/components/ProductionOperationDialog'
 import { useApi } from '@/hooks/useApi'
 import { buildIntegrationAuthJson } from './authPayload'
 
@@ -87,6 +89,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 export default function IntegrationPage() {
   useDocumentTitle('集成管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
+  const projects = useAuthStore((s) => s.projects)
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<IntegrationConfig | null>(null)
   const [testing, setTesting] = useState(false)
@@ -94,8 +97,26 @@ export default function IntegrationPage() {
   const [deleteTarget, setDeleteTarget] = useState<IntegrationConfig | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [syncing, setSyncing] = useState<number | null>(null)
+  const [syncTarget, setSyncTarget] = useState<IntegrationConfig | null>(null)
+  const [environments, setEnvironments] = useState<Environment[]>([])
+  const [syncEnvironmentId, setSyncEnvironmentId] = useState<number | undefined>()
   const [logsOpen, setLogsOpen] = useState<number | null>(null)
   const [logs, setLogs] = useState<SyncLog[]>([])
+  const syncEnvironment = environments.find(environment => environment.id === syncEnvironmentId)
+  const isProductionEnvironment = syncEnvironment?.is_production === true || syncEnvironment?.env_type === 'prod'
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchEnvironments(controller.signal).then((rows) => {
+      if (controller.signal.aborted) return
+      setEnvironments(rows)
+      const testEnvironment = rows.find(environment => environment.env_type === 'test' && !environment.is_production)
+      setSyncEnvironmentId(testEnvironment?.id)
+    }).catch(() => {
+      if (!controller.signal.aborted) setEnvironments([])
+    })
+    return () => controller.abort()
+  }, [])
 
   // ── Linkage tracking (batch-34) ──
   const [linkageData, setLinkageData] = useState<{
@@ -264,10 +285,17 @@ export default function IntegrationPage() {
     }
   }
 
-  const handleSync = async (id: number) => {
-    setSyncing(id)
+  const handleSync = async () => {
+    if (!syncTarget || !syncEnvironment) return
+    const target = syncTarget
+    setSyncTarget(null)
+    setSyncing(target.id)
     try {
-      const r = await syncNow(id)
+      const r = await syncNow(target.id, {
+        environment_id: syncEnvironment.id,
+        direction: target.sync_direction,
+        confirm_prod: isProductionEnvironment,
+      })
       toast.success(`同步完成: 推送 ${r.pushed}, 拉取 ${r.pulled}, 错误 ${r.errors}`)
       refresh()
     } catch (e: any) {
@@ -275,6 +303,14 @@ export default function IntegrationPage() {
     } finally {
       setSyncing(null)
     }
+  }
+
+  const requestSync = (target: IntegrationConfig) => {
+    if (!syncEnvironment) {
+      toast.error('请先选择同步目标环境')
+      return
+    }
+    setSyncTarget(target)
   }
 
   const openLogs = async (id: number) => {
@@ -298,9 +334,31 @@ export default function IntegrationPage() {
             管理 Jira / TAPD 外部缺陷同步连接
           </p>
         </div>
-        {hasPerm('integration:manage') && (
-          <Button onClick={openCreate}><Plus className="size-4 mr-1" />新建集成</Button>
-        )}
+        <div className="flex items-center gap-2">
+          {hasPerm('integration:sync') && (
+            <Select
+              value={syncEnvironmentId?.toString()}
+              onValueChange={(value) => setSyncEnvironmentId(Number(value))}
+            >
+              <SelectTrigger
+                className={cn('w-[190px]', isProductionEnvironment && 'border-status-danger-border')}
+                aria-label="同步目标环境"
+              >
+                <SelectValue placeholder="选择同步环境" />
+              </SelectTrigger>
+              <SelectContent>
+                {environments.map(environment => (
+                  <SelectItem key={environment.id} value={environment.id.toString()}>
+                    {environment.name}{environment.is_production || environment.env_type === 'prod' ? '（生产）' : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {hasPerm('integration:manage') && (
+            <Button onClick={openCreate}><Plus className="size-4 mr-1" />新建集成</Button>
+          )}
+        </div>
       </div>
 
       {/* ── Linkage Tracking Panel (batch-34) ── */}
@@ -451,7 +509,7 @@ export default function IntegrationPage() {
                   <Button
                     variant="secondary" size="sm"
                     disabled={syncing === r.id}
-                    onClick={() => handleSync(r.id)}
+                    onClick={() => requestSync(r)}
                   >
                     <RefreshCw className={cn('size-3.5 mr-1', syncing === r.id && 'animate-spin')} />
                     同步
@@ -643,6 +701,19 @@ export default function IntegrationPage() {
           )}
         </DialogContent>
       </Dialog>
+      <ProductionOperationDialog
+        open={syncTarget !== null}
+        onOpenChange={(open) => { if (!open && syncing === null) setSyncTarget(null) }}
+        project={projects.find(project => project.id === syncTarget?.project_id)?.name || `项目 #${syncTarget?.project_id ?? '-'}`}
+        environment={syncEnvironment?.name || '未选择环境'}
+        baseUrl={syncEnvironment?.base_url || '未配置'}
+        operation={`${syncTarget?.sync_direction === 'bidirectional' ? '双向' : syncTarget?.sync_direction === 'push_only' ? '推送' : '拉取'}同步「${syncTarget?.name || ''}」至 ${syncTarget?.base_url || '未配置外部地址'}`}
+        classification="write"
+        affectedCount={syncTarget ? 1 : 0}
+        isProduction={isProductionEnvironment}
+        pending={syncing !== null}
+        onConfirm={handleSync}
+      />
       <ConfirmActionDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open && !deleting) setDeleteTarget(null) }}

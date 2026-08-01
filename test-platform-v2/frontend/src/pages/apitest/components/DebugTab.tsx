@@ -9,21 +9,13 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import ProductionOperationDialog from '@/components/ProductionOperationDialog'
 import { quickExecute } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchDatasets } from '@/api/dataset'
 import AssertionEditor from './AssertionEditor'
 import { buildSampleBody, formatBody } from './utils'
+import { buildApiExecutionRequest } from '../apiExecutionRequest'
 import type { ApiEndpoint, ApiExecutionResult, ApiAssertionResult, BatchExecutionResult, DatasetListItem, Environment } from '@/types'
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
@@ -44,8 +36,6 @@ const BODY_TYPES = [
   { value: 'x-www-form-urlencoded', label: 'x-www-form-urlencoded' },
   { value: 'raw', label: 'Raw' },
 ] as const
-
-const TEST_COUNTS = [1, 3, 5] as const
 
 type HeaderRow = { key: string; value: string }
 type ParamRow = { key: string; value: string }
@@ -108,17 +98,16 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   const [serviceName, setServiceName] = useState('')
   const [modulePath, setModulePath] = useState('')
   const [endpointPath, setEndpointPath] = useState('')
-  const [testCount, setTestCount] = useState(5)
   const [bodyType, setBodyType] = useState<string>('json')
   const [body, setBody] = useState('')
   const [headersJson, setHeadersJson] = useState('{}')
   const [assertions, setAssertions] = useState('[]')
   const [envId, setEnvId] = useState<number | undefined>()
   const [envs, setEnvs] = useState<Environment[]>([])
-  const initialEnvIdRef = useRef(envId)
+  const executionInFlightRef = useRef(false)
   const [datasetId, setDatasetId] = useState<number | undefined>()
   const [datasets, setDatasets] = useState<DatasetListItem[]>([])
-  const [showProdConfirm, setShowProdConfirm] = useState(false)
+  const [operationDialogOpen, setOperationDialogOpen] = useState(false)
 
   function isProductionEnv(env: Environment): boolean {
     return env.is_production === true || env.env_type === 'prod'
@@ -134,14 +123,6 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
     fetchEnvironments().then((data) => {
       if (cancelled) return
       setEnvs(data)
-      // 默认选中「测试5」环境
-      if (initialEnvIdRef.current === undefined) {
-        const defaultEnv = data.find((e: Environment) => e.name === '测试5')
-        if (defaultEnv) {
-          setEnvId(defaultEnv.id)
-          setBaseUrl(defaultEnv.base_url)
-        }
-      }
     }).catch(() => {})
     fetchDatasets({ page_size: 100 }).then(d => { if (!cancelled) setDatasets(d.items || []) }).catch(() => {})
     return () => { cancelled = true }
@@ -207,16 +188,11 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
     return JSON.stringify(h)
   }
 
-  const buildUrl = (): string => {
-    const base = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
-    if (paramRows.length === 0) return base
-    const qs = paramRows
-      .filter(r => r.key.trim())
-      .map(r => `${encodeURIComponent(r.key.trim())}=${encodeURIComponent(r.value)}`)
-      .join('&')
-    if (!qs) return base
-    return base.includes('?') ? `${base}&${qs}` : `${base}?${qs}`
-  }
+  const buildUrl = (): string => composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
+
+  const buildQueryParams = (): Record<string, string> => Object.fromEntries(
+    paramRows.filter(row => row.key.trim()).map(row => [row.key.trim(), row.value]),
+  )
 
   // Auto-scroll to response when result changes
   useEffect(() => {
@@ -231,27 +207,25 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   }, [result])
 
   const doQuickExecute = async (confirmProd: boolean) => {
+    if (executionInFlightRef.current) return
+    executionInFlightRef.current = true
     setLoading(true)
     setResult(null)
     try {
-      // When a dataset is selected, backend handles batch per-row;
-      // otherwise repeat the same request sequentially testCount times.
-      const times = datasetId ? 1 : testCount
-      let lastResult: any = null
-      for (let i = 0; i < times; i++) {
-        const res = await quickExecute({
+      const lastResult = await quickExecute(buildApiExecutionRequest({
+        source: endpoint ? 'asset' : 'quick',
+        environmentId: envId,
+        datasetId,
+        request: {
           method,
           url: buildUrl(),
           headers: buildHeaders(),
           body: bodyType === 'json' ? body : body,
           assertions,
-          environment_id: envId,
-          dataset_id: datasetId,
-          confirm_prod: confirmProd,
-        })
-        lastResult = res
-        if (res?.status === 'error') break
-      }
+          queryParams: buildQueryParams(),
+        },
+        confirmProd,
+      }))
       setResult(lastResult as any)
       if (isBatchResult(lastResult)) toast.success(`批量执行完成: ${lastResult.passed}/${lastResult.total_rows} 通过`)
       else if (lastResult.all_pass) toast.success('全部断言通过')
@@ -259,20 +233,17 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
     } catch (e: any) {
       toast.error(e?.message || '请求失败')
       setResult(e?.response?.data || { status: 'error', status_code: 0, error: e?.message })
-    } finally { setLoading(false) }
+    } finally {
+      executionInFlightRef.current = false
+      setLoading(false)
+    }
   }
 
   const runQuick = async () => {
     const composed = composeAssetUrl(baseUrl, serviceName, modulePath, endpointPath)
     if (!composed) { toast.error('请填写接口地址'); return }
 
-    const selectedEnv = envs.find(e => e.id === envId)
-    if (selectedEnv && isProductionEnv(selectedEnv)) {
-      setShowProdConfirm(true)
-      return
-    }
-
-    await doQuickExecute(false)
+    setOperationDialogOpen(true)
   }
 
   // ── Header table helpers ──
@@ -339,15 +310,6 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
             </Select>
           </div>
         )}
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium whitespace-nowrap">次数:</label>
-          <Select value={testCount.toString()} onValueChange={(v) => setTestCount(Number(v))}>
-            <SelectTrigger className="w-full sm:w-[80px]" aria-label="选择请求方法"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TEST_COUNTS.map((n) => <SelectItem key={n} value={n.toString()}>{n}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
         <Button onClick={runQuick} disabled={loading} data-icon="inline-start" className="ml-auto">
           {loading ? <Loader2 className="animate-spin" /> : <Play />}
           发送
@@ -512,21 +474,22 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
         <ResponsePanel result={result} loading={loading} />
       </div>
 
-      {/* Production confirmation dialog */}
-      <AlertDialog open={showProdConfirm} onOpenChange={setShowProdConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>生产环境确认</AlertDialogTitle>
-            <AlertDialogDescription>
-              您正在对生产环境执行 API 测试，此操作将发送真实 HTTP 请求到生产服务器。请确认您了解此操作的风险。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => doQuickExecute(true)}>确认执行</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ProductionOperationDialog
+        open={operationDialogOpen}
+        onOpenChange={setOperationDialogOpen}
+        project={`项目 #${envs.find(environment => environment.id === envId)?.project_id ?? '-'}`}
+        environment={envs.find(environment => environment.id === envId)?.name ?? '未选择环境'}
+        baseUrl={baseUrl || '未配置'}
+        operation={`发送 ${method.toUpperCase()} ${buildUrl()} 请求`}
+        classification={['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase()) ? 'read' : 'write'}
+        affectedCount={1}
+        isProduction={!!envs.find(environment => environment.id === envId && isProductionEnv(environment))}
+        pending={loading}
+        onConfirm={() => {
+          setOperationDialogOpen(false)
+          return doQuickExecute(!!envs.find(environment => environment.id === envId && isProductionEnv(environment)))
+        }}
+      />
     </div>
   )
 }
