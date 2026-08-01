@@ -1,7 +1,7 @@
 ---
 title: "测试平台 v2 现状功能 PRD"
 owner: "qa-team"
-last_reviewed: "2026-07-27"
+last_reviewed: "2026-08-01"
 status: "active"
 expires: "2026-12-26"
 tags: ["PRD", "现状", "功能清单", "基线"]
@@ -12,14 +12,14 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 
 > 文档性质：**现状反向 PRD**——逆向梳理平台「当前已实现」的功能，逐模块给出目标 / 用户故事 / 功能点 / 字段 / 状态机 / 业务规则 / 接口 / 成熟度标注。
 > 用途：作为后续功能增 / 删 / 改的**基线**。每节末尾「现状与局限」即改进入口。
-> 依据：`F:\CamelTv\test-platform-v2` 源码逐文件核对（后端 FastAPI / 前端 React），结论可在源码验证。
-> 版本：对应后端 `app_version = 2.1.0`　日期：2026-06-22
+> 依据：当前 worktree 的锁文件、FastAPI 路由/认证实现、React 路由、Batch 60 QA/问题登记与自动化资产核对；历史截图、脚本存在或候选用例数均不单独构成通过证据。
+> 版本：后端应用版本 `2.1.0`；依赖基线 FastAPI `0.140.13`、React `19.2.8`　日期：2026-08-01
 
 ---
 
 ## 0. 阅读指南
 
-- **成熟度标记**：✅ 生产可用｜🟡 可用但能力有限｜🧪 **演示态（数据为模拟/前端本地，不具生产能力）**
+- **成熟度标记**：✅ 本地受控链路有可复核证据｜🟡 真实实现但生产级矩阵不完整｜⛔ 缺外部条件或明确延期。该标记不是发布准入结论。
 - 每个功能点尽量给出真实接口路径（前缀 `/api/v1`）与关键字段。
 - 字段「状态枚举」均来自后端 Schema 默认值与注释，是改进时的事实口径。
 
@@ -38,33 +38,41 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 自定义角色 | — | 按权限点 + 数据范围（global/project/self）灵活配置 |
 
 ### 1.3 技术架构（一句话）
-前端 React18 + TS + shadcn/ui（SPA），后端 FastAPI + SQLAlchemy2.0 + SQLite(可升 PostgreSQL)，JWT 鉴权，APScheduler 调度，外接 DeepSeek LLM / ELK / 蓝湖。
+前端 React 19.2.8 + React Router 8.3.0 + TS + shadcn/ui（SPA），后端 FastAPI 0.140.13 + SQLAlchemy 2.0.51 + SQLite（可升 PostgreSQL）；浏览器会话以承载 JWT 的 httpOnly Cookie 为主，Bearer 仅作过渡回退，APScheduler 调度，外接 DeepSeek LLM / ELK / 蓝湖。
 
 ### 1.4 模块全景与成熟度
-| # | 模块 | 路由 | 成熟度 |
-|---|------|------|--------|
-| 1 | 登录与鉴权 | `/login` | ✅ |
-| 2 | 工作台看板 | `/workbench` | ✅ |
-| 3 | 项目管理 | `/project` | ✅ |
-| 4 | 系统管理（用户/角色/权限/审计） | `/system` | ✅ |
-| 5 | 需求管理 + AI 用例生成 | `/requirement` | 🟡（本地链路可用；真实 LLM、蓝湖证据和旧库升级待验收） |
-| 6 | 用例管理 | `/testcase` | ✅ |
-| 7 | 测试计划与执行 | `/testplan` `/testplan/:id` | ✅ |
-| 8 | 测试报告 | `/report` | ✅ |
-| 9 | 定时任务 | `/schedule` | ✅ |
-| 10 | 缺陷管理 | `/defect` | 🟡（仅外链，无内建工作流） |
-| 11 | API 测试 | `/apitest` | 🟡（真实 httpx 执行，待补齐快照/取消/生产保护） |
-| 12 | UI 自动化 | `/uitest` | 🟡（真实 Playwright 执行，待补齐异步/环境/产物） |
-| 13 | 音视频专项 | `/special` | 🧪（检测指标为随机数模拟） |
+| # | 模块 | 路由 | 成熟度与证据边界 |
+|---|------|------|------------------|
+| 1 | 登录与鉴权 | `/login` | 🟡 Cookie 主会话已实现；强制改密、会话失效与直达绕过矩阵待完成 |
+| 2 | 工作台看板 | `/workbench` | 🟡 本地真数据可见；跨项目/全角色/响应式矩阵不完整 |
+| 3 | 项目管理 | `/project` | ✅ 成员、主题、停用与顶部项目刷新有本地证据 |
+| 4 | 系统管理（用户/角色/权限/审计） | `/system` | 🟡 RBAC/审计存在；admin/tester/viewer 全能力矩阵待补 |
+| 5 | 需求管理 + AI 用例生成 | `/requirement` | 🟡 / ⛔ 本地持久化链可用；真实 LLM、蓝湖和旧 PostgreSQL 快照受外部输入阻塞 |
+| 6 | 用例管理 / 脑图 | `/testcase` `/mindmap` | 🟡 CRUD、批量、导入导出与版本能力存在；破坏性操作、权限与全浏览器证据待补 |
+| 7 | 测试计划与执行 | `/testplan` `/testplan/:id` | 🟡 本地状态流可用；批量、并发、权限和外部回写矩阵不完整 |
+| 8 | 测试报告 | `/report` | 🟡 快照/导出可用；全量分页、响应式与权限验收待补 |
+| 9 | 定时任务 | `/schedule` | 🟡 调度、空状态与部分 RBAC 有证据；生产环境保护待统一 |
+| 10 | 缺陷管理 | `/defect` `/defect/:id` | 🟡 内建状态流、评论、附件与深链存在；全权限/原子性矩阵待补 |
+| 11 | API 测试 | `/apitest` | 🟡 OpenAPI/Swagger 导入和 httpx 真实执行存在；五入口一致性、生产保护与 Test5 当前契约待验收 |
+| 12 | UI 自动化 | `/uitest` | 🟡 本地 Runner 真实执行和产物链可用；不代表体育业务 E2E 通过 |
+| 13 | 音视频专项 | `/special` | 🟡 真实样本/ffprobe 指标链已取代随机数；外部真实流矩阵未完成 |
+| 14 | 环境 / 数据集 | `/environment` `/dataset` | 🟡 项目级数据与加密变量存在；跨项目和生产目标安全矩阵待补 |
+| 15 | 通知 / 集成 | `/notify` `/integration` | ⛔ 本地模型与错误路径可验；真实 SMTP/Webhook/Jira/TAPD/ELK 缺凭据和非生产端点 |
+| 16 | 知识 / Agent / 发布包 | `/knowledge` `/agent-workbench` `/release-bundles` | 🟡 / ⛔ 前置条件缺失时已 fail closed；真实外部链和交互标注回归待补 |
+| 17 | 性能监控 | `/perftest` | ⛔ 缺 SoloX、授权真机和采集窗口，页面存在不等于验收通过 |
+| 18 | 开放 API | API-only `/api/v1/open` | 🟡 独立 API Token Bearer 鉴权；前端入口和生产级契约证据不完整 |
+| 19 | 主题实验室 | `/theme-lab` | ✅ 本地设计/响应式验证工具，不是业务生产能力 |
+| 20 | 运维发布控制 | 独立项目，无产品路由 | ⛔ Batch 61 在 `deploy/release-control/` 建设 test-only CLI/领域库；production 拒绝，控制面 API/UI 延后 Batch 62 |
 
 ---
 
 ## 2. 全局机制（跨模块通用规范）
 
 ### 2.1 登录与会话
-- 账号密码登录 → 返回 JWT（`access_token_expire_minutes` 默认 1440min/24h）。
-- 前端持久化于 localStorage（key `cameltv-auth`，Zustand）；每次请求自动注入 `Authorization: Bearer <token>`。
-- `401` 由前端拦截器自动登出并跳转 `/login`。
+- 账号密码登录签发 JWT（`access_token_expire_minutes` 默认 1440min/24h），同时写入名为 `cameltv_token` 的 `httpOnly` Cookie；默认 `SameSite=Lax`、`Path=/api`，production 配置必须启用 `Secure`。
+- 登录响应依然返回 `access_token` 以兼容过渡期客户端。前端 Zustand `cameltv-auth` 只持久化用户、项目、权限和主题等非 Token 状态；Token 仅在当前内存会话中保留作 Bearer 回退，刷新后由 Cookie 继续鉴权。
+- API 客户端使用 `withCredentials: true`，后端优先读 Cookie，仅在 Cookie 缺失时接受 `Authorization: Bearer` 并记录弃用回退告警；独立开放 API Token `tpat_*` 仍使用 Bearer，与浏览器 JWT Cookie 会话分离。
+- Cookie 写请求受 Origin/Referer CSRF 中间件保护；`401` 由前端清理本地用户态并跳转 `/login`，显式登出先请求 `/api/v1/auth/logout` 清除 Cookie。
 
 ### 2.2 多项目隔离
 - 登录后选择「当前项目」，前端在每个请求注入 `X-Project-Id`。
@@ -94,11 +102,12 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 **目标**：身份认证与会话建立。
 **用户故事**：作为用户，我用账号密码登录后进入工作台，并能切换我参与的项目。
 **功能点**
-- 账号密码登录　`POST /auth/login` → `{token, user, projects, permissions}`
+- 账号密码登录　`POST /auth/login` → Cookie + `{access_token, token_type, user, projects, permissions, must_change_password}`
 - 获取当前用户　`GET /auth/me`
-- 退出登录（前端清除本地态）
-**业务规则**：用户 `status≠1`（禁用）拒绝登录；token 失效自动登出。
-**现状与局限**：仅账号密码；无验证码/锁定/SSO/找回密码/刷新令牌。
+- 退出登录　`POST /auth/logout`（后端清 Cookie，前端清内存/持久化用户态）
+- 修改/找回/重置密码　`POST /auth/change-password|forgot-password|reset-password`；`GET /auth/sso-config` 只返回 OIDC 配置状态
+**业务规则**：用户 `status≠1`（禁用）拒绝登录；同 IP 登录有限频；Token 失效返回 401。
+**现状与局限**：OIDC 是配置状态占位，未证明完整 SSO 登录链；Bearer 过渡回退尚未移除；`must_change_password` 用户只允许改密/登出的前后端强制门禁和旧会话失效仍属 Batch 61 验收项。
 
 ---
 
@@ -134,7 +143,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 **目标**：用户、角色、权限、审计的后台管理（Tabs 页）。
 **4.1 用户管理**　`/system/users`
 - 列表/详情/新建/更新/删除（`GET/POST/PUT/DELETE`）。
-- 字段：username、nickname、email、status(1/0)、role_codes[]、last_login_at；新建默认密码 `123456`，更新时密码留空即不改。
+- 字段：username、nickname、email、status(1/0)、role_codes[]、last_login_at；新建用户必须显式提供至少 6 位密码，无通用默认密码，更新时密码留空即不改。
 **4.2 角色管理**　`/system/roles`
 - 列表/详情/新建/更新/删除。
 - 字段：code、name、data_scope(global/project/self)、remark、permission_codes[]。
@@ -197,7 +206,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | expected_result | 预期结果 |
 | api_method / api_endpoint / api_spec_ref | 接口用例专用 |
 | source | manual / migration / ai（来源） |
-**现状与局限**：无用例评审流、无版本历史/变更对比、无 Xmind/脑图编辑、无批量编辑、无回收站、无用例与需求的双向追溯。
+**现状与局限**：已有提交/通过/驳回/撤回评审流及历史，版本列表/详情，Excel/Xmind 导入导出，批量优先级更新和批量删除。当前局限是批量破坏操作仍需完成真实浏览器 + DB + 审计 + 失败原子性回归，无回收站，需求↔用例追溯和脑图交互也尚未完成全矩阵生产验收。
 
 ---
 
@@ -260,7 +269,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 ---
 
 ### 模块 10　缺陷管理 🟡
-**目标**：登记缺陷并关联用例/执行，外链至禅道/Jira。
+**目标**：登记缺陷、关联用例/执行，并在平台内完成状态流转与审计。
 **功能点**
 | 操作 | 接口 |
 |------|------|
@@ -268,8 +277,9 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 列表（分页+筛选） | `GET /defect` |
 | 创建/详情/编辑/删除 | `GET/POST/PUT/DELETE /defect/{id}` |
 - 字段：defect_id（自动编号）、title、description、severity(**P0/P1/P2/P3**)、status(默认 **open**)、case_id、execution_id、assignee、external_id、external_url、creator、resolved_at。
-- 关联：可挂到具体用例与执行记录；可外链外部缺陷系统。
-**现状与局限**：**无内建状态机工作流**（仅 open/resolved 雏形，无确认→修复→回归→关闭流转与校验）；无评论/附件/变更历史；与禅道/Jira 仅为「外链」非「双向同步」。
+- 内建状态机：`open → confirmed → fixing → pending_review → closed`，支持合法的 `rejected` 与 reopen；每次流转记录前后状态、操作人、备注与时间。
+- 关联：可挂到具体用例与执行记录；提供评论、附件上传/下载/删除和深链详情。
+**现状与局限**：内建流转与本地评论/附件已实现，但批量破坏性操作的原子性、全角色权限和外部 Jira/TAPD 真实双向链仍未完成生产级验收。
 
 ---
 
@@ -279,13 +289,14 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 - **服务端真实执行引擎**：后端通过 `httpx` 发起真实 HTTP 请求（`api_execution_service.py`），绕过浏览器跨域限制。
 - **资产四层模型**：ApiService（分组）→ ApiEndpoint（接口定义，含 method/url/headers/body）→ TestCase（用例，含断言 JSONPath）→ ApiExecutionTask（执行批次，含 request/response 快照）。
 - **完整接口**：`/api/v1/apitest/services|endpoints|tasks` CRUD + OpenAPI 导入预览/确认 + AI 用例生成（DeepSeek）+ 批量任务创建/取消/重试失败 + 失败分析 + curl 命令导出。
+- **OpenAPI 导入边界**：解析 OpenAPI 3.x 与 Swagger 2.0 JSON/YAML，支持文本或 URL；Knife4j/Swagger 文档 URL 作为来源类型记录。预览不写库，确认后才建立服务/端点资产。平台自身的 FastAPI 运行时契约为 `/openapi.json`，与导入的被测系统契约是两类对象。
 - **请求/响应快照**：每次执行保存结构化 `request_snapshot`（method/url/headers/body）和 `response_snapshot`（status_code/headers/body_preview/body_size_bytes/truncated/content_type），可回溯。
 - **断言引擎**：支持 JSONPath 提取 + 比较运算符（equals/contains/regex/gte/lte），结果写入 `assertion_results`。
 - **批量任务工作器**：独立 daemon 线程 `api_task_worker.py`，claim-based 抢占（locked_by/locked_at），支持 cancel 中途取消 + retry-failed 重试。
 - **环境与变量注入**：通过 `environment_id` 关联环境（base_url），支持 AES-128 加密变量 `${VAR_NAME}` 解析；生产环境需 `apitest:execute_prod` 权限 + `confirm_prod` 二次确认。
-- **SSRF 防护**：无环境时校验目标 URL 非内网/回环地址；关联环境则信任 base_url。
+- **SSRF 防护现状**：无环境时校验目标 URL 非内网/回环地址；关联环境后的 host allowlist、私有 Test5 策略与重定向逐跳复验是 Batch 61 待收紧项，不得因存在 `environment_id` 而宣称 SSRF 安全闭环。
 - **前端四 Tab**：Assets（服务+接口管理）、Debug（即时调试，环境选择器+请求构建器+响应查看器）、Cases（用例列表+批量执行）、Tasks（任务列表+详情含请求/响应快照+分析）。
-**局限/改进入口**：任务取消为非即时（仅轮询点检查 cancel_requested）；缺少请求脚本/前置处理器；尚无定时/CI 触发的一等公民集成（需走 Open API token）；生产保护审计日志待补全。
+**局限/改进入口**：任务取消为轮询点协作取消；五个执行入口尚需统一 request builder、环境/变量解析、断言类型和生产拒绝语义。Batch 60 只用 5-path 本地 OpenAPI 完成了资产→用例→计划/报告的 R1 链；没有当前 Test5 六服务全量契约与授权执行，不能计为体育 API 业务回归通过。
 
 ---
 
@@ -302,13 +313,13 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 - **环境变量注入**：执行时注入 `BASE_URL`、解密后的环境变量（`EnvironmentVariable` AES-128），spec 可通过 `process.env` 读取。
 - **任务工作器双通路**：`ui_runner_queue.enqueue_run()` 即时入队 + `task_worker._process_ui_runs()` APScheduler 每 5 秒兜底轮询。
 - **失败分析与知识入库**：`failure_analyzer.analyze_ui_failure()` 分类错误；失败执行自动通过 `ingest_service` 入库知识中心。
-- **可用 Spec**：`production-smoke.spec.ts`（5 用例：首页/登录/导航/API 健康/性能）、`production-web-smoke.spec.ts`（轻量 Web 冒烟）。
+- **内置 Spec**：`production-smoke.spec.ts`（首页/登录/导航/API 健康/性能）、`production-web-smoke.spec.ts`（轻量 Web smoke）。文件名中的 `production` 不决定实际目标；执行环境由 Job 绑定和 `BASE_URL` 决定。
 - **用例编译链路**：`case_compiler_service.py` 支持 功能用例 JSON steps → LLM (DeepSeek) → TypeScript `.spec.ts` → tsc 类型检查 → playwright --dry-run 验证 → 可执行文件。
-**局限/改进入口**：Playwright 配置 `screenshot: 'only-on-failure'`（非 always）；无异步执行模式（当前同步等待 subprocess）；STORAGE_DIR 硬编码不可配；spec 需预置于 `backend/tests/playwright/specs/` 非运行时上传。
+**局限/改进入口**：Runner 由本地队列/工作线程执行预置 spec，不是任意脚本上传服务；失败截图/video/trace 与受保护产物回看已实现，但每个正常成功功能的发布证据需要另行采集。Batch 60 Run #5 的 4 pass / 0 fail / 1 skip 只证明本地测试平台 Runner 能启动 Chromium、执行断言并持久化终态；它不证明 Test5/生产体育登录、赛事、文章、充值、退币、赠送或运营后台 E2E 通过。体育业务资产位于 `tests/automation/ui/`，必须在获授权目标上单独执行并与 Runner smoke 分开统计。
 
 ---
 
-### 模块 13　音视频专项 🧪（演示态）
+### 模块 13　音视频专项 🟡（真实样本链，验收待完整）
 **目标**：对流地址做音视频质量检测。
 **功能点**
 | 操作 | 接口 |
@@ -317,10 +328,10 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 创建/详情/删除 | `GET/POST/DELETE /av_check/{id}` |
 | 触发检测 | `POST /av_check/{id}/trigger` |
 | 指标明细 | `GET /av_check/{id}/metrics` |
-- 字段：name、stream_url、protocol(**HLS/FLV/WebRTC/DASH**)、status(idle)、last_result。
+- 字段：name、stream_url、protocol（前端可选 HLS/FLV/WebRTC/DASH/HTTP/HTTPS）、status、last_result。
 - 指标：metric_name、metric_value、threshold、pass、detail（如「起播时延 ms/2000」「卡顿率 %/5」）。
-**关键现状**：**检测指标为随机数模拟**（`av_check_service.py:130` `random.uniform` 伪造 value），**未真实拉流探测**。
-**改进入口**：接入真实拉流/探测能力替换随机值。
+**关键现状**：随机数指标已替换为真实媒体样本探测，Batch 60 以真实 HTTP MP4 与 ffprobe 完成六指标、幂率、统计、阈值、幂等性与前端终态回读的本地闭环。
+**改进入口**：外部实时流、多协议、异常网络、长时窗和授权环境矩阵未完成，因此不能从本地 MP4 证据推导生产流质量已通过。
 
 ---
 
@@ -334,10 +345,10 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 计划状态 plan.status | draft / active / completed / archived |
 | 计划内用例 last_status | pending / pass / fail / skip / block |
 | 执行结果 execution.status | pass / fail / skip / block |
-| 缺陷状态 defect.status | open（→ resolved，工作流未完善） |
+| 缺陷状态 defect.status | open / confirmed / fixing / pending_review / closed / rejected（closed/rejected 可 reopen 至 open） |
 | 角色数据范围 data_scope | global / project / self |
 | 权限点类型 permission.type | menu / button / api |
-| 音视频协议 protocol | HLS / FLV / WebRTC / DASH |
+| 音视频协议 protocol | HLS / FLV / WebRTC / DASH / HTTP / HTTPS |
 | 浏览器 browser | chromium / firefox / webkit |
 | 需求解析类型 parsed_type | requirement / test_cases |
 | 需求项类型 | functional / ui / data / integration |
@@ -346,21 +357,19 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 
 ## 5. 现状总结与改进基线
 
-### 5.1 已闭环的核心价值（建议「做深」而非推翻）
-需求 →（AI 生成 + 需求反向评审）→ 用例库（域树）→ 测试计划 → 逐条执行（含 ELK 排障）→ 报告快照 / 缺陷登记 / 工作台看板，并由定时任务驱动周期化。RBAC + 多项目 + 审计构成企业级底座。
+### 5.1 已有的本地真实链
+需求/资产 → 用例库 → 测试计划 → 执行 → 报告/缺陷/追溯的本地链存在，RBAC、多项目和审计也有真实实现。API 测试是后端 httpx 真实执行，UI Runner 是真实 Playwright 子进程，音视频已有真实媒体样本指标链。这些结论仅限具体已执行的 R1/本地证据。
 
-### 5.2 三类「演示态」功能（改进时优先决策：做真 or 降级标注）
-- API 测试（纯前端）、UI 自动化（随机数）、音视频专项（随机数）——当前不具备真实测试能力，对外需明确标注，避免信任落差。
+### 5.2 生产级结论与边界
+Batch 60 最终结论是 `NEEDS WORK`，production 发布是 `DEFERRED`。平台本地 Runner 成功不是体育业务 E2E；OpenAPI 导入成功不是 Test5 六服务契约回归；脚本可收集、历史截图、892 个资产或 1323 条候选用例也不是本轮通过数。真实 LLM/蓝湖/通知/集成/真机/旧 PostgreSQL 快照缺授权输入时必须保持 `BLOCKED` 或 fail closed。
 
-### 5.3 已知能力缺口（改进候选清单，来自各模块「现状与局限」）
-1. 需求-用例-缺陷**追溯矩阵 / 需求覆盖率**（数据模型已具备，仅缺聚合视图）。
-2. 缺陷**内建工作流**（状态机 + 流转记录 + 评论/附件）。
-3. **消息通知**（执行完成 / 缺陷指派 / 定时失败 → 邮件/企业微信/钉钉/飞书）。
-4. 报告**增强**（趋势、质量门禁、PDF/Excel 导出、模板）。
-5. 用例**评审流 / 版本历史 / 脑图编辑 / Xmind 导入导出 / 批量操作**。
-6. **CI/CD 集成**（Jenkins/GitHub Actions 触发与回写）。
-7. **环境/变量管理**（供 API/UI 用例引用）。
-8. 工程化：密钥外置、消除 N+1、补事务、补自动化测试、文档与代码对齐（README 仍写 Ant Design，实为 shadcn/ui）。
+### 5.3 Batch 61 事实源对应的待闭环项
+1. 统一 API/UI/发布包/集成等执行入口的目标环境、请求性质、生产拒绝与审计语义。
+2. 完成全模块 A→B→A 项目隔离和 admin/tester/viewer 能力矩阵，补破坏性操作、强制改密、无障碍与响应式证据。
+3. 将运行时数据库、备份、Playwright 结果/报告和原始流量产物排除在版本库外，已跟踪产物需在明确授权后单独移除。
+4. 取得当前 Test5 六服务契约、最小权限账号、稳定数据和清理授权后，才能单独签发体育 API/UI R2 结论。
+5. 解决体育 UI 自动化供应链高危依赖，并获取完整后端依赖审计结果。
+6. 在仓库独立项目 `deploy/release-control/` 实现 test-only 不可变发布、回滚和防篡改证据；Batch 61 没有产品控制台 UI，production 操作必须返回 `PRODUCTION_NOT_CONFIGURED`，控制面 API/UI 是 Batch 62 消费者。
 
 ---
 

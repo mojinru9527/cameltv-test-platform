@@ -2,11 +2,15 @@
 from __future__ import annotations
 
 import copy
+import ipaddress
 import json
 import re
+import socket
 import time
+import uuid
 from datetime import datetime, timezone
 from typing import Any
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 import httpx
 from sqlalchemy.orm import Session
@@ -23,6 +27,12 @@ MAX_RESPONSE_BODY_SIZE = 500 * 1024  # 500 KB (max stored in raw_body)
 BODY_PREVIEW_MAX_SIZE = 4096  # chars for response_snapshot.body_preview
 SENSITIVE_HEADERS = {"authorization", "cookie", "set-cookie", "x-api-key", "x-auth-token", "token"}
 SENSITIVE_MASK = "***"
+UNSUPPORTED_BODY_MASK = "[REDACTED_UNSUPPORTED_BODY]"
+SENSITIVE_FIELD_NAMES = {
+    "authorization", "cookie", "set_cookie", "x_api_key", "x_auth_token",
+    "token", "access_token", "refresh_token", "api_key", "apikey",
+    "password", "passwd", "secret", "client_secret", "private_key",
+}
 
 
 # ═══════════════════════════════════════════════════════
@@ -63,10 +73,12 @@ def execute_api_case(
     if dataset_id:
         return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id,
                                      project_id=project_id,
-                                     confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
+                                     confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
+                                     require_release_assertions=case.review_status == "approved")
     return _do_execute(db, request_def, assertions, environment_id=environment_id,
                        project_id=project_id,
-                       confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
+                       confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
+                       require_release_assertions=case.review_status == "approved")
 
 
 def quick_execute(
@@ -79,15 +91,18 @@ def quick_execute(
     dataset_id: int | None = None,
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
+    require_release_assertions: bool = False,
 ) -> dict:
     """即时执行（不依赖已保存用例），用于调试面板。若提供 dataset_id 则批量执行。"""
     if dataset_id:
         return _execute_with_dataset(db, request_def, assertions or [], environment_id, dataset_id,
                                      project_id=project_id,
-                                     confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
+                                     confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
+                                     require_release_assertions=require_release_assertions)
     return _do_execute(db, request_def, assertions or [], environment_id=environment_id,
                        project_id=project_id,
-                       confirm_prod=confirm_prod, has_execute_prod=has_execute_prod)
+                       confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
+                       require_release_assertions=require_release_assertions)
 
 
 # ═══════════════════════════════════════════════════════
@@ -104,47 +119,86 @@ def _do_execute(
     dataset_row_index: int | None = None,
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
+    require_release_assertions: bool = False,
 ) -> dict:
     """核心执行流程：解析变量 → 生产保护检查 → 发请求 → 跑断言 → 汇总结果。"""
+    execution_id = f"APIEXEC-{uuid.uuid4().hex[:12].upper()}"
     method = (request_def.get("method") or "GET").upper()
     url = request_def.get("url") or ""
     headers = request_def.get("headers") or {}
     body = request_def.get("body") or ""
+    query_params = request_def.get("query_params") or {}
+
+    assertion_contract_error = _assertion_contract_error(
+        assertions,
+        require_release_assertions=require_release_assertions,
+    )
+    if assertion_contract_error:
+        return _error_result(
+            assertion_contract_error,
+            error_type="INVALID_CASE",
+            environment_id=environment_id,
+            execution_id=execution_id,
+        )
 
     # 0. 环境必须属于当前项目；内部调用也不得退回裸 environment_id。
     if environment_id:
         from app.services.environment_service import get_environment
 
         if not project_id or not get_environment(db, environment_id, project_id):
-            return _error_result("环境不存在或不属于当前项目")
+            return _error_result(
+                "环境不存在或不属于当前项目",
+                error_type="TARGET_POLICY",
+                environment_id=environment_id,
+                execution_id=execution_id,
+            )
 
     # 0.1 生产环境保护检查
     allowed, prod_msg = _check_prod_protection(db, method, environment_id, confirm_prod, has_execute_prod)
     if not allowed:
-        return _error_result(prod_msg)
+        return _error_result(
+            prod_msg,
+            error_type="POLICY_DENIED",
+            environment_id=environment_id,
+            execution_id=execution_id,
+        )
 
     # 1. 变量替换
     if environment_id:
         url = resolve_variables(db, environment_id, project_id, url)
         body = resolve_variables(db, environment_id, project_id, body)
+        query_params = _resolve_mapping_variables(
+            db, environment_id, project_id, query_params,
+        )
         resolved_headers = {}
         for k, v in headers.items():
             k2 = resolve_variables(db, environment_id, project_id, k)
             v2 = resolve_variables(db, environment_id, project_id, str(v))
             if k2 is None or v2 is None:
-                return _error_result("环境不存在或不属于当前项目")
+                return _error_result(
+                    "环境不存在或不属于当前项目",
+                    error_type="TARGET_POLICY",
+                    environment_id=environment_id,
+                    execution_id=execution_id,
+                )
             resolved_headers[k2] = v2
         headers = resolved_headers
 
     # 2. 解析最终 URL
     resolved_url = _resolve_url(db, environment_id, url)
+    resolved_url = _append_query_params(resolved_url, query_params)
 
     # 2.5 SSRF 防护检查
-    if environment_id:
-        # 环境内 URL 允许（已配置的 base_url），直接请求跳过 SSRF 检查
-        pass
-    else:
-        _validate_url_no_ssrf(resolved_url)
+    try:
+        _validate_target_url(db, environment_id, project_id, resolved_url)
+    except ValueError as exc:
+        return _error_result(
+            str(exc),
+            error_type="TARGET_POLICY",
+            environment_id=environment_id,
+            resolved_url=resolved_url,
+            execution_id=execution_id,
+        )
 
     # 3. 构建请求快照（执行前）
     request_snapshot = _build_request_snapshot(
@@ -153,20 +207,24 @@ def _do_execute(
         resolved_url=resolved_url,
         headers=headers,
         body=body,
+        query_params=query_params,
         environment_id=environment_id,
         dataset_row_index=dataset_row_index,
+        execution_id=execution_id,
     )
 
     # 4. 发起 HTTP 请求
     start = time.perf_counter()
     try:
-        with httpx.Client(timeout=DEFAULT_TIMEOUT, follow_redirects=True) as client:
-            resp = client.request(
-                method=method,
-                url=resolved_url,
-                headers=_prepare_headers(headers, body),
-                content=body if method in ("POST", "PUT", "PATCH") else None,
-            )
+        resp = _request_with_target_policy(
+            db,
+            method=method,
+            url=resolved_url,
+            headers=_prepare_headers(headers, body),
+            body=body,
+            environment_id=environment_id,
+            project_id=project_id,
+        )
         duration_ms = round((time.perf_counter() - start) * 1000, 1)
 
         # 读取响应体（限大小）
@@ -179,12 +237,38 @@ def _do_execute(
         # 提取响应头
         resp_headers = {k: v for k, v in resp.headers.items()}
 
+    except ValueError as exc:
+        return _error_result(
+            str(exc), request_snapshot,
+            error_type="TARGET_POLICY",
+            environment_id=environment_id,
+            resolved_url=resolved_url,
+            execution_id=execution_id,
+        )
     except httpx.TimeoutException:
-        return _error_result("请求超时 (30s)", request_snapshot)
+        return _error_result(
+            "请求超时 (30s)", request_snapshot,
+            error_type="TIMEOUT",
+            environment_id=environment_id,
+            resolved_url=resolved_url,
+            execution_id=execution_id,
+        )
     except httpx.ConnectError as e:
-        return _error_result(f"连接失败: {e}", request_snapshot)
+        return _error_result(
+            f"连接失败: {e}", request_snapshot,
+            error_type="NETWORK_ERROR",
+            environment_id=environment_id,
+            resolved_url=resolved_url,
+            execution_id=execution_id,
+        )
     except Exception as e:
-        return _error_result(f"请求异常: {type(e).__name__}: {e}", request_snapshot)
+        return _error_result(
+            f"请求异常: {type(e).__name__}: {e}", request_snapshot,
+            error_type="NETWORK_ERROR",
+            environment_id=environment_id,
+            resolved_url=resolved_url,
+            execution_id=execution_id,
+        )
 
     # 5. 执行断言
     assertion_results = _run_assertions(
@@ -195,17 +279,19 @@ def _do_execute(
         duration_ms=duration_ms,
         response_headers=resp_headers,
     )
-    all_pass = all(a["passed"] for a in assertion_results) if assertion_results else True
+    all_pass = all(a["passed"] for a in assertion_results)
+    assertion_summary = _assertion_summary(assertion_results)
 
     # 6. 构建响应快照
     full_body = raw_body if raw_body else ""
     body_size = len(raw_body) if raw_body else 0
     body_truncated = body_size > MAX_RESPONSE_BODY_SIZE
-    body_preview = _truncate_for_preview(full_body, BODY_PREVIEW_MAX_SIZE)
+    safe_response_headers = _redact_evidence(resp_headers)
+    body_preview = _snapshot_body(full_body)
     response_snapshot = {
         "status_code": resp.status_code,
-        "headers": resp_headers,
-        "body_preview": body_preview,
+        "headers": safe_response_headers,
+        "body_preview": _truncate_for_preview(body_preview, BODY_PREVIEW_MAX_SIZE),
         "body_size_bytes": body_size,
         "truncated": body_truncated or (len(full_body) > BODY_PREVIEW_MAX_SIZE),
         "content_type": resp_headers.get("content-type", ""),
@@ -220,6 +306,11 @@ def _do_execute(
         "duration_ms": duration_ms,
         "assertions": assertion_results,
         "all_pass": all_pass,
+        "assertion_summary": assertion_summary,
+        "environment_id": environment_id,
+        "resolved_url": _redact_url_query(resolved_url),
+        "error_type": "" if all_pass else "ASSERTION_FAILED",
+        "execution_id": execution_id,
         "request_snapshot": request_snapshot,
         "response_snapshot": response_snapshot,
         "executed_at": datetime.now(timezone.utc).isoformat(),
@@ -264,13 +355,50 @@ def _run_assertions(
     return results
 
 
+def _assertion_contract_error(
+    assertions: list[dict],
+    *,
+    require_release_assertions: bool,
+) -> str:
+    if not assertions:
+        return "API 用例至少需要一个有效断言"
+    if not require_release_assertions:
+        return ""
+
+    has_status = any(rule.get("type") == "status_code" for rule in assertions)
+    jsonpath_rules = [rule for rule in assertions if rule.get("type") == "jsonpath"]
+    business_paths = {
+        str(rule.get("path") or "").casefold()
+        for rule in jsonpath_rules
+        if str(rule.get("path") or "").casefold().endswith((".code", ".business_code"))
+    }
+    has_business_code = bool(business_paths)
+    has_core_field = any(
+        str(rule.get("path") or "").casefold() not in business_paths
+        and str(rule.get("path") or "") not in {"", "$"}
+        for rule in jsonpath_rules
+    )
+
+    missing = []
+    if not has_status:
+        missing.append("status")
+    if not has_business_code:
+        missing.append("business-code")
+    if not has_core_field:
+        missing.append("core-field")
+    if missing:
+        return f"approved release API case missing assertions: {', '.join(missing)}"
+    return ""
+
+
 def _assert_status_code(rule: dict, status_code: int) -> dict:
     expected = rule.get("expected", 200)
     op = rule.get("operator", "eq")
     passed = _compare(status_code, expected, op)
     return {
         "type": "status_code",
-        "expected": f"{op} {expected}",
+        "expected": expected,
+        "operator": op,
         "actual": status_code,
         "passed": passed,
         "message": f"HTTP {status_code} {_op_label(op)} {expected}" + (" ✓" if passed else " ✗"),
@@ -283,7 +411,8 @@ def _assert_response_time(rule: dict, duration_ms: float) -> dict:
     passed = _compare(duration_ms, expected, op)
     return {
         "type": "response_time",
-        "expected": f"{op} {expected}ms",
+        "expected": expected,
+        "operator": op,
         "actual": f"{duration_ms}ms",
         "passed": passed,
         "message": f"{duration_ms}ms {_op_label(op)} {expected}ms" + (" ✓" if passed else " ✗"),
@@ -319,7 +448,8 @@ def _assert_jsonpath(rule: dict, data: Any) -> dict:
     passed = _compare(actual, expected, op)
     return {
         "type": "jsonpath", "path": path,
-        "expected": f"{op} {expected}",
+        "expected": expected,
+        "operator": op,
         "actual": actual,
         "passed": passed,
         "message": f"{path}: {actual} {_op_label(op)} {expected}" + (" ✓" if passed else " ✗"),
@@ -669,6 +799,44 @@ def _prepare_headers(headers: dict, body: str) -> dict:
     return h
 
 
+def _resolve_mapping_variables(
+    db: Session,
+    environment_id: int,
+    project_id: int,
+    value: Any,
+) -> Any:
+    """Resolve environment variables recursively without coercing numeric values."""
+    if isinstance(value, dict):
+        return {
+            str(_resolve_mapping_variables(db, environment_id, project_id, key)):
+            _resolve_mapping_variables(db, environment_id, project_id, item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [
+            _resolve_mapping_variables(db, environment_id, project_id, item)
+            for item in value
+        ]
+    if isinstance(value, str):
+        return resolve_variables(db, environment_id, project_id, value)
+    return value
+
+
+def _append_query_params(url: str, query_params: dict[str, Any]) -> str:
+    if not query_params:
+        return url
+    parsed = urlparse(url)
+    existing = parse_qsl(parsed.query, keep_blank_values=True)
+    additions: list[tuple[str, Any]] = []
+    for key, value in query_params.items():
+        if isinstance(value, list):
+            additions.extend((key, item) for item in value)
+        else:
+            additions.append((key, value))
+    query = urlencode([*existing, *additions], doseq=True)
+    return urlunparse(parsed._replace(query=query))
+
+
 def _resolve_url(db: Session, environment_id: int | None, url: str) -> str:
     """将相对路径与环境 base_url 拼接为完整 URL。
     - 完整 URL (http/https 开头) 直接返回
@@ -688,10 +856,6 @@ def _resolve_url(db: Session, environment_id: int | None, url: str) -> str:
 
 
 # ── SSRF 防护 ────────────────────────────────────────────
-
-import ipaddress
-import socket
-from urllib.parse import urlparse
 
 # 禁止访问的 IP 范围（RFC 1918 + 回环 + 链路本地 + 特殊用途）
 _SSRF_BLOCKED_NETWORKS = [
@@ -744,7 +908,111 @@ def _validate_url_no_ssrf(url: str, allow_env_urls: bool = True) -> None:
         )
 
 
-def _error_result(message: str, request_snapshot: dict | None = None) -> dict:
+def _effective_port(parsed) -> int | None:
+    if parsed.port is not None:
+        return parsed.port
+    if parsed.scheme == "https":
+        return 443
+    if parsed.scheme == "http":
+        return 80
+    return None
+
+
+def _validate_target_url(
+    db: Session,
+    environment_id: int | None,
+    project_id: int,
+    url: str,
+) -> None:
+    """Validate every outbound target, including redirects, before network I/O."""
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError(f"无法解析 URL: {url}")
+
+    if environment_id is None:
+        _validate_url_no_ssrf(url)
+        return
+
+    from app.services.environment_service import get_environment
+
+    environment = get_environment(db, environment_id, project_id) if project_id else None
+    if not environment:
+        raise ValueError("环境不存在或不属于当前项目")
+
+    allowed = urlparse(environment.get("base_url") or "")
+    same_target = (
+        allowed.scheme in {"http", "https"}
+        and allowed.hostname is not None
+        and parsed.scheme == allowed.scheme
+        and parsed.hostname.casefold() == allowed.hostname.casefold()
+        and _effective_port(parsed) == _effective_port(allowed)
+    )
+    if not same_target:
+        raise ValueError(
+            "target URL must match the project environment host allowlist"
+        )
+
+
+def _request_with_target_policy(
+    db: Session,
+    *,
+    method: str,
+    url: str,
+    headers: dict,
+    body: str,
+    environment_id: int | None,
+    project_id: int,
+) -> httpx.Response:
+    """Send at most ten hops and revalidate each redirect target."""
+    current_method = method
+    current_url = url
+    current_body = body
+    with httpx.Client(timeout=DEFAULT_TIMEOUT, follow_redirects=False) as client:
+        for _hop in range(10):
+            response = client.request(
+                method=current_method,
+                url=current_url,
+                headers=headers,
+                content=(
+                    current_body
+                    if current_method in ("POST", "PUT", "PATCH")
+                    else None
+                ),
+            )
+            if not response.is_redirect:
+                return response
+            location = response.headers.get("location")
+            if not location:
+                return response
+            next_url = urljoin(current_url, location)
+            _validate_target_url(db, environment_id, project_id, next_url)
+            if response.status_code == 303 or (
+                response.status_code in {301, 302} and current_method == "POST"
+            ):
+                current_method = "GET"
+                current_body = ""
+            current_url = next_url
+    raise ValueError("redirect limit exceeded")
+
+
+def _assertion_summary(assertions: list[dict]) -> dict[str, int]:
+    passed = sum(1 for assertion in assertions if assertion.get("passed") is True)
+    return {
+        "total": len(assertions),
+        "passed": passed,
+        "failed": len(assertions) - passed,
+    }
+
+
+def _error_result(
+    message: str,
+    request_snapshot: dict | None = None,
+    *,
+    error_type: str = "EXECUTION_ERROR",
+    environment_id: int | None = None,
+    resolved_url: str = "",
+    execution_id: str | None = None,
+) -> dict:
     return {
         "status": "error",
         "status_code": 0,
@@ -754,7 +1022,12 @@ def _error_result(message: str, request_snapshot: dict | None = None) -> dict:
         "duration_ms": 0,
         "assertions": [],
         "all_pass": False,
+        "assertion_summary": {"total": 0, "passed": 0, "failed": 0},
         "error": message,
+        "error_type": error_type,
+        "environment_id": environment_id,
+        "resolved_url": _redact_url_query(resolved_url),
+        "execution_id": execution_id or f"APIEXEC-{uuid.uuid4().hex[:12].upper()}",
         "request_snapshot": request_snapshot or {},
         "response_snapshot": {},
         "executed_at": datetime.now(timezone.utc).isoformat(),
@@ -768,38 +1041,87 @@ def _build_request_snapshot(
     resolved_url: str,
     headers: dict,
     body: str,
+    query_params: dict[str, Any] | None = None,
     environment_id: int | None = None,
     dataset_row_index: int | None = None,
+    execution_id: str | None = None,
 ) -> dict:
-    """构建完整请求快照，敏感头脱敏，包含可复制 curl 命令。"""
-    safe_headers = {}
-    for k, v in headers.items():
-        if k.lower() in SENSITIVE_HEADERS:
-            safe_headers[k] = SENSITIVE_MASK
-        else:
-            safe_headers[k] = v
+    """构建脱敏请求快照；非结构化正文默认不持久化。"""
+    safe_headers = _redact_evidence(headers)
+    safe_query_params = _redact_evidence(query_params or {})
+    safe_body = _snapshot_body(body)
+    if len(safe_body) > 10000:
+        safe_body = safe_body[:10000] + f"\n... (truncated, total {len(safe_body)} bytes)"
 
-    safe_body = body
-    if body and len(str(body)) > 10000:
-        safe_body = str(body)[:10000] + f"\n... (truncated, total {len(str(body))} bytes)"
+    safe_original_url = _redact_url_query(original_url)
+    safe_resolved_url = _redact_url_query(resolved_url)
 
     snapshot = {
         "method": method,
-        "original_url": original_url,
-        "resolved_url": resolved_url,
+        "original_url": safe_original_url,
+        "resolved_url": safe_resolved_url,
         "headers": safe_headers,
+        "query_params": safe_query_params,
         "body": safe_body,
         "environment_id": environment_id,
         "dataset_row_index": dataset_row_index,
+        "execution_id": execution_id,
         "curl": build_curl_command({
             "method": method,
-            "resolved_url": resolved_url,
-            "original_url": original_url,
+            "resolved_url": safe_resolved_url,
+            "original_url": safe_original_url,
             "headers": safe_headers,
             "body": safe_body,
         }),
     }
     return snapshot
+
+
+def _is_sensitive_field(key: str) -> bool:
+    normalized = re.sub(r"[^a-z0-9]+", "_", key.casefold()).strip("_")
+    return (
+        normalized in SENSITIVE_FIELD_NAMES
+        or normalized.endswith("_token")
+        or normalized.endswith("_password")
+        or normalized.endswith("_secret")
+        or normalized.endswith("_api_key")
+    )
+
+
+def _redact_evidence(value: Any, *, field_name: str = "") -> Any:
+    """Recursively mask sensitive evidence fields while preserving safe types."""
+    if field_name and _is_sensitive_field(field_name):
+        return SENSITIVE_MASK
+    if isinstance(value, dict):
+        return {
+            key: _redact_evidence(item, field_name=str(key))
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_redact_evidence(item) for item in value]
+    if isinstance(value, tuple):
+        return [_redact_evidence(item) for item in value]
+    return value
+
+
+def _snapshot_body(body: str | None) -> str:
+    if not body:
+        return ""
+    try:
+        parsed = json.loads(body)
+    except (json.JSONDecodeError, TypeError):
+        return UNSUPPORTED_BODY_MASK
+    return json.dumps(_redact_evidence(parsed), ensure_ascii=False, default=str)
+
+
+def _redact_url_query(url: str) -> str:
+    if not url:
+        return url
+    parsed = urlparse(url)
+    safe_query = []
+    for key, value in parse_qsl(parsed.query, keep_blank_values=True):
+        safe_query.append((key, SENSITIVE_MASK if _is_sensitive_field(key) else value))
+    return urlunparse(parsed._replace(query=urlencode(safe_query, doseq=True)))
 
 
 # ── 生产环境保护 ──────────────────────────────────────────
@@ -877,6 +1199,7 @@ def _execute_with_dataset(
     project_id: int = 0,
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
+    require_release_assertions: bool = False,
 ) -> dict:
     """遍历数据集每一行，逐行替换 ${column_name} 并执行，返回批量结果。"""
     from app.services.dataset_service import get_dataset_rows, get_dataset
@@ -894,6 +1217,12 @@ def _execute_with_dataset(
         # Substitute ${column_name} in url, headers, body
         row_req["url"] = _substitute_columns(row_req.get("url", ""), row)
         row_req["body"] = _substitute_columns(row_req.get("body", ""), row)
+        query_params = row_req.get("query_params", {})
+        if isinstance(query_params, dict):
+            row_req["query_params"] = {
+                key: _substitute_query_value(value, row)
+                for key, value in query_params.items()
+            }
         headers = row_req.get("headers", {})
         if isinstance(headers, dict):
             for k, v in headers.items():
@@ -903,10 +1232,11 @@ def _execute_with_dataset(
         result = _do_execute(db, row_req, row_assertions, environment_id=environment_id,
                             project_id=project_id, dataset_row_index=row_idx,
                             confirm_prod=confirm_prod,
-                            has_execute_prod=has_execute_prod)
+                            has_execute_prod=has_execute_prod,
+                            require_release_assertions=require_release_assertions)
         per_row_results.append({
             "row_index": row_idx,
-            "row_data": row,
+            "row_data": _redact_evidence(row),
             "result": result,
         })
 
@@ -932,6 +1262,14 @@ def _substitute_columns(template: str, row: dict) -> str:
     def _replacer(m: re.Match) -> str:
         return str(row.get(m.group(1), m.group(0)))
     return _COL_VAR_PATTERN.sub(_replacer, template)
+
+
+def _substitute_query_value(value: Any, row: dict) -> Any:
+    if isinstance(value, str):
+        return _substitute_columns(value, row)
+    if isinstance(value, list):
+        return [_substitute_query_value(item, row) for item in value]
+    return value
 
 
 # ── curl 复现命令生成 ────────────────────────────────────

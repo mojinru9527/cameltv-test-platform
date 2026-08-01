@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -44,6 +45,11 @@ class PageInteraction:
     description: str = ""
     admin_config_source: str = ""  # for dynamic_filter type
     extraction_source: str = ""  # which layer extracted this
+    annotation_id: str = ""
+    x: float | None = None
+    y: float | None = None
+    width: float | None = None
+    height: float | None = None
 
 
 @dataclass
@@ -444,7 +450,21 @@ def _interaction_to_dict(interaction: PageInteraction) -> dict[str, Any]:
         d["admin_config_source"] = interaction.admin_config_source
     if interaction.extraction_source:
         d["extraction_source"] = interaction.extraction_source
+    if interaction.annotation_id:
+        d["id"] = interaction.annotation_id
+    for field_name in ("x", "y", "width", "height"):
+        value = getattr(interaction, field_name)
+        if value is not None:
+            d[field_name] = value
     return d
+
+
+def _optional_coordinate(item: dict[str, Any], field_name: str) -> float | None:
+    value = item.get(field_name)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    numeric = float(value)
+    return numeric if math.isfinite(numeric) else None
 
 
 def parse_page_interactions(json_str: str) -> list[PageInteraction]:
@@ -465,6 +485,11 @@ def parse_page_interactions(json_str: str) -> list[PageInteraction]:
             description=item.get("description", ""),
             admin_config_source=item.get("admin_config_source", ""),
             extraction_source=item.get("extraction_source", ""),
+            annotation_id=str(item.get("id", "")),
+            x=_optional_coordinate(item, "x"),
+            y=_optional_coordinate(item, "y"),
+            width=_optional_coordinate(item, "width"),
+            height=_optional_coordinate(item, "height"),
         ))
     return interactions
 
@@ -504,6 +529,11 @@ def save_manual_interactions(
             description=item.get("description", ""),
             admin_config_source=item.get("admin_config_source", ""),
             extraction_source="manual",
+            annotation_id=str(item.get("id", "")),
+            x=_optional_coordinate(item, "x"),
+            y=_optional_coordinate(item, "y"),
+            width=_optional_coordinate(item, "width"),
+            height=_optional_coordinate(item, "height"),
         ))
 
     # Merge & dedup

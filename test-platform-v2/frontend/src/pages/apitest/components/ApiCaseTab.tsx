@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Play, ClipboardCheck, MinusCircle, Loader2, CheckCircle2, XCircle, RefreshCw, ChevronDown } from '@/lib/icons'
 import { Button } from '@/ui'
@@ -9,22 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import ProductionOperationDialog from '@/components/ProductionOperationDialog'
 import { fetchTestCases } from '@/api/testcase'
 import { executeApiCase, createApiExecutionTask } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
 import { useAuthStore } from '@/stores/auth'
 import { ResponsePanel } from './DebugTab'
 import { groupApiCases } from './apiCaseGroups'
+import { buildApiExecutionRequest, type ApiExecutionSource } from '../apiExecutionRequest'
 import type { ApiExecutionResult, BatchExecutionResult, ApiAssertionResult, Environment } from '@/types'
 
 const METHOD_COLORS: Record<string, string> = {
@@ -47,7 +39,12 @@ export default function ApiCaseTab() {
   const [responseModalOpen, setResponseModalOpen] = useState(false)
   const [envs, setEnvs] = useState<Environment[]>([])
   const [envId, setEnvId] = useState<number | undefined>()
-  const [showProdConfirm, setShowProdConfirm] = useState(false)
+  const [pendingExecution, setPendingExecution] = useState<{
+    source: Extract<ApiExecutionSource, 'single' | 'group' | 'batch'>
+    cases: any[]
+    name: string
+  } | null>(null)
+  const executionInFlightRef = useRef(false)
 
   function isProductionEnv(env: Environment): boolean {
     return env.is_production === true || env.env_type === 'prod'
@@ -99,68 +96,83 @@ export default function ApiCaseTab() {
     })
   }
 
-  const runSingle = async (caseId: number) => {
-    setExecutingCase(caseId)
-    setResult(null)
+  const submitExecution = async (
+    operation: NonNullable<typeof pendingExecution>,
+    confirmProd: boolean,
+  ) => {
+    if (executionInFlightRef.current) return
+    executionInFlightRef.current = true
+    const caseIds = operation.cases.map(testCase => testCase.id)
+    if (operation.source === 'single') setExecutingCase(caseIds[0])
+    else setLoading(true)
     try {
-      const res = await executeApiCase(caseId)
-      setResult(res as any)
-      setResponseModalOpen(true)
-      if (!isBatchResult(res) && res.all_pass) toast.success('全部断言通过')
-      else if (!isBatchResult(res)) toast.error(`${res.assertions?.filter((a: ApiAssertionResult) => !a.passed).length || 0} 个断言失败`)
+      const request = buildApiExecutionRequest({
+        source: operation.source,
+        environmentId: envId,
+        caseIds,
+        request: null,
+        confirmProd,
+      })
+      if (operation.source === 'single') {
+        setResult(null)
+        const res = await executeApiCase(request)
+        setResult(res as any)
+        setResponseModalOpen(true)
+        if (!isBatchResult(res) && res.all_pass) toast.success('全部断言通过')
+        else if (!isBatchResult(res)) toast.error(`${res.assertions?.filter((a: ApiAssertionResult) => !a.passed).length || 0} 个断言失败`)
+        return
+      }
+
+      const task = await createApiExecutionTask({ ...request, name: operation.name })
+      toast.success(`${operation.source === 'group' ? '分组' : '批量'}任务已创建: ${task.task_id}，共 ${task.total} 条用例`)
+      setTimeout(() => loadCases(), 1000)
     } catch (e: any) {
       toast.error(e?.message || '执行失败')
-      setResult({ error: true, message: e?.message || '网络请求失败，请检查后端服务是否启动' })
-      setResponseModalOpen(true)
+      if (operation.source === 'single') {
+        setResult({ error: true, message: e?.message || '网络请求失败，请检查后端服务是否启动' })
+        setResponseModalOpen(true)
+      }
+    } finally {
+      executionInFlightRef.current = false
+      setExecutingCase(null)
+      setLoading(false)
     }
-    finally { setExecutingCase(null) }
   }
 
-  const runGroup = async (groupCases: any[]) => {
+  const requestExecution = (
+    source: Extract<ApiExecutionSource, 'single' | 'group' | 'batch'>,
+    cases: any[],
+    name: string,
+  ) => {
     if (!projectId) { toast.error('未选择项目'); return }
-    setLoading(true)
-    try {
-      const task = await createApiExecutionTask({
-        name: `分组执行 ${groupCases[0]?.api_endpoint || new Date().toLocaleString('zh-CN')}`,
-        case_ids: groupCases.map((testCase) => testCase.id),
-        environment_id: envId,
-      })
-      toast.success(`分组任务已创建: ${task.task_id}，共 ${task.total} 条用例`)
-      setTimeout(() => loadCases(), 1000)
-    } catch (e: any) {
-      toast.error(e?.message || '分组执行失败')
-    }
-    finally { setLoading(false) }
-  }
-
-  const doBatchExecute = async (confirmProd: boolean) => {
-    if (!projectId) { toast.error('未选择项目'); return }
-    if (selected.size === 0) { toast.error('请至少选择一条用例'); return }
-    setLoading(true)
-    try {
-      const task = await createApiExecutionTask({
-        name: `批量执行 ${new Date().toLocaleString('zh-CN')}`,
-        case_ids: Array.from(selected),
-        environment_id: envId,
-        confirm_prod: confirmProd,
-      })
-      toast.success(`批量任务已创建: ${task.task_id}，共 ${task.total} 条用例`)
-      setTimeout(() => loadCases(), 1000)
-    } catch (e: any) { toast.error(e?.message || '创建任务失败') }
-    finally { setLoading(false) }
-  }
-
-  const runBatch = async () => {
-    if (!projectId) { toast.error('未选择项目'); return }
-    if (selected.size === 0) { toast.error('请至少选择一条用例'); return }
-
+    if (cases.length === 0) { toast.error('请至少选择一条用例'); return }
+    const operation = { source, cases, name }
     const selectedEnv = envs.find(e => e.id === envId)
-    if (selectedEnv && isProductionEnv(selectedEnv)) {
-      setShowProdConfirm(true)
+    const hasWrite = cases.some(testCase => !['GET', 'HEAD', 'OPTIONS'].includes((testCase.api_method || 'GET').toUpperCase()))
+    if (selectedEnv && isProductionEnv(selectedEnv) && hasWrite) {
+      setPendingExecution(operation)
       return
     }
+    void submitExecution(operation, false)
+  }
 
-    await doBatchExecute(false)
+  const runSingle = (caseId: number) => {
+    const testCase = apiCases.find(item => item.id === caseId)
+    if (!testCase) return
+    requestExecution('single', [testCase], `单用例执行 ${testCase.title}`)
+  }
+
+  const runGroup = (groupCases: any[]) => {
+    requestExecution(
+      'group',
+      groupCases,
+      `分组执行 ${groupCases[0]?.api_endpoint || new Date().toLocaleString('zh-CN')}`,
+    )
+  }
+
+  const runBatch = () => {
+    const selectedCases = apiCases.filter(testCase => selected.has(testCase.id))
+    requestExecution('batch', selectedCases, `批量执行 ${new Date().toLocaleString('zh-CN')}`)
   }
 
   const groups = groupApiCases(apiCases)
@@ -299,21 +311,24 @@ export default function ApiCaseTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Production confirmation dialog */}
-      <AlertDialog open={showProdConfirm} onOpenChange={setShowProdConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>生产环境确认</AlertDialogTitle>
-            <AlertDialogDescription>
-              您正在对生产环境执行 API 测试，此操作将发送真实 HTTP 请求到生产服务器。请确认您了解此操作的风险。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={() => doBatchExecute(true)}>确认执行</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ProductionOperationDialog
+        open={pendingExecution !== null}
+        onOpenChange={(open) => { if (!open) setPendingExecution(null) }}
+        project={`项目 #${projectId ?? '-'}`}
+        environment={envs.find(environment => environment.id === envId)?.name ?? '未选择环境'}
+        baseUrl={envs.find(environment => environment.id === envId)?.base_url ?? '未配置'}
+        operation={pendingExecution?.name ?? '执行 API 用例'}
+        classification="write"
+        affectedCount={pendingExecution?.cases.length ?? 0}
+        isProduction={true}
+        pending={loading || executingCase !== null}
+        onConfirm={() => {
+          if (!pendingExecution) return
+          const operation = pendingExecution
+          setPendingExecution(null)
+          return submitExecution(operation, true)
+        }}
+      />
     </div>
   )
 }

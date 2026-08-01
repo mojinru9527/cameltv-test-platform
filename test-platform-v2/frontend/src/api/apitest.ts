@@ -3,48 +3,34 @@ import type {
   ApiExecutionResult, BatchExecutionResult,
   ApiService, ApiEndpoint, ApiImportPreview, ApiImportResult,
   ApiExecutionTask, ApiTaskDetail,
-  GenerateApiCasesRequest, BatchGenerateRequest, ApiTaskCreateRequest,
+  GenerateApiCasesRequest, BatchGenerateRequest,
 } from '@/types'
+import type { ApiExecutionRequest } from '@/pages/apitest/apiExecutionRequest'
 
 // ── 即时执行（保留原有） ──
 
 /** 执行已保存的 API 用例 */
 export async function executeApiCase(
-  caseId: number,
-  environmentId?: number,
-  datasetId?: number,
+  request: ApiExecutionRequest,
 ): Promise<ApiExecutionResult | BatchExecutionResult> {
+  const caseId = request.case_ids[0]
+  if (request.source !== 'single' || request.case_ids.length !== 1 || !caseId) {
+    throw new Error('single execution requires exactly one case')
+  }
   return api.post(`/test-cases/${caseId}/execute`, {
-    environment_id: environmentId ?? null,
-    dataset_id: datasetId ?? null,
+    ...request,
+    request: null,
   })
 }
 
 /** 即时执行（不保存用例） */
-export async function quickExecute(request: {
-  method: string
-  url: string
-  headers?: string
-  body?: string
-  assertions?: string
-  environment_id?: number
-  dataset_id?: number
-  service_name?: string
-  query_params?: string
-  confirm_prod?: boolean
-}): Promise<ApiExecutionResult | BatchExecutionResult> {
-  return api.post('/apitest/api-execute', {
-    method: request.method,
-    url: request.url,
-    headers: request.headers || '{}',
-    body: request.body || '',
-    assertions: request.assertions || '[]',
-    environment_id: request.environment_id ?? null,
-    dataset_id: request.dataset_id ?? null,
-    service_name: request.service_name || undefined,
-    query_params: request.query_params || undefined,
-    confirm_prod: request.confirm_prod ?? false,
-  })
+export async function quickExecute(
+  request: ApiExecutionRequest,
+): Promise<ApiExecutionResult | BatchExecutionResult> {
+  if ((request.source !== 'quick' && request.source !== 'asset') || !request.request) {
+    throw new Error('quick and asset execution require a request definition')
+  }
+  return api.post('/apitest/api-execute', request)
 }
 
 // ── 服务管理 ──
@@ -112,8 +98,11 @@ export async function batchGenerateApiCases(
 // ── 批量执行任务 ──
 
 export async function createApiExecutionTask(
-  data: ApiTaskCreateRequest,
+  data: ApiExecutionRequest & { name: string; service_id?: number },
 ): Promise<ApiExecutionTask> {
+  if (data.source !== 'group' && data.source !== 'batch') {
+    throw new Error('task execution source must be group or batch')
+  }
   return api.post('/apitest/tasks', data) as unknown as Promise<ApiExecutionTask>
 }
 

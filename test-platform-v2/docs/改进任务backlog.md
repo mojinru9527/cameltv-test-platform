@@ -778,6 +778,17 @@ graph LR
   OPS2 --> OPS3["OPS3 Phase 3：Production 同 Digest 晋级"]
 ```
 
+### Batch 61 冻结（2026-08-01）
+
+> 本节只追加 Batch 61 范围和当前阻塞事实，不改写 OPS0～OPS3 的 Batch 60 历史。事实源为 `work-logs/batch-61-acceptance-matrix.md`、`batch-61-issue-register.md`、`batch-61-real-data-manifest.md`、`batch-61-pc-usage-snapshot-index.md` 和 `batch-61-release-readiness.md`。
+
+- OPS0、OPS1 是 Batch 61 `MUST`；OPS2、OPS3 保持 `DEFERRED` 到 Batch 62/63。
+- 运维发布能力在 `deploy/release-control` **新开独立项目**，拥有独立依赖、JSON Schema、CLI、状态机、测试和 Agent Team worktree/PR；Batch 61 不建设运维控制面 API/UI。
+- Batch 61 三工作流按 W1 `production-safety-and-test-credibility` → W2 `sports-api-ui-r2-acceptance` → W3 `test-release-control-plane-mvp` 顺序合并。后续 worktree 只能在前序 PR 合入后从最新 `origin/main` 创建。
+- 截至 `2026-08-01`，Test5/VPN、六服务契约、账号、稳定数据/清理、旧 PostgreSQL 快照、DevOps owner 和 test release 基础设施均为 `BLOCKED / UNASSIGNED`。
+- 当前实际 verdict 为 `NOT READY`，目标上限为 `LOCAL HARDENING COMPLETE / EXTERNAL BLOCKED`；只有 19/19 MUST 全部 `PASS` 后才可判定 `READY FOR TEST RELEASE`。
+- Production 发布、production 数据库迁移和 production 写链保持 `DEFERRED`。
+
 ---
 
 ## 依赖关系总览（Mermaid）

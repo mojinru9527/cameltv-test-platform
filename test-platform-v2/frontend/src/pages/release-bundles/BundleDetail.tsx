@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import {
@@ -16,6 +16,7 @@ import type {
   ReleaseBundleVersionChain,
   ModuleTreeResponse,
   VersionDiffResult,
+  Environment,
 } from '@/types'
 import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,6 +24,7 @@ import { Badge } from '@/ui'
 import { Input } from '@/ui'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   ArrowLeft,
@@ -47,10 +49,12 @@ import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
+import ProductionOperationDialog from '@/components/ProductionOperationDialog'
 import ModuleTreeView from './components/ModuleTreeView'
 import VersionChainTimeline from './components/VersionChainTimeline'
 import DiffReviewPanel from './components/DiffReviewPanel'
 import { useAuthStore } from '@/stores/auth'
+import { fetchEnvironments } from '@/api/environment'
 
 const PLATFORM_ICONS: Record<string, LucideIcon> = {
   APP: Smartphone,
@@ -78,6 +82,7 @@ export default function BundleDetailPage() {
   const navigate = useNavigate()
   const canManage = useAuthStore((state) => state.hasPerm('knowledge:manage'))
   const canTriggerRegression = useAuthStore((state) => state.hasPerm('uitest:trigger'))
+  const projects = useAuthStore((state) => state.projects)
   useDocumentTitle('发布包详情')
 
   const [tab, setTab] = useState('tree')
@@ -168,6 +173,24 @@ export default function BundleDetailPage() {
   const [regressionScope, setRegressionScope] = useState<RegressionScopeResult | null>(null)
   const [loadingScope, setLoadingScope] = useState(false)
   const [triggeringReg, setTriggeringReg] = useState(false)
+  const [regressionDialogOpen, setRegressionDialogOpen] = useState(false)
+  const [environments, setEnvironments] = useState<Environment[]>([])
+  const [regressionEnvironmentId, setRegressionEnvironmentId] = useState<number | undefined>()
+  const regressionEnvironment = environments.find(environment => environment.id === regressionEnvironmentId)
+  const isProductionEnvironment = regressionEnvironment?.is_production === true || regressionEnvironment?.env_type === 'prod'
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchEnvironments(controller.signal).then((rows) => {
+      if (controller.signal.aborted) return
+      setEnvironments(rows)
+      const testEnvironment = rows.find(environment => environment.env_type === 'test' && !environment.is_production)
+      setRegressionEnvironmentId(testEnvironment?.id)
+    }).catch(() => {
+      if (!controller.signal.aborted) setEnvironments([])
+    })
+    return () => controller.abort()
+  }, [])
 
   const handleViewRegressionScope = async () => {
     setLoadingScope(true)
@@ -183,9 +206,14 @@ export default function BundleDetailPage() {
   }
 
   const handleTriggerRegression = async () => {
+    if (!regressionEnvironment) return
+    setRegressionDialogOpen(false)
     setTriggeringReg(true)
     try {
-      const result: TriggerRegressionResult = await triggerRegression(bundleId)
+      const result: TriggerRegressionResult = await triggerRegression(bundleId, {
+        environment_id: regressionEnvironment.id,
+        confirm_prod: isProductionEnvironment,
+      })
       toast.success(`已触发 ${result.triggered} 个 UI 回归测试任务`)
       if (result.jobs?.length > 0) {
         result.jobs.forEach((j) => toast.info(`任务 #${j.job_id}: ${j.module}`))
@@ -194,6 +222,28 @@ export default function BundleDetailPage() {
       toast.error('触发回归测试失败')
     } finally {
       setTriggeringReg(false)
+    }
+  }
+
+  const handleRequestRegression = async () => {
+    if (!regressionEnvironment) {
+      toast.error('请先选择回归目标环境')
+      return
+    }
+    if (regressionScope) {
+      setRegressionDialogOpen(true)
+      return
+    }
+
+    setLoadingScope(true)
+    try {
+      const result = await fetchRegressionScope(bundleId)
+      setRegressionScope(result)
+      setRegressionDialogOpen(true)
+    } catch {
+      toast.error('获取回归范围失败，未触发回归测试')
+    } finally {
+      setLoadingScope(false)
     }
   }
 
@@ -270,6 +320,26 @@ export default function BundleDetailPage() {
           {/* Regression actions (batch-34) */}
           {!editing && (
             <>
+              {canTriggerRegression && (
+                <Select
+                  value={regressionEnvironmentId?.toString()}
+                  onValueChange={(value) => setRegressionEnvironmentId(Number(value))}
+                >
+                  <SelectTrigger
+                    className={cn('h-8 w-[180px] text-xs', isProductionEnvironment && 'border-status-danger-border')}
+                    aria-label="回归目标环境"
+                  >
+                    <SelectValue placeholder="选择回归环境" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {environments.map(environment => (
+                      <SelectItem key={environment.id} value={environment.id.toString()}>
+                        {environment.name}{environment.is_production || environment.env_type === 'prod' ? '（生产）' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <Button
                 variant="secondary"
                 size="sm"
@@ -281,10 +351,10 @@ export default function BundleDetailPage() {
               </Button>
               {canTriggerRegression && <Button
                 size="sm"
-                onClick={handleTriggerRegression}
-                disabled={triggeringReg}
+                onClick={handleRequestRegression}
+                disabled={triggeringReg || loadingScope}
               >
-                {triggeringReg ? <RefreshCw className="size-3.5 mr-1 animate-spin" /> : <RefreshCw className="size-3.5 mr-1" />}
+                {(triggeringReg || loadingScope) ? <RefreshCw className="size-3.5 mr-1 animate-spin" /> : <RefreshCw className="size-3.5 mr-1" />}
                 触发UI回归
               </Button>}
             </>
@@ -540,6 +610,20 @@ export default function BundleDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ProductionOperationDialog
+        open={regressionDialogOpen}
+        onOpenChange={setRegressionDialogOpen}
+        project={projects.find(project => project.id === bundle.project_id)?.name || `项目 #${bundle.project_id}`}
+        environment={regressionEnvironment?.name || '未选择环境'}
+        baseUrl={regressionEnvironment?.base_url || '未配置'}
+        operation={`触发发布包「${bundle.name}」UI 回归`}
+        classification="write"
+        affectedCount={regressionScope?.total_regression_cases ?? 0}
+        isProduction={isProductionEnvironment}
+        pending={triggeringReg}
+        onConfirm={handleTriggerRegression}
+      />
     </div>
   )
 }
