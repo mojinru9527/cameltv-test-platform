@@ -14,8 +14,8 @@
     "capture": "npx playwright test --reporter=json"
   },
   "dependencies": {
+    "@midscene/web": "1.10.8",
     "@playwright/test": "^1.48.0",
-    "@midscene/web": "^0.20.0",
     "dotenv": "^16.4.0"
   },
   "devDependencies": {
@@ -23,7 +23,12 @@
     "cross-env": "^7.0.3",
     "typescript": "^5.6.3"
   },
+  "overrides": {
+    "js-yaml": "4.3.0",
+    "sharp": "0.35.0",
+    "uuid": "11.1.1"
+  },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.9.0"
   }
 }

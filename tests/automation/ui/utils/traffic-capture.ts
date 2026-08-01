@@ -29,6 +29,20 @@ let captured: CapturedEntry[] = []
 let sessionId = ''
 let pendingResponseCaptures = new Set<Promise<void>>()
 
+export function assertNoCanaryLeak(
+  content: string,
+  canaries: readonly string[] = (process.env.CAMELTV_EVIDENCE_CANARIES ?? '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
+): void {
+  if (canaries.some((canary) => content.includes(canary))) {
+    throw new Error(
+      '[traffic-capture] Evidence canary detected; refusing to persist capture',
+    )
+  }
+}
+
 function isSensitiveKey(key: string): boolean {
   const normalized = key.toLowerCase().replace(/[^a-z0-9]/g, '')
   return [
@@ -196,5 +210,6 @@ export async function flushTrafficCapture(): Promise<void> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
   const outFile = path.join(outDir, `${safeSessionId}-${timestamp}.jsonl`)
   const lines = entries.map((entry) => JSON.stringify(entry)).join('\n')
+  assertNoCanaryLeak(lines)
   await fs.writeFile(outFile, lines, 'utf8')
 }

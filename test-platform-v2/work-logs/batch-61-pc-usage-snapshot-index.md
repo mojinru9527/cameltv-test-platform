@@ -9,9 +9,13 @@
 - Batch 60 的 `PC-B60-0001`～`PC-B60-0053` 原 ID 和证据路径保持不变，仅作历史基线；Batch 61 不重编号、不覆盖，也不自动继承 PASS。
 - Batch 61 初始没有新截图，因此本文件没有任何 `PASS` 记录。
 
-计划证据目录：
+W1 计划证据目录：
 
 `work-logs/evidence/batch-61-production-readiness/pc-usage-snapshots/`
+
+W2 体育 R2 证据目录：
+
+`work-logs/evidence/batch-61-sports-platform-validation/pc-usage-snapshots/`
 
 ## 2. Batch 60 基线引用
 
@@ -40,6 +44,16 @@
 | PC-B61-0011 | OPS1 | `TEST_VERIFIED` 时间线显示锁、备份、迁移、后端、前端、健康和 Smoke | Test release | `OPS-001-02-test-verified-timeline-PASS.png` | DevOps owner / `UNASSIGNED` | `BLOCKED` |
 | PC-B61-0012 | OPS1 | 受控失败进入 fail-closed，随后应用回滚到上一兼容 release | Test release | `OPS-001-03-controlled-failure-rollback-PASS.png` | DevOps owner / `UNASSIGNED` | `BLOCKED` |
 | PC-B61-0013 | OPS1 | 部署后真实体育测试平台版本/健康页与 manifest digest/revision 一致 | Test release | `OPS-001-04-platform-version-health-PASS.png` | DevOps owner / `UNASSIGNED` | `BLOCKED` |
+
+### 3.1 W2 实际取证检查点
+
+| 范围 | 状态 | 实际文件数 | 依据 |
+| --- | --- | ---: | --- |
+| Test5 首页/列表/详情/订单/运营只读正常态 | `BLOCKED` | 0 | VPN、六当前合同、账号和稳定数据均缺失；UI 23/23 BLOCKED |
+| Test5 授权登录正常态 | `BLOCKED` | 0 | 最小权限账号/有效期/撤销 owner 未提供 |
+| 支付/退款/赠送正常态 | `BLOCKED` | 0 | 无独立书面写授权、专用账号、限额和 cleanup |
+
+W2 没有复制 Batch 60、Mock、路由外壳或错误页作为成功截图。详细说明见 `evidence/batch-61-sports-platform-validation/pc-usage-snapshots/README.md`。
 
 ## 4. 模块覆盖账本
 

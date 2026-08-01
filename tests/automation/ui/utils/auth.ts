@@ -6,6 +6,11 @@
  * prompt, log message, screenshot name, or persisted traffic capture.
  */
 import type { Page } from '@playwright/test'
+import {
+  BlockedRunError,
+  assertNetworkRequestAllowed,
+  parseRuntimePreconditions,
+} from './preconditions'
 
 export interface LoginCredentials {
   username: string
@@ -69,7 +74,11 @@ export function getLoginCredentials(
   if (!username) missing.push('CAMELTV_USERNAME')
   if (!password) missing.push('CAMELTV_PASSWORD')
   if (missing.length > 0) {
-    throw new Error(`[auth] Missing required credentials: ${missing.join(', ')}`)
+    throw new BlockedRunError(
+      missing.join(','),
+      environment.CAMELTV_ACCOUNT_OWNER?.trim() || 'UNASSIGNED',
+      'required login credentials are missing',
+    )
   }
   return { username, password }
 }
@@ -94,6 +103,17 @@ export async function fillLoginForm(
 /** Log in and require an observable authenticated user-menu marker. */
 export async function login(page: Page): Promise<void> {
   const credentials = getLoginCredentials()
+  const runtime = parseRuntimePreconditions()
+  await page.route('**/*', async (route) => {
+    const request = route.request()
+    try {
+      assertNetworkRequestAllowed(runtime, request.url(), request.method())
+    } catch (error) {
+      await route.abort('blockedbyclient')
+      throw error
+    }
+    await route.continue()
+  })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
   const userMenu = page.locator(USER_MENU_SELECTOR).first()

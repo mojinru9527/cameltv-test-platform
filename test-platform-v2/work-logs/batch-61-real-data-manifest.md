@@ -5,9 +5,9 @@
 | 项目 | 值 |
 | --- | --- |
 | 冻结日期 | `2026-08-01` |
-| 代码基线 | `7d9a0118f6e2d5d505f9e0dde7b59881f027bb6b` |
-| W1 | `feature/batch-61-production-safety-and-test-credibility` |
-| W2 | `feature/batch-61-sports-api-ui-r2-acceptance`，仅在 W1 合并后从最新 `main` 创建 |
+| 代码基线 | W1：`7d9a0118f6e2d5d505f9e0dde7b59881f027bb6b`；W2：`174e002fbe53d75d49aaf09c269fac622a4c7c58` |
+| W1 | `feature/batch-61-production-safety-and-test-credibility`，PR #89 已合入 `main` |
+| W2 | `feature/batch-61-sports-acceptance-and-supply-chain`，已从 W1 合入后的最新 `main` 创建 |
 | W3 | `feature/batch-61-test-release-control-plane-mvp`，仅在 W2 合并后从最新 `main` 创建 |
 | 运维项目边界 | 在 `deploy/release-control` **新开独立项目**；独立依赖、schema、CLI、测试和 PR，不把 Batch 62 运维 UI 提前塞入测试平台 |
 | 数据原则 | R1、R2、R3、M 分层；历史数据不证明当前环境；缺外部条件时标记 `BLOCKED`，不得造数据或改记 `PASS` |
