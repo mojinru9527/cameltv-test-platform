@@ -25,6 +25,7 @@ const {
   fetchRunDetail,
   cancelRun,
   fetchRunArtifacts,
+  fetchRunArtifactBlob,
   fetchRunnerHealth,
 } = await import('@/api/uitest')
 
@@ -84,6 +85,21 @@ describe('UI Test API functions (run detail)', () => {
     })
   })
 
+  describe('fetchRunArtifactBlob', () => {
+    it('loads protected artifact bytes through the project-aware API client', async () => {
+      const blob = new Blob(['sports evidence'], { type: 'image/png' })
+      mockGet.mockResolvedValue(blob)
+
+      const result = await fetchRunArtifactBlob(42, 'screenshots/home page.png')
+
+      expect(mockGet).toHaveBeenCalledWith(
+        '/ui-tests/runs/42/artifacts/screenshots/home%20page.png',
+        { responseType: 'blob' },
+      )
+      expect(result).toBe(blob)
+    })
+  })
+
   describe('fetchRunnerHealth', () => {
     it('calls GET /ui-tests/runner/health', async () => {
       const mockHealth = {
@@ -119,6 +135,93 @@ vi.mock('@/hooks/useDocumentTitle', () => ({
 describe('UiRunDetail component rendering', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+  })
+
+  const openRunDetailWithOutput = async (stdout: string, stderr: string) => {
+    const run = {
+      id: 1, job_id: 10, status: 'done',
+      result: { total: 1, pass_: 1, fail: 0, skip: 0, duration: 1 },
+      screenshots: [], video_url: '', trace_id: '',
+      base_url: 'http://localhost:5196', browser: 'chromium', duration: 1,
+      error_message: '', stdout, stderr,
+      artifact_dir: '', report_json_path: '', html_report_path: '',
+      process_id: null, cancel_requested: false,
+      started_at: '2026-01-01T00:00:00Z', finished_at: '2026-01-01T00:00:01Z',
+    }
+
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/environments') return Promise.resolve([])
+      if (url === '/ui-tests') {
+        return Promise.resolve({
+          total: 1, page: 1, page_size: 20,
+          items: [{
+            id: 10,
+            name: 'Batch 60 体育 UI 回归',
+            description: '',
+            test_spec: 'specs/production-smoke.spec.ts',
+            browser: 'chromium',
+            environment_id: 1,
+            status: 'idle',
+            last_result: run.result,
+            creator_id: 1,
+            creator_name: '测试工程师',
+            last_run_status: 'done',
+            last_run_time: run.finished_at,
+            created_at: run.started_at,
+            updated_at: run.finished_at,
+          }],
+        })
+      }
+      if (url === '/ui-tests/10') {
+        return Promise.resolve({
+          id: 10,
+          name: 'Batch 60 体育 UI 回归',
+          description: '',
+          test_spec: 'specs/production-smoke.spec.ts',
+          browser: 'chromium',
+          status: 'idle',
+          last_result: run.result,
+        })
+      }
+      if (url === '/ui-tests/10/runs') {
+        return Promise.resolve({ total: 1, page: 1, page_size: 20, items: [run] })
+      }
+      if (url === '/ui-tests/runs/1') return Promise.resolve(run)
+      if (url === '/ui-tests/runs/1/artifacts') return Promise.resolve([])
+      return Promise.resolve({ total: 0, items: [], page: 1, page_size: 20 })
+    })
+
+    const { default: UiTestPage } = await import('@/pages/uitest/index')
+    render(<UiTestPage />)
+
+    fireEvent.click(await screen.findByRole('button', { name: '详情' }))
+    const resultCell = await screen.findByText('Total: 1 Pass: 1 Fail: 0')
+    fireEvent.click(resultCell.closest('tr')!)
+    await screen.findByRole('dialog', { name: /运行详情 #1/ })
+  }
+
+  it('shows stdout by default when both stdout and stderr are available', async () => {
+    await openRunDetailWithOutput('STDOUT-FIRST', 'STDERR-SECOND')
+
+    expect(screen.getByRole('tab', { name: 'stdout' }).getAttribute('data-state')).toBe('active')
+    expect(screen.getByRole('tab', { name: 'stderr' }).getAttribute('data-state')).toBe('inactive')
+    expect(await screen.findByText('STDOUT-FIRST')).not.toBeNull()
+    expect(screen.queryByText('STDERR-SECOND')).toBeNull()
+  })
+
+  it('falls back to stderr when stdout is empty', async () => {
+    await openRunDetailWithOutput('', 'STDERR-FALLBACK')
+
+    expect(screen.getByRole('tab', { name: 'stderr' }).getAttribute('data-state')).toBe('active')
+    expect(await screen.findByText('STDERR-FALLBACK')).not.toBeNull()
+  })
+
+  it('keeps output tabs inactive when stdout and stderr are both empty', async () => {
+    await openRunDetailWithOutput('', '')
+
+    expect(screen.queryByRole('tab', { name: 'stdout' })).toBeNull()
+    expect(screen.queryByRole('tab', { name: 'stderr' })).toBeNull()
+    expect(screen.getByRole('tab', { name: '输出' }).getAttribute('data-state')).toBe('inactive')
   })
 
   it('renders run status badge correctly for different statuses', async () => {

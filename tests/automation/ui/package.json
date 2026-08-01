@@ -6,8 +6,10 @@
   "scripts": {
     "test": "npx playwright test",
     "test:headed": "npx playwright test --headed",
-    "test:test": "npx playwright test --env=test",
-    "test:prod": "npx playwright test --env=prod",
+    "test:test": "cross-env TEST_ENV=test playwright test",
+    "test:prod": "cross-env TEST_ENV=prod playwright test",
+    "test:security": "playwright test --config=playwright.security.config.ts",
+    "typecheck": "tsc --noEmit",
     "report": "npx playwright show-report",
     "capture": "npx playwright test --reporter=json"
   },
@@ -15,6 +17,11 @@
     "@playwright/test": "^1.48.0",
     "@midscene/web": "^0.20.0",
     "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.6.3"
   },
   "engines": {
     "node": ">=18.0.0"

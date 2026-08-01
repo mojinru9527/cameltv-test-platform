@@ -8,7 +8,9 @@ param(
 
     [switch]$ConfirmProduction,
 
-    [switch]$InitializeLocal
+    [switch]$InitializeLocal,
+
+    [switch]$LibraryOnly
 )
 
 Set-StrictMode -Version Latest
@@ -362,7 +364,86 @@ function Test-ProcessBelongsToPath {
 
     $normalizedCommand = $CommandLine.Replace("/", "\")
     $normalizedPath = $ExpectedPath.Replace("/", "\").TrimEnd("\")
-    return $normalizedCommand.IndexOf($normalizedPath, [System.StringComparison]::OrdinalIgnoreCase) -ge 0
+    $searchFrom = 0
+    while ($searchFrom -lt $normalizedCommand.Length) {
+        $matchIndex = $normalizedCommand.IndexOf(
+            $normalizedPath,
+            $searchFrom,
+            [System.StringComparison]::OrdinalIgnoreCase
+        )
+        if ($matchIndex -lt 0) {
+            return $false
+        }
+
+        $beforeValid = $matchIndex -eq 0
+        if (-not $beforeValid) {
+            $before = $normalizedCommand[$matchIndex - 1]
+            $beforeValid = [char]::IsWhiteSpace($before) -or $before -in @('"', "'", '=')
+        }
+
+        $afterIndex = $matchIndex + $normalizedPath.Length
+        $afterValid = $afterIndex -eq $normalizedCommand.Length
+        if (-not $afterValid) {
+            $after = $normalizedCommand[$afterIndex]
+            $afterValid = [char]::IsWhiteSpace($after) -or $after -in @('"', "'", '\')
+        }
+
+        if ($beforeValid -and $afterValid) {
+            return $true
+        }
+        $searchFrom = $matchIndex + 1
+    }
+    return $false
+}
+
+function Get-VerifiedListenerProcessId {
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Listeners,
+        [Parameter(Mandatory)][int]$Port,
+        [Parameter(Mandatory)][string]$ExpectedPath,
+        [Parameter(Mandatory)][string]$Label
+    )
+
+    $listenerList = @($Listeners)
+    if ($listenerList.Count -eq 0) {
+        return $null
+    }
+    if ($listenerList.Count -ne 1) {
+        $listenerPids = ($listenerList.ProcessId -join ", ")
+        throw "$Label port $Port has multiple listener processes (PID: $listenerPids). Stop them before starting this profile."
+    }
+
+    $listener = $listenerList[0]
+    if (-not (Test-ProcessBelongsToPath -CommandLine $listener.CommandLine -ExpectedPath $ExpectedPath)) {
+        throw "$Label port $Port is occupied by a process outside this worktree (PID: $($listener.ProcessId)). Stop it or change the ignored local profile."
+    }
+    return [int]$listener.ProcessId
+}
+
+function Set-VerifiedManifestListenerPid {
+    param(
+        [Parameter(Mandatory)][psobject]$Manifest,
+        [Parameter(Mandatory)][ValidateSet("backend", "frontend")][string]$Name,
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Listeners,
+        [Parameter(Mandatory)][int]$Port,
+        [Parameter(Mandatory)][string]$ExpectedPath,
+        [Parameter(Mandatory)][string]$Label
+    )
+
+    $listenerPid = Get-VerifiedListenerProcessId `
+        -Listeners $Listeners `
+        -Port $Port `
+        -ExpectedPath $ExpectedPath `
+        -Label $Label
+    if ($null -eq $listenerPid) {
+        return $null
+    }
+
+    if (-not $Manifest.PSObject.Properties["pids"] -or $null -eq $Manifest.pids) {
+        $Manifest | Add-Member -MemberType NoteProperty -Name "pids" -Value ([pscustomobject]@{}) -Force
+    }
+    $Manifest.pids | Add-Member -MemberType NoteProperty -Name $Name -Value $listenerPid -Force
+    return $listenerPid
 }
 
 function Resolve-LocalListener {
@@ -373,26 +454,35 @@ function Resolve-LocalListener {
         [Parameter(Mandatory)][scriptblock]$StartProcess
     )
 
-    $listeners = @(Get-ListeningProcesses -Port $Port)
-    if ($listeners.Count -gt 0) {
-        $foreignListeners = @(
-            $listeners | Where-Object {
-                -not (Test-ProcessBelongsToPath -CommandLine $_.CommandLine -ExpectedPath $ExpectedPath)
-            }
-        )
-        if ($foreignListeners.Count -gt 0) {
-            $foreignPids = ($foreignListeners.ProcessId -join ", ")
-            throw "$Label port $Port is occupied by a process outside this worktree (PID: $foreignPids). Stop it or change the ignored local profile."
-        }
-
-        $reusedPid = [int]$listeners[0].ProcessId
+    $listenerPid = Get-VerifiedListenerProcessId `
+        -Listeners @(Get-ListeningProcesses -Port $Port) `
+        -Port $Port `
+        -ExpectedPath $ExpectedPath `
+        -Label $Label
+    if ($null -ne $listenerPid) {
+        $reusedPid = [int]$listenerPid
         Write-Host "Reusing $Label from this worktree (PID $reusedPid)."
         return $reusedPid
     }
 
     $startedProcess = & $StartProcess
     Write-Host "Started $Label (PID $($startedProcess.Id))."
-    return [int]$startedProcess.Id
+    $deadline = [DateTime]::UtcNow.AddSeconds(60)
+    while ([DateTime]::UtcNow -lt $deadline) {
+        $listenerPid = Get-VerifiedListenerProcessId `
+            -Listeners @(Get-ListeningProcesses -Port $Port) `
+            -Port $Port `
+            -ExpectedPath $ExpectedPath `
+            -Label $Label
+        if ($null -ne $listenerPid) {
+            if ([int]$listenerPid -ne [int]$startedProcess.Id) {
+                Write-Host "Resolved $Label listener PID $listenerPid from launcher PID $($startedProcess.Id)."
+            }
+            return [int]$listenerPid
+        }
+        Start-Sleep -Milliseconds 200
+    }
+    throw "$Label did not bind port $Port within 60 seconds. Logs: $runtimeDirectory"
 }
 
 function Assert-LocalListenerOwnership {
@@ -402,15 +492,11 @@ function Assert-LocalListenerOwnership {
         [Parameter(Mandatory)][string]$Label
     )
 
-    $foreignListeners = @(
-        Get-ListeningProcesses -Port $Port | Where-Object {
-            -not (Test-ProcessBelongsToPath -CommandLine $_.CommandLine -ExpectedPath $ExpectedPath)
-        }
-    )
-    if ($foreignListeners.Count -gt 0) {
-        $foreignPids = ($foreignListeners.ProcessId -join ", ")
-        throw "$Label port $Port is occupied by a process outside this worktree (PID: $foreignPids). Stop it or change the ignored local profile."
-    }
+    $null = Get-VerifiedListenerProcessId `
+        -Listeners @(Get-ListeningProcesses -Port $Port) `
+        -Port $Port `
+        -ExpectedPath $ExpectedPath `
+        -Label $Label
 }
 
 function Assert-LocalReuseManifest {
@@ -458,39 +544,20 @@ function Assert-LocalReuseManifest {
         throw "Existing local listeners do not match the requested profile target, URL, database, ports, or Git SHA. Stop the old processes before starting this profile."
     }
 
-    if (
-        $backendListeners.Count -gt 0 -and
-        (
-            -not $manifest.pids.PSObject.Properties["backend"] -or
-            [int]$manifest.pids.backend -notin $backendListeners.ProcessId
-        )
-    ) {
-        throw "Existing backend listener does not match the runtime manifest PID. Stop the old process before starting this profile."
-    }
-    if (
-        $frontendListeners.Count -gt 0 -and
-        (
-            -not $manifest.pids.PSObject.Properties["frontend"] -or
-            [int]$manifest.pids.frontend -notin $frontendListeners.ProcessId
-        )
-    ) {
-        throw "Existing frontend listener does not match the runtime manifest PID. Stop the old process before starting this profile."
-    }
-
-    if ($RequireRunning) {
-        $backendProcess = @(
-            $backendListeners | Where-Object { $_.ProcessId -eq [int]$manifest.pids.backend }
-        )[0]
-        $frontendProcess = @(
-            $frontendListeners | Where-Object { $_.ProcessId -eq [int]$manifest.pids.frontend }
-        )[0]
-        if (-not (Test-ProcessBelongsToPath -CommandLine $backendProcess.CommandLine -ExpectedPath $backendRoot)) {
-            throw "The manifest backend PID does not belong to this worktree."
-        }
-        if (-not (Test-ProcessBelongsToPath -CommandLine $frontendProcess.CommandLine -ExpectedPath $frontendRoot)) {
-            throw "The manifest frontend PID does not belong to this worktree."
-        }
-    }
+    $null = Set-VerifiedManifestListenerPid `
+        -Manifest $manifest `
+        -Name "backend" `
+        -Listeners $backendListeners `
+        -Port $backendPort `
+        -ExpectedPath $backendRoot `
+        -Label "Backend"
+    $null = Set-VerifiedManifestListenerPid `
+        -Manifest $manifest `
+        -Name "frontend" `
+        -Listeners $frontendListeners `
+        -Port $frontendPort `
+        -ExpectedPath $frontendRoot `
+        -Label "Frontend"
 
     return $manifest
 }
@@ -703,6 +770,10 @@ function Invoke-SharedCompose {
         Write-Host "Database: $($Database["backend"])/$($Database["name"])"
         Write-Host "Runtime manifest: $manifestPath"
     }
+}
+
+if ($LibraryOnly) {
+    return
 }
 
 if ($InitializeLocal) {

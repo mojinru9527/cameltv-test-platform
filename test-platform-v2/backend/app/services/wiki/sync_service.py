@@ -49,6 +49,16 @@ class WikiSyncResult:
 
 
 @dataclass
+class WikiSyncAvailability:
+    """Current project's executable Wiki sync preconditions."""
+    available: bool
+    reason: str = ""
+    release_bundle_id: int | None = None
+    release_bundle_name: str = ""
+    release_bundle_status: str = ""
+
+
+@dataclass
 class WikiTreeNode:
     """A node in the Wiki directory tree."""
     path: str  # e.g. "/体育平台/APP端/资讯/资讯列表"
@@ -69,6 +79,52 @@ _PAGE_TYPE_MAP = {
     "attachment": "attachment",
     "function_point": "requirement",
 }
+
+
+def get_sync_availability(
+    db: Session,
+    *,
+    project_id: int,
+    wiki_enabled: bool,
+) -> WikiSyncAvailability:
+    """Return a read-only, project-scoped preflight for Wiki bundle sync."""
+    if not wiki_enabled:
+        return WikiSyncAvailability(
+            available=False,
+            reason="Wiki 知识库未启用，请先启用 Wiki 能力。",
+        )
+
+    active_bundle = db.scalar(
+        select(ReleaseBundle)
+        .where(
+            ReleaseBundle.project_id == project_id,
+            ReleaseBundle.status == "active",
+        )
+        .order_by(ReleaseBundle.id.desc())
+        .limit(1)
+    )
+    if active_bundle:
+        return WikiSyncAvailability(
+            available=True,
+            release_bundle_id=active_bundle.id,
+            release_bundle_name=active_bundle.name,
+            release_bundle_status=active_bundle.status,
+        )
+
+    has_bundle = db.scalar(
+        select(ReleaseBundle.id)
+        .where(ReleaseBundle.project_id == project_id)
+        .limit(1)
+    )
+    if has_bundle:
+        return WikiSyncAvailability(
+            available=False,
+            reason="当前项目没有启用中的发布包，请在发布包管理中选择一个版本并设为启用。",
+        )
+    return WikiSyncAvailability(
+        available=False,
+        reason="当前项目暂无发布包，请先创建发布包并设为启用，或选择已有启用发布包。",
+    )
 
 
 # ── Content Hash ──

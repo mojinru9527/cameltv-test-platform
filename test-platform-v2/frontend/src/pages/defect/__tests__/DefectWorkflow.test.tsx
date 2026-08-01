@@ -109,6 +109,9 @@ describe('缺陷状态机', () => {
       })
       expect(onTransitioned).toHaveBeenCalledWith(confirmed)
     })
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '状态流转' })).toBeNull()
+    })
   })
 })
 

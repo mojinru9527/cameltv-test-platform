@@ -72,6 +72,7 @@ export const router = createBrowserRouter([
       { path: 'special', element: <PageLoader><SpecialPage /></PageLoader> },
       { path: 'schedule', element: <PageLoader><SchedulePage /></PageLoader> },
       { path: 'defect', element: <PageLoader><DefectPage /></PageLoader> },
+      { path: 'defect/:id', element: <PageLoader><DefectPage /></PageLoader> },
       { path: 'report', element: <PageLoader><ReportPage /></PageLoader> },
       { path: 'system', element: <PageLoader><SystemPage /></PageLoader> },
       { path: 'project', element: <PageLoader><ProjectPage /></PageLoader> },

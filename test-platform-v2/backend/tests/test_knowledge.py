@@ -32,6 +32,9 @@ def kdb():
     )
     Base.metadata.create_all(bind=engine)
     session = sessionmaker(bind=engine)()
+    from app.models.project import Project
+    session.add(Project(id=1, code="KNOWLEDGE-TEST", name="Knowledge Test Project"))
+    session.commit()
     try:
         yield session
     finally:
@@ -852,6 +855,80 @@ class TestGraphApi:
         assert resp.status_code == 503
         assert resp.json()["code"] == 503
 
+    def test_extract_rejects_project_without_active_chunks_without_side_effects(
+        self, kdb, kclient, monkeypatch,
+    ):
+        from unittest.mock import Mock
+        from app.api.v1 import knowledge as knowledge_api
+        from app.core.config import settings
+        from app.models.audit import AuditLog
+        from app.models.knowledge import KnowledgeEntity
+
+        monkeypatch.setattr(settings, "knowledge_graph_enabled", True, raising=False)
+        extract = Mock(return_value={"extracted": 0, "relations": 0, "skipped": 0, "message": ""})
+        monkeypatch.setattr(knowledge_api, "extract_and_build_graph_in_new_session", extract)
+        audit_before = kdb.query(AuditLog).count()
+        entity_before = kdb.query(KnowledgeEntity).count()
+
+        resp = kclient.post("/api/v1/knowledge/graph/extract", json={"max_chunks": 10})
+
+        assert resp.status_code == 409
+        assert resp.json() == {
+            "code": 409,
+            "msg": "当前项目没有可提取的有效知识片段，请先导入并解析知识源",
+            "data": None,
+        }
+        assert kdb.query(AuditLog).count() == audit_before
+        assert kdb.query(KnowledgeEntity).count() == entity_before
+        extract.assert_not_called()
+
+    def test_extract_rejects_source_without_active_chunks_without_side_effects(
+        self, kdb, kclient, monkeypatch,
+    ):
+        from unittest.mock import Mock
+        from app.api.v1 import knowledge as knowledge_api
+        from app.core.config import settings
+        from app.models.audit import AuditLog
+        from app.models.knowledge import KnowledgeChunk, KnowledgeEntity, KnowledgeSource
+
+        monkeypatch.setattr(settings, "knowledge_graph_enabled", True, raising=False)
+        unavailable_source = KnowledgeSource(
+            project_id=1, source_type="manual", title="Unavailable", status="parsed",
+        )
+        available_source = KnowledgeSource(
+            project_id=1, source_type="manual", title="Available", status="parsed",
+        )
+        kdb.add_all([unavailable_source, available_source])
+        kdb.flush()
+        kdb.add_all([
+            KnowledgeChunk(
+                project_id=1, source_id=unavailable_source.id, content="stale", status="deprecated",
+            ),
+            KnowledgeChunk(
+                project_id=1, source_id=available_source.id, content="active", status="active",
+            ),
+        ])
+        kdb.commit()
+        extract = Mock(return_value={"extracted": 0, "relations": 0, "skipped": 0, "message": ""})
+        monkeypatch.setattr(knowledge_api, "extract_and_build_graph_in_new_session", extract)
+        audit_before = kdb.query(AuditLog).count()
+        entity_before = kdb.query(KnowledgeEntity).count()
+
+        resp = kclient.post(
+            "/api/v1/knowledge/graph/extract",
+            json={"source_id": unavailable_source.id, "max_chunks": 10},
+        )
+
+        assert resp.status_code == 409
+        assert resp.json() == {
+            "code": 409,
+            "msg": "指定知识源没有可提取的有效知识片段",
+            "data": None,
+        }
+        assert kdb.query(AuditLog).count() == audit_before
+        assert kdb.query(KnowledgeEntity).count() == entity_before
+        extract.assert_not_called()
+
     def test_entities_list_empty(self, kclient):
         resp = kclient.get("/api/v1/knowledge/graph/entities")
         assert resp.status_code == 200
@@ -896,7 +973,11 @@ class TestGraphApi:
         assert data[0]["relation_type"] == "contains"
 
     def test_graph_view(self, kdb, kclient):
-        from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
+        from app.models.knowledge import KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource
+        source = KnowledgeSource(project_id=1, source_type="manual", title="Graph", status="parsed")
+        kdb.add(source)
+        kdb.flush()
+        kdb.add(KnowledgeChunk(project_id=1, source_id=source.id, content="graph", status="active"))
         e1 = KnowledgeEntity(id=201, project_id=1, entity_type="api", entity_key="g1", name="GET /a", confidence=0.9)
         e2 = KnowledgeEntity(id=202, project_id=1, entity_type="field", entity_key="g2", name="f1", confidence=0.7)
         kdb.add_all([e1, e2])
@@ -910,6 +991,22 @@ class TestGraphApi:
         body = resp.json()["data"]
         assert len(body["nodes"]) >= 2
         assert len(body["edges"]) >= 1
+        assert body["extract_available"] is True
+        assert body["unavailable_reason"] == ""
+
+    def test_empty_graph_view_explains_why_extraction_is_unavailable(self, kclient, monkeypatch):
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "knowledge_graph_enabled", True, raising=False)
+
+        resp = kclient.get("/api/v1/knowledge/graph/view")
+
+        assert resp.status_code == 200
+        assert resp.json()["data"] == {
+            "nodes": [],
+            "edges": [],
+            "extract_available": False,
+            "unavailable_reason": "当前项目没有可提取的有效知识片段，请先导入并解析知识源",
+        }
 
     def test_approve_relation(self, kdb, kclient):
         from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
@@ -1077,6 +1174,36 @@ class TestAgentApi:
         assert len(types) >= 4
         assert any(t["type"] == "requirement_analysis" for t in types)
 
+    def test_agent_types_report_unavailable_without_ai_key(self, kclient, monkeypatch):
+        from app.api.v1 import agent as agent_api
+
+        monkeypatch.setattr(agent_api.settings, "ai_enabled", True)
+        monkeypatch.setattr(agent_api.settings, "ai_api_key", "")
+
+        resp = kclient.get("/api/v1/agents/types")
+
+        assert resp.status_code == 200
+        types = resp.json()["data"]
+        assert all(item["available"] is False for item in types)
+        assert all(item["unavailable_reason"] == "AI_API_KEY 未配置" for item in types)
+
+    def test_trigger_rejected_before_enqueue_without_ai_key(self, kclient, kdb, monkeypatch):
+        from app.api.v1 import agent as agent_api
+        from app.models.knowledge import AgentQueueItem
+
+        monkeypatch.setattr(agent_api.settings, "ai_enabled", True)
+        monkeypatch.setattr(agent_api.settings, "ai_api_key", "")
+
+        before = kdb.query(AgentQueueItem).count()
+        resp = kclient.post(
+            "/api/v1/agents/run/requirement_analysis",
+            json={"query": "Batch 60 体育需求"},
+        )
+
+        assert resp.status_code == 503
+        assert resp.json()["msg"] == "AI_API_KEY 未配置"
+        assert kdb.query(AgentQueueItem).count() == before
+
     def test_trigger_without_permission(self, kclient):
         """没有 agent:run 权限→ 403。"""
         # kclient 使用 * 权限，本测试验证占位；
@@ -1140,4 +1267,3 @@ class TestArtifactWriteApi:
         resp = kclient.post("/api/v1/knowledge/ai-artifacts/99999/approve", json={"comment": ""})
         assert resp.status_code == 200
         assert resp.json()["code"] == 404
-

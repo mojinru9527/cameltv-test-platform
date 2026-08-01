@@ -33,8 +33,15 @@ Thumbs.db
 
 # Local databases (dev SQLite — must never be committed)
 *.db
+*.db-*
 *.sqlite
 *.sqlite3
+*.sqlite-*
+
+# Backup and editor recovery files
+*.bak
+*.orig
+*~
 
 # Throwaway verification worktrees
 .verify-*/

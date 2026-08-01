@@ -1964,3 +1964,8 @@ html.theme-transition *::after {
   --border-high-contrast: rgba(218, 239, 224, 0.18);
   --theme-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
+
+.mindmap-canvas foreignObject,
+.mindmap-canvas foreignObject * {
+  color: var(--foreground) !important;
+}

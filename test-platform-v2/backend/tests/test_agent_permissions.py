@@ -70,6 +70,15 @@ def _make_client(db_session, permissions: list[str], project_id: int = 1) -> Tes
     return TestClient(app)
 
 
+@pytest.fixture()
+def available_ai(monkeypatch):
+    """Allow queue-path tests to pass the production AI availability preflight."""
+    from app.api.v1 import agent as agent_api
+
+    monkeypatch.setattr(agent_api.settings, "ai_enabled", True)
+    monkeypatch.setattr(agent_api.settings, "ai_api_key", "test-placeholder-key")
+
+
 # ═══════════════════════════════════════════════════════
 # 测试用例
 # ═══════════════════════════════════════════════════════
@@ -157,7 +166,7 @@ class TestAgentRunWrite:
             from app.main import app
             app.dependency_overrides.clear()
 
-    def test_trigger_succeeds_with_run_permission(self, agent_db):
+    def test_trigger_succeeds_with_run_permission(self, agent_db, available_ai):
         """agent:view + agent:run 可触发 Agent（入队成功）。"""
         c = _make_client(agent_db, ["agent:view", "agent:run"])
         try:
@@ -175,7 +184,9 @@ class TestAgentRunWrite:
             from app.main import app
             app.dependency_overrides.clear()
 
-    def test_trigger_commits_before_starting_processor(self, agent_db, monkeypatch):
+    def test_trigger_commits_before_starting_processor(
+        self, agent_db, available_ai, monkeypatch,
+    ):
         """The worker must not see a queue row until the request transaction commits."""
         from types import SimpleNamespace
 
@@ -205,7 +216,9 @@ class TestAgentRunWrite:
             from app.main import app
             app.dependency_overrides.clear()
 
-    def test_trigger_returns_503_when_queue_lock_retries_are_exhausted(self, agent_db, monkeypatch):
+    def test_trigger_returns_503_when_queue_lock_retries_are_exhausted(
+        self, agent_db, available_ai, monkeypatch,
+    ):
         """SQLite writer contention is a retryable 503, never an internal 500."""
         import app.api.v1.agent as agent_api
         from app.services.knowledge.agent_queue import QueueWriteBusy
@@ -245,7 +258,7 @@ class TestAgentRunWrite:
         ],
     )
     def test_trigger_returns_503_when_commit_is_locked(
-        self, lock_message, agent_db, monkeypatch,
+        self, lock_message, agent_db, available_ai, monkeypatch,
     ):
         """A lock raised while committing must not escape as a raw HTTP 500."""
         from types import SimpleNamespace
@@ -274,6 +287,33 @@ class TestAgentRunWrite:
             assert resp.json()["code"] == 503
             assert resp.json()["msg"] == "Agent queue is temporarily busy; retry shortly"
             start_processor.assert_not_called()
+        finally:
+            from app.main import app
+            app.dependency_overrides.clear()
+
+    def test_trigger_returns_503_without_ai_configuration(self, agent_db, monkeypatch):
+        """agent:run cannot bypass the production AI availability preflight."""
+        import app.api.v1.agent as agent_api
+
+        monkeypatch.setattr(agent_api.settings, "ai_enabled", True)
+        monkeypatch.setattr(agent_api.settings, "ai_api_key", "")
+        enqueue = MagicMock()
+        monkeypatch.setattr(agent_api, "enqueue", enqueue)
+
+        c = _make_client(agent_db, ["agent:view", "agent:run"])
+        try:
+            resp = c.post(
+                "/api/v1/agents/run/case_generation",
+                headers={"X-Project-Id": "1"},
+                json={"query": "generate cases"},
+            )
+            assert resp.status_code == 503
+            assert resp.json() == {
+                "code": 503,
+                "msg": "AI_API_KEY 未配置",
+                "data": None,
+            }
+            enqueue.assert_not_called()
         finally:
             from app.main import app
             app.dependency_overrides.clear()

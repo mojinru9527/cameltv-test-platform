@@ -138,8 +138,45 @@ class TestPlaywrightExecutorPopen:
         db_session.refresh(run)
         # PID should have been recorded
         assert run.process_id == 99999
+        assert mock_popen.call_args.kwargs["encoding"] == "utf-8"
+        assert mock_popen.call_args.kwargs["errors"] == "replace"
 
         # Cleanup
+        spec_path.unlink(missing_ok=True)
+
+    def test_executor_drains_output_before_waiting_for_process_exit(
+        self, db_session, ui_job_factory, ui_run_factory,
+    ):
+        job = ui_job_factory(test_spec="specs/output-drain.spec.ts")
+        from app.services.playwright_executor import PLAYWRIGHT_DIR
+
+        spec_path = PLAYWRIGHT_DIR / job.test_spec
+        spec_path.parent.mkdir(parents=True, exist_ok=True)
+        spec_path.write_text("// mock spec", encoding="utf-8")
+        run = ui_run_factory(job_id=job.id, status="pending")
+
+        output_reader_started = threading.Event()
+        mock_proc = MagicMock(spec=subprocess.Popen)
+        mock_proc.pid = 99998
+        mock_proc.returncode = 0
+        mock_proc.communicate.side_effect = lambda: (
+            output_reader_started.set() or '{"suites":[]}',
+            "",
+        )
+
+        def poll_after_reader_started():
+            assert output_reader_started.wait(1), "stdout/stderr must be drained while the child is running"
+            return 0
+
+        mock_proc.poll.side_effect = poll_after_reader_started
+
+        with patch("subprocess.Popen", return_value=mock_proc):
+            with patch("app.services.playwright_executor.shutil.which", return_value="/usr/bin/npx"):
+                from app.services.playwright_executor import run_playwright_test
+                result = run_playwright_test(db_session, run.id, job.id, job.project_id)
+
+        assert output_reader_started.is_set()
+        assert result["status"] == "done"
         spec_path.unlink(missing_ok=True)
 
     def test_executor_sets_artifact_dir(self, db_session, ui_job_factory, ui_run_factory, monkeypatch):
@@ -649,6 +686,22 @@ class TestPlaywrightExecutorHelperFunctions:
         with patch("app.services.playwright_executor.shutil.which", return_value=None):
             result = _resolve_cmd("nonexistent-cmd")
             assert result is None
+
+    def test_health_rejects_global_cli_when_local_test_package_is_missing(self, tmp_path, monkeypatch):
+        from app.services import playwright_executor
+
+        playwright_dir = tmp_path / "playwright"
+        playwright_dir.mkdir()
+        monkeypatch.setattr(playwright_executor, "PLAYWRIGHT_DIR", playwright_dir)
+        monkeypatch.setattr(playwright_executor, "_resolve_cmd", lambda _: "npx")
+        run = MagicMock()
+        monkeypatch.setattr(playwright_executor.subprocess, "run", run)
+
+        available, message = playwright_executor._check_playwright_installed()
+
+        assert available is False
+        assert "npm ci" in message
+        run.assert_not_called()
 
     def test_list_available_specs(self, monkeypatch, tmp_path):
         """_list_available_specs should find .spec.js and .spec.ts files."""

@@ -93,7 +93,13 @@ export default function DefectTable({
       {(d) => (
         <>
           <div className="rounded-lg border">
-            <Table>
+            <Table
+              containerProps={{
+                role: 'region',
+                'aria-label': '缺陷列表，可横向滚动',
+                tabIndex: 0,
+              }}
+            >
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[160px]">编号</TableHead>

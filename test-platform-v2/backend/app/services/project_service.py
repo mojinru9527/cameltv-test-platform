@@ -35,6 +35,12 @@ def is_member(db: Session, user_id: int, project_id: int) -> bool:
     return row is not None
 
 
+def is_active_project(db: Session, project_id: int) -> bool:
+    return db.scalar(
+        select(Project.id).where(Project.id == project_id, Project.status == 1)
+    ) is not None
+
+
 # ══════════════════════════════════════════════
 # Admin CRUD
 # ══════════════════════════════════════════════

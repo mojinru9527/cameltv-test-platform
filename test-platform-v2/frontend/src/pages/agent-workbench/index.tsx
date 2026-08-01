@@ -227,11 +227,11 @@ export default function AgentWorkbenchPage() {
                       className="w-full mt-3"
                       size="sm"
                       onClick={() => setTriggerDialog(t)}
-                      disabled={!canRun}
-                      title={canRun ? undefined : '需要 agent:run 权限'}
+                      disabled={!canRun || !t.available}
+                      title={!canRun ? '需要 agent:run 权限' : t.unavailable_reason || undefined}
                     >
                       <Play className="size-4 mr-1" />
-                      执行
+                      {t.available ? '执行' : '暂不可用'}
                     </Button>
                   </CardContent>
                 </Card>

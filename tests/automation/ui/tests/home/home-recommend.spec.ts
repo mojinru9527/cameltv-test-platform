@@ -3,8 +3,7 @@
  *
  * 对应 P0 用例: TC-HOME-001, 002
  */
-import { test, expect } from '@playwright/test';
-import { aiBoolean, aiAction } from '@midscene/web';
+import { test } from '../../utils/ai-test';
 import { login } from '../../utils/auth';
 import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
 
@@ -13,9 +12,9 @@ const SESSION = 'home-recommend';
 test.describe('HOME — 首页推荐', () => {
   test.beforeAll(() => initTrafficCapture(SESSION));
   test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(() => flushTrafficCapture());
+  test.afterAll(async () => { await flushTrafficCapture(); });
 
-  test('TC-HOME-001: 展示 Yield 前5作者推荐', async ({ page }) => {
+  test('TC-HOME-001: 展示 Yield 前5作者推荐', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(3000);
 
@@ -25,7 +24,7 @@ test.describe('HOME — 首页推荐', () => {
     console.log(`Recommendation section visible: ${hasRecommended}`);
   });
 
-  test('TC-HOME-001: 推荐作者按 Yield 排序', async ({ page }) => {
+  test('TC-HOME-001: 推荐作者按 Yield 排序', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(3000);
 

@@ -68,7 +68,30 @@ def update_integration(db: Session, integration_id: int, data: dict, project_id:
     if "enabled" in data and data["enabled"] is not None:
         row.enabled = data["enabled"]
     if "auth_json" in data and data["auth_json"] is not None and data["auth_json"] != MASKED:
-        row.auth_json = encrypt_value(data["auth_json"])
+        incoming_raw = data["auth_json"]
+        try:
+            incoming_auth = json.loads(incoming_raw) if isinstance(incoming_raw, str) else incoming_raw
+        except (json.JSONDecodeError, TypeError):
+            incoming_auth = None
+
+        if isinstance(incoming_auth, dict):
+            try:
+                existing_auth = json.loads(decrypt_value(row.auth_json))
+            except (json.JSONDecodeError, TypeError, ValueError):
+                existing_auth = {}
+            if not isinstance(existing_auth, dict):
+                existing_auth = {}
+
+            explicit_values = {
+                key: value
+                for key, value in incoming_auth.items()
+                if value is not None and value != ""
+            }
+            if explicit_values:
+                existing_auth.update(explicit_values)
+                row.auth_json = encrypt_value(json.dumps(existing_auth, ensure_ascii=False))
+        else:
+            row.auth_json = encrypt_value(incoming_raw)
 
     row.updated_at = datetime.now(timezone.utc)
     db.commit()

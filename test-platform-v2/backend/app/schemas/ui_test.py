@@ -27,6 +27,12 @@ class UiTestJobUpdate(BaseModel):
     environment_id: int | None = None
 
 
+class UiTestTriggerRequest(BaseModel):
+    """Explicit confirmation required before a production UI run is queued."""
+
+    confirm_prod: bool = False
+
+
 class UiTestRunOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

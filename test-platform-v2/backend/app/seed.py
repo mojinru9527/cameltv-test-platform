@@ -100,6 +100,7 @@ _ACTIONS = [
     ("uitest:update", "编辑UI自动化任务", "button"),
     ("uitest:delete", "删除UI自动化任务", "button"),
     ("uitest:trigger", "触发UI自动化", "button"),
+    ("uitest:trigger_prod", "触发生产环境UI自动化", "button"),
     # API 测试
     ("apitest:execute", "执行接口测试", "button"),
     ("apitest:view", "查看接口测试", "button"),
@@ -176,6 +177,7 @@ _ACTIONS = [
 _TESTER_ACTIONS = {
     "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
     "apitest:task", "apitest:asset_manage",
+    "schedule:list",
     "knowledge:view",
     "agent:view", "agent:list",
     "wiki:view", "wiki:diff",

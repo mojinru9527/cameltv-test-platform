@@ -1,7 +1,7 @@
 ---
 title: "架构决策记录 (ADR) — 索引"
 owner: "tech-lead"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-07-30"
 status: "active"
 expires: "2027-06-26"
 tags: ["adr", "architecture", "decisions", "index"]
@@ -26,6 +26,7 @@ related: ["template.md", "0001-use-python-fastapi-monostack.md", "../document-st
 | [0007](0007-deepseek-llm-test-case-generation.md) | DeepSeek LLM 驱动 AI 测试用例生成 | ✅ 已采纳 | 2026-03 |
 | [0008](0008-jenkins-github-actions-dual-cicd.md) | Jenkins + GitHub Actions 双通道 CI/CD | ✅ 已采纳 | 2026-01 |
 | [0013](0013-llm-wiki-structured-knowledge-diff.md) | 自建 LLM-Wiki 结构化知识层与 RAG/Wiki 差异对比 | ✅ 已采纳 | 2026-07 |
+| [0015](0015-operations-release-control-plane.md) | 采用统一运维发布控制面交付测试平台 | 🟡 提议中 | 2026-07 |
 
 ## ADR 状态
 

@@ -14,6 +14,8 @@ import json
 import logging
 from typing import Any
 
+from app.core.config import settings
+
 logger = logging.getLogger("knowledge.skills")
 
 # ── 预置 Skills 模板 ──
@@ -137,8 +139,17 @@ SKILL_TEMPLATES: dict[str, dict[str, Any]] = {
 }
 
 
+def _skill_unavailable_reason() -> str:
+    if not settings.ai_enabled:
+        return "AI 服务未启用"
+    if not settings.ai_api_key:
+        return "AI_API_KEY 未配置"
+    return ""
+
+
 def list_skills() -> list[dict[str, Any]]:
-    """列出所有可用 Skills 模板（不含 prompt_template 细节）。"""
+    """列出所有 Skills 模板及当前可用性（不含 prompt_template 细节）。"""
+    unavailable_reason = _skill_unavailable_reason()
     return [
         {
             "name": s["name"],
@@ -147,6 +158,8 @@ def list_skills() -> list[dict[str, Any]]:
             "icon": s["icon"],
             "category": s["category"],
             "input_params": s["input_params"],
+            "available": not unavailable_reason,
+            "unavailable_reason": unavailable_reason,
         }
         for s in SKILL_TEMPLATES.values()
     ]
@@ -210,6 +223,14 @@ async def apply_skill_in_new_session(
     if not skill:
         return {"error": f"未知 Skill: {skill_name}", "success": False}
 
+    unavailable_reason = _skill_unavailable_reason()
+    if unavailable_reason:
+        return {
+            "success": False,
+            "skill": skill_name,
+            "error": unavailable_reason,
+        }
+
     params = params or {}
 
     # 填充默认参数
@@ -255,15 +276,16 @@ async def apply_skill_in_new_session(
                 }
         except Exception as e:
             logger.warning("Agent orchestrator unavailable for skill %s: %s", skill_name, e)
+            return {
+                "success": False,
+                "skill": skill_name,
+                "error": f"Agent 执行异常: {e}",
+            }
 
-        # 降级：返回上下文和 prompt（供手动使用）
         return {
-            "success": True,
+            "success": False,
             "skill": skill_name,
-            "knowledge_context": knowledge_context[:2000],
-            "prompt": prompt[:2000],
-            "params": filled_params,
-            "note": "Agent 执行器不可用，返回原始知识上下文和分析提示词",
+            "error": (result or {}).get("error") or "Agent 未返回成功结果",
         }
     except Exception as e:
         logger.exception("Apply skill %s failed", skill_name)

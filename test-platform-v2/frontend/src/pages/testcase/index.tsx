@@ -39,9 +39,10 @@ import { AsyncState } from '@/components/state'
 import { Search, RotateCcw, Plus, Edit, Trash2, History, FileCheck, CheckCircle2, XCircle, Send } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase } from '@/api/testcase'
-import { formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
+import { countCasesByType, formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuthStore } from '@/stores/auth'
 import CaseDrawer from './CaseDrawer'
 import VersionDialog from './VersionDialog'
 import type { TestCaseVersion } from '@/types'
@@ -53,6 +54,13 @@ const REVIEW_TONES: Record<string, BadgeTone> = { draft: 'neutral', submitted: '
 
 export default function TestCasePage() {
   useDocumentTitle('用例库')
+  const hasPerm = useAuthStore((state) => state.hasPerm)
+  const canCreate = hasPerm('testcase:create')
+  const canUpdate = hasPerm('testcase:update')
+  const canDelete = hasPerm('testcase:delete')
+  const canSubmitReview = hasPerm('review:submit')
+  const canApproveReview = hasPerm('review:approve')
+  const canBatchSelect = canUpdate || canDelete
   // filter state (default to manual - api cases managed in apitest module)
   const [actTab, setActTab] = useState('manual')
   const [selDomain, setSelDomain] = useState('')
@@ -72,6 +80,7 @@ export default function TestCasePage() {
   const [batchDeleting, setBatchDeleting] = useState(false)
   const [batchUpdating, setBatchUpdating] = useState(false)
   const [batchPriority, setBatchPriority] = useState('')
+  const [batchDeleteDialog, setBatchDeleteDialog] = useState(false)
 
   // delete dialog
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
@@ -110,6 +119,7 @@ export default function TestCasePage() {
     [],
   )
   const domains = useMemo(() => domainData || [], [domainData])
+  const caseTypeCounts = useMemo(() => countCasesByType(domains), [domains])
 
   const items = useMemo(() => data?.items || [], [data?.items])
   // Sort newest first (created_at descending, fallback to id descending)
@@ -139,6 +149,7 @@ export default function TestCasePage() {
       await batchDeleteCases(Array.from(selected))
       toast.success(`已删除 ${selected.size} 条用例`)
       setSelected(new Set())
+      setBatchDeleteDialog(false)
       refetch()
     } catch {
       toast.error('批量删除失败')
@@ -260,8 +271,8 @@ export default function TestCasePage() {
       {/* Top Tabs */}
       <div className="flex items-center gap-2">
         {([
-          ['', '全部 (901)'],
-          ['manual', '功能用例 (795)'],
+          ['', `全部 (${caseTypeCounts.all})`],
+          ['manual', `功能用例 (${caseTypeCounts.manual})`],
         ]).map(([k, label]) => (
           <button
             key={k as string}
@@ -378,17 +389,19 @@ export default function TestCasePage() {
               重置
             </Button>
             <div className="hidden flex-1 sm:block" />
-            <Button size="sm" className="w-full sm:w-auto" onClick={() => openEdit()}>
-              <Plus className="size-3.5" data-icon="inline-start" />
-              新建用例
-            </Button>
+            {canCreate && (
+              <Button size="sm" className="w-full sm:w-auto" onClick={() => openEdit()}>
+                <Plus className="size-3.5" data-icon="inline-start" />
+                新建用例
+              </Button>
+            )}
           </div>
 
           {/* Batch toolbar */}
           {selected.size > 0 && (
             <div className="flex items-center gap-2 rounded-md border bg-accent/30 px-3 py-2">
               <span className="text-sm font-medium">已选 {selected.size} 条</span>
-              <Select value={batchPriority || undefined} onValueChange={setBatchPriority}>
+              {canUpdate && <Select value={batchPriority || undefined} onValueChange={setBatchPriority}>
                 <SelectTrigger className="w-[100px]" size="sm" aria-label="批量设置优先级">
                   <SelectValue placeholder="优先级" />
                 </SelectTrigger>
@@ -397,15 +410,15 @@ export default function TestCasePage() {
                     <SelectItem key={v} value={v}>{v}</SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
-              <Button size="sm" variant="secondary" onClick={doBatchUpdate} disabled={batchUpdating || !batchPriority}>
+              </Select>}
+              {canUpdate && <Button size="sm" variant="secondary" onClick={doBatchUpdate} disabled={batchUpdating || !batchPriority}>
                 {batchUpdating ? '更新中...' : '批量更新'}
-              </Button>
+              </Button>}
               <div className="flex-1" />
-              <Button size="sm" variant="danger" onClick={doBatchDelete} disabled={batchDeleting}>
+              {canDelete && <Button size="sm" variant="danger" onClick={() => setBatchDeleteDialog(true)} disabled={batchDeleting}>
                 <Trash2 className="size-3.5" data-icon="inline-start" />
                 {batchDeleting ? '删除中...' : `批量删除 (${selected.size})`}
-              </Button>
+              </Button>}
               <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>取消</Button>
             </div>
           )}
@@ -427,12 +440,14 @@ export default function TestCasePage() {
             onRetry={refetch}
             emptyTitle="暂无测试用例"
             emptyDescription="点击「新建用例」开始创建"
-            emptyAction={{
-              label: keyword || selDomain || selModule || priority ? '清除筛选' : '新建用例',
-              onClick: keyword || selDomain || selModule || priority
-                ? () => { setSelDomain(''); setSelModule(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1) }
-                : () => openEdit(),
-            }}
+            emptyAction={keyword || selDomain || selModule || priority
+              ? {
+                  label: '清除筛选',
+                  onClick: () => { setSelDomain(''); setSelModule(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1) },
+                }
+              : canCreate
+                ? { label: '新建用例', onClick: () => openEdit() }
+                : undefined}
             skeletonType="table"
             loadingRows={4}
           >
@@ -442,11 +457,11 @@ export default function TestCasePage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[40px]">
-                      <Checkbox
+                      {canBatchSelect && <Checkbox
                         checked={selected.size === sortedItems.length && sortedItems.length > 0}
                         onCheckedChange={toggleSelectAll}
                         aria-label="选择当前页全部用例"
-                      />
+                      />}
                     </TableHead>
                     <TableHead className="w-[100px]">模块名称</TableHead>
                     <TableHead className="w-[160px]">用例标题</TableHead>
@@ -467,11 +482,11 @@ export default function TestCasePage() {
                       className={sortedItems.length >= 50 ? '[content-visibility:auto] [contain-intrinsic-size:auto_44px]' : undefined}
                     >
                       <TableCell>
-                        <Checkbox
+                        {canBatchSelect && <Checkbox
                           checked={selected.has(r.id)}
                           onCheckedChange={() => toggleSelect(r.id)}
                           aria-label={`选择用例：${r.title || r.id}`}
-                        />
+                        />}
                       </TableCell>
                       <TableCell className="max-w-[100px] truncate">
                         <span className="line-clamp-1">{r.module || '......'}</span>
@@ -509,7 +524,7 @@ export default function TestCasePage() {
                             <History className="size-3" aria-hidden="true" />
                           </Button>
                           {/* Review actions (batch-34) */}
-                          {r.review_status === 'draft' && (
+                          {canSubmitReview && r.review_status === 'draft' && (
                             <Button
                               size="icon-xs"
                               variant="ghost"
@@ -519,7 +534,7 @@ export default function TestCasePage() {
                               <Send className="size-3 text-status-info" aria-hidden="true" />
                             </Button>
                           )}
-                          {r.review_status === 'submitted' && (
+                          {canApproveReview && r.review_status === 'submitted' && (
                             <>
                               <Button
                                 size="icon-xs"
@@ -539,15 +554,15 @@ export default function TestCasePage() {
                               </Button>
                             </>
                           )}
-                          <Button
+                          {canUpdate && <Button
                             size="icon-xs"
                             variant="ghost"
                             onClick={() => openEdit(r)}
                             aria-label={`编辑用例：${r.title || r.id}`}
                           >
                             <Edit className="size-3" aria-hidden="true" />
-                          </Button>
-                          <AlertDialog open={deleteTarget === r.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
+                          </Button>}
+                          {canDelete && <AlertDialog open={deleteTarget === r.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
                             <AlertDialogTrigger asChild>
                               <Button
                                 size="icon-xs"
@@ -569,7 +584,7 @@ export default function TestCasePage() {
                                 <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>删除</AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
-                          </AlertDialog>
+                          </AlertDialog>}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -618,6 +633,27 @@ export default function TestCasePage() {
         caseData={versionCase}
         versions={versions}
       />
+
+      <AlertDialog open={batchDeleteDialog} onOpenChange={setBatchDeleteDialog}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认批量删除用例？</AlertDialogTitle>
+            <AlertDialogDescription>
+              将删除当前项目中选中的 {selected.size} 条用例。此操作不可撤销，请确认删除范围后继续。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={batchDeleting}>取消</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={doBatchDelete}
+              disabled={batchDeleting || selected.size === 0}
+            >
+              {batchDeleting ? '删除中...' : '确认删除'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Review Dialog (batch-34) ── */}
       <AlertDialog open={reviewDialog} onOpenChange={setReviewDialog}>

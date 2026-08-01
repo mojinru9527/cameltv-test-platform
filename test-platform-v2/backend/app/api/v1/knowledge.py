@@ -63,6 +63,9 @@ from app.services.knowledge.vectorize import embed_pending_chunks_in_new_session
 logger = logging.getLogger("knowledge")
 router = APIRouter(prefix="/knowledge", tags=["知识中心"])
 
+_NO_ACTIVE_CHUNKS = "当前项目没有可提取的有效知识片段，请先导入并解析知识源"
+_NO_ACTIVE_SOURCE_CHUNKS = "指定知识源没有可提取的有效知识片段"
+
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = "") -> None:
     audit_service.write_audit(
@@ -73,6 +76,22 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
         action=action, target=target, detail=detail,
         ip=req.client.host if req.client else "",
     )
+
+
+def _graph_extract_availability(
+    db: Session,
+    project_id: int,
+    source_id: int | None = None,
+) -> tuple[bool, str]:
+    stmt = select(KnowledgeChunk.id).where(
+        KnowledgeChunk.project_id == project_id,
+        KnowledgeChunk.status == "active",
+    )
+    if source_id is not None:
+        stmt = stmt.where(KnowledgeChunk.source_id == source_id)
+    if db.scalar(stmt.limit(1)) is not None:
+        return True, ""
+    return False, _NO_ACTIVE_SOURCE_CHUNKS if source_id is not None else _NO_ACTIVE_CHUNKS
 
 
 # ═══════════════════════════════════════════════════════
@@ -534,6 +553,14 @@ def extract_graph(
     if not settings.knowledge_graph_enabled:
         raise APIException(code=503, msg="知识图谱未启用（knowledge_graph_enabled=False）", http_status=503)
 
+    available, unavailable_reason = _graph_extract_availability(
+        db,
+        current.project_id or 0,
+        body.source_id,
+    )
+    if not available:
+        raise APIException(code=409, msg=unavailable_reason, http_status=409)
+
     result = extract_and_build_graph_in_new_session(
         current.project_id or 0,
         source_id=body.source_id,
@@ -603,6 +630,11 @@ def graph_view(
 ):
     """返回力导向图所需的 nodes + edges 数据。支持按 knowledge_domain 过滤。"""
     pid = current.project_id or 0
+    if settings.knowledge_graph_enabled:
+        extract_available, unavailable_reason = _graph_extract_availability(db, pid)
+    else:
+        extract_available = False
+        unavailable_reason = "知识图谱功能未启用"
 
     stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
     if knowledge_domain:
@@ -653,7 +685,12 @@ def graph_view(
         edge.source = id_to_node_id.get(from_id, edge.source)
         edge.target = id_to_node_id.get(to_id, edge.target)
 
-    return R.ok(GraphViewOut(nodes=nodes, edges=edges))
+    return R.ok(GraphViewOut(
+        nodes=nodes,
+        edges=edges,
+        extract_available=extract_available,
+        unavailable_reason=unavailable_reason,
+    ))
 
 
 @router.post("/graph/relations/{relation_id}/approve", response_model=R[KnowledgeRelationOut], summary="采纳关系")
