@@ -7,8 +7,16 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   fetchWikiConfig, fetchWikiRawSources, fetchWikiPages, fetchWikiPage,
   fetchWikiPageLinks, fetchWikiRawSource, createWikiIngestJob, approveWikiPage, rejectWikiPage,
+  fetchWikiSyncAvailability, syncBundleToWiki,
 } from '@/api/wiki'
-import type { WikiConfig, WikiRawSource, WikiPageBrief, WikiPage, WikiLink } from '@/types'
+import type {
+  WikiConfig,
+  WikiLink,
+  WikiPage,
+  WikiPageBrief,
+  WikiRawSource,
+  WikiSyncAvailability,
+} from '@/types'
 import { useAuthStore } from '@/stores/auth'
 import { Upload, RefreshCw, Loader2, BookOpen, CheckCircle2, FileText, ExternalLink, GitBranch, Layers } from '@/lib/icons'
 import WikiImportDialog from './WikiImportDialog'
@@ -28,6 +36,8 @@ export default function WikiTab() {
   const [raws, setRaws] = useState<WikiRawSource[]>([])
   const [pages, setPages] = useState<WikiPageBrief[]>([])
   const [loading, setLoading] = useState(false)
+  const [syncAvailability, setSyncAvailability] = useState<WikiSyncAvailability | null>(null)
+  const [syncing, setSyncing] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [compiling, setCompiling] = useState<number | null>(null)
   const [selected, setSelected] = useState<WikiPage | null>(null)
@@ -37,14 +47,22 @@ export default function WikiTab() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [cfg, rawPage, pagePage] = await Promise.all([
+      const [cfg, rawPage, pagePage, availability] = await Promise.all([
         fetchWikiConfig().catch(() => null),
         fetchWikiRawSources({ page: 1, page_size: 50 }).catch(() => null),
         fetchWikiPages({ page: 1, page_size: 200 }).catch(() => null),
+        fetchWikiSyncAvailability().catch(() => ({
+          available: false,
+          reason: '无法读取 Wiki 同步前置条件，请稍后重试。',
+          release_bundle_id: null,
+          release_bundle_name: '',
+          release_bundle_status: '',
+        })),
       ])
       if (cfg) setConfig(cfg)
       if (rawPage) setRaws(rawPage.items || [])
       if (pagePage) setPages(pagePage.items || [])
+      setSyncAvailability(availability)
     } finally {
       setLoading(false)
     }
@@ -91,6 +109,28 @@ export default function WikiTab() {
 
   const canManage = hasPerm('wiki:manage')
   const canApprove = hasPerm('wiki:approve')
+  const syncUnavailableReason = !canManage
+    ? '当前账号缺少 Wiki 管理权限，无法同步发布包。'
+    : syncAvailability && !syncAvailability.available
+      ? syncAvailability.reason
+      : ''
+
+  const syncReleaseBundle = async () => {
+    if (!canManage || !syncAvailability?.available || !syncAvailability.release_bundle_id) return
+    setSyncing(true)
+    try {
+      const result = await syncBundleToWiki(syncAvailability.release_bundle_id)
+      toast.success(
+        `Wiki 同步完成：新增 ${result.raw_sources_created}，更新 ${result.raw_sources_updated}，跳过 ${result.raw_sources_skipped}`,
+      )
+      await load()
+    } catch (e: any) {
+      toast.error(e?.message || 'Wiki 同步失败')
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const grouped = pages.reduce<Record<string, WikiPageBrief[]>>((acc, p) => {
     (acc[p.page_type] ||= []).push(p); return acc
   }, {})
@@ -106,6 +146,24 @@ export default function WikiTab() {
         </div>
         <span className="ml-2 text-xs text-muted-foreground">来源 {raws.length} · 页面 {pages.length}</span>
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            className="h-8"
+            aria-label="同步发布包到 Wiki"
+            title={syncAvailability?.release_bundle_name || syncUnavailableReason}
+            onClick={syncReleaseBundle}
+            disabled={
+              loading
+              || syncing
+              || !canManage
+              || !syncAvailability?.available
+              || !syncAvailability.release_bundle_id
+            }
+          >
+            {syncing ? <Loader2 className="size-4 animate-spin" /> : <GitBranch className="size-4" />}
+            同步发布包
+          </Button>
           <Button variant="secondary" size="sm" className="h-8" onClick={load} disabled={loading}>
             {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           </Button>
@@ -116,6 +174,20 @@ export default function WikiTab() {
           )}
         </div>
       </div>
+
+      {syncUnavailableReason && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-status-warning-border bg-status-warning-muted px-3 py-2 text-xs text-status-warning"
+        >
+          <span>{syncUnavailableReason}</span>
+          {canManage && (
+            <a href="/release-bundles" className="font-medium underline underline-offset-2">
+              前往发布包管理
+            </a>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-3">
         {/* 左：来源 + Wiki 页面树 */}

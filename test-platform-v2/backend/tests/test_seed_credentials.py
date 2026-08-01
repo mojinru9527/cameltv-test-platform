@@ -17,6 +17,7 @@ from app.core.config import Settings
 from app.core.db import Base
 from app.core.security import verify_password
 from app.models.project import Project, ProjectMember
+from app.models.rbac import Permission, Role, RolePermission
 from app.models.user import User
 
 
@@ -194,6 +195,31 @@ def test_production_rejects_empty_seed_credentials() -> None:
 
     assert any("ADMIN_PASSWORD" in issue for issue in issues)
     assert any("TESTER_PASSWORD" in issue for issue in issues)
+
+
+def test_tester_role_can_list_visible_schedule_module(
+    seed_session_factory,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(seed, "settings", _development_settings())
+    seed.run_seed()
+    capsys.readouterr()
+
+    with seed_session_factory() as db:
+        tester_role = db.scalar(select(Role).where(Role.code == "tester"))
+        schedule_list = db.scalar(
+            select(Permission).where(Permission.code == "schedule:list")
+        )
+        assert tester_role is not None
+        assert schedule_list is not None
+        assignment = db.scalar(
+            select(RolePermission).where(
+                RolePermission.role_id == tester_role.id,
+                RolePermission.permission_id == schedule_list.id,
+            )
+        )
+        assert assignment is not None
 
 
 def test_local_docs_require_credentials_before_initial_database_creation() -> None:

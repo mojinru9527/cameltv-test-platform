@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, get_current_user, require_permission
+from app.core.deps import CurrentUser, require_permission
 
 logger = logging.getLogger("release_bundles")
 from app.models.release_bundle import ReleaseBundle
@@ -369,7 +369,7 @@ async def confirm_diff(
 @router.get("/{bundle_id}/regression-scope", response_model=R[dict], summary="计算 UI 回归范围")
 def get_regression_scope(
     bundle_id: int,
-    current: CurrentUser = Depends(get_current_user),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
     db: Session = Depends(get_db),
 ):
     """基于 ReleaseBundle 版本差异计算推荐的 UI 回归测试范围。
@@ -408,7 +408,14 @@ def get_regression_scope(
         changed_modules = {m.name for m in modules_rows if m.name}
 
     if not changed_modules:
-        return R.ok({"changed_modules": [], "regression_cases": [], "coverage": {}})
+        return R.ok({
+            "bundle_id": bundle_id,
+            "bundle_name": bundle.name,
+            "client_version": bundle.client_version,
+            "changed_modules": [],
+            "regression_summary": [],
+            "total_regression_cases": 0,
+        })
 
     # 通过 KnowledgeRelation 查找关联的测试用例
     test_summaries = []

@@ -10,7 +10,7 @@ import {
   Loader2,
   Edit,
 } from '@/lib/icons'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   createAvMeasurement,
   createAvTask,
@@ -81,8 +81,10 @@ import {
 } from '@/components/ui/table'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
-const PROTOCOL_MAP: Record<string, { color: string }> = {
+export const PROTOCOL_MAP: Record<string, { color: string }> = {
   HLS: { color: 'blue' },
+  HTTP: { color: 'blue' },
+  HTTPS: { color: 'blue' },
   FLV: { color: 'green' },
   WebRTC: { color: 'purple' },
   DASH: { color: 'orange' },
@@ -122,6 +124,19 @@ const avTaskFormSchema = z.object({
 })
 
 type AvTaskFormValues = z.infer<typeof avTaskFormSchema>
+
+const AV_POLL_INTERVAL_MS = 1000
+const AV_POLL_MAX_ATTEMPTS = 60
+
+function waitForNextPoll(signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const timeout = window.setTimeout(resolve, AV_POLL_INTERVAL_MS)
+    signal.addEventListener('abort', () => {
+      window.clearTimeout(timeout)
+      reject(new DOMException('Aborted', 'AbortError'))
+    }, { once: true })
+  })
+}
 
 type MeasurementForm = {
   metric_type: string
@@ -168,6 +183,13 @@ export default function SpecialPage() {
   const [measurementTemplates, setMeasurementTemplates] = useState<AvMeasurementTemplate[]>([])
   const [editingMeasurement, setEditingMeasurement] = useState<AvMeasurementItem | null>(null)
   const [measurementForm, setMeasurementForm] = useState<MeasurementForm>(emptyMeasurementForm())
+  const [triggeringIds, setTriggeringIds] = useState<Set<number>>(() => new Set())
+  const triggerPolls = useRef(new Map<number, AbortController>())
+
+  useEffect(() => () => {
+    triggerPolls.current.forEach((controller) => controller.abort())
+    triggerPolls.current.clear()
+  }, [])
 
   const form = useForm<AvTaskFormValues>({
     resolver: zodResolver(avTaskFormSchema),
@@ -204,9 +226,46 @@ export default function SpecialPage() {
   }
 
   const doTrigger = async (id: number) => {
-    await triggerAvCheck(id)
-    toast.success('检测已完成')
-    load()
+    if (triggeringIds.has(id)) return
+
+    setTriggeringIds((current) => new Set(current).add(id))
+    const controller = new AbortController()
+    triggerPolls.current.set(id, controller)
+    try {
+      const triggered = await triggerAvCheck(id)
+      if (triggered.status !== 'running') {
+        triggered.status === 'done'
+          ? toast.success('检测已完成')
+          : toast.error('检测失败，请查看任务详情')
+        await load()
+        return
+      }
+
+      toast.info('检测已启动，正在后台执行')
+      await load()
+      for (let attempt = 0; attempt < AV_POLL_MAX_ATTEMPTS; attempt += 1) {
+        const current = await fetchAvTask(id, controller.signal)
+        if (current.status === 'done' || current.status === 'fail') {
+          setDetail((openDetail) => openDetail?.id === id ? current : openDetail)
+          current.status === 'done'
+            ? toast.success('检测已完成')
+            : toast.error('检测失败，请查看任务详情')
+          await load()
+          return
+        }
+        await waitForNextPoll(controller.signal)
+      }
+      toast.warning('检测仍在后台执行，可稍后刷新查看')
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) throw error
+    } finally {
+      triggerPolls.current.delete(id)
+      setTriggeringIds((current) => {
+        const next = new Set(current)
+        next.delete(id)
+        return next
+      })
+    }
   }
 
   const doDelete = async () => {
@@ -389,7 +448,7 @@ export default function SpecialPage() {
             ) : data.items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-8">
-                  <EmptyState title="暂无音视频任务" description="点击「新建任务」创建音视频质量检测" className="py-0" />
+                <EmptyState title="暂无音视频任务" description="点击「新建检测」创建音视频质量检测" className="py-0" />
                 </TableCell>
               </TableRow>
             ) : (
@@ -415,7 +474,7 @@ export default function SpecialPage() {
                         详情
                       </Button>
                       {hasPerm('avcheck:trigger') && (
-                        <Button size="xs" variant="secondary" onClick={() => doTrigger(r.id)} disabled={r.status === 'running'}>
+                        <Button size="xs" variant="secondary" onClick={() => doTrigger(r.id)} disabled={r.status === 'running' || triggeringIds.has(r.id)}>
                           <Play className="size-3" />
                           触发
                         </Button>
@@ -505,7 +564,7 @@ export default function SpecialPage() {
 
       {/* Detail Sheet */}
       <Sheet open={detailOpen} onOpenChange={(open) => { if (!open) { setDetailOpen(false); setDetail(null) } }}>
-        <SheetContent className="sm:max-w-2xl">
+        <SheetContent className="data-[side=right]:sm:max-w-2xl">
           <SheetHeader>
             <SheetTitle>检测详情</SheetTitle>
           </SheetHeader>
@@ -525,10 +584,10 @@ export default function SpecialPage() {
                   return (
                     <div
                       key={label as string}
-                      className={`flex flex-col border-b border-r p-2 even:border-r-0 [&:nth-last-child(-n+2)]:border-b-0 ${isLast ? 'col-span-2 border-r-0' : ''}`}
+                      className={`flex min-w-0 flex-col border-b border-r p-2 even:border-r-0 [&:nth-last-child(-n+2)]:border-b-0 ${isLast ? 'col-span-2 border-r-0' : ''}`}
                     >
                       <dt className="text-xs text-muted-foreground">{label}</dt>
-                      <dd className="text-sm mt-0.5">{value}</dd>
+                      <dd className="mt-0.5 min-w-0 break-all text-sm">{value}</dd>
                     </div>
                   )
                 })}
@@ -639,7 +698,10 @@ export default function SpecialPage() {
 
               {detail.status === 'idle' && hasPerm('avcheck:trigger') && (
                 <div className="text-center pt-2">
-                  <Button onClick={() => { doTrigger(detail.id); setDetailOpen(false) }}>
+                  <Button
+                    disabled={triggeringIds.has(detail.id)}
+                    onClick={() => { doTrigger(detail.id); setDetailOpen(false) }}
+                  >
                     <Play className="size-4" />
                     开始检测
                   </Button>

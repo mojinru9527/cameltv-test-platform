@@ -515,10 +515,26 @@ def _assert_array_length(rule: dict, data: Any) -> dict:
 
 def _compare(actual: Any, expected: Any, op: str) -> bool:
     """通用比较器。"""
+    equal = actual == expected
+    numeric_types = (int, float)
+    one_numeric_one_string = (
+        isinstance(actual, numeric_types)
+        and not isinstance(actual, bool)
+        and isinstance(expected, str)
+    ) or (
+        isinstance(expected, numeric_types)
+        and not isinstance(expected, bool)
+        and isinstance(actual, str)
+    )
+    if one_numeric_one_string:
+        try:
+            equal = float(actual) == float(expected)
+        except (TypeError, ValueError):
+            equal = False
     if op == "eq" or op == "equals":
-        return actual == expected
+        return equal
     if op == "neq" or op == "not_equals":
-        return actual != expected
+        return not equal
     if op == "gt":
         try:
             return float(actual) > float(expected)

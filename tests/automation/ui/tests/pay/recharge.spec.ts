@@ -3,8 +3,7 @@
  *
  * 对应 P0 用例: TC-PAY-001, 004, 010, 016, 017, 018
  */
-import { test, expect } from '@playwright/test';
-import { aiBoolean, aiAction } from '@midscene/web';
+import { test, expect } from '../../utils/ai-test';
 import { login } from '../../utils/auth';
 import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
 
@@ -13,9 +12,9 @@ const SESSION = 'recharge';
 test.describe('PAY — 充值', () => {
   test.beforeAll(() => initTrafficCapture(SESSION));
   test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(() => flushTrafficCapture());
+  test.afterAll(async () => { await flushTrafficCapture(); });
 
-  test('TC-PAY-001: 展示当前骆驼币余额', async ({ page }) => {
+  test('TC-PAY-001: 展示当前骆驼币余额', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
@@ -27,7 +26,7 @@ test.describe('PAY — 充值', () => {
     expect(balanceVisible).toBe(true);
   });
 
-  test('TC-PAY-004: 默认选中法币 TAB', async ({ page }) => {
+  test('TC-PAY-004: 默认选中法币 TAB', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
@@ -38,7 +37,7 @@ test.describe('PAY — 充值', () => {
     console.log(`Fiat tab selected: ${fiatSelected}`);
   });
 
-  test('TC-PAY-010: 套餐列表按展示顺序', async ({ page }) => {
+  test('TC-PAY-010: 套餐列表按展示顺序', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
@@ -49,7 +48,7 @@ test.describe('PAY — 充值', () => {
     expect(packagesVisible).toBe(true);
   });
 
-  test('TC-PAY-016: 创建订单按钮可见', async ({ page }) => {
+  test('TC-PAY-016: 创建订单按钮可见', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 

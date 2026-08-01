@@ -305,6 +305,15 @@ class WikiSyncRequest(BaseModel):
     create_wiki_pages: bool = Field(False, description="是否同时触发 Wiki 页面编译")
 
 
+class WikiSyncAvailabilityOut(BaseModel):
+    """当前项目执行 Wiki 同步所需的前置条件。"""
+    available: bool
+    reason: str = ""
+    release_bundle_id: int | None = None
+    release_bundle_name: str = ""
+    release_bundle_status: str = ""
+
+
 class WikiSyncResultOut(BaseModel):
     """Wiki 同步结果。"""
     release_bundle_id: int

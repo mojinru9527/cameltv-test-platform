@@ -12,7 +12,14 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.schemas.common import R
-from app.schemas.ui_test import UiTestJobCreate, UiTestJobDetailOut, UiTestJobOut, UiTestJobUpdate, UiTestRunOut
+from app.schemas.ui_test import (
+    UiTestJobCreate,
+    UiTestJobDetailOut,
+    UiTestJobOut,
+    UiTestJobUpdate,
+    UiTestRunOut,
+    UiTestTriggerRequest,
+)
 from app.services import ui_test_service
 from app.services.audit_service import write_audit
 
@@ -335,15 +342,28 @@ def delete_job(
 @router.post("/{job_id}/trigger", response_model=R[UiTestRunOut])
 def trigger_job(
     req: Request, job_id: int,
+    body: UiTestTriggerRequest | None = None,
     current: CurrentUser = Depends(require_permission("uitest:trigger")),
     db: Session = Depends(get_db),
 ):
     """触发 UI 测试 — 立即创建 run 并入队，由队列 worker 异步执行 Playwright。"""
     try:
-        run_dict = ui_test_service.trigger_job(db, job_id, current.project_id or 0)
+        run_dict = ui_test_service.trigger_job(
+            db,
+            job_id,
+            current.project_id or 0,
+            confirm_prod=body.confirm_prod if body else False,
+            has_trigger_prod=(
+                current.is_super
+                or "*" in current.permissions
+                or "uitest:trigger_prod" in current.permissions
+            ),
+        )
         db.commit()
         _audit(req, current, db, "uitest:trigger", f"#{job_id} run=#{run_dict['id']}")
         return R.ok(UiTestRunOut(**run_dict))
+    except PermissionError as e:
+        raise HTTPException(403, str(e))
     except ValueError as e:
         raise HTTPException(400, str(e))
 

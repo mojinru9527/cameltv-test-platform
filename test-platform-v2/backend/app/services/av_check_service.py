@@ -317,6 +317,11 @@ def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
     if not r:
         raise ValueError("任务不存在")
 
+    # A running probe already owns this task. Returning its current state keeps
+    # repeated UI/API triggers idempotent and avoids concurrent ffprobe writes.
+    if r.status == "running":
+        return _task_to_dict(r, metrics=list(r.metrics))
+
     stream_url = (r.stream_url or "").strip()
     protocol = r.protocol or "HLS"
 
@@ -358,6 +363,7 @@ def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
                     "checked_at": datetime.now(timezone.utc).isoformat(),
                 }, ensure_ascii=False)
                 bg_db.commit()
+                _queue_terminal_notifications(project_id, bg_task.name, "fail", [])
                 return
 
             # 保存指标
@@ -389,6 +395,12 @@ def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
             bg_task.last_result = json.dumps(result_summary, ensure_ascii=False)
             bg_task.status = "done"
             bg_db.commit()
+            _queue_terminal_notifications(
+                project_id,
+                bg_task.name,
+                "done",
+                probe_result["metrics"],
+            )
             logger.info(f"AV check #{task_id}: completed — {pass_count}/{len(probe_result['metrics'])} passed")
 
         except Exception as exc:
@@ -402,6 +414,7 @@ def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
                         "checked_at": datetime.now(timezone.utc).isoformat(),
                     }, ensure_ascii=False)
                     bg_db.commit()
+                    _queue_terminal_notifications(project_id, bg_task.name, "fail", [])
             except Exception:
                 pass
         finally:
@@ -409,6 +422,42 @@ def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
 
     threading.Thread(target=_background_probe, daemon=True, name=f"av-check-{task_id}").start()
     return _task_to_dict(r, metrics=[])
+
+
+def _queue_terminal_notifications(
+    project_id: int,
+    task_name: str,
+    status: str,
+    metrics: list[dict],
+) -> None:
+    from app.services.notify_service import queue_notification
+
+    total = len(metrics)
+    passed = sum(1 for item in metrics if item.get("passed") or item.get("pass_"))
+    queue_notification(
+        project_id,
+        "task_finished",
+        {
+            "task_type": "音视频流探测",
+            "task_name": task_name,
+            "status": status,
+            "result_summary": f"达标 {passed} / 总计 {total}",
+            "link": "/special",
+        },
+    )
+    queue_notification(
+        project_id,
+        "test_result",
+        {
+            "task_name": task_name,
+            "passed": passed,
+            "failed": max(0, total - passed),
+            "skipped": 0,
+            "pass_rate": f"{round(passed * 100 / total, 1)}%" if total else "0%",
+            "conclusion": "通过" if status == "done" and total and passed == total else "未通过",
+            "link": "/special",
+        },
+    )
 
 
 def get_metrics(db: Session, task_id: int, project_id: int) -> list[dict]:

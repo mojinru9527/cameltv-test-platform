@@ -126,9 +126,14 @@ const reportSchema = z.object({
 
 type ReportFormData = z.infer<typeof reportSchema>
 
+export function getReportPassCount(stats: Record<string, unknown>): number {
+  return Number(stats.pass ?? stats.pass_ ?? 0)
+}
+
 export default function ReportPage() {
   useDocumentTitle('测试报告')
   const chartColors = useChartColors()
+  const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [createOpen, setCreateOpen] = useState(false)
@@ -254,11 +259,14 @@ export default function ReportPage() {
   }
 
   const handleSearch = () => {
+    const nextKeyword = keywordInput.trim()
     setPage(1)
+    if (nextKeyword === keyword) refetch()
+    else setKeyword(nextKeyword)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') setPage(1)
+    if (e.key === 'Enter') handleSearch()
   }
 
   // detail content parsing
@@ -266,10 +274,11 @@ export default function ReportPage() {
   const dStats = content?.stats || {}
   const dCases = content?.cases || []
   const dTotal = dStats.total || 0
-  const dPassRate = dTotal > 0 ? Math.round(((dStats.pass_ || 0) / dTotal) * 100) : 0
+  const dPass = getReportPassCount(dStats)
+  const dPassRate = dTotal > 0 ? Math.round((dPass / dTotal) * 100) : 0
 
   const statItems = [
-    { key: 'pass', color: chartColors.barPass, value: dStats.pass_ || 0 },
+    { key: 'pass', color: chartColors.barPass, value: dPass },
     { key: 'fail', color: chartColors.barFail, value: dStats.fail || 0 },
     { key: 'skip', color: chartColors.chart4, value: dStats.skip || 0 },
     { key: 'block', color: chartColors.p3, value: dStats.block || 0 },
@@ -429,8 +438,8 @@ export default function ReportPage() {
             <Input
               placeholder="搜索报告名称"
               className="w-[220px]"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
             <Button variant="secondary" size="sm" onClick={handleSearch} data-icon="inline-start">
@@ -517,7 +526,7 @@ export default function ReportPage() {
 
       {/* Detail Sheet */}
       <Sheet open={detailId !== null} onOpenChange={(open) => { if (!open) { setDetailId(null); setDetail(null) } }}>
-        <SheetContent side="right" className="w-full sm:max-w-[820px] overflow-y-auto">
+        <SheetContent side="right" className="data-[side=right]:w-full data-[side=right]:sm:max-w-[820px] overflow-y-auto">
           <SheetHeader>
             <SheetTitle>报告: {detail?.name || ''}</SheetTitle>
             <SheetDescription>查看报告详细信息</SheetDescription>
@@ -603,9 +612,9 @@ export default function ReportPage() {
               </div>
 
               {/* Stats grid */}
-              <div className="grid grid-cols-10 gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-7">
                 {/* Total count */}
-                <div className="col-span-2">
+                <div>
                   <Card size="sm" className="text-center ui-surface">
                     <CardContent className="py-2 px-2">
                       <div className="text-xs text-muted-foreground">总用例</div>
@@ -614,7 +623,7 @@ export default function ReportPage() {
                   </Card>
                 </div>
                 {/* Pass rate */}
-                <div className="col-span-2">
+                <div>
                   <Card size="sm" className="ui-surface">
                     <CardContent className="py-2 px-3">
                       <Progress value={dPassRate} className="h-2" />
@@ -624,7 +633,7 @@ export default function ReportPage() {
                 </div>
                 {/* Status counts */}
                 {statItems.map((item) => (
-                  <div key={item.key} className="col-span-1">
+                  <div key={item.key}>
                     <Card size="sm" className="text-center ui-surface">
                       <CardContent className="py-2 px-1">
                         <div className="text-lg font-bold" style={{ color: item.color }}>{item.value}</div>

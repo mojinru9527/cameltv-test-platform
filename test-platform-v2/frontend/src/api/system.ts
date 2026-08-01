@@ -1,5 +1,6 @@
 import client from './client'
 import { API_BASE_URL } from './baseUrl'
+import { useAuthStore } from '@/stores/auth'
 
 // ── 用户 ──
 export function fetchUsers(signal?: AbortSignal) { return client.get('/system/users', { signal }) }
@@ -23,13 +24,17 @@ export function fetchAuditLogs(params?: any) { return client.get('/system/audit-
 /** 导出审计日志 CSV，返回 Blob 供前端下载 */
 export async function exportAuditLogsCsv(params?: { action?: string; keyword?: string }) {
   // Use fetch directly for binary download
-  const token = localStorage.getItem('access_token')
+  const { token, currentProjectId } = useAuthStore.getState()
   const searchParams = new URLSearchParams()
   if (params?.action) searchParams.set('action', params.action)
   if (params?.keyword) searchParams.set('keyword', params.keyword)
   const url = `${API_BASE_URL}/system/audit-logs/export?${searchParams.toString()}`
+  const headers: Record<string, string> = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+  if (currentProjectId) headers['X-Project-Id'] = String(currentProjectId)
   const resp = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
+    headers,
   })
   if (!resp.ok) throw new Error('导出失败')
   const blob = await resp.blob()

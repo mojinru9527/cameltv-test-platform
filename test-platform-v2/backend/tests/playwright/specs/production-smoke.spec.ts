@@ -110,6 +110,7 @@ test.describe('CamelTv 生产环境冒烟测试', () => {
 
     // 统计所有可点击元素（不限于 a 标签，camel1.tv 大量使用 div/span + onclick）
     const clickables = page.locator('a[href], button, [role="button"], [onclick], [class*="tab"]');
+    await expect(clickables.first()).toBeVisible({ timeout: 10_000 });
     const total = await clickables.count();
     console.log(`可交互元素总数: ${total}`);
 

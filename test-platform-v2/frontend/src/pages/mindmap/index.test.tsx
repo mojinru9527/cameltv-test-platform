@@ -1,4 +1,4 @@
-import { act, render, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MindmapPage from './index'
 
@@ -90,5 +90,31 @@ describe('MindmapPage markmap lifecycle', () => {
 
     expect(markmapMocks.fit).not.toHaveBeenCalled()
     expect(markmapMocks.destroy).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the exit control inside the fixed fullscreen card', async () => {
+    render(<MindmapPage />)
+    await act(async () => { await Promise.resolve() })
+
+    fireEvent.click(screen.getByRole('button', { name: '全屏' }))
+
+    const exitFullscreen = screen.getByRole('button', { name: '退出全屏' })
+    const fullscreenCard = exitFullscreen.closest('[data-slot="card"]')
+    expect(fullscreenCard).not.toBeNull()
+    expect(fullscreenCard?.classList.contains('fixed')).toBe(true)
+    expect(fullscreenCard?.classList.contains('z-50')).toBe(true)
+
+    fireEvent.click(exitFullscreen)
+    expect(screen.getByRole('button', { name: '全屏' })).not.toBeNull()
+  })
+
+  it('exits fullscreen with Escape', async () => {
+    render(<MindmapPage />)
+    fireEvent.click(screen.getByRole('button', { name: '全屏' }))
+    expect(screen.getByRole('button', { name: '退出全屏' })).not.toBeNull()
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    expect(screen.getByRole('button', { name: '全屏' })).not.toBeNull()
   })
 })

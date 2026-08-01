@@ -50,6 +50,7 @@ import { AsyncState } from '@/components/state'
 import ModuleTreeView from './components/ModuleTreeView'
 import VersionChainTimeline from './components/VersionChainTimeline'
 import DiffReviewPanel from './components/DiffReviewPanel'
+import { useAuthStore } from '@/stores/auth'
 
 const PLATFORM_ICONS: Record<string, LucideIcon> = {
   APP: Smartphone,
@@ -75,6 +76,8 @@ export default function BundleDetailPage() {
   const { id } = useParams<{ id: string }>()
   const bundleId = Number(id)
   const navigate = useNavigate()
+  const canManage = useAuthStore((state) => state.hasPerm('knowledge:manage'))
+  const canTriggerRegression = useAuthStore((state) => state.hasPerm('uitest:trigger'))
   useDocumentTitle('发布包详情')
 
   const [tab, setTab] = useState('tree')
@@ -276,14 +279,14 @@ export default function BundleDetailPage() {
                 {loadingScope ? <RefreshCw className="size-3.5 mr-1 animate-spin" /> : <Layers className="size-3.5 mr-1" />}
                 回归范围
               </Button>
-              <Button
+              {canTriggerRegression && <Button
                 size="sm"
                 onClick={handleTriggerRegression}
                 disabled={triggeringReg}
               >
                 {triggeringReg ? <RefreshCw className="size-3.5 mr-1 animate-spin" /> : <RefreshCw className="size-3.5 mr-1" />}
                 触发UI回归
-              </Button>
+              </Button>}
             </>
           )}
           {editing ? (
@@ -298,7 +301,7 @@ export default function BundleDetailPage() {
               </Button>
             </>
           ) : (
-            <Button variant="ghost" size="sm" onClick={startEdit}>
+            canManage && <Button variant="ghost" size="sm" onClick={startEdit}>
               编辑
             </Button>
           )}
@@ -500,7 +503,7 @@ export default function BundleDetailPage() {
               <CardTitle className="text-sm flex items-center justify-between">
                 <span>版本差异对比</span>
                 <div className="flex items-center gap-2">
-                  <Button
+                  {canManage && <Button
                     size="sm"
                     variant="secondary"
                     onClick={handleDiff}
@@ -508,7 +511,7 @@ export default function BundleDetailPage() {
                   >
                     {diffing && <RefreshCw className="size-4 mr-1 animate-spin" />}
                     触发对比
-                  </Button>
+                  </Button>}
                 </div>
               </CardTitle>
             </CardHeader>

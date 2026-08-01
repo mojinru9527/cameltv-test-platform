@@ -33,6 +33,7 @@ import type { IntegrationConfig, SyncLog, RequirementDocument } from '@/types'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import ConfirmActionDialog from '@/components/ConfirmActionDialog'
 import { useApi } from '@/hooks/useApi'
+import { buildIntegrationAuthJson } from './authPayload'
 
 // ── Form schema ──
 
@@ -191,23 +192,13 @@ export default function IntegrationPage() {
   const handleSave = async (values: FormValues) => {
     setSaving(true)
     try {
-      // Build auth JSON from provider-specific fields
-      let authJson = '{}'
-      if (values.provider_type === 'jira') {
-        const extra: Record<string, string> = {}
-        if (values.project_key) extra.project_key = values.project_key
-        authJson = JSON.stringify({ email: values.email || '', api_token: values.api_token || '', ...extra })
-      } else {
-        const extra: Record<string, string> = {}
-        if (values.workspace_id) extra.workspace_id = values.workspace_id
-        authJson = JSON.stringify({ api_user: values.api_user || '', api_password: values.api_password || '', ...extra })
-      }
+      const authJson = buildIntegrationAuthJson(values, Boolean(editing))
 
       const payload = {
         name: values.name,
         provider_type: values.provider_type,
         base_url: values.base_url,
-        auth_json: authJson,
+        ...(authJson === undefined ? {} : { auth_json: authJson }),
         sync_direction: values.sync_direction,
         sync_interval_minutes: values.sync_interval_minutes,
         enabled: values.enabled,
@@ -217,7 +208,7 @@ export default function IntegrationPage() {
         await updateIntegration(editing.id, payload)
         toast.success('集成配置已更新')
       } else {
-        await createIntegration(payload)
+        await createIntegration({ ...payload, auth_json: authJson ?? '{}' })
         toast.success('集成配置已创建')
       }
       setDrawer(false)
@@ -252,12 +243,7 @@ export default function IntegrationPage() {
       return
     }
     const values = form.getValues()
-    let authJson = '{}'
-    if (values.provider_type === 'jira') {
-      authJson = JSON.stringify({ email: values.email || '', api_token: values.api_token || '' })
-    } else {
-      authJson = JSON.stringify({ api_user: values.api_user || '', api_password: values.api_password || '' })
-    }
+    const authJson = buildIntegrationAuthJson(values, false) ?? '{}'
 
     setTesting(true)
     try {

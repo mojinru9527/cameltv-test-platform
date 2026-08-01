@@ -258,6 +258,8 @@ class GraphViewOut(BaseModel):
     """力导向图数据。"""
     nodes: list[GraphNode] = Field(default_factory=list)
     edges: list[GraphEdge] = Field(default_factory=list)
+    extract_available: bool = False
+    unavailable_reason: str = ""
 
 
 class EntityExtractRequest(BaseModel):

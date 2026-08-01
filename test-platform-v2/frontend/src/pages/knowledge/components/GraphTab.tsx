@@ -52,6 +52,7 @@ export default function GraphTab() {
   const [evolving, setEvolving] = useState(false)
   const [evolveResult, setEvolveResult] = useState<GraphEvolveResult | null>(null)
   const [domain, setDomain] = useState<string>('project')
+  const extractUnavailableReason = graphData?.unavailable_reason || '当前没有可提取的知识片段'
 
   const loadGraph = useCallback(async (d?: string) => {
     const dom = d ?? domain
@@ -266,8 +267,17 @@ export default function GraphTab() {
   if (!graphData || graphData.nodes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <p className="text-sm text-muted-foreground">暂无图谱数据，请先提取实体与关系</p>
-        <Button onClick={handleExtract} disabled={extracting}>
+        <div className="max-w-xl space-y-1 text-center">
+          <p className="text-sm font-medium">暂无图谱数据</p>
+          <p className="text-sm text-muted-foreground">
+            {graphData?.extract_available ? '可以从当前知识片段提取实体与关系' : extractUnavailableReason}
+          </p>
+        </div>
+        <Button
+          onClick={handleExtract}
+          disabled={extracting || !graphData?.extract_available}
+          title={graphData?.extract_available ? '触发实体提取' : extractUnavailableReason}
+        >
           {extracting ? (
             <>
               <RefreshCw className="size-4 mr-1 animate-spin" />
@@ -341,8 +351,8 @@ export default function GraphTab() {
             variant="secondary"
             size="sm"
             onClick={handleExtract}
-            disabled={extracting}
-            title="重新提取"
+            disabled={extracting || !graphData.extract_available}
+            title={graphData.extract_available ? '重新提取' : extractUnavailableReason}
           >
             <RefreshCw className={`size-4 mr-1 ${extracting ? 'animate-spin' : ''}`} />
             提取

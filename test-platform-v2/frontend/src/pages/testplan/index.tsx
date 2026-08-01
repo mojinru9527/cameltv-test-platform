@@ -43,6 +43,7 @@ export default function TestPlanPage() {
   useDocumentTitle('测试计划')
   const navigate = useNavigate()
   const [status, setStatus] = useState('')
+  const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
   const [page, setPage] = useState(1)
   const [drawer, setDrawer] = useState(false)
@@ -59,6 +60,13 @@ export default function TestPlanPage() {
     },
     [status, keyword, page]
   )
+
+  const submitKeyword = () => {
+    const nextKeyword = keywordInput.trim()
+    setPage(1)
+    if (nextKeyword === keyword) refetch()
+    else setKeyword(nextKeyword)
+  }
 
   const doDelete = async (id: number) => {
     await deletePlan(id)
@@ -152,7 +160,7 @@ export default function TestPlanPage() {
         onRetry={refetch}
         emptyTitle="暂无测试计划"
         emptyDescription="点击「新建计划」开始创建"
-        emptyAction={{ label: keyword ? '清除筛选' : '新建计划', onClick: keyword ? () => { setKeyword(''); setPage(1) } : () => openEdit() }}
+        emptyAction={{ label: keyword ? '清除筛选' : '新建计划', onClick: keyword ? () => { setKeywordInput(''); setKeyword(''); setPage(1) } : () => openEdit() }}
         skeletonType="table"
         loadingRows={4}
       >
@@ -190,13 +198,13 @@ export default function TestPlanPage() {
               </InputGroupAddon>
               <InputGroupInput
                 placeholder="搜索计划名称"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') { setPage(1) } }}
+                value={keywordInput}
+                onChange={(e) => setKeywordInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') submitKeyword() }}
               />
             </InputGroup>
 
-            <Button size="sm" onClick={() => setPage(1)}>
+            <Button size="sm" onClick={submitKeyword}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>

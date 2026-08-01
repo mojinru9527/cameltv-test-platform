@@ -53,6 +53,21 @@ describe('performance page icon actions', () => {
     expect(await screen.findByText('暂无采集记录')).toBeTruthy()
   })
 
+  it('wraps the four navigation tabs into two columns on mobile', async () => {
+    render(
+      <MemoryRouter initialEntries={['/perftest?tab=device']}>
+        <PerfTestPage />
+      </MemoryRouter>,
+    )
+
+    const tablist = screen.getByRole('tablist')
+    expect(tablist.className).toContain('grid-cols-2')
+    expect(tablist.className).toContain('sm:grid-cols-4')
+    expect(tablist.className).toContain('group-data-[orientation=horizontal]/tabs:h-auto')
+    expect(screen.getByRole('tab', { name: '设备与采集' }).className).toContain('min-h-11')
+    expect(await screen.findByText('未检测到设备')).toBeTruthy()
+  })
+
   it('shows a persistent truthful unavailable state when SoloX is missing and recovers on retry', async () => {
     api.fetchDevices
       .mockRejectedValueOnce({

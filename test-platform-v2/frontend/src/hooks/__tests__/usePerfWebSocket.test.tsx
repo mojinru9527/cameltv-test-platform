@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '@/stores/auth'
-import { usePerfWebSocket } from '../usePerfWebSocket'
+import { resolvePerfWebSocketUrl, usePerfWebSocket } from '../usePerfWebSocket'
 
 vi.mock('@/api/perftest', () => ({
   fetchMetrics: vi.fn().mockResolvedValue({ metrics: [] }),
@@ -45,5 +45,19 @@ describe('usePerfWebSocket', () => {
     expect(WebSocketStub.urls[0]).not.toContain('must-not-appear-in-url')
 
     view.unmount()
+  })
+
+  it('resolves the socket against the current origin for proxy deployment', () => {
+    expect(resolvePerfWebSocketUrl(42, 7, '/api/v1', 'https://qa.example.com'))
+      .toBe('wss://qa.example.com/api/v1/perf-sessions/42/stream?project_id=7')
+  })
+
+  it('uses the API origin and path for a physically separated deployment', () => {
+    expect(resolvePerfWebSocketUrl(
+      42,
+      7,
+      'http://127.0.0.1:8026/gateway/api/v1/',
+      'https://frontend.example.com',
+    )).toBe('ws://127.0.0.1:8026/gateway/api/v1/perf-sessions/42/stream?project_id=7')
   })
 })

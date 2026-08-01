@@ -62,6 +62,29 @@ describe('useAuthStore', () => {
     })
   })
 
+  describe('setProjects', () => {
+    it('preserves the current project when it remains visible', () => {
+      useAuthStore.getState().setLogin(MOCK_LOGIN)
+      useAuthStore.getState().setCurrentProject(2)
+
+      useAuthStore.getState().setProjects([
+        MOCK_LOGIN.projects[1],
+        { id: 3, code: 'new', name: 'New Project' },
+      ])
+
+      expect(useAuthStore.getState().currentProjectId).toBe(2)
+    })
+
+    it('falls back to the first visible project when the current project is removed', () => {
+      useAuthStore.getState().setLogin(MOCK_LOGIN)
+      useAuthStore.getState().setCurrentProject(2)
+
+      useAuthStore.getState().setProjects([MOCK_LOGIN.projects[0]])
+
+      expect(useAuthStore.getState().currentProjectId).toBe(1)
+    })
+  })
+
   describe('setProjectTheme', () => {
     it('stores per-project color theme', () => {
       useAuthStore.getState().setProjectTheme(1, 'xlab')

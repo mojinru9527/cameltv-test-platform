@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
@@ -28,6 +29,14 @@ from app.services.knowledge.agent_queue import (
 from app.schemas.knowledge import AgentQueueItemOut, QueueStats
 
 router = APIRouter(prefix="/agents", tags=["Agent 工作台"])
+
+
+def _agent_unavailable_reason() -> str:
+    if not settings.ai_enabled:
+        return "AI 服务未启用"
+    if not settings.ai_api_key:
+        return "AI_API_KEY 未配置"
+    return ""
 
 
 # ── 触发请求体 ──
@@ -96,6 +105,10 @@ def trigger_agent(
     if agent_type not in AGENT_META:
         return R(code=400, msg=f"未知 Agent 类型: {agent_type}。支持: {', '.join(AGENT_META.keys())}")
 
+    unavailable_reason = _agent_unavailable_reason()
+    if unavailable_reason:
+        raise APIException(code=503, http_status=503, msg=unavailable_reason)
+
     pid = current.project_id or 0
 
     try:
@@ -133,8 +146,16 @@ def list_agent_types(
     current: CurrentUser = Depends(require_permission("agent:view")),
 ):
     """返回所有可用的 Agent 类型及其元数据（label / description / artifact_type）。"""
+    unavailable_reason = _agent_unavailable_reason()
     return R.ok([
-        {"type": k, "label": v["label"], "description": v["description"], "artifact_type": v["artifact_type"]}
+        {
+            "type": k,
+            "label": v["label"],
+            "description": v["description"],
+            "artifact_type": v["artifact_type"],
+            "available": not unavailable_reason,
+            "unavailable_reason": unavailable_reason,
+        }
         for k, v in AGENT_META.items()
     ])
 

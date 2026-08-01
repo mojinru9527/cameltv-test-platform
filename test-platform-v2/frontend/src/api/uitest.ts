@@ -21,8 +21,8 @@ export async function deleteUiJob(id: number) {
   return api.delete(`/ui-tests/${id}`)
 }
 
-export async function triggerUiJob(id: number) {
-  return api.post(`/ui-tests/${id}/trigger`)
+export async function triggerUiJob(id: number, confirmProd = false) {
+  return api.post(`/ui-tests/${id}/trigger`, { confirm_prod: confirmProd })
 }
 
 export async function fetchUiRuns(jobId: number, params: Record<string, any> = {}) {
@@ -39,6 +39,18 @@ export async function cancelRun(runId: number): Promise<{ status: string; run_id
 
 export async function fetchRunArtifacts(runId: number): Promise<UiRunArtifact[]> {
   return api.get(`/ui-tests/runs/${runId}/artifacts`)
+}
+
+export async function fetchRunArtifactBlob(
+  runId: number,
+  path: string,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/')
+  return api.get(`/ui-tests/runs/${runId}/artifacts/${encodedPath}`, {
+    responseType: 'blob',
+    ...(signal ? { signal } : {}),
+  })
 }
 
 export async function fetchRunnerHealth(): Promise<RunnerHealth> {

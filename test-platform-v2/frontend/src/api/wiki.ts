@@ -17,6 +17,7 @@ import type {
   WikiLintReportBrief,
   WikiLintIssue,
   WikiLintConvertResult,
+  WikiSyncAvailability,
   WikiSyncResultOut,
   WikiSyncCoverage,
   WikiTreeDiffOut,
@@ -154,6 +155,10 @@ export async function convertWikiLintIssues(reportId: number, body?: {
 }
 
 // ── Wiki 基线同步 (Batch 27 M3) ──
+
+export async function fetchWikiSyncAvailability(): Promise<WikiSyncAvailability> {
+  return api.get('/wiki/sync/availability')
+}
 
 export async function syncBundleToWiki(
   bundleId: number,

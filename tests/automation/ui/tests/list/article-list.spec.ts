@@ -3,8 +3,7 @@
  *
  * 对应 P0 用例: TC-LIST-001, 002, 004, 005, 008, 010
  */
-import { test, expect } from '@playwright/test';
-import { aiBoolean, aiAction } from '@midscene/web';
+import { test, expect } from '../../utils/ai-test';
 import { login } from '../../utils/auth';
 import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
 
@@ -13,9 +12,9 @@ const SESSION = 'article-list';
 test.describe('LIST — 预测列表', () => {
   test.beforeAll(() => initTrafficCapture(SESSION));
   test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(() => flushTrafficCapture());
+  test.afterAll(async () => { await flushTrafficCapture(); });
 
-  test('TC-LIST-001: 分类TAB 按序展示', async ({ page }) => {
+  test('TC-LIST-001: 分类TAB 按序展示', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(3000);
 
@@ -24,7 +23,7 @@ test.describe('LIST — 预测列表', () => {
     expect(hasTabs).toBe(true);
   });
 
-  test('TC-LIST-004: 仅展示在售+免费文章', async ({ page }) => {
+  test('TC-LIST-004: 仅展示在售+免费文章', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(3000);
 
@@ -33,7 +32,7 @@ test.describe('LIST — 预测列表', () => {
     expect(visibleArticles).toBe(true);
   });
 
-  test('TC-LIST-005: 置顶文章优先展示', async ({ page }) => {
+  test('TC-LIST-005: 置顶文章优先展示', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(3000);
 
@@ -43,7 +42,7 @@ test.describe('LIST — 预测列表', () => {
     console.log(`First article is pinned: ${hasPinned}`);
   });
 
-  test('TC-LIST-010: 点击文章进入详情', async ({ page }) => {
+  test('TC-LIST-010: 点击文章进入详情', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(3000);
 

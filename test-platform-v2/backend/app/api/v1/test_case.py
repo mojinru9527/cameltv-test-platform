@@ -17,7 +17,7 @@ from app.schemas.test_case import (
     TestCaseOut,
     TestCaseUpdate,
 )
-from app.services import audit_service, test_case_service
+from app.services import audit_service, rbac_service, test_case_service
 from app.services.api_execution_service import execute_api_case
 from app.services.knowledge import ingest_service
 
@@ -321,7 +321,7 @@ def execute_test_case(
         if not env:
             return R(code=404, msg="环境不存在或不属于当前项目")
         if env.env_type == "prod" or env.is_production:
-            if "apitest:execute_prod" not in current.permissions and "*" not in current.permissions:
+            if not current.is_super and not rbac_service.has_permission(current.permissions, "apitest:execute_prod"):
                 return R(code=403, msg="生产环境执行需要 apitest:execute_prod 权限")
 
     try:
@@ -331,6 +331,10 @@ def execute_test_case(
             environment_id=env_id,
             dataset_id=body.dataset_id if body else None,
             confirm_prod=confirm_prod,
+            has_execute_prod=(
+                current.is_super
+                or rbac_service.has_permission(current.permissions, "apitest:execute_prod")
+            ),
         )
     except ValueError as e:
         return R(code=1, msg=str(e))
@@ -377,7 +381,7 @@ def review_case(
     # approve/reject use review:approve permission
     if body.action in ("approve", "reject"):
         # Re-check permission — the Depends above allows submit/withdraw via review:submit
-        if "review:approve" not in current.permissions:
+        if not rbac_service.has_permission(current.permissions, "review:approve"):
             from app.core.exceptions import APIException
             raise APIException(code=403, msg="需要审批评审权限 (review:approve)", http_status=403)
 

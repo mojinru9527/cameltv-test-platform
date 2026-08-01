@@ -237,6 +237,8 @@ export interface SkillTemplate {
   icon: string
   category: string
   input_params: SkillParam[]
+  available: boolean
+  unavailable_reason: string
 }
 
 export interface SkillParam {

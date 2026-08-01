@@ -28,6 +28,7 @@ from app.core.security import create_access_token, hash_password
 from app.main import app
 from app.models.audit import AuditLog
 from app.models.lanhu_evidence import LanhuEvidenceJob, LanhuEvidencePage
+from app.models.project import Project
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.release_bundle import ReleaseBundle
 from app.models.requirement import RequirementDocument
@@ -143,6 +144,13 @@ def test_parallel_admin_link_requests_return_one_success_and_conflicts(
     run_key = uuid4().hex
     project_id = uuid4().int % 1_000_000_000 + 1
     with pg_session_factory.begin() as db:
+        db.add(Project(
+            id=project_id,
+            code=f"batch48-pg-{run_key}",
+            name=f"Batch 48 PG {run_key}",
+            owner_id=1,
+            status=1,
+        ))
         user = User(
             username=f"batch48_pg_{run_key}",
             password=hash_password(uuid4().hex),
@@ -263,6 +271,13 @@ def test_parallel_module_extraction_converges_on_one_tree(
     run_key = uuid4().hex
     project_id = uuid4().int % 1_000_000_000 + 1
     with pg_session_factory.begin() as db:
+        db.add(Project(
+            id=project_id,
+            code=f"batch48-extract-{run_key}",
+            name=f"Batch 48 Extract {run_key}",
+            owner_id=1,
+            status=1,
+        ))
         user = User(
             username=f"batch48_extract_{run_key}",
             password=hash_password(uuid4().hex),

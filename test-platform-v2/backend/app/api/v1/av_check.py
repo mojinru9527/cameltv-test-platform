@@ -204,32 +204,33 @@ def trigger_task(
         r = av_check_service.trigger_check(db, task_id, current.project_id or 0)
         db.commit()
         _audit(req, current, db, "avcheck:trigger", f"#{task_id}")
-        metric_total = len(r.get("metrics") or [])
-        metric_passed = sum(1 for item in (r.get("metrics") or []) if item.get("pass_"))
-        queue_notification(
-            current.project_id or 0,
-            "task_finished",
-            {
-                "task_type": "音视频流探测",
-                "task_name": r["name"],
-                "status": r["status"],
-                "result_summary": f"达标 {metric_passed} / 总计 {metric_total}",
-                "link": "/special",
-            },
-        )
-        queue_notification(
-            current.project_id or 0,
-            "test_result",
-            {
-                "task_name": r["name"],
-                "passed": metric_passed,
-                "failed": max(0, metric_total - metric_passed),
-                "skipped": 0,
-                "pass_rate": f"{round(metric_passed * 100 / metric_total, 1)}%" if metric_total else "0%",
-                "conclusion": "通过" if metric_total and metric_passed == metric_total else "未通过",
-                "link": "/special",
-            },
-        )
+        if r["status"] != "running":
+            metric_total = len(r.get("metrics") or [])
+            metric_passed = sum(1 for item in (r.get("metrics") or []) if item.get("pass_"))
+            queue_notification(
+                current.project_id or 0,
+                "task_finished",
+                {
+                    "task_type": "音视频流探测",
+                    "task_name": r["name"],
+                    "status": r["status"],
+                    "result_summary": f"达标 {metric_passed} / 总计 {metric_total}",
+                    "link": "/special",
+                },
+            )
+            queue_notification(
+                current.project_id or 0,
+                "test_result",
+                {
+                    "task_name": r["name"],
+                    "passed": metric_passed,
+                    "failed": max(0, metric_total - metric_passed),
+                    "skipped": 0,
+                    "pass_rate": f"{round(metric_passed * 100 / metric_total, 1)}%" if metric_total else "0%",
+                    "conclusion": "通过" if metric_total and metric_passed == metric_total else "未通过",
+                    "link": "/special",
+                },
+            )
         return R.ok(AvCheckTaskOut(**r))
     except ValueError as e:
         from app.core.exceptions import APIException

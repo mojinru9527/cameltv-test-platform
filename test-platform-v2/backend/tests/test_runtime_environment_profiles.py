@@ -92,8 +92,19 @@ def test_local_status_requires_and_displays_a_verified_runtime_manifest() -> Non
     assert '$manifest.database.name -ceq $Database["name"]' in launcher
     assert "[int]$manifest.ports.backend -eq $backendPort" in launcher
     assert "[int]$manifest.ports.frontend -eq $frontendPort" in launcher
-    assert "[int]$manifest.pids.backend -notin $backendListeners.ProcessId" in launcher
-    assert "[int]$manifest.pids.frontend -notin $frontendListeners.ProcessId" in launcher
+    assert "function Get-VerifiedListenerProcessId" in launcher
+    assert "function Set-VerifiedManifestListenerPid" in launcher
+    assert "$listenerList.Count -ne 1" in launcher
+    assert "has multiple listener processes" in launcher
+    assert "outside this worktree" in launcher
+    assert "$beforeValid -and $afterValid" in launcher
+    assert 'if ([int]$listenerPid -ne [int]$startedProcess.Id)' in launcher
+    assert 'return [int]$listenerPid' in launcher
+    assert '-Name "backend"' in launcher
+    assert '-Listeners $backendListeners' in launcher
+    assert '-Name "frontend"' in launcher
+    assert '-Listeners $frontendListeners' in launcher
+    assert '$Manifest.pids | Add-Member -MemberType NoteProperty -Name $Name -Value $listenerPid -Force' in launcher
     assert 'Write-Host "Runtime manifest: verified"' in launcher
     assert 'Write-Host "Manifest target: $($manifest.target)"' in launcher
     assert 'Write-Host "Manifest frontend URL: $($manifest.frontendUrl)"' in launcher

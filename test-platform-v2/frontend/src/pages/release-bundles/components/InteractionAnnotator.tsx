@@ -38,6 +38,39 @@ interface AnnotatedRegion {
   isGlobalNav: boolean
 }
 
+function finiteNumber(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback
+}
+
+export function parseSavedRegions(rawJson: string): AnnotatedRegion[] {
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(rawJson || '[]')
+  } catch {
+    return []
+  }
+  if (!Array.isArray(parsed)) return []
+
+  return parsed.flatMap((value, index) => {
+    if (!value || typeof value !== 'object') return []
+    const item = value as Record<string, unknown>
+    const interactionType = String(item.interaction_type || 'navigation')
+    return [{
+      id: String(item.id || `saved-region-${index}`),
+      x: finiteNumber(item.x, 24 + (index % 3) * 180),
+      y: finiteNumber(item.y, 24 + Math.floor(index / 3) * 100),
+      width: finiteNumber(item.width, 140),
+      height: finiteNumber(item.height, 56),
+      targetPage: String(item.target_page || ''),
+      interactionType,
+      trigger: String(item.trigger || ''),
+      sourceElement: String(item.source_element || ''),
+      adminConfigSource: String(item.admin_config_source || ''),
+      isGlobalNav: interactionType === 'global_navigation' || item.is_global_nav === true,
+    }]
+  })
+}
+
 interface InteractionAnnotatorProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -73,17 +106,8 @@ export default function InteractionAnnotator({
 
   // Parse existing interactions
   useEffect(() => {
-    if (page?.page_interactions) {
-      try {
-        const existing = JSON.parse(page.page_interactions)
-        // Convert to regions (approximate coordinates not available from JSON)
-        setRegions([])
-      } catch {
-        setRegions([])
-      }
-    } else {
-      setRegions([])
-    }
+    setRegions(parseSavedRegions(page?.page_interactions ?? '[]'))
+    setEditingId(null)
   }, [page])
 
   // Canvas mouse handlers

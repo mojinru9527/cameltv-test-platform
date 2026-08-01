@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { fetchTestCases } from '@/api/testcase'
@@ -139,6 +139,8 @@ export default function MindmapPage() {
       mmRef.current = markmap
       await markmap.setData(root)
 
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+
       if (!isCurrentRender() || mmRef.current !== markmap) {
         if (mmRef.current === markmap) {
           mmRef.current = null
@@ -149,15 +151,8 @@ export default function MindmapPage() {
       }
 
       const viewport = svg.getBoundingClientRect()
-      const rect = markmap.state?.rect
-      const contentWidth = rect ? rect.x2 - rect.x1 : 0
-      const contentHeight = rect ? rect.y2 - rect.y1 : 0
-      const canFit = [
-        viewport.width,
-        viewport.height,
-        contentWidth,
-        contentHeight,
-      ].every((value) => Number.isFinite(value) && value > 0)
+      const canFit = [viewport.width, viewport.height]
+        .every((value) => Number.isFinite(value) && value > 0)
 
       if (canFit) {
         await markmap.fit()
@@ -192,6 +187,15 @@ export default function MindmapPage() {
     }
   }, [destroyMindmap, isLoading, renderMindmap])
 
+  useEffect(() => {
+    if (!fullscreen) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setFullscreen(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [fullscreen])
+
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center gap-3">
@@ -219,14 +223,17 @@ export default function MindmapPage() {
 
         <div className="flex-1" />
 
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setFullscreen(!fullscreen)}
-          title={fullscreen ? '退出全屏' : '全屏'}
-        >
-          {fullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
-        </Button>
+        {!fullscreen && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setFullscreen(true)}
+            aria-label="全屏"
+            title="全屏"
+          >
+            <Maximize2 className="size-4" />
+          </Button>
+        )}
       </div>
 
       {renderError && (
@@ -242,6 +249,19 @@ export default function MindmapPage() {
             用例脑图（域 → 模块 → 用例）
             {rawData && <span className="ml-2 text-muted-foreground font-normal">({(rawData as any)?.items?.length || 0} 条)</span>}
           </CardTitle>
+          {fullscreen && (
+            <CardAction>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setFullscreen(false)}
+                aria-label="退出全屏"
+                title="退出全屏"
+              >
+                <Minimize2 className="size-4" />
+              </Button>
+            </CardAction>
+          )}
         </CardHeader>
         <CardContent className="pt-4">
           <AsyncState
@@ -255,7 +275,7 @@ export default function MindmapPage() {
           >
             <div
               ref={containerRef}
-              className="min-h-[55vh] overflow-auto"
+              className="mindmap-canvas min-h-[55vh] overflow-auto"
               style={{ width: '100%' }}
             />
           </AsyncState>

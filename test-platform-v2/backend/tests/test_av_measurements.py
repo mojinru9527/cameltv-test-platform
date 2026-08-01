@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import math
+import threading
 
 import pytest
+from sqlalchemy.orm import sessionmaker
 
 from app.models.av_check import AvCheckTask
 from app.schemas.av_check import AvCheckMeasurementCreate
@@ -94,3 +96,117 @@ def test_measurements_are_project_isolated(db_session):
                 threshold=2000,
             ),
         )
+
+
+def test_running_probe_is_not_started_twice(db_session, monkeypatch):
+    task = _task(db_session)
+    task.stream_url = "https://sports.example.test/live.m3u8"
+    task.status = "running"
+    db_session.commit()
+
+    started_threads: list[str] = []
+
+    class ThreadSpy:
+        def __init__(self, *args, name: str, **kwargs):
+            started_threads.append(name)
+
+        def start(self):
+            return None
+
+    monkeypatch.setattr(threading, "Thread", ThreadSpy)
+    monkeypatch.setattr(
+        "app.services.ffmpeg_service._check_ffmpeg_installed",
+        lambda: (True, "test"),
+    )
+
+    result = av_check_service.trigger_check(db_session, task.id, project_id=1)
+
+    assert result["status"] == "running"
+    assert started_threads == []
+
+
+def test_running_trigger_does_not_emit_terminal_notifications(
+    client,
+    auth_headers,
+    db_session,
+    monkeypatch,
+):
+    task = _task(db_session)
+    task.stream_url = "https://sports.example.test/live.m3u8"
+    db_session.commit()
+    task_data = av_check_service.get_task(db_session, task.id, project_id=1)
+    assert task_data is not None
+    task_data["status"] = "running"
+
+    events: list[str] = []
+    monkeypatch.setattr(
+        "app.services.notify_service.queue_notification",
+        lambda project_id, event, data: events.append(event),
+    )
+    monkeypatch.setattr(
+        av_check_service,
+        "trigger_check",
+        lambda db, task_id, project_id: task_data,
+    )
+
+    response = client.post(
+        f"/api/v1/av-checks/{task.id}/trigger",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert events == ["task_started"]
+
+
+def test_background_probe_emits_terminal_notifications_after_commit(db_session, monkeypatch):
+    task = _task(db_session)
+    task.stream_url = "https://sports.example.test/live.m3u8"
+    db_session.commit()
+
+    events: list[tuple[str, dict]] = []
+
+    class ImmediateThread:
+        def __init__(self, *, target, **kwargs):
+            self.target = target
+
+        def start(self):
+            self.target()
+
+    monkeypatch.setattr(threading, "Thread", ImmediateThread)
+    monkeypatch.setattr(
+        "app.services.ffmpeg_service._check_ffmpeg_installed",
+        lambda: (True, "test"),
+    )
+    monkeypatch.setattr(
+        "app.services.ffmpeg_service.probe_stream",
+        lambda stream_url, protocol: {
+            "ok": True,
+            "metrics": [
+                {
+                    "name": "首帧时间",
+                    "value": 800,
+                    "threshold": 1000,
+                    "passed": True,
+                    "unit": "ms",
+                    "recommended": "<= 1000ms",
+                    "raw_value": 800,
+                },
+            ],
+            "raw": {"ffprobe_version": "test"},
+        },
+    )
+    monkeypatch.setattr(
+        "app.core.db.SessionLocal",
+        sessionmaker(bind=db_session.get_bind()),
+    )
+    monkeypatch.setattr(
+        "app.services.notify_service.queue_notification",
+        lambda project_id, event, data: events.append((event, data)),
+    )
+
+    result = av_check_service.trigger_check(db_session, task.id, project_id=1)
+
+    assert result["status"] == "running"
+    assert [event for event, _ in events] == ["task_finished", "test_result"]
+    assert events[0][1]["status"] == "done"
+    assert events[1][1]["conclusion"] == "通过"

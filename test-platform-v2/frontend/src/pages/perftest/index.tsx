@@ -265,11 +265,11 @@ export default function PerfTestPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setSearchParams({ tab: v }) }}>
-        <TabsList>
-          <TabsTrigger value="device" className="gap-1.5"><Smartphone className="size-4" />设备与采集</TabsTrigger>
-          <TabsTrigger value="monitor" className="gap-1.5"><Gauge className="size-4" />实时监控</TabsTrigger>
-          <TabsTrigger value="history" className="gap-1.5"><History className="size-4" />历史记录</TabsTrigger>
-          <TabsTrigger value="report" className="gap-1.5"><BarChart3 className="size-4" />报告与对比</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 gap-1 group-data-[orientation=horizontal]/tabs:h-auto sm:w-auto sm:grid-cols-4">
+          <TabsTrigger value="device" className="min-h-11 gap-1.5"><Smartphone className="size-4" />设备与采集</TabsTrigger>
+          <TabsTrigger value="monitor" className="min-h-11 gap-1.5"><Gauge className="size-4" />实时监控</TabsTrigger>
+          <TabsTrigger value="history" className="min-h-11 gap-1.5"><History className="size-4" />历史记录</TabsTrigger>
+          <TabsTrigger value="report" className="min-h-11 gap-1.5"><BarChart3 className="size-4" />报告与对比</TabsTrigger>
         </TabsList>
 
         {/* ── Tab 1: Device & Collection ── */}

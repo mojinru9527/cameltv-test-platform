@@ -5,8 +5,8 @@ export async function fetchAvTasks(params: Record<string, any> = {}, signal?: Ab
   return api.get('/av-checks', { params, ...(signal ? { signal } : {}) })
 }
 
-export async function fetchAvTask(id: number) {
-  return api.get(`/av-checks/${id}`)
+export function fetchAvTask(id: number, signal?: AbortSignal): Promise<AvTaskItem> {
+  return api.get(`/av-checks/${id}`, signal ? { signal } : undefined) as unknown as Promise<AvTaskItem>
 }
 
 export async function createAvTask(body: Record<string, any>) {
@@ -17,8 +17,8 @@ export async function deleteAvTask(id: number) {
   return api.delete(`/av-checks/${id}`)
 }
 
-export async function triggerAvCheck(id: number) {
-  return api.post(`/av-checks/${id}/trigger`)
+export function triggerAvCheck(id: number): Promise<AvTaskItem> {
+  return api.post(`/av-checks/${id}/trigger`) as unknown as Promise<AvTaskItem>
 }
 
 export async function fetchAvMetrics(taskId: number) {

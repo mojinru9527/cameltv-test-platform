@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.db import get_db
-from app.core.exceptions import forbidden, unauthorized
+from app.core.exceptions import forbidden, not_found, unauthorized
 from app.core.security import decode_token
 from app.models.user import User
 from app.services import project_service, rbac_service
@@ -81,6 +81,8 @@ def require_project(
         raise forbidden("缺少当前项目（请求头 X-Project-Id）")
     if not current.is_super and not project_service.is_member(db, current.user.id, current.project_id):
         raise forbidden("无权访问该项目")
+    if not project_service.is_active_project(db, current.project_id):
+        raise not_found("项目不存在")
     return current
 
 

@@ -110,6 +110,9 @@ jobs:
       - name: PostgreSQL concurrency regressions
         working-directory: test-platform-v2/backend
         env:
+          DATABASE_URL: postgresql://cameltv:cameltv_test@localhost:5432/cameltv_test
+          AUTO_CREATE_TABLES: 'false'
+          SYNC_ENABLED: 'false'
           BATCH48_RUN_PG_INTEGRATION: '1'
           BATCH48_PG_INTEGRATION_URL: postgresql+psycopg2://cameltv:cameltv_test@localhost:5432/cameltv_test
         run: python -m pytest -q tests/test_batch48_postgresql_concurrency.py

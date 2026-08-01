@@ -11,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 from app.core.db import Base
 from app.core.security import hash_password
 from app.models.rbac import Permission, Role, RolePermission, UserRole
+from app.models.project import Project
 from app.models.user import User
 
 # ── Disable production DB touch during tests ──
@@ -62,8 +63,10 @@ def client(db_session):
     def override_get_db():
         try:
             yield db_session
-        finally:
-            pass
+            db_session.commit()
+        except Exception:
+            db_session.rollback()
+            raise
 
     from app.core.db import get_db
     app.dependency_overrides[get_db] = override_get_db
@@ -91,6 +94,7 @@ def admin_user(db_session) -> User:
     db_session.flush()
     db_session.add(RolePermission(role_id=role.id, permission_id=perm.id))
     db_session.add(UserRole(user_id=u.id, role_id=role.id, project_id=0))
+    db_session.add(Project(id=1, code="TEST", name="Test Project", owner_id=u.id, status=1))
     db_session.commit()
     return u
 

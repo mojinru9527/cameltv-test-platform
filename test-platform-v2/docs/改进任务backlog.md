@@ -1,17 +1,18 @@
 ---
 title: "测试平台 v2 改进任务 Backlog"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-07-30"
 status: "active"
 expires: "2026-12-26"
 tags: ["backlog", "改进任务", "开发任务", "issue"]
-related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "work-logs/P1-安全加固与体验优化-PRD.md"]
+related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/代码审查与产品重构PRD.md", "test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "work-logs/P1-安全加固与体验优化-PRD.md", "docs/adr/0015-operations-release-control-plane.md", "test-platform-v2/docs/operations/运维发布平台-架构与交付要求.md"]
 ---
 
 # CamelTv 测试平台 —— 改进任务 Backlog（可领取开发任务）
 
 > 来源 1：《现状功能PRD.md》第 5.3 节「已知能力缺口」8 条改进项（Epic G~I）。
 > 来源 2：《P1-安全加固与体验优化-PRD.md》8 项安全/可靠性/体验改进（Epic S1~S8），2026-07-01 新增。
+> 来源 3：Batch 60 生产级验收与 ADR-0015，新增运维发布平台 Epic OPS；不改变历史任务状态或既有交付结论。
 > 方法：tracer-bullet **纵切片**——每个任务穿透 schema→API→UI→测试全链路，可独立交付/验证。
 > 说明：本工程未配置 issue tracker，故以本地 backlog 形式呈现；每条结构对齐标准 issue 模板，可直接复制到 GitHub Issues / Linear / 禅道。
 > 标记：**AFK**=可独立实现合并｜**HITL**=需人工决策/评审。优先级 T0>T1>T2>T3（P1 批次安全基线）; P0>P1>P2（原批次功能增强）。
@@ -32,6 +33,7 @@ related: ["test-platform-v2/docs/现状功能PRD.md", "test-platform-v2/docs/代
 | E　环境/变量管理 | ⑦ | 1 | 批次三 |
 | C　用例能力增强 | ⑤ | 5 | 批次三 |
 | I　CI/CD 集成 | ⑥ | 3 | 批次三 |
+| OPS　运维发布平台 | Batch 60 / ADR-0015 | 4 | Batch 60 Phase 0–3 |
 
 ---
 
@@ -712,6 +714,72 @@ S8 (WCAG AA)           ─── 依赖 S7 组件就绪后统一替换，T3
 
 ---
 
+## Epic OPS　运维发布平台（Batch 60 新增）
+
+> 本 Epic 只新增未来建设切片，不修改 S1–S8、G–I 的历史状态。架构事实源为 [ADR-0015](../../docs/adr/0015-operations-release-control-plane.md) 和 [运维发布平台架构与交付要求](operations/运维发布平台-架构与交付要求.md)。
+
+### OPS0　Phase 0：架构、Manifest 与手工契约　`HITL`　`P0`
+
+**What**：确定发布控制面边界，把 React 前端、FastAPI 后端、Alembic 迁移、配置 schema 和 QA 证据绑定为不可变 release unit。
+
+**AC**
+- [x] ADR-0015 决策记录和详细架构/交付要求已建立
+- [x] Batch 60 计划、执行矩阵和 A13 门禁已登记
+- [ ] 提供可机器校验的 release manifest JSON Schema 及正负面样例
+- [ ] 提供 test 环境清单、手工发布/回滚 runbook 和一次 test dry-run 证据
+- [ ] manifest、日志和证据 secret scan 为零明文 Secret
+
+**Blocked by**：None
+
+### OPS1　Phase 1：不可变 Test 发布与 Jenkins 适配　`AFK`　`P0`
+
+**What**：构建一次、按 digest 部署；Jenkins/Runner 只消费 `release_id`，完成 test 环境锁、备份、独占 migration job、后端、前端、健康、Smoke、审计和应用回滚。
+
+**AC**
+- [ ] 前端/后端镜像、SBOM、签名、Alembic head 和 QA 证据绑定同一 manifest
+- [ ] test 实际运行 digest 与 manifest 一致；相同 release 重试幂等
+- [ ] Alembic 多 head、备份失败、Secret 缺失、健康失败均 fail-closed
+- [ ] 注入迁移/后端/前端/Smoke 失败后，状态机与回滚证据可复核
+- [ ] production Job 不含 checkout/build/install 步骤，只允许读取已验证 digest
+
+**Blocked by**：OPS0
+
+### OPS2　Phase 2：发布控制面 API/UI　`HITL`　`P0`
+
+**What**：交付发布/环境 API、运维 UI、RBAC、审批、事件时间线、回滚、通知、Secret Provider 和审计检索。
+
+**AC**
+- [ ] Release 列表/详情、环境看板、发布向导、审批中心、回滚中心、Secret 引用和审计页可用
+- [ ] 开发、QA、运维、DBA、Secret 管理、审计角色由后端强制隔离
+- [ ] production 审批绑定 release/environment/digest/migration/window，任一变化立即失效
+- [ ] 所有写 API 支持幂等键、关联 ID、CSRF/重放保护和追加审计
+- [ ] 控制面重启可恢复进行中状态，不重复迁移或部署
+- [ ] UI 达到 WCAG 2.1 AA，并能清晰呈现失败、阻塞、回滚和 `DEFERRED`
+
+**Blocked by**：OPS1
+
+### OPS3　Phase 3：Production 同 Digest 晋级　`HITL`　`P0`　`DEFERRED`
+
+**What**：接入正式基础设施、Secret Manager、制品签名、PostgreSQL、监控、备份恢复和渐进发布，晋级 test 已验证的完全相同 digest。
+
+**AC**
+- [ ] 正式服务器/集群、DNS、TLS、PostgreSQL、制品库和 Secret Manager 已登记
+- [ ] production 发布前完成备份恢复演练，基线 RPO ≤ 24h、RTO ≤ 60min
+- [ ] production 仅接受 `TEST_VERIFIED` release，前后端 digest 与 test 逐项一致
+- [ ] expand/contract migration、观察门禁、应用回滚和数据库独立恢复审批通过
+- [ ] 首次 production 演练、安全审计、A13 和非功能门禁全部通过
+
+**Blocked by**：OPS2；正式 production 基础设施与发布授权尚未就绪，因此当前只能是 `DEFERRED`，不得记为 `PASS`
+
+```mermaid
+graph LR
+  OPS0["OPS0 Phase 0：架构与 Manifest"] --> OPS1["OPS1 Phase 1：不可变 Test 发布"]
+  OPS1 --> OPS2["OPS2 Phase 2：控制面 API/UI"]
+  OPS2 --> OPS3["OPS3 Phase 3：Production 同 Digest 晋级"]
+```
+
+---
+
 ## 依赖关系总览（Mermaid）
 
 ```mermaid
@@ -815,6 +883,20 @@ graph LR
 ### 批次四（V2.3 HITL 补齐）：✅ 已完成 — C3 评审流 + C5 脑图 + I1 CI 协议 + R3 质量门禁。
 
 ### 下一步推进 (V2.6+)
-- **近期**：微服务拆分、AI 失败根因分析
-- **中期**：多集群支持、自定义报告模板引擎
-- **长期**：测试平台 SaaS 化、多租户架构
+- **近期**：OPS0 release manifest/runbook、微服务拆分、AI 失败根因分析
+- **中期**：OPS1/OPS2 不可变 test 发布与控制面、多集群支持、自定义报告模板引擎
+- **长期**：OPS3 production 同 digest 晋级（基础设施就绪后）、测试平台 SaaS 化、多租户架构
+
+---
+
+## Batch 60 事实追加：系统管理 PC 验收关闭项（2026-07-31）
+
+> 本节仅追加 Batch 60 的运行事实和问题关闭证据，不修改上文各历史 Epic、任务状态、交付批次或旧结论。
+
+| Batch 60 问题 | 状态 | 已验证事实 | 证据 |
+| --- | --- | --- | --- |
+| B60-P1-026 审计持久化丢失 | 已关闭 | 请求级数据库会话成功时统一提交、异常时统一回滚；用户创建审计跨请求会话边界仍存在，失败请求不产生额外审计 | `backend/tests/test_batch60_audit_durability.py` 2/2 通过；`work-logs/evidence/batch-60-sports-platform-validation/pc-usage-snapshots/FP-SYS-001-03-audit-PASS.png` |
+| B60-P1-027 审计 CSV Cookie 会话 | 已关闭 | CSV 导出携带 httpOnly Cookie、当前项目头，并仅在内存 Token 存在时兼容 Authorization；实际导出 2 条 `user:create` 记录 | `frontend/src/api/__tests__/system.test.ts` 通过；`work-logs/evidence/batch-60-sports-platform-validation/system/FP-SYS-001-audit-user-create.csv` |
+| B60-P2-003 用例数量硬编码 | 已关闭 | “全部/功能用例”改为按当前项目领域数据聚合；只读空项目实际显示 0/0，不再显示固定 901/795 | `caseListFormatters.test.ts` 通过；`work-logs/evidence/batch-60-sports-platform-validation/pc-usage-snapshots/FP-SYS-001-04-readonly-role-PASS.png` |
+
+`FP-SYS-001` 的四张最终通过截图、CSV、尺寸、SHA-256 和敏感信息复核结果统一登记在 `work-logs/evidence/batch-60-sports-platform-validation/system/README.md`；本次系统管理 PC 验收状态为 `PASS`。

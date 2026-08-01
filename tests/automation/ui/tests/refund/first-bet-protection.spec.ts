@@ -4,8 +4,7 @@
  * 对应 P0 用例: TC-REFUND-001, 002, 004, 005, 007
  * 使用 midscene.js 自然语言驱动
  */
-import { test, expect } from '@playwright/test';
-import { aiBoolean, aiAction } from '@midscene/web';
+import { test, expect } from '../../utils/ai-test';
 import { login } from '../../utils/auth';
 import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
 
@@ -19,9 +18,9 @@ test.describe('REFUND — 首单退币', () => {
     await login(page);
   });
 
-  test.afterAll(() => flushTrafficCapture());
+  test.afterAll(async () => { await flushTrafficCapture(); });
 
-  test('TC-REFUND-001: 从未购买单篇付费用户具备活动资格', async ({ page }) => {
+  test('TC-REFUND-001: 从未购买单篇付费用户具备活动资格', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
@@ -41,7 +40,7 @@ test.describe('REFUND — 首单退币', () => {
     expect(hintVisible).toBe(true);
   });
 
-  test('TC-REFUND-004: 首次单篇付费结果 Loss 全额退币', async ({ page }) => {
+  test('TC-REFUND-004: 首次单篇付费结果 Loss 全额退币', async ({ page, aiAction, aiBoolean }) => {
     // 此用例需要用户有资格 + 文章结果已结算为 Loss
     // 实际测试依赖于测试环境数据预置
     await page.goto('/');
@@ -60,7 +59,7 @@ test.describe('REFUND — 首单退币', () => {
     console.log('Loss refund verified — balance restored correctly.');
   });
 
-  test('TC-REFUND-005: 首次单篇付费结果 Win 不退币', async ({ page }) => {
+  test('TC-REFUND-005: 首次单篇付费结果 Win 不退币', async ({ page, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
@@ -74,7 +73,7 @@ test.describe('REFUND — 首单退币', () => {
     expect(refundVisible).toBe(false);
   });
 
-  test('TC-REFUND-007: 退币仅享受一次', async ({ page }) => {
+  test('TC-REFUND-007: 退币仅享受一次', async ({ page, aiAction, aiBoolean }) => {
     // 需要有使用过退币资格的测试用户
     await page.goto('/');
     await page.waitForTimeout(2000);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
+import { ProjectScopeBoundary } from './ProjectScopeBoundary'
 import { toast } from 'sonner'
 import { fetchMenus, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -522,7 +523,9 @@ export default function MainLayout() {
 
         {/* Page content */}
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-auto p-4 page-enter sm:p-6">
-          <Outlet />
+          <ProjectScopeBoundary projectId={currentProjectId}>
+            <Outlet />
+          </ProjectScopeBoundary>
         </main>
       </SidebarInset>
       <CommandPalette />

@@ -32,6 +32,9 @@ def kdb():
     )
     Base.metadata.create_all(bind=engine)
     session = sessionmaker(bind=engine)()
+    from app.models.project import Project
+    session.add(Project(id=1, code="RAG-TEST", name="RAG Test Project"))
+    session.commit()
     try:
         yield session
     finally:

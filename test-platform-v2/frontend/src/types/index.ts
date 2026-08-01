@@ -1009,6 +1009,8 @@ export interface GraphEdge {
 export interface GraphView {
   nodes: GraphNode[]
   edges: GraphEdge[]
+  extract_available: boolean
+  unavailable_reason: string
 }
 
 // M3 实体列表精简视图（匹配后端 KnowledgeEntityBrief）
@@ -1470,6 +1472,14 @@ export interface AttachmentExtractResultOut {
 }
 
 // ── Wiki Sync ──
+
+export interface WikiSyncAvailability {
+  available: boolean
+  reason: string
+  release_bundle_id: number | null
+  release_bundle_name: string
+  release_bundle_status: string
+}
 
 export interface WikiSyncResultOut {
   release_bundle_id: number

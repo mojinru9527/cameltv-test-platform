@@ -81,6 +81,7 @@ type MemberFormData = z.infer<typeof memberSchema>
 export default function ProjectPage() {
   useDocumentTitle('项目管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
+  const setProjects = useAuthStore((s) => s.setProjects)
   const [page, setPage] = useState(1)
 
   const { data, isLoading, isError, error, refetch } = useApi<any>(
@@ -97,6 +98,11 @@ export default function ProjectPage() {
   const [activeProject, setActiveProject] = useState<ProjectDetail | null>(null)
   const [users, setUsers] = useState<any[]>([])
   const [roles, setRoles] = useState<any[]>([])
+
+  const syncProjectSwitcher = useCallback(async () => {
+    const visibleProjects: any = await api.get('/projects')
+    setProjects(Array.isArray(visibleProjects) ? visibleProjects : [])
+  }, [setProjects])
 
   const {
     register,
@@ -149,21 +155,21 @@ export default function ProjectPage() {
         {hasPerm('project:delete') && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="danger" data-icon="inline-start" aria-label={`删除项目 ${r.name}`}>
+              <Button size="sm" variant="danger" data-icon="inline-start" aria-label={`停用项目 ${r.name}`}>
                 <Trash2 />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>确定删除此项目？</AlertDialogTitle>
+                <AlertDialogTitle>确定停用此项目？</AlertDialogTitle>
                 <AlertDialogDescription>
-                  此操作不可撤销。将删除项目「{r.name}」及其关联数据。
+                  项目「{r.name}」将从项目切换器移除并停止使用；历史数据和审计记录仍会保留。
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>取消</AlertDialogCancel>
                 <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
-                  删除
+                  停用
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -183,6 +189,7 @@ export default function ProjectPage() {
         await api.post('/projects', vals)
         toast.success('项目已创建')
       }
+      await syncProjectSwitcher()
       setDrawer(false)
       refetch()
     } finally { setSaving(false) }
@@ -190,7 +197,8 @@ export default function ProjectPage() {
 
   const doDelete = async (id: number) => {
     await api.delete(`/projects/${id}`)
-    toast.success('已删除')
+    await syncProjectSwitcher()
+    toast.success('项目已停用')
     refetch()
   }
 

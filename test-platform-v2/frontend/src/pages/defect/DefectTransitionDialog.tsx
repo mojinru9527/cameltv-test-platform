@@ -34,6 +34,7 @@ export default function DefectTransitionDialog({
     try {
       await onConfirm(comment)
       setComment('')
+      onClose()
     } catch {
       // error handled by caller
     } finally {
