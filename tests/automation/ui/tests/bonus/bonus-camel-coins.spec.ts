@@ -3,8 +3,7 @@
  *
  * 对应 P0 用例: TC-BONUS-001, 002, 003
  */
-import { test, expect } from '@playwright/test';
-import { aiBoolean, aiAction } from '@midscene/web';
+import { test } from '../../utils/ai-test';
 import { login } from '../../utils/auth';
 import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
 
@@ -13,9 +12,9 @@ const SESSION = 'bonus-camel-coins';
 test.describe('BONUS — 充值赠送', () => {
   test.beforeAll(() => initTrafficCapture(SESSION));
   test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(() => flushTrafficCapture());
+  test.afterAll(async () => { await flushTrafficCapture(); });
 
-  test('TC-BONUS-001: 参与活动套餐购买后显示赠送数额', async ({ page }) => {
+  test('TC-BONUS-001: 参与活动套餐购买后显示赠送数额', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
@@ -29,7 +28,7 @@ test.describe('BONUS — 充值赠送', () => {
     console.log(`Bonus visible on packages: ${bonusVisible}`);
   });
 
-  test('TC-BONUS-002: 未参与活动套餐不展示 Bonus', async ({ page }) => {
+  test('TC-BONUS-002: 未参与活动套餐不展示 Bonus', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 

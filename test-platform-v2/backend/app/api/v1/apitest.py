@@ -711,8 +711,13 @@ def create_task(
     # 生产环境保护检查：若目标环境为 prod，验证权限和二次确认
     has_execute_prod = current.is_super or "apitest:execute_prod" in current.permissions
     if body.environment_id:
-        env = db.get(Environment, body.environment_id)
-        if env and (env.env_type == "prod" or env.is_production):
+        env = db.query(Environment).filter(
+            Environment.id == body.environment_id,
+            Environment.project_id == pid,
+        ).first()
+        if not env:
+            raise HTTPException(404, "环境不存在或不属于当前项目")
+        if env.env_type == "prod" or env.is_production:
             if not has_execute_prod:
                 raise HTTPException(403, "生产环境执行任务需要 apitest:execute_prod 权限")
             if not body.confirm_prod:

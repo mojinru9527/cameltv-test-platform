@@ -54,6 +54,7 @@ import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import ConfirmActionDialog from '@/components/ConfirmActionDialog'
+import { useAuthStore } from '@/stores/auth'
 
 const STATUS_VARIANT: Record<
   string,
@@ -78,6 +79,7 @@ const STATUS_VARIANT: Record<
 export default function ReleaseBundlesPage() {
   useDocumentTitle('版本发布包')
   const navigate = useNavigate()
+  const canManage = useAuthStore((state) => state.hasPerm('knowledge:manage'))
 
   const [keyword, setKeyword] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
@@ -155,7 +157,7 @@ export default function ReleaseBundlesPage() {
         title="版本发布包"
         description="管理蓝湖原型版本对应的发布包，构建「项目球」模块树知识图谱。"
       >
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        {canManage && <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus className="size-4 mr-1" />
@@ -229,7 +231,7 @@ export default function ReleaseBundlesPage() {
               </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+        </Dialog>}
       </PageHeader>
 
       {/* ── Filters ── */}
@@ -275,7 +277,7 @@ export default function ReleaseBundlesPage() {
             data={items.length > 0 ? items : undefined}
             emptyTitle="暂无发布包"
             emptyDescription="点击「新建发布包」创建第一个版本"
-            emptyAction={{ label: '新建发布包', onClick: () => setCreateOpen(true) }}
+            emptyAction={canManage ? { label: '新建发布包', onClick: () => setCreateOpen(true) } : undefined}
             onRetry={refetch}
           >
             <Table>
@@ -344,7 +346,7 @@ export default function ReleaseBundlesPage() {
                         : '-'}
                     </TableCell>
                     <TableCell>
-                      <Button
+                      {canManage && <Button
                         variant="ghost"
                         size="icon"
                         className="size-8"
@@ -355,7 +357,7 @@ export default function ReleaseBundlesPage() {
                         }}
                       >
                         <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
-                      </Button>
+                      </Button>}
                     </TableCell>
                   </TableRow>
                 ))}

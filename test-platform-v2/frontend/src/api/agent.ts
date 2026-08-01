@@ -24,6 +24,8 @@ export interface AgentTypeMeta {
   label: string
   description: string
   artifact_type: string
+  available: boolean
+  unavailable_reason: string
 }
 
 export interface AgentRunTriggerResult {

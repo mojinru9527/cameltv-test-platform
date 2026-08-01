@@ -41,7 +41,13 @@ export const useAuthStore = create<AuthState>()(
           permissions: data.permissions,
           currentProjectId: data.projects[0]?.id ?? null,
         }),
-      setProjects: (projects) => set({ projects }),
+      setProjects: (projects) =>
+        set((state) => ({
+          projects,
+          currentProjectId: projects.some((project) => project.id === state.currentProjectId)
+            ? state.currentProjectId
+            : (projects[0]?.id ?? null),
+        })),
       setPermissions: (permissions) => set({ permissions }),
       setCurrentProject: (id) => set({ currentProjectId: id }),
       setProjectTheme: (projectId, theme) =>

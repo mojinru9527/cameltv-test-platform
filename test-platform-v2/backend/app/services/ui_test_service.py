@@ -180,16 +180,27 @@ def delete_job(db: Session, job_id: int, project_id: int) -> bool:
     return True
 
 
-def _resolve_base_url(db: Session, environment_id: int | None) -> str:
-    """从环境配置解析 base_url，未配置则返回空字符串。"""
+def _resolve_environment(db: Session, environment_id: int | None, project_id: int):
+    """Resolve an execution environment without crossing the project boundary."""
     if not environment_id:
-        return ""
+        return None
     from app.models.environment import Environment
-    env = db.get(Environment, environment_id)
-    return env.base_url if env else ""
+    return db.scalar(
+        select(Environment).where(
+            Environment.id == environment_id,
+            Environment.project_id == project_id,
+        )
+    )
 
 
-def trigger_job(db: Session, job_id: int, project_id: int) -> dict:
+def trigger_job(
+    db: Session,
+    job_id: int,
+    project_id: int,
+    *,
+    confirm_prod: bool = False,
+    has_trigger_prod: bool = False,
+) -> dict:
     """触发 UI 测试执行 — 创建 run 记录，入队，立即返回。
 
     Playwright 执行由 ui_runner_queue 后台线程池异步驱动，
@@ -205,11 +216,20 @@ def trigger_job(db: Session, job_id: int, project_id: int) -> dict:
     if job.status == "running":
         raise ValueError("任务正在执行中，请等待完成后再触发")
 
+    environment = _resolve_environment(db, job.environment_id, project_id)
+    if job.environment_id and not environment:
+        raise ValueError("执行环境不存在或不属于当前项目")
+    if environment and (environment.env_type == "prod" or environment.is_production):
+        if not has_trigger_prod:
+            raise PermissionError("生产环境 UI 自动化需要 uitest:trigger_prod 权限")
+        if not confirm_prod:
+            raise ValueError("生产环境 UI 自动化需要 confirm_prod=true 确认")
+
     # 检查 Playwright 可用性并记录
     pw_ok, pw_msg = _check_playwright_installed()
 
     # 解析环境的 base_url
-    base_url = _resolve_base_url(db, job.environment_id)
+    base_url = environment.base_url if environment else ""
 
     now = datetime.now(timezone.utc)
     job.status = "running"

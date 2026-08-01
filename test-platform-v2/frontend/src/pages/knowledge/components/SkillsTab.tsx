@@ -64,6 +64,10 @@ export default function SkillsTab() {
   }, [load])
 
   const handleApply = async (skill: SkillTemplate) => {
+    if (!skill.available) {
+      toast.error(skill.unavailable_reason || 'AI 能力暂不可用')
+      return
+    }
     setApplying(skill.name)
     setResult(null)
     try {
@@ -152,12 +156,13 @@ export default function SkillsTab() {
     if (!categories[cat]) categories[cat] = []
     categories[cat].push(s)
   }
+  const availableCount = skills.filter((skill) => skill.available).length
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Zap className="size-4" />
-        <span>{skills.length} 个 AI 能力模板可用</span>
+        <span>{availableCount}/{skills.length} 个 AI 能力模板可用</span>
       </div>
 
       {Object.entries(categories).map(([cat, items]) => (
@@ -171,17 +176,27 @@ export default function SkillsTab() {
               return (
                 <Card
                   key={skill.name}
-                  className="cursor-pointer hover:border-primary/50 transition-colors"
-                  onClick={() => { setSelected(skill); setParams({}); setResult(null) }}
+                  className={skill.available
+                    ? 'cursor-pointer hover:ring-primary/50 transition-colors'
+                    : 'cursor-not-allowed opacity-60'}
+                  aria-disabled={!skill.available}
+                  title={skill.unavailable_reason || undefined}
+                  onClick={skill.available
+                    ? () => { setSelected(skill); setParams({}); setResult(null) }
+                    : undefined}
                 >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Icon className="size-4 text-primary" />
                       {skill.label}
+                      {!skill.available && <Badge tone="warning">暂不可用</Badge>}
                     </CardTitle>
                     <CardDescription className="text-xs">
                       {skill.description}
                     </CardDescription>
+                    {!skill.available && (
+                      <p className="text-xs text-status-warning">{skill.unavailable_reason}</p>
+                    )}
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">
@@ -246,7 +261,8 @@ export default function SkillsTab() {
                 </Button>
                 <Button
                   onClick={() => handleApply(selected)}
-                  disabled={applying === selected.name}
+                  disabled={!selected.available || applying === selected.name}
+                  title={selected.unavailable_reason || undefined}
                 >
                   {applying === selected.name ? (
                     <>

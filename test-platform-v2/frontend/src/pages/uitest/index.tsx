@@ -20,10 +20,10 @@ import {
   Ban,
 } from '@/lib/icons'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts } from '@/api/uitest'
+import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts, fetchRunArtifactBlob } from '@/api/uitest'
 import { fetchEnvironments } from '@/api/environment'
 import { useAuthStore } from '@/stores/auth'
-import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
 import type { Environment, UiJobItem, UiRunItem, UiRunArtifact } from '@/types'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
@@ -31,6 +31,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
+import { ErrorState } from '@/components/state'
 import PageHeader from '@/components/PageHeader'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
@@ -130,21 +131,79 @@ const uiJobFormSchema = z.object({
 
 type UiJobFormValues = z.infer<typeof uiJobFormSchema>
 
+export function ProtectedArtifactMedia({
+  runId,
+  path,
+  name,
+  kind,
+}: {
+  runId: number
+  path: string
+  name: string
+  kind: 'image' | 'video' | 'download' | 'link'
+}) {
+  const [objectUrl, setObjectUrl] = useState('')
+  const [loadFailed, setLoadFailed] = useState(false)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    let createdUrl = ''
+
+    fetchRunArtifactBlob(runId, path, controller.signal)
+      .then((blob) => {
+        if (controller.signal.aborted) return
+        createdUrl = URL.createObjectURL(blob)
+        setObjectUrl(createdUrl)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setLoadFailed(true)
+      })
+
+    return () => {
+      controller.abort()
+      if (createdUrl) URL.revokeObjectURL(createdUrl)
+    }
+  }, [runId, path])
+
+  if (loadFailed) {
+    return <span role="alert" className="text-xs text-status-danger">{name} 加载失败</span>
+  }
+  if (!objectUrl) {
+    return <span className="text-xs text-muted-foreground">{name} 加载中...</span>
+  }
+  if (kind === 'image') {
+    return (
+      <a href={objectUrl} target="_blank" rel="noreferrer" className="block rounded border overflow-hidden hover:ring-2 hover:ring-primary">
+        <img src={objectUrl} alt={name} className="w-full h-24 object-cover" />
+        <div className="text-xs p-1 truncate">{name}</div>
+      </a>
+    )
+  }
+  if (kind === 'video') {
+    return <video aria-label={name} controls className="w-full max-h-[300px]" src={objectUrl} />
+  }
+  return (
+    <a
+      href={objectUrl}
+      {...(kind === 'download' ? { download: name } : { target: '_blank', rel: 'noreferrer' })}
+      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+    >
+      {kind === 'download' ? <Download className="size-3" /> : <FileText className="size-4" />}
+      {name}
+    </a>
+  )
+}
+
 export default function UiTestPage() {
   useDocumentTitle('UI 测试')
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [data, setData] = useState({ total: 0, items: [] as UiJobItem[], page: 1, page_size: 20 })
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState<Error | null>(null)
   const [fStatus, setFStatus] = useState<string | undefined>()
   const [fKeyword, setFKeyword] = useState('')
-  const [scripts, setScripts] = useState<string[]>([])
   const [environments, setEnvironments] = useState<Environment[]>([])
 
-  useAbortableEffect((signal) => {
-    fetchScripts(signal)
-      .then((rows) => { if (!signal.aborted) setScripts(rows) })
-      .catch(() => { if (!signal.aborted) setScripts([]) })
-  }, [])
   useAbortableEffect((signal) => {
     fetchEnvironments(signal)
       .then((rows) => { if (!signal.aborted) setEnvironments(rows) })
@@ -155,6 +214,8 @@ export default function UiTestPage() {
   const [editing, setEditing] = useState<UiJobItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+  const [prodTriggerTarget, setProdTriggerTarget] = useState<UiJobItem | null>(null)
+  const [triggering, setTriggering] = useState(false)
 
   const [detail, setDetail] = useState<any>(null)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -203,6 +264,14 @@ export default function UiTestPage() {
     defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null },
   })
 
+  const getEnvironment = (job: UiJobItem) => (
+    environments.find((environment) => environment.id === job.environment_id) ?? null
+  )
+  const isProductionJob = (job: UiJobItem) => {
+    const environment = getEnvironment(job)
+    return environment?.is_production === true || environment?.env_type === 'prod'
+  }
+
   // ── DataTable column definitions ──
   const uiJobColumns: DataTableColumn<UiJobItem>[] = [
     { key: 'name', header: '名称', className: 'max-w-0', render: (r) => (
@@ -220,14 +289,29 @@ export default function UiTestPage() {
         {r.browser}
       </Badge>
     )},
+    { key: 'environment', header: '目标环境', headerClassName: 'w-[180px]', render: (r) => {
+      const environment = getEnvironment(r)
+      if (!environment) return <span className="text-muted-foreground">未绑定</span>
+      const production = environment.is_production === true || environment.env_type === 'prod'
+      return (
+        <div className="flex min-w-0 items-center gap-1">
+          {production && <Badge tone="danger">PROD</Badge>}
+          <span className="truncate" title={`${environment.name} · ${environment.base_url || '未配置 Base URL'}`}>
+            {environment.name}
+          </span>
+        </div>
+      )
+    }},
     { key: 'status', header: '状态', headerClassName: 'w-[100px]', render: (r) => (
       <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
         {STATUS_MAP[r.status]?.label || r.status}
       </Badge>
     )},
     { key: 'last_run_time', header: '上次执行', headerClassName: 'w-[170px]', render: (r) => r.last_run_time ? new Date(r.last_run_time).toLocaleString('zh-CN') : '-' },
-    { key: 'actions', header: '操作', headerClassName: 'w-[240px]', render: (r) => (
-      <div className="flex items-center gap-1">
+    { key: 'actions', header: '操作', headerClassName: 'w-[240px]', render: (r) => {
+      const production = isProductionJob(r)
+      const canTriggerTarget = !production || hasPerm('uitest:trigger_prod')
+      return <div className="flex items-center gap-1">
         <Button size="xs" variant="secondary" onClick={() => openDetail(r)}>
           <Eye className="size-3" />
           详情
@@ -239,7 +323,13 @@ export default function UiTestPage() {
           </Button>
         )}
         {hasPerm('uitest:trigger') && (
-          <Button size="xs" variant="secondary" onClick={() => doTrigger(r.id)} disabled={r.status === 'running'}>
+          <Button
+            size="xs"
+            variant="secondary"
+            onClick={() => requestTrigger(r)}
+            disabled={r.status === 'running' || !canTriggerTarget}
+            title={!canTriggerTarget ? '缺少 uitest:trigger_prod 生产执行权限' : undefined}
+          >
             <Play className="size-3" />
             执行
           </Button>
@@ -264,11 +354,12 @@ export default function UiTestPage() {
           </AlertDialog>
         )}
       </div>
-    )},
+    }},
   ]
 
   const load = useCallback(async (page = 1, signal?: AbortSignal) => {
     setLoading(true)
+    setLoadError(null)
     try {
       const params: any = { page, page_size: 20 }
       if (fStatus) params.status = fStatus
@@ -276,7 +367,9 @@ export default function UiTestPage() {
       const r: any = await fetchUiJobs(params, signal)
       if (!signal?.aborted) setData(r)
     } catch (error) {
-      rethrowUnlessAborted(error, signal)
+      if (!signal?.aborted) {
+        setLoadError(error instanceof Error ? error : new Error('UI 测试任务加载失败'))
+      }
     } finally {
       if (!signal?.aborted) setLoading(false)
     }
@@ -300,10 +393,29 @@ export default function UiTestPage() {
     } finally { setSaving(false) }
   }
 
-  const doTrigger = async (id: number) => {
-    await triggerUiJob(id)
+  const doTrigger = async (id: number, confirmProd = false) => {
+    await triggerUiJob(id, confirmProd)
     toast.success('执行已触发')
     load()
+  }
+
+  const requestTrigger = async (job: UiJobItem) => {
+    if (isProductionJob(job)) {
+      setProdTriggerTarget(job)
+      return
+    }
+    await doTrigger(job.id)
+  }
+
+  const confirmProductionTrigger = async () => {
+    if (!prodTriggerTarget) return
+    setTriggering(true)
+    try {
+      await doTrigger(prodTriggerTarget.id, true)
+      setProdTriggerTarget(null)
+    } finally {
+      setTriggering(false)
+    }
   }
 
   const doDelete = async () => {
@@ -365,6 +477,9 @@ export default function UiTestPage() {
     <div className="space-y-4">
       <PageHeader title="UI 测试" />
 
+      {loadError ? (
+        <ErrorState error={loadError} onRetry={() => { void load(data.page) }} />
+      ) : (
       <DataTable
         columns={uiJobColumns}
         data={data.items}
@@ -418,6 +533,7 @@ export default function UiTestPage() {
           </div>
         }
       />
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); setEditing(null); form.reset() } }}>
@@ -511,6 +627,8 @@ export default function UiTestPage() {
                   ['浏览器', <Badge key="br" tone="neutral" className={browserBadgeClass(BROWSER_MAP[detail.browser]?.color)}><Monitor className="size-3" />{detail.browser}</Badge>],
                   ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>{STATUS_MAP[detail.status]?.label}</Badge>],
                   ['测试文件', detail.test_spec || '-'],
+                  ['目标环境', getEnvironment(detail)?.name || '未绑定'],
+                  ['目标地址', getEnvironment(detail)?.base_url || '-'],
                 ].map(([label, value]) => (
                   <div key={label as string} className="flex flex-col border-b border-r p-2 even:border-r-0 [&:nth-last-child(-n+2)]:border-b-0">
                     <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -525,7 +643,11 @@ export default function UiTestPage() {
 
               {hasPerm('uitest:trigger') && (
                 <div>
-                  <Button onClick={async () => { await doTrigger(detail.id); await openDetail(detail) }}>
+                  <Button
+                    onClick={() => requestTrigger(detail)}
+                    disabled={isProductionJob(detail) && !hasPerm('uitest:trigger_prod')}
+                    title={isProductionJob(detail) && !hasPerm('uitest:trigger_prod') ? '缺少 uitest:trigger_prod 生产执行权限' : undefined}
+                  >
                     <Play className="size-4" />
                     执行测试
                   </Button>
@@ -593,6 +715,31 @@ export default function UiTestPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <AlertDialog open={!!prodTriggerTarget} onOpenChange={(open) => { if (!open && !triggering) setProdTriggerTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">确认执行生产环境 UI 自动化？</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                <p>该操作将启动真实浏览器并访问生产目标。请确认脚本仅包含已获授权的只读范围。</p>
+                <dl className="rounded-md border p-3 text-foreground">
+                  <div><dt className="inline text-muted-foreground">任务：</dt><dd className="inline">{prodTriggerTarget?.name}</dd></div>
+                  <div><dt className="inline text-muted-foreground">环境：</dt><dd className="inline">{prodTriggerTarget ? getEnvironment(prodTriggerTarget)?.name : '-'}</dd></div>
+                  <div className="break-all"><dt className="inline text-muted-foreground">地址：</dt><dd className="inline">{prodTriggerTarget ? getEnvironment(prodTriggerTarget)?.base_url || '未配置' : '-'}</dd></div>
+                  <div className="break-all"><dt className="inline text-muted-foreground">脚本：</dt><dd className="inline">{prodTriggerTarget?.test_spec || '未配置'}</dd></div>
+                </dl>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={triggering}>取消</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={triggering} onClick={confirmProductionTrigger}>
+              {triggering ? '正在触发…' : '确认执行生产任务'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Run Detail Dialog */}
       <Dialog open={runDetailOpen} onOpenChange={(open) => { if (!open) { setRunDetailOpen(false); setSelectedRun(null); setRunArtifacts([]) } }}>
@@ -682,7 +829,7 @@ export default function UiTestPage() {
               )}
 
               {/* Stdout/Stderr toggle */}
-              <Tabs defaultValue="">
+              <Tabs defaultValue={selectedRun.stdout ? 'stdout' : selectedRun.stderr ? 'stderr' : 'none'}>
                 <TabsList>
                   <TabsTrigger value="" disabled>输出</TabsTrigger>
                   {(selectedRun.stdout) && <TabsTrigger value="stdout"><Terminal className="size-3" />stdout</TabsTrigger>}
@@ -721,10 +868,7 @@ export default function UiTestPage() {
                       <div className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Image className="size-3" />截图</div>
                       <div className="grid grid-cols-3 gap-2">
                         {runArtifacts.filter(a => a.type === 'png').slice(0, 9).map((a) => (
-                          <a key={a.path} href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} target="_blank" rel="noreferrer" className="block rounded border overflow-hidden hover:ring-2 hover:ring-primary">
-                            <img src={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} alt={a.name} className="w-full h-24 object-cover" />
-                            <div className="text-xs p-1 truncate">{a.name}</div>
-                          </a>
+                          <ProtectedArtifactMedia key={a.path} runId={selectedRun.id} path={a.path} name={a.name} kind="image" />
                         ))}
                       </div>
                     </div>
@@ -733,16 +877,13 @@ export default function UiTestPage() {
                   {runArtifacts.filter(a => a.type === 'webm').map((a) => (
                     <div key={a.path} className="rounded border overflow-hidden">
                       <div className="text-xs text-muted-foreground p-2 flex items-center gap-1"><Video className="size-3" />视频: {a.name}</div>
-                      <video controls className="w-full max-h-[300px]" src={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} />
+                      <ProtectedArtifactMedia runId={selectedRun.id} path={a.path} name={a.name} kind="video" />
                     </div>
                   ))}
                   {/* Traces */}
                   {runArtifacts.filter(a => a.type === 'zip').map((a) => (
                     <div key={a.path}>
-                      <a href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-                        <Download className="size-3" />
-                        下载 Trace: {a.name}
-                      </a>
+                      <ProtectedArtifactMedia runId={selectedRun.id} path={a.path} name={`下载 Trace: ${a.name}`} kind="download" />
                     </div>
                   ))}
                   {/* Other files */}
@@ -750,7 +891,7 @@ export default function UiTestPage() {
                     <div className="text-xs text-muted-foreground flex flex-wrap gap-2">
                       其他文件:
                       {runArtifacts.filter(a => !['png', 'webm', 'zip'].includes(a.type)).map((a) => (
-                        <a key={a.path} href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/${a.path}`} className="text-primary hover:underline">{a.name}</a>
+                        <ProtectedArtifactMedia key={a.path} runId={selectedRun.id} path={a.path} name={a.name} kind="download" />
                       ))}
                     </div>
                   )}
@@ -759,10 +900,7 @@ export default function UiTestPage() {
 
               {/* HTML Report link */}
               {selectedRun.html_report_path && (
-                <a href={`/api/v1/ui-tests/runs/${selectedRun.id}/artifacts/report/index.html`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-                  <FileText className="size-4" />
-                  查看 HTML 报告
-                </a>
+                <ProtectedArtifactMedia runId={selectedRun.id} path="report/index.html" name="查看 HTML 报告" kind="link" />
               )}
 
               {/* Empty artifacts for pending/running */}

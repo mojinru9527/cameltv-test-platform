@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchMetrics } from '@/api/perftest'
 import type { MetricDataPoint } from '@/api/perftest'
 import { useAuthStore } from '@/stores/auth'
+import { API_BASE_URL, resolveApiUrl } from '@/api/baseUrl'
 
 type ConnectionMode = 'websocket' | 'polling' | 'disconnected'
 
@@ -11,6 +12,23 @@ interface UsePerfWebSocketOptions {
   onSnapshot?: (point: MetricDataPoint) => void
   onEvent?: (event: { event_type: string; detail: string }) => void
   onEnd?: (reason: string) => void
+}
+
+export function resolvePerfWebSocketUrl(
+  sessionId: number,
+  projectId: number | null | undefined,
+  apiBase: string = API_BASE_URL,
+  pageOrigin: string = window.location.origin,
+): string {
+  const query = new URLSearchParams({
+    project_id: projectId == null ? '' : String(projectId),
+  })
+  const url = new URL(
+    resolveApiUrl(`/perf-sessions/${sessionId}/stream?${query}`, apiBase),
+    pageOrigin,
+  )
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  return url.toString()
 }
 
 export function usePerfWebSocket({
@@ -77,13 +95,9 @@ export function usePerfWebSocket({
     if (wsRef.current) return
 
     const projectId = useAuthStore.getState().currentProjectId
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
 
     try {
-      const ws = new WebSocket(
-        `${protocol}//${host}/api/v1/perf-sessions/${sessionId}/stream?project_id=${projectId ?? ''}`,
-      )
+      const ws = new WebSocket(resolvePerfWebSocketUrl(sessionId, projectId))
       wsRef.current = ws
 
       ws.onopen = () => {

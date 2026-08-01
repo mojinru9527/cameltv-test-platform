@@ -1,4 +1,5 @@
 import api from './client'
+import { API_BASE_URL, resolveApiUrl } from './baseUrl'
 
 // ── Types ──
 
@@ -57,8 +58,12 @@ export async function deleteReport(id: number) {
 
 // ── Report Export ──
 
-export function exportReportUrl(id: number, format: 'csv' | 'excel' | 'pdf'): string {
-  return `/api/v1/reports/${id}/export?format=${format}`
+export function exportReportUrl(
+  id: number,
+  format: 'csv' | 'excel' | 'pdf',
+  apiBase: string = API_BASE_URL,
+): string {
+  return resolveApiUrl(`/reports/${id}/export?format=${format}`, apiBase)
 }
 
 // ── Report Trends ──

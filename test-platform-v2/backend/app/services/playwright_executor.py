@@ -71,6 +71,9 @@ def _check_playwright_installed() -> tuple[bool, str]:
     npx = _resolve_cmd("npx")
     if not npx:
         return False, "npx 命令不可用，请安装 Node.js"
+    local_test_package = PLAYWRIGHT_DIR / "node_modules" / "@playwright" / "test" / "package.json"
+    if not local_test_package.is_file():
+        return False, "UI Runner 本地依赖未安装，请在 backend/tests/playwright 执行 npm ci"
     try:
         result = subprocess.run(
             [npx, "playwright", "--version"],
@@ -255,6 +258,8 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             cwd=str(PLAYWRIGHT_DIR),
             env=env,
         )
@@ -263,6 +268,21 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
         run.process_id = proc.pid
         db.commit()
         logger.info(f"Playwright process started: PID={proc.pid}, run_id={run_id}")
+
+        # Drain both pipes immediately. Waiting for process exit before reading
+        # can deadlock once a JSON report fills the OS pipe buffer.
+        process_output: dict[str, str] = {"stdout": "", "stderr": ""}
+
+        def _drain_process_output() -> None:
+            try:
+                stdout_value, stderr_value = proc.communicate()
+                process_output["stdout"] = stdout_value or ""
+                process_output["stderr"] = stderr_value or ""
+            except Exception as exc:
+                process_output["stderr"] = f"读取 Playwright 输出失败: {type(exc).__name__}: {exc}"
+
+        output_thread = threading.Thread(target=_drain_process_output, daemon=True)
+        output_thread.start()
 
         # 6. 轮询循环：检查进程状态 + 取消标记 + 超时
         start_time = time.monotonic()
@@ -274,7 +294,9 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             if run.cancel_requested or run.status == "cancelled":
                 logger.info(f"Cancelling Playwright process PID={proc.pid} for run #{run_id}")
                 proc.kill()
-                stdout_text, stderr_text = _safe_communicate(proc)
+                output_thread.join(timeout=10)
+                stdout_text = process_output["stdout"]
+                stderr_text = process_output["stderr"]
                 run.status = "cancelled"
                 run.finished_at = datetime.now(timezone.utc)
                 run.error_message = "用户手动取消"
@@ -288,7 +310,9 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             if elapsed > DEFAULT_TIMEOUT:
                 logger.warning(f"Playwright timeout for run #{run_id} after {elapsed:.0f}s")
                 proc.kill()
-                stdout_text, stderr_text = _safe_communicate(proc)
+                output_thread.join(timeout=10)
+                stdout_text = process_output["stdout"]
+                stderr_text = process_output["stderr"]
                 run.stdout = stdout_text or ""
                 run.stderr = (stderr_text or "")[:5000]
                 db.commit()
@@ -308,7 +332,12 @@ def _run_playwright_test(db: Session, run_id: int, job_id: int, project_id: int)
             return {"status": "cancelled", "run_id": run_id}
 
         # 7. 进程正常结束，收集输出
-        stdout_text, stderr_text = _safe_communicate(proc)
+        output_thread.join(timeout=10)
+        if output_thread.is_alive():
+            proc.kill()
+            return _fail_run(db, run, "Playwright 输出读取线程未能结束", job)
+        stdout_text = process_output["stdout"]
+        stderr_text = process_output["stderr"]
         run.stdout = stdout_text or ""
         run.stderr = (stderr_text or "")[:5000]
 

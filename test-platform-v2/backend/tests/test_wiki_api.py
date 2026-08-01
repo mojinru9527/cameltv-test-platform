@@ -10,7 +10,7 @@ import pytest
 
 from app.core.config import settings
 from app.core.security import hash_password
-from app.models.project import ProjectMember
+from app.models.project import Project, ProjectMember
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.user import User
 
@@ -29,6 +29,7 @@ def wiki_lint_on(monkeypatch):
 @pytest.fixture()
 def wiki_manager_headers(client, db_session):
     """Authenticate a project-scoped wiki manager without super-admin permission."""
+    db_session.add(Project(id=1, code="WIKI-MANAGER", name="Wiki Manager Project"))
     user = User(
         username="wiki_manager",
         password=hash_password("wiki-manager-password"),
@@ -59,6 +60,7 @@ def wiki_manager_headers(client, db_session):
 @pytest.fixture()
 def project_wildcard_headers(client, db_session):
     """Authenticate a project-scoped wildcard role that is not a system super-admin."""
+    db_session.add(Project(id=1, code="WIKI-WILDCARD", name="Wiki Wildcard Project"))
     user = User(
         username="project_wildcard",
         password=hash_password("project-wildcard-password"),

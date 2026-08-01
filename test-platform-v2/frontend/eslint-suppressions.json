@@ -109,11 +109,6 @@
       "count": 1
     }
   },
-  "src/pages/knowledge/components/SkillsTab.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/pages/knowledge/components/SphereTab.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 3
@@ -176,7 +171,7 @@
   },
   "src/pages/release-bundles/components/InteractionAnnotator.tsx": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 2
+      "count": 1
     }
   },
   "src/pages/release-bundles/components/ModuleTimeline.tsx": {
@@ -256,7 +251,7 @@
   },
   "src/pages/uitest/index.tsx": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 3
+      "count": 2
     }
   },
   "src/pages/workbench/index.tsx": {

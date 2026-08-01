@@ -15,7 +15,7 @@ def seed_projects(db_session) -> tuple[Project, Project, Project]:
         Project(id=2, code="B59-B", name="Batch 59 Project B"),
         Project(id=3, code="B59-EMPTY", name="Batch 59 Empty Project"),
     )
-    db_session.add_all(projects)
+    projects = tuple(db_session.merge(project) for project in projects)
     db_session.commit()
     return projects
 

@@ -788,10 +788,37 @@ def convert_lint_issues(
 # ═══════════════════════════════════════════════════════
 
 from app.schemas.release_bundle import (
+    WikiSyncAvailabilityOut,
     WikiSyncRequest,
     WikiSyncResultOut,
     WikiTreeDiffOut,
 )
+
+
+@router.get(
+    "/sync/availability",
+    response_model=R[WikiSyncAvailabilityOut],
+    summary="Wiki 同步前置条件",
+)
+def get_wiki_sync_availability(
+    current: CurrentUser = Depends(require_permission("wiki:view")),
+    db: Session = Depends(get_db),
+):
+    """只读检查当前项目是否存在可用于 Wiki 同步的启用发布包。"""
+    from app.services.wiki.sync_service import get_sync_availability
+
+    availability = get_sync_availability(
+        db,
+        project_id=current.project_id or 0,
+        wiki_enabled=settings.wiki_enabled,
+    )
+    return R.ok(WikiSyncAvailabilityOut(
+        available=availability.available,
+        reason=availability.reason,
+        release_bundle_id=availability.release_bundle_id,
+        release_bundle_name=availability.release_bundle_name,
+        release_bundle_status=availability.release_bundle_status,
+    ))
 
 
 @router.post("/sync/bundle/{bundle_id}", response_model=R[WikiSyncResultOut], summary="模块树同步到 Wiki Raw Source")
@@ -822,6 +849,12 @@ def sync_bundle_to_wiki(
     if not bundle or bundle.project_id != pid:
         from app.core.exceptions import not_found
         raise not_found("发布包")
+    if bundle.status != "active":
+        raise APIException(
+            code=409,
+            msg="发布包未启用，请先在发布包管理中选择该版本并设为启用",
+            http_status=409,
+        )
 
     result = sync_to_wiki(
         db,

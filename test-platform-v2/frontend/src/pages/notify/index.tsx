@@ -53,6 +53,7 @@ import PageHeader from '@/components/PageHeader'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { classifyNotifyTestResult } from './notifyResult'
 import {
   Plus,
   Edit,
@@ -204,8 +205,9 @@ export default function NotifyPage() {
     setTesting(true)
     try {
       const result = await testNotify()
-      toast.success(`测试通知已发送: 成功 ${result.sent}, 失败 ${result.failed}, 跳过 ${result.skipped}`)
-      setTestOpen(false)
+      const feedback = classifyNotifyTestResult(result)
+      toast[feedback.level](feedback.message)
+      if (feedback.level === 'success') setTestOpen(false)
     } catch {
       // error toast handled by client interceptor
     } finally {

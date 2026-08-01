@@ -17,6 +17,7 @@ import { SkeletonText } from '@/components/ui/skeleton'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuthStore } from '@/stores/auth'
 import {
   Table,
   TableHeader,
@@ -68,7 +69,7 @@ const RUN_STATUS_BADGE: Record<string, string> = {
 
 const scheduleSchema = z.object({
   name: z.string().min(1, '请输入名称'),
-  plan_id: z.string().min(1, '请选择计划'),
+  plan_id: z.string({ required_error: '请选择计划' }).min(1, '请选择计划'),
   cron_expression: z.string().min(1, '请输入 Cron 表达式'),
   enabled: z.boolean().default(true),
   description: z.string().optional(),
@@ -78,6 +79,11 @@ type ScheduleFormValues = z.infer<typeof scheduleSchema>
 
 export default function SchedulePage() {
   useDocumentTitle('定时任务')
+  const hasPerm = useAuthStore((state) => state.hasPerm)
+  const canCreate = hasPerm('schedule:create')
+  const canUpdate = hasPerm('schedule:update')
+  const canDelete = hasPerm('schedule:delete')
+  const canTrigger = hasPerm('schedule:trigger')
   const [page, setPage] = useState(1)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
@@ -92,7 +98,7 @@ export default function SchedulePage() {
 
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleSchema),
-    defaultValues: { enabled: true, description: '' },
+    defaultValues: { plan_id: '', enabled: true, description: '' },
   })
 
   const loadPlans = async () => {
@@ -107,7 +113,7 @@ export default function SchedulePage() {
   const openNew = () => {
     loadPlans()
     setEditing(null)
-    form.reset({ enabled: true, description: '' })
+    form.reset({ plan_id: '', enabled: true, description: '' })
     setDrawerOpen(true)
   }
 
@@ -185,10 +191,12 @@ export default function SchedulePage() {
 
       <Card>
         <CardContent className="flex items-center gap-3 pt-4">
-          <Button onClick={openNew} data-icon="inline-start">
-            <Plus />
-            新建调度
-          </Button>
+          {canCreate && (
+            <Button onClick={openNew} data-icon="inline-start">
+              <Plus />
+              新建调度
+            </Button>
+          )}
           <span className="text-xs text-muted-foreground">
             示例: <code className="rounded bg-muted px-1.5 py-0.5 text-xs">0 9 * * 1-5</code> 工作日9点, <code className="rounded bg-muted px-1.5 py-0.5 text-xs">0 */4 * * *</code> 每4小时
           </span>
@@ -206,9 +214,18 @@ export default function SchedulePage() {
         loadingRows={5}
         emptyTitle="暂无定时任务"
         emptyDescription="点击「新建调度」创建定时测试任务"
-        emptyAction={{ label: '新建调度', onClick: openNew }}
+        emptyAction={canCreate ? { label: '新建调度', onClick: openNew } : undefined}
       >
         {(d) => {
+          if (d.items.length === 0) {
+            return (
+              <EmptyState
+                title="暂无定时任务"
+                description="点击「新建调度」创建定时测试任务"
+                action={canCreate ? { label: '新建调度', onClick: openNew } : undefined}
+              />
+            )
+          }
           const totalPages = Math.max(1, Math.ceil(d.total / d.page_size))
           return (
             <>
@@ -249,6 +266,7 @@ export default function SchedulePage() {
                               <Switch
                                 size="sm"
                                 checked={row.enabled}
+                                disabled={!canUpdate}
                                 onCheckedChange={(checked) => doToggle(row.id, checked)}
                               />
                             </TableCell>
@@ -259,32 +277,44 @@ export default function SchedulePage() {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
-                                <Button size="sm" variant="secondary" onClick={() => doTrigger(row.id)} data-icon="inline-start">
-                                  <Zap />
-                                  触发
-                                </Button>
-                                <Button size="sm" variant="secondary" onClick={() => openEdit(row)} data-icon="inline-start">
-                                  <Edit />
-                                </Button>
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button size="sm" variant="danger" data-icon="inline-start">
-                                      <Trash2 />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>确定删除？</AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        此操作不可撤销。
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>取消</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => doDelete(row.id)}>删除</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
+                                {canTrigger && (
+                                  <Button size="sm" variant="secondary" onClick={() => doTrigger(row.id)} data-icon="inline-start">
+                                    <Zap />
+                                    触发
+                                  </Button>
+                                )}
+                                {canUpdate && (
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    aria-label="编辑"
+                                    onClick={() => openEdit(row)}
+                                    data-icon="inline-start"
+                                  >
+                                    <Edit />
+                                  </Button>
+                                )}
+                                {canDelete && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button size="sm" variant="danger" aria-label="删除" data-icon="inline-start">
+                                        <Trash2 />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>确定删除？</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          此操作不可撤销。
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>取消</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => doDelete(row.id)}>删除</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -425,6 +455,7 @@ export default function SchedulePage() {
               <label className="text-sm font-medium">启用</label>
               <Switch
                 checked={form.watch('enabled')}
+                disabled={editing?.id ? !canUpdate : !canCreate}
                 onCheckedChange={(v) => form.setValue('enabled', v)}
               />
             </div>
@@ -441,7 +472,10 @@ export default function SchedulePage() {
           </form>
           <DialogFooter>
             <Button variant="secondary" onClick={() => setDrawerOpen(false)}>取消</Button>
-            <Button disabled={saving} onClick={form.handleSubmit(doSave)}>
+            <Button
+              disabled={saving || (editing?.id ? !canUpdate : !canCreate)}
+              onClick={form.handleSubmit(doSave)}
+            >
               {saving ? '保存中...' : '保存'}
             </Button>
           </DialogFooter>

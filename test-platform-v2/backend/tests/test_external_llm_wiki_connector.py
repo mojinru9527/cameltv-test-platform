@@ -13,6 +13,7 @@ from __future__ import annotations
 import pytest
 
 from app.core.config import settings
+from app.models.project import Project
 
 
 # ── helpers ──
@@ -167,6 +168,8 @@ def test_delete_connection(client, auth_headers, external_on, db_session):
 
 def test_cannot_access_other_project_connection(client, auth_headers, external_on, db_session):
     """创建连接后，另一个项目无法访问。"""
+    db_session.add(Project(id=2, code="EXTERNAL-WIKI-P2", name="External Wiki Project 2"))
+    db_session.commit()
     # 当前项目 project_id=1（由 auth_headers fixture 注入 X-Project-Id: 1）
     r = client.post("/api/v1/wiki/external-connections", headers=auth_headers, json={
         "name": "Project 1 Conn", "base_url": "http://p1:9999",

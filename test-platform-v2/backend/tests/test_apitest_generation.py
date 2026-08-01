@@ -270,6 +270,20 @@ class TestApiExecutionEnhancements:
         )
         assert results[0]["passed"] is True
 
+    def test_status_code_eq_accepts_ui_string_expected_value(self):
+        """可视化编辑器提交字符串数值时，状态码等值断言仍应通过。"""
+        from app.services.api_execution_service import _run_assertions
+
+        results = _run_assertions(
+            [{"type": "status_code", "expected": "200", "operator": "eq"}],
+            status_code=200,
+            response_data={"status": "ok"},
+            raw_body='{"status":"ok"}',
+            duration_ms=100,
+        )
+
+        assert results[0]["passed"] is True
+
     def test_assert_array_length(self):
         """array_length 断言应检查数组长度。"""
         from app.services.api_execution_service import _run_assertions

@@ -3,8 +3,7 @@
  *
  * 对应 P0 用例: TC-DETAIL-003, 005, 006, 019, 020, 023, 024, 026, 029, 031, 032
  */
-import { test, expect } from '@playwright/test';
-import { aiBoolean, aiAction } from '@midscene/web';
+import { test, expect } from '../../utils/ai-test';
 import { login } from '../../utils/auth';
 import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
 
@@ -13,9 +12,9 @@ const SESSION = 'article-detail';
 test.describe('DETAIL — UGC详情', () => {
   test.beforeAll(() => initTrafficCapture(SESSION));
   test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(() => flushTrafficCapture());
+  test.afterAll(async () => { await flushTrafficCapture(); });
 
-  test('TC-DETAIL-005/006: Follow/Unfollow 切换', async ({ page }) => {
+  test('TC-DETAIL-005/006: Follow/Unfollow 切换', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
@@ -37,7 +36,7 @@ test.describe('DETAIL — UGC详情', () => {
     console.log(`Follow success: ${followSuccess}`);
   });
 
-  test('TC-DETAIL-019/020: 未解锁预测项脱敏 vs 已解锁完整', async ({ page }) => {
+  test('TC-DETAIL-019/020: 未解锁预测项脱敏 vs 已解锁完整', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 
@@ -52,7 +51,7 @@ test.describe('DETAIL — UGC详情', () => {
     }
   });
 
-  test('TC-DETAIL-032: 余额不足无法解锁', async ({ page }) => {
+  test('TC-DETAIL-032: 余额不足无法解锁', async ({ page, aiAction, aiBoolean }) => {
     await page.goto('/');
     await page.waitForTimeout(2000);
 

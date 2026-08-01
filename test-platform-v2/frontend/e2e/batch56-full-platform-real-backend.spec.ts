@@ -17,6 +17,7 @@ type RouteExpectation = {
   expectedPath?: string
   heading?: string
   fallbackText?: string
+  mainId?: string
   navLabel?: string
   controlledUnavailable?: {
     method: string
@@ -139,7 +140,7 @@ const desktopRoutes: RouteExpectation[] = [
   },
   {
     path: '/theme-lab',
-    fallbackText: '测试平台 · 主题实验室',
+    mainId: 'theme-lab-workspace',
   },
   { path: '/batch56-route-not-found', heading: '页面建设中' },
 ]
@@ -565,12 +566,18 @@ async function inspectRoute(
       { timeout: 12_000 },
     )
 
-    const expectedContent = route.heading || route.fallbackText
-    if (expectedContent) {
-      const locator = route.heading
-        ? page.getByRole('heading', { name: expectedContent, exact: true }).first()
-        : page.getByText(expectedContent, { exact: false }).first()
-      await locator.waitFor({ state: 'visible', timeout: 12_000 })
+    if (route.mainId) {
+      await page
+        .locator(`main#${route.mainId}`)
+        .waitFor({ state: 'visible', timeout: 12_000 })
+    } else {
+      const expectedContent = route.heading || route.fallbackText
+      if (expectedContent) {
+        const locator = route.heading
+          ? page.getByRole('heading', { name: expectedContent, exact: true }).first()
+          : page.getByText(expectedContent, { exact: false }).first()
+        await locator.waitFor({ state: 'visible', timeout: 12_000 })
+      }
     }
     if (!(await waitForUiToSettle(page, probe))) {
       issues.push('业务 API 未在 5 秒内稳定')
@@ -888,7 +895,7 @@ test.describe.serial('Batch 57 PC 真实后端生产验收', () => {
 
 })
 
-test.describe.serial('Batch 59 平板与移动端遗留验收', () => {
+test.describe('Batch 59 平板与移动端遗留验收', () => {
   test.beforeAll(() => {
     expect(
       credentials.username,

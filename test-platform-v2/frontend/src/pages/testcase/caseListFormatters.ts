@@ -114,3 +114,17 @@ export function sortCasesNewestFirst<T extends { id?: number; created_at?: strin
     return (right.id ?? 0) - (left.id ?? 0)
   })
 }
+
+export function countCasesByType(
+  domains: Array<{ domain?: string; count?: number }>,
+): { all: number; manual: number } {
+  return domains.reduce(
+    (totals, domain) => {
+      const count = Number.isFinite(domain.count) ? Number(domain.count) : 0
+      totals.all += count
+      if (domain.domain !== '接口测试') totals.manual += count
+      return totals
+    },
+    { all: 0, manual: 0 },
+  )
+}

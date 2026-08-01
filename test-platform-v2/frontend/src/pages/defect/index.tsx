@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router'
+import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth'
-import { fetchDefectStats, fetchDefects } from '@/api/defect'
+import { fetchDefect, fetchDefectStats, fetchDefects } from '@/api/defect'
 import type { DefectItem } from '@/types'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -14,6 +16,8 @@ import DefectDetailSheet from './DefectDetailSheet'
 export default function DefectPage() {
   useDocumentTitle('缺陷管理')
   const hasPerm = useAuthStore((s) => s.hasPerm)
+  const navigate = useNavigate()
+  const { id: routeDefectId } = useParams()
 
   // ── Filters ──
   const [fSeverity, setFSeverity] = useState<string | undefined>()
@@ -47,6 +51,25 @@ export default function DefectPage() {
   // ── Detail sheet ──
   const [detail, setDetail] = useState<DefectItem | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
+
+  useEffect(() => {
+    const defectId = Number(routeDefectId)
+    if (!Number.isInteger(defectId) || defectId <= 0) return
+
+    let cancelled = false
+    fetchDefect(defectId)
+      .then((item) => {
+        if (cancelled) return
+        setDetail(item as unknown as DefectItem)
+        setDetailOpen(true)
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return
+        toast.error(error instanceof Error ? error.message : '缺陷详情加载失败')
+        navigate('/defect', { replace: true })
+      })
+    return () => { cancelled = true }
+  }, [navigate, routeDefectId])
 
   // ── Derived helpers ──
   const refetchAll = () => { list.refetch(); refetchStats() }
@@ -98,7 +121,11 @@ export default function DefectPage() {
         <DefectDetailSheet
           detail={detail}
           open={detailOpen}
-          onClose={() => { setDetailOpen(false); setDetail(null) }}
+          onClose={() => {
+            setDetailOpen(false)
+            setDetail(null)
+            if (routeDefectId) navigate('/defect')
+          }}
           onTransitioned={(updated) => { setDetail(updated); refetchAll() }}
           onMutated={list.refetch}
           canSync={hasPerm('integration:sync')}
