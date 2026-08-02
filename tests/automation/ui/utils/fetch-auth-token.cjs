@@ -22,6 +22,9 @@ const USERNAME_SELECTOR = [
   'input[type="tel"]',
   'input[autocomplete="username"]',
   'input[type="text"]',
+  'input[placeholder*="手机号"]',
+  'input[placeholder*="手机"]',
+  'input[placeholder*="phone" i]',
 ].join(', ')
 
 const PASSWORD_SELECTOR = [
@@ -36,6 +39,46 @@ const SUBMIT_SELECTOR = [
   'button:has-text("登录")',
   'button:has-text("Sign In")',
 ].join(', ')
+
+const PHONE_TAB_SELECTOR = [
+  '[role="tab"]:has-text("手机号")',
+  '[role="tab"]:has-text("手机")',
+  'button:has-text("手机号登录")',
+  'button:has-text("手机登录")',
+  '[class*="tab"]:has-text("手机号")',
+].join(', ')
+
+/** 输出登录页结构（不包含任何凭据值），用于远程调试选择器。 */
+async function dumpLoginPage(page) {
+  const info = await page.evaluate(() => {
+    const inputs = Array.from(document.querySelectorAll('input')).map((el) => ({
+      name: el.name || '',
+      type: el.type || '',
+      placeholder: el.placeholder || '',
+      visible: !!(el.offsetWidth || el.offsetHeight),
+    }))
+    const tabs = Array.from(
+      document.querySelectorAll('[role="tab"], button, [class*="tab"]'),
+    )
+      .map((el) => (el.textContent || '').trim())
+      .filter(Boolean)
+    return {
+      title: document.title,
+      inputs,
+      tabs: [...new Set(tabs)].slice(0, 40),
+    }
+  })
+  process.stdout.write(`[DEBUG] ${JSON.stringify(info, null, 2)}\n`)
+}
+
+/** 先切到"手机号登录"页签（存在才点，尽力而为）。 */
+async function switchToPhoneLogin(page) {
+  const tab = page.locator(PHONE_TAB_SELECTOR).first()
+  if (await tab.isVisible().catch(() => false)) {
+    await tab.click()
+    await page.waitForTimeout(300)
+  }
+}
 
 /** 尽力而为地选中国家码（+86 等）。找不到控件时保持原样（账号可能已含国家码）。 */
 async function applyCountryCode(page, countryCode) {
@@ -93,7 +136,15 @@ async function main() {
   try {
     const page = await browser.newPage()
     await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded' })
+    if (process.env.CAMELTV_DEBUG === '1') {
+      await dumpLoginPage(page)
+    }
+
+    await switchToPhoneLogin(page)
     await applyCountryCode(page, countryCode)
+    if (process.env.CAMELTV_DEBUG === '1') {
+      await dumpLoginPage(page)
+    }
 
     const usernameInput = page.locator(USERNAME_SELECTOR).first()
     const passwordInput = page.locator(PASSWORD_SELECTOR).first()

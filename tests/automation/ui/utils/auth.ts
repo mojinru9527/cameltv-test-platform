@@ -27,6 +27,9 @@ const USERNAME_SELECTOR = [
   'input[type="tel"]',
   'input[autocomplete="username"]',
   'input[type="text"]',
+  'input[placeholder*="手机号"]',
+  'input[placeholder*="手机"]',
+  'input[placeholder*="phone" i]',
 ].join(', ')
 
 const PASSWORD_SELECTOR = [
@@ -63,6 +66,27 @@ const LOGIN_ERROR_SELECTOR = [
   '.toast-error',
   '[data-testid="login-error"]',
 ].join(', ')
+
+const PHONE_TAB_SELECTOR = [
+  '[role="tab"]:has-text("手机号")',
+  '[role="tab"]:has-text("手机")',
+  'button:has-text("手机号登录")',
+  'button:has-text("手机登录")',
+  '[class*="tab"]:has-text("手机号")',
+].join(', ')
+
+/** 先切到"手机号登录"页签（存在才点，尽力而为，失败不阻断）。 */
+async function switchToPhoneLogin(page: Page): Promise<void> {
+  try {
+    const tab = page.locator(PHONE_TAB_SELECTOR).first()
+    if (await tab.isVisible().catch(() => false)) {
+      await tab.click()
+      await page.waitForTimeout(300)
+    }
+  } catch {
+    // 单页签登录页无此步骤
+  }
+}
 
 /** 尽力而为地选中国家码（默认 +86，可经 CAMELTV_COUNTRY_CODE 覆盖）。找不到控件时保持原样。 */
 export async function applyCountryCode(
@@ -153,6 +177,7 @@ export async function login(page: Page): Promise<void> {
   })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
+  await switchToPhoneLogin(page)
   try {
     await applyCountryCode(page)
   } catch {
