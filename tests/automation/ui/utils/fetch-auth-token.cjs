@@ -40,6 +40,14 @@ const SUBMIT_SELECTOR = [
   'button:has-text("Sign In")',
 ].join(', ')
 
+const LOGIN_ENTRY_SELECTOR = [
+  '[data-testid="login-btn"]',
+  'a[href*="login" i]',
+  'button:has-text("登录")',
+  'button:has-text("Sign In")',
+  'a:has-text("登录")',
+].join(', ')
+
 const PHONE_TAB_SELECTOR = [
   '[role="tab"]:has-text("手机号")',
   '[role="tab"]:has-text("手机")',
@@ -159,9 +167,16 @@ async function main() {
   const browser = await chromium.launch({ headless: true })
   try {
     const page = await browser.newPage()
-    await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded' })
+    await page.goto(`${base}/`, { waitUntil: 'domcontentloaded' })
     if (process.env.CAMELTV_DEBUG === '1') {
       await dumpLoginPage(page)
+    }
+
+    // 首页没有 /login 路由（404），必须点页面上的"登录"入口打开弹窗
+    const loginEntry = page.locator(LOGIN_ENTRY_SELECTOR).first()
+    if (await loginEntry.isVisible().catch(() => false)) {
+      await loginEntry.click()
+      await page.waitForTimeout(500)
     }
 
     await switchToLoginDialog(page)
