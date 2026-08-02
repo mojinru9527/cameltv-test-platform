@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import {
   ALL_COMMAND_ROUTES,
   filterCommandRoutes,
-  type CommandRoute,
 } from '../CommandPalette'
 
 describe('CommandPalette 路由对账（B60-P1-002）', () => {
