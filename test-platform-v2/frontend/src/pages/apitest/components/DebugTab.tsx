@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { Play, Plus, Trash2, Loader2, CheckCircle2, XCircle } from '@/lib/icons'
 import { Button } from '@/ui'
+import { useAuthStore } from '@/stores/auth'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/ui'
@@ -91,6 +92,7 @@ interface Props {
 }
 
 export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
+  const canExecute = useAuthStore((state) => state.hasPerm)('apitest:execute')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiExecutionResult | null>(null)
   const [method, setMethod] = useState<string>('GET')
@@ -310,7 +312,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
             </Select>
           </div>
         )}
-        <Button onClick={runQuick} disabled={loading} data-icon="inline-start" className="ml-auto">
+        <Button onClick={runQuick} disabled={loading || !canExecute} data-icon="inline-start" className="ml-auto">
           {loading ? <Loader2 className="animate-spin" /> : <Play />}
           发送
         </Button>

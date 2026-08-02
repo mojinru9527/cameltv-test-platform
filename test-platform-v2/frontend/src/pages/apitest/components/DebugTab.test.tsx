@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { useAuthStore } from '@/stores/auth'
 
 const fetchEnvironments = vi.fn()
 const fetchDatasets = vi.fn()
@@ -24,6 +25,7 @@ describe('快速调试资产预填', () => {
   }
 
   beforeEach(() => {
+    useAuthStore.setState({ permissions: ['*'], currentProjectId: 1 })
     Element.prototype.scrollIntoView = vi.fn()
     fetchEnvironments.mockReset().mockResolvedValue([
       {

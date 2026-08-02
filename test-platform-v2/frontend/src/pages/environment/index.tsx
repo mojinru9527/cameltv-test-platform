@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
+import { useAuthStore } from '@/stores/auth'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
@@ -63,6 +64,7 @@ export default function EnvironmentPage() {
   const [selectedEnv, setSelectedEnv] = useState<Environment | null>(null)
   const [variables, setVariables] = useState<EnvironmentVariable[]>([])
   const [varsLoading, setVarsLoading] = useState(false)
+  const canManage = useAuthStore((state) => state.hasPerm)('project:manage')
 
   // Dialogs
   const [envDialog, setEnvDialog] = useState(false)
@@ -224,12 +226,12 @@ export default function EnvironmentPage() {
     <PageShell
       title="环境与变量管理"
       description="项目级测试环境配置与加密变量管理，支持环境切换与变量引用。"
-      actions={(
-        <Button onClick={openEnvCreate}>
+      actions={canManage ? (
+        <Button className="min-h-11" onClick={openEnvCreate}>
           <Plus className="size-4" data-icon="inline-start" />
           新建环境
         </Button>
-      )}
+      ) : undefined}
       glass
     >
       <div className="space-y-4">
@@ -241,7 +243,7 @@ export default function EnvironmentPage() {
         onRetry={refetch}
         emptyTitle="暂无环境"
         emptyDescription={'点击"新建环境"创建第一个测试环境'}
-        emptyAction={{ label: '新建环境', onClick: openEnvCreate }}
+        emptyAction={canManage ? { label: '新建环境', onClick: openEnvCreate } : undefined}
       >
         {(envList) => (
           <>
@@ -276,21 +278,27 @@ export default function EnvironmentPage() {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEnvEdit(selectedEnv)} aria-label="编辑环境" title="编辑环境">
-                        <Edit className="size-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEnvDelete(selectedEnv)} aria-label="删除环境" title="删除环境">
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
+                      {canManage && (
+                        <Button variant="ghost" size="icon" onClick={() => openEnvEdit(selectedEnv)} aria-label="编辑环境" title="编辑环境">
+                          <Edit className="size-4" />
+                        </Button>
+                      )}
+                      {canManage && (
+                        <Button variant="ghost" size="icon" onClick={() => handleEnvDelete(selectedEnv)} aria-label="删除环境" title="删除环境">
+                          <Trash2 className="size-4 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">变量列表</h3>
-                    <Button variant="secondary" size="sm" onClick={openVarCreate}>
-                      <Plus className="size-3.5" data-icon="inline-start" />添加变量
-                    </Button>
+                    {canManage && (
+                      <Button variant="secondary" size="sm" className="min-h-11" onClick={openVarCreate}>
+                        <Plus className="size-3.5" data-icon="inline-start" />添加变量
+                      </Button>
+                    )}
                   </div>
 
                   {varsLoading ? (
@@ -329,12 +337,16 @@ export default function EnvironmentPage() {
                             <TableCell className="text-sm text-muted-foreground">{v.description}</TableCell>
                             <TableCell>
                               <div className="flex gap-1">
-                                <Button variant="ghost" size="icon" onClick={() => openVarEdit(v)} aria-label={`编辑变量 ${v.key}`} title="编辑">
-                                  <Edit className="size-3.5" />
-                                </Button>
-                                <Button variant="ghost" size="icon" onClick={() => handleVarDelete(v)} aria-label={`删除变量 ${v.key}`} title="删除">
-                                  <Trash2 className="size-3.5 text-destructive" />
-                                </Button>
+                                {canManage && (
+                                  <Button variant="ghost" size="icon" onClick={() => openVarEdit(v)} aria-label={`编辑变量 ${v.key}`} title="编辑">
+                                    <Edit className="size-3.5" />
+                                  </Button>
+                                )}
+                                {canManage && (
+                                  <Button variant="ghost" size="icon" onClick={() => handleVarDelete(v)} aria-label={`删除变量 ${v.key}`} title="删除">
+                                    <Trash2 className="size-3.5 text-destructive" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>

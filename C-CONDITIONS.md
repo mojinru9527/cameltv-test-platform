@@ -8,6 +8,12 @@
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
 - 条件满足后标记为 `✅ Closed`，注明合入的 PR/commit
 
+**Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
+TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
+C55-3/C55-4、G56-011/012/014、C58-01~06、CP-C1/C2 等外部依赖项继续保留 Open，
+解除条件见 Batch 63 回归汇总 §3.3；其余早期孤儿（batch-18/22/24/25v2/26KB/27/31、
+C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入后续批次。
+
 ---
 
 ## Open (待处理)
@@ -27,14 +33,12 @@
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| TPv2-B19-C1 | CategoryManagerDialog补充vitest单元测试 | P2 | 2026-07-19 |
 | TPv2-B19-C2 | 修复至少5项预存组件测试契约漂移 | P2 | 2026-07-19 |
 
 ### batch-21 — 缺失特性孤儿（batch-30 归位）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| TPv2-B21-C2 | Knife4j doc.html URL自动发现(load_openapi_spec) | P2 | 2026-07-20 |
 
 ### batch-21 — PR #27/#28/#29 Pipeline Verification
 
@@ -206,13 +210,20 @@
 |----|------|---------|------|
 | MergeBF-C1 | DebugTab 3失败+ApiCaseTab 2失败跟踪 | batch 22-25已大幅重构(OBSOLETE) | 2026-07-22 |
 
+### Batch 63 — 遗留条件对账关闭
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| TPv2-B19-C1 | CategoryManagerDialog 补充 vitest 单元测试 | Batch 63 `CategoryManagerDialog.test.tsx` 7/7 | 2026-08-02 |
+| TPv2-B21-C2 | Knife4j doc.html URL 自动发现（load_openapi_spec） | Batch 63 复核：`apitest.py:_resolve_spec` 已实现；`test_openapi_import_knife4j.py` 9/9 | 2026-08-02 |
+
 ---
 
 ## 统计
 
-- **Open / 非关闭**: 45 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 43 (含 9 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 45
+- **Closed**: 47
 - **Total**: 90
 
 ## 维护约定

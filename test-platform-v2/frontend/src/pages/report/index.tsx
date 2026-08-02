@@ -65,6 +65,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { SkeletonText } from '@/components/ui/skeleton'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuthStore } from '@/stores/auth'
 import { ErrorState, AsyncState } from '@/components/state'
 import StatCard from '@/components/StatCard'
 import {
@@ -142,6 +143,9 @@ export default function ReportPage() {
   const [creating, setCreating] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
   const [templates, setTemplates] = useState<ReportTemplate[]>([])
+  const hasPerm = useAuthStore((state) => state.hasPerm)
+  const canCreate = hasPerm('report:create')
+  const canDelete = hasPerm('report:delete')
 
   const {
     register,
@@ -187,27 +191,29 @@ export default function ReportPage() {
           <Eye />
           查看
         </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button size="sm" variant="danger" data-icon="inline-start">
-              <Trash2 />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>确定删除？</AlertDialogTitle>
-              <AlertDialogDescription>
-                将删除报告「{r.name}」，此操作不可撤销。
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
-                删除
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {canDelete && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button size="sm" variant="danger" data-icon="inline-start">
+                <Trash2 />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>确定删除？</AlertDialogTitle>
+                <AlertDialogDescription>
+                  将删除报告「{r.name}」，此操作不可撤销。
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction variant="destructive" onClick={() => doDelete(r.id)}>
+                  删除
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
     )},
   ]
@@ -443,14 +449,16 @@ export default function ReportPage() {
               onChange={(e) => setKeywordInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <Button variant="secondary" size="sm" onClick={handleSearch} data-icon="inline-start">
+            <Button variant="secondary" size="sm" className="min-h-11" onClick={handleSearch} data-icon="inline-start">
               <Search />
               搜索
             </Button>
-            <Button size="sm" onClick={openCreate} data-icon="inline-start">
-              <Plus />
-              生成报告
-            </Button>
+            {canCreate && (
+              <Button size="sm" className="min-h-11" onClick={openCreate} data-icon="inline-start">
+                <Plus />
+                生成报告
+              </Button>
+            )}
           </div>
         }
       />

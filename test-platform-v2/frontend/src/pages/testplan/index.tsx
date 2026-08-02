@@ -29,6 +29,7 @@ import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { deletePlan, fetchPlans } from '@/api/testplan'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuthStore } from '@/stores/auth'
 import { AsyncState } from '@/components/state'
 import PlanDrawer from './PlanDrawer'
 
@@ -49,6 +50,10 @@ export default function TestPlanPage() {
   const [drawer, setDrawer] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
+  const hasPerm = useAuthStore((state) => state.hasPerm)
+  const canCreate = hasPerm('testplan:create')
+  const canUpdate = hasPerm('testplan:update')
+  const canDelete = hasPerm('testplan:delete')
 
   // ── Data fetching with useApi ──
   const { data, isLoading, isRefetching, isError, error, refetch } = useApi(
@@ -121,15 +126,19 @@ export default function TestPlanPage() {
     { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', className: 'text-muted-foreground', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[140px]', render: (r) => (
       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-        <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)} aria-label={`编辑测试计划 ${r.name || r.id}`}>
-          <Edit className="size-3" />
-        </Button>
+        {canUpdate && (
+          <Button size="icon-xs" variant="ghost" onClick={() => openEdit(r)} aria-label={`编辑测试计划 ${r.name || r.id}`}>
+            <Edit className="size-3" />
+          </Button>
+        )}
         <AlertDialog open={deleteTarget === r.id} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
-          <AlertDialogTrigger asChild>
-            <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)} aria-label={`删除测试计划 ${r.name || r.id}`}>
-              <Trash2 className="size-3" />
-            </Button>
-          </AlertDialogTrigger>
+          {canDelete && (
+            <AlertDialogTrigger asChild>
+              <Button size="icon-xs" variant="ghost" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)} aria-label={`删除测试计划 ${r.name || r.id}`}>
+                <Trash2 className="size-3" />
+              </Button>
+            </AlertDialogTrigger>
+          )}
           <AlertDialogContent size="sm">
             <AlertDialogHeader>
               <AlertDialogTitle>确定删除？</AlertDialogTitle>
@@ -160,7 +169,9 @@ export default function TestPlanPage() {
         onRetry={refetch}
         emptyTitle="暂无测试计划"
         emptyDescription="点击「新建计划」开始创建"
-        emptyAction={{ label: keyword ? '清除筛选' : '新建计划', onClick: keyword ? () => { setKeywordInput(''); setKeyword(''); setPage(1) } : () => openEdit() }}
+        emptyAction={keyword || canCreate
+          ? { label: keyword ? '清除筛选' : '新建计划', onClick: keyword ? () => { setKeywordInput(''); setKeyword(''); setPage(1) } : () => openEdit() }
+          : undefined}
         skeletonType="table"
         loadingRows={4}
       >
@@ -204,7 +215,7 @@ export default function TestPlanPage() {
               />
             </InputGroup>
 
-            <Button size="sm" onClick={submitKeyword}>
+            <Button size="sm" className="min-h-11" onClick={submitKeyword}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
@@ -212,10 +223,12 @@ export default function TestPlanPage() {
               <RotateCcw className="size-3.5" data-icon="inline-start" />
             </Button>
             <div className="flex-1" />
-            <Button size="sm" onClick={() => openEdit()}>
-              <Plus className="size-3.5" data-icon="inline-start" />
-              新建计划
-            </Button>
+            {canCreate && (
+              <Button size="sm" className="min-h-11" onClick={() => openEdit()}>
+                <Plus className="size-3.5" data-icon="inline-start" />
+                新建计划
+              </Button>
+            )}
           </div>
         }
         />

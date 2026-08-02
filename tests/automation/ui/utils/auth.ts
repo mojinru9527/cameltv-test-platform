@@ -27,6 +27,9 @@ const USERNAME_SELECTOR = [
   'input[type="tel"]',
   'input[autocomplete="username"]',
   'input[type="text"]',
+  'input[placeholder*="手机号"]',
+  'input[placeholder*="手机"]',
+  'input[placeholder*="phone" i]',
 ].join(', ')
 
 const PASSWORD_SELECTOR = [
@@ -63,6 +66,88 @@ const LOGIN_ERROR_SELECTOR = [
   '.toast-error',
   '[data-testid="login-error"]',
 ].join(', ')
+
+const PHONE_TAB_SELECTOR = [
+  '[role="tab"]:has-text("手机号")',
+  '[role="tab"]:has-text("手机")',
+  'button:has-text("手机号登录")',
+  'button:has-text("手机登录")',
+  '[class*="tab"]:has-text("手机号")',
+].join(', ')
+
+const LOGIN_DIALOG_SELECTOR = [
+  'a:has-text("Already have an account")',
+  'button:has-text("Already have an account")',
+  '[role="button"]:has-text("Already have an account")',
+  'a:has-text("已有账号")',
+  'button:has-text("已有账号")',
+  'a:has-text("去登录")',
+  'button:has-text("去登录")',
+  'span:has-text("Log in")',
+].join(', ')
+
+/** 登录弹窗默认是注册页，先切到登录对话框（存在才点，失败不阻断）。 */
+async function switchToLoginDialog(page: Page): Promise<void> {
+  try {
+    const link = page.locator(LOGIN_DIALOG_SELECTOR).first()
+    if (await link.isVisible().catch(() => false)) {
+      await link.click()
+      await page.waitForTimeout(400)
+    }
+  } catch {
+    // 已是登录页时无此步骤
+  }
+}
+
+/** 先切到"手机号登录"页签（存在才点，尽力而为，失败不阻断）。 */
+async function switchToPhoneLogin(page: Page): Promise<void> {
+  try {
+    const tab = page.locator(PHONE_TAB_SELECTOR).first()
+    if (await tab.isVisible().catch(() => false)) {
+      await tab.click()
+      await page.waitForTimeout(300)
+    }
+  } catch {
+    // 单页签登录页无此步骤
+  }
+}
+
+/** 尽力而为地选中国家码（默认 +86，可经 CAMELTV_COUNTRY_CODE 覆盖）。找不到控件时保持原样。 */
+export async function applyCountryCode(
+  page: Page,
+  countryCode = process.env.CAMELTV_COUNTRY_CODE?.trim() || '+86',
+): Promise<void> {
+  if (!countryCode) return
+  const digits = countryCode.replace(/\s+/g, '').replace(/^\+/, '')
+
+  const select = page.locator('select').first()
+  if (await select.isVisible().catch(() => false)) {
+    const texts = await select.locator('option').allTextContents()
+    const label =
+      texts.find((t) => t.includes(`+${digits}`)) ||
+      texts.find((t) => t.includes(digits) && t.includes('中国')) ||
+      texts.find((t) => t.trim() === digits)
+    if (label) {
+      await select.selectOption({ label: label.trim() })
+      return
+    }
+  }
+
+  const trigger = page
+    .locator(
+      '[data-testid*="country" i], [aria-label*="国家" i], [aria-label*="区号" i], [aria-label*="country" i], [class*="country-code" i], [class*="area-code" i], button:has-text("+86")',
+    )
+    .first()
+  if (await trigger.isVisible().catch(() => false)) {
+    await trigger.click()
+    const option = page
+      .locator('[role="option"]:has-text("+86"), [role="option"]:has-text("中国"), li:has-text("+86"), div:has-text("+86")')
+      .first()
+    if (await option.isVisible().catch(() => false)) {
+      await option.click()
+    }
+  }
+}
 
 /** Return configured credentials or fail before any browser interaction. */
 export function getLoginCredentials(
@@ -124,6 +209,14 @@ export async function login(page: Page): Promise<void> {
     await loginEntry.click()
   } else {
     await page.goto('/login', { waitUntil: 'domcontentloaded' })
+  }
+
+  await switchToLoginDialog(page)
+  await switchToPhoneLogin(page)
+  try {
+    await applyCountryCode(page)
+  } catch {
+    // 国家码控件缺失或选择失败时不影响后续登录（账号可能已含国家码）
   }
 
   await fillLoginForm(page, credentials)

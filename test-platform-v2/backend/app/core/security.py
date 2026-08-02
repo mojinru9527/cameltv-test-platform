@@ -5,7 +5,8 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 
 import bcrypt
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError
 
 from app.core.config import settings
 
@@ -42,5 +43,5 @@ def create_access_token(subject: str | int, extra: dict | None = None) -> str:
 def decode_token(token: str) -> dict | None:
     try:
         return jwt.decode(token, settings.effective_secret_key, algorithms=[settings.algorithm])
-    except JWTError:
+    except InvalidTokenError:
         return None

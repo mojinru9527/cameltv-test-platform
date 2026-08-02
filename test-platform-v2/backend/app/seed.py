@@ -38,8 +38,10 @@ _MENUS = [
     ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 16),
     ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 17),
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 18),
-    ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 19),
-    ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 20),
+    ("menu:notify", "通知配置", "", "/notify", "NotificationOutlined", 19),
+    ("menu:environment", "目标环境", "", "/environment", "EnvironmentOutlined", 20),
+    ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 21),
+    ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 22),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -192,7 +194,7 @@ _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
-    "menu:perftest",
+    "menu:perftest", "menu:notify", "menu:environment",
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
 }
 
