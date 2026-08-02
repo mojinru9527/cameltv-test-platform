@@ -6,7 +6,7 @@
 
 | 条件数 | 通过 | 失败 | 阻塞 |
 |:------:|:----:|:----:|:----:|
-| 9 | 8 | 0 | 1 |
+| 10 | 9 | 0 | 1 |
 
 ## 变更范围与 CI 分类
 
@@ -26,6 +26,7 @@
 | G7 | OCR 模式确认 | LANHU_OCR_PROVIDER=local | PASS（无需云凭据） |
 | G8 | 清单一致性 | 2.x/6.1 状态与实测交叉核对 | PASS（2.1 ⏳、2.2/2.3 ✅、6.1 ⏳ 与事实一致） |
 | G9 | Docker 构建验证 | `docker build --target builder`（Linux 容器复现 Railway） | PASS：pip 依赖阶段 0 错误（B67-Q3 修复后） |
+| G10 | Railway PORT 监听验证 | `docker run -e PORT=8099` → uvicorn 监听 8099，health 200 | PASS（B67-Q4 修复后；原实现写死 8000 导致 Railway 健康检查端口不匹配） |
 
 ## 逐条件验证
 
@@ -65,6 +66,7 @@
 | B67-Q1 | P1 | AI_API_KEY 鉴权失败（401），AI 验收无法解锁 | `GET /v1/models` → 401 | ✅ 已修复（2026-08-02 换新 Key 实测 200） |
 | B67-Q2 | P3 | 蓝湖 Cookie 有效期未实测 | lanhu-mcp/.env | 转 C67-3（AI 验收批次） |
 | B67-Q3 | P0 | Railway 构建失败：`requirements.lock` 为 Windows 生成，缺平台标记/缺 Linux 依赖（pywin32==312 无标记、SecretStorage/jeepney/uvloop 未锁） | 本地 `docker build --target builder` 复现（两个报错：pywin32 → SecretStorage → uvloop） | ✅ 已修复（2026-08-03：pywin32 加 win32 标记；补 secretstorage/jeepney（linux）与 uvloop（非 win32）哈希锁；builder 阶段构建通过） |
+| B67-Q4 | P0 | Railway 健康检查失败：容器固定监听 8000，而 Railway 按注入的 `PORT` 变量探测端口；首次迁移 2~4 分钟也可能超默认 300s 健康检查超时 | 部署日志：`Uvicorn running on http://0.0.0.0:8000` 但 Healthcheck failure；官方文档确认 PORT 注入语义 | ✅ 已修复（2026-08-03：Dockerfile CMD 改 `${PORT:-8000}`；railway.json 加 `healthcheckTimeout: 600`；本地 `PORT=8099` 实测 health 200） |
 
 ## 发布建议
 

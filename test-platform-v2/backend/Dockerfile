@@ -70,4 +70,4 @@ RUN mkdir -p /app/storage /data/lanhu /ms-playwright "${XDG_CACHE_HOME}" \
 
 USER cameltv:cameltv
 EXPOSE 8000
-CMD ["sh", "-c", "echo '=== CamelTv Test Platform v2.6 ===' && test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && echo 'Running database migrations...' && alembic upgrade head && echo 'Starting application...' && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "echo '=== CamelTv Test Platform v2.6 ===' && test \"$(alembic heads | grep -c ' (head)$')\" -eq 1 && echo 'Running database migrations...' && alembic upgrade head && echo 'Starting application...' && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-8000}\""]
