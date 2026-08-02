@@ -127,6 +127,10 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 | `docs/adr/0004-jwt-bcrypt-rbac-auth.md` | ADR-0004: JWT + BCrypt + RBAC 认证授权 |
 | `docs/adr/0005-zustand-over-redux.md` | ADR-0005: 选用 Zustand 而非 Redux |
 | `docs/adr/0006-shadcn-ui-over-antd.md` | ADR-0006: 选用 shadcn/ui 而非 Ant Design |
+| `docs/adr/0016-three-repository-separation.md` | ADR-0016: 三仓分离（前端/后端/运维平台） |
+| `docs/architecture/` | 架构解析与设计报告（batch-64 起） |
+| `docs/production-delivery/` | 生产环境交付清单 |
+| `scripts/repo-split/` | 仓库边界事实源校验器（repo-boundaries.json） |
 
 ### 2.7 `.github/` — GitHub Actions 工作流
 
