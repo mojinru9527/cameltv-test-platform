@@ -45,7 +45,7 @@ client.interceptors.response.use(
       return Promise.reject(err)
     }
     const status = err.response?.status
-    const msg = err.response?.data?.msg || err.message || '网络错误'
+    const msg = err.response?.data?.msg || err.response?.data?.detail || err.message || '网络错误'
     // Keep inline error states as specific as the toast. Axios otherwise
     // exposes only "Request failed with status code …" to page-level recovery UI.
     err.message = msg
