@@ -198,7 +198,6 @@ def delete_case(db: Session, case_id: int, project_id: int = 0) -> bool:
     if not row:
         return False
     row.is_deleted = True
-    db.commit()
     return True
 
 
