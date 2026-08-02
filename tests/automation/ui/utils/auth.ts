@@ -75,6 +75,30 @@ const PHONE_TAB_SELECTOR = [
   '[class*="tab"]:has-text("手机号")',
 ].join(', ')
 
+const LOGIN_DIALOG_SELECTOR = [
+  'a:has-text("Already have an account")',
+  'button:has-text("Already have an account")',
+  '[role="button"]:has-text("Already have an account")',
+  'a:has-text("已有账号")',
+  'button:has-text("已有账号")',
+  'a:has-text("去登录")',
+  'button:has-text("去登录")',
+  'span:has-text("Log in")',
+].join(', ')
+
+/** 登录弹窗默认是注册页，先切到登录对话框（存在才点，失败不阻断）。 */
+async function switchToLoginDialog(page: Page): Promise<void> {
+  try {
+    const link = page.locator(LOGIN_DIALOG_SELECTOR).first()
+    if (await link.isVisible().catch(() => false)) {
+      await link.click()
+      await page.waitForTimeout(400)
+    }
+  } catch {
+    // 已是登录页时无此步骤
+  }
+}
+
 /** 先切到"手机号登录"页签（存在才点，尽力而为，失败不阻断）。 */
 async function switchToPhoneLogin(page: Page): Promise<void> {
   try {
@@ -177,13 +201,6 @@ export async function login(page: Page): Promise<void> {
   })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
 
-  await switchToPhoneLogin(page)
-  try {
-    await applyCountryCode(page)
-  } catch {
-    // 国家码控件缺失或选择失败时不影响后续登录（账号可能已含国家码）
-  }
-
   const userMenu = page.locator(USER_MENU_SELECTOR).first()
   if (await userMenu.isVisible().catch(() => false)) return
 
@@ -192,6 +209,14 @@ export async function login(page: Page): Promise<void> {
     await loginEntry.click()
   } else {
     await page.goto('/login', { waitUntil: 'domcontentloaded' })
+  }
+
+  await switchToLoginDialog(page)
+  await switchToPhoneLogin(page)
+  try {
+    await applyCountryCode(page)
+  } catch {
+    // 国家码控件缺失或选择失败时不影响后续登录（账号可能已含国家码）
   }
 
   await fillLoginForm(page, credentials)

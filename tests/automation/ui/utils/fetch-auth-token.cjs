@@ -48,6 +48,17 @@ const PHONE_TAB_SELECTOR = [
   '[class*="tab"]:has-text("手机号")',
 ].join(', ')
 
+const LOGIN_DIALOG_SELECTOR = [
+  'a:has-text("Already have an account")',
+  'button:has-text("Already have an account")',
+  '[role="button"]:has-text("Already have an account")',
+  'a:has-text("已有账号")',
+  'button:has-text("已有账号")',
+  'a:has-text("去登录")',
+  'button:has-text("去登录")',
+  'span:has-text("Log in")',
+].join(', ')
+
 /** 输出登录页结构（不包含任何凭据值），用于远程调试选择器。 */
 async function dumpLoginPage(page) {
   const info = await page.evaluate(() => {
@@ -62,13 +73,26 @@ async function dumpLoginPage(page) {
     )
       .map((el) => (el.textContent || '').trim())
       .filter(Boolean)
+    const links = Array.from(document.querySelectorAll('a, [role="button"], button'))
+      .map((el) => (el.textContent || '').trim())
+      .filter(Boolean)
     return {
       title: document.title,
       inputs,
       tabs: [...new Set(tabs)].slice(0, 40),
+      links: [...new Set(links)].slice(0, 40),
     }
   })
   process.stdout.write(`[DEBUG] ${JSON.stringify(info, null, 2)}\n`)
+}
+
+/** 登录弹窗默认是注册页，先切到登录对话框（存在才点）。 */
+async function switchToLoginDialog(page) {
+  const link = page.locator(LOGIN_DIALOG_SELECTOR).first()
+  if (await link.isVisible().catch(() => false)) {
+    await link.click()
+    await page.waitForTimeout(400)
+  }
 }
 
 /** 先切到"手机号登录"页签（存在才点，尽力而为）。 */
@@ -140,6 +164,7 @@ async function main() {
       await dumpLoginPage(page)
     }
 
+    await switchToLoginDialog(page)
     await switchToPhoneLogin(page)
     await applyCountryCode(page, countryCode)
     if (process.env.CAMELTV_DEBUG === '1') {
