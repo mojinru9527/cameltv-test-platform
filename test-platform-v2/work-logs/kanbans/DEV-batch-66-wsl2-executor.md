@@ -23,11 +23,11 @@
 ## 当前位置
 
 ```
-Batch 66 — Test5 验收执行器搭建（窗口 2026-08-03 11:00–18:00）
-├── 已完成: 安装脚本；README（V1–V5 登记表）；1.1/1.5 登记；六部门工件
-├── 🔄 进行中: QA 门禁与 Leader 判决 → 用户 push 授权
-├── ⏳ 窗口前: 安装 Ubuntu 发行版（wsl --install -d Ubuntu）并运行脚本
-└── ⏳ 2026-08-03 11:00–18:00: V1–V5 实测并登记（V2/V3 需 Test5 内网）
+Batch 66 — Test5 验收执行器搭建 ✅ 全部完成
+├── ✅ 已完成: 安装脚本；README；1.1/1.5 登记；Ubuntu WSL2 安装；OpenVPN 连接（账号 mojinru）
+├── ✅ V1–V5 实测全部通过（2026-08-02，见 batch-66-executor-closure-verification-record.md）
+├── ✅ 收尾: 脚本 bug 修复（sudo grep、隧道地址精确匹配）；验证登记
+└── ⏳ 待办: 其余 5 节点 IP（C66-4）；旧双 VPN 手册删除（C65-2）；延迟优化
 ```
 
 ## 阻塞与风险
