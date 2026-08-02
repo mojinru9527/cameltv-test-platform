@@ -7,8 +7,8 @@
 | 维度 | 评分 | 备注 |
 |------|------|------|
 | 需求聚焦 | PASS | 只收口 2.x/6.1 前置条件登记，未扩到 AI 全链路验收 |
-| 实现质量 | PASS | 清单登记与 .env 实测一致；零业务代码 |
-| 风险 | PASS | 无明文 Secret 入库；2.1/6.1 未假解锁（C63-2） |
+| 实现质量 | PASS | 清单登记与 .env 实测一致；B67-Q3 锁文件修复经本地 Docker 构建验证 |
+| 风险 | PASS | 无明文 Secret 入库；2.1/6.1 未假解锁（C63-2）；依赖修复不升级任何包版本 |
 | 覆盖 | PASS | 六部门工件 + 看板 + 清单状态同步 |
 | 证据 | PASS | AI Key 401→200 换新实测记录、占位符扫描、蓝湖/OCR 键核对 |
 
@@ -17,11 +17,14 @@
 1. **2.1 已解锁**：首测 401 判定为「已填但失效」，不因记忆而假解锁；用户换新 Key 后实测 200 → 登记 ✅，C67-1 关闭。
 2. **2.2/2.3 登记 ✅**：蓝湖账密/Cookie 与本地 OCR 结论有据。
 3. **6.1 判定为「待提供」**：Dockerfile 已修复，Railway 重试与 URL 回传为用户操作项。
+4. **B67-Q3 构建阻塞修复（2026-08-03）**：`requirements.lock` 补平台标记与 Linux 依赖
+   （pywin32/secretstorage/jeepney/uvloop），`docker build --target builder` 本地验证通过，
+   不升级任何既有包版本；合并主干后 Railway 自动部署。
 
 ## 抽检通过
 
 - ✅ `docs/production-delivery/外部前置条件清单.md` §2/§6.1 — 状态与 QA 实测一致
-- ✅ `git diff --check` 0；密钥扫描 0 命中
+- ✅ `git diff --check` 0；密钥扫描 0 命中；`docker build --target builder` 0 错误
 - ✅ C63-2 登记字段（提供人/日期/授权范围）完整
 
 ## 判决

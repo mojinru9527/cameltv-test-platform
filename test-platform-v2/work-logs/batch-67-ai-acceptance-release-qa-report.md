@@ -1,12 +1,12 @@
 # Batch 67 — QA 报告（AI 验收与正式域名发布前置条件收口）
 
-> **QA (🔍)** | Date: 2026-08-02 | Verdict: PASS（2.1 已解锁；6.1 仍为外部待办）
+> **QA (🔍)** | Date: 2026-08-02 | 修订：2026-08-03 | Verdict: PASS（2.1 已解锁；B67-Q3 已修复；6.1 待用户部署）
 
 ## 测试总览
 
 | 条件数 | 通过 | 失败 | 阻塞 |
 |:------:|:----:|:----:|:----:|
-| 8 | 7 | 0 | 1 |
+| 9 | 8 | 0 | 1 |
 
 ## 变更范围与 CI 分类
 
@@ -25,6 +25,7 @@
 | G6 | 蓝湖凭据存在性 | LANHU_USERNAME/PASSWORD/COOKIE 键非空 | PASS |
 | G7 | OCR 模式确认 | LANHU_OCR_PROVIDER=local | PASS（无需云凭据） |
 | G8 | 清单一致性 | 2.x/6.1 状态与实测交叉核对 | PASS（2.1 ⏳、2.2/2.3 ✅、6.1 ⏳ 与事实一致） |
+| G9 | Docker 构建验证 | `docker build --target builder`（Linux 容器复现 Railway） | PASS：pip 依赖阶段 0 错误（B67-Q3 修复后） |
 
 ## 逐条件验证
 
@@ -54,7 +55,7 @@
 | 检查项 | 结果 | 说明 |
 |--------|:----:|------|
 | 服务器确认 | ❌ | 未提供 Railway URL / 服务器地址 |
-| 阻塞根因 | 记录 | Dockerfile 子模块修复已合入；重试部署待用户操作（手册 §1） |
+| 阻塞根因 | ✅ 已修复 | 构建依赖 B67-Q3（pywin32/SecretStorage/uvloop）已修复并本地验证；待合并主干后 Railway 自动部署（手册 §1） |
 | 结论 | ⏳ | 登记为待提供；C58-06 维持 OPEN |
 
 ## 缺陷列表
@@ -63,8 +64,10 @@
 |---|:------:|------|------|------|
 | B67-Q1 | P1 | AI_API_KEY 鉴权失败（401），AI 验收无法解锁 | `GET /v1/models` → 401 | ✅ 已修复（2026-08-02 换新 Key 实测 200） |
 | B67-Q2 | P3 | 蓝湖 Cookie 有效期未实测 | lanhu-mcp/.env | 转 C67-3（AI 验收批次） |
+| B67-Q3 | P0 | Railway 构建失败：`requirements.lock` 为 Windows 生成，缺平台标记/缺 Linux 依赖（pywin32==312 无标记、SecretStorage/jeepney/uvloop 未锁） | 本地 `docker build --target builder` 复现（两个报错：pywin32 → SecretStorage → uvloop） | ✅ 已修复（2026-08-03：pywin32 加 win32 标记；补 secretstorage/jeepney（linux）与 uvloop（非 win32）哈希锁；builder 阶段构建通过） |
 
 ## 发布建议
 
 状态: **PASS**（本批交付物范围）　必修复: 0　建议修复: 1（B67-Q2，转 C67-3）
-2.1 已解锁（实测 200）；6.1 仍为外部待办（用户提供服务器 URL 后关闭），不构成本批交付缺陷。
+2.1 已解锁（实测 200）；B67-Q3 构建阻塞已修复并本地验证；6.1 仍为外部待办（合并主干后 Railway 自动部署，
+用户回传 URL 后关闭），不构成本批交付缺陷。

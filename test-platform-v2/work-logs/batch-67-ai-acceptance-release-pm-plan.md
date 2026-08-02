@@ -37,8 +37,15 @@
 **验收标准**: C 编号与判决一致，登记日期/来源批次。
 **涉及文件**: `C-CONDITIONS.md`
 
+### [x] Task 5: requirements.lock 跨平台依赖修复（B67-Q3）
+**描述**: Railway 构建在 pip 依赖阶段失败——锁文件为 Windows 环境生成，缺平台标记与 Linux 依赖。
+修复：`pywin32==312` 加 `sys_platform == "win32"` 标记；补 `secretstorage==3.5.0` / `jeepney==0.9.0`
+（`sys_platform == "linux"`）与 `uvloop==0.22.1`（`sys_platform != "win32"`）哈希锁。
+**验收标准**: `docker build --target builder` 0 错误；Windows 本地安装不受影响（标记隔离）。
+**涉及文件**: `test-platform-v2/backend/requirements.lock`
+
 ## 质量要求
 - [x] 密钥扫描 0 命中（无 password/token/key/cookie 明文入库）
 - [x] `git diff --check` 通过
 - [x] 清单状态与 .env 实测一致，禁止补登假证据（C63-2）
-- [x] 纯 docs/work-logs 变更，零业务代码改动
+- [x] 变更以文档为主，唯一代码文件为 requirements.lock（依赖锁），本地 Docker 构建验证通过
