@@ -192,7 +192,7 @@ export default function SchedulePage() {
       <Card>
         <CardContent className="flex items-center gap-3 pt-4">
           {canCreate && (
-            <Button onClick={openNew} data-icon="inline-start">
+          <Button className="min-h-11" onClick={openNew} data-icon="inline-start">
               <Plus />
               新建调度
             </Button>
@@ -278,7 +278,7 @@ export default function SchedulePage() {
                             <TableCell>
                               <div className="flex items-center gap-1">
                                 {canTrigger && (
-                                  <Button size="sm" variant="secondary" onClick={() => doTrigger(row.id)} data-icon="inline-start">
+            <Button size="sm" variant="secondary" className="min-h-11" onClick={() => doTrigger(row.id)} data-icon="inline-start">
                                     <Zap />
                                     触发
                                   </Button>

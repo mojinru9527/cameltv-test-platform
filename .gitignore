@@ -7,6 +7,7 @@
 *.key
 *.ovpn
 secrets/
+actions-runner/
 
 # Python
 __pycache__/

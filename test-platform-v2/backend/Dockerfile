@@ -30,6 +30,7 @@ ENV VIRTUAL_ENV=/opt/venv \
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
+        git \
         ffmpeg \
         nodejs \
         npm \
@@ -55,7 +56,14 @@ COPY test-platform-v2/backend/app ./app
 COPY test-platform-v2/backend/alembic ./alembic
 COPY test-platform-v2/backend/alembic.ini .
 COPY test-platform-v2/backend/tests/playwright ./tests/playwright
-COPY lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py
+
+# lanhu-mcp 是 Git 子模块，云构建（Railway/Vercel/CI）默认不拉取子模块内容。
+# 这里在构建期直接从子模块 remote 拉取，保证无本地子模块也能构建。
+RUN git clone --depth 1 --branch main \
+        https://github.com/mojinru9527/lanhu-mcp.git /tmp/lanhu-mcp \
+    && mkdir -p /app/lanhu-mcp \
+    && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py \
+    && rm -rf /tmp/lanhu-mcp
 
 RUN mkdir -p /app/storage /data/lanhu /ms-playwright "${XDG_CACHE_HOME}" \
     && chown -R cameltv:cameltv /app /data /ms-playwright /home/cameltv

@@ -124,9 +124,10 @@ def test_backend_image_installs_locked_ui_lanhu_and_media_runtime() -> None:
     assert "npm ci || npm install" not in dockerfile
 
     assert (
-        "COPY lanhu-mcp/lanhu_mcp_server.py "
-        "/app/lanhu-mcp/lanhu_mcp_server.py"
+        "lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py"
     ) in dockerfile
+    # Batch 63：云构建（Railway 等）不拉 Git 子模块，Dockerfile 改为构建期 clone
+    assert "github.com/mojinru9527/lanhu-mcp" in dockerfile
     assert "nodejs" in dockerfile
     assert "npm" in dockerfile
     assert "ffmpeg" in dockerfile

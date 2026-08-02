@@ -9,7 +9,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://backend.cameltv-platform.example.com/api/:path*"
+      "destination": "https://${BACKEND_URL}/api/:path*"
     },
     {
       "source": "/((?!api/).*)",

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/auth'
 import {
   fetchChannels,
   createChannel,
@@ -109,6 +110,7 @@ export default function NotifyPage() {
   const [saving, setSaving] = useState(false)
   const [testOpen, setTestOpen] = useState(false)
   const [testing, setTesting] = useState(false)
+  const canManage = useAuthStore((state) => state.hasPerm)('notify:manage')
 
   const { data, isLoading, isError, error, refetch } = useApi(
     () => fetchChannels(),
@@ -220,14 +222,18 @@ export default function NotifyPage() {
     <div>
       <PageHeader title="通知配置" description="管理 Webhook 和邮件通知渠道">
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => setTestOpen(true)} data-icon="inline-start">
-            <Play />
-            测试发送
-          </Button>
-          <Button size="sm" onClick={openCreate} data-icon="inline-start">
-            <Plus />
-            新增渠道
-          </Button>
+          {canManage && (
+            <Button variant="secondary" size="sm" className="min-h-11" onClick={() => setTestOpen(true)} data-icon="inline-start">
+              <Play />
+              测试发送
+            </Button>
+          )}
+          {canManage && (
+            <Button size="sm" className="min-h-11" onClick={openCreate} data-icon="inline-start">
+              <Plus />
+              新增渠道
+            </Button>
+          )}
         </div>
       </PageHeader>
 
@@ -240,7 +246,7 @@ export default function NotifyPage() {
           onRetry={refetch}
           emptyTitle="暂无通知渠道"
           emptyDescription="点击「新增渠道」创建第一个 Webhook 或邮件通知"
-          emptyAction={{ label: '新增渠道', onClick: openCreate }}
+          emptyAction={canManage ? { label: '新增渠道', onClick: openCreate } : undefined}
           loadingVariant="skeleton"
           skeletonType="table"
           loadingRows={3}
@@ -292,15 +298,19 @@ export default function NotifyPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Button size="sm" variant="ghost" onClick={() => openEdit(ch)}>
-                            <Edit className="size-4" />
-                          </Button>
+                          {canManage && (
+                            <Button size="sm" variant="ghost" onClick={() => openEdit(ch)}>
+                              <Edit className="size-4" />
+                            </Button>
+                          )}
                           <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="ghost">
-                                <Trash2 className="size-4 text-destructive" />
-                              </Button>
-                            </AlertDialogTrigger>
+                            {canManage && (
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="ghost">
+                                  <Trash2 className="size-4 text-destructive" />
+                                </Button>
+                              </AlertDialogTrigger>
+                            )}
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>确定删除？</AlertDialogTitle>

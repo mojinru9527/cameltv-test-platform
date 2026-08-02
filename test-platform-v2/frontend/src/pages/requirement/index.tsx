@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/auth'
 import { fetchDomains } from '@/api/testcase'
 import {
   confirmExtraction, deleteRequirement, extractFeatures, fetchGeneratedCases,
@@ -83,6 +84,8 @@ interface RequirementData {
 }
 
 export default function RequirementPage() {
+  const hasPerm = useAuthStore((state) => state.hasPerm)
+  const canWriteDocs = hasPerm('requirement:upload') || hasPerm('requirement:generate') || hasPerm('requirement:import')
   useDocumentTitle('需求管理')
   const [keyword, setKeyword] = useState('')
   const [uploading, setUploading] = useState(false)
@@ -456,7 +459,7 @@ export default function RequirementPage() {
       description="上传 PRD、Excel 或蓝湖链接，使用 AI 提取需求并生成测试用例。"
       actions={(
         <>
-          <Button variant="secondary" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置">
+          <Button variant="secondary" size="sm" onClick={() => setLanhuSettingsOpen(true)} title="蓝湖项目配置" disabled={!canWriteDocs}>
             <Settings className="size-4" />
             蓝湖设置
           </Button>
@@ -528,7 +531,7 @@ export default function RequirementPage() {
       </div>
 
       {/* Upload Area */}
-      <Card size="sm" className="ui-surface">
+      <Card size="sm" className={'ui-surface' + (canWriteDocs ? '' : ' opacity-60 pointer-events-none')}>
         <CardHeader className="border-b pb-3">
           <CardTitle className="text-sm flex items-center gap-2">
             <Cloud className="size-4" />
@@ -835,7 +838,7 @@ export default function RequirementPage() {
                                   <Button
                                     size="sm"
                                     variant="primary"
-                                    disabled={generating && generatingDocId === r.id}
+                                    disabled={!canWriteDocs || (generating && generatingDocId === r.id)}
                                     onClick={() => handleGenerate(r.id, true)}
                                   >
                                     {generating && generatingDocId === r.id ? (
@@ -849,7 +852,7 @@ export default function RequirementPage() {
                                   <Button
                                     size="sm"
                                     variant="primary"
-                                    disabled={extracting && extractingDocId === r.id}
+                                    disabled={!canWriteDocs || (extracting && extractingDocId === r.id)}
                                     onClick={() => handleExtract(r.id)}
                                   >
                                     {extracting && extractingDocId === r.id ? (
@@ -863,7 +866,7 @@ export default function RequirementPage() {
                                   <Button
                                     size="sm"
                                     variant="primary"
-                                    disabled={extracting && extractingDocId === r.id}
+                                    disabled={!canWriteDocs || (extracting && extractingDocId === r.id)}
                                     onClick={() => handleExtract(r.id)}
                                   >
                                     {extracting && extractingDocId === r.id ? (
@@ -879,11 +882,11 @@ export default function RequirementPage() {
                                 <Button
                                   size="sm"
                                   variant="secondary"
-                                  disabled={
+                                  disabled={!canWriteDocs || (
                                     r.extraction_status === 'confirmed'
                                       ? extracting && extractingDocId === r.id
                                       : generating && generatingDocId === r.id
-                                  }
+                                  )}
                                   onClick={() => {
                                     if (r.extraction_status === 'confirmed') {
                                       handleReExtract(r.id)
@@ -932,7 +935,7 @@ export default function RequirementPage() {
                                 <Button
                                   size="sm"
                                   variant="secondary"
-                                  disabled={generating && generatingDocId === r.id}
+                                  disabled={!canWriteDocs || (generating && generatingDocId === r.id)}
                                   onClick={() => handleGenerate(r.id, false)}
                                 >
                                   {generating && generatingDocId === r.id ? (
@@ -987,6 +990,7 @@ export default function RequirementPage() {
                             <Button
                               size="sm"
                               variant="danger"
+                              disabled={!canWriteDocs}
                               onClick={() => handleDelete(r)}
                             >
                               <Trash2 className="size-3.5" />
