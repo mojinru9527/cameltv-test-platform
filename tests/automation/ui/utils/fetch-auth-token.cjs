@@ -41,18 +41,28 @@ const SUBMIT_SELECTOR = [
 ].join(', ')
 
 const LOGIN_ENTRY_SELECTOR = [
+  'a:has-text("My")',
+  'a[href*="my" i]',
   '[data-testid="login-btn"]',
   'a[href*="login" i]',
   'button:has-text("登录")',
   'button:has-text("Sign In")',
   'a:has-text("登录")',
-  'a:has-text("My")',
   '[aria-label*="user" i]',
   '[aria-label*="account" i]',
   '[aria-label*="登录" i]',
   '[aria-label*="sign in" i]',
   '[class*="login-btn" i]',
-  'a[href*="my" i]',
+].join(', ')
+
+const LOGIN_TEXT_SELECTOR = [
+  'button:has-text("登录")',
+  'a:has-text("登录")',
+  'button:has-text("Log In")',
+  'button:has-text("Sign In")',
+  'span:has-text("登录")',
+  '[role="menuitem"]:has-text("登录")',
+  '[role="menuitem"]:has-text("Log In")',
 ].join(', ')
 
 const PHONE_TAB_SELECTOR = [
@@ -100,6 +110,7 @@ async function dumpLoginPage(page) {
       }))
       .filter((b) => b.aria || b.title || b.text)
     return {
+      url: window.location.href,
       title: document.title,
       inputs,
       tabs: [...new Set(tabs)].slice(0, 40),
@@ -192,10 +203,41 @@ async function main() {
     const loginEntry = page.locator(LOGIN_ENTRY_SELECTOR).first()
     if (await loginEntry.isVisible().catch(() => false)) {
       await loginEntry.click()
-      await page.waitForTimeout(700)
+      await page.waitForTimeout(2500)
     }
     if (process.env.CAMELTV_DEBUG === '1') {
       await dumpLoginPage(page)
+    }
+
+    // 兜底 1：直接访问 /my（未登录通常落到登录页）
+    const hasInput = await page
+      .locator(USERNAME_SELECTOR)
+      .first()
+      .isVisible()
+      .catch(() => false)
+    if (!hasInput) {
+      await page.goto(`${base}/my`, { waitUntil: 'domcontentloaded' }).catch(() => {})
+      await page.waitForTimeout(1500)
+      if (process.env.CAMELTV_DEBUG === '1') {
+        await dumpLoginPage(page)
+      }
+    }
+
+    // 兜底 2：点击任何可见的"登录/Log In"文案
+    const hasInput2 = await page
+      .locator(USERNAME_SELECTOR)
+      .first()
+      .isVisible()
+      .catch(() => false)
+    if (!hasInput2) {
+      const loginText = page.locator(LOGIN_TEXT_SELECTOR).first()
+      if (await loginText.isVisible().catch(() => false)) {
+        await loginText.click()
+        await page.waitForTimeout(1200)
+        if (process.env.CAMELTV_DEBUG === '1') {
+          await dumpLoginPage(page)
+        }
+      }
     }
 
     await switchToLoginDialog(page)
