@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "description": "CamelTv 仓库边界事实源（Batch 64 架构基线）。归属采用「最长前缀优先」：嵌套路径归更具体的仓库。拆分批次与 CI 分类器以此文件为唯一事实源，新增顶层路径必须在此声明。",
+  "repositories": {
+    "frontend": {
+      "description": "测试平台 Web UI（目标仓库 cameltv-test-frontend）",
+      "paths": [
+        "test-platform-v2/frontend"
+      ],
+      "rules": [
+        "只通过 /api/v1 REST 契约与后端通信，禁止 import 后端代码",
+        "API 类型由 OpenAPI 生成（npm run gen:api）或人工同步并附契约说明",
+        "不直连数据库，不保存明文 Secret"
+      ]
+    },
+    "backend": {
+      "description": "测试平台后端 + 执行引擎 + 蓝湖集成（目标仓库 cameltv-test-backend）",
+      "paths": [
+        "test-platform-v2/backend",
+        "lanhu-mcp"
+      ],
+      "rules": [
+        "不渲染 HTML，只输出 REST/JSON",
+        "数据库变更必须走 Alembic 迁移，禁止 AUTO_CREATE_TABLES 掩盖迁移错位",
+        "不保存明文 Secret；AI/OCR/蓝湖凭据走 .env 注入",
+        "执行引擎（apitest/uitest/av_check/perf）非演示态，修改必须保持与前端契约同步"
+      ]
+    },
+    "ops-platform": {
+      "description": "运维发布平台（ADR-0015/0016，目标仓库 cameltv-ops-platform）",
+      "paths": [
+        "deploy",
+        "test-platform-v2/backend/app/api/v1/ops_releases.py",
+        "test-platform-v2/backend/app/services/ops_release_reader.py",
+        "test-platform-v2/frontend/src/api/opsReleases.ts",
+        "test-platform-v2/frontend/src/pages/operations-release"
+      ],
+      "rules": [
+        "只消费 release manifest / 事实层，禁止伪造发布成功",
+        "production 未就绪时保持 PRODUCTION_NOT_CONFIGURED / 503 语义",
+        "不保存明文 Secret；Secret 只以引用名进入 manifest",
+        "Jenkins 是过渡执行器，不成为长期环境事实源"
+      ]
+    },
+    "shared": {
+      "description": "跨仓共享资产、仓库级元数据与过渡期根目录资产",
+      "paths": [
+        ".claude",
+        ".githooks",
+        ".github",
+        "docs",
+        "scripts",
+        "tests",
+        "work-logs",
+        "产品需求",
+        "test-platform-v2",
+        "repo-boundaries.json",
+        ".dockerignore",
+        ".gitattributes",
+        ".gitignore",
+        ".gitmodules",
+        ".mcp.json",
+        ".pr-body-batch20.md",
+        ".pr-body-batch22.md",
+        "AGENTS.md",
+        "C-CONDITIONS.md",
+        "CLAUDE.md",
+        "COMMANDS.md",
+        "CamelTv-测试自动化平台-建设方案.md",
+        "Jenkinsfile",
+        "package-lock.json",
+        "railway.json",
+        "test-测试平台设计方案.md",
+        "测试平台-前后端分离重构方案.md",
+        "知识中心-用户使用手册.md",
+        "知识库.md",
+        "pective pipeline — Agent Team work-logs + 10 TypeScript fixes + domain CRUD API",
+        "pective pipeline — Agent Team work-logs + 10 TypeScript fixes + domain CRUD API\uF022"
+      ],
+      "rules": [
+        "test-platform-v2 根目录为过渡期共享资产（walkthrough/重启脚本等），拆仓时收敛到对应仓库或删除",
+        "两个 pective 开头的文件为历史误提交产物，待 batch-65 独立审计删除",
+        "docs/ 新增强制走 document-standards 元数据约定"
+      ]
+    },
+    "deprecated-v1": {
+      "description": "测试平台 V1（单体遗留，已弃用）。V2 未覆盖的 CLI 工具迁移/废弃决策完成前不得整体移除",
+      "paths": [
+        "test-platform"
+      ],
+      "rules": [
+        "禁止新增功能；只允许维护性修复或按批次执行的迁移/退役操作",
+        "整体移除必须满足 docs/architecture/batch-64-architecture-analysis.md §4 覆盖矩阵的全部条件",
+        "web-ui/ 与 server/ 已确认被 V2 覆盖，可先于 tools/ 退役（仍走独立审计批次）"
+      ]
+    }
+  }
+}

@@ -2,7 +2,7 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-07-29 (Batch 56 交付物与生产验收阻断对账)
+**最后更新**: 2026-08-02 (Batch 64 架构解析与仓库拆分基线)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
@@ -17,6 +17,23 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-63 — 汇总问题遗留解决版本（Batch 63 Leader 条件，本批归位）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C63-1 | Batch 64 按 `docs/能力产品化决策清单.md` 排期 Token/Playground/用例导入导出/追溯下钻 UI，不得无限期停留在 API-only | P1 | 2026-08-02 |
+| C63-2 | 外部阻塞项（Test5、AI/OCR、真机、旧库、C58、DevOps）解除时，必须先登记提供人/日期/授权范围再执行，禁止补登假证据 | P0 | 2026-08-02 |
+| C63-3 | `C-CONDITIONS.md` 继续按 Batch 63 复核口径维护；新批次 PRD 须引用 C63 条件 | P2 | 2026-08-02 |
+
+### batch-64 — 架构解析与仓库拆分基线（Batch 64 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C64-1 | V1 整体移除受覆盖矩阵门禁（`docs/architecture/batch-64-architecture-analysis.md` §4）；B 档工具（mock/capture/apidiff/datafactory/logagg/loadtest/envcheck）逐项迁移或用户批准废弃后才可删除 | P0 | 2026-08-02 |
+| C64-2 | 独立审计批次删除根目录两个 `pective pipeline — ...` 误提交文件，删除后同步更新 `repo-boundaries.json` | P2 | 2026-08-02 |
+| C64-3 | 生产交付清单待运维回填 DB/Redis/MQ 真实内网地址后更新；production 保持 DEFERRED；拆仓批次合入前 `validate_repo_boundaries.py --check` 必须全绿 | P0 | 2026-08-02 |
+| C64-4 | C63-1 四项 API-only UI（Token/Playground/导入导出/追溯下钻）排期 batch-65+ | P1 | 2026-08-02 |
 
 ### batch-18 — Wiki Diff 孤儿（batch-30 归位）
 
