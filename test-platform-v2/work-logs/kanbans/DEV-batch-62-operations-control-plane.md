@@ -17,17 +17,18 @@
 | 2 | Store, locks, idempotency, events | completed | completed | completed | pending | pending | hash-chain and conflict tests green |
 | 3 | Test-only command facade | completed | completed | completed | pending | pending | 17 core tests green; production rejects |
 | 4 | Adapter contract | completed | completed | completed | pending | pending | 5 adapter tests green; no external executor |
-| 5 | Operations API/UI consumer | planned | pending | pending | pending | pending | separate slice |
+| 5 | Operations API/UI consumer | completed | completed | completed | pending | pending | global RBAC read-only consumer; production/executor UI omitted |
 | 6 | Real test exercise | blocked | blocked | blocked | blocked | blocked | external owner needed |
 
 ## Current position
 
-    Batch 62 -> Slice 4 -> local QA complete
+    Batch 62 -> Slice 5 -> local QA complete
     completed: Batch 61 W2 PR 90 merged into main
     completed: isolated worktree, executor confirmation, Product/PM/Design artifacts
     completed: immutable manifest, schema check, SQLite audit chain, lock/replay and state machine
     completed: immutable adapter inputs; test-only Jenkins contract rejects unconfigured execution
-    next: commit adapter contract, mandatory push-range confirmation, then API/UI consumer planning
+    completed: global RBAC read-only API consumes executor-owned SQLite facts; UI renders persisted release/event facts and production deferred notice
+    next: update QA/Leader artifacts, commit Slice 5, mandatory push-range confirmation
     safety: no Test5, production, credentials, registry, Jenkins, Docker or migrations
 
 ## Blockers

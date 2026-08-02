@@ -29,4 +29,6 @@ The example manifest uses .invalid hostnames and fabricated digest values. It is
 
 ReleaseStore receives an explicit SQLite path from its executor. That path belongs outside a Jenkins workspace and outside the test-platform application database. The repository supplies no default state location, credential or target address.
 
+When the test-platform backend needs to expose read-only release facts, set `RELEASE_CONTROL_DATABASE_PATH` to that executor-owned SQLite file through the deployment environment and mount it read-only. The backend does not create this file, write to it, or fall back to a product database when it is unavailable.
+
 Before adapters or API/UI are added, retain the core test suite and add consumer contract tests. A real test exercise remains blocked until named DevOps/DBA owners provide a registry, Runner, PostgreSQL 16, backup destination, Secret-reference mechanism and an authorized window. Production remains deferred.

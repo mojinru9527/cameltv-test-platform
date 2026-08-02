@@ -120,3 +120,15 @@ def _require_permission_only(code: str):
             raise forbidden(f"缺少权限：{code}")
         return current
     return _checker
+
+
+def require_system_permission(code: str):
+    """Require a global RBAC grant without inventing a project scope for ops."""
+
+    def _checker(current: CurrentUser = Depends(get_current_user)) -> CurrentUser:
+        system_permissions = current.system_permissions or []
+        if not rbac_service.has_permission(system_permissions, code):
+            raise forbidden(f"缺少全局权限：{code}")
+        return current
+
+    return _checker

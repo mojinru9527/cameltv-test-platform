@@ -136,6 +136,12 @@ deploy/release-control 已提供本地、无执行器依赖的核心：不可变
 
 这只是 Phase 1 的核心事实层，不改变本 ADR 的 proposed 状态，也不代表 test deployment、回滚演练、Phase 2 API/UI 或 Phase 3 production 已完成。后续适配器和 UI 必须消费该记录，而不能重新建立并行的发布事实源。
 
+### 7.2 2026-08-02 实施证据（Batch 62 Slice 5）
+
+测试平台增加了只读的 `/api/v1/ops/deployments`、详情和事件 API，以及直达路由 `/operations-release`。它们仅在全局 `release:view` 权限允许后，从 `RELEASE_CONTROL_DATABASE_PATH` 指向的 executor-owned SQLite 状态库读取非敏感事实；路径未配置或不可读时返回 `503`，不会创建本地替代记录或模拟发布成功。
+
+该页面没有 release、审批、迁移、回滚或 production 命令。production、Test5、Jenkins、Docker、registry、PostgreSQL、Secret provider 仍未接入，不能将这项只读可见性解释为 Phase 2 或生产就绪。
+
 ## 后果
 
 ### 正面影响

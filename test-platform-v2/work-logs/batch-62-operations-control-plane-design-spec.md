@@ -30,6 +30,12 @@ Secret references use secret://environment/name@version. Values on secret-like k
 
 An event includes sequence, release/deployment/environment IDs, actor, phase, from/to state, sanitized reason/evidence, predecessor hash and current hash. A sequence gap or digest mismatch fails verification.
 
+## Slice 5 read-only consumer
+
+The implemented consumer uses `GET /api/v1/ops/deployments` and `GET /api/v1/ops/deployments/{id}/events`, both protected by the global `release:view` permission. It reads the configured executor-owned state store and returns `503` when that store is absent rather than showing mock records.
+
+`frontend/src/pages/operations-release/index.tsx` uses `PageHeader`, `Card`, `AsyncState`, semantic status `Badge`s and a responsive one/two-column layout. It has loading, error, empty and production-deferred states. Selecting a deployment triggers exactly one events request; inactive detail content has no background polling or write controls. The route is direct-only (`/operations-release`) pending menu policy, so no unapproved side-bar access is implied.
+
 ## UI-forward constraints
 
 Future UI must display a non-secret code plus text, source every timeline from ordered events, retain server-side production rejection even when controls are disabled, and make no mock release fact available as a production-looking record. UI implementation will use the repository UI convention skill before it begins.

@@ -33,6 +33,7 @@ const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const AgentWorkbenchPage = lazy(() => import('@/pages/agent-workbench'))
 const PerftestPage = lazy(() => import('@/pages/perftest'))
+const OperationsReleasePage = lazy(() => import('@/pages/operations-release'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
 const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
 const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPanorama'))
@@ -208,6 +209,7 @@ export const router = createBrowserRouter([
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
       { path: 'agent-workbench', element: <PageLoader><AgentWorkbenchPage /></PageLoader> },
       { path: 'perftest', element: <PageLoader><PerftestPage /></PageLoader> },
+      { path: 'operations-release', element: <PageLoader><OperationsReleasePage /></PageLoader> },
       { path: 'theme-lab', element: <PageLoader><ThemeLabPage /></PageLoader> },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
