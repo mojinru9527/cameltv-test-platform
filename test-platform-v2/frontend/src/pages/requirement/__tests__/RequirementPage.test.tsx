@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { useAuthStore } from '@/stores/auth'
 
 const mockFetchDomains = vi.fn()
 const mockFetchRequirements = vi.fn()
@@ -79,6 +80,7 @@ function renderPage() {
 
 describe('RequirementPage acceptance behavior', () => {
   beforeEach(() => {
+    useAuthStore.setState({ permissions: ['*'], currentProjectId: 1 })
     vi.clearAllMocks()
     mockFetchDomains.mockResolvedValue([])
     mockFetchRequirements.mockResolvedValue({
