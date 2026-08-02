@@ -48,6 +48,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C66-4 | 其余 5 个 Test5 节点（camel-to-test5 等）内网 IP 待 Test5 owner 提供后补 WSL hosts（g3 已确认 = 192.168.50.170） | P2 | 2026-08-02 |
 
+### batch-67 — AI 验收与正式域名发布前置条件收口（Batch 67 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C67-1 | 用户提供有效 DeepSeek API Key 并写入 `test-platform-v2/backend/.env`（同步 deploy/.env），实测 `GET {AI_API_BASE_URL}/models` HTTP 200 后关闭 2.1 | P0 | 2026-08-02 |
+| C67-2 | 用户提供后端托管公网 URL（Railway `*.up.railway.app`）或自建 Docker 服务器地址+端口，登记 6.1 后回填 `vercel.json` 反代目标，关闭 C58-06 | P0 | 2026-08-02 |
+| C67-3 | AI 验收批次启动时实测蓝湖 Cookie 有效期（lanhu-mcp 登录态），失效则重新获取 | P2 | 2026-08-02 |
+
 ### batch-18 — Wiki Diff 孤儿（batch-30 归位）
 
 | ID | 内容 | 优先级 | 创建日期 |
