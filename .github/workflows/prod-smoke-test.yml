@@ -32,6 +32,7 @@ jobs:
         env:
           CAMELTV_USERNAME: ${{ secrets.CAMELTV_PROD_USERNAME }}
           CAMELTV_PASSWORD: ${{ secrets.CAMELTV_PROD_PASSWORD }}
+          CAMELTV_COUNTRY_CODE: '+86'
           CAMELTV_BASE_URL: https://www.camel1.tv/
         run: |
           npm ci

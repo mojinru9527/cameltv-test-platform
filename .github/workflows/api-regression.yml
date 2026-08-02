@@ -45,6 +45,7 @@ jobs:
         env:
           CAMELTV_USERNAME: ${{ secrets.CAMELTV_TEST_USERNAME }}
           CAMELTV_PASSWORD: ${{ secrets.CAMELTV_TEST_PASSWORD }}
+          CAMELTV_COUNTRY_CODE: '+86'
           CAMELTV_BASE_URL: https://camelive-g3-test5.elelive.cn/
         run: |
           npm ci

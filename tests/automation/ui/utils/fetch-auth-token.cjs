@@ -5,6 +5,9 @@
  *   $env:CAMELTV_USERNAME='<账号>'; $env:CAMELTV_PASSWORD='<密码>'
  *   $env:CAMELTV_BASE_URL='https://camelive-g3-test5.elelive.cn/'
  *   node utils/fetch-auth-token.cjs
+ * 账号为手机号时（纯账密关联手机号），国家码默认 +86：
+ *   $env:CAMELTV_COUNTRY_CODE='+86'   # 可覆盖为其他区号
+ *   CAMELTV_USERNAME 填手机号本地号（不带 +86）
  *
  * 输出：{userId,userSig,...} 的 JSON 字符串（原样作为 Authorization: Bearer 值）。
  * 凭据只从进程环境读取，不写入任何日志/文件；失败时退出码非 0。
@@ -34,6 +37,42 @@ const SUBMIT_SELECTOR = [
   'button:has-text("Sign In")',
 ].join(', ')
 
+/** 尽力而为地选中国家码（+86 等）。找不到控件时保持原样（账号可能已含国家码）。 */
+async function applyCountryCode(page, countryCode) {
+  if (!countryCode) return
+  const digits = countryCode.replace(/\s+/g, '').replace(/^\+/, '')
+
+  // 1) 原生 <select> 国家码下拉
+  const select = page.locator('select').first()
+  if (await select.isVisible().catch(() => false)) {
+    const texts = await select.locator('option').allTextContents()
+    const label =
+      texts.find((t) => t.includes(`+${digits}`)) ||
+      texts.find((t) => t.includes(digits) && t.includes('中国')) ||
+      texts.find((t) => t.trim() === digits)
+    if (label) {
+      await select.selectOption({ label: label.trim() })
+      return
+    }
+  }
+
+  // 2) 自定义国家码下拉（按钮/触发器 → 选项）
+  const trigger = page
+    .locator(
+      '[data-testid*="country" i], [aria-label*="国家" i], [aria-label*="区号" i], [aria-label*="country" i], [class*="country-code" i], [class*="area-code" i], button:has-text("+86")',
+    )
+    .first()
+  if (await trigger.isVisible().catch(() => false)) {
+    await trigger.click()
+    const option = page
+      .locator('[role="option"]:has-text("+86"), [role="option"]:has-text("中国"), li:has-text("+86"), div:has-text("+86")')
+      .first()
+    if (await option.isVisible().catch(() => false)) {
+      await option.click()
+    }
+  }
+}
+
 function getCredentials() {
   const username = process.env.CAMELTV_USERNAME?.trim() ?? ''
   const password = process.env.CAMELTV_PASSWORD ?? ''
@@ -48,11 +87,13 @@ function getCredentials() {
 async function main() {
   const creds = getCredentials()
   const base = (process.env.CAMELTV_BASE_URL?.trim() || 'https://camelive-g3-test5.elelive.cn/').replace(/\/+$/, '')
+  const countryCode = process.env.CAMELTV_COUNTRY_CODE?.trim() || '+86'
 
   const browser = await chromium.launch({ headless: true })
   try {
     const page = await browser.newPage()
     await page.goto(`${base}/login`, { waitUntil: 'domcontentloaded' })
+    await applyCountryCode(page, countryCode)
 
     const usernameInput = page.locator(USERNAME_SELECTOR).first()
     const passwordInput = page.locator(PASSWORD_SELECTOR).first()

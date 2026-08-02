@@ -64,6 +64,43 @@ const LOGIN_ERROR_SELECTOR = [
   '[data-testid="login-error"]',
 ].join(', ')
 
+/** 尽力而为地选中国家码（默认 +86，可经 CAMELTV_COUNTRY_CODE 覆盖）。找不到控件时保持原样。 */
+export async function applyCountryCode(
+  page: Page,
+  countryCode = process.env.CAMELTV_COUNTRY_CODE?.trim() || '+86',
+): Promise<void> {
+  if (!countryCode) return
+  const digits = countryCode.replace(/\s+/g, '').replace(/^\+/, '')
+
+  const select = page.locator('select').first()
+  if (await select.isVisible().catch(() => false)) {
+    const texts = await select.locator('option').allTextContents()
+    const label =
+      texts.find((t) => t.includes(`+${digits}`)) ||
+      texts.find((t) => t.includes(digits) && t.includes('中国')) ||
+      texts.find((t) => t.trim() === digits)
+    if (label) {
+      await select.selectOption({ label: label.trim() })
+      return
+    }
+  }
+
+  const trigger = page
+    .locator(
+      '[data-testid*="country" i], [aria-label*="国家" i], [aria-label*="区号" i], [aria-label*="country" i], [class*="country-code" i], [class*="area-code" i], button:has-text("+86")',
+    )
+    .first()
+  if (await trigger.isVisible().catch(() => false)) {
+    await trigger.click()
+    const option = page
+      .locator('[role="option"]:has-text("+86"), [role="option"]:has-text("中国"), li:has-text("+86"), div:has-text("+86")')
+      .first()
+    if (await option.isVisible().catch(() => false)) {
+      await option.click()
+    }
+  }
+}
+
 /** Return configured credentials or fail before any browser interaction. */
 export function getLoginCredentials(
   environment: LoginEnvironment = process.env,
@@ -115,6 +152,12 @@ export async function login(page: Page): Promise<void> {
     await route.continue()
   })
   await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+  try {
+    await applyCountryCode(page)
+  } catch {
+    // 国家码控件缺失或选择失败时不影响后续登录（账号可能已含国家码）
+  }
 
   const userMenu = page.locator(USER_MENU_SELECTOR).first()
   if (await userMenu.isVisible().catch(() => false)) return

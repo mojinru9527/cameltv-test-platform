@@ -136,6 +136,8 @@ docker run -d --name cameltv-pg16 \
    > 说明：自 Batch 63 起，定时任务在每次运行前用账密现场登录业务站并刷新
    > `auth_token`（脚本 `tests/automation/ui/utils/fetch-auth-token.cjs`），
    > **不再需要手动维护** `CAMELTV_TEST_AUTH_TOKEN` / `CAMELTV_PROD_AUTH_TOKEN`。
+   > 账号为手机号时国家码默认 `+86`（`CAMELTV_COUNTRY_CODE`），
+   > `CAMELTV_*_USERNAME` 填手机号本地号（不带 +86）。
 2. 本地运行秘密：只写 gitignored 的 `test-platform-v2/backend/.env`（已完成同步）。
 3. 生产运行秘密：只写 gitignored 的 `test-platform-v2/config/runtime/production.env`。
 
