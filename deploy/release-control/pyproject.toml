@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cameltv-release-control"
+version = "0.1.0"
+description = "Fail-closed release-control domain core for CamelTv."
+requires-python = ">=3.12"
+dependencies = ["pydantic>=2.6"]
+
+[project.scripts]
+cameltv-release = "cameltv_release.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
