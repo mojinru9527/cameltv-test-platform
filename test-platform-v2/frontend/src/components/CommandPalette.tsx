@@ -20,11 +20,27 @@ import {
   Search,
   GitBranch,
   Share2,
+  Sparkles,
+  Cpu,
+  Bell,
+  Globe,
+  Database,
+  Link2,
   type LucideIcon,
 } from '@/lib/icons'
+import { useAuthStore } from '@/stores/auth'
 
-// Route registry — all searchable pages
-const STATIC_ROUTES: { label: string; path: string; icon: LucideIcon; group: string }[] = [
+export interface CommandRoute {
+  label: string
+  path: string
+  icon: LucideIcon
+  group: string
+  /** 需要该权限才可见（缺省 = 登录即可见） */
+  permission?: string
+}
+
+// Route registry — all searchable pages（与 router/seed 菜单对账）
+export const ALL_COMMAND_ROUTES: CommandRoute[] = [
   { label: '工作台', path: '/workbench', icon: LayoutDashboard, group: '页面' },
   { label: '用例服务', path: '/testcase', icon: FileText, group: '页面' },
   { label: '测试计划', path: '/testplan', icon: FolderOpen, group: '页面' },
@@ -33,17 +49,35 @@ const STATIC_ROUTES: { label: string; path: string; icon: LucideIcon; group: str
   { label: '定时任务', path: '/schedule', icon: Clock, group: '页面' },
   { label: '缺陷管理', path: '/defect', icon: Bug, group: '页面' },
   { label: '质量追溯', path: '/trace', icon: Share2, group: '页面' },
+  { label: '用例脑图', path: '/mindmap', icon: Share2, group: '页面' },
+  { label: '版本测试任务', path: '/release-bundles', icon: GitBranch, group: '页面' },
+  { label: '知识中心', path: '/knowledge', icon: Sparkles, group: '页面' },
+  { label: '测试数据集', path: '/dataset', icon: Database, group: '页面' },
+  { label: '集成配置', path: '/integration', icon: Link2, group: '页面' },
+  { label: '目标环境', path: '/environment', icon: Globe, group: '页面' },
+  { label: '通知配置', path: '/notify', icon: Bell, group: '页面' },
   { label: '项目管理', path: '/project', icon: Settings, group: '页面' },
   { label: '系统管理', path: '/system', icon: Settings, group: '页面' },
   { label: 'API 测试', path: '/apitest', icon: FileText, group: '页面' },
   { label: 'UI 自动化', path: '/uitest', icon: FileText, group: '页面' },
   { label: '音视频专项', path: '/special', icon: FileText, group: '页面' },
+  { label: 'Agent 工作台', path: '/agent-workbench', icon: Sparkles, group: '页面' },
+  { label: '性能监控', path: '/perftest', icon: Cpu, group: '页面' },
+  { label: '运维发布记录', path: '/operations-release', icon: FileText, group: '页面', permission: 'release:view' },
 ]
+
+export function filterCommandRoutes(
+  routes: CommandRoute[],
+  hasPerm: (code: string) => boolean,
+): CommandRoute[] {
+  return routes.filter((route) => !route.permission || hasPerm(route.permission))
+}
 
 export default function CommandPalette() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const hasPerm = useAuthStore((state) => state.hasPerm)
 
   // Ctrl+K / Cmd+K to toggle
   const onKeyDown = useCallback((e: KeyboardEvent) => {
@@ -63,18 +97,19 @@ export default function CommandPalette() {
   }, [onKeyDown])
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return STATIC_ROUTES
+    const visible = filterCommandRoutes(ALL_COMMAND_ROUTES, hasPerm)
+    if (!query.trim()) return visible
     const q = query.toLowerCase()
-    return STATIC_ROUTES.filter(
+    return visible.filter(
       (r) =>
         r.label.toLowerCase().includes(q) ||
         r.path.toLowerCase().includes(q) ||
         r.group.toLowerCase().includes(q),
     )
-  }, [query])
+  }, [query, hasPerm])
 
   const groups = useMemo(() => {
-    const map = new Map<string, typeof STATIC_ROUTES>()
+    const map = new Map<string, CommandRoute[]>()
     filtered.forEach((r) => {
       const list = map.get(r.group) || []
       list.push(r)
