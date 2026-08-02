@@ -58,6 +58,12 @@ COOKIE_SECURE=true
 
 > 密码中的 `@ : / # %` 需 URL 编码。`DATABASE_URL` 从 Supabase Dashboard →
 > Project Settings → Database → Connection string (Pooler) 复制。
+>
+> ⚠️ **面板连接串里的密码是占位符 `[YOUR-PASSWORD]`，不会显示真实密码**：
+> 复制后必须用创建项目时设置的数据库密码替换该占位符。若忘记密码，
+> 到 `Project Settings → Database → Reset database password` 重置后再填。
+> 新版面板入口可能在项目页右上角蓝色 **Connect** 按钮（弹窗 → ORMs/App
+> frameworks → PostgreSQL → Connection string），效果相同。
 
 ### 1.4 常见失败排查
 
