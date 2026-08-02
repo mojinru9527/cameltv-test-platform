@@ -56,6 +56,8 @@ _ACTIONS = [
     ("system:role:delete", "删除角色", "button"),
     # 系统管理 - 审计
     ("system:audit:list", "查看审计日志", "button"),
+    # 运维发布控制（全局只读；不创建产品侧菜单）
+    ("release:view", "查看运维发布记录", "button"),
     # 用例服务
     ("testcase:list", "查看用例", "button"),
     ("testcase:detail", "查看用例详情", "button"),

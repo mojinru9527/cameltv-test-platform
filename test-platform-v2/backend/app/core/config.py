@@ -45,6 +45,10 @@ class Settings(BaseSettings):
 
     # ── Database ──
     database_url: str = "sqlite:///./data/platform.db"
+    # Independent, executor-owned release-control SQLite store. Empty keeps
+    # the operations API fail-closed instead of creating an application-owned
+    # parallel release fact store.
+    release_control_database_path: str = ""
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     auto_create_tables: bool = True
 

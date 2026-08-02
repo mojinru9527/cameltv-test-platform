@@ -222,6 +222,23 @@ def test_tester_role_can_list_visible_schedule_module(
         assert assignment is not None
 
 
+def test_seed_registers_global_operations_release_view_permission(
+    seed_session_factory,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(seed, "settings", _development_settings())
+    seed.run_seed()
+    capsys.readouterr()
+
+    with seed_session_factory() as db:
+        permission = db.scalar(
+            select(Permission).where(Permission.code == "release:view")
+        )
+        assert permission is not None
+        assert permission.name == "查看运维发布记录"
+
+
 def test_local_docs_require_credentials_before_initial_database_creation() -> None:
     backend_root = Path(__file__).parents[1]
     readme = (backend_root / "README.md").read_text(encoding="utf-8")
