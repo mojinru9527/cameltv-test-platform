@@ -215,7 +215,7 @@ export default function TestPlanPage() {
               />
             </InputGroup>
 
-            <Button size="sm" onClick={submitKeyword}>
+            <Button size="sm" className="min-h-11" onClick={submitKeyword}>
               <Search className="size-3.5" data-icon="inline-start" />
               搜索
             </Button>
@@ -224,7 +224,7 @@ export default function TestPlanPage() {
             </Button>
             <div className="flex-1" />
             {canCreate && (
-              <Button size="sm" onClick={() => openEdit()}>
+              <Button size="sm" className="min-h-11" onClick={() => openEdit()}>
                 <Plus className="size-3.5" data-icon="inline-start" />
                 新建计划
               </Button>

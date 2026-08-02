@@ -227,7 +227,7 @@ export default function EnvironmentPage() {
       title="环境与变量管理"
       description="项目级测试环境配置与加密变量管理，支持环境切换与变量引用。"
       actions={canManage ? (
-        <Button onClick={openEnvCreate}>
+        <Button className="min-h-11" onClick={openEnvCreate}>
           <Plus className="size-4" data-icon="inline-start" />
           新建环境
         </Button>
@@ -295,7 +295,7 @@ export default function EnvironmentPage() {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">变量列表</h3>
                     {canManage && (
-                      <Button variant="secondary" size="sm" onClick={openVarCreate}>
+                      <Button variant="secondary" size="sm" className="min-h-11" onClick={openVarCreate}>
                         <Plus className="size-3.5" data-icon="inline-start" />添加变量
                       </Button>
                     )}

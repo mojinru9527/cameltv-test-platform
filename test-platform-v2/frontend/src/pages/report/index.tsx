@@ -449,12 +449,12 @@ export default function ReportPage() {
               onChange={(e) => setKeywordInput(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <Button variant="secondary" size="sm" onClick={handleSearch} data-icon="inline-start">
+            <Button variant="secondary" size="sm" className="min-h-11" onClick={handleSearch} data-icon="inline-start">
               <Search />
               搜索
             </Button>
             {canCreate && (
-              <Button size="sm" onClick={openCreate} data-icon="inline-start">
+              <Button size="sm" className="min-h-11" onClick={openCreate} data-icon="inline-start">
                 <Plus />
                 生成报告
               </Button>

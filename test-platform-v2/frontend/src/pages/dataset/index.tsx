@@ -178,7 +178,7 @@ export default function DatasetPage() {
         icon={FileText}
       >
         {canCreate && (
-          <Button onClick={openCreate} size="sm">
+          <Button onClick={openCreate} size="sm" className="min-h-11">
             <Plus className="size-4 mr-1" />
             新建数据集
           </Button>

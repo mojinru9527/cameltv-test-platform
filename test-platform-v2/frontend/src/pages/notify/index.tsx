@@ -223,13 +223,13 @@ export default function NotifyPage() {
       <PageHeader title="通知配置" description="管理 Webhook 和邮件通知渠道">
         <div className="flex items-center gap-2">
           {canManage && (
-            <Button variant="secondary" size="sm" onClick={() => setTestOpen(true)} data-icon="inline-start">
+            <Button variant="secondary" size="sm" className="min-h-11" onClick={() => setTestOpen(true)} data-icon="inline-start">
               <Play />
               测试发送
             </Button>
           )}
           {canManage && (
-            <Button size="sm" onClick={openCreate} data-icon="inline-start">
+            <Button size="sm" className="min-h-11" onClick={openCreate} data-icon="inline-start">
               <Plus />
               新增渠道
             </Button>
