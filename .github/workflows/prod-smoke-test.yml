@@ -9,6 +9,9 @@ jobs:
   prod-smoke:
     runs-on: [self-hosted, internal-network]
     timeout-minutes: 15
+    env:
+      CAMELTV_PROD_AUTH_TOKEN: ${{ secrets.CAMELTV_PROD_AUTH_TOKEN }}
+      VPN_TUN_ADDR: ${{ secrets.VPN_TUN_ADDR }}
 
     steps:
       - uses: actions/checkout@v4

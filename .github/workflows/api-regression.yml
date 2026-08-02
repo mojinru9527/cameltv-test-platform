@@ -16,6 +16,16 @@ jobs:
   api-regression:
     runs-on: [self-hosted, internal-network]
     timeout-minutes: 30
+    env:
+      CAMELTV_TEST_AUTH_TOKEN: ${{ secrets.CAMELTV_TEST_AUTH_TOKEN }}
+      CAMELTV_PROD_AUTH_TOKEN: ${{ secrets.CAMELTV_PROD_AUTH_TOKEN }}
+      CAMELTV_TEST_DB_USER: ${{ secrets.CAMELTV_TEST_DB_USER }}
+      CAMELTV_TEST_DB_PWD: ${{ secrets.CAMELTV_TEST_DB_PWD }}
+      CAMELTV_TEST_REDIS_PWD: ${{ secrets.CAMELTV_TEST_REDIS_PWD }}
+      CAMELTV_TEST_MQ_USER: ${{ secrets.CAMELTV_TEST_MQ_USER }}
+      CAMELTV_TEST_MQ_PWD: ${{ secrets.CAMELTV_TEST_MQ_PWD }}
+      ELASTIC_API_KEY: ${{ secrets.ELASTIC_API_KEY }}
+      ELK_PASSWORD: ${{ secrets.ELK_PASSWORD }}
 
     steps:
       - uses: actions/checkout@v4
