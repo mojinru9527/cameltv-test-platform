@@ -46,6 +46,13 @@ const LOGIN_ENTRY_SELECTOR = [
   'button:has-text("登录")',
   'button:has-text("Sign In")',
   'a:has-text("登录")',
+  'a:has-text("My")',
+  '[aria-label*="user" i]',
+  '[aria-label*="account" i]',
+  '[aria-label*="登录" i]',
+  '[aria-label*="sign in" i]',
+  '[class*="login-btn" i]',
+  'a[href*="my" i]',
 ].join(', ')
 
 const PHONE_TAB_SELECTOR = [
@@ -84,11 +91,20 @@ async function dumpLoginPage(page) {
     const links = Array.from(document.querySelectorAll('a, [role="button"], button'))
       .map((el) => (el.textContent || '').trim())
       .filter(Boolean)
+    const buttons = Array.from(document.querySelectorAll('button, [role="button"], a[aria-label]'))
+      .map((el) => ({
+        text: (el.textContent || '').trim().slice(0, 30),
+        aria: el.getAttribute('aria-label') || '',
+        title: el.getAttribute('title') || '',
+        visible: !!(el.offsetWidth || el.offsetHeight),
+      }))
+      .filter((b) => b.aria || b.title || b.text)
     return {
       title: document.title,
       inputs,
       tabs: [...new Set(tabs)].slice(0, 40),
       links: [...new Set(links)].slice(0, 40),
+      buttons: buttons.slice(0, 40),
     }
   })
   process.stdout.write(`[DEBUG] ${JSON.stringify(info, null, 2)}\n`)
@@ -176,7 +192,10 @@ async function main() {
     const loginEntry = page.locator(LOGIN_ENTRY_SELECTOR).first()
     if (await loginEntry.isVisible().catch(() => false)) {
       await loginEntry.click()
-      await page.waitForTimeout(500)
+      await page.waitForTimeout(700)
+    }
+    if (process.env.CAMELTV_DEBUG === '1') {
+      await dumpLoginPage(page)
     }
 
     await switchToLoginDialog(page)
