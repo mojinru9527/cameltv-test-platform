@@ -13,7 +13,7 @@ deploy/release-control is the local, fail-closed domain core for the future Came
 
 ## Deliberately excluded
 
-- Real test/production deployment, Compose/Jenkins/Runner adapters, registry access, migrations, health probes, backup/restore and notifications.
+- Real test/production deployment, a configured Compose/Jenkins/Runner executor, registry access, migrations, health probes, backup/restore and notifications. The rendered adapter contracts validate immutable inputs and fail closed with EXTERNAL_EXECUTOR_NOT_CONFIGURED.
 - FastAPI operations endpoints and React operations views. Those later slices must consume these records rather than invent mock deployment facts.
 - Any production request: non-test commands return PRODUCTION_NOT_CONFIGURED before creating a lock, deployment or event.
 
