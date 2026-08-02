@@ -69,6 +69,8 @@ test-results.xml
 **/playwright-report/
 **/blob-report/
 tests/reports/
+tests/automation/reports/*
+!tests/automation/reports/.gitkeep
 tests/automation/ui/captured/
 *.har
 

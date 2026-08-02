@@ -5,11 +5,11 @@
 | 项目 | 固定值 |
 | --- | --- |
 | 冻结日期 | `2026-08-01` |
-| 分支 | `feature/batch-61-production-safety-and-test-credibility` |
-| 基线提交 | `7d9a0118f6e2d5d505f9e0dde7b59881f027bb6b`，与冻结时 `origin/main` 一致 |
+| 分支 | `feature/batch-61-sports-acceptance-and-supply-chain`（W2） |
+| 基线提交 | `174e002fbe53d75d49aaf09c269fac622a4c7c58`，W1 PR #89 合并后的 `origin/main` |
 | 工作流 / 执行器 | `agent-team` / `codex` |
 | 需求源 | Batch 61 实施计划 Task 2；Batch 60 QA、问题、真实数据、PC 快照、全平台矩阵和体育 API/UI 专项报告 |
-| 当前候选结论 | `NOT READY`；W1 当前有 4 项完成本地动态证据，仍有 9 项 `NOT RUN`、6 项外部 `BLOCKED`，不能解释为本地加固或发布已通过 |
+| 当前候选结论 | `NOT READY`；20 个 MUST 为 5 `PASS`、1 `FAIL`、6 `BLOCKED`、8 `NOT RUN`，不能解释为本地加固或发布已通过 |
 | Production | `DEFERRED`；Batch 61 不执行 production 发布或数据库迁移 |
 
 ## 2. 唯一执行状态词汇
@@ -28,8 +28,8 @@
 
 | 顺序 | 工作流 / 分支 | 边界 | 创建与合并门禁 |
 | ---: | --- | --- | --- |
-| 1 | W1 `feature/batch-61-production-safety-and-test-credibility` | 生产保护、项目隔离、RBAC、a11y、PRD/测试资产和本冻结文档 | 当前工作流；required checks 通过并合入 `main` 后，才从最新 `origin/main` 创建 W2 |
-| 2 | W2 `feature/batch-61-sports-api-ui-r2-acceptance` | 体育 Playwright/API 可信度、供应链、Test5 R2 验收 | 必须基于已合入 W1 的最新 `main`；合入后才创建 W3 |
+| 1 | W1 `feature/batch-61-production-safety-and-test-credibility` | 生产保护、项目隔离、RBAC、a11y、PRD/测试资产和本冻结文档 | PR #89 已合入 `main` |
+| 2 | W2 `feature/batch-61-sports-acceptance-and-supply-chain` | 体育 Playwright/API 可信度、供应链、Test5 R2 验收 | 当前工作流；基于 W1 合入后的 `origin/main@174e002f`；合入后才创建 W3 |
 | 3 | W3 `feature/batch-61-test-release-control-plane-mvp` | **新开独立运维发布项目** `deploy/release-control`，交付 manifest、CLI、状态机、Jenkins 适配和 test 回滚 | 必须基于已合入 W2 的最新 `main`；独立 worktree、PR、依赖和证据，不与测试平台页面代码混作一个项目 |
 
 三个工作流可以在人员规划上并行准备，但仓库集成必须按 W1 → W2 → W3 顺序；禁止从旧 `main` 创建后续 worktree。仅当最终证据对账产生跟踪文件变化时，才另建最终 acceptance PR。
@@ -56,22 +56,23 @@
 | B60-P1-017 | 静态确认 | W1 | 建立生产级全功能点正负面资产；Mock、组件、真实后端和外部证据分开统计 | Acceptance QA / `UNASSIGNED` | Codex Agent Team | Independent acceptance reviewer / `UNASSIGNED` | M1 → M5 | 功能点→用例→证据→缺陷矩阵及覆盖率自检 | N/A（本地可控） | `NOT RUN` |
 | B60-P1-019 | 静态确认 | W1 | API quick/asset/single/group/batch 五入口的环境、变量、授权、production guard、结果 schema 完全等价 | Backend/API owner / `UNASSIGNED` | Codex Agent Team | Security + acceptance reviewer / `UNASSIGNED` | M1 → M5 | GET/POST 参数化契约、Network、结果快照、零误触发 | N/A（本地可控） | `NOT RUN` |
 | B60-P1-020 | 静态确认 | W1 | `must_change_password` 前端声明和受保护流程完成；弱密码、取消、过期、重置后业务路由均 fail-closed | Auth owner / `UNASSIGNED` | Codex Agent Team | Security + acceptance reviewer / `UNASSIGNED` | M1 → M5 | API、路由守卫、浏览器、审计和密码策略证据 | N/A（本地可控） | `PASS` |
-| B60-P1-023 | 已复现 | W2 | 体育 UI 自动化无未接受 high/critical runtime 漏洞；升级后安全、类型、收集和真实 R2 只读旅程无回归 | Frontend supply-chain owner / `UNASSIGNED` | W2 Agent Team / `UNASSIGNED` | Security + acceptance reviewer / `UNASSIGNED` | M2 → M5 | lockfile diff、`npm audit --omit=dev`、安全/业务回归 | N/A（本地可控） | `NOT RUN` |
+| B60-P1-023 | 已复现 | W2 | 体育 UI 自动化无未接受 high/critical runtime 漏洞；升级后安全、类型、收集和真实 R2 只读旅程无回归 | Frontend supply-chain owner / `UNASSIGNED` | Codex Agent Team | Security + acceptance reviewer / `UNASSIGNED` | M2 → M5 | Midscene 1.10.8 lockfile、clean `npm audit --omit=dev` 0、typecheck、安全 17/17、38 条收集 | N/A（本地可控） | `PASS` |
+| B61-P1-001 | W2 审计新发现 | W2/后续独立 backend scope | backend runtime 不含未接受 high/critical；`ecdsa` 高危需移除/替换或具名限期接受 | Backend security/supply-chain owner / `UNASSIGNED` | `UNASSIGNED`（W2 scope 不含 runtime 依赖） | Security + architecture reviewer / `UNASSIGNED` | M2 → M5 | 锁定 `pip-audit`、依赖替换回归，或批准记录含 exploitability/owner/expiry/trigger | Backend security owner / `UNASSIGNED` | `FAIL` |
 | OPS0 | Batch 60 Phase 0 部分完成 | W3 | 新项目的 release manifest schema、正负样例、内容 hash、SBOM/签名/checksum/Alembic/QA 绑定可机器校验 | DevOps owner / `UNASSIGNED` | W3 Agent Team / `UNASSIGNED` | Architecture + acceptance reviewer / `UNASSIGNED` | M3 → M5 | schema 测试、schema-check、secret scan、manifest hash | DevOps owner / `UNASSIGNED` | `BLOCKED` |
 | OPS1 | Batch 60 未完成 | W3 | test 按 digest 幂等部署；锁、备份、migration、健康、Smoke、审计、失败恢复和应用回滚通过；production 稳定拒绝 | DevOps owner / `UNASSIGNED` | W3 Agent Team / `UNASSIGNED` | DBA + acceptance reviewer / `UNASSIGNED` | M3 → M5 | test 部署/回滚演练、实际 digest/revision、事件链 | DevOps owner / `UNASSIGNED` | `BLOCKED` |
 
-### 4.1 当前 MUST 汇总（W1 实现检查点）
+### 4.1 当前 MUST 汇总（W1 + W2 检查点）
 
 | 状态 | 数量 |
 | --- | ---: |
-| `PASS` | 4 |
-| `FAIL` | 0 |
+| `PASS` | 5 |
+| `FAIL` | 1 |
 | `BLOCKED` | 6 |
-| `NOT RUN` | 9 |
+| `NOT RUN` | 8 |
 | `DEFERRED` | 0 |
-| 合计 | 19 |
+| 合计 | 20 |
 
-### 4.2 W1 当前证据与未关闭边界
+### 4.2 W1/W2 当前证据与未关闭边界
 
 - 后端：`python -m ruff check app/ --select F821` 通过；初始化 `lanhu-mcp` 子模块后的全量 `pytest tests -q` 为 `976 passed, 3 skipped, 0 failed`。3 条 skip 为 PostgreSQL 并发专用条件，不计作通过证据。
 - 前端：`npm test -- --run` 为 `291/291`；`npm run typecheck` 与 `npm run build` 通过。
@@ -79,6 +80,9 @@
 - 真实后端浏览器链：使用本 worktree `8027` 后端与 `5197` 前端完成首次登录强制改密、旧会话退出、新密码重新登录到工作台；临时凭据仅经进程环境传递，启动日志已清空删除。
 - B60-P1-011、015、016、020 已达到本检查点最低证据，记为 `PASS`。
 - B60-P0-003、004 和 B60-P1-002、006、008、009、017、019 仍缺计划要求的真实后端/DB/审计、全部入口浏览器基数或历史标注保存回读等动态闭环，继续记为 `NOT RUN`，不得以 Mock E2E、组件测试或全量回归绿色替代。
+- W2 体育自动化：Midscene 升至 `1.10.8`，clean `npm audit --omit=dev` 为 0；typecheck、安全合同 `17/17`、sports 收集 `38 tests in 9 files`、production smoke 合同 `6/6` 均通过，B60-P1-023 关闭。
+- W2 R2：API 16 条为 `13 P0 + 3 P1 BLOCKED`，UI 23 条为 `20 P0 + 3 P1 BLOCKED`；Test5 请求/浏览器均为 0，故 B60-P0-001/002、P1-012/013 继续 BLOCKED。
+- backend 依赖观察：`pip-audit 2.10.1` 审计 118 个锁定依赖，发现 1 个 high `ecdsa 0.19.2`（B61-P1-001）；当前 HS256 不触发 ECDSA 签名路径，但无具名风险接受且上游无修复，A11 保持 FAIL。
 
 ## 5. 外部前置条件冻结
 
@@ -104,7 +108,7 @@
 
 ## 7. 放行规则
 
-- `READY FOR TEST RELEASE`：19 个 MUST 全部 `PASS`；P0/P1 无 `FAIL`、`BLOCKED` 或 `NOT RUN`；Test 发布和应用回滚演练通过；required checks 绿色。
+- `READY FOR TEST RELEASE`：20 个 MUST 全部 `PASS`；P0/P1 无 `FAIL`、`BLOCKED` 或 `NOT RUN`；Test 发布和应用回滚演练通过；required checks 绿色。
 - `LOCAL HARDENING COMPLETE / EXTERNAL BLOCKED`：本地可控 MUST 全部 `PASS`，但 Test5、旧 PG 或 test release 基础设施仍有外部 `BLOCKED`。该结论不是 release approval。
 - 任一本地 MUST 为 `FAIL`/`NOT RUN`，或证据/owner 不完整时，不得声称本地加固完成。
 - Production 始终为 `DEFERRED`；OPS2 控制面 API/UI 与 OPS3 production 同 digest 晋级属于 Batch 62/63。

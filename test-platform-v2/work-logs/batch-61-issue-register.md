@@ -30,7 +30,7 @@
 | B60-P1-017 | P1 | 静态确认 | 全平台正式验收资产不足，Mock 与真实证据混杂 | `MUST` | W1 | Acceptance QA / `UNASSIGNED` | `NOT RUN` | 正负面功能点矩阵与证据分层统计 |
 | B60-P1-019 | P1 | 静态确认 | API 五入口环境、变量、保护和结果不一致 | `MUST` | W1 | Backend/API owner / `UNASSIGNED` | `NOT RUN` | quick/asset/single/group/batch GET/POST 参数化回归 |
 | B60-P1-020 | P1 | 静态确认 | 强制改密前端流程缺失 | `MUST` | W1 | Auth owner / `UNASSIGNED` | `PASS` | 2026-08-01：后端强制改密 7/7、相关鉴权/隔离定向回归 51/51；真实 8027/5197 浏览器完成强制改密→退出→新密码重登，旧版访问 JWT、改密前 JWT 与重置 Token 均 fail-closed |
-| B60-P1-023 | P1 | 已复现 | 体育自动化 7 个 high runtime 漏洞 | `MUST` | W2 | Supply-chain owner / `UNASSIGNED` | `NOT RUN` | 零未接受 high/critical；升级后全回归 |
+| B60-P1-023 | P1 | 已复现 | 体育自动化 7 个 high runtime 漏洞 | `MUST` | W2 | Supply-chain owner / `UNASSIGNED` | `PASS` | 2026-08-01：Midscene `1.10.8` + audited overrides；clean `npm ci`、`npm audit --omit=dev` 为 0 漏洞；typecheck/security 17/17/38 条收集通过 |
 | B60-P2-001 | P2 | 已修复待复测 | 搜索请求提交态仍缺浏览器 Network 复核 | `SHOULD` | W1 | Frontend owner / `UNASSIGNED` | `NOT RUN` | 每次提交 1 个有效 GET、旧请求取消 |
 | B60-P2-002 | P2 | 部分关闭 | 移动/平板触控与小按钮全局审计未完成 | `DEFERRED` | Batch 62 | UX owner / `UNASSIGNED` | `DEFERRED` | Batch 62 全局触控矩阵 |
 | B60-P2-006 | P2 | 已复现 | 知识中心桌面标签和卡片密度 | `DEFERRED` | Batch 62 | UX owner / `UNASSIGNED` | `DEFERRED` | Batch 62 视觉/响应式复测 |
@@ -42,17 +42,23 @@
 | OPS0 | P0 | Phase 0 部分完成 | release manifest 机器契约尚未交付 | `MUST` | W3 新项目 | DevOps owner / `UNASSIGNED` | `BLOCKED` | schema/样例/hash/SBOM/签名/QA 绑定 |
 | OPS1 | P0 | 未完成 | immutable test 发布、Jenkins、状态机和回滚尚未交付 | `MUST` | W3 新项目 | DevOps owner / `UNASSIGNED` | `BLOCKED` | test digest/revision、事件链、失败恢复/回滚演练 |
 
-## 3. 处置汇总
+## 3. Batch 61 新发现
+
+| ID | 级别 | 发现摘要 | B61 disposition | 工作流 | Owner | 当前状态 | 关闭/接受条件 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| B61-P1-001 | P1 | backend lock 中 `ecdsa 0.19.2` 命中 high `GHSA-wj6h-64fc-37mp` / `CVE-2024-23342`（CVSS 7.4），上游无修复版本 | `MUST` | W2 发现，runtime 修复需独立 backend scope | Backend security/supply-chain owner / `UNASSIGNED` | `FAIL` | 移除/替换 `python-jose` 的受影响依赖并全回归，或由具名安全 owner 给出书面风险接受、到期日和升级/架构触发器；当前 HS256 不走 ECDSA 签名仅为 exploitability 说明，不构成接受 |
+
+## 4. 处置汇总
 
 | B61 disposition | 数量 | 说明 |
 | --- | ---: | --- |
-| `MUST` | 19 | 精确等于 Batch 61 计划指定集合；含 B60 已关闭但要求防回归的 B60-P1-015 |
+| `MUST` | 20 | 计划指定 19 项，加本批审计新发现 B61-P1-001；含 B60 已关闭但要求防回归的 B60-P1-015 |
 | `SHOULD` | 1 | B60-P2-001 |
 | `EXTERNAL BLOCKED` | 5 | B60-BLK-001～005 |
 | `DEFERRED` | 3 | B60-P1-010、B60-P2-002、B60-P2-006 |
-| 合计 | 28 | 与本表数据行一致 |
+| 合计 | 29 | 与继承项及 Batch 61 新发现数据行一致 |
 
-## 4. 带日期的外部阻塞登记
+## 5. 带日期的外部阻塞登记
 
 | 阻塞范围 | 状态 | 登记日期 | Owner | 解除条件 | 复核时限 |
 | --- | --- | --- | --- | --- | --- |
@@ -62,7 +68,7 @@
 | 旧 PostgreSQL 快照 | `BLOCKED` | `2026-08-01` | `UNASSIGNED` | 脱敏快照、来源版本、checksum、恢复步骤与数据断言 | 条件齐备后 M4 执行 |
 | DevOps/test release 基础设施 | `BLOCKED` | `2026-08-01` | `UNASSIGNED` | registry、Runner、PG16、备份、Secret reference、访问窗口 | owner 和环境均登记后才能解除 OPS0/OPS1 |
 
-## 5. 状态更新约束
+## 6. 状态更新约束
 
 1. B60 历史状态只在来源列保留；B61 复测结果写入 B61 状态，不回写或改名旧 ID。
 2. `FAIL` 必须记录输入、预期、实际、环境、证据和缺陷；`BLOCKED` 必须记录 owner 与解除条件。

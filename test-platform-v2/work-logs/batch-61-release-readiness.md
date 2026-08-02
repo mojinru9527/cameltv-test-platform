@@ -4,7 +4,7 @@
 
 **目标判定已降级为：`LOCAL HARDENING COMPLETE / EXTERNAL BLOCKED`。**
 
-原因：截至 `2026-08-01`，Test5/VPN、六服务当前契约、最小权限账号、稳定数据/清理规则、脱敏旧 PostgreSQL 快照、test release 基础设施和 DevOps owner 均未登记。该目标只是允许继续完成本地加固；当前 19 个 MUST 为 4 `PASS` + 6 `BLOCKED` + 9 `NOT RUN`，因此仍不能声称“LOCAL HARDENING COMPLETE”。
+原因：截至 `2026-08-01`，Test5/VPN、六服务当前契约、最小权限账号、稳定数据/清理规则、脱敏旧 PostgreSQL 快照、test release 基础设施和 DevOps owner 均未登记；backend 还发现 1 个未接受的 high runtime 漏洞。该目标只是允许继续完成本地加固；当前 20 个 MUST 为 5 `PASS` + 1 `FAIL` + 6 `BLOCKED` + 8 `NOT RUN`，因此仍不能声称“LOCAL HARDENING COMPLETE”。
 
 Production 发布和 production 数据库迁移为 `DEFERRED`。Batch 61 只交付 test 环境 release MVP；OPS2 运维 API/UI 与 OPS3 production 晋级属于 Batch 62/63。
 
@@ -39,9 +39,9 @@ W3 test-release-control-plane-mvp（新开 deploy/release-control 项目）
 
 | 里程碑 | 计划输出 | 当前状态 | 当前依据 / 解除条件 |
 | --- | --- | --- | --- |
-| M0 Batch 60 closure | B60 合入 main、CI 绿色、干净 B61 基线 | `PASS`（仅基线） | B61 HEAD 与 `origin/main` 均为 `7d9a0118...`；不代表 B61 功能通过 |
+| M0 Batch 60 closure | B60/W1 合入 main、CI 绿色、干净 W2 基线 | `PASS`（仅基线） | W1 PR #89 已合入；W2 基于 `origin/main@174e002f`；不代表 B61 功能通过 |
 | M1 Safety hardening | 4 个 P0 动态关闭、五入口、隔离/RBAC | `NOT RUN` | W1 已完成统一 guard、API 契约、改密与浏览器矩阵实现，但真实后端/DB/审计、五入口浏览器基数及历史标注回读闭环未齐，按严格词汇仍为 `NOT RUN` |
-| M2 Sports credibility | 无假绿、零未接受 high/critical、R2 只读 | `BLOCKED` | Test5/VPN/账号/数据 owner `UNASSIGNED` |
+| M2 Sports credibility | 无假绿、零未接受 high/critical、R2 只读 | `FAIL / BLOCKED` | Sports UI audit 已清零且假绿合同通过；backend `ecdsa` high 未接受；Test5/VPN/账号/数据 owner `UNASSIGNED` |
 | M3 Release contract/engine | manifest、CLI、状态机、Jenkins、回滚 | `BLOCKED` | DevOps owner 和 test 基础设施 `UNASSIGNED`；W3 尚未按顺序创建 |
 | M4 Real exercises | Test5、旧 PG、test deploy/rollback | `BLOCKED` | R2 包、旧 PG 快照和 release 环境均缺失 |
 | M5 Full acceptance | 全矩阵、PC 证据、QA 与 verdict | `NOT RUN` | 必须等待 W1→W2→W3 顺序合并和证据对账 |
@@ -53,7 +53,7 @@ W3 test-release-control-plane-mvp（新开 deploy/release-control 项目）
 | A01/A02 基线与隔离 | `NOT RUN` | 三 worktree 元数据、SHA、端口/数据库/环境清单逐一可追溯 |
 | A03–A09 功能/API/RBAC/事务/并发/查询/UI | `NOT RUN` | 所有 release-scope P0/P1 正负面 100% 执行且 100% PASS |
 | A10 真实旧库 | `BLOCKED` | 授权脱敏旧 PG 快照升级、重复升级、唯一 head、数据保留通过 |
-| A11 自动化/供应链 | `NOT RUN` | 双端全量、体育套件、release-control 测试和审计通过；零未接受 high/critical |
+| A11 自动化/供应链 | `FAIL` | 双端全量和体育套件通过；backend `ecdsa 0.19.2` high 未移除或具名接受；W3 release-control 尚未执行 |
 | A12 文档/证据一致 | `NOT RUN` | issue/matrix/manifest/snapshot/report totals 与代码事实一致 |
 | A13 运维 Test 发布 | `BLOCKED` | immutable test 部署、实际 digest/revision、幂等、失败恢复和应用回滚通过 |
 | A14 PC 快照 | `NOT RUN` | 所有正常工作 PC 功能有视觉复核的 1440×900 成功态索引 |
@@ -69,13 +69,15 @@ W3 test-release-control-plane-mvp（新开 deploy/release-control 项目）
 | DevOps owner + registry/Runner/PG16/backup/Secret refs | `BLOCKED` | `2026-08-01` | `UNASSIGNED` | OPS0/OPS1、A13、M3/M4 不可通过 |
 | Release-verdict owner | `BLOCKED` | `2026-08-01` | `UNASSIGNED` | 无人类具名签署，不得发布 |
 
+本地供应链失败：B61-P1-001 `ecdsa 0.19.2` high（CVSS 7.4）不是外部 blocker。当前应用算法为 HS256，只说明受影响的 ECDSA 签名路径未被调用；在移除/替换依赖或具名限期风险接受前，A11 和 M2 仍为 FAIL。
+
 计划要求在相对 Day 2 前冻结这些输入；绝对开工日尚未批准，所以绝对到期日保持 `UNASSIGNED`，不编造日期。
 
 ## 7. 机械判定规则
 
 ```text
 READY FOR TEST RELEASE
-= 19/19 MUST PASS
+= 20/20 MUST PASS
   + release-scope P0/P1 zero FAIL/BLOCKED/NOT RUN/runtime skip
   + zero open P0
   + zero unaccepted high/critical runtime vulnerability
@@ -111,3 +113,15 @@ NOT READY
 - 任一 Test5/VPN/账号/数据包到位时，记录提供人、日期、有效期和授权范围，再解除对应 `BLOCKED`。
 - DevOps owner 与 test 基础设施登记后，方可建立 W3 新项目并执行 OPS0/OPS1。
 - 任一状态或文件总数变化时，同步对账五份 Batch 61 文档；不得只改 release verdict。
+
+## 10. W2 代码质量与 R2 检查点（2026-08-01）
+
+| 检查 | 结果 | 证据边界 |
+| --- | --- | --- |
+| API preflight | `PASS` | Ruff 通过；pytest `16/16`；校验 VPN/六合同/Secret 引用/稳定数据/清理/SHA，零网络 |
+| Sports UI supply chain | `PASS` | Midscene `1.10.8`；clean `npm ci`；`npm audit --omit=dev` 0 漏洞；typecheck、安全 `17/17` |
+| Playwright truth contracts | `PASS` | sports 收集 38/9；production smoke 合同 6/6；backend 收集 36/3；未执行 Test5/production |
+| 双端全量 | `PASS` | backend F821 + `976 passed, 3 skipped`；frontend typecheck、Vitest `291/291`、build；两端 npm audit 0 |
+| Backend dependency audit | `FAIL` | isolated `pip-audit 2.10.1` 审计 118 依赖，发现 `PYSEC-2026-1325` / GHSA high；仓库还未锁定正式 audit tool |
+| Sports API R2 | `BLOCKED` | 16/16（13 P0 + 3 P1）均因外部前置未进入请求；Test5 请求 0 |
+| Sports UI R2 | `BLOCKED` | 23/23（20 P0 + 3 P1）均未进入真实业务执行；browser/Test5 请求 0；成功截图 0 |

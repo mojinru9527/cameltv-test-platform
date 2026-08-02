@@ -1,61 +1,59 @@
-/**
- * PAY — 骆驼币充值 UI 自动化
- *
- * 对应 P0 用例: TC-PAY-001, 004, 010, 016, 017, 018
- */
-import { test, expect } from '../../utils/ai-test';
-import { login } from '../../utils/auth';
-import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
+import { expect, test } from '../../utils/ai-test'
+import { login } from '../../utils/auth'
+import { observeSuccessfulApi, requireStringTestData } from '../../utils/business-oracle'
+import { loadTestData } from '../../utils/test-data'
+import {
+  attachTrafficCapture,
+  flushTrafficCapture,
+  initTrafficCapture,
+} from '../../utils/traffic-capture'
 
-const SESSION = 'recharge';
+test.describe('PAY - recharge read-only surface', () => {
+  let route = ''
+  let apiPattern = ''
+  let balanceText = ''
+  let fiatTabText = ''
+  let packageText = ''
+  let proceedButtonText = ''
 
-test.describe('PAY — 充值', () => {
-  test.beforeAll(() => initTrafficCapture(SESSION));
-  test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(async () => { await flushTrafficCapture(); });
+  test.beforeAll(() => {
+    const data = loadTestData()
+    route = requireStringTestData(data, 'routes.recharge')
+    apiPattern = requireStringTestData(data, 'pay.apiPattern')
+    balanceText = requireStringTestData(data, 'pay.expectedBalanceText')
+    fiatTabText = requireStringTestData(data, 'pay.fiatTabText')
+    packageText = requireStringTestData(data, 'pay.packageKey')
+    proceedButtonText = requireStringTestData(data, 'pay.proceedButtonText')
+    initTrafficCapture('recharge-readonly')
+  })
+  test.beforeEach(async ({ page }) => {
+    attachTrafficCapture(page)
+    await login(page)
+  })
+  test.afterAll(async () => flushTrafficCapture())
 
-  test('TC-PAY-001: 展示当前骆驼币余额', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
+  test('TC-PAY-001: configured balance is visible', async ({ page }) => {
+    await observeSuccessfulApi(page, apiPattern, () => page.goto(route))
+    await expect(page.getByText(balanceText, { exact: false }).first()).toBeVisible()
+  })
 
-    // 进入充值/钱包页
-    await aiAction('click the wallet balance or coin icon');
-    await page.waitForTimeout(2000);
+  test('TC-PAY-004: fiat tab is selected by default', async ({ page }) => {
+    await observeSuccessfulApi(page, apiPattern, () => page.goto(route))
+    await expect(page.getByRole('tab', { name: fiatTabText }).first()).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+  })
 
-    const balanceVisible = await aiBoolean('Is the current camel coin balance displayed with a number?');
-    expect(balanceVisible).toBe(true);
-  });
+  test('TC-PAY-010: configured package is visible', async ({ page }) => {
+    await observeSuccessfulApi(page, apiPattern, () => page.goto(route))
+    await expect(page.getByText(packageText, { exact: false }).first()).toBeVisible()
+  })
 
-  test('TC-PAY-004: 默认选中法币 TAB', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
-
-    await aiAction('go to the recharge page');
-    await page.waitForTimeout(2000);
-
-    const fiatSelected = await aiBoolean('Is the Fiat/FIAT tab selected by default?');
-    console.log(`Fiat tab selected: ${fiatSelected}`);
-  });
-
-  test('TC-PAY-010: 套餐列表按展示顺序', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
-
-    await aiAction('go to the recharge page, select a payment method');
-    await page.waitForTimeout(2000);
-
-    const packagesVisible = await aiBoolean('Are coin packages displayed with amounts?');
-    expect(packagesVisible).toBe(true);
-  });
-
-  test('TC-PAY-016: 创建订单按钮可见', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
-
-    await aiAction('go to the recharge page, select a package');
-    await page.waitForTimeout(2000);
-
-    const proceedVisible = await aiBoolean('Is the "Proceed to Payment" or continue button visible?');
-    console.log(`Proceed to Payment visible: ${proceedVisible}`);
-  });
-});
+  test('TC-PAY-016: order action is visible but not invoked', async ({ page }) => {
+    await observeSuccessfulApi(page, apiPattern, () => page.goto(route))
+    await expect(
+      page.getByRole('button', { name: proceedButtonText }).first(),
+    ).toBeVisible()
+  })
+})

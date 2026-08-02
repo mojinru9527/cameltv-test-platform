@@ -1,38 +1,49 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test'
 
-const SITE_URL = process.env.BASE_URL || 'https://www.camel1.tv';
-const USERNAME = process.env.PROD_PHONE || '';
-const PASSWORD = process.env.PROD_PASSWORD || '';
+import {
+  assertApiAssetsObserved,
+  assertProductionRequestAllowed,
+  readProductionSmokeRuntime,
+  type ApiAssetObservation,
+  type ProductionSmokeRuntime,
+} from '../support/production-smoke-contract'
 
-test('CamelTv 生产首页与授权登录入口只读冒烟', async ({ page }) => {
-  test.setTimeout(60_000);
-  page.setDefaultTimeout(10_000);
-  page.setDefaultNavigationTimeout(20_000);
+test.describe('CamelTv production web read-only smoke', () => {
+  let runtime: ProductionSmokeRuntime
 
-  const homeResponse = await page.goto(SITE_URL, { waitUntil: 'domcontentloaded' });
-  expect(homeResponse?.status() || 0).toBeLessThan(400);
-  expect((await page.title()).trim().length).toBeGreaterThan(0);
-  expect(await page.locator('a[href], button, [role="button"]').count()).toBeGreaterThan(0);
-  await page.screenshot({ path: test.info().outputPath('prod-homepage.png'), fullPage: false });
+  test.beforeAll(() => {
+    runtime = readProductionSmokeRuntime()
+  })
 
-  if (!USERNAME || !PASSWORD) {
-    test.info().annotations.push({ type: 'authorization', description: '未配置 PROD_PHONE/PROD_PASSWORD，跳过登录步骤' });
-    return;
-  }
+  test('homepage, business fixture, and API evidence agree', async ({ page }) => {
+    const apiAssets: ApiAssetObservation[] = []
+    const rejectedMethods: string[] = []
 
-  const loginUrl = new URL('/login', SITE_URL).toString();
-  await page.goto(loginUrl, { waitUntil: 'domcontentloaded' });
+    await page.route('**/*', async (route) => {
+      const request = route.request()
+      try {
+        assertProductionRequestAllowed(runtime, request.url(), request.method())
+      } catch (error) {
+        rejectedMethods.push(error instanceof Error ? error.message : String(error))
+        await route.abort('blockedbyclient')
+        return
+      }
+      await route.continue()
+    })
+    page.on('response', (response) => {
+      if (/\/api\/|api\./i.test(response.url())) {
+        apiAssets.push({ url: response.url(), status: response.status() })
+      }
+    })
 
-  const phoneInput = page.locator('input[type="tel"], input[name*="phone"], input[name*="username"], input[type="text"]').first();
-  const passwordInput = page.locator('input[type="password"]').first();
-  if (await phoneInput.isVisible().catch(() => false)) await phoneInput.fill(USERNAME);
-  if (await passwordInput.isVisible().catch(() => false)) await passwordInput.fill(PASSWORD);
+    const response = await page.goto(runtime.baseUrl.toString(), {
+      waitUntil: 'networkidle',
+    })
 
-  const submit = page.locator('button[type="submit"], button:has-text("登录"), button:has-text("Sign In")').first();
-  if (await submit.isVisible().catch(() => false)) {
-    await submit.click();
-    await page.waitForTimeout(2500);
-  }
-  await page.screenshot({ path: test.info().outputPath('prod-login-result.png'), fullPage: false });
-  expect(page.url()).toMatch(/^https:\/\/(www\.)?camel1\.tv\//);
-});
+    expect(response?.status() ?? 0).toBeGreaterThanOrEqual(200)
+    expect(response?.status() ?? 500).toBeLessThan(400)
+    await expect(page.getByText(runtime.expectedBusinessText, { exact: false }).first()).toBeVisible()
+    assertApiAssetsObserved(apiAssets)
+    expect(rejectedMethods).toEqual([])
+  })
+})

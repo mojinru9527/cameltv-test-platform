@@ -1,35 +1,42 @@
-/**
- * HOME — 首页预测推荐模块 UI 自动化
- *
- * 对应 P0 用例: TC-HOME-001, 002
- */
-import { test } from '../../utils/ai-test';
-import { login } from '../../utils/auth';
-import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
+import { expect, test } from '../../utils/ai-test'
+import { login } from '../../utils/auth'
+import { observeSuccessfulApi, requireStringTestData } from '../../utils/business-oracle'
+import { loadTestData } from '../../utils/test-data'
+import {
+  attachTrafficCapture,
+  flushTrafficCapture,
+  initTrafficCapture,
+} from '../../utils/traffic-capture'
 
-const SESSION = 'home-recommend';
+test.describe('HOME - recommendations', () => {
+  let route = ''
+  let apiPattern = ''
+  let recommendedAuthor = ''
+  let expectedYield = ''
 
-test.describe('HOME — 首页推荐', () => {
-  test.beforeAll(() => initTrafficCapture(SESSION));
-  test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(async () => { await flushTrafficCapture(); });
+  test.beforeAll(() => {
+    const data = loadTestData()
+    route = requireStringTestData(data, 'routes.home')
+    apiPattern = requireStringTestData(data, 'home.apiPattern')
+    recommendedAuthor = requireStringTestData(data, 'home.recommendedAuthorKey')
+    expectedYield = requireStringTestData(data, 'home.expectedYieldText')
+    initTrafficCapture('home-recommend')
+  })
+  test.beforeEach(async ({ page }) => {
+    attachTrafficCapture(page)
+    await login(page)
+  })
+  test.afterAll(async () => flushTrafficCapture())
 
-  test('TC-HOME-001: 展示 Yield 前5作者推荐', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(3000);
+  test('TC-HOME-001: configured top-Yield author is visible', async ({ page }) => {
+    const response = await observeSuccessfulApi(page, apiPattern, () => page.goto(route))
+    expect(response.ok()).toBe(true)
+    await expect(page.getByText(recommendedAuthor, { exact: false }).first()).toBeVisible()
+  })
 
-    await aiAction('scroll to the prediction recommendation section');
-    const hasRecommended = await aiBoolean('Is there a "Recommended" or top prediction authors section with author cards?');
-    // 取决于首页是否有推荐模块
-    console.log(`Recommendation section visible: ${hasRecommended}`);
-  });
-
-  test('TC-HOME-001: 推荐作者按 Yield 排序', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(3000);
-
-    await aiAction('scroll to the recommended authors section');
-    const hasYieldInfo = await aiBoolean('Are Yield percentage numbers visible near the author names?');
-    console.log(`Yield info visible: ${hasYieldInfo}`);
-  });
-});
+  test('TC-HOME-002: configured Yield value is visible', async ({ page }) => {
+    const response = await observeSuccessfulApi(page, apiPattern, () => page.goto(route))
+    expect(response.ok()).toBe(true)
+    await expect(page.getByText(expectedYield, { exact: false }).first()).toBeVisible()
+  })
+})

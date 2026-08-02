@@ -1,77 +1,97 @@
-/**
- * DETAIL — UGC 详情页 UI 自动化
- *
- * 对应 P0 用例: TC-DETAIL-003, 005, 006, 019, 020, 023, 024, 026, 029, 031, 032
- */
-import { test, expect } from '../../utils/ai-test';
-import { login } from '../../utils/auth';
-import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
+import { expect, test } from '../../utils/ai-test'
+import { login } from '../../utils/auth'
+import { observeSuccessfulApi, requireStringTestData } from '../../utils/business-oracle'
+import {
+  assertRequestMethodAllowed,
+  parseRuntimePreconditions,
+} from '../../utils/preconditions'
+import { loadTestData } from '../../utils/test-data'
+import {
+  attachTrafficCapture,
+  flushTrafficCapture,
+  initTrafficCapture,
+} from '../../utils/traffic-capture'
 
-const SESSION = 'article-detail';
+test.describe('DETAIL - read-only entitlement', () => {
+  let lockedRoute = ''
+  let unlockedRoute = ''
+  let apiPattern = ''
+  let lockedText = ''
+  let unlockedText = ''
 
-test.describe('DETAIL — UGC详情', () => {
-  test.beforeAll(() => initTrafficCapture(SESSION));
-  test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(async () => { await flushTrafficCapture(); });
+  test.beforeAll(() => {
+    const data = loadTestData()
+    lockedRoute = requireStringTestData(data, 'routes.lockedDetail')
+    unlockedRoute = requireStringTestData(data, 'routes.unlockedDetail')
+    apiPattern = requireStringTestData(data, 'detail.apiPattern')
+    lockedText = requireStringTestData(data, 'detail.lockedPredictionText')
+    unlockedText = requireStringTestData(data, 'detail.unlockedPredictionText')
+    initTrafficCapture('article-detail-readonly')
+  })
+  test.beforeEach(async ({ page }) => {
+    attachTrafficCapture(page)
+    await login(page)
+  })
+  test.afterAll(async () => flushTrafficCapture())
 
-  test('TC-DETAIL-005/006: Follow/Unfollow 切换', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
+  test('TC-DETAIL-019/020: locked and unlocked records expose distinct configured states', async ({ page }) => {
+    await observeSuccessfulApi(page, apiPattern, () => page.goto(lockedRoute))
+    await expect(page.getByText(lockedText, { exact: false }).first()).toBeVisible()
 
-    await aiAction('click on an article to enter its detail page');
-    await page.waitForTimeout(2000);
+    await observeSuccessfulApi(page, apiPattern, () => page.goto(unlockedRoute))
+    await expect(page.getByText(unlockedText, { exact: false }).first()).toBeVisible()
+  })
+})
 
-    const isDetail = await aiBoolean('Is this an article detail page?');
-    if (!isDetail) { test.skip(true, 'Not on detail page'); return; }
+test.describe('DETAIL - explicitly authorized writes', () => {
+  let followRoute = ''
+  let lowBalanceRoute = ''
+  let followApiPattern = ''
+  let unlockApiPattern = ''
+  let followButtonText = ''
+  let followingText = ''
+  let unlockButtonText = ''
+  let confirmButtonText = ''
+  let insufficientBalanceText = ''
 
-    // 检查 Follow 按钮
-    const followVisible = await aiBoolean('Is there a Follow or Following button visible?');
-    if (!followVisible) { test.skip(true, 'Follow button not visible'); return; }
+  test.beforeAll(() => {
+    const runtime = parseRuntimePreconditions()
+    assertRequestMethodAllowed(runtime, 'POST')
+    const data = loadTestData()
+    followRoute = requireStringTestData(data, 'routes.followDetail')
+    lowBalanceRoute = requireStringTestData(data, 'routes.lowBalanceDetail')
+    followApiPattern = requireStringTestData(data, 'detail.followApiPattern')
+    unlockApiPattern = requireStringTestData(data, 'detail.unlockApiPattern')
+    followButtonText = requireStringTestData(data, 'detail.followButtonText')
+    followingText = requireStringTestData(data, 'detail.followingText')
+    unlockButtonText = requireStringTestData(data, 'detail.unlockButtonText')
+    confirmButtonText = requireStringTestData(data, 'detail.confirmButtonText')
+    insufficientBalanceText = requireStringTestData(data, 'detail.insufficientBalanceText')
+    initTrafficCapture('article-detail-write')
+  })
+  test.beforeEach(async ({ page }) => {
+    attachTrafficCapture(page)
+    await login(page)
+  })
+  test.afterAll(async () => flushTrafficCapture())
 
-    // 点击 Follow
-    await aiAction('click the Follow button');
-    await page.waitForTimeout(1500);
+  test('TC-DETAIL-005/006: follow action has an API and visible state oracle', async ({ page }) => {
+    await page.goto(followRoute)
+    await observeSuccessfulApi(page, followApiPattern, () =>
+      page.getByText(followButtonText, { exact: true }).click(),
+    )
+    await expect(page.getByText(followingText, { exact: false }).first()).toBeVisible()
+  })
 
-    const followSuccess = await aiBoolean('Did a "successfully followed" or similar message appear?');
-    console.log(`Follow success: ${followSuccess}`);
-  });
-
-  test('TC-DETAIL-019/020: 未解锁预测项脱敏 vs 已解锁完整', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
-
-    await aiAction('find and click on a pay-per-article item');
-    await page.waitForTimeout(2000);
-
-    const isUnlocked = await aiBoolean('Is the full prediction data visible (odds and picks)?');
-    // 未解锁应只看到表头
-    if (!isUnlocked) {
-      const hasHeaderOnly = await aiBoolean('Is there a prediction table header but no specific odds values?');
-      expect(hasHeaderOnly).toBe(true);
-    }
-  });
-
-  test('TC-DETAIL-032: 余额不足无法解锁', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
-
-    await aiAction('click on a pay-per-article item with a coin price');
-    await page.waitForTimeout(2000);
-
-    const unlockBtn = await aiBoolean('Is the Unlock button visible with a coin amount?');
-    if (!unlockBtn) { test.skip(true, 'Unlock button not visible'); return; }
-
-    await aiAction('click the Unlock button');
-    await page.waitForTimeout(1500);
-
-    // 确认弹窗
-    const confirmDialog = await aiBoolean('Is there a confirmation dialog for unlocking?');
-    if (confirmDialog) {
-      await aiAction('click the confirm/proceed button');
-      await page.waitForTimeout(2000);
-
-      const balanceInsufficient = await aiBoolean('Is there an "insufficient balance" or "please recharge" message?');
-      console.log(`Balance insufficient shown: ${balanceInsufficient}`);
-    }
-  });
-});
+  test('TC-DETAIL-032: low-balance unlock is rejected visibly', async ({ page }) => {
+    await page.goto(lowBalanceRoute)
+    const response = await observeSuccessfulApi(page, unlockApiPattern, async () => {
+      await page.getByText(unlockButtonText, { exact: false }).first().click()
+      await page.getByText(confirmButtonText, { exact: false }).first().click()
+    })
+    expect(response.ok()).toBe(true)
+    await expect(
+      page.getByText(insufficientBalanceText, { exact: false }).first(),
+    ).toBeVisible()
+  })
+})
