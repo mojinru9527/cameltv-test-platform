@@ -75,6 +75,7 @@ vi.mock('@/components/state', () => ({
 }))
 
 import ReportPage from '../index'
+import { useAuthStore } from '@/stores/auth'
 
 describe('报告中心搜索提交态（B60-P2-001）', () => {
   beforeEach(() => {
@@ -86,6 +87,7 @@ describe('报告中心搜索提交态（B60-P2-001）', () => {
     })
     api.fetchPlans.mockResolvedValue([])
     api.fetchTemplates.mockResolvedValue([])
+    useAuthStore.setState({ permissions: ['*'], currentProjectId: 1 })
   })
 
   it('输入关键字不触发请求，仅提交触发一次有效 GET', async () => {
@@ -118,5 +120,16 @@ describe('报告中心搜索提交态（B60-P2-001）', () => {
       page_size: 20,
       keyword: '回归2',
     })
+  })
+
+  it('只读角色不显示生成报告入口（B60-P1-009）', async () => {
+    useAuthStore.setState({ permissions: ['report:list'] })
+    render(
+      <MemoryRouter>
+        <ReportPage />
+      </MemoryRouter>,
+    )
+    await waitFor(() => expect(api.fetchReports).toHaveBeenCalledTimes(1))
+    expect(screen.queryByRole('button', { name: '生成报告' })).toBeNull()
   })
 })

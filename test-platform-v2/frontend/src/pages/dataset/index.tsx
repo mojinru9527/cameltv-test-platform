@@ -23,6 +23,7 @@ import ConfirmActionDialog from '@/components/ConfirmActionDialog'
 import { AsyncState } from '@/components/state/AsyncState'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useAuthStore } from '@/stores/auth'
 
 import {
   fetchDatasets, fetchDataset, createDataset, updateDataset, deleteDataset,
@@ -37,6 +38,10 @@ export default function DatasetPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [detailId, setDetailId] = useState<number | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<DatasetListItem | null>(null)
+  const hasPerm = useAuthStore((state) => state.hasPerm)
+  const canCreate = hasPerm('dataset:create')
+  const canUpdate = hasPerm('dataset:update')
+  const canDelete = hasPerm('dataset:delete')
   const [deleting, setDeleting] = useState(false)
 
   // Form state
@@ -172,10 +177,12 @@ export default function DatasetPage() {
         description="管理 CSV/JSON 测试数据，支持参数化注入到 API 用例执行中"
         icon={FileText}
       >
-        <Button onClick={openCreate} size="sm">
-          <Plus className="size-4 mr-1" />
-          新建数据集
-        </Button>
+        {canCreate && (
+          <Button onClick={openCreate} size="sm">
+            <Plus className="size-4 mr-1" />
+            新建数据集
+          </Button>
+        )}
       </PageHeader>
 
       <AsyncState
@@ -185,7 +192,7 @@ export default function DatasetPage() {
         data={items}
         emptyTitle="暂无数据集"
         emptyDescription="点击「新建数据集」上传 CSV 或 JSON 文件"
-        emptyAction={{ label: '新建数据集', onClick: openCreate }}
+        emptyAction={canCreate ? { label: '新建数据集', onClick: openCreate } : undefined}
         onRetry={refetch}
       >
         <Card>
@@ -225,12 +232,16 @@ export default function DatasetPage() {
                           <Button variant="ghost" size="icon" onClick={() => handleViewDetail(item.id)} aria-label={`查看数据集 ${item.name} 详情`}>
                             <Eye className="size-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => openEdit(item.id)} aria-label={`编辑数据集 ${item.name}`}>
-                            <FileText className="size-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)} aria-label={`删除数据集 ${item.name}`}>
-                            <Trash2 className="size-4 text-status-danger" />
-                          </Button>
+                          {canUpdate && (
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(item.id)} aria-label={`编辑数据集 ${item.name}`}>
+                              <FileText className="size-4" />
+                            </Button>
+                          )}
+                          {canDelete && (
+                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(item)} aria-label={`删除数据集 ${item.name}`}>
+                              <Trash2 className="size-4 text-status-danger" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

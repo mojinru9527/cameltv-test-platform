@@ -35,11 +35,13 @@ vi.mock('@/components/state', () => ({
 vi.mock('../PlanDrawer', () => ({ default: () => null }))
 
 import TestPlanPage from '../index'
+import { useAuthStore } from '@/stores/auth'
 
 describe('测试计划搜索提交态（B60-P2-001）', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     api.fetchPlans.mockResolvedValue({ total: 0, items: [], page: 1, page_size: 20 })
+    useAuthStore.setState({ permissions: ['*'], currentProjectId: 1 })
   })
 
   it('输入关键字不触发请求，仅提交（按钮/回车）触发一次有效 GET', async () => {
@@ -72,5 +74,16 @@ describe('测试计划搜索提交态（B60-P2-001）', () => {
       page_size: 20,
       keyword: '赛事2',
     })
+  })
+
+  it('只读角色不显示新建/删除写入口（B60-P1-009）', async () => {
+    useAuthStore.setState({ permissions: ['testplan:list'] })
+    render(
+      <MemoryRouter>
+        <TestPlanPage />
+      </MemoryRouter>,
+    )
+    await waitFor(() => expect(api.fetchPlans).toHaveBeenCalledTimes(1))
+    expect(screen.queryByRole('button', { name: '新建计划' })).toBeNull()
   })
 })
