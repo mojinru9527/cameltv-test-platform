@@ -122,8 +122,20 @@ docker run -d --name cameltv-pg16 \
 ## 5. G5：秘密管理
 
 1. CI 秘密：GitHub 仓库 → `Settings` → `Secrets and variables` → `Actions` →
-   `New repository secret`，按需新增：`DATABASE_URL`、`SECRET_KEY`、
-   `ADMIN_PASSWORD`、`TESTER_PASSWORD`、`AI_API_KEY`、`LANHU_COOKIE` 等。
+   `New repository secret`，按需新增：
+
+   **业务平台自动刷新 token（必需）**
+   - `CAMELTV_TEST_USERNAME` / `CAMELTV_TEST_PASSWORD`：测试5 业务账号账密
+   - `CAMELTV_PROD_USERNAME` / `CAMELTV_PROD_PASSWORD`：生产业务账号账密
+   - `VPN_TUN_ADDR`：vpn07 tun 地址（prod-smoke 用）
+
+   **可选（v1 配置当前为注释态）**
+   - `CAMELTV_TEST_DB_USER` / `CAMELTV_TEST_DB_PWD`、`CAMELTV_TEST_REDIS_PWD`、
+     `CAMELTV_TEST_MQ_USER` / `CAMELTV_TEST_MQ_PWD`、`ELASTIC_API_KEY` / `ELK_PASSWORD`
+
+   > 说明：自 Batch 63 起，定时任务在每次运行前用账密现场登录业务站并刷新
+   > `auth_token`（脚本 `tests/automation/ui/utils/fetch-auth-token.cjs`），
+   > **不再需要手动维护** `CAMELTV_TEST_AUTH_TOKEN` / `CAMELTV_PROD_AUTH_TOKEN`。
 2. 本地运行秘密：只写 gitignored 的 `test-platform-v2/backend/.env`（已完成同步）。
 3. 生产运行秘密：只写 gitignored 的 `test-platform-v2/config/runtime/production.env`。
 

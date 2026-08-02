@@ -10,7 +10,6 @@ jobs:
     runs-on: [self-hosted, internal-network]
     timeout-minutes: 15
     env:
-      CAMELTV_PROD_AUTH_TOKEN: ${{ secrets.CAMELTV_PROD_AUTH_TOKEN }}
       VPN_TUN_ADDR: ${{ secrets.VPN_TUN_ADDR }}
 
     steps:
@@ -26,6 +25,22 @@ jobs:
           cd test-platform
           pip install -r requirements.txt
           pip install -e .
+
+      - name: Refresh business token (prod)
+        shell: pwsh
+        working-directory: tests/automation/ui
+        env:
+          CAMELTV_USERNAME: ${{ secrets.CAMELTV_PROD_USERNAME }}
+          CAMELTV_PASSWORD: ${{ secrets.CAMELTV_PROD_PASSWORD }}
+          CAMELTV_BASE_URL: https://www.camel1.tv/
+        run: |
+          npm ci
+          npx playwright install chromium
+          $token = node utils/fetch-auth-token.cjs
+          if ([string]::IsNullOrWhiteSpace($token)) { throw 'prod token refresh failed' }
+          Add-Content -Path $env:GITHUB_ENV -Value "CAMELTV_PROD_AUTH_TOKEN<<EOF"
+          Add-Content -Path $env:GITHUB_ENV -Value $token
+          Add-Content -Path $env:GITHUB_ENV -Value "EOF"
 
       - name: Verify VPN Connection
         run: |

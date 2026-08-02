@@ -17,8 +17,6 @@ jobs:
     runs-on: [self-hosted, internal-network]
     timeout-minutes: 30
     env:
-      CAMELTV_TEST_AUTH_TOKEN: ${{ secrets.CAMELTV_TEST_AUTH_TOKEN }}
-      CAMELTV_PROD_AUTH_TOKEN: ${{ secrets.CAMELTV_PROD_AUTH_TOKEN }}
       CAMELTV_TEST_DB_USER: ${{ secrets.CAMELTV_TEST_DB_USER }}
       CAMELTV_TEST_DB_PWD: ${{ secrets.CAMELTV_TEST_DB_PWD }}
       CAMELTV_TEST_REDIS_PWD: ${{ secrets.CAMELTV_TEST_REDIS_PWD }}
@@ -40,6 +38,22 @@ jobs:
           cd test-platform
           pip install -r requirements.txt
           pip install -e .
+
+      - name: Refresh business token (test5)
+        shell: pwsh
+        working-directory: tests/automation/ui
+        env:
+          CAMELTV_USERNAME: ${{ secrets.CAMELTV_TEST_USERNAME }}
+          CAMELTV_PASSWORD: ${{ secrets.CAMELTV_TEST_PASSWORD }}
+          CAMELTV_BASE_URL: https://camelive-g3-test5.elelive.cn/
+        run: |
+          npm ci
+          npx playwright install chromium
+          $token = node utils/fetch-auth-token.cjs
+          if ([string]::IsNullOrWhiteSpace($token)) { throw 'test5 token refresh failed' }
+          Add-Content -Path $env:GITHUB_ENV -Value "CAMELTV_TEST_AUTH_TOKEN<<EOF"
+          Add-Content -Path $env:GITHUB_ENV -Value $token
+          Add-Content -Path $env:GITHUB_ENV -Value "EOF"
 
       - name: Env Health Check
         run: |
