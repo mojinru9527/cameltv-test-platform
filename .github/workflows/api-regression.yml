@@ -41,16 +41,13 @@ jobs:
 
       - name: Refresh business token (test5)
         shell: pwsh
-        working-directory: tests/automation/ui
         env:
           CAMELTV_USERNAME: ${{ secrets.CAMELTV_TEST_USERNAME }}
           CAMELTV_PASSWORD: ${{ secrets.CAMELTV_TEST_PASSWORD }}
           CAMELTV_COUNTRY_CODE: '+86'
-          CAMELTV_BASE_URL: https://camelive-g3-test5.elelive.cn/
+          CAMELTV_LOGIN_URL: https://camel-test5.elelive.cn/account-service/ee/client/demo/login
         run: |
-          npm ci
-          npx playwright install chromium
-          $token = node utils/fetch-auth-token.cjs
+          $token = node tests/automation/ui/utils/fetch-auth-token.cjs
           if ([string]::IsNullOrWhiteSpace($token)) { throw 'test5 token refresh failed' }
           Add-Content -Path $env:GITHUB_ENV -Value "CAMELTV_TEST_AUTH_TOKEN<<EOF"
           Add-Content -Path $env:GITHUB_ENV -Value $token

@@ -28,16 +28,13 @@ jobs:
 
       - name: Refresh business token (prod)
         shell: pwsh
-        working-directory: tests/automation/ui
         env:
           CAMELTV_USERNAME: ${{ secrets.CAMELTV_PROD_USERNAME }}
           CAMELTV_PASSWORD: ${{ secrets.CAMELTV_PROD_PASSWORD }}
           CAMELTV_COUNTRY_CODE: '+86'
-          CAMELTV_BASE_URL: https://www.camel1.tv/
+          CAMELTV_LOGIN_URL: https://api.cameltv.live/account-service/ee/client/demo/login
         run: |
-          npm ci
-          npx playwright install chromium
-          $token = node utils/fetch-auth-token.cjs
+          $token = node tests/automation/ui/utils/fetch-auth-token.cjs
           if ([string]::IsNullOrWhiteSpace($token)) { throw 'prod token refresh failed' }
           Add-Content -Path $env:GITHUB_ENV -Value "CAMELTV_PROD_AUTH_TOKEN<<EOF"
           Add-Content -Path $env:GITHUB_ENV -Value $token
