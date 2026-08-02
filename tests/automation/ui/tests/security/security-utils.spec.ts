@@ -10,6 +10,7 @@ import {
   getLoginCredentials,
 } from '../../utils/auth'
 import {
+  assertNoCanaryLeak,
   attachTrafficCapture,
   flushTrafficCapture,
   initTrafficCapture,
@@ -205,6 +206,22 @@ test.describe('traffic capture security contract', () => {
 
     expect(await fs.readdir(outputDir)).toHaveLength(1)
   })
+
+  test('canary scan rejects sensitive values even under an innocent field name', () => {
+    expect(() =>
+      assertNoCanaryLeak(
+        JSON.stringify({ safe: 'batch61-canary-secret' }),
+        ['batch61-canary-secret'],
+      ),
+    ).toThrow(/evidence canary/i)
+
+    expect(() =>
+      assertNoCanaryLeak(
+        JSON.stringify({ correlation_id: 'batch61-correlation-001' }),
+        ['batch61-canary-secret'],
+      ),
+    ).not.toThrow()
+  })
 })
 
 test('package scripts use supported Playwright environment selection', async () => {
@@ -216,4 +233,38 @@ test('package scripts use supported Playwright environment selection', async () 
   expect(packageJson.scripts['test:prod']).toContain('TEST_ENV=prod')
   expect(packageJson.scripts['test:test']).not.toContain('--env')
   expect(packageJson.scripts['test:prod']).not.toContain('--env')
+})
+
+test('main Playwright config and env template contain no implicit target or account', async () => {
+  const configSource = await fs.readFile(
+    path.join(uiRoot, 'playwright.config.ts'),
+    'utf8',
+  )
+  const envExample = await fs.readFile(path.join(uiRoot, '.env.example'), 'utf8')
+
+  for (const source of [configSource, envExample]) {
+    expect(source).not.toContain('https://g3-test3.elelive.cn')
+    expect(source).not.toContain('CAMELTV_USERNAME=qa_test')
+  }
+  expect(configSource).toContain('parseRuntimePreconditions')
+  expect(configSource).toContain('getLoginCredentials')
+})
+
+test('sports business specs use stable data and API oracles without silent skips', async () => {
+  const businessSpecs = [
+    'tests/home/home-recommend.spec.ts',
+    'tests/list/article-list.spec.ts',
+    'tests/detail/article-detail.spec.ts',
+    'tests/pay/recharge.spec.ts',
+    'tests/refund/first-bet-protection.spec.ts',
+    'tests/bonus/bonus-camel-coins.spec.ts',
+  ]
+
+  for (const relativePath of businessSpecs) {
+    const source = await fs.readFile(path.join(uiRoot, relativePath), 'utf8')
+    expect(source, relativePath).not.toContain('test.skip')
+    expect(source, relativePath).not.toContain('console.log')
+    expect(source, relativePath).toContain('requireStringTestData')
+    expect(source, relativePath).toContain('observeSuccessfulApi')
+  }
 })

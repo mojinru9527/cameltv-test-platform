@@ -1,43 +1,40 @@
-/**
- * BONUS — 充值额外赠送骆驼币 UI 自动化
- *
- * 对应 P0 用例: TC-BONUS-001, 002, 003
- */
-import { test } from '../../utils/ai-test';
-import { login } from '../../utils/auth';
-import { initTrafficCapture, attachTrafficCapture, flushTrafficCapture } from '../../utils/traffic-capture';
+import { expect, test } from '../../utils/ai-test'
+import { login } from '../../utils/auth'
+import { observeSuccessfulApi, requireStringTestData } from '../../utils/business-oracle'
+import { loadTestData } from '../../utils/test-data'
+import {
+  attachTrafficCapture,
+  flushTrafficCapture,
+  initTrafficCapture,
+} from '../../utils/traffic-capture'
 
-const SESSION = 'bonus-camel-coins';
+test.describe('BONUS - recharge package labels', () => {
+  let route = ''
+  let apiPattern = ''
+  let bonusPackage = ''
+  let nonBonusPackage = ''
 
-test.describe('BONUS — 充值赠送', () => {
-  test.beforeAll(() => initTrafficCapture(SESSION));
-  test.beforeEach(async ({ page }) => { attachTrafficCapture(page); await login(page); });
-  test.afterAll(async () => { await flushTrafficCapture(); });
+  test.beforeAll(() => {
+    const data = loadTestData()
+    route = requireStringTestData(data, 'routes.recharge')
+    apiPattern = requireStringTestData(data, 'bonus.apiPattern')
+    bonusPackage = requireStringTestData(data, 'bonus.bonusPackageText')
+    nonBonusPackage = requireStringTestData(data, 'bonus.nonBonusPackageText')
+    initTrafficCapture('bonus-packages-readonly')
+  })
+  test.beforeEach(async ({ page }) => {
+    attachTrafficCapture(page)
+    await login(page)
+  })
+  test.afterAll(async () => flushTrafficCapture())
 
-  test('TC-BONUS-001: 参与活动套餐购买后显示赠送数额', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
+  test('TC-BONUS-001: configured bonus package exposes its bonus label', async ({ page }) => {
+    await observeSuccessfulApi(page, apiPattern, () => page.goto(route))
+    await expect(page.getByText(bonusPackage, { exact: false }).first()).toBeVisible()
+  })
 
-    // 进入充值页
-    await aiAction('click the wallet balance or go to the recharge/payment page');
-    await page.waitForTimeout(2000);
-
-    // 检查套餐是否展示 Bonus 标识
-    const bonusVisible = await aiBoolean('Is there a "Bonus" label with an amount on any recharge package?');
-    // 取决于测试环境活动是否启用
-    console.log(`Bonus visible on packages: ${bonusVisible}`);
-  });
-
-  test('TC-BONUS-002: 未参与活动套餐不展示 Bonus', async ({ page, aiAction, aiBoolean }) => {
-    await page.goto('/');
-    await page.waitForTimeout(2000);
-
-    await aiAction('go to the recharge page');
-    await page.waitForTimeout(2000);
-
-    // 应该有套餐不展示 Bonus
-    const hasNonBonus = await aiBoolean('Are there packages WITHOUT the Bonus label?');
-    // 正常情况下至少有一个套餐不参与活动
-    console.log(`Non-bonus packages exist: ${hasNonBonus}`);
-  });
-});
+  test('TC-BONUS-002: configured non-bonus package remains distinguishable', async ({ page }) => {
+    await observeSuccessfulApi(page, apiPattern, () => page.goto(route))
+    await expect(page.getByText(nonBonusPackage, { exact: false }).first()).toBeVisible()
+  })
+})
