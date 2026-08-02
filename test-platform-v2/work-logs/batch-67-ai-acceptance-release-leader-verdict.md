@@ -10,11 +10,11 @@
 | 实现质量 | PASS | 清单登记与 .env 实测一致；零业务代码 |
 | 风险 | PASS | 无明文 Secret 入库；2.1/6.1 未假解锁（C63-2） |
 | 覆盖 | PASS | 六部门工件 + 看板 + 清单状态同步 |
-| 证据 | PASS | AI Key 401 实测记录、占位符扫描、蓝湖/OCR 键核对 |
+| 证据 | PASS | AI Key 401→200 换新实测记录、占位符扫描、蓝湖/OCR 键核对 |
 
 ## 关键决策（已批准）
 
-1. **2.1 判定为「已填但失效」**：不因用户记忆「填过」而标 ✅；实测 401 → ⏳ 待换新 Key。
+1. **2.1 已解锁**：首测 401 判定为「已填但失效」，不因记忆而假解锁；用户换新 Key 后实测 200 → 登记 ✅，C67-1 关闭。
 2. **2.2/2.3 登记 ✅**：蓝湖账密/Cookie 与本地 OCR 结论有据。
 3. **6.1 判定为「待提供」**：Dockerfile 已修复，Railway 重试与 URL 回传为用户操作项。
 
@@ -27,12 +27,12 @@
 ## 判决
 
 **有条件通过**。本批交付物可进入 push → Draft PR → 首轮 checks → 用户二次确认流程；
-2.1 与 6.1 维持 OPEN，解锁以用户提供物为准。
+2.1 已关闭；6.1 维持 OPEN，以用户提供的服务器 URL 为准。
 
 ## 下一批次 Leader 条件
 
-- **C67-1（P0）**：用户提供有效 DeepSeek API Key 并写入 `test-platform-v2/backend/.env`
-  （同步 deploy/.env），实测 `GET {AI_API_BASE_URL}/models` HTTP 200 后关闭 2.1。
+- **C67-1（P0）**：✅ 已满足 — 用户提供有效 DeepSeek API Key 并写入 `test-platform-v2/backend/.env`
+  （已同步 deploy/.env），实测 `GET {AI_API_BASE_URL}/models` HTTP 200。
 - **C67-2（P0）**：用户提供后端托管公网 URL（Railway `*.up.railway.app`）或自建 Docker 服务器地址+端口，
   登记 6.1 后回填 `vercel.json` 反代目标，关闭 C58-06。
 - **C67-3（P2）**：AI 验收批次启动时实测蓝湖 Cookie 有效期（lanhu-mcp 登录态），失效则重新获取。
