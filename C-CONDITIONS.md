@@ -2,7 +2,7 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-08-02 (Batch 64 架构解析与仓库拆分基线)
+**最后更新**: 2026-08-02 (Batch 65 Test5 执行器隔离与前置条件清单)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
@@ -34,6 +34,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C64-2 | 独立审计批次删除根目录两个 `pective pipeline — ...` 误提交文件，删除后同步更新 `repo-boundaries.json` | P2 | 2026-08-02 |
 | C64-3 | 生产交付清单待运维回填 DB/Redis/MQ 真实内网地址后更新；production 保持 DEFERRED；拆仓批次合入前 `validate_repo_boundaries.py --check` 必须全绿 | P0 | 2026-08-02 |
 | C64-4 | C63-1 四项 API-only UI（Token/Playground/导入导出/追溯下钻）排期 batch-65+ | P1 | 2026-08-02 |
+
+### batch-65 — Test5 验收执行器隔离 + 外部前置条件清单（Batch 65 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C65-1 | batch-66 搭建执行器并跑通 V1–V5 验证矩阵；WSL2 tun 不可用时按回退路径切换 Docker/VM，不得以「方案文档存在」代替实测 | P0 | 2026-08-02 |
+| C65-2 | 旧《生产测试平台固定配置与双VPN切换验收手册.md》随执行器落地后走独立审计删除 | P2 | 2026-08-02 |
+| C65-3 | 外部前置条件按 `docs/production-delivery/外部前置条件清单.md` 逐项解锁并登记；未解锁项对应验收保持 DEFERRED，禁止补登假证据 | P1 | 2026-08-02 |
 
 ### batch-18 — Wiki Diff 孤儿（batch-30 归位）
 
