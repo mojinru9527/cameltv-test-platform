@@ -62,7 +62,8 @@ sudo chmod 600 "$AUTH_FILE"
 unset VPN_PASS
 
 # 让 auth-user-pass 指向本地凭据文件（若 .ovpn 未指定）
-if ! grep -q "auth-user-pass" "$OVPN_DEST"; then
+# 注：配置文件为 root 600 权限，普通用户读取需 sudo
+if ! sudo grep -q "auth-user-pass" "$OVPN_DEST"; then
     echo "auth-user-pass $AUTH_FILE" | sudo tee -a "$OVPN_DEST" >/dev/null
 else
     sudo sed -i "s|^auth-user-pass.*|auth-user-pass $AUTH_FILE|" "$OVPN_DEST"
@@ -71,7 +72,7 @@ fi
 echo "==> [5/5] 启动 OpenVPN（后台守护）"
 sudo openvpn --config "$OVPN_DEST" --daemon
 sleep 3
-ip -4 addr show | grep -E "10\." || echo "WARN: 尚未看到 10.x 地址，请检查连接日志"
+ip -4 addr show | grep -E "inet 10\.7\." || echo "WARN: 尚未看到隧道地址，请检查连接日志"
 
 cat <<'EOF'
 

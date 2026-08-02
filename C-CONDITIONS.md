@@ -2,7 +2,7 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-08-02 (Batch 66 Test5 验收执行器搭建)
+**最后更新**: 2026-08-02 (Batch 66 执行器 V1–V5 验证全部通过)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
@@ -39,7 +39,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C65-1 | batch-66 搭建执行器并跑通 V1–V5 验证矩阵；WSL2 tun 不可用时按回退路径切换 Docker/VM，不得以「方案文档存在」代替实测 | P0 | 2026-08-02 |
 | C65-2 | 旧《生产测试平台固定配置与双VPN切换验收手册.md》随执行器落地后走独立审计删除 | P2 | 2026-08-02 |
 | C65-3 | 外部前置条件按 `docs/production-delivery/外部前置条件清单.md` 逐项解锁并登记；未解锁项对应验收保持 DEFERRED，禁止补登假证据 | P1 | 2026-08-02 |
 
@@ -47,9 +46,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C66-1 | 2026-08-03 11:00–18:00 窗口内完成 V1–V5 实测并登记（`scripts/executor/README.md` §2）；V2/V3 需 Test5 内网信息 | P0 | 2026-08-02 |
-| C66-2 | OpenVPN 真实凭据/CA 只存 WSL 本地（/opt/test5-runner），严禁入库 | P0 | 2026-08-02 |
-| C66-3 | Ubuntu 发行版安装受阻时使用 Docker Desktop 容器执行器回退并记录原因 | P1 | 2026-08-02 |
+| C66-4 | 其余 5 个 Test5 节点（camel-to-test5 等）内网 IP 待 Test5 owner 提供后补 WSL hosts（g3 已确认 = 192.168.50.170） | P2 | 2026-08-02 |
 
 ### batch-18 — Wiki Diff 孤儿（batch-30 归位）
 
@@ -182,6 +179,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
+| C65-1 | batch-66 搭建执行器并跑通 V1–V5 验证矩阵 | V1–V5 全部通过（`batch-66-executor-closure-verification-record.md`） | 2026-08-02 |
+| C66-1 | 窗口内完成 V1–V5 实测并登记 | 验证记录 + `scripts/executor/README.md` §2 登记表 | 2026-08-02 |
+| C66-2 | OpenVPN 真实凭据/CA 只存 WSL 本地 | `/opt/test5-runner/test5.auth`（chmod 600，未入库） | 2026-08-02 |
+| C66-3 | Ubuntu 安装受阻时 Docker 回退 | 未触发（WSL2 成功），N/A | 2026-08-02 |
 | G56-015 | 前后端生产依赖许可证清单与 psycopg2-binary LGPL/OpenSSL NOTICE 策略已归档 | Batch 57 `batch-57-license-audit.md`，CLOSED-WITH-NOTICE | 2026-07-30 |
 | G56-016 | Batch 56 QA 报告、独立 issue register、evidence README、Leader Verdict 和 execution matrix 已互相引用并完成 `NEEDS WORK` 对账；仅关闭交付物缺口 | Batch 57 文档闭环 | 2026-07-29 |
 | C55-1 | `/apitest` 保持前端路由且仅 `/api/v1` 进入 Vite 代理 | commits `df8a4b7` + `b77b53b` + `7d2aff1`；Vitest 13/13 + Playwright 1/1 | 2026-07-29 |

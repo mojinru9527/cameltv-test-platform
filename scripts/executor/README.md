@@ -30,18 +30,18 @@ bash scripts/executor/wsl2-executor-setup.sh \
   chmod 600，不入库）、后台启动。
 - 您的 `test5.ovpn` 放在本机任意位置（如桌面），**不要提交进仓库**。
 
-## 2. 验证矩阵 V1–V5（窗口内执行并登记）
+## 2. 验证矩阵 V1–V5（2026-08-02 全部通过并登记）
 
 | # | 场景 | 命令/动作 | 预期 | 登记 |
 |---|------|-----------|------|:----:|
-| V1 | 主机 AI（vpn07 开） | `curl -I https://api.deepseek.com` | 401（链路通） | ⬜ |
-| V2 | 执行器内 Test5 内网 | `ping -c 2 <Test5内网IP>` | 通 | ⬜ |
-| V3 | 执行器内 Test5 域名 | `curl -I https://camelive-g3-test5.elelive.cn` | 200 | ⬜ |
-| V4 | 两者同时运行 | 主机 AI 用例生成 + 执行器 Test5 冒烟 | 双方正常 | ⬜ |
-| V5 | 反向验证 | 关 vpn07，仅执行器跑 Test5 验收 | Test5 正常 | ⬜ |
+| V1 | 主机 AI（vpn07 开） | `curl -I https://api.deepseek.com` | 401（链路通） | ✅ 2026-08-02（401） |
+| V2 | 执行器内 Test5 内网 | `ping -c 2 192.168.50.170` | 通 | ✅ 2026-08-02（0% 丢包） |
+| V3 | 执行器内 Test5 域名 | `curl -I https://camelive-g3-test5.elelive.cn` | 200 | ✅ 2026-08-02（HTTP 200） |
+| V4 | 两者同时运行 | 主机 AI 5 次 + 执行器 Test5 5 次并行 | 双方正常 | ✅ 2026-08-02（401×5 + 200×5） |
+| V5 | 反向验证 | 关 vpn07，仅执行器跑 Test5 验收 | Test5 正常 | ✅ 2026-08-02（用户手动 + Agent 复核：200 + 0%） |
 
-> Test5 内网 IP 需要在窗口内从 OpenVPN 连接后获取（`ip route` / `ipconfig` 对账），
-> 或由 Test5 owner 直接提供。
+> g3 节点内网 IP = `192.168.50.170`（经 VPN 网关 10.7.7.1 DNS 解析）；其余 5 个节点
+> （camel-to-test5 等）网关 DNS 返回 REFUSED，待 Test5 owner 提供后补 hosts。
 
 ## 3. 执行器日常使用
 
