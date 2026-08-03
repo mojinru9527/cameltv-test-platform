@@ -36,6 +36,17 @@ class Settings(BaseSettings):
     csrf_enabled: bool = True
     csrf_allowed_origins: str = ""             # comma-separated; empty = use allowed_origins
 
+    # ── Login rate limit (C70-3) ──
+    login_rate_limit_max: int = 10             # 生产安全默认：10 次 / 窗口
+    login_rate_limit_window_seconds: int = 900
+
+    @property
+    def effective_login_rate_limit(self) -> tuple[int, int]:
+        """生产保持安全默认；开发/测试环境放宽以支持自动化验收（非安全降级）。"""
+        if self.environment in ("development", "test"):
+            return max(self.login_rate_limit_max, 100), self.login_rate_limit_window_seconds
+        return self.login_rate_limit_max, self.login_rate_limit_window_seconds
+
     # ── CSP (P1-2/S2c) ──
     csp_enabled: bool = True
     csp_header: str = "script-src 'self' cdn.jsdelivr.net; object-src 'none'; base-uri 'self'"

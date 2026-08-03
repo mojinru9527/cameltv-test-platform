@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import pytest
+import asyncio
 
+from app.core.config import settings as _settings
 from app.services.ai_service import (
     _CHUNK_FP_LIMIT,
     _dedupe_and_renumber,
     _split_extraction_chunks,
+    generate_test_cases,
 )
 
 
@@ -62,3 +65,47 @@ class TestDedupeAndRenumber:
         ]
         out = _dedupe_and_renumber(cases)
         assert len({c["id"] for c in out}) == 2
+
+
+class TestChunkedConcurrentGeneration:
+    def test_chunks_merge_in_order(self, monkeypatch):
+        monkeypatch.setattr(_settings, "ai_api_key", "test-key")
+        calls = []
+
+        async def fake_call(system_prompt, user_message, label, max_tokens=None):
+            calls.append(label)
+            idx = len(calls)
+            return {
+                "result": {
+                    "functional_cases": [
+                        {"id": f"TC-{idx}-1", "title": f"case-{label}-1", "steps": []},
+                        {"id": f"TC-{idx}-2", "title": f"case-{label}-2", "steps": []},
+                    ],
+                    "api_cases": [],
+                },
+                "raw": "{}",
+                "finish_reason": "stop",
+                "truncated": False,
+                "error": None,
+            }
+
+        monkeypatch.setattr("app.services.ai_service._call_ai_api", fake_call)
+        extraction = {
+            "modules": [
+                _module("A", 15),
+                _module("B", 15),
+                _module("C", 15),
+            ]
+        }
+        result = asyncio.run(
+            generate_test_cases(
+                content="# 测试需求\n\n模块 A 功能说明",
+                file_type="md",
+                extraction=extraction,
+            )
+        )
+        cases = result.get("functional_cases") or []
+        assert len(cases) == 6  # 3 块 × 2 条
+        assert len(calls) == 3  # 并发合并后仍 3 次调用
+        # 编号唯一
+        assert len({c["id"] for c in cases}) == 6

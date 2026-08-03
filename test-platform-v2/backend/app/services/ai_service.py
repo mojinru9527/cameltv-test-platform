@@ -10,6 +10,7 @@ Changelog-first extraction pipeline for Lanhu URLs:
 from __future__ import annotations
 
 import json
+import asyncio
 import re
 from pathlib import Path
 
@@ -736,6 +737,7 @@ def _merge_split_results(func_result: dict | None, api_result: dict | None,
 
 # C68-3: 分批生成常量与工具（batch-69）
 _CHUNK_FP_LIMIT = 25
+_CHUNK_CONCURRENCY = 2
 
 
 def _split_extraction_chunks(
@@ -1065,23 +1067,35 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
             "functional_cases": [],
             "api_cases": [],
         }
-        failed_blocks = 0
-        for i, chunk in enumerate(chunks, start=1):
-            chunk_user = _build_user_message_with_extraction(
-                effective_content, effective_file_type, source_ref, {"modules": chunk}
-            )
-            label = f"functional-chunk-{i}"
-            func_resp = await _call_ai_api(functional_system, chunk_user, label)
-            if func_resp["truncated"]:
-                warnings.append(f"{label} 生成被截断，已重试")
-                func_resp = await _call_ai_api(functional_system, chunk_user, f"{label}-retry")
-            if func_resp["result"] is None:
-                failed_blocks += 1
-                warnings.append(
-                    f"{label} 生成失败：{func_resp.get('error', '未知错误')}（该块未产出用例）"
+        sem = asyncio.Semaphore(_CHUNK_CONCURRENCY)
+
+        async def _run_chunk(index: int, chunk: list[dict]) -> tuple[int, dict | None, list[str]]:
+            chunk_warnings: list[str] = []
+            async with sem:
+                chunk_user = _build_user_message_with_extraction(
+                    effective_content, effective_file_type, source_ref, {"modules": chunk}
                 )
+                label = f"functional-chunk-{index}"
+                func_resp = await _call_ai_api(functional_system, chunk_user, label)
+                if func_resp["truncated"]:
+                    chunk_warnings.append(f"{label} 生成被截断，已重试")
+                    func_resp = await _call_ai_api(functional_system, chunk_user, f"{label}-retry")
+                if func_resp["result"] is None:
+                    chunk_warnings.append(
+                        f"{label} 生成失败：{func_resp.get('error', '未知错误')}（该块未产出用例）"
+                    )
+                    return index, None, chunk_warnings
+                return index, func_resp["result"], chunk_warnings
+
+        results = await asyncio.gather(
+            *[_run_chunk(i, c) for i, c in enumerate(chunks, start=1)]
+        )
+        failed_blocks = 0
+        for _index, chunk_result, chunk_warnings in sorted(results, key=lambda r: r[0]):
+            warnings.extend(chunk_warnings)
+            if chunk_result is None:
+                failed_blocks += 1
                 continue
-            chunk_result = func_resp["result"]
             merged["functional_cases"].extend(chunk_result.get("functional_cases") or [])
             merged["api_cases"].extend(chunk_result.get("api_cases") or [])
             if isinstance(chunk_result.get("requirement_analysis"), dict):

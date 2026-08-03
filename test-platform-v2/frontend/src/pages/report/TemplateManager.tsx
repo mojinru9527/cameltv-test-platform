@@ -50,6 +50,7 @@ export default function TemplateManager({ open, onOpenChange, templates, onChang
   const [editing, setEditing] = useState<ReportTemplate | null>(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState<ReportTemplate | null>(null)
+  const [sectionEnabled, setSectionEnabled] = useState<Record<string, boolean>>({})
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<TemplateFormData>({
     resolver: zodResolver(templateSchema),
     defaultValues: { name: '', description: '', is_default: false },
@@ -58,13 +59,20 @@ export default function TemplateManager({ open, onOpenChange, templates, onChang
   function openEdit(t: ReportTemplate) {
     setEditing(t)
     reset({ name: t.name, description: t.description ?? '', is_default: t.is_default })
+    setSectionEnabled(
+      Object.fromEntries((t.sections ?? []).map((s) => [s.key, Boolean(s.enabled)])),
+    )
   }
 
   async function onSubmit(data: TemplateFormData) {
     setSaving(true)
     try {
       if (editing) {
-        await updateTemplate(editing.id, data)
+        const sections = (editing.sections ?? []).map((s) => ({
+          ...s,
+          enabled: sectionEnabled[s.key] ?? s.enabled,
+        }))
+        await updateTemplate(editing.id, { ...data, sections })
         toast.success('模板已更新')
       } else {
         await createTemplate(data)
@@ -92,6 +100,16 @@ export default function TemplateManager({ open, onOpenChange, templates, onChang
     }
   }
 
+  async function onSetDefault(t: ReportTemplate) {
+    try {
+      await updateTemplate(t.id, { is_default: true })
+      toast.success(`「${t.name}」已设为默认`)
+      onChanged()
+    } catch (e: any) {
+      toast.error(e?.message || '设置失败')
+    }
+  }
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -116,6 +134,11 @@ export default function TemplateManager({ open, onOpenChange, templates, onChang
                     {t.description || '（无描述）'} · {t.sections?.length ?? 0} 个章节
                   </p>
                 </div>
+                {!t.is_default && (
+                  <Button variant="ghost" size="sm" onClick={() => onSetDefault(t)}>
+                    设为默认
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={() => openEdit(t)}>
                   <Edit className="size-3.5" data-icon="inline-start" />
                   编辑
@@ -141,6 +164,22 @@ export default function TemplateManager({ open, onOpenChange, templates, onChang
                 />
                 设为默认模板
               </label>
+              {editing && (editing.sections?.length ?? 0) > 0 && (
+                <div className="space-y-1 rounded border p-2">
+                  <p className="text-xs text-muted-foreground">章节启用</p>
+                  {editing.sections.map((s) => (
+                    <label key={s.key} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={sectionEnabled[s.key] ?? Boolean(s.enabled)}
+                        onCheckedChange={(v) =>
+                          setSectionEnabled((prev) => ({ ...prev, [s.key]: Boolean(v) }))
+                        }
+                      />
+                      {s.label}
+                    </label>
+                  ))}
+                </div>
+              )}
               <DialogFooter>
                 {editing && (
                   <Button type="button" variant="ghost" onClick={() => { setEditing(null); reset({ name: '', description: '', is_default: false }) }}>
