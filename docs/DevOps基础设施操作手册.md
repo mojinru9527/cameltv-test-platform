@@ -52,7 +52,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=<独立强随机值>
 TESTER_USERNAME=tester
 TESTER_PASSWORD=<独立强随机值>
-ALLOWED_ORIGINS=https://cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app
+ALLOWED_ORIGINS=https://cameltv-test-platform1.vercel.app
 COOKIE_SECURE=true
 ```
 

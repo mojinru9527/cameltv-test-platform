@@ -44,7 +44,7 @@ tags: ["production", "architecture", "cloudflare", "vercel", "supabase", "batch-
 - **配置**: `frontend/vercel.json`
 - **框架**: Vite 7
 - **Node**: 22.x
-- **部署域名**: `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app` ✅
+- **部署域名**: `cameltv-test-platform1.vercel.app` ✅
 - **文档**: `frontend/vercel.json`
 
 ### Supabase — PostgreSQL Database
