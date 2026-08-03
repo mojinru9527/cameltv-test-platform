@@ -52,9 +52,17 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C67-3 | AI 验收批次启动时实测蓝湖 Cookie 有效期（lanhu-mcp 登录态），失效则重新获取 | P2 | 2026-08-02 |
 
 ### batch-18 — Wiki Diff 孤儿（batch-30 归位）
+
+### batch-68 — AI 验收全链路（Batch 68 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C68-1 | 补齐 J15 外部只读页面与 J16 媒体样本授权后执行对应正负面验收；无授权保持 DEFERRED | P1 | 2026-08-03 |
+| C68-2 | `TestCaseUpdate` 增加 `source_doc_id` 或等价关联端点，并用 API 重新建立需求-用例关联（替换本批 DB 种子方式） | P2 | 2026-08-03 |
+| C68-3 | 评估 AI 用例生成的分批/分模块策略，解决大文档输出截断（正向链路） | P2 | 2026-08-03 |
+| C68-4 | 正式域名发布决策登记到交付清单（本批演练已 200；域名启用/自定义域名决策由用户确认） | P1 | 2026-08-03 |
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
@@ -254,6 +262,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|---------|------|
 | C67-1 | 用户提供有效 DeepSeek API Key 并写入 `test-platform-v2/backend/.env`（同步 deploy/.env），实测 `GET {AI_API_BASE_URL}/models` HTTP 200 | Batch 67 换新 Key 实测 200（deepseek-v4-flash / deepseek-v4-pro），清单 2.1 ✅ | 2026-08-02 |
 | C67-2 | 用户提供后端托管公网 URL（Railway `*.up.railway.app`）或自建 Docker 服务器地址+端口，登记 6.1 后回填 `vercel.json` 反代目标，关闭 C58-06 | Railway `https://test-platform.up.railway.app` 实测 health 200（版本 2.3.0 与 main 一致）；清单 6.1 ✅；`vercel.json` 反代已写死（#100） | 2026-08-03 |
+| C67-3 | AI 验收批次启动时实测蓝湖 Cookie 有效期（lanhu-mcp 登录态），失效则重新获取 | Batch 68 Slice 1 实测：lanhu-mcp Cookie 调 `GET /api/project/multi_info` → HTTP 200、业务码 00000（账号已脱敏），有效 | 2026-08-03 |
 
 ### batch-58 — 生产云注册（C58 部分条件关闭）
 
@@ -273,9 +282,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 40 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 39 (含 9 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 50
+- **Closed**: 51
 - **Total**: 90
 
 ## 维护约定
