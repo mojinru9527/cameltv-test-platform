@@ -52,7 +52,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C67-2 | 用户提供后端托管公网 URL（Railway `*.up.railway.app`）或自建 Docker 服务器地址+端口，登记 6.1 后回填 `vercel.json` 反代目标，关闭 C58-06 | P0 | 2026-08-02 |
 | C67-3 | AI 验收批次启动时实测蓝湖 Cookie 有效期（lanhu-mcp 登录态），失效则重新获取 | P2 | 2026-08-02 |
 
 ### batch-18 — Wiki Diff 孤儿（batch-30 归位）
@@ -166,11 +165,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 | 状态 |
 |----|------|--------|---------|------|
 | C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | OPEN — 直接使用 Vercel 受保护地址不等于完成原 Cloudflare 条件 |
-| C58-02 | Vercel 注册 + 导入仓库 + 前端部署到 `cameltv-test-platform1-aslyb72oq-test11-c8f1.vercel.app` | P1 | 2026-07-30 | PARTIAL — 2026-07-30 匿名 HEAD 返回 302 到 Vercel SSO，尚无公开前端 HTTP 200 证据 |
 | C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库连接可用 | P0 | 2026-07-30 | UNVERIFIED — clean checkout 无非秘密连接证据，不能仅凭项目 ref 关闭 |
 | C58-04 | `production.env` 中 0 个 `<...>` 占位符且运行所需值完整 | P0 | 2026-07-30 | UNVERIFIED — 文件受 Git 忽略且 Batch 59 clean worktree 中不存在，无法复现此前声明 |
 | C58-05 | 验收文档 §2.5 和 §5.6-5.8 注册信息回填完毕并与可访问状态一致 | P1 | 2026-07-30 | PARTIAL — 文档已回填，但 C58-01～04 的运行证据尚不成立 |
-| C58-06 | 确定后端托管方案并配置 `/api` 反代目标 | P2 | 2026-07-30 | OPEN — `vercel.json` 仍指向 `backend.cameltv-platform.example.com` 占位域名 |
 
 ---
 
@@ -256,6 +253,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
 | C67-1 | 用户提供有效 DeepSeek API Key 并写入 `test-platform-v2/backend/.env`（同步 deploy/.env），实测 `GET {AI_API_BASE_URL}/models` HTTP 200 | Batch 67 换新 Key 实测 200（deepseek-v4-flash / deepseek-v4-pro），清单 2.1 ✅ | 2026-08-02 |
+| C67-2 | 用户提供后端托管公网 URL（Railway `*.up.railway.app`）或自建 Docker 服务器地址+端口，登记 6.1 后回填 `vercel.json` 反代目标，关闭 C58-06 | Railway `https://test-platform.up.railway.app` 实测 health 200（版本 2.3.0 与 main 一致）；清单 6.1 ✅；`vercel.json` 反代已写死（#100） | 2026-08-03 |
+
+### batch-58 — 生产云注册（C58 部分条件关闭）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C58-02 | Vercel 注册 + 导入仓库 + 前端部署到 `cameltv-test-platform1.vercel.app` | 2026-08-03 公开访问实测 200（登录页 `/login` 与 `/api/v1/open/health` 反代均 200） | 2026-08-03 |
+| C58-06 | 确定后端托管方案并配置 `/api` 反代目标 | Railway `https://test-platform.up.railway.app` health 200（版本 2.3.0）；`vercel.json` 反代已写死（#100） | 2026-08-03 |
 
 ### Batch 63 — 遗留条件对账关闭
 
@@ -268,9 +273,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 43 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 40 (含 9 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 47
+- **Closed**: 50
 - **Total**: 90
 
 ## 维护约定

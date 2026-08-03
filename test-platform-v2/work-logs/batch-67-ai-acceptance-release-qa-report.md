@@ -1,12 +1,12 @@
 # Batch 67 — QA 报告（AI 验收与正式域名发布前置条件收口）
 
-> **QA (🔍)** | Date: 2026-08-02 | 修订：2026-08-03 | Verdict: PASS（2.1 已解锁；B67-Q3 已修复；6.1 待用户部署）
+> **QA (🔍)** | Date: 2026-08-02 | 修订：2026-08-03 | Verdict: PASS（2.1 已解锁；B67-Q3/Q4 已修复；6.1 部署登记 ✅，C58-02/C58-06 关闭）
 
 ## 测试总览
 
 | 条件数 | 通过 | 失败 | 阻塞 |
 |:------:|:----:|:----:|:----:|
-| 10 | 9 | 0 | 1 |
+| 10 | 10 | 0 | 0 |
 
 ## 变更范围与 CI 分类
 
@@ -24,9 +24,11 @@
 | G5 | 占位符扫描 | backend/.env 值扫描 `<`/YOUR/CHANGE_ME | 0 命中 |
 | G6 | 蓝湖凭据存在性 | LANHU_USERNAME/PASSWORD/COOKIE 键非空 | PASS |
 | G7 | OCR 模式确认 | LANHU_OCR_PROVIDER=local | PASS（无需云凭据） |
-| G8 | 清单一致性 | 2.x/6.1 状态与实测交叉核对 | PASS（2.1 ⏳、2.2/2.3 ✅、6.1 ⏳ 与事实一致） |
+| G8 | 清单一致性 | 2.x/6.1 状态与实测交叉核对 | PASS（2.1/2.2/2.3 ✅、6.1 ✅ 与事实一致） |
 | G9 | Docker 构建验证 | `docker build --target builder`（Linux 容器复现 Railway） | PASS：pip 依赖阶段 0 错误（B67-Q3 修复后） |
 | G10 | Railway PORT 监听验证 | `docker run -e PORT=8099` → uvicorn 监听 8099，health 200 | PASS（B67-Q4 修复后；原实现写死 8000 导致 Railway 健康检查端口不匹配） |
+| G11 | Railway 线上 health | `GET https://test-platform.up.railway.app/api/v1/open/health` | PASS：HTTP 200，`{code:0, data:{status:ok, version:2.3.0}}`（与 main 一致） |
+| G12 | Vercel 公开访问 + 反代 | `GET https://cameltv-test-platform1.vercel.app/login` 与 `/api/v1/open/health` | PASS：均 HTTP 200（登录页 title=CamelTv 测试平台；`/api` 反代到 Railway 返回 2.3.0） |
 
 ## 逐条件验证
 
@@ -55,9 +57,9 @@
 ### C4: 6.1 DevOps 服务器
 | 检查项 | 结果 | 说明 |
 |--------|:----:|------|
-| 服务器确认 | ❌ | 未提供 Railway URL / 服务器地址 |
+| 服务器确认 | ✅ | Railway 公网 URL `https://test-platform.up.railway.app`（2026-08-03 实测 health 200，版本 2.3.0 与 main 一致） |
 | 阻塞根因 | ✅ 已修复 | 构建依赖 B67-Q3（pywin32/SecretStorage/uvloop）已修复并本地验证；待合并主干后 Railway 自动部署（手册 §1） |
-| 结论 | ⏳ | 登记为待提供；C58-06 维持 OPEN |
+| 结论 | ✅ | 6.1 登记 ✅；`vercel.json` 反代已写死（#100）；C58-06 关闭 |
 
 ## 缺陷列表
 
@@ -71,5 +73,5 @@
 ## 发布建议
 
 状态: **PASS**（本批交付物范围）　必修复: 0　建议修复: 1（B67-Q2，转 C67-3）
-2.1 已解锁（实测 200）；B67-Q3 构建阻塞已修复并本地验证；6.1 仍为外部待办（合并主干后 Railway 自动部署，
-用户回传 URL 后关闭），不构成本批交付缺陷。
+2.1 已解锁（实测 200）；B67-Q3/Q4 构建与健康检查修复已上线验证；6.1 部署登记 ✅（Railway health 200）、
+Vercel 公开访问 200、C58-02/C58-06 已关闭；剩余 B67-Q2 蓝湖 Cookie 有效期转 C67-3（AI 验收批次）。
