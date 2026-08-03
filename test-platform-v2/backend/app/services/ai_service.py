@@ -734,6 +734,54 @@ def _merge_split_results(func_result: dict | None, api_result: dict | None,
     return merged
 
 
+# C68-3: 分批生成常量与工具（batch-69）
+_CHUNK_FP_LIMIT = 25
+
+
+def _split_extraction_chunks(
+    extraction: dict | None, limit: int = _CHUNK_FP_LIMIT
+) -> list[list[dict]]:
+    """按功能点数量把 extraction.modules 拆成多块，保证每块 FP 数 <= limit。"""
+    modules = (extraction or {}).get("modules") or []
+    chunks: list[list[dict]] = []
+    current: list[dict] = []
+    count = 0
+    for mod in modules:
+        fps = mod.get("function_points") or []
+        if len(fps) > limit:
+            if current:
+                chunks.append(current)
+                current, count = [], 0
+            for i in range(0, len(fps), limit):
+                chunks.append([{**mod, "function_points": fps[i:i + limit]}])
+            continue
+        if count + len(fps) > limit and current:
+            chunks.append(current)
+            current, count = [], 0
+        current.append(mod)
+        count += len(fps)
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def _dedupe_and_renumber(cases: list[dict], start: int = 1) -> list[dict]:
+    """按 title 去重并重新编号，保证 id 唯一。"""
+    seen: set[str] = set()
+    out: list[dict] = []
+    idx = start
+    for c in cases:
+        key = (c.get("title") or "").strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        c = dict(c)
+        c["id"] = f"TC-{idx:03d}"
+        idx += 1
+        out.append(c)
+    return out
+
+
 def _parse_ai_response(raw: str) -> dict:
     """Extract JSON from AI response, handling common formatting issues."""
     text = raw.strip()
@@ -1006,39 +1054,71 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
                     "AI 将基于文字描述生成测试用例。"
                 )
 
-    if extraction and extraction.get("modules"):
-        user_message = _build_user_message_with_extraction(
-            effective_content, effective_file_type, source_ref, extraction
-        )
-    else:
-        user_message = _build_user_message(effective_content, effective_file_type, source_ref,
-                                           page_filtered=page_filtered, folder_name=folder_name,
-                                           changelog=changelog_info, client_scope=client_scope)
-
     functional_system = _build_system_prompt("functional")
-
-    func_resp = await _call_ai_api(functional_system, user_message, "functional")
-
     warnings: list[str] = []
-    if func_resp["truncated"]:
-        warnings.append("功能用例生成被截断，结果可能不完整")
+    chunks = _split_extraction_chunks(extraction) if extraction and extraction.get("modules") else []
 
-    if func_resp["result"] is None:
-        import tempfile
-        import time
-        raw = func_resp["raw"]
-        dump_path = Path(tempfile.gettempdir()) / f"ai_response_failed_{int(time.time())}.json"
-        if raw:
-            dump_path.write_text(raw, encoding="utf-8")
-        error_detail = func_resp.get("error", "未知错误")
-        raise ValueError(
-            f"AI 返回的 JSON 格式异常，无法解析。\n"
-            f"错误: {error_detail}\n"
-            f"原始响应已保存至: {dump_path}\n"
-            f"请检查该文件中的 JSON 语法错误。"
-        )
-
-    result = func_resp["result"]
+    if chunks and len(chunks) > 1:
+        # C68-3: 大文档分批生成并合并，块级失败不拖垮整体
+        merged: dict = {
+            "requirement_analysis": {"extracted_requirements": [], "overall_assessment": ""},
+            "functional_cases": [],
+            "api_cases": [],
+        }
+        failed_blocks = 0
+        for i, chunk in enumerate(chunks, start=1):
+            chunk_user = _build_user_message_with_extraction(
+                effective_content, effective_file_type, source_ref, {"modules": chunk}
+            )
+            label = f"functional-chunk-{i}"
+            func_resp = await _call_ai_api(functional_system, chunk_user, label)
+            if func_resp["truncated"]:
+                warnings.append(f"{label} 生成被截断，已重试")
+                func_resp = await _call_ai_api(functional_system, chunk_user, f"{label}-retry")
+            if func_resp["result"] is None:
+                failed_blocks += 1
+                warnings.append(
+                    f"{label} 生成失败：{func_resp.get('error', '未知错误')}（该块未产出用例）"
+                )
+                continue
+            chunk_result = func_resp["result"]
+            merged["functional_cases"].extend(chunk_result.get("functional_cases") or [])
+            merged["api_cases"].extend(chunk_result.get("api_cases") or [])
+            if isinstance(chunk_result.get("requirement_analysis"), dict):
+                merged["requirement_analysis"] = chunk_result["requirement_analysis"]
+        if failed_blocks == len(chunks):
+            raise ValueError("AI 分批生成全部失败，请检查 AI 服务后重试")
+        merged["functional_cases"] = _dedupe_and_renumber(merged["functional_cases"])
+        result = merged
+    else:
+        if chunks:
+            user_message = _build_user_message_with_extraction(
+                effective_content, effective_file_type, source_ref, extraction
+            )
+        else:
+            user_message = _build_user_message(
+                effective_content, effective_file_type, source_ref,
+                page_filtered=page_filtered, folder_name=folder_name,
+                changelog=changelog_info, client_scope=client_scope,
+            )
+        func_resp = await _call_ai_api(functional_system, user_message, "functional")
+        if func_resp["truncated"]:
+            warnings.append("功能用例生成被截断，结果可能不完整")
+        if func_resp["result"] is None:
+            import tempfile
+            import time
+            raw = func_resp["raw"]
+            dump_path = Path(tempfile.gettempdir()) / f"ai_response_failed_{int(time.time())}.json"
+            if raw:
+                dump_path.write_text(raw, encoding="utf-8")
+            error_detail = func_resp.get("error", "未知错误")
+            raise ValueError(
+                f"AI 返回的 JSON 格式异常，无法解析。\n"
+                f"错误: {error_detail}\n"
+                f"原始响应已保存至: {dump_path}\n"
+                f"请检查该文件中的 JSON 语法错误。"
+            )
+        result = func_resp["result"]
     if "api_cases" not in result:
         result["api_cases"] = []
 

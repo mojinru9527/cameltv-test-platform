@@ -272,6 +272,12 @@ def update_test_case(
     current: CurrentUser = Depends(require_permission("testcase:update")),
     db: Session = Depends(get_db),
 ):
+    # C68-2：source_doc_id 必须指向当前项目内存在的需求文档
+    link_error = test_case_service.validate_source_doc(
+        db, body.source_doc_id, current.project_id or 0
+    )
+    if link_error:
+        return R(code=400, msg=link_error)
     row = test_case_service.update_case(db, case_id, body.model_dump(exclude_none=True))
     if not row:
         return R(code=404, msg="用例不存在")
