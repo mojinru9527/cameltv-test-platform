@@ -10,6 +10,8 @@ import time
 from collections import defaultdict
 from threading import Lock
 
+from app.core.config import settings
+
 
 class RateLimiter:
     """Sliding-window rate limiter with per-key counters."""
@@ -62,5 +64,6 @@ class RateLimiter:
 # Singleton for open API endpoints
 open_api_limiter = RateLimiter(max_requests=60, window_seconds=60)
 
-# Login rate limiter: max 10 attempts per IP per 15 min
-login_limiter = RateLimiter(max_requests=10, window_seconds=900)
+# Login rate limiter（C70-3）：参数由 settings 按环境注入
+# 生产默认 10 次/15 分钟；development/test 自动放宽至 >=100 次/窗口
+login_limiter = RateLimiter(*settings.effective_login_rate_limit)
