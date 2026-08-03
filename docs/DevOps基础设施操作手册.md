@@ -71,7 +71,7 @@ COOKIE_SECURE=true
 |---|---|---|
 | build failed（1 分钟内） | 子模块缺失（已修）或 lanhu-mcp 私有 | 重试部署；若 clone 鉴权失败，将 lanhu-mcp 仓库设为 public，或配置 PAT 后把 URL 改为 `https://<token>@github.com/...`（PAT 只放构建 secret） |
 | 启动即退出 | `DATABASE_URL`/`SECRET_KEY` 缺失 | 按 §1.3 补齐 Variables 后 redeploy |
-| `/api` 500 | Vercel 反代未指向本服务 | 部署成功后把 `https://<service>.up.railway.app` 发我，并在 Vercel Dashboard 配置 `BACKEND_URL` 环境变量 |
+| `/api` 502/500 | Vercel 反代未指向本服务 | 后端地址已写死在 `test-platform-v2/frontend/vercel.json` 的 `/api` rewrite 中；Railway 服务域名变更时同步更新该文件并重新部署 |
 
 ### 1.5 验证
 
@@ -152,7 +152,7 @@ docker run -d --name cameltv-pg16 \
 
 ## 7. 完成标准
 
-- [ ] Railway 服务部署成功且 health 200 → C58-06 关闭，`BACKEND_URL` 配置到 Vercel
+- [x] Railway 服务部署成功且 health 200 → C58-06 关闭；`/api` 反代目标已写死在 `vercel.json`（`https://test-platform.up.railway.app`）
 - [ ] ghcr.io workflow 推送成功 → G2 关闭
 - [ ] 自托管 runner 上线 → G3 关闭
 - [ ] PG16 备份验证一次恢复 → G4 关闭
