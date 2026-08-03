@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import { createReport, deleteReport, exportReportUrl, fetchReport, fetchReports, fetchTrends, type TrendsData } from '@/api/report'
 import { fetchTemplates, type ReportTemplate } from '@/api/reportTemplate'
+import TemplateManager from './TemplateManager'
 import { fetchPlans } from '@/api/testplan'
 import { Input } from '@/ui'
 import { Textarea } from '@/components/ui/textarea'
@@ -143,6 +144,7 @@ export default function ReportPage() {
   const [creating, setCreating] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
   const [templates, setTemplates] = useState<ReportTemplate[]>([])
+  const [templateManagerOpen, setTemplateManagerOpen] = useState(false)
   const hasPerm = useAuthStore((state) => state.hasPerm)
   const canCreate = hasPerm('report:create')
   const canDelete = hasPerm('report:delete')
@@ -502,21 +504,26 @@ export default function ReportPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">报告模板 <span className="text-muted-foreground font-normal">(可选)</span></label>
-              <Select
-                value={watch('template_id') ? String(watch('template_id')) : undefined}
-                onValueChange={(v) => setValue('template_id', Number(v), { shouldValidate: true })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="选择模板（留空使用默认）" />
-                </SelectTrigger>
-                <SelectContent>
-                  {templates.map((t) => (
-                    <SelectItem key={t.id} value={String(t.id)}>
-                      {t.name} {t.is_default ? '(默认)' : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select
+                  value={watch('template_id') ? String(watch('template_id')) : undefined}
+                  onValueChange={(v) => setValue('template_id', Number(v), { shouldValidate: true })}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="选择模板（留空使用默认）" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        {t.name} {t.is_default ? '(默认)' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="secondary" onClick={() => { loadTemplates(); setTemplateManagerOpen(true) }}>
+                  管理
+                </Button>
+              </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">备注</label>
@@ -707,6 +714,12 @@ export default function ReportPage() {
         </SheetContent>
       </Sheet>
     </div>
+      <TemplateManager
+        open={templateManagerOpen}
+        onOpenChange={setTemplateManagerOpen}
+        templates={templates}
+        onChanged={loadTemplates}
+      />
     </PageShell>
   )
 }

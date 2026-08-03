@@ -10,6 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { fetchCoverage, type CoverageData } from '@/api/trace'
 import { FileCheck, Link2, Play, ShieldCheck, Bug, Percent, FileText, Calendar, BarChart3 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
+import TraceDrilldown from './Drilldown'
 
 export default function TracePage() {
   useDocumentTitle('链路追踪')
@@ -136,6 +137,9 @@ export default function TracePage() {
                   </div>
                 )
               })()}
+
+              {/* ── 追溯下钻（C63-1）── */}
+              <TraceDrilldown />
 
               {/* ── 按用例类型分布 ── */}
               <Card className="ui-surface">

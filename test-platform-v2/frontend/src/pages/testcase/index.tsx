@@ -36,9 +36,9 @@ import DomainTree from '@/components/DomainTree'
 import Pagination from '@/components/Pagination'
 import { AsyncState } from '@/components/state'
 
-import { Search, RotateCcw, Plus, Edit, Trash2, History, FileCheck, CheckCircle2, XCircle, Send } from '@/lib/icons'
+import { Search, RotateCcw, Plus, Edit, Trash2, History, FileCheck, CheckCircle2, XCircle, Send, Upload, Download } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase } from '@/api/testcase'
+import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase, importExcel, importXmind, downloadExport } from '@/api/testcase'
 import { countCasesByType, formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -86,6 +86,8 @@ export default function TestCasePage() {
   const [batchPriority, setBatchPriority] = useState('')
   const [batchDeleteDialog, setBatchDeleteDialog] = useState(false)
   const batchDeleteInFlight = useRef(false)
+  const importInputRef = useRef<HTMLInputElement>(null)
+  const [importing, setImporting] = useState(false)
 
   // delete dialog
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
@@ -129,6 +131,41 @@ export default function TestCasePage() {
   const items = useMemo(() => data?.items || [], [data?.items])
   // Sort newest first (created_at descending, fallback to id descending)
   const sortedItems = useMemo(() => sortCasesNewestFirst(items), [items])
+
+  async function handleImportFile(file: File | undefined) {
+    if (!file) return
+    setImporting(true)
+    try {
+      const isXmind = file.name.toLowerCase().endsWith('.xmind')
+      const res: any = isXmind ? await importXmind(file) : await importExcel(file)
+      toast.success(`导入完成：${res?.imported ?? 0}/${res?.total ?? 0} 条`)
+      setPage(1)
+      refetch()
+    } catch (e: any) {
+      toast.error(e?.message || '导入失败')
+    } finally {
+      setImporting(false)
+      if (importInputRef.current) importInputRef.current.value = ''
+    }
+  }
+
+  async function handleExport(format: 'excel' | 'xmind') {
+    try {
+      const blob = await downloadExport(format, {
+        ...(selDomain ? { domain: selDomain } : {}),
+        ...(selModule ? { module: selModule } : {}),
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `test-cases.${format === 'excel' ? 'xlsx' : 'xmind'}`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('导出成功')
+    } catch (e: any) {
+      toast.error(e?.message || '导出失败')
+    }
+  }
   const totalPages = data ? Math.ceil(data.total / data.page_size) : 1
 
   // ── Selection helpers ──
@@ -399,6 +436,30 @@ export default function TestCasePage() {
               重置
             </Button>
             <div className="hidden flex-1 sm:block" />
+            {canCreate && (
+              <>
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".xlsx,.xmind"
+                  className="hidden"
+                  aria-label="导入用例文件"
+                  onChange={(e) => handleImportFile(e.target.files?.[0])}
+                />
+                <Button size="sm" variant="secondary" disabled={importing} onClick={() => importInputRef.current?.click()}>
+                  <Upload className="size-3.5" data-icon="inline-start" />
+                  {importing ? '导入中...' : '导入'}
+                </Button>
+              </>
+            )}
+            <Button size="sm" variant="ghost" onClick={() => handleExport('excel')}>
+              <Download className="size-3.5" data-icon="inline-start" />
+              导出 Excel
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => handleExport('xmind')}>
+              <Download className="size-3.5" data-icon="inline-start" />
+              导出 XMind
+            </Button>
             {canCreate && (
               <Button size="sm" className="w-full sm:w-auto" onClick={() => openEdit()}>
                 <Plus className="size-3.5" data-icon="inline-start" />
