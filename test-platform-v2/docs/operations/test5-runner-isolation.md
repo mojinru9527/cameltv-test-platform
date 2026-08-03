@@ -9,7 +9,6 @@ tags: ["operations", "test5", "vpn", "network-isolation", "wsl", "runner", "batc
 related:
   - "../../../docs/adr/0017-test5-runner-network-isolation.md"
   - "运维发布平台-架构与交付要求.md"
-  - "生产测试平台固定配置与双VPN切换验收手册.md"
 ---
 
 # Test5 验收执行器网络隔离方案（WSL/容器）

@@ -9,7 +9,6 @@ tags: ["batch-57", "acceptance", "external-input", "credentials"]
 related:
   - "../work-logs/batch-56-production-acceptance-issue-register.md"
   - "../work-logs/batch-57-environment-targets-and-batch56-acceptance.md"
-  - "生产测试平台固定配置与双VPN切换验收手册.md"
 ---
 
 # Batch 57 生产验收输入补充操作单
