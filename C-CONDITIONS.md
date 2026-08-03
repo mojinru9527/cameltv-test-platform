@@ -195,8 +195,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 | 状态 |
 |----|------|--------|---------|------|
 | C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | CLOSED — 2026-08-04 决策：Vercel 自带 HTTPS/CDN 已满足，暂不启用 Cloudflare（豁免登记） |
-| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库连接可用 | P0 | 2026-07-30 | UNVERIFIED — clean checkout 无非秘密连接证据，不能仅凭项目 ref 关闭 |
-| C58-04 | `production.env` 中 0 个 `<...>` 占位符且运行所需值完整 | P0 | 2026-07-30 | UNVERIFIED — 文件受 Git 忽略且 Batch 59 clean worktree 中不存在，无法复现此前声明 |
+| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库连接可用 | P0 | 2026-07-30 | CLOSED — 2026-08-04 实测 `SELECT version()` → PostgreSQL 17.6（pooler 连接 1.4s） |
+| C58-04 | `production.env` 中 0 个 `<...>` 占位符且运行所需值完整 | P0 | 2026-07-30 | CLOSED — 2026-08-04 production.env 完整（batch-58 已填），域更新，占位符 0（仅注释） |
 | C58-05 | 验收文档 §2.5 和 §5.6-5.8 注册信息回填完毕并与可访问状态一致 | P1 | 2026-07-30 | PARTIAL — 文档已回填，但 C58-01～04 的运行证据尚不成立 |
 
 ---
@@ -315,6 +315,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C71-1 | AI 分批并发上线后以真实大文档实测耗时下降百分比并登记 | batch-72：147 FP 并发 2 → 354.4s（串行 682s，-48%），325 条用例 | 2026-08-04 |
 | C71-2 | 报告模板章节级编辑 UI 已支持启用勾选；模板字段级（标题/说明）编辑可后续增强 | batch-72：updateTemplate 改名/描述持久化 200 + 回读 | 2026-08-04 |
 | C70-1 | Playground 前端入口需 C22-C2/C3 runner 链路（真实编译+执行）验证通过后开放，否则维持 API-only | batch-72：评估结论维持 API-only（compile 骨架可用、Gherkin→步骤 TODO、execute 无实证）；解锁条件登记 C72-2 | 2026-08-04 |
+| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库连接可用 | batch-73：连接串定位（batch-58 production.env）+ 实测 PG 17.6 | 2026-08-04 |
+| C58-04 | `production.env` 中 0 个 `<...>` 占位符且运行所需值完整 | batch-73：production.env 完整 + 域更新 + 占位符 0 | 2026-08-04 |
 
 ### batch-73 — 交付决策与明细文档
 
@@ -341,9 +343,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 42 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 40 (含 9 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 64
+- **Closed**: 66
 - **Total**: 106
 
 ## 维护约定
