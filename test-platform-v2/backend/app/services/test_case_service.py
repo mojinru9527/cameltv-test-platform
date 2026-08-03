@@ -70,6 +70,18 @@ def _sanitize_case_data(data: dict) -> dict:
     return data
 
 
+def validate_source_doc(db, source_doc_id: int | None, project_id: int) -> str | None:
+    """C68-2：校验用例来源需求文档属于当前项目。返回错误信息或 None。"""
+    if source_doc_id is None:
+        return None
+    from app.services import requirement_service
+
+    doc = requirement_service.get_requirement(db, source_doc_id, project_id=project_id)
+    if not doc:
+        return "来源需求文档不存在或无权关联"
+    return None
+
+
 # ── CRUD ──────────────────────────────────────────────
 
 def list_cases(

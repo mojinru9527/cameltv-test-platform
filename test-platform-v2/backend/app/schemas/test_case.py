@@ -97,6 +97,7 @@ class TestCaseUpdate(BaseModel):
     api_body: Optional[str] = None
     api_assertions: Optional[str] = None
     source_req_id: Optional[str] = None
+    source_doc_id: Optional[int] = None
 
 
 # ── 查询参数 ──────────────────────────────────────────
