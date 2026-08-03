@@ -5,7 +5,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm ci",
-  "nodeVersion": "22.x",
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -24,9 +23,6 @@
       ]
     }
   ],
-  "env": {
-    "VITE_PROXY_TARGET": "@backend-url"
-  },
   "git": {
     "deploymentEnabled": {
       "main": true
