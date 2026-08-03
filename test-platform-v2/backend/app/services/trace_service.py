@@ -210,7 +210,7 @@ def get_requirement_coverage(db: Session, doc_id: int, project_id: int) -> dict 
             with_defects += 1
 
         case_details.append({
-            "case_id": c.case_id, "title": c.title, "domain": c.domain,
+            "id": c.id, "case_id": c.case_id, "title": c.title, "domain": c.domain,
             "module": c.module, "priority": c.priority,
             "in_plan": in_plan, "executed": is_executed,
             "passed": is_passed, "defect_count": defect_count,

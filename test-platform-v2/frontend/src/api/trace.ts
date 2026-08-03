@@ -50,3 +50,23 @@ export async function fetchCoverage(): Promise<CoverageData> {
 export async function fetchCaseTrace(caseId: number): Promise<CaseTrace> {
   return client.get(`/trace/case/${caseId}`) as Promise<CaseTrace>
 }
+
+export interface RequirementTraceSummary {
+  document_id: number
+  document_title: string
+  document_status: string
+  total_cases: number
+  imported_count: number
+  cases_in_plans: number
+  cases_executed: number
+  cases_passed: number
+  cases_with_defects: number
+  coverage_rate: number
+  execution_rate: number
+  pass_rate: number
+  cases: Array<Record<string, any>>
+}
+
+export async function fetchRequirementTrace(docId: number): Promise<RequirementTraceSummary> {
+  return client.get(`/trace/requirement/${docId}`) as Promise<RequirementTraceSummary>
+}
