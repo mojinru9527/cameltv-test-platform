@@ -1,10 +1,11 @@
-import { FileText, Users, Shield } from '@/lib/icons'
+import { FileText, Users, Shield, KeyRound } from '@/lib/icons'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useAuthStore } from '@/stores/auth'
 import PageHeader from '@/components/PageHeader'
 import AuditTab from './AuditTab'
 import RolesTab from './RolesTab'
 import UsersTab from './UsersTab'
+import TokensTab from './TokensTab'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export default function SystemPage() {
@@ -14,8 +15,9 @@ export default function SystemPage() {
   const showUsers = hasPerm('system:user:list')
   const showRoles = hasPerm('system:role:list')
   const showAudit = hasPerm('system:audit:list')
+  const showTokens = hasPerm('token:list')
 
-  const defaultTab = showUsers ? 'users' : showRoles ? 'roles' : showAudit ? 'audit' : 'users'
+  const defaultTab = showUsers ? 'users' : showRoles ? 'roles' : showAudit ? 'audit' : showTokens ? 'tokens' : 'users'
 
   return (
     <div>
@@ -40,6 +42,12 @@ export default function SystemPage() {
               审计日志
             </TabsTrigger>
           )}
+          {showTokens && (
+            <TabsTrigger value="tokens">
+              <KeyRound className="size-4" />
+              API Token
+            </TabsTrigger>
+          )}
         </TabsList>
         {showUsers && (
           <TabsContent value="users">
@@ -54,6 +62,11 @@ export default function SystemPage() {
         {showAudit && (
           <TabsContent value="audit">
             <AuditTab />
+          </TabsContent>
+        )}
+        {showTokens && (
+          <TabsContent value="tokens">
+            <TokensTab />
           </TabsContent>
         )}
       </Tabs>
