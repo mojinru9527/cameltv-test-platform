@@ -104,6 +104,22 @@ export async function importXmind(file: File): Promise<{ imported: number; total
   })
 }
 
+/** 带鉴权下载导入模板/当前筛选用例（batch-70）。 */
+export async function downloadExport(
+  format: 'excel' | 'xmind',
+  params: Record<string, string> = {},
+): Promise<Blob> {
+  const { useAuthStore } = await import('@/stores/auth')
+  const { token, currentProjectId } = useAuthStore.getState()
+  const url = format === 'excel' ? exportExcelUrl(params) : exportXmindUrl(params)
+  const headers: Record<string, string> = {}
+  if (token) headers.Authorization = `Bearer ${token}`
+  if (currentProjectId) headers['X-Project-Id'] = String(currentProjectId)
+  const resp = await fetch(url, { credentials: 'include', headers })
+  if (!resp.ok) throw new Error('导出失败')
+  return resp.blob()
+}
+
 // ── Version history ──
 
 export async function fetchVersions(caseId: number): Promise<import('@/types').TestCaseVersion[]> {

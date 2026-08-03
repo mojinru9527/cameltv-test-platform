@@ -11,6 +11,9 @@ export {
   FolderTree,
   // Actions
   Plus,
+  KeyRound,
+  Copy,
+  Check,
   Edit,
   Pencil,
   Trash2,
