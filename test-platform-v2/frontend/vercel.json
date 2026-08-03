@@ -23,9 +23,6 @@
       ]
     }
   ],
-  "env": {
-    "VITE_PROXY_TARGET": "@backend-url"
-  },
   "git": {
     "deploymentEnabled": {
       "main": true
