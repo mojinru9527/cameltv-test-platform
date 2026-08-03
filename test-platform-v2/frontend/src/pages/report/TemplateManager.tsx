@@ -55,11 +55,6 @@ export default function TemplateManager({ open, onOpenChange, templates, onChang
     defaultValues: { name: '', description: '', is_default: false },
   })
 
-  function openCreate() {
-    setEditing(null)
-    reset({ name: '', description: '', is_default: false })
-  }
-
   function openEdit(t: ReportTemplate) {
     setEditing(t)
     reset({ name: t.name, description: t.description ?? '', is_default: t.is_default })
