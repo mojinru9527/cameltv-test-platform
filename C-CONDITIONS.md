@@ -194,7 +194,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 | 状态 |
 |----|------|--------|---------|------|
-| C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | OPEN — 直接使用 Vercel 受保护地址不等于完成原 Cloudflare 条件 |
+| C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | CLOSED — 2026-08-04 决策：Vercel 自带 HTTPS/CDN 已满足，暂不启用 Cloudflare（豁免登记） |
 | C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库连接可用 | P0 | 2026-07-30 | UNVERIFIED — clean checkout 无非秘密连接证据，不能仅凭项目 ref 关闭 |
 | C58-04 | `production.env` 中 0 个 `<...>` 占位符且运行所需值完整 | P0 | 2026-07-30 | UNVERIFIED — 文件受 Git 忽略且 Batch 59 clean worktree 中不存在，无法复现此前声明 |
 | C58-05 | 验收文档 §2.5 和 §5.6-5.8 注册信息回填完毕并与可访问状态一致 | P1 | 2026-07-30 | PARTIAL — 文档已回填，但 C58-01～04 的运行证据尚不成立 |
@@ -341,9 +341,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 43 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 42 (含 9 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 63
+- **Closed**: 64
 - **Total**: 106
 
 ## 维护约定
