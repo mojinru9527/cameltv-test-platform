@@ -18,6 +18,7 @@
 | J10 报告链路 | 3 | 0 | 创建/详情/导出 xlsx |
 | J03 RBAC 隔离 | 2 | 0 | 双项目/角色/跨项目 403 |
 | J19 横向一致性 | 2 | 0 | API/DB 计数一致、分页一致 |
+| J15 真实浏览器 UI | 1 | 0 | Chromium 打开本地登录页（title/输入框/截图） |
 | Slice 5~6（发布演练登记/QA 终稿/PR） | 0 | 0 | 执行中 |
 
 ## 可执行门禁（命令、退出码、结果）
@@ -97,6 +98,13 @@
 |--------|:----:|------|
 | 分页/总数 | ✅ | `GET /test-cases?page=1&page_size=10` → total=50、items=10，与 DB `COUNT(*)`=50 一致 |
 | 覆盖矩阵一致性 | ✅ | coverage 的 total/in_plans/executed/passed/defects 与计划 stats 与缺陷表一致 |
+
+### J15 — 真实浏览器 UI 主链（本平台页面）
+| 检查项 | 结果 | 说明 |
+|--------|:----:|------|
+| Playwright/Chromium | ✅ | headless Chromium 打开 `http://127.0.0.1:5205/login` → title=「登录 \| CamelTv 测试平台」，2 个输入框（账号/密码），networkidle 完成 |
+| 截图证据 | ✅ | `F:\CamelTv-worktrees\logs\batch-68\ui-login-smoke.png`（工作树外，不入库） |
+| 外部页面 | ⏳ DEFERRED | J15 外部只读页面授权未提供（C63-2），不伪证 |
 
 ### J08 — 真实用例导入（R1 资产）
 | 检查项 | 结果 | 说明 |
