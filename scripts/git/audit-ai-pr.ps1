@@ -116,7 +116,11 @@ if (-not $repository.delete_branch_on_merge) { throw "Repository must delete tas
 
 $checkResults = @()
 foreach ($name in $requiredChecks) {
-    $check = @($pr.statusCheckRollup | Where-Object name -eq $name | Select-Object -Last 1)
+    # statusCheckRollup 混含 CheckRun（有 name）与 StatusContext（如 Vercel，只有 context）。
+    # Set-StrictMode 下直接按 name 过滤会在 StatusContext 上抛属性不存在错误，先按属性存在性过滤。
+    $check = @($pr.statusCheckRollup | Where-Object {
+        $_.PSObject.Properties.Name -contains "name" -and $_.name -eq $name
+    } | Select-Object -Last 1)
     $status = if ($check.Count -eq 1) { [string]$check[0].status } else { "MISSING" }
     $conclusion = if ($check.Count -eq 1) { [string]$check[0].conclusion } else { "MISSING" }
     $checkResults += [pscustomobject]@{ Name = $name; Status = $status; Conclusion = $conclusion }
