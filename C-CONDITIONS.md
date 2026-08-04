@@ -43,7 +43,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C76-1 | 修复 scan-common-bugs 扫出的存量 HARD：`R.err` 7 处（补 `def err` 或改 raise）、seed.py 密码 print（改 logger 不输出明文）、高危 except-pass 逐处加日志或传播 | P1 | 2026-08-04 |
+| C76-1 | 修复 scan-common-bugs 扫出的存量 HARD：`R.err` 7 处（补 `def err` 或改 raise）、seed.py 密码 print（**复核结论：一次性显示契约，扫描降级 WARN 复核**）、高危 except-pass 逐处加日志或传播 | P1 | 2026-08-04 |
 | C76-2 | 后续批次提交前运行 `scan-common-bugs.ps1`，HARD>0 处理或注明豁免 | P2 | 2026-08-04 |
 
 ### batch-77 — 存量 P0 修复（Batch 77 Leader 条件）
@@ -377,7 +377,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
-| C76-1 | 修复 scan 扫出的存量 HARD（R.err/seed 密码/高危 except-pass） | Batch 77：`common.py` 补 `err()` + `test_r_schema.py` 3 条；seed 密码清零；6 处吞异常加日志（PR #112 待合入） | 2026-08-04 |
+| C76-1 | 修复 scan 扫出的存量 HARD（R.err/seed 密码/高危 except-pass） | Batch 77：`common.py` 补 `err()` + `test_r_schema.py` 3 条；seed 密码按一次性显示契约保留、扫描降级 WARN（首轮误删经 CI 抓出回退）；6 处吞异常加日志（PR #112 待合入） | 2026-08-04 |
 
 ### Batch 63 — 遗留条件对账关闭
 

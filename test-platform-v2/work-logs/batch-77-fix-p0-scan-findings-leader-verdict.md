@@ -14,7 +14,7 @@
 ## 关键决策（已批准）
 
 1. **补 `R.err()` 而非改造调用点**：最小变更修复 P0-01，7 处 `R.err(code=404,...)` 保持语义，前端 envelope 契约不变。
-2. **seed 密码彻底清零**：改为 logger 且不输出明文，覆盖 Batch 37 P0-02。
+2. **seed 密码契约复核（修正）**：`test_seed_credentials.py` 已强制"生成凭据一次性显示"（admin WARNING 日志 / tester stdout / 二次运行零输出），属已测试契约；首轮删除密码显示的方案被 CI 抓出并回退，scan 将 seed.py print 降级 WARN 复核。
 3. **scan 规则细化**：带注释 except-pass 降级 WARN，避免误伤"有意为之"的兜底代码；无注释仍 HARD。
 4. **环境阻塞如实记录**：本地 pytest 阻塞（Python 3.12 被卸载），执行证据 = CI 后端全新检出与全量回归。
 
@@ -40,7 +40,8 @@
 
 | 发现 | 处理 | 落点 |
 |------|------|------|
-| Batch 37 两个 P0 实际仍在（R.err/密码 print） | 本批修复 + 补单测 | common.py / seed.py / test_r_schema.py |
+| Batch 37 P0-01（R.err）实际仍在 | 本批修复 + 补单测 | common.py / test_r_schema.py |
+| Batch 37 P0-02（seed 密码 print）经复核为一次性显示契约 | 保持契约，scan 降级 WARN；首轮误删方案已回退 | seed.py / scan-common-bugs.ps1 / test_seed_credentials.py |
 | 6 处高危静默吞异常故障不可见 | 加日志 | open_api / api_task_worker / playwright_executor |
 | scan 对"有意为之的注释吞异常"误报 HARD | 带注释降级 WARN | scan-common-bugs.ps1 |
 | 本地 Python 环境损坏导致 pytest 不可执行 | 记录阻塞 + CI 兜底 + C77-2 | QA 报告 / C-CONDITIONS |
@@ -49,6 +50,6 @@
 
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
-| 计划 5h / 实际 3h | 0/0/1/1 | 0 | 环境+存量 | 开工前验证开发机 Python；存量 HARD 按批消化 |
+| 计划 5h / 实际 3.5h | 0/0/1/1 + 返工 D3 | 1 | 契约冲突 | 改动前先查既有测试契约；CI 首轮全绿再申请合入 |
 
 **技能使用**: `cameltv-agent-team` 完整批次流水线；`cameltv-bug-guard` 规则来源；`scan-common-bugs.ps1` 回归验证。

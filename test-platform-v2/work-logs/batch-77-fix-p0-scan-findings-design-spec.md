@@ -11,7 +11,7 @@
 | 文件 | 改动 | 说明 |
 |------|------|------|
 | `app/schemas/common.py` | +`err()` classmethod | `code:int=1, msg:str="error"`，`data=None`，与 `ok()` 同构 |
-| `app/seed.py` | +logging，5 处 print→logger.info | 密码行改为"已哈希存储（不输出明文）" |
+| `app/seed.py` | 保持原样（一次性显示契约）；scan 降级 WARN | test_seed_credentials.py 强制一次性显示 |
 | `app/api/v1/open_api.py` | +logging，3 处 except→logger.exception | CI 通知/线程启动失败可见 |
 | `app/services/api_task_worker.py` | 2 处 except→logger.warning | 标记失败/DB 关闭失败可见 |
 | `app/services/playwright_executor.py` | 1 处 except→logger.warning | 产物列表失败可见 |

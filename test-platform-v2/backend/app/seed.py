@@ -1,7 +1,6 @@
 """首次启动初始化数据 —— 权限/角色/管理员/测试用户/默认项目（幂等）。"""
 from __future__ import annotations
 
-import logging
 import secrets as _secrets
 
 from sqlalchemy import select
@@ -12,8 +11,6 @@ from app.core.security import hash_password
 from app.models.project import Project, ProjectMember
 from app.models.rbac import Permission, Role, RolePermission, UserRole
 from app.models.user import User
-
-logger = logging.getLogger(__name__)
 
 # 菜单权限点：(code, name, parent_code, path, icon, sort)
 _MENUS = [
@@ -337,14 +334,14 @@ def run_seed() -> None:
 
         db.commit()
         if created_admin:
-            logger.info("[seed] 初始管理员已创建：%s", settings.admin_username)
+            print(f"[seed] 初始管理员已创建：{settings.admin_username}")
             if settings.admin_password:
-                logger.info("[seed] 管理员使用自定义密码")
+                print("[seed] 管理员使用自定义密码")
             else:
-                logger.info("[seed] 管理员使用自动生成密码（已哈希存储），首次登录需修改")
+                print("[seed] 管理员使用自动生成密码（见启动日志），首次登录需修改")
         if created_tester:
-            logger.info("[seed] 测试用户已创建：%s", settings.tester_username)
+            print(f"[seed] 测试用户已创建：{settings.tester_username}")
             if not settings.tester_password and tester_pwd is not None:
-                logger.info("[seed] 测试用户自动生成密码已哈希存储（不输出明文）")
+                print(f"[seed] 测试用户自动生成密码：{tester_pwd}")
     finally:
         db.close()

@@ -141,6 +141,7 @@ function Invoke-Scan {
         $role = $null
         if ($rel -match '^test-platform-v2/backend/tests/') { $role = "backend-tests" }
         elseif ($rel -match '^test-platform-v2/backend/scripts/') { $role = "backend-scripts" }
+        elseif ($rel -eq 'test-platform-v2/backend/app/seed.py') { $role = "backend-scripts" }
         elseif ($rel -match '^test-platform-v2/backend/') { $role = "backend-app" }
         elseif ($rel -match '^test-platform-v2/frontend/src/') { $role = "frontend-src" }
         if (-not $role) { continue }

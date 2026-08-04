@@ -15,9 +15,9 @@
 **涉及文件**: `test-platform-v2/backend/app/schemas/common.py`、`test-platform-v2/backend/tests/test_r_schema.py`
 **参考**: PRD §4 US-1；Batch 37 review P0-01
 
-### [ ] Task 2: seed.py 密码 print → logger
-**描述**: 补 logging，5 处 print 改 logger.info，密码行不输出明文。
-**验收标准**: - stdout 无明文密码；- scan 复扫 seed.py 0 HARD。
+### [ ] Task 2: seed.py 密码 print（契约复核）
+**描述**: 保持一次性显示契约（test_seed_credentials.py 强制），不删除密码显示；scan 将 seed.py print 降级 WARN 复核。
+**验收标准**: - test_seed_credentials.py 通过（CI）；- scan 复扫 seed.py 仅 WARN。
 **涉及文件**: `test-platform-v2/backend/app/seed.py`
 
 ### [ ] Task 3: 6 处高危静默吞异常加日志

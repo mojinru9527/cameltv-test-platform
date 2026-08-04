@@ -7,7 +7,7 @@
 `scan-common-bugs.ps1`（Batch 76 落地）首扫暴露仓库存量 HARD 67 处，其中 Batch 37 审计已点名的两个 P0 仍在：
 
 1. **P0-01 `R.err()` 无定义**：`schemas/common.py` 的 R 只有 `ok()`，而 `test_case.py` 有 7 处 `R.err(code=..., msg=...)` 调用，一旦触发错误分支将抛 `AttributeError` → 500，而非业务错误码。
-2. **P0-02 seed.py 明文打印密码**：`print(f"[seed] 测试用户自动生成密码：{tester_pwd}")` 把自动生成密码输出到 stdout，进 CI/容器日志造成泄露。
+2. **P0-02 seed.py 明文打印密码（复核结论：契约非漏洞）**：`print(f"[seed] 测试用户自动生成密码：{tester_pwd}")` 曾被视为泄露；但 `tests/test_seed_credentials.py` 已强制"生成凭据一次性显示"契约（admin 走 WARNING 日志、tester 走 stdout，且二次运行零输出）。**本批修正 = 扫描将 seed.py print 降级为 WARN 复核，不再按 HARD 拦截。**
 3. **高危静默吞异常**：Batch 37 点名的 open_api.py（通知失败 2 处 + Playwright 线程启动失败 1 处）、api_task_worker.py（任务标记失败、DB 关闭失败 2 处）、playwright_executor.py（产物文件列表失败 1 处）共 6 处 `except Exception: pass`，故障不可见。
 
 ## 2. 成功指标
@@ -15,7 +15,7 @@
 | 指标 | 基线 | 目标 | 测量 |
 |------|------|------|------|
 | R.err | 无定义（7 调用会崩溃） | 定义 + 3 条单测 | pytest（CI）|
-| seed 密码 | print 明文 | logger 不输出明文 | scan 复扫 |
+| seed 密码 | print 明文 | 保持一次性显示契约（单测强制）；扫描 WARN 复核 | scan 复扫 + 单测 |
 | 6 处吞异常 | pass 静默 | logger 记录 | scan 复扫 |
 | scan HARD | 67 | 显著下降且 R.err 清零 | scan 复扫 |
 | ruff F821 | — | 全绿 | ruff |
