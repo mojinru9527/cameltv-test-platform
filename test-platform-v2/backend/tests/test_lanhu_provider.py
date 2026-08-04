@@ -316,3 +316,148 @@ def test_delegation_identity():
     """ai_service 委托到 provider 的同一函数（抽取+委托，保行为）。"""
     from app.services import ai_service
     assert ai_service._extract_lanhu_content is lanhu_provider._extract_lanhu_content
+
+
+# ═══════════════════════════════════════════════════════
+# C87-1 项目级蓝湖链接（仅 tid+pid，无 docId）→ 自动发现文档
+# ═══════════════════════════════════════════════════════
+
+_PROJECT_URL = (
+    "https://lanhuapp.com/web/#/item/project/stage"
+    "?tid=6324825d-1614-4d73-bc4c-f05cdf0734c1"
+    "&pid=c92eba63-69eb-4123-97c0-6605ce2e3216"
+)
+
+
+class _FakeProjectExtractor:
+    """项目级 URL 提取器 mock：parse_url 按是否带 docId 返回不同结果。"""
+
+    def __init__(self, cookie="", images=None, http_error=False):
+        self.images = images if images is not None else [
+            {"id": "doc-web-001", "name": "Web 端设计稿"},
+        ]
+        self.http_error = http_error
+        self.downloaded_doc_id: str | None = None
+
+    def parse_url(self, url):
+        if "docId=" in url:
+            return {
+                "doc_id": "doc-web-001",
+                "version_id": "",
+                "page_id": "",
+                "team_id": "6324825d-1614-4d73-bc4c-f05cdf0734c1",
+                "project_id": "c92eba63-69eb-4123-97c0-6605ce2e3216",
+            }
+        return {
+            "doc_id": "",
+            "version_id": "",
+            "page_id": "",
+            "team_id": "6324825d-1614-4d73-bc4c-f05cdf0734c1",
+            "project_id": "c92eba63-69eb-4123-97c0-6605ce2e3216",
+        }
+
+    async def _project_images(self, url):
+        if self.http_error:
+            return SimpleNamespace(status_code=500, json=lambda: {})
+        return SimpleNamespace(
+            status_code=200,
+            json=lambda: {
+                "code": "00000",
+                "data": {"images": self.images},
+            },
+        )
+
+    @property
+    def client(self):
+        return SimpleNamespace(get=self._project_images)
+
+    async def download_resources(self, url, output_dir, **kwargs):
+        self.downloaded_doc_id = "doc-web-001" if "docId=" in url else ""
+        return {"status": "downloaded"}
+
+    async def get_pages_list(self, url):
+        return {
+            "document_name": "Web 端设计稿",
+            "pages": [{
+                "id": "p1",
+                "name": "登录页",
+                "folder": "Web",
+                "filename": "login.html",
+            }],
+        }
+
+
+def _with_runtime(extractor, url: str) -> dict:
+    """以注入 runtime 的方式调用 get_lanhu_pages_for_evidence（不触网）。"""
+    import asyncio as _asyncio
+
+    return _asyncio.run(_call_with_runtime(extractor, url))
+
+
+async def _call_with_runtime(extractor, url: str) -> dict:
+    monkeypatch = None
+    # 直接注入：临时替换 _load_lanhu_runtime
+    import app.services.external.lanhu_provider as _lp
+
+    runtime = SimpleNamespace(
+        LanhuExtractor=lambda cookie="": extractor,
+        fix_html_files=lambda _: None,
+        auth_error_types=(),
+        login=None,
+        save_cookie=None,
+    )
+    original = _lp._load_lanhu_runtime
+    _lp._load_lanhu_runtime = lambda: runtime
+    try:
+        return await _lp.get_lanhu_pages_for_evidence(url)
+    finally:
+        _lp._load_lanhu_runtime = original
+
+
+class TestProjectUrlEvidence:
+    def test_project_url_auto_discovers_first_doc_and_returns_pages(self):
+        """项目级链接（无 docId）→ 自动发现首个文档并返回页面证据。"""
+        extractor = _FakeProjectExtractor()
+        result = _with_runtime(extractor, _PROJECT_URL)
+
+        assert result["status"] == "success"
+        assert extractor.downloaded_doc_id == "doc-web-001"
+        assert result["document_name"] == "Web 端设计稿"
+        assert result["pages"] and result["pages"][0]["id"] == "p1"
+
+    def test_project_url_empty_images_returns_failed_with_clear_error(self):
+        """项目内无设计文档 → failed（提示未发现设计文档，而非缺少 docId）。"""
+        extractor = _FakeProjectExtractor(images=[])
+        result = _with_runtime(extractor, _PROJECT_URL)
+
+        assert result["status"] == "failed"
+        assert "设计文档" in result["error"]
+        assert "缺少 docId" not in result["error"]
+
+    def test_project_url_http_error_returns_failed_without_crash(self):
+        """项目文档列表接口异常 → failed，不裸抛。"""
+        extractor = _FakeProjectExtractor(http_error=True)
+        result = _with_runtime(extractor, _PROJECT_URL)
+
+        assert result["status"] == "failed"
+        assert result["pages"] == []
+
+    def test_shared_helper_resolves_first_doc(self):
+        """共享 helper _resolve_project_doc 返回追加 docId 的 URL 与 doc_id。"""
+        extractor = _FakeProjectExtractor()
+
+        effective_url, doc_id = asyncio.run(
+            lanhu_provider._resolve_project_doc(_PROJECT_URL, extractor)
+        )
+
+        assert doc_id == "doc-web-001"
+        assert "docId=doc-web-001" in effective_url
+
+    def test_shared_helper_raises_when_project_has_no_docs(self):
+        """共享 helper 在项目内无设计文档时给出明确错误。"""
+        extractor = _FakeProjectExtractor(images=[])
+
+        with pytest.raises(ValueError) as exc_info:
+            asyncio.run(lanhu_provider._resolve_project_doc(_PROJECT_URL, extractor))
+
+        assert "设计文档" in str(exc_info.value)

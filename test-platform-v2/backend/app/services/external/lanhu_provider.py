@@ -332,32 +332,14 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
             url_version_id = params.get("version_id", "")
             effective_url = url
 
-            # ── Handle project-level URLs (no docId) ──
+            # ── Handle project-level URLs (no docId) — 共享 helper（C87-1）──
             if not doc_id:
-                team_id = params.get("team_id", "")
-                project_id = params.get("project_id", "")
-                logger.info("[ai_service] No docId in URL (tid=%s..., pid=%s...)", team_id[:8], project_id[:8])
-                # Try to auto-discover the first document in the project
                 try:
-                    resp = await extractor.client.get(
-                        f"https://lanhuapp.com/api/project/images"
-                        f"?project_id={project_id}&team_id={team_id}"
-                        f"&dds_status=1&position=1&show_cb_src=1&comment=1"
-                    )
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        if data.get("code") == "00000":
-                            images = data.get("data", {}).get("images", [])
-                            if images:
-                                doc_id = images[0].get("id")
-                                doc_name_hint = images[0].get("name", "")
-                                logger.info("[ai_service] Auto-selected document: '%s' (id=%s...) from %d available", doc_name_hint, doc_id[:16], len(images))
-                                sep = "&" if "?" in url.split("#")[-1] else "?"
-                                effective_url = f"{url}{sep}docId={doc_id}"
-                                params = extractor.parse_url(effective_url)
-                                doc_id = params["doc_id"]
-                except Exception:
-                    pass  # Fall through to error message below
+                    effective_url, doc_id = await _resolve_project_doc(url, extractor)
+                    params = extractor.parse_url(effective_url)
+                    url_version_id = params.get("version_id", "")
+                except ValueError:
+                    pass  # Fall through to the detailed error message below
 
                 if not doc_id:
                     raise ValueError(
@@ -754,6 +736,52 @@ def parse_lanhu_ids(url: str) -> tuple[str, str, str]:
 _parse_url_ids = parse_lanhu_ids
 
 
+async def _resolve_project_doc(url: str, extractor) -> tuple[str, str]:
+    """项目级蓝湖链接（仅 tid+pid，无 docId）→ 自动发现首个设计文档。
+
+    Returns (effective_url, doc_id)：effective_url 为原链接追加 docId 后的可下载
+    URL。项目内无文档或接口异常时抛 ValueError（明确提示，而非「缺少 docId」）。
+    供需求提取 `_extract_lanhu_content` 与证据包 `get_lanhu_pages_for_evidence`
+    共享，保证两条链路行为一致（C87-1）。
+    """
+    params = extractor.parse_url(url)
+    team_id = params.get("team_id", "")
+    project_id = params.get("project_id", "")
+    if not project_id:
+        raise ValueError(
+            "蓝湖链接缺少项目 ID（pid），请在蓝湖打开具体设计稿后复制含 docId 的链接"
+        )
+    logger.info(
+        "[lanhu_provider] No docId in URL (tid=%s..., pid=%s...)",
+        str(team_id)[:8], str(project_id)[:8],
+    )
+    try:
+        resp = await extractor.client.get(
+            "https://lanhuapp.com/api/project/images"
+            f"?project_id={project_id}&team_id={team_id}"
+            "&dds_status=1&position=1&show_cb_src=1&comment=1"
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get("code") == "00000":
+                images = data.get("data", {}).get("images", [])
+                if images:
+                    doc_id = str(images[0].get("id") or "")
+                    doc_name_hint = str(images[0].get("name") or "")
+                    sep = "&" if "?" in url.split("#")[-1] else "?"
+                    effective_url = f"{url}{sep}docId={doc_id}"
+                    logger.info(
+                        "[lanhu_provider] Auto-selected document: '%s' (id=%s...)",
+                        doc_name_hint, doc_id[:16],
+                    )
+                    return effective_url, doc_id
+    except Exception as exc:  # noqa: BLE001 — 统一转为明确错误
+        logger.warning("[lanhu_provider] project images discovery failed: %s", exc)
+    raise ValueError(
+        "蓝湖项目内未发现设计文档，请在蓝湖打开具体设计稿后复制含 docId 的链接"
+    )
+
+
 def build_immutable_version(doc_id: str, version_id: str, page_id: str | None) -> str:
     """构建标准化的蓝湖 immutable_version。
 
@@ -860,13 +888,17 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
             params = extractor.parse_url(url)
             doc_id = params.get("doc_id", "")
             url_version_id = params.get("version_id", "")
+            effective_url = url
             if not doc_id:
-                raise ValueError("蓝湖链接缺少 docId，请复制具体设计稿页面链接")
+                # C87-1: 项目级链接（仅 tid+pid）→ 自动发现首个设计文档
+                effective_url, doc_id = await _resolve_project_doc(url, extractor)
+                params = extractor.parse_url(effective_url)
+                url_version_id = params.get("version_id", "")
 
             resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
             download_result = await _download_lanhu_resources(
                 extractor,
-                url,
+                effective_url,
                 resource_dir,
                 url_version_id,
                 params.get("page_id", ""),
@@ -875,7 +907,7 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
             if download_result.get("status") in ("downloaded", "updated"):
                 runtime.fix_html_files(resource_dir)
 
-            pages_info = await extractor.get_pages_list(url)
+            pages_info = await extractor.get_pages_list(effective_url)
             document_name = pages_info.get("document_name", "设计稿")
 
             pages: list[dict] = []
