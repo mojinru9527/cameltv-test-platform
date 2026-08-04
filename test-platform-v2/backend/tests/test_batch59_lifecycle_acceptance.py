@@ -8,6 +8,8 @@ from openpyxl import load_workbook
 from app.models.audit import AuditLog
 from app.models.defect import Defect, DefectTransition
 from app.models.release_bundle import ReleaseBundle
+
+from _guard_helpers import assert_guard_404
 from app.models.test_report import TestReport as ReportModel
 from tests.batch59_factories import seed_case_plan_execution
 
@@ -109,7 +111,7 @@ def test_j10_report_crud_export_and_foreign_access_are_project_scoped(
     db_session.add(foreign)
     db_session.commit()
     foreign_detail = client.get(f"/api/v1/reports/{foreign.id}", headers=auth_headers)
-    assert foreign_detail.status_code == 404
+    assert_guard_404(foreign_detail)
 
     deleted = client.delete(f"/api/v1/reports/{report_id}", headers=auth_headers)
     assert deleted.status_code == 200
@@ -179,7 +181,7 @@ def test_j12_defect_state_machine_history_stats_and_illegal_retry(
         json={"to_status": "confirmed"},
         headers=auth_headers,
     )
-    assert foreign_transition.status_code == 404
+    assert_guard_404(foreign_transition)
 
     db_session.expire_all()
     assert db_session.get(Defect, defect_id).status == "closed"
@@ -266,9 +268,9 @@ def test_j17_release_bundle_version_chain_crud_and_project_isolation(
         f"/api/v1/release-bundles/{foreign_parent.id}",
         headers=auth_headers,
     )
-    assert foreign_detail.status_code == 404
-    assert foreign_update.status_code == 404
-    assert foreign_delete.status_code == 404
+    assert_guard_404(foreign_detail)
+    assert_guard_404(foreign_update)
+    assert_guard_404(foreign_delete)
 
     deleted = client.delete(
         f"/api/v1/release-bundles/{child_id}",

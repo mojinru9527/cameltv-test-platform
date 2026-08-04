@@ -4,6 +4,8 @@ from __future__ import annotations
 from app.core.cipher import encrypt_value
 from app.models.environment import Environment, EnvironmentVariable
 
+from _guard_helpers import assert_guard_404
+
 
 def _seed_environments(db_session) -> tuple[Environment, Environment, EnvironmentVariable]:
     own = Environment(
@@ -46,8 +48,8 @@ def test_foreign_environment_cannot_be_updated_or_deleted(
         headers=auth_headers,
     )
 
-    assert updated.status_code == 404
-    assert deleted.status_code == 404
+    assert_guard_404(updated)
+    assert_guard_404(deleted)
     db_session.expire_all()
     assert db_session.get(Environment, foreign.id).name == "foreign"
 
@@ -75,9 +77,9 @@ def test_foreign_environment_variables_are_not_visible_or_resolvable(
         },
     )
 
-    assert listed.status_code == 404
-    assert created.status_code == 404
-    assert resolved.status_code == 404
+    assert_guard_404(listed)
+    assert_guard_404(created)
+    assert_guard_404(resolved)
     assert "must-not-leak" not in resolved.text
     assert "SECRET_TOKEN" not in resolved.text
 
@@ -97,8 +99,8 @@ def test_variable_id_must_belong_to_environment_and_project(
         headers=auth_headers,
     )
 
-    assert updated.status_code == 404
-    assert deleted.status_code == 404
+    assert_guard_404(updated)
+    assert_guard_404(deleted)
     db_session.expire_all()
     variable = db_session.get(EnvironmentVariable, foreign_variable.id)
     assert variable is not None
