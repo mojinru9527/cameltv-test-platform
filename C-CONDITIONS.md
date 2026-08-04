@@ -22,6 +22,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-84 — 真机性能验收（Batch 84 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C84-1 | iOS 真机采集验收（CP-C2）——用户提供 iPhone（信任电脑 + USB 调试）与安装被测 App 后执行，tidevice 采集链沿用 batch-84 方法 | P1 | 2026-08-04 |
+| C84-2 | Android 采集复测建议在带滚动/播放的场景采样（fps 静态页为 0 的观察项），复测记录存档 | P3 | 2026-08-04 |
+
 ### batch-75 — Agent Team 自我进化与提效改造（Batch 75 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
@@ -37,7 +44,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C74-1 | J16 码率指标口径修复（HLS `probe_stream` 对 m3u8 播放列表误读为码率），修复后复测 6 项达标口径 | P2 | 2026-08-04 |
 | C74-2 | Test5 无契约服务（admin-service 需登录、konfi-service 需 token）由用户提供登录/token 后补拉契约并登记 | P2 | 2026-08-04 |
-| C74-3 | 真机性能验收（CP-C1/C2）待用户提供 Android/iOS 真机后排期执行 | P1 | 2026-08-04 |
+| C74-3 | ✅ CLOSED — 2026-08-04：Android 真机验收完成（OPPO Find X3，batch-84 QA）；iOS 部分随 CP-C2 待设备 |
 
 ### batch-76 — 避坑清单自动化 + 双档同步（Batch 76 Leader 条件）
 
@@ -214,8 +221,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| CP-C1 | Android 真机采集端到端验证（BLOCKING：需物理设备） | P0 | 2026-07-19 |
-| CP-C2 | iOS 真机采集端到端验证（BLOCKING：需物理设备 + iTunes/tidevice） | P0 | 2026-07-19 |
+| CP-C1 | ✅ CLOSED — 2026-08-04：OPPO Find X3（PEDM00/Android 14）端到端采集通过（设备识别→App com.camelrn→WS 实时采样→报告；启动 307ms），batch-84 QA/证据 evidence/batch-84 | P0 | 2026-07-19 |
+| CP-C2 | iOS 真机采集端到端验证（BLOCKING：需物理设备 + iTunes/tidevice；2026-08-04 用户未提供 iPhone，保持 Open） | P0 | 2026-07-19 |
 
 ### batch-27 — Knowledge Sphere (✅ 代码已合入 PR #52, 4 条件 Open, 4 已修复)
 
@@ -454,9 +461,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 41 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 39 (含 8 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 80
+- **Closed**: 82
 - **Total**: 121（另有 13 条历史补录不计入）
 
 ## 维护约定

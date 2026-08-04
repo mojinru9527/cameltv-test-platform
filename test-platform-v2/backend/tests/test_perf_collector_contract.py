@@ -14,6 +14,42 @@ def test_missing_solox_returns_no_synthetic_devices(monkeypatch) -> None:
     assert collector.get_device_apps("missing-device") == []
 
 
+def test_solox_string_device_list_is_parsed(monkeypatch) -> None:
+    """SoloX getDevices() 返回 ['dcd8891f(PEDM00)'] 字符串，必须解析为设备对象。"""
+    class FakeDevices:
+        def getDevices(self):
+            return ["dcd8891f(PEDM00)"]
+
+    monkeypatch.setattr(collector, "SOLOX_AVAILABLE", True)
+    monkeypatch.setattr(collector, "Devices", lambda: FakeDevices())
+    monkeypatch.setattr(collector, "_android_device_name", lambda _device_id: "OPPO Find X3")
+    monkeypatch.setattr(collector, "_android_os_version", lambda _device_id: "Android 14")
+
+    devices = collector.get_connected_devices()
+    assert len(devices) == 1
+    assert devices[0]["device_id"] == "dcd8891f"
+    assert devices[0]["device_model"] == "PEDM00"
+    assert devices[0]["device_name"] == "OPPO Find X3"
+    assert devices[0]["os_version"] == "Android 14"
+    assert devices[0]["platform"] == "Android"
+    assert devices[0]["status"] == "online"
+
+
+def test_solox_dict_device_list_is_supported(monkeypatch) -> None:
+    class FakeDevices:
+        def getDevices(self):
+            return [{"serial": "serial-1", "model": "Pixel"}]
+
+    monkeypatch.setattr(collector, "SOLOX_AVAILABLE", True)
+    monkeypatch.setattr(collector, "Devices", lambda: FakeDevices())
+    monkeypatch.setattr(collector, "_android_device_name", lambda _device_id: "Pixel")
+    monkeypatch.setattr(collector, "_android_os_version", lambda _device_id: "Android 15")
+
+    devices = collector.get_connected_devices()
+    assert devices[0]["device_id"] == "serial-1"
+    assert devices[0]["device_model"] == "Pixel"
+
+
 def test_missing_solox_never_generates_random_metrics(monkeypatch) -> None:
     monkeypatch.setattr(collector, "SOLOX_AVAILABLE", False)
 
