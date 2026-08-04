@@ -75,7 +75,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C81-1 | 每周或每 10 批次执行 WARN 基线审计（`scan-common-bugs.ps1 -BaselinePath docs/agent-team/warn-baseline.json`），结果追加到 `warn-inventory.md` 趋势表；新增 WARN 类别必须归因，基线刷新须经 Leader 复核 | P2 | 2026-08-04 |
+| C81-1 | 每周或每 10 批次执行 WARN 基线审计（`run-warn-audit.ps1`：对比基线 + 自动追加趋势行 + 输出汇报摘要），结果落在 `warn-inventory.md` 趋势表；新增 WARN 类别必须归因，基线刷新须经 Leader 复核 | P2 | 2026-08-04 |
 
 ### batch-63 — 汇总问题遗留解决版本（Batch 63 Leader 条件，本批归位）
 
