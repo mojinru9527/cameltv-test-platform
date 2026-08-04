@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import re
 import subprocess
 import tempfile
@@ -10,6 +11,10 @@ from pathlib import Path
 from typing import Optional
 
 from app.schemas.playground import CompileRequest, CompileResponse, ExecuteRequest, ExecuteResponse, SourceType
+
+# 中文 Gherkin 引号集合（「」 “” " 和 '）
+_OPEN_QUOTES = r'[「“"\']'
+_CLOSE_QUOTES = r'[」”"\']'
 
 
 # ── Gherkin → Playwright mapping ──────────────────────────────────────────
@@ -49,6 +54,37 @@ _ACTION_MAP: list[tuple[str, str]] = [
     # Screenshot
     (r'Then\s+(?:I\s+)?(?:take|capture)\s+(?:a\s+)?screenshot',
      r"await page.screenshot({ path: 'playground-screenshot.png' });"),
+    # ── 中文 Gherkin 映射（batch-74，支持「当/且/则」前缀）──
+    # 导航：打开/访问/进入/前往/来到/浏览 "url"
+    (rf'(?:当|且|则)?\s*(?:我\s*)?(?:打开|访问|进入|前往|来到|浏览)\s*{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}',
+     r"await page.goto('\1');"),
+    # 点击：点击/单击/按下 "选择器"
+    (rf'(?:当|且|则)?\s*(?:我\s*)?(?:点击|单击|按下)\s*{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}',
+     r"await page.click('\1');"),
+    # 输入：在 "选择器" 输入/填写 "文本"
+    (rf'(?:当|且|则)?\s*(?:我\s*)?在\s*{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}\s*(?:输入|填写|填入|键入)\s*{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}',
+     r"await page.fill('\1', '\2');"),
+    # 输入（倒装）：输入 "文本" 到 "选择器"
+    (rf'(?:当|且|则)?\s*(?:我\s*)?(?:输入|填写|填入|键入)\s*{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}\s*(?:到|至|于)\s*{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}',
+     r"await page.fill('\2', '\1');"),
+    # 断言文本：看到/显示/包含 "文本"
+    (rf'(?:当|且|则)?\s*(?:我\s*)?(?:应该\s*)?(?:看到|可见|显示|出现|包含|能看到|应显示)\s*{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}',
+     r"await expect(page.locator('body')).toContainText('\1');"),
+    # 断言元素可见："选择器" 可见/出现/显示
+    (rf'(?:当|且|则)?\s*(?:我\s*)?(?:应该\s*)?{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}\s*(?:应\s*)?(?:可见|出现|显示)',
+     r"await expect(page.locator('\1')).toBeVisible();"),
+    # 断言 URL：url/地址 应包含/变为 "x"
+    (rf'(?:当|且|则)?\s*(?:url|URL|地址|网址)\s*(?:应该|应)?\s*(?:包含|变为|跳转到|是)\s*{_OPEN_QUOTES}(.+?){_CLOSE_QUOTES}',
+     r"await expect(page).toHaveURL(/\1/);"),
+    # 等待：等待 N 秒（转毫秒）
+    (r'(?:当|且|则)?\s*(?:我\s*)?(?:等待|等)\s*(\d+)\s*(?:秒|s)',
+     r"await page.waitForTimeout(\1 * 1000);"),
+    # 等待：等待 N 毫秒
+    (r'(?:当|且|则)?\s*(?:我\s*)?(?:等待|等)\s*(\d+)\s*(?:毫秒|ms)',
+     r"await page.waitForTimeout(\1);"),
+    # 截图
+    (r'(?:当|且|则)?\s*(?:我\s*)?(?:截图|截图保存|拍个截图)',
+     r"await page.screenshot({ path: 'playground-screenshot.png' });"),
 ]
 
 
@@ -71,7 +107,8 @@ def _gherkin_to_playwright(source: str) -> str:
                 # Replace capture groups in template
                 result = template
                 for i, group in enumerate(m.groups(), 1):
-                    result = result.replace(f"\\{i}", group)
+                    escaped = group.replace("\\", "\\\\").replace("'", "\\'")
+                    result = result.replace(f"\\{i}", escaped)
                 steps.append(f"  {result}")
                 matched = True
                 break
@@ -127,6 +164,39 @@ def compile_spec(req: CompileRequest) -> CompileResponse:
 
     compile_ms = (time.perf_counter() - t0) * 1000
     return CompileResponse(spec_code=spec_code, spec_type="playwright", compile_ms=round(compile_ms, 2))
+
+
+def build_gherkin_from_case(case) -> str:
+    """把功能用例（TestCase ORM）的 steps JSON 组装为 Gherkin 源文本。
+
+    每条步骤按 `当 {desc}` 输出（desc 通常已经是动作句）；预期结果作为独立
+    `则 看到/显示` 行（仅当含可断言关键词），无法映射的步骤编译时保持 TODO 降级。
+    """
+    title = (case.title or "Playground Test").strip()
+    lines = [f"Feature: {title}"]
+    if getattr(case, "preconditions", "") and case.preconditions != "[]":
+        try:
+            pre = json.loads(case.preconditions)
+            if isinstance(pre, list):
+                for item in pre:
+                    if isinstance(item, str) and item.strip():
+                        lines.append(f"当 {item.strip()}")
+        except (TypeError, ValueError, json.JSONDecodeError):
+            pass
+    try:
+        steps = json.loads(case.steps or "[]")
+    except (TypeError, ValueError, json.JSONDecodeError):
+        steps = []
+    for item in steps if isinstance(steps, list) else []:
+        if not isinstance(item, dict):
+            continue
+        desc = (item.get("desc") or item.get("step") or "").strip()
+        expected = (item.get("expected") or "").strip()
+        if desc:
+            lines.append(f"当 {desc}")
+        if expected and any(kw in expected for kw in ("看到", "显示", "包含", "可见", "出现", "url", "URL")):
+            lines.append(f"则 {expected}")
+    return "\n".join(lines)
 
 
 def execute_spec(req: ExecuteRequest) -> ExecuteResponse:
