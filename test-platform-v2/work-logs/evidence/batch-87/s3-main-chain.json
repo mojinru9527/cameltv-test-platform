@@ -1,0 +1,16 @@
+{
+  "plan_id": 1,
+  "report_id": 1,
+  "schedule_id": 1,
+  "defect_id": 1,
+  "executed": 25,
+  "plan_stats": {
+    "total": 25,
+    "pending": 0,
+    "pass_": 25,
+    "fail": 0,
+    "skip": 0,
+    "block": 0
+  },
+  "defect_final": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"to_status\"],\"msg\":\"Field required\",\"input\":{\"status\":\"closed\",\"comment\":\"已修复验证\"}}]}"
+}

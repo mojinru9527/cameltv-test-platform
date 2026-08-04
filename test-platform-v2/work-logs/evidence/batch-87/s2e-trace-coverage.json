@@ -1,0 +1,25 @@
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "total_cases": 25,
+    "cases_in_plans": 0,
+    "cases_executed": 0,
+    "cases_passed": 0,
+    "cases_with_defects": 0,
+    "by_type": {
+      "manual": 25
+    },
+    "by_domain": {
+      "直播观看": 10,
+      "直播间互动": 7,
+      "赛事回放": 8
+    },
+    "coverage_rate": 0.0,
+    "execution_rate": 0.0,
+    "pass_rate": 0.0,
+    "requirement_count": 1,
+    "requirements_with_cases": 1,
+    "requirement_coverage_rate": 100.0
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "transitions": [
+    {
+      "step": "fixing->pending_review",
+      "http": 200,
+      "code": 0,
+      "msg": "ok",
+      "data_status": "pending_review"
+    },
+    {
+      "step": "pending_review->closed",
+      "http": 200,
+      "code": 0,
+      "msg": "ok",
+      "data_status": "closed"
+    }
+  ],
+  "final": {
+    "defect_id": "DEF-20260804-001",
+    "title": "P0 验收发现：回放倍速切换偶发失效",
+    "status": "closed",
+    "severity": "P1"
+  }
+}

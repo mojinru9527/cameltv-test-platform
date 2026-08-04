@@ -1,0 +1,103 @@
+{
+  "empty_upload": {
+    "status": 400,
+    "body": "{\"code\":400,\"msg\":\"上传文件不能为空\",\"data\":null}"
+  },
+  "audit": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+      "total": 8,
+      "list": [
+        {
+          "id": 8,
+          "user_id": 1,
+          "username": "admin",
+          "project_id": 1,
+          "action": "project:member:add",
+          "target": "project#2 user#3",
+          "detail": "",
+          "ip": "127.0.0.1",
+          "created_at": "2026-08-04T23:51:06.779212"
+        },
+        {
+          "id": 7,
+          "user_id": 1,
+          "username": "admin",
+          "project_id": 1,
+          "action": "project:member:add",
+          "target": "project#2 user#0",
+          "detail": "",
+          "ip": "127.0.0.1",
+          "created_at": "2026-08-04T23:50:23.413873"
+        },
+        {
+          "id": 6,
+          "user_id": 1,
+          "username": "admin",
+          "project_id": 1,
+          "action": "user:create",
+          "target": "用户 userb",
+          "detail": "{'username': 'userb', 'nickname': 'UserB', 'email': 'userb@test.local', 'status': 1, 'role_codes': []}",
+          "ip": "127.0.0.1",
+          "created_at": "2026-08-04T23:50:23.400846"
+        },
+        {
+          "id": 5,
+          "user_id": 1,
+          "username": "admin",
+          "project_id": 1,
+          "action": "project:create",
+          "target": "#2 隔离项目B",
+          "detail": "",
+          "ip": "127.0.0.1",
+          "created_at": "2026-08-04T23:50:23.163823"
+        },
+        {
+          "id": 4,
+          "user_id": 1,
+          "username": "超级管理员",
+          "project_id": 1,
+          "action": "requirement:import",
+          "target": "doc#1",
+          "detail": "导入 25 条用例，跳过 0 条",
+          "ip": "127.0.0.1",
+          "created_at": "2026-08-04T23:50:23.094433"
+        },
+        {
+          "id": 3,
+          "user_id": 1,
+          "username": "超级管理员",
+          "project_id": 1,
+          "action": "requirement:generate",
+          "target": "doc#1",
+          "detail": "直接: 分析 11 需求点 + 生成 25 功能用例 + 0 接口用例",
+          "ip": "127.0.0.1",
+          "created_at": "2026-08-04T23:49:18.073989"
+        },
+        {
+          "id": 2,
+          "user_id": 1,
+          "username": "超级管理员",
+          "project_id": 1,
+          "action": "requirement:extract",
+          "target": "doc#1",
+          "detail": "提取 3 模块 + 24 功能点",
+          "ip": "127.0.0.1",
+          "created_at": "2026-08-04T23:48:49.436712"
+        },
+        {
+          "id": 1,
+          "user_id": 1,
+          "username": "超级管理员",
+          "project_id": 1,
+          "action": "requirement:upload",
+          "target": "#1 赛事回放需求",
+          "detail": "",
+          "ip": "127.0.0.1",
+          "created_at": "2026-08-04T23:48:29.498514"
+        }
+      ]
+    }
+  }
+}
