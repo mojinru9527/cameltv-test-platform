@@ -13,11 +13,18 @@ from app.core.config import settings
 
 
 def _get_fernet() -> Fernet:
-    """Derive a 32-byte Fernet key from the app secret_key."""
-    raw = settings.secret_key.encode("utf-8") if settings.secret_key else b"cameltv-dev-key"
+    """Derive a 32-byte Fernet key from the app secret key.
+
+    Batch 80（C79-1）：移除硬编码回退密钥（Batch 37 P1-01）。
+    开发环境走 `effective_secret_key` 自动生成会话密钥；生产环境未配置 SECRET_KEY 时直接失败。
+    """
+    key = settings.effective_secret_key
+    if not key:
+        raise RuntimeError("SECRET_KEY 未配置且当前环境不允许自动生成，禁止加密/解密")
+    raw = key.encode("utf-8")
     digest = hashlib.sha256(raw).digest()
-    key = base64.urlsafe_b64encode(digest)
-    return Fernet(key)
+    key_b64 = base64.urlsafe_b64encode(digest)
+    return Fernet(key_b64)
 
 
 def encrypt_value(plain: str) -> str:
