@@ -2,11 +2,15 @@
 
 > 所有 Agent Team Leader 设定的「下一批次 C 条件」集中追踪。Product 开工前必须先读此文件。
 
-**最后更新**: 2026-08-02 (Batch 66 执行器 V1–V5 验证全部通过)
 **追踪规则**:
 - 每个 Leader Verdict 末尾的 C 条件必须写入此文件
 - Product 开工第一件事：检查此文件中所有 `Open` 条件，PRD 中必须包含或明确豁免
 - 条件满足后标记为 `✅ Closed`，注明合入的 PR/commit
+- **状态机（Batch 75 起）**：`Open（待处理）` → `In-Progress（处理中）` → `Closed（已关闭，必须带证据：PR/commit/链接）`；外部阻塞项 → `Deferred（延期，必须带解除条件）`
+- 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
+- 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
+
+**最后更新**: 2026-08-04 (Batch 75: 状态机规则 + audit-cconditions.ps1 审计工具)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -17,6 +21,23 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-75 — Agent Team 自我进化与提效改造（Batch 75 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C75-1 | 后续批次 Product 必须按「批次模式」判定完整/轻量，并在 PRD 记录 `mode`；轻量批次必须含豁免理由 | P2 | 2026-08-04 |
+| C75-2 | 每批 Leader 判决必须含「流程回写」小节；改动 SKILL.md/DEPARTMENTS.md 必须同步 CHANGELOG | P2 | 2026-08-04 |
+| C75-3 | PR 推送前运行 `audit-cconditions.ps1 -RequireLatestBatch`，0 硬错才允许合入 | P1 | 2026-08-04 |
+| C75-4 | 下批同步 AGENTS.md 双档措辞，消除门禁双源措辞差异 | P2 | 2026-08-04 |
+
+### batch-74 — Test5 契约 + Playground 实证（Batch 74 Leader 条件，Batch 75 补录）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C74-1 | J16 码率指标口径修复（HLS `probe_stream` 对 m3u8 播放列表误读为码率），修复后复测 6 项达标口径 | P2 | 2026-08-04 |
+| C74-2 | Test5 无契约服务（admin-service 需登录、konfi-service 需 token）由用户提供登录/token 后补拉契约并登记 | P2 | 2026-08-04 |
+| C74-3 | 真机性能验收（CP-C1/C2）待用户提供 Android/iOS 真机后排期执行 | P1 | 2026-08-04 |
 
 ### batch-63 — 汇总问题遗留解决版本（Batch 63 Leader 条件，本批归位）
 
@@ -341,12 +362,28 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ---
 
+## 历史引用归档（Batch 75 审计补录，不计入 Open/Closed 统计）
+
+> `audit-cconditions.ps1` 首次运行发现以下历史条件被 leader-verdict 引用但从未入追踪器。补录仅用于 ID 一致性，不改变业务状态；证据以来源 verdict/工件为准。
+
+| ID | 来源批次 | 补录说明 |
+|----|---------|---------|
+| C42-1、C42-2、C42-3、C42-4、C42-5、C42-6 | batch-42 | 见 batch-42/45/46 verdict（活动管理域确认等） |
+| C43-1、C43-2、C43-3、C43-4、C43-5、C43-6 | batch-43 | 见 batch-43/45/46 verdict（Alembic/Docker 等） |
+| C44-C1、C44-C4 | batch-44 | 见 batch-44/45/46 verdict |
+| C45-C1、C45-C2、C45-C3、C45-C4 | batch-45 | C45-C1/C3/C4 已由 batch-46 关闭（见 batch-46 verdict） |
+| C46-C1、C46-C2、C46-C3 | batch-46 | 见 batch-46 verdict |
+| C50-1、C50-2、C50-3 | batch-50 | 见 batch-50 verdict（C50-3 已 inline ✅）；C50-2 由 batch-51 tsconfig 修复 |
+| C51-1、C51-2、C51-3、C51-4、C51-5、C51-6、C51-7、C51-8 | batch-50→51 | 见 batch-51 verdict：Badge tone 迁移 / 5 新基元 / PageShell 5 页 / tsc 零错误等（C51-1/C51-4 已 inline ✅） |
+| C55-5 | batch-55 | PC 1440×900 矩阵已关闭，见 batch-56 verdict（tablet/mobile P2 非阻断） |
+| G56-013 | batch-56 | CLOSED，见 batch-56 verdict |
+
 ## 统计
 
-- **Open / 非关闭**: 32 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 39 (含 9 个 P0 blocking)
 - **In Progress**: 0
 - **Closed**: 74
-- **Total**: 106
+- **Total**: 113（另有 13 条历史补录不计入）
 
 ## 维护约定
 
