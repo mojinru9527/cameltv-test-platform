@@ -33,3 +33,14 @@ mode: light
 
 - 事实源：`.claude/skills/cameltv-agent-team/`（入库）；`.agents/` 为 git 忽略的本地镜像（`.gitignore:97`）。
 - 门禁：C75-1（mode 记录）、C75-2（流程回写 + CHANGELOG）、C75-3（推送前 audit-cconditions -RequireLatestBatch）、C76-2 / C80-1（无新增 WARN）。
+
+## 6. 本批追加范围（Batch 83 进行中用户确认）
+
+用户要求把 Agent Team 交付门禁收敛为**一次总确认**：一次确认覆盖本批次推送、创建 Draft PR、required checks 通过后合并到 main，不再逐次询问/二次确认；直接任务保持 AGENTS.md §2.4 逐次 Push 确认。据此追加：
+
+- `AGENTS.md`（§2.1.2 / §2.3 / §2.4 / §2.5）：Agent Team 一次总确认措辞 + §2.4 Agent Team 例外。
+- `.claude/skills/cameltv-agent-team/SKILL.md`、`DEPARTMENTS.md`（+ `.agents` 本地镜像）：标准流程 / Leader / 合入章节同步。
+- `docs/agent-team/pipeline-modes.md`：两档共同强制项措辞。
+- `scripts/git/audit-ai-pr.ps1`：最终审计不再强制完成确认。
+- `.github/pull_request_template.md`：完成确认字段改为一次总确认。
+- `docs/agent-team/local-dev-workflow.md`：§3.3 / §3.4 同步。

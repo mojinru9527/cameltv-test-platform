@@ -15,6 +15,8 @@
 1. **`docs/agent-team/local-dev-workflow.md` 作为 Agent Team 常驻流程资产**：后续批次 Product/Dev 开工前引用（SKILL.md「关联」已登记），把"F:\CamelTv 保持 main + 独立 worktree + push 门禁 + 批次生命周期"固化为统一操作口径。
 2. **技能双档维护规则写入备忘**：`.claude` 为入库事实源，`.agents` 为 Codex 本地镜像（git 忽略）；技能改动必须两处同步 + CHANGELOG。本批已按此规则执行。
 3. **不新增 C 条件**：双档漂移发现走流程回写落点（备忘 §2/§5），避免扩大本批范围。
+4. **确认门禁收敛为一次总确认（用户进行中确认，Batch 83 起）**：Agent Team 批次在首轮 QA 证据后做一次总确认（推送+创建 Draft PR+required checks 通过后合入 main），不再逐次询问/二次确认；直接任务保持逐次 Push 确认。同步更新 AGENTS.md / SKILL / DEPARTMENTS / pipeline-modes / audit-ai-pr / PR 模板 / 操作备忘。
+5. **`confirm-agent-team-completion.ps1` 降级为可选完成证据**：最终审计不再强制。
 
 ## 抽检通过
 
@@ -26,7 +28,7 @@
 
 ## 判决
 
-**APPROVED（有条件）** — 条件：① 用户完成二次确认（`confirm-agent-team-completion.ps1 -Executor codex -UserConfirmedCompletion`）；② PR required checks 全绿；③ 最终审计 `-RequireSuccessfulChecks` 通过。全部满足后转 Ready 并 squash 合入 main。
+**APPROVED（有条件）** — 条件：① 用户一次总确认（推送+PR+合入）；② PR required checks 全绿；③ 最终审计 `-RequireSuccessfulChecks` 通过。全部满足后转 Ready 并 squash 合入 main，无需再次授权。
 
 ## 下一批次 Leader 条件（如有）
 
@@ -38,11 +40,12 @@
 |------|------|------|
 | `.agents` 与 `.claude` 技能副本存在漂移（.agents 缺 batch-76 CHANGELOG；SKILL.md 大小 19892 vs 20195），Codex 运行时读取 git 忽略的本地镜像 | 在备忘中固化"双档同步"规则（改 .claude 进 PR + 同步 .agents + CHANGELOG） | `docs/agent-team/local-dev-workflow.md` §2/§5 |
 | "pull 不切分支 / main 被其他工作区占用"是本机反复出现的困惑根因 | 纳入备忘常见坑速查并登记命令 | `docs/agent-team/local-dev-workflow.md` §5/§7 |
+| 用户反馈确认环节过多（逐次 push / 二次完成确认 / 合入授权多次询问） | 收敛为一次总确认（推送+PR+合入），直接任务保留逐次 Push 确认 | AGENTS.md §2.3/§2.4、SKILL.md 标准流程、audit-ai-pr.ps1 |
 
 ## 复盘卡
 
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
-| 计划 2h / 实际 1.5h | 0/0/0/1 | 0 | 流程 | 技能双档开工前先 diff 对齐，避免只改一份造成漂移 |
+| 计划 2h / 实际 2.5h | 0/0/0/1 | 0 | 流程 | 技能双档开工前先 diff 对齐；规范调整先与用户对齐确认次数再落地 |
 
 **技能使用**: `cameltv-agent-team` → 六部门流水线与工件模板；KB RAG 检索不可用（lanhu MCP 未运行）以仓库本地文档（AGENTS.md/ADR/历史工件）替代核查，已在 QA 报告记录。

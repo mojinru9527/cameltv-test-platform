@@ -66,7 +66,7 @@ feature/* 或 fix/*
 - **完整批次**（新功能/重构/配置/Schema/新行为、新接口、新配置、新依赖）：PRD + PM + Design + Dev + QA + Leader 六件。
 - **轻量批次**（验收/修复/纯文档/纯证据/内部流程工具）：PRD-lite + QA + Leader 三件 + 看板；PRD-lite 必须记录 `mode: light` 与豁免理由。
 
-两档**同等强制**以下 Git 门禁：独立 worktree、分支命名、Draft PR、`audit-ai-pr`、用户二次确认、required checks 全绿后合入。本小节与 SKILL.md/pipeline-modes.md 措辞同步。
+两档**同等强制**以下 Git 门禁：独立 worktree、分支命名、Draft PR、`audit-ai-pr`、用户一次总确认（推送+PR+合入）、required checks 全绿后合入。本小节与 SKILL.md/pipeline-modes.md 措辞同步。
 
 ### 2.2 GitHub 分支保护
 
@@ -98,10 +98,9 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 
 # 6. 提交前本地自检（见第 3 节）
 
-# 7. Batch 48 起，每一次 push 前先展示第 5 节变更摘要，并向用户明确询问：
-# “当前待推送范围如下。是否还有其他变动需要合并？
-# 如果有，我将暂停推送，完成合并和自检后再重新确认。”
-# 只有用户明确回答“没有其他变动”并授权本次 push 后，才可继续。
+# 7. 首轮 QA 证据完成后，Agent Team 做一次总确认（覆盖本批次推送、创建 Draft PR、required checks 通过后合入 main）：
+# 展示第 5 节变更摘要并询问“确认推送 {分支}、创建 Draft PR，并在 required checks 通过后合并到 main？”
+# 只有用户明确授权本次总确认后，才可继续推送/PR/合入；确认后不再逐次询问（Agent Team 例外，见 2.4；直接任务仍按逐次 Push 确认）
 
 # 8. Push 功能分支（只 push 功能分支！）
 git push -u origin feature/{描述}
@@ -112,12 +111,10 @@ gh pr create --draft --base main --head feature/{描述} --title "..." --body ".
 # 10. 先做基础审计并等待 Draft PR 首轮 checks
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex
 
-# 11. 首轮验证完成后，Agent Team 再问用户“实际执行器仍为 Codex/Claude 吗，是否授权最终审计与合并？”并停下等待
-# 收到明确答复后记录完成确认；身份必须与开始确认一致
-pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor codex -UserConfirmedCompletion
-
-# 12. 完成确认证据推送前，仍须重新执行第 7 步的 push 确认；对应 checks 全绿后，才允许最终审计
+# 11. 总确认后无需再次问询（Agent Team）；对应 checks 全绿后，运行最终审计
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex -RequireSuccessfulChecks
+
+# 12. 最终审计通过后由 Leader APPROVED，转 Ready 并 squash 合并到 main（无需再次授权）
 ```
 
 ### 2.4 Batch 48 起的逐次 Push 确认（强制）
@@ -134,6 +131,7 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 - 用户表示还有其他变动时，必须暂停 push；合并这些变动并重新完成对应自检后，再展示新范围并重新询问。
 - 获得授权后如果提交、文件范围或目标分支发生变化，原授权立即失效，必须重新确认。
 - 未取得明确授权时，不得 push、创建 PR，或以完成确认证据 push 绕过本门禁。
+- **Agent Team 例外（Batch 83 起）**：Agent Team 批次在首轮 QA 证据完成后做**一次总确认**（覆盖本批次推送、创建 Draft PR、required checks 通过后合并到 main），确认后不再逐次询问；总确认后若提交、文件范围或目标分支发生变化，原授权立即失效，必须重新确认。直接任务不受此例外约束。
 
 ### 2.5 多窗口并行（Agent Team）
 
@@ -143,7 +141,7 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 - 每个 worktree 使用独立 `.ai-worktree.json`、前后端端口、SQLite 和 `.env`
 - `.ai-worktree.json` 分开记录 workflow（`direct|agent-team`）和 executor（`claude|codex|human`）
 - Agent Team 入口要求在聊天中问询并等待用户明确选择 `claude|codex`，然后才可传入 `-UserConfirmedExecutor`；Git 无法从进程名、IDE、客户端、代码风格或 diff 可靠猜测实际 AI
-- Agent Team 在 Draft PR 首轮验证后必须再次问询实际执行器和最终交付授权；未运行 `confirm-agent-team-completion.ps1` 时，最终 PR 审计必定失败
+- Agent Team 在 Draft PR 首轮验证后不再二次问询（Batch 83 一次总确认已覆盖推送/PR/合入）；`confirm-agent-team-completion.ps1` 仅作可选完成证据，最终 PR 审计不再强制要求
 - Claude Code 位于 VS Code、Codex 位于 ChatGPT 客户端不影响隔离；隔离由独立 worktree、分支、端口和元数据实现，两个客户端不得打开同一任务 worktree 并行修改
 - 目录按 executor 隔离；分支仍按业务任务命名，pre-push 自动核对 workflow/executor、目录、分支和范围
 - 分支按任务命名；AI 执行器只写入忽略的本地元数据，pre-push 自动核对 metadata 与当前目录/分支

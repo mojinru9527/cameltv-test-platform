@@ -51,10 +51,21 @@
 
 状态: **READY**   必修复: 0   建议修复: 0（D1 走流程回写，不阻塞本批）
 
+## 追加：Batch 83 门禁收敛调整（Slice 4）
+
+| 检查项 | 命令/核对 | 结果 |
+|--------|-----------|------|
+| audit-ai-pr 语法 | `[Parser]::ParseFile(audit-ai-pr.ps1)` | ✅ 0 错误 |
+| 规范双源一致 | AGENTS.md / SKILL（.claude 与 .agents）/ DEPARTMENTS / pipeline-modes 关键措辞对比 | ✅ 一致 |
+| 旧确认措辞残留 | `rg "二次确认|必须再次问询"` 规范文件 | ✅ 无强制残留（仅可选说明） |
+| 审计脚本强制项 | `rg "completion confirmation" audit-ai-pr.ps1` | ✅ 已移除强制完成确认 |
+| scope 元数据 | `.ai-worktree.json` 含 AGENTS.md / scripts/git / .github/pull_request_template.md | ✅ |
+| 直接任务门禁 | AGENTS.md §2.4 逐次 Push 确认保留 | ✅ |
+
 ## 复盘卡
 
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
-| 计划 2h / 实际 1.5h | 0/0/0/1 | 0 | 流程 | 技能双档（.claude 入库 / .agents 本地镜像）开工前先 diff 对齐再改 |
+| 计划 2h / 实际 2.5h | 0/0/0/1 | 0 | 流程 | 技能双档开工前先 diff 对齐；规范调整先与用户对齐确认次数再落地 |
 
 **技能使用**: `cameltv-agent-team` → 六部门流水线 + 工件模板；`cameltv-bug-guard` 不适用（无平台代码变更）。

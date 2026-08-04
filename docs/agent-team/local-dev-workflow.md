@@ -49,14 +49,14 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 ### 3.3 开发与提交
 
 - 每切片结束：`git add -- {本切片文件}` → `git diff --cached --name-status` 核对 → commit → push。
-- **push 前（每次）**：展示变更摘要，逐字询问："当前待推送范围如下。是否还有其他变动需要合并？如果有，我将暂停推送，完成合并和自检后再重新确认。" 只有用户明确回答"没有其他变动"并明确授权本次 push 才可推送（AGENTS.md §2.4）。
+- **一次总确认（Agent Team，Batch 83 起）**：首轮 QA 证据完成后展示变更摘要，一次确认覆盖本批次推送、创建 Draft PR、required checks 通过后合并到 main；确认后不再逐次询问（AGENTS.md §2.4 Agent Team 例外）。直接任务仍按逐次 Push 确认。
 - 提交前自检：`scan-common-bugs.ps1`（HARD>0 处理或豁免，C76-2）、`audit-cconditions.ps1 -RequireLatestBatch`（C75-3）、变更域对应门禁。
 
 ### 3.4 PR 与合入
 
 1. 全部 Slice + 首轮 QA 证据 → `gh pr create --draft --base main --head feature/batch-{N}-{name}`。
 2. 首轮审计：`pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {codex|claude}`。
-3. **二次硬暂停**：再问用户实际执行器 + 是否授权最终审计/合并；收到明确答复后运行 `pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor {codex|claude} -UserConfirmedCompletion`。
+3. 一次总确认已覆盖推送/PR/合入，无需二次问询；`confirm-agent-team-completion.ps1` 仅作可选完成证据。
 4. required checks 全绿 → 最终审计（`-RequireSuccessfulChecks`）→ Leader APPROVED → 转 Ready → squash 合入 main。
 5. 合入后：`git -C F:\CamelTv pull --ff-only origin main` 更新主干视图；按需 `git worktree remove` 清理任务工作区。
 

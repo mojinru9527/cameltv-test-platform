@@ -102,14 +102,15 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor {claude|codex} -UserConfirm
 # 1.1 在新 worktree 开工前验证
 pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex}
 
-# 2. 每切片结束后只暂存本切片文件（防夹带其他任务或生成物）
+# 2. 每切片结束后只暂存本切片文件（防夹带其他任务或生成物）；总确认前只本地提交，不推送
 git status --short
 git add -- path/to/file1 path/to/file2
 git diff --cached --name-status
 git commit -m "feat(batch-{N}): {切片描述}"
-git push -u origin feature/batch-{N}-{name}
 
-# 3. 全部 Slice 完成并取得首轮 QA 证据后，创建 Draft PR
+# 3. 全部 Slice 完成并取得首轮 QA 证据后，做一次总确认（覆盖本批次推送、创建 Draft PR、required checks 通过后合入 main）：
+# "确认推送 feature/batch-{N}-{name}、创建 Draft PR，并在 required checks 通过后合并到 main？"——等待明确答复；确认后不再逐次询问
+git push -u origin feature/batch-{N}-{name}
 #    ⚠️ 必须先 push 到 feature 分支，再建 PR
 #    ⚠️ 禁止直接 git merge/push 到 main（本地 hook 与远端规则均会拒绝）
 gh pr create \
@@ -122,13 +123,10 @@ gh pr create \
 # 3.1 PR 创建后做基础审计并等待首轮 required checks
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex}
 
-# 3.2 硬暂停：首轮验证后再次问用户实际执行器，并询问是否授权最终审计/合并；等待明确答复
-pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor {claude|codex} -UserConfirmedCompletion
-
-# 3.3 把完成确认证据写入工件并 push；该提交的 required checks 全绿后做最终审计
+# 3.2 总确认后无需再次问询（Agent Team）；required checks 全绿后做最终审计
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor {claude|codex} -RequireSuccessfulChecks
 
-# 4. PR 合入且确认无需继续修复后，从控制 worktree 更新 main 再清理任务 worktree
+# 4. 最终审计通过后由 Leader APPROVED，转 Ready 并 squash 合入 main；确认无需继续修复后从控制 worktree 更新 main 再清理任务 worktree
 git -C F:/CamelTv-control pull --ff-only origin main
 git worktree remove {任务 worktree 绝对路径}
 git branch -d feature/batch-{N}-{name}
@@ -171,7 +169,7 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecuto
 
 # Step 2：每个 VSCode 窗口 Open Folder 打开对应的 worktree 目录
 # Step 3：各自独立开发、每切片 commit+push（遵循上方标准流程）
-# Step 4：全部完成后各自创建 Draft PR；每个任务分别完成第二次用户确认、最终审计和 Leader 审批后才合入 main
+# Step 4：全部完成后各自创建 Draft PR；每个任务一次总确认（推送+PR+合入）、最终审计和 Leader 审批后合入 main
 
 gh pr create --draft --base main --head feature/batch-{N1}-{name1} --title "..."
 gh pr create --draft --base main --head feature/batch-{N2}-{name2} --title "..."
@@ -234,16 +232,16 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecuto
    - **KB 辅助定级**：出具 QA 报告前，检索知识库中与被测模块相关的历史缺陷模式。相似历史缺陷须在报告中列出，用于辅助缺陷定级（P0–P3）和评估回归风险。
    **遇到硬 bug 或性能回归时，走 `diagnose` skill 的纪律化诊断循环**（复现→最小化→假设→插桩→修→回归测试），不靠猜测修。
    - **CI 分层核对**：PR 检查按完整 base/head diff 分类。QA 必须记录 backend/frontend 分类与实际运行/跳过 jobs；未知、CI、部署或分类失败必须双端全量/阻断，禁止把 required job 名称存在当作重测试已执行。
-6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**。Leader 只在用户完成二次确认、QA 硬门禁全绿、`audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过后给 APPROVED；没有完成确认、运行日志或只有文档结论时必须打回。**判决末尾必须含「流程回写」小节**；对 `SKILL.md`/`DEPARTMENTS.md` 的任何改动必须同步 `CHANGELOG.md`。
+6. **Leader**：抽检各部门工件 → 给 APPROVED / 有条件通过 / 打回，并可设下一批次的 Leader 条件（C 编号）。**设定的 C 条件必须同步追加到 `C-CONDITIONS.md`**。Leader 只在用户完成一次总确认（推送+PR+合入）、QA 硬门禁全绿、`audit-ai-pr.ps1 -RequireSuccessfulChecks` 通过后给 APPROVED；没有总确认、运行日志或只有文档结论时必须打回。**判决末尾必须含「流程回写」小节**；对 `SKILL.md`/`DEPARTMENTS.md` 的任何改动必须同步 `CHANGELOG.md`。
    - **知识审计**：合入前验证 (a) 本批次是否产出了可入库的知识（设计决策、踩坑记录、新发现的问题模式）；(b) 如有，是否已通过 `ingest_platform_knowledge` 入库；(c) 本批次决策是否与 KB 中已有知识矛盾，如有矛盾须在 leader-verdict 中记录并说明取舍理由。
    **跨会话交接时用 `handoff` skill 压缩上下文为交接文档**，避免下一个 session 丢失进度。
 
 ### 第 7 步：合入 + 收尾
 
-- 合入前：用户二次确认 + QA 判决 PASS + Leader APPROVED + PR 必需检查全部通过。若仓库尚未配置 required checks，禁止自动合并，必须由人工确认检查结果。
+- 合入前：用户一次总确认（推送+PR+合入）+ QA 判决 PASS + Leader APPROVED + PR 必需检查全部通过。若仓库尚未配置 required checks，禁止自动合并，必须由人工确认检查结果。
 - 合入：**必须通过 PR**（`gh pr create`），禁止直接 `git merge` 到 main 再 push（本地 hook 与分支保护都会拒绝）。详见上方 [Git 工作流](#git-工作流强制)。
 - 合入后：更新看板批次记录（产出+审批+耗时）；本地分支确认无未推送提交后删除，远端分支按仓库自动删除策略或人工决定。
-- ⚠️ 工作树可能被外部进程周期性重置 → **每切片即刻 commit + push**（见 `[[worktree-reset-hazard]]`）。
+- ⚠️ 工作树可能被外部进程周期性重置 → **每切片即刻 commit**；总确认后立即 push 到远端（见 `[[worktree-reset-hazard]]`）。
 
 ## 工件命名规范
 
