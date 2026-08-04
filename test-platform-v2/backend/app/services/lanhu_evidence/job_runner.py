@@ -98,6 +98,21 @@ def _dom_text_for(local_url: str) -> str:
     return ""
 
 
+def _local_image_capture(local_url: str) -> screenshot_service.CaptureResult | None:
+    """本地图片文件（设计图板原图）→ 直接作为证据段，免浏览器往返（C87-1）。"""
+    from urllib.parse import unquote, urlparse
+
+    if not local_url:
+        return None
+    parsed = urlparse(local_url)
+    if parsed.scheme != "file":
+        return None
+    path = Path(unquote(parsed.path))
+    if path.suffix.lower() not in (".png", ".jpg", ".jpeg", ".webp") or not path.exists():
+        return None
+    return screenshot_service.capture_local_image(path)
+
+
 def run_job_in_new_session(
     job_id: int,
     project_id: int,
@@ -225,9 +240,13 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
         output_dir = pages_dir / page_key
         target_url = discovered.local_url or discovered.page_url
         try:
-            capture = asyncio.run(
-                screenshot_service.capture_page_segments(target_url, output_dir, page_key)
-            )
+            local_capture = _local_image_capture(discovered.local_url)
+            if local_capture is not None:
+                capture = local_capture
+            else:
+                capture = asyncio.run(
+                    screenshot_service.capture_page_segments(target_url, output_dir, page_key)
+                )
         except Exception as exc:  # noqa: BLE001
             capture = screenshot_service.CaptureResult(error=f"[页{order+1}/{len(pages)}] {str(exc)[:280]}")
 
