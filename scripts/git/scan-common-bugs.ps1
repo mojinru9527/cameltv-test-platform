@@ -102,7 +102,15 @@ function Test-File {
         foreach ($m in [regex]::Matches($text, $p.Re)) {
             $lc = Get-LineCol -Text $text -Index $m.Index
             $snip = ($text.Substring($m.Index, [Math]::Min(70, $text.Length - $m.Index)) -replace "`r|`n", " ")
-            if ($p.Sev -eq "WARN") {
+            $sev = $p.Sev
+            if ($p.Name -like "except*") {
+                # 带注释的 except-pass 视为有意为之，降级为 WARN 复核
+                $lineEnd = $text.IndexOf("`n", $m.Index)
+                if ($lineEnd -lt 0) { $lineEnd = $text.Length }
+                $extended = $text.Substring($m.Index, $lineEnd - $m.Index)
+                if ($extended -match '#') { $sev = "WARN" }
+            }
+            if ($sev -eq "WARN") {
                 Add-Hit -Target $Warn -Severity WARN -File $Relative -Line $lc[0] -Col $lc[1] -Snippet "$($p.Name): $snip"
             }
             else {
