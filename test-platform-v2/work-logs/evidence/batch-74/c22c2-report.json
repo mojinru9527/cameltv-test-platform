@@ -1,0 +1,151 @@
+{
+  "config": {
+    "argv": [
+      "F:\\Program Files\\nodejs\\node.exe",
+      "F:\\CamelTv-worktrees\\codex-batch-74-test5-playground-acceptance\\test-platform-v2\\backend\\tests\\playwright\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "specs/generated/batch74-TC-LIVE-001.spec.ts",
+      "--project",
+      "chromium",
+      "--reporter",
+      "json",
+      "--output",
+      "F:\\CamelTv-worktrees\\codex-batch-74-test5-playground-acceptance\\test-platform-v2\\backend\\storage\\ui-runs\\1"
+    ],
+    "configFile": "F:\\CamelTv-worktrees\\codex-batch-74-test5-playground-acceptance\\test-platform-v2\\backend\\tests\\playwright\\playwright.config.ts",
+    "rootDir": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/tests/playwright/specs",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/storage/ui-runs/1",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/tests/playwright/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 300000
+      },
+      {
+        "outputDir": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/storage/ui-runs/1",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/tests/playwright/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 300000
+      },
+      {
+        "outputDir": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/storage/ui-runs/1",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/tests/playwright/specs",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 300000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.0",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "generated\\batch74-TC-LIVE-001.spec.ts",
+      "file": "generated/batch74-TC-LIVE-001.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "进入直播间默认播放视频流",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5366,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-04T07:18:21.453Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c694cf7f1953d73c1ade-182d801fe25d919fb9f6",
+          "file": "generated/batch74-TC-LIVE-001.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-08-04T07:18:21.030Z",
+    "duration": 6091.624,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

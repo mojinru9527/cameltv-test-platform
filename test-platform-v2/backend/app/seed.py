@@ -30,6 +30,7 @@ _MENUS = [
     ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 8),
     ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 9),
     ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 10),
+    ("menu:playground", "Playground", "", "/playground", "PlayCircleOutlined", 10),
     ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 11),
     ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 12),
     ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 13),
@@ -192,7 +193,7 @@ _TESTER_ACTIONS = {
 
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
-    "menu:apitest", "menu:uitest", "menu:special", "menu:schedule", "menu:report",
+    "menu:apitest", "menu:uitest", "menu:playground", "menu:special", "menu:schedule", "menu:report",
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
     "menu:perftest", "menu:notify", "menu:environment",
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",

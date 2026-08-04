@@ -1,0 +1,77 @@
+[
+  {
+    "case_title": "进入直播间默认播放视频流",
+    "case_id_code": null,
+    "status": "pass",
+    "ui_result": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "screenshots": [
+        "playground-screenshot.png"
+      ]
+    },
+    "api_status": null,
+    "notes": "UI 自动执行: 1 条断言全部通过, 截图 1 张",
+    "executed_at": "2026-08-04T15:23:29.775751"
+  },
+  {
+    "case_title": "登录后进入质量追溯页",
+    "case_id_code": null,
+    "status": "pass",
+    "ui_result": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "screenshots": [
+        "playground-screenshot.png"
+      ]
+    },
+    "api_status": null,
+    "notes": "UI 自动执行: 1 条断言全部通过, 截图 1 张",
+    "executed_at": "2026-08-04T15:23:29.775751"
+  },
+  {
+    "case_title": "登录后进入用例服务页",
+    "case_id_code": null,
+    "status": "pass",
+    "ui_result": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "screenshots": [
+        "playground-screenshot.png"
+      ]
+    },
+    "api_status": null,
+    "notes": "UI 自动执行: 1 条断言全部通过, 截图 1 张",
+    "executed_at": "2026-08-04T15:23:29.775751"
+  },
+  {
+    "case_title": "后端健康检查 /health",
+    "case_id_code": null,
+    "status": "pass",
+    "ui_result": null,
+    "api_status": "ok",
+    "notes": "批量自动执行: GET http://127.0.0.1:8041/health",
+    "executed_at": "2026-08-04T15:23:29.775751"
+  },
+  {
+    "case_title": "开放API健康检查",
+    "case_id_code": null,
+    "status": "pass",
+    "ui_result": null,
+    "api_status": "ok",
+    "notes": "批量自动执行: GET http://127.0.0.1:8041/api/v1/open/health",
+    "executed_at": "2026-08-04T15:23:29.775751"
+  },
+  {
+    "case_title": "OpenAPI 文档可访问",
+    "case_id_code": null,
+    "status": "pass",
+    "ui_result": null,
+    "api_status": "ok",
+    "notes": "批量自动执行: GET http://127.0.0.1:8041/openapi.json",
+    "executed_at": "2026-08-04T15:23:29.775751"
+  }
+]
