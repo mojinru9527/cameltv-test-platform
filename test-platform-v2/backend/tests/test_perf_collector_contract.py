@@ -21,7 +21,7 @@ def test_solox_string_device_list_is_parsed(monkeypatch) -> None:
             return ["dcd8891f(PEDM00)"]
 
     monkeypatch.setattr(collector, "SOLOX_AVAILABLE", True)
-    monkeypatch.setattr(collector, "Devices", lambda: FakeDevices())
+    monkeypatch.setattr(collector, "Devices", lambda: FakeDevices(), raising=False)
     monkeypatch.setattr(collector, "_android_device_name", lambda _device_id: "OPPO Find X3")
     monkeypatch.setattr(collector, "_android_os_version", lambda _device_id: "Android 14")
 
@@ -41,7 +41,7 @@ def test_solox_dict_device_list_is_supported(monkeypatch) -> None:
             return [{"serial": "serial-1", "model": "Pixel"}]
 
     monkeypatch.setattr(collector, "SOLOX_AVAILABLE", True)
-    monkeypatch.setattr(collector, "Devices", lambda: FakeDevices())
+    monkeypatch.setattr(collector, "Devices", lambda: FakeDevices(), raising=False)
     monkeypatch.setattr(collector, "_android_device_name", lambda _device_id: "Pixel")
     monkeypatch.setattr(collector, "_android_os_version", lambda _device_id: "Android 15")
 
