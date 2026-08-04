@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import shutil
 import subprocess
+from urllib.parse import urlparse
 from typing import Any
 
 logger = logging.getLogger("ffmpeg")
@@ -26,7 +28,7 @@ METRIC_DEFS = [
         "name": "码率",
         "unit": "kbps",
         "threshold": 500,
-        "extract": lambda fmt, streams: _extract_bitrate(fmt),
+        "extract": lambda fmt, streams: _extract_bitrate(fmt, streams),
         "recommended": ">= 500",
     },
     {
@@ -165,6 +167,18 @@ def probe_stream(url: str, protocol: str = "HLS", timeout: int = DEFAULT_TIMEOUT
             "recommended": mdef.get("recommended", ""),
         })
 
+    # 6. HLS 码率实测（C74-1）：format.bit_rate 是 m3u8 播放列表值，需按分段大小/时长实测
+    if protocol.upper() == "HLS":
+        for m in metrics:
+            if m["name"] == "码率" and (m["value"] is None or float(m["value"] or 0) < 100):
+                measured = _measure_hls_bitrate(url)
+                if measured:
+                    m["value"] = measured
+                    m["passed"] = _compare_metric(measured, m["threshold"], m["name"])
+                    m["raw_value"] = f"hls-segments:{measured}"
+                else:
+                    m["raw_value"] = "hls-segments:unavailable"
+
     return {
         "ok": True,
         "metrics": metrics,
@@ -188,10 +202,112 @@ def _extract_start_time(fmt: dict) -> float | None:
     return None
 
 
-def _extract_bitrate(fmt: dict) -> float | None:
+def _extract_bitrate(fmt: dict, streams: list) -> float | None:
+    """提取媒体码率（kbps）。
+
+    口径（C74-1 修复）：
+    1. 优先媒体流 bit_rate（视频流优先）——流媒体的真实值；
+    2. HLS 场景的 format.bit_rate 是 m3u8 播放列表码率（实测 24bps），禁止作为媒体码率兜底，
+       由 probe_stream 用分段大小/时长实测；
+    3. 非 HLS 容器兜底 format.bit_rate。
+    """
+    for s in streams:
+        if s.get("codec_type") == "video":
+            br = s.get("bit_rate")
+            if br:
+                try:
+                    return round(float(br) / 1000, 2)
+                except (TypeError, ValueError):
+                    # 非数字 bit_rate（如空串/占位）：跳过该流，继续尝试下一候选
+                    pass
+    fmt_name = (fmt.get("format_name") or "").lower()
+    if fmt_name == "hls":
+        return None
     val = fmt.get("bit_rate")
     if val is not None:
-        return round(float(val) / 1000, 2)  # bps → kbps
+        try:
+            return round(float(val) / 1000, 2)
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _measure_hls_bitrate(url: str, max_segments: int = 5, timeout: float = 15.0) -> float | None:
+    """按 HLS 分段实测码率（kbps）：拉取媒体播放列表，取前 N 个分段的字节数与时长。"""
+    try:
+        import httpx
+    except ImportError:
+        return None
+
+    headers = {"User-Agent": "Mozilla/5.0"}
+    try:
+        parsed = urlparse(url)
+        headers["Referer"] = f"{parsed.scheme}://{parsed.netloc}/"
+        query_suffix = f"?{parsed.query}" if parsed.query else ""
+        base = url[: url.rfind("/") + 1]
+
+        with httpx.Client(timeout=timeout, follow_redirects=True) as client:
+            resp = client.get(url, headers=headers)
+            resp.raise_for_status()
+            lines = resp.text.splitlines()
+
+            segments: list[tuple[str, float]] = []
+            i = 0
+            while i < len(lines) and len(segments) < max_segments * 2:
+                line = lines[i].strip()
+                if line.startswith("#EXTINF"):
+                    duration = 0.0
+                    m = re.search(r"#EXTINF:\s*([0-9.]+)", line)
+                    if m:
+                        duration = float(m.group(1))
+                    if i + 1 < len(lines) and lines[i + 1].strip() and not lines[i + 1].strip().startswith("#"):
+                        seg = lines[i + 1].strip()
+                        if seg.startswith("http"):
+                            seg_url = seg + (query_suffix if "?" not in seg else "")
+                        else:
+                            seg_url = base + seg + query_suffix
+                        segments.append((seg_url, duration))
+                        i += 2
+                        continue
+                i += 1
+
+            if not segments:
+                return None
+
+            total_bytes = 0
+            total_duration = 0.0
+            for seg_url, duration in segments[:max_segments]:
+                try:
+                    with client.stream("GET", seg_url, headers={**headers, "Range": "bytes=0-0"}) as sr:
+                        length = _content_length_from_range(sr.headers.get("content-range"))
+                        if length is None:
+                            data = sr.read()
+                            length = len(data)
+                    if length and duration:
+                        total_bytes += length
+                        total_duration += duration
+                except Exception:
+                    continue
+
+            if not total_duration:
+                return None
+            kbps = (total_bytes * 8) / total_duration / 1000
+            return round(kbps, 2) if kbps > 0 else None
+    except Exception:
+        return None
+
+
+def _content_length_from_range(content_range: str | None) -> int | None:
+    """从 Content-Range（bytes 0-0/12345）解析总长度。"""
+    if not content_range:
+        return None
+    try:
+        total = content_range.split("/")[-1].strip()
+        if total.isdigit():
+            return int(total)
+    except Exception:
+        # Content-Range 格式非预期（如缺失 total）：返回 None，由调用方走整段下载兜底
+        pass
     return None
 
 
@@ -263,6 +379,6 @@ def _compare_metric(value: Any, threshold: Any, name: str) -> bool:
     except (TypeError, ValueError):
         return False
 
-    if name in ("码率", "帧率", "分辨率", "编码格式"):
+    if name in ("码率", "帧率", "分辨率", "编码格式", "流可用性"):
         return v >= t
     return v <= t
