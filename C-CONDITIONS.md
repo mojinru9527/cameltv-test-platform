@@ -22,6 +22,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-86 — WARN 技术债消化（Batch 86 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C86-1 | 后续批次新增测试断言遵循双 404 约定：隔离守卫用 `assert_guard_404`，业务"查不到"用 HTTP 200 + body code==404；新代码不得再引入裸 `status_code == 404`（WARN 只减不增） | P3 | 2026-08-04 |
+
 ### batch-84 — 真机性能验收（Batch 84 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
@@ -70,7 +76,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C79-1 | 231 处 WARN 分批消化：优先硬编码密钥模式（cameltv-dev-key/SECRET_KEY/api_key）、envelope 断言（status_code==404）；每批消化 ≥10 处或给出豁免理由 | P2 | 2026-08-04 |
+| C79-1 | 231 处 WARN 分批消化：优先硬编码密钥模式（cameltv-dev-key/SECRET_KEY/api_key）、envelope 断言（status_code==404）；每批消化 ≥10 处或给出豁免理由（2026-08-04 batch-86：404 守卫断言集中为 assert_guard_404，消化 21 处，WARN 230→209；其余 179 CLI print / 5 seed / 5 注释吞异常为已登记豁免类别） | P2 | 2026-08-04 |
 
 ### batch-80 — WARN 高价值项（Batch 80 Leader 条件）
 

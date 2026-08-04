@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-08-04T21:00:38.4415247+08:00",
+  "generated_at": "2026-08-04T23:33:27.9872849+08:00",
   "hard_count": 0,
-  "warn_count": 230,
+  "warn_count": 209,
   "warn_categories": {
     "except": 7,
     "scripts print（运维脚本可接受，需复核）": 182,
-    "HTTP 404 断言复核（隔离守卫正确/业务查不到应 200+code）": 41
+    "HTTP 404 断言复核（隔离守卫正确/业务查不到应 200+code）": 20
   },
   "warn_files": {
     "test-platform-v2/backend/app/api/v1/auth.py": 1,
@@ -25,14 +25,11 @@
     "test-platform-v2/backend/scripts/migrate_knowledge_domain.py": 18,
     "test-platform-v2/backend/scripts/poc_ai_interaction_detection.py": 48,
     "test-platform-v2/backend/scripts/test_plan_api.py": 19,
-    "test-platform-v2/backend/tests/test_apitest_project_isolation.py": 9,
     "test-platform-v2/backend/tests/test_batch48_requirement_acceptance.py": 5,
     "test-platform-v2/backend/tests/test_batch48_requirement_modules.py": 3,
-    "test-platform-v2/backend/tests/test_batch59_lifecycle_acceptance.py": 5,
     "test-platform-v2/backend/tests/test_batch59_management_acceptance.py": 3,
     "test-platform-v2/backend/tests/test_batch60_api_production_guard.py": 1,
     "test-platform-v2/backend/tests/test_batch63_production_guard_matrix.py": 1,
-    "test-platform-v2/backend/tests/test_environment_isolation.py": 7,
     "test-platform-v2/backend/tests/test_lanhu_evidence_import.py": 2,
     "test-platform-v2/backend/tests/test_project_existence_guard.py": 3,
     "test-platform-v2/backend/tests/test_ui_artifact_isolation.py": 1,
