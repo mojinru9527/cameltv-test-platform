@@ -16,6 +16,7 @@ description: 编码或改测试平台代码前的避坑清单，防止重复触�
 - [ ] **`httpx.TimeoutException` 的 except 必须先于 `httpx.HTTPError`**（前者是后者子类），否则超时被误分类为 network。
 - [ ] **降级要分类**：只对瞬时失败（timeout/network）降级到本地兜底；契约破损（parse/config）仍走 detailed raise，别把「AI 返回格式变了」静默降级掩盖真 bug。
 - [ ] **envelope 码 vs HTTP 码**：本仓约定「查不到 → `R(code=404)` + HTTP 200」。删除是硬删；断言别写 `status_code==404`，应写 `status_code==200 && json()["code"]==404`。
+- [ ] **404 双约定（Batch 80）**：**隔离/权限/存在性守卫**（项目不存在、跨项目访问、越权资源）走 HTTP 404 是正确契约（不泄露存在性），测试应断言 `status_code==404`；**业务资源查不到**（用例/环境/报告不存在）走 HTTP 200 + body `code==404`。改测试前先分清属于哪一类，别盲目统一。
 
 ## 前端（React / TypeScript）
 

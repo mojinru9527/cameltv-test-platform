@@ -93,9 +93,12 @@ function Test-File {
         )
     }
     if ($Role -eq "backend-tests") {
-        # envelope 断言（Warn）：查不到应断言 body code==404 而非 HTTP 404
+        # HTTP 404 断言（Warn，复核）：本仓存在双 404 约定——
+        # ① 隔离/权限/存在性守卫：HTTP 404 是正确契约（不泄露存在性）；
+        # ② 业务"查不到"：应断言 HTTP 200 + body code==404。
+        # 同一行已断言 envelope code（"code": 404 / code"] == 404）时视为①，跳过。
         $patterns += @(
-            @{ Name = "envelope 断言 status_code==404"; Re = 'status_code\s*==\s*404'; Sev = "WARN" }
+            @{ Name = "HTTP 404 断言复核（隔离守卫正确/业务查不到应 200+code）"; Re = 'status_code\s*==\s*404(?![^\r\n#]*["'']code["'']\s*[:=]\s*404)'; Sev = "WARN" }
         )
     }
     foreach ($p in $patterns) {
