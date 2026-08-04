@@ -32,7 +32,7 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 
 ## 批次模式（Batch 75 起）
 
-批次分为**完整批次**与**轻量批次**两档，判定与豁免规则详见 [docs/agent-team/pipeline-modes.md](../../../../docs/agent-team/pipeline-modes.md)。摘要：
+批次分为**完整批次**与**轻量批次**两档，判定与豁免规则详见 [docs/agent-team/pipeline-modes.md](../../../docs/agent-team/pipeline-modes.md)。摘要：
 
 | 档位 | 适用场景 | 强制工件 | 豁免记录 |
 |------|---------|---------|---------|
@@ -60,7 +60,7 @@ Agent Team 必须把每批经验回写到技能与仓库知识，禁止"流程�
 
 ## 复盘卡（Batch 75 起强制）
 
-QA 报告末尾与 Leader 判决末尾必须附复盘卡，字段见 [docs/agent-team/retro-card-template.md](../../../../docs/agent-team/retro-card-template.md)：
+QA 报告末尾与 Leader 判决末尾必须附复盘卡，字段见 [docs/agent-team/retro-card-template.md](../../../docs/agent-team/retro-card-template.md)：
 
 | 字段 | 内容 |
 |------|------|
@@ -74,7 +74,7 @@ QA 报告末尾与 Leader 判决末尾必须附复盘卡，字段见 [docs/agent
 
 ## 验收证据库（Batch 75 起）
 
-涉及验收/复测的批次，先读 [docs/agent-team/acceptance-evidence-kit.md](../../../../docs/agent-team/acceptance-evidence-kit.md)，复用已通过的基线证据（三视口截图、契约、回归矩阵、结果清单），只跑增量部分，并在 QA 报告中注明"引用基线 + 新增增量"。避免每批从零重复验收。
+涉及验收/复测的批次，先读 [docs/agent-team/acceptance-evidence-kit.md](../../../docs/agent-team/acceptance-evidence-kit.md)，复用已通过的基线证据（三视口截图、契约、回归矩阵、结果清单），只跑增量部分，并在 QA 报告中注明"引用基线 + 新增增量"。避免每批从零重复验收。
 
 ## Git 工作流（强制）
 
@@ -273,9 +273,9 @@ Agent Team 各部门执行任务时自动通过 RAG 检索知识库。检索优�
 
 - [DEPARTMENTS.md](DEPARTMENTS.md) — 六部门角色与交付物模板
 - [CHANGELOG.md](CHANGELOG.md) — 技能变更日志（Batch 75 起强制维护）
-- [pipeline-modes.md](../../../../docs/agent-team/pipeline-modes.md) — 完整/轻量双档批次定义
-- [retro-card-template.md](../../../../docs/agent-team/retro-card-template.md) — 复盘卡模板
-- [acceptance-evidence-kit.md](../../../../docs/agent-team/acceptance-evidence-kit.md) — 验收证据库规范
+- [pipeline-modes.md](../../../docs/agent-team/pipeline-modes.md) — 完整/轻量双档批次定义
+- [retro-card-template.md](../../../docs/agent-team/retro-card-template.md) — 复盘卡模板
+- [acceptance-evidence-kit.md](../../../docs/agent-team/acceptance-evidence-kit.md) — 验收证据库规范
 - `cameltv-ui-conventions` skill — 设计/前端组件与样式规范
 - `cameltv-bug-guard` skill — 编码前避坑清单
 - 嫁接单点利器：`tdd`（Dev） `diagnose`（QA） `review`（Leader） `grill-with-docs` `ubiquitous-language` `zoom-out`（Product） `design-an-interface` `prototype`（Design） `improve-codebase-architecture` `handoff`（Leader）

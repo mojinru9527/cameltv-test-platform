@@ -22,6 +22,15 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-75 — Agent Team 自我进化与提效改造（Batch 75 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C75-1 | 后续批次 Product 必须按「批次模式」判定完整/轻量，并在 PRD 记录 `mode`；轻量批次必须含豁免理由 | P2 | 2026-08-04 |
+| C75-2 | 每批 Leader 判决必须含「流程回写」小节；改动 SKILL.md/DEPARTMENTS.md 必须同步 CHANGELOG | P2 | 2026-08-04 |
+| C75-3 | PR 推送前运行 `audit-cconditions.ps1 -RequireLatestBatch`，0 硬错才允许合入 | P1 | 2026-08-04 |
+| C75-4 | 下批同步 AGENTS.md 双档措辞，消除门禁双源措辞差异 | P2 | 2026-08-04 |
+
 ### batch-74 — Test5 契约 + Playground 实证（Batch 74 Leader 条件，Batch 75 补录）
 
 | ID | 内容 | 优先级 | 创建日期 |
@@ -371,10 +380,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 35 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 39 (含 9 个 P0 blocking)
 - **In Progress**: 0
 - **Closed**: 74
-- **Total**: 109（另有 13 条历史补录不计入）
+- **Total**: 113（另有 13 条历史补录不计入）
 
 ## 维护约定
 
