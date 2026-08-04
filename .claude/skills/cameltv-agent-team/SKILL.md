@@ -227,6 +227,7 @@ pwsh scripts/git/start-agent-team-task.ps1 -Executor codex -UserConfirmedExecuto
 3. **Design**：只输出真实代码能落地的规范；若前端已实现则**反向回填**规范并做设计走查（用「文件:行号」锚点）。UI 细节走 `cameltv-ui-conventions` skill。API/模块接口设计不确定时，用 `design-an-interface` skill 并行生成多套方案对比；UI/状态机不确定时，用 `prototype` skill 做一次性原型验证后再写规范。
 4. **Dev**：**TDD 红绿重构为默认编码方法**（先写失败测试→最小实现→重构→循环）。按切片（Slice）推进：📝方案→💻编码→🔍自测→✅审批→🚀合入。每 batch 结束更新看板。相关技能存在时用于补充检查，不得把“调用过技能”当作测试证据。
    - **KB 检索**：编码前检索知识库中本次修改模块的历史缺陷和已知问题模式（`chunk_type=platform_knowledge` + `defect_case`）。检索到的每个相关问题须在代码中明确处理或在 commit message 中注明豁免理由。
+   - **自动避坑扫描（Batch 76 起）**：提交前运行 `pwsh scripts/git/scan-common-bugs.ps1`；硬伤（HARD）>0 必须处理或在该切片 commit message 中注明豁免理由，警告（WARN）逐条复核。规则集来自 `cameltv-bug-guard` 可自动化项与 Batch 37 P0/P1 案例。
 5. **QA**：默认立场「需要改进」。证据驱动——每个结论要有截图/日志/指标，不预设缺陷数量；零缺陷结论必须同时提供干净检出、类型检查、构建、自动化测试和关键用户路径证据。缺陷按 P0–P3 定级。**QA 报告末尾必须附复盘卡**（字段见「复盘卡」节）。
    - **最小硬门禁**：前端 `npm ci && npm run typecheck && npm run build`；后端 app 导入、`ruff check app --select F821`、Alembic 单头与 revision 长度测试。涉及模块的单元/集成测试必须执行并记录退出码。
    - **禁止静态代替执行**：文件存在、代码目测、工件齐全不能单独判定 PASS。

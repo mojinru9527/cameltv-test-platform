@@ -54,5 +54,6 @@ React 副作用四条铁律（违反任一 = Block PR，见 `[[react-effect-hygi
 ## 关联
 
 - [PATTERNS.md](PATTERNS.md) — 每条铁律的成因、真实案例与修法
+- `scripts/git/scan-common-bugs.ps1` — 可自动化避坑项的一键扫描（Batch 76 起，提交前运行；HARD>0 必须处理或注明豁免）
 - memory `[[common-pitfalls]]` `[[react-effect-hygiene-rules]]` `[[code-review-checklist]]` `[[bugfix-20260708-swagger-import-duplicate-discovery]]`
 - `cameltv-agent-team` skill — Dev 编码前的强制一环；`cameltv-ui-conventions` skill — UI 侧红旗
