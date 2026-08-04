@@ -5,6 +5,8 @@ and that cross-project access to tasks is denied.
 """
 import pytest
 
+from _guard_helpers import assert_guard_404
+
 
 @pytest.fixture
 def db(db_session):
@@ -74,7 +76,7 @@ class TestProjectIsolationServices:
             json={"display_name": "After"},
         )
 
-        assert response.status_code == 404
+        assert_guard_404(response)
         db.expire_all()
         assert db.get(ApiService, service.id).display_name == "Before"
 
@@ -127,7 +129,7 @@ class TestProjectIsolationEndpoints:
             json={"summary": "After"},
         )
 
-        assert response.status_code == 404
+        assert_guard_404(response)
         db.expire_all()
         assert db.get(ApiEndpoint, endpoint.id).summary == "Before"
 
@@ -149,7 +151,7 @@ class TestProjectIsolationEndpoints:
             },
         )
 
-        assert response.status_code == 404
+        assert_guard_404(response)
         assert db.query(ApiEndpoint).filter(ApiEndpoint.project_id == 1).count() == 0
 
     def test_create_endpoint_accepts_service_from_current_project(self, client, auth_headers, db):
@@ -194,7 +196,7 @@ class TestProjectIsolationEndpoints:
             json={"service_id": foreign_service.id},
         )
 
-        assert response.status_code == 404
+        assert_guard_404(response)
         db.expire_all()
         assert db.get(ApiEndpoint, endpoint_id).service_id == current_service_id
 
@@ -251,7 +253,7 @@ class TestProjectIsolationCaseGeneration:
             json={"endpoint_id": endpoint.id, "templates": ["basic"]},
         )
 
-        assert response.status_code == 404
+        assert_guard_404(response)
         assert db.query(TestCase).count() == 0
 
     def test_batch_generate_treats_foreign_endpoint_as_missing(self, client, auth_headers, db):
@@ -327,7 +329,7 @@ class TestProjectScopedAssetDeletion:
 
         response = client.delete(f"/api/v1/apitest/services/{service.id}", headers=auth_headers)
 
-        assert response.status_code == 404
+        assert_guard_404(response)
         assert db.get(ApiService, service.id) is not None
 
     def test_delete_service_returns_409_when_current_project_endpoint_references_it(
@@ -386,7 +388,7 @@ class TestProjectScopedAssetDeletion:
 
         response = client.delete(f"/api/v1/apitest/endpoints/{endpoint.id}", headers=auth_headers)
 
-        assert response.status_code == 404
+        assert_guard_404(response)
         assert db.get(ApiEndpoint, endpoint.id) is not None
 
     def test_delete_endpoint_returns_409_when_generated_case_references_it(
@@ -536,7 +538,7 @@ class TestProjectIsolationTasks:
             headers=auth_headers,
         )
 
-        assert response.status_code == 404
+        assert_guard_404(response)
 
     def test_task_failure_analysis_rejects_task_from_other_project(
         self, client, auth_headers, api_task_factory, db
@@ -558,4 +560,4 @@ class TestProjectIsolationTasks:
             headers=auth_headers,
         )
 
-        assert response.status_code == 404
+        assert_guard_404(response)
