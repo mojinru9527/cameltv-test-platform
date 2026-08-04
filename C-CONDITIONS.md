@@ -42,7 +42,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C74-1 | J16 码率指标口径修复（HLS `probe_stream` 对 m3u8 播放列表误读为码率），修复后复测 6 项达标口径 | P2 | 2026-08-04 |
+| C74-1 | ✅ CLOSED — 2026-08-04：码率改 HLS 分段实测（2026.68kbps PASS）+ 流可用性比较方向修正；av-checks 复测 6/6（batch-85 QA/证据 evidence/batch-85） | P2 | 2026-08-04 |
 | C74-2 | Test5 无契约服务（admin-service 需登录、konfi-service 需 token）由用户提供登录/token 后补拉契约并登记 | P2 | 2026-08-04 |
 | C74-3 | ✅ CLOSED — 2026-08-04：Android 真机验收完成（OPPO Find X3，batch-84 QA）；iOS 部分随 CP-C2 待设备 |
 
@@ -461,9 +461,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 39 (含 8 个 P0 blocking)
+- **Open / 非关闭**: 38 (含 8 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 82
+- **Closed**: 83
 - **Total**: 121（另有 13 条历史补录不计入）
 
 ## 维护约定
