@@ -260,7 +260,7 @@ def _execute_queue_item(item_id: int, project_id: int) -> None:
         try:
             input_data = json.loads(item.input_json or "{}")
         except (json.JSONDecodeError, TypeError):
-            pass
+            logger.warning("任务 input_json 解析失败，按空处理: %s", getattr(item, "task_id", "?"))
 
         # 调用编排引擎
         result = run_agent_in_new_session(

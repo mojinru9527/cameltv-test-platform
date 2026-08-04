@@ -416,7 +416,7 @@ def trigger_check(db: Session, task_id: int, project_id: int) -> dict:
                     bg_db.commit()
                     _queue_terminal_notifications(project_id, bg_task.name, "fail", [])
             except Exception:
-                pass
+                logger.warning("后台任务收尾通知失败: %s", bg_task.name)
         finally:
             bg_db.close()
 

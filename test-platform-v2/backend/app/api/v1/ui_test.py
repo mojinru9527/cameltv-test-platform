@@ -1,9 +1,12 @@
 """UI test API routes."""
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 
 from pathlib import Path as _Path
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
@@ -280,7 +283,7 @@ def runner_health(
             )
             browsers_ok = result.returncode == 0
         except Exception:
-            pass
+            logger.warning("Playwright 版本探测失败，假定浏览器可用")
 
     return R.ok({
         "npx": npx_ok,

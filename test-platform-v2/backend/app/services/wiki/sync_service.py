@@ -331,7 +331,7 @@ def sync_to_wiki(
                                 f" ({inter.get('interaction_type', 'navigation')})"
                             )
                 except json.JSONDecodeError:
-                    pass
+                    logger.warning("交互 JSON 解析失败，跳过")
 
             content_md = "\n\n".join(content_parts) if content_parts else f"# {page.name}\n\n（无 OCR 内容）"
             chash = _content_hash(content_md)

@@ -212,7 +212,7 @@ def parse_api_info(title: str, steps_str: str) -> tuple[str, str]:
             if m2:
                 return m2.group(1).upper(), m2.group(2)
     except (json.JSONDecodeError, TypeError):
-        pass
+        pass  # 无法解析则返回原始 method/endpoint
 
     return method, endpoint
 

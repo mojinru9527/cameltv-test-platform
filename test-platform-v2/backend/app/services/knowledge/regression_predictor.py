@@ -168,7 +168,7 @@ def _calculate_risk_for_path(db, project_id: int, api_path: str) -> dict:
             )
         ) or 0
     except Exception:
-        pass
+        logger.warning("缺陷频次查询失败，按 0 处理")
 
     # 2e. 计算风险分数（0-1）
     # 公式：缺陷频率 + 关联密度因子

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import shutil
 import subprocess
@@ -12,6 +13,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.base_service import batch_user_names
+
+logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.services.elk_service import build_kibana_link, extract_trace_id
@@ -521,7 +524,7 @@ def _execute_ui_case_sync(case) -> dict:
     try:
         default_shot.unlink(missing_ok=True)
     except OSError:
-        pass
+        logger.warning("默认截图清理失败")
 
     try:
         npx = shutil.which("npx") or shutil.which("npx.cmd")
@@ -553,7 +556,7 @@ def _execute_ui_case_sync(case) -> dict:
                 target.write_bytes(default_shot.read_bytes())
                 screenshots = ["playground-screenshot.png"]
             except OSError:
-                pass
+                logger.warning("默认截图写入失败")
         return {
             "ok": failed == 0 and total > 0,
             "total": total, "passed": passed, "failed": failed, "skipped": skipped,
@@ -570,7 +573,7 @@ def _execute_ui_case_sync(case) -> dict:
         try:
             spec_file.unlink(missing_ok=True)
         except OSError:
-            pass
+            logger.warning("spec 文件清理失败")
 
 
 def _parse_playwright_report(stdout_text: str) -> tuple[int, int, int, int] | None:
