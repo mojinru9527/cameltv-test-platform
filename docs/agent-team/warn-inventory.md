@@ -16,8 +16,9 @@
 
 1. **节奏**：每周或每 10 个批次（先到者）运行一次审计：
    ```powershell
-   pwsh scripts/git/scan-common-bugs.ps1 -RepositoryPath <root> -BaselinePath docs/agent-team/warn-baseline.json
+   pwsh scripts/git/run-warn-audit.ps1 -RepositoryPath <root>
    ```
+   该命令自动：对比基线 → 输出汇报摘要（`AUDIT_RESULT=...`）→ 幂等追加趋势行。
 2. **新增归因**：出现新 WARN 类别或新文件命中时，必须归因——新代码引入的要在当批处理或登记豁免；存量类别的数量变化记录在本文件"趋势"表。
 3. **趋势记录**：每次审计把 `{日期, 批次, warn_total, 新增类别, 清除项}` 追加到 §4。
 4. **门禁**：HARD 必须 0；新 WARN 类别不允许在无人复核的情况下合入（C76-2 延续）。
@@ -44,3 +45,6 @@
 | 日期 | 批次 | WARN 总数 | 新增类别 | 清除项 | 备注 |
 |------|------|----------:|----------|--------|------|
 | 2026-08-04 | 80 | 230 | — | cameltv-dev-key（1） | 基线建立 |
+| 2026-08-04 | 82 | 230 | 0 | 0 | 自动审计 |
+
+
