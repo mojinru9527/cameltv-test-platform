@@ -542,7 +542,7 @@ async def generate_test_cases(
         try:
             extraction = json.loads(doc.get("extraction_raw", "{}"))
         except json.JSONDecodeError:
-            pass
+            logger.warning("extraction_raw JSON 解析失败，按空提取处理: doc=%s", doc.get("id"))
 
         # ── Inherited function points (batch-26): separate from new FPs to avoid re-generating ──
         if extraction:
@@ -595,7 +595,7 @@ async def generate_test_cases(
                                         inherited_cases.append(pc_copy)
                                         break
                         except json.JSONDecodeError:
-                            pass
+                            logger.warning("用例 JSON 解析失败，跳过继承项")
 
                         # ── Log case inherit match rate for monitoring (batch-28) ──
                         if inherited_fps:

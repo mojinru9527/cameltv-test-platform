@@ -220,7 +220,7 @@ def _run_ui_test(run_id: int, job_id: int):
                     job.status = "fail"
                 db.commit()
             except Exception:
-                pass
+                logger.warning("任务状态回写失败")
         finally:
             db.close()
 

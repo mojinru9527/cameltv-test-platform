@@ -343,7 +343,7 @@ def ci_get_ui_run(
     try:
         result = _json.loads(run.result) if run.result else {}
     except (_json.JSONDecodeError, TypeError):
-        pass
+        logger.warning("执行结果 JSON 解析失败，按空结果处理: run_id=%s", run.id)
 
     return R.ok({
         "run_id": run.id,

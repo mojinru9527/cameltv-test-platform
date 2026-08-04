@@ -337,7 +337,7 @@ def _validate_spec(spec_code: str, spec_file: str) -> dict:
     try:
         tmp_path.unlink()
     except OSError:
-        pass
+        logger.warning("临时文件清理失败: %s", tmp_path)
 
     return result
 

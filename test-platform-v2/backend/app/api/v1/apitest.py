@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import json
+import logging
 import uuid
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -487,7 +490,7 @@ def _resolve_spec(source_type: str, source_ref: str, spec_content: str | None) -
                                                 break
                                     continue
                                 except Exception:
-                                    pass
+                                    logger.warning("接口发现响应解析失败，跳过该 endpoint")
                             spec_raw = body
                             break
                     except Exception:

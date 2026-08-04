@@ -11,7 +11,10 @@ from __future__ import annotations
 
 import json
 import asyncio
+import logging
 import re
+
+logger = logging.getLogger(__name__)
 from pathlib import Path
 
 import httpx
@@ -645,7 +648,7 @@ def _salvage_json_parts(text: str) -> dict | None:
                 if isinstance(obj, dict):
                     result["requirement_analysis"] = obj
             except (json.JSONDecodeError, ValueError):
-                pass
+                logger.warning("requirement_analysis JSON 解析失败，跳过该字段")
 
     if result["functional_cases"] or result["api_cases"]:
         return result
@@ -690,8 +693,7 @@ async def _call_ai_api(system_prompt: str, user_message: str, label: str = "",
             truncated = finish_reason == "length"
 
             if truncated:
-                print(f"[ai_service] WARNING: {label} response truncated (finish_reason=length, "
-                      f"raw_length={len(raw)} chars)")
+                logger.warning("[ai_service] WARNING: %s response truncated (finish_reason=length, raw_length=%d chars)", label, len(raw))
 
             try:
                 result = _parse_ai_response(raw)
@@ -701,7 +703,7 @@ async def _call_ai_api(system_prompt: str, user_message: str, label: str = "",
                 if truncated:
                     salvaged = _salvage_json_parts(raw)
                     if salvaged is not None:
-                        print(f"[ai_service] Salvaged partial data from truncated {label} response")
+                        logger.warning("[ai_service] Salvaged partial data from truncated %s response", label)
                         return {"result": salvaged, "raw": raw, "finish_reason": finish_reason,
                                 "truncated": True, "error": None}
                 return {"result": None, "raw": raw, "finish_reason": finish_reason,

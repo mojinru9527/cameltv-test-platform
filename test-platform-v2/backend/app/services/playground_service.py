@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import re
 import subprocess
 import tempfile
 import time
 from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 from app.schemas.playground import CompileRequest, CompileResponse, ExecuteRequest, ExecuteResponse, SourceType
 
@@ -197,7 +200,7 @@ def build_gherkin_from_case(case) -> str:
                     if isinstance(item, str) and item.strip():
                         lines.append(f"当 {item.strip()}")
         except (TypeError, ValueError, json.JSONDecodeError):
-            pass
+            logger.warning("Gherkin 步骤解析失败，跳过")
     try:
         steps = json.loads(case.steps or "[]")
     except (TypeError, ValueError, json.JSONDecodeError):
@@ -265,7 +268,7 @@ export default defineConfig({{
             try:
                 screenshot_base64 = base64.b64encode(screenshots[0].read_bytes()).decode()
             except Exception:
-                pass
+                logger.warning("截图读取失败，按无截图处理")
 
         duration_ms = (time.perf_counter() - t0) * 1000
         return ExecuteResponse(

@@ -12,6 +12,9 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import inspect
+import logging
+
+logger = logging.getLogger(__name__)
 import json
 import re
 import sys
@@ -333,8 +336,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
             if not doc_id:
                 team_id = params.get("team_id", "")
                 project_id = params.get("project_id", "")
-                print(f"[ai_service] No docId in URL "
-                      f"(tid={team_id[:8]}..., pid={project_id[:8]}...)")
+                logger.info("[ai_service] No docId in URL (tid=%s..., pid=%s...)", team_id[:8], project_id[:8])
                 # Try to auto-discover the first document in the project
                 try:
                     resp = await extractor.client.get(
@@ -349,9 +351,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                             if images:
                                 doc_id = images[0].get("id")
                                 doc_name_hint = images[0].get("name", "")
-                                print(f"[ai_service] Auto-selected document: "
-                                      f"'{doc_name_hint}' (id={doc_id[:16]}...) "
-                                      f"from {len(images)} available")
+                                logger.info("[ai_service] Auto-selected document: '%s' (id=%s...) from %d available", doc_name_hint, doc_id[:16], len(images))
                                 sep = "&" if "?" in url.split("#")[-1] else "?"
                                 effective_url = f"{url}{sep}docId={doc_id}"
                                 params = extractor.parse_url(effective_url)
@@ -403,8 +403,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                         break
 
                 if target_page is None:
-                    print(f"[ai_service] WARNING: page_id='{page_id}' not found in "
-                          f"sitemap ({full_page_count} pages), falling back to full extraction")
+                    logger.warning("[ai_service] WARNING: page_id='%s' not found in sitemap (%d pages), falling back to full extraction", page_id, full_page_count)
                 else:
                     target_parent_id = target_page.get('parent_id', '')
                     target_own_id = target_page.get('id', '')
@@ -424,11 +423,9 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                     if filtered_pages:
                         page_filtered = True
                         all_pages = filtered_pages
-                        print(f"[ai_service] Page-filtered extraction: {len(all_pages)}/"
-                              f"{full_page_count} pages in folder '{folder_name}'")
+                        logger.info("[ai_service] Page-filtered extraction: %d/%d pages in folder '%s'", len(all_pages), full_page_count, folder_name)
                     else:
-                        print(f"[ai_service] WARNING: page_id='{page_id}' matched but no "
-                              f"pages passed filter, falling back to full extraction")
+                        logger.warning("[ai_service] WARNING: page_id='%s' matched but no pages passed filter, falling back to full extraction", page_id)
             else:
                 # ── Version-aware changelog-first extraction ──
                 structure = _analyze_version_structure_v2(all_pages)
@@ -439,8 +436,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                 )
                 if changelog_text:
                     changelog_content = changelog_text
-                    print(f"[ai_service] Changelog extracted: {len(structure['changelog_pages'])} "
-                          f"pages, {len(changelog_text)} chars")
+                    logger.info("[ai_service] Changelog extracted: %d pages, %d chars", len(structure["changelog_pages"]), len(changelog_text))
 
                 # Step 2: Collect all detected client scopes
                 for vg in structure["version_groups"]:
@@ -459,9 +455,7 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                             detected_clients.append(c)
 
                 if structure["has_version_structure"]:
-                    print(f"[ai_service] Version-aware v2: {len(structure['version_groups'])} "
-                          f"version groups, changelog={len(structure['changelog_pages'])} pages, "
-                          f"clients={detected_clients} in '{doc_name}' ({full_page_count} pages)")
+                    logger.info("[ai_service] Version-aware v2: %d version groups, changelog=%d pages, clients=%s in '%s' (%d pages)", len(structure["version_groups"]), len(structure["changelog_pages"]), detected_clients, doc_name, full_page_count)
 
                     overall_max = _MAX_EXTRACTED_CHARS * 3
                     per_version_budget = max(
@@ -684,13 +678,13 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                     f"请手动获取 Cookie 填入 LANHU_COOKIE。\n"
                     f"错误详情: {str(e)[:200]}"
                 )
-            print(f"[ai_service] Lanhu auth failed: {e}. Attempting auto-login...")
+            logger.warning("[ai_service] Lanhu auth failed: %s. Attempting auto-login...", e)
             try:
                 new_cookie = await runtime.login()
                 if new_cookie:
                     if runtime.save_cookie is not None:
                         runtime.save_cookie(new_cookie)
-                    print("[ai_service] Auto-login succeeded, retrying extraction with new cookie...")
+                    logger.info("[ai_service] Auto-login succeeded, retrying extraction with new cookie...")
                     return await _do_extract(cookie_override=new_cookie, page_id=_page_id)
                 else:
                     raise ValueError(

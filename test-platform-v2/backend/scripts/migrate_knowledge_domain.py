@@ -95,7 +95,7 @@ def classify_domain(
             if isinstance(md, dict) and md.get("knowledge_domain") == "platform":
                 return "platform"
         except (json.JSONDecodeError, TypeError):
-            pass
+            pass  # 无法解析则继续探测下一分支
 
     # —— Project knowledge ——
     if source_type == "lanhu_evidence":
