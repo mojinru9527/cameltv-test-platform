@@ -58,3 +58,18 @@ sudo tail -f /var/log/openvpn/*.log
 
 - OpenVPN 真实 CA、账号密码**不入库**；凭据只存在于 WSL 本地 `/opt/test5-runner/test5.auth`。
 - 执行器产物（报告/日志）回传共享目录，验收结果按 C63-2 登记，不伪造证据。
+
+## 5. Test5 契约拉取（batch-74 新增）
+
+网关：`camel-api-gateway05.svc.elelive.cn`（内网，OpenVPN 下经 VPN DNS 10.7.7.1 解析）。
+2026-08-04 实测：六节点 + 网关均解析到 `192.168.50.170`（VPN DNS 重试可稳定；hosts 补录可选）。
+网关暴露 10 个路由服务（`GET /actuator/gateway/routes`）。
+
+```bash
+bash scripts/executor/fetch-test5-contracts.sh
+```
+
+产物：`test-platform-v2/tests/api-testing/specs/test5-contracts/{service}.openapi.json` + `manifest.json`
+（服务/URL/spec/版本/路径数/SHA-256/拉取时间）。契约只读拉取，不含凭据；
+`admin-service`（302 需登录）、`konfi-service`（需 token）、`gateway-service`（无文档）
+在 manifest 中如实登记，不伪造。

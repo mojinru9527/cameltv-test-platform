@@ -1,0 +1,28 @@
+{
+  "id": 1,
+  "job_id": 1,
+  "status": "done",
+  "result": {
+    "total": 1,
+    "pass_": 1,
+    "fail": 0,
+    "skip": 0,
+    "duration": 5.37
+  },
+  "screenshots": [],
+  "video_url": "",
+  "trace_id": "",
+  "base_url": "",
+  "browser": "chromium",
+  "duration": 8.03,
+  "artifact_dir": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/storage/ui-runs/1",
+  "report_json_path": "F:/CamelTv-worktrees/codex-batch-74-test5-playground-acceptance/test-platform-v2/backend/storage/ui-runs/1/report.json",
+  "html_report_path": "",
+  "error_message": "",
+  "stdout": "\nRunning 1 test using 1 worker\n\n[1/1] [chromium] › specs\\generated\\batch74-TC-LIVE-001.spec.ts:3:5 › 进入直播间默认播放视频流\n  1 passed (6.1s)\n",
+  "stderr": "",
+  "process_id": 28192,
+  "cancel_requested": false,
+  "started_at": "2026-08-04T07:18:19.854735",
+  "finished_at": "2026-08-04T07:18:27.888165"
+}

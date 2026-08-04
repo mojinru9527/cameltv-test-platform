@@ -1,0 +1,130 @@
+{
+  "task": {
+    "id": 2,
+    "project_id": 1,
+    "task_id": "AV-20260804-002",
+    "name": "J16 世界杯决赛回放 av-checks v2",
+    "stream_url": "https://liveplay2.camel4.live/hls/7-19-2026-World-Cup-Final-Match-England-v-France/main.m3u8?Expires=1785829155&KeyName=luotuo-live&Signature=ZCJs1LgxkhBL4nBR4j3sB6aOiZFbZmqMiOGuy9WblxTT_yYUN6U5kCiWxyrHj0aC2SPF_fMNJF15y7c_y_S9CA",
+    "protocol": "HLS",
+    "status": "done",
+    "last_result": "{\"total\": 6, \"pass_count\": 4, \"ffprobe_version\": \"ffprobe version 8.1.1-full_build-www.gyan.dev Copyright (c) 2007-2026 the FFmpeg developers\", \"checked_at\": \"2026-08-04T07:36:16.656538+00:00\", \"raw_format_name\": \"hls\", \"raw_duration\": \"7843.035120\", \"raw_size\": \"24108\", \"raw_stream_count\": 2, \"raw_ffprobe_version\": \"ffprobe version 8.1.1-full_build-www.gyan.dev Copyright (c) 2007-2026 the FFmpeg developers\"}",
+    "creator_id": 1,
+    "created_at": "2026-08-04T07:36:15.501543",
+    "updated_at": "2026-08-04T07:36:16.657059",
+    "creator_name": "超级管理员",
+    "metrics": [
+      {
+        "id": 1,
+        "task_id": 2,
+        "metric_name": "起播时延(ms)",
+        "metric_value": 1453.656,
+        "threshold": 2000.0,
+        "pass_": true,
+        "detail": "{\"unit\": \"ms\", \"recommended\": \"<= 2000\", \"raw_value\": 1453.656}"
+      },
+      {
+        "id": 2,
+        "task_id": 2,
+        "metric_name": "码率(kbps)",
+        "metric_value": 0.02,
+        "threshold": 500.0,
+        "pass_": false,
+        "detail": "{\"unit\": \"kbps\", \"recommended\": \">= 500\", \"raw_value\": 0.02}"
+      },
+      {
+        "id": 3,
+        "task_id": 2,
+        "metric_name": "帧率(fps)",
+        "metric_value": 29.97,
+        "threshold": 24.0,
+        "pass_": true,
+        "detail": "{\"unit\": \"fps\", \"recommended\": \">= 24\", \"raw_value\": 29.97}"
+      },
+      {
+        "id": 4,
+        "task_id": 2,
+        "metric_name": "分辨率(px)",
+        "metric_value": 921600.0,
+        "threshold": 921600.0,
+        "pass_": true,
+        "detail": "{\"unit\": \"px\", \"recommended\": \">= 1280×720\", \"raw_value\": 921600}"
+      },
+      {
+        "id": 5,
+        "task_id": 2,
+        "metric_name": "流可用性(score)",
+        "metric_value": 100.0,
+        "threshold": 50.0,
+        "pass_": false,
+        "detail": "{\"unit\": \"score\", \"recommended\": \">= 50\", \"raw_value\": 100}"
+      },
+      {
+        "id": 6,
+        "task_id": 2,
+        "metric_name": "编码格式",
+        "metric_value": 1.0,
+        "threshold": 1.0,
+        "pass_": true,
+        "detail": "{\"unit\": \"\", \"recommended\": \"H.264/AAC/HEVC/AV1\", \"raw_value\": 1}"
+      }
+    ],
+    "measurements": []
+  },
+  "metrics": [
+    {
+      "id": 1,
+      "task_id": 2,
+      "metric_name": "起播时延(ms)",
+      "metric_value": 1453.656,
+      "threshold": 2000.0,
+      "pass_": true,
+      "detail": "{\"unit\": \"ms\", \"recommended\": \"<= 2000\", \"raw_value\": 1453.656}"
+    },
+    {
+      "id": 2,
+      "task_id": 2,
+      "metric_name": "码率(kbps)",
+      "metric_value": 0.02,
+      "threshold": 500.0,
+      "pass_": false,
+      "detail": "{\"unit\": \"kbps\", \"recommended\": \">= 500\", \"raw_value\": 0.02}"
+    },
+    {
+      "id": 3,
+      "task_id": 2,
+      "metric_name": "帧率(fps)",
+      "metric_value": 29.97,
+      "threshold": 24.0,
+      "pass_": true,
+      "detail": "{\"unit\": \"fps\", \"recommended\": \">= 24\", \"raw_value\": 29.97}"
+    },
+    {
+      "id": 4,
+      "task_id": 2,
+      "metric_name": "分辨率(px)",
+      "metric_value": 921600.0,
+      "threshold": 921600.0,
+      "pass_": true,
+      "detail": "{\"unit\": \"px\", \"recommended\": \">= 1280×720\", \"raw_value\": 921600}"
+    },
+    {
+      "id": 5,
+      "task_id": 2,
+      "metric_name": "流可用性(score)",
+      "metric_value": 100.0,
+      "threshold": 50.0,
+      "pass_": false,
+      "detail": "{\"unit\": \"score\", \"recommended\": \">= 50\", \"raw_value\": 100}"
+    },
+    {
+      "id": 6,
+      "task_id": 2,
+      "metric_name": "编码格式",
+      "metric_value": 1.0,
+      "threshold": 1.0,
+      "pass_": true,
+      "detail": "{\"unit\": \"\", \"recommended\": \"H.264/AAC/HEVC/AV1\", \"raw_value\": 1}"
+    }
+  ],
+  "stream_url": "https://liveplay2.camel4.live/hls/7-19-2026-World-Cup-Final-Match-England-v-France/main.m3u8?Expires=1785829155&KeyName=luotuo-live&Signature=REDACTED"
+}

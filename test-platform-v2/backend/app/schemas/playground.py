@@ -16,6 +16,10 @@ class SourceType(str, Enum):
 class CompileRequest(BaseModel):
     source: str = Field(..., description="Test case source text (Gherkin/Markdown/plain)")
     source_type: SourceType = Field(default=SourceType.gherkin, description="Source format")
+    case_id: Optional[str] = Field(
+        default=None,
+        description="功能用例编号（如 TC-LIVE-001）；提供时忽略 source，从用例 steps 编译",
+    )
 
 
 class CompileResponse(BaseModel):

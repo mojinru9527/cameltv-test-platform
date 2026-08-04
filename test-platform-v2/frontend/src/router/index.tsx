@@ -34,6 +34,7 @@ const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const AgentWorkbenchPage = lazy(() => import('@/pages/agent-workbench'))
 const PerftestPage = lazy(() => import('@/pages/perftest'))
 const OperationsReleasePage = lazy(() => import('@/pages/operations-release'))
+const PlaygroundPage = lazy(() => import('@/pages/playground'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
 const BundleDetailPage = lazy(() => import('@/pages/release-bundles/BundleDetail'))
 const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPanorama'))
@@ -203,6 +204,7 @@ export const router = createBrowserRouter([
       { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },
       { path: 'integration', element: <PageLoader><IntegrationPage /></PageLoader> },
       { path: 'knowledge', element: <PageLoader><KnowledgePage /></PageLoader> },
+      { path: 'playground', element: <PageLoader><PlaygroundPage /></PageLoader> },
       { path: 'version-mission', element: <Navigate to="/release-bundles" replace /> },
       { path: 'release-bundles', element: <PageLoader><ReleaseBundlesPage /></PageLoader> },
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
