@@ -46,6 +46,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C76-1 | 修复 scan-common-bugs 扫出的存量 HARD：`R.err` 7 处（补 `def err` 或改 raise）、seed.py 密码 print（改 logger 不输出明文）、高危 except-pass 逐处加日志或传播 | P1 | 2026-08-04 |
 | C76-2 | 后续批次提交前运行 `scan-common-bugs.ps1`，HARD>0 处理或注明豁免 | P2 | 2026-08-04 |
 
+### batch-77 — 存量 P0 修复（Batch 77 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C77-1 | 剩余 49 处 HARD 逐项处理：app 内 print 迁移 logger、无注释 except-pass 加日志或注释说明；每批消化 ≥10 处或给出豁免理由 | P2 | 2026-08-04 |
+| C77-2 | 修复开发机 Python 3.12 环境（重装基础 Python 并重建 .venv），恢复本地 pytest 执行能力 | P2 | 2026-08-04 |
+
 ### batch-63 — 汇总问题遗留解决版本（Batch 63 Leader 条件，本批归位）
 
 | ID | 内容 | 优先级 | 创建日期 |
@@ -366,6 +373,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|---------|------|
 | C75-4 | AGENTS.md 双档措辞同步 | Batch 76 §2.1.2 已与 SKILL.md/pipeline-modes.md 一致（PR #111 待合入） | 2026-08-04 |
 
+### Batch 76 → 77 关闭
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C76-1 | 修复 scan 扫出的存量 HARD（R.err/seed 密码/高危 except-pass） | Batch 77：`common.py` 补 `err()` + `test_r_schema.py` 3 条；seed 密码清零；6 处吞异常加日志（PR #112 待合入） | 2026-08-04 |
+
 ### Batch 63 — 遗留条件对账关闭
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -393,10 +406,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 40 (含 9 个 P0 blocking)
+- **Open / 非关闭**: 41 (含 9 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 75
-- **Total**: 115（另有 13 条历史补录不计入）
+- **Closed**: 76
+- **Total**: 117（另有 13 条历史补录不计入）
 
 ## 维护约定
 
