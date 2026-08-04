@@ -1,0 +1,11 @@
+{
+  "project_b_own_total": null,
+  "cross_project_requirement": {
+    "status": 403,
+    "body": "{\"code\":403,\"msg\":\"缺少权限：requirement:upload\",\"data\":null}"
+  },
+  "cross_project_case": {
+    "status": 403,
+    "body": "{\"code\":403,\"msg\":\"缺少权限：testcase:detail\",\"data\":null}"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "config": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+      "wiki_enabled": true,
+      "wiki_auto_ingest_enabled": true,
+      "wiki_diff_enabled": true,
+      "wiki_auto_create_artifact": false,
+      "lanhu_mcp_enabled": true
+    }
+  },
+  "raw_sources": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+      "total": 0,
+      "page": 1,
+      "page_size": 20,
+      "items": []
+    }
+  }
+}

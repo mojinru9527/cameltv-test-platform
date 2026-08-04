@@ -1,0 +1,718 @@
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "document_id": 1,
+    "requirement_analysis": {
+      "extracted_requirements": [
+        {
+          "id": "REQ-1",
+          "title": "直播观看-进入直播间",
+          "description": "用户在首页可查看进行中的赛事列表，点击赛事进入直播间，播放器加载视频流。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "medium",
+              "description": "未明确赛事列表的加载方式（分页/滚动加载）和刷新机制。",
+              "suggestion": "明确列表加载方式及刷新策略。"
+            },
+            {
+              "severity": "medium",
+              "description": "未定义进入直播间时的网络异常处理（如无网络、弱网）。",
+              "suggestion": "补充网络异常提示和重试机制。"
+            },
+            {
+              "severity": "low",
+              "description": "未说明直播间是否支持竖屏/横屏切换。",
+              "suggestion": "明确播放器方向支持。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-2",
+          "title": "直播观看-清晰度切换",
+          "description": "直播间支持清晰度切换（如流畅、高清、超清）。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "medium",
+              "description": "未列出具体清晰度档位，切换逻辑（如当前档位不可用时的处理）未说明。",
+              "suggestion": "明确清晰度档位及降级策略。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-3",
+          "title": "直播观看-全屏切换",
+          "description": "直播间支持全屏切换，全屏后播放器全屏显示。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "low",
+              "description": "未明确全屏时是否锁定屏幕方向、退出全屏方式。",
+              "suggestion": "补充全屏交互细节。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-4",
+          "title": "直播观看-切出直播间停止播放",
+          "description": "用户切出直播间（如返回首页）后，播放停止。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "medium",
+              "description": "未定义切出直播间时是否释放资源、是否提示用户。",
+              "suggestion": "明确资源释放和提示策略。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-5",
+          "title": "赛事回放-回放列表分页加载",
+          "description": "回放列表分页加载，用户可浏览历史赛事。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "medium",
+              "description": "未明确分页大小、加载更多方式（自动/手动）及加载失败处理。",
+              "suggestion": "明确分页参数和加载交互。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-6",
+          "title": "赛事回放-播放完整回放视频",
+          "description": "点击回放可播放完整视频，支持加载。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "medium",
+              "description": "未说明回放视频是否支持断点续播、加载失败重试。",
+              "suggestion": "补充播放异常处理。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-7",
+          "title": "赛事回放-进度条拖动",
+          "description": "回放视频支持进度条拖动跳转。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "low",
+              "description": "未明确拖动时是否实时预览、拖动后加载缓冲提示。",
+              "suggestion": "补充拖动交互细节。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-8",
+          "title": "赛事回放-倍速播放",
+          "description": "支持 1.0/1.5/2.0 倍速切换。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "low",
+              "description": "未说明倍速切换后是否保持，退出后是否重置。",
+              "suggestion": "明确倍速状态保持策略。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-9",
+          "title": "直播间互动-发送弹幕",
+          "description": "观众可发送弹幕，弹幕实时展示（1s内）。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "medium",
+              "description": "未定义弹幕内容长度限制、敏感词过滤、发送频率限制。",
+              "suggestion": "补充弹幕内容校验和频率控制。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-10",
+          "title": "直播间互动-发送礼物",
+          "description": "观众可发送礼物，礼物触发动画。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "medium",
+              "description": "未定义礼物类型、价格、余额不足处理、动画触发条件。",
+              "suggestion": "明确礼物系统规则。"
+            }
+          ]
+        },
+        {
+          "id": "REQ-11",
+          "title": "直播间互动-异常消息提示重试",
+          "description": "异常消息（如发送失败）提示重试。",
+          "type": "functional",
+          "issues": [
+            {
+              "severity": "low",
+              "description": "未明确异常类型（网络、服务端）及重试机制。",
+              "suggestion": "补充异常分类和重试策略。"
+            }
+          ]
+        }
+      ],
+      "overall_assessment": "需求整体覆盖了直播观看、回放和互动三大核心功能，但存在多处细节缺失：如列表加载方式、清晰度档位、弹幕和礼物的具体规则、异常处理等。需求描述偏向功能概述，缺少边界条件和异常场景，需补充完善。"
+    },
+    "functional_cases": [
+      {
+        "index": 0,
+        "title": "首页展示进行中赛事列表",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "直播观看",
+        "module": "赛事列表",
+        "preconditions": "存在进行中的赛事，用户已登录",
+        "steps": "[{\"step\": 1, \"desc\": \"打开首页\", \"expected\": \"页面加载，显示进行中的赛事列表\"}, {\"step\": 2, \"desc\": \"查看列表内容\", \"expected\": \"列表展示赛事名称、时间、状态等信息，且均为进行中状态\"}]",
+        "expected_result": "首页正确展示进行中的赛事列表，无异常。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 1,
+        "title": "首页赛事列表为空时的展示",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "直播观看",
+        "module": "赛事列表",
+        "preconditions": "无进行中的赛事",
+        "steps": "[{\"step\": 1, \"desc\": \"打开首页\", \"expected\": \"页面显示空状态提示，如「暂无进行中的赛事」\"}]",
+        "expected_result": "列表为空时给出友好提示，不出现空白页或报错。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 2,
+        "title": "点击赛事进入直播间并加载播放器",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "直播观看",
+        "module": "直播间",
+        "preconditions": "存在进行中的赛事，用户已登录",
+        "steps": "[{\"step\": 1, \"desc\": \"在首页点击一个赛事卡片\", \"expected\": \"跳转到直播间页面，播放器开始加载视频流\"}, {\"step\": 2, \"desc\": \"等待播放器加载\", \"expected\": \"播放器显示加载中，随后开始播放，画面和声音正常\"}]",
+        "expected_result": "播放器成功加载并播放直播流。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 3,
+        "title": "进入直播间时网络异常处理",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "直播观看",
+        "module": "直播间",
+        "preconditions": "用户网络不可用",
+        "steps": "[{\"step\": 1, \"desc\": \"在无网络状态下点击赛事\", \"expected\": \"提示网络异常，并提供重试按钮\"}]",
+        "expected_result": "播放器不崩溃，显示错误提示，点击重试可重新加载。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 4,
+        "title": "直播清晰度切换成功",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "直播观看",
+        "module": "直播间",
+        "preconditions": "直播间播放中，存在多个清晰度选项",
+        "steps": "[{\"step\": 1, \"desc\": \"点击清晰度按钮\", \"expected\": \"弹出清晰度选择列表，包含流畅、高清、超清等选项\"}, {\"step\": 2, \"desc\": \"选择「高清」\", \"expected\": \"播放器切换清晰度，画面清晰度变化，播放不中断\"}]",
+        "expected_result": "清晰度切换生效，播放器继续播放。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 5,
+        "title": "清晰度切换时当前档位不可用",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "直播观看",
+        "module": "直播间",
+        "preconditions": "直播间播放中，某个清晰度（如超清）不可用",
+        "steps": "[{\"step\": 1, \"desc\": \"点击清晰度按钮，选择「超清」\", \"expected\": \"提示「该清晰度暂不可用」，并自动切换至上一可用档位或保持原清晰度\"}]",
+        "expected_result": "播放器不崩溃，给出提示并保持可用清晰度。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 6,
+        "title": "直播全屏切换成功",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "直播观看",
+        "module": "直播间",
+        "preconditions": "直播间播放中",
+        "steps": "[{\"step\": 1, \"desc\": \"点击全屏按钮\", \"expected\": \"播放器进入全屏模式，铺满屏幕，隐藏非必要UI\"}, {\"step\": 2, \"desc\": \"点击退出全屏按钮或按ESC\", \"expected\": \"播放器退出全屏，恢复原窗口大小\"}]",
+        "expected_result": "全屏切换可用，退出后播放不中断。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 7,
+        "title": "全屏时屏幕方向锁定",
+        "case_type": "manual",
+        "priority": "P2",
+        "domain": "直播观看",
+        "module": "直播间",
+        "preconditions": "直播间播放中，设备支持横竖屏",
+        "steps": "[{\"step\": 1, \"desc\": \"进入全屏\", \"expected\": \"屏幕自动横屏（如支持），方向锁定\"}, {\"step\": 2, \"desc\": \"旋转设备\", \"expected\": \"屏幕方向不随设备旋转而改变\"}]",
+        "expected_result": "全屏时方向锁定，体验良好。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "体验用例",
+        "imported": false,
+        "client_scope": [
+          "app"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 8,
+        "title": "切出直播间后播放停止",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "直播观看",
+        "module": "直播间",
+        "preconditions": "直播间播放中",
+        "steps": "[{\"step\": 1, \"desc\": \"点击返回按钮或切换到其他页面\", \"expected\": \"直播间页面关闭，播放器停止播放，声音停止\"}, {\"step\": 2, \"desc\": \"检查后台播放状态\", \"expected\": \"无后台播放，资源释放\"}]",
+        "expected_result": "切出直播间后播放完全停止，无声音残留。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 9,
+        "title": "切出直播间时未保存进度提示",
+        "case_type": "manual",
+        "priority": "P2",
+        "domain": "直播观看",
+        "module": "直播间",
+        "preconditions": "直播间播放中，用户未进行任何操作",
+        "steps": "[{\"step\": 1, \"desc\": \"点击返回\", \"expected\": \"直接退出，无提示（直播无进度保存）\"}]",
+        "expected_result": "直播退出无需提示，播放停止。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "体验用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 10,
+        "title": "回放列表分页加载",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "赛事回放",
+        "module": "回放列表",
+        "preconditions": "存在多场历史赛事（超过一页）",
+        "steps": "[{\"step\": 1, \"desc\": \"进入回放列表页\", \"expected\": \"显示第一页回放赛事，每页数量固定（如10条）\"}, {\"step\": 2, \"desc\": \"滚动到底部或点击加载更多\", \"expected\": \"自动加载下一页数据，列表追加显示\"}]",
+        "expected_result": "回放列表分页加载正常，无重复数据。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 11,
+        "title": "回放列表加载失败提示",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "赛事回放",
+        "module": "回放列表",
+        "preconditions": "网络异常",
+        "steps": "[{\"step\": 1, \"desc\": \"进入回放列表页\", \"expected\": \"提示加载失败，显示重试按钮\"}, {\"step\": 2, \"desc\": \"点击重试\", \"expected\": \"重新加载列表，成功后显示数据\"}]",
+        "expected_result": "加载失败有提示，重试可恢复。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 12,
+        "title": "点击回放播放完整视频",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "赛事回放",
+        "module": "回放播放",
+        "preconditions": "回放列表存在赛事，用户已登录",
+        "steps": "[{\"step\": 1, \"desc\": \"点击一个回放赛事\", \"expected\": \"进入回放播放页，播放器加载视频\"}, {\"step\": 2, \"desc\": \"等待加载完成\", \"expected\": \"视频开始播放，可完整播放至结束\"}]",
+        "expected_result": "回放视频可完整播放，无中断。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 13,
+        "title": "回放视频加载失败处理",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "赛事回放",
+        "module": "回放播放",
+        "preconditions": "网络异常或视频源不可用",
+        "steps": "[{\"step\": 1, \"desc\": \"点击回放赛事\", \"expected\": \"播放器提示加载失败，提供重试按钮\"}]",
+        "expected_result": "加载失败有明确提示，重试可重新加载。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 14,
+        "title": "回放进度条拖动跳转",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "赛事回放",
+        "module": "回放播放",
+        "preconditions": "回放视频播放中",
+        "steps": "[{\"step\": 1, \"desc\": \"拖动进度条到中间位置\", \"expected\": \"播放器跳转到对应时间点，继续播放\"}, {\"step\": 2, \"desc\": \"观察播放时间\", \"expected\": \"播放时间与进度条位置一致\"}]",
+        "expected_result": "进度条拖动可正常跳转。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 15,
+        "title": "拖动进度条到末尾",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "赛事回放",
+        "module": "回放播放",
+        "preconditions": "回放视频播放中",
+        "steps": "[{\"step\": 1, \"desc\": \"拖动进度条到最右端\", \"expected\": \"播放器跳转到视频末尾，显示结束状态或停止\"}]",
+        "expected_result": "跳转到末尾后播放停止，不崩溃。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "边界用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 16,
+        "title": "回放倍速切换",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "赛事回放",
+        "module": "回放播放",
+        "preconditions": "回放视频播放中",
+        "steps": "[{\"step\": 1, \"desc\": \"点击倍速按钮\", \"expected\": \"弹出倍速选项：1.0、1.5、2.0\"}, {\"step\": 2, \"desc\": \"选择1.5倍速\", \"expected\": \"播放速度变为1.5倍，声音正常\"}]",
+        "expected_result": "倍速切换生效。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 17,
+        "title": "倍速切换后退出播放再进入",
+        "case_type": "manual",
+        "priority": "P2",
+        "domain": "赛事回放",
+        "module": "回放播放",
+        "preconditions": "回放视频播放中，已切换至2.0倍速",
+        "steps": "[{\"step\": 1, \"desc\": \"退出回放播放页\", \"expected\": \"返回列表页\"}, {\"step\": 2, \"desc\": \"重新进入该回放\", \"expected\": \"倍速恢复为默认1.0，或保持上次设置（需明确）\"}]",
+        "expected_result": "倍速状态处理符合产品定义。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "体验用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 18,
+        "title": "发送弹幕成功展示",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "直播间互动",
+        "module": "弹幕",
+        "preconditions": "直播间播放中，用户已登录",
+        "steps": "[{\"step\": 1, \"desc\": \"在弹幕输入框输入文字「加油」\", \"expected\": \"输入框正常显示文字\"}, {\"step\": 2, \"desc\": \"点击发送按钮\", \"expected\": \"弹幕在1秒内出现在直播画面上，并滚动展示\"}]",
+        "expected_result": "弹幕发送成功并实时展示。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 19,
+        "title": "弹幕内容为空时发送",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "直播间互动",
+        "module": "弹幕",
+        "preconditions": "直播间播放中，用户已登录",
+        "steps": "[{\"step\": 1, \"desc\": \"不输入任何内容，直接点击发送\", \"expected\": \"提示「弹幕内容不能为空」，不发送\"}]",
+        "expected_result": "空弹幕被拦截，有提示。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 20,
+        "title": "弹幕内容超长限制",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "直播间互动",
+        "module": "弹幕",
+        "preconditions": "直播间播放中，用户已登录",
+        "steps": "[{\"step\": 1, \"desc\": \"输入超过最大长度（如50字）的弹幕\", \"expected\": \"输入框限制输入或提示超长，无法发送\"}]",
+        "expected_result": "超长弹幕被限制，有提示。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "边界用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 21,
+        "title": "发送弹幕失败提示重试",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "直播间互动",
+        "module": "弹幕",
+        "preconditions": "直播间播放中，网络异常",
+        "steps": "[{\"step\": 1, \"desc\": \"输入弹幕并发送\", \"expected\": \"提示「发送失败」，并提供重试按钮\"}, {\"step\": 2, \"desc\": \"点击重试\", \"expected\": \"重新发送，成功后展示\"}]",
+        "expected_result": "发送失败有提示，重试可成功。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 22,
+        "title": "发送礼物触发动画",
+        "case_type": "manual",
+        "priority": "P0",
+        "domain": "直播间互动",
+        "module": "礼物",
+        "preconditions": "直播间播放中，用户已登录，账户余额充足",
+        "steps": "[{\"step\": 1, \"desc\": \"点击礼物按钮\", \"expected\": \"弹出礼物面板，展示可赠送的礼物列表\"}, {\"step\": 2, \"desc\": \"选择一个礼物并点击赠送\", \"expected\": \"礼物动画触发，在直播间展示，余额相应扣减\"}]",
+        "expected_result": "礼物发送成功，动画正常触发。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "正面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 23,
+        "title": "礼物余额不足处理",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "直播间互动",
+        "module": "礼物",
+        "preconditions": "直播间播放中，用户余额不足",
+        "steps": "[{\"step\": 1, \"desc\": \"点击礼物并选择赠送\", \"expected\": \"提示「余额不足」，引导充值，不触发动画\"}]",
+        "expected_result": "余额不足有明确提示，不扣费。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      },
+      {
+        "index": 24,
+        "title": "礼物发送失败提示重试",
+        "case_type": "manual",
+        "priority": "P1",
+        "domain": "直播间互动",
+        "module": "礼物",
+        "preconditions": "直播间播放中，网络异常",
+        "steps": "[{\"step\": 1, \"desc\": \"选择礼物并点击赠送\", \"expected\": \"提示「发送失败」，提供重试按钮\"}, {\"step\": 2, \"desc\": \"点击重试\", \"expected\": \"重新发送，成功后动画触发\"}]",
+        "expected_result": "发送失败有提示，重试可成功。",
+        "api_method": "",
+        "api_endpoint": "",
+        "remark": "负面用例",
+        "imported": false,
+        "client_scope": [
+          "app",
+          "pc",
+          "web"
+        ],
+        "_inherited": false,
+        "_from_version": ""
+      }
+    ],
+    "api_cases": [],
+    "raw_response": "{\"requirement_analysis\": {\"extracted_requirements\": [{\"id\": \"REQ-1\", \"title\": \"直播观看-进入直播间\", \"description\": \"用户在首页可查看进行中的赛事列表，点击赛事进入直播间，播放器加载视频流。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确赛事列表的加载方式（分页/滚动加载）和刷新机制。\", \"suggestion\": \"明确列表加载方式及刷新策略。\"}, {\"severity\": \"medium\", \"description\": \"未定义进入直播间时的网络异常处理（如无网络、弱网）。\", \"suggestion\": \"补充网络异常提示和重试机制。\"}, {\"severity\": \"low\", \"description\": \"未说明直播间是否支持竖屏/横屏切换。\", \"suggestion\": \"明确播放器方向支持。\"}]}, {\"id\": \"REQ-2\", \"title\": \"直播观看-清晰度切换\", \"description\": \"直播间支持清晰度切换（如流畅、高清、超清）。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"medium\", \"description\": \"未列出具体清晰度档位，切换逻辑（如当前档位不可用时的处理）未说明。\", \"suggestion\": \"明确清晰度档位及降级策略。\"}]}, {\"id\": \"REQ-3\", \"title\": \"直播观看-全屏切换\", \"description\": \"直播间支持全屏切换，全屏后播放器全屏显示。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"low\", \"description\": \"未明确全屏时是否锁定屏幕方向、退出全屏方式。\", \"suggestion\": \"补充全屏交互细节。\"}]}, {\"id\": \"REQ-4\", \"title\": \"直播观看-切出直播间停止播放\", \"description\": \"用户切出直播间（如返回首页）后，播放停止。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"medium\", \"description\": \"未定义切出直播间时是否释放资源、是否提示用户。\", \"suggestion\": \"明确资源释放和提示策略。\"}]}, {\"id\": \"REQ-5\", \"title\": \"赛事回放-回放列表分页加载\", \"description\": \"回放列表分页加载，用户可浏览历史赛事。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确分页大小、加载更多方式（自动/手动）及加载失败处理。\", \"suggestion\": \"明确分页参数和加载交互。\"}]}, {\"id\": \"REQ-6\", \"title\": \"赛事回放-播放完整回放视频\", \"description\": \"点击回放可播放完整视频，支持加载。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"medium\", \"description\": \"未说明回放视频是否支持断点续播、加载失败重试。\", \"suggestion\": \"补充播放异常处理。\"}]}, {\"id\": \"REQ-7\", \"title\": \"赛事回放-进度条拖动\", \"description\": \"回放视频支持进度条拖动跳转。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"low\", \"description\": \"未明确拖动时是否实时预览、拖动后加载缓冲提示。\", \"suggestion\": \"补充拖动交互细节。\"}]}, {\"id\": \"REQ-8\", \"title\": \"赛事回放-倍速播放\", \"description\": \"支持 1.0/1.5/2.0 倍速切换。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"low\", \"description\": \"未说明倍速切换后是否保持，退出后是否重置。\", \"suggestion\": \"明确倍速状态保持策略。\"}]}, {\"id\": \"REQ-9\", \"title\": \"直播间互动-发送弹幕\", \"description\": \"观众可发送弹幕，弹幕实时展示（1s内）。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"medium\", \"description\": \"未定义弹幕内容长度限制、敏感词过滤、发送频率限制。\", \"suggestion\": \"补充弹幕内容校验和频率控制。\"}]}, {\"id\": \"REQ-10\", \"title\": \"直播间互动-发送礼物\", \"description\": \"观众可发送礼物，礼物触发动画。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"medium\", \"description\": \"未定义礼物类型、价格、余额不足处理、动画触发条件。\", \"suggestion\": \"明确礼物系统规则。\"}]}, {\"id\": \"REQ-11\", \"title\": \"直播间互动-异常消息提示重试\", \"description\": \"异常消息（如发送失败）提示重试。\", \"type\": \"functional\", \"issues\": [{\"severity\": \"low\", \"description\": \"未明确异常类型（网络、服务端）及重试机制。\", \"suggestion\": \"补充异常分类和重试策略。\"}]}], \"overall_assessment\": \"需求整体覆盖了直播观看、回放和互动三大核心功能，但存在多处细节缺失：如列表加载方式、清晰度档位、弹幕和礼物的具体规则、异常处理等。需求描述偏向功能概述，缺少边界条件和异常场景，需补充完善。\"}, \"functional_cases\": [{\"title\": \"首页展示进行中赛事列表\", \"priority\": \"P0\", \"domain\": \"直播观看\", \"module\": \"赛事列表\", \"preconditions\": \"存在进行中的赛事，用户已登录\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"打开首页\\\", \\\"expected\\\": \\\"页面加载，显示进行中的赛事列表\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"查看列表内容\\\", \\\"expected\\\": \\\"列表展示赛事名称、时间、状态等信息，且均为进行中状态\\\"}]\", \"expected_result\": \"首页正确展示进行中的赛事列表，无异常。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 0, \"case_type\": \"manual\"}, {\"title\": \"首页赛事列表为空时的展示\", \"priority\": \"P1\", \"domain\": \"直播观看\", \"module\": \"赛事列表\", \"preconditions\": \"无进行中的赛事\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"打开首页\\\", \\\"expected\\\": \\\"页面显示空状态提示，如「暂无进行中的赛事」\\\"}]\", \"expected_result\": \"列表为空时给出友好提示，不出现空白页或报错。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 1, \"case_type\": \"manual\"}, {\"title\": \"点击赛事进入直播间并加载播放器\", \"priority\": \"P0\", \"domain\": \"直播观看\", \"module\": \"直播间\", \"preconditions\": \"存在进行中的赛事，用户已登录\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"在首页点击一个赛事卡片\\\", \\\"expected\\\": \\\"跳转到直播间页面，播放器开始加载视频流\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"等待播放器加载\\\", \\\"expected\\\": \\\"播放器显示加载中，随后开始播放，画面和声音正常\\\"}]\", \"expected_result\": \"播放器成功加载并播放直播流。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 2, \"case_type\": \"manual\"}, {\"title\": \"进入直播间时网络异常处理\", \"priority\": \"P1\", \"domain\": \"直播观看\", \"module\": \"直播间\", \"preconditions\": \"用户网络不可用\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"在无网络状态下点击赛事\\\", \\\"expected\\\": \\\"提示网络异常，并提供重试按钮\\\"}]\", \"expected_result\": \"播放器不崩溃，显示错误提示，点击重试可重新加载。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 3, \"case_type\": \"manual\"}, {\"title\": \"直播清晰度切换成功\", \"priority\": \"P0\", \"domain\": \"直播观看\", \"module\": \"直播间\", \"preconditions\": \"直播间播放中，存在多个清晰度选项\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击清晰度按钮\\\", \\\"expected\\\": \\\"弹出清晰度选择列表，包含流畅、高清、超清等选项\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"选择「高清」\\\", \\\"expected\\\": \\\"播放器切换清晰度，画面清晰度变化，播放不中断\\\"}]\", \"expected_result\": \"清晰度切换生效，播放器继续播放。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 4, \"case_type\": \"manual\"}, {\"title\": \"清晰度切换时当前档位不可用\", \"priority\": \"P1\", \"domain\": \"直播观看\", \"module\": \"直播间\", \"preconditions\": \"直播间播放中，某个清晰度（如超清）不可用\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击清晰度按钮，选择「超清」\\\", \\\"expected\\\": \\\"提示「该清晰度暂不可用」，并自动切换至上一可用档位或保持原清晰度\\\"}]\", \"expected_result\": \"播放器不崩溃，给出提示并保持可用清晰度。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 5, \"case_type\": \"manual\"}, {\"title\": \"直播全屏切换成功\", \"priority\": \"P0\", \"domain\": \"直播观看\", \"module\": \"直播间\", \"preconditions\": \"直播间播放中\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击全屏按钮\\\", \\\"expected\\\": \\\"播放器进入全屏模式，铺满屏幕，隐藏非必要UI\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"点击退出全屏按钮或按ESC\\\", \\\"expected\\\": \\\"播放器退出全屏，恢复原窗口大小\\\"}]\", \"expected_result\": \"全屏切换可用，退出后播放不中断。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 6, \"case_type\": \"manual\"}, {\"title\": \"全屏时屏幕方向锁定\", \"priority\": \"P2\", \"domain\": \"直播观看\", \"module\": \"直播间\", \"preconditions\": \"直播间播放中，设备支持横竖屏\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"进入全屏\\\", \\\"expected\\\": \\\"屏幕自动横屏（如支持），方向锁定\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"旋转设备\\\", \\\"expected\\\": \\\"屏幕方向不随设备旋转而改变\\\"}]\", \"expected_result\": \"全屏时方向锁定，体验良好。\", \"remark\": \"体验用例\", \"client_scope\": [\"app\"], \"index\": 7, \"case_type\": \"manual\"}, {\"title\": \"切出直播间后播放停止\", \"priority\": \"P0\", \"domain\": \"直播观看\", \"module\": \"直播间\", \"preconditions\": \"直播间播放中\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击返回按钮或切换到其他页面\\\", \\\"expected\\\": \\\"直播间页面关闭，播放器停止播放，声音停止\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"检查后台播放状态\\\", \\\"expected\\\": \\\"无后台播放，资源释放\\\"}]\", \"expected_result\": \"切出直播间后播放完全停止，无声音残留。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 8, \"case_type\": \"manual\"}, {\"title\": \"切出直播间时未保存进度提示\", \"priority\": \"P2\", \"domain\": \"直播观看\", \"module\": \"直播间\", \"preconditions\": \"直播间播放中，用户未进行任何操作\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击返回\\\", \\\"expected\\\": \\\"直接退出，无提示（直播无进度保存）\\\"}]\", \"expected_result\": \"直播退出无需提示，播放停止。\", \"remark\": \"体验用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 9, \"case_type\": \"manual\"}, {\"title\": \"回放列表分页加载\", \"priority\": \"P0\", \"domain\": \"赛事回放\", \"module\": \"回放列表\", \"preconditions\": \"存在多场历史赛事（超过一页）\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"进入回放列表页\\\", \\\"expected\\\": \\\"显示第一页回放赛事，每页数量固定（如10条）\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"滚动到底部或点击加载更多\\\", \\\"expected\\\": \\\"自动加载下一页数据，列表追加显示\\\"}]\", \"expected_result\": \"回放列表分页加载正常，无重复数据。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 10, \"case_type\": \"manual\"}, {\"title\": \"回放列表加载失败提示\", \"priority\": \"P1\", \"domain\": \"赛事回放\", \"module\": \"回放列表\", \"preconditions\": \"网络异常\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"进入回放列表页\\\", \\\"expected\\\": \\\"提示加载失败，显示重试按钮\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"点击重试\\\", \\\"expected\\\": \\\"重新加载列表，成功后显示数据\\\"}]\", \"expected_result\": \"加载失败有提示，重试可恢复。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 11, \"case_type\": \"manual\"}, {\"title\": \"点击回放播放完整视频\", \"priority\": \"P0\", \"domain\": \"赛事回放\", \"module\": \"回放播放\", \"preconditions\": \"回放列表存在赛事，用户已登录\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击一个回放赛事\\\", \\\"expected\\\": \\\"进入回放播放页，播放器加载视频\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"等待加载完成\\\", \\\"expected\\\": \\\"视频开始播放，可完整播放至结束\\\"}]\", \"expected_result\": \"回放视频可完整播放，无中断。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 12, \"case_type\": \"manual\"}, {\"title\": \"回放视频加载失败处理\", \"priority\": \"P1\", \"domain\": \"赛事回放\", \"module\": \"回放播放\", \"preconditions\": \"网络异常或视频源不可用\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击回放赛事\\\", \\\"expected\\\": \\\"播放器提示加载失败，提供重试按钮\\\"}]\", \"expected_result\": \"加载失败有明确提示，重试可重新加载。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 13, \"case_type\": \"manual\"}, {\"title\": \"回放进度条拖动跳转\", \"priority\": \"P0\", \"domain\": \"赛事回放\", \"module\": \"回放播放\", \"preconditions\": \"回放视频播放中\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"拖动进度条到中间位置\\\", \\\"expected\\\": \\\"播放器跳转到对应时间点，继续播放\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"观察播放时间\\\", \\\"expected\\\": \\\"播放时间与进度条位置一致\\\"}]\", \"expected_result\": \"进度条拖动可正常跳转。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 14, \"case_type\": \"manual\"}, {\"title\": \"拖动进度条到末尾\", \"priority\": \"P1\", \"domain\": \"赛事回放\", \"module\": \"回放播放\", \"preconditions\": \"回放视频播放中\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"拖动进度条到最右端\\\", \\\"expected\\\": \\\"播放器跳转到视频末尾，显示结束状态或停止\\\"}]\", \"expected_result\": \"跳转到末尾后播放停止，不崩溃。\", \"remark\": \"边界用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 15, \"case_type\": \"manual\"}, {\"title\": \"回放倍速切换\", \"priority\": \"P0\", \"domain\": \"赛事回放\", \"module\": \"回放播放\", \"preconditions\": \"回放视频播放中\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击倍速按钮\\\", \\\"expected\\\": \\\"弹出倍速选项：1.0、1.5、2.0\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"选择1.5倍速\\\", \\\"expected\\\": \\\"播放速度变为1.5倍，声音正常\\\"}]\", \"expected_result\": \"倍速切换生效。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 16, \"case_type\": \"manual\"}, {\"title\": \"倍速切换后退出播放再进入\", \"priority\": \"P2\", \"domain\": \"赛事回放\", \"module\": \"回放播放\", \"preconditions\": \"回放视频播放中，已切换至2.0倍速\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"退出回放播放页\\\", \\\"expected\\\": \\\"返回列表页\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"重新进入该回放\\\", \\\"expected\\\": \\\"倍速恢复为默认1.0，或保持上次设置（需明确）\\\"}]\", \"expected_result\": \"倍速状态处理符合产品定义。\", \"remark\": \"体验用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 17, \"case_type\": \"manual\"}, {\"title\": \"发送弹幕成功展示\", \"priority\": \"P0\", \"domain\": \"直播间互动\", \"module\": \"弹幕\", \"preconditions\": \"直播间播放中，用户已登录\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"在弹幕输入框输入文字「加油」\\\", \\\"expected\\\": \\\"输入框正常显示文字\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"点击发送按钮\\\", \\\"expected\\\": \\\"弹幕在1秒内出现在直播画面上，并滚动展示\\\"}]\", \"expected_result\": \"弹幕发送成功并实时展示。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 18, \"case_type\": \"manual\"}, {\"title\": \"弹幕内容为空时发送\", \"priority\": \"P1\", \"domain\": \"直播间互动\", \"module\": \"弹幕\", \"preconditions\": \"直播间播放中，用户已登录\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"不输入任何内容，直接点击发送\\\", \\\"expected\\\": \\\"提示「弹幕内容不能为空」，不发送\\\"}]\", \"expected_result\": \"空弹幕被拦截，有提示。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 19, \"case_type\": \"manual\"}, {\"title\": \"弹幕内容超长限制\", \"priority\": \"P1\", \"domain\": \"直播间互动\", \"module\": \"弹幕\", \"preconditions\": \"直播间播放中，用户已登录\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"输入超过最大长度（如50字）的弹幕\\\", \\\"expected\\\": \\\"输入框限制输入或提示超长，无法发送\\\"}]\", \"expected_result\": \"超长弹幕被限制，有提示。\", \"remark\": \"边界用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 20, \"case_type\": \"manual\"}, {\"title\": \"发送弹幕失败提示重试\", \"priority\": \"P1\", \"domain\": \"直播间互动\", \"module\": \"弹幕\", \"preconditions\": \"直播间播放中，网络异常\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"输入弹幕并发送\\\", \\\"expected\\\": \\\"提示「发送失败」，并提供重试按钮\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"点击重试\\\", \\\"expected\\\": \\\"重新发送，成功后展示\\\"}]\", \"expected_result\": \"发送失败有提示，重试可成功。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 21, \"case_type\": \"manual\"}, {\"title\": \"发送礼物触发动画\", \"priority\": \"P0\", \"domain\": \"直播间互动\", \"module\": \"礼物\", \"preconditions\": \"直播间播放中，用户已登录，账户余额充足\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击礼物按钮\\\", \\\"expected\\\": \\\"弹出礼物面板，展示可赠送的礼物列表\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"选择一个礼物并点击赠送\\\", \\\"expected\\\": \\\"礼物动画触发，在直播间展示，余额相应扣减\\\"}]\", \"expected_result\": \"礼物发送成功，动画正常触发。\", \"remark\": \"正面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 22, \"case_type\": \"manual\"}, {\"title\": \"礼物余额不足处理\", \"priority\": \"P1\", \"domain\": \"直播间互动\", \"module\": \"礼物\", \"preconditions\": \"直播间播放中，用户余额不足\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"点击礼物并选择赠送\\\", \\\"expected\\\": \\\"提示「余额不足」，引导充值，不触发动画\\\"}]\", \"expected_result\": \"余额不足有明确提示，不扣费。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 23, \"case_type\": \"manual\"}, {\"title\": \"礼物发送失败提示重试\", \"priority\": \"P1\", \"domain\": \"直播间互动\", \"module\": \"礼物\", \"preconditions\": \"直播间播放中，网络异常\", \"steps\": \"[{\\\"step\\\": 1, \\\"desc\\\": \\\"选择礼物并点击赠送\\\", \\\"expected\\\": \\\"提示「发送失败」，提供重试按钮\\\"}, {\\\"step\\\": 2, \\\"desc\\\": \\\"点击重试\\\", \\\"expected\\\": \\\"重新发送，成功后动画触发\\\"}]\", \"expected_result\": \"发送失败有提示，重试可成功。\", \"remark\": \"负面用例\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"index\": 24, \"case_type\": \"manual\"}], \"api_cases\": []}",
+    "extraction_summary": ""
+  }
+}

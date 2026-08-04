@@ -1,0 +1,519 @@
+{
+  "code": 0,
+  "msg": "ok",
+  "data": {
+    "document_id": 1,
+    "modules": [
+      {
+        "id": "MOD-1",
+        "name": "直播观看",
+        "description": "用户在首页查看进行中的赛事列表，点击进入直播间，支持播放器加载、清晰度切换与全屏，切出后停止播放。",
+        "function_points": [
+          {
+            "id": "FP-1",
+            "title": "首页赛事列表展示",
+            "description": "首页展示进行中的赛事列表，用户可查看赛事信息。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确赛事列表的排序规则、刷新机制和加载方式（分页/滚动加载）。",
+                "suggestion": "明确列表排序（如按开始时间）、刷新频率和分页加载方式。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-2",
+            "title": "点击赛事进入直播间",
+            "description": "用户点击赛事列表中的任意赛事，进入对应的直播间页面。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未说明点击后是跳转新页面还是当前页跳转，以及加载中的反馈。",
+                "suggestion": "明确页面跳转方式，并增加加载中提示。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-3",
+            "title": "播放器加载视频流",
+            "description": "进入直播间后，播放器自动加载并播放视频流。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "high",
+                "description": "未定义加载失败（如网络异常、流地址失效）时的错误提示和重试机制。",
+                "suggestion": "增加加载失败提示和重试按钮。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-4",
+            "title": "清晰度切换",
+            "description": "用户可切换播放清晰度（如标清、高清、超清），切换后播放器加载对应清晰度视频流。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确清晰度选项有哪些、切换时是否中断播放、切换失败如何处理。",
+                "suggestion": "明确清晰度档位，切换时保持播放进度，失败时提示并恢复原清晰度。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-5",
+            "title": "全屏切换",
+            "description": "用户可点击全屏按钮进入全屏模式，再次点击退出全屏。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确全屏时UI元素（如弹幕、礼物动画）的显示方式，以及不同端的全屏行为差异。",
+                "suggestion": "定义全屏模式下的界面布局和交互。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-6",
+            "title": "切出直播间停止播放",
+            "description": "用户退出直播间（返回、关闭页面等）后，播放器停止播放并释放资源。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "high",
+                "description": "未明确切出直播间的方式（返回键、关闭页面、跳转其他页面）以及是否所有方式都停止播放。",
+                "suggestion": "明确所有退出路径，并确保播放停止。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-7",
+            "title": "直播状态显示",
+            "description": "直播间页面显示直播状态（如直播中、已结束），并可能影响播放器行为。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "需求未提及直播状态显示，但作为直播观看功能的一部分，需明确状态变化时的处理。",
+                "suggestion": "增加直播状态标识，并定义直播结束时的提示和跳转。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-8",
+            "title": "播放器控制栏",
+            "description": "播放器提供播放/暂停、音量、进度条等基本控制功能。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "需求未明确播放器控制栏的具体功能，但作为直播观看的基本交互，需补充。",
+                "suggestion": "明确播放器控制栏包含的控件及其行为。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          }
+        ]
+      },
+      {
+        "id": "MOD-2",
+        "name": "赛事回放",
+        "description": "用户可在回放列表选择历史赛事，加载完整回放视频，支持进度条拖动与倍速播放。",
+        "function_points": [
+          {
+            "id": "FP-1",
+            "title": "回放列表分页加载",
+            "description": "回放列表支持分页加载，用户可浏览历史赛事列表。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确分页方式（页码/滚动加载）、每页数量、加载失败处理。",
+                "suggestion": "明确分页参数和加载更多交互。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-2",
+            "title": "选择历史赛事",
+            "description": "用户从回放列表中选择一个历史赛事，进入回放详情或播放页面。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未说明点击后是直接播放还是进入详情页，以及加载中的反馈。",
+                "suggestion": "明确点击行为，增加加载提示。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-3",
+            "title": "加载完整回放视频",
+            "description": "点击回放后，播放器加载完整回放视频，可从头播放。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "high",
+                "description": "未定义视频加载失败（如网络异常、视频不存在）时的错误提示和重试机制。",
+                "suggestion": "增加错误提示和重试按钮。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-4",
+            "title": "进度条拖动",
+            "description": "用户可拖动进度条跳转到视频的任意位置，播放器加载对应时间点的视频。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确拖动时是否显示预览、拖动后是否立即播放、拖动到未加载区域的处理。",
+                "suggestion": "定义拖动交互细节。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-5",
+            "title": "倍速播放切换",
+            "description": "用户可切换播放倍速，支持1.0、1.5、2.0倍速。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确倍速切换的入口位置、切换后是否保持当前进度、是否支持其他倍速。",
+                "suggestion": "明确倍速选项和切换行为。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-6",
+            "title": "回放列表加载更多",
+            "description": "当用户滚动到列表底部时，自动加载下一页数据。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "需求仅提及分页加载，未明确是手动加载还是自动加载，以及加载中的状态。",
+                "suggestion": "明确加载方式（如滚动到底自动加载）和加载状态提示。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-7",
+            "title": "回放列表空状态",
+            "description": "当没有历史赛事时，回放列表显示空状态提示。",
+            "type": "ui",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "low",
+                "description": "需求未提及空状态，但作为列表功能的一部分，需考虑。",
+                "suggestion": "增加空状态提示文案。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-8",
+            "title": "回放加载失败提示",
+            "description": "当回放视频加载失败时，向用户显示错误提示，并提供重试或返回操作。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "high",
+                "description": "需求未提及加载失败处理，但作为关键异常场景，必须明确。",
+                "suggestion": "定义错误提示和重试机制。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          }
+        ]
+      },
+      {
+        "id": "MOD-3",
+        "name": "直播间互动",
+        "description": "观众可发送弹幕与礼物，弹幕实时展示，礼物触发动画，异常消息提示重试。",
+        "function_points": [
+          {
+            "id": "FP-1",
+            "title": "发送弹幕",
+            "description": "观众在直播间输入弹幕内容并发送，弹幕实时展示在屏幕上。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确弹幕输入框的位置、发送按钮、字数限制、敏感词过滤等。",
+                "suggestion": "明确弹幕输入交互和内容校验规则。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-2",
+            "title": "弹幕实时展示",
+            "description": "弹幕发送后1秒内展示在直播间屏幕上，并滚动显示。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确弹幕展示的样式（颜色、字体）、滚动速度、是否可关闭弹幕。",
+                "suggestion": "定义弹幕展示样式和开关功能。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-3",
+            "title": "发送礼物",
+            "description": "观众可选择礼物并发送，礼物发送后触发动画效果。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确礼物列表、礼物价格、发送数量、余额不足处理等。",
+                "suggestion": "定义礼物选择、支付和余额校验逻辑。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-4",
+            "title": "礼物动画触发",
+            "description": "礼物发送成功后，直播间播放对应的动画效果。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "未明确动画的展示形式、持续时间、是否可跳过、动画期间是否可发送其他礼物。",
+                "suggestion": "定义动画效果和交互限制。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-5",
+            "title": "异常消息提示重试",
+            "description": "当弹幕或礼物发送失败时，向用户显示错误提示，并提供重试操作。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "high",
+                "description": "未明确异常类型（网络错误、内容违规、余额不足等）和对应的提示信息，以及重试的具体行为。",
+                "suggestion": "定义不同异常的错误提示和重试逻辑。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-6",
+            "title": "弹幕发送频率限制",
+            "description": "为防止刷屏，可能对弹幕发送频率进行限制，如每分钟最多发送N条。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "需求未提及频率限制，但作为互动功能，需考虑滥用场景。",
+                "suggestion": "增加发送频率限制，并提示用户。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-7",
+            "title": "礼物发送余额校验",
+            "description": "发送礼物前校验用户余额是否足够，不足时提示充值。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "high",
+                "description": "需求未提及余额校验，但礼物发送必然涉及支付，需明确。",
+                "suggestion": "增加余额校验和充值引导。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          },
+          {
+            "id": "FP-8",
+            "title": "弹幕内容过滤",
+            "description": "弹幕内容可能包含敏感词，系统需进行过滤，违规内容不予展示。",
+            "type": "functional",
+            "client_scope": [
+              "app",
+              "pc",
+              "web"
+            ],
+            "issues": [
+              {
+                "severity": "medium",
+                "description": "需求未提及内容过滤，但作为直播平台，必须考虑合规性。",
+                "suggestion": "增加敏感词过滤机制，并提示用户。"
+              }
+            ],
+            "_inherited": false,
+            "_from_version": ""
+          }
+        ]
+      }
+    ],
+    "overall_assessment": "需求文档覆盖了直播观看、赛事回放和直播间互动三大核心功能，但整体描述较为简略，缺乏详细的业务规则、边界条件和异常处理说明。例如，直播观看中未明确清晰度档位、全屏行为、退出方式；回放中未明确分页加载的具体交互和加载失败处理；互动中未明确弹幕和礼物的具体规则、余额校验、频率限制等。这些缺失将导致测试用例设计困难，建议补充详细的需求规格说明，明确各功能的输入输出、异常流程和性能要求，以提高可测试性。",
+    "raw_response": "{\"modules\": [{\"id\": \"MOD-1\", \"name\": \"直播观看\", \"description\": \"用户在首页查看进行中的赛事列表，点击进入直播间，支持播放器加载、清晰度切换与全屏，切出后停止播放。\", \"function_points\": [{\"id\": \"FP-1\", \"title\": \"首页赛事列表展示\", \"description\": \"首页展示进行中的赛事列表，用户可查看赛事信息。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确赛事列表的排序规则、刷新机制和加载方式（分页/滚动加载）。\", \"suggestion\": \"明确列表排序（如按开始时间）、刷新频率和分页加载方式。\"}]}, {\"id\": \"FP-2\", \"title\": \"点击赛事进入直播间\", \"description\": \"用户点击赛事列表中的任意赛事，进入对应的直播间页面。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未说明点击后是跳转新页面还是当前页跳转，以及加载中的反馈。\", \"suggestion\": \"明确页面跳转方式，并增加加载中提示。\"}]}, {\"id\": \"FP-3\", \"title\": \"播放器加载视频流\", \"description\": \"进入直播间后，播放器自动加载并播放视频流。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"high\", \"description\": \"未定义加载失败（如网络异常、流地址失效）时的错误提示和重试机制。\", \"suggestion\": \"增加加载失败提示和重试按钮。\"}]}, {\"id\": \"FP-4\", \"title\": \"清晰度切换\", \"description\": \"用户可切换播放清晰度（如标清、高清、超清），切换后播放器加载对应清晰度视频流。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确清晰度选项有哪些、切换时是否中断播放、切换失败如何处理。\", \"suggestion\": \"明确清晰度档位，切换时保持播放进度，失败时提示并恢复原清晰度。\"}]}, {\"id\": \"FP-5\", \"title\": \"全屏切换\", \"description\": \"用户可点击全屏按钮进入全屏模式，再次点击退出全屏。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确全屏时UI元素（如弹幕、礼物动画）的显示方式，以及不同端的全屏行为差异。\", \"suggestion\": \"定义全屏模式下的界面布局和交互。\"}]}, {\"id\": \"FP-6\", \"title\": \"切出直播间停止播放\", \"description\": \"用户退出直播间（返回、关闭页面等）后，播放器停止播放并释放资源。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"high\", \"description\": \"未明确切出直播间的方式（返回键、关闭页面、跳转其他页面）以及是否所有方式都停止播放。\", \"suggestion\": \"明确所有退出路径，并确保播放停止。\"}]}, {\"id\": \"FP-7\", \"title\": \"直播状态显示\", \"description\": \"直播间页面显示直播状态（如直播中、已结束），并可能影响播放器行为。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"需求未提及直播状态显示，但作为直播观看功能的一部分，需明确状态变化时的处理。\", \"suggestion\": \"增加直播状态标识，并定义直播结束时的提示和跳转。\"}]}, {\"id\": \"FP-8\", \"title\": \"播放器控制栏\", \"description\": \"播放器提供播放/暂停、音量、进度条等基本控制功能。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"需求未明确播放器控制栏的具体功能，但作为直播观看的基本交互，需补充。\", \"suggestion\": \"明确播放器控制栏包含的控件及其行为。\"}]}]}, {\"id\": \"MOD-2\", \"name\": \"赛事回放\", \"description\": \"用户可在回放列表选择历史赛事，加载完整回放视频，支持进度条拖动与倍速播放。\", \"function_points\": [{\"id\": \"FP-1\", \"title\": \"回放列表分页加载\", \"description\": \"回放列表支持分页加载，用户可浏览历史赛事列表。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确分页方式（页码/滚动加载）、每页数量、加载失败处理。\", \"suggestion\": \"明确分页参数和加载更多交互。\"}]}, {\"id\": \"FP-2\", \"title\": \"选择历史赛事\", \"description\": \"用户从回放列表中选择一个历史赛事，进入回放详情或播放页面。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未说明点击后是直接播放还是进入详情页，以及加载中的反馈。\", \"suggestion\": \"明确点击行为，增加加载提示。\"}]}, {\"id\": \"FP-3\", \"title\": \"加载完整回放视频\", \"description\": \"点击回放后，播放器加载完整回放视频，可从头播放。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"high\", \"description\": \"未定义视频加载失败（如网络异常、视频不存在）时的错误提示和重试机制。\", \"suggestion\": \"增加错误提示和重试按钮。\"}]}, {\"id\": \"FP-4\", \"title\": \"进度条拖动\", \"description\": \"用户可拖动进度条跳转到视频的任意位置，播放器加载对应时间点的视频。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确拖动时是否显示预览、拖动后是否立即播放、拖动到未加载区域的处理。\", \"suggestion\": \"定义拖动交互细节。\"}]}, {\"id\": \"FP-5\", \"title\": \"倍速播放切换\", \"description\": \"用户可切换播放倍速，支持1.0、1.5、2.0倍速。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确倍速切换的入口位置、切换后是否保持当前进度、是否支持其他倍速。\", \"suggestion\": \"明确倍速选项和切换行为。\"}]}, {\"id\": \"FP-6\", \"title\": \"回放列表加载更多\", \"description\": \"当用户滚动到列表底部时，自动加载下一页数据。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"需求仅提及分页加载，未明确是手动加载还是自动加载，以及加载中的状态。\", \"suggestion\": \"明确加载方式（如滚动到底自动加载）和加载状态提示。\"}]}, {\"id\": \"FP-7\", \"title\": \"回放列表空状态\", \"description\": \"当没有历史赛事时，回放列表显示空状态提示。\", \"type\": \"ui\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"low\", \"description\": \"需求未提及空状态，但作为列表功能的一部分，需考虑。\", \"suggestion\": \"增加空状态提示文案。\"}]}, {\"id\": \"FP-8\", \"title\": \"回放加载失败提示\", \"description\": \"当回放视频加载失败时，向用户显示错误提示，并提供重试或返回操作。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"high\", \"description\": \"需求未提及加载失败处理，但作为关键异常场景，必须明确。\", \"suggestion\": \"定义错误提示和重试机制。\"}]}]}, {\"id\": \"MOD-3\", \"name\": \"直播间互动\", \"description\": \"观众可发送弹幕与礼物，弹幕实时展示，礼物触发动画，异常消息提示重试。\", \"function_points\": [{\"id\": \"FP-1\", \"title\": \"发送弹幕\", \"description\": \"观众在直播间输入弹幕内容并发送，弹幕实时展示在屏幕上。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确弹幕输入框的位置、发送按钮、字数限制、敏感词过滤等。\", \"suggestion\": \"明确弹幕输入交互和内容校验规则。\"}]}, {\"id\": \"FP-2\", \"title\": \"弹幕实时展示\", \"description\": \"弹幕发送后1秒内展示在直播间屏幕上，并滚动显示。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确弹幕展示的样式（颜色、字体）、滚动速度、是否可关闭弹幕。\", \"suggestion\": \"定义弹幕展示样式和开关功能。\"}]}, {\"id\": \"FP-3\", \"title\": \"发送礼物\", \"description\": \"观众可选择礼物并发送，礼物发送后触发动画效果。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确礼物列表、礼物价格、发送数量、余额不足处理等。\", \"suggestion\": \"定义礼物选择、支付和余额校验逻辑。\"}]}, {\"id\": \"FP-4\", \"title\": \"礼物动画触发\", \"description\": \"礼物发送成功后，直播间播放对应的动画效果。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"未明确动画的展示形式、持续时间、是否可跳过、动画期间是否可发送其他礼物。\", \"suggestion\": \"定义动画效果和交互限制。\"}]}, {\"id\": \"FP-5\", \"title\": \"异常消息提示重试\", \"description\": \"当弹幕或礼物发送失败时，向用户显示错误提示，并提供重试操作。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"high\", \"description\": \"未明确异常类型（网络错误、内容违规、余额不足等）和对应的提示信息，以及重试的具体行为。\", \"suggestion\": \"定义不同异常的错误提示和重试逻辑。\"}]}, {\"id\": \"FP-6\", \"title\": \"弹幕发送频率限制\", \"description\": \"为防止刷屏，可能对弹幕发送频率进行限制，如每分钟最多发送N条。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"需求未提及频率限制，但作为互动功能，需考虑滥用场景。\", \"suggestion\": \"增加发送频率限制，并提示用户。\"}]}, {\"id\": \"FP-7\", \"title\": \"礼物发送余额校验\", \"description\": \"发送礼物前校验用户余额是否足够，不足时提示充值。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"high\", \"description\": \"需求未提及余额校验，但礼物发送必然涉及支付，需明确。\", \"suggestion\": \"增加余额校验和充值引导。\"}]}, {\"id\": \"FP-8\", \"title\": \"弹幕内容过滤\", \"description\": \"弹幕内容可能包含敏感词，系统需进行过滤，违规内容不予展示。\", \"type\": \"functional\", \"client_scope\": [\"app\", \"pc\", \"web\"], \"issues\": [{\"severity\": \"medium\", \"description\": \"需求未提及内容过滤，但作为直播平台，必须考虑合规性。\", \"suggestion\": \"增加敏感词过滤机制，并提示用户。\"}]}]}], \"overall_assessment\": \"需求文档覆盖了直播观看、赛事回放和直播间互动三大核心功能，但整体描述较为简略，缺乏详细的业务规则、边界条件和异常处理说明。例如，直播观看中未明确清晰度档位、全屏行为、退出方式；回放中未明确分页加载的具体交互和加载失败处理；互动中未明确弹幕和礼物的具体规则、余额校验、频率限制等。这些缺失将导致测试用例设计困难，建议补充详细的需求规格说明，明确各功能的输入输出、异常流程和性能要求，以提高可测试性。\", \"requirement_analysis\": {\"extracted_requirements\": [], \"overall_assessment\": \"\"}, \"functional_cases\": [], \"api_cases\": []}",
+    "extraction_summary": "",
+    "extraction_status": "pending_review",
+    "version_info": [],
+    "client_summary": "",
+    "diff_summary": null,
+    "inherited_from_version": "",
+    "inherited_fp_count": 0
+  }
+}
