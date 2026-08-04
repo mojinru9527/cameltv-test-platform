@@ -1,0 +1,130 @@
+{
+  "total": 25,
+  "items": [
+    {
+      "case_id": "",
+      "title": "点击赛事进入直播间并加载播放器",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "进入直播间时网络异常处理",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "直播清晰度切换成功",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "清晰度切换时当前档位不可用",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "直播全屏切换成功",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "全屏时屏幕方向锁定",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "切出直播间后播放停止",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "切出直播间时未保存进度提示",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "首页展示进行中赛事列表",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "首页赛事列表为空时的展示",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "发送弹幕成功展示",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "弹幕内容为空时发送",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "弹幕内容超长限制",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "发送弹幕失败提示重试",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "发送礼物触发动画",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "礼物余额不足处理",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "礼物发送失败提示重试",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "回放列表分页加载",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "回放列表加载失败提示",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "点击回放播放完整视频",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "回放视频加载失败处理",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "回放进度条拖动跳转",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "拖动进度条到末尾",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "回放倍速切换",
+      "source": "ai_generated"
+    },
+    {
+      "case_id": "",
+      "title": "倍速切换后退出播放再进入",
+      "source": "ai_generated"
+    }
+  ]
+}

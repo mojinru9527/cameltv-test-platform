@@ -1,0 +1,60 @@
+{
+  "j19_idor": [
+    {
+      "resource": "GET /requirements/1",
+      "status": 403,
+      "body": "{\"code\":403,\"msg\":\"缺少权限：requirement:upload\",\"data\":null}"
+    },
+    {
+      "resource": "GET /test-cases/1",
+      "status": 403,
+      "body": "{\"code\":403,\"msg\":\"缺少权限：testcase:detail\",\"data\":null}"
+    },
+    {
+      "resource": "GET /test-plans/1",
+      "status": 403,
+      "body": "{\"code\":403,\"msg\":\"缺少权限：testplan:detail\",\"data\":null}"
+    },
+    {
+      "resource": "GET /reports/1",
+      "status": 403,
+      "body": "{\"code\":403,\"msg\":\"缺少权限：report:detail\",\"data\":null}"
+    },
+    {
+      "resource": "GET /defects/1",
+      "status": 403,
+      "body": "{\"code\":403,\"msg\":\"缺少权限：defect:detail\",\"data\":null}"
+    },
+    {
+      "resource": "GET /environments",
+      "status": 200,
+      "body": "{\"code\":0,\"msg\":\"ok\",\"data\":[]}"
+    }
+  ],
+  "j19_pagination": {
+    "page1_total": 25,
+    "page1_items": 10,
+    "page2_items": 10,
+    "consistent_total": true
+  },
+  "j08_search": {
+    "keyword": "直播",
+    "total": 17
+  },
+  "j08_bad_xlsx": {
+    "status": 400,
+    "body": "{\"code\":400,\"msg\":\".xlsx 内容损坏或无法解析\",\"data\":null}"
+  },
+  "j03_role_crud": {
+    "create": 200,
+    "update": 200,
+    "delete": 200
+  },
+  "j03_revoke": {
+    "remove_member": 200,
+    "after_access": {
+      "status": 403,
+      "body": "{\"code\":403,\"msg\":\"无权访问该项目\",\"data\":null}"
+    }
+  }
+}
