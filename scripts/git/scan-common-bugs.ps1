@@ -2,7 +2,9 @@
 param(
     [string]$RepositoryPath = (Get-Location).Path,
     [switch]$FailOnWarning,
-    [switch]$SelfTest
+    [switch]$SelfTest,
+    [string]$BaselinePath,
+    [string]$WriteBaseline
 )
 
 $ErrorActionPreference = "Stop"
@@ -185,6 +187,13 @@ function Write-Report {
     foreach ($w in $Result.Warn) { Write-Verbose ("  [WARN] {0}:{1}:{2} {3}" -f $w.File, $w.Line, $w.Col, $w.Snippet) }
 }
 
+function Get-RuleName {
+    param([string]$Snippet)
+    $i = $Snippet.IndexOf(':')
+    if ($i -lt 0) { return $Snippet.Trim() }
+    return $Snippet.Substring(0, $i).Trim()
+}
+
 if ($SelfTest) {
     $fixture = Join-Path ([IO.Path]::GetTempPath()) ("scan-common-bugs-fixture-" + [guid]::NewGuid().ToString("N"))
     try {
@@ -255,6 +264,50 @@ def test_404():
 $root = Get-GitRoot -Path $RepositoryPath
 $result = Invoke-Scan -Root $root
 Write-Report -Result $result
+
+$summary = [ordered]@{
+    generated_at   = (Get-Date).ToString("o")
+    hard_count     = $result.Hard.Count
+    warn_count     = $result.Warn.Count
+    warn_categories = [ordered]@{}
+    warn_files     = [ordered]@{}
+    hard_categories = [ordered]@{}
+}
+foreach ($w in $result.Warn) {
+    $rn = Get-RuleName -Snippet $w.Snippet
+    if ($summary.warn_categories.Contains($rn)) { $summary.warn_categories[$rn]++ } else { $summary.warn_categories[$rn] = 1 }
+    if ($summary.warn_files.Contains($w.File)) { $summary.warn_files[$w.File]++ } else { $summary.warn_files[$w.File] = 1 }
+}
+foreach ($h in $result.Hard) {
+    $rn = Get-RuleName -Snippet $h.Snippet
+    if ($summary.hard_categories.Contains($rn)) { $summary.hard_categories[$rn]++ } else { $summary.hard_categories[$rn] = 1 }
+}
+
+if ($WriteBaseline) {
+    $dir = Split-Path -Parent $WriteBaseline
+    if ($dir -and -not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+    ($summary | ConvertTo-Json -Depth 6) | Set-Content -Encoding UTF8 -LiteralPath $WriteBaseline
+    Write-Host "baseline written: $WriteBaseline"
+    exit 0
+}
+
+if ($BaselinePath) {
+    if (-not (Test-Path -LiteralPath $BaselinePath)) { Write-Error "Baseline not found: $BaselinePath"; exit 1 }
+    $base = Get-Content -Raw -LiteralPath $BaselinePath | ConvertFrom-Json
+    $newWarnCats = @($summary.warn_categories.Keys | Where-Object { -not $base.warn_categories.PSObject.Properties[$_] })
+    $newWarnFiles = @($summary.warn_files.Keys | Where-Object { -not $base.warn_files.PSObject.Properties[$_] })
+    $newHardCats = @($summary.hard_categories.Keys | Where-Object { -not $base.hard_categories.PSObject.Properties[$_] })
+    Write-Host "== baseline compare =="
+    Write-Host "warn total: $($base.warn_count) -> $($result.Warn.Count) (delta $($result.Warn.Count - [int]$base.warn_count))"
+    Write-Host "new warn categories: $($newWarnCats.Count) / new files: $($newWarnFiles.Count) / new hard categories: $($newHardCats.Count)"
+    foreach ($c in $newWarnCats) { Write-Host "  [NEW-WARN-CAT] $c" }
+    foreach ($f in $newWarnFiles) { Write-Host "  [NEW-WARN-FILE] $f" }
+    foreach ($c in $newHardCats) { Write-Host "  [NEW-HARD-CAT] $c" }
+    if ($result.Hard.Count -gt 0 -or $newHardCats.Count -gt 0) { exit 1 }
+    if ($newWarnCats.Count -gt 0 -or $newWarnFiles.Count -gt 0) { exit 2 }
+    exit 0
+}
+
 if ($result.Hard.Count -gt 0) { exit 1 }
 if ($result.Warn.Count -gt 0) { if ($FailOnWarning) { exit 1 } else { exit 2 } }
 exit 0
