@@ -2,6 +2,11 @@
 
 > 技能版本化唯一日志。凡修改 `SKILL.md` / `DEPARTMENTS.md` 必须在本文件追加一条。格式：日期 | 批次 | 变更摘要 | 动因。
 
+## 2026-08-04 | Batch 76 | Dev 步骤接入自动避坑扫描
+
+- **变更**：SKILL.md Dev 步骤新增「自动避坑扫描」（提交前运行 `scan-common-bugs.ps1`，HARD>0 必须处理或注明豁免）；`cameltv-bug-guard` 关联新增该工具。
+- **动因**：避坑清单从"读"升级为"机器拦截"；真实仓库首扫即发现 67 处 HARD（含 Batch 37 P0-01 `R.err` 7 处、P0-02 密码 print）。
+
 ## 2026-08-04 | Batch 75 | 双档流水线 + 自我进化 + 复盘卡 + 验收证据库
 
 - **变更**：SKILL.md 增加「批次模式（完整/轻量）」「自我进化（流程回写 + CHANGELOG 强制）」「复盘卡」「验收证据库」四节；DEPARTMENTS.md 重构 Leader 模板为独立第 6 节、QA/Leader 模板加入复盘卡、Product 模板加入技能使用行与轻量批次判定。
