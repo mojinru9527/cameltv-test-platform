@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 
 from fastapi import APIRouter, Depends, Header, Request
 from sqlalchemy import select
@@ -13,6 +14,8 @@ from app.core.exceptions import APIException
 from app.core.rate_limit import open_api_limiter
 from app.models.api_token import ApiToken
 from app.schemas.common import R
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/open", tags=["开放API"])
 
@@ -114,7 +117,7 @@ def ci_trigger_plan(
             "link": "",
         })
     except Exception:
-        pass
+        logger.exception("CI 触发通知失败: plan_id=%s", plan_id)
 
     return R.ok({
         "triggered": True,
@@ -220,7 +223,7 @@ def ci_post_results(
                 "link": "",
             })
         except Exception:
-            pass
+            logger.exception("CI 结果回写通知失败: run_id=%s", getattr(exec_row, "id", None))
 
     return R.ok({
         "run_id": exec_row.id,
@@ -305,7 +308,7 @@ def ci_trigger_ui_test(
             )
             t.start()
         except Exception:
-            pass
+            logger.exception("启动 Playwright 执行线程失败: run_id=%s job_id=%s", run.id, job_id)
 
     return R.ok({
         "triggered": True,

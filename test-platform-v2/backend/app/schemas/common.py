@@ -17,6 +17,10 @@ class R(BaseModel, Generic[T]):
     def ok(cls, data: Optional[T] = None, msg: str = "ok") -> "R[T]":
         return cls(code=0, msg=msg, data=data)
 
+    @classmethod
+    def err(cls, code: int = 1, msg: str = "error") -> "R[T]":
+        return cls(code=code, msg=msg, data=None)
+
 
 class Page(BaseModel, Generic[T]):
     total: int = 0

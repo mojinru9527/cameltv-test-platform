@@ -222,7 +222,7 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
                     },
                 )
         except Exception:
-            pass
+            logger.warning("标记任务失败状态失败（静默降级为仅 DB 记录）")
     finally:
         db.close()
 
@@ -295,7 +295,7 @@ def _processor_loop(poll_interval: float = 2.0) -> None:
             try:
                 db.close()
             except Exception:
-                pass
+                logger.warning("DB session 关闭失败")
             _wake_event.wait(timeout=poll_interval)
             _wake_event.clear()
 

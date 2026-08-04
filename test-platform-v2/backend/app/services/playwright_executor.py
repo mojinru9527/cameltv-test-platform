@@ -541,5 +541,5 @@ def _collect_artifacts(base_dir: Path, pattern: str) -> list[str]:
         for f in base_dir.rglob(pattern):
             items.append(str(f.relative_to(base_dir)).replace("\\", "/"))
     except Exception:
-        pass
+        logger.warning("Playwright 产物文件列表读取失败，返回部分结果（最多 20 项）")
     return items[:20]  # max 20
