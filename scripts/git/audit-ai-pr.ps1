@@ -64,9 +64,8 @@ if ($ExpectedExecutor) { $verifyArguments.ExpectedExecutor = $ExpectedExecutor }
 if ($ExpectedOwner) { $verifyArguments.ExpectedOwner = $ExpectedOwner }
 $verifyOutput = @(& (Join-Path $PSScriptRoot "verify-ai-worktree.ps1") @verifyArguments)
 $verification = $verifyOutput[-1]
-if ($RequireSuccessfulChecks -and $verification.Workflow -eq "agent-team" -and $verification.CompletionConfirmation -ne "confirmed") {
-    throw "Final Agent Team PR audit requires the user's completion confirmation. Ask again which executor actually performed the work, wait for the reply, then run confirm-agent-team-completion.ps1."
-}
+# Batch 83 起：Agent Team 交付采用一次总确认（推送+PR+合入），最终审计不再强制完成确认；
+# confirm-agent-team-completion.ps1 仅作可选完成证据；直接任务不受影响。
 
 $branch = (@(Invoke-CheckedGit -Path $root -Arguments @("branch", "--show-current")))[0].Trim()
 Invoke-CheckedGit -Path $root -Arguments @("fetch", "origin", "--prune") | Out-Null

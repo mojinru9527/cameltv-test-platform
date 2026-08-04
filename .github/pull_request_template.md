@@ -13,7 +13,7 @@ tags: ["template", "pull-request", "code-review"]
 - Workflow：`direct / agent-team`
 - Executor：`claude / codex / human`（Agent Team 只能选择 Claude/Codex）
 - Agent Team 开始确认：`confirmed / 不适用`（确认时间、聊天入口）
-- Agent Team 完成确认：`pending / confirmed / 不适用`（首轮 CI 后再次确认；确认时间）
+- Agent Team 一次总确认：`已确认 / 不适用`（覆盖推送+创建 PR+合入 main；确认时间）
 - Worktree task：
 - 声明范围（与 `.ai-worktree.json` 一致）：
 
@@ -76,8 +76,8 @@ tags: ["template", "pull-request", "code-review"]
 - [ ] **Worktree 隔离**：分支从最新 `origin/main` 创建，`.ai-worktree.json` 未提交，未在控制 worktree 开发
 - [ ] **Agent Team 开始确认**：开发前已在聊天中询问并收到 Claude/Codex 明确答复，启动命令带 `-UserConfirmedExecutor`（direct 任务不适用）
 - [ ] **基础 PR 审计**：`pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow {direct|agent-team} -ExpectedExecutor {claude|codex|human}` 通过，workflow/executor/branch/base/remote SHA/scope 一致
-- [ ] **Agent Team 完成确认**：Draft PR 首轮验证后再次询问实际执行器与最终交付授权，并运行 `confirm-agent-team-completion.ps1 -UserConfirmedCompletion`（direct 任务不适用）
-- [ ] **最终 PR 审计**：完成确认证据对应的 required checks 全绿后，在同一命令增加 `-RequireSuccessfulChecks` 并通过
+- [ ] **Agent Team 一次总确认**：首轮 QA 证据后一次确认推送+创建 Draft PR+required checks 通过后合入 main（Batch 83 起；direct 任务不适用）
+- [ ] **最终 PR 审计**：一次总确认后 required checks 全绿，在同一命令增加 `-RequireSuccessfulChecks` 并通过
 - [ ] **常见陷阱**：如发现新的重复性陷阱，已追加至 [docs/common-pitfalls.md](docs/common-pitfalls.md)
 - [ ] **术语表**：如有新业务术语引入，已更新 [docs/business-glossary.md](docs/business-glossary.md)
 
