@@ -281,3 +281,4 @@ Agent Team 各部门执行任务时自动通过 RAG 检索知识库。检索优�
 - `cameltv-bug-guard` skill — 编码前避坑清单
 - 嫁接单点利器：`tdd`（Dev） `diagnose`（QA） `review`（Leader） `grill-with-docs` `ubiquitous-language` `zoom-out`（Product） `design-an-interface` `prototype`（Design） `improve-codebase-architecture` `handoff`（Leader）
 - [ADR-0014](../../../docs/adr/0014-single-main-trunk-ai-worktrees.md) — 单一主干与 worktree 隔离决策
+- [local-dev-workflow.md](../../../docs/agent-team/local-dev-workflow.md) — 本地开发操作备忘（主干视图 / worktree 隔离 / 批次生命周期 / push 门禁）
