@@ -1,0 +1,32 @@
+[
+  {
+    "name": "j15-ext-home",
+    "run_status": "done",
+    "result": {
+      "total": 1,
+      "pass_": 1,
+      "fail": 0,
+      "skip": 0,
+      "duration": 6.4
+    },
+    "error": "",
+    "saved": [
+      "j15-ext-home-screenshot.png"
+    ]
+  },
+  {
+    "name": "j15-ext-replay",
+    "run_status": "done",
+    "result": {
+      "total": 1,
+      "pass_": 1,
+      "fail": 0,
+      "skip": 0,
+      "duration": 6.33
+    },
+    "error": "",
+    "saved": [
+      "j15-ext-replay-screenshot.png"
+    ]
+  }
+]

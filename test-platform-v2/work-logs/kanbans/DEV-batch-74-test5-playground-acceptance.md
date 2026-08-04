@@ -19,10 +19,10 @@
 | 0 | 六部门工件（PRD/PM/Design） | ✅ | ✅ | ✅ | ✅ | ✅ | 已提交 b2a5323 |
 | 1 | Test5 契约登记 | ✅ | ✅ | ✅ | ✅ | ✅ | 10 服务枚举 + 7 契约落盘（777cca6） |
 | 2 | Playground 映射改造 | ✅ | ✅ | ✅ | ✅ | ✅ | 中文 Gherkin 无 TODO（99f8a1d + 本批） |
-| 3 | Playground C22-C2/C3 实证 + 前端入口 | 🔄 | ✅ | ✅ | ⏳ | ⏳ | **当前位置**：C22-C2 1/1 + C22-C3 6/6 已过；前端入口待做 |
-| 4 | J15 外部页只读验收 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | camellofutbol.com |
-| 5 | J16 音视频 av-checks 验收 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | match replays 媒体 |
-| 6 | QA + Leader + PR | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 硬门禁 + 推送授权 |
+| 3 | Playground C22-C2/C3 实证 + 前端入口 | ✅ | ✅ | ✅ | ✅ | ✅ | C22-C2 1/1 + C22-C3 6/6 + /playground UI |
+| 4 | J15 外部页只读验收 | ✅ | ✅ | ✅ | ✅ | ✅ | camellofutbol.com 2/2 通过 |
+| 5 | J16 音视频 av-checks 验收 | ✅ | ✅ | ✅ | ✅ | ✅ | 真实 HLS 回放 4/6 达标（如实） |
+| 6 | QA + Leader + PR | ✅ | ✅ | ✅ | ✅ | 🔄 | **当前位置**：QA PASS + Leader APPROVED；等 push 授权 → Draft PR → checks → 二次确认 |
 
 > 状态图例：⏳ 待开始 | 🔄 进行中 | ✅ 已完成 | ❌ 已取消 | 🔒 阻塞中
 
