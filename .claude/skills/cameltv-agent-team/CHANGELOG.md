@@ -2,6 +2,16 @@
 
 > 技能版本化唯一日志。凡修改 `SKILL.md` / `DEPARTMENTS.md` 必须在本文件追加一条。格式：日期 | 批次 | 变更摘要 | 动因。
 
+## 2026-08-04 | Batch 83 | 新增本地开发操作备忘
+
+- **变更**：新增 `docs/agent-team/local-dev-workflow.md`（主干视图 / worktree 隔离 / 批次生命周期 / push 门禁 / 常见坑速查）；SKILL.md「关联」节新增该文档链接。
+- **动因**：用户要求把本地开发工作流固化为 Agent Team 常驻资产；此前 F:\CamelTv 曾停在旧分支导致"pull 不切分支、脚本缺失"等困扰（batch-82 实测）。
+
+## 2026-08-04 | Batch 83 | Agent Team 确认门禁收敛为一次总确认
+
+- **变更**：SKILL.md/DEPARTMENTS.md/AGENTS.md/pipeline-modes.md 将「逐次 push 确认 + 二次完成确认」收敛为一次总确认（推送+创建 Draft PR+required checks 通过后合入 main）；`audit-ai-pr.ps1` 最终审计不再强制完成确认；本地开发操作备忘同步更新。
+- **动因**：用户要求减少重复确认；推送/PR/合入属于同一次交付授权，一次明确答复即可；直接任务仍保留逐次 Push 确认（AGENTS.md §2.4）。
+
 ## 2026-08-04 | Batch 76 | Dev 步骤接入自动避坑扫描
 
 - **变更**：SKILL.md Dev 步骤新增「自动避坑扫描」（提交前运行 `scan-common-bugs.ps1`，HARD>0 必须处理或注明豁免）；`cameltv-bug-guard` 关联新增该工具。

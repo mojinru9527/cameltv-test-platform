@@ -108,13 +108,14 @@ shadcn/ui + Radix + Tailwind + CVA；Token 走语义类（bg-muted / text-muted-
 3. 开工前先读看板（SKILL.md 第 0 步）。
 4. 编码前扫 `cameltv-bug-guard` skill。
 5. 按切片推进，TDD 先测后码。
-6. 每切片结束执行：
+6. 每切片结束执行（总确认前只本地提交，不推送）：
    ```bash
    git status --short
    git add -- {本切片明确文件列表}
    git diff --cached --name-status
    git commit -m "feat(batch-{N}): {切片描述}"
-   git push -u origin feature/batch-{N}-{name}
+   ```
+   push 在本批次**一次总确认**（推送+PR+合入）后进行：`git push -u origin feature/batch-{N}-{name}`
 
 技术方案骨架：
 ```markdown
@@ -219,12 +220,7 @@ gh pr create --draft --base main --head feature/batch-{N}-{name} \
 pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex
 ```
 
-2. Agent Team 必须再次在聊天中问用户实际执行器是否与开始确认一致、是否授权最终审计和合并，并停下等待。收到明确答复后运行：
-
-```powershell
-pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor claude|codex -UserConfirmedCompletion
-```
-
-3. 完成确认证据推送并通过新一轮 required checks 与最终审计后，Leader 才能 APPROVED、将 Draft PR 标为 Ready 并执行合入。
+2. Agent Team 在首轮 QA 证据完成后做**一次总确认**（覆盖本批次推送、创建 Draft PR、required checks 通过后合入 main），展示变更摘要并停下等待明确答复；确认后不再逐次询问（AGENTS.md §2.4 Agent Team 例外）。`confirm-agent-team-completion.ps1` 仅作可选完成证据，不再强制。
+3. required checks 全绿并通过最终审计（`audit-ai-pr.ps1 -RequireSuccessfulChecks`）后，Leader 才能 APPROVED、将 Draft PR 标为 Ready 并执行合入。
 4. PR 合入后确认无未推送提交，再删除本地分支；远端分支按仓库策略处理。
 5. batch 结束更新看板：Slice 状态、当前位置、批次记录（产出+审批+耗时）。

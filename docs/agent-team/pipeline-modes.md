@@ -35,7 +35,7 @@ mode: light
 - QA 硬门禁（typecheck/build/ruff/import/Alembic，按变更域）
 - Leader 判决 + 流程回写 + 复盘卡
 - C 条件纳入/豁免 + 看板更新
-- PR 审计与用户二次确认
+- PR 审计与用户一次总确认（推送+PR+合入）
 
 ## 5. 与 AGENTS.md 的关系
 
