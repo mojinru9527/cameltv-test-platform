@@ -8,6 +8,8 @@
 
 **定位**：从问题出发，不是从方案出发。接到功能请求先追问 3 次「为什么」。清晰、频繁地说「不」以保护聚焦。
 
+**批次模式判定（Batch 75 起）**：先按 SKILL.md「批次模式」判定完整/轻量。轻量批次（`mode: light`）仅需 §1 问题陈述 + §3 非目标（含豁免理由）+ §4 用户故事，PM/Design 工件可省略，但 QA/Leader/看板/流程回写/复盘卡照常。
+
 ```markdown
 # Batch {name} — PRD Summary
 > **Product (🟦)** | Date: {YYYY-MM-DD} | Status: Draft/Review/Approved
@@ -31,6 +33,9 @@
 
 ## 6. 上线计划
 | 阶段 | 受众 | 成功门槛 |
+
+## 7. 技能使用
+{技能名} → {产出/结论}（非测试证据；技能不可用须记录替代核查方法）
 ```
 
 ---
@@ -152,35 +157,22 @@ API: {ms}   前端: {s}   覆盖: {%}
 
 ## 发布建议
 状态: NEEDS WORK / READY   必修复: {N}   建议修复: {N}
+
+## 复盘卡（Batch 75 起强制）
+| 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
+|----------|-------------------|----------|----------|----------|
+| {计划 vs 实际} | {n/n/n/n} | {n} | {分类} | {1 条动作} |
+
+**技能使用**: {技能名} → {产出/结论}（非测试证据）
 ```
 
 严重级：P0 致命（崩溃/数据丢失/安全漏洞，立即）/ P1 严重（核心不可用，4h）/ P2 一般（有替代，24h）/ P3 建议（体验，下迭代）。
 
 ---
 
-## 6. 🎯 全部 Slice 完成后：
+## 6. 🎯 Leader 领导部门 → `batch-{name}-leader-verdict.md`
 
-先创建 Draft PR，执行基础审计并等待首轮 required checks：
-
-```bash
-gh pr create --draft --base main --head feature/batch-{N}-{name} \
-  --title "feat: Batch {N} — {摘要}" \
-  --body "详见 Agent Team 工件: work-logs/"
-pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex
-```
-
-Agent Team 必须再次在聊天中问用户实际执行器是否与开始确认一致、是否授权最终审计和合并，并停下等待。收到明确答复后运行：
-
-```powershell
-pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor claude|codex -UserConfirmedCompletion
-```
-
-完成确认证据推送并通过新一轮 required checks 与最终审计后，Leader 才能 APPROVED、将 Draft PR 标为 Ready 并执行合入。
-
-**定位**：总协调 + 质量把关。抽检各部门工件，给判决，并可为下一批次设 Leader 条件（C 编号）。
-
-## 7.PR 合入后确认无未推送提交，再删除本地分支；远端分支按仓库策略处理。
-## 8.batch 结束更新看板：Slice 状态、当前位置、批次记录（产出+审批+耗时）。
+**定位**：总协调 + 质量把关。抽检各部门工件，给判决，并可为下一批次设 Leader 条件（C 编号）。**判决末尾必须含「流程回写」与「复盘卡」**（Batch 75 起强制）。
 
 ```markdown
 # Batch {name} — Leader Verdict
@@ -199,6 +191,40 @@ pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor claude|codex -UserC
 
 ## 判决
 {APPROVED → 给合入指令；或列出必须修复的条件 C{n}}
+
 ## 下一批次 Leader 条件（如有）
 - C{n}: {条件}
+
+## 流程回写（Batch 75 起强制）
+| 发现 | 处理 | 落点 |
+|------|------|------|
+| {流程/技能/模板缺陷} | {改 SKILL.md / 开 C 条件 / KB 入库 / 无需处理} | {文件+行 或 C id} |
+
+## 复盘卡
+| 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
+|----------|-------------------|----------|----------|----------|
+| {计划 vs 实际} | {n/n/n/n} | {n} | {分类} | {1 条动作} |
+
+**技能使用**: {技能名} → {产出/结论}（非测试证据）
 ```
+
+## 7. 合入与收尾（流程）
+
+1. 全部 Slice 完成并取得首轮 QA 证据后，创建 Draft PR：
+
+```bash
+gh pr create --draft --base main --head feature/batch-{N}-{name} \
+  --title "feat: Batch {N} — {摘要}" \
+  --body "详见 Agent Team 工件: work-logs/"
+pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor claude|codex
+```
+
+2. Agent Team 必须再次在聊天中问用户实际执行器是否与开始确认一致、是否授权最终审计和合并，并停下等待。收到明确答复后运行：
+
+```powershell
+pwsh scripts/git/confirm-agent-team-completion.ps1 -Executor claude|codex -UserConfirmedCompletion
+```
+
+3. 完成确认证据推送并通过新一轮 required checks 与最终审计后，Leader 才能 APPROVED、将 Draft PR 标为 Ready 并执行合入。
+4. PR 合入后确认无未推送提交，再删除本地分支；远端分支按仓库策略处理。
+5. batch 结束更新看板：Slice 状态、当前位置、批次记录（产出+审批+耗时）。
