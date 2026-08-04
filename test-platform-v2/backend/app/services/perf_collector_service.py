@@ -8,6 +8,7 @@ SoloX (https://github.com/smart-test-ti/SoloX) 是开源 Android/iOS 实时性�
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 logger = logging.getLogger("perf")
@@ -96,18 +97,25 @@ def get_connected_devices() -> list[dict[str, Any]]:
         devices = Devices()
         result: list[dict[str, Any]] = []
 
-        # Android 设备
+        # Android 设备（SoloX getDevices 返回 ["serial(model)"] 或 dict）
         try:
             android_list = devices.getDevices() or []
         except Exception:
             android_list = []
 
         for d in android_list:
-            device_id = d.get("serial") or d if isinstance(d, str) else str(d)
+            if isinstance(d, dict):
+                device_id = d.get("serial") or str(d)
+                model = d.get("model", "")
+            else:
+                raw = str(d)
+                m = re.match(r"^([^()]+)\((.+)\)$", raw)
+                device_id = m.group(1) if m else raw
+                model = m.group(2) if m else ""
             result.append({
                 "device_id": device_id,
                 "device_name": _android_device_name(device_id),
-                "device_model": "",
+                "device_model": model,
                 "platform": "Android",
                 "os_version": _android_os_version(device_id),
                 "status": "online",
@@ -115,7 +123,8 @@ def get_connected_devices() -> list[dict[str, Any]]:
 
         # iOS 设备
         try:
-            ios_list = devices.getDevicesIOS() or []
+            get_devices_ios = getattr(devices, "getDevicesIOS", None)
+            ios_list = get_devices_ios() if get_devices_ios else []
         except Exception:
             ios_list = []
 
