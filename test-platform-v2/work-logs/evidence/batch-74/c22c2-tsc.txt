@@ -1,0 +1,1 @@
+tsc --noEmit --strict --skipLibCheck --moduleResolution node --baseUrl backend/tests/playwright => exit 0 (2026-08-04)

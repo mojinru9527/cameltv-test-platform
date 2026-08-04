@@ -16,6 +16,9 @@ from app.schemas.playground import CompileRequest, CompileResponse, ExecuteReque
 _OPEN_QUOTES = r'[「“"\']'
 _CLOSE_QUOTES = r'[」”"\']'
 
+# 看起来像 CSS 选择器：以 # . [ @ 或标签+[ 开头（用于点击目标判断）
+_SELECTOR_LIKE = re.compile(r'^(?:#|\.|\[|@|[a-zA-Z][\w-]*\[)')
+
 
 # ── Gherkin → Playwright mapping ──────────────────────────────────────────
 
@@ -82,9 +85,9 @@ _ACTION_MAP: list[tuple[str, str]] = [
     # 等待：等待 N 毫秒
     (r'(?:当|且|则)?\s*(?:我\s*)?(?:等待|等)\s*(\d+)\s*(?:毫秒|ms)',
      r"await page.waitForTimeout(\1);"),
-    # 截图
+    # 截图（可用 PLAYGROUND_SCREENSHOT 环境变量重定向输出目录）
     (r'(?:当|且|则)?\s*(?:我\s*)?(?:截图|截图保存|拍个截图)',
-     r"await page.screenshot({ path: 'playground-screenshot.png' });"),
+     r"await page.screenshot({ path: process.env.PLAYGROUND_SCREENSHOT || 'playground-screenshot.png' });"),
 ]
 
 
@@ -118,6 +121,7 @@ def _gherkin_to_playwright(source: str) -> str:
             steps.append(f"  // TODO: {stripped}")
             steps.append(f"  // await page.???")
 
+    steps = [_rewrite_click_target(step) for step in steps]
     joined_steps = "\n".join(steps) if steps else "  // No steps parsed"
     escaped_name = test_name.replace("'", "\\'")
 
@@ -127,6 +131,17 @@ test('{escaped_name}', async ({{ page }}) => {{
 {joined_steps}
 }});
 """
+
+
+def _rewrite_click_target(step: str) -> str:
+    """把 `page.click('文本')` 重写为 getByText，让中文自然步骤可执行。"""
+    m = re.match(r"^(\s*)await page\.click\('(.+)'\);$", step)
+    if not m:
+        return step
+    indent, target = m.group(1), m.group(2)
+    if _SELECTOR_LIKE.match(target):
+        return f"{indent}await page.click('{target}');"
+    return f"{indent}await page.getByText('{target}').first().click();"
 
 
 def _markdown_to_playwright(source: str) -> str:

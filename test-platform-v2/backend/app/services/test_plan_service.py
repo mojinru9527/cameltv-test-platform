@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 import json
+import re
+import shutil
+import subprocess
 from datetime import datetime
+from pathlib import Path
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
@@ -487,6 +491,127 @@ def auto_execute_api_cases(
     }
 
 
+def _execute_ui_case_sync(case) -> dict:
+    """同步编译并执行一条 UI 用例（C22-C3 统一编排：真实 Playwright 链路）。
+
+    返回 pass/fail、产物与执行摘要；编译含 TODO 占位或执行失败都如实返回。
+    """
+    from app.schemas.playground import CompileRequest, SourceType
+    from app.services.playground_service import build_gherkin_from_case, compile_spec
+
+    playwright_dir = Path(__file__).resolve().parent.parent.parent / "tests" / "playwright"
+    generated_dir = playwright_dir / "specs" / "generated"
+    artifact_root = Path(__file__).resolve().parent.parent.parent / "storage" / "ui-runs" / "plan-sync"
+
+    source = build_gherkin_from_case(case)
+    compiled = compile_spec(CompileRequest(source=source, source_type=SourceType.gherkin))
+    spec_code = compiled.spec_code
+    if "TODO" in spec_code:
+        return {"ok": False, "error": "编译含 TODO 占位，无法执行", "spec_code": spec_code}
+
+    safe_id = re.sub(r"[^A-Za-z0-9_-]", "-", case.case_id or f"TC-{case.id}")
+    generated_dir.mkdir(parents=True, exist_ok=True)
+    spec_file = generated_dir / f"plan74-{safe_id}.spec.ts"
+    spec_file.write_text(spec_code, encoding="utf-8")
+    rel_spec = str(spec_file.relative_to(playwright_dir)).replace("\\", "/")
+    artifact_dir = artifact_root / safe_id
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    default_shot = playwright_dir / "playground-screenshot.png"
+    # 清理上一轮的残留截图，避免把无关文件当作本次产物
+    try:
+        default_shot.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+    try:
+        npx = shutil.which("npx") or shutil.which("npx.cmd")
+        if not npx:
+            return {"ok": False, "error": "npx/playwright 不可用"}
+        result = subprocess.run(
+            [
+                npx, "playwright", "test", rel_spec,
+                "--project", "chromium", "--reporter", "json",
+                "--output", str(artifact_dir),
+            ],
+            capture_output=True, text=True, timeout=180,
+            cwd=str(playwright_dir), encoding="utf-8", errors="replace",
+        )
+        stdout_text = result.stdout or ""
+        stderr_text = (result.stderr or "")[:2000]
+        report = _parse_playwright_report(stdout_text)
+        if report is None:
+            return {
+                "ok": False, "error": "Playwright 未输出有效 JSON 报告",
+                "exit_code": result.returncode, "stdout_tail": stdout_text[-1500:], "stderr_tail": stderr_text,
+            }
+        passed, failed, skipped, total = report
+        screenshots = [str(f.relative_to(artifact_dir)).replace("\\", "/") for f in sorted(artifact_dir.rglob("*.png"))]
+        # spec 默认截图写到 runner cwd；移动到产物目录统一收集
+        if default_shot.exists() and not screenshots:
+            try:
+                target = artifact_dir / "playground-screenshot.png"
+                target.write_bytes(default_shot.read_bytes())
+                screenshots = ["playground-screenshot.png"]
+            except OSError:
+                pass
+        return {
+            "ok": failed == 0 and total > 0,
+            "total": total, "passed": passed, "failed": failed, "skipped": skipped,
+            "screenshots": screenshots[:20],
+            "artifact_dir": str(artifact_dir).replace("\\", "/"),
+            "exit_code": result.returncode,
+            "stdout_tail": stdout_text[-1500:], "stderr_tail": stderr_text,
+        }
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": "UI 执行超时（180s）"}
+    except FileNotFoundError:
+        return {"ok": False, "error": "npx/playwright 不可用"}
+    finally:
+        try:
+            spec_file.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _parse_playwright_report(stdout_text: str) -> tuple[int, int, int, int] | None:
+    """解析 Playwright --reporter=json 输出，返回 (passed, failed, skipped, total)。"""
+    payload = None
+    for candidate in (stdout_text, stdout_text.strip().lstrip("\ufeff")):
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, dict) and isinstance(parsed.get("suites"), list):
+                payload = parsed
+                break
+        except (TypeError, ValueError, json.JSONDecodeError):
+            continue
+    if payload is None:
+        return None
+
+    def _collect(suite_list: list[dict]) -> list[dict]:
+        specs: list[dict] = []
+        for s in suite_list:
+            specs.extend(s.get("specs", []))
+            specs.extend(_collect(s.get("suites", [])))
+        return specs
+
+    passed = failed = skipped = total = 0
+    for spec in _collect(payload.get("suites", [])):
+        for test in spec.get("tests", []):
+            total += 1
+            results_list = test.get("results", [])
+            if not results_list:
+                skipped += 1
+                continue
+            status = results_list[-1].get("status", "skipped")
+            if status in ("passed", "expected"):
+                passed += 1
+            elif status in ("failed", "unexpected"):
+                failed += 1
+            else:
+                skipped += 1
+    return passed, failed, skipped, total
+
+
 # ═══════════════════════════════════════════════════════
 # 批量一键执行 (所有类型)
 # ═══════════════════════════════════════════════════════
@@ -544,8 +669,25 @@ def execute_all_cases(
                 status = "fail"
                 actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
                 notes = f"批量执行异常: {e}"
+        elif tc.case_type == "ui":
+            # UI 用例：真实编译 + headless Chromium 执行（batch-74 统一编排）
+            try:
+                ui_result = _execute_ui_case_sync(tc)
+                status = "pass" if ui_result.get("ok") else "fail"
+                actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
+                if ui_result.get("ok"):
+                    notes = (
+                        f"UI 自动执行: {ui_result.get('total', 0)} 条断言全部通过, "
+                        f"截图 {len(ui_result.get('screenshots', []))} 张"
+                    )
+                else:
+                    notes = f"UI 执行失败: {ui_result.get('error', '未知')}"
+            except Exception as e:
+                status = "fail"
+                actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
+                notes = f"UI 执行异常: {e}"
         else:
-            # 人工/UI 用例：标记 skip
+            # 人工等其他类型：标记 skip
             status = "skip"
             actual_result = ""
             notes = "需人工执行"

@@ -115,6 +115,16 @@ class TestCompileGherkinChinese:
         assert "toHaveURL(/detail/)" in result.spec_code
         assert "TODO" not in result.spec_code
 
+    def test_chinese_click_by_text_uses_get_by_text(self):
+        source = """Feature: 登录
+当 打开「http://localhost:5211/login」
+当 点击「登录」
+"""
+        result = compile_spec(CompileRequest(source=source, source_type=SourceType.gherkin))
+        assert "page.goto('http://localhost:5211/login')" in result.spec_code
+        assert "page.getByText('登录').first().click()" in result.spec_code
+        assert "TODO" not in result.spec_code
+
 
 class TestBuildGherkinFromCase:
     def test_case_steps_become_gherkin_source(self):
