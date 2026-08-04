@@ -164,3 +164,16 @@ def test_heartbeat_interval_stays_inside_stale_window():
 
     assert heartbeat_interval(600) == 30.0
     assert heartbeat_interval(8) < 8 / 2
+
+
+def test_dom_text_for_skips_image_files(tmp_path):
+    """设计图板原图（PNG）不应进入 DOM 文本，避免二进制混入 merged_text。"""
+    from app.services.lanhu_evidence.job_runner import _dom_text_for
+
+    png = tmp_path / "design.png"
+    png.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 32)
+    html = tmp_path / "card.html"
+    html.write_text("<html><body>批注：金额高度 64px 改 68px</body></html>", encoding="utf-8")
+
+    assert _dom_text_for(png.as_uri()) == ""
+    assert "金额高度" in _dom_text_for(html.as_uri())

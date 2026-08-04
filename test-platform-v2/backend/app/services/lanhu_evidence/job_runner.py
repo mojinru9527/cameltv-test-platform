@@ -81,7 +81,11 @@ def _require_active_job(db: Session, job_id: int, project_id: int) -> LanhuEvide
 
 
 def _dom_text_for(local_url: str) -> str:
-    """Best-effort extraction from a local Axure document."""
+    """Best-effort extraction from a local Axure HTML document.
+
+    仅解析 .html/.htm 文档；图片（设计图板原图）等二进制文件直接跳过，
+    避免 PNG 二进制混入 merged_text（C87-1 设计图板证据）。
+    """
     if not local_url:
         return ""
     try:
@@ -91,7 +95,7 @@ def _dom_text_for(local_url: str) -> str:
 
         parsed = urlparse(local_url)
         path = Path(unquote(parsed.path.lstrip("/"))) if parsed.scheme == "file" else Path(local_url)
-        if path.exists():
+        if path.exists() and path.suffix.lower() in (".html", ".htm"):
             return _extract_page_text(path) or ""
     except Exception:  # noqa: BLE001
         return ""
