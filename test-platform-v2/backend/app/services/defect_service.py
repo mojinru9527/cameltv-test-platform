@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -12,6 +13,8 @@ from sqlalchemy.orm import Session
 from app.core.base_service import batch_field_map, batch_user_names, paginate
 from app.core.config import settings
 from app.models.defect import Defect, DefectAttachment, DefectComment, DefectTransition
+
+logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
 from app.models.user import User
@@ -509,7 +512,7 @@ def delete_attachment(db: Session, attachment_id: int, project_id: int) -> bool:
     try:
         file_path.unlink(missing_ok=True)
     except OSError:
-        pass
+        logger.warning("附件文件删除失败: %s", file_path)
     db.delete(a)
     db.flush()
     return True

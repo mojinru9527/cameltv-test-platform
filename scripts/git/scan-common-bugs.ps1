@@ -105,7 +105,7 @@ function Test-File {
             $sev = $p.Sev
             if ($p.Name -like "except*") {
                 # 带注释的 except-pass 视为有意为之，降级为 WARN 复核
-                $lineEnd = $text.IndexOf("`n", $m.Index)
+                $lineEnd = $text.IndexOf("`n", $m.Index + $m.Length)
                 if ($lineEnd -lt 0) { $lineEnd = $text.Length }
                 $extended = $text.Substring($m.Index, $lineEnd - $m.Index)
                 if ($extended -match '#') { $sev = "WARN" }

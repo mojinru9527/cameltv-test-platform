@@ -194,7 +194,7 @@ async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int)
                 "duration_s": round(time.time() - start_ts, 1),
             })
         except Exception:
-            pass
+            logger.warning("会话进度推送失败")
 
         db.close()
         _active_tasks.pop(session_id, None)
@@ -250,7 +250,7 @@ async def perf_stream(ws: WebSocket, session_id: int) -> None:
                     stop_event.set()
                     break
             except json.JSONDecodeError:
-                pass
+                logger.warning("客户端消息 JSON 解析失败，忽略该帧")
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected for session %d", session_id)
         stop_event.set()

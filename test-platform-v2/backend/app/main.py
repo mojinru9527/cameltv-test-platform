@@ -1,6 +1,8 @@
 """FastAPI application entrypoint."""
 from __future__ import annotations
 
+import logging
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -11,6 +13,8 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.db import Base, engine
 from app.core.exceptions import APIException, api_exception_handler
+
+logger = logging.getLogger(__name__)
 
 # P1-S6c: 全局请求体大小限制 (100 MB)
 _MAX_BODY_BYTES = 100 * 1024 * 1024
@@ -60,9 +64,9 @@ async def lifespan(_: FastAPI):
     # ── security validation (fail early in production) ──
     security_issues = settings.validate_security()
     if security_issues:
-        print("[security] WARNING — configuration issues detected:")
+        logger.warning("[security] WARNING — configuration issues detected:")
         for issue in security_issues:
-            print(f"  - {issue}")
+            logger.warning("  - %s", issue)
         if settings.environment == "production":
             raise SystemExit(
                 "\n[security] FATAL — refusing to start in production with insecure configuration.\n"
@@ -107,9 +111,9 @@ async def lifespan(_: FastAPI):
                         name=f"Sync integration #{_cfg.id} ({_cfg.provider_type})",
                         replace_existing=True,
                     )
-                    print(f"[sync] Registered auto-sync job for integration #{_cfg.id} ({_cfg.name}) every {_cfg.sync_interval_minutes}min")
+                    logger.info("[sync] Registered auto-sync job for integration #%s (%s) every %smin", _cfg.id, _cfg.name, _cfg.sync_interval_minutes)
         except Exception as exc:
-            print(f"[sync] WARNING — failed to register auto-sync jobs: {exc}")
+            logger.warning("[sync] WARNING — failed to register auto-sync jobs: %s", exc)
         finally:
             _sync_db.close()
 

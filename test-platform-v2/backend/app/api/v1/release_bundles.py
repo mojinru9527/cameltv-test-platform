@@ -400,7 +400,7 @@ def get_regression_scope(
             elif isinstance(mod, str):
                 changed_modules.add(mod)
     except (json.JSONDecodeError, TypeError):
-        pass
+        logger.warning("模块树 JSON 解析失败，按空集合处理")
 
     # 从模块树中提取 module 名称（RequirementModule 表）
     if not changed_modules:
@@ -427,7 +427,7 @@ def get_regression_scope(
             if summary.get("total", 0) > 0:
                 test_summaries.append({"module": mod_name, **summary})
         except Exception:
-            pass
+            logger.warning("获取模块测试摘要失败: %s", mod_name)
 
     return R.ok({
         "bundle_id": bundle_id,

@@ -439,7 +439,7 @@ def _load_playwright_json_report(artifact_dir: Path, stdout_text: str) -> dict |
             if isinstance(payload, dict) and isinstance(payload.get("suites"), list):
                 return payload
         except json.JSONDecodeError:
-            pass
+            logger.warning("Playwright 报告 JSON 解析失败")
 
     return None
 

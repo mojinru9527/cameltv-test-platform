@@ -74,7 +74,7 @@ def detect_changes(project_id: int) -> list[ChangeEvent]:
                 import json
                 metadata = json.loads(src.metadata_json or "{}")
             except (json.JSONDecodeError, TypeError):
-                pass
+                logger.warning("源 metadata_json 解析失败，按空处理: %s", getattr(src, "id", "?"))
 
             old_hash = metadata.get("content_hash", "")
             if new_hash != old_hash and old_hash:
