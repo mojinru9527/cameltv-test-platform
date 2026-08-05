@@ -38,10 +38,7 @@ redis:
     password: "${CAMELTV_TEST_REDIS_PWD}"
 
 mqs:
-  # 待提供：Test5 RabbitMQ 真实地址（ncx 无 MQ 条目；testdata5 仅有 MySQL/MongoDB）
-  # - name: main
-  #   type: rabbitmq
-  #   url: "amqp://${CAMELTV_TEST_MQ_USER}:${CAMELTV_TEST_MQ_PWD}@10.x.x.x:5672/"
+  # 业务平台无 RabbitMQ（2026-08-05 用户确认）：MQ 不适用，保留空列表
 
 # 健康检查端点 — envcheck 会并发探活
 https:
