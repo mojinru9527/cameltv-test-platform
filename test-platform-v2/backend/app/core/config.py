@@ -76,6 +76,9 @@ class Settings(BaseSettings):
     # Required in production; generated in development only for initial creation.
     tester_password: str = ""
     tester_username: str = "tester"
+    # 运营只读账号（C31-3）：viewer 角色，仅查看
+    viewer_username: str = "viewer"
+    viewer_password: str = ""
 
     # ── ELK ──
     elk_base_url: str = ""

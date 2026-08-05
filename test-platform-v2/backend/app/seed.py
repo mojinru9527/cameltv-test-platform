@@ -225,6 +225,31 @@ _TESTER_ACTIONS = {
     "perftest:list", "perftest:create", "perftest:delete", "perftest:execute", "perftest:report",
 }
 
+# 运营只读角色（C31-3）：仅查看，无任何写操作
+_VIEWER_MENUS = {
+    "menu:workbench", "menu:trace", "menu:requirement", "menu:report", "menu:defect",
+    "menu:dataset", "menu:knowledge",
+    "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph",
+    "menu:knowledge:artifacts",
+}
+
+_VIEWER_ACTIONS = {
+    "testcase:list", "testcase:detail",
+    "testplan:list", "testplan:detail",
+    "report:list", "report:detail",
+    "defect:list", "defect:detail",
+    "schedule:list",
+    "dataset:list",
+    "knowledge:view",
+    "wiki:view",
+    "lanhu_evidence:view",
+    "perftest:list",
+    "apitest:view",
+    "uitest:list",
+    "avcheck:list",
+    "mission:list",
+}
+
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
     "menu:apitest", "menu:uitest", "menu:playground", "menu:special", "menu:schedule", "menu:report",
@@ -293,6 +318,11 @@ def run_seed() -> None:
         tester_role, _ = _get_or_create(
             db, Role, defaults={"name": "测试人员", "data_scope": "project"}, code="tester",
         )
+        viewer_role, _ = _get_or_create(
+            db, Role, defaults={"name": "运营只读", "data_scope": "project",
+                                "remark": "仅查看，无写操作（C31-3）"},
+            code="viewer",
+        )
 
         # 4) 角色-权限
         _get_or_create(db, RolePermission, role_id=admin_role.id, permission_id=star.id)
@@ -302,6 +332,9 @@ def run_seed() -> None:
         for code in _TESTER_ACTIONS:
             if code in code_to_perm:
                 _get_or_create(db, RolePermission, role_id=tester_role.id, permission_id=code_to_perm[code].id)
+        for code in _VIEWER_MENUS | _VIEWER_ACTIONS:
+            if code in code_to_perm:
+                _get_or_create(db, RolePermission, role_id=viewer_role.id, permission_id=code_to_perm[code].id)
 
         # 5) 管理员用户
         admin_user = db.scalar(
@@ -338,6 +371,24 @@ def run_seed() -> None:
             db.add(tester_user)
             db.flush()
 
+        # 5.6) 运营只读用户（C31-3）
+        viewer_pwd: str | None = None
+        viewer_user = db.scalar(
+            select(User).filter_by(username=settings.viewer_username)
+        )
+        created_viewer = viewer_user is None
+        if created_viewer:
+            viewer_pwd = settings.viewer_password or _secrets.token_urlsafe(10)
+            viewer_user = User(
+                username=settings.viewer_username,
+                password=hash_password(viewer_pwd),
+                nickname="运营只读",
+                email="viewer@cameltv.local",
+                status=1,
+            )
+            db.add(viewer_user)
+            db.flush()
+
         # 6) 默认项目
         project, _ = _get_or_create(
             db, Project,
@@ -366,6 +417,20 @@ def run_seed() -> None:
             user_id=tester_user.id,
             defaults={"role_id": tester_role.id},
         )
+        _get_or_create(
+            db,
+            UserRole,
+            user_id=viewer_user.id,
+            role_id=viewer_role.id,
+            project_id=0,
+        )
+        _get_or_create(
+            db,
+            ProjectMember,
+            project_id=project.id,
+            user_id=viewer_user.id,
+            defaults={"role_id": viewer_role.id},
+        )
 
         db.commit()
         if created_admin:
@@ -378,5 +443,7 @@ def run_seed() -> None:
             print(f"[seed] 测试用户已创建：{settings.tester_username}")
             if not settings.tester_password and tester_pwd is not None:
                 print(f"[seed] 测试用户自动生成密码：{tester_pwd}")
+        # viewer 密码由部署环境 env VIEWER_PASSWORD 提供；不打印，避免凭据散落与 WARN 增长
+        _ = viewer_user
     finally:
         db.close()
