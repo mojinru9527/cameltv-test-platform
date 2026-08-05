@@ -533,6 +533,18 @@ def resume_failed_job_in_new_session(
         job.heartbeat_at = datetime.now()
         db.commit()
 
+    heartbeat_stop = threading.Event()
+    heartbeat_thread: threading.Thread | None = None
+    if session_factory is None:
+        heartbeat_thread = threading.Thread(
+            target=_heartbeat_loop,
+            args=(factory, job_id, project_id, heartbeat_stop),
+            daemon=True,
+            name=f"lanhu-evidence-resume-heartbeat-{job_id}",
+        )
+        heartbeat_thread.start()
+
+    with _short_session(factory) as db:
         pages = db.execute(
             select(LanhuEvidencePage)
             .where(
@@ -596,21 +608,26 @@ def resume_failed_job_in_new_session(
                 "quality": quality,
             })
 
-    _finalize_after_capture(
-        factory,
-        job_id,
-        project_id,
-        creator_id=creator_id,
-        options=options,
-        source_url=source_url,
-        storage_dir=storage_dir,
-        page_dicts=page_dicts,
-        word_pages=word_pages,
-        json_pages=json_pages,
-        captured=captured,
-        ocr_done=ocr_done,
-        failed=failed,
-    )
+    try:
+        _finalize_after_capture(
+            factory,
+            job_id,
+            project_id,
+            creator_id=creator_id,
+            options=options,
+            source_url=source_url,
+            storage_dir=storage_dir,
+            page_dicts=page_dicts,
+            word_pages=word_pages,
+            json_pages=json_pages,
+            captured=captured,
+            ocr_done=ocr_done,
+            failed=failed,
+        )
+    finally:
+        heartbeat_stop.set()
+        if heartbeat_thread is not None:
+            heartbeat_thread.join(timeout=1.0)
 
 
 def _update_progress(
