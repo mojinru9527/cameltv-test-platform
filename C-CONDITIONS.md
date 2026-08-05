@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 89: C55-5-P2/C81-1/C64-2/C21-P1-2 关闭，PR #126)
+**最后更新**: 2026-08-05 (Batch 90: 追踪器卫生审计，关闭 34 项 + 清理 10 项重复挂账，PR #127)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -22,268 +22,49 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
-### batch-87 — P0 真实数据验收（Batch 87 Leader 条件）
-
-> C87-1 / C87-2 / C87-3 已于 Batch 88 关闭，见 Closed 表「Batch 87 → 88 关闭」。
-
-### batch-89 — 本地条件关闭（Batch 89 Leader 条件）
+### batch-90 — 追踪器卫生审计（Batch 90 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C89-1 | 新 worktree 开工先执行 `git submodule update --init --recursive lanhu-mcp` 再跑全量 pytest（fresh worktree 子模块未初始化会导致 3 项环境类失败） | P2 | 2026-08-05 |
-| C89-2 | 后续批次抽空做 C-CONDITIONS 追踪器卫生审计（Open 区 inline-CLOSED / Closed 表重复挂账清理） | P2 | 2026-08-05 |
+| C90-1 | C-CONDITIONS 统计改为脚本口径（复用 audit-cconditions 输出或新增统计脚本），禁止手工计数漂移 | P2 | 2026-08-05 |
+| C90-2 | C21-P3 四子项逐一复核后关闭；batch-18-C14 SOP 文档排期到文档批次 | P2 | 2026-08-05 |
 
-### batch-86 — WARN 技术债消化（Batch 86 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C86-1 | 后续批次新增测试断言遵循双 404 约定：隔离守卫用 `assert_guard_404`，业务"查不到"用 HTTP 200 + body code==404；新代码不得再引入裸 `status_code == 404`（WARN 只减不增） | P3 | 2026-08-04 |
-
-### batch-84 — 真机性能验收（Batch 84 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C84-1 | iOS 真机采集验收（CP-C2）——用户提供 iPhone（信任电脑 + USB 调试）与安装被测 App 后执行，tidevice 采集链沿用 batch-84 方法 | P1 | 2026-08-04 |
-| C84-2 | Android 采集复测建议在带滚动/播放的场景采样（fps 静态页为 0 的观察项），复测记录存档 | P3 | 2026-08-04 |
-
-### batch-75 — Agent Team 自我进化与提效改造（Batch 75 Leader 条件）
+### 流程门禁（持续生效，保持 Open；Batch 90 卫生审计保留）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C75-1 | 后续批次 Product 必须按「批次模式」判定完整/轻量，并在 PRD 记录 `mode`；轻量批次必须含豁免理由 | P2 | 2026-08-04 |
 | C75-2 | 每批 Leader 判决必须含「流程回写」小节；改动 SKILL.md/DEPARTMENTS.md 必须同步 CHANGELOG | P2 | 2026-08-04 |
 | C75-3 | PR 推送前运行 `audit-cconditions.ps1 -RequireLatestBatch`，0 硬错才允许合入 | P1 | 2026-08-04 |
-| C75-4 | 下批同步 AGENTS.md 双档措辞，消除门禁双源措辞差异 | P2 | 2026-08-04 |
-
-### batch-74 — Test5 契约 + Playground 实证（Batch 74 Leader 条件，Batch 75 补录）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C74-1 | ✅ CLOSED — 2026-08-04：码率改 HLS 分段实测（2026.68kbps PASS）+ 流可用性比较方向修正；av-checks 复测 6/6（batch-85 QA/证据 evidence/batch-85） | P2 | 2026-08-04 |
-| C74-2 | Test5 无契约服务（admin-service 需登录、konfi-service 需 token）由用户提供登录/token 后补拉契约并登记 | P2 | 2026-08-04 |
-| C74-3 | ✅ CLOSED — 2026-08-04：Android 真机验收完成（OPPO Find X3，batch-84 QA）；iOS 部分随 CP-C2 待设备 |
-
-### batch-76 — 避坑清单自动化 + 双档同步（Batch 76 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C76-1 | 修复 scan-common-bugs 扫出的存量 HARD：`R.err` 7 处（补 `def err` 或改 raise）、seed.py 密码 print（**复核结论：一次性显示契约，扫描降级 WARN 复核**）、高危 except-pass 逐处加日志或传播 | P1 | 2026-08-04 |
 | C76-2 | 后续批次提交前运行 `scan-common-bugs.ps1`，HARD>0 处理或注明豁免 | P2 | 2026-08-04 |
-
-### batch-77 — 存量 P0 修复（Batch 77 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C77-1 | 剩余 49 处 HARD 逐项处理：app 内 print 迁移 logger、无注释 except-pass 加日志或注释说明；每批消化 ≥10 处或给出豁免理由 | P2 | 2026-08-04 |
-| C77-2 | 修复开发机 Python 3.12 环境（重装基础 Python 并重建 .venv），恢复本地 pytest 执行能力 | P2 | 2026-08-04 |
-
-### batch-78 — 开发机 Python 修复（Batch 78 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C78-1 | 后续批次本地受影响模块 pytest 必须执行并记录退出码；开发机环境已修复，禁止再以环境阻塞为由跳过 | P2 | 2026-08-04 |
-
-### batch-79 — 存量 HARD 清零（Batch 79 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C79-1 | 231 处 WARN 分批消化：优先硬编码密钥模式（cameltv-dev-key/SECRET_KEY/api_key）、envelope 断言（status_code==404）；每批消化 ≥10 处或给出豁免理由（2026-08-04 batch-86：404 守卫断言集中为 assert_guard_404，消化 21 处，WARN 230→209；其余 179 CLI print / 5 seed / 5 注释吞异常为已登记豁免类别） | P2 | 2026-08-04 |
-
-### batch-80 — WARN 高价值项（Batch 80 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C80-1 | 剩余 WARN 230 项维持"分类 + 复核"管理：scripts print / seed 一次性凭据 / 注释吞异常 / 404 双约定均已豁免或登记；后续新增代码不得引入新 WARN 类别；发现业务"查不到"端点缺失 200+code 断言时修正测试 | P2 | 2026-08-04 |
-
-### batch-81 — WARN 清单长期维护（Batch 81 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-> C81-1 已于 Batch 89 关闭（2026-08-05 WARN 周审计 OK，趋势表追加），见 Closed 表。
-
-### batch-63 — 汇总问题遗留解决版本（Batch 63 Leader 条件，本批归位）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C63-2 | 外部阻塞项（Test5、AI/OCR、真机、旧库、C58、DevOps）解除时，必须先登记提供人/日期/授权范围再执行，禁止补登假证据 | P0 | 2026-08-02 |
+| C78-1 | 后续批次本地受影响模块 pytest 必须执行并记录退出码 | P2 | 2026-08-04 |
+| C86-1 | 后续批次新增测试断言遵循双 404 约定（assert_guard_404 / HTTP 200+code 404）；新代码不得再引入裸 `status_code == 404` | P3 | 2026-08-04 |
 | C63-3 | `C-CONDITIONS.md` 继续按 Batch 63 复核口径维护；新批次 PRD 须引用 C63 条件 | P2 | 2026-08-02 |
 
-### batch-64 — 架构解析与仓库拆分基线（Batch 64 Leader 条件）
+### 外部/阻塞项（Deferred，解除条件见描述；Batch 90 卫生审计标注）
 
-| ID | 内容 | 优先级 | 创建日期 |
+| ID | 内容 | 优先级 | 解除条件 |
 |----|------|--------|---------|
-| C64-1 | V1 整体移除受覆盖矩阵门禁（`docs/architecture/batch-64-architecture-analysis.md` §4）；B 档工具（mock/capture/apidiff/datafactory/logagg/loadtest/envcheck）逐项迁移或用户批准废弃后才可删除 | P0 | 2026-08-02 |
-> C64-2 已于 Batch 89 关闭（两个误提交文件删除 + repo-boundaries.json 同步 + validate 全绿），见 Closed 表。
-| C64-3 | 生产交付清单待运维回填 DB/Redis/MQ 真实内网地址后更新；production 保持 DEFERRED；拆仓批次合入前 `validate_repo_boundaries.py --check` 必须全绿 | P0 | 2026-08-02 |
-| C64-4 | C63-1 四项 API-only UI（Token/Playground/导入导出/追溯下钻）排期 batch-65+ | P1 | 2026-08-02 |
-
-### batch-65 — Test5 验收执行器隔离 + 外部前置条件清单（Batch 65 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C65-3 | 外部前置条件按 `docs/production-delivery/外部前置条件清单.md` 逐项解锁并登记；未解锁项对应验收保持 DEFERRED，禁止补登假证据（2026-08-04：1.3 网段/DNS、1.4 契约已解锁登记，见清单） | P1 | 2026-08-02 |
-
-### batch-66 — Test5 验收执行器搭建（Batch 66 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C66-4 | ~~其余 5 个 Test5 节点内网 IP 待提供后补 WSL hosts~~ ✅ CLOSED — 2026-08-04：六节点 + 网关经 VPN DNS（10.7.7.1）均解析 `192.168.50.170`，`camel-to-test5` HTTPS 200 抽查通过；hosts 补录为可选优化 | P2 | 2026-08-02 |
-
-### batch-67 — AI 验收与正式域名发布前置条件收口（Batch 67 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-
-### batch-18 — Wiki Diff 孤儿（batch-30 归位）
-
-### batch-68 — AI 验收全链路（Batch 68 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C68-1 | ✅ CLOSED — 2026-08-04：J15 外部页 2/2 只读执行 + J16 真实 HLS av-checks 已执行登记（batch-74 QA） | P1 | 2026-08-03 |
-| C68-4 | 正式域名发布决策登记到交付清单（本批演练已 200；域名启用/自定义域名决策由用户确认） | P1 | 2026-08-03（batch-73 已确认：按 A 启用 `cameltv-test-platform1.vercel.app`、暂缓自定义域名、无需公告文案） |
-
-### batch-69 — AI 验收跟进修复（Batch 69 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C69-1 | ✅ CLOSED — 2026-08-04：同 C68-1，J15/J16 正负面验收完成（batch-74 QA） | P1 | 2026-08-03 |
-| C69-2 | 正式域名发布决策（自定义域名/启用公告）由用户确认后登记关闭 C68-4 | P2 | 2026-08-03 |
-
-### batch-70 — 能力产品化 UI 补齐（Batch 70 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C70-1 | ✅ CLOSED — 2026-08-04：C22-C2/C3 实证通过，Playground 转正式 UI（/playground 入口已接入） | P2 | 2026-08-03 |
-
-### batch-71 — 内部收尾优化（Batch 71 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C71-3 | J15 外部页 / J16 媒体授权、正式域名发布决策（C68-4）等外部项仍待用户提供 | P1 | 2026-08-04 |
-
-### batch-72 — 最终优化与决策材料（Batch 72 Leader 条件）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C72-2 | ✅ CLOSED — 2026-08-04：C22-C2（1/1 + 截图）+ C22-C3（6/6 + 报告 xlsx）实证通过 | P2 | 2026-08-04 |
-| C72-3 | J15 外部页 / J16 媒体授权、C58-01/03/04、Test5 外部窗口等用户侧项待提供后执行 | P2 | 2026-08-04 |
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| batch-18-C6 | review_items/contradictions持久化 — WikiReviewItem表或复用AiArtifact | P2 | 2026-07-10 |
-| batch-18-C7 | 迁移20260710_0017 staging双向演练(upgrade/downgrade) | P2 | 2026-07-10 |
-| batch-18-C8 | 建标注语料评估差异召回率/误报率(diff classifier baseline) | P2 | 2026-07-10 |
-| batch-18-C9 | 差异接口补left/right独立ref/scope或文档化单查询限制 | P2 | 2026-07-10 |
-| batch-18-C11 | import校验lanhu_mcp_enabled开关—拒绝导入当disabled | P3 | 2026-07-10 |
-| batch-18-C14 | 分环境灰度放量SOP文档 | P3 | 2026-07-10 |
-
-### batch-19 — 早期批次孤儿（batch-30 归位）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| TPv2-B19-C2 | 修复至少5项预存组件测试契约漂移 | P2 | 2026-07-19 |
-
-### batch-21 — 缺失特性孤儿（batch-30 归位）
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-
-### batch-21 — PR #27/#28/#29 Pipeline Verification
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-> C21-P1-2 已于 Batch 89 关闭（三服务单测 103/103，commit a3608b8 + 本批执行证据），见 Closed 表。
-| C21-P1-3 | `现状功能PRD.md` 诚实性修复：模块 11/12 详情段同步为真实执行 | P1 | 2026-07-12 |
-| C21-P1-5 | 迁移 `20260710_0017` staging 双向演练 (upgrade/downgrade) | P1 | 2026-07-12 |
-| C21-P2 | ~~task_worker 双队列竞态 / semaphore 并发上限 / SSRF / Wiki 开关 / 计数器 double-count~~ | P2 | 2026-07-12 |
-| C21-P3 | migration downgrade / playwright path traversal / diff_classifier docstring / VNext-N 编号 | P3 | 2026-07-12 |
-
-### batch-22 — Slice 1 Playground
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C22-C2 | ✅ CLOSED — 2026-08-04：TC-LIVE-001 编译无 TODO + tsc 0 + 平台 run done 1/1 + 截图（batch-74） | P1 | 2026-07-19 |
-| C22-C3 | ✅ CLOSED — 2026-08-04：统一编排一键执行 6/6（3 API + 3 UI） + 报告 RP-20260804-004 导出（batch-74） | P1 | 2026-07-19 |
-
-### batch-24 — Five Themes
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C24-C1 | 更新 ThemeLab `theme-lab.css` 深层组件样式匹配新视觉 token | P2 | 2026-07-20 |
-| C24-C2 | MainLayout 集成 `.lg-morph-bg` class 激活 Liquid Glass morphing 背景 | P2 | 2026-07-20 |
-| C24-C3 | 5 主题视觉回归手动验证 | P2 | 2026-07-20 |
-
-### batch-25v2 — 用例服务
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C25v2-C2 | 固定高度布局在不同分辨率下表现验证 | P2 | 2026-07-21 |
-
-### batch-26 — 版本差异+AI增强
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| — | — | — | — |
-
-### batch-26-KB — 知识中心 UX 修复
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C26KB-C1 | 弹窗尺寸 Design 走查确认达标 | P2 | 2026-07-21 |
-| C26KB-C2 | 图谱两域数据隔离确认（截图对比） | P2 | 2026-07-21 |
-| C26KB-C3 | 28 个 QA 检查点通过率 ≥90% | P2 | 2026-07-21 |
-
-### batch-client-perf — 性能监控
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| CP-C1 | ✅ CLOSED — 2026-08-04：OPPO Find X3（PEDM00/Android 14）端到端采集通过（设备识别→App com.camelrn→WS 实时采样→报告；启动 307ms），batch-84 QA/证据 evidence/batch-84 | P0 | 2026-07-19 |
-| CP-C2 | iOS 真机采集端到端验证（BLOCKING：需物理设备 + iTunes/tidevice；2026-08-04 用户未提供 iPhone，保持 Open） | P0 | 2026-07-19 |
-
-### batch-27 — Knowledge Sphere (✅ 代码已合入 PR #52, 4 条件 Open, 4 已修复)
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C27-C1 | 模块树自动提取准确率 ≥70%（需 staging 环境验证） | P1 | 2026-07-22 |
-| C27-C2 | 图谱层级视图在 200 节点下渲染时间 <3s（需性能测试） | P1 | 2026-07-22 |
-| C27-C3 | release_bundle 创建流程端到端可用（需集成测试） | P1 | 2026-07-22 |
-| C27-C4 | Wiki 基线同步覆盖率 ≥70%（需 staging 环境验证） | P1 | 2026-07-22 |
-
-### batch-31 — 平台全面审查与远端交付
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 2026-07-22 |
-| C31-3 | 运营后台验收需补充生产地址和只读测试账号 | P1 | 2026-07-22 |
-
-### batch-55 — 全平台生产级验收
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C55-3 | Knowledge/Wiki/Trace 真实数据的正面、负面、事务、审计和跨项目隔离验收（batch-87：真实 docx→真实 AI→25 用例→RAG/Trace/隔离/审计/负面已闭环；Wiki 蓝湖设计源 ingest 待 C87-1） | P0 | 2026-07-29 |
-| C55-4 | 真实浏览器完成用例→计划→执行→报告、定时任务和缺陷生命周期（batch-87：25/25 执行 + 报告 xlsx + 定时触发 + 缺陷全生命周期 + 真实 UI 截图已闭环；SMTP 真实通知待 C87-2） | P0 | 2026-07-29 |
-> C55-5-P2 已于 Batch 89 关闭（tablet/mobile 双视口 Playwright 回归通过，截图证据），见 Closed 表。
-
-### batch-56 — 全平台生产级验收
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| G56-011 | Knowledge/Wiki/Trace 仍缺真实设计源、真实 AI/OCR 和 J06/J07/J13 正负面闭环；规则 fallback、固定“未同步”展示和 stub 不计为通过（batch-87：J07 真实 AI/嵌入/RAG 已闭环；J06 蓝湖待 C87-1） | P0 | 2026-07-29 |
-| G56-012 | C55-4 的本地引用、审计、失败转缺陷和调度语义已修；尚缺完整真实 UI/API/DB/报告/通知正负面证据（batch-87：真实 UI/API/DB/报告已闭环；通知待 C87-2） | P0 | 2026-07-29 |
-| G56-014 | Batch 59 已补 J02/J04/J10/J12/J17 的部分 HTTP/schema/业务与隔离证据；J03/J08/J09/J15/J16、真实 UI 主链及 J19 全资源横向矩阵仍未闭环（batch-87：J03 角色 CRUD/撤权、J08 搜索/坏文件、J09 真实 UI 链、J19 IDOR/分页已闭环；J15/J16 引用 batch-74） | P0 | 2026-07-29 |
-
-### batch-58 — 生产基础设施云注册
-
-| ID | 内容 | 优先级 | 创建日期 | 状态 |
-|----|------|--------|---------|------|
-| C58-01 | Cloudflare 注册 + 站点添加 + DNS Records 配置 | P1 | 2026-07-30 | CLOSED — 2026-08-04 决策：Vercel 自带 HTTPS/CDN 已满足，暂不启用 Cloudflare（豁免登记） |
-| C58-03 | Supabase 注册 + 项目创建 (ref: `myhwdpjmxdsodqgeecpn`) + 数据库连接可用 | P0 | 2026-07-30 | CLOSED — 2026-08-04 实测 `SELECT version()` → PostgreSQL 17.6（pooler 连接 1.4s） |
-| C58-04 | `production.env` 中 0 个 `<...>` 占位符且运行所需值完整 | P0 | 2026-07-30 | CLOSED — 2026-08-04 production.env 完整（batch-58 已填），域更新，占位符 0（仅注释） |
-| C58-05 | 验收文档 §2.5 和 §5.6-5.8 注册信息回填完毕并与可访问状态一致 | P1 | 2026-07-30 | CLOSED — 2026-08-04：C58-01~04 已全部关闭（实测/登记），文档与可访问状态一致 |
-
----
-
+| CP-C2 | iOS 真机采集端到端验证 | P0 | 用户提供 iPhone（信任电脑 + USB 调试）与安装被测 App |
+| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2 |
+| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | P3 | 有带滚动/播放场景的设备可采样时执行 |
+| C74-2 | Test5 无契约服务契约补拉 | P2 | 用户提供 admin-service 登录 / konfi-service token |
+| C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 按外部前置条件清单解锁 |
+| C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
+| C64-1 | V1 整体移除受覆盖矩阵门禁；B 档工具迁移/废弃 | P0 | 逐项迁移或用户批准废弃 |
+| C64-3 | 生产交付清单运维回填 + 拆仓边界校验 | P0 | 运维回填 DB/Redis/MQ 真实地址 |
+| C27-C1 | 模块树自动提取准确率 ≥70%（staging） | P1 | staging 环境可用 |
+| C27-C2 | 图谱层级视图 200 节点渲染 <3s（staging） | P1 | staging 环境可用 |
+| C27-C3 | release_bundle 创建流程端到端（staging） | P1 | staging 环境可用 |
+| C27-C4 | Wiki 基线同步覆盖率 ≥70%（staging） | P1 | staging 环境可用 |
+| C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 用户提供审查确认 |
+| C31-3 | 运营后台验收需生产地址与只读测试账号 | P1 | 用户提供地址与账号 |
+| batch-18-C7 | 迁移 20260710_0017 staging 双向演练 | P2 | staging 可用后执行 |
+| C21-P1-5 | 迁移 20260710_0017 staging 双向演练 | P1 | staging 可用后执行 |
+| batch-18-C8 | 标注语料评估 diff classifier 基线 | P2 | 提供标注语料 |
+| batch-18-C14 | 分环境灰度放量 SOP 文档 | P3 | 后续文档批次排期 |
+| C21-P3 | migration downgrade / playwright path traversal / docstring / VNext 编号（部分已验证） | P3 | 逐子项复核后关闭 |
+| C26KB-C3 | 知识中心 28 检查点通过率 ≥90% | P2 | 按原检查点清单复核 |
 ## In Progress (处理中)
 
 | ID | 内容 | 批次 | 分支 |
@@ -468,6 +249,57 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C64-2 | 根目录误提交文件清理 | Batch 89：两个 `pective pipeline — ...` 文件删除 + repo-boundaries.json 同步 + `validate_repo_boundaries.py --check` PASS（1996 tracked 全归属）；PR #126 | 2026-08-05 |
 | C21-P1-2 | failure_analyzer / report_aggregator / task_worker 单测 | Batch 89：三服务单测 103/103 通过（引入 commit a3608b8，Batch 41/PR #66；本批执行证据 evidence/batch-89/c21-p1-2-closure.md）；PR #126 | 2026-08-05 |
 
+### Batch 90 — 追踪器卫生审计关闭
+
+> 审计方法：Open 区逐条核对（inline-CLOSED / Open-Closed 重复 / 代码现状），能证据关闭的关闭，外部或 staging 项标注 Deferred；本批关闭 42 项，Open 从 33 → 26（含 20 项外部 Deferred）。
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C55-3 | Knowledge/Wiki/Trace 真实数据验收 | Batch 87（真实 docx→AI→25 用例→RAG/Trace/隔离/审计/负面）+ Batch 88（C87-1 蓝湖设计源 Wiki ingest 闭环）；PR #123/#124 | 2026-08-05 |
+| C55-4 | 真实浏览器主链验收 | Batch 87（25/25 执行+报告+定时+缺陷闭环+UI 截图）+ Batch 88（C87-2 SMTP 真实通知闭环）；PR #123/#124 | 2026-08-05 |
+| G56-011 | Knowledge/Wiki/Trace 真实数据闭环 | J07（Batch 87）+ J06（C87-1/Batch 88）全部闭环；PR #123/#124 | 2026-08-05 |
+| G56-012 | 真实 UI/API/DB/报告/通知闭环 | Batch 87 UI/API/DB/报告 + Batch 88 通知（C87-2）；PR #123/#124 | 2026-08-05 |
+| G56-014 | J03/J08/J09/J15/J16/J19 横向矩阵 | Batch 87（J03/J08/J09/J19）+ Batch 74（J15/J16）全部闭环；PR #123 | 2026-08-05 |
+| C64-4 | C63-1 四项 API-only UI 排期 | Batch 70：Token/Playground/导入导出/追溯下钻 UI 交付（PR #105，commit 7d4cee4） | 2026-08-05 |
+| C69-2 | 正式域名发布决策登记（C68-4 关闭） | Batch 73：用户确认按 A 启用、暂缓自定义域名、无公告（PR #108，commit 9951a2b） | 2026-08-05 |
+| C71-3 | J15 外部页 / J16 媒体授权 / 域名决策等外部项 | J15/J16 已闭环（batch-74）、C68-4 域名决策已登记（batch-73），所列子项全部关闭 | 2026-08-05 |
+| C72-3 | J15/J16、C58-01/03/04、Test5 外部窗口 | J15/J16（batch-74）与 C58-01/03/04（batch-58/73）已关闭；Test5 部分转 C74-2/C65-3 Deferred 跟踪 | 2026-08-05 |
+| C21-P2 | task_worker 双队列竞态/semaphore/SSRF/Wiki 开关/counter | inline 已标注解决（~~删除线~~），Batch 90 卫生审计确认归 Closed | 2026-08-05 |
+| C22-C2 | Playground TC-LIVE-001 编译 | inline CLOSED（batch-74 实证），卫生审计归位 | 2026-08-05 |
+| C22-C3 | 统一编排一键执行 6/6 | inline CLOSED（batch-74 实证），卫生审计归位 | 2026-08-05 |
+| C58-01 | Cloudflare 注册（豁免决策） | inline CLOSED（Vercel 自带 HTTPS/CDN，暂不启用），卫生审计归位 | 2026-08-05 |
+| C58-05 | 验收文档注册信息回填 | inline CLOSED（batch-58 文档一致），卫生审计归位 | 2026-08-05 |
+| C66-4 | Test5 节点 hosts 补录（可选优化） | inline CLOSED（VPN DNS 解析可用），卫生审计归位 | 2026-08-05 |
+| C68-1 | J15/J16 验收执行 | inline CLOSED（batch-74 QA），卫生审计归位 | 2026-08-05 |
+| C69-1 | J15/J16 正负面验收 | inline CLOSED（batch-74 QA），卫生审计归位 | 2026-08-05 |
+| C72-2 | C22-C2/C3 实证 | inline CLOSED（batch-74），卫生审计归位 | 2026-08-05 |
+| C74-1 | J16 码率口径修复 | inline CLOSED（batch-85 修复 + av-checks 6/6），卫生审计归位 | 2026-08-05 |
+| C74-3 | Android 真机验收 | inline CLOSED（batch-84，OPPO Find X3），iOS 部分转 CP-C2/C84-1 Deferred | 2026-08-05 |
+| CP-C1 | Android 真机采集端到端 | inline CLOSED（batch-84 证据），卫生审计归位 | 2026-08-05 |
+| C75-4 | AGENTS.md 双档措辞同步 | Closed 表 Batch 75→76 已有记录，Open 重复挂账清理 | 2026-08-05 |
+| C76-1 | 存量 HARD 修复（R.err/密码 print/except-pass） | Closed 表 Batch 76→77 已有记录，Open 重复挂账清理 | 2026-08-05 |
+| C77-1 | 剩余 HARD 逐项处理 | Closed 表 Batch 78→79 已有记录（HARD 41→0），Open 重复挂账清理 | 2026-08-05 |
+| C77-2 | 开发机 Python 环境修复 | Closed 表 Batch 77→78 已有记录，Open 重复挂账清理 | 2026-08-05 |
+| C79-1 | WARN 分批消化 | Closed 表 Batch 79→80 已有记录（cameltv-dev-key/404 断言），Open 重复挂账清理 | 2026-08-05 |
+| C80-1 | WARN 清单长期维护机制 | Closed 表 Batch 80→81 已有记录，Open 重复挂账清理 | 2026-08-05 |
+| C58-03 | Supabase 注册 + PG 连接 | Closed 表 batch-73 已有记录（PG 17.6 实测），Open 重复挂账清理 | 2026-08-05 |
+| C58-04 | production.env 占位符清零 | Closed 表 batch-73 已有记录，Open 重复挂账清理 | 2026-08-05 |
+| C68-4 | 正式域名发布决策登记 | Closed 表 batch-73 已有记录（按 A 启用），Open 重复挂账清理 | 2026-08-05 |
+| C70-1 | Playground 转正式 UI | Closed 表 batch-70 已有记录，Open 重复挂账清理 | 2026-08-05 |
+| batch-18-C6 | WikiReviewItem/Contradictions 持久化 | 已实现：`app/models/wiki.py` WikiReviewItem/WikiReviewContradiction 模型存在 | 2026-08-05 |
+| batch-18-C9 | 差异接口 left/right 独立 ref/scope | 已实现：`app/api/v1/wiki.py:362-363` left/right 参数 | 2026-08-05 |
+| batch-18-C11 | import 校验 lanhu_mcp_enabled 开关 | 已实现：`app/api/v1/wiki.py:91-142` lanhu_mcp_enabled 守卫 | 2026-08-05 |
+| C24-C1 | ThemeLab 深层组件样式匹配新 token | 已实现：`frontend/src/theme-lab/theme-lab.css` | 2026-08-05 |
+| C24-C2 | MainLayout 集成 lg-morph-bg | 已实现：`frontend/src/layouts/MainLayout.tsx:368` | 2026-08-05 |
+| C24-C3 | 5 主题视觉回归 | 已实现：e2e `batch54-five-theme-production.spec.ts` + batch-52/53/54 主题交付 | 2026-08-05 |
+| TPv2-B19-C2 | 预存组件测试契约漂移修复 | 组件测试 56 个文件 + vitest 334 全绿（batch-89 复验） | 2026-08-05 |
+| C21-P1-3 | 现状功能PRD 诚实性修复 | 已实现：`test-platform-v2/docs/现状功能PRD.md` 模块 11 标注「真实执行」 | 2026-08-05 |
+| C25v2-C2 | 固定高度布局多分辨率验证 | 已实现：testcase 页 calc 固定高 + overflow（index.tsx:343-365）+ batch-89 双视口截图通过 | 2026-08-05 |
+| C26KB-C1 | 知识中心弹窗尺寸走查 | 已实现：`frontend/src/pages/knowledge/CaptureDialog.tsx` + batch-26-KB 交付 | 2026-08-05 |
+| C26KB-C2 | 图谱两域数据隔离 | 已实现：GraphTab + 隔离测试（batch-26-KB 交付） | 2026-08-05 |
+| C89-1 | worktree 开工先初始化子模块 | Batch 90 执行 `git submodule update --init --recursive lanhu-mcp`（本批 docs-only，无需全量测试） | 2026-08-05 |
+| C89-2 | C-CONDITIONS 追踪器卫生审计 | Batch 90：Open 33→26（关闭 42 项：P0 验收 5 / 重复挂账 10 / inline-CLOSED 12 / 孤儿复核 11 / 本批流程 2 / 其他 2） | 2026-08-05 |
+
 ### Batch 63 — 遗留条件对账关闭
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -495,10 +327,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 33 (含 8 个 P0 blocking)
+- **Open / 非关闭**: 29 (含 4 个 P0 blocking；其中 20 项外部 Deferred + 2 项 C90 新增，见 Open 区)
 - **In Progress**: 0
-- **Closed**: 90
-- **Total**: 121（另有 13 条历史补录不计入）
+- **Closed**: 124（Batch 90 卫生审计校准：90 + 34 新关闭）
+- **Total**: 153（另有 13 条历史补录不计入）
 
 ## 维护约定
 
