@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 95: 后续小项消化，C91-2/C93-1 关闭 + konfi 解锁登记，PR #132)
+**最后更新**: 2026-08-05 (Batch 96: V1 工具审计 + viewer 只读账号 + diff 基线，C31-2/C31-3/batch-18-C8 关闭，PR #133)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -21,6 +21,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-96 — V1 工具审计 / 只读账号 / staging / diff 基线（Batch 96 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C96-1 | C27-C1~C4 四项验证在本地全栈（staging 替代）执行，数据/性能测量就绪后逐项关闭；V1 工具实际删除在独立清理批次执行 | P1 | 2026-08-05 |
 
 ### batch-95 — 后续小项消化（Batch 95 Leader 条件）
 
@@ -68,17 +74,17 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供（2026-08-05 登记，待 VPN 窗口取 token 拉契约）；admin-service 登录仍待提供 |
 | C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 待提供 |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
-| C64-1 | V1 整体移除受覆盖矩阵门禁；B 档工具迁移/废弃 | P0 | 逐项迁移或用户批准废弃 |
-| C64-3 | 生产交付清单运维回填 + 拆仓边界校验 | P0 | 运维回填 DB/Redis/MQ 真实地址 |
-| C27-C1 | 模块树自动提取准确率 ≥70%（staging） | P1 | staging 环境可用 |
-| C27-C2 | 图谱层级视图 200 节点渲染 <3s（staging） | P1 | staging 环境可用 |
-| C27-C3 | release_bundle 创建流程端到端（staging） | P1 | staging 环境可用 |
-| C27-C4 | Wiki 基线同步覆盖率 ≥70%（staging） | P1 | staging 环境可用 |
-| C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 用户提供审查确认 |
-| C31-3 | 运营后台验收需生产地址与只读测试账号 | P1 | 用户提供地址与账号 |
+| C64-1 | V1 整体移除受覆盖矩阵门禁；B 档工具迁移/废弃 | P0 | B 档 11 工具已批准废弃（用户 2026-08-05，审计无引用），删除排清理批次；V1 web-ui/server 整体移除仍需覆盖矩阵 |
+| C64-3 | 生产交付清单运维回填 + 拆仓边界校验 | P0 | 口径已澄清（业务 DB/Redis/MQ=被测系统地址）；业务地址仍需运维回填 |
+| C27-C1 | 模块树自动提取准确率 ≥70% | P1 | staging 替代已登记（test 环境 + 本地全栈）；执行待数据/性能测量（C96-1） |
+| C27-C2 | 图谱层级视图 200 节点渲染 <3s | P1 | 同上 |
+| C27-C3 | release_bundle 创建流程端到端 | P1 | 同上 |
+| C27-C4 | Wiki 基线同步覆盖率 ≥70% | P1 | 同上 |
+| C31-2 | 至少一名人工审查者确认变更范围与生产验收结论 | P1 | 已关闭（用户 2026-08-05 确认），见 Closed 表 |
+| C31-3 | 运营后台验收需生产地址与只读测试账号 | P1 | 已关闭（viewer 只读角色/账号实现 + 测试 3/3），见 Closed 表 |
 | batch-18-C7 | 迁移 20260710_0017 staging 双向演练 | P2 | staging 可用后执行 |
 | C21-P1-5 | 迁移 20260710_0017 staging 双向演练 | P1 | staging 可用后执行 |
-| batch-18-C8 | 标注语料评估 diff classifier 基线 | P2 | 提供标注语料 |
+| batch-18-C8 | 标注语料评估 diff classifier 基线 | P2 | 已关闭（Batch 96：10 组标注集 + 召回 1.0/误报 0），见 Closed 表 |
 ## In Progress (处理中)
 
 | ID | 内容 | 批次 | 分支 |
@@ -338,6 +344,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C91-2 | search_service/vector_store docstring 与实现对齐 | Batch 95：两处 docstring 更新（不按 status 过滤，全状态检索语义）+ 知识检索测试 49/49；PR #132 | 2026-08-05 |
 | C93-1 | 响应式 E2E 定时任务首次运行核对 | Batch 95：手动触发 `responsive-e2e.yml`（run 30986094838）→ 双视口回归 job **success**；PR #132 | 2026-08-05 |
 
+### Batch 96 — V1 工具审计 / 只读账号 / staging / diff 基线
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C31-2 | 人工审查者确认变更范围与生产验收结论 | 用户 2026-08-05 明确确认；PR #133 | 2026-08-05 |
+| C31-3 | 运营后台只读账号 | Batch 96：viewer 只读角色/账号（seed，含 _VIEWER_MENUS/_VIEWER_ACTIONS）+ `test_viewer_role.py` 3/3（查看 200/写 403）；PR #133 | 2026-08-05 |
+| batch-18-C8 | diff classifier 标注基线 | Batch 96：`test_diff_classifier_baseline.py` 10 组标注对 → 显著差异召回 1.0 / 误报 0（evidence JSON）；PR #133 | 2026-08-05 |
+
 ### Batch 63 — 遗留条件对账关闭
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -365,10 +379,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 26 (含 4 个 P0 blocking；其中 17 项 Deferred + 2 项 C95；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 24 (含 4 个 P0 blocking；其中 15 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 126（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 152（另有 13 条历史补录不计入）
+- **Closed**: 129（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Total**: 153（另有 13 条历史补录不计入）
 
 ## 维护约定
 

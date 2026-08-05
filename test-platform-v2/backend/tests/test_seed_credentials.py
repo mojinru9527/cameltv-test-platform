@@ -51,6 +51,8 @@ def _development_settings(**overrides: str) -> Settings:
         "admin_password": "",
         "tester_username": "batch55_tester",
         "tester_password": "",
+        "viewer_username": "batch55_viewer",
+        "viewer_password": "",
         "ai_enabled": False,
     }
     values.update(overrides)
@@ -89,9 +91,11 @@ def test_configured_seed_credentials_are_hashed_only_for_initial_creation(
 ) -> None:
     admin_password = f"test-admin-{secrets.token_urlsafe(16)}"
     tester_password = f"test-tester-{secrets.token_urlsafe(16)}"
+    viewer_password = f"test-viewer-{secrets.token_urlsafe(16)}"
     local_settings = _development_settings(
         admin_password=admin_password,
         tester_password=tester_password,
+        viewer_password=viewer_password,
     )
     monkeypatch.setattr(seed, "settings", local_settings)
 
@@ -113,13 +117,17 @@ def test_configured_seed_credentials_are_hashed_only_for_initial_creation(
     tester_hash = _user_password_hash(
         seed_session_factory, local_settings.tester_username
     )
+    viewer_hash = _user_password_hash(
+        seed_session_factory, local_settings.viewer_username
+    )
     assert verify_password(admin_password, admin_hash)
     assert verify_password(tester_password, tester_hash)
+    assert verify_password(viewer_password, viewer_hash)
     _assert_tester_has_default_project(
         seed_session_factory,
         local_settings.tester_username,
     )
-    assert hashed_plaintexts == [admin_password, tester_password]
+    assert hashed_plaintexts == [admin_password, tester_password, viewer_password]
 
     hashed_plaintexts.clear()
     seed.run_seed()
@@ -136,6 +144,10 @@ def test_configured_seed_credentials_are_hashed_only_for_initial_creation(
         _user_password_hash(seed_session_factory, local_settings.tester_username)
         == tester_hash
     )
+    assert (
+        _user_password_hash(seed_session_factory, local_settings.viewer_username)
+        == viewer_hash
+    )
 
 
 def test_generated_seed_credentials_are_created_and_shown_only_once(
@@ -151,6 +163,7 @@ def test_generated_seed_credentials_are_created_and_shown_only_once(
         [
             f"test-generated-admin-{secrets.token_urlsafe(12)}",
             f"test-generated-tester-{secrets.token_urlsafe(12)}",
+            f"test-generated-viewer-{secrets.token_urlsafe(12)}",
         ]
     )
     generated_calls: list[str] = []
@@ -165,7 +178,7 @@ def test_generated_seed_credentials_are_created_and_shown_only_once(
     with caplog.at_level(logging.WARNING, logger="uvicorn"):
         seed.run_seed()
     first_output = capsys.readouterr()
-    assert len(generated_calls) == 2
+    assert len(generated_calls) == 3
     assert generated_calls[0] in caplog.text
     assert generated_calls[1] in first_output.out
 
@@ -174,7 +187,7 @@ def test_generated_seed_credentials_are_created_and_shown_only_once(
         seed.run_seed()
     second_output = capsys.readouterr()
 
-    assert len(generated_calls) == 2
+    assert len(generated_calls) == 3
     assert second_output.out == ""
     assert second_output.err == ""
     assert caplog.records == []
