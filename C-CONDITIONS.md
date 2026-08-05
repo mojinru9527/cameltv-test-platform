@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 90: 追踪器卫生审计，关闭 34 项 + 清理 10 项重复挂账，PR #127)
+**最后更新**: 2026-08-05 (Batch 91: Open 区收口，C90-1/C90-2/C21-P3/batch-18-C14 关闭，PR #128)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -22,12 +22,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
-### batch-90 — 追踪器卫生审计（Batch 90 Leader 条件）
+### batch-91 — Open 区收口（Batch 91 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C90-1 | C-CONDITIONS 统计改为脚本口径（复用 audit-cconditions 输出或新增统计脚本），禁止手工计数漂移 | P2 | 2026-08-05 |
-| C90-2 | C21-P3 四子项逐一复核后关闭；batch-18-C14 SOP 文档排期到文档批次 | P2 | 2026-08-05 |
+| C91-1 | batch-94 落地 AI 产物批量审核/采纳 UI 后，复测 C26KB-C3 28 检查点（补齐 C7 3 项，通过率 ≥90%） | P2 | 2026-08-05 |
+| C91-2 | search_service.py 模块 docstring 的 status 过滤文案与实际行为对齐（B91-Q2 顺手项） | P3 | 2026-08-05 |
+
+### batch-90 — 追踪器卫生审计（Batch 90 Leader 条件）
+
+> C90-1 / C90-2 已于 Batch 91 关闭，见 Closed 表「Batch 91 — Open 区收口」。
 
 ### 流程门禁（持续生效，保持 Open；Batch 90 卫生审计保留）
 
@@ -62,9 +66,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | batch-18-C7 | 迁移 20260710_0017 staging 双向演练 | P2 | staging 可用后执行 |
 | C21-P1-5 | 迁移 20260710_0017 staging 双向演练 | P1 | staging 可用后执行 |
 | batch-18-C8 | 标注语料评估 diff classifier 基线 | P2 | 提供标注语料 |
-| batch-18-C14 | 分环境灰度放量 SOP 文档 | P3 | 后续文档批次排期 |
-| C21-P3 | migration downgrade / playwright path traversal / docstring / VNext 编号（部分已验证） | P3 | 逐子项复核后关闭 |
-| C26KB-C3 | 知识中心 28 检查点通过率 ≥90% | P2 | 按原检查点清单复核 |
+| C26KB-C3 | 知识中心 28 检查点通过率 ≥90%（Batch 91 复核：25/28=89.3%，批量采纳/驳回/导入 3 项未实现） | P2 | 批量审核/采纳 UI（batch-94）落地后复测 |
 ## In Progress (处理中)
 
 | ID | 内容 | 批次 | 分支 |
@@ -300,6 +302,15 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C89-1 | worktree 开工先初始化子模块 | Batch 90 执行 `git submodule update --init --recursive lanhu-mcp`（本批 docs-only，无需全量测试） | 2026-08-05 |
 | C89-2 | C-CONDITIONS 追踪器卫生审计 | Batch 90：Open 33→26（关闭 42 项：P0 验收 5 / 重复挂账 10 / inline-CLOSED 12 / 孤儿复核 11 / 本批流程 2 / 其他 2） | 2026-08-05 |
 
+### Batch 91 — Open 区收口
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C90-1 | C-CONDITIONS 统计脚本口径 | Batch 91：`audit-cconditions.ps1` 新增 `stats:` 输出（Open/Closed/Deferred 按文件解析），维护约定强制引用脚本；PR #128 | 2026-08-05 |
+| C90-2 | C21-P3 四子项复核 + SOP 文档 | Batch 91：migration downgrade 测试 7 passed（test_alembic_runbook 等）+ playwright path traversal 守卫（lanhu_evidence.py:315 / ui_test.py:55 is_relative_to）+ diff_classifier 模块 docstring + VNext-1..6 编号约定（wiki 落地方案）；《灰度放量SOP》docs/灰度放量SOP.md；PR #128 | 2026-08-05 |
+| C21-P3 | migration downgrade / path traversal / docstring / VNext 编号 | 四子项全部证据关闭（同 C90-2 证据）；PR #128 | 2026-08-05 |
+| batch-18-C14 | 分环境灰度放量 SOP 文档 | Batch 91：`docs/灰度放量SOP.md`（环境分层/灰度节奏/回滚/检查清单/责任矩阵）；PR #128 | 2026-08-05 |
+
 ### Batch 63 — 遗留条件对账关闭
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -327,13 +338,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 29 (含 4 个 P0 blocking；其中 20 项外部 Deferred + 2 项 C90 新增，见 Open 区)
+- **Open / 非关闭**: 27 (含 4 个 P0 blocking；其中 18 项 Deferred + 2 项 C91 新增；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 124（Batch 90 卫生审计校准：90 + 34 新关闭）
-- **Total**: 153（另有 13 条历史补录不计入）
+- **Closed**: 121（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Total**: 148（另有 13 条历史补录不计入）
 
 ## 维护约定
 
+0. **统计口径（C90-1，Batch 91 起强制）**：Open/Closed/Deferred 计数一律以 `pwsh scripts/git/audit-cconditions.ps1` 输出的 `stats:` 行为准；手工修改统计行视为漂移，Leader 复核时以脚本值校正。
 1. 每个 batch Leader Verdict 定稿后，Leader 负责将 C 条件追加到此文件
 2. Product 开工前必须 `Read C-CONDITIONS.md`，在 PRD 的「非目标」段中明确哪些 Open 条件纳入本次、哪些豁免及理由
 3. PR 合入后，Dev 负责将本次满足的 C 条件从 Open → Closed
