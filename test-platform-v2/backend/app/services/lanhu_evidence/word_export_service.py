@@ -21,6 +21,8 @@ class WordPage:
 
 
 def export_word(output_path: Path, title: str, source_url: str, pages: list[WordPage]) -> Path:
+    from app.services.lanhu_evidence.merge_service import sanitize_evidence_text
+
     doc = Document()
     doc.add_heading(title, level=0)
     doc.add_paragraph(f"来源链接：{source_url}")
@@ -40,7 +42,7 @@ def export_word(output_path: Path, title: str, source_url: str, pages: list[Word
                 except Exception:  # noqa: BLE001 — 单张截图损坏不应中断整份文档
                     doc.add_paragraph(f"（截图嵌入失败：{shot.name}）")
         doc.add_heading("识别文本", level=2)
-        for line in (page.merged_text or "").splitlines():
+        for line in sanitize_evidence_text(page.merged_text or "").splitlines():
             doc.add_paragraph(line)
 
     output_path = Path(output_path)

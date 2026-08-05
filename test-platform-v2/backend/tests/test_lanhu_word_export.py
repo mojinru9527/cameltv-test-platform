@@ -32,6 +32,29 @@ def test_word_export_contains_page_titles_and_text(tmp_path):
     assert "matchId 必填" in text
 
 
+def test_word_export_survives_xml_invalid_chars(tmp_path):
+    """merged_text 含 NUL/控制字符时仍可导出（C87-1 设计图板证据）。"""
+    from app.services.lanhu_evidence.word_export_service import WordPage, export_word
+
+    out = tmp_path / "lanhu.docx"
+    export_word(
+        output_path=out,
+        title="蓝湖证据包",
+        source_url="https://lanhuapp.com/x",
+        pages=[
+            WordPage(
+                page_name="bg切图",
+                page_path="设计图板/bg切图",
+                screenshots=[],
+                merged_text="# bg切图\n## DOM/MCP文本 \x00PNG\x01IHDR",
+                quality={"status": "success"},
+            )
+        ],
+    )
+
+    assert out.exists()
+
+
 def test_json_export_contains_source_refs(tmp_path):
     from app.services.lanhu_evidence.json_export_service import export_json
 

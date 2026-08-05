@@ -2,6 +2,19 @@
 from __future__ import annotations
 
 
+def test_sanitize_evidence_text_removes_xml_invalid_chars():
+    """NUL/控制字符剥离，保留 \\n \\t \\r 与正常文本（docx 导出防失败）。"""
+    from app.services.lanhu_evidence.merge_service import sanitize_evidence_text
+
+    dirty = "赛事回放\x00详情\u0001展示\n第二行\t缩进\r\n"
+    cleaned = sanitize_evidence_text(dirty)
+    assert "\x00" not in cleaned
+    assert "\u0001" not in cleaned
+    assert "赛事回放详情展示" in cleaned
+    assert "\n" in cleaned
+    assert "\t" in cleaned
+
+
 def test_mock_ocr_provider_returns_blocks(tmp_path, monkeypatch):
     from app.services.lanhu_evidence.ocr_provider import get_ocr_provider
 
@@ -63,4 +76,3 @@ def test_merge_marks_low_confidence_when_ocr_empty_and_dom_short():
     assert result.quality["status"] == "needs_review"
     assert result.quality["has_ocr"] is False
     assert result.quality["has_dom"] is False
-
