@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 88: C87-1/2/3 关闭，PR #124)
+**最后更新**: 2026-08-05 (Batch 89: C55-5-P2/C81-1/C64-2/C21-P1-2 关闭，PR #126)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -25,6 +25,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ### batch-87 — P0 真实数据验收（Batch 87 Leader 条件）
 
 > C87-1 / C87-2 / C87-3 已于 Batch 88 关闭，见 Closed 表「Batch 87 → 88 关闭」。
+
+### batch-89 — 本地条件关闭（Batch 89 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C89-1 | 新 worktree 开工先执行 `git submodule update --init --recursive lanhu-mcp` 再跑全量 pytest（fresh worktree 子模块未初始化会导致 3 项环境类失败） | P2 | 2026-08-05 |
+| C89-2 | 后续批次抽空做 C-CONDITIONS 追踪器卫生审计（Open 区 inline-CLOSED / Closed 表重复挂账清理） | P2 | 2026-08-05 |
 
 ### batch-86 — WARN 技术债消化（Batch 86 Leader 条件）
 
@@ -92,7 +99,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C81-1 | 每周或每 10 批次执行 WARN 基线审计（`run-warn-audit.ps1`：对比基线 + 自动追加趋势行 + 输出汇报摘要），结果落在 `warn-inventory.md` 趋势表；新增 WARN 类别必须归因，基线刷新须经 Leader 复核 | P2 | 2026-08-04 |
+> C81-1 已于 Batch 89 关闭（2026-08-05 WARN 周审计 OK，趋势表追加），见 Closed 表。
 
 ### batch-63 — 汇总问题遗留解决版本（Batch 63 Leader 条件，本批归位）
 
@@ -106,7 +113,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C64-1 | V1 整体移除受覆盖矩阵门禁（`docs/architecture/batch-64-architecture-analysis.md` §4）；B 档工具（mock/capture/apidiff/datafactory/logagg/loadtest/envcheck）逐项迁移或用户批准废弃后才可删除 | P0 | 2026-08-02 |
-| C64-2 | 独立审计批次删除根目录两个 `pective pipeline — ...` 误提交文件，删除后同步更新 `repo-boundaries.json` | P2 | 2026-08-02 |
+> C64-2 已于 Batch 89 关闭（两个误提交文件删除 + repo-boundaries.json 同步 + validate 全绿），见 Closed 表。
 | C64-3 | 生产交付清单待运维回填 DB/Redis/MQ 真实内网地址后更新；production 保持 DEFERRED；拆仓批次合入前 `validate_repo_boundaries.py --check` 必须全绿 | P0 | 2026-08-02 |
 | C64-4 | C63-1 四项 API-only UI（Token/Playground/导入导出/追溯下钻）排期 batch-65+ | P1 | 2026-08-02 |
 
@@ -186,7 +193,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C21-P1-2 | 补三个新服务单测：failure_analyzer / report_aggregator / task_worker | P1 | 2026-07-12 |
+> C21-P1-2 已于 Batch 89 关闭（三服务单测 103/103，commit a3608b8 + 本批执行证据），见 Closed 表。
 | C21-P1-3 | `现状功能PRD.md` 诚实性修复：模块 11/12 详情段同步为真实执行 | P1 | 2026-07-12 |
 | C21-P1-5 | 迁移 `20260710_0017` staging 双向演练 (upgrade/downgrade) | P1 | 2026-07-12 |
 | C21-P2 | ~~task_worker 双队列竞态 / semaphore 并发上限 / SSRF / Wiki 开关 / 计数器 double-count~~ | P2 | 2026-07-12 |
@@ -256,7 +263,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C55-3 | Knowledge/Wiki/Trace 真实数据的正面、负面、事务、审计和跨项目隔离验收（batch-87：真实 docx→真实 AI→25 用例→RAG/Trace/隔离/审计/负面已闭环；Wiki 蓝湖设计源 ingest 待 C87-1） | P0 | 2026-07-29 |
 | C55-4 | 真实浏览器完成用例→计划→执行→报告、定时任务和缺陷生命周期（batch-87：25/25 执行 + 报告 xlsx + 定时触发 + 缺陷全生命周期 + 真实 UI 截图已闭环；SMTP 真实通知待 C87-2） | P0 | 2026-07-29 |
-| C55-5-P2 | tablet `768×1024` 与 mobile `390×844` 的响应式、溢出和完整可操作性回归；不阻断 P0 生产判定 | P2 | 2026-07-29 |
+> C55-5-P2 已于 Batch 89 关闭（tablet/mobile 双视口 Playwright 回归通过，截图证据），见 Closed 表。
 
 ### batch-56 — 全平台生产级验收
 
@@ -452,6 +459,15 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C87-2 | 定时任务与缺陷通知真实 SMTP 收件验证（J11 缺口） | Batch 88：QQ SMTP 587 STARTTLS 真实发送（NotificationLog sent）+ IMAP 真实收件确认（plan_done + defect_assigned）；PR #124 | 2026-08-05 |
 | C87-3 | 项目级角色权限核验/修复（B87-Q1） | Batch 88：tester 权限矩阵补齐 51 项业务权限（testcase/testplan/report/defect/schedule 等）+ 全项目核验（项目内 200/跨项目 403/越权 403）+ 测试 5/5；PR #124 | 2026-08-05 |
 
+### Batch 89 — 本地条件关闭
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C55-5-P2 | tablet/mobile 响应式回归 | Batch 89：Playwright 双视口（768×1024 / 390×844）× 8 关键页面（登录/工作台/用例/计划/报告/缺陷/定时/知识）无水平溢出、主操作可点、console 0；2/2 通过 + 截图 16 张（evidence/batch-89/responsive/）；PR #126 | 2026-08-05 |
+| C81-1 | WARN 周审计 | Batch 89：`run-warn-audit.ps1 -BatchLabel batch-89` → AUDIT_RESULT=OK（WARN 209 持平、HARD 0、新增类别 0），趋势表追加 2026-08-05 行；PR #126 | 2026-08-05 |
+| C64-2 | 根目录误提交文件清理 | Batch 89：两个 `pective pipeline — ...` 文件删除 + repo-boundaries.json 同步 + `validate_repo_boundaries.py --check` PASS（1996 tracked 全归属）；PR #126 | 2026-08-05 |
+| C21-P1-2 | failure_analyzer / report_aggregator / task_worker 单测 | Batch 89：三服务单测 103/103 通过（引入 commit a3608b8，Batch 41/PR #66；本批执行证据 evidence/batch-89/c21-p1-2-closure.md）；PR #126 | 2026-08-05 |
+
 ### Batch 63 — 遗留条件对账关闭
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -479,9 +495,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 35 (含 8 个 P0 blocking)
+- **Open / 非关闭**: 33 (含 8 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 86
+- **Closed**: 90
 - **Total**: 121（另有 13 条历史补录不计入）
 
 ## 维护约定

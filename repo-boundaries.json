@@ -73,13 +73,11 @@
         "test-测试平台设计方案.md",
         "测试平台-前后端分离重构方案.md",
         "知识中心-用户使用手册.md",
-        "知识库.md",
-        "pective pipeline — Agent Team work-logs + 10 TypeScript fixes + domain CRUD API",
-        "pective pipeline — Agent Team work-logs + 10 TypeScript fixes + domain CRUD API\uF022"
+        "知识库.md"
       ],
       "rules": [
         "test-platform-v2 根目录为过渡期共享资产（walkthrough/重启脚本等），拆仓时收敛到对应仓库或删除",
-        "两个 pective 开头的文件为历史误提交产物，待 batch-65 独立审计删除",
+        "两个 pective 开头的历史误提交文件已由 batch-89 独立审计删除（C64-2）",
         "docs/ 新增强制走 document-standards 元数据约定"
       ]
     },
