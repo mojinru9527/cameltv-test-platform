@@ -123,6 +123,45 @@ if ($trackerDate -and $newestVerdictDate -and $trackerDate -lt $newestVerdictDat
     if ($RequireLatestBatch) { $hardErrors += $msg } else { $warnings += $msg }
 }
 
+# 检查 7 (C90-1): 统计口径 —— 按文件实际解析 Open/Closed/Deferred 计数，禁止手工漂移
+function Get-ConditionStats {
+    param([string]$TrackerText)
+    $openRows = @{}; $closedRows = @{}; $deferredRows = @{}
+    $section = ""
+    $inDeferredSection = $false
+    foreach ($ln in ($TrackerText -split "`n")) {
+        if ($ln -match '^## Open') { $section = "open"; continue }
+        if ($ln -match '^## In Progress') { $section = "inprogress"; continue }
+        if ($ln -match '^## Closed') { $section = "closed"; continue }
+        if ($ln -match '^## 历史引用归档') { $section = "archive"; continue }
+        if ($ln -match '^### ') {
+            $inDeferredSection = ($section -eq "open" -and $ln -match 'Deferred')
+            continue
+        }
+        if ($section -notin @("open", "closed") -or $ln -notmatch '^\|') { continue }
+        $cells = @($ln.Trim('|') -split '\|' | ForEach-Object { $_.Trim() })
+        if ($cells.Count -lt 1 -or $cells[0] -eq "" -or $cells[0] -eq "ID" -or $cells[0] -eq "—" -or $cells[0] -match '^-+$') { continue }
+        $id = $cells[0]
+        if ($section -eq "open") {
+            $openRows[$id] = $ln
+            if ($inDeferredSection) { $deferredRows[$id] = $ln }
+        } else {
+            $closedRows[$id] = $ln
+        }
+    }
+    $realOpen = @($openRows.Keys | Where-Object {
+        $row = $openRows[$_]
+        $row -notmatch 'CLOSED|✅ Closed|~~' -and -not $closedRows.ContainsKey($_)
+    })
+    return [pscustomobject]@{
+        OpenRows  = $openRows.Count
+        RealOpen  = $realOpen.Count
+        Deferred  = $deferredRows.Count
+        Closed    = $closedRows.Count
+    }
+}
+$stats = Get-ConditionStats -TrackerText $tracker
+
 # 输出
 Write-Host "== audit-cconditions =="
 Write-Host "tracker      : $trackerPath"
@@ -130,6 +169,7 @@ Write-Host "worklogs     : $($worklogDirs -join '; ')"
 Write-Host "verdicts     : $($verdictFiles.Count) files"
 Write-Host "condition ids: $($trackerIds.Count) in tracker, $($verdictIds.Count) referenced in verdicts"
 Write-Host "closed rows  : $closedCount (missing evidence: $closedMissingEvidence)"
+Write-Host "stats        : Open=$($stats.RealOpen) (rows=$($stats.OpenRows), deferred=$($stats.Deferred)) Closed=$($stats.Closed)"
 Write-Host "hard errors  : $($hardErrors.Count)"
 foreach ($e in $hardErrors) { Write-Host "  [ERROR] $e" }
 Write-Host "warnings     : $($warnings.Count)"
