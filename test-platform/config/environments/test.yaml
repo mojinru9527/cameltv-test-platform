@@ -21,21 +21,24 @@ expect_version: ">=14.0.0"
 auth_token: "${CAMELTV_TEST_AUTH_TOKEN}"
 
 # ============================================================
-# 依赖服务 — 填入真实内网地址后取消注释
+# 依赖服务 — 真实内网地址（Test5，2026-08-05 用户提供）
 # ============================================================
 dbs:
-  # 示例 — 替换为真实内网地址
-  # - name: main
-  #   type: mysql
-  #   dsn: "mysql+pymysql://${CAMELTV_TEST_DB_USER}:${CAMELTV_TEST_DB_PWD}@10.x.x.x:3306/cameltv"
+  # Test5 主库：ncx 导出 testdata5.elelive.cn:13356（用户 showmetest_app）
+  # 密码经 Navicat 密文解密后写入 .env（CAMELTV_TEST_DB_PWD）；库名 cameltv 待连接实测确认
+  - name: main
+    type: mysql
+    dsn: "mysql+pymysql://${CAMELTV_TEST_DB_USER}:${CAMELTV_TEST_DB_PWD}@testdata5.elelive.cn:13356/cameltv"
 
 redis:
-  # - name: cache
-  #   host: 10.x.x.x
-  #   port: 6379
-  #   password: "${CAMELTV_TEST_REDIS_PWD}"
+  # Test5 Redis：testdata5.elelive.cn:12252（用户提供）
+  - name: cache
+    host: testdata5.elelive.cn
+    port: 12252
+    password: "${CAMELTV_TEST_REDIS_PWD}"
 
 mqs:
+  # 待提供：Test5 RabbitMQ 真实地址（ncx 无 MQ 条目；testdata5 仅有 MySQL/MongoDB）
   # - name: main
   #   type: rabbitmq
   #   url: "amqp://${CAMELTV_TEST_MQ_USER}:${CAMELTV_TEST_MQ_PWD}@10.x.x.x:5672/"
