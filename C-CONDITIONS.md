@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-06 (Batch 99: 安卓双视频场景各 10 分钟采集完成（C84-2 关闭）+ 采集器三处修复 + C99-1 性能采集优化标记；iOS 阻塞原因更新为 solox 缺 iOS 26.5 DeviceSupport，PR #137)
+**最后更新**: 2026-08-06 (Batch 100: V1 整体退役（web-ui/server/cli 移除 + API 回归资产迁移）+ C64-1 关闭，PR #138)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -79,7 +79,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
 | C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
-| C64-1 | V1 整体移除受覆盖矩阵门禁；B 档工具迁移/废弃 | P0 | B 档 11 工具已批准废弃（用户 2026-08-05，审计无引用），删除排清理批次；V1 web-ui/server 整体移除仍需覆盖矩阵 |
 | C27-C1 | 模块树自动提取准确率 ≥70% | P1 | staging 替代已登记（test 环境 + 本地全栈）；执行待数据/性能测量（C96-1） |
 | C27-C2 | 图谱层级视图 200 节点渲染 <3s | P1 | 同上 |
 | C27-C3 | release_bundle 创建流程端到端 | P1 | 同上 |
@@ -377,6 +376,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | 用户口径重定义后完成：场景 A Chrome 赛事视频流 600s（fps 85/CPU 3.55%/mem 182MB）；场景 B 小象直播间 600s 60 点（fps 31.2/CPU 386.65%/mem 795MB，用户确认画面）；证据 `test-platform-v2/work-logs/evidence/batch-99/real-device-{chrome-sports,app-live}-10min.json`；PR #137 | 2026-08-05 |
 | B99-P1 | Android 采集缺陷修复（fps/cpu/WS 重试） | SoloX Android 14 fps 解析崩溃 → 自实现 SurfaceFlinger 解析+图层选择；多进程 CPU 失真 → /proc 双采样多核不封顶；内存 → dumpsys PSS；无线断开中断 → 采集循环重试 5×3s + 客户端容忍关闭帧；性能模块测试 54 passed；PR #137 | 2026-08-05 |
 
+### Batch 100 — V1 整体退役（2026-08-06）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C64-1 | V1 整体移除受覆盖矩阵门禁 | Batch 98：11 工具删除；**Batch 100**：web-ui/server/cli/core/config/docker/platform_tests 整体移除（用户规则：V2 覆盖即移除；cli/config 无消费者），API 回归资产迁移 `tests/api-testing/`；`rg -P 'test-platform/(?!v2)'` 非文档 0 引用 + boundary PASS；PR #138 | 2026-08-06 |
+
 ---
 
 ## 历史引用归档（Batch 75 审计补录，不计入 Open/Closed 统计）
@@ -397,9 +402,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 23 (含 4 个 P0 blocking；其中 15 项 Deferred + 2 项 C95 + 1 项 C96 + 1 项 C99；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 22 (含 4 个 P0 blocking；其中 14 项 Deferred + 2 项 C95 + 1 项 C96 + 1 项 C99；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 133（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Closed**: 134（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 156（另有 13 条历史补录不计入）
 
 ## 维护约定

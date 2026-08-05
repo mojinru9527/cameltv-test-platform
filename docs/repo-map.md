@@ -51,20 +51,11 @@ related: ["CLAUDE.md", "docs/business-glossary.md", "docs/adr/README.md"]
 | `docs/diagrams/` | 18 张 Mermaid + PNG 架构图 | — |
 | `deploy/` | v2 Docker Compose 部署编排（Nginx + FastAPI） | `docker-compose.yml` |
 
-### 2.2 `test-platform/` — 测试平台 v1 旧版（维护模式）
+### 2.2 `test-platform/` — 测试平台 v1 旧版（✅ 已退役 · Batch 100）
 
-> **一句话职责**：旧版单体测试平台，含 10 件 CLI 工具套件，Web 端功能已迁移至 v2。
->
-> **技术栈**：Python 3.12 + FastAPI + Click（CLI）| React 18 + Ant Design 5 + Vite
-
-| 子目录 | 职责 | 关键文件 |
-|--------|------|---------|
-| `cli/` | 统一 CLI 入口 `tp` 命令（Click 框架） | `tp.py` |
-| `tools/` | 10 件工具套件：envcheck、api_tester、traffic_monitor、mock_server、api_diff、data_factory、log_aggregator、report_dashboard、project_init、av_checker | 各工具目录下 `__init__.py` |
-| `server/` | v1 FastAPI Web 后端（端口 8000） | `main.py` |
-| `web-ui/` | v1 React 前端（Ant Design 5，端口 5173） | — |
-| `core/` | 核心组件：配置加载器、HTTP 客户端、日志、模型 | `config_loader.py` |
-| `config/` | 多站点多环境 YAML 配置系统（_base/site/environment 三级合并） | `environments/test.yaml`、`environments/prod.yaml` |
+> **状态**：v1 单体平台已于 Batch 100 整体移除（web-ui/server/cli 由 V2 覆盖；11 工具 Batch 98 删除）。
+> **保留资产**：API 回归 Playwright 用例与 OpenAPI 副本已迁移至 `tests/api-testing/generated/` 与 `tests/api-testing/specs/`，
+> 由 `scripts/ci/api-regression.ps1` 驱动 CI 回归。
 
 ### 2.3 `lanhu-mcp/` — 蓝湖 MCP 服务器（稳定）
 
