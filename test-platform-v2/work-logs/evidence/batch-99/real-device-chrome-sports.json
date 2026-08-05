@@ -1,0 +1,387 @@
+{
+  "captured_at": "2026-08-05T22:29:49+0800",
+  "scenario": "chrome-sports",
+  "duration_s": 40,
+  "device": {
+    "device_id": "dcd8891f",
+    "device_name": "PEDM00",
+    "device_model": "PEDM00",
+    "platform": "Android",
+    "os_version": "Android 14",
+    "status": "online",
+    "installed_apps": []
+  },
+  "session": {
+    "id": 10,
+    "session_id": "PERF-20260805-010",
+    "device_id": "dcd8891f",
+    "device_name": "",
+    "device_model": "",
+    "platform": "Android",
+    "pkg_name": "com.android.chrome",
+    "metrics": "cpu,memory,fps,jank,battery,network",
+    "status": "pending",
+    "duration": 300,
+    "actual_duration_s": 0,
+    "summary_json": "{}",
+    "error_message": "",
+    "creator_id": 1,
+    "created_at": "2026-08-05T14:29:05.988495",
+    "started_at": null,
+    "ended_at": null
+  },
+  "stream_messages": [
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-010",
+      "timestamp": 1785940150.6803102,
+      "elapsed_s": 4.7,
+      "sample_index": 0,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 0.31,
+          "systemCpuRate": 68.43
+        },
+        "memory": {
+          "total": 3.4,
+          "swap": 2.21
+        },
+        "fps": {
+          "fps": 11,
+          "jank": 5,
+          "refresh_ns": 8333333.0,
+          "frame_count": 25,
+          "layer": "com.android.chrome/ChromeChildSurface#3091"
+        },
+        "battery": {
+          "level": 85,
+          "temperature": 35.4
+        },
+        "network": {
+          "send": 42.09,
+          "recv": 55.3
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-010",
+      "timestamp": 1785940156.1241167,
+      "elapsed_s": 10.1,
+      "sample_index": 1,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 0.1,
+          "systemCpuRate": 17.84
+        },
+        "memory": {
+          "total": 3.29,
+          "swap": 2.14
+        },
+        "fps": {
+          "fps": 5,
+          "jank": 3,
+          "refresh_ns": 8333333.0,
+          "frame_count": 71,
+          "layer": "com.android.chrome/ChromeChildSurface#3091"
+        },
+        "battery": {
+          "level": 85,
+          "temperature": 35.4
+        },
+        "network": {
+          "send": 1.93,
+          "recv": 0.04
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-010",
+      "timestamp": 1785940161.6521814,
+      "elapsed_s": 15.6,
+      "sample_index": 2,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 0.0,
+          "systemCpuRate": 20.04
+        },
+        "memory": {
+          "total": 3.31,
+          "swap": 2.1
+        },
+        "fps": {
+          "fps": 19,
+          "jank": 15,
+          "refresh_ns": 8333333.0,
+          "frame_count": 90,
+          "layer": "com.android.chrome/ChromeChildSurface#3091"
+        },
+        "battery": {
+          "level": 85,
+          "temperature": 35.4
+        },
+        "network": {
+          "send": 1.13,
+          "recv": 2.08
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-010",
+      "timestamp": 1785940167.4596252,
+      "elapsed_s": 21.4,
+      "sample_index": 3,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 0.0,
+          "systemCpuRate": 31.39
+        },
+        "memory": {
+          "total": 3.32,
+          "swap": 2.11
+        },
+        "fps": {
+          "fps": 86,
+          "jank": 3,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.android.chrome/ChromeChildSurface#3091"
+        },
+        "battery": {
+          "level": 85,
+          "temperature": 35.5
+        },
+        "network": {
+          "send": 0.0,
+          "recv": 0.0
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-010",
+      "timestamp": 1785940172.666694,
+      "elapsed_s": 26.7,
+      "sample_index": 4,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 0.0,
+          "systemCpuRate": 29.93
+        },
+        "memory": {
+          "total": 3.31,
+          "swap": 2.11
+        },
+        "fps": {
+          "fps": 86,
+          "jank": 3,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.android.chrome/ChromeChildSurface#3091"
+        },
+        "battery": {
+          "level": 85,
+          "temperature": 35.5
+        },
+        "network": {
+          "send": 8.91,
+          "recv": 10.93
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-010",
+      "timestamp": 1785940178.4629183,
+      "elapsed_s": 32.4,
+      "sample_index": 5,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 0.0,
+          "systemCpuRate": 32.79
+        },
+        "memory": {
+          "total": 3.32,
+          "swap": 2.11
+        },
+        "fps": {
+          "fps": 23,
+          "jank": 2,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.android.chrome/ChromeChildSurface#3091"
+        },
+        "battery": {
+          "level": 85,
+          "temperature": 35.5
+        },
+        "network": {
+          "send": 0.0,
+          "recv": 0.0
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-010",
+      "timestamp": 1785940184.1318562,
+      "elapsed_s": 38.1,
+      "sample_index": 6,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 0.0,
+          "systemCpuRate": 6.72
+        },
+        "memory": {
+          "total": 3.38,
+          "swap": 2.17
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.android.chrome/ChromeChildSurface#3091"
+        },
+        "battery": {
+          "level": 85,
+          "temperature": 35.6
+        },
+        "network": {
+          "send": 0.0,
+          "recv": 0.04
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-010",
+      "timestamp": 1785940189.2679188,
+      "elapsed_s": 43.3,
+      "sample_index": 7,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 0.0,
+          "systemCpuRate": 15.15
+        },
+        "memory": {
+          "total": 3.39,
+          "swap": 2.18
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.android.chrome/ChromeChildSurface#3091"
+        },
+        "battery": {
+          "level": 85,
+          "temperature": 35.6
+        },
+        "network": {
+          "send": 0.07,
+          "recv": 0.6
+        }
+      }
+    },
+    {
+      "type": "session_end",
+      "session_id": "PERF-20260805-010",
+      "reason": "user_stop",
+      "total_samples": 8,
+      "duration_s": 43.8
+    }
+  ],
+  "total_points": 8,
+  "report": {
+    "session": {
+      "id": 10,
+      "session_id": "PERF-20260805-010",
+      "device_id": "dcd8891f",
+      "device_name": "",
+      "device_model": "",
+      "platform": "Android",
+      "pkg_name": "com.android.chrome",
+      "metrics": "cpu,memory,fps,jank,battery,network",
+      "status": "completed",
+      "duration": 300,
+      "actual_duration_s": 43,
+      "summary_json": "{\"total_samples\": 8, \"computed_at\": \"2026-08-05T14:29:49.768696+00:00\"}",
+      "error_message": "",
+      "creator_id": 1,
+      "created_at": "2026-08-05T14:29:05.988495",
+      "started_at": "2026-08-05T14:29:05.997496",
+      "ended_at": "2026-08-05T14:29:49.767739"
+    },
+    "metrics": [
+      {
+        "metric_type": "cpu",
+        "unit": "%",
+        "samples": 8,
+        "mean": 0.05,
+        "median": 0.0,
+        "p95": 0.24,
+        "min_val": 0.0,
+        "max_val": 0.31,
+        "stddev": 0.11,
+        "threshold": 60.0,
+        "threshold_comparator": "<=",
+        "passed": true
+      },
+      {
+        "metric_type": "memory",
+        "unit": "MB",
+        "samples": 8,
+        "mean": 3.34,
+        "median": 3.32,
+        "p95": 3.4,
+        "min_val": 3.29,
+        "max_val": 3.4,
+        "stddev": 0.04,
+        "threshold": 512.0,
+        "threshold_comparator": "<=",
+        "passed": true
+      },
+      {
+        "metric_type": "fps",
+        "unit": "fps",
+        "samples": 8,
+        "mean": 29.0,
+        "median": 15.0,
+        "p95": 86.0,
+        "min_val": 1.0,
+        "max_val": 86.0,
+        "stddev": 36.06,
+        "threshold": 30.0,
+        "threshold_comparator": ">=",
+        "passed": true
+      },
+      {
+        "metric_type": "jank",
+        "unit": "次",
+        "samples": 8,
+        "mean": 3.88,
+        "median": 3.0,
+        "p95": 11.5,
+        "min_val": 0.0,
+        "max_val": 15.0,
+        "stddev": 4.79,
+        "threshold": 0.0,
+        "threshold_comparator": "<=",
+        "passed": false
+      }
+    ],
+    "anomalies": []
+  }
+}

@@ -165,6 +165,192 @@ def get_device_apps(device_id: str, platform: str = "Android") -> list[str]:
         return []
 
 
+def _parse_surfaceflinger_latency(raw: str) -> dict[str, Any]:
+    """解析 `dumpsys SurfaceFlinger --latency <layer>` 输出为 fps/jank。
+
+    Android 12+ 首行可能为 `---- TIME: <ts> ----` 头（SoloX 2.9.3 因此解析崩溃），
+    必须跳过；随后首个数字行为刷新周期（ns），后续每行 3 个时间戳
+    （desired / actual / ready，均为 ns）。
+    fps = 最近 1 秒窗口内实际提交帧数；jank = 连续帧间隔 > 2×刷新周期
+    且 < 500ms（排除空闲/前后台切换边界）的次数，对标 PerfDog 卡顿口径。
+    """
+    lines = [
+        ln.strip()
+        for ln in raw.splitlines()
+        if ln.strip() and not ln.strip().startswith("----")
+    ]
+    refresh_ns = 0.0
+    if lines:
+        try:
+            refresh_ns = float(lines[0])
+        except ValueError:
+            return {"fps": 0, "jank": 0, "error": "bad refresh period"}
+
+    frames: list[int] = []
+    for ln in lines[1:]:
+        parts = ln.split()
+        if len(parts) >= 2:
+            try:
+                ts = int(parts[1])  # actualPresentTime
+                if ts > 0:
+                    frames.append(ts)
+            except ValueError:
+                continue
+    if not frames or refresh_ns <= 0:
+        return {"fps": 0, "jank": 0, "error": "no frame data"}
+
+    latest = max(frames)
+    window = [ts for ts in frames if latest - 1_000_000_000 <= ts <= latest]
+    fps = round(len(window), 1)
+
+    ordered = sorted(window)
+    jank = 0
+    for prev, curr in zip(ordered, ordered[1:]):
+        delta = curr - prev
+        if 0 < delta < 500_000_000 and delta > refresh_ns * 2.0:
+            jank += 1
+    return {
+        "fps": fps,
+        "jank": jank,
+        "refresh_ns": refresh_ns,
+        "frame_count": len(frames),
+    }
+
+
+def _collect_fps_android(device_id: str, pkg_name: str) -> dict[str, Any]:
+    """Android 帧率采集（自实现，规避 SoloX 对 Android 14 SurfaceFlinger 输出解析缺陷）。"""
+    import subprocess
+
+    try:
+        layers_res = subprocess.run(
+            ["adb", "-s", device_id, "shell", "dumpsys", "SurfaceFlinger", "--list"],
+            capture_output=True, text=True, timeout=15,
+        )
+        if layers_res.returncode != 0:
+            raise RuntimeError(
+                f"fps 图层查询失败（设备不可达？）: {layers_res.stderr.strip() or layers_res.stdout.strip()}"
+            )
+        layers = layers_res.stdout.splitlines()
+    except Exception as exc:
+        if isinstance(exc, RuntimeError):
+            raise
+        logger.warning("SurfaceFlinger latency query failed: %s", exc)
+        raise RuntimeError(f"fps 采集失败: {exc}") from exc
+
+    candidates = _select_fps_layers(layers, pkg_name)
+    if not candidates:
+        candidates = [pkg_name]
+
+    last_error = "no frame data in any layer"
+    for layer in candidates:
+        try:
+            out_res = subprocess.run(
+                # 图层名可能含括号/空格（如 SurfaceView[...](...)），必须整体加引号交给 adb shell
+                ["adb", "-s", device_id, "shell", f"dumpsys SurfaceFlinger --latency '{layer}'"],
+                capture_output=True, text=True, timeout=15,
+            )
+            if out_res.returncode != 0:
+                raise RuntimeError(
+                    f"fps 延迟数据查询失败: {out_res.stderr.strip() or out_res.stdout.strip()}"
+                )
+            out = out_res.stdout
+        except Exception as exc:
+            if isinstance(exc, RuntimeError):
+                raise
+            last_error = str(exc)
+            continue
+        parsed = _parse_surfaceflinger_latency(out)
+        if parsed.get("frame_count", 0) > 0 or "error" not in parsed:
+            parsed["layer"] = layer
+            return parsed
+        last_error = parsed.get("error", "no frame data in any layer")
+    return {"fps": 0, "jank": 0, "layer": candidates[0], "error": last_error}
+
+
+def _parse_dumpsys_meminfo(raw: str) -> float | None:
+    """解析 `dumpsys meminfo <pkg>` 的 TOTAL PSS（kB → MB）。"""
+    m = re.search(r"TOTAL PSS:\s*(\d+)", raw)
+    if not m:
+        return None
+    return round(int(m.group(1)) / 1024.0, 2)
+
+
+def _collect_cpu_android(device_id: str, pkg_name: str) -> dict[str, Any]:
+    """Android CPU 采集（/proc/<pid>/stat 1 秒双采样，按包汇总多进程）。"""
+    import subprocess
+    import time
+
+    def sh(*args: str) -> str:
+        r = subprocess.run(
+            ["adb", "-s", device_id, "shell", *args],
+            capture_output=True, text=True, timeout=20,
+        )
+        if r.returncode != 0:
+            raise RuntimeError(f"cpu 采集失败: {r.stderr.strip() or r.stdout.strip()}")
+        return r.stdout
+
+    def pids() -> list[str]:
+        out = sh("pidof", pkg_name).strip()
+        return [p for p in out.split() if p.isdigit()]
+
+    def sample() -> dict[str, tuple[int, int]]:
+        acc: dict[str, tuple[int, int]] = {}
+        for pid in pids():
+            try:
+                stat = sh("cat", f"/proc/{pid}/stat").strip()
+                idx = stat.rfind(")")
+                fields = stat[idx + 2:].split()
+                acc[pid] = (int(fields[11]), int(fields[12]))  # utime, stime
+            except Exception:
+                continue
+        return acc
+
+    a = sample()
+    time.sleep(1.0)
+    b = sample()
+    hz = 100  # Android CLK_TCK
+    total = 0.0
+    for pid, (u1, s1) in a.items():
+        if pid in b:
+            u2, s2 = b[pid]
+            dt = (u2 - u1 + s2 - s1) / hz
+            if dt > 0:
+                total += dt
+    # total 为 1 秒窗口内的 CPU 秒数；换算为百分比（多线程/多核可 >100%，如实上报）
+    return {"appCpuRate": round(total * 100.0, 2)}
+
+
+def _collect_memory_android(device_id: str, pkg_name: str) -> dict[str, Any]:
+    """Android 内存采集（dumpsys meminfo TOTAL PSS，MB）。"""
+    import subprocess
+
+    res = subprocess.run(
+        ["adb", "-s", device_id, "shell", "dumpsys", "meminfo", pkg_name],
+        capture_output=True, text=True, timeout=15,
+    )
+    if res.returncode != 0:
+        raise RuntimeError(f"memory 采集失败: {res.stderr.strip() or res.stdout.strip()}")
+    total_mb = _parse_dumpsys_meminfo(res.stdout)
+    if total_mb is None:
+        raise RuntimeError("memory 采集失败: 未找到 TOTAL PSS")
+    return {"total": total_mb}
+
+
+def _select_fps_layers(layers: list[str], pkg_name: str) -> list[str]:
+    """从 SurfaceFlinger --list 输出中选择可用于帧率采集的图层。
+
+    排除输入透传层（InputSink）与 ActivityRecord 壳层；真实渲染层通常形如
+    `com.camelrn/com.camelrn.MainActivity#NNN`。
+    """
+    return [
+        ln.strip()
+        for ln in layers
+        if pkg_name.lower() in ln.lower()
+        and "InputSink" not in ln
+        and "ActivityRecord{" not in ln
+    ]
+
+
 def collect_single_snapshot(device_id: str, pkg_name: str, platform: str = "Android") -> dict:
     """单次采样——返回所有已激活指标的快照数据。"""
     if not SOLOX_AVAILABLE:
@@ -183,9 +369,21 @@ def collect_single_snapshot(device_id: str, pkg_name: str, platform: str = "Andr
         result: dict[str, Any] = {"events": []}
         failures: dict[str, str] = {}
         collectors = {
-            "cpu": apm.collectCpu,
-            "memory": apm.collectMemory,
-            "fps": apm.collectFps,
+            "cpu": (
+                lambda: _collect_cpu_android(device_id, pkg_name)
+                if platform == "Android"
+                else apm.collectCpu
+            ),
+            "memory": (
+                lambda: _collect_memory_android(device_id, pkg_name)
+                if platform == "Android"
+                else apm.collectMemory
+            ),
+            "fps": (
+                lambda: _collect_fps_android(device_id, pkg_name)
+                if platform == "Android"
+                else apm.collectFps
+            ),
             "battery": apm.collectBattery,
             "network": lambda: apm.collectNetwork(wifi=True),
         }

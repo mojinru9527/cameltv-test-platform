@@ -1,0 +1,1983 @@
+{
+  "captured_at": "2026-08-05T23:57:07+0800",
+  "scenario": "manual",
+  "duration_s": 600,
+  "device": {
+    "device_id": "dcd8891f",
+    "device_name": "PEDM00",
+    "device_model": "PEDM00",
+    "platform": "Android",
+    "os_version": "Android 14",
+    "status": "online",
+    "installed_apps": []
+  },
+  "session": {
+    "id": 23,
+    "session_id": "PERF-20260805-023",
+    "device_id": "dcd8891f",
+    "device_name": "",
+    "device_model": "",
+    "platform": "Android",
+    "pkg_name": "com.yiwuzhibo",
+    "metrics": "cpu,memory,fps,jank,battery,network",
+    "status": "pending",
+    "duration": 300,
+    "actual_duration_s": 0,
+    "summary_json": "{}",
+    "error_message": "",
+    "creator_id": 1,
+    "created_at": "2026-08-05T15:51:58.745280",
+    "started_at": null,
+    "ended_at": null
+  },
+  "stream_messages": [
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945123.6804898,
+      "elapsed_s": 4.5,
+      "sample_index": 0,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 330.0
+        },
+        "memory": {
+          "total": 796.32
+        },
+        "fps": {
+          "fps": 57,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 42.8
+        },
+        "network": {
+          "send": 9.04,
+          "recv": 199.47
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945128.6172125,
+      "elapsed_s": 9.5,
+      "sample_index": 1,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 355.0
+        },
+        "memory": {
+          "total": 756.95
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 42.9
+        },
+        "network": {
+          "send": 6.97,
+          "recv": 187.41
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945133.6925404,
+      "elapsed_s": 14.5,
+      "sample_index": 2,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 373.0
+        },
+        "memory": {
+          "total": 756.06
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 42.9
+        },
+        "network": {
+          "send": 7.52,
+          "recv": 180.66
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945138.70124,
+      "elapsed_s": 19.6,
+      "sample_index": 3,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 381.0
+        },
+        "memory": {
+          "total": 761.67
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 42.9
+        },
+        "network": {
+          "send": 7.17,
+          "recv": 187.98
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945143.6303847,
+      "elapsed_s": 24.5,
+      "sample_index": 4,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 374.0
+        },
+        "memory": {
+          "total": 766.31
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 42.9
+        },
+        "network": {
+          "send": 7.53,
+          "recv": 198.13
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945148.7151,
+      "elapsed_s": 29.6,
+      "sample_index": 5,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 359.0
+        },
+        "memory": {
+          "total": 770.44
+        },
+        "fps": {
+          "fps": 53,
+          "jank": 3,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 42.9
+        },
+        "network": {
+          "send": 7.01,
+          "recv": 177.19
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945153.6588259,
+      "elapsed_s": 34.5,
+      "sample_index": 6,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 374.0
+        },
+        "memory": {
+          "total": 773.38
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 42.9
+        },
+        "network": {
+          "send": 8.37,
+          "recv": 197.77
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945158.7012093,
+      "elapsed_s": 39.6,
+      "sample_index": 7,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 384.0
+        },
+        "memory": {
+          "total": 770.89
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.0
+        },
+        "network": {
+          "send": 10.71,
+          "recv": 190.17
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945163.7060962,
+      "elapsed_s": 44.6,
+      "sample_index": 8,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 388.0
+        },
+        "memory": {
+          "total": 772.75
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.0
+        },
+        "network": {
+          "send": 8.49,
+          "recv": 235.48
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945168.470722,
+      "elapsed_s": 49.3,
+      "sample_index": 9,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 363.0
+        },
+        "memory": {
+          "total": 773.52
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.0
+        },
+        "network": {
+          "send": 6.2,
+          "recv": 169.43
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945173.2487986,
+      "elapsed_s": 54.1,
+      "sample_index": 10,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 367.0
+        },
+        "memory": {
+          "total": 769.08
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.0
+        },
+        "network": {
+          "send": 8.74,
+          "recv": 200.68
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945178.25821,
+      "elapsed_s": 59.1,
+      "sample_index": 11,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 381.0
+        },
+        "memory": {
+          "total": 770.03
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.0
+        },
+        "network": {
+          "send": 7.32,
+          "recv": 189.78
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945183.3274283,
+      "elapsed_s": 64.2,
+      "sample_index": 12,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 384.0
+        },
+        "memory": {
+          "total": 783.89
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.0
+        },
+        "network": {
+          "send": 8.25,
+          "recv": 195.22
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945188.3339393,
+      "elapsed_s": 69.2,
+      "sample_index": 13,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 388.0
+        },
+        "memory": {
+          "total": 785.57
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.1
+        },
+        "network": {
+          "send": 7.57,
+          "recv": 196.76
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945193.164099,
+      "elapsed_s": 74.0,
+      "sample_index": 14,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 399.0
+        },
+        "memory": {
+          "total": 774.34
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 2,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.1
+        },
+        "network": {
+          "send": 6.75,
+          "recv": 188.31
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945198.0947526,
+      "elapsed_s": 78.9,
+      "sample_index": 15,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 391.0
+        },
+        "memory": {
+          "total": 783.58
+        },
+        "fps": {
+          "fps": 55,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 8.67,
+          "recv": 232.42
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945203.1019511,
+      "elapsed_s": 84.0,
+      "sample_index": 16,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 391.0
+        },
+        "memory": {
+          "total": 780.48
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 6.85,
+          "recv": 177.77
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945208.1893623,
+      "elapsed_s": 89.0,
+      "sample_index": 17,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 390.0
+        },
+        "memory": {
+          "total": 780.85
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 6.72,
+          "recv": 179.6
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945213.0833454,
+      "elapsed_s": 93.9,
+      "sample_index": 18,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 383.0
+        },
+        "memory": {
+          "total": 780.55
+        },
+        "fps": {
+          "fps": 57,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 7.85,
+          "recv": 202.55
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945218.0934963,
+      "elapsed_s": 98.9,
+      "sample_index": 19,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 389.0
+        },
+        "memory": {
+          "total": 785.91
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 2,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 8.18,
+          "recv": 244.98
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945223.099517,
+      "elapsed_s": 104.0,
+      "sample_index": 20,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 393.0
+        },
+        "memory": {
+          "total": 784.27
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 7.37,
+          "recv": 193.79
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945228.2301722,
+      "elapsed_s": 109.1,
+      "sample_index": 21,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 392.0
+        },
+        "memory": {
+          "total": 794.13
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 6.82,
+          "recv": 186.35
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945233.2764285,
+      "elapsed_s": 114.1,
+      "sample_index": 22,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 391.0
+        },
+        "memory": {
+          "total": 787.88
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 6.42,
+          "recv": 188.03
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945238.222223,
+      "elapsed_s": 119.1,
+      "sample_index": 23,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 380.0
+        },
+        "memory": {
+          "total": 795.71
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 6.59,
+          "recv": 166.35
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945243.3996615,
+      "elapsed_s": 124.3,
+      "sample_index": 24,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 399.0
+        },
+        "memory": {
+          "total": 794.95
+        },
+        "fps": {
+          "fps": 57,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.2
+        },
+        "network": {
+          "send": 7.43,
+          "recv": 193.3
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945248.4967055,
+      "elapsed_s": 129.3,
+      "sample_index": 25,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 386.0
+        },
+        "memory": {
+          "total": 802.67
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 2,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.3
+        },
+        "network": {
+          "send": 7.01,
+          "recv": 187.63
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945253.4387972,
+      "elapsed_s": 134.3,
+      "sample_index": 26,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 376.0
+        },
+        "memory": {
+          "total": 790.63
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.3
+        },
+        "network": {
+          "send": 8.39,
+          "recv": 245.53
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945258.4148765,
+      "elapsed_s": 139.3,
+      "sample_index": 27,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 376.0
+        },
+        "memory": {
+          "total": 788.48
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.3
+        },
+        "network": {
+          "send": 7.6,
+          "recv": 202.06
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945263.485351,
+      "elapsed_s": 144.3,
+      "sample_index": 28,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 394.0
+        },
+        "memory": {
+          "total": 788.77
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.3
+        },
+        "network": {
+          "send": 7.67,
+          "recv": 210.55
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945268.45317,
+      "elapsed_s": 149.3,
+      "sample_index": 29,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 400.0
+        },
+        "memory": {
+          "total": 789.65
+        },
+        "fps": {
+          "fps": 57,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 7.7,
+          "recv": 225.86
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945273.6141915,
+      "elapsed_s": 154.5,
+      "sample_index": 30,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 407.0
+        },
+        "memory": {
+          "total": 793.77
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 7.22,
+          "recv": 232.51
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945278.510566,
+      "elapsed_s": 159.4,
+      "sample_index": 31,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 395.0
+        },
+        "memory": {
+          "total": 793.64
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 7.2,
+          "recv": 205.3
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945283.3277462,
+      "elapsed_s": 164.2,
+      "sample_index": 32,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 399.0
+        },
+        "memory": {
+          "total": 789.75
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 8.54,
+          "recv": 255.31
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945288.4137735,
+      "elapsed_s": 169.3,
+      "sample_index": 33,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 395.0
+        },
+        "memory": {
+          "total": 803.4
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 7.36,
+          "recv": 207.77
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945293.421102,
+      "elapsed_s": 174.3,
+      "sample_index": 34,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 398.0
+        },
+        "memory": {
+          "total": 801.81
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 8.45,
+          "recv": 253.74
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945298.4761012,
+      "elapsed_s": 179.3,
+      "sample_index": 35,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 400.0
+        },
+        "memory": {
+          "total": 801.13
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 6.92,
+          "recv": 201.88
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945303.550272,
+      "elapsed_s": 184.4,
+      "sample_index": 36,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 395.0
+        },
+        "memory": {
+          "total": 798.07
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 8.06,
+          "recv": 244.82
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945308.5863802,
+      "elapsed_s": 189.4,
+      "sample_index": 37,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 397.0
+        },
+        "memory": {
+          "total": 807.24
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.4
+        },
+        "network": {
+          "send": 6.89,
+          "recv": 198.29
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945313.6951475,
+      "elapsed_s": 194.5,
+      "sample_index": 38,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 402.0
+        },
+        "memory": {
+          "total": 800.68
+        },
+        "fps": {
+          "fps": 57,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.5
+        },
+        "network": {
+          "send": 8.45,
+          "recv": 202.06
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945318.8009043,
+      "elapsed_s": 199.7,
+      "sample_index": 39,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 397.0
+        },
+        "memory": {
+          "total": 807.05
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.5
+        },
+        "network": {
+          "send": 7.22,
+          "recv": 188.53
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945323.935233,
+      "elapsed_s": 204.8,
+      "sample_index": 40,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 401.0
+        },
+        "memory": {
+          "total": 803.08
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.5
+        },
+        "network": {
+          "send": 6.74,
+          "recv": 192.62
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945329.0326781,
+      "elapsed_s": 209.9,
+      "sample_index": 41,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 402.0
+        },
+        "memory": {
+          "total": 804.96
+        },
+        "fps": {
+          "fps": 57,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 8.12,
+          "recv": 219.4
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945334.067211,
+      "elapsed_s": 214.9,
+      "sample_index": 42,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 397.0
+        },
+        "memory": {
+          "total": 802.1
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 8.16,
+          "recv": 228.15
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945339.2305567,
+      "elapsed_s": 220.1,
+      "sample_index": 43,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 396.0
+        },
+        "memory": {
+          "total": 806.51
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 10.61,
+          "recv": 302.43
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945344.2032943,
+      "elapsed_s": 225.1,
+      "sample_index": 44,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 365.0
+        },
+        "memory": {
+          "total": 812.52
+        },
+        "fps": {
+          "fps": 57,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 6.75,
+          "recv": 181.07
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945349.486456,
+      "elapsed_s": 230.3,
+      "sample_index": 45,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 380.0
+        },
+        "memory": {
+          "total": 820.08
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 7.17,
+          "recv": 167.44
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945354.7325814,
+      "elapsed_s": 235.6,
+      "sample_index": 46,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 384.0
+        },
+        "memory": {
+          "total": 816.06
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 7.16,
+          "recv": 196.03
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945359.939066,
+      "elapsed_s": 240.8,
+      "sample_index": 47,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 373.0
+        },
+        "memory": {
+          "total": 821.76
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 83,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 7.33,
+          "recv": 166.39
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945365.1539538,
+      "elapsed_s": 246.0,
+      "sample_index": 48,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 375.0
+        },
+        "memory": {
+          "total": 824.5
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 6.8,
+          "recv": 181.85
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945370.3153567,
+      "elapsed_s": 251.2,
+      "sample_index": 49,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 391.0
+        },
+        "memory": {
+          "total": 818.2
+        },
+        "fps": {
+          "fps": 56,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.6
+        },
+        "network": {
+          "send": 6.81,
+          "recv": 192.53
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945375.5159674,
+      "elapsed_s": 256.4,
+      "sample_index": 50,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 392.0
+        },
+        "memory": {
+          "total": 823.03
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.7
+        },
+        "network": {
+          "send": 8.4,
+          "recv": 209.31
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945380.4936352,
+      "elapsed_s": 261.3,
+      "sample_index": 51,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 377.0
+        },
+        "memory": {
+          "total": 823.79
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.7
+        },
+        "network": {
+          "send": 7.9,
+          "recv": 202.84
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945385.7608294,
+      "elapsed_s": 266.6,
+      "sample_index": 52,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 383.0
+        },
+        "memory": {
+          "total": 817.17
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.7
+        },
+        "network": {
+          "send": 7.16,
+          "recv": 181.74
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945390.8313258,
+      "elapsed_s": 271.7,
+      "sample_index": 53,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 373.0
+        },
+        "memory": {
+          "total": 815.62
+        },
+        "fps": {
+          "fps": 57,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.7
+        },
+        "network": {
+          "send": 8.65,
+          "recv": 250.05
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945396.0429184,
+      "elapsed_s": 276.9,
+      "sample_index": 54,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 418.0
+        },
+        "memory": {
+          "total": 811.97
+        },
+        "fps": {
+          "fps": 55,
+          "jank": 1,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.7
+        },
+        "network": {
+          "send": 8.34,
+          "recv": 193.67
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945401.2439773,
+      "elapsed_s": 282.1,
+      "sample_index": 55,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 383.0
+        },
+        "memory": {
+          "total": 818.62
+        },
+        "fps": {
+          "fps": 54,
+          "jank": 2,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.8
+        },
+        "network": {
+          "send": 7.88,
+          "recv": 214.32
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945406.4613526,
+      "elapsed_s": 287.3,
+      "sample_index": 56,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 389.0
+        },
+        "memory": {
+          "total": 815.63
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.8
+        },
+        "network": {
+          "send": 8.95,
+          "recv": 251.96
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945411.6787426,
+      "elapsed_s": 292.5,
+      "sample_index": 57,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 409.0
+        },
+        "memory": {
+          "total": 811.87
+        },
+        "fps": {
+          "fps": 54,
+          "jank": 3,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.8
+        },
+        "network": {
+          "send": 7.81,
+          "recv": 209.53
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945416.9293153,
+      "elapsed_s": 297.8,
+      "sample_index": 58,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 391.0
+        },
+        "memory": {
+          "total": 817.59
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.8
+        },
+        "network": {
+          "send": 8.2,
+          "recv": 200.32
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-023",
+      "timestamp": 1785945422.0884283,
+      "elapsed_s": 302.9,
+      "sample_index": 59,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 404.0
+        },
+        "memory": {
+          "total": 815.36
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 16666666.0,
+          "frame_count": 127,
+          "layer": "com.yiwuzhibo/com.yiwu.module_av.mlvb.ui.activity.LiveRoomAudienceActivity#3548"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 43.8
+        },
+        "network": {
+          "send": 7.55,
+          "recv": 206.28
+        }
+      }
+    },
+    {
+      "type": "session_end",
+      "session_id": "PERF-20260805-023",
+      "reason": "duration_reached",
+      "total_samples": 60,
+      "duration_s": 303.4
+    }
+  ],
+  "total_points": 60,
+  "report": {
+    "session": {
+      "id": 23,
+      "session_id": "PERF-20260805-023",
+      "device_id": "dcd8891f",
+      "device_name": "",
+      "device_model": "",
+      "platform": "Android",
+      "pkg_name": "com.yiwuzhibo",
+      "metrics": "cpu,memory,fps,jank,battery,network",
+      "status": "completed",
+      "duration": 300,
+      "actual_duration_s": 303,
+      "summary_json": "{\"total_samples\": 60, \"computed_at\": \"2026-08-05T15:57:02.595149+00:00\"}",
+      "error_message": "",
+      "creator_id": 1,
+      "created_at": "2026-08-05T15:51:58.745280",
+      "started_at": "2026-08-05T15:51:58.752275",
+      "ended_at": "2026-08-05T15:57:02.594148"
+    },
+    "metrics": [
+      {
+        "metric_type": "cpu",
+        "unit": "%",
+        "samples": 60,
+        "mean": 386.65,
+        "median": 389.5,
+        "p95": 404.15,
+        "min_val": 330.0,
+        "max_val": 418.0,
+        "stddev": 14.64,
+        "threshold": 60.0,
+        "threshold_comparator": "<=",
+        "passed": false
+      },
+      {
+        "metric_type": "memory",
+        "unit": "MB",
+        "samples": 60,
+        "mean": 795.11,
+        "median": 795.33,
+        "p95": 821.82,
+        "min_val": 756.06,
+        "max_val": 824.5,
+        "stddev": 18.42,
+        "threshold": 512.0,
+        "threshold_comparator": "<=",
+        "passed": false
+      },
+      {
+        "metric_type": "fps",
+        "unit": "fps",
+        "samples": 60,
+        "mean": 31.23,
+        "median": 54.5,
+        "p95": 57.0,
+        "min_val": 1.0,
+        "max_val": 57.0,
+        "stddev": 27.59,
+        "threshold": 30.0,
+        "threshold_comparator": ">=",
+        "passed": true
+      },
+      {
+        "metric_type": "jank",
+        "unit": "次",
+        "samples": 60,
+        "mean": 0.68,
+        "median": 1.0,
+        "p95": 2.0,
+        "min_val": 0.0,
+        "max_val": 3.0,
+        "stddev": 0.75,
+        "threshold": 0.0,
+        "threshold_comparator": "<=",
+        "passed": false
+      }
+    ],
+    "anomalies": []
+  }
+}

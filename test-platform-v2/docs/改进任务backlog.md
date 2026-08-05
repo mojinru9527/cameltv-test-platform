@@ -789,6 +789,20 @@ graph LR
 - 当前实际 verdict 为 `NOT READY`，目标上限为 `LOCAL HARDENING COMPLETE / EXTERNAL BLOCKED`；只有 19/19 MUST 全部 `PASS` 后才可判定 `READY FOR TEST RELEASE`。
 - Production 发布、production 数据库迁移和 production 写链保持 `DEFERRED`。
 
+## Epic PERF-OPT　性能采集功能优化（Batch 99 真机验收标记，C99-1）
+
+> **标记**：2026-08-06 Batch 99 真机验收（安卓双视频场景各 10 分钟）后由用户明确要求登记。
+> 性能采集链路已可用且数据真实，但存在以下需要优化的点，供后续批次排期。
+
+| # | 优化项 | 现状（Batch 99 实测） | 目标 | 优先级 |
+|---|--------|----------------------|------|:----:|
+| P1 | 采样周期并行化 | 单点 ~10–55s（dumpsys meminfo/fps 串行，Chrome 多进程尤慢；600s 仅 11–60 点） | 各指标并行采集，单点 ≤2s | P1 |
+| P2 | jank 视频帧率口径 | 30fps 视频在 120Hz 屏帧间距 >2×刷新周期被全量误报（视频场景 jank 恒定偏高） | 按视频帧率/应用帧率口径评估，避免误报 | P2 |
+| P3 | 多核 CPU 语义与阈值 | 多线程 App 如实上报 >100%（小象直播间 386%），阈值 ≤60 直接 FAIL | 明确多核口径（总和/单核平均）并调整阈值语义 | P2 |
+| P4 | iOS 26.5 支持 | solox 缺 iOS 26.5 DeviceSupport（GitHub 404），平台 iOS 采集不可用 | solox 支持该版本或自建 iOS 指标通道 | P3 |
+
+**备注**：小象直播间真实高负载（CPU 386%/内存 795MB）为被测应用性能发现，转业务侧跟进（B99-Q5），不属于平台采集功能缺陷。
+
 ---
 
 ## 依赖关系总览（Mermaid）
