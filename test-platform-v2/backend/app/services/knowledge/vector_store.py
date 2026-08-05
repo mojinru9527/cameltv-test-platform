@@ -44,7 +44,7 @@ class VectorStore(ABC):
     def search(
         self, db: Session, *, project_id: int, query_vec, top_k: int = 8, chunk_type: str | None = None
     ) -> list[VectorSearchResult]:
-        """向量检索：项目内、仅 active chunk，按余弦降序返回 top_k。"""
+        """向量检索：项目内全部 chunk（不按 status 过滤，与 keyword 召回一致），按余弦降序返回 top_k。"""
 
 
 class SqliteVectorStore(VectorStore):

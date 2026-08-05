@@ -3,7 +3,7 @@
 - 关键词：SQLite LIKE（CJK 二元组保召回 + Python 侧计分；FTS5 为后续优化）。
 - 向量：委托 vector_store（NumPy 余弦），query 侧经 embedding_service 加检索前缀嵌入。
 - 融合：Reciprocal Rank Fusion（对量纲鲁棒，无需归一两路分数）。
-- 治理：仅项目内、仅 status="active" 切片（vector_store 与 keyword 均已过滤）。
+- 治理：仅项目内切片，**不按 status 过滤**（含 deprecated/archived 切片，满足全状态检索；keyword 与 vector 召回行为一致）。
 
 mode: "hybrid"（默认）| "keyword" | "vector"，便于对比与降级（模型不可用时可纯关键词）。
 """
