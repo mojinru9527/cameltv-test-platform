@@ -33,8 +33,6 @@ cat <<'EOF'
 
 仍需手动完成的外部依赖:
   1) Docker Desktop —— Mock Server(WireMock) 需要:  docker pull wiremock/wiremock
-  2) mitmproxy CA 证书 —— 抓 camel1.to 的 HTTPS 必需:
-       先跑  tp capture --site camel1 --env prod  启动 mitmproxy,
-       浏览器访问 http://mitm.it 下载安装证书到系统信任区。
+  2) 生产访问 —— 如需抓包，请自行安装 mitmproxy 并按需配置代理证书。
   3) 填写 .env 中各站点/环境凭据与 UPSTREAM_PROXY。
 EOF
