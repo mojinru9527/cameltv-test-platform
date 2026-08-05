@@ -75,6 +75,46 @@ def reject(db: Session, artifact_id: int, project_id: int, reviewer_id: int, com
     return row
 
 
+def batch_approve(
+    db: Session,
+    artifact_ids: list[int],
+    project_id: int,
+    reviewer_id: int,
+    comment: str = "",
+) -> dict:
+    """批量采纳 AI 产物（去重、逐条复用 approve，事务由调用方统一 commit）。"""
+    ids = list(dict.fromkeys(artifact_ids or []))
+    approved: list[int] = []
+    missing: list[int] = []
+    for aid in ids:
+        row = approve(db, aid, project_id, reviewer_id, comment)
+        if row is not None:
+            approved.append(aid)
+        else:
+            missing.append(aid)
+    return {"approved": approved, "missing": missing}
+
+
+def batch_reject(
+    db: Session,
+    artifact_ids: list[int],
+    project_id: int,
+    reviewer_id: int,
+    comment: str = "",
+) -> dict:
+    """批量驳回 AI 产物（去重、逐条复用 reject，事务由调用方统一 commit）。"""
+    ids = list(dict.fromkeys(artifact_ids or []))
+    rejected: list[int] = []
+    missing: list[int] = []
+    for aid in ids:
+        row = reject(db, aid, project_id, reviewer_id, comment)
+        if row is not None:
+            rejected.append(aid)
+        else:
+            missing.append(aid)
+    return {"rejected": rejected, "missing": missing}
+
+
 def import_to_test_case(db: Session, artifact_id: int, project_id: int) -> dict:
     """将审核通过的 AI 用例产物导入正式用例库。
 

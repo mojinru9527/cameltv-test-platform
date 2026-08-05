@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 93: 响应式回归常驻 CI，PR #130)
+**最后更新**: 2026-08-05 (Batch 94: AI 产物批量审核/采纳，C26KB-C3/C91-1/C92-1 关闭，PR #131)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -30,15 +30,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ### batch-92 — 蓝湖证据包审核 UI（Batch 92 Leader 条件）
 
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C92-1 | batch-94 落地 AI 产物批量审核/采纳 UI 时，与证据包页面审核统一「人工审核」交互范式（复用 JobDetail 审核 Dialog 模式） | P3 | 2026-08-05 |
+> C92-1 已于 Batch 94 关闭（批量审核 Dialog 复用统一「人工审核」范式）。
 
 ### batch-91 — Open 区收口（Batch 91 Leader 条件）
 
+> C91-1 已于 Batch 94 关闭（C26KB-C3 28/28 复测达标）；C91-2 保持 Open。
+
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C91-1 | batch-94 落地 AI 产物批量审核/采纳 UI 后，复测 C26KB-C3 28 检查点（补齐 C7 3 项，通过率 ≥90%） | P2 | 2026-08-05 |
 | C91-2 | search_service.py 模块 docstring 的 status 过滤文案与实际行为对齐（B91-Q2 顺手项） | P3 | 2026-08-05 |
 
 ### batch-90 — 追踪器卫生审计（Batch 90 Leader 条件）
@@ -78,7 +77,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | batch-18-C7 | 迁移 20260710_0017 staging 双向演练 | P2 | staging 可用后执行 |
 | C21-P1-5 | 迁移 20260710_0017 staging 双向演练 | P1 | staging 可用后执行 |
 | batch-18-C8 | 标注语料评估 diff classifier 基线 | P2 | 提供标注语料 |
-| C26KB-C3 | 知识中心 28 检查点通过率 ≥90%（Batch 91 复核：25/28=89.3%，批量采纳/驳回/导入 3 项未实现） | P2 | 批量审核/采纳 UI（batch-94）落地后复测 |
+| C26KB-C3 | 知识中心 28 检查点通过率 ≥90% | P2 | 已关闭（Batch 94 补齐批量操作后 28/28），见 Closed 表 |
 ## In Progress (处理中)
 
 | ID | 内容 | 批次 | 分支 |
@@ -323,6 +322,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C21-P3 | migration downgrade / path traversal / docstring / VNext 编号 | 四子项全部证据关闭（同 C90-2 证据）；PR #128 | 2026-08-05 |
 | batch-18-C14 | 分环境灰度放量 SOP 文档 | Batch 91：`docs/灰度放量SOP.md`（环境分层/灰度节奏/回滚/检查清单/责任矩阵）；PR #128 | 2026-08-05 |
 
+### Batch 94 — AI 产物批量审核/采纳
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C26KB-C3 | 知识中心 28 检查点通过率 ≥90% | Batch 94：补齐 C7 批量采纳/驳回/导入（3 新端点 + 前端勾选/全选/批量 Dialog）后复测 **28/28（100%）**；后端 7/7 + E2E 1/1 + 截图 3；PR #131 | 2026-08-05 |
+| C91-1 | batch-94 落地批量审核/采纳 UI 后复测 C26KB-C3 | 随 C26KB-C3 关闭（28/28）；PR #131 | 2026-08-05 |
+| C92-1 | 与证据包页面审核统一「人工审核」交互范式 | 批量审核 Dialog 复用统一范式（C26KB-C3 同批）；PR #131 | 2026-08-05 |
+
 ### Batch 63 — 遗留条件对账关闭
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -350,9 +357,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 29 (含 4 个 P0 blocking；其中 18 项 Deferred + C91~C93 新增；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 26 (含 4 个 P0 blocking；其中 18 项 Deferred；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 121（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Closed**: 124（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 150（另有 13 条历史补录不计入）
 
 ## 维护约定

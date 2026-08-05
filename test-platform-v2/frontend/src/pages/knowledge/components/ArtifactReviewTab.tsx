@@ -27,8 +27,17 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/ui'
+import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { fetchAiArtifacts, approveArtifact, rejectArtifact, importArtifact } from '@/api/knowledge'
+import {
+  fetchAiArtifacts,
+  approveArtifact,
+  rejectArtifact,
+  importArtifact,
+  batchApproveArtifacts,
+  batchRejectArtifacts,
+  batchImportArtifacts,
+} from '@/api/knowledge'
 import type { AiArtifact } from '@/types'
 import { Loader2, CheckCircle2, XCircle, Download, Eye } from '@/lib/icons'
 
@@ -69,6 +78,12 @@ export default function ArtifactReviewTab() {
   const [actionLoading, setActionLoading] = useState(false)
 
   const [importingId, setImportingId] = useState<number | null>(null)
+
+  // Batch selection (Batch 94)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [batchMode, setBatchMode] = useState<'approve' | 'reject' | 'import' | null>(null)
+  const [batchComment, setBatchComment] = useState('')
+  const [batchLoading, setBatchLoading] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -125,6 +140,93 @@ export default function ArtifactReviewTab() {
     }
   }
 
+  const actionableIds = (rows: AiArtifact[]) =>
+    rows
+      .filter((r) => r.review_status === 'pending' || r.review_status === 'approved')
+      .map((r) => r.id)
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
+  const toggleSelectAll = () => {
+    const actionable = actionableIds(rows)
+    const allSelected = actionable.length > 0 && actionable.every((id) => selectedIds.includes(id))
+    setSelectedIds((prev) =>
+      allSelected ? prev.filter((id) => !actionable.includes(id)) : Array.from(new Set([...prev, ...actionable])),
+    )
+  }
+
+  const closeBatch = () => {
+    setBatchMode(null)
+    setBatchComment('')
+  }
+
+  const handleBatchApprove = async () => {
+    setBatchLoading(true)
+    try {
+      const result = await batchApproveArtifacts(selectedIds, batchComment)
+      toast.success(`已采纳 ${result.approved.length} 条`)
+      setSelectedIds([])
+      closeBatch()
+      await loadPage()
+    } catch (e: any) {
+      toast.error(e?.message || '批量采纳失败')
+    } finally {
+      setBatchLoading(false)
+    }
+  }
+
+  const handleBatchReject = async () => {
+    if (!batchComment.trim()) {
+      toast.error('批量驳回需填写原因')
+      return
+    }
+    setBatchLoading(true)
+    try {
+      const result = await batchRejectArtifacts(selectedIds, batchComment)
+      toast.success(`已驳回 ${result.rejected.length} 条`)
+      setSelectedIds([])
+      closeBatch()
+      await loadPage()
+    } catch (e: any) {
+      toast.error(e?.message || '批量驳回失败')
+    } finally {
+      setBatchLoading(false)
+    }
+  }
+
+  const handleBatchImport = async () => {
+    setBatchLoading(true)
+    try {
+      const result = await batchImportArtifacts(selectedIds)
+      toast.success(`已导入 ${result.imported.length} 条`)
+      setSelectedIds([])
+      closeBatch()
+      await loadPage()
+    } catch (e: any) {
+      toast.error(e?.message || '批量导入失败')
+    } finally {
+      setBatchLoading(false)
+    }
+  }
+
+  const loadPage = async () => {
+    try {
+      const res = await fetchAiArtifacts({
+        review_status: status === '_all' ? undefined : status,
+        page,
+        page_size: PAGE_SIZE,
+      })
+      setRows(res.items)
+      setTotal(res.total)
+    } catch {
+      // 刷新失败保持现状
+    }
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return (
@@ -138,7 +240,7 @@ export default function ArtifactReviewTab() {
             setPage(1)
           }}
         >
-          <SelectTrigger className="h-8 text-xs w-[140px]">
+          <SelectTrigger aria-label="筛选审核状态" className="h-8 text-xs w-[140px]">
             <SelectValue placeholder="审核状态" />
           </SelectTrigger>
           <SelectContent>
@@ -151,6 +253,25 @@ export default function ArtifactReviewTab() {
         </Select>
         <span className="text-xs text-muted-foreground">共 {total} 条</span>
 
+        <div className="ml-auto flex items-center gap-2">
+          {selectedIds.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground">已选 {selectedIds.length} 条</span>
+              <Button size="sm" variant="secondary" className="min-h-9" onClick={() => setBatchMode('approve')} data-icon="inline-start">
+                <CheckCircle2 />
+                批量采纳
+              </Button>
+              <Button size="sm" variant="secondary" className="min-h-9" onClick={() => setBatchMode('reject')} data-icon="inline-start">
+                <XCircle />
+                批量驳回
+              </Button>
+              <Button size="sm" className="min-h-9" onClick={() => setBatchMode('import')} data-icon="inline-start">
+                <Download />
+                批量导入
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -158,6 +279,16 @@ export default function ArtifactReviewTab() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  aria-label="全选当前页可操作产物"
+                  checked={
+                    actionableIds(rows).length > 0 &&
+                    actionableIds(rows).every((id) => selectedIds.includes(id))
+                  }
+                  onCheckedChange={toggleSelectAll}
+                />
+              </TableHead>
               <TableHead className="w-[110px]">类型</TableHead>
               <TableHead>标题</TableHead>
               <TableHead className="w-[80px]">置信度</TableHead>
@@ -169,7 +300,7 @@ export default function ArtifactReviewTab() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="p-3" aria-label="正在加载 AI 产物">
+              <TableCell colSpan={7} className="p-3" aria-label="正在加载 AI 产物">
                   <div className="space-y-2" aria-hidden="true">
                     {Array.from({ length: 4 }, (_, index) => (
                       <Skeleton key={index} className="h-8 w-full" />
@@ -179,7 +310,7 @@ export default function ArtifactReviewTab() {
               </TableRow>
             ) : rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={7} className="h-24 text-center text-sm text-muted-foreground">
                   暂无 AI 产物
                 </TableCell>
               </TableRow>
@@ -189,6 +320,15 @@ export default function ArtifactReviewTab() {
                 const isPending = a.review_status === 'pending'
                 return (
                   <TableRow key={a.id}>
+                    <TableCell>
+                      {(a.review_status === 'pending' || a.review_status === 'approved') && (
+                        <Checkbox
+                          aria-label={`选择产物 ${a.title || a.id}`}
+                          checked={selectedIds.includes(a.id)}
+                          onCheckedChange={() => toggleSelect(a.id)}
+                        />
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge tone="neutral">
                         {TYPE_LABELS[a.artifact_type] || a.artifact_type}
@@ -341,6 +481,64 @@ export default function ArtifactReviewTab() {
                 : actionTarget?.action === 'approve'
                 ? '确认采纳'
                 : '确认驳回'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── 批量审核/导入 Dialog（Batch 94）── */}
+      <Dialog open={batchMode !== null} onOpenChange={(open) => { if (!open) closeBatch() }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {batchMode === 'approve' ? '批量采纳' : batchMode === 'reject' ? '批量驳回' : '批量导入'}
+            </DialogTitle>
+            <DialogDescription>
+              已选 {selectedIds.length} 条产物
+              {batchMode === 'import' ? '（仅已采纳产物可导入正式用例库）' : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {batchMode === 'approve' && (
+              <>
+                <Label>审核意见（可选）</Label>
+                <Input
+                  placeholder="输入审核意见…"
+                  value={batchComment}
+                  onChange={(e) => setBatchComment(e.target.value)}
+                />
+              </>
+            )}
+            {batchMode === 'reject' && (
+              <>
+                <Label>驳回原因（必填）</Label>
+                <Input
+                  placeholder="如：内容与需求不符、缺少必填字段…"
+                  value={batchComment}
+                  onChange={(e) => setBatchComment(e.target.value)}
+                />
+              </>
+            )}
+            {batchMode === 'import' && (
+              <p className="text-sm text-muted-foreground">
+                批量导入受治理开关约束；未开启时会提示逐条导入。
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={closeBatch}>取消</Button>
+            <Button
+              variant={batchMode === 'reject' ? 'danger' : 'primary'}
+              disabled={batchLoading}
+              onClick={
+                batchMode === 'approve'
+                  ? handleBatchApprove
+                  : batchMode === 'reject'
+                  ? handleBatchReject
+                  : handleBatchImport
+              }
+            >
+              {batchLoading ? '处理中…' : '确认'}
             </Button>
           </DialogFooter>
         </DialogContent>
