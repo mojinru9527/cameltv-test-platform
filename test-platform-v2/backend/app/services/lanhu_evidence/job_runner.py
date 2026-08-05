@@ -90,11 +90,14 @@ def _dom_text_for(local_url: str) -> str:
         return ""
     try:
         from urllib.parse import unquote, urlparse
+        from urllib.request import url2pathname
 
         from app.services.external.lanhu_provider import _extract_page_text
 
         parsed = urlparse(local_url)
-        path = Path(unquote(parsed.path.lstrip("/"))) if parsed.scheme == "file" else Path(local_url)
+        # file:// 统一经 url2pathname 转换：Windows 盘符（/C:/...）与 POSIX 绝对路径
+        # （/tmp/...）都正确解析，避免 lstrip("/") 在 Linux 上把绝对路径变相对。
+        path = Path(url2pathname(unquote(parsed.path))) if parsed.scheme == "file" else Path(local_url)
         if path.exists() and path.suffix.lower() in (".html", ".htm"):
             return _extract_page_text(path) or ""
     except Exception:  # noqa: BLE001
