@@ -23,6 +23,8 @@ from app.models.knowledge import (
 from app.schemas.common import Page, R
 from app.schemas.knowledge import (
     AiArtifactOut,
+    ArtifactBatchImportRequest,
+    ArtifactBatchReviewRequest,
     ArtifactImportRequest,
     ArtifactReviewRequest,
     AutoBuildRequest,
@@ -486,6 +488,54 @@ def get_artifact(
     if not row:
         return R(code=404, msg="AI 产物不存在")
     return R.ok(AiArtifactOut.model_validate(row))
+
+
+# ── 批量审核/导入（Batch 94；静态路径必须先于 {artifact_id} 注册，避免 422）──
+
+@router.post("/ai-artifacts/batch-approve", response_model=R[dict], summary="批量采纳 AI 产物")
+def batch_approve_artifacts(
+    body: ArtifactBatchReviewRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:approve")),
+    db: Session = Depends(get_db),
+):
+    result = artifact_service.batch_approve(
+        db, body.ids, current.project_id or 0, current.user.id, body.comment,
+    )
+    _audit(req, current, db, "knowledge:approve", f"artifacts#{len(result['approved'])}", body.comment)
+    db.commit()
+    return R.ok(result)
+
+
+@router.post("/ai-artifacts/batch-reject", response_model=R[dict], summary="批量驳回 AI 产物")
+def batch_reject_artifacts(
+    body: ArtifactBatchReviewRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:approve")),
+    db: Session = Depends(get_db),
+):
+    result = artifact_service.batch_reject(
+        db, body.ids, current.project_id or 0, current.user.id, body.comment,
+    )
+    _audit(req, current, db, "knowledge:reject", f"artifacts#{len(result['rejected'])}", body.comment)
+    db.commit()
+    return R.ok(result)
+
+
+@router.post("/ai-artifacts/batch-import", response_model=R[dict], summary="批量导入 AI 用例产物")
+def batch_import_artifacts(
+    body: ArtifactBatchImportRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("ai_artifact:import")),
+    db: Session = Depends(get_db),
+):
+    """批量导入审核通过的 AI 用例产物（受 ai_artifact_allow_batch_import 治理开关约束）。"""
+    result = artifact_service.import_artifacts_to_test_cases(
+        db, body.ids, current.project_id or 0,
+    )
+    _audit(req, current, db, "ai_artifact:import", f"artifacts#{len(result)}", "")
+    db.commit()
+    return R.ok({"imported": result})
 
 
 @router.post("/ai-artifacts/{artifact_id}/approve", response_model=R[AiArtifactOut], summary="采纳 AI 产物")
