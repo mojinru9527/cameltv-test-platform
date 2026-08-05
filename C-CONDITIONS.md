@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-04 (Batch 75: 状态机规则 + audit-cconditions.ps1 审计工具)
+**最后更新**: 2026-08-05 (Batch 88: C87-1/2/3 关闭，PR #124)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -24,11 +24,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ### batch-87 — P0 真实数据验收（Batch 87 Leader 条件）
 
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C87-1 | 用户提供真实蓝湖设计源链接（或账号可访问项目）后，走证据包采集→OCR→导入 RAG/Wiki 闭环，关闭 J06 与 Wiki ingest 缺口 | P1 | 2026-08-04 |
-| C87-2 | 提供测试邮箱/收件箱后，完成定时任务与缺陷通知的真实 SMTP 收件验证（J11 缺口） | P2 | 2026-08-04 |
-| C87-3 | 核验项目级角色权限（B87-Q1：项目 B tester 成员缺 `testcase:create`），修复或确认 RBAC 语义 | P2 | 2026-08-04 |
+> C87-1 / C87-2 / C87-3 已于 Batch 88 关闭，见 Closed 表「Batch 87 → 88 关闭」。
 
 ### batch-86 — WARN 技术债消化（Batch 86 Leader 条件）
 
@@ -448,6 +444,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|---------|------|
 | C80-1 | WARN 清单长期维护机制 | Batch 81：warn-baseline.json（230 项）+ inventory 文档（4 类/节奏/趋势）+ scan -WriteBaseline/-BaselinePath 对比模式（PR #116 待合入） | 2026-08-04 |
 
+### Batch 87 → 88 关闭
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C87-1 | 真实蓝湖设计源证据包闭环（J06 / Wiki ingest 缺口） | Batch 88：项目级链接自动识别设计图板（241+102 页真实设计稿）→ 截图+OCR → 质量门禁（24 页人工审核豁免）→ 导入需求/RAG/Wiki（清洗后 0 二进制垃圾）；PR #124 | 2026-08-05 |
+| C87-2 | 定时任务与缺陷通知真实 SMTP 收件验证（J11 缺口） | Batch 88：QQ SMTP 587 STARTTLS 真实发送（NotificationLog sent）+ IMAP 真实收件确认（plan_done + defect_assigned）；PR #124 | 2026-08-05 |
+| C87-3 | 项目级角色权限核验/修复（B87-Q1） | Batch 88：tester 权限矩阵补齐 51 项业务权限（testcase/testplan/report/defect/schedule 等）+ 全项目核验（项目内 200/跨项目 403/越权 403）+ 测试 5/5；PR #124 | 2026-08-05 |
+
 ### Batch 63 — 遗留条件对账关闭
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -475,9 +479,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 38 (含 8 个 P0 blocking)
+- **Open / 非关闭**: 35 (含 8 个 P0 blocking)
 - **In Progress**: 0
-- **Closed**: 83
+- **Closed**: 86
 - **Total**: 121（另有 13 条历史补录不计入）
 
 ## 维护约定
