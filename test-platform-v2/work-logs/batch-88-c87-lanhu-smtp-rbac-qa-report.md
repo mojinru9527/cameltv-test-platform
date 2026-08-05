@@ -15,13 +15,13 @@
 
 | # | 门禁 | 命令 | 退出码 | 结果 |
 |---|------|------|:------:|------|
-| G1 | 后端全量 pytest | `.venv python -m pytest -q` | 0 | **1050 passed, 3 skipped, 0 failed**（4m04s） |
+| G1 | 后端全量 pytest | `.venv python -m pytest -q` | 0 | **1054 passed, 3 skipped, 0 failed**（3m43s，含本批新增 4 项） |
 | G2 | 后端 F821 | `ruff check app --select F821` | 0 | All checks passed |
 | G3 | Alembic 单头 | `alembic heads` | 0 | `20260728_merge_batch37_main (head)` 单头 |
 | G4 | 前端 typecheck | `npm run typecheck` | 0 | tsc -b 通过 |
 | G5 | 前端 build | `npm run build` | 0 | built in 10.78s |
 | G6 | 前端 vitest | `npm test` | 0 | **334 passed (87 files)**；首轮 1 次 worker 意外退出（环境抖动），重跑 334/334 |
-| G7 | 扫描 | `scan-common-bugs.ps1` | 0 | **HARD 0，WARN 209**（与基线一致，无新增类别） |
+| G7 | 扫描 | `scan-common-bugs.ps1` | 0 | **HARD 0，WARN 209**（与基线一致，无新增类别；临时 gitignored 脚本已清理） |
 | G8 | C 条件审计 | `audit-cconditions.ps1 -RequireLatestBatch` | 0 | 硬错 0、警告 0 |
 | G9 | 受影响模块 pytest | lanhu/smtp/rbac/evidence 相关 | 0 | test_lanhu_* 40 + test_smtp_* 24 + test_rbac_project_roles 5 全绿 |
 
@@ -53,6 +53,8 @@
 - OCR 抽查为真实设计内容（赛事回放入口/骆驼币账户/充值结果/首页-PC 等），中文+英文混排识别
 - **数据质量修复**：预修复 DOM 提取把 PNG 二进制写入图片页 merged_text → `_dom_text_for` 修复 + `sanitize_evidence_text` 清洗 + `repair_evidence_imports` 重导（319 图片页清洗，旧产物删除后重导，Wiki/Chunks 二进制垃圾 0）
 - 版本 diff 对设计图板链接跳过（无 versionId，非致命，日志记录）
+
+> 备注：ruff F401/F811 存在 7 处存量未使用 import（lanhu_provider asyncio/json/httpx 等，非本批引入）；本批仅新增 `import html` 且已使用，CI 硬门禁 F821=0 不受影响。
 
 ### C87-2：SMTP 真实收发（✅ 闭环）
 
