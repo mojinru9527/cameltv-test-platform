@@ -1,16 +1,19 @@
 ---
 title: "体育平台 本地测试平台（v1 旧版）"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-08-05"
 status: "maintenance"
-expires: "2026-12-26"
+expires: "2027-02-05"
 tags: ["test-platform", "v1", "cli", "legacy", "maintenance"]
 related: ["test-platform-v2/README.md", "test-platform/CLAUDE.md"]
 ---
 
 # 体育平台 · 本地测试平台
 
-多站点 × 多环境的 6 件套测试工具,统一 CLI `tp` 驱动。基于《test-测试平台设计方案.md》落地。
+> ⚠️ **2026-08-05（Batch 98）**：11 个 V1 工具已批准废弃并删除，`tp` CLI 仅保留 `config` 自检；
+> CI 回归迁移至 `scripts/ci/api-regression.ps1` + Playwright 直跑。以下历史章节仅作追溯记录。
+
+多站点 × 多环境的 6 件套测试工具,统一 CLI `tp` 驱动。基于《test-测试平台设计方案.md》落地（历史记录）。
 
 | 工具 | CLI | 作用 |
 | --- | --- | --- |
