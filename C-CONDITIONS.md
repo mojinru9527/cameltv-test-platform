@@ -26,6 +26,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 > C87-1 / C87-2 / C87-3 已于 Batch 88 关闭，见 Closed 表「Batch 87 → 88 关闭」。
 
+### batch-89 — 本地条件关闭（Batch 89 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C89-1 | 新 worktree 开工先执行 `git submodule update --init --recursive lanhu-mcp` 再跑全量 pytest（fresh worktree 子模块未初始化会导致 3 项环境类失败） | P2 | 2026-08-05 |
+| C89-2 | 后续批次抽空做 C-CONDITIONS 追踪器卫生审计（Open 区 inline-CLOSED / Closed 表重复挂账清理） | P2 | 2026-08-05 |
+
 ### batch-86 — WARN 技术债消化（Batch 86 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
@@ -488,7 +495,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 31 (含 8 个 P0 blocking)
+- **Open / 非关闭**: 33 (含 8 个 P0 blocking)
 - **In Progress**: 0
 - **Closed**: 90
 - **Total**: 121（另有 13 条历史补录不计入）
