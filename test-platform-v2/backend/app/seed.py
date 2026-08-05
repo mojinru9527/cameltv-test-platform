@@ -43,6 +43,7 @@ _MENUS = [
     ("menu:environment", "目标环境", "", "/environment", "EnvironmentOutlined", 20),
     ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 21),
     ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 22),
+    ("menu:lanhu_evidence", "蓝湖证据包", "", "/lanhu-evidence", "FileTextOutlined", 23),
 ]
 
 # 操作权限点（按模块分组）：(code, name, type)
@@ -230,6 +231,7 @@ _TESTER_MENUS = {
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
     "menu:perftest", "menu:notify", "menu:environment",
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
+    "menu:lanhu_evidence",
 }
 
 
