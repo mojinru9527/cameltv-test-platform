@@ -3,7 +3,7 @@
 用法：cd backend && python scripts/migrate_cases.py
 
 功能：
-1. 从旧库 test-platform/data/platform.db 读取 901 条 test_cases
+1. 从旧库（v1 已退役，Batch 100；旧库需从备份恢复到 v1 原 `data/platform.db` 路径）读取 901 条 test_cases
 2. 按 tags / api_spec_ref 自动拆分为 功能用例 / 接口用例
 3. 应用 module → (domain, module) 映射表归入分类
 4. 写入 v2 新库 test_case 表
@@ -26,7 +26,7 @@ NEW_DB_URL = os.environ.get("DATABASE_URL", "sqlite:///./data/platform.db")
 
 if not os.path.exists(OLD_DB):
     print(f"[ERROR] 旧库不存在: {OLD_DB}")
-    print("请确认 test-platform/data/platform.db 文件存在")
+print("请确认旧库备份已恢复到 v1 原 data/platform.db 路径（v1 已退役，Batch 100）")
     sys.exit(1)
 
 # ── 模块 → (域, 模块) 映射表 ──────────────────────────

@@ -101,9 +101,10 @@ MCP 配置示例（添加到 Cursor / Claude Code 的 MCP 配置）：
 
 ---
 
-## 2. 测试平台 · 首次搭建
+## 2. 测试平台 v1（已退役 · Batch 100）
 
-> 项目路径：`test-platform/`
+> ⚠️ v1（`test-platform/`）已于 Batch 100 整体移除。以下历史命令仅作追溯；
+> API 回归资产迁移至 `tests/api-testing/generated/`，由 `scripts/ci/api-regression.ps1` 驱动。
 
 ### 2.1 一键搭建脚本
 
@@ -543,5 +544,5 @@ tp logagg --help
 
 ---
 
-> **提示：** 所有需要凭据的操作（`tp envcheck`、`tp api run` 等）需要在 `test-platform/.env` 中填写真实的数据库/Redis/MQ/ELK 密码和 auth token。  
-> 模板文件：`test-platform/.env.example`
+> **提示（已退役）：** v1 凭据文件 `test-platform/.env` 随 Batch 100 移除；CI 凭据改由 GitHub Secrets 注入，
+> 业务 DB/Redis 地址见 `docs/production-delivery/生产环境交付清单.md`。

@@ -51,7 +51,7 @@ jobs:
 
       - name: Install Playwright test deps
         run: npm ci
-        working-directory: test-platform/tests/api-testing/generated
+        working-directory: tests/api-testing/generated
 
       - name: Refresh business token
         shell: pwsh

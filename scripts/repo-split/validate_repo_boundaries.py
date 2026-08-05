@@ -2,7 +2,7 @@
 """Validate the CamelTv repository boundary manifest (repo-boundaries.json).
 
 The manifest defines which path belongs to which future repository
-(frontend / backend / ops-platform / shared / deprecated-v1). Ownership uses
+(frontend / backend / ops-platform / shared). Ownership uses
 longest-prefix-wins semantics, so a deeper path may override a parent
 assignment (e.g. an ops-platform file living today under test-platform-v2/backend).
 

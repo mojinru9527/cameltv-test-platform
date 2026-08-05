@@ -60,11 +60,8 @@ function Invoke-ApiRun {
     param([string]$BaseUrl, [string]$AuthToken, [string]$Grep, [string]$Proxy, [string]$ReportDir)
     if (-not $BaseUrl) { throw "run 子命令需要 -BaseUrl" }
 
-    # 定位生成式测试目录（仓库根 或 任意子目录 cwd 均可）
-    $specDir = Join-Path $PWD "test-platform/tests/api-testing/generated"
-    if (-not (Test-Path -LiteralPath (Join-Path $specDir "playwright.config.ts"))) {
-        $specDir = Join-Path $PWD "tests/api-testing/generated"
-    }
+    # 定位生成式测试目录（仓库根 或 任意子目录 cwd 均可；Batch 100 起 v1 已退役）
+    $specDir = Join-Path $PWD "tests/api-testing/generated"
     if (-not (Test-Path -LiteralPath (Join-Path $specDir "playwright.config.ts"))) {
         throw "未找到生成式测试目录（期望 playwright.config.ts）: $specDir"
     }
