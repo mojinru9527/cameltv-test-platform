@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 98: CI 迁移 + V1 11 工具删除 + C64-3 关闭（prod 无法提供，以 test 为准），PR #136)
+**最后更新**: 2026-08-05 (Batch 99: Android 滚动 fps 真实采样（采集器缺陷修复）+ iOS 阻塞原因登记，C84-2 关闭，PR #137)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -68,9 +68,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 解除条件 |
 |----|------|--------|---------|
-| CP-C2 | iOS 真机采集端到端验证 | P0 | 用户已承诺 2026-08-05 晚在家执行（iPhone 信任电脑 + USB 调试 + 被测 App） |
-| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（2026-08-05 晚） |
-| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | P3 | 有带滚动/播放场景的设备可采样时执行 |
+| CP-C2 | iOS 真机采集端到端验证 | P0 | 用户已连接 iPhone；**阻塞：Windows 主机缺 Apple Mobile Device 驱动（tidevice 连 usbmux 被拒，无 iTunes/Apple 服务）**；解除条件：安装 iTunes/Apple Devices 驱动或改用 macOS 宿主后复测 |
+| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（驱动安装后执行） |
+| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | P3 | 已关闭（Batch 99：滚动场景 fps 真实采样 mean 59.38/max 117，采集器 Android 14 缺陷已修复），见 Closed 表 |
 | C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
 | C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
@@ -365,6 +365,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C64-3 | 生产交付清单运维回填 + 拆仓边界校验 | prod 业务 DB/Redis **无法提供**（用户 2026-08-05），验收以 test 环境为准（同 C31-3 口径）；test DB/Redis 已回填（2026-08-04，`testdata5.elelive.cn`）；体育平台无 MQ（N/A）；拆仓边界校验 PASS（Batch 97/98）；PR #136 | 2026-08-05 |
 | C96-1（部分） | V1 工具实际删除 | 11 个工具目录删除 + CI 迁移（`api-regression`/`prod-smoke-test` 改自包含脚本 `scripts/ci/api-regression.ps1`，`tp` 命令 0 引用）；C27 四项验证仍 Open；PR #136 | 2026-08-05 |
 
+### Batch 99 — 真机性能验收（2026-08-05）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | OPPO Find X3（PEDM00/Android 14）滚动场景真实采样：fps mean 59.38（min 1/max 117，120Hz）PASS + 启动 314ms；证据 `test-platform-v2/work-logs/evidence/batch-99/real-device-collection-batch99.json`；PR #137 | 2026-08-05 |
+| B99-P1 | Android 14 fps 恒 0 缺陷（SoloX 2.9.3 解析 `dumpsys SurfaceFlinger --latency` 的 `---- TIME:` 头崩溃） | 采集器自实现 SurfaceFlinger 解析（跳过头行、最近 1s 窗口 fps、2×刷新周期 jank）+ 图层选择（排除 InputSink/ActivityRecord）；`test_perf_fps_parser.py` 8/8；PR #137 | 2026-08-05 |
+
 ---
 
 ## 历史引用归档（Batch 75 审计补录，不计入 Open/Closed 统计）
@@ -385,10 +392,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 23 (含 4 个 P0 blocking；其中 16 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 22 (含 4 个 P0 blocking；其中 16 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 131（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 154（另有 13 条历史补录不计入）
+- **Closed**: 133（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Total**: 155（另有 13 条历史补录不计入）
 
 ## 维护约定
 
