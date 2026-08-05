@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 94: AI 产物批量审核/采纳，C26KB-C3/C91-1/C92-1 关闭，PR #131)
+**最后更新**: 2026-08-05 (Batch 95: 后续小项消化，C91-2/C93-1 关闭 + konfi 解锁登记，PR #132)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -22,11 +22,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
-### batch-93 — 响应式回归常驻 CI（Batch 93 Leader 条件）
+### batch-95 — 后续小项消化（Batch 95 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C93-1 | 响应式 E2E 定时任务合入后次日核对首次 cron 运行；连续 3 次失败需修复或暂停 | P2 | 2026-08-05 |
+| C95-1 | Test5 窗口开启后用 konfi 账号取 token 拉契约（补 C74-2）；admin-service 登录提供后一并完成 | P2 | 2026-08-05 |
+| C95-2 | iOS 真机（CP-C2/C84-1）今晚用户执行后登记结果并关闭或转缺陷 | P2 | 2026-08-05 |
+
+### batch-93 — 响应式回归常驻 CI（Batch 93 Leader 条件）
+
+> C93-1 已于 Batch 95 关闭（手动触发 workflow 运行成功，run 30986094838）。
 
 ### batch-92 — 蓝湖证据包审核 UI（Batch 92 Leader 条件）
 
@@ -35,10 +40,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ### batch-91 — Open 区收口（Batch 91 Leader 条件）
 
 > C91-1 已于 Batch 94 关闭（C26KB-C3 28/28 复测达标）；C91-2 保持 Open。
-
-| ID | 内容 | 优先级 | 创建日期 |
-|----|------|--------|---------|
-| C91-2 | search_service.py 模块 docstring 的 status 过滤文案与实际行为对齐（B91-Q2 顺手项） | P3 | 2026-08-05 |
+> C91-2 已于 Batch 95 关闭（search_service/vector_store docstring 对齐 + 49 测试通过）。
 
 ### batch-90 — 追踪器卫生审计（Batch 90 Leader 条件）
 
@@ -60,11 +62,11 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 解除条件 |
 |----|------|--------|---------|
-| CP-C2 | iOS 真机采集端到端验证 | P0 | 用户提供 iPhone（信任电脑 + USB 调试）与安装被测 App |
-| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2 |
+| CP-C2 | iOS 真机采集端到端验证 | P0 | 用户已承诺 2026-08-05 晚在家执行（iPhone 信任电脑 + USB 调试 + 被测 App） |
+| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（2026-08-05 晚） |
 | C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | P3 | 有带滚动/播放场景的设备可采样时执行 |
-| C74-2 | Test5 无契约服务契约补拉 | P2 | 用户提供 admin-service 登录 / konfi-service token |
-| C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 按外部前置条件清单解锁 |
+| C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供（2026-08-05 登记，待 VPN 窗口取 token 拉契约）；admin-service 登录仍待提供 |
+| C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 待提供 |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
 | C64-1 | V1 整体移除受覆盖矩阵门禁；B 档工具迁移/废弃 | P0 | 逐项迁移或用户批准废弃 |
 | C64-3 | 生产交付清单运维回填 + 拆仓边界校验 | P0 | 运维回填 DB/Redis/MQ 真实地址 |
@@ -77,7 +79,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | batch-18-C7 | 迁移 20260710_0017 staging 双向演练 | P2 | staging 可用后执行 |
 | C21-P1-5 | 迁移 20260710_0017 staging 双向演练 | P1 | staging 可用后执行 |
 | batch-18-C8 | 标注语料评估 diff classifier 基线 | P2 | 提供标注语料 |
-| C26KB-C3 | 知识中心 28 检查点通过率 ≥90% | P2 | 已关闭（Batch 94 补齐批量操作后 28/28），见 Closed 表 |
 ## In Progress (处理中)
 
 | ID | 内容 | 批次 | 分支 |
@@ -330,6 +331,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C91-1 | batch-94 落地批量审核/采纳 UI 后复测 C26KB-C3 | 随 C26KB-C3 关闭（28/28）；PR #131 | 2026-08-05 |
 | C92-1 | 与证据包页面审核统一「人工审核」交互范式 | 批量审核 Dialog 复用统一范式（C26KB-C3 同批）；PR #131 | 2026-08-05 |
 
+### Batch 95 — 后续小项消化
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C91-2 | search_service/vector_store docstring 与实现对齐 | Batch 95：两处 docstring 更新（不按 status 过滤，全状态检索语义）+ 知识检索测试 49/49；PR #132 | 2026-08-05 |
+| C93-1 | 响应式 E2E 定时任务首次运行核对 | Batch 95：手动触发 `responsive-e2e.yml`（run 30986094838）→ 双视口回归 job **success**；PR #132 | 2026-08-05 |
+
 ### Batch 63 — 遗留条件对账关闭
 
 | ID | 内容 | 合入方式 | 日期 |
@@ -357,10 +365,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 26 (含 4 个 P0 blocking；其中 18 项 Deferred；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 26 (含 4 个 P0 blocking；其中 17 项 Deferred + 2 项 C95；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 124（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 150（另有 13 条历史补录不计入）
+- **Closed**: 126（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Total**: 152（另有 13 条历史补录不计入）
 
 ## 维护约定
 
