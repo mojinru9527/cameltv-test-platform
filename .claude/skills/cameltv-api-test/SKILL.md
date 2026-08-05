@@ -1,13 +1,14 @@
 ---
 name: cameltv-api-test
-description: Use when asked to run, write, or debug API/interface tests — "运行接口测试", "执行API测试", "调试接口", "写接口用例", "API回归", "接口自动化". Covers v1 CLI tools (tp api), pytest suites, and GitHub Actions scheduled regression.
+description: Use when asked to run, write, or debug API/interface tests — "运行接口测试", "执行API测试", "调试接口", "写接口用例", "API回归", "接口自动化". Covers scripts/ci/api-regression.ps1, pytest suites, and GitHub Actions scheduled regression.
 ---
 
 # CamelTv API 测试
 
 ## Overview
 
-执行和编写 CamelTv 项目的 API/接口测试。覆盖测试平台 v1 CLI 工具（`tp api`）、v2 pytest 套件、GitHub Actions 定时回归。
+执行和编写 CamelTv 项目的 API/接口测试。覆盖自包含回归脚本（`scripts/ci/api-regression.ps1`）、v2 pytest 套件、GitHub Actions 定时回归。
+> ⚠️ v1（`test-platform/`）已于 Batch 100 退役；`tp api` 等命令不再存在，回归资产迁移至 `tests/api-testing/generated/`。
 
 **核心原则：每个接口至少覆盖入参校验、业务逻辑校验、返回值校验三类用例。**
 
@@ -22,7 +23,7 @@ description: Use when asked to run, write, or debug API/interface tests — "运
 
 | 工具 | 位置 | 用途 | 触发方式 |
 |------|------|------|---------|
-| `tp api` CLI | test-platform/ | v1 接口测试主命令 | 命令行 / CI |
+| `scripts/ci/api-regression.ps1` | scripts/ci/ | 自包含回归脚本（health/run/collect-elk） | 命令行 / CI |
 | pytest + httpx | test-platform-v2/backend/tests/ | v2 后端单元+集成测试 | `pytest` / Jenkins |
 | GitHub Actions | .github/workflows/api-regression.yml | 每日 API 回归 | 定时 02:03 UTC |
 | GitHub Actions | .github/workflows/prod-smoke-test.yml | 生产冒烟 | 定时 08:07 UTC |
@@ -38,24 +39,17 @@ description: Use when asked to run, write, or debug API/interface tests — "运
 
 ### 第 2 步：运行已有测试
 
-#### v1 CLI 方式
+#### 自包含回归脚本方式（v1 CLI 已退役，Batch 100）
 
 ```bash
-cd test-platform
-pip install -e .
-
 # 环境健康检查
-tp envcheck --env test
+pwsh scripts/ci/api-regression.ps1 health -BaseUrls "https://camelive-g3-test5.elelive.cn/,https://g3-test3.elelive.cn/"
 
 # 运行全部 API 测试
-tp api run --env test --report data/reports/api-report.xml
+pwsh scripts/ci/api-regression.ps1 run -BaseUrl "https://g3-test3.elelive.cn" -AuthToken $env:CAMELTV_AUTH_TOKEN -ReportDir "artifacts"
 
-# 按标签过滤（smoke / regression / critical）
-tp api run --env test --filter smoke
-
-# 运行特定模块
-tp api run --env test --module auth
-tp api run --env test --module project
+# 失败时收集 ELK traceId
+pwsh scripts/ci/api-regression.ps1 collect-elk -JunitPath "artifacts/api-test-junit.xml" -ElasticUrl $env:ELASTIC_URL
 ```
 
 #### v2 pytest 方式
@@ -101,11 +95,10 @@ python -m pytest tests/ -v \
 ### 第 4 步：分析测试结果
 
 ```bash
-# v1: 查看报告
-cd test-platform
-tp report show --file data/reports/api-report.xml
+# 查看 JUnit 报告（GitHub Actions artifact / 本地 artifacts/）
+# 直接打开 artifacts/api-test-junit.xml 或 JSON 结果
 
-# v2: pytest 输出
+# pytest 输出
 # 关注 FAILED、ERROR 标记，查看 traceback
 
 # 查看 Jenkins 报告
@@ -128,8 +121,8 @@ tp report show --file data/reports/api-report.xml
 
 ### GitHub Actions（自动）
 
-- **每日 API 回归**：`.github/workflows/api-regression.yml`，每日 02:03 UTC，运行 v1 CLI 全量 API 测试
-- **生产冒烟**：`.github/workflows/prod-smoke-test.yml`，每日 08:07 UTC，运行 smoke 标签用例
+- **每日 API 回归**：`.github/workflows/api-regression.yml`，每日 02:03 UTC，运行 `scripts/ci/api-regression.ps1` + Playwright API 用例（`tests/api-testing/generated/`）
+- **生产冒烟**：`.github/workflows/prod-smoke-test.yml`，每日 08:07 UTC，同上（只读 API 用例）
 
 ### Jenkins（自动）
 
@@ -140,11 +133,7 @@ tp report show --file data/reports/api-report.xml
 
 ```bash
 # 模拟 CI 环境
-cd test-platform
-tp api run --env test --report data/reports/api-ci-test.xml
-
-# 查看摘要
-tp report summary --file data/reports/api-ci-test.xml
+pwsh scripts/ci/api-regression.ps1 run -BaseUrl "https://g3-test3.elelive.cn" -AuthToken $env:CAMELTV_AUTH_TOKEN -ReportDir "artifacts"
 ```
 
 ## 测试数据管理

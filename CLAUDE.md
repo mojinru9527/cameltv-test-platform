@@ -24,7 +24,7 @@ related: ["test-platform-v2/CLAUDE.md", "docs/adr/README.md", "COMMANDS.md"]
 | 路径 | 模块 | 技术栈 | 状态 | 说明 |
 |------|------|--------|------|------|
 | [test-platform-v2/](test-platform-v2/CLAUDE.md) | 测试平台 v2 主力 | FastAPI + React 18 | **活跃开发** | 前后端分离，RBAC，AI 驱动 |
-| [test-platform/](test-platform/CLAUDE.md) | 测试平台 v1 旧版 | FastAPI + React 18 | 维护模式 | 单体架构，CLI 工具套件 |
+| ~~test-platform/~~ | 测试平台 v1 旧版 | FastAPI + React 18 | ✅ 已退役（Batch 100） | 整体移除；API 回归资产迁移至 tests/api-testing/ |
 | [lanhu-mcp/](lanhu-mcp/CLAUDE.md) | 蓝湖 MCP 服务 | FastMCP + Playwright | 稳定 | 桥接蓝湖原型与 AI 编码助手 |
 | [tests/](tests/CLAUDE.md) | 测试资产 | Markdown + Playwright | 持续积累 | 功能用例 + API 测试 + 自动化 |
 | [deploy/](deploy/CLAUDE.md) | CI/CD 部署 | Jenkins + Docker + GitHub Actions | 稳定 | 11 阶段 Pipeline |
