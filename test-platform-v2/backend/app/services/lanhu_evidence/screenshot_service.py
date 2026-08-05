@@ -83,6 +83,21 @@ class CaptureResult:
     error: str = ""
 
 
+def capture_local_image(image_path: Path) -> CaptureResult:
+    """设计图板原图证据：单段直采，免浏览器往返（C87-1）。"""
+    try:
+        digest = _sha256_file(image_path)
+    except Exception:  # noqa: BLE001 — 摘要缺失不阻断证据
+        digest = ""
+    return CaptureResult(
+        segments=[CaptureSegment(
+            path=image_path, scroll_top=0, viewport_height=0, sha256=digest,
+        )],
+        scroll_height=0,
+        viewport_height=0,
+    )
+
+
 _METRICS_JS = """() => ({
     scrollHeight: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
     clientHeight: window.innerHeight,

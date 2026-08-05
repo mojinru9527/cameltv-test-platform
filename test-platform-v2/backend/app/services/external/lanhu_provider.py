@@ -10,6 +10,7 @@ Wiki 编译流水线统一复用。ai_service 通过 `from ... import _extract_l
 from __future__ import annotations
 
 import asyncio
+import html
 import hashlib
 import inspect
 import logging
@@ -332,32 +333,14 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
             url_version_id = params.get("version_id", "")
             effective_url = url
 
-            # ── Handle project-level URLs (no docId) ──
+            # ── Handle project-level URLs (no docId) — 共享 helper（C87-1）──
             if not doc_id:
-                team_id = params.get("team_id", "")
-                project_id = params.get("project_id", "")
-                logger.info("[ai_service] No docId in URL (tid=%s..., pid=%s...)", team_id[:8], project_id[:8])
-                # Try to auto-discover the first document in the project
                 try:
-                    resp = await extractor.client.get(
-                        f"https://lanhuapp.com/api/project/images"
-                        f"?project_id={project_id}&team_id={team_id}"
-                        f"&dds_status=1&position=1&show_cb_src=1&comment=1"
-                    )
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        if data.get("code") == "00000":
-                            images = data.get("data", {}).get("images", [])
-                            if images:
-                                doc_id = images[0].get("id")
-                                doc_name_hint = images[0].get("name", "")
-                                logger.info("[ai_service] Auto-selected document: '%s' (id=%s...) from %d available", doc_name_hint, doc_id[:16], len(images))
-                                sep = "&" if "?" in url.split("#")[-1] else "?"
-                                effective_url = f"{url}{sep}docId={doc_id}"
-                                params = extractor.parse_url(effective_url)
-                                doc_id = params["doc_id"]
-                except Exception:
-                    pass  # Fall through to error message below
+                    effective_url, doc_id = await _resolve_project_doc(url, extractor)
+                    params = extractor.parse_url(effective_url)
+                    url_version_id = params.get("version_id", "")
+                except ValueError:
+                    pass  # Fall through to the detailed error message below
 
                 if not doc_id:
                     raise ValueError(
@@ -754,6 +737,142 @@ def parse_lanhu_ids(url: str) -> tuple[str, str, str]:
 _parse_url_ids = parse_lanhu_ids
 
 
+async def _resolve_project_doc(url: str, extractor) -> tuple[str, str]:
+    """项目级蓝湖链接（仅 tid+pid，无 docId）→ 自动发现首个设计文档。
+
+    Returns (effective_url, doc_id)：effective_url 为原链接追加 docId 后的可下载
+    URL。项目内无文档或接口异常时抛 ValueError（明确提示，而非「缺少 docId」）。
+    供需求提取 `_extract_lanhu_content` 与证据包 `get_lanhu_pages_for_evidence`
+    共享，保证两条链路行为一致（C87-1）。
+    """
+    params = extractor.parse_url(url)
+    team_id = params.get("team_id", "")
+    project_id = params.get("project_id", "")
+    if not project_id:
+        raise ValueError(
+            "蓝湖链接缺少项目 ID（pid），请在蓝湖打开具体设计稿后复制含 docId 的链接"
+        )
+    logger.info(
+        "[lanhu_provider] No docId in URL (tid=%s..., pid=%s...)",
+        str(team_id)[:8], str(project_id)[:8],
+    )
+    try:
+        resp = await extractor.client.get(
+            "https://lanhuapp.com/api/project/images"
+            f"?project_id={project_id}&team_id={team_id}"
+            "&dds_status=1&position=1&show_cb_src=1&comment=1"
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            if data.get("code") == "00000":
+                images = data.get("data", {}).get("images", [])
+                if images:
+                    doc_id = str(images[0].get("id") or "")
+                    doc_name_hint = str(images[0].get("name") or "")
+                    sep = "&" if "?" in url.split("#")[-1] else "?"
+                    effective_url = f"{url}{sep}docId={doc_id}"
+                    logger.info(
+                        "[lanhu_provider] Auto-selected document: '%s' (id=%s...)",
+                        doc_name_hint, doc_id[:16],
+                    )
+                    return effective_url, doc_id
+    except Exception as exc:  # noqa: BLE001 — 统一转为明确错误
+        logger.warning("[lanhu_provider] project images discovery failed: %s", exc)
+    raise ValueError(
+        "蓝湖项目内未发现设计文档，请在蓝湖打开具体设计稿后复制含 docId 的链接"
+    )
+
+
+async def _get_design_board_pages(url: str, extractor, resource_dir: str) -> dict | None:
+    """设计图板项目（项目级链接，无 docId）→ 下载全部设计图 + 批注卡为证据页面。
+
+    `/api/project/images` 返回项目设计图板：type=image 为设计图（url 直链下载），
+    type=card 为批注卡（文字在 name 字段）。设计图以原图文件作为证据页；
+    批注卡写成本地 HTML 页（保留真实批注文字），统一走截图/OCR/质量门禁。
+    项目内无下载设计图时返回 None，交由文档发现流程处理。
+    """
+    params = extractor.parse_url(url)
+    project_id = params.get("project_id")
+    team_id = params.get("team_id")
+    if not project_id or not team_id:
+        return None
+    resp = await extractor.client.get(
+        "https://lanhuapp.com/api/project/images"
+        f"?project_id={project_id}&team_id={team_id}"
+        "&dds_status=1&position=1&show_cb_src=1&comment=1"
+    )
+    if resp.status_code != 200:
+        return None
+    data = resp.json()
+    if data.get("code") != "00000":
+        return None
+    images = (data.get("data") or {}).get("images") or []
+    image_items = [im for im in images if im.get("type") == "image" and im.get("url")]
+    if not image_items:
+        return None
+
+    logger.info(
+        "[lanhu_provider] Design board discovered: %d images, %d cards (pid=%s...)",
+        len(image_items),
+        sum(1 for im in images if im.get("type") == "card"),
+        str(project_id)[:8],
+    )
+    board_dir = Path(resource_dir) / "design"
+    board_dir.mkdir(parents=True, exist_ok=True)
+    pages: list[dict] = []
+    for order, im in enumerate(image_items):
+        image_id = str(im.get("id") or f"img-{order:03d}")
+        image_name = str(im.get("name") or image_id)
+        local = board_dir / f"{image_id}.png"
+        try:
+            resp_img = await extractor.client.get(str(im.get("url")))
+            if resp_img.status_code == 200 and resp_img.content:
+                local.write_bytes(resp_img.content)
+        except Exception as exc:  # noqa: BLE001 — 单图失败不阻断整板
+            logger.warning("[lanhu_provider] design image download failed %s: %s", image_id[:12], exc)
+        pages.append({
+            "id": image_id,
+            "name": image_name,
+            "path": f"设计图板/{image_name}",
+            "folder": "设计图板",
+            "filename": local.name,
+            "local_url": local.as_uri() if local.exists() else "",
+        })
+
+    card_dir = Path(resource_dir) / "cards"
+    card_dir.mkdir(parents=True, exist_ok=True)
+    for order, card in enumerate(images):
+        if card.get("type") != "card":
+            continue
+        card_id = str(card.get("id") or f"card-{order:03d}")
+        text = str(card.get("name") or "").strip()
+        if not text:
+            continue
+        html_path = card_dir / f"{card_id}.html"
+        html_path.write_text(
+            "<!DOCTYPE html><html><head><meta charset='utf-8'>"
+            "<style>body{font-family:sans-serif;padding:24px;"
+            "white-space:pre-wrap;font-size:16px;line-height:1.6;}</style>"
+            f"</head><body>{html.escape(text)}</body></html>",
+            encoding="utf-8",
+        )
+        pages.append({
+            "id": card_id,
+            "name": text[:40],
+            "path": f"设计批注/{text[:40]}",
+            "folder": "设计批注",
+            "filename": html_path.name,
+            "local_url": html_path.as_uri(),
+        })
+
+    return {
+        "status": "success",
+        "resource_dir": str(resource_dir),
+        "document_name": "蓝湖设计图板",
+        "pages": pages,
+    }
+
+
 def build_immutable_version(doc_id: str, version_id: str, page_id: str | None) -> str:
     """构建标准化的蓝湖 immutable_version。
 
@@ -860,13 +979,25 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
             params = extractor.parse_url(url)
             doc_id = params.get("doc_id", "")
             url_version_id = params.get("version_id", "")
+            effective_url = url
             if not doc_id:
-                raise ValueError("蓝湖链接缺少 docId，请复制具体设计稿页面链接")
+                # C87-1: 项目级链接（仅 tid+pid）→ 优先设计图板（原图下载+OCR）
+                project_id = params.get("project_id", "")
+                board = await _get_design_board_pages(
+                    url, extractor,
+                    str(_data_dir() / f"design_board_{str(project_id)[:8]}"),
+                )
+                if board is not None:
+                    return board
+                # 无设计图板 → 文档自动发现
+                effective_url, doc_id = await _resolve_project_doc(url, extractor)
+                params = extractor.parse_url(effective_url)
+                url_version_id = params.get("version_id", "")
 
             resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
             download_result = await _download_lanhu_resources(
                 extractor,
-                url,
+                effective_url,
                 resource_dir,
                 url_version_id,
                 params.get("page_id", ""),
@@ -875,7 +1006,7 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
             if download_result.get("status") in ("downloaded", "updated"):
                 runtime.fix_html_files(resource_dir)
 
-            pages_info = await extractor.get_pages_list(url)
+            pages_info = await extractor.get_pages_list(effective_url)
             document_name = pages_info.get("document_name", "设计稿")
 
             pages: list[dict] = []

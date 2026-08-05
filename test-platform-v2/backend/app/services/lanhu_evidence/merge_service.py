@@ -9,6 +9,15 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+_XML_INVALID_RE = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]")
+
+
+def sanitize_evidence_text(text: str) -> str:
+    """去除 XML 非法字符（NUL/控制字符），防止 .docx 导出失败（C87-1 设计图板证据）。"""
+    if not text:
+        return ""
+    return _XML_INVALID_RE.sub("", text)
+
 
 def normalize_text(text: str) -> str:
     """去除多余空白与空行，保持可读的多行结构。"""

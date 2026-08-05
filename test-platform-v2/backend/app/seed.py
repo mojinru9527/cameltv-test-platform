@@ -181,13 +181,46 @@ _ACTIONS = [
 
 # 测试人员可见的菜单子集
 _TESTER_ACTIONS = {
+    # 用例服务（B87-Q1 核心缺口）
+    "testcase:list", "testcase:detail", "testcase:create", "testcase:update",
+    "testcase:delete", "testcase:export",
+    # 测试计划
+    "testplan:list", "testplan:detail", "testplan:create", "testplan:update",
+    "testplan:delete", "testplan:execute",
+    # 报告中心（删除留管理员）
+    "report:list", "report:detail", "report:create",
+    # 定时任务
+    "schedule:list", "schedule:create", "schedule:update", "schedule:delete",
+    "schedule:trigger",
+    # 缺陷管理（删除留管理员）
+    "defect:list", "defect:detail", "defect:create", "defect:update",
+    # 需求文档（上传/生成/导入）
+    "requirement:upload", "requirement:generate", "requirement:import",
+    # 测试数据集
+    "dataset:list", "dataset:create", "dataset:update", "dataset:delete",
+    # 用例评审
+    "review:submit", "review:approve",
+    # 版本测试任务（删除与 AI 生成留管理员）
+    "mission:list", "mission:detail", "mission:create", "mission:update",
+    "mission:log",
+    # 通知配置
+    "notify:list", "notify:manage",
+    # UI 自动化（生产触发留管理员）
+    "uitest:list", "uitest:detail", "uitest:create", "uitest:update",
+    "uitest:delete", "uitest:trigger",
+    # 专项测试
+    "avcheck:list", "avcheck:detail", "avcheck:create", "avcheck:delete",
+    "avcheck:trigger",
+    # 接口测试（保留；生产执行留管理员）
     "apitest:execute", "apitest:view", "apitest:import", "apitest:generate",
     "apitest:task", "apitest:asset_manage",
-    "schedule:list",
+    # 知识 / Wiki / Agent（只读视角；管理/审核留管理员）
     "knowledge:view",
     "agent:view", "agent:list",
     "wiki:view", "wiki:diff",
+    # 蓝湖证据包（采集可发起；导入/审核留管理员）
     "lanhu_evidence:view", "lanhu_evidence:run",
+    # 性能监控
     "perftest:list", "perftest:create", "perftest:delete", "perftest:execute", "perftest:report",
 }
 

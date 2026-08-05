@@ -50,6 +50,23 @@ def test_capture_marks_truncated_when_max_segments_cannot_reach_last_position():
     assert plan.positions == [0, 850, 1700]
 
 
+def test_capture_local_image_returns_single_segment_with_sha256():
+    """设计图板原图直采：单段证据 + 摘要（C87-1）。"""
+    import tempfile
+    from pathlib import Path
+
+    from app.services.lanhu_evidence.screenshot_service import capture_local_image
+
+    with tempfile.TemporaryDirectory() as td:
+        img = Path(td) / "design.png"
+        img.write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 64)
+        result = capture_local_image(img)
+        assert len(result.segments) == 1
+        assert result.segments[0].path == img
+        assert result.segments[0].sha256
+        assert result.error == ""
+
+
 def test_capture_plan_not_truncated_when_last_position_reaches_bottom():
     from app.services.lanhu_evidence.screenshot_service import capture_plan
 
