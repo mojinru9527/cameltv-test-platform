@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 91: Open 区收口，C90-1/C90-2/C21-P3/batch-18-C14 关闭，PR #128)
+**最后更新**: 2026-08-05 (Batch 92: 蓝湖证据包审核 UI 产品化，PR #129)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -21,6 +21,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Open (待处理)
+
+### batch-92 — 蓝湖证据包审核 UI（Batch 92 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C92-1 | batch-94 落地 AI 产物批量审核/采纳 UI 时，与证据包页面审核统一「人工审核」交互范式（复用 JobDetail 审核 Dialog 模式） | P3 | 2026-08-05 |
 
 ### batch-91 — Open 区收口（Batch 91 Leader 条件）
 
@@ -338,10 +344,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 27 (含 4 个 P0 blocking；其中 18 项 Deferred + 2 项 C91 新增；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 28 (含 4 个 P0 blocking；其中 18 项 Deferred + C91/C92 新增；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
 - **Closed**: 121（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 148（另有 13 条历史补录不计入）
+- **Total**: 149（另有 13 条历史补录不计入）
 
 ## 维护约定
 
