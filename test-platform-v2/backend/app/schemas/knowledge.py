@@ -100,6 +100,17 @@ class ArtifactImportRequest(BaseModel):
     comment: str = ""
 
 
+class ArtifactBatchReviewRequest(BaseModel):
+    """批量审核 AI 产物（采纳/驳回）。"""
+    ids: list[int]
+    comment: str = ""
+
+
+class ArtifactBatchImportRequest(BaseModel):
+    """批量导入审核通过的 AI 用例产物。"""
+    ids: list[int]
+
+
 # ── AgentRun ──
 
 class AgentRunOut(BaseModel):

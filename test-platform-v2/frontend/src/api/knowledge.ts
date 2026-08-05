@@ -144,6 +144,26 @@ export async function importArtifact(id: number): Promise<{ case_id: number }> {
   return api.post(`/knowledge/ai-artifacts/${id}/import-to-test-cases`, { comment: '' })
 }
 
+export async function batchApproveArtifacts(
+  ids: number[],
+  comment?: string,
+): Promise<{ approved: number[]; missing: number[] }> {
+  return api.post('/knowledge/ai-artifacts/batch-approve', { ids, comment: comment ?? '' })
+}
+
+export async function batchRejectArtifacts(
+  ids: number[],
+  comment?: string,
+): Promise<{ rejected: number[]; missing: number[] }> {
+  return api.post('/knowledge/ai-artifacts/batch-reject', { ids, comment: comment ?? '' })
+}
+
+export async function batchImportArtifacts(
+  ids: number[],
+): Promise<{ imported: Array<{ artifact_id: number; case_id: number }> }> {
+  return api.post('/knowledge/ai-artifacts/batch-import', { ids })
+}
+
 // ── M6 迭代知识包 ──
 
 export async function fetchIterations(params: {
