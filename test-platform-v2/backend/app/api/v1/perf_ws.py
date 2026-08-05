@@ -118,26 +118,32 @@ async def _collect_loop(session_id: int, ws: WebSocket, planned_duration_s: int)
             if planned_duration_s > 0 and elapsed >= planned_duration_s:
                 break
 
-            try:
-                # 调用 SoloX 单次采样（在线程池中运行，避免阻塞事件循环）
-                loop = asyncio.get_event_loop()
-                snapshot = await loop.run_in_executor(
-                    None,
-                    collector.collect_single_snapshot,
-                    device_id, pkg_name, platform,
-                )
-            except collector.CollectorUnavailableError as exc:
-                collection_error = str(exc)
+            # 调用 SoloX 单次采样（在线程池中运行，避免阻塞事件循环）
+            loop = asyncio.get_event_loop()
+            snapshot = None
+            last_error: Exception | None = None
+            # 无线 adb / USB 瞬时断开会令单次采样抛错；重试 5 次（间隔 3s）后再判失败
+            for attempt in range(5):
+                try:
+                    snapshot = await loop.run_in_executor(
+                        None,
+                        collector.collect_single_snapshot,
+                        device_id, pkg_name, platform,
+                    )
+                    break
+                except Exception as exc:
+                    last_error = exc
+                    logger.warning(
+                        "Snapshot %d attempt %d failed for session %d: %s",
+                        sample_count, attempt + 1, session_id, exc,
+                    )
+                    await asyncio.sleep(3)
+            if snapshot is None:
+                collection_error = f"真实性能采集失败: {last_error}"
                 logger.error(
                     "Performance collector unavailable for session %d: %s",
-                    session_id,
-                    exc,
+                    session_id, collection_error,
                 )
-                await ws.send_json({"type": "error", "detail": collection_error})
-                break
-            except Exception as exc:
-                logger.warning("Snapshot %d failed for session %d: %s", sample_count, session_id, exc)
-                collection_error = f"真实性能采集失败: {exc}"
                 await ws.send_json({"type": "error", "detail": collection_error})
                 break
 

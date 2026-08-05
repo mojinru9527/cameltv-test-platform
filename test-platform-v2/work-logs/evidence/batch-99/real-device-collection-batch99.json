@@ -1,0 +1,387 @@
+{
+  "captured_at": "2026-08-05T20:58:46+0800",
+  "device": {
+    "device_id": "dcd8891f",
+    "device_name": "PEDM00",
+    "device_model": "PEDM00",
+    "platform": "Android",
+    "os_version": "Android 14",
+    "status": "online",
+    "installed_apps": []
+  },
+  "session": {
+    "id": 8,
+    "session_id": "PERF-20260805-008",
+    "device_id": "dcd8891f",
+    "device_name": "",
+    "device_model": "",
+    "platform": "Android",
+    "pkg_name": "com.camelrn",
+    "metrics": "cpu,memory,fps,jank,battery,network",
+    "status": "pending",
+    "duration": 300,
+    "actual_duration_s": 0,
+    "summary_json": "{}",
+    "error_message": "",
+    "creator_id": 1,
+    "created_at": "2026-08-05T12:58:02.840679",
+    "started_at": null,
+    "ended_at": null
+  },
+  "stream_messages": [
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-008",
+      "timestamp": 1785934687.227462,
+      "elapsed_s": 4.4,
+      "sample_index": 0,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 7.42,
+          "systemCpuRate": 12.23
+        },
+        "memory": {
+          "total": 204.54,
+          "swap": 0.25
+        },
+        "fps": {
+          "fps": 59,
+          "jank": 51,
+          "refresh_ns": 8333333.0,
+          "frame_count": 125,
+          "layer": "com.camelrn/com.camelrn.MainActivity#709"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 33.4
+        },
+        "network": {
+          "send": 0.46,
+          "recv": 0.43
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-008",
+      "timestamp": 1785934692.2709188,
+      "elapsed_s": 9.4,
+      "sample_index": 1,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 12.74,
+          "systemCpuRate": 24.46
+        },
+        "memory": {
+          "total": 345.15,
+          "swap": 0.12
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.camelrn/com.camelrn.MainActivity#709"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 33.4
+        },
+        "network": {
+          "send": 3.08,
+          "recv": 12.05
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-008",
+      "timestamp": 1785934697.1488168,
+      "elapsed_s": 14.3,
+      "sample_index": 2,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 18.66,
+          "systemCpuRate": 33.06
+        },
+        "memory": {
+          "total": 433.24,
+          "swap": 0.12
+        },
+        "fps": {
+          "fps": 117,
+          "jank": 2,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.camelrn/com.camelrn.MainActivity#709"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 33.4
+        },
+        "network": {
+          "send": 0.0,
+          "recv": 0.0
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-008",
+      "timestamp": 1785934702.39925,
+      "elapsed_s": 19.5,
+      "sample_index": 3,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 14.89,
+          "systemCpuRate": 32.65
+        },
+        "memory": {
+          "total": 451.09,
+          "swap": 0.12
+        },
+        "fps": {
+          "fps": 91,
+          "jank": 3,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.camelrn/com.camelrn.MainActivity#709"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 33.5
+        },
+        "network": {
+          "send": 11.54,
+          "recv": 11.09
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-008",
+      "timestamp": 1785934707.160719,
+      "elapsed_s": 24.3,
+      "sample_index": 4,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 13.7,
+          "systemCpuRate": 31.9
+        },
+        "memory": {
+          "total": 450.57,
+          "swap": 0.12
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.camelrn/com.camelrn.MainActivity#709"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 33.6
+        },
+        "network": {
+          "send": 0.17,
+          "recv": 0.0
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-008",
+      "timestamp": 1785934712.3893626,
+      "elapsed_s": 29.5,
+      "sample_index": 5,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 14.26,
+          "systemCpuRate": 30.92
+        },
+        "memory": {
+          "total": 461.19,
+          "swap": 0.12
+        },
+        "fps": {
+          "fps": 1,
+          "jank": 0,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.camelrn/com.camelrn.MainActivity#709"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 33.6
+        },
+        "network": {
+          "send": 0.0,
+          "recv": 0.0
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-008",
+      "timestamp": 1785934717.5986052,
+      "elapsed_s": 34.7,
+      "sample_index": 6,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 14.07,
+          "systemCpuRate": 31.04
+        },
+        "memory": {
+          "total": 473.04,
+          "swap": 0.12
+        },
+        "fps": {
+          "fps": 88,
+          "jank": 2,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.camelrn/com.camelrn.MainActivity#709"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 33.7
+        },
+        "network": {
+          "send": 0.0,
+          "recv": 0.0
+        }
+      }
+    },
+    {
+      "type": "metrics_snapshot",
+      "session_id": "PERF-20260805-008",
+      "timestamp": 1785934722.8216434,
+      "elapsed_s": 39.9,
+      "sample_index": 7,
+      "metrics": {
+        "events": [],
+        "cpu": {
+          "appCpuRate": 8.74,
+          "systemCpuRate": 14.64
+        },
+        "memory": {
+          "total": 464.11,
+          "swap": 0.12
+        },
+        "fps": {
+          "fps": 117,
+          "jank": 1,
+          "refresh_ns": 8333333.0,
+          "frame_count": 127,
+          "layer": "com.camelrn/com.camelrn.MainActivity#709"
+        },
+        "battery": {
+          "level": 82,
+          "temperature": 33.7
+        },
+        "network": {
+          "send": 0.51,
+          "recv": 0.0
+        }
+      }
+    },
+    {
+      "type": "session_end",
+      "session_id": "PERF-20260805-008",
+      "reason": "user_stop",
+      "total_samples": 8,
+      "duration_s": 40.5
+    }
+  ],
+  "total_points": 8,
+  "report": {
+    "session": {
+      "id": 8,
+      "session_id": "PERF-20260805-008",
+      "device_id": "dcd8891f",
+      "device_name": "",
+      "device_model": "",
+      "platform": "Android",
+      "pkg_name": "com.camelrn",
+      "metrics": "cpu,memory,fps,jank,battery,network",
+      "status": "completed",
+      "duration": 300,
+      "actual_duration_s": 40,
+      "summary_json": "{\"total_samples\": 8, \"computed_at\": \"2026-08-05T12:58:43.330474+00:00\"}",
+      "error_message": "",
+      "creator_id": 1,
+      "created_at": "2026-08-05T12:58:02.840679",
+      "started_at": "2026-08-05T12:58:02.850931",
+      "ended_at": "2026-08-05T12:58:43.329474"
+    },
+    "metrics": [
+      {
+        "metric_type": "cpu",
+        "unit": "%",
+        "samples": 8,
+        "mean": 13.06,
+        "median": 13.88,
+        "p95": 17.34,
+        "min_val": 7.42,
+        "max_val": 18.66,
+        "stddev": 3.55,
+        "threshold": 60.0,
+        "threshold_comparator": "<=",
+        "passed": true
+      },
+      {
+        "metric_type": "memory",
+        "unit": "MB",
+        "samples": 8,
+        "mean": 410.37,
+        "median": 450.83,
+        "p95": 469.91,
+        "min_val": 204.54,
+        "max_val": 473.04,
+        "stddev": 92.44,
+        "threshold": 512.0,
+        "threshold_comparator": "<=",
+        "passed": true
+      },
+      {
+        "metric_type": "fps",
+        "unit": "fps",
+        "samples": 8,
+        "mean": 59.38,
+        "median": 73.5,
+        "p95": 117.0,
+        "min_val": 1.0,
+        "max_val": 117.0,
+        "stddev": 51.66,
+        "threshold": 30.0,
+        "threshold_comparator": ">=",
+        "passed": true
+      },
+      {
+        "metric_type": "jank",
+        "unit": "次",
+        "samples": 8,
+        "mean": 7.38,
+        "median": 1.5,
+        "p95": 34.2,
+        "min_val": 0.0,
+        "max_val": 51.0,
+        "stddev": 17.66,
+        "threshold": 0.0,
+        "threshold_comparator": "<=",
+        "passed": false
+      }
+    ],
+    "anomalies": []
+  },
+  "startup_ms": 314,
+  "startup_raw": "Starting: Intent { cmp=com.camelrn/.MainActivity }\nStatus: ok\nLaunchState: COLD\nActivity: com.camelrn/.MainActivity\nTotalTime: 314\nWaitTime: 326\nComplete\n"
+}

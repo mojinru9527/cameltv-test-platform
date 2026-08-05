@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 98: CI 迁移 + V1 11 工具删除 + C64-3 关闭（prod 无法提供，以 test 为准），PR #136)
+**最后更新**: 2026-08-06 (Batch 99: 安卓双视频场景各 10 分钟采集完成（C84-2 关闭）+ 采集器三处修复 + C99-1 性能采集优化标记；iOS 阻塞原因更新为 solox 缺 iOS 26.5 DeviceSupport，PR #137)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -27,6 +27,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C96-1 | C27-C1~C4 四项验证在本地全栈（staging 替代）执行，数据/性能测量就绪后逐项关闭（V1 工具删除已于 Batch 98 完成） | P1 | 2026-08-05 |
+
+### batch-99 — 性能采集功能优化（Batch 99 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C99-1 | **性能采集功能需要优化**：①采样周期并行化（当前 10–55s/点 → 目标 ≤2s）；②jank 视频帧率口径（30fps 视频在 120Hz 屏误报）；③多核 CPU 语义与阈值（当前如实上报 >100%）；④iOS 26.5 支持（solox DeviceSupport 缺失）；详见 `test-platform-v2/docs/改进任务backlog.md` Epic PERF-OPT | P2 | 2026-08-06 |
 
 ### batch-95 — 后续小项消化（Batch 95 Leader 条件）
 
@@ -68,9 +74,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 解除条件 |
 |----|------|--------|---------|
-| CP-C2 | iOS 真机采集端到端验证 | P0 | 用户已承诺 2026-08-05 晚在家执行（iPhone 信任电脑 + USB 调试 + 被测 App） |
-| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（2026-08-05 晚） |
-| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | P3 | 有带滚动/播放场景的设备可采样时执行 |
+| CP-C2 | iOS 真机采集端到端验证 | P0 | 用户已连接 iPhone（Apple 驱动已装，tidevice 可识别）；**阻塞：solox 缺 iOS 26.5 DeviceSupport（GitHub 404），平台 iOS 采集不可用**；解除条件：solox 支持该版本或提供受支持 iOS 设备 |
+| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（solox 支持后执行） |
 | C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
 | C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
@@ -365,6 +370,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C64-3 | 生产交付清单运维回填 + 拆仓边界校验 | prod 业务 DB/Redis **无法提供**（用户 2026-08-05），验收以 test 环境为准（同 C31-3 口径）；test DB/Redis 已回填（2026-08-04，`testdata5.elelive.cn`）；体育平台无 MQ（N/A）；拆仓边界校验 PASS（Batch 97/98）；PR #136 | 2026-08-05 |
 | C96-1（部分） | V1 工具实际删除 | 11 个工具目录删除 + CI 迁移（`api-regression`/`prod-smoke-test` 改自包含脚本 `scripts/ci/api-regression.ps1`，`tp` 命令 0 引用）；C27 四项验证仍 Open；PR #136 | 2026-08-05 |
 
+### Batch 99 — 真机性能验收（2026-08-05）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | 用户口径重定义后完成：场景 A Chrome 赛事视频流 600s（fps 85/CPU 3.55%/mem 182MB）；场景 B 小象直播间 600s 60 点（fps 31.2/CPU 386.65%/mem 795MB，用户确认画面）；证据 `test-platform-v2/work-logs/evidence/batch-99/real-device-{chrome-sports,app-live}-10min.json`；PR #137 | 2026-08-05 |
+| B99-P1 | Android 采集缺陷修复（fps/cpu/WS 重试） | SoloX Android 14 fps 解析崩溃 → 自实现 SurfaceFlinger 解析+图层选择；多进程 CPU 失真 → /proc 双采样多核不封顶；内存 → dumpsys PSS；无线断开中断 → 采集循环重试 5×3s + 客户端容忍关闭帧；性能模块测试 54 passed；PR #137 | 2026-08-05 |
+
 ---
 
 ## 历史引用归档（Batch 75 审计补录，不计入 Open/Closed 统计）
@@ -385,10 +397,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 23 (含 4 个 P0 blocking；其中 16 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 23 (含 4 个 P0 blocking；其中 15 项 Deferred + 2 项 C95 + 1 项 C96 + 1 项 C99；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 131（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 154（另有 13 条历史补录不计入）
+- **Closed**: 133（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Total**: 156（另有 13 条历史补录不计入）
 
 ## 维护约定
 
