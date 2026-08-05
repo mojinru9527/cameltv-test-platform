@@ -1,0 +1,8 @@
+{
+  "labeled_pairs": 10,
+  "expected_diffs": 9,
+  "matched_diffs": 9,
+  "false_positives": 0,
+  "recall": 1.0,
+  "precision": 1.0
+}
