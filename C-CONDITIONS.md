@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 99: Android 滚动 fps 真实采样（采集器缺陷修复）+ iOS 阻塞原因登记，C84-2 关闭，PR #137)
+**最后更新**: 2026-08-05 (Batch 99: 采集器 Android14 fps 缺陷修复 + 验收口径重定义为双视频场景（Chrome 赛事 / 小象直播间各 10 分钟），C84-2 待设备重连后执行，PR #137)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -70,7 +70,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | CP-C2 | iOS 真机采集端到端验证 | P0 | 用户已连接 iPhone；**阻塞：Windows 主机缺 Apple Mobile Device 驱动（tidevice 连 usbmux 被拒，无 iTunes/Apple 服务）**；解除条件：安装 iTunes/Apple Devices 驱动或改用 macOS 宿主后复测 |
 | C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（驱动安装后执行） |
-| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | P3 | 已关闭（Batch 99：滚动场景 fps 真实采样 mean 59.38/max 117，采集器 Android 14 缺陷已修复），见 Closed 表 |
+| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | P3 | 用户 2026-08-05 重定义验收口径：① Chrome/Safari 打开 www.camel1.tv 任选有视频流比赛观看 10 分钟；② 小象直播 App 任选直播间观看 10 分钟。滚动压测仅作辅助数据；Android 待设备重连后执行，iOS 待 Apple 驱动 |
 | C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
 | C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
@@ -369,7 +369,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
-| C84-2 | Android 采集复测（滚动/播放场景 fps 采样） | OPPO Find X3（PEDM00/Android 14）滚动场景真实采样：fps mean 59.38（min 1/max 117，120Hz）PASS + 启动 314ms；证据 `test-platform-v2/work-logs/evidence/batch-99/real-device-collection-batch99.json`；PR #137 | 2026-08-05 |
 | B99-P1 | Android 14 fps 恒 0 缺陷（SoloX 2.9.3 解析 `dumpsys SurfaceFlinger --latency` 的 `---- TIME:` 头崩溃） | 采集器自实现 SurfaceFlinger 解析（跳过头行、最近 1s 窗口 fps、2×刷新周期 jank）+ 图层选择（排除 InputSink/ActivityRecord）；`test_perf_fps_parser.py` 8/8；PR #137 | 2026-08-05 |
 
 ---
@@ -392,9 +391,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 22 (含 4 个 P0 blocking；其中 16 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 23 (含 4 个 P0 blocking；其中 16 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 133（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Closed**: 132（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
 - **Total**: 155（另有 13 条历史补录不计入）
 
 ## 维护约定

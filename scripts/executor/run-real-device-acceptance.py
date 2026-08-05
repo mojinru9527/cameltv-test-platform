@@ -1,13 +1,20 @@
-"""真机性能验收采集驱动（Android 滚动场景 E2E，Batch 99）。
+"""真机性能验收采集驱动（Batch 99 双视频场景版）。
 
-流程: 登录 → 取项目 → 创建设备会话 → start → 挂 WebSocket 采样流（同时 adb 驱动滚动）
-      → stop → 报告/指标 → 冷启动测量 → 落盘证据 JSON。
-运行: <venv-python> scripts/executor/run-real-device-acceptance.py --password <pw> [--backend-url ...]
+场景（--scenario）:
+  scroll        滚动压测（旧口径，仅作辅助数据）
+  chrome-sports 安卓 Chrome 打开 www.camel1.tv，任选一场有视频流的比赛观看 10 分钟
+  app-live      小象直播 App 任选一个视频流直播间观看 10 分钟
+
+流程: 登录 → 取项目 → 建会话 → start → WebSocket 采样（期间驱动目标视频场景）
+      → 到时长后 stop → 报告/指标 → 冷启动 → 落盘证据 JSON。
+运行: <venv-python> scripts/executor/run-real-device-acceptance.py --password <pw> --scenario chrome-sports [--duration 600]
 """
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
+import re
 import subprocess
 import threading
 import time
@@ -19,16 +26,58 @@ import websockets
 
 def adb_cmd(adb: str, device: str, *args: str) -> str:
     out = subprocess.run(
-        [adb, "-s", device, *args], capture_output=True, text=True, timeout=30,
+        [adb, "-s", device, *args], capture_output=True, text=True, timeout=60,
     )
     return out.stdout + out.stderr
+
+
+def _ui_dump(adb: str, device: str, local_path: Path) -> list[dict]:
+    """dump 当前 UI 层级并返回节点列表（text/bounds/clickable）。"""
+    adb_cmd(adb, device, "shell", "uiautomator", "dump", "/sdcard/ui.xml")
+    adb_cmd(adb, device, "pull", "/sdcard/ui.xml", str(local_path))
+    try:
+        import xml.etree.ElementTree as ET
+
+        tree = ET.parse(local_path)
+        nodes: list[dict] = []
+        for node in tree.iter("node"):
+            text = node.attrib.get("text", "") or ""
+            bounds = node.attrib.get("bounds", "")
+            clickable = node.attrib.get("clickable", "false") == "true"
+            if text.strip() or clickable:
+                nodes.append({
+                    "text": text.strip(),
+                    "bounds": bounds,
+                    "clickable": clickable,
+                    "class": node.attrib.get("class", ""),
+                })
+        return nodes
+    except Exception:
+        return []
+
+
+def _bounds_center(bounds: str) -> tuple[int, int] | None:
+    m = re.match(r"\[(\d+),(\d+)\]\[(\d+),(\d+)\]", bounds)
+    if not m:
+        return None
+    x1, y1, x2, y2 = map(int, m.groups())
+    return (x1 + x2) // 2, (y1 + y2) // 2
+
+
+def _tap_first(adb: str, device: str, nodes: list[dict], matcher) -> bool:
+    for node in nodes:
+        if matcher(node) and _bounds_center(node["bounds"]):
+            x, y = _bounds_center(node["bounds"])
+            adb_cmd(adb, device, "shell", "input", "tap", str(x), str(y))
+            print(f"[drive] tapped ({x},{y}) text='{node['text'][:40]}'", flush=True)
+            return True
+    return False
 
 
 def drive_scroll(adb: str, device: str, pkg: str, seconds: int) -> None:
     adb_cmd(adb, device, "shell", "am", "force-stop", pkg)
     adb_cmd(adb, device, "shell", "am", "start", "-n", f"{pkg}/.MainActivity")
     time.sleep(5)
-    # 连续 fling：纵向赛事列表 + 横向 LIVE 轮播交替，保持帧持续产生
     end = time.time() + seconds
     i = 0
     while time.time() < end:
@@ -44,6 +93,55 @@ def drive_scroll(adb: str, device: str, pkg: str, seconds: int) -> None:
         i += 1
 
 
+def drive_chrome_sports(adb: str, device: str, dump_path: Path) -> None:
+    """Chrome 打开 www.camel1.tv，任选一场有视频流的比赛（LIVE 卡片）进入。"""
+    chrome = "com.android.chrome"
+    adb_cmd(adb, device, "shell", "svc", "power", "stayon", "true")
+    adb_cmd(adb, device, "shell", "input", "keyevent", "KEYCODE_WAKEUP")
+    adb_cmd(adb, device, "shell", "am", "force-stop", chrome)
+    adb_cmd(adb, device, "shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", "https://www.camel1.tv", chrome)
+    time.sleep(14)
+    for attempt in range(3):
+        nodes = _ui_dump(adb, device, dump_path)
+        # 优先带 LIVE 徽标的赛事卡片；其次首屏赛事条目
+        live = [n for n in nodes if n["text"].upper() == "LIVE" or "LIVE" in n["text"].upper()]
+        clicked = _tap_first(adb, device, live, lambda n: True)
+        if not clicked:
+            match_cards = [
+                n for n in nodes
+                if n["clickable"] and n["bounds"].count("[") >= 2
+                and 500 <= _bounds_center(n["bounds"])[1] <= 1600
+            ]
+            clicked = _tap_first(adb, device, match_cards, lambda n: True)
+        if clicked:
+            break
+        adb_cmd(adb, device, "shell", "input", "swipe", "540", "1600", "540", "700", "400")
+        time.sleep(3)
+    time.sleep(8)  # 等待视频页加载/起播
+
+
+def drive_app_live(adb: str, device: str, pkg: str, dump_path: Path) -> None:
+    """小象直播 App：启动 → 进入任一直播间（视频流）。"""
+    adb_cmd(adb, device, "shell", "svc", "power", "stayon", "true")
+    adb_cmd(adb, device, "shell", "input", "keyevent", "KEYCODE_WAKEUP")
+    adb_cmd(adb, device, "shell", "am", "force-stop", pkg)
+    adb_cmd(adb, device, "shell", "monkey", "-p", pkg, "-c", "android.intent.category.LAUNCHER", "1")
+    time.sleep(12)
+    for attempt in range(3):
+        nodes = _ui_dump(adb, device, dump_path)
+        room_hits = [
+            n for n in nodes
+            if any(k in n["text"] for k in ("直播", "Live", "LIVE", "观看", "人"))
+            or (n["clickable"] and n["bounds"].count("[") >= 2)
+        ]
+        clicked = _tap_first(adb, device, room_hits, lambda n: True)
+        if clicked:
+            break
+        adb_cmd(adb, device, "shell", "input", "swipe", "540", "1600", "540", "700", "400")
+        time.sleep(3)
+    time.sleep(8)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--backend-url", default="http://127.0.0.1:8046/api/v1")
@@ -51,8 +149,9 @@ def main() -> int:
     ap.add_argument("--password", required=True)
     ap.add_argument("--adb", default=r"C:\Users\26029\AppData\Local\Android\Sdk\platform-tools\adb.exe")
     ap.add_argument("--device", default="dcd8891f")
-    ap.add_argument("--pkg", default="com.camelrn")
-    ap.add_argument("--drive-seconds", type=int, default=26)
+    ap.add_argument("--scenario", choices=["scroll", "chrome-sports", "app-live"], default="chrome-sports")
+    ap.add_argument("--app-pkg", default="")
+    ap.add_argument("--duration", type=int, default=600)
     ap.add_argument("--output-dir", default="test-platform-v2/work-logs/evidence/batch-99")
     args = ap.parse_args()
 
@@ -83,11 +182,11 @@ def main() -> int:
 
         create = client.post("/perf-sessions", headers=auth, json={
             "device_id": args.device,
-            "pkg_name": args.pkg,
+            "pkg_name": args.app_pkg or "com.android.chrome",
             "metrics": ["cpu", "memory", "fps", "jank", "battery", "network"],
         }).json()["data"]
         sid, ssid = create["id"], create["session_id"]
-        print(f"[session] created id={sid} session={ssid}", flush=True)
+        print(f"[session] created id={sid} session={ssid} scenario={args.scenario} duration={args.duration}s", flush=True)
 
         client.post(f"/perf-sessions/{sid}/start", headers=auth).raise_for_status()
         print("[session] started", flush=True)
@@ -98,41 +197,49 @@ def main() -> int:
             "X-Project-Id": str(project_id),
         }
         ws_url = base.replace("http://", "ws://") + f"/perf-sessions/{sid}/stream"
+        dump_path = Path(args.output_dir) / f"ui-{args.scenario}.xml"
+        dump_path.parent.mkdir(parents=True, exist_ok=True)
 
         samples: list[dict] = []
-        stop_ws = threading.Event()
 
-        async def stream() -> None:
+        if args.scenario == "scroll":
+            drive = threading.Thread(
+                target=drive_scroll, args=(args.adb, args.device, args.app_pkg or "com.camelrn", max(10, args.duration - 6))
+            )
+        elif args.scenario == "chrome-sports":
+            drive = threading.Thread(target=drive_chrome_sports, args=(args.adb, args.device, dump_path))
+        else:
+            pkg = args.app_pkg or "com.yiwuzhibo"
+            drive = threading.Thread(target=drive_app_live, args=(args.adb, args.device, pkg, dump_path))
+
+        async def run_collection() -> None:
             async with websockets.connect(ws_url, additional_headers=ws_headers) as ws:
-                while True:
+                drive.start()
+                deadline = time.time() + args.duration
+                while time.time() < deadline:
                     try:
-                        msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=40))
+                        msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
                     except asyncio.TimeoutError:
-                        break
+                        continue
                     samples.append(msg)
                     if msg.get("type") in ("session_end", "error"):
                         break
-                    if stop_ws.is_set() and msg.get("type") == "metrics_snapshot":
-                        await ws.send(json.dumps({"action": "stop"}))
-                        stop_ws.clear()
+                try:
+                    await ws.send(json.dumps({"action": "stop"}))
+                except Exception:
+                    pass
+                while True:
+                    try:
+                        msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
+                    except asyncio.TimeoutError:
+                        break
+                    samples.append(msg)
+                    if msg.get("type") == "session_end":
+                        break
+                drive.join(timeout=5)
 
-        import asyncio
-
-        drive_thread = threading.Thread(
-            target=drive_scroll, args=(args.adb, args.device, args.pkg, args.drive_seconds)
-        )
-        drive_thread.start()
-
-        async def runner() -> None:
-            task = asyncio.create_task(stream())
-            while drive_thread.is_alive():
-                await asyncio.sleep(1)
-            stop_ws.set()
-            await asyncio.sleep(2)
-            await task
-
-        asyncio.run(runner())
-        print(f"[stream] samples={len(samples)}", flush=True)
+        asyncio.run(run_collection())
+        print(f"[stream] messages={len(samples)}", flush=True)
 
         report = client.get(f"/perf-sessions/{sid}/report", headers=auth).json()["data"]
         for m in report.get("metrics", []):
@@ -144,32 +251,22 @@ def main() -> int:
         metrics = client.get(f"/perf-sessions/{sid}/metrics", headers=auth).json()["data"]
         print(f"[metrics] total_points={metrics['total_points']}", flush=True)
 
-        adb_cmd(args.adb, args.device, "shell", "am", "force-stop", args.pkg)
-        time.sleep(2)
-        startup_raw = adb_cmd(args.adb, args.device, "shell", "am", "start", "-W", "-n", f"{args.pkg}/.MainActivity")
-        total_time = 0
-        import re
-        m = re.search(r"TotalTime:\s*(\d+)", startup_raw)
-        if m:
-            total_time = int(m.group(1))
-        print(f"[startup] TotalTime={total_time}ms", flush=True)
-
         out_dir = Path(args.output_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         evidence = {
             "captured_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "scenario": args.scenario,
+            "duration_s": args.duration,
             "device": dev,
             "session": create,
             "stream_messages": samples,
             "total_points": metrics["total_points"],
             "report": report,
-            "startup_ms": total_time,
-            "startup_raw": startup_raw,
         }
-        evidence_path = out_dir / "real-device-collection-batch99.json"
+        evidence_path = out_dir / f"real-device-{args.scenario}.json"
         evidence_path.write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"[evidence] saved: {evidence_path}", flush=True)
-        print(f"SESSION={ssid} ID={sid}", flush=True)
+        print(f"SESSION={ssid} ID={sid} SCENARIO={args.scenario}", flush=True)
     return 0
 
 
