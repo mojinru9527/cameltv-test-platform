@@ -1,6 +1,6 @@
 # Batch 88 — Leader Verdict（C87-1/2/3）
 
-> **Leader (🎯)** | Date: 2026-08-05 | Decision: 有条件通过（C87-1 证据包运行中，收尾复测后 APPROVED）
+> **Leader (🎯)** | Date: 2026-08-05 | Decision: **APPROVED**（C87-1/2/3 全部闭环）
 
 ## 评审摘要
 
@@ -8,7 +8,7 @@
 |------|------|------|
 | 需求聚焦 | PASS | 完整批次（mode: full），三条件严格按 C-CONDITIONS 纳入，无范围蔓延 |
 | 实现质量 | PASS | RBAC seed 矩阵补齐 + 51 项测试锁定；蓝湖项目级链接共享 helper + 设计图板分支，测试 40/40 |
-| 证据 | PASS | C87-2 IMAP 真实收件、C87-3 全项目矩阵 + 行为验证、门禁全绿；C87-1 真实 OCR 页抽查通过 |
+| 证据 | PASS | C87-1 241+102 页真实证据包→OCR→需求/RAG/Wiki 全闭环；C87-2 IMAP 真实收件；C87-3 全项目矩阵 |
 | 诚实性 | PASS | 链接实际项目名（APP_UI/WEB_UI）如实记录；OCR 空页/PNG 二进制瑕疵不掩盖 |
 | 门禁 | PASS | ruff F821=0、pytest 1050、vitest 334、build OK、scan HARD=0、audit-cconditions 0 硬错 |
 | 风险 | 低 | C87-1 证据包耗时（模型加载 ~20s/页）；外部项无新增 |
@@ -30,8 +30,12 @@
 
 ## 判决
 
-**有条件通过**：代码、测试、门禁与 C87-2/C87-3 证据齐备。C87-1 两个真实证据包任务后台运行中（预计 2–3h）；
-完成后 QA 需补齐：质量门禁核对 → 无 OCR 页人工审核豁免 → 导入需求/RAG/Wiki → 溯源核对，再转 APPROVED 并进入一次总确认。
+**APPROVED**：代码、测试、门禁与三条件证据齐备——
+- C87-1：241+102 页真实证据包（截图+OCR）→ 质量门禁（24 页人工审核豁免）→ 需求/RAG/Wiki 导入闭环，清洗后 0 二进制垃圾
+- C87-2：SMTP 真实发送 + IMAP 真实收件
+- C87-3：tester 矩阵修复 + 全项目核验
+
+进入一次总确认：推送 `feature/batch-88-c87-lanhu-smtp-rbac` → Draft PR → required checks 全绿后合入 main。
 
 ## 下一批次 Leader 条件
 

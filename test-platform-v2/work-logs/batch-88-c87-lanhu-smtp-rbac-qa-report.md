@@ -6,7 +6,7 @@
 
 | 条件 | 通过 | 失败 | 阻塞 |
 |:-----|:----:|:----:|:----:|
-| C87-1 蓝湖项目级设计源证据包（Web/APP） | 1（代码+链路） | 0 | 1（job 运行中） |
+| C87-1 蓝湖项目级设计源证据包（Web/APP） | 2/2 全闭环 | 0 | 0 |
 | C87-2 SMTP 真实收发（plan_done + defect_assigned） | 2/2 | 0 | 0 |
 | C87-3 项目级 RBAC 全项目核验/修复 | 4/4 | 0 | 0 |
 | 门禁（ruff/pytest/vitest/build/scan/audit） | 全绿 | 0 | 0 |
@@ -27,7 +27,7 @@
 
 ## 逐条件验证
 
-### C87-1：蓝湖项目级设计源证据包 → OCR → RAG/Wiki（运行中）
+### C87-1：蓝湖项目级设计源证据包 → OCR → RAG/Wiki（✅ 闭环）
 
 **代码能力（已交付）**：
 - `lanhu_provider._resolve_project_doc`：项目级链接（仅 tid+pid）自动发现文档；需求提取与证据包两条链路共享（`_extract_lanhu_content` 重构复用）
@@ -36,13 +36,23 @@
 - `job_runner._dom_text_for`：仅解析 HTML，图片二进制不再混入 merged_text
 - 测试：`test_lanhu_provider.py` + `test_lanhu_screenshot_service.py` + `test_lanhu_evidence_worker.py` 全绿（40+7）
 
-**真实执行证据（job #1 Web 项目，运行中）**：
-- 发现页面：**241**（224 设计图 + 17 批注卡），captured/OCR 持续推进，failed=0
-- 抽查前 10 页：`capture=success ocr=success segs=1`，OCR 文本为真实设计内容（赛事回放入口 / 赛事回放详情 / 转账 / 骆驼币账户 / 充值结果 等）
-- 已知质量点：1 页 `bg切图` OCR unavailable（纯背景图）→ 收尾按设计走 `lanhu_evidence:review` 人工审核豁免；4 页 merged_text 含 PNG 二进制（修复已合入，运行中任务不回改，证据以 OCR 文本为准）
-- job #2（APP 项目）排队等待 #1 完成后执行
+**真实执行证据（job #1 Web 项目 241 页 / job #2 APP 项目 102 页，均完成）**：
 
-**待收尾**：job #1/#2 完成后：质量门禁（import_ready）→ 审核豁免无 OCR 页 → 导入需求/RAG/Wiki → 核对 Raw Source/知识源/追溯。
+| 项 | job 1（Web 项目） | job 2（APP 项目） |
+|----|-------------------|-------------------|
+| 发现页面 | 241（224 图 + 17 批注卡） | 102（设计图板） |
+| 捕获/OCR | 241 / 221 | 102 / 98 |
+| 无 OCR 页（人工审核豁免） | 20 | 4 |
+| 终态 | success | success |
+| 质量门禁 | import_ready=true | import_ready=true |
+| 需求文档 | 蓝湖证据包 1（65,050 字符） | 蓝湖证据包 2（50,455 字符） |
+| RAG 知识源 | source#2，241 chunks | source#3，102 chunks |
+| Wiki Raw Source | #1（65,028 字符） | #2（50,433 字符） |
+| 溯源 | evidence_job_id + source_ref + immutable_version | 同左 |
+
+- OCR 抽查为真实设计内容（赛事回放入口/骆驼币账户/充值结果/首页-PC 等），中文+英文混排识别
+- **数据质量修复**：预修复 DOM 提取把 PNG 二进制写入图片页 merged_text → `_dom_text_for` 修复 + `sanitize_evidence_text` 清洗 + `repair_evidence_imports` 重导（319 图片页清洗，旧产物删除后重导，Wiki/Chunks 二进制垃圾 0）
+- 版本 diff 对设计图板链接跳过（无 versionId，非致命，日志记录）
 
 ### C87-2：SMTP 真实收发（✅ 闭环）
 
@@ -67,7 +77,8 @@
 |---|:----:|------|------|
 | B88-Q1 | P3 | 设计图板 1 页纯背景图 OCR 为空（bg切图） | 收尾按设计人工审核豁免（lanhu_evidence:review） |
 | B88-Q2 | P3 | 用户链接 1/2 在蓝湖侧实际项目名分别为 APP_UI / WEB_UI（与用户标注相反） | 不影响采集；QA/Leader 向用户如实说明 |
-| B88-Q3 | P3 | 运行中证据任务 merged_text 含 PNG 二进制（4 页） | `_dom_text_for` 已修复（commit d3def0d），运行中任务不回改，OCR 文本为准 |
+| B88-Q3 | P3 | merged_text 含 PNG 二进制 NUL → Word 导出崩溃（job1/job2 导出阶段 failed） | 已修复：`sanitize_evidence_text` 文本清洗 + `resume_failed_job_in_new_session` 断点续跑（commit bd46f29/2ddd9dd），已捕获页面不重跑 OCR |
+| B88-Q4 | P3 | 设计图板 Word 导出嵌入 241 张大图，耗时 >15 分钟 | 记录为已知成本；后续批次评估设计图板跳过 docx 或限制截图嵌入 |
 
 ## CI 分层核对
 
