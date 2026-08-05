@@ -82,14 +82,15 @@
       ]
     },
     "deprecated-v1": {
-      "description": "测试平台 V1（单体遗留，已弃用）。V2 未覆盖的 CLI 工具迁移/废弃决策完成前不得整体移除",
+      "description": "测试平台 V1（单体遗留，已弃用）。11 个工具目录已于 Batch 98 删除（C64-1）；web-ui/server/cli 退役决策见 Batch 99",
       "paths": [
         "test-platform"
       ],
       "rules": [
         "禁止新增功能；只允许维护性修复或按批次执行的迁移/退役操作",
         "整体移除必须满足 docs/architecture/batch-64-architecture-analysis.md §4 覆盖矩阵的全部条件",
-        "web-ui/ 与 server/ 已确认被 V2 覆盖，可先于 tools/ 退役（仍走独立审计批次）"
+        "11 个工具目录（api_tester/api_diff/av_checker/data_factory/env_check/load_tester/log_aggregator/mock_server/project_init/report_dashboard/traffic_monitor）已于 Batch 98 删除",
+        "web-ui/ 与 server/ 已确认被 V2 覆盖，退役走 Batch 99 独立审计批次"
       ]
     }
   }

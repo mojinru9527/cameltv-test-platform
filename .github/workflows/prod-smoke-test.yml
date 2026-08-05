@@ -11,20 +11,27 @@ jobs:
     timeout-minutes: 15
     env:
       VPN_TUN_ADDR: ${{ secrets.VPN_TUN_ADDR }}
+      ELASTIC_API_KEY: ${{ secrets.ELASTIC_API_KEY }}
+      ELASTIC_URL: ${{ secrets.ELASTIC_URL }}
+      KIBANA_URL: ${{ secrets.KIBANA_URL }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install Dependencies
+      - name: Verify VPN + prod reachability
+        shell: pwsh
         run: |
-          cd test-platform
-          pip install -r requirements.txt
-          pip install -e .
+          if ([string]::IsNullOrWhiteSpace($env:VPN_TUN_ADDR)) { throw 'VPN_TUN_ADDR missing (vpn07 未配置)' }
+          pwsh scripts/ci/api-regression.ps1 health -BaseUrls "https://www.camel1.tv/,https://api.cameltv.live/"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright test deps
+        run: npm ci
+        working-directory: test-platform/tests/api-testing/generated
 
       - name: Refresh business token (prod)
         shell: pwsh
@@ -36,23 +43,31 @@ jobs:
         run: |
           $token = node tests/automation/ui/utils/fetch-auth-token.cjs
           if ([string]::IsNullOrWhiteSpace($token)) { throw 'prod token refresh failed' }
-          Add-Content -Path $env:GITHUB_ENV -Value "CAMELTV_PROD_AUTH_TOKEN<<EOF"
+          Add-Content -Path $env:GITHUB_ENV -Value "CAMELTV_AUTH_TOKEN<<EOF"
           Add-Content -Path $env:GITHUB_ENV -Value $token
           Add-Content -Path $env:GITHUB_ENV -Value "EOF"
 
-      - name: Verify VPN Connection
+      - name: Run Production Smoke (read-only API specs)
+        shell: pwsh
         run: |
-          cd test-platform
-          tp config show --env prod
-        # vpn07 不通会直接 fail fast (vpn07_check)
+          pwsh scripts/ci/api-regression.ps1 run `
+            -BaseUrl "https://api.cameltv.live" `
+            -AuthToken $env:CAMELTV_AUTH_TOKEN `
+            -ReportDir "$env:GITHUB_WORKSPACE/artifacts"
 
-      - name: Run Smoke Tests
-        run: |
-          cd test-platform
-          tp api run --env prod --filter smoke --report data/reports/prod-smoke-${{ github.run_number }}.xml
-
-      - name: Ingest Report
+      - name: Upload JUnit Artifact
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-smoke-${{ github.run_number }}
+          path: artifacts/api-test-junit.xml
+          if-no-files-found: warn
+
+      - name: ELK Trace Collection
+        if: failure()
+        shell: pwsh
         run: |
-          cd test-platform
-          tp report ingest --file data/reports/prod-smoke-${{ github.run_number }}.xml --build ${{ github.run_number }} --branch main --source api
+          pwsh scripts/ci/api-regression.ps1 collect-elk `
+            -JunitPath "$env:GITHUB_WORKSPACE/artifacts/api-test-junit.xml" `
+            -ElasticUrl $env:ELASTIC_URL `
+            -KibanaUrl $env:KIBANA_URL

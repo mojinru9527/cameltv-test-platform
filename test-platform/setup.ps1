@@ -33,7 +33,5 @@ Write-Host "自检:       tp config show --site camel1 --env prod"
 Write-Host ""
 Write-Host "仍需手动完成的外部依赖:" -ForegroundColor Yellow
 Write-Host "  1) Docker Desktop —— Mock Server(WireMock) 需要。安装后  docker pull wiremock/wiremock"
-Write-Host "  2) mitmproxy CA 证书 —— 抓 camel1.to 的 HTTPS 必需:"
-Write-Host "       先跑一次  tp capture --site camel1 --env prod  会启动 mitmproxy,"
-Write-Host "       浏览器访问 http://mitm.it 下载并安装对应平台证书到'受信任的根证书颁发机构'。"
+Write-Host "  2) 生产访问 —— 如需抓包，请自行安装 mitmproxy 并按需配置代理证书。"
 Write-Host "  3) 填写 .env 中各站点/环境的凭据与 UPSTREAM_PROXY(访问站点的上游代理地址)。"

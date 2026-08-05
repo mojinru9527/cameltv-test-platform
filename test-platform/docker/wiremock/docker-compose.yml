@@ -1,4 +1,4 @@
-# WireMock 容器。由 `tp mock up --site <site>` 注入环境变量后启动。
+# WireMock 容器（V1 mock_server 已随 Batch 98 删除；如需 WireMock 可手动使用本文件）。
 # 也可手动: MOCK_MAPPINGS=... MOCK_PORT=8080 docker compose up -d
 services:
   wiremock:

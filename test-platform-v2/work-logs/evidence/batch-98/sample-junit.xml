@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="sample" tests="2" failures="1">
+    <testcase name="ok-case" classname="sample" time="0.1"/>
+    <testcase name="fail-case" classname="sample" time="0.2">
+      <failure message="request failed">GET /camel-service/x 500 traceId: abc123def456</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -10,8 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from server.routes import (
-    config, envcheck, api_test, ui_auto, datafactory,
-    report, task_history, test_cases, test_plans, workspace,
+    config, ui_auto, report, task_history, test_cases, test_plans, workspace,
 )
 
 app = FastAPI(
@@ -39,10 +38,7 @@ app.add_middleware(
 
 # 注册路由 (v0.3.0)
 app.include_router(config.router, prefix="/api")
-app.include_router(envcheck.router, prefix="/api")
-app.include_router(api_test.router, prefix="/api")
 app.include_router(ui_auto.router, prefix="/api")
-app.include_router(datafactory.router, prefix="/api")
 app.include_router(report.router, prefix="/api")
 app.include_router(task_history.router, prefix="/api")
 app.include_router(test_cases.router, prefix="/api")

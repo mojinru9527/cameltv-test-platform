@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 96: V1 工具审计 + viewer 只读账号 + diff 基线，C31-2/C31-3/batch-18-C8 关闭，PR #133)
+**最后更新**: 2026-08-05 (Batch 98: CI 迁移 + V1 11 工具删除 + C64-3 关闭（prod 无法提供，以 test 为准），PR #136)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -26,7 +26,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C96-1 | C27-C1~C4 四项验证在本地全栈（staging 替代）执行，数据/性能测量就绪后逐项关闭；V1 工具实际删除在独立清理批次执行 | P1 | 2026-08-05 |
+| C96-1 | C27-C1~C4 四项验证在本地全栈（staging 替代）执行，数据/性能测量就绪后逐项关闭（V1 工具删除已于 Batch 98 完成） | P1 | 2026-08-05 |
 
 ### batch-95 — 后续小项消化（Batch 95 Leader 条件）
 
@@ -75,7 +75,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
 | C64-1 | V1 整体移除受覆盖矩阵门禁；B 档工具迁移/废弃 | P0 | B 档 11 工具已批准废弃（用户 2026-08-05，审计无引用），删除排清理批次；V1 web-ui/server 整体移除仍需覆盖矩阵 |
-| C64-3 | 生产交付清单运维回填 + 拆仓边界校验 | P0 | 口径已澄清（业务 DB/Redis/MQ=被测系统地址）；test DB/Redis 已回填（2026-08-05 用户提供）；体育平台无 MQ（N/A）；prod 地址待提供 |
 | C27-C1 | 模块树自动提取准确率 ≥70% | P1 | staging 替代已登记（test 环境 + 本地全栈）；执行待数据/性能测量（C96-1） |
 | C27-C2 | 图谱层级视图 200 节点渲染 <3s | P1 | 同上 |
 | C27-C3 | release_bundle 创建流程端到端 | P1 | 同上 |
@@ -359,6 +358,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | TPv2-B19-C1 | CategoryManagerDialog 补充 vitest 单元测试 | Batch 63 `CategoryManagerDialog.test.tsx` 7/7 | 2026-08-02 |
 | TPv2-B21-C2 | Knife4j doc.html URL 自动发现（load_openapi_spec） | Batch 63 复核：`apitest.py:_resolve_spec` 已实现；`test_openapi_import_knife4j.py` 9/9 | 2026-08-02 |
 
+### Batch 98 — CI 迁移 + V1 工具删除（2026-08-05）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C64-3 | 生产交付清单运维回填 + 拆仓边界校验 | prod 业务 DB/Redis **无法提供**（用户 2026-08-05），验收以 test 环境为准（同 C31-3 口径）；test DB/Redis 已回填（2026-08-04，`testdata5.elelive.cn`）；体育平台无 MQ（N/A）；拆仓边界校验 PASS（Batch 97/98）；PR #136 | 2026-08-05 |
+| C96-1（部分） | V1 工具实际删除 | 11 个工具目录删除 + CI 迁移（`api-regression`/`prod-smoke-test` 改自包含脚本 `scripts/ci/api-regression.ps1`，`tp` 命令 0 引用）；C27 四项验证仍 Open；PR #136 | 2026-08-05 |
+
 ---
 
 ## 历史引用归档（Batch 75 审计补录，不计入 Open/Closed 统计）
@@ -379,10 +385,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 24 (含 4 个 P0 blocking；其中 15 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 23 (含 4 个 P0 blocking；其中 16 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
-- **Closed**: 129（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 153（另有 13 条历史补录不计入）
+- **Closed**: 131（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
+- **Total**: 154（另有 13 条历史补录不计入）
 
 ## 维护约定
 
