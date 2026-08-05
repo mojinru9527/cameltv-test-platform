@@ -31,7 +31,7 @@ from app.models.lanhu_evidence import (
 )
 from app.services.lanhu_evidence import page_discovery, screenshot_service
 from app.services.lanhu_evidence.json_export_service import export_json
-from app.services.lanhu_evidence.merge_service import merge_page_text
+from app.services.lanhu_evidence.merge_service import merge_page_text, sanitize_evidence_text
 from app.services.lanhu_evidence.ocr_provider import get_ocr_provider
 from app.services.lanhu_evidence.quality_service import evaluate_job_quality
 from app.services.lanhu_evidence.word_export_service import WordPage, export_word
@@ -309,9 +309,9 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
                     local_url=discovered.local_url,
                     capture_status=capture_status,
                     ocr_status=ocr_status,
-                    dom_text=dom_text,
-                    ocr_text=ocr_text,
-                    merged_text=merged.merged_text,
+                    dom_text=sanitize_evidence_text(dom_text),
+                    ocr_text=sanitize_evidence_text(ocr_text),
+                    merged_text=sanitize_evidence_text(merged.merged_text),
                     segment_count=len(capture.segments),
                     capture_truncated=bool(capture.truncated),
                     quality_json=json.dumps(merged.quality, ensure_ascii=False),
@@ -390,8 +390,49 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
             "quality": merged.quality,
         })
 
+    _finalize_after_capture(
+        factory,
+        job_id,
+        project_id,
+        creator_id=creator_id,
+        options=options,
+        source_url=source_url,
+        storage_dir=storage_dir,
+        page_dicts=page_dicts,
+        word_pages=word_pages,
+        json_pages=json_pages,
+        captured=captured,
+        ocr_done=ocr_done,
+        failed=failed,
+    )
+
+
+def _finalize_after_capture(
+    factory: SessionFactory,
+    job_id: int,
+    project_id: int,
+    *,
+    creator_id: int,
+    options: dict,
+    source_url: str,
+    storage_dir: Path,
+    page_dicts: list[dict],
+    word_pages: list[WordPage],
+    json_pages: list[dict],
+    captured: int,
+    ocr_done: int,
+    failed: int,
+) -> None:
+    """捕获完成后：质量评估 → Word/JSON 导出 → 终态 → 自动导入。
+
+    主流程 `_run_job` 与断点续跑 `resume_failed_job_in_new_session` 共用，
+    保证「已捕获页面不重跑截图/OCR」的恢复语义与主流程一致。
+    """
     quality = evaluate_job_quality(page_dicts)
 
+    include_word = bool(options.get("include_word", True))
+    include_json = bool(options.get("include_json", True))
+    job_meta: dict = {}
     # Zero captured pages are a hard failure and produce no formal documents.
     if captured > 0 and (include_word or include_json):
         with _short_session(factory) as db:
@@ -399,6 +440,12 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
             job.stage = "exporting"
             job.heartbeat_at = datetime.now()
             title = f"蓝湖证据包 {job.document_name or job.doc_id or ''}".strip()
+            job_meta = {
+                "job_id": job.id,
+                "source_url": job.source_url,
+                "doc_id": job.doc_id,
+                "version_id": job.version_id,
+            }
             db.commit()
 
         if include_word:
@@ -413,14 +460,6 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             )
         if include_json:
-            with _short_session(factory) as db:
-                job = _require_active_job(db, job_id, project_id)
-                job_meta = {
-                    "job_id": job.id,
-                    "source_url": job.source_url,
-                    "doc_id": job.doc_id,
-                    "version_id": job.version_id,
-                }
             json_path = storage_dir / "lanhu.json"
             export_json(json_path, job_meta, json_pages)
             _persist_export_asset(
@@ -459,6 +498,119 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
 
     if quality["import_ready"]:
         _run_auto_import(factory, job_id, project_id, creator_id, options)
+
+
+def resume_failed_job_in_new_session(
+    job_id: int,
+    project_id: int,
+    session_factory: SessionFactory | None = None,
+) -> None:
+    """断点续跑：已捕获全部页面但导出/终态失败的任务，不重跑截图/OCR。
+
+    从持久化页面与资产重建证据结构（文本经 sanitize 清洗），复用
+    `_finalize_after_capture` 完成导出、质量评估、终态与自动导入。
+    仅对 status=failed 且有捕获页面的任务生效；无页面直接返回。
+    """
+    factory = session_factory or SessionLocal
+    with _short_session(factory) as db:
+        job = _scoped_job(db, job_id, project_id)
+        if job is None or job.status != "failed":
+            return
+        if not job.captured_pages:
+            return
+        try:
+            options = json.loads(job.requested_options_json or "{}")
+        except (json.JSONDecodeError, TypeError):
+            options = {}
+        options = options if isinstance(options, dict) else {}
+        storage_dir = Path(job.storage_dir)
+        creator_id = job.creator_id
+        source_url = job.source_url
+
+        job.status = "running"
+        job.stage = "exporting"
+        job.error_message = ""
+        job.heartbeat_at = datetime.now()
+        db.commit()
+
+        pages = db.execute(
+            select(LanhuEvidencePage)
+            .where(
+                LanhuEvidencePage.job_id == job_id,
+                LanhuEvidencePage.project_id == project_id,
+            )
+            .order_by(LanhuEvidencePage.order_index)
+        ).scalars().all()
+        page_ids = [p.id for p in pages]
+        assets_by_page: dict[int, list[str]] = {}
+        if page_ids:
+            asset_rows = db.execute(
+                select(LanhuEvidenceAsset.page_id, LanhuEvidenceAsset.file_path)
+                .where(LanhuEvidenceAsset.page_id.in_(page_ids))
+            ).all()
+            for page_id, file_path in asset_rows:
+                assets_by_page.setdefault(page_id, []).append(file_path)
+
+        page_dicts: list[dict] = []
+        word_pages: list[WordPage] = []
+        json_pages: list[dict] = []
+        captured = 0
+        ocr_done = 0
+        failed = 0
+        for p in pages:
+            merged = sanitize_evidence_text(p.merged_text or "")
+            page_dicts.append({
+                "capture_status": p.capture_status,
+                "segment_count": p.segment_count,
+                "capture_truncated": bool(p.capture_truncated),
+                "merged_text": merged,
+                "ocr_status": p.ocr_status,
+                "review_status": p.review_status,
+            })
+            if p.capture_status == "success":
+                captured += 1
+            else:
+                failed += 1
+            if (p.ocr_text or "").strip():
+                ocr_done += 1
+            try:
+                quality = json.loads(p.quality_json or "{}")
+            except (json.JSONDecodeError, TypeError):
+                quality = {}
+            screenshots = [Path(path) for path in assets_by_page.get(p.id, [])]
+            word_pages.append(WordPage(
+                page_name=p.page_name,
+                page_path=p.page_path,
+                merged_text=merged,
+                quality=quality,
+                screenshots=screenshots,
+            ))
+            json_pages.append({
+                "page_id": p.page_id,
+                "page_name": p.page_name,
+                "page_path": p.page_path,
+                "merged_text": merged,
+                "screenshots": [
+                    _relative_asset_path(path, storage_dir) for path in screenshots
+                ],
+                "quality": quality,
+            })
+
+    _finalize_after_capture(
+        factory,
+        job_id,
+        project_id,
+        creator_id=creator_id,
+        options=options,
+        source_url=source_url,
+        storage_dir=storage_dir,
+        page_dicts=page_dicts,
+        word_pages=word_pages,
+        json_pages=json_pages,
+        captured=captured,
+        ocr_done=ocr_done,
+        failed=failed,
+    )
 
 
 def _update_progress(

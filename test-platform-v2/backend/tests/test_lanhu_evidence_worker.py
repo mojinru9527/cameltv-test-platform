@@ -177,3 +177,70 @@ def test_dom_text_for_skips_image_files(tmp_path):
 
     assert _dom_text_for(png.as_uri()) == ""
     assert "金额高度" in _dom_text_for(html.as_uri())
+
+
+def test_resume_failed_job_reuses_captured_pages(tmp_path):
+    """断点续跑：failed 任务从已持久化页面恢复导出/终态，不重跑截图/OCR。"""
+    from sqlalchemy import create_engine, select
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+
+    import app.models  # noqa: F401 — 注册全部模型
+    from app.core.db import Base
+    from app.models.lanhu_evidence import (
+        LanhuEvidenceAsset,
+        LanhuEvidenceJob,
+        LanhuEvidencePage,
+    )
+    from app.services.lanhu_evidence.job_runner import resume_failed_job_in_new_session
+
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(bind=engine)
+    Session = sessionmaker(bind=engine)
+
+    with Session() as s:
+        s.add(LanhuEvidenceJob(
+            id=1,
+            project_id=1,
+            source_url="https://lanhuapp.com/web/#/item/project/stage?tid=t&pid=p",
+            status="failed",
+            stage="done",
+            captured_pages=1,
+            creator_id=1,
+            storage_dir=str(tmp_path),
+            requested_options_json='{"include_word": true, "include_json": true}',
+        ))
+        s.add(LanhuEvidencePage(
+            job_id=1,
+            project_id=1,
+            page_id="p1",
+            page_name="赛事回放",
+            page_path="设计图板/赛事回放",
+            folder="设计图板",
+            order_index=0,
+            capture_status="success",
+            ocr_status="success",
+            segment_count=1,
+            merged_text="# 赛事回放\n## OCR识别文本\n9:41 赛事\x00回放",
+            quality_json='{"status":"success"}',
+        ))
+        s.commit()
+
+    resume_failed_job_in_new_session(1, 1, session_factory=Session)
+
+    with Session() as s:
+        job = s.get(LanhuEvidenceJob, 1)
+        assert job.status == "success"
+        assert job.stage == "done"
+        assert job.quality_json
+        assert "import_ready" in job.quality_json
+        assets = s.execute(
+            select(LanhuEvidenceAsset).where(LanhuEvidenceAsset.job_id == 1)
+        ).scalars().all()
+        assert {a.asset_type for a in assets} == {"word", "json"}
+    assert (tmp_path / "lanhu.docx").exists()
+    assert (tmp_path / "lanhu.json").exists()
