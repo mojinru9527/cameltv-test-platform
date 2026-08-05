@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-05 (Batch 99: 安卓双视频场景各 10 分钟采集完成（C84-2 关闭）+ 采集器三处修复；iOS 阻塞原因更新为 solox 缺 iOS 26.5 DeviceSupport，PR #137)
+**最后更新**: 2026-08-06 (Batch 99: 安卓双视频场景各 10 分钟采集完成（C84-2 关闭）+ 采集器三处修复 + C99-1 性能采集优化标记；iOS 阻塞原因更新为 solox 缺 iOS 26.5 DeviceSupport，PR #137)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -27,6 +27,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C96-1 | C27-C1~C4 四项验证在本地全栈（staging 替代）执行，数据/性能测量就绪后逐项关闭（V1 工具删除已于 Batch 98 完成） | P1 | 2026-08-05 |
+
+### batch-99 — 性能采集功能优化（Batch 99 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C99-1 | **性能采集功能需要优化**：①采样周期并行化（当前 10–55s/点 → 目标 ≤2s）；②jank 视频帧率口径（30fps 视频在 120Hz 屏误报）；③多核 CPU 语义与阈值（当前如实上报 >100%）；④iOS 26.5 支持（solox DeviceSupport 缺失）；详见 `test-platform-v2/docs/改进任务backlog.md` Epic PERF-OPT | P2 | 2026-08-06 |
 
 ### batch-95 — 后续小项消化（Batch 95 Leader 条件）
 
@@ -391,10 +397,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 22 (含 4 个 P0 blocking；其中 15 项 Deferred + 2 项 C95 + 1 项 C96；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 23 (含 4 个 P0 blocking；其中 15 项 Deferred + 2 项 C95 + 1 项 C96 + 1 项 C99；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
 - **Closed**: 133（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 155（另有 13 条历史补录不计入）
+- **Total**: 156（另有 13 条历史补录不计入）
 
 ## 维护约定
 

@@ -32,9 +32,10 @@
 
 ## 下一批次 Leader 条件
 
-- 不新增 C 条件。CP-C2/C84-1：solox 支持 iOS 26.5（或提供受支持版本 iPhone）后执行 iOS 双场景。
+- **C99-1（P2，已登记）**：**性能采集功能需要优化**——①采样周期并行化（当前 10–55s/点 → 目标 ≤2s）；②jank 视频帧率口径；③多核 CPU 语义与阈值；④iOS 26.5 支持（solox DeviceSupport）。详见 `test-platform-v2/docs/改进任务backlog.md` Epic PERF-OPT。
+- CP-C2/C84-1：solox 支持 iOS 26.5（或提供受支持版本 iPhone）后执行 iOS 双场景。
 - C96-1：C27 四项验证（staging/本地全栈）待数据与性能测量。
-- 优化项：perftest 采样并行化、jank 视频口径、小象直播间高负载跟进（B99-Q2/Q4/Q5）。
+- B99-Q5：小象直播间高负载（CPU 386%/内存 795MB）真实发现，转业务侧跟进。
 
 ## 流程回写
 
