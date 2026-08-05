@@ -1,9 +1,10 @@
 """真机性能验收采集驱动（Batch 99 双视频场景版）。
 
-场景（--scenario）:
+  场景（--scenario）:
   scroll        滚动压测（旧口径，仅作辅助数据）
   chrome-sports 安卓 Chrome 打开 www.camel1.tv，任选一场有视频流的比赛观看 10 分钟
   app-live      小象直播 App 任选一个视频流直播间观看 10 分钟
+  manual        用户手动驱动目标应用/页面，平台仅按 duration 采样（广告/登录受限场景兜底）
 
 流程: 登录 → 取项目 → 建会话 → start → WebSocket 采样（期间驱动目标视频场景）
       → 到时长后 stop → 报告/指标 → 冷启动 → 落盘证据 JSON。
@@ -99,7 +100,12 @@ def drive_chrome_sports(adb: str, device: str, dump_path: Path) -> None:
     adb_cmd(adb, device, "shell", "svc", "power", "stayon", "true")
     adb_cmd(adb, device, "shell", "input", "keyevent", "KEYCODE_WAKEUP")
     adb_cmd(adb, device, "shell", "am", "force-stop", chrome)
-    adb_cmd(adb, device, "shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", "https://www.camel1.tv", chrome)
+    adb_cmd(
+        adb, device, "shell",
+        "am", "start", "-a", "android.intent.action.VIEW",
+        "-d", "https://www.camel1.tv",
+        "-n", "com.android.chrome/com.google.android.apps.chrome.Main",
+    )
     time.sleep(14)
     for attempt in range(3):
         nodes = _ui_dump(adb, device, dump_path)
@@ -149,7 +155,7 @@ def main() -> int:
     ap.add_argument("--password", required=True)
     ap.add_argument("--adb", default=r"C:\Users\26029\AppData\Local\Android\Sdk\platform-tools\adb.exe")
     ap.add_argument("--device", default="dcd8891f")
-    ap.add_argument("--scenario", choices=["scroll", "chrome-sports", "app-live"], default="chrome-sports")
+    ap.add_argument("--scenario", choices=["scroll", "chrome-sports", "app-live", "manual"], default="chrome-sports")
     ap.add_argument("--app-pkg", default="")
     ap.add_argument("--duration", type=int, default=600)
     ap.add_argument("--output-dir", default="test-platform-v2/work-logs/evidence/batch-99")
@@ -202,7 +208,11 @@ def main() -> int:
 
         samples: list[dict] = []
 
-        if args.scenario == "scroll":
+        if args.scenario == "manual":
+            adb_cmd(args.adb, args.device, "shell", "svc", "power", "stayon", "true")
+            print("[drive] manual mode — 用户手动驱动目标应用/页面", flush=True)
+            drive = threading.Thread(target=lambda: time.sleep(args.duration))
+        elif args.scenario == "scroll":
             drive = threading.Thread(
                 target=drive_scroll, args=(args.adb, args.device, args.app_pkg or "com.camelrn", max(10, args.duration - 6))
             )
@@ -218,7 +228,9 @@ def main() -> int:
                 deadline = time.time() + args.duration
                 while time.time() < deadline:
                     try:
-                        msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
+                        msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=30))
+                    except websockets.exceptions.ConnectionClosed:
+                        break
                     except asyncio.TimeoutError:
                         continue
                     samples.append(msg)
@@ -231,6 +243,8 @@ def main() -> int:
                 while True:
                     try:
                         msg = json.loads(await asyncio.wait_for(ws.recv(), timeout=10))
+                    except websockets.exceptions.ConnectionClosed:
+                        break
                     except asyncio.TimeoutError:
                         break
                     samples.append(msg)

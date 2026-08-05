@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from app.services.perf_collector_service import (
+    _parse_dumpsys_meminfo,
     _parse_surfaceflinger_latency,
     _select_fps_layers,
 )
@@ -96,3 +97,16 @@ def test_layer_selection_skips_input_sink_and_activity_record() -> None:
     assert len(selected) == 2
     assert all("InputSink" not in ln and "ActivityRecord{" not in ln for ln in selected)
     assert selected[0].startswith("240a46f")
+
+
+def test_meminfo_parses_total_pss_kb_to_mb() -> None:
+    raw = (
+        "TOTAL   190421   115172    48236      243   360560    48839    32030    16808\n"
+        "TOTAL PSS:   190421            TOTAL RSS:   360560       TOTAL SWAP PSS:      243\n"
+    )
+    assert _parse_dumpsys_meminfo(raw) == 185.96
+
+
+def test_meminfo_missing_returns_none() -> None:
+    assert _parse_dumpsys_meminfo("no data") is None
+

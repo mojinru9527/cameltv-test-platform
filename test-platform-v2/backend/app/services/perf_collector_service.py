@@ -245,7 +245,8 @@ def _collect_fps_android(device_id: str, pkg_name: str) -> dict[str, Any]:
     for layer in candidates:
         try:
             out_res = subprocess.run(
-                ["adb", "-s", device_id, "shell", "dumpsys", "SurfaceFlinger", "--latency", layer],
+                # 图层名可能含括号/空格（如 SurfaceView[...](...)），必须整体加引号交给 adb shell
+                ["adb", "-s", device_id, "shell", f"dumpsys SurfaceFlinger --latency '{layer}'"],
                 capture_output=True, text=True, timeout=15,
             )
             if out_res.returncode != 0:
@@ -264,6 +265,75 @@ def _collect_fps_android(device_id: str, pkg_name: str) -> dict[str, Any]:
             return parsed
         last_error = parsed.get("error", "no frame data in any layer")
     return {"fps": 0, "jank": 0, "layer": candidates[0], "error": last_error}
+
+
+def _parse_dumpsys_meminfo(raw: str) -> float | None:
+    """解析 `dumpsys meminfo <pkg>` 的 TOTAL PSS（kB → MB）。"""
+    m = re.search(r"TOTAL PSS:\s*(\d+)", raw)
+    if not m:
+        return None
+    return round(int(m.group(1)) / 1024.0, 2)
+
+
+def _collect_cpu_android(device_id: str, pkg_name: str) -> dict[str, Any]:
+    """Android CPU 采集（/proc/<pid>/stat 1 秒双采样，按包汇总多进程）。"""
+    import subprocess
+    import time
+
+    def sh(*args: str) -> str:
+        r = subprocess.run(
+            ["adb", "-s", device_id, "shell", *args],
+            capture_output=True, text=True, timeout=20,
+        )
+        if r.returncode != 0:
+            raise RuntimeError(f"cpu 采集失败: {r.stderr.strip() or r.stdout.strip()}")
+        return r.stdout
+
+    def pids() -> list[str]:
+        out = sh("pidof", pkg_name).strip()
+        return [p for p in out.split() if p.isdigit()]
+
+    def sample() -> dict[str, tuple[int, int]]:
+        acc: dict[str, tuple[int, int]] = {}
+        for pid in pids():
+            try:
+                stat = sh("cat", f"/proc/{pid}/stat").strip()
+                idx = stat.rfind(")")
+                fields = stat[idx + 2:].split()
+                acc[pid] = (int(fields[11]), int(fields[12]))  # utime, stime
+            except Exception:
+                continue
+        return acc
+
+    a = sample()
+    time.sleep(1.0)
+    b = sample()
+    hz = 100  # Android CLK_TCK
+    total = 0.0
+    for pid, (u1, s1) in a.items():
+        if pid in b:
+            u2, s2 = b[pid]
+            dt = (u2 - u1 + s2 - s1) / hz
+            if dt > 0:
+                total += dt
+    # total 为 1 秒窗口内的 CPU 秒数；换算为百分比（多线程/多核可 >100%，如实上报）
+    return {"appCpuRate": round(total * 100.0, 2)}
+
+
+def _collect_memory_android(device_id: str, pkg_name: str) -> dict[str, Any]:
+    """Android 内存采集（dumpsys meminfo TOTAL PSS，MB）。"""
+    import subprocess
+
+    res = subprocess.run(
+        ["adb", "-s", device_id, "shell", "dumpsys", "meminfo", pkg_name],
+        capture_output=True, text=True, timeout=15,
+    )
+    if res.returncode != 0:
+        raise RuntimeError(f"memory 采集失败: {res.stderr.strip() or res.stdout.strip()}")
+    total_mb = _parse_dumpsys_meminfo(res.stdout)
+    if total_mb is None:
+        raise RuntimeError("memory 采集失败: 未找到 TOTAL PSS")
+    return {"total": total_mb}
 
 
 def _select_fps_layers(layers: list[str], pkg_name: str) -> list[str]:
@@ -299,8 +369,16 @@ def collect_single_snapshot(device_id: str, pkg_name: str, platform: str = "Andr
         result: dict[str, Any] = {"events": []}
         failures: dict[str, str] = {}
         collectors = {
-            "cpu": apm.collectCpu,
-            "memory": apm.collectMemory,
+            "cpu": (
+                lambda: _collect_cpu_android(device_id, pkg_name)
+                if platform == "Android"
+                else apm.collectCpu
+            ),
+            "memory": (
+                lambda: _collect_memory_android(device_id, pkg_name)
+                if platform == "Android"
+                else apm.collectMemory
+            ),
             "fps": (
                 lambda: _collect_fps_android(device_id, pkg_name)
                 if platform == "Android"
