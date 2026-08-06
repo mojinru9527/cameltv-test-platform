@@ -56,9 +56,26 @@ def _load_skill_context_for(kind: str) -> str:
     """Load skill files for a specific case type.
 
     kind = "functional": SKILL.md + case-template.md + functional-checklist.md
-    kind = "api":        Same as functional (API cases generated via dedicated endpoint)
+    kind = "api":        api-checklist.md + 接口测试考虑点【辅助作用】.md + SKILL.md
     """
-    # Use functional skill context — API cases are generated via AI prompt for integration-type requirements
+    if kind == "api":
+        parts: list[str] = []
+        api_files = ["api-checklist.md", "接口测试考虑点【辅助作用】.md"]
+        for fname in api_files:
+            fpath = _skill_dir() / fname
+            if fname == "接口测试考虑点【辅助作用】.md" and not fpath.exists():
+                # 仓库规范中心兜底（tests/test-case-standards/）
+                alt = _resolve_workspace_root() / "tests" / "test-case-standards" / fname
+                if alt.exists():
+                    fpath = alt
+            if fpath.exists():
+                parts.append(fpath.read_text(encoding="utf-8"))
+        skill_fpath = _skill_dir() / "SKILL.md"
+        if skill_fpath.exists():
+            parts.append(skill_fpath.read_text(encoding="utf-8"))
+        return "\n\n---\n\n".join(parts)
+
+    # functional 原逻辑（API 用例由专门生成器/AI 提示词覆盖，此处保持功能清单）
     files = ["SKILL.md", "case-template.md", "functional-checklist.md"]
     parts: list[str] = []
     for fname in files:
@@ -139,7 +156,11 @@ def _build_system_prompt(kind: str = "functional") -> str:
         "禁止用无业务含义的占位值（如随机字符串 'abc'、随意数字 123）。\n"
         "- 对于 type=integration 的功能点，在 api_cases 数组中生成对应的接口测试用例，包含 api_method 和 api_endpoint（建议路径）。\n"
         "- 接口用例必须包含：api_body（请求参数，字段完整、值贴合真实业务）、"
-        "api_assertions（断言：状态码 + 关键字段/业务规则）、case_design_method、positive_negative。\n"
+        "api_assertions（断言：状态码 + 响应结构/关键字段 + 业务规则，如业务状态码、记录数/排序、"
+        "核心字段非空、success=true、新增数据标识非空）、case_design_method、positive_negative。\n"
+        "- 接口用例须覆盖「测试考虑点」辅助清单（见下方 skill_ctx 中的接口检查点）："
+        "冒烟/场景串联、健壮性合法非法入参（含增加不存在参数）、安全（加密/越权/CSRF）、"
+        "性能（低优先级）、数据入库一致性、稳定性、兼容性、监控告警。\n"
         "- 每个用例需标注 client_scope（适用的客户端：app/pc/web），"
         "如需求未明确指定则根据常识推断。"
     )
@@ -176,7 +197,7 @@ def _build_system_prompt(kind: str = "functional") -> str:
 - api_cases[].api_method: HTTP 方法 "GET" / "POST" / "PUT" / "DELETE"
 - api_cases[].api_endpoint: 建议的 API 路径（如 "/api/v1/matches"）
 - api_cases[].api_body: 请求参数 JSON（字段完整、值贴合真实业务，禁止占位）
-- api_cases[].api_assertions: 断言数组（状态码、关键字段、业务规则）
+- api_cases[].api_assertions: 断言数组（状态码、响应结构/关键字段、业务规则）
 
 关键规则：
 - **先分析需求，再生成用例** — 阶段一完成后才能进入阶段二。
