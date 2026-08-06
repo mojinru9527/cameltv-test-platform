@@ -92,7 +92,9 @@ async function main() {
     setState({ step: "captcha_missing" });
   }
 
-  const captcha = await waitForFile(CAPTCHA_ANSWER, 240000, "captcha");
+  const captchaTimeout = Number(process.env.CAPTCHA_TIMEOUT || 1800000);
+  const smsTimeout = Number(process.env.SMS_TIMEOUT || 1800000);
+  const captcha = await waitForFile(CAPTCHA_ANSWER, captchaTimeout, "captcha");
   if (!captcha) {
     setState({ step: "captcha_timeout" });
     await browser.close();
@@ -109,7 +111,7 @@ async function main() {
   const pageText = (await page.locator("body").innerText().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
   setState({ step: "sms_ready", sms_visible: smsVisible, page_text: pageText });
 
-  const sms = await waitForFile(SMS_ANSWER, 900000, "sms");
+  const sms = await waitForFile(SMS_ANSWER, smsTimeout, "sms");
   if (!sms) {
     setState({ step: "sms_timeout" });
     await browser.close();
