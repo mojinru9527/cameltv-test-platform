@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 账号注册（邀请码） */
+        post: operations["register_api_v1_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -83,6 +100,41 @@ export interface paths {
         get: operations["menus_api_v1_system_menus_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/invite-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 邀请码列表 */
+        get: operations["list_invite_codes_api_v1_system_invite_codes_get"];
+        put?: never;
+        /** 生成邀请码 */
+        post: operations["create_invite_code_api_v1_system_invite_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/invite-codes/{invite_id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停用邀请码 */
+        post: operations["disable_invite_code_api_v1_system_invite_codes__invite_id__disable_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -233,6 +285,50 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** RegisterIn */
+        RegisterIn: {
+            /** Username */
+            username: string;
+            /** Nickname */
+            nickname: string;
+            /** Email */
+            email: string;
+            /** Password */
+            password: string;
+            /** Invite Code */
+            invite_code: string;
+        };
+        /** InviteCodeIn */
+        InviteCodeIn: {
+            /**
+             * Usage Limit
+             * @default 1
+             */
+            usage_limit: number;
+            /** Expires At */
+            expires_at?: string | null;
+        };
+        /** InviteCodeOut */
+        InviteCodeOut: {
+            /** Id */
+            id: number;
+            /** Code */
+            code: string;
+            /** Created By */
+            created_by: number;
+            /** Created By Name */
+            created_by_name: string;
+            /** Usage Limit */
+            usage_limit: number;
+            /** Used Count */
+            used_count: number;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Status */
+            status: number;
+            /** Created At */
+            created_at?: string | null;
+        };
         /** LoginOut */
         LoginOut: {
             /** Access Token */
@@ -344,6 +440,11 @@ export interface components {
              * @default 1
              */
             status: number;
+            /**
+             * Owner Id
+             * @default 0
+             */
+            owner_id: number;
         };
         /** R */
         R: {
@@ -491,6 +592,36 @@ export interface components {
             msg: string;
             /** Data */
             data?: components["schemas"]["ProjectOut"][] | null;
+        };
+        /** R[InviteCodeOut] */
+        R_InviteCodeOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["InviteCodeOut"] | null;
+        };
+        /** R[list[InviteCodeOut]] */
+        R_list_InviteCodeOut__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["InviteCodeOut"][] | null;
         };
         /** R[list[RoleOut]] */
         R_list_RoleOut__: {
@@ -713,6 +844,118 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_api_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_LoginOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_invite_codes_api_v1_system_invite_codes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_InviteCodeOut__"];
+                };
+            };
+        };
+    };
+    create_invite_code_api_v1_system_invite_codes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteCodeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_InviteCodeOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_invite_code_api_v1_system_invite_codes__invite_id__disable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
                 };
             };
         };

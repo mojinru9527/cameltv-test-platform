@@ -15,6 +15,7 @@ export interface Project {
   name: string
   description?: string
   status?: number
+  owner_id?: number
 }
 
 export interface LoginResult {
