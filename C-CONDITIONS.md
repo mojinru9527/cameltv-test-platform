@@ -77,6 +77,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C102-4 | 生产页面与需求原型差异标注能力（英文站 vs 中文原型，新增 World Cup/Replays 模块） | P2 | 2026-08-06 |
 | C102-5 | AI 生成截断自动补全（块级重试+补生成+覆盖缺口报告） | P2 | 2026-08-06 |
 
+### batch-110 — 体育平台第一期收口（Batch 110 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C110-1 | 生产 wiki 知识库启用（Railway 变量 WIKI_ENABLED/WIKI_DIFF_ENABLED/WIKI_AUTO_INGEST_ENABLED=true）后执行 build-wiki-baseline.py（模块树/同步/编译/审批/差异 ≥3 组），wiki 基线闭环 | P1 | 2026-08-06 |
+| C110-2 | 知识中心标准 capture 复验：提供 sportsadmin 凭证后经 /knowledge/capture 导入 7 源并确认 sources 可见（Batch 110 直连补入为过渡） | P1 | 2026-08-06 |
+| C110-3 | 接口用例批量执行/结果回填平台 UI（当前 execute-interface-cases.py 脚本回填 97 条） | P2 | 2026-08-06 |
+| C110-4 | 用例 P0 口径复核（Batch 110 收敛 418→345：用户端关键域全 P0 + 运营核心模块 P0，用户确认口径后固化） | P2 | 2026-08-06 |
+| C110-5 | 运营后台生产账号/Test5 契约补拉（C95-1/C74-2 继续）→ konfi 关联由推断校准为实测 | P2 | 2026-08-06 |
+
 ### batch-96 — V1 工具审计 / 只读账号 / staging / diff 基线（Batch 96 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
