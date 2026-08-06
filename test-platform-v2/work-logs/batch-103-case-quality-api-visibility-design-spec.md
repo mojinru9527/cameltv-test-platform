@@ -18,6 +18,22 @@
   「请求参数 / 断言 / 请求结果」三栏（shadcn/ui Tab，遵循 cameltv-ui-conventions）。
 - 迁移：Alembic 新增迁移（含回滚）；API 序列化同步字段。
 
+## 2b. 接口用例真实参数驱动（生产基线）
+
+- 参数基线来源：真实生产请求样本（如 `/camel-service/ee/news/list_visible`）：
+  `{"sorts":[{"key":"top","sort":"desc"},{"key":"updateTime","sort":"desc"}],"page":2,"size":30,
+  "queryList":[{"isOrNotRange":0,"key":"language","type":"String","value1":"0","value2":""}],
+  "locale":"en"}`。
+- 按 `API接口测试方案.md` 必选设计（每字段）：
+  | 维度 | 字段示例 | 用例方向 |
+  |------|---------|---------|
+  | 分页 | page=1/0/-1/非数字/超界；size=1/30/0/负数/超上限 | 正/负/边界 |
+  | 过滤 | queryList 空/缺省/多条件 AND 组合/key 非法/type 枚举/value 越界 | 正/负/边界/组合 |
+  | 排序 | sorts 空/单 key/多 key/非法 sort 值 | 正/负/边界 |
+  | 语言 | locale=en/zh/缺省/非法 | 正/负/边界/枚举 |
+  | 类型 | 数字字段传字符串/字符串传数字/布尔/数组/对象 | 类型校验 |
+- 生成流程：契约参数 schema + 真实样本 → AI 按规范设计字段级用例 → 人工评审 → 执行回填实际响应做断言。
+
 ## 3. 覆盖度补强流程（复用 Batch 102 通道）
 
 ```text

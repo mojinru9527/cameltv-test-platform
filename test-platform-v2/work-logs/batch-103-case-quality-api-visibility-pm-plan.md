@@ -9,7 +9,7 @@
 | 1 | 批次工件 + 需求登记 | PRD/PM/Design/看板 + C-CONDITIONS（C103-1/2）+ backlog Epic | 工件齐全；audit 0 硬错 | `test-platform-v2/work-logs/batch-103-*`、`C-CONDITIONS.md`、`docs/改进任务backlog.md` |
 | 2 | AI 生成规范对齐 | `ai_service` 提示词注入用例规范（等价类/边界值/场景法/错误推测 + 正负向） | 生成产物字段完整；单测覆盖提示词关键约束 | `test-platform-v2/backend/app/services/ai_service.py` + 测试 |
 | 3 | 功能用例覆盖度补强 | 用户端 92 FP → ≥184 条（≥2 条/FP）；运营后台同步补强；补生成重导入生产 | 用例库计数达标；覆盖缺口报告 | 生产 API/DB、`scripts/sports/` |
-| 4 | 接口用例可视 | TestCase/AIGeneratedCase 增加请求参数+断言；执行结果回填；前端详情渲染 | 接口用例详情可见 参数/断言/结果 | backend schema + frontend 用例详情 |
+| 4 | 接口用例真实参数+可视 | 以生产真实请求参数为基线（list_visible 等样本），按接口测试规范设计字段级正/负/边界/类型用例；TestCase 增加请求参数+断言+结果回填；前端详情渲染 | 接口用例详情可见 参数/断言/结果；用例参数来自真实业务请求而非模拟 | backend schema + frontend 用例详情 + 真实参数样本 |
 | 5 | QA + Leader + 一次总确认 | 门禁/证据/判决；push → Draft PR → checks → 合入 | 全绿；PR 合入 main | `test-platform-v2/work-logs/batch-103-*` |
 
 ## 依赖与顺序
