@@ -28,6 +28,7 @@ from app.models.knowledge import (
 )
 from app.models.project import Project, ProjectMember
 from app.models.notification import NotificationChannel, NotificationLog
+from app.models.organization import Organization, OrganizationMember
 from app.models.perf import PerfDevice, PerfMetric, PerfSession
 from app.models.quality_gate import QualityGateConfig
 from app.models.report_template import ReportTemplate
@@ -80,6 +81,8 @@ __all__ = [
     "EnvironmentVariable",
     "NotificationChannel",
     "NotificationLog",
+    "Organization",
+    "OrganizationMember",
     "QualityGateConfig",
     "ReportTemplate",
     "TestCase",

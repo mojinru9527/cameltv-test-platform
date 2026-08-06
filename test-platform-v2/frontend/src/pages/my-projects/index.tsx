@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import api from '@/api/client'
+import { fetchOrganizations } from '@/api/organization'
 import { fetchRoles, fetchUsers } from '@/api/system'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/ui'
@@ -59,7 +60,7 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import { Plus, Loader2, Users, Edit, Trash2, ArrowRight, RotateCcw } from '@/lib/icons'
-import type { Project } from '@/types'
+import type { Organization, Project } from '@/types'
 
 const projectSchema = z.object({
   code: z.string().min(1, '项目编码必填'),
@@ -96,6 +97,8 @@ export default function MyProjectsPage() {
   const [users, setUsers] = useState<any[]>([])
   const [roles, setRoles] = useState<any[]>([])
   const [activeProject, setActiveProject] = useState<Project | null>(null)
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [organizationId, setOrganizationId] = useState<number | null>(null)
 
   const {
     register,
@@ -132,7 +135,10 @@ export default function MyProjectsPage() {
         await api.put(`/projects/${editing.id}`, vals)
         toast.success('项目已更新')
       } else {
-        await api.post('/projects', vals)
+        await api.post('/projects', {
+          ...vals,
+          organization_id: organizationId ?? undefined,
+        })
         toast.success('项目已创建')
       }
       await syncProjectSwitcher()
@@ -193,9 +199,18 @@ export default function MyProjectsPage() {
     setMembers(mRes || [])
   }
 
-  const openCreate = () => {
+  const openCreate = async () => {
     reset({ code: '', name: '', description: '' })
     setEditing(null)
+    try {
+      const orgs = await fetchOrganizations()
+      setOrganizations(orgs || [])
+      const personal = (orgs || []).find((o) => o.type === 'personal')
+      setOrganizationId(personal?.id ?? orgs?.[0]?.id ?? null)
+    } catch {
+      setOrganizations([])
+      setOrganizationId(null)
+    }
     setDrawer(true)
   }
 
@@ -222,6 +237,12 @@ export default function MyProjectsPage() {
       header: '描述',
       className: 'hidden md:table-cell max-w-[320px] truncate',
       render: (r) => r.description || '-',
+    },
+    {
+      key: 'organization_name',
+      header: '所属组织',
+      className: 'w-[140px]',
+      render: (r) => <span className="text-xs text-muted-foreground">{r.organization_name || '-'}</span>,
     },
     {
       key: 'owner',
@@ -359,6 +380,26 @@ export default function MyProjectsPage() {
               <label htmlFor="project-description" className="text-sm font-medium">描述</label>
               <Textarea id="project-description" placeholder="项目说明" rows={3} {...register('description')} />
             </div>
+            {!editing && (
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="project-org" className="text-sm font-medium">所属组织</label>
+                <Select
+                  value={organizationId !== null ? String(organizationId) : undefined}
+                  onValueChange={(v) => setOrganizationId(Number(v))}
+                >
+                  <SelectTrigger id="project-org" className="w-full" aria-label="选择组织">
+                    <SelectValue placeholder="选择组织" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {organizations.map((o) => (
+                      <SelectItem key={o.id} value={String(o.id)}>
+                        {o.name}（{o.type === 'personal' ? '个人' : '团队'}）
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </form>
           <DialogFooter>
             <Button variant="secondary" onClick={() => { setDrawer(false); setEditing(null) }}>

@@ -12,9 +12,11 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.exceptions import forbidden, not_found, unauthorized
 from app.core.security import decode_token, password_token_version
+from app.models.organization import Organization
 from app.models.project import Project
 from app.models.user import User
 from app.services import project_service, rbac_service
+from app.services import organization_service
 
 logger = logging.getLogger("auth")
 _bearer = HTTPBearer(auto_error=False)
@@ -92,10 +94,18 @@ def require_project(
     """要求请求头携带有效的 X-Project-Id，且用户是该项目成员（超管放行）。"""
     if not current.project_id:
         raise forbidden("缺少当前项目（请求头 X-Project-Id）")
-    if not current.is_super and not project_service.is_member(db, current.user.id, current.project_id):
-        raise forbidden("无权访问该项目")
-    if not project_service.is_active_project(db, current.project_id):
+    proj = db.get(Project, current.project_id)
+    if not proj or proj.status == 0:
         raise not_found("项目不存在")
+    if not current.is_super:
+        # Batch 105：项目成员 或 项目所属组织成员 均可访问
+        member = project_service.is_member(db, current.user.id, current.project_id)
+        org_member = bool(
+            proj.organization_id
+            and organization_service.is_member(db, current.user.id, proj.organization_id)
+        )
+        if not member and not org_member:
+            raise forbidden("无权访问该项目")
     return current
 
 
@@ -172,3 +182,29 @@ def require_project_owner_or(perm_code: str):
         return current
 
     return _checker
+
+
+def require_org_member(
+    organization_id: int,
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CurrentUser:
+    org = db.get(Organization, organization_id)
+    if not org or org.status == 0:
+        raise not_found("组织不存在")
+    if current.is_super or organization_service.is_member(db, current.user.id, organization_id):
+        return current
+    raise forbidden("无权访问该组织")
+
+
+def require_org_owner_or_admin(
+    organization_id: int,
+    current: CurrentUser = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> CurrentUser:
+    org = db.get(Organization, organization_id)
+    if not org or org.status == 0:
+        raise not_found("组织不存在")
+    if current.is_super or organization_service.is_owner_or_admin(db, current.user.id, organization_id):
+        return current
+    raise forbidden("仅组织负责人或管理员可执行此操作")

@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     invite_code_required: bool = True          # 注册必须凭邀请码
     default_registration_role: str = "tester"  # 注册用户的默认全局角色
     max_projects_per_user: int = 5             # 普通用户可拥有的启用项目上限
+    max_team_organizations_per_user: int = 5   # Batch 105：团队组织上限（个人组织不计入）
     register_rate_limit_max: int = 5           # 注册限流：5 次 / 窗口
     register_rate_limit_window_seconds: int = 900
 

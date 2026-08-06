@@ -12,6 +12,7 @@ import { Button, Input } from '@/ui'
 const LoginPage = lazy(() => import('@/pages/login'))
 const RegisterPage = lazy(() => import('@/pages/register'))
 const MyProjectsPage = lazy(() => import('@/pages/my-projects'))
+const OrganizationPage = lazy(() => import('@/pages/organization'))
 const SystemPage = lazy(() => import('@/pages/system'))
 const TestCasePage = lazy(() => import('@/pages/testcase'))
 const TestPlanPage = lazy(() => import('@/pages/testplan'))
@@ -188,6 +189,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/workbench" replace /> },
       { path: 'my-projects', element: <PageLoader><MyProjectsPage /></PageLoader> },
+      { path: 'organizations', element: <PageLoader><OrganizationPage /></PageLoader> },
       { path: 'workbench', element: <PageLoader><Workbench /></PageLoader> },
       { path: 'trace', element: <PageLoader><TracePage /></PageLoader> },
       { path: 'requirement', element: <PageLoader><RequirementPage /></PageLoader> },
