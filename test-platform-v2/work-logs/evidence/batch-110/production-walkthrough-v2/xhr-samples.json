@@ -1,0 +1,199 @@
+{
+  "base": "https://www.camel1.tv",
+  "captured_at": "2026-08-06T09:50:51.286Z",
+  "pages_visited": 40,
+  "samples": [
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/ads/activity/get",
+      "post_data": "{\"displayPlatform\":\"PC\",\"displayPage\":\"INDEX\"}",
+      "page": "https://www.camel1.tv/",
+      "ts": 1786009687642,
+      "status": 200,
+      "response": "{\"traceId\":\"0b6i7bvj1cgctt\",\"timestamp\":1786009688417,\"status\":200,\"data\":{\"adPagePositionData\":{\"INDEX\":{\"Banner\":[{\"id\":913,\"displayPage\":\"INDEX\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/European-Top-Clubs-Friendly-Matche-Kick-Off-Time-FREE-Live-Streamingg-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":557,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260806/a5fd0328d34e4a0caf85dfd93a3108af.png?width=1888&height=200\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":916,\"displayPage\":\"INDEX\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/world-cup-camellive-match-replays-spain-argentina-rodri-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":559,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260730/b45e9ee91a2a4754a49c035a70478ab6.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":891,\"displayPage\":\"INDEX\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":541,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/25dcfc5210be4a43b828e8ca2d50e718.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1888,\"height\":200,\"canaryVal\":100.00}],\"SidebarDown\":[{\"id\":895,\"displayPage\":\"INDEX\",\"adPositionId\":5,\"positionType\":\"SidebarDown\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":544,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/3643b503f38b4cc3b024aa48a93b3e3b.png?imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"canaryVal\":100.00}],\"SidebarUp\":[{\"id\":894,\"displayPage\":\"INDEX\",\"adPositionId\":4,\"positionType\":\"SidebarUp\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":543,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/374ffb1d5ab147a28c5b18258aae3747.png?imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"canaryVal\":100.00}]}},\"language\":\"en\",\"region\":\"JP\",\"deviceId\":\"2c232d98-f82f-4e16-a3b4-c1633f88a454\",\"popUnderDisplayCount\":1,\"popUnderCoolDownMinDuration\":5,\"popUnderCoolDownMaxDuration\":10,\"displayPage\":\"INDEX\"},\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/ads/activity/get",
+      "post_data": "{\"displayPlatform\":\"PC\",\"displayPage\":\"MATCH\",\"matchId\":\"965mkyhkvjklr1g\"}",
+      "page": "https://www.camel1.tv/football/jagiellonia-bialystok-vs-rangers-f-c/965mkyhkvjklr1g",
+      "ts": 1786009698389,
+      "status": 200,
+      "response": "{\"traceId\":\"gdgi7bvj1ebdvn\",\"timestamp\":1786009698738,\"status\":200,\"data\":{\"adPagePositionData\":{\"MATCH\":{\"Banner\":[{\"id\":914,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/European-Top-Clubs-Friendly-Matche-Kick-Off-Time-FREE-Live-Streamingg-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":557,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260806/a5fd0328d34e4a0caf85dfd93a3108af.png?width=1888&height=200\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":917,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/world-cup-camellive-match-replays-spain-argentina-rodri-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":559,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260730/b45e9ee91a2a4754a49c035a70478ab6.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":919,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/Friendly%20Match%2CChelsea%2CTottenham%20Hotspur%2CTeam%20News%2CKick-Off%20Time%2CFREE%20Live%20Streaming?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":560,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260731/920217d11b784b3cbb7c30892c19e787.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":892,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":541,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/25dcfc5210be4a43b828e8ca2d50e718.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1888,\"height\":200,\"canaryVal\":100.00}],\"HalfTime\":[{\"id\":803,\"displayPage\":\"MATCH\",\"adPositionId\":9,\"positionType\":\"HalfTime\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://creptbabysitter.com/k60dnrsi7j?key=922edcb5fa5d362b4ad7c4dc16a876a2\",\"triggerCloseSeconds\":30,\"adMaterialId\":498,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260727/f30e2d0c2ada4daca58b148cc6ff74e5.gif?width=750&height=422&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":750,\"height\":422,\"canaryVal\":100.00}],\"Patch\":[{\"id\":893,\"displayPage\":\"MATCH\",\"adPositionId\":7,\"positionType\":\"Patch\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":5,\"adMaterialId\":542,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/3fa8f302e2f348f6aa96d4b3f4ad9ca9.png?width=1720&height=968&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1720,\"height\":968,\"canaryVal\":100.00}]}},\"language\":\"en\",\"region\":\"JP\",\"deviceId\":\"2c232d98-f82f-4e16-a3b4-c1633f88a454\",\"popUnderDisplayCount\":1,\"popUnderCoolDownMinDuration\":5,\"popUnderCoolDownMaxDuration\":10,\"matchId\":\"965mkyhkvjklr1g\",\"displayPage\":\"MATCH\"},\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/ads/activity/get",
+      "post_data": "{\"displayPlatform\":\"PC\",\"displayPage\":\"MATCH\",\"matchId\":\"zp5rzghgkn5kq82\"}",
+      "page": "https://www.camel1.tv/football/paok-saloniki-vs-anderlecht/zp5rzghgkn5kq82",
+      "ts": 1786009706946,
+      "status": 200,
+      "response": "{\"traceId\":\"vooi7bvj17p4vg\",\"timestamp\":1786009707296,\"status\":200,\"data\":{\"adPagePositionData\":{\"MATCH\":{\"Banner\":[{\"id\":914,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/European-Top-Clubs-Friendly-Matche-Kick-Off-Time-FREE-Live-Streamingg-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":557,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260806/a5fd0328d34e4a0caf85dfd93a3108af.png?width=1888&height=200\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":917,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/world-cup-camellive-match-replays-spain-argentina-rodri-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":559,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260730/b45e9ee91a2a4754a49c035a70478ab6.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":919,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/Friendly%20Match%2CChelsea%2CTottenham%20Hotspur%2CTeam%20News%2CKick-Off%20Time%2CFREE%20Live%20Streaming?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":560,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260731/920217d11b784b3cbb7c30892c19e787.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":892,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":541,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/25dcfc5210be4a43b828e8ca2d50e718.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1888,\"height\":200,\"canaryVal\":100.00}],\"HalfTime\":[{\"id\":803,\"displayPage\":\"MATCH\",\"adPositionId\":9,\"positionType\":\"HalfTime\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://creptbabysitter.com/k60dnrsi7j?key=922edcb5fa5d362b4ad7c4dc16a876a2\",\"triggerCloseSeconds\":30,\"adMaterialId\":498,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260727/f30e2d0c2ada4daca58b148cc6ff74e5.gif?width=750&height=422&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":750,\"height\":422,\"canaryVal\":100.00}],\"Patch\":[{\"id\":893,\"displayPage\":\"MATCH\",\"adPositionId\":7,\"positionType\":\"Patch\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":5,\"adMaterialId\":542,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/3fa8f302e2f348f6aa96d4b3f4ad9ca9.png?width=1720&height=968&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1720,\"height\":968,\"canaryVal\":100.00}]}},\"language\":\"en\",\"region\":\"JP\",\"deviceId\":\"2c232d98-f82f-4e16-a3b4-c1633f88a454\",\"popUnderDisplayCount\":1,\"popUnderCoolDownMinDuration\":5,\"popUnderCoolDownMaxDuration\":10,\"matchId\":\"zp5rzghgkn5kq82\",\"displayPage\":\"MATCH\"},\"msg\":\"\"}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/account-service/ee/client/general",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/general",
+      "post_data": "",
+      "page": "https://www.camel1.tv/",
+      "ts": 1786009687643,
+      "status": 200,
+      "response": "{\"traceId\":\"093n7bvj1jnho4\",\"timestamp\":1786009849120,\"status\":200,\"data\":{\"ip\":\"43.207.116.248\",\"region\":\"JP\"},\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/client/getHistoryMessage",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/getHistoryMessage",
+      "post_data": "{\"groupId\":\"camel_318q66hx56ovqo9\"}",
+      "page": "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+      "ts": 1786009765812,
+      "status": 200,
+      "response": "{\"traceId\":\"9dik7bvj1ramkv\",\"timestamp\":1786009766315,\"status\":200,\"data\":[],\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/client/getHistoryMessage",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/getHistoryMessage",
+      "post_data": "{\"groupId\":\"camel_8yomo4h1d369q0j\"}",
+      "page": "https://www.camel1.tv/football/chabab-atlas-khenifra-vs-racing-casablanca/animation/8yomo4h1d369q0j",
+      "ts": 1786009776926,
+      "status": 200,
+      "response": "{\"traceId\":\"u3tk7bvj1ojcrh\",\"timestamp\":1786009777280,\"status\":200,\"data\":[],\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/client/getHistoryMessage",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/getHistoryMessage",
+      "post_data": "{\"groupId\":\"camel_l7oqdehg5ojyr51\"}",
+      "page": "https://www.camel1.tv/football/kalighat-fc-vs-patha-chakra/animation/l7oqdehg5ojyr51",
+      "ts": 1786009795153,
+      "status": 200,
+      "response": "{\"traceId\":\"etel7bvj1iegug\",\"timestamp\":1786009795503,\"status\":200,\"data\":[],\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/client/web/getAnchorNoticeMapper",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/web/getAnchorNoticeMapper",
+      "post_data": "",
+      "page": "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+      "ts": 1786009765812,
+      "status": 200,
+      "response": "{\"traceId\":\"ojom7bvj131aav\",\"timestamp\":1786009838201,\"status\":200,\"data\":\"Welcome! Enjoy free football live streams. We recommend bookmarking our site. Please keep chat friendly. Violations may result in restricted access.\",\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/login/anonymous/web?appCode=D04B29D6B957CD44DC5F9894189380B8",
+      "host": "api.cameltv.live",
+      "path": "/account-service/login/anonymous/web?appCode=D04B29D6B957CD44DC5F9894189380B8",
+      "post_data": "{\"appCode\":\"D04B29D6B957CD44DC5F9894189380B8\"}",
+      "page": "https://www.camel1.tv/",
+      "ts": 1786009687642,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"detail\":{\"key\":\"Anony088112127\",\"value\":\"C_1e27b9448315dad3e5c9187b66d2f7ea\"},\"success\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/setting?category=room",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/setting?category=room",
+      "post_data": "",
+      "page": "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+      "ts": 1786009765935,
+      "status": 200,
+      "response": "{\"traceId\":\"emom7bvj1n1tno\",\"timestamp\":1786009838286,\"status\":200,\"data\":[{\"category\":\"room\",\"name\":\"RoomExitReportInterval\",\"value\":\"60\",\"desc\":\"RoomExit上报间隔\",\"memberCount\":786}],\"msg\":\"\"}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/sports_live/loadAnchorsByMatchId?matchId=2y8m4zh5kwgpql0",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/sports_live/loadAnchorsByMatchId?matchId=2y8m4zh5kwgpql0",
+      "post_data": "",
+      "page": "https://www.camel1.tv/football/persatuan-sepakbola-indonesia-jakarta-vs-arema-fc/live/2y8m4zh5kwgpql0",
+      "ts": 1786009822717,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"detail\":{\"anchorIds\":[],\"streams\":[{\"pushUrl\":\"rtmp://livepush.camel4.live/live/sd-6Mxia8wdXFv6889cVm\",\"streamUrl\":\"https://liveplay1.camel4.live/live/sd-6Mxia8wdXFv6889cVm_md.m3u8\",\"streamUrlM3u8\":\"https://liveplay1.camel4.live/live/sd-6Mxia8wdXFv6889cVm_md.m3u8\",\"matchTime\":1786005000,\"isBackup\":0,\"isCustom\":0}],\"robot\":false},\"success\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/sports_live/view_match?matchId=318q66hx56ovqo9",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/sports_live/view_match?matchId=318q66hx56ovqo9",
+      "post_data": "",
+      "page": "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+      "ts": 1786009765812,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"success\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/sports_live/view_match?matchId=8yomo4h1d369q0j",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/sports_live/view_match?matchId=8yomo4h1d369q0j",
+      "post_data": "",
+      "page": "https://www.camel1.tv/football/chabab-atlas-khenifra-vs-racing-casablanca/animation/8yomo4h1d369q0j",
+      "ts": 1786009776926,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"success\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/sports_live/view_match?matchId=l7oqdehg5ojyr51",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/sports_live/view_match?matchId=l7oqdehg5ojyr51",
+      "post_data": "",
+      "page": "https://www.camel1.tv/football/kalighat-fc-vs-patha-chakra/animation/l7oqdehg5ojyr51",
+      "ts": 1786009795153,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"success\":true}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/konfi-service/web/getDataById",
+      "host": "api.cameltv.live",
+      "path": "/konfi-service/web/getDataById",
+      "post_data": "{\"formKey\":\"sport_live_worldcup_telegram\"}",
+      "page": "https://www.camel1.tv/worldcup-2026",
+      "ts": 1786009762662,
+      "status": 200,
+      "response": "{\"traceId\":\"97fk7bvj19jbjl\",\"timestamp\":1786009763050,\"status\":200,\"data\":[{\"text_bn\":\"<p>ধাপ ১: আপনার ওয়ার্ল্ড কাপ সাপোর্ট টিম অ্যাভাটার ফ্রেমটি সম্পূর্ণ ফ্রি-তে ক্লেইম করুন! শুধুমাত্র আমাদের কাস্টমার সার্ভিসের সাথে যোগাযোগ করুন।</p><p>ধাপ ২: ১টি প্রিমিয়াম পেইড পিক (Paid Pick) পান সম্পূর্ণ ফ্রি — যার মূল্য $৮.৮৮ !!</p><p>ক্লেইম করার নিয়ম: কাস্টমার সার্ভিসের সাথে যোগাযোগ করুন + আপনার Camel ইউজার আইডি (User ID) প্রদান করুন।</p>\",\"formKey\":\"sport_live_worldcup_telegram\",\"text_en\":\"<p>Step&nbsp;1:&nbsp;Claim&nbsp;your&nbsp;World&nbsp;Cup&nbsp;Support&nbsp;Team&nbsp;Avatar&nbsp;Frame&nbsp;for&nbsp;FREE!&nbsp;Simply&nbsp;contact&nbsp;our&nbsp;customer&nbsp;service.</p><p>Step&nbsp;2:&nbsp;Get&nbsp;1&nbsp;Premium&nbsp;Paid&nbsp;Pick&nbsp;for&nbsp;FREE&nbsp;—&nbsp;Worth&nbsp;$8.88&nbsp;!!</p><p>How&nbsp;to&nbsp;Claim:&nbsp;Contact&nbsp;Customer&nbsp;Service&nbsp;+&nbsp;Provide&nbsp;your&nbsp;Camel&nbsp;User&nbsp;ID.</p>\",\"icon\":\"\",\"url\":\"https://t.me/CamelLiveNewsHub/2328\",\"text_hi\":\"<p>स्टेप 1: अपनी वर्ल्ड कप सपोर्ट टीम का अवतार फ्रेम (Avatar Frame) बिल्कुल FREE में पाएं! बस हमारे कस्टमर सर्विस से संपर्क करें।</p><p>स्टेप 2: 1 प्रीमियम पेड पिक (Premium Paid Pick) पाएं बिल्कुल FREE — कीमत $8.88 !!</p><p>दावा (Claim) कैसे करें: कस्टमर सर्विस से संपर्क करें + अपना Camel यूजर ID दें।</p>\",\"text_id\":\"<p>Langkah 1: Klaim Bingkai Avatar Tim Dukungan Piala Dunia Anda secara GRATIS! Cukup hubungi layanan pelanggan kami.</p><p>Langkah 2: Dapatkan 1 Prediksi Berbayar Premium (Premium Paid Pick) secara GRATIS — Senilai $8.88 !!</p><p>Cara Klaim: Hubungi Layanan Pelanggan + Berikan ID Pengguna Camel Anda.</p>\",\"id\":\"696361217529289292\",\"key\":\"1\",\"text_ar\":\"<p>الخطوة 1: احصل على إطار أفاتار لفريقك المفضل في كأس العالم مجانًا! كل ما عليك فعله هو التواصل مع خدمة العملاء لدينا.</p><p>الخطوة 2: احصل على توقع مدفوع ومميز (Premium Paid Pick) مجانًا — بقيمة 8.88$ !!</p><p>كيفية المطالبة: تواصل مع خدمة العملاء + أرسل معرف المستخدم الخاص بك على Camel (User ID).</p>\"}],\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://sensors.cameltv.live/sa.gif?project=production",
+      "host": "sensors.cameltv.live",
+      "path": "/sa.gif?project=production",
+      "post_data": "data_list=H4sIAAAAAAAAA%2B2XT2%2FcRBTAv4plVT3tZG3v2l6vhFCINlSCCESCOFTImh0%2Fr6exZ5yZsY1bRSon4EIPSFzotRdOHODWr5MgvgVvnE2UtDRqqyAh5Mt65nneH78%2FP80%2BfOLyDIThhoN2l0%2Fce9ttnzIpjzmkPHOXrp%2FkWRQnfjTz6YwSb7H2sizyvGCWh8mCRH44SyKP%2BAH%2Bevi8Oh4E1E%2Fc04mbcW24YOZO7E3ckq%2BHaIen%2B0ijyK7TCkwhrQcmM7gUtqA0l8L63QnCHd%2FGUytZg7r6asMreCwFpDLPNRh3SeYLD9U1UwAiLYBvCpQm3jVhxzNTuEt%2FPrfClkNXS2VeOXslvnn61bhfC9HKqQFtUqNonnOWatkoBqnpa8Bjf%2F7y%2B%2FmPL87%2F%2BPav755dO6yBKlakx9B3Utk8nD%2F%2F9ezZz2ff%2F3b29GW6Vfrhp7OXT68pKchBKVB4HKW0rnFhWlw2qsRlYUytl9Np13U7jFZQ%2BjumneZSmjUtyynVpJKCMklaTTZgaA5TEc5PyrIQXts9Oml7NFWjr1yqCu3VDPc3fZZUbHAFwvpnDLSW6qJTdoUUvbdY%2BH7gB7GNyVQXOlyndUfdJaZzrWSnB1t7hZLVUPi8Kcv0Dj8ATaU1tSV030f1pAHVXwRe0w2WkZvS1vEraljh7B46B4Mdp9XOx4Md51PegnPIpIKJs48N5xwaBbTiYjNxDgatQ0ONdu47X9aZLaRDnD37dYPmpR%2Fbf9uZixc4TEnse1EwI48rtY65GfJtsPMu%2BwqHH1RqVW0SMcc5V9giGcXgjWoAhXeY1Hv%2Fehpw1KltoUo2%2Bo7Ys80UziU7xi20mLNhYtLPMW2rb2qpG2XTZ6GCE38t7%2FOJmw56QyjhLFokW2leNrpI%2F0HjdDIiekT0iOi3%2BICsUdQMJUKHuQJkrmDILX8k2buS7AGWaCWM6t8CY3Ew82KUhrdgLBwxNmLs%2FTD2fyCTaWk2hJT484sbV2sbf7gEhPH2vaB2atypgE5PMzTFy%2Bmqsd1DBTmSNdkrm7Um%2B4qDyMqeDMwA8glnx%2BSzPCdH2Flk%2F4vVilhekCu6bIj%2FIdhZTjvaf2CtY0SagbDeDnaP9h7gfk2FwIvftuYfDbvxBvjO3NzNbrn%2FxVF8A5xBlMwRndHijeDEdyM4R3CO4ERwxq%2BBM7kFnJjbMiOsqcngu7RErCwsiALMSq%2BJrikXhKqNHSZBiZKZ4iMq%2FxOoDONFcvOvcuLPojBOvDeh0r47%2Ffpvm0DGP88UAAA%3D&gzip=1&crc=-359053137",
+      "page": "https://www.camel1.tv/football/as-monaco-vs-getafe/n54qllhn0vwjqvy",
+      "ts": 1786009716624
+    },
+    {
+      "method": "POST",
+      "url": "https://sensors.cameltv.live/sa.gif?project=production",
+      "host": "sensors.cameltv.live",
+      "path": "/sa.gif?project=production",
+      "post_data": "data_list=H4sIAAAAAAAAA%2B1VO2%2FUQBD%2BK9YqUN3D63vZ16EoEgVICOgQWu2tx%2BdNbK%2Bzuz7nEkWCCmhIgUQDLQ0VBXT5OxfEv2DWdwmXBEUgXXnNeffTfDOz8%2FjuxQmRMRRWWgmGjE%2FIzuo6Z0KpAwlMxmRMaJTEw1FEhz3Ke7zthxM%2Fjoe%2BH%2FSSQRS2h3TQi4Z%2Bmwb46%2BP3yjwIOI3IaYvE0lhZCLsRfy2SyUmTbfMl%2BwYhd2Y52FS5CELFcAnOQBupChe3Eww61OVTalWCvnq1lTkcqwKYShIDlozb%2FdBHuhEaoGApyGmKaOSvgbWMbUrGtN934ExCXSptb9hewdetb%2BZ9K0WHcwvGMqt5kkjBjKq0AGbnJaDZz0%2FfL95%2Fufjx%2BtebszVjA1yLlB3AvFba1eHi89fF2cfF22%2BLV%2BdsRXr3YXH%2Bao2kIQGtQaM5orws8WBneKx0hsfU2tKMu926rjuC55DRjp11LfC8%2B5QLWUzvBf4uN3yS8ULwbjAP8%2F5xuh9GR4eZP0I3JcZJlM7RVynwfj0esqZ4gsLFFgKMUXo5JQ8KVcz9MKQ0oIFzVNl8yZGGlTUnYyzlRKvaNL52U63ypulJlWVsQ8mjG1Zy1zryv7TDCvR8mXDJp9g6aTPXu6UH7w%2FfeyRn4D3mVqRgWt4zoTQY7773HON5T5DqtdEak28ML9250Vqt0yjEPYlGYX808tsRTeCY95pyWhyqy5HBvQbNHNXVCEuYSI3djznmaHUFCP5jzbw7n76zqXfimnI3ArmqzIZ0Y1UK3ClxgFeYYVGaaWcu%2FN5RqUylXX2cIOC2rhe2RVjDa1IZDPtBhChFNMkqk7LbDHra2srrVl638npH8nGluW1ag8ESDaiZhUBBoluJuiVRD7H%2Be4XF%2F5S%2F6RO9pk%2FDQRg4NLhDn4LTl78BCv7o5gAKAAA%3D&gzip=1&crc=-668583774",
+      "page": "https://www.camel1.tv/team/Racing%20Casablanca/2y8m4zhj89xql07",
+      "ts": 1786009790784
+    },
+    {
+      "method": "POST",
+      "url": "https://sensors.cameltv.live/sa.gif?project=production",
+      "host": "sensors.cameltv.live",
+      "path": "/sa.gif?project=production",
+      "post_data": "data=H4sIAAAAAAAAA61UO28TQRD%2BK6dVoPLj7hzfwx2ySANISNCv1ntzvo3vbpfdPV9MFClUQEMKJBpoaagooMvfcRD%2FgtmLHTkJRaSk8c1%2Bmm%2Fmm5ePicigtsIKMGRyTPY2zxXlUi4EUJGRCQnSPIviNIhGARuxvp%2FM%2FCyLfD8c5eM06UfBeJRGfj8I8dfH75V7GLIgJSc9kgljRc3tg8TrkVLMOrXdlxwahJxNK7CFdBm4zGALLkEbIWuXdxCOB4HTo7RUoK%2BqtqKCt7IGKvPcgCWT%2Fn7iI91wDVDTAsS8QDT1d8BWZLYgk2B%2F34FLAa2S2t7wvYKve9%2FUfUuiw5kFY6nVLM8Fp0Y2mgO1KwXo9ufrr4tP3y9%2Bv%2Fv7%2FmzH2QDTvKALWLVSuz5cfPuxPvuy%2FvBzfXpON6SPn9fnpzskDTloDRrdEWVKoWGXaDa6RLOwVpnJcNi27YCzCspgYJdDC6waPmMlFsvso9A%2FmA6P4rKKVSHT%2BaIK2wwDKMyQS11hFMXxfT1Tyeo5WlC7rJyDMVJf7seTWtYrP0mCIAzC2Cmx1SVHGKpaRibYxJmWreliTQstq27ceVOW9N6yMQBVzI2L3J3wpgG9uhSp2BwHJWzpJrXlegdT77lYgveCWV6A6XmvuNRgvMfea8zhvUSS1%2FemTmrnuA3kVmhzNnGC95DGaZL6cX%2BcH0arQnfNs7g829XA%2BwVNHdV1BBuWC41Tzhiqs7oBBO%2FcIe%2B%2F5e7dvzY8QeaGXMnGPNB%2FwqZ8vBe%2BwCcssRHdJlOX%2FumRkqbRrifu2PESd5vZI7TjdVJG%2FiiIEE0QzcvGFPQ2Izn5B82DD1s6BQAA&ext=crc%3D-1100581831&gzip=1&crc=-1100581831",
+      "page": "https://www.camel1.tv/team/Kalighat%20FC/x7lm7pho9gkm2wd",
+      "ts": 1786009798931
+    }
+  ]
+}

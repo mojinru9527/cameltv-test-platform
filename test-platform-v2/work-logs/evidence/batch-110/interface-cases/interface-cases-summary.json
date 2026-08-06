@@ -1,0 +1,310 @@
+{
+  "endpoints": [
+    {
+      "service": "account-service",
+      "path": "/account-service/ee/ads/activity/get",
+      "module": "/account-service/ee/ads/activity/get",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 21,
+      "imported": 21
+    },
+    {
+      "service": "account-service",
+      "path": "/account-service/ee/client/general",
+      "module": "/account-service/ee/client/general",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "account-service",
+      "path": "/account-service/ee/client/getCountryCode",
+      "module": "/account-service/ee/client/getCountryCode",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "account-service",
+      "path": "/account-service/ee/client/getHistoryMessage",
+      "module": "/account-service/ee/client/getHistoryMessage",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 9,
+      "imported": 9
+    },
+    {
+      "service": "account-service",
+      "path": "/account-service/ee/client/web/getAnchorNoticeMapper",
+      "module": "/account-service/ee/client/web/getAnchorNoticeMapper",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "account-service",
+      "path": "/account-service/login/anonymous/web",
+      "module": "/account-service/login/anonymous/web",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 9,
+      "imported": 9
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/news/list_visible",
+      "module": "/camel-service/ee/news/list_visible",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 35,
+      "imported": 35
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/search/hot",
+      "module": "/camel-service/ee/search/hot",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/search/query",
+      "module": "/camel-service/ee/search/query",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/search/recommend",
+      "module": "/camel-service/ee/search/recommend",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/setting",
+      "module": "/camel-service/ee/setting",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/football/match/detail_live",
+      "module": "/camel-service/ee/sports_live/football/match/detail_live",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/loadAnchorsByMatchId",
+      "module": "/camel-service/ee/sports_live/loadAnchorsByMatchId",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/view_match",
+      "module": "/camel-service/ee/sports_live/view_match",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "konfi-service",
+      "path": "/konfi-service/web/getDataById",
+      "module": "/konfi-service/web/getDataById",
+      "real_source": "生产真实样本（Batch 110 采集）",
+      "schema_source": "real-sample",
+      "generated": 9,
+      "imported": 9
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/fifa/football/season/match",
+      "module": "世界杯-赛程",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/replay/list",
+      "module": "回放-列表",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/replay/get",
+      "module": "回放-详情",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/get_team_by_name",
+      "module": "球队-详情",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/football/season/recent/table/detail",
+      "module": "联赛-积分榜",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/get_competition_by_name",
+      "module": "联赛-详情",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/football/season/match",
+      "module": "联赛-赛程",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/news_kind/list",
+      "module": "资讯-分类",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/news/related",
+      "module": "资讯-相关推荐",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/news/get",
+      "module": "资讯-详情(全文)",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/news/get_visible",
+      "module": "资讯-详情(可见)",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/forecast/queryOddsSummaryByMatchId",
+      "module": "赔率-汇总",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/football/match/time",
+      "module": "赛事详情-时间线",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/football/match/team_stats/list",
+      "module": "赛事详情-球队统计",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/football/match/analysis",
+      "module": "赛事详情-赛前分析",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/football/match/lineup",
+      "module": "赛事详情-阵容",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/hot_group_match",
+      "module": "首页-热门分组",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/hot_team",
+      "module": "首页-热门球队",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    },
+    {
+      "service": "camel-service",
+      "path": "/camel-service/ee/sports_live/hot_match",
+      "module": "首页-热门赛事",
+      "real_source": "生产回填探测（契约参数 + 生产真实值）",
+      "schema_source": "real-sample",
+      "generated": 3,
+      "imported": 3
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+[
+  "Provider's accounts list is empty.",
+  "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+  "Failed to load resource: the server responded with a status of 404 (Not Found)",
+  "{\"timestamp\":\"2026-08-06T09:49:23.238Z\",\"method\":\"POST\",\"url\":\"/konfi-service/web/getDataById\",\"duration\":\"882ms\",\"status\":404,\"error\":\"API Error: 404 Not Found\",\"stack\":\"ApiError: API Error: 404 Not Found\\n    at https://www.camel1.tv/_next/static/chunks/2026-fc99ab989c291ad4.js:1:22522\\n    at Obj",
+  "Failed to load resource: the server responded with a status of 404 ()",
+  "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)",
+  "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+]

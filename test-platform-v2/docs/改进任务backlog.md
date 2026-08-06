@@ -820,6 +820,18 @@ graph LR
 
 **备注**：B1/B5 是本批用例密度（用户端 77 条 vs 运营后台 133 条）差异的直接原因之一；B2 本批已按 ingest 落库语义直连补入知识源（5 来源/16 实体/15 关系）作为过渡。
 
+### Batch 110 追加（2026-08-06，第一期收口执行中发现）
+
+| # | 障碍 | 实测证据（Batch 110） | 目标 | 优先级 |
+|---|------|---------------------|------|:----:|
+| B6 | 生产 wiki 知识库未启用 | `wiki_enabled` 默认 OFF，production.env 无 WIKI_ENABLED 变量；wiki API 走 503 门禁 | Railway 配置 WIKI_ENABLED/WIKI_DIFF_ENABLED/WIKI_AUTO_INGEST_ENABLED=true 后执行 build-wiki-baseline | P1 |
+| B7 | 需求模块树直建仅脚本级（平台 API 仍依赖蓝湖证据包） | build-wiki-baseline.py 直建 ReleaseBundle+RequirementModule 树成功路径已就绪，平台 /requirement-modules 仍要求 evidence_job_id | 平台 API 支持 md 直传建树（C102-3 升级） | P2 |
+| B8 | 接口用例批量执行/结果回填无平台 UI | 97 条执行回填由 execute-interface-cases.py 完成，平台前端仅单条执行 | 平台「批量执行+结果回填」UI（C103-7 关联） | P2 |
+| B9 | 知识中心标准 capture 未复验（直连补入 7 源） | 无平台密码时走直连；标准 /knowledge/capture 需登录后复验 sources 可见 | 提供凭证后 API capture 复验（C107-1 同链路） | P2 |
+| B10 | 生产 SSR 站点 XHR 样本少，需交互触发+回填探测 | 40 页勘察仅 10 XHR；交互触发+契约回填后闭环 34 接口 | 平台支持「页面 XHR 批量采集」工具（C103-5 落地） | P3 |
+
+**备注**：B6/B7 关联 C110-1；B8 关联 C110-3；B9 关联 C110-2；B10 关联 C103-5 已部分落地（34 接口闭环）。
+
 ---
 
 ## Epic CASE-QUALITY　功能用例质量与覆盖度（Batch 103 启动，C103-1）

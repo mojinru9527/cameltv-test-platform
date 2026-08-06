@@ -1,0 +1,8 @@
+{
+  "s0": {
+    "status": 200,
+    "final_url": "https://admcamel.camel1.tv/nav",
+    "len": 6553,
+    "head": "{\"code\":0,\"msg\":\"\",\"items\":[{\"title\":\"直播管理\",\"href\":\"\",\"icon\":\"&#xe652;\",\"spread\":false,\"children\":[{\"title\":\"在播管理\",\"href"
+  }
+}
