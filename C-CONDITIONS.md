@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-06 (Batch 105: 租户模式——用户→组织→项目，PR 待创建)
+**最后更新**: 2026-08-06 (Batch 106: 生产启用清单 + 组织权限映射 + 项目邀请链接，PR 待创建)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -52,6 +52,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C105-2 | 生产启用租户层前执行存量迁移演练（含 PostgreSQL）并确认 REGISTRATION_ENABLED/配额监控（承接 C104-2），结果登记交付清单 | P1 | 2026-08-06 |
 | C105-3 | frontend/src/types/api.d.ts 全量重生成（C104-3 持续跟踪，工具版本锁定） | P2 | 2026-08-06 |
 | C105-4 | 「停用组织后组织成员入口提示」UI 走查与组织项目联动浏览器截图证据 | P2 | 2026-08-06 |
+
+### batch-106 — 生产启用 + 组织权限映射 + 项目邀请链接（Batch 106 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C106-1 | 生产切换人工步骤（用户确认窗口后）：备份 Supabase → Railway 新增 REGISTRATION_ENABLED=true / INVITE_CODE_REQUIRED=true / 配额变量 → alembic upgrade head → 按 checklist §4 验证 → 回填清单 §6 并关闭 C104-2/C105-2 | P1 | 2026-08-06 |
+| C106-2 | 邀请链接灰度观察一周：统计转化与滥用，评估邮件通知与防刷（限流/验证码） | P2 | 2026-08-06 |
 
 ### batch-102 — 体育平台功能模块梳理（Batch 102 Leader 条件）
 
@@ -141,7 +148,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 批次 | 分支 |
 |----|------|------|------|
-| — | — | — | — |
+| C104-2 | 生产启用注册开关/邀请码/配额监控确认 | batch-106 | feature/batch-106-production-permissions-invites |
+| C105-2 | 生产租户层迁移演练与开关确认（承接 C104-2） | batch-106 | feature/batch-106-production-permissions-invites |
 
 ---
 
@@ -152,6 +160,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
 | C104-1 | 租户/组织层（用户→组织→项目）批次须从合并后最新 main 创建；organization_id 预留、两级成员权限与数据迁移 | Batch 105 PR（待创建）：sys_organization/sys_organization_member + sys_project.organization_id + 回填迁移 + 组织成员访问；自 c9d7d5a 创建 | 2026-08-06 |
+
+### Batch 105 → 106 关闭
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C105-1 | 组织负责人/管理员=组织内项目管理员权限映射 | Batch 106 PR（待创建）：rbac_service org 推导 + require_project_owner_or 组织成员放行；测试 5/5 + 冒烟 | 2026-08-06 |
+| C104-4 | 项目邀请链接（注册即入项目与组织） | Batch 106 PR（待创建）：sys_project_invite + 注册集成 + 前端入口；测试 9/9 + 冒烟 | 2026-08-06 |
 
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
