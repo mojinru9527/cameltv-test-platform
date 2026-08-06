@@ -18,7 +18,6 @@ depends_on = None
 def upgrade() -> None:
     # 初始迁移会按当前模型 Base.metadata.create_all 建表（含后续模型字段），
     # 因此本迁移必须幂等：列已存在（模型建表）时跳过（仓库既有模式，见 20260626_0003）。
-    columns = {c["name"] for c in sa.inspect(op.get_bind()).get_columns("test_case")}
     new_columns = [
         ("case_design_method", sa.String(length=64)),
         ("positive_negative", sa.String(length=16)),
@@ -26,9 +25,12 @@ def upgrade() -> None:
         ("last_response_json", sa.Text()),
         ("last_run_status", sa.String(length=16)),
     ]
-    for name, col_type in new_columns:
-        if name not in columns:
-            op.add_column("test_case", sa.Column(name, col_type, nullable=False, server_default=""))
+    inspector = sa.inspect(op.get_bind())
+    if "test_case" in {t for t in inspector.get_table_names()}:
+        columns = {c["name"] for c in inspector.get_columns("test_case")}
+        for name, col_type in new_columns:
+            if name not in columns:
+                op.add_column("test_case", sa.Column(name, col_type, nullable=False, server_default=""))
 
 
 def downgrade() -> None:
