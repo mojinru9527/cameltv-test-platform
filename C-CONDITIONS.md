@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-06 (Batch 100: V1 整体退役（web-ui/server/cli 移除 + API 回归资产迁移）+ C64-1 关闭，PR #138)
+**最后更新**: 2026-08-06 (Batch 101: 体育平台生产接入（899 端点/325 用例/环境/UI 冒烟/定时/Token）+ 冒烟 3/5 发现登记，PR #139)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -33,6 +33,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C99-1 | **性能采集功能需要优化**：①采样周期并行化（当前 10–55s/点 → 目标 ≤2s）；②jank 视频帧率口径（30fps 视频在 120Hz 屏误报）；③多核 CPU 语义与阈值（当前如实上报 >100%）；④iOS 26.5 支持（solox DeviceSupport 缺失）；详见 `test-platform-v2/docs/改进任务backlog.md` Epic PERF-OPT | P2 | 2026-08-06 |
+
+### batch-101 — 体育平台承接（Batch 101 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C101-1 | 生产只读冒烟放行策略评估：站点 POST 信标与第三方广告域（ukankingwithea.com 等）的白名单/策略决策；当前严格只读守卫拦截为真实发现，不静默放行 | P1 | 2026-08-06 |
+| C101-2 | 音视频专项 match replays 真实回放 URL（`--av-url` 待业务提供后创建任务） | P2 | 2026-08-06 |
+| C101-3 | Test5 内网 API 回归由 CI `api-regression` workflow 承担；平台「体育平台-每日API回归」schedule 因内网不可达停用（enabled=false）登记 | P2 | 2026-08-06 |
 
 ### batch-95 — 后续小项消化（Batch 95 Leader 条件）
 
@@ -402,10 +410,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## 统计
 
-- **Open / 非关闭**: 22 (含 4 个 P0 blocking；其中 14 项 Deferred + 2 项 C95 + 1 项 C96 + 1 项 C99；口径见 `audit-cconditions.ps1` stats 输出)
+- **Open / 非关闭**: 25 (含 4 个 P0 blocking；其中 14 项 Deferred + 2 项 C95 + 1 项 C96 + 1 项 C99 + 3 项 C101；口径见 `audit-cconditions.ps1` stats 输出)
 - **In Progress**: 0
 - **Closed**: 134（Batch 91 起以 `audit-cconditions.ps1` stats 输出为准）
-- **Total**: 156（另有 13 条历史补录不计入）
+- **Total**: 159（另有 13 条历史补录不计入）
 
 ## 维护约定
 
