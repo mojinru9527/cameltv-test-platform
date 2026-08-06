@@ -10,6 +10,8 @@ import { useAuthStore } from '@/stores/auth'
 import { Button, Input } from '@/ui'
 
 const LoginPage = lazy(() => import('@/pages/login'))
+const RegisterPage = lazy(() => import('@/pages/register'))
+const MyProjectsPage = lazy(() => import('@/pages/my-projects'))
 const SystemPage = lazy(() => import('@/pages/system'))
 const TestCasePage = lazy(() => import('@/pages/testcase'))
 const TestPlanPage = lazy(() => import('@/pages/testplan'))
@@ -169,6 +171,7 @@ function ForcedPasswordChangePage() {
 
 export const router = createBrowserRouter([
   { path: '/login', element: <PageLoader><LoginPage /></PageLoader> },
+  { path: '/register', element: <PageLoader><RegisterPage /></PageLoader> },
   {
     path: '/change-password',
     element: <RequireAuth><ForcedPasswordChangePage /></RequireAuth>,
@@ -184,6 +187,7 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Navigate to="/workbench" replace /> },
+      { path: 'my-projects', element: <PageLoader><MyProjectsPage /></PageLoader> },
       { path: 'workbench', element: <PageLoader><Workbench /></PageLoader> },
       { path: 'trace', element: <PageLoader><TracePage /></PageLoader> },
       { path: 'requirement', element: <PageLoader><RequirementPage /></PageLoader> },

@@ -9,6 +9,27 @@ export function createUser(body: any) { return client.post('/system/users', body
 export function updateUser(id: number, body: any) { return client.put(`/system/users/${id}`, body) }
 export function deleteUser(id: number) { return client.delete(`/system/users/${id}`) }
 
+// ── 注册邀请码（Batch 104）──
+export interface InviteCode {
+  id: number
+  code: string
+  created_by: number
+  created_by_name: string
+  usage_limit: number
+  used_count: number
+  expires_at: string | null
+  status: number
+  created_at: string | null
+}
+
+export function fetchInviteCodes() { return client.get<unknown, InviteCode[]>('/system/invite-codes') }
+export function createInviteCode(body: { usage_limit?: number; expires_at?: string | null }) {
+  return client.post<unknown, InviteCode>('/system/invite-codes', body)
+}
+export function disableInviteCode(id: number) {
+  return client.post<unknown, { disabled: boolean }>(`/system/invite-codes/${id}/disable`)
+}
+
 // ── 角色 ──
 export function fetchRoles() { return client.get('/system/roles') }
 export function createRole(body: any) { return client.post('/system/roles', body) }

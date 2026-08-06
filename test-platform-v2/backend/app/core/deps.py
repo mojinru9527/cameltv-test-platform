@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.exceptions import forbidden, not_found, unauthorized
 from app.core.security import decode_token, password_token_version
+from app.models.project import Project
 from app.models.user import User
 from app.services import project_service, rbac_service
 
@@ -129,6 +130,45 @@ def require_system_permission(code: str):
         system_permissions = current.system_permissions or []
         if not rbac_service.has_permission(system_permissions, code):
             raise forbidden(f"缺少全局权限：{code}")
+        return current
+
+    return _checker
+
+
+def require_project_create(
+    current: CurrentUser = Depends(get_current_user),
+) -> CurrentUser:
+    """创建项目：超管 / project:create / project:self_create 三者任一（Batch 104）。"""
+    perms = current.permissions or []
+    if (
+        current.is_super
+        or rbac_service.has_permission(perms, "project:create")
+        or rbac_service.has_permission(perms, "project:self_create")
+    ):
+        return current
+    raise forbidden("缺少权限：project:create")
+
+
+def require_project_owner_or(perm_code: str):
+    """项目级操作放行：超管 / 项目负责人（owner_id） / 拥有全局权限且为项目成员。
+
+    Batch 104 外放轻量模式：普通用户对自己的项目拥有管理能力，无需全局权限点。
+    """
+
+    def _checker(
+        project_id: int,
+        current: CurrentUser = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> CurrentUser:
+        proj = db.get(Project, project_id)
+        if not proj or proj.status == 0:
+            raise not_found("项目不存在")
+        if current.is_super or proj.owner_id == current.user.id:
+            return current
+        if not rbac_service.has_permission(current.permissions, perm_code):
+            raise forbidden(f"缺少权限：{perm_code}")
+        if not project_service.is_member(db, current.user.id, project_id):
+            raise forbidden("无权访问该项目")
         return current
 
     return _checker
