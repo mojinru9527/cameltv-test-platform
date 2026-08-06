@@ -18,6 +18,8 @@
 | Wiki 基线 | **已闭环（C110-1）**：bundle#4 建树 45 模块/43 页 → 43 raw sources → 43 编译 → 158 页审批 → 10 差异任务（财务 21/世界杯 7/回放 3 项） | `evidence/batch-110/wiki-baseline-summary.json` + wiki-diff-and-capture-verify.json |
 | capture 复验 | **已闭环（C110-2）**：标准 /knowledge/capture 新内容 code 0 + id=15；重复内容去重；sources total=16 | `evidence/batch-110/wiki-diff-and-capture-verify.json` |
 | 障碍登记 | SPORT-INT 追加 B6–B10；C110-1~5 入追踪器 | `docs/改进任务backlog.md` + `C-CONDITIONS.md` |
+| konfi 实测 | 生产 konfi（admin-test）29 配置表 formKey+数据量（热门联赛 25/资讯 10935/球队 35455/回放 104 等） | `evidence/batch-110/konfi-inventory-sports.json` |
+| 运营后台生产只读 | admcamel.camel1.tv（mojinru）登录链路实测 + 15 模块完整菜单（系统模块按要求跳过） | `evidence/batch-110/admin-walkthrough/nav.json` + README.md |
 
 ## 2. 硬门禁
 
@@ -52,8 +54,8 @@
 
 ## 5. 发布建议
 
-状态: **通过（C110-1/C110-2 已闭环）**
-必修复: 0 ｜ 条件: C110-3/4/5 跟踪（平台 UI/口径/konfi 校准）
+状态: **通过（C110-1/C110-2/C110-5 已闭环）**
+必修复: 0 ｜ 条件: C110-3/4 跟踪（平台 UI/口径）；C95-1/C74-2 Test5 契约继续 Deferred
 
 ## 6. 复盘卡
 

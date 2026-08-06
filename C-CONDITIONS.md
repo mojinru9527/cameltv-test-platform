@@ -85,7 +85,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ~~C110-2~~ | ~~知识中心标准 capture 复验（7 源 sources 可见）~~ | P1 | 2026-08-06 |
 | C110-3 | 接口用例批量执行/结果回填平台 UI（当前 execute-interface-cases.py 脚本回填 97 条） | P2 | 2026-08-06 |
 | C110-4 | 用例 P0 口径复核（Batch 110 收敛 418→345：用户端关键域全 P0 + 运营核心模块 P0，用户确认口径后固化） | P2 | 2026-08-06 |
-| C110-5 | 运营后台生产账号/Test5 契约补拉（C95-1/C74-2 继续）→ konfi 关联由推断校准为实测 | P2 | 2026-08-06 |
+| ~~C110-5~~ | ~~konfi 关联由推断校准为实测（生产 konfi 29 配置表 + 运营后台 15 模块菜单只读勘察）~~ | P2 | 2026-08-06 |
 
 ### batch-96 — V1 工具审计 / 只读账号 / staging / diff 基线（Batch 96 Leader 条件）
 
@@ -171,6 +171,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|---------|------|
 | C110-1 | 生产 wiki 基线闭环（Railway 已启用；build-wiki-baseline.py 建 bundle#4：45 模块/43 页/43 raw sources 同步/43 编译/158 页审批/10 差异任务，财务 21+世界杯 7+回放 3 差异项） | Batch 110 PR #149 + evidence/batch-110/wiki-baseline-summary.json | 2026-08-06 |
 | C110-2 | 知识中心标准 capture 复验（新内容 code 0 + id=15；重复内容按 content_hash 去重；sources total=16 可见） | Batch 110 PR #149 + evidence/batch-110/wiki-diff-and-capture-verify.json | 2026-08-06 |
+| C110-5 | konfi 关联实测校准（生产 konfi 29 配置表 formKey+数据量；运营后台生产菜单 15 模块只读勘察，系统模块按要求跳过） | Batch 110 PR #149 + evidence/batch-110/konfi-inventory-sports.json + admin-walkthrough/nav.json | 2026-08-06 |
 
 ### Batch 109 — 生产启用收尾关闭（2026-08-06）
 
