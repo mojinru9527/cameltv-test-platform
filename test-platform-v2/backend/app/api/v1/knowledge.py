@@ -440,18 +440,26 @@ def capture_insight(
     """快速捕获灵感/想法/片段，自动入库为 inbox 分类，后续 AI 自动加工。"""
     from app.services.knowledge.ingest_service import ingest_capture_in_new_session
 
-    source_id = ingest_capture_in_new_session(
+    result = ingest_capture_in_new_session(
         current.project_id or 0,
         title=body.title,
         content=body.content,
         source_url=body.source_url or "",
         tags=body.tags,
     )
-    if source_id is None:
+    if result.reason == "disabled":
+        raise APIException(
+            code=503,
+            msg="知识入库未启用（KNOWLEDGE_INGEST_ENABLED=false），请联系管理员",
+            http_status=503,
+        )
+    if result.reason == "duplicate":
         return R(code=409, msg="内容重复，已存在相同知识源")
-    _audit(req, current, db, "knowledge:capture", f"source#{source_id}", body.title)
+    if result.reason == "error" or result.source_id is None:
+        raise APIException(code=500, msg="知识入库失败，请查看服务日志", http_status=500)
+    _audit(req, current, db, "knowledge:capture", f"source#{result.source_id}", body.title)
     db.commit()
-    return R.ok({"id": source_id, "title": body.title, "status": "captured"})
+    return R.ok({"id": result.source_id, "title": body.title, "status": "captured"})
 
 
 # ═══════════════════════════════════════════════════════
