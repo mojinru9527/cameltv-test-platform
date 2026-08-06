@@ -15,11 +15,13 @@ from app.core.security import (
     verify_password,
 )
 from app.models.rbac import Role, UserRole
+from app.models.project import Project, ProjectMember
 from app.models.user import User
 from app.schemas.auth import LoginOut, ProjectBrief, UserBrief
 from app.schemas.organization import OrganizationBrief
 from app.services import project_service, rbac_service
 from app.services import organization_service
+from app.services import project_invite_service
 from app.services.invite_service import consume_invite_code
 
 
@@ -69,13 +71,20 @@ def register(
     email: str,
     password: str,
     invite_code: str,
+    project_invite_token: str = "",
 ) -> User:
     """注册新用户：校验邀请码与唯一性，创建用户并赋予默认全局角色。"""
     if db.scalar(select(User).where(User.username == username)):
         raise APIException(code=400, msg="用户名已存在", http_status=400)
     if email and db.scalar(select(User).where(User.email == email)):
         raise APIException(code=400, msg="邮箱已被使用", http_status=400)
-    if settings.invite_code_required:
+    project_invite = None
+    if project_invite_token:
+        # Batch 106：有效项目邀请链接可免除平台邀请码，并自动加入项目/组织
+        project_invite = project_invite_service.consume_project_invite(
+            db, project_invite_token
+        )
+    elif settings.invite_code_required:
         consume_invite_code(db, invite_code)
 
     user = User(
@@ -95,5 +104,22 @@ def register(
         db.add(UserRole(user_id=user.id, role_id=role.id, project_id=0))
     # Batch 105：注册即拥有个人组织
     organization_service.ensure_personal_organization(db, user.id)
+    if project_invite:
+        proj = db.get(Project, project_invite.project_id)
+        if proj and proj.status == 1:
+            db.add(ProjectMember(
+                project_id=proj.id,
+                user_id=user.id,
+                role_id=role.id if role else 0,
+            ))
+            if proj.organization_id and not organization_service.is_member(
+                db, user.id, proj.organization_id
+            ):
+                from app.models.organization import OrganizationMember
+                db.add(OrganizationMember(
+                    organization_id=proj.organization_id,
+                    user_id=user.id,
+                    role_id=3,
+                ))
     db.commit()
     return user
