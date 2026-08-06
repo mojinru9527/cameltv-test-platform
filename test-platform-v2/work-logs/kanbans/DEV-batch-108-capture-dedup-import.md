@@ -16,27 +16,28 @@
 
 | # | Slice | 方案 | 编码 | 自测 | 审批 | 合入 | 备注 |
 |---|-------|:----:|:----:|:----:|:----:|:----:|------|
-| 1 | 工件 + 根因（PRD/PM/Design/看板） | ✅ | ✅ | ✅ | ✅ | ⏳ | 根因：部署开关关 + API 混义 + hooks 翻转 |
-| 2 | ingest 类型化 + 路由映射 + 配置 | ✅ | 🔄 ⬅️ | ⏳ | ⏳ | ⏳ | **当前位置**：编码中 |
-| 3 | 单测 + 生产导入闭环 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
-| 4 | QA + Leader + 一次总确认 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | |
+| 1 | 工件 + 根因（PRD/PM/Design/看板） | ✅ | ✅ | ✅ | ✅ | ⏳ | commit 8e7c9b2（根因：开关关+混义+hooks 翻转） |
+| 2 | ingest 类型化 + 路由映射 + 配置 | ✅ | ✅ | ✅ | ✅ | ⏳ | CaptureIngestResult + 503/409/500/200 + env 开关 |
+| 3 | 单测 + 生产导入闭环 | ✅ | ✅ | ✅ | ✅ | ⏳ | 107 pytest；规范文档 id=6 入库且 sources API 可见 |
+| 4 | QA + Leader + 一次总确认 | ✅ | ✅ | ✅ | 🔄 ⬅️ | ⏳ | **当前位置**：等一次总确认 |
 
 ## 📍 当前位置
 
 ```
-Batch 108 — capture 去重误判修复 + 规范导入闭环
-├── ✅ 根因：KNOWLEDGE_INGEST_ENABLED=false（部署环境）→ 一律 None → 409 混义；hooks 失败翻转
-├── 🔄 编码：CaptureIngestResult 类型化 + 路由 503/409/500/200 + production.env 开关
-├── ⏳ 待做：单测 + 生产库导入规范文档 + sources API 验证
-└── ⏳ 下一步：QA 硬门禁 + Leader 判决 → 一次总确认
+Batch 108 — capture 去重误判修复 + 规范导入闭环（完成，等一次总确认）
+├── ✅ 根因：KNOWLEDGE_INGEST_ENABLED=false + API 混义 + hooks 失败翻转
+├── ✅ 修复：CaptureIngestResult 类型化 + 路由 503/409/500/200 + hooks 容错 + env 开关
+├── ✅ 闭环：规范文档入库生产知识中心（id=6，sources API total=6 可见）；107 pytest
+└── 🔄 等一次总确认（push + Draft PR + required checks 后合入）
 ```
 
 ## 📜 批次记录
 
 ### Batch 108 — capture 修复 + 导入闭环 (2026-08-06)
-- **产出**: PRD/PM/Design/看板（S1）；修复编码（S2 进行中）
-- **审批**: 待一次总确认
-- **耗时**: 进行中
+- **产出**: 根因定位 + 类型化修复 + 路由映射 + 配置 + 单测 6 条 + 规范导入闭环 + QA/Leader
+- **审批**: Leader APPROVED（待用户一次总确认）
+- **耗时**: 0.5d
+- **记录**: C107-1/C102-2(capture) 关闭；C108-1（Railway env 复验）登记
 
 ## ⚠️ 阻塞与风险
 
