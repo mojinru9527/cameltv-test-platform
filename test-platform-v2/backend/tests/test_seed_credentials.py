@@ -210,6 +210,50 @@ def test_production_rejects_empty_seed_credentials() -> None:
     assert any("TESTER_PASSWORD" in issue for issue in issues)
 
 
+def test_production_without_demo_users_does_not_require_tester_password() -> None:
+    production_settings = Settings(
+        _env_file=None,
+        environment="production",
+        secret_key=secrets.token_urlsafe(32),
+        admin_password=secrets.token_urlsafe(16),
+        seed_demo_users=False,
+        ai_enabled=False,
+        cookie_secure=True,
+    )
+
+    issues = production_settings.validate_security()
+
+    assert not any("TESTER_PASSWORD" in issue for issue in issues)
+
+
+def test_seed_demo_users_disabled_skips_tester_and_viewer(
+    seed_session_factory,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    local_settings = _development_settings(seed_demo_users=False)
+    monkeypatch.setattr(seed, "settings", local_settings)
+
+    seed.run_seed()
+    capsys.readouterr()
+
+    with seed_session_factory() as db:
+        assert (
+            db.scalar(select(User).where(User.username == local_settings.admin_username))
+            is not None
+        )
+        assert (
+            db.scalar(select(User).where(User.username == local_settings.tester_username))
+            is None
+        )
+        assert (
+            db.scalar(select(User).where(User.username == local_settings.viewer_username))
+            is None
+        )
+        project = db.scalar(select(Project).where(Project.code == "cameltv"))
+        assert project is not None
+
+
 def test_tester_role_can_list_visible_schedule_module(
     seed_session_factory,
     monkeypatch: pytest.MonkeyPatch,

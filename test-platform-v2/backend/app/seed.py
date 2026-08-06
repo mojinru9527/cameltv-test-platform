@@ -364,41 +364,46 @@ def run_seed() -> None:
             db.add(admin_user)
             db.flush()
 
-        # 5.5) 测试用户（方便验证角色隔离）
-        tester_pwd: str | None = None
-        tester_user = db.scalar(
-            select(User).filter_by(username=settings.tester_username)
-        )
-        created_tester = tester_user is None
-        if created_tester:
-            tester_pwd = settings.tester_password or _secrets.token_urlsafe(10)
-            tester_user = User(
-                username=settings.tester_username,
-                password=hash_password(tester_pwd),
-                nickname="测试同学",
-                email="tester@cameltv.local",
-                status=1,
+        # 5.5/5.6) 测试/只读演示账号（Batch 109：SEED_DEMO_USERS=false 时不创建，
+        # 生产外放后避免部署时重建验收账号；角色本身仍保留）
+        tester_user = None
+        viewer_user = None
+        created_tester = False
+        created_viewer = False
+        if settings.seed_demo_users:
+            tester_pwd: str | None = None
+            tester_user = db.scalar(
+                select(User).filter_by(username=settings.tester_username)
             )
-            db.add(tester_user)
-            db.flush()
+            created_tester = tester_user is None
+            if created_tester:
+                tester_pwd = settings.tester_password or _secrets.token_urlsafe(10)
+                tester_user = User(
+                    username=settings.tester_username,
+                    password=hash_password(tester_pwd),
+                    nickname="测试同学",
+                    email="tester@cameltv.local",
+                    status=1,
+                )
+                db.add(tester_user)
+                db.flush()
 
-        # 5.6) 运营只读用户（C31-3）
-        viewer_pwd: str | None = None
-        viewer_user = db.scalar(
-            select(User).filter_by(username=settings.viewer_username)
-        )
-        created_viewer = viewer_user is None
-        if created_viewer:
-            viewer_pwd = settings.viewer_password or _secrets.token_urlsafe(10)
-            viewer_user = User(
-                username=settings.viewer_username,
-                password=hash_password(viewer_pwd),
-                nickname="运营只读",
-                email="viewer@cameltv.local",
-                status=1,
+            viewer_pwd: str | None = None
+            viewer_user = db.scalar(
+                select(User).filter_by(username=settings.viewer_username)
             )
-            db.add(viewer_user)
-            db.flush()
+            created_viewer = viewer_user is None
+            if created_viewer:
+                viewer_pwd = settings.viewer_password or _secrets.token_urlsafe(10)
+                viewer_user = User(
+                    username=settings.viewer_username,
+                    password=hash_password(viewer_pwd),
+                    nickname="运营只读",
+                    email="viewer@cameltv.local",
+                    status=1,
+                )
+                db.add(viewer_user)
+                db.flush()
 
         # 6) 默认项目
         project, _ = _get_or_create(
@@ -412,36 +417,38 @@ def run_seed() -> None:
                        defaults={"role_id": admin_role.id})
         _get_or_create(db, UserRole, user_id=admin_user.id, role_id=admin_role.id, project_id=0)
 
-        # 7.5) 测试用户分配 tester 角色并加入默认项目。两条关系必须
-        # 独立幂等创建，确保全新数据库第一次启动后账号即可使用。
-        _get_or_create(
-            db,
-            UserRole,
-            user_id=tester_user.id,
-            role_id=tester_role.id,
-            project_id=0,
-        )
-        _get_or_create(
-            db,
-            ProjectMember,
-            project_id=project.id,
-            user_id=tester_user.id,
-            defaults={"role_id": tester_role.id},
-        )
-        _get_or_create(
-            db,
-            UserRole,
-            user_id=viewer_user.id,
-            role_id=viewer_role.id,
-            project_id=0,
-        )
-        _get_or_create(
-            db,
-            ProjectMember,
-            project_id=project.id,
-            user_id=viewer_user.id,
-            defaults={"role_id": viewer_role.id},
-        )
+        # 7.5) 测试/只读用户分配角色并加入默认项目（仅演示账号开启时）。
+        # 两条关系必须独立幂等创建，确保全新数据库第一次启动后账号即可使用。
+        if tester_user is not None:
+            _get_or_create(
+                db,
+                UserRole,
+                user_id=tester_user.id,
+                role_id=tester_role.id,
+                project_id=0,
+            )
+            _get_or_create(
+                db,
+                ProjectMember,
+                project_id=project.id,
+                user_id=tester_user.id,
+                defaults={"role_id": tester_role.id},
+            )
+        if viewer_user is not None:
+            _get_or_create(
+                db,
+                UserRole,
+                user_id=viewer_user.id,
+                role_id=viewer_role.id,
+                project_id=0,
+            )
+            _get_or_create(
+                db,
+                ProjectMember,
+                project_id=project.id,
+                user_id=viewer_user.id,
+                defaults={"role_id": viewer_role.id},
+            )
 
         db.commit()
         if created_admin:
