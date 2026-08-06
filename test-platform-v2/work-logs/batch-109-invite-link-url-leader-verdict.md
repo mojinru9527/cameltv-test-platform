@@ -47,7 +47,7 @@
 | 生产验收发现可分享链接用 `req.base_url` 拼 URL，反代后域名/协议失真 | 新增 `FRONTEND_URL` 配置优先 + 回退；QA 复盘卡增加「完整 URL 断言」 | config.py + project.py + evidence |
 | 演示账号清理会被 seed 复活 | 新增 `SEED_DEMO_USERS` 开关并同步生产校验 | seed.py + env 模板 ×3 + checklist |
 | 生产凭据与本地记录不一致 | 用户授权临时密码重置并登录验证；建议改密同步 | B109-3 + checklist §6 |
-| Batch 107（#145）判决 C107-1/C107-2 未入追踪器（存量漂移，audit 报孤儿） | 本批补录到 C-CONDITIONS batch-107 节，audit 恢复 0 硬错 | C-CONDITIONS batch-107 节 |
+| 合并 origin/main 时发现批量替换误改 batch-107 节（#146 已含 C107-1/C107-2 与 C108-1） | 冲突解决：保留 #146 原节，删除误改重复节，audit 恢复 0 硬错 | C-CONDITIONS batch-107/108/109 节 |
 
 ## 复盘卡
 
