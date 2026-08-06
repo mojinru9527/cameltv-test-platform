@@ -1,0 +1,47 @@
+{
+  "inserted": 6,
+  "cases": [
+    {
+      "domain": "用户管理",
+      "module": "用户列表",
+      "title": "用户列表查询（分页/筛选）",
+      "priority": "P0",
+      "pn": "positive"
+    },
+    {
+      "domain": "用户管理",
+      "module": "用户封禁",
+      "title": "用户封禁与解封",
+      "priority": "P0",
+      "pn": "positive"
+    },
+    {
+      "domain": "用户管理",
+      "module": "屏蔽记录",
+      "title": "屏蔽记录查询",
+      "priority": "P0",
+      "pn": "positive"
+    },
+    {
+      "domain": "用户管理",
+      "module": "举报记录",
+      "title": "举报记录查询与处理",
+      "priority": "P0",
+      "pn": "positive"
+    },
+    {
+      "domain": "用户管理",
+      "module": "意见反馈",
+      "title": "意见反馈列表与处理",
+      "priority": "P0",
+      "pn": "positive"
+    },
+    {
+      "domain": "球队及联赛管理",
+      "module": "屏蔽赛事视频",
+      "title": "屏蔽赛事视频配置",
+      "priority": "P0",
+      "pn": "positive"
+    }
+  ]
+}

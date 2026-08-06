@@ -13,6 +13,7 @@
 | wiki 差异评审 | 10 任务 230 差异项全部评审；P0/P1 采纳转待审产物 **85 个** | `evidence/batch-111/wiki-diff-review-summary.json` |
 | api-regression 根因 | **runner win-internal-001 offline** → `runs-on: self-hosted/internal-network` 0s 失败（B11） | GitHub runners API + run 31112374886 |
 | 障碍登记 | B11/B12 + C111-1~4 | `改进任务backlog.md` + `C-CONDITIONS.md` |
+| P0 口径确认（C110-4） | 用户补充广告/联赛/球队/球员/回放 + 运营后台清单；补回放 3 + 运营后台缺口 6 条用例；P0 345→390（33 域/151 模块） | `evidence/batch-111/p0-inventory.json` + 映射文档 §0 |
 
 ## 2. 硬门禁
 
