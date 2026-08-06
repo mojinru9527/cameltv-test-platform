@@ -1,6 +1,8 @@
 """测试用例 API 路由 — /api/v1/test-cases/*"""
 from __future__ import annotations
 
+import json
+import logging
 from io import BytesIO
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Request
@@ -25,6 +27,7 @@ from app.services.knowledge import ingest_service
 from app.services.production_operation_guard import ProductionOperation, require_allowed_operation
 
 router = APIRouter(prefix="/test-cases", tags=["测试用例"])
+logger = logging.getLogger("test_case")
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
@@ -361,6 +364,37 @@ def execute_test_case(
         return R(code=1, msg=str(e))
     except Exception as e:
         return R(code=1, msg=f"执行失败: {e}")
+
+    # Batch 103：执行结果回填到用例（请求结果可视）
+    try:
+        from app.models.test_case import TestCase as TestCaseModel
+
+        case_row = db.query(TestCaseModel).filter_by(
+            id=case_id,
+            project_id=current.project_id or 0,
+        ).first()
+        if case_row:
+            from datetime import datetime as _dt
+
+            case_row.last_response_json = json.dumps(
+                {
+                    "status_code": result.get("status_code"),
+                    "response_body": result.get("response_body"),
+                    "assertions": result.get("assertions", []),
+                    "assertion_summary": result.get("assertion_summary", {}),
+                    "all_pass": result.get("all_pass"),
+                    "executed_at": result.get("executed_at"),
+                },
+                ensure_ascii=False,
+            )
+            case_row.last_run_status = (
+                "success" if result.get("all_pass")
+                else ("error" if result.get("status") == "error" else "fail")
+            )
+            db.commit()
+    except Exception:
+        db.rollback()
+        logger.warning("execution result backfill failed for case_id=%d", case_id)
 
     return R.ok(result)
 
