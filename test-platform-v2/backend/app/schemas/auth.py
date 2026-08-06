@@ -3,10 +3,20 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.organization import OrganizationBrief
+
 
 class LoginIn(BaseModel):
     username: str
     password: str
+
+
+class RegisterIn(BaseModel):
+    username: str = Field(..., min_length=2, max_length=64)
+    nickname: str = ""
+    email: str = ""
+    password: str = Field(..., min_length=6, max_length=128)
+    invite_code: str = ""
 
 
 class UserBrief(BaseModel):
@@ -33,6 +43,7 @@ class LoginOut(BaseModel):
     projects: list[ProjectBrief] = []
     permissions: list[str] = []
     must_change_password: bool = False  # 首次登录使用默认密码时要求强制修改
+    organizations: list[OrganizationBrief] = []
 
 
 class MeOut(BaseModel):
@@ -40,6 +51,7 @@ class MeOut(BaseModel):
     projects: list[ProjectBrief] = []
     permissions: list[str] = []
     current_project_id: int | None = None
+    organizations: list[OrganizationBrief] = []
 
 
 class ChangePasswordIn(BaseModel):

@@ -40,12 +40,36 @@ class Settings(BaseSettings):
     login_rate_limit_max: int = 10             # 生产安全默认：10 次 / 窗口
     login_rate_limit_window_seconds: int = 900
 
+    # ── 外放轻量模式（Batch 104）：注册 / 邀请码 / 自助项目 ──
+    # 生产默认关闭注册，须由运维显式开启（灰度阶段靠邀请码管控）。
+    registration_enabled: bool = False
+    invite_code_required: bool = True          # 注册必须凭邀请码
+    default_registration_role: str = "tester"  # 注册用户的默认全局角色
+    max_projects_per_user: int = 5             # 普通用户可拥有的启用项目上限
+    max_team_organizations_per_user: int = 5   # Batch 105：团队组织上限（个人组织不计入）
+    register_rate_limit_max: int = 5           # 注册限流：5 次 / 窗口
+    register_rate_limit_window_seconds: int = 900
+
     @property
     def effective_login_rate_limit(self) -> tuple[int, int]:
         """生产保持安全默认；开发/测试环境放宽以支持自动化验收（非安全降级）。"""
         if self.environment in ("development", "test"):
             return max(self.login_rate_limit_max, 100), self.login_rate_limit_window_seconds
         return self.login_rate_limit_max, self.login_rate_limit_window_seconds
+
+    @property
+    def effective_registration_enabled(self) -> bool:
+        """注册总开关：development/test 默认开放（自动化验收）；生产必须显式开启。"""
+        if self.environment in ("development", "test"):
+            return True
+        return self.registration_enabled
+
+    @property
+    def effective_register_rate_limit(self) -> tuple[int, int]:
+        """注册限流：生产保持安全默认；开发/测试放宽（同 C70-3 口径）。"""
+        if self.environment in ("development", "test"):
+            return max(self.register_rate_limit_max, 100), self.register_rate_limit_window_seconds
+        return self.register_rate_limit_max, self.register_rate_limit_window_seconds
 
     # ── CSP (P1-2/S2c) ──
     csp_enabled: bool = True

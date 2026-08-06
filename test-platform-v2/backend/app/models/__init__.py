@@ -7,6 +7,7 @@ from app.models.dataset import Dataset
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.integration import IntegrationConfig
+from app.models.invite_code import InviteCode
 from app.models.lanhu_evidence import (
     LanhuEvidenceAsset,
     LanhuEvidenceJob,
@@ -27,6 +28,7 @@ from app.models.knowledge import (
 )
 from app.models.project import Project, ProjectMember
 from app.models.notification import NotificationChannel, NotificationLog
+from app.models.organization import Organization, OrganizationMember
 from app.models.perf import PerfDevice, PerfMetric, PerfSession
 from app.models.quality_gate import QualityGateConfig
 from app.models.report_template import ReportTemplate
@@ -79,6 +81,8 @@ __all__ = [
     "EnvironmentVariable",
     "NotificationChannel",
     "NotificationLog",
+    "Organization",
+    "OrganizationMember",
     "QualityGateConfig",
     "ReportTemplate",
     "TestCase",
@@ -109,6 +113,7 @@ __all__ = [
     "ModuleAdminLink",
     "ReleaseBundle",
     "IntegrationConfig",
+    "InviteCode",
     "SyncLog",
     "VersionMission",
     "AgentWorkLog",

@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 账号注册（邀请码） */
+        post: operations["register_api_v1_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -72,6 +89,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 我可见的组织 */
+        get: operations["list_organizations_api_v1_organizations_get"];
+        put?: never;
+        /** 创建团队组织 */
+        post: operations["create_organization_api_v1_organizations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** 更新组织 */
+        put: operations["update_organization_api_v1_organizations__organization_id__put"];
+        post?: never;
+        /** 停用团队组织 */
+        delete: operations["disable_organization_api_v1_organizations__organization_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 组织成员列表 */
+        get: operations["list_members_api_v1_organizations__organization_id__members_get"];
+        put?: never;
+        /** 添加/更新组织成员 */
+        post: operations["add_member_api_v1_organizations__organization_id__members_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 移除组织成员 */
+        delete: operations["remove_member_api_v1_organizations__organization_id__members__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organization_id}/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 组织项目列表 */
+        get: operations["list_org_projects_api_v1_organizations__organization_id__projects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/menus": {
         parameters: {
             query?: never;
@@ -83,6 +188,41 @@ export interface paths {
         get: operations["menus_api_v1_system_menus_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/invite-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 邀请码列表 */
+        get: operations["list_invite_codes_api_v1_system_invite_codes_get"];
+        put?: never;
+        /** 生成邀请码 */
+        post: operations["create_invite_code_api_v1_system_invite_codes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/invite-codes/{invite_id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停用邀请码 */
+        post: operations["disable_invite_code_api_v1_system_invite_codes__invite_id__disable_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -233,6 +373,50 @@ export interface components {
             /** Password */
             password: string;
         };
+        /** RegisterIn */
+        RegisterIn: {
+            /** Username */
+            username: string;
+            /** Nickname */
+            nickname: string;
+            /** Email */
+            email: string;
+            /** Password */
+            password: string;
+            /** Invite Code */
+            invite_code: string;
+        };
+        /** InviteCodeIn */
+        InviteCodeIn: {
+            /**
+             * Usage Limit
+             * @default 1
+             */
+            usage_limit: number;
+            /** Expires At */
+            expires_at?: string | null;
+        };
+        /** InviteCodeOut */
+        InviteCodeOut: {
+            /** Id */
+            id: number;
+            /** Code */
+            code: string;
+            /** Created By */
+            created_by: number;
+            /** Created By Name */
+            created_by_name: string;
+            /** Usage Limit */
+            usage_limit: number;
+            /** Used Count */
+            used_count: number;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Status */
+            status: number;
+            /** Created At */
+            created_at?: string | null;
+        };
         /** LoginOut */
         LoginOut: {
             /** Access Token */
@@ -253,6 +437,8 @@ export interface components {
              * @default []
              */
             permissions: string[];
+            /** Organizations */
+            organizations?: components["schemas"]["OrganizationBrief"][];
         };
         /** MeOut */
         MeOut: {
@@ -269,6 +455,8 @@ export interface components {
             permissions: string[];
             /** Current Project Id */
             current_project_id?: number | null;
+            /** Organizations */
+            organizations?: components["schemas"]["OrganizationBrief"][];
         };
         /**
          * PermissionGroup
@@ -344,6 +532,15 @@ export interface components {
              * @default 1
              */
             status: number;
+            /**
+             * Owner Id
+             * @default 0
+             */
+            owner_id: number;
+            /** Organization Id */
+            organization_id?: number | null;
+            /** Organization Name */
+            organization_name: string;
         };
         /** R */
         R: {
@@ -491,6 +688,181 @@ export interface components {
             msg: string;
             /** Data */
             data?: components["schemas"]["ProjectOut"][] | null;
+        };
+        /** R[InviteCodeOut] */
+        R_InviteCodeOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["InviteCodeOut"] | null;
+        };
+        /** R[list[InviteCodeOut]] */
+        R_list_InviteCodeOut__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["InviteCodeOut"][] | null;
+        };
+        /** OrganizationBrief */
+        OrganizationBrief: {
+            /** Id */
+            id: number;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /**
+             * Type
+             * @default team
+             */
+            type: string;
+        };
+        /** OrganizationCreate */
+        OrganizationCreate: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+        };
+        /** OrganizationMemberOut */
+        OrganizationMemberOut: {
+            /** Organization Id */
+            organization_id: number;
+            /** User Id */
+            user_id: number;
+            /** Role Id */
+            role_id: number;
+            /** Username */
+            username: string;
+            /** Nickname */
+            nickname: string;
+        };
+        /** OrganizationOut */
+        OrganizationOut: {
+            /** Id */
+            id: number;
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+            /** Type */
+            type: string;
+            /** Owner Id */
+            owner_id: number;
+            /** My Role */
+            my_role: number;
+            /** Status */
+            status: number;
+            /** Member Count */
+            member_count: number;
+            /** Project Count */
+            project_count: number;
+        };
+        /** OrganizationUpdate */
+        OrganizationUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Status */
+            status?: number | null;
+        };
+        /** R[OrganizationMemberOut] */
+        R_OrganizationMemberOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["OrganizationMemberOut"] | null;
+        };
+        /** R[OrganizationOut] */
+        R_OrganizationOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["OrganizationOut"] | null;
+        };
+        /** R[list[OrganizationMemberOut]] */
+        R_list_OrganizationMemberOut__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["OrganizationMemberOut"][] | null;
+        };
+        /** R[list[OrganizationOut]] */
+        R_list_OrganizationOut__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["OrganizationOut"][] | null;
+        };
+        /** R[list[dict]] */
+        R_list_dict__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: {
+                [key: string]: unknown;
+            }[] | null;
         };
         /** R[list[RoleOut]] */
         R_list_RoleOut__: {
@@ -713,6 +1085,323 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_organizations_api_v1_organizations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_OrganizationOut__"];
+                };
+            };
+        };
+    };
+    create_organization_api_v1_organizations_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_OrganizationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_organization_api_v1_organizations__organization_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: {
+                organization_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganizationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_OrganizationOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_organization_api_v1_organizations__organization_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: {
+                organization_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+        };
+    };
+    list_members_api_v1_organizations__organization_id__members_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: {
+                organization_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_OrganizationMemberOut__"];
+                };
+            };
+        };
+    };
+    add_member_api_v1_organizations__organization_id__members_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: {
+                organization_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_OrganizationMemberOut_"];
+                };
+            };
+        };
+    };
+    remove_member_api_v1_organizations__organization_id__members__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: {
+                organization_id: number;
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+        };
+    };
+    list_org_projects_api_v1_organizations__organization_id__projects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: {
+                organization_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_dict__"];
+                };
+            };
+        };
+    };
+    register_api_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_LoginOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_invite_codes_api_v1_system_invite_codes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_InviteCodeOut__"];
+                };
+            };
+        };
+    };
+    create_invite_code_api_v1_system_invite_codes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteCodeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_InviteCodeOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disable_invite_code_api_v1_system_invite_codes__invite_id__disable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
                 };
             };
         };
