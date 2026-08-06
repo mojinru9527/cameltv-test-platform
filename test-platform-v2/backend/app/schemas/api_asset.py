@@ -269,7 +269,11 @@ class ApiTaskDetailOut(ApiTaskOut):
 class GenerateApiCasesRequest(BaseModel):
     endpoint_id: int | None = None
     endpoint_data: dict | None = None  # 手动传入的接口定义（不依赖已保存的 endpoint）
-    templates: list[str] = Field(default=["basic", "boundary", "invalid", "idempotency"])
+    templates: list[str] = Field(default=[
+        "basic", "boundary", "invalid", "security", "idempotency", "extreme",
+        "smoke", "scenario", "extra_param", "security_ext", "performance_low",
+        "data_test", "stability", "compatibility", "monitoring",
+    ])
     import_to_case_library: bool = True
     module: str = ""
     service_name: str = ""
@@ -277,5 +281,9 @@ class GenerateApiCasesRequest(BaseModel):
 
 class BatchGenerateRequest(BaseModel):
     endpoint_ids: list[int] = Field(..., min_length=1, max_length=100)
-    templates: list[str] = Field(default=["basic", "boundary", "invalid", "idempotency"])
+    templates: list[str] = Field(default=[
+        "basic", "boundary", "invalid", "security", "idempotency", "extreme",
+        "smoke", "scenario", "extra_param", "security_ext", "performance_low",
+        "data_test", "stability", "compatibility", "monitoring",
+    ])
     import_to_case_library: bool = True

@@ -133,7 +133,11 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
     try {
       const result = await generateApiCases({
         endpoint_id: ep.id,
-        templates: ['basic', 'boundary', 'invalid', 'security', 'idempotency', 'extreme'],
+        templates: [
+          'basic', 'boundary', 'invalid', 'security', 'idempotency', 'extreme',
+          'smoke', 'scenario', 'extra_param', 'security_ext', 'performance_low',
+          'data_test', 'stability', 'compatibility', 'monitoring',
+        ],
         import_to_case_library: true,
         service_name: services.find(s => s.id === ep.service_id)?.name || '',
         module: ep.module,

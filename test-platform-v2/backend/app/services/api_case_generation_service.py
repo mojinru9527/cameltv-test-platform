@@ -76,10 +76,43 @@ def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[d
             "tags": [f"service:{endpoint.get('service_name', '')}", f"scenario:{scenario}", "source:real_sample"],
         }
 
-    # 0) 正向基线：真实样本原样
+    # 0) 正向基线：真实样本原样（Batch 107：断言升级为状态码 + 响应结构业务断言）
+    _resp_assertions = _response_structure_assertions(real_sample)
     cases.append(_mk(
         "正常请求（真实业务参数原样）", "positive", "positive", "场景法",
-        dict(body), f"接口返回 2xx；响应结构与真实调用一致。", priority="P0",
+        dict(body), f"接口返回 2xx；响应结构与真实调用一致。",
+        assertions=[
+            {"type": "status_code", "expected": 200, "operator": "gte"},
+            {"type": "status_code", "expected": 300, "operator": "lt"},
+            {"type": "response_time", "expected": 5000, "operator": "lt"},
+        ] + _resp_assertions,
+        priority="P0",
+    ))
+
+    # 0.1) 返回值结构校验（表格-返回值校验【必选】落地）：业务状态码/记录数/排序/核心字段
+    if _resp_assertions:
+        cases.append(_mk(
+            "返回值结构校验（业务状态码/记录数/排序/核心字段）", "response_structure", "positive", "场景法",
+            dict(body),
+            "按真实响应结构校验：业务状态码、记录数上限、排序规则、核心字段非空与真实调用一致。",
+            assertions=[
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 300, "operator": "lt"},
+            ] + _resp_assertions,
+            priority="P0",
+        ))
+
+    # 0.2) 冒烟测试（业务功能测试-冒烟）：业务入参完成功能并验证
+    cases.append(_mk(
+        "冒烟测试（业务入参完成功能并验证结果）", "smoke", "positive", "场景法",
+        dict(body),
+        "以业务入参为起点完成接口功能，并通过返回结果或其他接口验证。",
+        assertions=[
+            {"type": "status_code", "expected": 200, "operator": "gte"},
+            {"type": "status_code", "expected": 300, "operator": "lt"},
+            {"type": "response_time", "expected": 5000, "operator": "lt"},
+        ] + _resp_assertions,
+        priority="P0",
     ))
 
     # 1) 逐字段覆盖
@@ -185,14 +218,20 @@ def generate_cases_from_endpoint(
 
     Args:
         endpoint: {service_name, module, method, path, summary, request_schema}
-        templates: 生成模板集 [basic, boundary, invalid, idempotency, extreme]
+        templates: 生成模板集 [basic, boundary, invalid, security, idempotency, extreme,
+            smoke, scenario, extra_param, security_ext, performance_low, data_test,
+            stability, compatibility, monitoring]
 
     Returns:
         list of case dicts with title/domain/module/case_type/priority/steps/
         expected_result/api_method/api_endpoint/api_headers/api_body/api_assertions/tags
     """
     if templates is None:
-        templates = ["basic", "boundary", "invalid", "security", "idempotency", "extreme"]
+        templates = [
+            "basic", "boundary", "invalid", "security", "idempotency", "extreme",
+            "smoke", "scenario", "extra_param", "security_ext", "performance_low",
+            "data_test", "stability", "compatibility", "monitoring",
+        ]
 
     cases: list[dict] = []
     schema = endpoint.get("request_schema", {})
@@ -280,6 +319,43 @@ def generate_cases_from_endpoint(
     total_params = len(properties) + len(query_params)
     if total_params >= 2:
         cases.extend(_build_combo_param_cases(endpoint, properties, query_params))
+
+    # ── Batch 107：测试考虑点（XMind 接口测试.xmind）新模板 ──
+    # 业务功能测试：冒烟（业务入参起点完成功能并验证）
+    if "smoke" in templates:
+        cases.extend(_build_smoke_cases(endpoint, real))
+
+    # 业务功能测试：场景（多接口串联状态转变；无关联信息时生成待关联建议）
+    if "scenario" in templates:
+        cases.extend(_build_scenario_cases(endpoint, real))
+
+    # 健壮性-入参非法：增加不存在的参数
+    if "extra_param" in templates:
+        cases.extend(_build_extra_param_cases(endpoint, real))
+
+    # 安全：敏感信息加密 / 越权访问 / CSRF
+    if "security_ext" in templates:
+        cases.extend(_build_security_ext_cases(endpoint))
+
+    # 性能（用户指示低优先级）：并发/吞吐/服务器资源（P2/P3）
+    if "performance_low" in templates:
+        cases.extend(_build_performance_low_cases(endpoint))
+
+    # 数据测试：数据库入库 / 字段类型长度一致性（DB 检查断言）
+    if "data_test" in templates:
+        cases.extend(_build_data_test_cases(endpoint))
+
+    # 稳定性（表格-可选）：限流 / 熔断 / 降级
+    if "stability" in templates:
+        cases.extend(_build_stability_cases(endpoint))
+
+    # 兼容性（表格-可选）：入参 / 返回值 / 老功能
+    if "compatibility" in templates:
+        cases.extend(_build_compatibility_cases(endpoint))
+
+    # 监控告警（表格-可选）：性能监控 qps/rt + 业务监控错误码/指标
+    if "monitoring" in templates:
+        cases.extend(_build_monitoring_cases(endpoint))
 
     # ── 数量下限保证 ──
     if total_params >= 5 and len(cases) < 40:
@@ -1004,6 +1080,317 @@ def _build_security_cases(ep: dict, properties: dict) -> list[dict]:
 
 
 # ═══════════════════════════════════════════════════════
+# Batch 107：测试考虑点新模板（XMind 接口测试.xmind，2026-08-06）
+# ═══════════════════════════════════════════════════════
+
+def _build_smoke_cases(ep: dict, real: dict | None = None) -> list[dict]:
+    """业务功能测试-冒烟测试：以业务中某一入参为起点完成接口功能，并通过结果验证。
+
+    有真实样本时以其请求参数为基线；断言同时校验响应结构（业务码/记录数/核心字段，
+    若样本含响应结构）与响应时间，避免只查 2xx 的假冒烟。
+    """
+    body = real.get("body") or real.get("request_body") if real else None
+    if body is None:
+        body = _build_valid_body(ep)
+    assertions = [
+        {"type": "status_code", "expected": 200, "operator": "gte"},
+        {"type": "status_code", "expected": 300, "operator": "lt"},
+        {"type": "response_time", "expected": 5000, "operator": "lt"},
+    ]
+    if real:
+        assertions.extend(_response_structure_assertions(real))
+    return [_make_case(
+        ep,
+        title=f"{ep.get('summary') or ep.get('path')} - 冒烟测试（业务入参完成功能并验证结果）",
+        priority="P0",
+        scenario="smoke",
+        body=body,
+        assertions=assertions,
+        expected="以业务入参为起点完成接口业务功能，返回 2xx 且响应结构/关键字段符合预期，响应时间 < 5s。",
+    )]
+
+
+def _build_scenario_cases(ep: dict, real: dict | None = None) -> list[dict]:
+    """业务功能测试-场景测试：多接口连续调用达到状态转变，并通过返回结果或其他接口验证。
+
+    单接口生成器无跨接口关联图谱：真实样本或 endpoint 含关联接口信息时引用；
+    否则生成「场景测试建议（待关联）」用例，标注需配置依赖接口后补全。
+    """
+    related = None
+    if real:
+        related = real.get("related_endpoints") or real.get("related") or real.get("assertion_design_hints")
+    extra_note = ""
+    if related:
+        extra_note = f"关联接口/验证提示：{json.dumps(related, ensure_ascii=False)[:300]}"
+    else:
+        extra_note = "当前无接口关联信息，需在接口关联配置后按业务状态转变补全依赖接口串联步骤。"
+    body = real.get("body") or real.get("request_body") if real else None
+    if body is None:
+        body = _build_valid_body(ep)
+    c = _make_case(
+        ep,
+        title=f"{ep.get('summary') or ep.get('path')} - 场景测试（接口串联状态转变）",
+        priority="P1",
+        scenario="scenario",
+        body=body,
+        assertions=[
+            {"type": "status_code", "expected": 200, "operator": "gte"},
+            {"type": "status_code", "expected": 500, "operator": "lt"},
+        ],
+        expected=f"通过多个接口连续调用达到业务状态转变，并以返回结果或后续接口查询验证状态。{extra_note}",
+    )
+    c["test_data_note"] = c.get("test_data_note", "") + f" 场景测试说明：{extra_note}"
+    return [c]
+
+
+def _build_extra_param_cases(ep: dict, real: dict | None = None) -> list[dict]:
+    """健壮性-入参非法：增加不存在的参数，验证服务器按契约处理（4xx 或忽略），不得 5xx。"""
+    body = real.get("body") or real.get("request_body") if real else None
+    if body is None:
+        body = _build_valid_body(ep)
+    if not isinstance(body, dict):
+        body = {}
+    body = dict(body)
+    body["__unknown_extra_field__"] = "should_be_rejected_or_ignored"
+    return [_make_case(
+        ep,
+        title=f"{ep.get('summary') or ep.get('path')} - 增加不存在的参数",
+        priority="P1",
+        scenario="extra_param",
+        body=body,
+        assertions=[
+            {"type": "status_code", "expected": 400, "operator": "gte"},
+            {"type": "status_code", "expected": 500, "operator": "lt"},
+        ],
+        expected="请求体增加契约外参数时应返回 4xx 参数校验错误或被安全忽略，不得 5xx。",
+    )]
+
+
+def _build_security_ext_cases(ep: dict) -> list[dict]:
+    """安全测试扩展：越权访问（弱/无效 token）、CSRF（写接口）、HTTPS/签名/加密检查。"""
+    method = ep.get("method", "GET").upper()
+    cases: list[dict] = []
+
+    # 越权访问：弱 token 调用接口应被拒绝（401/403 或业务拒绝），不得 5xx
+    cases.append(_make_case(
+        ep,
+        title=f"{ep.get('summary') or ep.get('path')} - 越权访问-无效/弱 Token",
+        priority="P1",
+        scenario="security_ext",
+        body=_build_valid_body(ep),
+        assertions=[
+            {"type": "status_code", "expected": 401, "operator": "gte"},
+            {"type": "status_code", "expected": 500, "operator": "lt"},
+        ],
+        expected="携带无效/弱 Token 调用应返回 401/403 或业务拒绝，不得 5xx；已登录用户访问他人资源应被拒绝（越权拦截）。",
+        extra_headers={"Authorization": "Bearer invalid-token"},
+    ))
+
+    # HTTPS/签名/加密：通信加密与敏感信息不泄露
+    cases.append(_make_case(
+        ep,
+        title=f"{ep.get('summary') or ep.get('path')} - 敏感信息加密-HTTPS/签名/响应不泄露明文敏感字段",
+        priority="P1",
+        scenario="security_ext",
+        body=_build_valid_body(ep),
+        assertions=[
+            {"type": "status_code", "expected": 200, "operator": "gte"},
+            {"type": "status_code", "expected": 500, "operator": "lt"},
+            {"type": "security_check", "assert": "https_and_no_plain_secrets"},
+        ],
+        expected="通信使用 HTTPS；存在请求签名/身份确认机制时校验其生效；响应不得明文泄露密码/密钥等敏感字段。",
+    ))
+
+    # CSRF：写接口校验来源
+    if method in ("POST", "PUT", "PATCH", "DELETE"):
+        cases.append(_make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - CSRF 请求伪造-伪造来源应被拒绝",
+            priority="P1",
+            scenario="security_ext",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "status_code", "expected": 400, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected="写接口带伪造 Origin/Referer 或缺失 CSRF Token 时应返回 4xx 或被安全拒绝，不得 5xx 且不得执行写入。",
+            extra_headers={"Origin": "https://evil.example.com"},
+        ))
+    return cases
+
+
+def _build_performance_low_cases(ep: dict) -> list[dict]:
+    """性能测试（用户 2026-08-06 指示低优先级）：并发/吞吐/服务器资源，P2/P3 非阻塞。"""
+    cases = [
+        _make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 性能-并发请求（低优先级）",
+            priority="P2",
+            scenario="performance_low",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected="并发（如 10 并发同参数）请求不 5xx，qps/rt 在服务容量范围内；低优先级辅助检查。",
+        ),
+        _make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 性能-吞吐与服务器资源监控（低优先级）",
+            priority="P3",
+            scenario="performance_low",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "monitoring", "assert": "throughput_and_resources"},
+            ],
+            expected="观察吞吐量、服务器资源使用率（CPU/IO/内存/Network）在合理范围；低优先级辅助检查。",
+        ),
+    ]
+    return cases
+
+
+def _build_data_test_cases(ep: dict) -> list[dict]:
+    """数据测试：数据库入库/字段类型长度一致性（基本+专业化要点），DB 检查断言。"""
+    method = ep.get("method", "GET").upper()
+    cases = [
+        _make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 数据测试-数据库入库与字段一致性",
+            priority="P2",
+            scenario="data_test",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+                {"type": "db_check", "assert": "record_persisted_and_fields_consistent"},
+            ],
+            expected="执行后确认数据库正常入库；字段类型/长度与需求及页面输入一致；主外键/索引/完整性约束符合设计。",
+        ),
+    ]
+    if method in ("POST", "PUT", "PATCH", "DELETE"):
+        cases.append(_make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 数据测试-写操作数据校验（专业）",
+            priority="P2",
+            scenario="data_test",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "db_check", "assert": "write_ops_data_consistency"},
+            ],
+            expected="插入/更新/删除后数据正确；并发操作正确处理；权限定义正确。",
+        ))
+    return cases
+
+
+def _build_stability_cases(ep: dict) -> list[dict]:
+    """稳定性（表格-可选）：限流 / 熔断 / 降级，按服务策略验证。"""
+    return [
+        _make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 稳定性-限流",
+            priority="P2",
+            scenario="stability",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "status_code", "expected": 429, "operator": "eq"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected="高频请求触发限流时应返回 429 或明确的限流策略响应，不得 5xx。",
+        ),
+        _make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 稳定性-熔断/降级",
+            priority="P2",
+            scenario="stability",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+            ],
+            expected="依赖故障触发熔断/降级时返回降级结果或明确错误码，不得 5xx 崩溃。",
+        ),
+    ]
+
+
+def _build_compatibility_cases(ep: dict) -> list[dict]:
+    """兼容性（表格-可选）：入参兼容 / 返回值兼容 / 老功能兼容。"""
+    return [
+        _make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 兼容性-入参/返回值/老功能",
+            priority="P2",
+            scenario="compatibility",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 500, "operator": "lt"},
+                {"type": "compat_check", "assert": "param_append_only_and_old_behavior"},
+            ],
+            expected="入参字段仅新增不破坏旧调用；返回值字段按序新增不影响旧解析；老功能调用不受影响；老数据兼容。",
+        ),
+    ]
+
+
+def _build_monitoring_cases(ep: dict) -> list[dict]:
+    """监控告警（表格-可选）：性能监控 qps/rt + 业务监控错误码/业务指标。"""
+    return [
+        _make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 监控告警-性能监控（qps/rt）",
+            priority="P2",
+            scenario="monitoring",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "monitoring", "assert": "qps_rt_metrics_visible"},
+            ],
+            expected="接口 qps/rt 监控指标可观测，异常时触发告警。",
+        ),
+        _make_case(
+            ep,
+            title=f"{ep.get('summary') or ep.get('path')} - 监控告警-业务监控（错误码/业务指标）",
+            priority="P2",
+            scenario="monitoring",
+            body=_build_valid_body(ep),
+            assertions=[
+                {"type": "monitoring", "assert": "business_metrics_visible"},
+            ],
+            expected="业务错误码与业务指标上报可见，异常业务量触发告警。",
+        ),
+    ]
+
+
+def _response_structure_assertions(real: dict) -> list[dict]:
+    """把真实样本的响应结构转成业务断言（Batch 107，返回值校验【必选】落地）。
+
+    消费 response_envelope_keys / data_keys / record_count / first_record_fields /
+    assertion_design_hints；无响应结构信息时返回空列表（调用方保留状态码断言）。
+    """
+    out: list[dict] = []
+    envelope = real.get("response_envelope_keys") or []
+    data_keys = real.get("data_keys") or []
+    record_count = real.get("record_count")
+    first_fields = real.get("first_record_fields") or []
+    hints = real.get("assertion_design_hints") or []
+
+    if envelope:
+        out.append({"type": "response_structure", "path": envelope[0], "assert": "exists"})
+    if "data" in envelope:
+        out.append({"type": "response_structure", "path": "data", "assert": "is_object_or_array"})
+    if data_keys:
+        for k in data_keys[:3]:
+            out.append({"type": "response_structure", "path": f"data.{k}", "assert": "exists"})
+    if record_count is not None:
+        out.append({"type": "response_structure", "path": "data.records", "assert": "len_lte", "expected": record_count})
+    if first_fields:
+        for f in first_fields[:5]:
+            out.append({"type": "response_structure", "path": f"data.records[0].{f}", "assert": "not_empty"})
+    for h in hints:
+        if isinstance(h, str):
+            out.append({"type": "response_structure", "assert": "hint", "note": h[:200]})
+    return out
+
+
+# ═══════════════════════════════════════════════════════
 # 额外边界覆盖 (null/空/零/负 per parameter)
 # ═══════════════════════════════════════════════════════
 
@@ -1213,6 +1600,16 @@ _SCENARIO_LABELS: dict[str, str] = {
     "security_sql": "SQL注入",
     "security_xss": "XSS",
     "security_path_traversal": "路径遍历",
+    "smoke": "冒烟测试",
+    "scenario": "场景测试",
+    "extra_param": "非法入参",
+    "security_ext": "安全扩展",
+    "performance_low": "性能(低优先级)",
+    "data_test": "数据测试",
+    "stability": "稳定性",
+    "compatibility": "兼容性",
+    "monitoring": "监控告警",
+    "response_structure": "返回值结构",
 }
 
 
@@ -1279,11 +1676,24 @@ def _make_case(
         "idempotency": "场景法",
         "auth": "场景法",
         "combo": "组合覆盖",
+        "smoke": "场景法",
+        "scenario": "场景法",
+        "extra_param": "错误推测",
+        "security_ext": "错误推测",
+        "performance_low": "场景法",
+        "data_test": "场景法",
+        "stability": "场景法",
+        "compatibility": "场景法",
+        "monitoring": "场景法",
+        "response_structure": "场景法",
     }
     _PN_MAP = {
         "positive": "positive",
         "boundary": "boundary",
         "extreme": "boundary",
+        "smoke": "positive",
+        "scenario": "positive",
+        "response_structure": "positive",
     }
     design_method = next(
         (v for k, v in _METHOD_MAP.items() if scenario.startswith(k)),
