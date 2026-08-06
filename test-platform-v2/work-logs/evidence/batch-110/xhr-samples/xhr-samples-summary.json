@@ -151,7 +151,7 @@
       "path": "/camel-service/ee/replay/list",
       "host": "api.cameltv.live",
       "has_body": false,
-      "response_len": 3340,
+      "response_len": 3380,
       "source": "生产回填探测（契约参数 + 生产真实值）"
     },
     {
@@ -169,7 +169,7 @@
       "path": "/camel-service/ee/sports_live/get_team_by_name",
       "host": "api.cameltv.live",
       "has_body": false,
-      "response_len": 76,
+      "response_len": 12840,
       "source": "生产回填探测（契约参数 + 生产真实值）"
     },
     {
@@ -286,7 +286,7 @@
       "path": "/camel-service/ee/sports_live/hot_group_match",
       "host": "api.cameltv.live",
       "has_body": false,
-      "response_len": 51899,
+      "response_len": 50860,
       "source": "生产回填探测（契约参数 + 生产真实值）"
     },
     {
@@ -304,7 +304,7 @@
       "path": "/camel-service/ee/sports_live/hot_match",
       "host": "api.cameltv.live",
       "has_body": false,
-      "response_len": 12066,
+      "response_len": 11953,
       "source": "生产回填探测（契约参数 + 生产真实值）"
     }
   ]

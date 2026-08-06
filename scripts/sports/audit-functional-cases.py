@@ -49,7 +49,7 @@ def main() -> int:
             items = data.get("items") or []
             total = data.get("total", 0)
             for it in items:
-                if it.get("domain") not in ("体育平台-用户端", "体育平台-运营后台"):
+                if it.get("domain") in ("接口测试", "接口用例"):
                     continue
                 by_domain[it.get("domain")] += 1
                 by_module[it.get("module") or "(无模块)"] += 1
@@ -68,7 +68,7 @@ def main() -> int:
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
     out = EVIDENCE_DIR / "functional-case-audit.json"
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"[audit] 功能用例总数: {sum(by_domain.values())}（用户端 {by_domain.get('体育平台-用户端', 0)} / 运营后台 {by_domain.get('体育平台-运营后台', 0)}）")
+    print(f"[audit] 功能用例总数: {sum(by_domain.values())}（域数 {len(by_domain)}）")
     print(f"[audit] P0: {by_priority.get('P0', 0)} / P1: {by_priority.get('P1', 0)} / P2: {by_priority.get('P2', 0)} / 其他: {by_priority.get('UNSET', 0)}")
     print(f"[evidence] {out.relative_to(REPO_ROOT)}")
     return 0

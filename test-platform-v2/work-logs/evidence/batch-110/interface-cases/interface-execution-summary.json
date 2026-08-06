@@ -1,0 +1,1477 @@
+{
+  "runs": [
+    {
+      "case_id": 1644,
+      "title": "/camel-service/ee/news/list_visible - 正常请求（真实业务参数原样）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 345,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1645,
+      "title": "/camel-service/ee/news/list_visible - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 218,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1646,
+      "title": "/camel-service/ee/news/list_visible - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 213,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1653,
+      "title": "/camel-service/ee/news/list_visible - locale 边界值 空字符串（语义：返回文案语言（枚举：en/zh 等））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 205,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1654,
+      "title": "/camel-service/ee/news/list_visible - locale 边界值 超长（语义：返回文案语言（枚举：en/zh 等））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 225,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1655,
+      "title": "/camel-service/ee/news/list_visible - locale 边界值 特殊字符（语义：返回文案语言（枚举：en/zh 等））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 213,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1659,
+      "title": "/camel-service/ee/news/list_visible - page 边界值 0（语义：页码（分页请求第几页，从 1 开始））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 242,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1660,
+      "title": "/camel-service/ee/news/list_visible - page 边界值 负数（语义：页码（分页请求第几页，从 1 开始））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 205,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1661,
+      "title": "/camel-service/ee/news/list_visible - page 边界值 超上限（语义：页码（分页请求第几页，从 1 开始））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 175,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1665,
+      "title": "/camel-service/ee/news/list_visible - size 边界值 0（语义：每页条数（单页返回记录数上限））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 1805,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1666,
+      "title": "/camel-service/ee/news/list_visible - size 边界值 负数（语义：每页条数（单页返回记录数上限））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 1441,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1667,
+      "title": "/camel-service/ee/news/list_visible - size 边界值 超上限（语义：每页条数（单页返回记录数上限））",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 175,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1671,
+      "title": "/camel-service/ee/news/list_visible - 分页边界：page=1 且 size 减一（首页最小页）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 188,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1672,
+      "title": "/camel-service/ee/news/list_visible - 分页边界：page 超总页数",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 182,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1673,
+      "title": "/camel-service/ee/news/list_visible - 过滤条件为空数组（返回全量数据）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 248,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1674,
+      "title": "/camel-service/ee/news/list_visible - 过滤条件多条件组合（AND）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 163,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1675,
+      "title": "/camel-service/ee/news/list_visible - 排序规则变更（updateTime asc）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 211,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1677,
+      "title": "/camel-service/ee/news/list_visible - locale 枚举：zh",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 174,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1678,
+      "title": "/camel-service/ee/news/list_visible - locale 枚举：missing",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/list_visible",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 180,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1679,
+      "title": "/camel-service/ee/search/hot - 正常请求（真实业务参数原样）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/hot",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 172,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1680,
+      "title": "/camel-service/ee/search/hot - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/hot",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 163,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1681,
+      "title": "/camel-service/ee/search/hot - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/hot",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1682,
+      "title": "/camel-service/ee/search/query - 正常请求（真实业务参数原样）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/query?page=1&size=10&content=Real+Madrid&type=all",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 155,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": [
+          "data is_object_or_array 缺失（动态数据，200 信封保留）",
+          "data.team exists 缺失（动态数据，200 信封保留）",
+          "data.competition exists 缺失（动态数据，200 信封保留）",
+          "data.match exists 缺失（动态数据，200 信封保留）"
+        ]
+      }
+    },
+    {
+      "case_id": 1683,
+      "title": "/camel-service/ee/search/query - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/query?page=1&size=10&content=Real+Madrid&type=all",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": [
+          "data is_object_or_array 缺失（动态数据，200 信封保留）",
+          "data.team exists 缺失（动态数据，200 信封保留）",
+          "data.competition exists 缺失（动态数据，200 信封保留）",
+          "data.match exists 缺失（动态数据，200 信封保留）"
+        ]
+      }
+    },
+    {
+      "case_id": 1684,
+      "title": "/camel-service/ee/search/query - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/query?page=1&size=10&content=Real+Madrid&type=all",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 162,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": [
+          "data is_object_or_array 缺失（动态数据，200 信封保留）",
+          "data.team exists 缺失（动态数据，200 信封保留）",
+          "data.competition exists 缺失（动态数据，200 信封保留）",
+          "data.match exists 缺失（动态数据，200 信封保留）"
+        ]
+      }
+    },
+    {
+      "case_id": 1685,
+      "title": "/camel-service/ee/search/recommend - 正常请求（真实业务参数原样）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/recommend?keyword=",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 164,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1686,
+      "title": "/camel-service/ee/search/recommend - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/recommend?keyword=",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1687,
+      "title": "/camel-service/ee/search/recommend - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/search/recommend?keyword=",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 163,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1688,
+      "title": "/camel-service/ee/setting - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/setting?category=room",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 153,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1689,
+      "title": "/camel-service/ee/setting - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/setting?category=room",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 169,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1690,
+      "title": "/camel-service/ee/setting - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/setting?category=room",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 155,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1691,
+      "title": "/camel-service/ee/sports_live/football/match/detail_live - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/detail_live?matchId=n54qllhn0vwjqvy",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 165,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1692,
+      "title": "/camel-service/ee/sports_live/football/match/detail_live - 返回值结构校验（业务状态码/记录数/排序/",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/detail_live?matchId=n54qllhn0vwjqvy",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1693,
+      "title": "/camel-service/ee/sports_live/football/match/detail_live - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/detail_live?matchId=n54qllhn0vwjqvy",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 179,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1694,
+      "title": "/camel-service/ee/sports_live/loadAnchorsByMatchId - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/loadAnchorsByMatchId?matchId=2y8m4zh5kwgpql0",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 166,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1695,
+      "title": "/camel-service/ee/sports_live/loadAnchorsByMatchId - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/loadAnchorsByMatchId?matchId=2y8m4zh5kwgpql0",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 158,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1696,
+      "title": "/camel-service/ee/sports_live/loadAnchorsByMatchId - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/loadAnchorsByMatchId?matchId=2y8m4zh5kwgpql0",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 164,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1697,
+      "title": "/camel-service/ee/sports_live/view_match - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/view_match?matchId=318q66hx56ovqo9",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1698,
+      "title": "/camel-service/ee/sports_live/view_match - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/view_match?matchId=318q66hx56ovqo9",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 158,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1699,
+      "title": "/camel-service/ee/sports_live/view_match - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/view_match?matchId=318q66hx56ovqo9",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 159,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1709,
+      "title": "/camel-service/ee/fifa/football/season/match - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/fifa/football/season/match?competitionId=kp3glrw7hwqdyjv&page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 183,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1710,
+      "title": "/camel-service/ee/fifa/football/season/match - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/fifa/football/season/match?competitionId=kp3glrw7hwqdyjv&page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 181,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1711,
+      "title": "/camel-service/ee/fifa/football/season/match - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/fifa/football/season/match?competitionId=kp3glrw7hwqdyjv&page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 173,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1712,
+      "title": "/camel-service/ee/replay/list - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/replay/list?page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1713,
+      "title": "/camel-service/ee/replay/list - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/replay/list?page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 162,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1714,
+      "title": "/camel-service/ee/replay/list - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/replay/list?page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 161,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1715,
+      "title": "/camel-service/ee/replay/get - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/replay/get?id=107123464706493798",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1716,
+      "title": "/camel-service/ee/replay/get - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/replay/get?id=107123464706493798",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 157,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1717,
+      "title": "/camel-service/ee/replay/get - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/replay/get?id=107123464706493798",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 154,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1718,
+      "title": "/camel-service/ee/sports_live/get_team_by_name - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/get_team_by_name?name=Petro Atletico de Luanda",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 185,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1719,
+      "title": "/camel-service/ee/sports_live/get_team_by_name - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/get_team_by_name?name=Petro Atletico de Luanda",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 175,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1720,
+      "title": "/camel-service/ee/sports_live/get_team_by_name - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/get_team_by_name?name=Petro Atletico de Luanda",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 174,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1721,
+      "title": "/camel-service/ee/sports_live/football/season/recent/table/detail - 正常请求（真实业务参数原",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/season/recent/table/detail?competitionId=56ypq3nh0xmd7oj",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1722,
+      "title": "/camel-service/ee/sports_live/football/season/recent/table/detail - 返回值结构校验（业务状态",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/season/recent/table/detail?competitionId=56ypq3nh0xmd7oj",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 158,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1723,
+      "title": "/camel-service/ee/sports_live/football/season/recent/table/detail - 冒烟测试（业务入参完成功",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/season/recent/table/detail?competitionId=56ypq3nh0xmd7oj",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 162,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1724,
+      "title": "/camel-service/ee/sports_live/get_competition_by_name - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/get_competition_by_name?name=UEFA Europa League",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 169,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1725,
+      "title": "/camel-service/ee/sports_live/get_competition_by_name - 返回值结构校验（业务状态码/记录数/排序/核心字",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/get_competition_by_name?name=UEFA Europa League",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 161,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1726,
+      "title": "/camel-service/ee/sports_live/get_competition_by_name - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/get_competition_by_name?name=UEFA Europa League",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 166,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1727,
+      "title": "/camel-service/ee/sports_live/football/season/match - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/season/match?competitionId=56ypq3nh0xmd7oj&page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 174,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1728,
+      "title": "/camel-service/ee/sports_live/football/season/match - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/season/match?competitionId=56ypq3nh0xmd7oj&page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 162,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1729,
+      "title": "/camel-service/ee/sports_live/football/season/match - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/season/match?competitionId=56ypq3nh0xmd7oj&page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 181,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1730,
+      "title": "/camel-service/ee/news_kind/list - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news_kind/list",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 155,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1731,
+      "title": "/camel-service/ee/news_kind/list - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news_kind/list",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1732,
+      "title": "/camel-service/ee/news_kind/list - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news_kind/list",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1733,
+      "title": "/camel-service/ee/news/related - 正常请求（真实业务参数原样）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/related?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 257,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1734,
+      "title": "/camel-service/ee/news/related - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/related?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 281,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1735,
+      "title": "/camel-service/ee/news/related - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "POST",
+      "endpoint": "/camel-service/ee/news/related?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 253,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1736,
+      "title": "/camel-service/ee/news/get - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news/get?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 155,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1737,
+      "title": "/camel-service/ee/news/get - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news/get?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 163,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1738,
+      "title": "/camel-service/ee/news/get - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news/get?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 162,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1739,
+      "title": "/camel-service/ee/news/get_visible - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news/get_visible?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1740,
+      "title": "/camel-service/ee/news/get_visible - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news/get_visible?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 158,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1741,
+      "title": "/camel-service/ee/news/get_visible - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/news/get_visible?id=1136114052779478936",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1742,
+      "title": "/camel-service/ee/forecast/queryOddsSummaryByMatchId - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/forecast/queryOddsSummaryByMatchId?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 163,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1743,
+      "title": "/camel-service/ee/forecast/queryOddsSummaryByMatchId - 返回值结构校验（业务状态码/记录数/排序/核心字段",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/forecast/queryOddsSummaryByMatchId?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 163,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1744,
+      "title": "/camel-service/ee/forecast/queryOddsSummaryByMatchId - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/forecast/queryOddsSummaryByMatchId?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 157,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1745,
+      "title": "/camel-service/ee/sports_live/football/match/time - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/time?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 155,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1746,
+      "title": "/camel-service/ee/sports_live/football/match/time - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/time?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 157,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1747,
+      "title": "/camel-service/ee/sports_live/football/match/time - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/time?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1748,
+      "title": "/camel-service/ee/sports_live/football/match/team_stats/list - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/team_stats/list?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 163,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1749,
+      "title": "/camel-service/ee/sports_live/football/match/team_stats/list - 返回值结构校验（业务状态码/记录数",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/team_stats/list?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 155,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1750,
+      "title": "/camel-service/ee/sports_live/football/match/team_stats/list - 冒烟测试（业务入参完成功能并验证结",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/team_stats/list?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 159,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1751,
+      "title": "/camel-service/ee/sports_live/football/match/analysis - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/analysis?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 167,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1752,
+      "title": "/camel-service/ee/sports_live/football/match/analysis - 返回值结构校验（业务状态码/记录数/排序/核心字",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/analysis?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 160,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1753,
+      "title": "/camel-service/ee/sports_live/football/match/analysis - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/analysis?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 168,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1754,
+      "title": "/camel-service/ee/sports_live/football/match/lineup - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/lineup?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 187,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1755,
+      "title": "/camel-service/ee/sports_live/football/match/lineup - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/lineup?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 156,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1756,
+      "title": "/camel-service/ee/sports_live/football/match/lineup - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/football/match/lineup?matchId=965mkyhkvjklr1g",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 164,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1757,
+      "title": "/camel-service/ee/sports_live/hot_group_match - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_group_match",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 177,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1758,
+      "title": "/camel-service/ee/sports_live/hot_group_match - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_group_match",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 175,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1759,
+      "title": "/camel-service/ee/sports_live/hot_group_match - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_group_match",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 169,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1760,
+      "title": "/camel-service/ee/sports_live/hot_team - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_team",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 157,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1761,
+      "title": "/camel-service/ee/sports_live/hot_team - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_team",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 158,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1762,
+      "title": "/camel-service/ee/sports_live/hot_team - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_team",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 165,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1763,
+      "title": "/camel-service/ee/sports_live/hot_match - 正常请求（真实业务参数原样）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_match?page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 177,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1764,
+      "title": "/camel-service/ee/sports_live/hot_match - 返回值结构校验（业务状态码/记录数/排序/核心字段）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_match?page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 188,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    },
+    {
+      "case_id": 1765,
+      "title": "/camel-service/ee/sports_live/hot_match - 冒烟测试（业务入参完成功能并验证结果）",
+      "method": "GET",
+      "endpoint": "/camel-service/ee/sports_live/hot_match?page=1&size=10",
+      "passed": true,
+      "result": {
+        "status": 200,
+        "elapsed_ms": 179,
+        "assertions_ok": true,
+        "status_check": "ok",
+        "structure_fails": [],
+        "structure_warnings": []
+      }
+    }
+  ],
+  "passed": 97,
+  "failed": 0,
+  "errors": 0
+}

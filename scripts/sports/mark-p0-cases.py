@@ -1,7 +1,9 @@
 """体育平台承接 — 功能用例 P0 标识（Batch 110，UI 自动化基线）。
 
-按「P0 功能用例 → UI 自动化映射」清单，将核心功能模块的功能用例优先级更新为 P0。
-仅更新 is_deleted=false 的 manual 功能用例（不覆盖接口用例的既有优先级语义）。
+P0 口径（Batch 110 QA 定义）：
+  用户端关键用户路径（首页/赛事详情/直播间/资讯/搜索/登录注册/个人中心）→ 全部 P0；
+  运营后台核心管理链路（账户/充值/提现/预测/内容/广告/装扮/消息/用户/系统核心模块）→ 模块命中 P0，其余回 P1；
+  跨域生产新增模块（回放/世界杯）→ 命中 P0。
 
 运行: <venv-python> scripts/sports/mark-p0-cases.py --database-url "$env:TP_DATABASE_URL"
 """
@@ -18,12 +20,27 @@ import psycopg2
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE_DIR = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / "batch-110"
 
-# P0 模块（用户端关键用户路径 + 运营后台核心管理链路）
-P0_MODULES = [
-    "首页", "赛事详情", "直播间", "资讯", "搜索", "我的", "回放", "世界杯",
-    "联赛", "球队", "登录注册", "用户账户", "财务管理", "赛事预测",
-    "UGC管理", "内容管理", "商城管理", "广告管理", "装扮管理", "消息", "用户管理", "系统管理",
+# 用户端关键域（全部 P0）
+P0_USER_DOMAINS = [
+    "首页", "赛事详情", "直播间", "资讯", "搜索", "登录注册", "个人中心",
 ]
+
+# 运营后台域（仅核心模块 P0，其余回 P1）
+ADMIN_DOMAINS = [
+    "财务管理", "赛事预测", "UGC管理", "商城管理", "广告管理", "装扮管理",
+    "消息管理", "系统管理", "球队及联赛管理", "风控管理", "银钻任务管理",
+]
+
+ADMIN_P0_MODULES = [
+    "%用户账户%", "%充值%", "%提现%", "%预测赛事%", "%用户参与%", "%奖励%",
+    "%退回%", "%资讯%", "%热门搜索%", "%商品%", "%广告活动%", "%广告位%",
+    "%头像框%", "%推送%", "%聊天室%", "%版本更新%", "%热门联赛%", "%热门球队%",
+    "%屏蔽赛事视频%", "%风控%", "%银钻任务%", "%用户列表%", "%封禁%", "%举报%",
+    "%意见反馈%", "%文章%", "%创作者%", "%购买记录%", "%勋章%",
+]
+
+# 跨域生产新增模块
+P0_MODULE_PATTERNS = ["%回放%", "%世界杯%"]
 
 
 def main() -> int:
@@ -39,25 +56,56 @@ def main() -> int:
 
     conn = psycopg2.connect(dsn)
     conn.autocommit = False
-    summary = {"p0_modules": P0_MODULES, "updated_by_module": {}}
+    summary = {
+        "p0_user_domains": P0_USER_DOMAINS,
+        "admin_domains": ADMIN_DOMAINS,
+        "p0_module_patterns": P0_MODULE_PATTERNS,
+        "updated": {},
+    }
     try:
         with conn.cursor() as cur:
-            for mod in P0_MODULES:
+            for dom in P0_USER_DOMAINS:
                 cur.execute(
                     "UPDATE test_case SET priority='P0', updated_at=now() "
                     "WHERE project_id=1 AND is_deleted=false AND case_type='manual' "
-                    "AND module=%s AND priority<>'P0'",
-                    (mod,),
+                    "AND domain=%s AND priority<>'P0'",
+                    (dom,),
                 )
-                updated = cur.rowcount
-                summary["updated_by_module"][mod] = updated
-                print(f"[P0] {mod}: {updated} 条已标记 P0", flush=True)
+                summary["updated"][f"user:{dom}"] = cur.rowcount
+            for dom in ADMIN_DOMAINS:
+                cur.execute(
+                    "UPDATE test_case SET priority='P1', updated_at=now() "
+                    "WHERE project_id=1 AND is_deleted=false AND case_type='manual' "
+                    "AND domain=%s AND priority='P0'",
+                    (dom,),
+                )
+                summary["updated"][f"admin-reset:{dom}"] = cur.rowcount
+            for pat in ADMIN_P0_MODULES:
+                cur.execute(
+                    "UPDATE test_case SET priority='P0', updated_at=now() "
+                    "WHERE project_id=1 AND is_deleted=false AND case_type='manual' "
+                    "AND module LIKE %s AND priority<>'P0'",
+                    (pat,),
+                )
+                summary["updated"][f"admin-p0:{pat}"] = cur.rowcount
+            for pat in P0_MODULE_PATTERNS:
+                cur.execute(
+                    "UPDATE test_case SET priority='P0', updated_at=now() "
+                    "WHERE project_id=1 AND is_deleted=false AND case_type='manual' "
+                    "AND module LIKE %s AND priority<>'P0'",
+                    (pat,),
+                )
+                summary["updated"][f"pattern:{pat}"] = cur.rowcount
             cur.execute(
                 "SELECT priority, COUNT(*) FROM test_case WHERE project_id=1 AND is_deleted=false "
-                "AND case_type='manual' AND domain IN ('体育平台-用户端','体育平台-运营后台') "
-                "GROUP BY priority ORDER BY priority"
+                "AND case_type='manual' GROUP BY priority ORDER BY priority"
             )
             summary["priority_distribution"] = {str(r[0]): r[1] for r in cur.fetchall()}
+            cur.execute(
+                "SELECT module, COUNT(*) FROM test_case WHERE project_id=1 AND is_deleted=false "
+                "AND case_type='manual' AND priority='P0' GROUP BY module ORDER BY module"
+            )
+            summary["p0_modules"] = {r[0]: r[1] for r in cur.fetchall()}
         conn.commit()
     except Exception:
         conn.rollback()
@@ -68,8 +116,7 @@ def main() -> int:
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
     out = EVIDENCE_DIR / "p0-cases-summary.json"
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
-    total = sum(summary["updated_by_module"].values())
-    print(f"[done] P0 标记 {total} 条，分布: {summary['priority_distribution']}")
+    print(f"[done] P0 分布: {summary['priority_distribution']}（P0 模块数 {len(summary['p0_modules'])}）")
     print(f"[evidence] {out.relative_to(REPO_ROOT)}")
     return 0
 

@@ -74,7 +74,7 @@ TARGETS = [
 def main() -> int:
     news_id = _load_news_id()
     for t in TARGETS:
-        if t["query"].get("id") is None:
+        if "id" in t["query"] and t["query"]["id"] is None:
             t["query"]["id"] = news_id
 
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
