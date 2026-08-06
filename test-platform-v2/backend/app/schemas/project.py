@@ -15,12 +15,15 @@ class ProjectOut(BaseModel):
     description: str = ""
     status: int = 1
     owner_id: int = 0
+    organization_id: int | None = None
+    organization_name: str = ""
 
 
 class ProjectCreate(BaseModel):
     code: str
     name: str
     description: str = ""
+    organization_id: Optional[int] = None
 
 
 class ProjectUpdate(BaseModel):

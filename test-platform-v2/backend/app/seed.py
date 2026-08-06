@@ -37,6 +37,7 @@ _MENUS = [
     ("menu:system", "系统管理", "", "/system", "SettingOutlined", 14),
     ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 15),
     ("menu:myproject", "我的项目", "", "/my-projects", "AppstoreOutlined", 15),
+    ("menu:organization", "组织管理", "", "/organizations", "AppstoreOutlined", 16),
     ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 16),
     ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 17),
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 18),
@@ -238,6 +239,7 @@ _VIEWER_MENUS = {
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph",
     "menu:knowledge:artifacts",
     "menu:myproject",
+    "menu:organization",
 }
 
 _VIEWER_ACTIONS = {
@@ -265,6 +267,7 @@ _TESTER_MENUS = {
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
     "menu:lanhu_evidence",
     "menu:myproject",
+    "menu:organization",
 }
 
 

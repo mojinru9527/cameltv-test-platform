@@ -17,7 +17,9 @@ from app.core.security import (
 from app.models.rbac import Role, UserRole
 from app.models.user import User
 from app.schemas.auth import LoginOut, ProjectBrief, UserBrief
+from app.schemas.organization import OrganizationBrief
 from app.services import project_service, rbac_service
+from app.services import organization_service
 from app.services.invite_service import consume_invite_code
 
 
@@ -38,6 +40,9 @@ def login(db: Session, username: str, password: str) -> LoginOut:
     codes = rbac_service.permission_codes(db, user.id)
     is_super = "*" in codes
     projects = project_service.projects_for_user(db, user.id, is_superadmin=is_super)
+    organizations = organization_service.organizations_for_user(
+        db, user.id, is_superadmin=is_super
+    )
 
     token = create_access_token(
         user.id,
@@ -52,6 +57,7 @@ def login(db: Session, username: str, password: str) -> LoginOut:
         projects=[ProjectBrief.model_validate(p) for p in projects],
         permissions=codes,
         must_change_password=user.must_change_password,
+        organizations=[OrganizationBrief(**o) for o in organizations],
     )
 
 
@@ -87,5 +93,7 @@ def register(
     role = db.scalar(select(Role).where(Role.code == role_code))
     if role:
         db.add(UserRole(user_id=user.id, role_id=role.id, project_id=0))
+    # Batch 105：注册即拥有个人组织
+    organization_service.ensure_personal_organization(db, user.id)
     db.commit()
     return user

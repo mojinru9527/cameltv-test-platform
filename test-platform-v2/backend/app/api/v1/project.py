@@ -34,7 +34,8 @@ def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str,
 @router.get("", response_model=R[list[ProjectOut]], summary="当前用户可见项目")
 def list_projects(current: CurrentUser = Depends(get_current_user), db: Session = Depends(get_db)):
     projects = project_service.projects_for_user(db, current.user.id, is_superadmin=current.is_super)
-    return R.ok([ProjectOut.model_validate(p) for p in projects])
+    items = project_service.attach_organization_names(db, projects)
+    return R.ok([ProjectOut(**item) for item in items])
 
 
 @router.get("/current", response_model=R[ProjectOut], summary="校验并返回当前项目（需 X-Project-Id）")
@@ -79,7 +80,11 @@ def create_project(
     current: CurrentUser = Depends(require_project_create),
     db: Session = Depends(get_db),
 ):
-    r = project_service.create_project(db, body, current.user.id, is_super=current.is_super)
+    r = project_service.create_project(
+        db, body, current.user.id,
+        is_super=current.is_super,
+        organization_id=body.organization_id,
+    )
     db.commit()
     _audit(req, current, db, "project:create", f"#{r['id']} {r['name']}")
     return R.ok(ProjectOut(**r))

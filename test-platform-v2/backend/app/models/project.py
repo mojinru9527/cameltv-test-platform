@@ -17,6 +17,8 @@ class Project(Base, TimestampMixin):
     description: Mapped[str] = mapped_column(default="")
     owner_id: Mapped[int] = mapped_column(default=0)
     status: Mapped[int] = mapped_column(default=1)
+    # Batch 105：项目归属组织（租户模式）；空值兼容历史数据/未迁移库
+    organization_id: Mapped[int | None] = mapped_column(default=None)
     # 项目级配置（JSON 文本）：环境/代理等
     config: Mapped[str] = mapped_column(default="{}")
 

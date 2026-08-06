@@ -6,26 +6,61 @@ from sqlalchemy.orm import Session
 
 from app.core.base_service import batch_user_names
 from app.core.config import settings
-from app.core.exceptions import APIException
+from app.core.exceptions import APIException, forbidden, not_found
+from app.models.organization import Organization, OrganizationMember
 from app.models.project import Project, ProjectMember
 from app.models.rbac import Role
 from app.models.user import User
+from app.services import organization_service
 
 
 def projects_for_user(db: Session, user_id: int, is_superadmin: bool = False) -> list[Project]:
     """超管可见全部项目；普通用户仅见其加入的项目。"""
     if is_superadmin:
-        return list(db.scalars(select(Project).where(Project.status == 1).order_by(Project.id)).all())
-    proj_ids = db.scalars(
-        select(ProjectMember.project_id).where(ProjectMember.user_id == user_id)
+        projects = list(db.scalars(select(Project).where(Project.status == 1).order_by(Project.id)).all())
+    else:
+        proj_ids = set(db.scalars(
+            select(ProjectMember.project_id).where(ProjectMember.user_id == user_id)
+        ).all())
+        # Batch 105：组织成员可见组织下全部项目
+        org_ids = set(db.scalars(
+            select(OrganizationMember.organization_id).where(
+                OrganizationMember.user_id == user_id
+            )
+        ).all())
+        if org_ids:
+            proj_ids |= set(db.scalars(
+                select(Project.id).where(
+                    Project.organization_id.in_(org_ids),
+                    Project.status == 1,
+                )
+            ).all())
+        if not proj_ids:
+            return []
+        projects = list(
+            db.scalars(
+                select(Project).where(Project.id.in_(proj_ids), Project.status == 1).order_by(Project.id)
+            ).all()
+        )
+    return projects
+
+
+def attach_organization_names(db: Session, projects: list[Project]) -> list[dict]:
+    """为项目列表附加组织名（接口层使用，避免破坏 ORM 消费者）。"""
+    org_names = _org_names(db, {p.organization_id for p in projects if p.organization_id})
+    return [
+        _project_to_dict(p, org_name=org_names.get(p.organization_id, ""))
+        for p in projects
+    ]
+
+
+def _org_names(db: Session, org_ids: set[int]) -> dict[int, str]:
+    if not org_ids:
+        return {}
+    rows = db.execute(
+        select(Organization.id, Organization.name).where(Organization.id.in_(org_ids))
     ).all()
-    if not proj_ids:
-        return []
-    return list(
-        db.scalars(
-            select(Project).where(Project.id.in_(set(proj_ids)), Project.status == 1).order_by(Project.id)
-        ).all()
-    )
+    return dict(rows)
 
 
 def is_member(db: Session, user_id: int, project_id: int) -> bool:
@@ -73,7 +108,13 @@ def get_project(db: Session, project_id: int) -> dict | None:
     return _project_to_dict(r, owner_name)
 
 
-def create_project(db: Session, data, owner_id: int, is_super: bool = False) -> dict:
+def create_project(
+    db: Session,
+    data,
+    owner_id: int,
+    is_super: bool = False,
+    organization_id: int | None = None,
+) -> dict:
     # Batch 104：普通用户受个人项目数配额约束（超管不限）
     if not is_super:
         owned = db.scalar(
@@ -87,10 +128,20 @@ def create_project(db: Session, data, owner_id: int, is_super: bool = False) -> 
                 msg=f"项目数量已达上限（{settings.max_projects_per_user}），请停用不再使用的项目",
                 http_status=400,
             )
+    org = None
+    if not organization_id:
+        org = organization_service.ensure_personal_organization(db, owner_id)
+        organization_id = org.id
+    else:
+        org = db.get(Organization, organization_id)
+        if not org or org.status == 0:
+            raise not_found("组织不存在")
+        if not is_super and not organization_service.is_member(db, owner_id, organization_id):
+            raise forbidden("无权在该组织下创建项目")
     r = Project(
         code=data.code, name=data.name,
         description=data.description or "", owner_id=owner_id,
-        status=1,
+        status=1, organization_id=organization_id,
     )
     db.add(r)
     db.flush()
@@ -101,7 +152,7 @@ def create_project(db: Session, data, owner_id: int, is_super: bool = False) -> 
         user_id=owner_id,
         role_id=tester_role.id if tester_role else 0,
     ))
-    return _project_to_dict(r)
+    return _project_to_dict(r, org_name=org.name if org else "")
 
 
 def update_project(db: Session, project_id: int, data) -> dict | None:
@@ -178,11 +229,13 @@ def list_members(db: Session, project_id: int) -> list[dict]:
     ]
 
 
-def _project_to_dict(r: Project, owner_name: str = "") -> dict:
+def _project_to_dict(r: Project, owner_name: str = "", org_name: str = "") -> dict:
     return {
         "id": r.id, "code": r.code, "name": r.name,
         "description": r.description or "",
         "owner_id": r.owner_id,
+        "organization_id": r.organization_id,
+        "organization_name": org_name,
         "owner_name": owner_name,
         "config": getattr(r, "config", "{}") or "{}",
         "status": r.status,
