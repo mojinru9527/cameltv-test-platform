@@ -1,0 +1,61 @@
+[
+  {
+    "method": "GET",
+    "url": "https://www.camel1.tv/api/imgproxy/s",
+    "query": {
+      "src": "https://img.cameltv.live/football/team/b0fa01690e4a5c944c861b245b42d5b4.png",
+      "w": "64",
+      "q": "75"
+    },
+    "body": null
+  },
+  {
+    "method": "POST",
+    "url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+    "query": {},
+    "body": {
+      "displayPlatform": "PC",
+      "displayPage": "INDEX"
+    }
+  },
+  {
+    "method": "POST",
+    "url": "https://api.cameltv.live/account-service/login/anonymous/web",
+    "query": {
+      "appCode": "D04B29D6B957CD44DC5F9894189380B8"
+    },
+    "body": {
+      "{\"appCode\":\"D04B29D6B957CD44DC5F9894189380B8\"}": ""
+    }
+  },
+  {
+    "method": "GET",
+    "url": "https://api.cameltv.live/account-service/ee/client/general",
+    "query": {},
+    "body": null
+  },
+  {
+    "method": "POST",
+    "url": "https://sensors.cameltv.live/sa.gif",
+    "query": {
+      "project": "production"
+    },
+    "body": {
+      "data_list": "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liDCbUSACBABIl6I7OA2IuON66MFiCwyIkAEiAARM0RmcGO1TKM+7EhGZJERASJABIh4IXLVECIV+mgBIoeMCBABIkDEDNGgjchZaftoCSJkRIAIEAEiXoh8nhH5kH68F2WIvABEgAgQASJeiMzgzuqDQyMjPDxGeMAhOASHeB0KeULknLKeoiMJUUBCBIgAESBihmgw9t5YTUuCG4HIASJABIgAESdEocrHvKZ5YkUf/XqIaBkgAkSACBDxQpRPna/p/X0fLUGEjAgQASJAxAuRyDMiHZSjjEiUHyZEywARIAJEgIgVIikGY14l7eU+WoBIorEaEAEiQMQM0fCpZrKPlRhCxQwMgSEwxMvQYHpGaXygC6ZGKmYKFTNABIgAETNEeT6kghPHaAkiZESACBABIl6IdP6UV68rr/poASKNjAgQASJAxAxR/pRXqSzFytNV0zIwBIbAEBhiZcjk01WrSgpH0fLA+4DJGQERIAJEzBANJmcURluCyI503Vt03QMiQASImCHKx5kFZ2WCaKSp2qKpGhABIkDEC5HLO++FN1r00QJEDuPMABEgAkTMEOWd9yI47SnqRyDygAgQASJAxAqRzzvvdbqpuo8WIPLovAdEgAgQMUM0eLZicEL10RJE6L4HRIAIEPFCFAZPmxaB9hXCSPd9QPc9IAJEgIgRovRuefe9pauW5iMqdd+nLdB9D4gAESBihiivmnkfjCdrqjJEAo80A0SACBDxQiTyB3hoJ6pjtAQRqmaACBABIl6IZN5G5JxMNTM5ApEERIAIEAEiXohUNWisTnWv+2gBIoWqGSACRICIGaK8aiYroRJEpYcrpi3wcEVABIgAES9EOp+vWljpFEVLQzzSFhjiAYgAESBihmgwX7WorKNoaYhH2gJDPAARIAJEvBCZHCJL+zIUHYHIACJABIgAES9ENh9rpqSjomB12SGr4RAc+s479Oi9z1deaexNfviDp018cfOrl69ef3LVrzzbztP1mDKLUDLpIXhfCvvo8chml80ulfL8FH97ujzazi+Owg6ZEDqfXkgFLyhYzm9o2Zvf/Bf8t3pIxYABAA==",
+      "gzip": "1",
+      "crc": "-1549973098"
+    }
+  },
+  {
+    "method": "POST",
+    "url": "https://sensors.cameltv.live/sa.gif",
+    "query": {
+      "project": "production"
+    },
+    "body": {
+      "data_list": "H4sIAAAAAAAAA+2Wz4/bRBTH/xXjrjhlEjtOHDsSQmVJBGr5IbqISgiNJuPneIjjMTNju9lqpXKCXugBiUt75cKJA9z67+wi/gveONkf2R8tlRaEUC7xzHfevHnz5r2P8uVjVyRQGGEEaHf82N3bTFeUS7kQQEXijl0/TpNh0h8OR8ko5MTzI45KzGfebACchP4wiEOP+H389fB7Zg79EBL3qOMmQhtRcHMr/jpuLmZttO3X/VqjZMd0CSaT9gQuEzgVa1BayMKe2+0Pu76Np1SyBHV261QobWgttDDUiCWgbd/rh8SLiBc6/mA8CMee1/WHsXW6tlaQglKg0PaqSDOpzdbKTMlG40LOinnF5vaIw4zw4qoFz5jSYHd/fjAl0bmBUSxNBadaVooDNavSevnj+W8nP/x88vu3f3737NxWA1M8owtYNVLZjJy8+OX42U/H3/96/OQl3ex5+uPxyyc2HayQxWopK31L77MJDbOcihwwGENlwe2LrLPrj6JhHEej0MOUdlx7M75oz/bRoe/5oYdqmlc6o1d2hN5RZ1e3rR+bm0NZAJVp2pYMGUSYuT3NFUBBMxDzDNXYuyA2IjEZJnQwsGItoCmlMpdsz+Rt68txXwnR6szA3y7WjfEbVOv5pu0GZGWJA1PjsFI5DjNjSj3u9Zqm6XK2hNzvtqslbk+lWtr65PZNsCFxDLYTK7NcexOalg1zx3jpTVuivp8puWyfJ63ynL7imJ41uhDf9UZ33upJ+KB+eP/Tg8OF3fE6j7hOS2bfw23nWPC5zeoXzPDMmeLzOlMpzYzluXNf1OA8MArYUhTzjvOASwXO285UPDKVAu0QZ986bw2tM7zyGh0JW7ljoyq4KK67MGW5hgtXO8Xcdo7/OaC0nMAp1NjtON8rkaS2Vq8jS8uQc7KEgRcFqAavIEuwI8uOLP95sjDOQWup1qVz17aaF0W+F4z8wDZCzZJ2KfYDa2xEbcvXKlgwm/WCtf9yegU0upeAYSLvTSpbA6wgB7Ik+3k102SqBBRJviIfWcQAuSf4gnySpuQA64NMP5tMiOUHOQPNnPjvYr+oFW3Y6h3rHSPSHAp72ocfvz95iPMZKwqEx+bl3mtnNyLodVC8PQj+e9wyNb2bTB6VUmMU17CrH4y22DWIwhGK0Y3owrUdunbo+t+gK4r9y+ga+NvoOj3DsAWQHAu8y+WyV0fDYOapb+oddt4YO8P+INzCziiMYquObuKOXTv66i9cZ3zYRhAAAA==",
+      "gzip": "1",
+      "crc": "10603727"
+    }
+  }
+]

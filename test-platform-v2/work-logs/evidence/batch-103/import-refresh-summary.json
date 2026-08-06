@@ -1,0 +1,12 @@
+{
+  "1": {
+    "cases": 227,
+    "import": 200,
+    "resp": "{\"code\":0,\"msg\":\"ok\",\"data\":{\"imported\":227,\"skipped\":0,\"total\":227,\"plan_id\":null,\"plan_name\":\"\"}}"
+  },
+  "3": {
+    "cases": 249,
+    "import": 200,
+    "resp": "{\"code\":0,\"msg\":\"ok\",\"data\":{\"imported\":249,\"skipped\":0,\"total\":249,\"plan_id\":null,\"plan_name\":\"\"}}"
+  }
+}
