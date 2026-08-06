@@ -1,0 +1,27 @@
+{
+  "captured_at": "2026-08-06",
+  "backend": "https://test-platform.up.railway.app",
+  "project_id": 1,
+  "imported_services": [
+    "account-service", "api-gateway-service", "camel-mimo", "camel-service",
+    "live-platform", "payment-service", "studio-service"
+  ],
+  "endpoints_total": 899,
+  "plan": "体育平台-每日回归 (camel-service, 325 cases generated)",
+  "environment": { "id": 1, "name": "体育平台-生产", "env_type": "prod", "base_url": "https://www.camel1.tv" },
+  "ui_job": { "id": 1, "name": "体育平台-生产只读冒烟", "test_spec": "specs/production-smoke.spec.ts" },
+  "schedule": { "id": 1, "name": "体育平台-每日API回归", "enabled": false, "note": "Test5 内网服务从公网后端不可达；内网回归由 CI api-regression workflow 承担" },
+  "ci_token": "tpat_Eagbj7MMnrfuOh2TxKglGprv0tXkWGGdYQSvwz0Y9VE (sports-ci, 请保存)",
+  "ui_run": {
+    "run_id": 4,
+    "status": "fail",
+    "result": { "total": 5, "passed": 3, "failed": 2, "duration_s": 13.55 },
+    "passed_tests": ["TC-PROD-003 navigation surface", "TC-PROD-004 core API asset", "TC-PROD-005 15s baseline"],
+    "failed_reasons": [
+      "TC-PROD-001/003: 严格只读守卫拦截站点 POST 信标与非白名单广告域（ukankingwithea.com / dstimaariracon.org / allowtohimselfew.org）——真实发现：生产首页含 POST 追踪与第三方广告",
+      "TC-PROD-002: 登录用例需显式授权（PROD_LOGIN_AUTHORIZED），生产业务账号不提供，按契约失败（非平台缺陷）"
+    ],
+    "screenshots": 4,
+    "note": "冒烟真实执行并暴露站点行为；放行策略评估见 C101-1"
+  }
+}
