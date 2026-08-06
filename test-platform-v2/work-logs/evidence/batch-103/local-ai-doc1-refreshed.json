@@ -1,0 +1,3303 @@
+{
+  "requirement_analysis": {
+    "extracted_requirements": [
+      {
+        "id": "REQ-1",
+        "title": "广告位配置规则",
+        "description": "定义广告位的类型（banner、插屏、激励视频）和展示逻辑。",
+        "type": "functional",
+        "issues": [
+          {
+            "severity": "medium",
+            "description": "需求未明确广告位展示的具体触发条件、频率控制、关闭逻辑等细节。",
+            "suggestion": "补充广告位展示的触发条件、频次限制、用户关闭选项等规则。"
+          },
+          {
+            "severity": "low",
+            "description": "未说明广告位在不同页面（如首页、赛事详情）的优先级和冲突处理。",
+            "suggestion": "明确各页面广告位的优先级和同时展示时的处理逻辑。"
+          }
+        ]
+      },
+      {
+        "id": "REQ-2",
+        "title": "银钻系统规则",
+        "description": "银钻的获取、消耗、兑换和有效期等规则。",
+        "type": "functional",
+        "issues": [
+          {
+            "severity": "medium",
+            "description": "需求未明确银钻获取的具体途径、消耗场景、兑换比例及有效期计算方式。",
+            "suggestion": "补充银钻获取方式、消耗场景、兑换比例、有效期规则及过期处理。"
+          },
+          {
+            "severity": "low",
+            "description": "未说明银钻账户的流水记录展示和异常处理。",
+            "suggestion": "明确银钻流水记录的展示字段和异常处理逻辑。"
+          }
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "title": "银钻预测玩法规则",
+        "description": "使用银钻参与预测的具体玩法、赔率、结算规则。",
+        "type": "functional",
+        "issues": [
+          {
+            "severity": "high",
+            "description": "需求未明确预测玩法的具体规则（如预测选项、赔率计算、结算时间、异常情况处理）。",
+            "suggestion": "补充预测玩法的详细规则，包括赔率计算方式、结算时间、平局处理、取消比赛等异常情况。"
+          },
+          {
+            "severity": "medium",
+            "description": "未说明预测的投注限额、单场预测次数限制等。",
+            "suggestion": "明确预测的投注限额、单场预测次数限制等规则。"
+          }
+        ]
+      },
+      {
+        "id": "REQ-4",
+        "title": "UGC功能概述",
+        "description": "UGC内容发布规范、审核机制、推荐算法。",
+        "type": "functional",
+        "issues": [
+          {
+            "severity": "medium",
+            "description": "需求未明确UGC内容发布的具体规范（如内容类型、格式要求、敏感词过滤）。",
+            "suggestion": "补充UGC内容发布规范，包括内容类型、格式要求、敏感词过滤等。"
+          },
+          {
+            "severity": "medium",
+            "description": "未说明审核机制的流程（如人工审核还是自动审核、审核时长、审核结果通知）。",
+            "suggestion": "明确审核机制的流程、审核时长、审核结果通知方式。"
+          },
+          {
+            "severity": "low",
+            "description": "推荐算法未说明具体规则（如基于什么数据推荐）。",
+            "suggestion": "补充推荐算法的基本规则和影响因素。"
+          }
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "title": "付费活动规则",
+        "description": "付费活动的参与方式、价格、有效期。",
+        "type": "functional",
+        "issues": [
+          {
+            "severity": "medium",
+            "description": "需求未明确付费活动的具体参与方式（如购买入口、支付方式）、价格设置、有效期计算。",
+            "suggestion": "补充付费活动的参与方式、价格设置、有效期计算及退款政策。"
+          },
+          {
+            "severity": "low",
+            "description": "未说明活动结束后未使用权益的处理方式。",
+            "suggestion": "明确活动结束后未使用权益的处理方式。"
+          }
+        ]
+      },
+      {
+        "id": "REQ-6",
+        "title": "骆驼币及绿钻规则",
+        "description": "骆驼币的充值、消费、退款政策。",
+        "type": "functional",
+        "issues": [
+          {
+            "severity": "medium",
+            "description": "需求未明确骆驼币的充值渠道、消费场景、退款政策的具体细节（如退款条件、退款时效）。",
+            "suggestion": "补充骆驼币的充值渠道、消费场景、退款政策的具体细节。"
+          },
+          {
+            "severity": "low",
+            "description": "未说明绿钻与骆驼币的关系及转换规则。",
+            "suggestion": "明确绿钻与骆驼币的关系及转换规则。"
+          }
+        ]
+      }
+    ],
+    "overall_assessment": "需求整体描述了说明附件模块的六个功能点，但每个功能点的描述较为简略，缺乏具体规则细节，如触发条件、边界值、异常处理等。需要补充详细规则以确保测试用例的完整性和准确性。建议产品补充各功能点的详细规则说明。"
+  },
+  "functional_cases": [
+    {
+      "title": "启动页正常展示",
+      "priority": "P0",
+      "domain": "启动与引导",
+      "module": "启动页",
+      "preconditions": "APP已安装，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开APP",
+          "expected": "显示启动页，包含品牌标识和加载状态（如转圈或进度条）"
+        }
+      ],
+      "expected_result": "启动页正常显示，品牌标识清晰，加载状态可见，随后自动进入开屏广告或首页",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-001"
+    },
+    {
+      "title": "启动页加载失败处理",
+      "priority": "P1",
+      "domain": "启动与引导",
+      "module": "启动页",
+      "preconditions": "APP已安装，网络异常或服务器无响应",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开APP",
+          "expected": "启动页显示，但加载状态异常，应有超时或错误提示，并最终进入首页或重试"
+        }
+      ],
+      "expected_result": "启动页不会卡死，有错误提示或自动跳转，用户可正常使用",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-002"
+    },
+    {
+      "title": "开屏广告正常加载图片",
+      "priority": "P0",
+      "domain": "启动与引导",
+      "module": "开屏广告",
+      "preconditions": "网络正常，存在可用的图片广告",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "启动APP，等待启动页结束",
+          "expected": "展示开屏广告，广告内容为图片，显示完整"
+        }
+      ],
+      "expected_result": "开屏广告正常展示，图片清晰，无拉伸变形",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-003"
+    },
+    {
+      "title": "开屏广告加载失败处理",
+      "priority": "P1",
+      "domain": "启动与引导",
+      "module": "开屏广告",
+      "preconditions": "网络异常或广告服务不可用",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "启动APP，等待启动页结束",
+          "expected": "不展示广告，直接进入首页，或显示广告加载失败提示"
+        }
+      ],
+      "expected_result": "广告加载失败不影响进入首页，无白屏或卡死",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-004"
+    },
+    {
+      "title": "点击跳过广告成功进入首页",
+      "priority": "P0",
+      "domain": "启动与引导",
+      "module": "开屏广告",
+      "preconditions": "开屏广告已展示，跳过按钮可见",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击“跳过”按钮",
+          "expected": "广告关闭，进入应用主界面（首页）"
+        }
+      ],
+      "expected_result": "成功跳过广告，进入首页，无卡顿",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-005"
+    },
+    {
+      "title": "跳过按钮不可点击",
+      "priority": "P1",
+      "domain": "启动与引导",
+      "module": "开屏广告",
+      "preconditions": "广告加载中，跳过按钮未激活",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在广告加载完成前点击跳过按钮",
+          "expected": "按钮无响应或提示加载中，不能跳过"
+        }
+      ],
+      "expected_result": "跳过按钮在加载完成前不可用，防止误操作",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-006"
+    },
+    {
+      "title": "权限引导弹窗正常显示",
+      "priority": "P0",
+      "domain": "启动与引导",
+      "module": "权限获取",
+      "preconditions": "首次启动APP，需要获取通知或定位权限",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "启动APP，触发权限请求",
+          "expected": "弹出权限引导弹窗，显示权限用途说明，提供允许和拒绝按钮"
+        }
+      ],
+      "expected_result": "权限弹窗正常显示，文案清晰，按钮可用",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-007"
+    },
+    {
+      "title": "拒绝权限后的处理",
+      "priority": "P1",
+      "domain": "启动与引导",
+      "module": "权限获取",
+      "preconditions": "权限弹窗已显示",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击“拒绝”按钮",
+          "expected": "弹窗关闭，APP继续运行，相关功能降级或提示"
+        }
+      ],
+      "expected_result": "拒绝权限后APP不崩溃，能正常使用，且后续有合理提示",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-008"
+    },
+    {
+      "title": "点击广告跳转落地页",
+      "priority": "P0",
+      "domain": "启动与引导",
+      "module": "开屏广告",
+      "preconditions": "开屏广告展示中，广告内容可点击",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击广告区域",
+          "expected": "跳转到指定落地页（应用内页面或外部链接）"
+        }
+      ],
+      "expected_result": "跳转成功，落地页正确，返回后能回到首页",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-009"
+    },
+    {
+      "title": "广告点击无响应",
+      "priority": "P1",
+      "domain": "启动与引导",
+      "module": "开屏广告",
+      "preconditions": "广告加载中或网络异常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击广告区域",
+          "expected": "无跳转或提示广告加载中，不崩溃"
+        }
+      ],
+      "expected_result": "广告未加载完成时点击无响应，不影响后续操作",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-010"
+    },
+    {
+      "title": "手机号登录成功",
+      "priority": "P0",
+      "domain": "登录注册",
+      "module": "手机号登录",
+      "preconditions": "已注册手机号，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入正确手机号",
+          "expected": "手机号格式校验通过"
+        },
+        {
+          "step": 2,
+          "desc": "点击获取验证码",
+          "expected": "发送验证码，按钮倒计时"
+        },
+        {
+          "step": 3,
+          "desc": "输入正确验证码",
+          "expected": "验证码校验通过"
+        },
+        {
+          "step": 4,
+          "desc": "点击登录",
+          "expected": "登录成功，跳转首页"
+        }
+      ],
+      "expected_result": "登录成功，进入首页，用户信息正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-011"
+    },
+    {
+      "title": "手机号格式错误",
+      "priority": "P0",
+      "domain": "登录注册",
+      "module": "手机号登录",
+      "preconditions": "网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入错误手机号（如12345）",
+          "expected": "提示手机号格式错误"
+        },
+        {
+          "step": 2,
+          "desc": "点击获取验证码",
+          "expected": "不发送验证码，提示手机号错误"
+        }
+      ],
+      "expected_result": "手机号格式校验失败，无法获取验证码",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-012"
+    },
+    {
+      "title": "验证码错误",
+      "priority": "P0",
+      "domain": "登录注册",
+      "module": "手机号登录",
+      "preconditions": "已获取验证码",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入正确手机号并获取验证码",
+          "expected": "验证码发送成功"
+        },
+        {
+          "step": 2,
+          "desc": "输入错误验证码",
+          "expected": "提示验证码错误"
+        },
+        {
+          "step": 3,
+          "desc": "点击登录",
+          "expected": "登录失败，提示验证码错误"
+        }
+      ],
+      "expected_result": "登录失败，提示验证码错误，不进入首页",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-013"
+    },
+    {
+      "title": "第三方登录成功",
+      "priority": "P0",
+      "domain": "登录注册",
+      "module": "第三方登录",
+      "preconditions": "已安装微信或QQ，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击微信登录",
+          "expected": "拉起微信授权页面"
+        },
+        {
+          "step": 2,
+          "desc": "同意授权",
+          "expected": "授权成功，返回APP并登录"
+        }
+      ],
+      "expected_result": "登录成功，进入首页，用户信息正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-014"
+    },
+    {
+      "title": "第三方登录取消授权",
+      "priority": "P1",
+      "domain": "登录注册",
+      "module": "第三方登录",
+      "preconditions": "已安装微信或QQ，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击微信登录",
+          "expected": "拉起微信授权页面"
+        },
+        {
+          "step": 2,
+          "desc": "取消授权",
+          "expected": "返回APP，提示登录取消，不登录"
+        }
+      ],
+      "expected_result": "登录失败，提示用户取消授权，停留在登录页",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-015"
+    },
+    {
+      "title": "手机号注册成功",
+      "priority": "P0",
+      "domain": "登录注册",
+      "module": "手机号注册",
+      "preconditions": "手机号未注册，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入未注册手机号",
+          "expected": "手机号格式校验通过"
+        },
+        {
+          "step": 2,
+          "desc": "输入密码（符合规则）",
+          "expected": "密码强度校验通过"
+        },
+        {
+          "step": 3,
+          "desc": "点击注册",
+          "expected": "注册成功，自动登录并跳转首页"
+        }
+      ],
+      "expected_result": "注册成功，账号创建，进入首页",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-016"
+    },
+    {
+      "title": "手机号已注册",
+      "priority": "P1",
+      "domain": "登录注册",
+      "module": "手机号注册",
+      "preconditions": "手机号已注册",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入已注册手机号",
+          "expected": "提示手机号已注册"
+        },
+        {
+          "step": 2,
+          "desc": "输入密码",
+          "expected": "密码输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击注册",
+          "expected": "注册失败，提示手机号已存在"
+        }
+      ],
+      "expected_result": "注册失败，提示手机号已注册，不创建账号",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-017"
+    },
+    {
+      "title": "勾选协议后登录成功",
+      "priority": "P0",
+      "domain": "登录注册",
+      "module": "用户协议与隐私政策",
+      "preconditions": "登录页显示，协议未勾选",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "勾选同意用户协议和隐私政策",
+          "expected": "复选框变为选中状态"
+        },
+        {
+          "step": 2,
+          "desc": "点击登录",
+          "expected": "登录流程正常进行"
+        }
+      ],
+      "expected_result": "登录成功，进入首页",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-018"
+    },
+    {
+      "title": "未勾选协议点击登录",
+      "priority": "P0",
+      "domain": "登录注册",
+      "module": "用户协议与隐私政策",
+      "preconditions": "登录页显示，协议未勾选",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "不勾选协议，直接点击登录",
+          "expected": "提示请先同意用户协议和隐私政策"
+        }
+      ],
+      "expected_result": "登录被阻止，提示需勾选协议",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-019"
+    },
+    {
+      "title": "忘记密码重置成功",
+      "priority": "P0",
+      "domain": "登录注册",
+      "module": "忘记密码",
+      "preconditions": "已注册手机号，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击忘记密码",
+          "expected": "进入重置密码页面"
+        },
+        {
+          "step": 2,
+          "desc": "输入已注册手机号",
+          "expected": "手机号格式校验通过"
+        },
+        {
+          "step": 3,
+          "desc": "获取验证码并输入",
+          "expected": "验证码校验通过"
+        },
+        {
+          "step": 4,
+          "desc": "输入新密码",
+          "expected": "密码符合规则"
+        },
+        {
+          "step": 5,
+          "desc": "确认新密码",
+          "expected": "两次密码一致"
+        },
+        {
+          "step": 6,
+          "desc": "点击重置",
+          "expected": "重置成功，提示并跳转登录页"
+        }
+      ],
+      "expected_result": "密码重置成功，可用新密码登录",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-020"
+    },
+    {
+      "title": "手机号未注册时重置密码",
+      "priority": "P1",
+      "domain": "登录注册",
+      "module": "忘记密码",
+      "preconditions": "手机号未注册",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入未注册手机号",
+          "expected": "提示手机号未注册"
+        },
+        {
+          "step": 2,
+          "desc": "点击获取验证码",
+          "expected": "不发送验证码，提示手机号未注册"
+        }
+      ],
+      "expected_result": "无法重置密码，提示手机号未注册",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-021"
+    },
+    {
+      "title": "进行中的比赛正常展示",
+      "priority": "P0",
+      "domain": "首页",
+      "module": "进行中的比赛/热门比赛",
+      "preconditions": "存在进行中的比赛，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开首页",
+          "expected": "顶部模块显示进行中的比赛，包含比分、时间等实时信息"
+        }
+      ],
+      "expected_result": "比赛信息展示正确，数据实时更新",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-022"
+    },
+    {
+      "title": "无进行中的比赛时展示",
+      "priority": "P1",
+      "domain": "首页",
+      "module": "进行中的比赛/热门比赛",
+      "preconditions": "当前无进行中的比赛",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开首页",
+          "expected": "模块显示暂无进行中的比赛或推荐热门比赛"
+        }
+      ],
+      "expected_result": "模块有合理空态展示，不空白或报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-023"
+    },
+    {
+      "title": "开播提醒订阅成功",
+      "priority": "P0",
+      "domain": "首页",
+      "module": "开播提醒",
+      "preconditions": "存在即将开始的比赛，用户未订阅",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击开播提醒按钮",
+          "expected": "按钮变为已订阅状态，提示订阅成功"
+        }
+      ],
+      "expected_result": "订阅成功，后续比赛开始前收到通知",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-024"
+    },
+    {
+      "title": "重复订阅开播提醒",
+      "priority": "P1",
+      "domain": "首页",
+      "module": "开播提醒",
+      "preconditions": "已订阅该比赛",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "再次点击开播提醒按钮",
+          "expected": "提示已订阅或取消订阅"
+        }
+      ],
+      "expected_result": "不会重复订阅，有明确提示",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-025"
+    },
+    {
+      "title": "热门赛事横向滑动浏览",
+      "priority": "P0",
+      "domain": "首页",
+      "module": "热门赛事",
+      "preconditions": "存在热门赛事数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在热门赛事模块左右滑动",
+          "expected": "列表可横向滑动，展示更多赛事"
+        },
+        {
+          "step": 2,
+          "desc": "点击某个赛事",
+          "expected": "跳转到赛事详情页"
+        }
+      ],
+      "expected_result": "滑动流畅，点击跳转正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-026"
+    },
+    {
+      "title": "热门赛事数据为空",
+      "priority": "P1",
+      "domain": "首页",
+      "module": "热门赛事",
+      "preconditions": "无热门赛事数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开首页",
+          "expected": "热门赛事模块显示暂无数据或隐藏"
+        }
+      ],
+      "expected_result": "模块有合理空态，不影响其他模块",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-027"
+    },
+    {
+      "title": "热门联赛入口跳转",
+      "priority": "P0",
+      "domain": "首页",
+      "module": "热门联赛",
+      "preconditions": "存在热门联赛数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击热门联赛入口",
+          "expected": "跳转到对应联赛详情页"
+        }
+      ],
+      "expected_result": "跳转正确，联赛详情页显示正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-028"
+    },
+    {
+      "title": "热门联赛入口无数据",
+      "priority": "P1",
+      "domain": "首页",
+      "module": "热门联赛",
+      "preconditions": "无热门联赛数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开首页",
+          "expected": "热门联赛模块不显示或显示空态"
+        }
+      ],
+      "expected_result": "模块合理处理空数据，不报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-029"
+    },
+    {
+      "title": "赛程表日期切换",
+      "priority": "P0",
+      "domain": "首页",
+      "module": "赛程表",
+      "preconditions": "存在近期赛程数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开首页赛程表模块",
+          "expected": "显示当前日期赛程"
+        },
+        {
+          "step": 2,
+          "desc": "点击其他日期",
+          "expected": "显示对应日期的赛程"
+        }
+      ],
+      "expected_result": "日期切换正常，赛程数据正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-030"
+    },
+    {
+      "title": "赛程表日期无数据",
+      "priority": "P1",
+      "domain": "首页",
+      "module": "赛程表",
+      "preconditions": "某日期无赛程",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "切换到无赛程的日期",
+          "expected": "显示暂无赛程提示"
+        }
+      ],
+      "expected_result": "空态提示清晰，无异常",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-031"
+    },
+    {
+      "title": "首页下拉刷新成功",
+      "priority": "P0",
+      "domain": "首页",
+      "module": "下拉刷新",
+      "preconditions": "首页已加载，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "下拉首页",
+          "expected": "出现刷新动画，数据重新加载"
+        },
+        {
+          "step": 2,
+          "desc": "松开手指",
+          "expected": "刷新完成，所有模块数据更新"
+        }
+      ],
+      "expected_result": "刷新成功，数据更新，无卡顿",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-032"
+    },
+    {
+      "title": "下拉刷新网络异常",
+      "priority": "P1",
+      "domain": "首页",
+      "module": "下拉刷新",
+      "preconditions": "网络异常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "下拉首页",
+          "expected": "刷新失败，提示网络错误"
+        }
+      ],
+      "expected_result": "有错误提示，页面保持原数据，不崩溃",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-033"
+    },
+    {
+      "title": "资讯列表按时间加载成功",
+      "priority": "P0",
+      "domain": "资讯",
+      "module": "资讯列表",
+      "preconditions": "用户已登录，网络正常，存在已发布的资讯数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开App，进入资讯模块",
+          "expected": "显示资讯列表页面"
+        },
+        {
+          "step": 2,
+          "desc": "观察列表加载",
+          "expected": "列表按时间倒序展示，每条资讯显示标题、封面图、发布时间，加载无异常"
+        }
+      ],
+      "expected_result": "资讯列表成功加载，数据按时间倒序排列，展示完整，无加载失败或崩溃",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-034"
+    },
+    {
+      "title": "资讯列表加载失败提示",
+      "priority": "P1",
+      "domain": "资讯",
+      "module": "资讯列表",
+      "preconditions": "用户已登录，网络断开或服务器异常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开App，进入资讯模块",
+          "expected": "显示加载失败提示，如「加载失败，请检查网络」"
+        },
+        {
+          "step": 2,
+          "desc": "点击重试按钮",
+          "expected": "重新发起请求，若网络恢复则加载成功"
+        }
+      ],
+      "expected_result": "加载失败时给出明确提示，重试功能有效，不崩溃",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-035"
+    },
+    {
+      "title": "资讯列表分类筛选",
+      "priority": "P1",
+      "domain": "资讯",
+      "module": "资讯列表",
+      "preconditions": "用户已登录，存在多个分类的资讯数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入资讯列表页",
+          "expected": "显示分类标签（如热门、最新、赛事）"
+        },
+        {
+          "step": 2,
+          "desc": "点击「赛事」分类",
+          "expected": "列表刷新，仅显示赛事类资讯"
+        }
+      ],
+      "expected_result": "分类筛选生效，列表内容与所选分类一致",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-036"
+    },
+    {
+      "title": "资讯列表空数据展示",
+      "priority": "P2",
+      "domain": "资讯",
+      "module": "资讯列表",
+      "preconditions": "用户已登录，当前分类下无资讯数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入资讯列表页，选择无数据的分类",
+          "expected": "显示空状态提示，如「暂无资讯」"
+        }
+      ],
+      "expected_result": "空状态提示友好，无异常报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-037"
+    },
+    {
+      "title": "资讯详情正常展示",
+      "priority": "P0",
+      "domain": "资讯",
+      "module": "资讯详情",
+      "preconditions": "用户已登录，存在一篇图文资讯",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在资讯列表点击一条资讯",
+          "expected": "进入详情页，加载文章标题、正文、图片"
+        },
+        {
+          "step": 2,
+          "desc": "上下滑动阅读",
+          "expected": "内容完整展示，图片加载正常，无卡顿"
+        }
+      ],
+      "expected_result": "详情页展示完整，图片文字清晰，可正常阅读",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-038"
+    },
+    {
+      "title": "资讯详情图片加载失败",
+      "priority": "P1",
+      "domain": "资讯",
+      "module": "资讯详情",
+      "preconditions": "用户已登录，网络不稳定，详情页包含图片",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入资讯详情页",
+          "expected": "图片区域显示加载失败占位图，文字内容正常显示"
+        }
+      ],
+      "expected_result": "图片加载失败时显示占位图，不影响正文阅读，无崩溃",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-039"
+    },
+    {
+      "title": "资讯搜索关键字",
+      "priority": "P0",
+      "domain": "资讯",
+      "module": "资讯搜索",
+      "preconditions": "用户已登录，存在包含「足球」的资讯",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入资讯模块，点击搜索框",
+          "expected": "弹出搜索输入框"
+        },
+        {
+          "step": 2,
+          "desc": "输入「足球」并搜索",
+          "expected": "显示搜索结果列表，包含标题或正文含「足球」的资讯"
+        }
+      ],
+      "expected_result": "搜索结果准确，展示相关资讯",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-040"
+    },
+    {
+      "title": "资讯搜索无结果",
+      "priority": "P1",
+      "domain": "资讯",
+      "module": "资讯搜索",
+      "preconditions": "用户已登录，搜索不存在的关键字",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入资讯搜索，输入「不存在的关键字」",
+          "expected": "显示无结果提示，如「未找到相关资讯」"
+        }
+      ],
+      "expected_result": "无结果提示清晰，无异常",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-041"
+    },
+    {
+      "title": "资讯标签筛选",
+      "priority": "P1",
+      "domain": "资讯",
+      "module": "资讯搜索",
+      "preconditions": "用户已登录，存在带标签的资讯",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入资讯搜索页，点击标签「转会」",
+          "expected": "显示所有带「转会」标签的资讯"
+        }
+      ],
+      "expected_result": "筛选结果正确，仅显示对应标签的资讯",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-042"
+    },
+    {
+      "title": "资讯推送开启",
+      "priority": "P0",
+      "domain": "资讯",
+      "module": "资讯推送",
+      "preconditions": "用户已登录，系统未授权推送权限",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入设置-通知设置，开启资讯推送",
+          "expected": "弹出系统权限请求，允许后推送开启成功"
+        }
+      ],
+      "expected_result": "推送权限请求正常，开启后能接收推送通知",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-043"
+    },
+    {
+      "title": "资讯推送关闭",
+      "priority": "P1",
+      "domain": "资讯",
+      "module": "资讯推送",
+      "preconditions": "用户已开启资讯推送",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入设置-通知设置，关闭资讯推送",
+          "expected": "推送关闭成功，后续不再接收资讯推送"
+        }
+      ],
+      "expected_result": "关闭后不再收到推送通知",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-044"
+    },
+    {
+      "title": "从导航栏进入搜索页",
+      "priority": "P0",
+      "domain": "搜索",
+      "module": "搜索入口",
+      "preconditions": "用户已登录，App处于首页",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击首页顶部搜索框",
+          "expected": "进入搜索页，显示搜索输入框和热门搜索"
+        }
+      ],
+      "expected_result": "成功进入搜索页",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-045"
+    },
+    {
+      "title": "搜索页返回",
+      "priority": "P1",
+      "domain": "搜索",
+      "module": "搜索入口",
+      "preconditions": "用户已进入搜索页",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击返回按钮",
+          "expected": "返回上一页，搜索状态清空"
+        }
+      ],
+      "expected_result": "返回正常，无残留",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-046"
+    },
+    {
+      "title": "搜索建议实时显示",
+      "priority": "P0",
+      "domain": "搜索",
+      "module": "搜索建议",
+      "preconditions": "用户已进入搜索页，网络正常",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在搜索框输入「梅」",
+          "expected": "实时显示包含「梅」的搜索建议列表"
+        }
+      ],
+      "expected_result": "搜索建议实时出现，内容相关",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-047"
+    },
+    {
+      "title": "搜索建议无匹配",
+      "priority": "P1",
+      "domain": "搜索",
+      "module": "搜索建议",
+      "preconditions": "用户已进入搜索页",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入无匹配的字符如「zzz」",
+          "expected": "无建议显示，或显示「无匹配建议」"
+        }
+      ],
+      "expected_result": "无建议时提示友好，不报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-048"
+    },
+    {
+      "title": "搜索结果按分类聚合",
+      "priority": "P0",
+      "domain": "搜索",
+      "module": "搜索结果",
+      "preconditions": "用户已登录，搜索「C罗」存在球员、球队、比赛等结果",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在搜索页输入「C罗」并搜索",
+          "expected": "结果页按分类（球员、球队、比赛）分组展示"
+        }
+      ],
+      "expected_result": "结果分类清晰，每个分类下展示对应内容",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-049"
+    },
+    {
+      "title": "搜索结果为空",
+      "priority": "P1",
+      "domain": "搜索",
+      "module": "搜索结果",
+      "preconditions": "用户已登录，搜索不存在的关键字",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入「不存在」并搜索",
+          "expected": "显示空状态提示，如「未找到相关内容」"
+        }
+      ],
+      "expected_result": "空状态提示清晰，并推荐热门搜索",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-050"
+    },
+    {
+      "title": "搜索空状态推荐内容",
+      "priority": "P2",
+      "domain": "搜索",
+      "module": "搜索空状态",
+      "preconditions": "用户已登录，搜索无结果",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "搜索无结果后，观察推荐区域",
+          "expected": "显示推荐内容（如热门球队、球员）"
+        }
+      ],
+      "expected_result": "推荐内容展示正常，点击可跳转",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-051"
+    },
+    {
+      "title": "个人中心首页展示",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "个人中心首页",
+      "preconditions": "用户已登录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击底部导航「我的」",
+          "expected": "显示用户头像、昵称、银钻余额、动态等基本信息"
+        }
+      ],
+      "expected_result": "信息展示完整，与用户数据一致",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-052"
+    },
+    {
+      "title": "未登录访问个人中心",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "个人中心首页",
+      "preconditions": "用户未登录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击「我的」",
+          "expected": "显示登录引导，如「点击登录」"
+        }
+      ],
+      "expected_result": "提示登录，点击后跳转登录页",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-053"
+    },
+    {
+      "title": "关注列表查看",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "关注列表",
+      "preconditions": "用户已登录，且有关注的用户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「我的」-「关注」",
+          "expected": "显示已关注的用户列表，包含头像、昵称"
+        }
+      ],
+      "expected_result": "关注列表展示正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-054"
+    },
+    {
+      "title": "取消关注",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "关注列表",
+      "preconditions": "用户已登录，有关注的用户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在关注列表点击某用户旁的「已关注」按钮",
+          "expected": "按钮变为「关注」，该用户从列表移除"
+        }
+      ],
+      "expected_result": "取消关注成功，列表更新",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-055"
+    },
+    {
+      "title": "订阅管理查看",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "订阅管理",
+      "preconditions": "用户已登录，有订阅的比赛或联赛",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「我的」-「订阅」",
+          "expected": "显示已订阅的比赛、联赛列表及通知设置"
+        }
+      ],
+      "expected_result": "订阅列表展示正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-056"
+    },
+    {
+      "title": "取消订阅",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "订阅管理",
+      "preconditions": "用户已登录，有订阅的比赛",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在订阅列表点击「取消订阅」",
+          "expected": "该比赛从订阅列表移除，通知设置同步取消"
+        }
+      ],
+      "expected_result": "取消订阅成功，列表更新",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-057"
+    },
+    {
+      "title": "银钻账户余额展示",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "银钻账户",
+      "preconditions": "用户已登录，账户有银钻",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「我的」-「银钻账户」",
+          "expected": "显示当前银钻余额、获取记录和兑换入口"
+        }
+      ],
+      "expected_result": "余额显示正确，记录可查看",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-058"
+    },
+    {
+      "title": "银钻余额为0",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "银钻账户",
+      "preconditions": "用户已登录，银钻余额为0",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入银钻账户",
+          "expected": "余额显示0，获取记录为空，兑换入口置灰或提示"
+        }
+      ],
+      "expected_result": "余额为0时展示正常，无异常",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-059"
+    },
+    {
+      "title": "完成每日任务获取银钻",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "领银钻任务",
+      "preconditions": "用户已登录，有可完成的每日任务",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「领银钻」页面",
+          "expected": "显示任务列表，如观看广告、分享"
+        },
+        {
+          "step": 2,
+          "desc": "点击「观看广告」任务并完成",
+          "expected": "任务完成，银钻余额增加对应奖励"
+        }
+      ],
+      "expected_result": "任务完成，银钻到账，任务状态更新",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-060"
+    },
+    {
+      "title": "重复领取任务奖励",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "领银钻任务",
+      "preconditions": "用户已登录，某任务今日已完成",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "再次点击已完成的任务",
+          "expected": "提示「今日已完成」，无法重复领取"
+        }
+      ],
+      "expected_result": "不能重复领取，提示明确",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-061"
+    },
+    {
+      "title": "邀请好友成功",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "邀请好友",
+      "preconditions": "用户已登录，有可分享的邀请码",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「邀请好友」页面",
+          "expected": "显示邀请码和分享按钮"
+        },
+        {
+          "step": 2,
+          "desc": "点击分享，好友通过邀请码注册",
+          "expected": "双方获得奖励，邀请记录更新"
+        }
+      ],
+      "expected_result": "邀请成功，奖励发放正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-062"
+    },
+    {
+      "title": "使用无效邀请码",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "邀请好友",
+      "preconditions": "用户已登录，输入无效邀请码",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在注册页输入无效邀请码",
+          "expected": "提示「邀请码无效」"
+        }
+      ],
+      "expected_result": "提示错误，注册不成功",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-063"
+    },
+    {
+      "title": "商城兑换虚拟商品",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "Camel商城",
+      "preconditions": "用户已登录，银钻余额充足",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入Camel商城，选择一件虚拟商品",
+          "expected": "显示商品详情和兑换按钮"
+        },
+        {
+          "step": 2,
+          "desc": "点击兑换并确认",
+          "expected": "兑换成功，银钻扣除，商品发放到我的装扮"
+        }
+      ],
+      "expected_result": "兑换成功，银钻余额减少，商品到账",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-064"
+    },
+    {
+      "title": "银钻不足兑换失败",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "Camel商城",
+      "preconditions": "用户已登录，银钻余额不足",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "选择一件价格高于余额的商品，点击兑换",
+          "expected": "提示「银钻不足」，兑换失败"
+        }
+      ],
+      "expected_result": "兑换失败，余额不变",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-065"
+    },
+    {
+      "title": "查看我的收藏",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "我的收藏",
+      "preconditions": "用户已登录，有收藏的资讯或UGC",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「我的收藏」",
+          "expected": "显示收藏列表，可切换分类（资讯/UGC）"
+        }
+      ],
+      "expected_result": "收藏列表展示正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-066"
+    },
+    {
+      "title": "取消收藏",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "我的收藏",
+      "preconditions": "用户已登录，有收藏内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "在收藏列表点击「取消收藏」",
+          "expected": "该内容从列表移除，提示取消成功"
+        }
+      ],
+      "expected_result": "取消收藏成功，列表更新",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-067"
+    },
+    {
+      "title": "编辑个人资料",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "我的资料",
+      "preconditions": "用户已登录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「我的资料」",
+          "expected": "显示头像、昵称、性别、简介等可编辑项"
+        },
+        {
+          "step": 2,
+          "desc": "修改昵称为「测试昵称」，保存",
+          "expected": "保存成功，个人中心显示新昵称"
+        }
+      ],
+      "expected_result": "资料修改成功，所有端同步更新",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-068"
+    },
+    {
+      "title": "昵称为空保存",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "我的资料",
+      "preconditions": "用户已登录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "清空昵称，点击保存",
+          "expected": "提示「昵称不能为空」，保存失败"
+        }
+      ],
+      "expected_result": "保存失败，昵称保持原值",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-069"
+    },
+    {
+      "title": "查看FAQ列表",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "FAQ帮助中心",
+      "preconditions": "用户已登录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「FAQ」",
+          "expected": "显示常见问题列表，点击可展开答案"
+        }
+      ],
+      "expected_result": "FAQ列表展示正常，答案可查看",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-070"
+    },
+    {
+      "title": "FAQ无数据",
+      "priority": "P2",
+      "domain": "个人中心",
+      "module": "FAQ帮助中心",
+      "preconditions": "用户已登录，FAQ列表为空",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入FAQ页面",
+          "expected": "显示空状态提示，如「暂无常见问题」"
+        }
+      ],
+      "expected_result": "空状态提示友好",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-071"
+    },
+    {
+      "title": "提交意见反馈",
+      "priority": "P0",
+      "domain": "个人中心",
+      "module": "意见反馈",
+      "preconditions": "用户已登录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入「意见反馈」",
+          "expected": "显示反馈输入框和上传截图按钮"
+        },
+        {
+          "step": 2,
+          "desc": "输入反馈内容，上传截图，点击提交",
+          "expected": "提交成功，提示「反馈已收到」"
+        }
+      ],
+      "expected_result": "反馈提交成功，后台可查",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-072"
+    },
+    {
+      "title": "反馈内容为空提交",
+      "priority": "P1",
+      "domain": "个人中心",
+      "module": "意见反馈",
+      "preconditions": "用户已登录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "不输入内容，点击提交",
+          "expected": "提示「请输入反馈内容」"
+        }
+      ],
+      "expected_result": "提交失败，提示明确",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-073"
+    },
+    {
+      "title": "骆驼币账户首页-正常展示余额、充值入口、交易记录",
+      "priority": "P0",
+      "domain": "支付与账户",
+      "module": "骆驼币账户",
+      "preconditions": "用户已登录，且账户内有骆驼币余额",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币账户首页",
+          "expected": "页面加载成功，显示骆驼币余额、充值入口和交易记录列表"
+        },
+        {
+          "step": 2,
+          "desc": "查看余额显示",
+          "expected": "余额以数字形式显示，保留两位小数，如 100.00"
+        },
+        {
+          "step": 3,
+          "desc": "点击充值入口",
+          "expected": "跳转到充值页面或弹出充值对话框"
+        },
+        {
+          "step": 4,
+          "desc": "查看交易记录",
+          "expected": "交易记录列表展示，包含时间、类型、金额等信息"
+        }
+      ],
+      "expected_result": "页面正常展示，所有元素可交互，数据准确",
+      "remark": "正面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-074"
+    },
+    {
+      "title": "骆驼币账户首页-余额为0时展示",
+      "priority": "P1",
+      "domain": "支付与账户",
+      "module": "骆驼币账户",
+      "preconditions": "用户已登录，且账户余额为0",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币账户首页",
+          "expected": "页面加载成功，余额显示为0.00，充值入口正常显示，交易记录可能为空"
+        },
+        {
+          "step": 2,
+          "desc": "查看交易记录",
+          "expected": "若交易记录为空，显示空状态提示，如'暂无交易记录'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常报错",
+      "remark": "边界用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-075"
+    },
+    {
+      "title": "骆驼币账户首页-网络异常时加载失败",
+      "priority": "P1",
+      "domain": "支付与账户",
+      "module": "骆驼币账户",
+      "preconditions": "用户已登录，网络断开",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币账户首页",
+          "expected": "页面显示加载失败提示，如'网络异常，请稍后重试'，并提供重试按钮"
+        }
+      ],
+      "expected_result": "页面不崩溃，给出错误提示，重试后能恢复",
+      "remark": "负面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-076"
+    },
+    {
+      "title": "数字货币支付流程-正常支付成功",
+      "priority": "P0",
+      "domain": "支付与账户",
+      "module": "数字货币支付",
+      "preconditions": "用户已登录，有足够的数字货币余额，存在待支付订单",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入支付页面，选择数字货币支付方式",
+          "expected": "显示支付金额、数字货币余额、确认支付按钮"
+        },
+        {
+          "step": 2,
+          "desc": "点击确认支付",
+          "expected": "弹出支付确认框，显示支付金额和支付方式"
+        },
+        {
+          "step": 3,
+          "desc": "确认支付",
+          "expected": "支付成功，跳转到支付结果页，显示支付成功信息"
+        }
+      ],
+      "expected_result": "支付成功，订单状态更新为已支付，账户余额扣减正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-077"
+    },
+    {
+      "title": "数字货币支付流程-余额不足支付失败",
+      "priority": "P0",
+      "domain": "支付与账户",
+      "module": "数字货币支付",
+      "preconditions": "用户已登录，数字货币余额小于支付金额",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入支付页面，选择数字货币支付方式",
+          "expected": "显示支付金额、数字货币余额（不足）、确认支付按钮"
+        },
+        {
+          "step": 2,
+          "desc": "点击确认支付",
+          "expected": "提示'余额不足'，无法继续支付，或跳转到充值页面"
+        }
+      ],
+      "expected_result": "支付失败，订单状态不变，余额未扣减",
+      "remark": "负面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-078"
+    },
+    {
+      "title": "数字货币支付流程-支付超时处理",
+      "priority": "P1",
+      "domain": "支付与账户",
+      "module": "数字货币支付",
+      "preconditions": "用户已登录，有足够余额，存在待支付订单",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入支付页面，选择数字货币支付方式",
+          "expected": "显示支付页面"
+        },
+        {
+          "step": 2,
+          "desc": "等待超过支付超时时间（如5分钟）",
+          "expected": "支付页面提示'支付超时'，订单状态变为已取消或待支付"
+        }
+      ],
+      "expected_result": "支付超时处理正确，订单状态更新",
+      "remark": "边界用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-079"
+    },
+    {
+      "title": "数字货币支付流程-支付过程中取消",
+      "priority": "P1",
+      "domain": "支付与账户",
+      "module": "数字货币支付",
+      "preconditions": "用户已登录，有足够余额，存在待支付订单",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入支付页面，选择数字货币支付方式",
+          "expected": "显示支付页面"
+        },
+        {
+          "step": 2,
+          "desc": "点击取消或返回按钮",
+          "expected": "支付流程取消，订单状态不变，余额未扣减"
+        }
+      ],
+      "expected_result": "取消支付成功，无异常",
+      "remark": "负面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-080"
+    },
+    {
+      "title": "骆驼币流水记录-正常展示获取和消耗明细",
+      "priority": "P0",
+      "domain": "支付与账户",
+      "module": "骆驼币流水记录",
+      "preconditions": "用户已登录，且有骆驼币流水记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币流水记录页面",
+          "expected": "页面加载成功，显示流水记录列表，包含时间、类型（获取/消耗）、金额、余额等信息"
+        },
+        {
+          "step": 2,
+          "desc": "查看流水记录",
+          "expected": "记录按时间倒序排列，每条记录显示完整信息"
+        }
+      ],
+      "expected_result": "流水记录展示正确，数据准确",
+      "remark": "正面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-081"
+    },
+    {
+      "title": "骆驼币流水记录-无流水记录时展示空状态",
+      "priority": "P1",
+      "domain": "支付与账户",
+      "module": "骆驼币流水记录",
+      "preconditions": "用户已登录，且无任何流水记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币流水记录页面",
+          "expected": "页面显示空状态提示，如'暂无流水记录'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常",
+      "remark": "边界用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-082"
+    },
+    {
+      "title": "骆驼币流水记录-筛选功能",
+      "priority": "P1",
+      "domain": "支付与账户",
+      "module": "骆驼币流水记录",
+      "preconditions": "用户已登录，且有多种类型的流水记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币流水记录页面",
+          "expected": "页面显示筛选条件，如类型（全部/获取/消耗）、时间范围"
+        },
+        {
+          "step": 2,
+          "desc": "选择类型为'获取'",
+          "expected": "列表只显示获取类型的记录"
+        },
+        {
+          "step": 3,
+          "desc": "选择时间范围为'近30天'",
+          "expected": "列表只显示近30天的记录"
+        }
+      ],
+      "expected_result": "筛选功能正常，列表数据符合筛选条件",
+      "remark": "正面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-083"
+    },
+    {
+      "title": "支付结果展示-支付成功结果页",
+      "priority": "P0",
+      "domain": "支付与账户",
+      "module": "支付结果页",
+      "preconditions": "用户已完成一笔支付",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "支付成功后自动跳转到支付结果页",
+          "expected": "页面显示支付成功图标、支付金额、订单号等信息"
+        },
+        {
+          "step": 2,
+          "desc": "点击'查看订单'按钮",
+          "expected": "跳转到订单详情页"
+        },
+        {
+          "step": 3,
+          "desc": "点击'返回'按钮",
+          "expected": "返回上一页或首页"
+        }
+      ],
+      "expected_result": "支付结果页展示正确，按钮功能正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-084"
+    },
+    {
+      "title": "支付结果展示-支付失败结果页",
+      "priority": "P0",
+      "domain": "支付与账户",
+      "module": "支付结果页",
+      "preconditions": "用户支付失败",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "支付失败后跳转到支付结果页",
+          "expected": "页面显示支付失败图标、失败原因、重试按钮"
+        },
+        {
+          "step": 2,
+          "desc": "点击'重试'按钮",
+          "expected": "重新发起支付流程"
+        },
+        {
+          "step": 3,
+          "desc": "点击'返回'按钮",
+          "expected": "返回上一页或首页"
+        }
+      ],
+      "expected_result": "支付结果页展示正确，按钮功能正常",
+      "remark": "负面用例",
+      "client_scope": [
+        "web"
+      ],
+      "id": "TC-085"
+    },
+    {
+      "title": "比赛数据概览-正常展示比赛关键数据",
+      "priority": "P0",
+      "domain": "APP端数据与排行榜",
+      "module": "比赛数据概览",
+      "preconditions": "存在进行中的比赛，且比赛数据已同步",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入比赛数据概览页面",
+          "expected": "页面显示比分、比赛时间、比赛事件（如进球、红黄牌）等关键数据"
+        },
+        {
+          "step": 2,
+          "desc": "查看数据实时性",
+          "expected": "数据实时更新，如比分变化后页面自动刷新"
+        }
+      ],
+      "expected_result": "比赛数据展示正确，实时更新正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-086"
+    },
+    {
+      "title": "比赛数据概览-无比赛数据时展示",
+      "priority": "P1",
+      "domain": "APP端数据与排行榜",
+      "module": "比赛数据概览",
+      "preconditions": "无进行中的比赛",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入比赛数据概览页面",
+          "expected": "页面显示空状态提示，如'暂无比赛数据'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常",
+      "remark": "边界用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-087"
+    },
+    {
+      "title": "预测比赛列表-正常展示可预测比赛",
+      "priority": "P0",
+      "domain": "APP端数据与排行榜",
+      "module": "预测比赛列表",
+      "preconditions": "存在可预测的比赛",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测比赛列表页面",
+          "expected": "页面显示比赛列表，包含比赛时间、对阵双方、预测截止时间等信息"
+        },
+        {
+          "step": 2,
+          "desc": "点击某场比赛",
+          "expected": "进入预测页面"
+        }
+      ],
+      "expected_result": "列表展示正确，点击跳转正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-088"
+    },
+    {
+      "title": "预测比赛列表-无比赛时展示空状态",
+      "priority": "P1",
+      "domain": "APP端数据与排行榜",
+      "module": "预测比赛列表",
+      "preconditions": "无可预测的比赛",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测比赛列表页面",
+          "expected": "页面显示空状态提示，如'暂无预测比赛'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常",
+      "remark": "边界用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-089"
+    },
+    {
+      "title": "联赛详情页-正常展示积分榜、赛程、球队信息",
+      "priority": "P0",
+      "domain": "APP端数据与排行榜",
+      "module": "联赛详情页",
+      "preconditions": "存在联赛数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入联赛详情页",
+          "expected": "页面显示联赛名称、积分榜、赛程、球队信息等模块"
+        },
+        {
+          "step": 2,
+          "desc": "切换不同模块（如积分榜、赛程）",
+          "expected": "模块切换正常，数据加载正确"
+        }
+      ],
+      "expected_result": "联赛详情页展示正确，模块切换正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-090"
+    },
+    {
+      "title": "联赛详情页-无数据时展示",
+      "priority": "P1",
+      "domain": "APP端数据与排行榜",
+      "module": "联赛详情页",
+      "preconditions": "联赛无数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入联赛详情页",
+          "expected": "页面显示空状态提示，如'暂无数据'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常",
+      "remark": "边界用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-091"
+    },
+    {
+      "title": "球队详情页-正常展示球队资料、积分、阵容等",
+      "priority": "P0",
+      "domain": "APP端数据与排行榜",
+      "module": "球队详情页",
+      "preconditions": "存在球队数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入球队详情页",
+          "expected": "页面显示球队名称、队徽、资料、积分、阵容、数据、最佳球员等模块"
+        },
+        {
+          "step": 2,
+          "desc": "切换不同模块",
+          "expected": "模块切换正常，数据加载正确"
+        }
+      ],
+      "expected_result": "球队详情页展示正确，模块切换正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-092"
+    },
+    {
+      "title": "球队详情页-无数据时展示",
+      "priority": "P1",
+      "domain": "APP端数据与排行榜",
+      "module": "球队详情页",
+      "preconditions": "球队无数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入球队详情页",
+          "expected": "页面显示空状态提示，如'暂无数据'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常",
+      "remark": "边界用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-093"
+    },
+    {
+      "title": "球员详情页-正常展示数据统计、比赛记录、资讯",
+      "priority": "P0",
+      "domain": "APP端数据与排行榜",
+      "module": "球员详情页",
+      "preconditions": "存在球员数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入球员详情页",
+          "expected": "页面显示球员姓名、照片、数据统计、比赛记录、相关资讯等模块"
+        },
+        {
+          "step": 2,
+          "desc": "切换不同模块",
+          "expected": "模块切换正常，数据加载正确"
+        }
+      ],
+      "expected_result": "球员详情页展示正确，模块切换正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-094"
+    },
+    {
+      "title": "球员详情页-无数据时展示",
+      "priority": "P1",
+      "domain": "APP端数据与排行榜",
+      "module": "球员详情页",
+      "preconditions": "球员无数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入球员详情页",
+          "expected": "页面显示空状态提示，如'暂无数据'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常",
+      "remark": "边界用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-095"
+    },
+    {
+      "title": "球队榜-正常展示球队排行",
+      "priority": "P0",
+      "domain": "APP端数据与排行榜",
+      "module": "球队榜",
+      "preconditions": "存在球队数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入球队榜页面",
+          "expected": "页面显示球队列表，按某项数据（如胜率）排序"
+        },
+        {
+          "step": 2,
+          "desc": "切换排序指标（如进球）",
+          "expected": "列表按新指标重新排序"
+        }
+      ],
+      "expected_result": "球队榜展示正确，排序切换正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-096"
+    },
+    {
+      "title": "球队榜-无数据时展示",
+      "priority": "P1",
+      "domain": "APP端数据与排行榜",
+      "module": "球队榜",
+      "preconditions": "无球队数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入球队榜页面",
+          "expected": "页面显示空状态提示，如'暂无球队数据'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常",
+      "remark": "边界用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-097"
+    },
+    {
+      "title": "球员榜-正常展示球员排行",
+      "priority": "P0",
+      "domain": "APP端数据与排行榜",
+      "module": "球员榜",
+      "preconditions": "存在球员数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入球员榜页面",
+          "expected": "页面显示球员列表，按某项数据（如进球）排序"
+        },
+        {
+          "step": 2,
+          "desc": "切换排序指标（如助攻）",
+          "expected": "列表按新指标重新排序"
+        }
+      ],
+      "expected_result": "球员榜展示正确，排序切换正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-098"
+    },
+    {
+      "title": "球员榜-无数据时展示",
+      "priority": "P1",
+      "domain": "APP端数据与排行榜",
+      "module": "球员榜",
+      "preconditions": "无球员数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入球员榜页面",
+          "expected": "页面显示空状态提示，如'暂无球员数据'"
+        }
+      ],
+      "expected_result": "页面正常展示，无异常",
+      "remark": "边界用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-099"
+    },
+    {
+      "title": "PC端首页布局-正常展示赛事列表和热门推荐",
+      "priority": "P0",
+      "domain": "PC端功能",
+      "module": "PC端首页",
+      "preconditions": "PC端可正常访问",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开PC端首页",
+          "expected": "页面布局适配大屏，显示赛事列表、热门推荐等模块"
+        },
+        {
+          "step": 2,
+          "desc": "调整浏览器窗口大小",
+          "expected": "页面布局自适应，无错乱"
+        }
+      ],
+      "expected_result": "首页布局正常，响应式适配正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc"
+      ],
+      "id": "TC-100"
+    },
+    {
+      "title": "PC端首页布局-小窗口下布局错乱",
+      "priority": "P1",
+      "domain": "PC端功能",
+      "module": "PC端首页",
+      "preconditions": "PC端可正常访问",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开PC端首页",
+          "expected": "页面正常显示"
+        },
+        {
+          "step": 2,
+          "desc": "将浏览器窗口缩小到最小宽度",
+          "expected": "页面可能出现横向滚动条或布局错乱，但不应崩溃"
+        }
+      ],
+      "expected_result": "页面不崩溃，但布局可能不美观",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc"
+      ],
+      "id": "TC-101"
+    },
+    {
+      "title": "PC端UGC列表-正常展示并支持键盘导航",
+      "priority": "P0",
+      "domain": "PC端功能",
+      "module": "PC端UGC列表",
+      "preconditions": "存在UGC内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开PC端UGC列表",
+          "expected": "页面显示UGC内容列表，布局适配大屏"
+        },
+        {
+          "step": 2,
+          "desc": "使用键盘方向键上下移动焦点",
+          "expected": "焦点在列表项间移动，高亮显示"
+        },
+        {
+          "step": 3,
+          "desc": "按回车键选中当前项",
+          "expected": "跳转到对应UGC详情页"
+        }
+      ],
+      "expected_result": "列表展示正常，键盘导航功能正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc"
+      ],
+      "id": "TC-102"
+    },
+    {
+      "title": "PC端UGC列表-键盘导航无焦点时",
+      "priority": "P1",
+      "domain": "PC端功能",
+      "module": "PC端UGC列表",
+      "preconditions": "存在UGC内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开PC端UGC列表",
+          "expected": "页面显示列表"
+        },
+        {
+          "step": 2,
+          "desc": "按Tab键或方向键",
+          "expected": "焦点应移动到列表项，若列表为空则无焦点"
+        }
+      ],
+      "expected_result": "键盘导航行为符合预期",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc"
+      ],
+      "id": "TC-103"
+    },
+    {
+      "title": "PC端UGC详情-正常查看并全屏观看",
+      "priority": "P0",
+      "domain": "PC端功能",
+      "module": "PC端UGC详情",
+      "preconditions": "存在UGC内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开PC端UGC详情页",
+          "expected": "页面显示UGC内容，如文章或视频"
+        },
+        {
+          "step": 2,
+          "desc": "点击全屏按钮",
+          "expected": "视频或内容全屏显示"
+        },
+        {
+          "step": 3,
+          "desc": "按ESC退出全屏",
+          "expected": "退出全屏，恢复正常显示"
+        }
+      ],
+      "expected_result": "详情页展示正常，全屏功能正常",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc"
+      ],
+      "id": "TC-104"
+    },
+    {
+      "title": "PC端UGC详情-全屏观看时网络中断",
+      "priority": "P1",
+      "domain": "PC端功能",
+      "module": "PC端UGC详情",
+      "preconditions": "存在UGC视频内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开PC端UGC详情页并播放视频",
+          "expected": "视频正常播放"
+        },
+        {
+          "step": 2,
+          "desc": "断网",
+          "expected": "视频播放中断，显示加载失败提示"
+        }
+      ],
+      "expected_result": "视频播放中断，有错误提示",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc"
+      ],
+      "id": "TC-105"
+    },
+    {
+      "title": "广告位类型配置正确显示",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "广告位系统",
+      "preconditions": "用户已登录，进入广告位配置页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开广告位配置页面",
+          "expected": "页面正常加载，显示广告位类型列表"
+        },
+        {
+          "step": 2,
+          "desc": "查看广告位类型列表",
+          "expected": "列表包含banner、插屏、激励视频三种类型，且类型名称正确"
+        }
+      ],
+      "expected_result": "广告位类型配置正确显示，包含banner、插屏、激励视频三种类型。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-106"
+    },
+    {
+      "title": "广告位类型配置为空时提示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "广告位系统",
+      "preconditions": "用户已登录，进入广告位配置页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开广告位配置页面",
+          "expected": "页面正常加载"
+        },
+        {
+          "step": 2,
+          "desc": "清空广告位类型列表",
+          "expected": "系统提示「广告位类型不能为空」"
+        }
+      ],
+      "expected_result": "系统提示「广告位类型不能为空」，不允许保存空配置。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-107"
+    },
+    {
+      "title": "广告位展示逻辑-首页banner展示",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "广告位系统",
+      "preconditions": "用户已登录，首页有banner广告位配置",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开首页",
+          "expected": "首页顶部显示banner广告位"
+        },
+        {
+          "step": 2,
+          "desc": "查看banner广告内容",
+          "expected": "banner广告正常展示，可点击跳转"
+        }
+      ],
+      "expected_result": "首页banner广告位正常展示，广告内容可点击跳转。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-108"
+    },
+    {
+      "title": "广告位展示逻辑-无广告配置时不展示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "广告位系统",
+      "preconditions": "用户已登录，首页无banner广告位配置",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开首页",
+          "expected": "首页顶部不显示banner广告位"
+        }
+      ],
+      "expected_result": "首页不显示banner广告位，页面正常展示其他内容。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-109"
+    },
+    {
+      "title": "银钻获取规则-每日签到获取银钻",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "银钻系统",
+      "preconditions": "用户已登录，银钻账户余额为0",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入银钻账户页面",
+          "expected": "页面显示当前银钻余额为0"
+        },
+        {
+          "step": 2,
+          "desc": "点击「每日签到」按钮",
+          "expected": "签到成功，银钻余额增加，流水记录新增一条签到记录"
+        }
+      ],
+      "expected_result": "签到成功，银钻余额增加，流水记录新增一条签到记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-110"
+    },
+    {
+      "title": "银钻获取规则-重复签到提示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "银钻系统",
+      "preconditions": "用户已登录，今日已签到",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入银钻账户页面",
+          "expected": "页面显示今日已签到状态"
+        },
+        {
+          "step": 2,
+          "desc": "再次点击「每日签到」按钮",
+          "expected": "系统提示「今日已签到」，银钻余额不变"
+        }
+      ],
+      "expected_result": "系统提示「今日已签到」，银钻余额不变，不产生重复流水。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-111"
+    },
+    {
+      "title": "银钻消耗规则-使用银钻参与预测",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "银钻系统",
+      "preconditions": "用户已登录，银钻余额充足（如100银钻）",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测页面",
+          "expected": "页面显示当前银钻余额"
+        },
+        {
+          "step": 2,
+          "desc": "选择预测选项，输入投注银钻数量（如10）",
+          "expected": "投注成功，银钻余额减少10，流水记录新增一条消费记录"
+        }
+      ],
+      "expected_result": "投注成功，银钻余额减少10，流水记录新增一条消费记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-112"
+    },
+    {
+      "title": "银钻消耗规则-银钻不足时提示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "银钻系统",
+      "preconditions": "用户已登录，银钻余额为5",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测页面",
+          "expected": "页面显示当前银钻余额为5"
+        },
+        {
+          "step": 2,
+          "desc": "输入投注银钻数量10",
+          "expected": "系统提示「银钻不足」，无法投注"
+        }
+      ],
+      "expected_result": "系统提示「银钻不足」，无法投注，银钻余额不变。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-113"
+    },
+    {
+      "title": "银钻兑换规则-兑换骆驼币成功",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "银钻系统",
+      "preconditions": "用户已登录，银钻余额充足（如100银钻），骆驼币账户余额为0",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入银钻账户页面",
+          "expected": "页面显示银钻余额和兑换入口"
+        },
+        {
+          "step": 2,
+          "desc": "点击「兑换」按钮，输入兑换数量（如10银钻）",
+          "expected": "兑换成功，银钻余额减少10，骆驼币余额增加对应数量，流水记录新增兑换记录"
+        }
+      ],
+      "expected_result": "兑换成功，银钻余额减少10，骆驼币余额增加对应数量，流水记录新增兑换记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-114"
+    },
+    {
+      "title": "银钻兑换规则-兑换数量超过余额提示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "银钻系统",
+      "preconditions": "用户已登录，银钻余额为5",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入银钻账户页面",
+          "expected": "页面显示银钻余额为5"
+        },
+        {
+          "step": 2,
+          "desc": "点击「兑换」按钮，输入兑换数量10",
+          "expected": "系统提示「银钻不足」，无法兑换"
+        }
+      ],
+      "expected_result": "系统提示「银钻不足」，无法兑换，银钻余额不变。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-115"
+    },
+    {
+      "title": "银钻有效期规则-过期银钻自动清零",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "银钻系统",
+      "preconditions": "用户已登录，存在即将过期的银钻（如有效期至当日）",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入银钻账户页面",
+          "expected": "页面显示银钻余额及有效期信息"
+        },
+        {
+          "step": 2,
+          "desc": "等待银钻过期",
+          "expected": "过期后银钻余额自动清零，流水记录新增过期记录"
+        }
+      ],
+      "expected_result": "过期后银钻余额自动清零，流水记录新增过期记录。",
+      "remark": "边界用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-116"
+    },
+    {
+      "title": "银钻有效期规则-过期银钻不清零（异常）",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "银钻系统",
+      "preconditions": "用户已登录，存在已过期银钻",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入银钻账户页面",
+          "expected": "页面显示银钻余额未清零，仍显示过期银钻"
+        }
+      ],
+      "expected_result": "系统应自动清零过期银钻，若未清零则视为缺陷。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-117"
+    },
+    {
+      "title": "银钻预测玩法-正常预测流程",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "银钻预测玩法",
+      "preconditions": "用户已登录，银钻余额充足，存在可预测的比赛",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测比赛列表",
+          "expected": "显示可预测的比赛列表"
+        },
+        {
+          "step": 2,
+          "desc": "选择一场比赛，进入预测页面",
+          "expected": "显示预测选项（如主胜、平局、客胜）和赔率"
+        },
+        {
+          "step": 3,
+          "desc": "选择预测选项，输入投注银钻数量，点击「确认预测」",
+          "expected": "预测成功，银钻余额减少，生成预测记录"
+        }
+      ],
+      "expected_result": "预测成功，银钻余额减少，生成预测记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-118"
+    },
+    {
+      "title": "银钻预测玩法-预测时银钻不足",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "银钻预测玩法",
+      "preconditions": "用户已登录，银钻余额为0",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测页面",
+          "expected": "页面显示银钻余额为0"
+        },
+        {
+          "step": 2,
+          "desc": "选择预测选项，输入投注银钻数量",
+          "expected": "系统提示「银钻不足」，无法预测"
+        }
+      ],
+      "expected_result": "系统提示「银钻不足」，无法预测。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-119"
+    },
+    {
+      "title": "银钻预测玩法-预测结算-猜中",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "银钻预测玩法",
+      "preconditions": "用户已登录，存在已预测的比赛，且预测结果正确",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "等待比赛结束，系统自动结算",
+          "expected": "预测猜中，银钻余额增加（本金+奖金），流水记录新增结算记录"
+        }
+      ],
+      "expected_result": "预测猜中，银钻余额增加（本金+奖金），流水记录新增结算记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-120"
+    },
+    {
+      "title": "银钻预测玩法-预测结算-未猜中",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "银钻预测玩法",
+      "preconditions": "用户已登录，存在已预测的比赛，且预测结果错误",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "等待比赛结束，系统自动结算",
+          "expected": "预测未猜中，银钻余额不返还，流水记录新增结算记录"
+        }
+      ],
+      "expected_result": "预测未猜中，银钻余额不返还，流水记录新增结算记录。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-121"
+    },
+    {
+      "title": "银钻预测玩法-比赛取消时退款",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "银钻预测玩法",
+      "preconditions": "用户已登录，存在已预测的比赛，且比赛被取消",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "等待比赛取消通知",
+          "expected": "系统自动退款，银钻余额恢复，流水记录新增退款记录"
+        }
+      ],
+      "expected_result": "系统自动退款，银钻余额恢复，流水记录新增退款记录。",
+      "remark": "异常流用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-122"
+    },
+    {
+      "title": "UGC内容发布-正常发布",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "UGC功能概述",
+      "preconditions": "用户已登录，进入UGC发布页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入UGC发布页面",
+          "expected": "页面正常加载，显示发布表单"
+        },
+        {
+          "step": 2,
+          "desc": "输入内容（如文字、图片），点击「发布」",
+          "expected": "发布成功，内容进入审核状态，提示「发布成功，等待审核」"
+        }
+      ],
+      "expected_result": "发布成功，内容进入审核状态，提示「发布成功，等待审核」。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-123"
+    },
+    {
+      "title": "UGC内容发布-内容为空时提示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "UGC功能概述",
+      "preconditions": "用户已登录，进入UGC发布页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入UGC发布页面",
+          "expected": "页面正常加载"
+        },
+        {
+          "step": 2,
+          "desc": "不输入任何内容，点击「发布」",
+          "expected": "系统提示「内容不能为空」，无法发布"
+        }
+      ],
+      "expected_result": "系统提示「内容不能为空」，无法发布。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-124"
+    },
+    {
+      "title": "UGC内容审核-审核通过",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "UGC功能概述",
+      "preconditions": "用户已登录，存在待审核的UGC内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "等待审核结果",
+          "expected": "审核通过后，内容在UGC列表中可见，状态变为已发布"
+        }
+      ],
+      "expected_result": "审核通过后，内容在UGC列表中可见，状态变为已发布。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-125"
+    },
+    {
+      "title": "UGC内容审核-审核不通过",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "UGC功能概述",
+      "preconditions": "用户已登录，存在待审核的UGC内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "等待审核结果",
+          "expected": "审核不通过，内容不展示，用户收到通知，可修改后重新提交"
+        }
+      ],
+      "expected_result": "审核不通过，内容不展示，用户收到通知，可修改后重新提交。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-126"
+    },
+    {
+      "title": "UGC推荐算法-推荐内容展示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "UGC功能概述",
+      "preconditions": "用户已登录，存在已发布的UGC内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入UGC列表页",
+          "expected": "列表展示推荐内容，推荐内容根据算法排序"
+        }
+      ],
+      "expected_result": "列表展示推荐内容，推荐内容根据算法排序。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-127"
+    },
+    {
+      "title": "UGC推荐算法-无推荐内容时展示空态",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "UGC功能概述",
+      "preconditions": "用户已登录，无推荐内容",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入UGC列表页",
+          "expected": "页面显示空态提示「暂无推荐内容」"
+        }
+      ],
+      "expected_result": "页面显示空态提示「暂无推荐内容」。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-128"
+    },
+    {
+      "title": "付费活动-正常参与",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "付费活动规则",
+      "preconditions": "用户已登录，存在进行中的付费活动",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入付费活动页面",
+          "expected": "显示活动详情，包括价格、有效期"
+        },
+        {
+          "step": 2,
+          "desc": "点击「立即参与」，完成支付",
+          "expected": "支付成功，活动权益生效，提示「参与成功」"
+        }
+      ],
+      "expected_result": "支付成功，活动权益生效，提示「参与成功」。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-129"
+    },
+    {
+      "title": "付费活动-支付失败",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "付费活动规则",
+      "preconditions": "用户已登录，存在进行中的付费活动",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入付费活动页面",
+          "expected": "显示活动详情"
+        },
+        {
+          "step": 2,
+          "desc": "点击「立即参与」，支付时取消或余额不足",
+          "expected": "支付失败，提示「支付失败」，活动权益未生效"
+        }
+      ],
+      "expected_result": "支付失败，提示「支付失败」，活动权益未生效。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-130"
+    },
+    {
+      "title": "付费活动-活动过期后无法参与",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "付费活动规则",
+      "preconditions": "用户已登录，存在已过期的付费活动",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入已过期的付费活动页面",
+          "expected": "页面显示活动已结束，无法参与"
+        }
+      ],
+      "expected_result": "页面显示活动已结束，无法参与。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-131"
+    },
+    {
+      "title": "骆驼币充值-正常充值",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "骆驼币及绿钻规则",
+      "preconditions": "用户已登录，进入骆驼币账户页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币账户页面",
+          "expected": "显示当前骆驼币余额"
+        },
+        {
+          "step": 2,
+          "desc": "点击「充值」，选择充值金额，完成支付",
+          "expected": "充值成功，骆驼币余额增加，流水记录新增充值记录"
+        }
+      ],
+      "expected_result": "充值成功，骆驼币余额增加，流水记录新增充值记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app",
+        "web"
+      ],
+      "id": "TC-132"
+    },
+    {
+      "title": "骆驼币充值-支付失败",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "骆驼币及绿钻规则",
+      "preconditions": "用户已登录，进入骆驼币账户页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币账户页面",
+          "expected": "显示当前骆驼币余额"
+        },
+        {
+          "step": 2,
+          "desc": "点击「充值」，选择充值金额，支付时取消或余额不足",
+          "expected": "充值失败，提示「支付失败」，骆驼币余额不变"
+        }
+      ],
+      "expected_result": "充值失败，提示「支付失败」，骆驼币余额不变。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app",
+        "web"
+      ],
+      "id": "TC-133"
+    },
+    {
+      "title": "骆驼币消费-使用骆驼币购买商品",
+      "priority": "P0",
+      "domain": "说明附件",
+      "module": "骆驼币及绿钻规则",
+      "preconditions": "用户已登录，骆驼币余额充足（如100骆驼币），存在可购买商品",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入Camel商城",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "选择商品，点击「购买」，确认支付",
+          "expected": "购买成功，骆驼币余额减少，流水记录新增消费记录"
+        }
+      ],
+      "expected_result": "购买成功，骆驼币余额减少，流水记录新增消费记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-134"
+    },
+    {
+      "title": "骆驼币消费-余额不足时提示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "骆驼币及绿钻规则",
+      "preconditions": "用户已登录，骆驼币余额为5，商品价格为10骆驼币",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入Camel商城",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "选择价格为10骆驼币的商品，点击「购买」",
+          "expected": "系统提示「骆驼币不足」，无法购买"
+        }
+      ],
+      "expected_result": "系统提示「骆驼币不足」，无法购买。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app"
+      ],
+      "id": "TC-135"
+    },
+    {
+      "title": "骆驼币退款-申请退款成功",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "骆驼币及绿钻规则",
+      "preconditions": "用户已登录，存在可退款的骆驼币消费记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币流水记录",
+          "expected": "显示消费记录"
+        },
+        {
+          "step": 2,
+          "desc": "选择一条可退款记录，点击「申请退款」",
+          "expected": "退款成功，骆驼币余额恢复，流水记录新增退款记录"
+        }
+      ],
+      "expected_result": "退款成功，骆驼币余额恢复，流水记录新增退款记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "app",
+        "web"
+      ],
+      "id": "TC-136"
+    },
+    {
+      "title": "骆驼币退款-不可退款记录提示",
+      "priority": "P1",
+      "domain": "说明附件",
+      "module": "骆驼币及绿钻规则",
+      "preconditions": "用户已登录，存在不可退款的骆驼币消费记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币流水记录",
+          "expected": "显示消费记录"
+        },
+        {
+          "step": 2,
+          "desc": "选择一条不可退款记录，点击「申请退款」",
+          "expected": "系统提示「该记录不可退款」，无法退款"
+        }
+      ],
+      "expected_result": "系统提示「该记录不可退款」，无法退款。",
+      "remark": "负面用例",
+      "client_scope": [
+        "app",
+        "web"
+      ],
+      "id": "TC-137"
+    }
+  ],
+  "api_cases": [],
+  "_warnings": [
+    "functional-chunk-2 生成被截断，已重试",
+    "functional-chunk-2 生成失败：AI 返回的 JSON 格式异常，无法解析。\n原始错误: Expecting ',' delimiter (行 986, 列 6)\n修复后错误: Expecting property name enclosed in double quotes (行 13, 列 143)\n错误位置附近内容 (chars 23955-24155):\n     \"step\": 2,\\n          \"desc\": \"点击其他比赛\",\\n          \"expected\": \"切换到该比赛的直播间\"\\n        }\\n      ],\\n      \"expected_result\": \"赛程切换正常，直播间内容更新\",\\n      \"remark\": \"正面用例\",\\n      \"client_scope\": [\"app\"]\\n    }（该块未产出用例）",
+    "functional-chunk-3 生成被截断，已重试",
+    "functional-chunk-4 生成被截断，已重试"
+  ]
+}

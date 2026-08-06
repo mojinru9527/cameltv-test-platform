@@ -1,0 +1,90 @@
+{
+  "endpoint": "POST /camel-service/ee/news/list_visible",
+  "request_params": {
+    "sorts": [
+      {
+        "key": "top",
+        "sort": "desc"
+      },
+      {
+        "key": "updateTime",
+        "sort": "desc"
+      }
+    ],
+    "page": 2,
+    "size": 30,
+    "queryList": [
+      {
+        "isOrNotRange": 0,
+        "key": "language",
+        "type": "String",
+        "value1": "0",
+        "value2": ""
+      }
+    ],
+    "locale": "en"
+  },
+  "response_status": 200,
+  "response_envelope_keys": [
+    "traceId",
+    "timestamp",
+    "status",
+    "data",
+    "msg"
+  ],
+  "data_keys": [
+    "records",
+    "total",
+    "size",
+    "current",
+    "orders",
+    "optimizeCountSql",
+    "searchCount",
+    "pages"
+  ],
+  "record_count": 30,
+  "first_record_fields": [
+    "id",
+    "pv",
+    "groupId",
+    "sport_live_news_poster",
+    "sport_live_news_title",
+    "kindId",
+    "kindName",
+    "audit_status",
+    "sport_live_news_show",
+    "language",
+    "top",
+    "sports_live_news_keyword",
+    "news_id",
+    "sports_live_news_edit",
+    "sports_live_news_description",
+    "publishTime",
+    "createTime",
+    "updateTime",
+    "createBy",
+    "updateBy",
+    "auditBy",
+    "sports_live_news_auth",
+    "author",
+    "player_ids",
+    "match_ids",
+    "team_ids",
+    "competition_ids",
+    "player_objs",
+    "match_objs",
+    "team_objs",
+    "competition_objs",
+    "nodes"
+  ],
+  "assertion_design_hints": [
+    "业务状态码 status 校验（0=成功）",
+    "data.current/page 与请求 page 一致",
+    "data.records 数量 <= size(30)",
+    "排序：top=desc 优先、updateTime=desc 次级（校验首条 top 值）",
+    "queryList language=0 过滤生效（records[].language == 0）",
+    "核心字段非空：id/news_id/sport_live_news_title/sport_live_news_poster",
+    "分页边界：page=1 首条、page 超总页数返回空 records、size=0/负数/超上限",
+    "字段类型：page/size 传字符串/小数/负数；queryList 缺省/多条件组合；locale 非法枚举"
+  ]
+}

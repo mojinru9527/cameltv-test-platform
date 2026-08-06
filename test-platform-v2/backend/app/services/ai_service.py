@@ -94,38 +94,52 @@ def _build_system_prompt(kind: str = "functional") -> str:
     ],
     "overall_assessment": "对需求整体的完整性、清晰度评估（2-5 句话）"
   },
-  "functional_cases": [
-    {
-      "title": "用例标题",
-      "priority": "P0",
-      "domain": "业务域",
-      "module": "所属模块",
-      "preconditions": "前提条件",
-      "steps": [{"step": 1, "desc": "操作描述", "expected": "该步预期结果"}],
-      "expected_result": "整体预期结果",
-      "remark": "备注（如正面/负面/边界用例）",
+    "functional_cases": [
+      {
+        "title": "用例标题",
+        "priority": "P0",
+        "domain": "业务域",
+        "module": "所属模块",
+        "case_design_method": "等价类划分",
+        "positive_negative": "positive",
+        "test_data_note": "本用例使用的数据及其业务含义（禁止无意义占位值）",
+        "preconditions": "前提条件",
+        "steps": [{"step": 1, "desc": "操作描述", "expected": "该步预期结果"}],
+        "expected_result": "整体预期结果",
+        "remark": "备注（如正面/负面/边界用例）",
       "client_scope": ["app", "pc"]
     }
   ],
-  "api_cases": [
-    {
-      "title": "接口用例标题",
-      "priority": "P0",
-      "domain": "业务域",
-      "module": "所属模块",
-      "api_method": "GET",
-      "api_endpoint": "/api/v1/xxx",
-      "preconditions": "前提条件",
-      "expected_result": "预期结果（如返回 200 + 数据列表）",
-      "remark": "关联的功能点 REQ ID"
+    "api_cases": [
+      {
+        "title": "接口用例标题",
+        "priority": "P0",
+        "domain": "业务域",
+        "module": "所属模块",
+        "api_method": "GET",
+        "api_endpoint": "/api/v1/xxx",
+        "api_headers": "{\"Content-Type\": \"application/json\"}",
+        "api_body": "{\"page\": 1, \"size\": 20}",
+        "api_assertions": "[{\"type\": \"status\", \"value\": 200}, {\"type\": \"field\", \"path\": \"data.records\", \"assert\": \"is_array\"}]",
+        "case_design_method": "边界值分析",
+        "positive_negative": "boundary",
+        "test_data_note": "真实业务参数来源与含义说明",
+        "preconditions": "前提条件",
+        "expected_result": "预期结果（如返回 200 + 数据列表）",
+        "remark": "关联的功能点 REQ ID"
     }
   ]
 }"""
 
     focus_rule = "- 专注于生成**功能测试用例**。对于 type=integration 的功能点，同时在 api_cases 中生成对应接口用例建议。"
     kind_rules = (
-        "- 功能用例数量不做硬性限制，应覆盖所有功能点，宁多勿少。\n"
+        "- 覆盖度硬性要求：**每个功能点至少 2 条用例（1 条正向 + 1 条负向或边界）**，"
+        "复杂状态机/多分支模块至少 3 条；宁多勿少，禁止合并相似行为导致漏测。\n"
+        "- 用例数据要求：每条用例的输入数据必须**贴合业务语义**（可解释该值代表什么业务场景），"
+        "禁止用无业务含义的占位值（如随机字符串 'abc'、随意数字 123）。\n"
         "- 对于 type=integration 的功能点，在 api_cases 数组中生成对应的接口测试用例，包含 api_method 和 api_endpoint（建议路径）。\n"
+        "- 接口用例必须包含：api_body（请求参数，字段完整、值贴合真实业务）、"
+        "api_assertions（断言：状态码 + 关键字段/业务规则）、case_design_method、positive_negative。\n"
         "- 每个用例需标注 client_scope（适用的客户端：app/pc/web），"
         "如需求未明确指定则根据常识推断。"
     )
@@ -139,8 +153,9 @@ def _build_system_prompt(kind: str = "functional") -> str:
 
 **阶段二：设计功能测试用例**
 1. 基于阶段一拆解出的功能点，严格遵循以下团队测试用例设计规范，设计功能测试用例。
-2. 每个功能点至少 1 条正面用例 + 1 条负面用例。
+2. 每个功能点至少 2 条用例（1 条正向 + 1 条负向或边界），复杂模块 ≥3 条。
 3. 综合运用等价类划分、边界值分析、场景法、错误推测等方法。
+4. 用例输入数据必须贴合业务语义（明确该值代表的业务场景），禁止无意义占位值。
 {focus_rule}
 
 {skill_ctx}
@@ -153,14 +168,20 @@ def _build_system_prompt(kind: str = "functional") -> str:
 - requirement_analysis.type: 可选值 "functional"(功能) / "ui"(界面) / "data"(数据) / "integration"(集成)
 - requirement_analysis.issues[].severity: "high"(高优先级/逻辑漏洞) / "medium"(中优先级/模糊不清) / "low"(低优先级/建议优化)
 - functional_cases[].priority: P0(关键路径/基本流) / P1(异常流/边界值) / P2(体验/界面)
+- functional_cases[].case_design_method: 等价类划分 / 边界值分析 / 场景法 / 错误推测 / 组合覆盖
+- functional_cases[].positive_negative: "positive"(正向) / "negative"(负向) / "boundary"(边界)
+- functional_cases[].test_data_note: 说明本条用例输入数据的业务含义与来源（真实数据回填或按语义构造）
 - functional_cases[].steps: 每个步骤含 step(序号), desc(操作描述), expected(该步预期)
 - functional_cases[].client_scope: 该用例适用的客户端列表，可选值 "app" / "pc" / "web"
 - api_cases[].api_method: HTTP 方法 "GET" / "POST" / "PUT" / "DELETE"
 - api_cases[].api_endpoint: 建议的 API 路径（如 "/api/v1/matches"）
+- api_cases[].api_body: 请求参数 JSON（字段完整、值贴合真实业务，禁止占位）
+- api_cases[].api_assertions: 断言数组（状态码、关键字段、业务规则）
 
 关键规则：
 - **先分析需求，再生成用例** — 阶段一完成后才能进入阶段二。
-- 每个需求功能点至少 1 条正面用例 + 1 条负面用例。
+- 每个需求功能点至少 2 条用例（1 正向 + 1 负向或边界），复杂模块 ≥3 条。
+- 每条用例都必须有 case_design_method 与 positive_negative，且 test_data_note 说明数据业务含义。
 {kind_rules}
 - steps 数组中每项必须包含 step, desc, expected 三个字段。
 - 预期结果不可只写"成功""报错"，需含具体判断标准（如"数据库新增对应记录""返回 400 和错误提示"）。
@@ -738,7 +759,7 @@ def _merge_split_results(func_result: dict | None, api_result: dict | None,
 
 
 # C68-3: 分批生成常量与工具（batch-69）
-_CHUNK_FP_LIMIT = 25
+_CHUNK_FP_LIMIT = 12  # Batch 103: 每用例新增设计字段后调小分块，避免输出截断导致覆盖缺口
 _CHUNK_CONCURRENCY = 2
 
 
