@@ -9,6 +9,14 @@ class LoginIn(BaseModel):
     password: str
 
 
+class RegisterIn(BaseModel):
+    username: str = Field(..., min_length=2, max_length=64)
+    nickname: str = ""
+    email: str = ""
+    password: str = Field(..., min_length=6, max_length=128)
+    invite_code: str = ""
+
+
 class UserBrief(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

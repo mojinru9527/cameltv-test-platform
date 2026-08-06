@@ -6,11 +6,19 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import unauthorized
-from app.core.security import create_access_token, password_token_version, verify_password
+from app.core.config import settings
+from app.core.exceptions import APIException, unauthorized
+from app.core.security import (
+    create_access_token,
+    hash_password,
+    password_token_version,
+    verify_password,
+)
+from app.models.rbac import Role, UserRole
 from app.models.user import User
 from app.schemas.auth import LoginOut, ProjectBrief, UserBrief
 from app.services import project_service, rbac_service
+from app.services.invite_service import consume_invite_code
 
 
 def authenticate(db: Session, username: str, password: str) -> User:
@@ -45,3 +53,39 @@ def login(db: Session, username: str, password: str) -> LoginOut:
         permissions=codes,
         must_change_password=user.must_change_password,
     )
+
+
+def register(
+    db: Session,
+    *,
+    username: str,
+    nickname: str,
+    email: str,
+    password: str,
+    invite_code: str,
+) -> User:
+    """注册新用户：校验邀请码与唯一性，创建用户并赋予默认全局角色。"""
+    if db.scalar(select(User).where(User.username == username)):
+        raise APIException(code=400, msg="用户名已存在", http_status=400)
+    if email and db.scalar(select(User).where(User.email == email)):
+        raise APIException(code=400, msg="邮箱已被使用", http_status=400)
+    if settings.invite_code_required:
+        consume_invite_code(db, invite_code)
+
+    user = User(
+        username=username,
+        password=hash_password(password),
+        nickname=nickname,
+        email=email,
+        status=1,
+        must_change_password=False,
+    )
+    db.add(user)
+    db.flush()
+
+    role_code = settings.default_registration_role or "tester"
+    role = db.scalar(select(Role).where(Role.code == role_code))
+    if role:
+        db.add(UserRole(user_id=user.id, role_id=role.id, project_id=0))
+    db.commit()
+    return user

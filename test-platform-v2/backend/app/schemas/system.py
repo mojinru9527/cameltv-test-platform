@@ -145,3 +145,22 @@ class AuditLogOut(BaseModel):
     detail: str = ""
     ip: str = ""
     created_at: datetime | None = None
+
+
+# ── 注册邀请码（Batch 104 外放轻量模式）──
+
+class InviteCodeIn(BaseModel):
+    usage_limit: int = Field(1, ge=1, le=1000, description="可注册次数上限")
+    expires_at: datetime | None = Field(None, description="过期时间（UTC ISO）；空=永不过期")
+
+
+class InviteCodeOut(BaseModel):
+    id: int
+    code: str
+    created_by: int = 0
+    created_by_name: str = ""
+    usage_limit: int = 1
+    used_count: int = 0
+    expires_at: datetime | None = None
+    status: int = 1
+    created_at: datetime | None = None
