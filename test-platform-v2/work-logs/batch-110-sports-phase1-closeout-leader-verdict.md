@@ -1,6 +1,6 @@
 # Batch 110 — Leader Verdict（体育平台第一期收口）
 
-> **Leader (🎯)** | Date: 2026-08-06 | Decision: **APPROVED（条件通过，C110-1/2 待外部配置后闭环）**
+> **Leader (🎯)** | Date: 2026-08-06 | Decision: **APPROVED（C110-1/2 已闭环）**
 
 ## 评审摘要
 
@@ -9,7 +9,7 @@
 | 需求聚焦 | PASS | 完整批次（mode: full）；范围=全模块梳理/P0 用例/接口用例与测试/UI 自动化/RAG+Wiki/障碍登记，无蔓延 |
 | 实现质量 | PASS | 40 页勘察+识图 9 页+功能地图 v2；P0=345；34 接口样本→170 用例→97/97 实跑；UI 自动化 10/10；RAG 7 源；wiki 脚本就绪 |
 | 证据 | PASS | production-walkthrough / vision / xhr-samples / interface-cases（生成+执行）/ ui-automation / p0-cases / rag-content 全部落盘 |
-| 诚实性 | PASS | wiki 生产未启用、capture 直连过渡、search 动态 data 豁免、konfi 推断待校准均如实登记 |
+| 诚实性 | PASS | wiki 未启用→已闭环、capture 直连→API 复验闭环、search 动态 data 豁免、konfi 推断待校准均如实登记 |
 | 门禁 | PASS | 脚本语法 0 错；UI 10/10；接口 97/97；audit/boundary 在合入前运行 |
 | 风险 | 中 | 生产 wiki 启用依赖 Railway 变量（用户操作，batch-109 模式）；sportsadmin 凭证用于 capture 复验与 wiki API |
 
@@ -23,6 +23,7 @@
    不虚报已闭环（C102-3 直建能力由脚本先落地）。
 4. **RAG 过渡**：标准 capture 待凭证复验（C110-2）；直连补入 7 源保持数据完整。
 5. **C101-1 策略决策**：业务主机严格只读守卫；sensors/第三方分析遥测 POST 放行并登记，写型端点仍拦截。
+6. **C110-1/C110-2 闭环**：wiki 基线（bundle#4/43 raw sources/158 页/10 diff）+ capture 复验（code 0/id=15/sources 16）证据落盘。
 
 ## 抽检通过
 
@@ -41,8 +42,8 @@
 
 ## 下一批次 Leader 条件
 
-- C110-1（P1）：生产 wiki 启用后执行 build-wiki-baseline.py，wiki 基线（模块树/raw sources/编译/审批/差异 ≥3 组）闭环。
-- C110-2（P1）：sportsadmin 凭证到位后经 /knowledge/capture 复验 7 源（sources 可见），关闭直连过渡。
+- C110-1（P1）：✅ 已闭环（wiki 基线 43 raw sources/158 页/10 diff，财务 21+世界杯 7+回放 3）。
+- C110-2（P1）：✅ 已闭环（capture code 0 + id=15，sources 16 可见）。
 - C110-3（P2）：接口用例批量执行/结果回填平台 UI。
 - C110-4（P2）：P0 口径用户确认后固化。
 - C110-5（P2）：Test5 契约补拉后 konfi 关联实测校准。

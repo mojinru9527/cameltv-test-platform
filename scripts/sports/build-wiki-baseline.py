@@ -60,8 +60,9 @@ def _ensure_bundle(cur, project_id: int) -> int:
     if row:
         return row[0]
     cur.execute(
-        "INSERT INTO release_bundle (project_id, name, description, client_version, admin_version, status, created_at, updated_at) "
-        "VALUES (%s,%s,%s,'14.1.0','8.2.0','active',now(),now()) RETURNING id",
+        "INSERT INTO release_bundle (project_id, name, description, client_version, admin_version, status, "
+        "diff_summary, global_navigation, created_at, updated_at) "
+        "VALUES (%s,%s,%s,'14.1.0','8.2.0','active','{}','[]',now(),now()) RETURNING id",
         (project_id, BUNDLE_NAME, BUNDLE_DESC),
     )
     return cur.fetchone()[0]
@@ -94,8 +95,9 @@ def build_tree(dsn: str, client: httpx.Client, doc_ids: list[int]) -> dict:
                 if not root_id:
                     cur.execute(
                         "INSERT INTO requirement_module (project_id, release_bundle_id, name, node_type, platform, "
-                        "parent_module_id, source_version, change_type, description, sort_order, created_at, updated_at) "
-                        "VALUES (1,%s,%s,'module',%s,NULL,%s,'new','',0,now(),now()) RETURNING id",
+                        "parent_module_id, source_version, change_type, description, sort_order, lanhu_page_id, "
+                        "screenshot_urls, has_visual_only_content, page_interactions, created_at, updated_at) "
+                        "VALUES (1,%s,%s,'module',%s,NULL,%s,'new','',0,'','[]',false,'[]',now(),now()) RETURNING id",
                         (bundle_id, platform, platform, doc.get("version") or "14.1.0"),
                     )
                     root_id = cur.fetchone()[0]
@@ -108,8 +110,9 @@ def build_tree(dsn: str, client: httpx.Client, doc_ids: list[int]) -> dict:
                     if not mod_id:
                         cur.execute(
                             "INSERT INTO requirement_module (project_id, release_bundle_id, name, node_type, platform, "
-                            "parent_module_id, source_version, change_type, description, sort_order, created_at, updated_at) "
-                            "VALUES (1,%s,%s,'module',%s,%s,%s,'new',%s,0,now(),now()) RETURNING id",
+                            "parent_module_id, source_version, change_type, description, sort_order, lanhu_page_id, "
+                            "screenshot_urls, has_visual_only_content, page_interactions, created_at, updated_at) "
+                            "VALUES (1,%s,%s,'module',%s,%s,%s,'new',%s,0,'','[]',false,'[]',now(),now()) RETURNING id",
                             (bundle_id, mod_name, platform, root_id, "14.1.0", (m.get("description") or "")[:2000]),
                         )
                         mod_id = cur.fetchone()[0]
@@ -118,8 +121,9 @@ def build_tree(dsn: str, client: httpx.Client, doc_ids: list[int]) -> dict:
                     if not page_id:
                         cur.execute(
                             "INSERT INTO requirement_module (project_id, release_bundle_id, name, node_type, platform, "
-                            "parent_module_id, source_version, change_type, description, sort_order, created_at, updated_at) "
-                            "VALUES (1,%s,%s,'page',%s,%s,%s,'new',%s,1,now(),now()) RETURNING id",
+                            "parent_module_id, source_version, change_type, description, sort_order, lanhu_page_id, "
+                            "screenshot_urls, has_visual_only_content, page_interactions, created_at, updated_at) "
+                            "VALUES (1,%s,%s,'page',%s,%s,%s,'new',%s,1,'','[]',false,'[]',now(),now()) RETURNING id",
                             (bundle_id, f"{mod_name}-页面", platform, mod_id, "14.1.0", (m.get("description") or "")[:4000]),
                         )
                         page_id = cur.fetchone()[0]
@@ -132,8 +136,9 @@ def build_tree(dsn: str, client: httpx.Client, doc_ids: list[int]) -> dict:
                             continue
                         cur.execute(
                             "INSERT INTO requirement_module (project_id, release_bundle_id, name, node_type, platform, "
-                            "parent_module_id, source_version, change_type, description, sort_order, created_at, updated_at) "
-                            "VALUES (1,%s,%s,'function_point',%s,%s,%s,'new',%s,2,now(),now())",
+                            "parent_module_id, source_version, change_type, description, sort_order, lanhu_page_id, "
+                            "screenshot_urls, has_visual_only_content, page_interactions, created_at, updated_at) "
+                            "VALUES (1,%s,%s,'function_point',%s,%s,%s,'new',%s,2,'','[]',false,'[]',now(),now())",
                             (bundle_id, fp_name[:500], platform, page_id, "14.1.0", (fp.get("content") or "")[:2000]),
                         )
                         result["fps"] += 1

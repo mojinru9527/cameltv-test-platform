@@ -81,8 +81,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C110-1 | 生产 wiki 知识库启用（Railway 变量 WIKI_ENABLED/WIKI_DIFF_ENABLED/WIKI_AUTO_INGEST_ENABLED=true）后执行 build-wiki-baseline.py（模块树/同步/编译/审批/差异 ≥3 组），wiki 基线闭环 | P1 | 2026-08-06 |
-| C110-2 | 知识中心标准 capture 复验：提供 sportsadmin 凭证后经 /knowledge/capture 导入 7 源并确认 sources 可见（Batch 110 直连补入为过渡） | P1 | 2026-08-06 |
+| ~~C110-1~~ | ~~生产 wiki 知识库启用后执行 build-wiki-baseline.py（模块树/同步/编译/审批/差异 ≥3 组）~~ | P1 | 2026-08-06 |
+| ~~C110-2~~ | ~~知识中心标准 capture 复验（7 源 sources 可见）~~ | P1 | 2026-08-06 |
 | C110-3 | 接口用例批量执行/结果回填平台 UI（当前 execute-interface-cases.py 脚本回填 97 条） | P2 | 2026-08-06 |
 | C110-4 | 用例 P0 口径复核（Batch 110 收敛 418→345：用户端关键域全 P0 + 运营核心模块 P0，用户确认口径后固化） | P2 | 2026-08-06 |
 | C110-5 | 运营后台生产账号/Test5 契约补拉（C95-1/C74-2 继续）→ konfi 关联由推断校准为实测 | P2 | 2026-08-06 |
@@ -164,6 +164,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Closed (已完成)
+
+### Batch 110 → 收尾关闭（2026-08-06）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C110-1 | 生产 wiki 基线闭环（Railway 已启用；build-wiki-baseline.py 建 bundle#4：45 模块/43 页/43 raw sources 同步/43 编译/158 页审批/10 差异任务，财务 21+世界杯 7+回放 3 差异项） | Batch 110 PR #149 + evidence/batch-110/wiki-baseline-summary.json | 2026-08-06 |
+| C110-2 | 知识中心标准 capture 复验（新内容 code 0 + id=15；重复内容按 content_hash 去重；sources total=16 可见） | Batch 110 PR #149 + evidence/batch-110/wiki-diff-and-capture-verify.json | 2026-08-06 |
 
 ### Batch 109 — 生产启用收尾关闭（2026-08-06）
 

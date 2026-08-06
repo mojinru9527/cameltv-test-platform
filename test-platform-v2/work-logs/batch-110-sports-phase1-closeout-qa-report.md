@@ -15,7 +15,8 @@
 | 接口测试执行 | 97 条正向/边界用例生产实跑 **97/97 通过**，last_response_json/last_run_status 回填 | `evidence/batch-110/interface-cases/interface-execution-summary.json` |
 | UI 自动化 | P0 用例 → 10 条生产只读 UI spec **10/10 通过**，含只读守卫与截图 | `evidence/batch-110/ui-automation/` + `docs/体育平台-P0用例-UI自动化映射.md` |
 | RAG 知识中心 | 4 份需求文档全文 + 功能地图 + 3 份接口规范直连补入 7 源 + 图谱扩展 | `evidence/batch-110/rag-content-sync-summary.json` |
-| Wiki 基线 | build-wiki-baseline.py 就绪（模块树/同步/编译/审批/差异）；生产启用待 C110-1 | `scripts/sports/build-wiki-baseline.py` + C110-1 |
+| Wiki 基线 | **已闭环（C110-1）**：bundle#4 建树 45 模块/43 页 → 43 raw sources → 43 编译 → 158 页审批 → 10 差异任务（财务 21/世界杯 7/回放 3 项） | `evidence/batch-110/wiki-baseline-summary.json` + wiki-diff-and-capture-verify.json |
+| capture 复验 | **已闭环（C110-2）**：标准 /knowledge/capture 新内容 code 0 + id=15；重复内容去重；sources total=16 | `evidence/batch-110/wiki-diff-and-capture-verify.json` |
 | 障碍登记 | SPORT-INT 追加 B6–B10；C110-1~5 入追踪器 | `docs/改进任务backlog.md` + `C-CONDITIONS.md` |
 
 ## 2. 硬门禁
@@ -35,8 +36,8 @@
 
 | # | 级别 | 问题 | 实测证据 | 处理 |
 |---|:----:|------|---------|------|
-| B110-1 | P1 | 生产 wiki 未启用（WIKI_ENABLED 默认 OFF） | production.env 无变量；wiki API 门禁 503 | 登记 C110-1：Railway 配置后执行基线 |
-| B110-2 | P1 | 知识中心标准 capture 未复验（直连 7 源为过渡） | 无平台密码时 API 登录不可用 | 登记 C110-2：凭证后 capture 复验 sources 可见 |
+| B110-1 | P1 | 生产 wiki 未启用（WIKI_ENABLED 默认 OFF） | production.env 无变量；wiki API 门禁 503 | ✅ C110-1 已闭环（Railway 配置 + 基线执行） |
+| B110-2 | P1 | 知识中心标准 capture 未复验（直连 7 源为过渡） | 无平台密码时 API 登录不可用 | ✅ C110-2 已闭环（capture code 0 + sources 16 可见） |
 | B110-3 | P2 | 接口批量执行无平台 UI（脚本回填） | 97 条由 execute-interface-cases.py 完成 | 登记 C110-3：平台批量执行 UI 迭代 |
 | B110-4 | P2 | SSR 站点 XHR 少，样本采集需交互触发+契约回填 | 40 页仅 10 XHR → 34 接口闭环 | B10 登记：平台 XHR 采集工具 |
 | B110-5 | P2 | search/query 响应为会话相关动态数据（部分时段空 data） | 实跑 200 空信封 | 断言以 2xx+信封为主，data.* 动态豁免并记录 warning |
@@ -51,8 +52,8 @@
 
 ## 5. 发布建议
 
-状态: **有条件通过**（C110-1/2 为条件，不阻塞本批数据交付）
-必修复: 0 ｜ 条件: C110-1（wiki 启用+基线）、C110-2（capture 复验）
+状态: **通过（C110-1/C110-2 已闭环）**
+必修复: 0 ｜ 条件: C110-3/4/5 跟踪（平台 UI/口径/konfi 校准）
 
 ## 6. 复盘卡
 

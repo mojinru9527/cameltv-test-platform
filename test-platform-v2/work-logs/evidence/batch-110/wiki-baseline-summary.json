@@ -1,0 +1,586 @@
+{
+  "tree": {
+    "bundles": 1,
+    "modules": 45,
+    "pages": 43,
+    "fps": 0,
+    "links": 0,
+    "bundle_id": 4
+  },
+  "wiki": {
+    "sync": {
+      "release_bundle_id": 4,
+      "raw_sources_created": 43,
+      "raw_sources_updated": 0,
+      "raw_sources_skipped": 0,
+      "coverage": {
+        "total_pages": 43,
+        "synced_pages": 43,
+        "missing_pages": 0
+      },
+      "errors": []
+    },
+    "ingest_jobs": [
+      {
+        "id": 1,
+        "project_id": 1,
+        "raw_source_id": 43,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:13:58.982500",
+        "finished_at": "2026-08-06T14:14:13.195400"
+      },
+      {
+        "id": 2,
+        "project_id": 1,
+        "raw_source_id": 42,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:13:59.291447",
+        "finished_at": "2026-08-06T14:14:10.853998"
+      },
+      {
+        "id": 3,
+        "project_id": 1,
+        "raw_source_id": 41,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 3}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:13:59.590176",
+        "finished_at": "2026-08-06T14:14:15.176321"
+      },
+      {
+        "id": 4,
+        "project_id": 1,
+        "raw_source_id": 40,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:13:59.861621",
+        "finished_at": "2026-08-06T14:14:11.057744"
+      },
+      {
+        "id": 5,
+        "project_id": 1,
+        "raw_source_id": 39,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 6, \"review_items\": 4}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:00.169204",
+        "finished_at": "2026-08-06T14:14:12.790284"
+      },
+      {
+        "id": 6,
+        "project_id": 1,
+        "raw_source_id": 38,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 3}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:00.488391",
+        "finished_at": "2026-08-06T14:14:20.334041"
+      },
+      {
+        "id": 7,
+        "project_id": 1,
+        "raw_source_id": 37,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:00.810317",
+        "finished_at": "2026-08-06T14:14:19.417109"
+      },
+      {
+        "id": 8,
+        "project_id": 1,
+        "raw_source_id": 36,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:01.115005",
+        "finished_at": "2026-08-06T14:14:13.429945"
+      },
+      {
+        "id": 9,
+        "project_id": 1,
+        "raw_source_id": 35,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 0}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:10.728544",
+        "finished_at": "2026-08-06T14:14:17.048436"
+      },
+      {
+        "id": 10,
+        "project_id": 1,
+        "raw_source_id": 34,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:11.139158",
+        "finished_at": "2026-08-06T14:14:22.443516"
+      },
+      {
+        "id": 11,
+        "project_id": 1,
+        "raw_source_id": 33,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:12.629471",
+        "finished_at": "2026-08-06T14:14:21.781018"
+      },
+      {
+        "id": 12,
+        "project_id": 1,
+        "raw_source_id": 32,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:13.076479",
+        "finished_at": "2026-08-06T14:14:27.622982"
+      },
+      {
+        "id": 13,
+        "project_id": 1,
+        "raw_source_id": 31,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 4}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:13.517432",
+        "finished_at": "2026-08-06T14:14:31.260594"
+      },
+      {
+        "id": 14,
+        "project_id": 1,
+        "raw_source_id": 30,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 7, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:15.090483",
+        "finished_at": "2026-08-06T14:14:32.790594"
+      },
+      {
+        "id": 15,
+        "project_id": 1,
+        "raw_source_id": 29,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:16.989555",
+        "finished_at": "2026-08-06T14:14:30.289102"
+      },
+      {
+        "id": 16,
+        "project_id": 1,
+        "raw_source_id": 28,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 6, \"review_items\": 3}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:19.337842",
+        "finished_at": "2026-08-06T14:14:36.813341"
+      },
+      {
+        "id": 17,
+        "project_id": 1,
+        "raw_source_id": 27,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:20.225197",
+        "finished_at": "2026-08-06T14:14:41.859077"
+      },
+      {
+        "id": 18,
+        "project_id": 1,
+        "raw_source_id": 26,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:21.698406",
+        "finished_at": "2026-08-06T14:14:45.519624"
+      },
+      {
+        "id": 19,
+        "project_id": 1,
+        "raw_source_id": 25,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:22.363831",
+        "finished_at": "2026-08-06T14:14:31.152799"
+      },
+      {
+        "id": 20,
+        "project_id": 1,
+        "raw_source_id": 24,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:27.528948",
+        "finished_at": "2026-08-06T14:14:39.683368"
+      },
+      {
+        "id": 21,
+        "project_id": 1,
+        "raw_source_id": 23,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:30.203388",
+        "finished_at": "2026-08-06T14:14:41.097431"
+      },
+      {
+        "id": 22,
+        "project_id": 1,
+        "raw_source_id": 22,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:31.074470",
+        "finished_at": "2026-08-06T14:14:44.029006"
+      },
+      {
+        "id": 23,
+        "project_id": 1,
+        "raw_source_id": 21,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 3}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:31.418259",
+        "finished_at": "2026-08-06T14:15:10.443986"
+      },
+      {
+        "id": 24,
+        "project_id": 1,
+        "raw_source_id": 20,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:32.617667",
+        "finished_at": "2026-08-06T14:14:49.249386"
+      },
+      {
+        "id": 25,
+        "project_id": 1,
+        "raw_source_id": 19,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:36.655884",
+        "finished_at": "2026-08-06T14:14:48.577247"
+      },
+      {
+        "id": 26,
+        "project_id": 1,
+        "raw_source_id": 18,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 3}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:39.612266",
+        "finished_at": "2026-08-06T14:14:52.498051"
+      },
+      {
+        "id": 27,
+        "project_id": 1,
+        "raw_source_id": 17,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:41.024290",
+        "finished_at": "2026-08-06T14:14:51.179866"
+      },
+      {
+        "id": 28,
+        "project_id": 1,
+        "raw_source_id": 16,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 9, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:41.766162",
+        "finished_at": "2026-08-06T14:14:59.859821"
+      },
+      {
+        "id": 29,
+        "project_id": 1,
+        "raw_source_id": 15,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:43.949354",
+        "finished_at": "2026-08-06T14:15:04.441585"
+      },
+      {
+        "id": 30,
+        "project_id": 1,
+        "raw_source_id": 14,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 7, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:45.416188",
+        "finished_at": "2026-08-06T14:14:54.226772"
+      },
+      {
+        "id": 31,
+        "project_id": 1,
+        "raw_source_id": 13,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 6, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:48.494254",
+        "finished_at": "2026-08-06T14:14:58.851662"
+      },
+      {
+        "id": 32,
+        "project_id": 1,
+        "raw_source_id": 12,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 8, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:49.135558",
+        "finished_at": "2026-08-06T14:15:06.581093"
+      },
+      {
+        "id": 33,
+        "project_id": 1,
+        "raw_source_id": 11,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:51.091398",
+        "finished_at": "2026-08-06T14:14:57.321670"
+      },
+      {
+        "id": 34,
+        "project_id": 1,
+        "raw_source_id": 10,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 7, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:52.428895",
+        "finished_at": "2026-08-06T14:15:10.657700"
+      },
+      {
+        "id": 35,
+        "project_id": 1,
+        "raw_source_id": 9,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:54.131820",
+        "finished_at": "2026-08-06T14:15:22.429576"
+      },
+      {
+        "id": 36,
+        "project_id": 1,
+        "raw_source_id": 8,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:57.258481",
+        "finished_at": "2026-08-06T14:15:14.101366"
+      },
+      {
+        "id": 37,
+        "project_id": 1,
+        "raw_source_id": 7,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:58.685572",
+        "finished_at": "2026-08-06T14:15:07.119868"
+      },
+      {
+        "id": 38,
+        "project_id": 1,
+        "raw_source_id": 6,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 1}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:14:59.617448",
+        "finished_at": "2026-08-06T14:15:09.809401"
+      },
+      {
+        "id": 39,
+        "project_id": 1,
+        "raw_source_id": 5,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:15:04.516997",
+        "finished_at": "2026-08-06T14:15:20.008996"
+      },
+      {
+        "id": 40,
+        "project_id": 1,
+        "raw_source_id": 4,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 5, \"review_items\": 3}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:15:06.367941",
+        "finished_at": "2026-08-06T14:15:28.330442"
+      },
+      {
+        "id": 41,
+        "project_id": 1,
+        "raw_source_id": 3,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:15:06.990018",
+        "finished_at": "2026-08-06T14:15:24.194262"
+      },
+      {
+        "id": 42,
+        "project_id": 1,
+        "raw_source_id": 2,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 4}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:15:09.718642",
+        "finished_at": "2026-08-06T14:15:25.195614"
+      },
+      {
+        "id": 43,
+        "project_id": 1,
+        "raw_source_id": 1,
+        "status": "success",
+        "stage": "generation",
+        "result_json": "{\"pages\": 4, \"review_items\": 2}",
+        "error_message": "",
+        "retry_count": 0,
+        "created_at": "2026-08-06T14:15:10.332767",
+        "finished_at": "2026-08-06T14:15:22.303107"
+      }
+    ],
+    "approved_pages": 158,
+    "diff_tasks": [
+      {
+        "query": "首页",
+        "task_id": 1
+      },
+      {
+        "query": "赛事详情",
+        "task_id": 2
+      },
+      {
+        "query": "直播间",
+        "task_id": 3
+      },
+      {
+        "query": "资讯",
+        "task_id": 4
+      },
+      {
+        "query": "搜索",
+        "task_id": 5
+      },
+      {
+        "query": "我的",
+        "task_id": 6
+      },
+      {
+        "query": "回放",
+        "task_id": 7
+      },
+      {
+        "query": "世界杯",
+        "task_id": 8
+      },
+      {
+        "query": "财务管理",
+        "task_id": 9
+      },
+      {
+        "query": "UGC",
+        "task_id": 10
+      }
+    ]
+  },
+  "errors": []
+}
