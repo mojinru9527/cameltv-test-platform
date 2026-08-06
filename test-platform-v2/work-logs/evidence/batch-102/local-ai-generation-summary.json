@@ -1,0 +1,22 @@
+{
+  "docs": [
+    {
+      "doc_id": 1,
+      "title": "体育平台-用户端-需求规格说明书",
+      "modules": 14,
+      "fp": 90,
+      "functional_cases": 137,
+      "api_cases": 0,
+      "evidence": "F:\\CamelTv-worktrees\\codex-batch-102-sports-functional-mapping\\test-platform-v2\\work-logs\\evidence\\batch-102\\local-ai-doc1.json"
+    },
+    {
+      "doc_id": 3,
+      "title": "体育平台-运营后台-需求规格说明书",
+      "modules": 14,
+      "fp": 108,
+      "functional_cases": 133,
+      "api_cases": 0,
+      "evidence": "F:\\CamelTv-worktrees\\codex-batch-102-sports-functional-mapping\\test-platform-v2\\work-logs\\evidence\\batch-102\\local-ai-doc3.json"
+    }
+  ]
+}

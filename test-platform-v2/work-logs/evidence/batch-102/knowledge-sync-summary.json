@@ -1,0 +1,7 @@
+{
+  "sources": 5,
+  "chunks": 5,
+  "entities": 16,
+  "relations": 15,
+  "note": "生产 /knowledge/capture 接口异常（一律 409），按 ingest_capture 落库语义直连写入"
+}

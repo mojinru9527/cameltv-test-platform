@@ -805,6 +805,23 @@ graph LR
 
 ---
 
+## Epic SPORT-INT　体育平台承接-平台使用障碍登记（Batch 102，C102-1~5）
+
+> **标记**：2026-08-06 Batch 102 体育平台功能梳理过程中发现（用户要求「平台使用较少或测试使用有障碍的地方都标记一下，后续一一迭代」）。
+> 关联交付：`docs/体育平台-功能模块地图.md`、`work-logs/batch-102-sports-functional-mapping-*`。
+
+| # | 障碍 | 实测证据（Batch 102） | 目标 | 优先级 |
+|---|------|---------------------|------|:----:|
+| B1 | 需求 AI 提取/生成同步请求超时 | 大需求文档（92+ 功能点）`POST /requirements/{id}/generate` 在 Railway 网关 300s 整返回 502；小文档提取 216s 可成功 | 改造为异步任务 + 轮询；或网关超时放宽 + 分块 | P1 |
+| B2 | 知识中心入库接口不可用 | `/knowledge/capture` 生产端一律 `409 内容重复` 且 `knowledge_source` 0 落库；`search/health` 显示 vector_search_functional=false | 修复 ingest 链路（capture 落库 + 向量回填） | P1 |
+| B3 | 需求模块树/跨系统关联依赖蓝湖证据包 | `requirement-modules/bundle/{id}/extract` 强制 `evidence_job_id`；md 直传需求无法建模块树/admin-links/konfi 关联 | 支持从需求文档直接建模块树与手动 admin-links | P2 |
+| B4 | 生产页面与需求原型差异无标注能力 | 生产为英文站（无显式 UGC 入口、含 World Cup 2026/Match Replays 等），需求中文原型无对应页 | 平台支持「需求 vs 生产实测」差异标注/对照 | P2 |
+| B5 | AI 生成截断无自动补全 | 本地复算 90+ FP 文档时多块 `finish_reason=length`，依赖 salvage 恢复，用例密度受影响 | 块级重试 + 截断块补生成 + 覆盖缺口报告 | P2 |
+
+**备注**：B1/B5 是本批用例密度（用户端 77 条 vs 运营后台 133 条）差异的直接原因之一；B2 本批已按 ingest 落库语义直连补入知识源（5 来源/16 实体/15 关系）作为过渡。
+
+---
+
 ## 依赖关系总览（Mermaid）
 
 ```mermaid

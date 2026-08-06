@@ -1,0 +1,18 @@
+{
+  "backend": "https://test-platform.up.railway.app/api/v1",
+  "dry_run": false,
+  "username": "sportsadmin",
+  "project_id": 1,
+  "requirements": [
+    {
+      "id": 3,
+      "title": "体育平台-运营后台-需求规格说明书",
+      "note": "运营后台原型（72 页）：财务/赛事预测/UGC/内容/商城/广告/装扮/消息/用户/系统"
+    },
+    {
+      "id": 4,
+      "title": "体育平台-用户端-更新日志",
+      "note": "用户端更新日志（版本历史）"
+    }
+  ]
+}
