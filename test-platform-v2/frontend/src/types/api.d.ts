@@ -89,6 +89,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 项目邀请链接列表 */
+        get: operations["list_project_invites_api_v1_projects__project_id__invites_get"];
+        put?: never;
+        /** 生成项目邀请链接 */
+        post: operations["create_project_invite_api_v1_projects__project_id__invites_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/invites/{invite_id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 停用项目邀请链接 */
+        post: operations["disable_project_invite_api_v1_projects__project_id__invites__invite_id__disable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations": {
         parameters: {
             query?: never;
@@ -385,6 +420,8 @@ export interface components {
             password: string;
             /** Invite Code */
             invite_code: string;
+            /** Project Invite Token */
+            project_invite_token: string;
         };
         /** InviteCodeIn */
         InviteCodeIn: {
@@ -513,6 +550,67 @@ export interface components {
             code: string;
             /** Name */
             name: string;
+        };
+        /** ProjectInviteIn */
+        ProjectInviteIn: {
+            /**
+             * Usage Limit
+             * @default 1
+             */
+            usage_limit: number;
+            /** Expires At */
+            expires_at?: string | null;
+        };
+        /** ProjectInviteOut */
+        ProjectInviteOut: {
+            /** Id */
+            id: number;
+            /** Project Id */
+            project_id: number;
+            /** Token */
+            token: string;
+            /** Url */
+            url: string;
+            /** Usage Limit */
+            usage_limit: number;
+            /** Used Count */
+            used_count: number;
+            /** Expires At */
+            expires_at?: string | null;
+            /** Status */
+            status: number;
+            /** Created At */
+            created_at?: string | null;
+        };
+        /** R[ProjectInviteOut] */
+        R_ProjectInviteOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["ProjectInviteOut"] | null;
+        };
+        /** R[list[ProjectInviteOut]] */
+        R_list_ProjectInviteOut__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["ProjectInviteOut"][] | null;
         };
         /** ProjectOut */
         ProjectOut: {
@@ -1085,6 +1183,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_project_invite_api_v1_projects__project_id__invites_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: {
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectInviteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_ProjectInviteOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_project_invites_api_v1_projects__project_id__invites_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: {
+                project_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_ProjectInviteOut__"];
+                };
+            };
+        };
+    };
+    disable_project_invite_api_v1_projects__project_id__invites__invite_id__disable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: {
+                project_id: number;
+                invite_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
                 };
             };
         };

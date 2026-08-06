@@ -96,8 +96,30 @@ describe('注册页', () => {
       email: '',
       password: 'secret123',
       invite_code: 'ABC123',
+      project_invite_token: '',
     })
     expect(mockSetLogin).toHaveBeenCalledTimes(1)
     expect(mockNavigate).toHaveBeenCalledWith('/my-projects', { replace: true })
+  })
+
+  it('携带项目邀请参数时展示提示并随请求提交', async () => {
+    mockRegister.mockResolvedValue({
+      access_token: 'tok',
+      user: { id: 10, username: 'alice', nickname: 'Alice', email: '' },
+      projects: [],
+      permissions: [],
+    })
+    render(
+      <MemoryRouter initialEntries={['/register?invite=TOKEN123']}>
+        <RegisterPage />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText(/你正被邀请加入一个项目/)).toBeTruthy()
+    fillForm()
+    fireEvent.click(screen.getByRole('button', { name: '注册并登录' }))
+    await waitFor(() => expect(mockRegister).toHaveBeenCalledTimes(1))
+    expect(mockRegister).toHaveBeenCalledWith(
+      expect.objectContaining({ project_invite_token: 'TOKEN123' }),
+    )
   })
 })

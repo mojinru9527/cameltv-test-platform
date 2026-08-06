@@ -17,6 +17,7 @@ class RegisterIn(BaseModel):
     email: str = ""
     password: str = Field(..., min_length=6, max_length=128)
     invite_code: str = ""
+    project_invite_token: str = ""
 
 
 class UserBrief(BaseModel):
