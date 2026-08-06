@@ -651,6 +651,24 @@ def ingest_platform_knowledge_in_new_session(
 
 # ── 9. 灵感捕获入库 ──
 
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class CaptureIngestResult:
+    """capture 入库结果（Batch 108：不再用 None 混义 disabled/duplicate/error）。
+
+    reason:
+      - created:   成功入库，source_id 为新建知识源 id
+      - disabled:  知识入库总开关关闭（KNOWLEDGE_INGEST_ENABLED=false）
+      - duplicate: 同 (project_id, source_type, source_id, content_hash) 已存在
+      - error:     内部异常（已记录日志，未入库）
+    """
+
+    reason: str
+    source_id: int | None = None
+
+
 def ingest_capture_in_new_session(
     project_id: int,
     title: str,
@@ -658,13 +676,13 @@ def ingest_capture_in_new_session(
     *,
     source_url: str = "",
     tags: list[str] | None = None,
-) -> int | None:
+) -> CaptureIngestResult:
     """快速捕获灵感/想法/片段 → inbox，后续可由 AI 自动加工分类。
 
-    返回创建的 knowledge_source.id，去重时返回 None。
+    返回 CaptureIngestResult：created / disabled / duplicate / error。
     """
     if not settings.knowledge_ingest_enabled:
-        return None
+        return CaptureIngestResult("disabled")
     db = SessionLocal()
     try:
         raw = sanitize(_truncate(content))
@@ -686,7 +704,7 @@ def ingest_capture_in_new_session(
         )
         if src is None:
             db.commit()
-            return None
+            return CaptureIngestResult("duplicate")
         src.para_category = "inbox"
         src.knowledge_domain = "platform"
         src.freshness_score = 1.0
@@ -701,12 +719,16 @@ def ingest_capture_in_new_session(
         ]
         chunk_service.make_chunks(db, src, chunks)
         db.commit()
-        _post_ingest_hooks(project_id, source_id=src.id)
-        return src.id
+        # hooks（嵌入/图谱/Agent）失败不得翻转已提交的入库成功（Batch 108）
+        try:
+            _post_ingest_hooks(project_id, source_id=src.id)
+        except Exception:
+            logger.exception("post-ingest hooks failed after capture committed: %s", title)
+        return CaptureIngestResult("created", src.id)
     except Exception:
         logger.exception("ingest capture failed: %s", title)
         db.rollback()
-        return None
+        return CaptureIngestResult("error")
     finally:
         db.close()
 
