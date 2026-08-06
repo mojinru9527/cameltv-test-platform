@@ -1,0 +1,82 @@
+{
+  "diff_tasks": [
+    {
+      "id": 10,
+      "title": "体育平台-UGC（RAG vs Wiki）",
+      "status": "running",
+      "items": 0
+    },
+    {
+      "id": 9,
+      "title": "体育平台-财务管理（RAG vs Wiki）",
+      "status": "success",
+      "items": 21
+    },
+    {
+      "id": 8,
+      "title": "体育平台-世界杯（RAG vs Wiki）",
+      "status": "success",
+      "items": 7
+    },
+    {
+      "id": 7,
+      "title": "体育平台-回放（RAG vs Wiki）",
+      "status": "success",
+      "items": 3
+    },
+    {
+      "id": 6,
+      "title": "体育平台-我的（RAG vs Wiki）",
+      "status": "running",
+      "items": 0
+    },
+    {
+      "id": 5,
+      "title": "体育平台-搜索（RAG vs Wiki）",
+      "status": "running",
+      "items": 0
+    },
+    {
+      "id": 4,
+      "title": "体育平台-资讯（RAG vs Wiki）",
+      "status": "running",
+      "items": 0
+    },
+    {
+      "id": 3,
+      "title": "体育平台-直播间（RAG vs Wiki）",
+      "status": "running",
+      "items": 0
+    },
+    {
+      "id": 2,
+      "title": "体育平台-赛事详情（RAG vs Wiki）",
+      "status": "running",
+      "items": 0
+    },
+    {
+      "id": 1,
+      "title": "体育平台-首页（RAG vs Wiki）",
+      "status": "running",
+      "items": 0
+    }
+  ],
+  "sources_total": 16,
+  "source_titles": [
+    "体育平台-功能地图v2-摘要",
+    "体育平台-接口测试考虑点【辅助作用】",
+    "体育平台-接口测试规范",
+    "体育平台-API接口测试方案",
+    "体育平台-更新日志-运营后台-完整版",
+    "体育平台-更新日志-用户端原型-完整版",
+    "体育平台-蓝湖原型-运营后台-20260611_180605",
+    "体育平台-蓝湖原型-用户端原型-20260611_180510",
+    "Batch 108 生产复验记录 20260806170157",
+    "接口测试考虑点【辅助作用】（XMind 权威版 2026-08-06）",
+    "体育平台-konfi 配置关联（待校准）",
+    "体育平台-生产页面与需求对照（勘察记录）",
+    "体育平台-运营后台模块地图（需求文档）",
+    "体育平台-用户端模块地图（需求↔生产）",
+    "体育平台-功能总览（用户端/运营后台/konfi）"
+  ]
+}

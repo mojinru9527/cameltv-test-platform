@@ -1,0 +1,239 @@
+{
+  "base": "https://www.camel1.tv",
+  "captured_at": "2026-08-06T09:55:16.906Z",
+  "pages_visited": 30,
+  "samples": [
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/ads/activity/get",
+      "post_data": "{\"displayPlatform\":\"PC\",\"displayPage\":\"INDEX\"}",
+      "page_label": {
+        "url": "https://www.camel1.tv/",
+        "label": "home"
+      },
+      "ts": 1786009858895,
+      "status": 200,
+      "response": "{\"traceId\":\"vcdn7bvj169h74\",\"timestamp\":1786009859488,\"status\":200,\"data\":{\"adPagePositionData\":{\"INDEX\":{\"Banner\":[{\"id\":913,\"displayPage\":\"INDEX\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/European-Top-Clubs-Friendly-Matche-Kick-Off-Time-FREE-Live-Streamingg-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":557,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260806/a5fd0328d34e4a0caf85dfd93a3108af.png?width=1888&height=200\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":916,\"displayPage\":\"INDEX\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/world-cup-camellive-match-replays-spain-argentina-rodri-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":559,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260730/b45e9ee91a2a4754a49c035a70478ab6.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":891,\"displayPage\":\"INDEX\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":541,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/25dcfc5210be4a43b828e8ca2d50e718.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1888,\"height\":200,\"canaryVal\":100.00}],\"SidebarDown\":[{\"id\":895,\"displayPage\":\"INDEX\",\"adPositionId\":5,\"positionType\":\"SidebarDown\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":544,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/3643b503f38b4cc3b024aa48a93b3e3b.png?imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"canaryVal\":100.00}],\"SidebarUp\":[{\"id\":894,\"displayPage\":\"INDEX\",\"adPositionId\":4,\"positionType\":\"SidebarUp\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":543,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/374ffb1d5ab147a28c5b18258aae3747.png?imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"canaryVal\":100.00}]}},\"language\":\"en\",\"region\":\"JP\",\"deviceId\":\"04aec5d4-efcb-4f3f-b72d-510714becf6c\",\"popUnderDisplayCount\":1,\"popUnderCoolDownMinDuration\":5,\"popUnderCoolDownMaxDuration\":10,\"displayPage\":\"INDEX\"},\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/ads/activity/get",
+      "post_data": "{\"displayPlatform\":\"PC\",\"displayPage\":\"MATCH\",\"matchId\":\"965mkyhkvjklr1g\"}",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/jagiellonia-bialystok-vs-rangers-f-c/965mkyhkvjklr1g",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786009883579,
+      "status": 200,
+      "response": "{\"traceId\":\"j85o7bvj1mkqn7\",\"timestamp\":1786009883925,\"status\":200,\"data\":{\"adPagePositionData\":{\"MATCH\":{\"Banner\":[{\"id\":914,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/European-Top-Clubs-Friendly-Matche-Kick-Off-Time-FREE-Live-Streamingg-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":557,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260806/a5fd0328d34e4a0caf85dfd93a3108af.png?width=1888&height=200\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":917,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/world-cup-camellive-match-replays-spain-argentina-rodri-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":559,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260730/b45e9ee91a2a4754a49c035a70478ab6.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":919,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/Friendly%20Match%2CChelsea%2CTottenham%20Hotspur%2CTeam%20News%2CKick-Off%20Time%2CFREE%20Live%20Streaming?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":560,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260731/920217d11b784b3cbb7c30892c19e787.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":892,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":541,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/25dcfc5210be4a43b828e8ca2d50e718.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1888,\"height\":200,\"canaryVal\":100.00}],\"HalfTime\":[{\"id\":803,\"displayPage\":\"MATCH\",\"adPositionId\":9,\"positionType\":\"HalfTime\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://creptbabysitter.com/k60dnrsi7j?key=922edcb5fa5d362b4ad7c4dc16a876a2\",\"triggerCloseSeconds\":30,\"adMaterialId\":498,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260727/f30e2d0c2ada4daca58b148cc6ff74e5.gif?width=750&height=422&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":750,\"height\":422,\"canaryVal\":100.00}],\"Patch\":[{\"id\":893,\"displayPage\":\"MATCH\",\"adPositionId\":7,\"positionType\":\"Patch\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":5,\"adMaterialId\":542,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/3fa8f302e2f348f6aa96d4b3f4ad9ca9.png?width=1720&height=968&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1720,\"height\":968,\"canaryVal\":100.00}]}},\"language\":\"en\",\"region\":\"JP\",\"deviceId\":\"04aec5d4-efcb-4f3f-b72d-510714becf6c\",\"popUnderDisplayCount\":1,\"popUnderCoolDownMinDuration\":5,\"popUnderCoolDownMaxDuration\":10,\"matchId\":\"965mkyhkvjklr1g\",\"displayPage\":\"MATCH\"},\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/ads/activity/get",
+      "post_data": "{\"displayPlatform\":\"PC\",\"displayPage\":\"MATCH\",\"matchId\":\"zp5rzghgkn5kq82\"}",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/paok-saloniki-vs-anderlecht/zp5rzghgkn5kq82",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786009902029,
+      "status": 200,
+      "response": "{\"traceId\":\"79no7bvj1247gu\",\"timestamp\":1786009902377,\"status\":200,\"data\":{\"adPagePositionData\":{\"MATCH\":{\"Banner\":[{\"id\":914,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/European-Top-Clubs-Friendly-Matche-Kick-Off-Time-FREE-Live-Streamingg-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":557,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260806/a5fd0328d34e4a0caf85dfd93a3108af.png?width=1888&height=200\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":917,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/world-cup-camellive-match-replays-spain-argentina-rodri-1?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":559,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260730/b45e9ee91a2a4754a49c035a70478ab6.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":919,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"/news/detail/Friendly%20Match%2CChelsea%2CTottenham%20Hotspur%2CTeam%20News%2CKick-Off%20Time%2CFREE%20Live%20Streaming?entry_way=news\",\"triggerCloseSeconds\":0,\"adMaterialId\":560,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260731/920217d11b784b3cbb7c30892c19e787.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":1888,\"height\":200,\"canaryVal\":100.00},{\"id\":892,\"displayPage\":\"MATCH\",\"adPositionId\":2,\"positionType\":\"Banner\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":0,\"adMaterialId\":541,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/25dcfc5210be4a43b828e8ca2d50e718.png?width=1888&height=200&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1888,\"height\":200,\"canaryVal\":100.00}],\"HalfTime\":[{\"id\":803,\"displayPage\":\"MATCH\",\"adPositionId\":9,\"positionType\":\"HalfTime\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://creptbabysitter.com/k60dnrsi7j?key=922edcb5fa5d362b4ad7c4dc16a876a2\",\"triggerCloseSeconds\":30,\"adMaterialId\":498,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260727/f30e2d0c2ada4daca58b148cc6ff74e5.gif?width=750&height=422&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":100,\"width\":750,\"height\":422,\"canaryVal\":100.00}],\"Patch\":[{\"id\":893,\"displayPage\":\"MATCH\",\"adPositionId\":7,\"positionType\":\"Patch\",\"displayMethod\":\"round\",\"displaySource\":\"material\",\"jumpContent\":\"https://take-look.com/v853b0rqv\",\"triggerCloseSeconds\":5,\"adMaterialId\":542,\"adMaterialUrl\":\"https://livecdn.cameltv.live/common/pic/20260717/3fa8f302e2f348f6aa96d4b3f4ad9ca9.png?width=1720&height=968&imageView2/0/w/q/70/format/webp\",\"adMaterialType\":\"image\",\"displayWeight\":50,\"width\":1720,\"height\":968,\"canaryVal\":100.00}]}},\"language\":\"en\",\"region\":\"JP\",\"deviceId\":\"04aec5d4-efcb-4f3f-b72d-510714becf6c\",\"popUnderDisplayCount\":1,\"popUnderCoolDownMinDuration\":5,\"popUnderCoolDownMaxDuration\":10,\"matchId\":\"zp5rzghgkn5kq82\",\"displayPage\":\"MATCH\"},\"msg\":\"\"}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/account-service/ee/client/general",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/general",
+      "post_data": "",
+      "page_label": {
+        "url": "https://www.camel1.tv/",
+        "label": "home"
+      },
+      "ts": 1786009858896,
+      "status": 200,
+      "response": "{\"traceId\":\"5ddn7bvj1qni18\",\"timestamp\":1786009859493,\"status\":200,\"data\":{\"ip\":\"43.207.116.248\",\"region\":\"JP\"},\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/client/getHistoryMessage",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/getHistoryMessage",
+      "post_data": "{\"groupId\":\"camel_318q66hx56ovqo9\"}",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786010016726,
+      "status": 200,
+      "response": "{\"traceId\":\"rg7s7bvj1h5egl\",\"timestamp\":1786010017309,\"status\":200,\"data\":[],\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/client/getHistoryMessage",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/getHistoryMessage",
+      "post_data": "{\"groupId\":\"camel_8yomo4h1d369q0j\"}",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/chabab-atlas-khenifra-vs-racing-casablanca/animation/8yomo4h1d369q0j",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786010041949,
+      "status": 200,
+      "response": "{\"traceId\":\"qtvs7bvj1rbgt4\",\"timestamp\":1786010042299,\"status\":200,\"data\":[],\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/client/getHistoryMessage",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/getHistoryMessage",
+      "post_data": "{\"groupId\":\"camel_l7oqdehg5ojyr51\"}",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/kalighat-fc-vs-patha-chakra/animation/l7oqdehg5ojyr51",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786010076468,
+      "status": 200,
+      "response": "{\"traceId\":\"ek1u7bvj1vgpbl\",\"timestamp\":1786010076816,\"status\":200,\"data\":[],\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/ee/client/web/getAnchorNoticeMapper",
+      "host": "api.cameltv.live",
+      "path": "/account-service/ee/client/web/getAnchorNoticeMapper",
+      "post_data": "",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786010016726,
+      "status": 200,
+      "response": "{\"traceId\":\"8e7s7bvj1h4e33\",\"timestamp\":1786010017226,\"status\":200,\"data\":\"Welcome! Enjoy free football live streams. We recommend bookmarking our site. Please keep chat friendly. Violations may result in restricted access.\",\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/account-service/login/anonymous/web?appCode=D04B29D6B957CD44DC5F9894189380B8",
+      "host": "api.cameltv.live",
+      "path": "/account-service/login/anonymous/web?appCode=D04B29D6B957CD44DC5F9894189380B8",
+      "post_data": "{\"appCode\":\"D04B29D6B957CD44DC5F9894189380B8\"}",
+      "page_label": {
+        "url": "https://www.camel1.tv/",
+        "label": "home"
+      },
+      "ts": 1786009858895,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"detail\":{\"key\":\"Anony088112502\",\"value\":\"C_0ff682fd63116f6af03d2f7e004fb9cb\"},\"success\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/setting?category=room",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/setting?category=room",
+      "post_data": "",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786010016822,
+      "status": 200,
+      "response": "{\"traceId\":\"5h7s7bvj1va24s\",\"timestamp\":1786010017317,\"status\":200,\"data\":[{\"category\":\"room\",\"name\":\"RoomExitReportInterval\",\"value\":\"60\",\"desc\":\"RoomExit上报间隔\",\"memberCount\":798}],\"msg\":\"\"}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/sports_live/view_match?matchId=318q66hx56ovqo9",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/sports_live/view_match?matchId=318q66hx56ovqo9",
+      "post_data": "",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786010016726,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"success\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/sports_live/view_match?matchId=8yomo4h1d369q0j",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/sports_live/view_match?matchId=8yomo4h1d369q0j",
+      "post_data": "",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/chabab-atlas-khenifra-vs-racing-casablanca/animation/8yomo4h1d369q0j",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786010041950,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"success\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://api.cameltv.live/camel-service/ee/sports_live/view_match?matchId=l7oqdehg5ojyr51",
+      "host": "api.cameltv.live",
+      "path": "/camel-service/ee/sports_live/view_match?matchId=l7oqdehg5ojyr51",
+      "post_data": "",
+      "page_label": {
+        "url": "https://www.camel1.tv/football/kalighat-fc-vs-patha-chakra/animation/l7oqdehg5ojyr51",
+        "label": "match_Watch the ma"
+      },
+      "ts": 1786010076468,
+      "status": 200,
+      "response": "{\"code\":0,\"msg\":\"\",\"success\":true}"
+    },
+    {
+      "method": "POST",
+      "url": "https://api.cameltv.live/konfi-service/web/getDataById",
+      "host": "api.cameltv.live",
+      "path": "/konfi-service/web/getDataById",
+      "post_data": "{\"formKey\":\"sport_live_worldcup_telegram\"}",
+      "page_label": {
+        "url": "https://www.camel1.tv/worldcup-2026",
+        "label": "match_FIFA World C"
+      },
+      "ts": 1786010008320,
+      "status": 200,
+      "response": "{\"traceId\":\"g3vr7bvj1jlnrt\",\"timestamp\":1786010008690,\"status\":200,\"data\":[{\"text_bn\":\"<p>ধাপ ১: আপনার ওয়ার্ল্ড কাপ সাপোর্ট টিম অ্যাভাটার ফ্রেমটি সম্পূর্ণ ফ্রি-তে ক্লেইম করুন! শুধুমাত্র আমাদের কাস্টমার সার্ভিসের সাথে যোগাযোগ করুন।</p><p>ধাপ ২: ১টি প্রিমিয়াম পেইড পিক (Paid Pick) পান সম্পূর্ণ ফ্রি — যার মূল্য $৮.৮৮ !!</p><p>ক্লেইম করার নিয়ম: কাস্টমার সার্ভিসের সাথে যোগাযোগ করুন + আপনার Camel ইউজার আইডি (User ID) প্রদান করুন।</p>\",\"formKey\":\"sport_live_worldcup_telegram\",\"text_en\":\"<p>Step&nbsp;1:&nbsp;Claim&nbsp;your&nbsp;World&nbsp;Cup&nbsp;Support&nbsp;Team&nbsp;Avatar&nbsp;Frame&nbsp;for&nbsp;FREE!&nbsp;Simply&nbsp;contact&nbsp;our&nbsp;customer&nbsp;service.</p><p>Step&nbsp;2:&nbsp;Get&nbsp;1&nbsp;Premium&nbsp;Paid&nbsp;Pick&nbsp;for&nbsp;FREE&nbsp;—&nbsp;Worth&nbsp;$8.88&nbsp;!!</p><p>How&nbsp;to&nbsp;Claim:&nbsp;Contact&nbsp;Customer&nbsp;Service&nbsp;+&nbsp;Provide&nbsp;your&nbsp;Camel&nbsp;User&nbsp;ID.</p>\",\"icon\":\"\",\"url\":\"https://t.me/CamelLiveNewsHub/2328\",\"text_hi\":\"<p>स्टेप 1: अपनी वर्ल्ड कप सपोर्ट टीम का अवतार फ्रेम (Avatar Frame) बिल्कुल FREE में पाएं! बस हमारे कस्टमर सर्विस से संपर्क करें।</p><p>स्टेप 2: 1 प्रीमियम पेड पिक (Premium Paid Pick) पाएं बिल्कुल FREE — कीमत $8.88 !!</p><p>दावा (Claim) कैसे करें: कस्टमर सर्विस से संपर्क करें + अपना Camel यूजर ID दें।</p>\",\"text_id\":\"<p>Langkah 1: Klaim Bingkai Avatar Tim Dukungan Piala Dunia Anda secara GRATIS! Cukup hubungi layanan pelanggan kami.</p><p>Langkah 2: Dapatkan 1 Prediksi Berbayar Premium (Premium Paid Pick) secara GRATIS — Senilai $8.88 !!</p><p>Cara Klaim: Hubungi Layanan Pelanggan + Berikan ID Pengguna Camel Anda.</p>\",\"id\":\"696361217529289292\",\"key\":\"1\",\"text_ar\":\"<p>الخطوة 1: احصل على إطار أفاتار لفريقك المفضل في كأس العالم مجانًا! كل ما عليك فعله هو التواصل مع خدمة العملاء لدينا.</p><p>الخطوة 2: احصل على توقع مدفوع ومميز (Premium Paid Pick) مجانًا — بقيمة 8.88$ !!</p><p>كيفية المطالبة: تواصل مع خدمة العملاء + أرسل معرف المستخدم الخاص بك على Camel (User ID).</p>\"}],\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://sensors.cameltv.live/sa.gif?project=production",
+      "host": "sensors.cameltv.live",
+      "path": "/sa.gif?project=production",
+      "post_data": "data_list=H4sIAAAAAAAAA%2B3dTW%2FkyHkH8K9SEYzkIs2y3ovKwZA00o4284YZ2YMgCASKXa2mxSbbJFtyr7HAJhc7l%2FhgwIDhXHMJEiCH5OZbvomB3SDfIk9RLXnIXvbEwTAvPX%2FsYKf1FKnu5stvnqp%2BqvovfrqXTXzRZE3m673Dn%2B59b%2F3j6jIty5vMX2aTvcM9Hk8nxl5dSRnxWE4OovQqTeKpmfhEJsodGK5lbKIDLuj%2FEf39uD3ncXq199X%2B3iSrm6xIm4%2FzC%2Ff38uyqfb3t33s%2FqikUHl%2FOfTMrw1Ok5cQ%2FBG99VWdlEZ74idBPeHhBi6pc%2BOrxfTfZ3H9ZFv6ynE5r3%2BwdHigX0e51WnlfXM58dj2jaBy9F7zLJs1s75ArFYK3mb9blFXT2%2FYx3N26%2F7o3XmKIJ42vm8umSqbTLL2sy2WV%2BstmtfC02b%2F%2F5l%2B%2B%2Fdu%2F%2F%2FZf%2F%2Bo%2FfvaL9zaufVKls8sbv7orq3Acvv27f%2FjmF7%2F65uf%2F%2FM3Xv71c7%2FQ3v%2Fzmt1%2B%2Ft1Plp76qfEWbUzRZLOhBc0sPl1VOD2dNs6gPP%2Fvs7u7uSZrMfc6fNLefUfOC9p%2BW1Zy2WaT0c%2Ff35ElxTY98EX5RM78PZvXl4i7ZO6RjcFWVd3W78cmsKuft2Zou8%2FzyA89KzZeLJBzLvYcff7z01er%2BCRbJNR2jrMnDQXqXNOmMndHZYmdl2Vwlec6eZ7eevW0qn8yz4nqfvU3LyrM%2FZmfZT5pl5Wt2wE7C07UbPvzCcBbXl651dEnGTjtn%2BQFfVeK6asJRSxs6fw9nh24iX12GXcO7ojc9zSo60JOEXmVTLT0FP%2FAuv%2Ffx3gNd7UlRFqt5uaw%2F1v23fp90baY39KO%2FpXfcXjWXr%2BlNn%2F5kUdb0QsKGdGPRVf%2F%2BUdvfu2z3a1%2BLtJGMKCooOs2X9exycw%2Fx1T6gAlT%2F36CaLKukaY8V%2FZJp5UmpIiUA%2BKdGwjM6aKdFQ0R%2Flwey40Eso4hTVG3xQMEDePDf9eB%2FjYOs8fP1VcTpKnZOiziOhbPGSPfQ%2FnCLPyvvWFOy%2Bzv9dBnOeVKwi3LBTvLlVU03f%2BaLSb5iL8IWdHsfsj%2FL0puDV9Mpu6BLItz5b05Peyywo%2BfPWVaw15UPp%2FfxSdszYz81ll76u%2Fo53d4%2FvD8UPWdiIVRXJsOlpKgekim0QSbIBJkg07gyyagjk6MWS1E%2BLJPkkAkyQSbINLJMupszxcpQ0GyByQAmwASYANO4MKnesHPMo3VwACaFjAkwASbANDZMpgMT5yYSFLVbZLKQCTJBJsg0rkxadGSyik4UReWwTFpCJsgEmSDTyDK5bmdOGRmi8RaZYsgEmSATZBpXJtOtZpKS5KHoYDVTaINMkAkyQaZxZbLdmgEuhHXr6IBMNoJMkAkyQaaRZerWDHApQp2l3VI0YFE0AJkgE2QaWSbXLRqw1PIQHZDJoWoAMkEmyDS2TN2qAWUdN%2BF8bZEJVQOQCTJBppFlirs5k1FWOIoOzu8PbZAJMkEmyDSyTN2cyUZSSYpuyZli5EyQCTJBpnFlomfs5kwyEhQcTpmoDTABJsAEmEaGyXY%2FmlNCWYq6LTI5yASZIBNkGlcm3p2cIrXjMUWHJ6dQG2SCTJAJMo0sU9wrtLSGr6NDMmFyCmSCTJBpZJl6C1o6o7mi6PCClhILWkImyASZRpepmzPFMQ%2B9OTk8OYXaIBNkgkyQaVyZ%2Bgtaioi7dXRIJuRMkAkyQaaRZVLdCb3G0VPdBwdgUkiZABNgAkxjw9RNmcglYyg6PJ%2BX2iATZIJMkGlcmXR3ANzEIqbOnN7SmdPozEEmyASZRpbJdMuZ4ohCW2qZDGqZwBJYAksjs9RfNC7WzqyjAzJh0TjIBJkg0%2Bgy6V5XLqy0K7csGiexaBxkgkyQaWyZeovGxXTa6DW4LbN5HWbzQibIBJnGlqk7m1cYE6l1dEgmLIACmSATZBpZprg7%2FM2tEmYdHZAJi8ZBJsgEmUaXqZsz6fB9TjLesgBKjAVQABNgAkzjwqSi3gIo3KgQHS4aoDbIBJkgE2QaWabet%2FM6JRRFhxdAoTbIBJkgE2QaVybeq%2F%2B2nOi5jw7IxPHtvJAJMkGmsWXqLoCiYy1lrMRwoSW1QSbIBJkg07gyiW6hpbZSGYoOF1pSG2SCTJAJMo0rk%2BxOThH0Cig4%2FOW81AaYABNgAkwjw9StGZBaxQ%2FRIZlQZwmZIBNkGlkmJTfW2Q3RLQPgCgPgkAkyQaaxZeoOgEvlBF9Hh2RC0QBkgkyQaWSZdG85S8V1iG4ZANcYAIdMkAkyjSyT6a40EM6YW0cHZDIYAYdMkAkyjSyT7a2BEmlLvTk7PJ%2BX2iATZIJMkGlkmXqTUyInLUW3jDNZjDNBJsgEmUaWyfUKLbmKqTfntowzOYwzQSbIBJlGlinu9eYU9eXovy29OazOBJkgE2QaXaZub04Zt44NuYTFmeASXIJL47qko25fjovI8HX0u2WiNsgEmSATZBpXJt6dNGcJphAdrhmgNsgEmSATZBpZpu6sOW5jSzkTH%2B7NURtkgkyQCTKNK5PozZrT2gqKDs%2BaozbIBJkgE2QaV6beEihK02mj6JbeHNZAgUyQCTKNLlO3N%2BdkSJnkls6cRGcOMAEmwDQyTKq7BrgwsaY%2FastHcwofzUEmyASZRpZJ9zpzQumIols6cxqdOcgEmSDT2DKZ7gC4MbENo%2BBbZMKClpAJMkGmkWUy%2FW%2FBFNKtowMyGUxNgUyQCTKNLVN3aoqzlqsw1LRFJiw0AJkgE2QaWSbbHQG3sYnXwQGYLKqZABNgAkwjw%2BR6nTmplFhHB2Ry6MxBJsgEmUaWKe6tzRRbuw4OwBSjZgAw%2Fc%2FAlKSpr%2Buyuj%2F7R%2BGmiZzjXOhIjOgWjw1dQZquJR3FYYHXvltHNWtmdP9nlafDdUNQJRO%2F38ZeJ3U4Iey0mIQ7%2F5Cd0ZOzZ0%2FZG0%2Fve1WzctpuJyJh2LuyyifsZLlgR%2BTFq3C6MvJk1TrxR124uIJcHYis6uZUxnKuKCoH6aI20AW6dpmusBCQsoJLRfdCFEndp%2BuYDpbPyyJhX5SUIwWK3iSpZ%2FSu2JtyUmWHJFWSU8ZFjyfsz31D%2BRh76xvanV1USVHTO2Zn3nd1EsCpR013JEq3mZPdUotpUYsJnHYdJ2ms0Jobuuq5cqqP0%2Fu%2BsB8sgjy%2F%2B%2Bt%2F5CpiL7I8p%2FPRxYkekxlH13T253SbEBwVe5qV86SYgKcP8NQtexIiMoKiw2VP1AaewNNO8%2BREpHj7aTU3xmix0e2rrsPlXnjKnZZVkeR0lRJCt0QSdfQuZkGH19TJo5PD3i6n9Pb8hL1Y1mneOpFkRc2O%2FTQocZbR7vvsdJ7lGbFAolXNv%2F1T4b9krxaLsqb93qYJpWnZ777%2Bdc0ukrTJ0hodwg%2Bg1p2YF8dcW4oOz8yjNqAG1HYaNRvrMPZO3QsjnbYbqJ2dnx09Dj3RnU%2BHIyRT64GrY7qZwpB66B6eF9Mk8FeSefMWs%2FOiIZn%2BlB019PdNTalYCFMiFn7nO0rZ2MuyIfIokct9Rb95AsI%2BQFjvO1y4EZyiw6VVFt8VDMJ2m7DI0L%2FsXEcqclEcyXiDMHyM%2BH8Aru6XnBsexRpwAa5PGS5ljaB%2FwY2kf8Kdi9RG%2FUObJ50l9OLYSZXV2WMv8qRs%2B5mUXuXh8dRPQvpEJ6hmT33jK%2FKBuohk3qslpVufUxeyyH6fnyHJ2m5VbzayiIWQ6%2BiAVTqCVbBqp60yWmhhrHZC6NhxuTXJ6mZU7OgkDNBTznXb9gl9tf7x8IJ4YOF23O9mXPvflXAhwxpWy0Qm6o5uWWvo9riPfpda7R5QC2rttlpKSW2EiJSNtdys1Nqm1snM53Q0A1pfLMN9uKwh1kcVq%2FcVVi6KxDo6JBbG4yHWboslpOBSx0YKK4VyGwVaZ3RImxl7u%2FB092cFKZVU1%2F777Hm5zGp2S1nV5wn1Cl8tfBFku0ja8fmXdI35it7fpGYv254ibdNa9kV5hf7gB5zqjl05OkF2HR1yCmNXcGq3naKLS5uIrprYSeM2x66eVsmcoEnZxV0ogyCpHsef2pqFN%2F7A5z5t2qqtk1cvX5wev3refp5Ys2fZnL2bZblnPzgNnz62JQ8ob%2FjDmBJcxzwyfGjYyoQ2MAWmdpspZ2xkLT2NU8bqjXTqqGp8k1AqlOc1%2B2FWZGlG3byjqvYhQ2prFI6XWT5pK%2BHf%2FniZTKixXBaTgFRXJBSRbvDSW20hMvAIHn3KHklDJkVaWBsr62Jp%2Bh69WN3Mkiwv2YvlpFrdsPupgqELJ6KDeVlQ1%2B9puQg%2FHyeUOJ2zZ8ntulw0X7HXVXkbakpXlGwVZeqLtFfozoFU3xze69zFQq6jQ0ph6WEotdtK6Vhoa3QkLY8iF%2FENpZIflRU7phv%2BpqFnWV7PDn%2BfPCXF5DGBup%2BCc1yVIW96nIhDqL2m87YehKrmva4djPqAUU46TdGh1WHCHlgdBkbttlEq5k7x8OGeM07HG5lUqJhq2skzbwI0k7KF6XNfVteULf1Jzd75SZtYNWUoQX%2FmqZNHML1IJj6rEnZeh9HyEDlaXocqKreH8aftSvXWW9BGhkxqaL2FsAfWW4BSO62U0NwZOo90KzgeqWhDqfO6nQ3TDom%2FDjVRJ2WeJ4ua7v7vs6NpqJU6OjuhPCr3STvt72ECTlgoph0Yz8IQ%2Bj6jriU7oneYZutC0Jfl3XrkHJWf%2FzXCOCW83VUZjI1cmFkwRFhoA2EgbKcJU1YIbgUXkZaUcG0MoW%2BroXoRRKM7AZWfY6rVXUtGRlpQcGgpmbADlpIBWjuOVpi1YWPqI8rYKb19adHhws%2BLsml8MSOrnpVNvVhWkOujytVdZkYZ2eZbZgtdBnSBrt2mK6Jky3JB15kzkkd9ut48OX%2Fy%2Bgk7b5KwNgybPkCQ%2B2tS7H74%2FWHCTZaWBXmRFGnJjhPSIGOLpK5JheQuWbGkYcbsoVP4hyAlnOSaooMTa0IbkAJSO42UFBFdMVZxE2bq87iP1H3h5nrZmMN1IVW5Simfem9Z4%2FPp%2FVowT0tft2vBvE2rZBEGuW6IiyT3oaJhUdZJDqQ%2BgFRvbavI8JBJDc6lCW1ACkjtMlJcGuWc5s5GwrlIbCwMc5xNwjC6jtj8fv1Q5pdVWXdXEZ0Hi1poaNuw%2BCh1G%2BvsurhfDplN6dWFYa6wcEwY3wqjXXsoZ9hqVXfen9WR1rAKVn3aVgmhw9M47lTE5UbJlVQHKzpgByWlTi%2F9ap5UofqzmWXFDZuvWLgo2F3WhGKr5MssZ7OkZim9mMAVdQSpZ4gU6gMs9ebPiNjydXSIpfirv%2FxP6Ux55kmIAQA%3D&gzip=1&crc=1754583315",
+      "page_label": {
+        "url": "https://www.camel1.tv/",
+        "label": "home"
+      },
+      "ts": 1786009864880
+    },
+    {
+      "method": "POST",
+      "url": "https://sensors.cameltv.live/sa.gif?project=production",
+      "host": "sensors.cameltv.live",
+      "path": "/sa.gif?project=production",
+      "post_data": "data_list=H4sIAAAAAAAAA%2B2bT2%2FkthXAvwo7CHoa74qSSEmTQzGenYl3Y68XayeLoigEjkR5WGtELUnNdBIssM0lySU5BAgQJNdcihboob3l1m8SYLfot%2Bij%2FKfWTMZZBwkQ2PTBQz3%2BEfn4%2BNN7IvWHD3si55URRnDdG3zYe%2Bv8cpVmUp4Knoq8N%2BjhpMhpNJ0GgYeTIN%2FxsmnGkoLmnAUsjHcoJkFCvR3sw38Pfi%2FLY5xk096Lfi8X2ogqMz9Pg%2F1eKaZtf9vf3p80iGw6nXMzk%2FYWmcz5hXDBlRaysje%2B55N72HaoVrLm6nLcRsz5B7LiqSwKzU1vsBPGHlTXmeK8SmdcnMxAmnhXhEuRm1lvgMPQCheCL2upzFrZS3G39Hq%2FN7po5cxwbVKjWFGILNWyURlPzarmUOw%2FX%2F%2Fz9Wffvv7XX%2F778edXCmvOVDZLT%2FlqKZXVw%2Btv%2Fvrq8y9fffKPVy%2B%2FS88rffrFq%2B9eXqmkeMGV4gqKg5TVNSTMApKNKiE5M6bWg%2Fv3l8vlvYzNeYnvmcX95%2FcrvrT9r6GVQqo5lKwzuO62VrLqBFK8si1nGddaqjMjGFayWnlxjLFPPN%2FezczP6gid1kvWG4CipkouddvWaKbkvJ3SoinL9I26BoXSmlm197rC5w1Xq7Ob1ewElCpMabX6TimnrEQTKQ38lugxVEE7aL%2FVE3qvzm2ij44VqzSMUqPfogNmshkaVqxcaWELj2w%2F0L5Y8IvWrQ2cG34Ug0EnMaU4iXZqNS%2BalddqxsDsX8wtLEGuUlvVDhe0UQgF05Qz6LJRDQfhGw3%2FrV9oWLB8mJ28uWz0z7Wgz4cOxp6dwiVfgBJaM0yfgB7Gf66lbpTVh12psIyuKrLfS9t6bV%2FiKAl9kMYgLcpGz9LNGvGLviOfI98tJl%2FeKGZatUJTheIAvCoDfGAHlHQPtDmuDDwAfogmcYcmEaVeCNLkGpokjiaOJj%2BVJr9ujAjD5%2BemhkkMf8RPksSPYVkE8UX%2BBRT25BIZiZ61C33cWMNgFTqWNRqVzVSjiRK8ysvVGQq4RgP0rshOdw6LAh2D3QAkJk%2FH4xYJ6MgozuaiOkHD%2FX0kKvREcWsDlzdtpy9yOEttZ%2FcBC%2B%2BfaWedTz7BHaIRmnhW6m8lGuQ5ojmi3X6i4YSCHRGwKOIliUeidaINNTIzjiZCcVDaKSCM5bzfyp4wbacFjStwtbgeoAl0Ae09QE85jH6lkSzacr7nU%2FRMqjJHo6ZGQ8XRoZ00AZxZtbj4TRdpOHRM%2BxGmxZ7nd700Dx5JIA22Mc3mOaY5pt1%2BppEkTMLIx0GIQ5iTgKwzbRdUxktZMfRIgltlGfWUZRzB2NBTmSsxAIQBOA4YpHP0e27AhUNH3ED1S1qgCeddbPmOWj9OrbDricVBgkFKr6EWddRy1LoL1Apo5BOCKdg%2BDuNwnVpXwQMYsEj6%2FqO%2F4dBDB6IsYVa61IK0ZcIJ2MAcFgvwRKEHQs5ZlTtu3ZxbtMMt6sckAWl0Dbcixy3HrTvArdj3QqAXoQmmlBJ%2FI4JUJ9boKw7eVqNgrYOtAp0WwCqIGY9nMNnoCcSLFglHTQGD5Dk6aHRWtq%2FAmKg02uWgCRuFQvU%2BGs9FKQAOwA9l%2Fv33in%2BADutaaqh3lDFw7MT3L7%2FS6NhuKWa652LLG9Ouu5%2FokzCwXtrWHQCb52jnaHcHaBclxL75j0JCg5hEG7SbPJwML19vAb9AKdb9On85tgtLyr7Qt5Hmw6pglosSYDhvKfewMoCst9HQwO%2BpBufNisF1s20%2BE5Yy0gALwfUruYKWc8e2m7MtWTsrERNgG%2Fa2sw17jm2ObbefbR6NwggTL%2FRiL%2FGCZINtbnfzV0m0ll3%2FJxq44TY2xfgaomFHNEe020%2B0kFIc%2B3ZzM4moT%2BMNoh2wyoLKcIVGYProAYdAFOhwIo1oD49BhLona0uptU2DK6%2Fa2mCzu4Hg%2FLKbUizBa%2FuZMU1ikG7fz4Q8RzFHsbtAMeITn0Yk9n14suPgWr%2Bs64Sh4chuD4CbtmjjSwDd2eXgGLyvliD9rpPW%2FyEfzTllN8ZZd6MT%2FGmQJ5hcgzPicOZwdhdwFoYBob7vhVFCgs0jZ9fhbDTjJejU0uxRY1djox3KfmmUke7eZxwGAUi3n9mAPIcyh7I7gDI%2F8HFAEhr4UeCH8cZJswko1szQUc0BChA1jmZMnfDfoX3ZwJpfgB%2F2DgNuHNa8ssg7Zu3uwGOwNK5glLlGj9swFMq0kHskpy60vDnAuoc3SEixBdj2wxuQ5wDmAHYHAAYmRqgHtpPEATzYNz5oeqDYHAiUoeOlPbYBCLvctjx77cV3eMnbT7cHaHT4%2BGC8e7jfbnNqtCfm6NlMlBy9N7abou0RDXcc4yfwK1qLJWnigXTr5902z%2FHL8esu8CumkRdFcLM4pBHZcMCGynDDwHkqS43eF5XIBESMQ6W59anaMxW7jSjz9iOAo%2BcNyyFTNlVu6dVFlTsm%2Bwak6n46jmPsEZBuPzgGeS%2F%2B%2BD9EWgFuhEcAAA%3D%3D&gzip=1&crc=1289691143",
+      "page_label": {
+        "url": "https://www.camel1.tv/q/news",
+        "label": "news_News"
+      },
+      "ts": 1786009872204
+    },
+    {
+      "method": "POST",
+      "url": "https://sensors.cameltv.live/sa.gif?project=production",
+      "host": "sensors.cameltv.live",
+      "path": "/sa.gif?project=production",
+      "post_data": "data_list=H4sIAAAAAAAAA%2B1Uu27UQBT9FcuKqHY3Hj927e1QlIiCAikFBUKj8fh6PcT2mJnxOksUKVSQhhRINNDSUFFAl9%2FZIP6CO84mbBJEmlSQxr5zdO778ezAFRnURhgB2p0euBur54JyKfcEUJG5U5ckeTaepGkQeCQJsqHHU86SfJwBC1gYD8ckCpKxNyQ%2Bfj38X%2FIJSXjqHg7cTGgjam7uxuDALUXax9v%2F3RcaISvTCkwhrQsuM7gA56C0kLV1PPKjEbEBNUo2oC7zNqKCV7IGKvNcg3GnwzD2UF1zBVDTAsSsQDTx1sBOZKZwpyQMLTgX0DVSmWvcS%2Fgq%2B3rcN0K0ODOgDTWK5bngVMtWcaBm0QDSfnz8dvbu89n31z%2FfnKyRNTDFC7oHi04qW4ezT1%2BWJx%2BWb78uj07pSun4%2FfL0aE1JQQ5KgUI6oqxpUDBzFFtVolgY0%2Bjp5mbXdSPOKijJyMw3qwUSGrSQS1Uhq%2BH4vmqpZPUMJaitVc5Ba6nOB%2BBhLeuFF8eE%2BJHnW0%2BmOtcRmjYdc6dYpFTJTve2tgolq76deVuW9NawkEAbZsvt%2FgZetqAW504aNsNCClPaSj5lhhfODrbU2ZHSpKwsncdiDs6uUcAqUc8Gzi6XCpwHzo7YN60C7QydLeuyJ14YtK1ezfckxrlN4klEgmBYZyKZRG1fBINNvmghbhooalVtZph4LhR2I2MYpVEtIHhrpht3lwUuBbNtqWSr72pNV5niCPM9fMIcc%2B6Hiz7BtLf3G6kxEEvE%2FcPlWK%2FbwKW9Xh9LPJlEIaIhonnZ6oLe1AgPB%2Ff37P6e%2FYP3LGsVM3050UyuAE9ZzfFKkP%2FvbjzCwm3XRi3%2BeDTCK0cj8X2fIBr95WhEh89%2FASpM4pMGCQAA&gzip=1&crc=622157227",
+      "page_label": {
+        "url": "https://www.camel1.tv/my",
+        "label": "mine_My"
+      },
+      "ts": 1786009881138
+    }
+  ]
+}

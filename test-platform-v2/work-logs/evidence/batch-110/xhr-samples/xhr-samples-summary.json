@@ -1,0 +1,311 @@
+{
+  "total": 34,
+  "interfaces": [
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/account-service/ee/ads/activity/get",
+      "host": "api.cameltv.live",
+      "has_body": true,
+      "response_len": 3394,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "GET",
+      "path": "/account-service/ee/client/general",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 121,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "GET",
+      "path": "/account-service/ee/client/getCountryCode",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 86,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/account-service/ee/client/getHistoryMessage",
+      "host": "api.cameltv.live",
+      "has_body": true,
+      "response_len": 86,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/account-service/ee/client/web/getAnchorNoticeMapper",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 234,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/account-service/login/anonymous/web",
+      "host": "api.cameltv.live",
+      "has_body": true,
+      "response_len": 113,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/camel-service/ee/news/list_visible",
+      "host": "api.cameltv.live",
+      "has_body": true,
+      "response_len": 80425,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/camel-service/ee/search/hot",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 850,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/camel-service/ee/search/query",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 68105,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/camel-service/ee/search/recommend",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 4062,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "GET",
+      "path": "/camel-service/ee/setting",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 190,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/football/match/detail_live",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 76,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/loadAnchorsByMatchId",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 366,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/view_match",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 34,
+      "source": ""
+    },
+    {
+      "module": "",
+      "method": "POST",
+      "path": "/konfi-service/web/getDataById",
+      "host": "api.cameltv.live",
+      "has_body": true,
+      "response_len": 1986,
+      "source": ""
+    },
+    {
+      "module": "世界杯-赛程",
+      "method": "GET",
+      "path": "/camel-service/ee/fifa/football/season/match",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 14447,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "回放-列表",
+      "method": "GET",
+      "path": "/camel-service/ee/replay/list",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 3380,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "回放-详情",
+      "method": "GET",
+      "path": "/camel-service/ee/replay/get",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 386,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "球队-详情",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/get_team_by_name",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 12840,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "联赛-积分榜",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/football/season/recent/table/detail",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 76,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "联赛-详情",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/get_competition_by_name",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 1288,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "联赛-赛程",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/football/season/match",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 13088,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "资讯-分类",
+      "method": "GET",
+      "path": "/camel-service/ee/news_kind/list",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 1150,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "资讯-相关推荐",
+      "method": "POST",
+      "path": "/camel-service/ee/news/related",
+      "host": "api.cameltv.live",
+      "has_body": true,
+      "response_len": 34758,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "资讯-详情(全文)",
+      "method": "GET",
+      "path": "/camel-service/ee/news/get",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 111,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "资讯-详情(可见)",
+      "method": "GET",
+      "path": "/camel-service/ee/news/get_visible",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 4596,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "赔率-汇总",
+      "method": "GET",
+      "path": "/camel-service/ee/forecast/queryOddsSummaryByMatchId",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 1359,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "赛事详情-时间线",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/football/match/time",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 97,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "赛事详情-球队统计",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/football/match/team_stats/list",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 76,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "赛事详情-赛前分析",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/football/match/analysis",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 35154,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "赛事详情-阵容",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/football/match/lineup",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 76,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "首页-热门分组",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/hot_group_match",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 50860,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "首页-热门球队",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/hot_team",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 17589,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    },
+    {
+      "module": "首页-热门赛事",
+      "method": "GET",
+      "path": "/camel-service/ee/sports_live/hot_match",
+      "host": "api.cameltv.live",
+      "has_body": false,
+      "response_len": 11953,
+      "source": "生产回填探测（契约参数 + 生产真实值）"
+    }
+  ]
+}

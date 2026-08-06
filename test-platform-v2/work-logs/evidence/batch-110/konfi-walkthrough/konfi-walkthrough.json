@@ -1,0 +1,82 @@
+{
+  "steps": [
+    {
+      "name": "01-login",
+      "url": "https://konfi-web.cameltv.live/login",
+      "title": "Konfi",
+      "text": "Konfi系统 记住登录 忘记密码 登 录 会话超时，请重新登录！"
+    },
+    {
+      "name": "02-after-login",
+      "url": "https://konfi-web.cameltv.live/dashboard",
+      "title": "Konfi",
+      "text": "Konfi系统 admin-test 体育直播 模板 赛事管理 首页/首页 Elelive Elelive Konfi ©2021"
+    },
+    {
+      "name": "menu-直播",
+      "url": "https://konfi-web.cameltv.live/dashboard",
+      "title": "Konfi",
+      "text": "Konfi系统 admin-test 体育直播 直播间消息 客服地址 历史联赛(仅查看) 热门联赛 资讯 球队列表(仅查看) ins中转页面 推赛事流用户 联赛简介 赛事分类 联赛聚合页 热门球队 屏蔽联赛配置 友情链接 球队简介 球队多语言配置 联赛多语言配置 球员资料描述 热门球员 直播间关注配置 ugc白名单 世界杯telegram配置 配置参数 Script脚本 广告-Popunder地区次数配置 全局点击 Script Ad 模板 赛事管理 首页/首页 Elelive Elelive Konfi ©2021"
+    },
+    {
+      "name": "menu-配置",
+      "url": "https://konfi-web.cameltv.live/main/5553117634280705646/8764592155147643559",
+      "title": "Konfi",
+      "text": "Konfi系统 admin-test 体育直播 直播间消息 客服地址 历史联赛(仅查看) 热门联赛 资讯 球队列表(仅查看) ins中转页面 推赛事流用户 联赛简介 赛事分类 联赛聚合页 热门球队 屏蔽联赛配置 友情链接 球队简介 球队多语言配置 联赛多语言配置 球员资料描述 热门球员 直播间关注配置 ugc白名单 世界杯telegram配置 配置参数 Script脚本 广告-Popunder地区次数配置 全局点击 Script Ad 模板 赛事管理 首页/体育直播/屏蔽联赛配置 配置表key：sports_live_block_competition_match名称：屏蔽联赛配置 导出 联赛ID ... 备注 ... 屏蔽项 ... 针对国家 ... 操作 gy0or5jhg6qwzv3 德甲 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 4zp5rzghp5q82w1 意甲 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 p4jwq2gh754m0ve UEFA Europa Conference League 欧协联 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 jednm9whz0ryox8 英超 不加seo索引 所有国家 共 4 条数据 1 10 条/页 Elelive Konfi ©2021"
+    },
+    {
+      "name": "menu-ad",
+      "url": "https://konfi-web.cameltv.live/main/5553117634280705646/8764592155147643559",
+      "title": "Konfi",
+      "text": "Konfi系统 admin-test 体育直播 直播间消息 客服地址 历史联赛(仅查看) 热门联赛 资讯 球队列表(仅查看) ins中转页面 推赛事流用户 联赛简介 赛事分类 联赛聚合页 热门球队 屏蔽联赛配置 友情链接 球队简介 球队多语言配置 联赛多语言配置 球员资料描述 热门球员 直播间关注配置 ugc白名单 世界杯telegram配置 配置参数 Script脚本 广告-Popunder地区次数配置 全局点击 Script Ad 模板 赛事管理 首页/体育直播/屏蔽联赛配置 配置表key：sports_live_block_competition_match名称：屏蔽联赛配置 导出 联赛ID ... 备注 ... 屏蔽项 ... 针对国家 ... 操作 gy0or5jhg6qwzv3 德甲 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 4zp5rzghp5q82w1 意甲 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 p4jwq2gh754m0ve UEFA Europa Conference League 欧协联 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 jednm9whz0ryox8 英超 不加seo索引 所有国家 共 4 条数据 1 10 条/页 Elelive Konfi ©2021 退"
+    },
+    {
+      "name": "menu-live",
+      "url": "https://konfi-web.cameltv.live/main/5553117634280705646/8764592155147643559",
+      "title": "Konfi",
+      "text": "Konfi系统 admin-test 体育直播 直播间消息 客服地址 历史联赛(仅查看) 热门联赛 资讯 球队列表(仅查看) ins中转页面 推赛事流用户 联赛简介 赛事分类 联赛聚合页 热门球队 屏蔽联赛配置 友情链接 球队简介 球队多语言配置 联赛多语言配置 球员资料描述 热门球员 直播间关注配置 ugc白名单 世界杯telegram配置 配置参数 Script脚本 广告-Popunder地区次数配置 全局点击 Script Ad 模板 赛事管理 首页/体育直播/屏蔽联赛配置 配置表key：sports_live_block_competition_match名称：屏蔽联赛配置 导出 联赛ID ... 备注 ... 屏蔽项 ... 针对国家 ... 操作 gy0or5jhg6qwzv3 德甲 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 4zp5rzghp5q82w1 意甲 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 p4jwq2gh754m0ve UEFA Europa Conference League 欧协联 不加seo索引、不提前出赛程、只能点击进行中的赛事、屏蔽视频 所有国家 jednm9whz0ryox8 英超 不加seo索引 所有国家 共 4 条数据 1 10 条/页 Elelive Konfi ©2021"
+    }
+  ],
+  "apiHits": [
+    {
+      "method": "GET",
+      "url": "https://konfi-web.cameltv.live/admins",
+      "post": "",
+      "page": "about:blank"
+    },
+    {
+      "method": "POST",
+      "url": "https://konfi.cameltv.live/user/login?loginName=admin-test&password=test123&t=null",
+      "post": "{\"t\":null,\"loginName\":\"admin-test\",\"password\":\"test123\"}",
+      "page": "https://konfi-web.cameltv.live/login",
+      "response": "{\"traceId\":\"fei0nbvj1e002k\",\"timestamp\":1786025888208,\"status\":200,\"data\":{\"token\":\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE3ODYwNjkwODgsInVzZXJuYW1lIjoiYWRtaW4tdGVzdCJ9.SOOihoXPN-YmzPOexmuo7voHnnMhHJGlXC5sVY03Vqg\",\"userInfo\":{\"loginName\":\"admin-test\",\"userCode\":\"normal\"}},\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://konfi.cameltv.live/konfi/menu/getTree?parentFolderId=0",
+      "post": "{\"parentFolderId\":0}",
+      "page": "https://konfi-web.cameltv.live/dashboard",
+      "response": "{\"traceId\":\"soi0nbvj1gkb4c\",\"timestamp\":1786025888642,\"status\":200,\"data\":{\"menuTreeList\":[{\"folderId\":\"5553117634280705646\",\"name\":\"体育直播\",\"parentFolderId\":\"0\",\"type\":1,\"defSort\":{},\"children\":[{\"folderId\":\"5940977201120957642\",\"key\":\"sport_live_msg_conf\",\"name\":\"直播间消息\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"5941121782210625895\",\"key\":\"sport_live_cs_url\",\"name\":\"客服地址\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"6028699403999891450\",\"key\":\"sports_live_competition\",\"name\":\"历史联赛(仅查看)\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"6062042725139964669\",\"key\":\"sports_live_hot_competition\",\"name\":\"热门联赛\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"6201224263081662510\",\"key\":\"sport_live_news\",\"name\":\"资讯\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"6438569130185706100\",\"key\":\"sports_live_team\",\"name\":\"球队列表(仅查看)\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"6446076779785360433\",\"key\":\"sport_live_ins\",\"name\":\"ins中转页面\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"6758860089527182238\",\"key\":\"sports_live_fbstream_user\",\"name\":\"推赛事流用户\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"7118019705538582125\",\"key\":\"sports_live_competition_info\",\"name\":\"联赛简介\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"7240196818360914940\",\"key\":\"sports_live_competition_type\",\"name\":\"赛事分类\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{\"key\":\"weight\",\"sort\":\"desc\"},\"permit\":[\"lineQuery\"]},{\"folderId\":\"7240213318081762724\",\"key\":\"sports_live_competition_agg_page\",\"name\":\"联赛聚合页\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"7698471365099156759\",\"key\":\"sports_live_hot_team\",\"name\":\"热门球队\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{\"key\":\"weight\",\"sort\":\"asc\"},\"permit\":[\"lineQuery\"]},{\"folderId\":\"8764592155147643559\",\"key\":\"sports_live_block_competition_match\",\"name\":\"屏蔽联赛配置\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"8764635192129236972\",\"key\":\"sports_live_friends_link\",\"name\":\"友情链接\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\":0,\"defSort\":{},\"permit\":[\"lineQuery\"]},{\"folderId\":\"8764639688959996116\",\"key\":\"sports_live_team_info\",\"name\":\"球队简介\",\"parentFolderId\":\"5553117634280705646\",\"parentName\":\"体育直播\",\"type\""
+    },
+    {
+      "method": "POST",
+      "url": "https://konfi.cameltv.live/form/getByFolderId?folderId=8764592155147643559",
+      "post": "{\"folderId\":\"8764592155147643559\"}",
+      "page": "https://konfi-web.cameltv.live/main/5553117634280705646/8764592155147643559",
+      "response": "{\"traceId\":\"k5p0nbvj1659jd\",\"timestamp\":1786025895094,\"status\":200,\"data\":{\"folderId\":\"8764592155147643559\",\"key\":\"sports_live_block_competition_match\",\"name\":\"屏蔽联赛配置\",\"parentFolderId\":\"5553117634280705646\",\"type\":0,\"createDate\":\"2025-10-31T14:30:00.502\",\"updateDate\":\"2025-10-31T14:30:00.502\",\"linePermit\":[\"lineQuery\"]},\"msg\":\"\"}"
+    },
+    {
+      "method": "POST",
+      "url": "https://konfi.cameltv.live/columns/getByFormKey?formKey=sports_live_block_competition_match",
+      "post": "{\"formKey\":\"sports_live_block_competition_match\"}",
+      "page": "https://konfi-web.cameltv.live/main/5553117634280705646/8764592155147643559"
+    },
+    {
+      "method": "POST",
+      "url": "https://konfi.cameltv.live/data/getFormData?formKey=sports_live_block_competition_match&page=1&size=10",
+      "post": "{\"formKey\":\"sports_live_block_competition_match\",\"page\":1,\"size\":10}",
+      "page": "https://konfi-web.cameltv.live/main/5553117634280705646/8764592155147643559",
+      "response": "{\"traceId\":\"5kp0nbvj1sdbh1\",\"timestamp\":1786025895560,\"status\":200,\"data\":{\"records\":[{\"blockCountry\":[\"_ALL_\"],\"competitionId\":\"gy0or5jhg6qwzv3\",\"createBy\":\"camle_yeye\",\"notes\":\"德甲\",\"formKey\":\"sports_live_block_competition_match\",\"createTime\":\"2026-05-22 12:14:58\",\"updateBy\":\"camle_yeye\",\"updateTime\":\"2026-05-28 19:40:52\",\"id\":\"717712183660766554\",\"blockItem\":[\"blockSeo\",\"blockShow\",\"blockClick\",\"blockVideo\"]},{\"blockCountry\":[\"_ALL_\"],\"competitionId\":\"4zp5rzghp5q82w1\",\"createBy\":\"camle_yeye\",\"notes\":\"意甲\",\"formKey\":\"sports_live_block_competition_match\",\"createTime\":\"2026-04-08 19:15:32\",\"updateBy\":\"camle_yeye\",\"updateTime\":\"2026-05-20 15:13:13\",\"id\":\"464284582479918648\",\"blockItem\":[\"blockSeo\",\"blockShow\",\"blockClick\",\"blockVideo\"]},{\"blockCountry\":[\"_ALL_\"],\"competitionId\":\"p4jwq2gh754m0ve\",\"createBy\":\"camle_yeye\",\"notes\":\"UEFA Europa Conference League 欧协联\",\"formKey\":\"sports_live_block_competition_match\",\"createTime\":\"2025-12-05 15:21:17\",\"updateBy\":\"camle_yeye\",\"updateTime\":\"2026-05-28 19:40:42\",\"id\":\"8967735850838533037\",\"blockItem\":[\"blockSeo\",\"blockShow\",\"blockClick\",\"blockVideo\"]},{\"blockCountry\":[\"_ALL_\"],\"competitionId\":\"jednm9whz0ryox8\",\"createBy\":\"camle_yeye\",\"notes\":\"英超\",\"formKey\":\"sports_live_block_competition_match\",\"createTime\":\"2025-12-02 15:36:11\",\"updateBy\":\"camle_yeye\",\"updateTime\":\"2026-01-26 16:31:58\",\"id\":\"8950401258815861591\",\"blockItem\":[\"blockSeo\"]}],\"total\":4,\"size\":10,\"current\":1,\"orders\":[],\"optimizeCountSql\":true,\"hitCount\":false,\"searchCount\":true,\"pages\":1},\"msg\":\"\"}"
+    }
+  ]
+}
