@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import api from '@/api/client'
 import { fetchOrganizations } from '@/api/organization'
+import { createProjectInvite } from '@/api/projectInvites'
 import { fetchRoles, fetchUsers } from '@/api/system'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/ui'
@@ -59,7 +60,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { Plus, Loader2, Users, Edit, Trash2, ArrowRight, RotateCcw } from '@/lib/icons'
+import { Plus, Loader2, Users, Edit, Trash2, ArrowRight, RotateCcw, Link2, Copy } from '@/lib/icons'
 import type { Organization, Project } from '@/types'
 
 const projectSchema = z.object({
@@ -99,6 +100,12 @@ export default function MyProjectsPage() {
   const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [organizationId, setOrganizationId] = useState<number | null>(null)
+
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [inviteUsageLimit, setInviteUsageLimit] = useState(1)
+  const [inviteExpiresAt, setInviteExpiresAt] = useState('')
+  const [inviteSaving, setInviteSaving] = useState(false)
+  const [inviteUrl, setInviteUrl] = useState('')
 
   const {
     register,
@@ -197,6 +204,33 @@ export default function MyProjectsPage() {
     toast.success('已移除')
     const mRes: any = await api.get(`/projects/${activeProject?.id}/members`)
     setMembers(mRes || [])
+  }
+
+  const doCreateInvite = async () => {
+    if (!activeProject) return
+    setInviteSaving(true)
+    try {
+      const expires_at = inviteExpiresAt ? new Date(inviteExpiresAt).toISOString() : null
+      const created = await createProjectInvite(activeProject.id, {
+        usage_limit: Math.max(1, inviteUsageLimit),
+        expires_at,
+      })
+      setInviteUrl(created.url || '')
+      toast.success('邀请链接已生成')
+    } catch {
+      toast.error('生成邀请链接失败')
+    } finally {
+      setInviteSaving(false)
+    }
+  }
+
+  const copyInviteUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl)
+      toast.success('邀请链接已复制')
+    } catch {
+      toast.error('复制失败，请手动选择复制')
+    }
   }
 
   const openCreate = async () => {
@@ -465,6 +499,23 @@ export default function MyProjectsPage() {
                 <Plus />
                 邀请
               </Button>
+              {activeProject && isOwner(activeProject) && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setInviteUrl('')
+                    setInviteUsageLimit(1)
+                    setInviteExpiresAt('')
+                    setInviteOpen(true)
+                  }}
+                  data-icon="inline-start"
+                >
+                  <Link2 />
+                  生成邀请链接
+                </Button>
+              )}
             </form>
 
             <div className="rounded-xl border bg-card text-sm">
@@ -518,6 +569,63 @@ export default function MyProjectsPage() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={inviteOpen} onOpenChange={(open) => { if (!open) { setInviteOpen(false) } }}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>生成项目邀请链接</DialogTitle>
+            <DialogDescription>
+              同事打开链接注册后会自动加入「{activeProject?.name}」
+            </DialogDescription>
+          </DialogHeader>
+          {inviteUrl ? (
+            <div className="flex items-center gap-2 rounded-lg border bg-muted p-3">
+              <Link2 className="size-4 shrink-0 text-muted-foreground" />
+              <code className="min-w-0 flex-1 break-all font-mono text-xs">{inviteUrl}</code>
+              <Button size="sm" variant="secondary" onClick={() => void copyInviteUrl()} data-icon="inline-start">
+                <Copy />
+                复制
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="invite-usage-limit" className="text-sm font-medium">可注册次数</label>
+                <Input
+                  id="invite-usage-limit"
+                  type="number"
+                  min={1}
+                  value={inviteUsageLimit}
+                  onChange={(e) => setInviteUsageLimit(Number(e.target.value) || 1)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label htmlFor="invite-expires-at" className="text-sm font-medium">过期时间（可选）</label>
+                <Input
+                  id="invite-expires-at"
+                  type="datetime-local"
+                  value={inviteExpiresAt}
+                  onChange={(e) => setInviteExpiresAt(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">留空表示永不过期</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            {inviteUrl ? (
+              <Button onClick={() => setInviteOpen(false)}>完成</Button>
+            ) : (
+              <>
+                <Button variant="secondary" onClick={() => setInviteOpen(false)}>取消</Button>
+                <Button disabled={inviteSaving} onClick={() => void doCreateInvite()} data-icon="inline-start">
+                  {inviteSaving && <Loader2 className="animate-spin" />}
+                  生成
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

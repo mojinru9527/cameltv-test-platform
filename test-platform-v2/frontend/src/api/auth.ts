@@ -11,6 +11,7 @@ export interface RegisterPayload {
   email?: string
   password: string
   invite_code?: string
+  project_invite_token?: string
 }
 
 /** Batch 104：开放注册（邀请码），成功后自动登录并写入 httpOnly cookie。 */
