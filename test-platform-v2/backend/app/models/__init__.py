@@ -7,6 +7,7 @@ from app.models.dataset import Dataset
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.integration import IntegrationConfig
+from app.models.invite_code import InviteCode
 from app.models.lanhu_evidence import (
     LanhuEvidenceAsset,
     LanhuEvidenceJob,
@@ -109,6 +110,7 @@ __all__ = [
     "ModuleAdminLink",
     "ReleaseBundle",
     "IntegrationConfig",
+    "InviteCode",
     "SyncLog",
     "VersionMission",
     "AgentWorkLog",

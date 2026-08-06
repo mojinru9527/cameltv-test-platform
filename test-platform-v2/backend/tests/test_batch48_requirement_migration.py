@@ -15,7 +15,15 @@ from sqlalchemy.exc import IntegrityError
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
 PREVIOUS_HEAD = "20260726_batch45"
-BATCH48_HEAD = "20260728_merge_batch37_main"
+
+
+def _current_head() -> str:
+    """动态读取 Alembic 当前唯一头，避免后续批次新增迁移时测试陈旧。"""
+    config = Config(str(BACKEND_ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
+    heads = ScriptDirectory.from_config(config).get_heads()
+    assert len(heads) == 1, "Alembic 必须保持单头"
+    return heads[0]
 
 
 def _alembic_environment(database_path: Path) -> dict[str, str]:
@@ -213,7 +221,7 @@ def test_upgrade_repairs_stamped_old_schema_without_losing_data(tmp_path: Path) 
 
     assert retried_upgrade.returncode == 0
     assert second_upgrade.returncode == 0
-    assert BATCH48_HEAD in current.stdout
+    assert _current_head() in current.stdout
 
     inspector = sa.inspect(engine)
     requirement_columns = {
@@ -400,8 +408,9 @@ def test_batch48_is_the_only_head_and_target_models_are_registered() -> None:
     config = Config(str(BACKEND_ROOT / "alembic.ini"))
     config.set_main_option("script_location", str(BACKEND_ROOT / "alembic"))
     heads = ScriptDirectory.from_config(config).get_heads()
-    assert heads == [BATCH48_HEAD]
-    assert len(BATCH48_HEAD) <= 32
+    current_head = _current_head()
+    assert heads == [current_head]
+    assert len(current_head) <= 32
 
     import app.models  # noqa: F401
     from app.core.db import Base

@@ -67,3 +67,6 @@ open_api_limiter = RateLimiter(max_requests=60, window_seconds=60)
 # Login rate limiter（C70-3）：参数由 settings 按环境注入
 # 生产默认 10 次/15 分钟；development/test 自动放宽至 >=100 次/窗口
 login_limiter = RateLimiter(*settings.effective_login_rate_limit)
+
+# Register rate limiter（Batch 104）：独立桶，避免与登录限流互相污染
+register_limiter = RateLimiter(*settings.effective_register_rate_limit)

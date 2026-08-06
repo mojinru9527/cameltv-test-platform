@@ -5,7 +5,14 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.deps import CurrentUser, get_current_user, require_permission, require_project
+from app.core.deps import (
+    CurrentUser,
+    get_current_user,
+    require_permission,
+    require_project,
+    require_project_create,
+    require_project_owner_or,
+)
 from app.schemas.common import R
 from app.schemas.project import ProjectCreate, ProjectOut, ProjectUpdate
 from app.services import project_service
@@ -56,7 +63,7 @@ def list_all_projects(
 @router.get("/{project_id}", response_model=R[dict], summary="项目详情")
 def get_project(
     project_id: int,
-    current: CurrentUser = Depends(require_permission("project:detail")),
+    current: CurrentUser = Depends(require_project_owner_or("project:detail")),
     db: Session = Depends(get_db),
 ):
     r = project_service.get_project(db, project_id)
@@ -69,10 +76,10 @@ def get_project(
 @router.post("", response_model=R[ProjectOut], summary="创建项目")
 def create_project(
     req: Request, body: ProjectCreate,
-    current: CurrentUser = Depends(require_permission("project:create")),
+    current: CurrentUser = Depends(require_project_create),
     db: Session = Depends(get_db),
 ):
-    r = project_service.create_project(db, body, current.user.id)
+    r = project_service.create_project(db, body, current.user.id, is_super=current.is_super)
     db.commit()
     _audit(req, current, db, "project:create", f"#{r['id']} {r['name']}")
     return R.ok(ProjectOut(**r))
@@ -81,7 +88,7 @@ def create_project(
 @router.put("/{project_id}", response_model=R[dict], summary="编辑项目")
 def update_project(
     req: Request, project_id: int, body: ProjectUpdate,
-    current: CurrentUser = Depends(require_permission("project:update")),
+    current: CurrentUser = Depends(require_project_owner_or("project:update")),
     db: Session = Depends(get_db),
 ):
     r = project_service.update_project(db, project_id, body)
@@ -96,7 +103,7 @@ def update_project(
 @router.delete("/{project_id}", response_model=R[dict], summary="删除项目")
 def delete_project(
     req: Request, project_id: int,
-    current: CurrentUser = Depends(require_permission("project:delete")),
+    current: CurrentUser = Depends(require_project_owner_or("project:delete")),
     db: Session = Depends(get_db),
 ):
     ok = project_service.delete_project(db, project_id)
@@ -112,7 +119,7 @@ def delete_project(
 def add_member(
     req: Request, project_id: int,
     body: dict,
-    current: CurrentUser = Depends(require_permission("project:manage")),
+    current: CurrentUser = Depends(require_project_owner_or("project:manage")),
     db: Session = Depends(get_db),
 ):
     user_id = body.get("user_id", 0)
@@ -126,7 +133,7 @@ def add_member(
 @router.delete("/{project_id}/members/{user_id}", response_model=R[dict], summary="移除项目成员")
 def remove_member(
     req: Request, project_id: int, user_id: int,
-    current: CurrentUser = Depends(require_permission("project:manage")),
+    current: CurrentUser = Depends(require_project_owner_or("project:manage")),
     db: Session = Depends(get_db),
 ):
     ok = project_service.remove_member(db, project_id, user_id)
@@ -141,7 +148,7 @@ def remove_member(
 @router.get("/{project_id}/members", response_model=R[list], summary="项目成员列表")
 def list_members(
     project_id: int,
-    current: CurrentUser = Depends(require_permission("project:manage")),
+    current: CurrentUser = Depends(require_project_owner_or("project:manage")),
     db: Session = Depends(get_db),
 ):
     items = project_service.list_members(db, project_id)
@@ -166,7 +173,7 @@ class GateConfigBody(_PydanticBase):
 @router.get("/{project_id}/quality-gate", response_model=R[dict], summary="获取质量门禁配置")
 def get_quality_gate(
     project_id: int,
-    current: CurrentUser = Depends(require_permission("project:manage")),
+    current: CurrentUser = Depends(require_project_owner_or("project:manage")),
     db: Session = Depends(get_db),
 ):
     """获取项目的质量门禁配置。未配置时返回默认值。"""
@@ -193,7 +200,7 @@ def upsert_quality_gate(
     project_id: int,
     body: GateConfigBody,
     req: Request,
-    current: CurrentUser = Depends(require_permission("project:manage")),
+    current: CurrentUser = Depends(require_project_owner_or("project:manage")),
     db: Session = Depends(get_db),
 ):
     """创建或更新项目的质量门禁配置。"""

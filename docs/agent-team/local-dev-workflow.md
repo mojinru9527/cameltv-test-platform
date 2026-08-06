@@ -74,6 +74,7 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 | `git switch main` 报"main 已被工作区占用" | main 被另一个 worktree 检出 | `git worktree list` 找到占用者，先让它在旧工作区切走/脱离，再使用 main |
 | 新代码里的脚本/文件找不到 | 工作区停在旧分支 | 从最新 origin/main 更新或重建工作区 |
 | 端口冲突 | 多个工作区 metadata 端口重复 | 换独立端口；脚本启动时自动检测 |
+| 补丁写进了主工作区（F:\CamelTv） | 编辑工具默认以会话工作目录为根（batch-104 实测） | 先小样验证相对路径前缀（如 `../CamelTv-worktrees/{task}/...`），落盘后立即 `git status` 核对；误写后用同内容反向恢复并复制到目标 worktree |
 | 周审计误报大量 HARD | scan 未排除普通 `venv/`（batch-82 已修复） | F:\CamelTv 更新到含修复的 main |
 | 要改 Agent Team 技能 | `.claude` 是入库事实源，`.agents` 是本地镜像 | 改 `.claude` 进 PR + 同步 `.agents` 镜像 + CHANGELOG |
 

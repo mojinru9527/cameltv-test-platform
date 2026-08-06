@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -114,7 +114,15 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="justify-center">
-          <p className="text-xs text-muted-foreground">请使用管理员分配的账号登录</p>
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-xs text-muted-foreground">请使用管理员分配的账号登录</p>
+            <p className="text-xs text-muted-foreground">
+              还没有账号？
+              <Link to="/register" className="ml-1 text-primary hover:underline">
+                使用邀请码注册
+              </Link>
+            </p>
+          </div>
         </CardFooter>
       </Card>
     </div>

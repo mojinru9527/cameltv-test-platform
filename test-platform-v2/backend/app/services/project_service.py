@@ -5,6 +5,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.base_service import batch_user_names
+from app.core.config import settings
+from app.core.exceptions import APIException
 from app.models.project import Project, ProjectMember
 from app.models.rbac import Role
 from app.models.user import User
@@ -71,7 +73,20 @@ def get_project(db: Session, project_id: int) -> dict | None:
     return _project_to_dict(r, owner_name)
 
 
-def create_project(db: Session, data, owner_id: int) -> dict:
+def create_project(db: Session, data, owner_id: int, is_super: bool = False) -> dict:
+    # Batch 104：普通用户受个人项目数配额约束（超管不限）
+    if not is_super:
+        owned = db.scalar(
+            select(func.count()).select_from(Project).where(
+                Project.owner_id == owner_id, Project.status == 1,
+            )
+        )
+        if (owned or 0) >= settings.max_projects_per_user:
+            raise APIException(
+                code=400,
+                msg=f"项目数量已达上限（{settings.max_projects_per_user}），请停用不再使用的项目",
+                http_status=400,
+            )
     r = Project(
         code=data.code, name=data.name,
         description=data.description or "", owner_id=owner_id,
@@ -79,6 +94,13 @@ def create_project(db: Session, data, owner_id: int) -> dict:
     )
     db.add(r)
     db.flush()
+    # Batch 104：创建者自动成为项目成员（外放轻量模式核心，修复创建后不可见缺口）
+    tester_role = db.scalar(select(Role).where(Role.code == "tester"))
+    db.add(ProjectMember(
+        project_id=r.id,
+        user_id=owner_id,
+        role_id=tester_role.id if tester_role else 0,
+    ))
     return _project_to_dict(r)
 
 

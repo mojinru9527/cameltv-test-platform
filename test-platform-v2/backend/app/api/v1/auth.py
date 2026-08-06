@@ -10,7 +10,7 @@ from app.core.deps import CurrentUser, get_current_user
 from app.core.exceptions import APIException
 from app.core.security import hash_password, verify_password
 from app.models.user import User
-from app.schemas.auth import ChangePasswordIn, LoginIn, LoginOut, MeOut, ProjectBrief, UserBrief
+from app.schemas.auth import ChangePasswordIn, LoginIn, LoginOut, MeOut, ProjectBrief, RegisterIn, UserBrief
 from app.schemas.common import R
 from app.services import auth_service, project_service
 
@@ -50,6 +50,35 @@ def login(body: LoginIn, response: Response, request: Request, db: Session = Dep
 
     result = auth_service.login(db, body.username, body.password)
     # P1-1: 同时下发 httpOnly cookie；响应体仍返回 access_token 以兼容过渡期客户端。
+    _set_auth_cookie(response, result.access_token)
+    return R.ok(result)
+
+
+@router.post("/register", response_model=R[LoginOut], summary="账号注册（邀请码）")
+def register(body: RegisterIn, response: Response, request: Request, db: Session = Depends(get_db)):
+    """外放轻量模式（Batch 104）：注册并自动登录，httpOnly cookie 同登录。
+
+    安全默认：生产环境 registration_enabled=false 时接口直接 403；
+    开启后默认要求有效邀请码（invite_code_required），并受独立注册限流。
+    """
+    if not settings.effective_registration_enabled:
+        raise APIException(code=403, msg="注册未开放，请联系管理员获取邀请码", http_status=403)
+
+    from app.core.rate_limit import register_limiter
+    client_ip = request.client.host if request.client else "unknown"
+    allowed, wait = register_limiter.is_allowed(client_ip)
+    if not allowed:
+        raise APIException(code=429, msg=f"注册尝试过于频繁，请 {wait}s 后重试", http_status=429)
+
+    auth_service.register(
+        db,
+        username=body.username,
+        nickname=body.nickname,
+        email=body.email,
+        password=body.password,
+        invite_code=body.invite_code,
+    )
+    result = auth_service.login(db, body.username, body.password)
     _set_auth_cookie(response, result.access_token)
     return R.ok(result)
 

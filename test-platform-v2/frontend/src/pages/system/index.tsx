@@ -6,6 +6,7 @@ import AuditTab from './AuditTab'
 import RolesTab from './RolesTab'
 import UsersTab from './UsersTab'
 import TokensTab from './TokensTab'
+import InviteCodesTab from './InviteCodesTab'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export default function SystemPage() {
@@ -16,8 +17,19 @@ export default function SystemPage() {
   const showRoles = hasPerm('system:role:list')
   const showAudit = hasPerm('system:audit:list')
   const showTokens = hasPerm('token:list')
+  const showInvites = hasPerm('system:invite:manage')
 
-  const defaultTab = showUsers ? 'users' : showRoles ? 'roles' : showAudit ? 'audit' : showTokens ? 'tokens' : 'users'
+  const defaultTab = showUsers
+    ? 'users'
+    : showRoles
+      ? 'roles'
+      : showAudit
+        ? 'audit'
+        : showTokens
+          ? 'tokens'
+          : showInvites
+            ? 'invites'
+            : 'users'
 
   return (
     <div>
@@ -48,6 +60,12 @@ export default function SystemPage() {
               API Token
             </TabsTrigger>
           )}
+          {showInvites && (
+            <TabsTrigger value="invites">
+              <KeyRound className="size-4" />
+              邀请码
+            </TabsTrigger>
+          )}
         </TabsList>
         {showUsers && (
           <TabsContent value="users">
@@ -67,6 +85,11 @@ export default function SystemPage() {
         {showTokens && (
           <TabsContent value="tokens">
             <TokensTab />
+          </TabsContent>
+        )}
+        {showInvites && (
+          <TabsContent value="invites">
+            <InviteCodesTab />
           </TabsContent>
         )}
       </Tabs>

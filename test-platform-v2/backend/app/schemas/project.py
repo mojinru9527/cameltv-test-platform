@@ -14,6 +14,7 @@ class ProjectOut(BaseModel):
     name: str
     description: str = ""
     status: int = 1
+    owner_id: int = 0
 
 
 class ProjectCreate(BaseModel):

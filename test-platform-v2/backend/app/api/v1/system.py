@@ -10,8 +10,8 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user, require_permission
 from app.schemas.common import R
 from app.schemas.system import (
-    AuditLogOut, PermissionGroup, PermissionOut, RoleCreate, RoleOut, RoleUpdate,
-    UserCreate, UserOut, UserUpdate,
+    AuditLogOut, InviteCodeIn, InviteCodeOut, PermissionGroup, PermissionOut,
+    RoleCreate, RoleOut, RoleUpdate, UserCreate, UserOut, UserUpdate,
 )
 from app.services import audit_service, menu_service, role_service, user_service
 
@@ -246,3 +246,56 @@ def export_audit_logs(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ── 注册邀请码管理（Batch 104 外放轻量模式）──
+
+@router.get("/invite-codes", response_model=R[list[InviteCodeOut]], summary="邀请码列表")
+def list_invite_codes(
+    current: CurrentUser = Depends(require_permission("system:invite:manage")),
+    db: Session = Depends(get_db),
+):
+    from app.services.invite_service import list_invite_codes as _list_invite_codes
+    return R.ok([InviteCodeOut(**item) for item in _list_invite_codes(db)])
+
+
+@router.post("/invite-codes", response_model=R[InviteCodeOut], summary="生成邀请码")
+def create_invite_code(
+    body: InviteCodeIn,
+    current: CurrentUser = Depends(require_permission("system:invite:manage")),
+    db: Session = Depends(get_db),
+):
+    from app.services.invite_service import create_invite_code as _create_invite_code
+    invite = _create_invite_code(
+        db,
+        created_by=current.user.id,
+        usage_limit=body.usage_limit,
+        expires_at=body.expires_at,
+    )
+    db.commit()
+    return R.ok(InviteCodeOut(
+        id=invite.id,
+        code=invite.code,
+        created_by=current.user.id,
+        created_by_name=current.user.nickname or current.user.username,
+        usage_limit=invite.usage_limit,
+        used_count=0,
+        expires_at=invite.expires_at,
+        status=1,
+        created_at=invite.created_at,
+    ))
+
+
+@router.post("/invite-codes/{invite_id}/disable", response_model=R[dict], summary="停用邀请码")
+def disable_invite_code(
+    invite_id: int,
+    current: CurrentUser = Depends(require_permission("system:invite:manage")),
+    db: Session = Depends(get_db),
+):
+    from app.core.exceptions import not_found
+    from app.services.invite_service import disable_invite_code as _disable_invite_code
+    invite = _disable_invite_code(db, invite_id)
+    if not invite:
+        raise not_found("邀请码")
+    db.commit()
+    return R.ok({"disabled": True, "id": invite_id})

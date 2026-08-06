@@ -36,6 +36,7 @@ _MENUS = [
     ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 13),
     ("menu:system", "系统管理", "", "/system", "SettingOutlined", 14),
     ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 15),
+    ("menu:myproject", "我的项目", "", "/my-projects", "AppstoreOutlined", 15),
     ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 16),
     ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 17),
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 18),
@@ -60,6 +61,8 @@ _ACTIONS = [
     ("system:role:delete", "删除角色", "button"),
     # 系统管理 - 审计
     ("system:audit:list", "查看审计日志", "button"),
+    # 系统管理 - 注册邀请码（Batch 104 外放轻量模式）
+    ("system:invite:manage", "管理注册邀请码", "button"),
     # 运维发布控制（全局只读；不创建产品侧菜单）
     ("release:view", "查看运维发布记录", "button"),
     # 用例服务
@@ -119,6 +122,7 @@ _ACTIONS = [
     ("project:list", "查看项目列表", "button"),
     ("project:detail", "查看项目详情", "button"),
     ("project:create", "创建项目", "button"),
+    ("project:self_create", "自助创建项目", "button"),
     ("project:update", "编辑项目", "button"),
     ("project:delete", "删除项目", "button"),
     ("project:manage", "管理项目成员", "button"),
@@ -182,6 +186,8 @@ _ACTIONS = [
 
 # 测试人员可见的菜单子集
 _TESTER_ACTIONS = {
+    # Batch 104 外放轻量模式：自助建项目
+    "project:self_create",
     # 用例服务（B87-Q1 核心缺口）
     "testcase:list", "testcase:detail", "testcase:create", "testcase:update",
     "testcase:delete", "testcase:export",
@@ -231,6 +237,7 @@ _VIEWER_MENUS = {
     "menu:dataset", "menu:knowledge",
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph",
     "menu:knowledge:artifacts",
+    "menu:myproject",
 }
 
 _VIEWER_ACTIONS = {
@@ -257,6 +264,7 @@ _TESTER_MENUS = {
     "menu:perftest", "menu:notify", "menu:environment",
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
     "menu:lanhu_evidence",
+    "menu:myproject",
 }
 
 
