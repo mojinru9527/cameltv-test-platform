@@ -1,6 +1,6 @@
 """Batch 103 — 用例质量与接口可视字段。
 
-Revision ID: 20260806_batch103_case_quality_fields
+Revision ID: 20260806_batch103_case_quality
 Revises: 20260728_merge_batch37_main
 Create Date: 2026-08-06
 """
@@ -9,7 +9,7 @@ from __future__ import annotations
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "20260806_batch103_case_quality_fields"
+revision: str = "20260806_batch103_case_quality"
 down_revision: str = "20260728_merge_batch37_main"
 branch_labels = None
 depends_on = None
