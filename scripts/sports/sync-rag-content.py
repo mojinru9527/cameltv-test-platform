@@ -51,35 +51,36 @@ def main() -> int:
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--database-url", default=os.environ.get("TP_DATABASE_URL", ""))
     args = ap.parse_args()
-    if not args.password or not args.database_url:
-        print("ERROR: 需要 --password / TP_ADMIN_PASSWORD 与 --database-url / TP_DATABASE_URL", flush=True)
+    if not args.database_url:
+        print("ERROR: 需要 --database-url / TP_DATABASE_URL", flush=True)
         return 1
 
     # 1) 标准 API capture（优先）
     captured = []
     api_blocked = False
-    with httpx.Client(base_url=args.backend_url.rstrip("/"), timeout=300,
-                      headers={"Origin": "https://cameltv-test-platform1.vercel.app", "X-Project-Id": "1"}) as c:
-        r = c.post("/auth/login", json={"username": args.username, "password": args.password})
-        r.raise_for_status()
-        c.headers["Authorization"] = f"Bearer {r.json()['data']['access_token']}"
-        sources = []
-        for p in REQ_DOCS + SPEC_DOCS:
-            if not p.exists():
-                print(f"[warn] 缺失 {p.name}", flush=True)
-                continue
-            content = p.read_text(encoding="utf-8", errors="replace")
-            title = f"体育平台-{p.stem}"
-            rr = c.post("/knowledge/capture", json={"title": title, "content": content})
-            j = rr.json()
-            if rr.status_code >= 400 or j.get("code") not in (None, 0):
-                print(f"[capture] {title} -> {rr.status_code} code={j.get('code')} msg={j.get('msg')}（登记障碍，走直连）", flush=True)
-                api_blocked = True
-                sources.append({"title": title, "path": str(p), "api": False})
-            else:
-                captured.append({"title": title, "id": j.get("data", {}).get("id")})
-                sources.append({"title": title, "path": str(p), "api": True})
-                print(f"[capture] {title} -> id={j.get('data', {}).get('id')}", flush=True)
+    if args.password:
+        with httpx.Client(base_url=args.backend_url.rstrip("/"), timeout=300,
+                          headers={"Origin": "https://cameltv-test-platform1.vercel.app", "X-Project-Id": "1"}) as c:
+            r = c.post("/auth/login", json={"username": args.username, "password": args.password})
+            r.raise_for_status()
+            c.headers["Authorization"] = f"Bearer {r.json()['data']['access_token']}"
+            for p in REQ_DOCS + SPEC_DOCS:
+                if not p.exists():
+                    print(f"[warn] 缺失 {p.name}", flush=True)
+                    continue
+                content = p.read_text(encoding="utf-8", errors="replace")
+                title = f"体育平台-{p.stem}"
+                rr = c.post("/knowledge/capture", json={"title": title, "content": content})
+                j = rr.json()
+                if rr.status_code >= 400 or j.get("code") not in (None, 0):
+                    print(f"[capture] {title} -> {rr.status_code} code={j.get('code')} msg={j.get('msg')}（登记障碍，走直连）", flush=True)
+                    api_blocked = True
+                else:
+                    captured.append({"title": title, "id": j.get("data", {}).get("id")})
+                    print(f"[capture] {title} -> id={j.get('data', {}).get('id')}", flush=True)
+    else:
+        print("[info] 未提供平台密码，跳过标准 capture API，直接走直连同步（Batch 108 修复后再用 API 复验）", flush=True)
+        api_blocked = True
 
     summary = {"api_captured": captured, "api_blocked": api_blocked}
 
