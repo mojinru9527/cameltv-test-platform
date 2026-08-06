@@ -129,6 +129,58 @@ class TestApiTaskWorkerClaim:
 class TestApiTaskWorkerExecute:
     """Worker execute_task 测试。"""
 
+    def test_execute_task_backfills_case_last_response(self, db_session):
+        """Batch 111（C110-3/C103-7）：执行后必须回填 TestCase.last_response_json/last_run_status。"""
+        from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
+        from app.models.test_case import TestCase
+        from app.services import api_task_worker
+
+        case = TestCase(
+            project_id=1, title="Backfill Case", case_type="api",
+            api_method="GET", api_endpoint="https://httpbin.org/get",
+            api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
+        )
+        db_session.add(case)
+        db_session.commit()
+
+        task = ApiExecutionTask(
+            project_id=1, task_id="T-BACKFILL", name="Backfill Test",
+            total=1, status="pending",
+        )
+        db_session.add(task)
+        db_session.flush()
+        db_session.add(ApiExecutionTaskItem(task_id=task.id, case_id=case.id, status="pending"))
+        db_session.commit()
+
+        fake_result = {
+            "all_pass": True,
+            "duration_ms": 12,
+            "status_code": 200,
+            "response_headers": {"content-type": "application/json"},
+            "raw_body": '{"ok":true}',
+            "assertions": [],
+        }
+
+        class _NoCloseSession:
+            def __init__(self, inner):
+                self._inner = inner
+
+            def __getattr__(self, name):
+                return getattr(self._inner, name)
+
+            def close(self):
+                pass
+
+        wrapped = _NoCloseSession(db_session)
+        with patch("app.services.api_task_worker.SessionLocal", return_value=wrapped), \
+             patch("app.services.api_execution_service.execute_api_case", return_value=fake_result):
+            api_task_worker.execute_task(task.id, project_id=1, worker_id="test-worker")
+
+        db_session.refresh(case)
+        assert case.last_run_status == "passed"
+        assert case.last_response_json is not None
+        assert '"status_code": 200' in case.last_response_json
+
     def test_cancel_requested_skips_all_pending_items(self, db_session):
         """cancel_requested=True 时，所有 pending item 应被标记为 skipped，任务状态为 cancelled。"""
         from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
