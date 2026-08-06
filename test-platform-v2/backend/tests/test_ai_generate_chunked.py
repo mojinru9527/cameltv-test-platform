@@ -27,12 +27,14 @@ def _module(name: str, fp_count: int) -> dict:
 
 class TestSplitExtractionChunks:
     def test_small_doc_single_chunk(self):
-        extraction = {"modules": [_module("A", 10), _module("B", 10)]}
+        # Batch 103: 分块上限调整为 _CHUNK_FP_LIMIT（12），小文档合计不超过上限时应为 1 块
+        half = _CHUNK_FP_LIMIT // 2
+        extraction = {"modules": [_module("A", half), _module("B", half)]}
         chunks = _split_extraction_chunks(extraction, _CHUNK_FP_LIMIT)
         assert len(chunks) == 1
 
     def test_large_doc_split(self):
-        extraction = {"modules": [_module("A", 40), _module("B", 30)]}
+        extraction = {"modules": [_module("A", _CHUNK_FP_LIMIT * 3), _module("B", _CHUNK_FP_LIMIT * 2)]}
         chunks = _split_extraction_chunks(extraction, _CHUNK_FP_LIMIT)
         assert len(chunks) >= 2
         for chunk in chunks:
@@ -40,7 +42,7 @@ class TestSplitExtractionChunks:
             assert total_fp <= _CHUNK_FP_LIMIT
 
     def test_single_oversize_module_split(self):
-        extraction = {"modules": [_module("A", 60)]}
+        extraction = {"modules": [_module("A", _CHUNK_FP_LIMIT * 2 + 1)]}
         chunks = _split_extraction_chunks(extraction, _CHUNK_FP_LIMIT)
         assert len(chunks) == 3
 
@@ -90,11 +92,12 @@ class TestChunkedConcurrentGeneration:
             }
 
         monkeypatch.setattr("app.services.ai_service._call_ai_api", fake_call)
+        per_mod = _CHUNK_FP_LIMIT // 3
         extraction = {
             "modules": [
-                _module("A", 15),
-                _module("B", 15),
-                _module("C", 15),
+                _module("A", per_mod),
+                _module("B", per_mod),
+                _module("C", per_mod),
             ]
         }
         result = asyncio.run(
@@ -105,7 +108,8 @@ class TestChunkedConcurrentGeneration:
             )
         )
         cases = result.get("functional_cases") or []
-        assert len(cases) == 6  # 3 块 × 2 条
-        assert len(calls) == 3  # 并发合并后仍 3 次调用
+        expected_chunks = len(_split_extraction_chunks(extraction, _CHUNK_FP_LIMIT))
+        assert len(cases) == expected_chunks * 2  # 每块 2 条
+        assert len(calls) == expected_chunks
         # 编号唯一
-        assert len({c["id"] for c in cases}) == 6
+        assert len({c["id"] for c in cases}) == expected_chunks * 2

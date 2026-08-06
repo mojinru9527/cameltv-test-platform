@@ -1,0 +1,3635 @@
+{
+  "requirement_analysis": {
+    "extracted_requirements": [],
+    "overall_assessment": ""
+  },
+  "functional_cases": [
+    {
+      "title": "文章列表默认展示",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "文章列表",
+      "preconditions": "存在至少一篇文章，运营人员已登录后台",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入UGC管理-文章列表页面",
+          "expected": "页面加载成功，显示文章列表"
+        },
+        {
+          "step": 2,
+          "desc": "观察列表内容",
+          "expected": "列表显示标题、作者、状态、发布时间等字段，数据正确"
+        }
+      ],
+      "expected_result": "文章列表正确展示所有文章，分页正常，每页条数符合默认设置（如20条）",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-001"
+    },
+    {
+      "title": "文章列表空数据展示",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章列表",
+      "preconditions": "系统中无任何文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面显示空列表，提示'暂无数据'，分页显示0条"
+        }
+      ],
+      "expected_result": "空列表正确展示，无报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-002"
+    },
+    {
+      "title": "文章列表分页功能",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章列表",
+      "preconditions": "存在超过一页的文章（如25条）",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "显示第一页数据，每页20条"
+        },
+        {
+          "step": 2,
+          "desc": "点击下一页",
+          "expected": "显示第二页数据，共2页"
+        }
+      ],
+      "expected_result": "分页正确，页码和总页数显示正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-003"
+    },
+    {
+      "title": "文章列表分页边界-最后一页",
+      "priority": "P2",
+      "domain": "UGC管理",
+      "module": "文章列表",
+      "preconditions": "存在21篇文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "第一页显示20条"
+        },
+        {
+          "step": 2,
+          "desc": "点击下一页",
+          "expected": "第二页显示1条，总页数2"
+        }
+      ],
+      "expected_result": "最后一页数据正确，无空白页",
+      "remark": "边界用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-004"
+    },
+    {
+      "title": "按标题搜索文章",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "文章搜索与筛选",
+      "preconditions": "存在标题包含'测试'的文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "在标题搜索框输入'测试'",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击搜索按钮",
+          "expected": "列表刷新，显示标题包含'测试'的文章"
+        }
+      ],
+      "expected_result": "搜索结果正确，仅显示匹配文章",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-005"
+    },
+    {
+      "title": "按不存在的标题搜索",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章搜索与筛选",
+      "preconditions": "无标题包含'不存在'的文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "在标题搜索框输入'不存在'",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击搜索按钮",
+          "expected": "列表显示空，提示'暂无数据'"
+        }
+      ],
+      "expected_result": "搜索无结果时正确提示，无报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-006"
+    },
+    {
+      "title": "按状态筛选文章",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "文章搜索与筛选",
+      "preconditions": "存在已发布和草稿状态的文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "在状态下拉框选择'已发布'",
+          "expected": "选择成功"
+        },
+        {
+          "step": 3,
+          "desc": "点击搜索按钮",
+          "expected": "列表仅显示已发布文章"
+        }
+      ],
+      "expected_result": "筛选结果正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-007"
+    },
+    {
+      "title": "按发布时间范围筛选-开始时间大于结束时间",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章搜索与筛选",
+      "preconditions": "无",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "选择开始时间为2026-06-10，结束时间为2026-06-01",
+          "expected": "系统提示'开始时间不能大于结束时间'，无法搜索"
+        }
+      ],
+      "expected_result": "时间范围校验正确，阻止非法查询",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-008"
+    },
+    {
+      "title": "多条件组合筛选",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章搜索与筛选",
+      "preconditions": "存在标题含'测试'且状态为已发布的文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "输入标题'测试'，选择状态'已发布'",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击搜索",
+          "expected": "列表显示同时满足条件的文章"
+        }
+      ],
+      "expected_result": "多条件组合查询正确，条件为AND关系",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-009"
+    },
+    {
+      "title": "文章状态流转-草稿提交审核",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "文章状态流转",
+      "preconditions": "存在一篇草稿状态的文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "找到草稿文章，点击'提交审核'按钮",
+          "expected": "系统提示'提交成功'，文章状态变为'待审核'"
+        }
+      ],
+      "expected_result": "状态正确流转为待审核，数据库状态更新",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-010"
+    },
+    {
+      "title": "文章状态流转-非法状态变更",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章状态流转",
+      "preconditions": "存在一篇已发布状态的文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "尝试将已发布文章直接改为'草稿'",
+          "expected": "系统提示'不允许从已发布变更为草稿'，操作被拒绝"
+        }
+      ],
+      "expected_result": "非法状态变更被阻止，状态不变",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-011"
+    },
+    {
+      "title": "创建文章入口跳转",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "创建文章入口",
+      "preconditions": "运营人员已登录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击'创建文章'按钮",
+          "expected": "跳转至创建文章页面，显示富文本编辑器"
+        }
+      ],
+      "expected_result": "正确跳转至创建文章页面",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-012"
+    },
+    {
+      "title": "无权限访问创建文章入口",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "创建文章入口",
+      "preconditions": "当前账号无创建文章权限",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "观察'创建文章'按钮",
+          "expected": "按钮置灰或不可见，点击无反应"
+        }
+      ],
+      "expected_result": "无权限用户无法进入创建文章页面",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-013"
+    },
+    {
+      "title": "文章列表操作-编辑",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "文章列表操作",
+      "preconditions": "存在一篇文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击某篇文章的'编辑'按钮",
+          "expected": "跳转至编辑页面，表单回显原数据"
+        }
+      ],
+      "expected_result": "正确进入编辑页面",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-014"
+    },
+    {
+      "title": "文章列表操作-删除",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "文章列表操作",
+      "preconditions": "存在一篇文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击某篇文章的'删除'按钮",
+          "expected": "弹出确认框"
+        },
+        {
+          "step": 3,
+          "desc": "点击确认",
+          "expected": "文章被删除，列表刷新，数据库中记录被删除或标记删除"
+        }
+      ],
+      "expected_result": "删除成功，列表不再显示该文章",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-015"
+    },
+    {
+      "title": "文章列表操作-删除取消",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章列表操作",
+      "preconditions": "存在一篇文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击'删除'按钮",
+          "expected": "弹出确认框"
+        },
+        {
+          "step": 3,
+          "desc": "点击取消",
+          "expected": "文章未被删除，列表不变"
+        }
+      ],
+      "expected_result": "取消删除后文章保留",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-016"
+    },
+    {
+      "title": "文章列表操作-下架",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "文章列表操作",
+      "preconditions": "存在一篇已发布文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击'下架'按钮",
+          "expected": "系统提示'下架成功'，文章状态变为'已下架'"
+        }
+      ],
+      "expected_result": "文章下架成功，前端不可见",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-017"
+    },
+    {
+      "title": "文章列表操作-下架未发布文章",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章列表操作",
+      "preconditions": "存在一篇草稿文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击草稿文章的'下架'按钮",
+          "expected": "按钮不可用或提示'仅已发布文章可下架'"
+        }
+      ],
+      "expected_result": "无法对非发布文章执行下架操作",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-018"
+    },
+    {
+      "title": "创建文章-保存草稿",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "创建文章表单",
+      "preconditions": "运营人员已登录，已进入创建文章页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "填写标题'测试文章'",
+          "expected": "输入正常"
+        },
+        {
+          "step": 2,
+          "desc": "填写正文'这是正文'",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "选择分类'科技'",
+          "expected": "选择成功"
+        },
+        {
+          "step": 4,
+          "desc": "点击'保存草稿'按钮",
+          "expected": "系统提示'保存成功'，文章状态为草稿"
+        }
+      ],
+      "expected_result": "草稿保存成功，数据库新增记录，状态为草稿",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-019"
+    },
+    {
+      "title": "创建文章-必填项为空",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "创建文章表单",
+      "preconditions": "已进入创建文章页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "不填写标题，直接点击'保存草稿'",
+          "expected": "系统提示'标题不能为空'，保存被阻止"
+        }
+      ],
+      "expected_result": "必填校验生效，无法保存",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-020"
+    },
+    {
+      "title": "创建文章-标题长度超限",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "创建文章表单",
+      "preconditions": "已进入创建文章页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "输入标题超过100个字符",
+          "expected": "系统提示'标题长度不能超过100个字符'，无法输入或保存失败"
+        }
+      ],
+      "expected_result": "长度校验生效",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-021"
+    },
+    {
+      "title": "创建文章-上传非法格式图片",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "创建文章表单",
+      "preconditions": "已进入创建文章页面",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "点击上传封面图片，选择exe文件",
+          "expected": "系统提示'仅支持jpg/png格式'，上传失败"
+        }
+      ],
+      "expected_result": "图片格式校验生效",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-022"
+    },
+    {
+      "title": "文章发布提交-提交审核",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "文章发布提交",
+      "preconditions": "存在一篇草稿文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击草稿文章的'提交审核'按钮",
+          "expected": "系统提示'提交成功'，文章状态变为'待审核'"
+        }
+      ],
+      "expected_result": "文章状态更新为待审核，进入审核流程",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-023"
+    },
+    {
+      "title": "文章发布提交-重复提交",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "文章发布提交",
+      "preconditions": "存在一篇待审核文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击待审核文章的'提交审核'按钮",
+          "expected": "按钮不可用或提示'该文章已提交审核'"
+        }
+      ],
+      "expected_result": "重复提交被阻止",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-024"
+    },
+    {
+      "title": "查看文章详情-正常查看",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "查看文章详情",
+      "preconditions": "存在一篇文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击文章标题或'查看'按钮",
+          "expected": "跳转至详情页，显示标题、正文、作者、状态、阅读统计等信息"
+        }
+      ],
+      "expected_result": "详情信息完整正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-025"
+    },
+    {
+      "title": "查看文章详情-无权限访问",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "查看文章详情",
+      "preconditions": "当前账号无查看文章权限",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "尝试直接访问文章详情URL",
+          "expected": "系统提示'无权限访问'或跳转至无权限页面"
+        }
+      ],
+      "expected_result": "无权限用户无法查看详情",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-026"
+    },
+    {
+      "title": "编辑文章-回显正确",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "编辑文章回显",
+      "preconditions": "存在一篇文章，包含标题、正文、分类、封面图、摘要",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文章列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击'编辑'按钮",
+          "expected": "跳转至编辑页面，所有字段正确回显，包括富文本内容和图片"
+        }
+      ],
+      "expected_result": "表单回显与原文章一致",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-027"
+    },
+    {
+      "title": "编辑文章-修改后保存",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "编辑文章回显",
+      "preconditions": "存在一篇文章",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入编辑页面",
+          "expected": "表单回显"
+        },
+        {
+          "step": 2,
+          "desc": "修改标题为'新标题'",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击'保存'",
+          "expected": "系统提示'保存成功'，数据库更新"
+        }
+      ],
+      "expected_result": "修改保存成功，列表显示新标题",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-028"
+    },
+    {
+      "title": "编辑文章-修改为已存在标题",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "编辑文章回显",
+      "preconditions": "存在两篇文章，标题分别为'文章A'和'文章B'",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "编辑文章B，将标题改为'文章A'",
+          "expected": "系统提示'标题已存在'，保存失败"
+        }
+      ],
+      "expected_result": "标题唯一性校验生效",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-029"
+    },
+    {
+      "title": "订阅记录查询-按用户筛选",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "订阅记录查询",
+      "preconditions": "存在订阅记录，用户ID为1001",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入订阅记录页面",
+          "expected": "页面加载成功，显示订阅记录列表"
+        },
+        {
+          "step": 2,
+          "desc": "输入用户ID 1001，点击搜索",
+          "expected": "列表显示该用户的订阅记录"
+        }
+      ],
+      "expected_result": "筛选结果正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-030"
+    },
+    {
+      "title": "订阅记录查询-无结果",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "订阅记录查询",
+      "preconditions": "无用户ID为9999的订阅记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入订阅记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "输入用户ID 9999，点击搜索",
+          "expected": "列表显示'暂无数据'"
+        }
+      ],
+      "expected_result": "无结果时正确提示",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-031"
+    },
+    {
+      "title": "购买记录查询-按文章筛选",
+      "priority": "P0",
+      "domain": "UGC管理",
+      "module": "购买记录查询",
+      "preconditions": "存在购买记录，文章标题为'付费文章'",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入购买记录页面",
+          "expected": "页面加载成功，显示购买记录列表"
+        },
+        {
+          "step": 2,
+          "desc": "输入文章标题'付费文章'，点击搜索",
+          "expected": "列表显示该文章的购买记录"
+        }
+      ],
+      "expected_result": "筛选结果正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-032"
+    },
+    {
+      "title": "购买记录查询-金额显示正确",
+      "priority": "P1",
+      "domain": "UGC管理",
+      "module": "购买记录查询",
+      "preconditions": "存在购买记录，金额为10.50",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入购买记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看购买记录中的金额字段",
+          "expected": "金额显示为10.50，格式正确"
+        }
+      ],
+      "expected_result": "金额显示正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-033"
+    },
+    {
+      "title": "购买记录查询-金额为负数",
+      "priority": "P2",
+      "domain": "UGC管理",
+      "module": "购买记录查询",
+      "preconditions": "无",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入购买记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "尝试构造负数金额的购买记录",
+          "expected": "系统应阻止负数金额，或显示异常提示"
+        }
+      ],
+      "expected_result": "负数金额被拒绝或提示错误",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-034"
+    },
+    {
+      "title": "商品列表默认展示所有商品",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "商品管理",
+      "preconditions": "系统中存在至少10条商品记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "页面加载成功，显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "观察列表内容",
+          "expected": "列表显示商品名称、价格、库存、状态等字段，默认显示第一页数据，分页控件显示总页数"
+        }
+      ],
+      "expected_result": "商品列表正确展示所有商品字段，分页正常，每页显示默认条数（如10条）。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-035"
+    },
+    {
+      "title": "商品列表分页功能",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "商品管理",
+      "preconditions": "系统中存在超过一页的商品记录（如20条）",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示第一页商品"
+        },
+        {
+          "step": 2,
+          "desc": "点击下一页",
+          "expected": "显示第二页商品，页码更新"
+        }
+      ],
+      "expected_result": "分页切换正常，数据不重复不遗漏。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-036"
+    },
+    {
+      "title": "商品列表空数据展示",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "商品管理",
+      "preconditions": "系统中无任何商品记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "页面显示空列表，提示'暂无数据'"
+        }
+      ],
+      "expected_result": "页面友好提示无数据，不报错。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-037"
+    },
+    {
+      "title": "按商品名称搜索",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "商品管理",
+      "preconditions": "存在商品名为'测试商品'的记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "在搜索框输入'测试商品'",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击搜索按钮",
+          "expected": "列表刷新，显示名称包含'测试商品'的商品"
+        }
+      ],
+      "expected_result": "搜索结果正确，仅显示匹配的商品。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-038"
+    },
+    {
+      "title": "按状态筛选商品",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "商品管理",
+      "preconditions": "存在上架和下架状态的商品",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "选择状态为'上架'",
+          "expected": "下拉选择正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击筛选",
+          "expected": "列表仅显示上架商品"
+        }
+      ],
+      "expected_result": "筛选结果正确，仅显示对应状态的商品。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-039"
+    },
+    {
+      "title": "按价格区间筛选商品",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "商品管理",
+      "preconditions": "存在价格在10-100元之间的商品",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "输入最低价格10，最高价格100",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击筛选",
+          "expected": "列表显示价格在10到100之间的商品（包含边界值）"
+        }
+      ],
+      "expected_result": "筛选结果正确，包含边界值。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-040"
+    },
+    {
+      "title": "搜索无结果提示",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "商品管理",
+      "preconditions": "系统中无名为'不存在的商品'的记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "输入'不存在的商品'并搜索",
+          "expected": "列表显示'暂无数据'"
+        }
+      ],
+      "expected_result": "页面提示无匹配数据，不报错。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-041"
+    },
+    {
+      "title": "价格区间最小值大于最大值",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "商品管理",
+      "preconditions": "无",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "输入最低价格100，最高价格10",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击筛选",
+          "expected": "提示'最低价格不能大于最高价格'，不执行筛选"
+        }
+      ],
+      "expected_result": "系统给出明确错误提示，不执行筛选。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-042"
+    },
+    {
+      "title": "新增商品成功",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "新增/编辑商品",
+      "preconditions": "已登录有权限的管理员账号",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面，点击'新增商品'",
+          "expected": "打开新增商品表单"
+        },
+        {
+          "step": 2,
+          "desc": "填写商品名称'测试商品'、描述'测试描述'、上传图片、价格100、库存10、选择商品类型、设置上架状态",
+          "expected": "表单填写正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'保存成功'，列表刷新并显示新商品"
+        }
+      ],
+      "expected_result": "商品创建成功，数据库中新增对应记录，列表可见。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-043"
+    },
+    {
+      "title": "新增商品必填项为空",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "新增/编辑商品",
+      "preconditions": "已登录有权限的管理员账号",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增商品表单",
+          "expected": "表单打开"
+        },
+        {
+          "step": 2,
+          "desc": "不填写商品名称，其他字段正常填写",
+          "expected": "名称留空"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'商品名称不能为空'，不提交"
+        }
+      ],
+      "expected_result": "系统阻止提交，给出明确错误提示。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-044"
+    },
+    {
+      "title": "新增商品价格非法",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "新增/编辑商品",
+      "preconditions": "已登录有权限的管理员账号",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增商品表单",
+          "expected": "表单打开"
+        },
+        {
+          "step": 2,
+          "desc": "填写商品名称，价格输入-1",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'价格不能为负数'，不提交"
+        }
+      ],
+      "expected_result": "系统拒绝保存，给出错误提示。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-045"
+    },
+    {
+      "title": "编辑商品成功",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "新增/编辑商品",
+      "preconditions": "存在一个商品记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面，点击某商品的'编辑'",
+          "expected": "打开编辑表单，回显原数据"
+        },
+        {
+          "step": 2,
+          "desc": "修改商品名称为'修改后商品'",
+          "expected": "修改正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'保存成功'，列表显示修改后的名称"
+        }
+      ],
+      "expected_result": "商品信息更新成功，数据库中记录已更新。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-046"
+    },
+    {
+      "title": "编辑商品名称为空",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "新增/编辑商品",
+      "preconditions": "存在一个商品记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入编辑表单",
+          "expected": "表单打开"
+        },
+        {
+          "step": 2,
+          "desc": "清空商品名称",
+          "expected": "名称清空"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'商品名称不能为空'，不提交"
+        }
+      ],
+      "expected_result": "系统阻止提交，给出错误提示。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-047"
+    },
+    {
+      "title": "商品上架成功",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "商品上下架",
+      "preconditions": "存在一个下架状态的商品",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击该商品的'上架'按钮",
+          "expected": "提示'上架成功'，状态变为上架"
+        }
+      ],
+      "expected_result": "商品状态更新为上架，用户端可见。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-048"
+    },
+    {
+      "title": "商品下架成功",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "商品上下架",
+      "preconditions": "存在一个上架状态的商品",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击该商品的'下架'按钮",
+          "expected": "提示'下架成功'，状态变为下架"
+        }
+      ],
+      "expected_result": "商品状态更新为下架，用户端不可见。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-049"
+    },
+    {
+      "title": "对已下架商品再次下架",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "商品上下架",
+      "preconditions": "存在一个下架状态的商品",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击该商品的'下架'按钮",
+          "expected": "按钮不可用或提示'商品已下架'"
+        }
+      ],
+      "expected_result": "系统不允许重复下架，给出提示或按钮置灰。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-050"
+    },
+    {
+      "title": "删除商品成功",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "商品删除",
+      "preconditions": "存在一个商品记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击某商品的'删除'按钮",
+          "expected": "弹出确认框"
+        },
+        {
+          "step": 3,
+          "desc": "点击确认",
+          "expected": "提示'删除成功'，列表不再显示该商品"
+        }
+      ],
+      "expected_result": "商品被删除（软删除），用户端不可见，数据库中记录标记为删除。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-051"
+    },
+    {
+      "title": "删除商品取消操作",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "商品删除",
+      "preconditions": "存在一个商品记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入商品管理页面",
+          "expected": "显示商品列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击某商品的'删除'按钮",
+          "expected": "弹出确认框"
+        },
+        {
+          "step": 3,
+          "desc": "点击取消",
+          "expected": "关闭确认框，商品未被删除"
+        }
+      ],
+      "expected_result": "取消删除，商品保留。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-052"
+    },
+    {
+      "title": "购买记录查询成功",
+      "priority": "P0",
+      "domain": "商城管理",
+      "module": "购买记录",
+      "preconditions": "存在至少一条购买记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入购买记录页面",
+          "expected": "显示购买记录列表"
+        },
+        {
+          "step": 2,
+          "desc": "输入订单号、用户、商品、时间范围等条件",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击查询",
+          "expected": "列表显示符合条件的记录"
+        }
+      ],
+      "expected_result": "查询结果正确，显示订单号、用户、商品、时间等信息。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-053"
+    },
+    {
+      "title": "购买记录查询无结果",
+      "priority": "P1",
+      "domain": "商城管理",
+      "module": "购买记录",
+      "preconditions": "系统中无匹配记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入购买记录页面",
+          "expected": "显示购买记录列表"
+        },
+        {
+          "step": 2,
+          "desc": "输入不存在的订单号'123456'",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击查询",
+          "expected": "列表显示'暂无数据'"
+        }
+      ],
+      "expected_result": "页面提示无匹配数据，不报错。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-054"
+    },
+    {
+      "title": "广告活动列表展示",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "广告活动管理",
+      "preconditions": "存在至少一条广告活动记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告活动管理页面",
+          "expected": "页面加载成功，显示广告活动列表"
+        }
+      ],
+      "expected_result": "列表显示活动名称、投放时间、状态、关联素材等字段。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-055"
+    },
+    {
+      "title": "广告活动列表空数据",
+      "priority": "P1",
+      "domain": "广告管理",
+      "module": "广告活动管理",
+      "preconditions": "系统中无广告活动记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告活动管理页面",
+          "expected": "页面显示'暂无数据'"
+        }
+      ],
+      "expected_result": "页面友好提示无数据。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-056"
+    },
+    {
+      "title": "新增广告活动成功",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "新增/编辑广告活动",
+      "preconditions": "已登录有权限的管理员账号",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告活动管理页面，点击'新增'",
+          "expected": "打开新增表单"
+        },
+        {
+          "step": 2,
+          "desc": "填写活动名称'测试活动'、投放时间（开始时间早于结束时间）、预算1000、关联广告位",
+          "expected": "表单填写正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'保存成功'，列表显示新活动"
+        }
+      ],
+      "expected_result": "广告活动创建成功，数据库中新增记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-057"
+    },
+    {
+      "title": "新增广告活动时间校验",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "新增/编辑广告活动",
+      "preconditions": "已登录有权限的管理员账号",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开新增表单",
+          "expected": "表单打开"
+        },
+        {
+          "step": 2,
+          "desc": "填写活动名称，开始时间晚于结束时间",
+          "expected": "输入正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'结束时间必须晚于开始时间'，不提交"
+        }
+      ],
+      "expected_result": "系统拒绝提交，给出错误提示。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-058"
+    },
+    {
+      "title": "编辑广告活动成功",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "新增/编辑广告活动",
+      "preconditions": "存在一个广告活动记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告活动管理页面，点击'编辑'",
+          "expected": "打开编辑表单，回显原数据"
+        },
+        {
+          "step": 2,
+          "desc": "修改活动名称",
+          "expected": "修改正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'保存成功'，列表显示修改后的名称"
+        }
+      ],
+      "expected_result": "广告活动更新成功。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-059"
+    },
+    {
+      "title": "编辑广告活动名称为空",
+      "priority": "P1",
+      "domain": "广告管理",
+      "module": "新增/编辑广告活动",
+      "preconditions": "存在一个广告活动记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "打开编辑表单",
+          "expected": "表单打开"
+        },
+        {
+          "step": 2,
+          "desc": "清空活动名称",
+          "expected": "名称清空"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'活动名称不能为空'，不提交"
+        }
+      ],
+      "expected_result": "系统阻止提交，给出错误提示。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-060"
+    },
+    {
+      "title": "启动广告活动",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "广告活动状态控制",
+      "preconditions": "存在一个未开始的广告活动",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告活动管理页面",
+          "expected": "显示活动列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击该活动的'启动'按钮",
+          "expected": "提示'启动成功'，状态变为进行中"
+        }
+      ],
+      "expected_result": "活动状态更新为进行中。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-061"
+    },
+    {
+      "title": "暂停广告活动",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "广告活动状态控制",
+      "preconditions": "存在一个进行中的广告活动",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告活动管理页面",
+          "expected": "显示活动列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击该活动的'暂停'按钮",
+          "expected": "提示'暂停成功'，状态变为暂停"
+        }
+      ],
+      "expected_result": "活动状态更新为暂停。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-062"
+    },
+    {
+      "title": "终止广告活动",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "广告活动状态控制",
+      "preconditions": "存在一个进行中的广告活动",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告活动管理页面",
+          "expected": "显示活动列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击该活动的'终止'按钮",
+          "expected": "提示'终止成功'，状态变为已终止"
+        }
+      ],
+      "expected_result": "活动状态更新为已终止，且不可再启动。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-063"
+    },
+    {
+      "title": "对已终止活动再次启动",
+      "priority": "P1",
+      "domain": "广告管理",
+      "module": "广告活动状态控制",
+      "preconditions": "存在一个已终止的广告活动",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告活动管理页面",
+          "expected": "显示活动列表"
+        },
+        {
+          "step": 2,
+          "desc": "点击该活动的'启动'按钮",
+          "expected": "按钮不可用或提示'活动已终止，无法启动'"
+        }
+      ],
+      "expected_result": "系统不允许启动已终止的活动。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-064"
+    },
+    {
+      "title": "广告素材列表展示",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "广告素材管理",
+      "preconditions": "存在至少一个广告素材",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告素材管理页面",
+          "expected": "页面加载成功，显示素材列表"
+        }
+      ],
+      "expected_result": "列表显示素材名称、类型、预览等。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-065"
+    },
+    {
+      "title": "广告素材列表空数据",
+      "priority": "P1",
+      "domain": "广告管理",
+      "module": "广告素材管理",
+      "preconditions": "系统中无广告素材",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告素材管理页面",
+          "expected": "页面显示'暂无数据'"
+        }
+      ],
+      "expected_result": "页面友好提示无数据。",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-066"
+    },
+    {
+      "title": "新增广告素材成功",
+      "priority": "P0",
+      "domain": "广告管理",
+      "module": "新增/编辑广告素材",
+      "preconditions": "已登录有权限的管理员账号",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入广告素材管理页面，点击'新增'",
+          "expected": "打开新增表单"
+        },
+        {
+          "step": 2,
+          "desc": "上传图片文件，填写素材名称'测试素材'、类型'图片'、链接'http://example.com'",
+          "expected": "上传和填写正常"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示'保存成功'，列表显示新素材"
+        }
+      ],
+      "expected_result": "素材创建成功，数据库中新增记录。",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-067"
+    },
+    {
+      "title": "头像框列表展示正确",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "头像框",
+      "preconditions": "系统存在至少一个头像框数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入装扮管理-头像框页面",
+          "expected": "页面加载成功，显示头像框列表"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表字段",
+          "expected": "列表展示名称、图片、有效期、适用条件等字段，数据与数据库一致"
+        }
+      ],
+      "expected_result": "头像框列表正确展示所有头像框信息",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-068"
+    },
+    {
+      "title": "头像框列表为空时显示空状态",
+      "priority": "P1",
+      "domain": "装扮管理",
+      "module": "头像框",
+      "preconditions": "系统中无任何头像框数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入装扮管理-头像框页面",
+          "expected": "页面显示空状态提示，如「暂无头像框」"
+        }
+      ],
+      "expected_result": "页面显示空状态，无异常报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-069"
+    },
+    {
+      "title": "新增头像框成功",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "新增/编辑头像框",
+      "preconditions": "具有新增头像框权限，已准备一张符合格式的图片",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增/编辑头像框页面",
+          "expected": "页面正常打开，表单字段齐全"
+        },
+        {
+          "step": 2,
+          "desc": "输入名称「测试头像框」，上传图片，设置有效期（开始时间早于结束时间），选择获得条件「购买」",
+          "expected": "输入有效，无错误提示"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "保存成功，提示「保存成功」，列表中出现新头像框"
+        }
+      ],
+      "expected_result": "新增头像框成功，数据库新增对应记录",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-070"
+    },
+    {
+      "title": "新增头像框名称为空",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "新增/编辑头像框",
+      "preconditions": "具有新增头像框权限",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增/编辑头像框页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "名称留空，上传图片，设置有效期，选择获得条件",
+          "expected": "名称字段提示「名称不能为空」"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "保存失败，提示错误，不提交请求"
+        }
+      ],
+      "expected_result": "无法保存，名称必填校验生效",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-071"
+    },
+    {
+      "title": "新增头像框有效期开始时间晚于结束时间",
+      "priority": "P1",
+      "domain": "装扮管理",
+      "module": "新增/编辑头像框",
+      "preconditions": "具有新增头像框权限",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增/编辑头像框页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "输入名称，上传图片，设置开始时间晚于结束时间",
+          "expected": "提示「开始时间不能晚于结束时间」"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "保存失败，不提交请求"
+        }
+      ],
+      "expected_result": "有效期逻辑校验生效，无法保存",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-072"
+    },
+    {
+      "title": "编辑头像框成功",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "新增/编辑头像框",
+      "preconditions": "存在一个头像框记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入头像框列表，点击编辑",
+          "expected": "编辑页面打开，回显原数据"
+        },
+        {
+          "step": 2,
+          "desc": "修改名称为「新名称」，点击保存",
+          "expected": "保存成功，列表更新为新名称"
+        }
+      ],
+      "expected_result": "编辑成功，数据库记录更新",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-073"
+    },
+    {
+      "title": "编辑头像框时上传非图片文件",
+      "priority": "P1",
+      "domain": "装扮管理",
+      "module": "新增/编辑头像框",
+      "preconditions": "存在一个头像框记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入编辑页面",
+          "expected": "编辑页面打开"
+        },
+        {
+          "step": 2,
+          "desc": "上传一个txt文件作为图片",
+          "expected": "提示「图片格式不支持，请上传jpg/png」"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "保存失败，不提交请求"
+        }
+      ],
+      "expected_result": "图片格式校验生效，无法保存",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-074"
+    },
+    {
+      "title": "删除未被使用的头像框成功",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "头像框删除",
+      "preconditions": "存在一个未被任何用户使用的头像框",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入头像框列表，点击删除",
+          "expected": "弹出确认对话框"
+        },
+        {
+          "step": 2,
+          "desc": "点击确认删除",
+          "expected": "删除成功，列表不再显示该头像框"
+        }
+      ],
+      "expected_result": "删除成功，数据库记录删除",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-075"
+    },
+    {
+      "title": "删除正在被使用的头像框",
+      "priority": "P1",
+      "domain": "装扮管理",
+      "module": "头像框删除",
+      "preconditions": "存在一个已被用户使用的头像框",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入头像框列表，点击删除",
+          "expected": "弹出提示「该头像框正在被使用，无法删除」或确认提示"
+        },
+        {
+          "step": 2,
+          "desc": "根据提示操作",
+          "expected": "若禁止删除，则删除失败；若允许删除，需确认后续影响"
+        }
+      ],
+      "expected_result": "系统正确处理使用中的头像框删除，不产生数据异常",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-076"
+    },
+    {
+      "title": "关联用户成功",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "关联用户",
+      "preconditions": "存在一个头像框和有效用户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入关联用户页面，选择头像框",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "输入用户ID，点击关联",
+          "expected": "提示「关联成功」，用户获得该头像框"
+        }
+      ],
+      "expected_result": "关联成功，用户头像框列表中新增该头像框",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-077"
+    },
+    {
+      "title": "关联不存在的用户",
+      "priority": "P1",
+      "domain": "装扮管理",
+      "module": "关联用户",
+      "preconditions": "存在一个头像框",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入关联用户页面，选择头像框",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "输入不存在的用户ID，点击关联",
+          "expected": "提示「用户不存在」"
+        }
+      ],
+      "expected_result": "关联失败，提示用户不存在",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-078"
+    },
+    {
+      "title": "勋章列表展示正确",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "勋章",
+      "preconditions": "系统存在至少一个勋章数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入装扮管理-勋章页面",
+          "expected": "页面加载成功，显示勋章列表"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表字段",
+          "expected": "列表展示名称、图片、条件等字段，数据与数据库一致"
+        }
+      ],
+      "expected_result": "勋章列表正确展示所有勋章信息",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-079"
+    },
+    {
+      "title": "勋章列表为空时显示空状态",
+      "priority": "P1",
+      "domain": "装扮管理",
+      "module": "勋章",
+      "preconditions": "系统中无任何勋章数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入装扮管理-勋章页面",
+          "expected": "页面显示空状态提示，如「暂无勋章」"
+        }
+      ],
+      "expected_result": "页面显示空状态，无异常报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-080"
+    },
+    {
+      "title": "新增勋章成功",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "新增/编辑勋章",
+      "preconditions": "具有新增勋章权限，已准备一张符合格式的图片",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增/编辑勋章页面",
+          "expected": "页面正常打开，表单字段齐全"
+        },
+        {
+          "step": 2,
+          "desc": "输入名称「测试勋章」，上传图片，设置获得规则",
+          "expected": "输入有效，无错误提示"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "保存成功，提示「保存成功」，列表中出现新勋章"
+        }
+      ],
+      "expected_result": "新增勋章成功，数据库新增对应记录",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-081"
+    },
+    {
+      "title": "新增勋章名称为空",
+      "priority": "P0",
+      "domain": "装扮管理",
+      "module": "新增/编辑勋章",
+      "preconditions": "具有新增勋章权限",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增/编辑勋章页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "名称留空，上传图片，设置获得规则",
+          "expected": "名称字段提示「名称不能为空」"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "保存失败，提示错误，不提交请求"
+        }
+      ],
+      "expected_result": "无法保存，名称必填校验生效",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-082"
+    },
+    {
+      "title": "用户账户列表展示正确",
+      "priority": "P0",
+      "domain": "财务管理",
+      "module": "用户账户",
+      "preconditions": "系统存在至少一个用户账户数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入财务管理-用户账户页面",
+          "expected": "页面加载成功，显示账户列表"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表字段",
+          "expected": "列表展示用户ID、余额（骆驼币、绿钻等）、冻结金额、账户状态等字段，数据与数据库一致"
+        }
+      ],
+      "expected_result": "用户账户列表正确展示所有账户信息",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-083"
+    },
+    {
+      "title": "用户账户列表为空时显示空状态",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "用户账户",
+      "preconditions": "系统中无任何用户账户数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入财务管理-用户账户页面",
+          "expected": "页面显示空状态提示，如「暂无账户」"
+        }
+      ],
+      "expected_result": "页面显示空状态，无异常报错",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-084"
+    },
+    {
+      "title": "按用户ID搜索账户成功",
+      "priority": "P0",
+      "domain": "财务管理",
+      "module": "账户搜索与筛选",
+      "preconditions": "存在用户ID为10001的账户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户账户页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "在用户ID输入框输入10001，点击搜索",
+          "expected": "列表显示用户ID为10001的账户"
+        }
+      ],
+      "expected_result": "搜索成功，返回匹配的账户",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-085"
+    },
+    {
+      "title": "按不存在的用户ID搜索",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "账户搜索与筛选",
+      "preconditions": "无用户ID为99999的账户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户账户页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "在用户ID输入框输入99999，点击搜索",
+          "expected": "列表显示空，提示「未找到相关账户」"
+        }
+      ],
+      "expected_result": "搜索无结果，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-086"
+    },
+    {
+      "title": "按余额区间筛选账户成功",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "账户搜索与筛选",
+      "preconditions": "存在余额在100到200之间的账户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户账户页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "设置余额区间为100-200，点击筛选",
+          "expected": "列表显示余额在100到200之间的账户"
+        }
+      ],
+      "expected_result": "筛选成功，返回符合条件的账户",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-087"
+    },
+    {
+      "title": "余额区间最小值大于最大值",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "账户搜索与筛选",
+      "preconditions": "无",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户账户页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "设置余额区间为200-100，点击筛选",
+          "expected": "提示「最小值不能大于最大值」"
+        }
+      ],
+      "expected_result": "筛选条件校验失败，不执行查询",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-088"
+    },
+    {
+      "title": "查看账户详情成功",
+      "priority": "P0",
+      "domain": "财务管理",
+      "module": "账户详情查看",
+      "preconditions": "存在一个用户账户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户账户列表，点击某账户的详情",
+          "expected": "进入账户详情页面"
+        },
+        {
+          "step": 2,
+          "desc": "查看余额构成、流水明细链接",
+          "expected": "显示余额构成（骆驼币、绿钻等），流水明细链接可点击"
+        }
+      ],
+      "expected_result": "账户详情正确展示，链接有效",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-089"
+    },
+    {
+      "title": "查看不存在账户的详情",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "账户详情查看",
+      "preconditions": "无",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "直接访问不存在的账户详情URL",
+          "expected": "提示「账户不存在」或跳转到列表页"
+        }
+      ],
+      "expected_result": "系统正确处理无效账户访问",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-090"
+    },
+    {
+      "title": "冻结账户成功",
+      "priority": "P0",
+      "domain": "财务管理",
+      "module": "账户详情查看",
+      "preconditions": "存在一个状态正常的账户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入账户详情页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "点击冻结按钮",
+          "expected": "提示「确认冻结该账户？」"
+        },
+        {
+          "step": 3,
+          "desc": "确认冻结",
+          "expected": "冻结成功，账户状态变为冻结"
+        }
+      ],
+      "expected_result": "账户冻结成功，状态更新",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-091"
+    },
+    {
+      "title": "冻结已冻结的账户",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "账户详情查看",
+      "preconditions": "存在一个已冻结的账户",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入该账户详情页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "点击冻结按钮",
+          "expected": "按钮置灰或提示「账户已冻结」"
+        }
+      ],
+      "expected_result": "无法重复冻结，提示正确",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-092"
+    },
+    {
+      "title": "充值记录列表展示正确",
+      "priority": "P0",
+      "domain": "财务管理",
+      "module": "充值记录",
+      "preconditions": "系统存在至少一条充值记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入财务管理-充值记录页面",
+          "expected": "页面加载成功，显示充值记录列表"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表字段",
+          "expected": "列表展示订单号、用户、时间、支付方式等字段，数据与数据库一致"
+        }
+      ],
+      "expected_result": "充值记录列表正确展示所有记录",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-093"
+    },
+    {
+      "title": "按订单号搜索充值记录成功",
+      "priority": "P0",
+      "domain": "财务管理",
+      "module": "充值记录",
+      "preconditions": "存在订单号为ORD123的充值记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入充值记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "在订单号输入框输入ORD123，点击搜索",
+          "expected": "列表显示订单号为ORD123的记录"
+        }
+      ],
+      "expected_result": "搜索成功，返回匹配的记录",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-094"
+    },
+    {
+      "title": "按不存在的订单号搜索",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "充值记录",
+      "preconditions": "无订单号为ORD999的记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入充值记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "在订单号输入框输入ORD999，点击搜索",
+          "expected": "列表显示空，提示「未找到相关记录」"
+        }
+      ],
+      "expected_result": "搜索无结果，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-095"
+    },
+    {
+      "title": "骆驼币流水列表展示正确",
+      "priority": "P0",
+      "domain": "财务管理",
+      "module": "骆驼币流水",
+      "preconditions": "系统存在至少一条骆驼币流水记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入财务管理-骆驼币流水页面",
+          "expected": "页面加载成功，显示流水列表"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表字段",
+          "expected": "列表展示收入/支出、来源、时间等字段，数据与数据库一致"
+        }
+      ],
+      "expected_result": "骆驼币流水列表正确展示所有记录",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-096"
+    },
+    {
+      "title": "按时间范围筛选骆驼币流水",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "骆驼币流水",
+      "preconditions": "存在指定时间范围内的流水记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币流水页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "设置开始时间和结束时间，点击筛选",
+          "expected": "列表显示该时间范围内的流水记录"
+        }
+      ],
+      "expected_result": "筛选成功，返回符合条件的记录",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-097"
+    },
+    {
+      "title": "时间范围开始时间晚于结束时间",
+      "priority": "P1",
+      "domain": "财务管理",
+      "module": "骆驼币流水",
+      "preconditions": "无",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入骆驼币流水页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "设置开始时间晚于结束时间，点击筛选",
+          "expected": "提示「开始时间不能晚于结束时间」"
+        }
+      ],
+      "expected_result": "筛选条件校验",
+      "id": "TC-098"
+    },
+    {
+      "title": "预测赛事列表-正常展示",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "预测赛事列表",
+      "preconditions": "系统存在至少一条预测赛事数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测赛事列表页面",
+          "expected": "页面加载成功，无报错"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表数据",
+          "expected": "列表展示赛事名称、时间、投注选项、赔率、状态等信息，数据与数据库一致"
+        }
+      ],
+      "expected_result": "列表正常展示所有预测赛事，信息完整",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-099"
+    },
+    {
+      "title": "预测赛事列表-空数据展示",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "预测赛事列表",
+      "preconditions": "系统中无预测赛事数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测赛事列表页面",
+          "expected": "页面加载成功，无报错"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "显示空数据提示，如「暂无数据」"
+        }
+      ],
+      "expected_result": "列表显示空状态提示，无异常",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-100"
+    },
+    {
+      "title": "新增预测赛事-合法数据创建成功",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "新增/编辑预测赛事",
+      "preconditions": "运营人员已登录后台，具有新增赛事权限",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增预测赛事页面",
+          "expected": "页面正常打开，表单字段齐全"
+        },
+        {
+          "step": 2,
+          "desc": "填写赛事名称、时间、投注选项、赔率、截止下注时间等合法数据",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示保存成功，列表新增该赛事，数据库新增对应记录"
+        }
+      ],
+      "expected_result": "赛事创建成功，数据正确保存",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-101"
+    },
+    {
+      "title": "新增预测赛事-必填项为空",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "新增/编辑预测赛事",
+      "preconditions": "运营人员已登录后台",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增预测赛事页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "不填写赛事名称，其他字段填写合法",
+          "expected": "无输入"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示「赛事名称不能为空」，不提交请求，数据库无新增"
+        }
+      ],
+      "expected_result": "保存被阻止，提示必填项错误",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-102"
+    },
+    {
+      "title": "新增预测赛事-截止时间早于当前时间",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "新增/编辑预测赛事",
+      "preconditions": "运营人员已登录后台",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增预测赛事页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "填写截止下注时间为过去时间",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示「截止时间必须晚于当前时间」，不提交请求"
+        }
+      ],
+      "expected_result": "保存被阻止，提示时间错误",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-103"
+    },
+    {
+      "title": "编辑预测赛事-修改合法数据",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "新增/编辑预测赛事",
+      "preconditions": "存在一个未结算的预测赛事",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测赛事列表，点击编辑",
+          "expected": "打开编辑页面，回显原数据"
+        },
+        {
+          "step": 2,
+          "desc": "修改赛事名称、赔率等字段为合法值",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示保存成功，列表数据更新，数据库记录更新"
+        }
+      ],
+      "expected_result": "赛事信息修改成功",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-104"
+    },
+    {
+      "title": "编辑已结算赛事-应被禁止",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "新增/编辑预测赛事",
+      "preconditions": "存在一个已结算的预测赛事",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测赛事列表，找到已结算赛事",
+          "expected": "列表显示该赛事状态为已结算"
+        },
+        {
+          "step": 2,
+          "desc": "点击编辑按钮",
+          "expected": "编辑按钮不可用或提示「已结算赛事不可编辑」"
+        }
+      ],
+      "expected_result": "无法编辑已结算赛事",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-105"
+    },
+    {
+      "title": "赛事结算-正常结算成功",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "赛事结算",
+      "preconditions": "存在一个已截止下注且未结算的赛事，有用户下注记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测赛事列表，选择该赛事",
+          "expected": "列表显示该赛事"
+        },
+        {
+          "step": 2,
+          "desc": "点击结算按钮",
+          "expected": "弹出结算确认框"
+        },
+        {
+          "step": 3,
+          "desc": "选择真实结果（如主胜）",
+          "expected": "选择成功"
+        },
+        {
+          "step": 4,
+          "desc": "确认结算",
+          "expected": "提示结算成功，系统自动计算中奖用户并发放奖励，奖励发放记录新增对应记录"
+        }
+      ],
+      "expected_result": "赛事结算成功，奖励发放正确",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-106"
+    },
+    {
+      "title": "赛事结算-未截止下注时结算",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "赛事结算",
+      "preconditions": "存在一个未截止下注的赛事",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入预测赛事列表，选择该赛事",
+          "expected": "列表显示该赛事"
+        },
+        {
+          "step": 2,
+          "desc": "点击结算按钮",
+          "expected": "结算按钮不可用或提示「赛事未截止，不能结算」"
+        }
+      ],
+      "expected_result": "无法结算未截止赛事",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-107"
+    },
+    {
+      "title": "用户参与记录-正常查询",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "用户参与记录",
+      "preconditions": "存在用户下注记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户参与记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "输入查询条件（如用户ID、赛事名称）",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击查询",
+          "expected": "列表展示符合条件的下注记录，包含选项、金额、时间等"
+        }
+      ],
+      "expected_result": "查询结果正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-108"
+    },
+    {
+      "title": "用户参与记录-无数据查询",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "用户参与记录",
+      "preconditions": "系统中无下注记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户参与记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击查询",
+          "expected": "显示「暂无数据」提示"
+        }
+      ],
+      "expected_result": "查询结果为空，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-109"
+    },
+    {
+      "title": "奖励发放记录-正常展示",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "奖励发放记录",
+      "preconditions": "存在奖励发放记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入奖励发放记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "列表展示中奖用户、奖金、发放时间等信息，数据正确"
+        }
+      ],
+      "expected_result": "奖励发放记录正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-110"
+    },
+    {
+      "title": "奖励发放记录-筛选无结果",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "奖励发放记录",
+      "preconditions": "存在奖励发放记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入奖励发放记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "输入不存在的用户ID进行筛选",
+          "expected": "列表显示「暂无数据」"
+        }
+      ],
+      "expected_result": "筛选结果为空，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-111"
+    },
+    {
+      "title": "退回记录-正常展示",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "退回记录",
+      "preconditions": "存在退回记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入退回记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "列表展示退回记录，包含用户、金额、时间等"
+        }
+      ],
+      "expected_result": "退回记录正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-112"
+    },
+    {
+      "title": "退回记录-无数据展示",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "退回记录",
+      "preconditions": "系统中无退回记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入退回记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "显示「暂无数据」提示"
+        }
+      ],
+      "expected_result": "退回记录为空，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-113"
+    },
+    {
+      "title": "数据统计-正常展示",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "数据统计",
+      "preconditions": "存在预测赛事及投注数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入数据统计页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看统计指标",
+          "expected": "展示投注总额、参与人数等数据，数值与数据库统计一致"
+        }
+      ],
+      "expected_result": "统计数据正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-114"
+    },
+    {
+      "title": "数据统计-无数据展示",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "数据统计",
+      "preconditions": "系统中无预测赛事数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入数据统计页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看统计指标",
+          "expected": "显示统计值为0或空状态提示"
+        }
+      ],
+      "expected_result": "统计数据为空，无异常",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-115"
+    },
+    {
+      "title": "用户统计-正常展示",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "用户统计",
+      "preconditions": "存在用户预测行为数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户统计页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看统计指标",
+          "expected": "展示用户胜率、投注偏好等数据，数值正确"
+        }
+      ],
+      "expected_result": "用户统计数据正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-116"
+    },
+    {
+      "title": "用户统计-无数据展示",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "用户统计",
+      "preconditions": "系统中无用户预测行为数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入用户统计页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看统计指标",
+          "expected": "显示统计值为0或空状态提示"
+        }
+      ],
+      "expected_result": "用户统计数据为空，无异常",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-117"
+    },
+    {
+      "title": "风控设置-合法参数保存",
+      "priority": "P0",
+      "domain": "赛事预测",
+      "module": "风控设置",
+      "preconditions": "运营人员已登录后台",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入风控设置页面",
+          "expected": "页面加载成功，显示当前参数值"
+        },
+        {
+          "step": 2,
+          "desc": "修改单用户下注上限、单赛事下注上限、赔率变动阈值等为合法值",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示保存成功，参数更新，数据库记录更新"
+        }
+      ],
+      "expected_result": "风控参数保存成功",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-118"
+    },
+    {
+      "title": "风控设置-参数超出范围",
+      "priority": "P1",
+      "domain": "赛事预测",
+      "module": "风控设置",
+      "preconditions": "运营人员已登录后台",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入风控设置页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "设置单用户下注上限为负数",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示「单用户下注上限必须大于0」，不保存"
+        }
+      ],
+      "expected_result": "保存被阻止，提示参数错误",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-119"
+    },
+    {
+      "title": "任务内容列表-正常展示",
+      "priority": "P0",
+      "domain": "银钻任务",
+      "module": "任务内容列表",
+      "preconditions": "存在任务数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入任务内容列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "列表展示任务名称、奖励、状态、有效期等信息，数据正确"
+        }
+      ],
+      "expected_result": "任务列表正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-120"
+    },
+    {
+      "title": "任务内容列表-空数据展示",
+      "priority": "P1",
+      "domain": "银钻任务",
+      "module": "任务内容列表",
+      "preconditions": "系统中无任务数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入任务内容列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "显示「暂无数据」提示"
+        }
+      ],
+      "expected_result": "任务列表为空，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-121"
+    },
+    {
+      "title": "新增任务-合法数据创建成功",
+      "priority": "P0",
+      "domain": "银钻任务",
+      "module": "新增/编辑任务",
+      "preconditions": "运营人员已登录后台",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增任务页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "填写任务名称、条件（如观看时长）、奖励银钻数量、图标等合法数据",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示保存成功，列表新增该任务，数据库新增记录"
+        }
+      ],
+      "expected_result": "任务创建成功",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-122"
+    },
+    {
+      "title": "新增任务-奖励银钻数量为0",
+      "priority": "P1",
+      "domain": "银钻任务",
+      "module": "新增/编辑任务",
+      "preconditions": "运营人员已登录后台",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入新增任务页面",
+          "expected": "页面正常打开"
+        },
+        {
+          "step": 2,
+          "desc": "填写奖励银钻数量为0",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击保存",
+          "expected": "提示「奖励银钻数量必须大于0」，不保存"
+        }
+      ],
+      "expected_result": "保存被阻止，提示参数错误",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-123"
+    },
+    {
+      "title": "任务完成记录-正常查询",
+      "priority": "P0",
+      "domain": "银钻任务",
+      "module": "任务完成记录",
+      "preconditions": "存在任务完成记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入任务完成记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "输入查询条件（如用户ID、任务名称）",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 3,
+          "desc": "点击查询",
+          "expected": "列表展示符合条件的记录，包含用户、任务、完成时间、奖励发放状态"
+        }
+      ],
+      "expected_result": "查询结果正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-124"
+    },
+    {
+      "title": "任务完成记录-无数据查询",
+      "priority": "P1",
+      "domain": "银钻任务",
+      "module": "任务完成记录",
+      "preconditions": "系统中无任务完成记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入任务完成记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击查询",
+          "expected": "显示「暂无数据」提示"
+        }
+      ],
+      "expected_result": "查询结果为空，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-125"
+    },
+    {
+      "title": "邀请好友记录-正常展示",
+      "priority": "P0",
+      "domain": "银钻任务",
+      "module": "邀请好友记录",
+      "preconditions": "存在邀请记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入邀请好友记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "列表展示邀请人、被邀请人、邀请时间、奖励状态等信息"
+        }
+      ],
+      "expected_result": "邀请记录正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-126"
+    },
+    {
+      "title": "邀请好友记录-无数据展示",
+      "priority": "P1",
+      "domain": "银钻任务",
+      "module": "邀请好友记录",
+      "preconditions": "系统中无邀请记录",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入邀请好友记录页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "显示「暂无数据」提示"
+        }
+      ],
+      "expected_result": "邀请记录为空，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-127"
+    },
+    {
+      "title": "任务状态控制-启用任务",
+      "priority": "P0",
+      "domain": "银钻任务",
+      "module": "任务状态控制",
+      "preconditions": "存在一个已禁用的任务",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入任务内容列表",
+          "expected": "列表展示任务"
+        },
+        {
+          "step": 2,
+          "desc": "点击启用按钮",
+          "expected": "提示启用成功，任务状态变为启用，用户端可见"
+        }
+      ],
+      "expected_result": "任务启用成功",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-128"
+    },
+    {
+      "title": "任务状态控制-禁用任务",
+      "priority": "P0",
+      "domain": "银钻任务",
+      "module": "任务状态控制",
+      "preconditions": "存在一个已启用的任务",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入任务内容列表",
+          "expected": "列表展示任务"
+        },
+        {
+          "step": 2,
+          "desc": "点击禁用按钮",
+          "expected": "提示禁用成功，任务状态变为禁用，用户端不可见"
+        }
+      ],
+      "expected_result": "任务禁用成功",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-129"
+    },
+    {
+      "title": "任务状态控制-禁用已禁用任务",
+      "priority": "P1",
+      "domain": "银钻任务",
+      "module": "任务状态控制",
+      "preconditions": "存在一个已禁用的任务",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入任务内容列表",
+          "expected": "列表展示任务"
+        },
+        {
+          "step": 2,
+          "desc": "点击禁用按钮",
+          "expected": "按钮不可用或提示「任务已禁用」"
+        }
+      ],
+      "expected_result": "无法重复禁用",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-130"
+    },
+    {
+      "title": "文案白名单列表-正常展示",
+      "priority": "P0",
+      "domain": "风控管理",
+      "module": "文案白名单列表",
+      "preconditions": "存在白名单数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文案白名单列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "列表展示白名单关键词或句子，数据正确"
+        }
+      ],
+      "expected_result": "白名单列表正确展示",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-131"
+    },
+    {
+      "title": "文案白名单列表-空数据展示",
+      "priority": "P1",
+      "domain": "风控管理",
+      "module": "文案白名单列表",
+      "preconditions": "系统中无白名单数据",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文案白名单列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "查看列表",
+          "expected": "显示「暂无数据」提示"
+        }
+      ],
+      "expected_result": "白名单列表为空，显示空状态",
+      "remark": "负面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-132"
+    },
+    {
+      "title": "添加白名单-合法文案添加成功",
+      "priority": "P0",
+      "domain": "风控管理",
+      "module": "添加/删除白名单",
+      "preconditions": "运营人员已登录后台",
+      "steps": [
+        {
+          "step": 1,
+          "desc": "进入文案白名单列表页面",
+          "expected": "页面加载成功"
+        },
+        {
+          "step": 2,
+          "desc": "点击添加按钮",
+          "expected": "弹出添加输入框"
+        },
+        {
+          "step": 3,
+          "desc": "输入合法文案（如「你好」）",
+          "expected": "输入无报错"
+        },
+        {
+          "step": 4,
+          "desc": "确认添加",
+          "expected": "提示添加成功，列表新增该文案，数据库新增记录"
+        }
+      ],
+      "expected_result": "白名单添加成功",
+      "remark": "正面用例",
+      "client_scope": [
+        "pc",
+        "web"
+      ],
+      "id": "TC-133"
+    }
+  ],
+  "api_cases": [],
+  "_warnings": [
+    "functional-chunk-1 生成被截断，已重试",
+    "functional-chunk-2 生成被截断，已重试",
+    "functional-chunk-3 生成被截断，已重试",
+    "functional-chunk-3 生成失败：AI 返回的 JSON 格式异常，无法解析。\n原始错误: Expecting ',' delimiter (行 1035, 列 10)\n修复后错误: Expecting property name enclosed in double quotes (行 13, 列 131)\n错误位置附近内容 (chars 24637-24837):\n      \"step\": 1,\\n          \"desc\": \"进入球队及联赛-热门联赛页面\",\\n          \"expected\": \"页面加载成功\"\\n        },\\n        {\\n          \"step\": 2,\\n          \"desc\": \"查看列表\",\\n          \"expected\": \"列表显示联赛名称、ID等字段\"\\n        }（该块未产出用例）",
+    "functional-chunk-4 生成被截断，已重试",
+    "functional-chunk-5 生成被截断，已重试"
+  ]
+}

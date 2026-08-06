@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -43,6 +43,10 @@ class TestCase(Base, TimestampMixin):
     priority: Mapped[str] = mapped_column(default="P2")           # P0 / P1 / P2 / P3
     status: Mapped[str] = mapped_column(default="active")         # draft / active / archived
     tags: Mapped[str] = mapped_column(default="[]")               # JSON 数组
+    # 用例设计追溯（batch-103：规范对齐）
+    case_design_method: Mapped[str] = mapped_column(default="")    # 等价类划分/边界值分析/场景法/错误推测/组合覆盖
+    positive_negative: Mapped[str] = mapped_column(default="")     # positive/negative/boundary
+    test_data_note: Mapped[str] = mapped_column(Text, default="")  # 输入数据业务含义与来源
 
     # 用例内容
     preconditions: Mapped[str] = mapped_column(default="")
@@ -56,6 +60,8 @@ class TestCase(Base, TimestampMixin):
     api_headers: Mapped[str] = mapped_column(default="{}")        # JSON: {"Content-Type":"application/json"}
     api_body: Mapped[str] = mapped_column(default="")             # JSON: 请求体
     api_assertions: Mapped[str] = mapped_column(default="[]")     # JSON: 断言规则数组
+    last_response_json: Mapped[str] = mapped_column(Text, default="")  # JSON: 最近执行实际响应
+    last_run_status: Mapped[str] = mapped_column(default="")       # success/fail/skipped/error
 
     # API 追溯 (batch-34: FK 链路补齐)
     api_endpoint_id: Mapped[int | None] = mapped_column(default=None, index=True)  # FK → ApiEndpoint

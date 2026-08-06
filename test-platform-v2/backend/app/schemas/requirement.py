@@ -72,11 +72,17 @@ class AIGeneratedCase(BaseModel):
     priority: str = "P2"            # P0 / P1 / P2 / P3
     domain: str = ""
     module: str = ""
+    case_design_method: str = ""      # 等价类划分 / 边界值分析 / 场景法 / 错误推测 / 组合覆盖
+    positive_negative: str = ""       # positive / negative / boundary
+    test_data_note: str = ""          # 用例输入数据的业务含义与来源说明
     preconditions: str = ""
     steps: str = "[]"               # JSON string
     expected_result: str = ""
     api_method: str = ""
     api_endpoint: str = ""
+    api_headers: str = "{}"         # JSON: 请求头
+    api_body: str = ""              # JSON: 请求参数（贴合真实业务）
+    api_assertions: str = "[]"      # JSON: 断言数组
     remark: str = ""
     imported: bool = False          # whether this case has been imported
     client_scope: list[str] = []    # ["app", "pc", "web"] — applicable client platforms

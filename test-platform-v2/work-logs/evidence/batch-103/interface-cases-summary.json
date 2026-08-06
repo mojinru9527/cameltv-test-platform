@@ -1,0 +1,25 @@
+{
+  "endpoints": [
+    {
+      "service": "camel-service",
+      "path": "/ee/news/list_visible",
+      "real_source": "用户提供真实请求样本（新闻列表翻页+语言过滤）",
+      "generated": 33,
+      "imported": 33
+    },
+    {
+      "service": "account-service",
+      "path": "/ee/ads/activity/get",
+      "real_source": "生产首页真实 XHR 样本（2026-08-06 Playwright 抓取）",
+      "generated": 38,
+      "imported": 38
+    },
+    {
+      "service": "account-service",
+      "path": "/ee/client/general",
+      "real_source": "生产首页真实 XHR 样本（2026-08-06 Playwright 抓取）",
+      "generated": 1,
+      "imported": 1
+    }
+  ]
+}

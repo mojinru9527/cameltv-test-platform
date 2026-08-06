@@ -7,11 +7,179 @@ from typing import Any
 # 单接口用例生成数量上限（防止膨胀）
 _MAX_CASES_PER_ENDPOINT = 200
 
+# 常见业务字段语义提示（Batch 103：贴合语义构造数据，禁止无意义占位）
+FIELD_SEMANTICS = {
+    "page": "页码（分页请求第几页，从 1 开始）",
+    "size": "每页条数（单页返回记录数上限）",
+    "current": "当前页码（响应侧）",
+    "total": "总记录数（响应侧）",
+    "locale": "返回文案语言（枚举：en/zh 等）",
+    "language": "语言过滤值（业务枚举）",
+    "sorts": "排序规则数组（key=排序字段，sort=desc/asc）",
+    "queryList": "过滤条件数组（key=字段名，type=类型，value1/value2=值/区间边界，isOrNotRange=是否区间）",
+    "top": "置顶标志（0=否，1=是）",
+    "updateTime": "更新时间（时间戳/时间格式）",
+    "displayPlatform": "展示平台（PC/APP/WEB）",
+    "displayPage": "展示页面（如 INDEX 首页）",
+    "keyword": "搜索关键词",
+    "id": "业务主键 ID",
+    "key": "字段名",
+    "value1": "查询值/区间下界",
+    "value2": "区间上界",
+    "isOrNotRange": "是否区间查询（0=精确，1=区间）",
+    "type": "字段类型标识（String/Integer 等）",
+}
+
+
+def generate_cases_from_real_sample(endpoint: dict, real_sample: dict) -> list[dict]:
+    """真实业务样本驱动的字段级接口用例（Batch 103，C103-4）。
+
+    契约 schema 可能为空（如 /ee/news/list_visible），此时以生产/测试环境真实请求
+    样本为字段来源：对样本 body 中的每个字段按业务语义生成 正向/负向/边界/类型 用例，
+    禁止无意义占位值。
+    """
+    method = (endpoint.get("method") or "GET").upper()
+    path = endpoint.get("path", "")
+    body = real_sample.get("body") or real_sample.get("request_body") or {}
+    if not isinstance(body, dict):
+        body = {}
+    source = real_sample.get("source") or real_sample.get("url") or "真实业务请求样本"
+    cases: list[dict] = []
+
+    def _mk(
+        title: str, scenario: str, pn: str, method_name: str,
+        body_value: dict, expected: str, assertions: list[dict] | None = None,
+        priority: str = "P1",
+    ) -> dict:
+        body_str = json.dumps(body_value, ensure_ascii=False) if method not in ("GET", "HEAD") else ""
+        return {
+            "title": f"{path} - {title}",
+            "domain": "接口测试",
+            "module": endpoint.get("module", ""),
+            "case_type": "api",
+            "priority": priority,
+            "preconditions": f"接口 {method} {path} 可访问",
+            "steps": [{"step": 1, "action": f"发送 {method} 请求到 {path}", "expected": expected}],
+            "expected_result": expected,
+            "api_method": method,
+            "api_endpoint": path,
+            "api_headers": {"Content-Type": "application/json"},
+            "api_body": body_str,
+            "api_assertions": assertions or [
+                {"type": "status_code", "expected": 200, "operator": "gte"},
+                {"type": "status_code", "expected": 300, "operator": "lt"},
+            ],
+            "case_design_method": method_name,
+            "positive_negative": pn,
+            "test_data_note": f"数据来源：{source}；字段语义与构造值说明见用例。",
+            "source": "ai_generated",
+            "tags": [f"service:{endpoint.get('service_name', '')}", f"scenario:{scenario}", "source:real_sample"],
+        }
+
+    # 0) 正向基线：真实样本原样
+    cases.append(_mk(
+        "正常请求（真实业务参数原样）", "positive", "positive", "场景法",
+        dict(body), f"接口返回 2xx；响应结构与真实调用一致。", priority="P0",
+    ))
+
+    # 1) 逐字段覆盖
+    for field, value in body.items():
+        semantics = FIELD_SEMANTICS.get(field, f"{field}（业务字段，语义以接口文档为准）")
+        ptype = "integer" if isinstance(value, bool) is False and isinstance(value, int) else \
+            "string" if isinstance(value, str) else "boolean" if isinstance(value, bool) else \
+            "array" if isinstance(value, list) else "object"
+
+        # 边界：0 / 负数 / 最小 / 超长
+        if ptype == "integer":
+            for label, bad in (("0", 0), ("负数", -1), ("超上限", 10**9)):
+                v = dict(body); v[field] = bad
+                cases.append(_mk(
+                    f"{field} 边界值 {label}（语义：{semantics}）", "boundary", "boundary", "边界值分析",
+                    v, f"{field} 为 {label} 时按业务校验返回 2xx 或 4xx（视后端规则），不得 5xx。",
+                ))
+        elif ptype == "string":
+            for label, bad in (("空字符串", ""), ("超长", "x" * 256), ("特殊字符", "@#$%^&*()")):
+                v = dict(body); v[field] = bad
+                cases.append(_mk(
+                    f"{field} 边界值 {label}（语义：{semantics}）", "boundary", "boundary", "边界值分析",
+                    v, f"{field} 为 {label} 时按业务校验返回 2xx 或 4xx，不得 5xx。",
+                ))
+
+        # 类型错误
+        wrong = {"integer": "not_a_number", "string": 12345, "boolean": "not_bool", "array": "not_array", "object": "not_object"}.get(ptype, "__invalid__")
+        v = dict(body); v[field] = wrong
+        cases.append(_mk(
+            f"{field} 类型错误（{ptype} → {type(wrong).__name__}）", "type", "negative", "错误推测",
+            v, f"{field} 类型不符时应返回 4xx 参数校验错误。",
+        ))
+
+        # 缺失 / null
+        v = dict(body); v.pop(field, None)
+        cases.append(_mk(
+            f"{field} 缺失", "required_missing", "negative", "等价类划分",
+            v, f"{field} 缺失时按必填规则返回 2xx 或 4xx，不得 5xx。",
+        ))
+        v = dict(body); v[field] = None
+        cases.append(_mk(
+            f"{field} 为 null", "required_null", "negative", "等价类划分",
+            v, f"{field} 为 null 时应返回 2xx 或 4xx，不得 5xx。",
+        ))
+
+    # 2) 关键组合场景（真实样本语义）
+    if "page" in body and "size" in body:
+        v = dict(body); v["page"] = 1; v["size"] = max(1, body["size"] - 1) if isinstance(body["size"], int) else 1
+        cases.append(_mk(
+            "分页边界：page=1 且 size 减一（首页最小页）", "boundary", "boundary", "边界值分析",
+            v, "首页请求返回记录数 ≤ size；分页字段生效。",
+        ))
+        v = dict(body); v["page"] = 999999; v["size"] = body["size"]
+        cases.append(_mk(
+            "分页边界：page 超总页数", "boundary", "boundary", "边界值分析",
+            v, "超出总页数时返回空 records（或 4xx），不得 5xx。",
+        ))
+    if "queryList" in body and isinstance(body["queryList"], list):
+        v = dict(body); v["queryList"] = []
+        cases.append(_mk(
+            "过滤条件为空数组（返回全量数据）", "combo", "positive", "组合覆盖",
+            v, "queryList 为空时返回默认全量数据，结构正确。",
+        ))
+        v = dict(body)
+        v["queryList"] = body["queryList"] + [{"isOrNotRange": 0, "key": "top", "type": "Integer", "value1": "1", "value2": ""}]
+        cases.append(_mk(
+            "过滤条件多条件组合（AND）", "combo", "positive", "组合覆盖",
+            v, "多条件组合过滤生效，返回记录满足全部条件。",
+        ))
+    if "sorts" in body and isinstance(body["sorts"], list):
+        v = dict(body); v["sorts"] = [{"key": "updateTime", "sort": "asc"}]
+        cases.append(_mk(
+            "排序规则变更（updateTime asc）", "combo", "positive", "组合覆盖",
+            v, "排序按 updateTime 升序返回。",
+        ))
+        v = dict(body); v["sorts"] = [{"key": "updateTime", "sort": "invalid"}]
+        cases.append(_mk(
+            "排序方向非法值", "enum", "negative", "等价类划分",
+            v, "sort 非 desc/asc 时返回 4xx 或按默认规则处理，不得 5xx。",
+        ))
+    if "locale" in body:
+        for lang in ("zh", "missing"):
+            v = dict(body)
+            if lang == "missing":
+                v.pop("locale", None)
+            else:
+                v["locale"] = lang
+            cases.append(_mk(
+                f"locale 枚举：{lang}", "enum", "boundary", "等价类划分",
+                v, "locale 变更/缺省时响应文案语言按枚举处理。",
+            ))
+
+    return cases[:_MAX_CASES_PER_ENDPOINT]
+
 
 def generate_cases_from_endpoint(
     endpoint: dict,
     *,
     templates: list[str] | None = None,
+    real_samples: list[dict] | None = None,
 ) -> list[dict]:
     """从接口定义生成测试用例列表。
 
@@ -38,6 +206,9 @@ def generate_cases_from_endpoint(
     endpoint.get("service_name", "")
     endpoint.get("summary", "")
 
+    # Batch 103：真实业务样本基线（避免 mock 占位）
+    real = real_samples[0] if real_samples else None
+
     # Extract query/path/header params
     query_params = schema.get("query", []) if isinstance(schema, dict) else []
     path_params = schema.get("path", []) if isinstance(schema, dict) else []
@@ -45,9 +216,9 @@ def generate_cases_from_endpoint(
 
     # ── 基础正常用例 ──
     if "basic" in templates:
-        cases.append(_build_positive_case(endpoint))
+        cases.append(_build_positive_case(endpoint, real=real))
         if query_params:
-            cases.append(_build_query_param_case(endpoint, query_params))
+            cases.append(_build_query_param_case(endpoint, query_params, real=real))
 
     # ── 必填字段校验 (body) ──
     if "invalid" in templates and required_fields:
@@ -133,10 +304,21 @@ def generate_cases_from_endpoint(
 # 基础正常用例
 # ═══════════════════════════════════════════════════════
 
-def _build_positive_case(ep: dict) -> dict:
-    """构造正向基础用例。断言 status_code 在 2xx 范围。"""
-    body = _build_valid_body(ep)
-    return _make_case(
+def _build_positive_case(ep: dict, real: dict | None = None) -> dict:
+    """构造正向基础用例。有真实样本时以其请求参数为基线，避免 mock 占位。"""
+    body = None
+    data_note = ""
+    if real:
+        body = real.get("body") or real.get("request_body")
+        query = real.get("query") or real.get("query_params") or {}
+        data_note = (
+            "数据来源：生产/测试环境真实业务请求样本"
+            + (f"（{real.get('source') or real.get('url') or ''}）" if (real.get("source") or real.get("url")) else "")
+            + "；字段值贴合真实业务语义，非占位数据。"
+        )
+    if body is None:
+        body = _build_valid_body(ep)
+    c = _make_case(
         ep,
         title=f"{ep.get('summary') or ep.get('path')} - 正常请求",
         priority="P0",
@@ -149,11 +331,23 @@ def _build_positive_case(ep: dict) -> dict:
         ],
         expected="接口返回 2xx 状态码，响应时间 < 5s。",
     )
+    if data_note:
+        c["test_data_note"] = data_note
+    if real and query:
+        query_str = "&".join(f"{k}={v}" for k, v in query.items())
+        sep = "&" if "?" in c.get("api_endpoint", "") else "?"
+        c["api_endpoint"] = f"{c.get('api_endpoint', '')}{sep}{query_str}"
+    return c
 
 
-def _build_query_param_case(ep: dict, query_params: list) -> dict:
-    """构造 query 参数组合用例。"""
-    params = {p["name"]: _sample_value_for_param(p) for p in query_params if p.get("required")}
+def _build_query_param_case(ep: dict, query_params: list, real: dict | None = None) -> dict:
+    """构造 query 参数组合用例。优先使用真实样本中的 query 参数值。"""
+    real_query = (real or {}).get("query") or (real or {}).get("query_params") or {}
+    params = {
+        p["name"]: real_query.get(p["name"], _sample_value_for_param(p))
+        for p in query_params
+        if p.get("required") or p["name"] in real_query
+    }
     query_str = "&".join(f"{k}={v}" for k, v in params.items())
     full_path = f"{ep['path']}?{query_str}"
 
@@ -169,6 +363,8 @@ def _build_query_param_case(ep: dict, query_params: list) -> dict:
         ],
         expected="正确传入 query 参数时返回 2xx。",
     )
+    if real:
+        c["test_data_note"] = "数据来源：生产/测试环境真实业务请求样本（query 参数真实值）。"
     c["api_endpoint"] = full_path
     return c
 
@@ -1066,6 +1262,35 @@ def _make_case(
     if method in ("GET", "HEAD"):
         body_str = ""
 
+    # Batch 103：设计方法/正负向可追溯
+    _METHOD_MAP = {
+        "positive": "场景法",
+        "boundary": "边界值分析",
+        "required": "等价类划分",
+        "null": "等价类划分",
+        "type": "错误推测",
+        "enum": "等价类划分",
+        "format": "错误推测",
+        "query": "等价类划分",
+        "path": "等价类划分",
+        "header": "等价类划分",
+        "extreme": "边界值分析",
+        "security": "错误推测",
+        "idempotency": "场景法",
+        "auth": "场景法",
+        "combo": "组合覆盖",
+    }
+    _PN_MAP = {
+        "positive": "positive",
+        "boundary": "boundary",
+        "extreme": "boundary",
+    }
+    design_method = next(
+        (v for k, v in _METHOD_MAP.items() if scenario.startswith(k)),
+        "等价类划分",
+    )
+    positive_negative = _PN_MAP.get(scenario, "negative")
+
     return {
         "title": formatted_title,
         "domain": "接口测试",
@@ -1082,6 +1307,9 @@ def _make_case(
         "api_headers": headers,
         "api_body": body_str,
         "api_assertions": assertions,
+        "case_design_method": design_method,
+        "positive_negative": positive_negative,
+        "test_data_note": "数据按接口字段业务语义构造（等价类/边界值/错误推测）；真实样本可用时以生产/测试环境回填值为准。",
         "source": "ai_generated",
         "tags": [
             f"service:{service}",

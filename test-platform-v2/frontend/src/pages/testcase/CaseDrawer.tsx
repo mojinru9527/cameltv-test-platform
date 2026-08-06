@@ -38,6 +38,11 @@ const formSchema = z.object({
   module: z.string().min(1, '请选择模块'),
   api_method: z.string().optional().or(z.literal('')),
   api_endpoint: z.string().optional().or(z.literal('')),
+  api_body: z.string().optional().or(z.literal('')),
+  api_assertions: z.string().optional().or(z.literal('')),
+  case_design_method: z.string().optional().or(z.literal('')),
+  positive_negative: z.string().optional().or(z.literal('')),
+  test_data_note: z.string().optional().or(z.literal('')),
   preconditions: z.string().optional().or(z.literal('')),
   steps: z.string().min(1, '请输入测试步骤'),
   expected_result: z.string().min(1, '请输入预期结果'),
@@ -227,6 +232,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-4">
               <TabsTrigger value="form">基本信息</TabsTrigger>
+              {editing?.case_type === 'api' && <TabsTrigger value="api-data">接口数据</TabsTrigger>}
               <TabsTrigger value="review">评审</TabsTrigger>
             </TabsList>
 
@@ -249,6 +255,12 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
                 onReview={doReview}
               />
             </TabsContent>
+
+            {editing?.case_type === 'api' && (
+              <TabsContent value="api-data">
+                <ApiDataPanel editing={editing} />
+              </TabsContent>
+            )}
           </Tabs>
         ) : (
           <form onSubmit={handleSubmit(doSave)} className="max-h-[60vh] overflow-y-auto space-y-4">
@@ -418,29 +430,106 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
 
       {/* Conditional API fields */}
       {selType === 'api' && (
-        <div className="grid grid-cols-[120px_1fr] gap-4">
+        <>
+          <div className="grid grid-cols-[120px_1fr] gap-4">
+            <div>
+              <label htmlFor="case-api-method" className="mb-1 block text-sm font-medium">HTTP 方法</label>
+              <Controller
+                name="api_method"
+                control={control}
+                render={({ field }: any) => (
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <SelectTrigger id="case-api-method" size="sm"><SelectValue placeholder="方法" /></SelectTrigger>
+                    <SelectContent position="popper">
+                      {['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].map((v) => (
+                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div>
+              <label htmlFor="case-api-endpoint" className="mb-1 block text-sm font-medium">接口路径</label>
+              <Input id="case-api-endpoint" placeholder="/api/v1/xxx" {...register('api_endpoint')} />
+            </div>
+          </div>
+
+          {/* 设计方法 / 正负向 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="case-design-method" className="mb-1 block text-sm font-medium">设计方法</label>
+              <Controller
+                name="case_design_method"
+                control={control}
+                render={({ field }: any) => (
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <SelectTrigger id="case-design-method" size="sm"><SelectValue placeholder="选择设计方法" /></SelectTrigger>
+                    <SelectContent position="popper">
+                      {['等价类划分', '边界值分析', '场景法', '错误推测', '组合覆盖'].map((v) => (
+                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div>
+              <label htmlFor="case-positive-negative" className="mb-1 block text-sm font-medium">正负向/边界</label>
+              <Controller
+                name="positive_negative"
+                control={control}
+                render={({ field }: any) => (
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <SelectTrigger id="case-positive-negative" size="sm"><SelectValue placeholder="选择类型" /></SelectTrigger>
+                    <SelectContent position="popper">
+                      <SelectItem value="positive">正向</SelectItem>
+                      <SelectItem value="negative">负向</SelectItem>
+                      <SelectItem value="boundary">边界</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          </div>
+
+          {/* 请求参数 */}
           <div>
-            <label htmlFor="case-api-method" className="mb-1 block text-sm font-medium">HTTP 方法</label>
-            <Controller
-              name="api_method"
-              control={control}
-              render={({ field }: any) => (
-                <Select value={field.value || undefined} onValueChange={field.onChange}>
-                  <SelectTrigger id="case-api-method" size="sm"><SelectValue placeholder="方法" /></SelectTrigger>
-                  <SelectContent position="popper">
-                    {['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].map((v) => (
-                      <SelectItem key={v} value={v}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+            <label htmlFor="case-api-body" className="mb-1 block text-sm font-medium">
+              请求参数（JSON，字段完整、值贴合真实业务）
+            </label>
+            <Textarea
+              id="case-api-body"
+              rows={5}
+              placeholder='{"page": 1, "size": 30, "queryList": [], "locale": "en"}'
+              {...register('api_body')}
             />
           </div>
+
+          {/* 断言 */}
           <div>
-            <label htmlFor="case-api-endpoint" className="mb-1 block text-sm font-medium">接口路径</label>
-            <Input id="case-api-endpoint" placeholder="/api/v1/xxx" {...register('api_endpoint')} />
+            <label htmlFor="case-api-assertions" className="mb-1 block text-sm font-medium">
+              断言（JSON：状态码 + 关键字段/业务规则）
+            </label>
+            <Textarea
+              id="case-api-assertions"
+              rows={4}
+              placeholder='[{"type":"status","value":200},{"type":"field","path":"data.records","assert":"is_array"}]'
+              {...register('api_assertions')}
+            />
           </div>
-        </div>
+
+          {/* 数据说明 */}
+          <div>
+            <label htmlFor="case-test-data-note" className="mb-1 block text-sm font-medium">数据说明（业务含义/来源）</label>
+            <Textarea
+              id="case-test-data-note"
+              rows={2}
+              placeholder="本用例输入数据的业务含义与来源（真实回填或按语义构造）"
+              {...register('test_data_note')}
+            />
+          </div>
+        </>
       )}
 
       {/* Preconditions */}
@@ -525,6 +614,64 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
       </div>
 
       {/* Ref */}
+    </div>
+  )
+}
+
+function ApiDataPanel({ editing }: { editing: any }) {
+  const pretty = (raw: string | undefined, fallback: string) => {
+    if (!raw) return fallback
+    try {
+      return JSON.stringify(JSON.parse(raw), null, 2)
+    } catch {
+      return raw
+    }
+  }
+  const runStatus = editing?.last_run_status
+  const runTone = runStatus === 'success' ? 'success' : runStatus === 'error' ? 'danger' : runStatus === 'fail' ? 'danger' : 'neutral'
+  const runLabel = runStatus === 'success' ? '成功' : runStatus === 'fail' ? '失败' : runStatus === 'error' ? '错误' : '未执行'
+
+  return (
+    <div className="max-h-[60vh] space-y-4 overflow-y-auto">
+      <div className="flex flex-wrap items-center gap-2">
+        {editing?.case_design_method && (
+          <Badge tone="info">设计方法：{editing.case_design_method}</Badge>
+        )}
+        {editing?.positive_negative && (
+          <Badge tone={editing.positive_negative === 'positive' ? 'success' : editing.positive_negative === 'boundary' ? 'warning' : 'danger'}>
+            {editing.positive_negative === 'positive' ? '正向' : editing.positive_negative === 'boundary' ? '边界' : '负向'}
+          </Badge>
+        )}
+        <Badge tone={runTone as any}>最近执行：{runLabel}</Badge>
+      </div>
+
+      {editing?.test_data_note && (
+        <div className="rounded-md border p-3 text-sm">
+          <p className="mb-1 font-medium">数据说明</p>
+          <p className="text-muted-foreground whitespace-pre-wrap">{editing.test_data_note}</p>
+        </div>
+      )}
+
+      <div>
+        <p className="mb-1 text-sm font-medium">请求参数</p>
+        <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs">
+          {pretty(editing?.api_body, '（空）')}
+        </pre>
+      </div>
+
+      <div>
+        <p className="mb-1 text-sm font-medium">断言</p>
+        <pre className="max-h-48 overflow-auto rounded-md bg-muted p-3 text-xs">
+          {pretty(editing?.api_assertions, '（空）')}
+        </pre>
+      </div>
+
+      <div>
+        <p className="mb-1 text-sm font-medium">请求结果（最近执行回填）</p>
+        <pre className="max-h-64 overflow-auto rounded-md bg-muted p-3 text-xs">
+          {pretty(editing?.last_response_json, '（尚未执行）')}
+        </pre>
+      </div>
     </div>
   )
 }

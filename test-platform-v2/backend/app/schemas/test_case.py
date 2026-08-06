@@ -22,6 +22,9 @@ class TestCaseOut(BaseModel):
     priority: str = "P2"
     status: str = "active"
     tags: str = "[]"
+    case_design_method: str = ""
+    positive_negative: str = ""
+    test_data_note: str = ""
     preconditions: str = ""
     steps: str = "[]"
     expected_result: str = ""
@@ -31,6 +34,8 @@ class TestCaseOut(BaseModel):
     api_headers: str = "{}"
     api_body: str = ""
     api_assertions: str = "[]"
+    last_response_json: str = ""
+    last_run_status: str = ""
     source: str = "migration"
     source_req_id: str = ""
     source_doc_id: Optional[int] = None
@@ -65,6 +70,9 @@ class TestCaseCreate(BaseModel):
     priority: str = "P2"
     status: str = "active"
     tags: str = "[]"
+    case_design_method: str = ""
+    positive_negative: str = ""
+    test_data_note: str = ""
     preconditions: str = ""
     steps: str = "[]"
     expected_result: str = ""
@@ -74,6 +82,8 @@ class TestCaseCreate(BaseModel):
     api_headers: str = "{}"
     api_body: str = ""
     api_assertions: str = "[]"
+    last_response_json: str = ""
+    last_run_status: str = ""
     source: str = "manual"
     source_req_id: str = ""
 
@@ -87,6 +97,9 @@ class TestCaseUpdate(BaseModel):
     priority: Optional[str] = None
     status: Optional[str] = None
     tags: Optional[str] = None
+    case_design_method: Optional[str] = None
+    positive_negative: Optional[str] = None
+    test_data_note: Optional[str] = None
     preconditions: Optional[str] = None
     steps: Optional[str] = None
     expected_result: Optional[str] = None
@@ -96,6 +109,8 @@ class TestCaseUpdate(BaseModel):
     api_headers: Optional[str] = None
     api_body: Optional[str] = None
     api_assertions: Optional[str] = None
+    last_response_json: Optional[str] = None
+    last_run_status: Optional[str] = None
     source_req_id: Optional[str] = None
     source_doc_id: Optional[int] = None
 
