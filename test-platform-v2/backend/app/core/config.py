@@ -49,6 +49,8 @@ class Settings(BaseSettings):
     max_team_organizations_per_user: int = 5   # Batch 105：团队组织上限（个人组织不计入）
     register_rate_limit_max: int = 5           # 注册限流：5 次 / 窗口
     register_rate_limit_window_seconds: int = 900
+    # 前端正式域名（Batch 109）：可分享链接（项目邀请等）使用的地址；空=回退请求域名
+    frontend_url: str = ""
 
     @property
     def effective_login_rate_limit(self) -> tuple[int, int]:
@@ -103,6 +105,9 @@ class Settings(BaseSettings):
     # 运营只读账号（C31-3）：viewer 角色，仅查看
     viewer_username: str = "viewer"
     viewer_password: str = ""
+    # 是否创建内置演示账号（tester/viewer）。生产外放后建议 false，
+    # 避免每次部署启动时重建演示账号（Batch 109，配合生产验收数据清理）
+    seed_demo_users: bool = True
 
     # ── ELK ──
     elk_base_url: str = ""
@@ -243,7 +248,7 @@ class Settings(BaseSettings):
                 issues.append("SECRET_KEY 未设置或仍为开发默认值，请通过环境变量/secret 管理设置强密钥")
             if not self.admin_password or self.admin_password == "admin123":
                 issues.append("ADMIN_PASSWORD 未设置或仍为默认值，请设置强密码")
-            if not self.tester_password:
+            if self.seed_demo_users and not self.tester_password:
                 issues.append("TESTER_PASSWORD 未设置，请为种子测试用户设置强密码")
             if self.ai_enabled and not self.ai_api_key:
                 issues.append("AI_API_KEY 未设置，AI 功能将不可用")
