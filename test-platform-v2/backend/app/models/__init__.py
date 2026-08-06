@@ -27,6 +27,7 @@ from app.models.knowledge import (
     KnowledgeVector,
 )
 from app.models.project import Project, ProjectMember
+from app.models.project_invite import ProjectInvite
 from app.models.notification import NotificationChannel, NotificationLog
 from app.models.organization import Organization, OrganizationMember
 from app.models.perf import PerfDevice, PerfMetric, PerfSession
@@ -76,6 +77,7 @@ __all__ = [
     "RolePermission",
     "Project",
     "ProjectMember",
+    "ProjectInvite",
     "AuditLog",
     "Environment",
     "EnvironmentVariable",

@@ -77,6 +77,7 @@ def register(body: RegisterIn, response: Response, request: Request, db: Session
         email=body.email,
         password=body.password,
         invite_code=body.invite_code,
+        project_invite_token=body.project_invite_token,
     )
     result = auth_service.login(db, body.username, body.password)
     _set_auth_cookie(response, result.access_token)

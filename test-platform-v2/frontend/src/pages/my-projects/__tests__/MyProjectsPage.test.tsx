@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -83,5 +83,28 @@ describe('我的项目页', () => {
     )
     await waitFor(() => expect(mockGet).toHaveBeenCalled())
     expect(screen.queryByRole('button', { name: /新建项目/ })).toBeNull()
+  })
+
+  it('负责人打开成员管理可见生成邀请链接入口', async () => {
+    mockHasPerm.mockReturnValue(true)
+    mockGet.mockImplementation((url: string) => {
+      if (url === '/projects') {
+        return Promise.resolve([
+          { id: 1, code: 'MYAPP', name: '我的应用', description: '', status: 1, owner_id: 1 },
+        ])
+      }
+      if (url === '/projects/1/members') {
+        return Promise.resolve([])
+      }
+      return Promise.resolve([])
+    })
+    render(
+      <MemoryRouter>
+        <MyProjectsPage />
+      </MemoryRouter>,
+    )
+    await screen.findByText('我的应用')
+    fireEvent.click(screen.getByRole('button', { name: /成员/ }))
+    expect(await screen.findByRole('button', { name: /生成邀请链接/ })).toBeTruthy()
   })
 })

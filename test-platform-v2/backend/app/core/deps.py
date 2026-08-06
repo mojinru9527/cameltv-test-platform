@@ -177,7 +177,12 @@ def require_project_owner_or(perm_code: str):
             return current
         if not rbac_service.has_permission(current.permissions, perm_code):
             raise forbidden(f"缺少权限：{perm_code}")
-        if not project_service.is_member(db, current.user.id, project_id):
+        member = project_service.is_member(db, current.user.id, project_id)
+        org_member = bool(
+            proj.organization_id
+            and organization_service.is_member(db, current.user.id, proj.organization_id)
+        )
+        if not member and not org_member:
             raise forbidden("无权访问该项目")
         return current
 

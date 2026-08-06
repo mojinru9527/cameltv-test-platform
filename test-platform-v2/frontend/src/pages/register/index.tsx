@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -36,10 +36,12 @@ type RegisterForm = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   useDocumentTitle('注册')
   const setLogin = useAuthStore((s) => s.setLogin)
   const [loading, setLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const inviteParam = new URLSearchParams(location.search).get('invite') || ''
 
   const {
     register,
@@ -67,6 +69,7 @@ export default function RegisterPage() {
         email: values.email || '',
         password: values.password,
         invite_code: values.invite_code,
+        project_invite_token: inviteParam,
       })
       setLogin(data)
       toast.success('注册成功，欢迎使用 CamelTv 测试平台')
@@ -88,6 +91,11 @@ export default function RegisterPage() {
           <CardDescription>凭管理员发放的邀请码创建账号</CardDescription>
         </CardHeader>
         <CardContent>
+          {inviteParam && (
+            <p className="mb-4 rounded-lg border border-border/60 bg-muted/40 p-3 text-sm text-muted-foreground">
+              你正被邀请加入一个项目，注册完成后将自动加入。
+            </p>
+          )}
           {submitError && (
             <p
               role="alert"

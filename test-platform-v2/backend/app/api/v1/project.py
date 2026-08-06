@@ -14,7 +14,13 @@ from app.core.deps import (
     require_project_owner_or,
 )
 from app.schemas.common import R
-from app.schemas.project import ProjectCreate, ProjectOut, ProjectUpdate
+from app.schemas.project import (
+    ProjectCreate,
+    ProjectInviteIn,
+    ProjectInviteOut,
+    ProjectOut,
+    ProjectUpdate,
+)
 from app.services import project_service
 from app.services.audit_service import write_audit
 
@@ -217,3 +223,65 @@ def upsert_quality_gate(
     db.commit()
     _audit(req, current, db, "project:gate:config", f"project#{project_id} gate updated")
     return R.ok({**config, "is_default": False})
+
+
+# ── 项目邀请链接（Batch 106：同事凭链接注册即入项目）──
+
+@router.post("/{project_id}/invites", response_model=R[ProjectInviteOut], summary="生成项目邀请链接")
+def create_project_invite(
+    req: Request,
+    project_id: int,
+    body: ProjectInviteIn,
+    current: CurrentUser = Depends(require_project_owner_or("project:manage")),
+    db: Session = Depends(get_db),
+):
+    from app.services import project_invite_service
+    invite = project_invite_service.create_project_invite(
+        db,
+        project_id=project_id,
+        created_by=current.user.id,
+        usage_limit=body.usage_limit,
+        expires_at=body.expires_at,
+    )
+    db.commit()
+    base = str(req.base_url).rstrip("/")
+    return R.ok(ProjectInviteOut(
+        id=invite.id,
+        project_id=project_id,
+        token=invite.token,
+        url=f"{base}/register?invite={invite.token}",
+        usage_limit=invite.usage_limit,
+        used_count=0,
+        expires_at=invite.expires_at,
+        status=1,
+        created_at=invite.created_at,
+    ))
+
+
+@router.get("/{project_id}/invites", response_model=R[list[ProjectInviteOut]], summary="项目邀请链接列表")
+def list_project_invites(
+    project_id: int,
+    current: CurrentUser = Depends(require_project_owner_or("project:manage")),
+    db: Session = Depends(get_db),
+):
+    from app.services import project_invite_service
+    items = project_invite_service.list_project_invites(db, project_id)
+    return R.ok([ProjectInviteOut(**item) for item in items])
+
+
+@router.post("/{project_id}/invites/{invite_id}/disable", response_model=R[dict], summary="停用项目邀请链接")
+def disable_project_invite(
+    req: Request,
+    project_id: int,
+    invite_id: int,
+    current: CurrentUser = Depends(require_project_owner_or("project:manage")),
+    db: Session = Depends(get_db),
+):
+    from app.core.exceptions import not_found
+    from app.services import project_invite_service
+    invite = project_invite_service.disable_project_invite(db, invite_id)
+    if not invite:
+        raise not_found("项目邀请链接")
+    db.commit()
+    _audit(req, current, db, "project:invite:disable", f"project#{project_id} invite#{invite_id}")
+    return R.ok({"disabled": True, "id": invite_id})
