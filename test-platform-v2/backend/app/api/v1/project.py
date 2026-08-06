@@ -4,6 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import (
     CurrentUser,
@@ -244,7 +245,9 @@ def create_project_invite(
         expires_at=body.expires_at,
     )
     db.commit()
-    base = str(req.base_url).rstrip("/")
+    # Batch 109：可分享链接优先使用前端正式域名（FRONTEND_URL），
+    # 未配置时回退请求域名，避免反代场景把后端地址/非 https 协议发给用户。
+    base = (settings.frontend_url or str(req.base_url)).rstrip("/")
     return R.ok(ProjectInviteOut(
         id=invite.id,
         project_id=project_id,

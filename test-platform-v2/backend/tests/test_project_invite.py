@@ -124,6 +124,26 @@ class TestProjectInvite:
         assert data["usage_limit"] == 3
         assert data["status"] == 1
 
+    def test_invite_url_uses_configured_frontend_url(
+        self, client, tester_role, monkeypatch
+    ):
+        from app.core.config import settings
+        monkeypatch.setattr(
+            settings, "frontend_url", "https://cameltv-test-platform1.vercel.app"
+        )
+        headers = _login(client, "alice")
+        project = _create_project(client, headers)
+        resp = client.post(
+            f"/api/v1/projects/{project['id']}/invites",
+            headers=headers,
+            json={},
+        )
+        assert resp.status_code == 200
+        url = resp.json()["data"]["url"]
+        assert url.startswith(
+            "https://cameltv-test-platform1.vercel.app/register?invite="
+        )
+
     def test_non_owner_cannot_generate(self, client, db_session, tester_role):
         from app.models.project import Project
         alice_headers = _login(client, "alice")
