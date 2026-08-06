@@ -1,0 +1,148 @@
+{
+  "captured_at": "2026-08-06T12:04:31",
+  "project_id": 1,
+  "requirements": [
+    {
+      "id": 4,
+      "title": "体育平台-用户端-更新日志",
+      "status": "parsed",
+      "extraction": "confirmed",
+      "imported": 0
+    },
+    {
+      "id": 3,
+      "title": "体育平台-运营后台-需求规格说明书",
+      "status": "imported",
+      "extraction": "confirmed",
+      "imported": 133
+    },
+    {
+      "id": 2,
+      "title": "体育平台-运营后台-更新日志",
+      "status": "parsed",
+      "extraction": "confirmed",
+      "imported": 0
+    },
+    {
+      "id": 1,
+      "title": "体育平台-用户端-需求规格说明书",
+      "status": "imported",
+      "extraction": "confirmed",
+      "imported": 77
+    }
+  ],
+  "domains": [
+    {
+      "domain": "接口测试",
+      "count": 325
+    },
+    {
+      "domain": "UGC",
+      "count": 3
+    },
+    {
+      "domain": "UGC管理",
+      "count": 34
+    },
+    {
+      "domain": "付费活动",
+      "count": 3
+    },
+    {
+      "domain": "商城管理",
+      "count": 20
+    },
+    {
+      "domain": "广告",
+      "count": 6
+    },
+    {
+      "domain": "广告管理",
+      "count": 13
+    },
+    {
+      "domain": "广告系统",
+      "count": 6
+    },
+    {
+      "domain": "应用启动",
+      "count": 2
+    },
+    {
+      "domain": "权限管理",
+      "count": 2
+    },
+    {
+      "domain": "用户协议",
+      "count": 2
+    },
+    {
+      "domain": "用户账户",
+      "count": 8
+    },
+    {
+      "domain": "装扮管理",
+      "count": 15
+    },
+    {
+      "domain": "财务管理",
+      "count": 16
+    },
+    {
+      "domain": "赛事详情",
+      "count": 18
+    },
+    {
+      "domain": "赛事预测",
+      "count": 21
+    },
+    {
+      "domain": "银钻任务",
+      "count": 11
+    },
+    {
+      "domain": "银钻系统",
+      "count": 6
+    },
+    {
+      "domain": "银钻预测",
+      "count": 4
+    },
+    {
+      "domain": "风控管理",
+      "count": 3
+    },
+    {
+      "domain": "首页",
+      "count": 12
+    },
+    {
+      "domain": "骆驼币及绿钻",
+      "count": 5
+    }
+  ],
+  "case_total": 535,
+  "knowledge": {
+    "source_count": 5,
+    "chunk_count": 5,
+    "entity_count": 16
+  },
+  "graph": {
+    "nodes": 16,
+    "edges": 15
+  },
+  "bundles": [
+    {
+      "id": 1,
+      "name": "体育平台-功能地图",
+      "client_version": "14.1.0",
+      "admin_version": "8.2.0",
+      "status": "draft"
+    }
+  ],
+  "xmind": {
+    "status": 200,
+    "bytes": 28370,
+    "ctype": "application/vnd.xmind.workbook"
+  }
+}
