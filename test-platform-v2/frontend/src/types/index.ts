@@ -16,6 +16,21 @@ export interface Project {
   description?: string
   status?: number
   owner_id?: number
+  organization_id?: number | null
+  organization_name?: string
+}
+
+export interface Organization {
+  id: number
+  code: string
+  name: string
+  description: string
+  type: 'personal' | 'team'
+  owner_id: number
+  my_role: number
+  status: number
+  member_count: number
+  project_count: number
 }
 
 export interface LoginResult {
@@ -24,6 +39,7 @@ export interface LoginResult {
   user: User
   projects: Project[]
   permissions: string[]
+  organizations?: Organization[]
 }
 
 export interface MeResult {
@@ -31,6 +47,7 @@ export interface MeResult {
   projects: Project[]
   permissions: string[]
   current_project_id: number | null
+  organizations?: Organization[]
 }
 
 export interface MenuItem {
