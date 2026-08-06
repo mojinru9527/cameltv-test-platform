@@ -87,6 +87,15 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C110-4 | 用例 P0 口径复核（Batch 110 收敛 418→345：用户端关键域全 P0 + 运营核心模块 P0，用户确认口径后固化） | P2 | 2026-08-06 |
 | ~~C110-5~~ | ~~konfi 关联由推断校准为实测（生产 konfi 29 配置表 + 运营后台 15 模块菜单只读勘察）~~ | P2 | 2026-08-06 |
 
+### batch-111 — 体育平台自动化落地（Batch 111 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C111-1 | internal-network 自托管 runner（win-internal-001）启动后，验证 api-regression 与 prod-smoke 各 1 次成功运行（0s 失败根因=runner offline，B11） | P1 | 2026-08-06 |
+| C111-2 | C110-3 回填合入部署后，生产执行 run-batch-execution.py（170 条）并核对 TestCase 回填（last_run 分布 + has_response） | P1 | 2026-08-06 |
+| C111-3 | UI 定时回归 job+schedule 触发后核对运行报告（P0 spec 10/10） | P2 | 2026-08-06 |
+| C111-4 | Test5 契约补拉（konfi-service/admin-service）导入平台（内网+凭据就绪后；C95-1/C74-2 承接） | P2 | 2026-08-06 |
+
 ### batch-96 — V1 工具审计 / 只读账号 / staging / diff 基线（Batch 96 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
