@@ -1,0 +1,74 @@
+[
+  {
+    "t": "REQ",
+    "method": "GET",
+    "url": "https://admcamel.camel1.tv/login",
+    "post": ""
+  },
+  {
+    "t": "RESP",
+    "status": 200,
+    "url": "https://admcamel.camel1.tv/login",
+    "body": "<!DOCTYPE html>\n<html>\n<head>\n\t\n\t\t<meta charset=\"utf-8\">\n\t\t<meta name=\"renderer\" content=\"webkit\">\n\t\t<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n\t\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, maximum-scale=1\">\n\t\t<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n\t\t<meta http-equiv=\"Expires\" content=\"0\">\n\t\t<meta http-equiv=\"Pragma\" content="
+  },
+  {
+    "t": "REQ",
+    "method": "GET",
+    "url": "https://admcamel.camel1.tv/captcha/generate?uuid=paQ3ZI8ec46iNRaHYPxVmXtMPE19KVvJ&random=0.8732815483950721",
+    "post": ""
+  },
+  {
+    "t": "RESP",
+    "status": 200,
+    "url": "https://admcamel.camel1.tv/captcha/generate?uuid=paQ3ZI8ec46iNRaHYPxVmXtMPE19KVvJ&random=0.8732815483950721",
+    "body": "�PNG\r\n\u001a\n\u0000\u0000\u0000\rIHDR\u0000\u0000\u0001,\u0000\u0000\u0000�\b\u0006\u0000\u0000\u0000*E\u0016B\u0000\u0000(oIDATx^�\t�eU}���k�Z=\u0010�h���Nt%�F[Cb�ai;t�i�$�Ih�\u0006\u0015Ŧ�6\u001a\u0010\u0004\u0014G@f\u0019E\u0004�$\u0011D\bC1O�P\u0005RE\rT\u00015R�<�;���}�_������=���޻��oYu��é�o�����E٘13�-���2f��\">0f�t�\u0014\u0014K�u|��c,�1Ӟ\u0014\u0011��5�\u0019\u000bk̴&�|�\u001b3Z��\u001a3m\u0019V:Ö\u001fS=ca���\u0014%���\u0019S\rca\u0011���\u0017�3f4\u0014-���\u001bS\u001eca��<\u0012�Sf��\u0014-���\u001bS\u001e�ZXE͖��gL���RV�c�eV\n�L��Uo\u0011�i�]V�\u0013eK����\fϬ\u0013V\u0015B)S�1��|r�k\\�Ձ��Rv�c�gV\t�j�T�^Q©��ber�����\u0012�Θ�0k�U�<�*�-S.e֝BH$!1�Ι��\u00193Zf�������گR&U���$\u0012"
+  },
+  {
+    "t": "REQ",
+    "method": "GET",
+    "url": "https://admcamel.camel1.tv/plugins/layui/css/modules/layer/default/loading-0.gif",
+    "post": ""
+  },
+  {
+    "t": "REQ",
+    "method": "POST",
+    "url": "https://admcamel.camel1.tv/captcha/check",
+    "post": "userCode=18476944071&imageVerifyCode=W935&uuid=paQ3ZI8ec46iNRaHYPxVmXtMPE19KVvJ"
+  },
+  {
+    "t": "REQ",
+    "method": "GET",
+    "url": "https://admcamel.camel1.tv/plugins/layui/css/modules/layer/default/loading-2.gif",
+    "post": ""
+  },
+  {
+    "t": "REQ",
+    "method": "GET",
+    "url": "https://admcamel.camel1.tv/captcha/generate?uuid=paQ3ZI8ec46iNRaHYPxVmXtMPE19KVvJ&random=0.8831689790468421",
+    "post": ""
+  },
+  {
+    "t": "RESP",
+    "status": 200,
+    "url": "https://admcamel.camel1.tv/captcha/check",
+    "body": "{\"code\":-1,\"msg\":\"The captha is invalid\",\"success\":false}"
+  },
+  {
+    "t": "RESP",
+    "status": 200,
+    "url": "https://admcamel.camel1.tv/plugins/layui/css/modules/layer/default/loading-0.gif",
+    "body": "GIF89a<\u0000\u0018\u0000�\u000f\u0000�ɧ�������t\r�S\u000f��\u0000��n��G�p:��j��2����D\u0000�f\u0000��\u0000���!�\u000bNETSCAPE2.0\u0003\u0001\u0000\u0000\u0000!�\u000bXMP DataXMP<?xpacket begin=\"﻿\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?> <x:xmpmeta xmlns:x=\"adobe:ns:meta/\" x:xmptk=\"Adobe XMP Core 5.0-c060 61.134777, 2010/02/12-17:32:00        \"> <rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"> <rdf:Description rdf:about=\"\" xmlns:xmpRights=\"http://ns.adobe.com/xap/1.0/righ"
+  },
+  {
+    "t": "RESP",
+    "status": 200,
+    "url": "https://admcamel.camel1.tv/plugins/layui/css/modules/layer/default/loading-2.gif",
+    "body": "GIF89a \u0000 \u0000�\u0000\u0000�����������������򺺺���444\u0001\u0001\u0001\u001b\u001b\u001b��ė�����TTT\u0000\u0000\u0000!�\u000bNETSCAPE2.0\u0003\u0001\u0000\u0000\u0000!�\u0004\u0005\u0005\u0000\u0000\u0000,\u0000\u0000\u0000\u0000 \u0000 \u0000\u0000\u0004�\u0010�I)K��ͧJJ5\u0010�\u0016\u001cU�RK\u0010�\u0014�(\u000e�&\u0013�\u001a05+/�mbp\rz��\f1\u0019\u0002\u0006;$\u00051C\u0001��\u0000I*\t�HCh`A\u0011o\u0001\u0001\u0004\"3qT5�\\�8a�\u0011��B�d\u0014\u000ewxG=Y\u0001\u0006g\u0014\u0001�wHb�\u001dv\bA=�0\u0004V\\�\\�;\u0004\u000b\f\u0007����;���H�������\u001d�0��t%�Hs��rY<H.�\u0013ŉ��\u0004��b�\u0013Z\u001ab�OEg:\u0001�GY].�=�A�OQ�s��\u0000�\\b�h.9�=sg��c��e�\u001d\b�*\u0012�ֆf\u00007D\u0000\u0000!�\u0004\u0005\u0005\u0000\u0000\u0000,\u0000\u0000\u0000\u0000\u0018\u0000\u0017\u0000\u0000\u0004r\u0010�I�\n5�\u0014�\u0007���bRH�h�W�\u0012�*lkL&-)�1-\u0007\u000ev�m\u0000�\u0016)\u0007\u0018�\u0012�M��t�\\���"
+  },
+  {
+    "t": "RESP",
+    "status": 200,
+    "url": "https://admcamel.camel1.tv/captcha/generate?uuid=paQ3ZI8ec46iNRaHYPxVmXtMPE19KVvJ&random=0.8831689790468421",
+    "body": "�PNG\r\n\u001a\n\u0000\u0000\u0000\rIHDR\u0000\u0000\u0001,\u0000\u0000\u0000�\b\u0006\u0000\u0000\u0000*E\u0016B\u0000\u0000#*IDATx^�\t�\u0016řǓl��5��uͱ�*��Me��&��f7�l*\u001b�Q9j�Tb��[$\u001ex�\u0001x!�x��\u0007FE�\u0006\u0001��\u0003Q\u0010\u0004E]E4\b���\u0002*����3n����~z�{�y?���~�;�Ow��Uϼ���\u0001�����&|\u0000_hhh�\u000f���N��i��>����444��\u0004Ž�;Q����PT�k\r\r\rn1����$\u0017�TF��\u001a\u001a�\u001f��\\�uu�\n�����ih�JH�$9�+R;a\u0011E�54t\u0005$2�\u001c�\u0015I&�2�)Ӷ��ݑ�HrLW$��b\b'F\u001f\r\r�DF�cZŞG�#�����X�44�\u0013\u0012\u0019I�i\u0005()��Ŕ�˽�.�����WCC;�\u0012��Vb���u����J!�\u0014}64�\u001d��\\�\u0012����C$e�\b����pb�^�\u0003��L��EE�����T�6�qŀ\u000fJWc"
+  }
+]
