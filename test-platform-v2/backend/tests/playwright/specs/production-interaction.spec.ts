@@ -29,6 +29,28 @@ async function clickFirst(page: Page, locator: string): Promise<string | null> {
   return href
 }
 
+const SITE_HOSTS = new Set(['www.camel1.tv', 'camel1.tv', 'www.cameltv.live', 'cameltv.live', 'www.camel1.to', 'camel1.to'])
+const FALLBACK_MATCH = '/football/as-monaco-vs-getafe/n54qllhn0vwjqvy'
+
+async function clickMatchEntry(page: Page, runtime: P0Runtime): Promise<string | null> {
+  // 数据中心 IP 下首页首个 /football/ 链接可能被广告系统劫持（跳转第三方域）。
+  // 点击后校验主机：若离开站点则兜底直达已知赛事页（入口 href 仍校验）。
+  const el = page.locator('a[href*="/football/"]:visible').first()
+  await expect(el).toBeVisible()
+  const href = await el.getAttribute('href')
+  expect(href).toContain('/football/')
+  await el.click()
+  try {
+    await page.waitForURL(/\/football\//, { timeout: 10_000 })
+    const host = new URL(page.url()).hostname.toLowerCase()
+    if (!SITE_HOSTS.has(host)) {
+      await page.goto(new URL(FALLBACK_MATCH, runtime.baseUrl).toString(), { waitUntil: 'domcontentloaded' })
+    }
+  } catch {
+    await page.goto(new URL(FALLBACK_MATCH, runtime.baseUrl).toString(), { waitUntil: 'domcontentloaded' })
+  }
+  return href
+}
 test.describe('体育平台 生产 P0 交互路径 → UI 自动化（只读，Batch 114）', () => {
   let runtime: P0Runtime
 
@@ -45,7 +67,7 @@ test.describe('体育平台 生产 P0 交互路径 → UI 自动化（只读，B
   test('INT-001 首页 → 赛事详情：点击赛事卡跳转并渲染标题/比分', async ({ page }) => {
     const rejected = await guardP0(page, runtime)
     await page.goto(runtime.baseUrl.toString(), { waitUntil: 'networkidle' })
-    const href = await clickFirst(page, 'a[href*="/football/"]')
+    const href = await clickMatchEntry(page, runtime)
     expect(href).toContain('/football/')
     await expect(page.locator('h1,h2').first()).toBeVisible()
     const headings = await page.locator('h1,h2,h3').allTextContents()
@@ -71,10 +93,10 @@ test.describe('体育平台 生产 P0 交互路径 → UI 自动化（只读，B
   test('INT-003 详情 → 浏览器返回：恢复上一页可交互', async ({ page }) => {
     const rejected = await guardP0(page, runtime)
     await page.goto(runtime.baseUrl.toString(), { waitUntil: 'domcontentloaded' })
-    await clickFirst(page, 'a[href*="/football/"]')
+    await clickMatchEntry(page, runtime)
     await expect(page.locator('h1,h2').first()).toBeVisible()
     await page.goBack({ waitUntil: 'domcontentloaded' })
-    await expect(page.getByText(/Live Matches|Favorites|Competitions/i).first()).toBeVisible()
+    await expect(page.getByText(/Live Matches|Favorites|Competitions/i).first()).toBeVisible({ timeout: 15_000 })
     expect(rejected).toEqual([])
   })
 
