@@ -15,6 +15,8 @@ class UiTestJobCreate(BaseModel):
     test_spec: str = ""
     browser: str = "chromium"       # chromium/firefox/webkit
     environment_id: int | None = None
+    cron_expression: str = ""          # B112-3 定时 cron（空=不定时）
+    schedule_enabled: bool = False     # B112-3 定时开关
 
 
 class UiTestJobUpdate(BaseModel):
@@ -25,6 +27,8 @@ class UiTestJobUpdate(BaseModel):
     test_spec: Optional[str] = None
     browser: Optional[str] = None
     environment_id: int | None = None
+    cron_expression: Optional[str] = None
+    schedule_enabled: Optional[bool] = None
 
 
 class UiTestTriggerRequest(BaseModel):
@@ -70,6 +74,8 @@ class UiTestJobOut(BaseModel):
     environment_id: int | None = None
     status: str = "idle"
     last_result: str = "{}"
+    cron_expression: str = ""
+    schedule_enabled: bool = False
     creator_id: int = 0
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

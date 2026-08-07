@@ -66,20 +66,42 @@ def _execute_schedule(schedule_id: int):
         run_id = run.id
         db.commit()
 
-        execution_result = execute_all_cases(
-            db,
-            sched.plan_id,
-            executor_id=0,
-            project_id=sched.project_id,
-        )
-        result = {
-            "total": execution_result["total"],
-            "pass_": execution_result["passed"],
-            "fail": execution_result["failed"],
-            "skip": execution_result["skipped"],
-            "block": 0,
-            "pending": 0,
-        }
+        if sched.job_type == "ui":
+            # B112-3：UI job 定时 —— 触发 UI job（Playwright 异步执行，schedule run 记录 ui_run_id）
+            from app.services.ui_test_service import trigger_job as trigger_ui_job
+
+            ui_run = trigger_ui_job(
+                db,
+                sched.job_id,
+                sched.project_id,
+                confirm_prod=True,
+                has_trigger_prod=True,
+            )
+            result = {
+                "ui_run_id": ui_run.get("id"),
+                "status": ui_run.get("status"),
+                "total": 1,
+                "pass_": 0,
+                "fail": 0,
+                "skip": 0,
+                "block": 0,
+                "pending": 1,
+            }
+        else:
+            execution_result = execute_all_cases(
+                db,
+                sched.plan_id,
+                executor_id=0,
+                project_id=sched.project_id,
+            )
+            result = {
+                "total": execution_result["total"],
+                "pass_": execution_result["passed"],
+                "fail": execution_result["failed"],
+                "skip": execution_result["skipped"],
+                "block": 0,
+                "pending": 0,
+            }
         run = db.get(TestScheduleRun, run_id)
         sched = db.get(TestSchedule, schedule_id)
         if run is None or sched is None:

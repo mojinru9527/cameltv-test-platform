@@ -19,7 +19,13 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          // 数据中心 Runner 稳定性（B114-2）：禁用 /dev/shm/GPU 与沙箱，降低页面崩溃/OOM
+          args: ['--disable-dev-shm-usage', '--no-sandbox', '--disable-gpu'],
+        },
+      },
     },
     {
       name: 'firefox',

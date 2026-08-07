@@ -11,9 +11,18 @@ from pydantic import BaseModel, ConfigDict, field_validator
 class ScheduleCreate(BaseModel):
     name: str
     description: str = ""
-    plan_id: int
+    plan_id: Optional[int] = None
+    job_type: str = "plan"   # plan | ui（B112-3：UI job 定时）
+    job_id: Optional[int] = None
     cron_expression: str
     enabled: bool = True
+
+    @field_validator("job_type")
+    @classmethod
+    def validate_job_type(cls, v: str) -> str:
+        if v not in ("plan", "ui"):
+            raise ValueError("job_type 仅支持 plan|ui")
+        return v
 
     @field_validator("cron_expression")
     @classmethod
@@ -29,6 +38,8 @@ class ScheduleUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     plan_id: Optional[int] = None
+    job_type: Optional[str] = None
+    job_id: Optional[int] = None
     cron_expression: Optional[str] = None
     enabled: Optional[bool] = None
 
@@ -51,7 +62,9 @@ class ScheduleOut(BaseModel):
     project_id: int = 0
     name: str = ""
     description: str = ""
-    plan_id: int = 0
+    plan_id: Optional[int] = 0
+    job_type: str = "plan"
+    job_id: Optional[int] = None
     cron_expression: str = ""
     enabled: bool = True
     next_run: Optional[datetime] = None

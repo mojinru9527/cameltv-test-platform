@@ -21,6 +21,8 @@ class UiTestJob(Base):
     browser: Mapped[str] = mapped_column(String(20), default="chromium")  # chromium/firefox/webkit
     environment_id: Mapped[int | None] = mapped_column(default=None, index=True)  # 执行环境
     status: Mapped[str] = mapped_column(String(20), default="idle")       # idle/running/done/fail
+    cron_expression: Mapped[str] = mapped_column(String(100), default="")  # B112-3 定时 cron（空=不定时）
+    schedule_enabled: Mapped[bool] = mapped_column(Boolean, default=False)  # B112-3 定时开关
     last_result: Mapped[str] = mapped_column(Text, default="{}")          # JSON summary
     creator_id: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
