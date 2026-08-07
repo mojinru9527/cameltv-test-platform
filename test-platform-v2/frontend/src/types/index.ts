@@ -198,6 +198,32 @@ export interface CoverageReport {
   coverage_rate: number
 }
 
+export interface ReleaseBundleBrief {
+  id: number
+  name: string
+  client_version: string
+  status: string
+}
+
+export interface ProductionDiffItem {
+  name: string
+  change_type: 'new' | 'matched' | 'missing'
+  matched_with?: string
+  source?: string
+}
+
+export interface ProductionDiffResult {
+  summary: {
+    production_total: number
+    requirement_total: number
+    new_count: number
+    matched_count: number
+    missing_count: number
+  }
+  items: ProductionDiffItem[]
+  warnings: string[]
+}
+
 export interface AIGenerateResult {
   document_id: number
   requirement_analysis?: RequirementAnalysis | null
