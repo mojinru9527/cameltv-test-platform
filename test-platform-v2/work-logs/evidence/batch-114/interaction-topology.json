@@ -1,0 +1,2451 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-08-07T03:55:58.330543+00:00",
+  "source": "test-platform-v2\\work-logs\\evidence\\batch-113\\interaction-paths.json",
+  "stats": {
+    "edges_raw": 3172,
+    "nodes": 38,
+    "edges": 119,
+    "p0_nodes": 9,
+    "p0_edges": 8
+  },
+  "nodes": [
+    {
+      "id": "世界杯专题",
+      "p0": true,
+      "pages": [
+        "/worldcup-2026"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "回放",
+      "p0": true,
+      "pages": [
+        "/match-replay",
+        "/match-replay/107123464706493798",
+        "/match-replay/107123464706493799",
+        "/match-replay/107123464706493800",
+        "/match-replay/107123464706493801",
+        "/match-replay/107123464706493802",
+        "/match-replay/107123464706493803",
+        "/match-replay/107123464706493804",
+        "/match-replay/107123464706493805",
+        "/match-replay/107123464706493806",
+        "/match-replay/107123464706493807",
+        "/match-replay/107123464706493808",
+        "/match-replay/107123464706493809",
+        "/match-replay/107123464706493810",
+        "/match-replay/107123464706493811",
+        "/match-replay/107123464706493813",
+        "/match-replay/107123464706493814",
+        "/match-replay/107123464706493815",
+        "/match-replay/107123464706493816",
+        "/match-replay/107123464706493817"
+      ],
+      "page_count": 30
+    },
+    {
+      "id": "我的",
+      "p0": true,
+      "pages": [
+        "/my",
+        "/my/feedback"
+      ],
+      "page_count": 2
+    },
+    {
+      "id": "球队",
+      "p0": true,
+      "pages": [
+        "/team/AC%20Leon%20Monza%20Brianza/zp5rzghpnz5q82w",
+        "/team/AD%20Confian%C3%A7a/vl7oqdehwjvr510",
+        "/team/AEL%20Larisa/k82rekhvg05repz",
+        "/team/AEL%20Limassol/8y39mp1h78omojx",
+        "/team/AS%20Monaco/yl5ergph6ner8k0",
+        "/team/AS%20Roma%20Women/1l4rjnh1e14m7vx",
+        "/team/ASD%20Calcio%20Pavonese/318q66hkpn7qo9j",
+        "/team/Academica%20Do%20Lobito/2y8m4zh83w6ql07",
+        "/team/Agremia%C3%A7%C3%A3o%20Sportiva%20Arapiraquense/4jwq2ghk2l1m0ve",
+        "/team/Aguia%20De%20Maraba/l5ergphoxjkr8k0",
+        "/team/Al%20Markhiya/k82rekhv7gwrepz",
+        "/team/Al-Raed%20SFC/vjxm8gh47epr6od",
+        "/team/Al-Sadd/gpxwrxlhdn6ryk0",
+        "/team/Al-Salmiya/dn1m1gh484vmoep",
+        "/team/Alaves%20B/k82rekhvvynrepz",
+        "/team/Albacete%20B/6ypq3nh5wo7md7o",
+        "/team/Algeria/y0or5jhlw90qwzv",
+        "/team/Always%20Ready/jw2r09hny7vrz84",
+        "/team/Amal%20Tiznit/23xmvkh3665qg8n",
+        "/team/Amazonas%20FC/x7lm7phwg05m2wd"
+      ],
+      "page_count": 517
+    },
+    {
+      "id": "直播间",
+      "p0": true,
+      "pages": [
+        "/football/bidhannagar-msa-vs-bss-sporting-club/animation/y39mp1h620g2moj",
+        "/football/chabab-atlas-khenifra-vs-racing-casablanca/animation/8yomo4h1d369q0j",
+        "/football/kalighat-fc-vs-patha-chakra/animation/l7oqdehg5ojyr51",
+        "/football/kptm-bangi-vs-ukm-fc/animation/3glrw7hnv3o2qdy",
+        "/football/liverpool-vs-as-monaco/965mkyhk9p5wr1g",
+        "/football/persatuan-sepakbola-indonesia-jakarta-vs-arema-fc/animation/2y8m4zh5kwgpql0",
+        "/football/persatuan-sepakbola-indonesia-jakarta-vs-arema-fc/live/2y8m4zh5kwgpql0",
+        "/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9",
+        "/football/shanghai-u17-vs-river-plate-u17/live/3glrw7hnep2zqdy",
+        "/football/tottenham-hotspur-u17-vs-sporting-cp-u17/live/6ypq3nhvdnyzmd7"
+      ],
+      "page_count": 10
+    },
+    {
+      "id": "联赛",
+      "p0": true,
+      "pages": [
+        "/league/Angolan%20Girabola%20League",
+        "/league/Brazilian%20Cup",
+        "/league/CAF%20Champions%20League",
+        "/league/Indian%20Calcutta%20Football%20League",
+        "/league/Indonesian%20Inter%20Island%20Cup",
+        "/league/Indonesian%20President%20Cup",
+        "/league/Indonesian%20Super%20League",
+        "/league/International%20Club%20Friendly",
+        "/league/Malaysian%20University%20League",
+        "/league/Morocco%20Botola%202",
+        "/league/Morocco%20Excellence%20Cup",
+        "/league/Shanghai%20Future%20Star%20Cup",
+        "/league/Spanish%20Segunda%20Divisi%C3%B3n%20RFEF",
+        "/r/league/UEFA%20Europa%20League"
+      ],
+      "page_count": 14
+    },
+    {
+      "id": "资讯",
+      "p0": true,
+      "pages": [
+        "/news/detail/2025-26-Calcutta-Premier-Division-camel-live-Free-Live-Stream-1",
+        "/news/detail/Argentina-National-Team-Kevin-Mac-Allister-Alexis-Mac-Allister-1",
+        "/news/detail/Barcelona-La-Liga-friendly-matches-1",
+        "/news/detail/BrazilianCup-Botafogo-RedBullBragantino-Prediction-1",
+        "/news/detail/BrazilianCup-Botafogo-VascodaGama-Prediction-1",
+        "/news/detail/BrazilianCup-Corinthians-AthleticoParanaense-Fluminense-Bahia-1",
+        "/news/detail/BrazilianCup-Corinthians-AthleticoParanaense-prediction-1",
+        "/news/detail/BrazilianCup-Corinthians-Palmeiras-Prediction-1",
+        "/news/detail/BrazilianCup-Cruzeiro-Atl%C3%A9ticoMineiro-Botafogo-VascodaGama-Prediction-1",
+        "/news/detail/BrazilianCup-Cruzeiro-Atl%C3%A9ticoMineiro-Prediction-1",
+        "/news/detail/BrazilianCup-Flamengo-Atl%C3%A9ticoMineiro-Prediction-1",
+        "/news/detail/BrazilianCup-Fluminense-Bahia-Prediction-1",
+        "/news/detail/BrazilianCup-S%C3%A3oPaulo-AthleticoParanaense-Prediction-1",
+        "/news/detail/Champions-League-3rd-Qualifying-Round-First-Leg-Kick-Off-Time-FREE-Live-Streaming-1",
+        "/news/detail/Competition-getting-Tougher-Deep-Dive-Preview-2026%2F27-European-Leagues-",
+        "/news/detail/East-Bengal-FC-Mohun-Bagan-AC-Indian-Calcutta-Football-League-camel-live-1",
+        "/news/detail/East-Bengal-FC-Mohun-Bagan-AC-Indian-Calcutta-Football-League-camel-live-2",
+        "/news/detail/Europa-League-Aston-Villa-vs-Lille-Prediction-%26-Winning-Bets-1",
+        "/news/detail/Europa-League-Bologna-VS-Aston-Villa-Pro-Prediction-%26-Betting-Tips-1",
+        "/news/detail/Europa-League-Bologna-vs-Roma-Prediction-%26-Winning-Bets-1"
+      ],
+      "page_count": 60
+    },
+    {
+      "id": "赛事详情",
+      "p0": true,
+      "pages": [
+        "/football/aberdeen-f-c-vs-heart-of-midlothian-f-c/1l4rjnh9pdlxm7v",
+        "/football/aberdeen-f-c-vs-rangers-f-c/pxwrxlhyw034ryk",
+        "/football/academica-do-lobito-vs-petro-atletico-de-luanda/3glrw7hnp00eqdy",
+        "/football/ael-larisa-vs-zakynthos/6ypq3nhvj3pemd7",
+        "/football/ael-limassol-vs-atromitos-athens/6ypq3nhvj7z3md7",
+        "/football/al-markhiya-vs-al-salmiya/4jwq2ghn3pd1m0v",
+        "/football/al-raed-sfc-vs-kazma/1l4rjnh9wjw8m7v",
+        "/football/amal-tiznit-vs-chabab-atlas-khenifra/y0or5jh8nv33qwz",
+        "/football/amal-tiznit-vs-racing-casablanca/8yomo4h1dgd5q0j",
+        "/football/amal-tiznit-vs-racing-casablanca/pxwrxlhy0v73ryk",
+        "/football/anderlecht-vs-boulogne/23xmvkh6jxjkqg8",
+        "/football/anderlecht-vs-hammarby/3glrw7hne4n4qdy",
+        "/football/anderlecht-vs-kv-kortrijk/8yomo4h1jo6gq0j",
+        "/football/anderlecht-vs-kv-mechelen/4jwq2ghnw417m0v",
+        "/football/anderlecht-vs-nec-nijmegen/jw2r09hky10yrz8",
+        "/football/anderlecht-vs-paok-saloniki/dj2ryohlowl4q1z",
+        "/football/anderlecht-vs-raal-la-louviere/23xmvkh6zj21qg8",
+        "/football/anderlecht-vs-sint-truidense/l5ergph4do54r8k",
+        "/football/andratx-vs-reus-fc-reddis/vjxm8ghe2o78r6o",
+        "/football/arbroath-vs-heart-of-midlothian-f-c/965mkyhkd0ddr1g"
+      ],
+      "page_count": 432
+    },
+    {
+      "id": "首页",
+      "p0": true,
+      "pages": [
+        "https://www.camel1.tv/"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "league_Brazilian Cu",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/league/Brazilian%20Cup"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "league_Indian Calcu",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/league/Indian%20Calcutta%20Football%20League"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "league_Indonesian P",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/league/Indonesian%20President%20Cup"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "league_Internationa",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/league/International%20Club%20Friendly"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "league_Malaysian Un",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/league/Malaysian%20University%20League"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "league_Shanghai Fut",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/league/Shanghai%20Future%20Star%20Cup"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "league_UEFA Europa ",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/r/league/UEFA%20Europa%20League"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "match_2026-07-01 2",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/match-replay/107123464706493801",
+        "https://www.camel1.tv/match-replay/107123464706493802"
+      ],
+      "page_count": 2
+    },
+    {
+      "id": "match_2026-07-15 2",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/match-replay/107123464706493800"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "match_2026-07-16 2",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/match-replay/107123464706493799"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "match_2026-07-19 2",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/match-replay/107123464706493798"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "match_FIFA World C",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/worldcup-2026"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "match_Match Replay",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/match-replay"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "match_Watch the ma",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/football/as-monaco-vs-getafe/n54qllhn0vwjqvy",
+        "https://www.camel1.tv/football/benfica-vs-heart-of-midlothian-f-c/jw2r09hkze2prz8",
+        "https://www.camel1.tv/football/bidhannagar-msa-vs-bss-sporting-club/animation/y39mp1h620g2moj",
+        "https://www.camel1.tv/football/chabab-atlas-khenifra-vs-racing-casablanca/animation/8yomo4h1d369q0j",
+        "https://www.camel1.tv/football/corinthians-sp-vs-internacional-rs/8yomo4h16pw8q0j",
+        "https://www.camel1.tv/football/jagiellonia-bialystok-vs-rangers-f-c/965mkyhkvjklr1g",
+        "https://www.camel1.tv/football/kalighat-fc-vs-patha-chakra/animation/l7oqdehg5ojyr51",
+        "https://www.camel1.tv/football/kptm-bangi-vs-ukm-fc/animation/3glrw7hnv3o2qdy",
+        "https://www.camel1.tv/football/paok-saloniki-vs-anderlecht/zp5rzghgkn5kq82",
+        "https://www.camel1.tv/football/persatuan-sepakbola-indonesia-jakarta-vs-arema-fc/live/2y8m4zh5kwgpql0",
+        "https://www.camel1.tv/football/petro-atletico-de-luanda-vs-reus-fc-reddis/animation/318q66hx56ovqo9"
+      ],
+      "page_count": 11
+    },
+    {
+      "id": "mine_My",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/my"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "news_News",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/q/news"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Arema FC",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Arema%20FC/jw2r09hlp2lrz84"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_BSS Sporting",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/BSS%20Sporting%20Club/x7lm7ph0zolm2wd"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Bidhannagar ",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Bidhannagar%20MSA/8yomo4hz3goq0j6"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Chabab Atlas",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Chabab%20Atlas%20Khenifra/zp5rzghjn42q82w"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_KPTM Bangi",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/KPTM%20Bangi/jw2r09h1z2jrz84"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Kalighat FC",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Kalighat%20FC/x7lm7pho9gkm2wd"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Patha Chakra",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Patha%20Chakra/4jwq2ghv4k4m0ve"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Persija Jaka",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Persatuan%20Sepakbola%20Indonesia%20Jakarta/l5ergpho7p8r8k0"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Petro Atleti",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Petro%20Atletico%20de%20Luanda/k82rekhv69drepz"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Racing Casab",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Racing%20Casablanca/2y8m4zhj89xql07"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_Reus FC Redd",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/Reus%20FC%20Reddis/6ypq3nhl3opmd7o"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "team_UKM FC",
+      "p0": false,
+      "pages": [
+        "https://www.camel1.tv/team/UKM%20FC/4jwq2ghkzvgm0ve"
+      ],
+      "page_count": 1
+    },
+    {
+      "id": "其他页面",
+      "p0": false,
+      "pages": [
+        "",
+        "/",
+        "/@camelsport",
+        "/@sportega1",
+        "/about-us",
+        "/ar",
+        "/bn",
+        "/camel_sports0",
+        "/contact-us",
+        "/en",
+        "/es",
+        "/free-football-live-streaming",
+        "/head-to-head/20260807-as-monaco-vs-getafe",
+        "/head-to-head/20260807-benfica-vs-heart-of-midlothian-f-c",
+        "/head-to-head/20260807-corinthians-sp-vs-internacional-rs",
+        "/head-to-head/20260807-fc-bayern-munich-vs-aston-villa",
+        "/head-to-head/20260807-jagiellonia-bialystok-vs-rangers-f-c",
+        "/head-to-head/20260807-paok-saloniki-vs-anderlecht",
+        "/head-to-head/20260807-singapore-vs-indonesia",
+        "/head-to-head/20260808-bayer-04-leverkusen-vs-sevilla-fc"
+      ],
+      "page_count": 284
+    }
+  ],
+  "edges": [
+    {
+      "from": "match_Watch the ma",
+      "to": "赛事详情",
+      "entries": [
+        "08/08\n-\n22:00\nTottenham Hotspur\nVS\nGetaf",
+        "08/09\n-\n22:00\nHeart of Midlothian F.C.\nV",
+        "08/09\n-\n23:00\nRangers F.C.\nVS\nHibernian ",
+        "08/10\n-\n00:30\nAnderlecht\nVS\nRAAL La Louv",
+        "08/10\n-\n02:15\nJagiellonia Bialystok\nVS\nW",
+        "08/10\n-\n03:00\nPalmeiras - SP\nVS\nInternac",
+        "08/10\n-\n03:30\nBenfica\nVS\nViseu",
+        "08/10\n-\n05:30\nRed Bull Bragantino\nVS\nCor",
+        "08/14\n-\n02:30\nAnderlecht\nVS\nPAOK Salonik",
+        "08/14\n-\n02:30\nRangers F.C.\nVS\nJagielloni",
+        "08/14\n-\n02:45\nHeart of Midlothian F.C.\nV",
+        "08/14\n-\n08:30\nCA Rosario Central\nVS\nCori",
+        "08/16\n-\n01:30\nDeportivo Alavés\nVS\nGetafe",
+        "08/16\n-\n19:30\nSK Beveren\nVS\nAnderlecht",
+        "08/16\n-\n23:30\nJagiellonia Bialystok\nVS\nP",
+        "08/17\n-\n06:30\nCorinthians - SP\nVS\nCruzei",
+        "08/18\n-\n03:15\nCasa Pia AC\nVS\nBenfica",
+        "08/18\n-\n07:00\nInternacional - RS\nVS\nRemo",
+        "08/21\n-\n00:00\nFerencvarosi TC/Gornik Zab",
+        "08/21\n-\n00:00\nGetafe\nVS\nPartizan Belgrad"
+      ],
+      "entry_count": 263,
+      "count": 732,
+      "p0": false
+    },
+    {
+      "from": "match_Watch the ma",
+      "to": "其他页面",
+      "entries": [
+        "APP",
+        "AS Monaco\nVS\nGetafe",
+        "Agi Firmansyah",
+        "Alfeandra Dewangga",
+        "All Hot Matches",
+        "Andritany Ardhiyasa",
+        "Aqil Savik",
+        "Arkhan Fikri",
+        "Arlyansyah Abdulmanan",
+        "Bayer 04 Leverkusen\nVS\nSevilla FC",
+        "Bayu Setiawan",
+        "Benfica\nVS\nHeart of Midlothian F.C.",
+        "Brighton&Hove Albion\nVS\nAS Roma",
+        "CA Rosario Central\nVS\nAldosivi Mar del P",
+        "CF Estrela Amadora SAD\nVS\nSporting CP",
+        "Careca",
+        "Chelsea\nVS\nAC Milan",
+        "Club Brugge\nVS\nKV Kortrijk",
+        "Corinthians - SP\nVS\nInternacional - RS",
+        "Dani Ibrohim"
+      ],
+      "entry_count": 87,
+      "count": 469,
+      "p0": false
+    },
+    {
+      "from": "league_Internationa",
+      "to": "球队",
+      "entries": [
+        "1\nFC Bukovyna Chernivtsi\n3.9\n35",
+        "10\nRigas Futbola Skola\n2.3\n27",
+        "11\nVasas SC II\n4.5\n27",
+        "12\nCarl Zeiss Jena\n3.7\n26",
+        "13\nSandecja Nowy Sacz\n3.7\n26",
+        "14\nBruk Bet Termalica\n3.7\n26",
+        "15\nSiarka Tarnobrzeg\n3.7\n26",
+        "16\nTatran LM\n2.9\n26",
+        "17\nSpVgg Ansbach\n3.3\n26",
+        "18\nEskilstuna United Women\n2.9\n26",
+        "19\nHaugesund\n2.4\n26",
+        "2\nFC Baník Ostrava B\n4.3\n34",
+        "20\nNitra\n5.2\n26",
+        "21\nPaksi FC\n3.6\n25",
+        "22\nOrebro Women\n2.5\n25",
+        "23\nTJ Unie Hlubina\n3.1\n25",
+        "24\nHonefoss BK\n2.8\n25",
+        "25\nNaftan Novopolotsk\n2.8\n25",
+        "26\nThe Strongest\n2.1\n25",
+        "27\nSkeid Oslo\n2.4\n24"
+      ],
+      "entry_count": 112,
+      "count": 112,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-01 2",
+      "to": "赛事详情",
+      "entries": [
+        "AEL LarisaVSZakynthos",
+        "AEL LimassolVSAtromitos Athens",
+        "AS MonacoVSGetafe",
+        "ASD Calcio PavoneseVSDesenzano Calvina",
+        "Al MarkhiyaVSAl-Salmiya",
+        "Al RaedVSKazma",
+        "Aris LimassolVSAl-Sadd",
+        "Badalona WomenVSBristol City Women",
+        "BenficaVSHeart of Midlothian F.C.",
+        "BettembourgVSCS Sanem",
+        "Bidhannagar MSAVSBSS Sporting Club",
+        "CD VillacanasVSCF Talavera de la Reina",
+        "CF IntercityVSVillarreal B",
+        "Chabab Atlas KhenifraVSRacing Casablanca",
+        "Club Atlético UniónVSClub Atlético Lanús",
+        "Como 1907 (W)VSAS Roma Women",
+        "CordobaVSAlmeria",
+        "Corinthians - SPVSInternacional - RS",
+        "CremoneseVSIraklis",
+        "Dos HermanasVSCA Antoniano"
+      ],
+      "entry_count": 54,
+      "count": 108,
+      "p0": false
+    },
+    {
+      "from": "team_Reus FC Redd",
+      "to": "球队",
+      "entries": [
+        "1\nCD Estebona\n0\n0/0/0\n0/0\n0",
+        "1\nCD Guadalajara\n0\n0/0/0\n0/0\n0",
+        "1\nCE Manresa\n0\n0/0/0\n0/0\n0",
+        "1\nUCAM Murcia\n0\n0/0/0\n0/0\n0",
+        "10\nAtletico Madrid C\n0\n0/0/0\n0/0\n0",
+        "10\nLorca Deportiva FC\n0\n0/0/0\n0/0\n0",
+        "10\nReus FC Reddis\n0\n0/0/0\n0/0\n0",
+        "10\nSD Gernika\n0\n0/0/0\n0/0\n0",
+        "10\nUD Marbella\n0\n0/0/0\n0/0\n0",
+        "11\nCD Artistico Navalcarnero\n0\n0/0/0\n0/0",
+        "11\nCD Atletico Paso\n0\n0/0/0\n0/0\n0",
+        "11\nDeportiva Minera\n0\n0/0/0\n0/0\n0",
+        "11\nNaxara\n0\n0/0/0\n0/0\n0",
+        "11\nReal Oviedo B\n0\n0/0/0\n0/0\n0",
+        "12\nGimnastica Torrelavega\n0\n0/0/0\n0/0\n0",
+        "12\nMurcia B\n0\n0/0/0\n0/0\n0",
+        "12\nNumancia\n0\n0/0/0\n0/0\n0",
+        "12\nPena Sport\n0\n0/0/0\n0/0\n0",
+        "12\nXerez Deportivo\n0\n0/0/0\n0/0\n0",
+        "13\nCS Puertollano\n0\n0/0/0\n0/0\n0"
+      ],
+      "entry_count": 98,
+      "count": 98,
+      "p0": false
+    },
+    {
+      "from": "league_Brazilian Cu",
+      "to": "球队",
+      "entries": [
+        "13\nMaringa FC\n2.0\n6",
+        "14\nCeara\n1.2\n6",
+        "15\nOperario Ferroviario PR\n1.2\n6",
+        "16\nNova Iguacu\n1.7\n5",
+        "17\nTuna Luso\n2.5\n5",
+        "20\nMaguary\n2.0\n4",
+        "21\nMadureira\n1.3\n4",
+        "22\nPrimavera\n2.0\n4",
+        "23\nGama\n2.0\n4",
+        "24\nUberlandia MG\n2.0\n4",
+        "25\nAnapolis FC\n2.0\n4",
+        "26\nAvaí FC\n2.0\n4",
+        "27\nVolta Redonda\n1.3\n4",
+        "30\nSanta Catarina\n1.0\n3",
+        "31\nIvinhema FC (MS)\n1.5\n3",
+        "32\nAmerica FC Natal RN\n1.5\n3",
+        "33\nAtletico Clube Goianiense\n0.6\n3",
+        "34\nAmazonas FC\n1.5\n3",
+        "35\nEC Jacuipense\n0.6\n3",
+        "36\nOperario MS\n1.5\n3"
+      ],
+      "entry_count": 86,
+      "count": 86,
+      "p0": false
+    },
+    {
+      "from": "首页",
+      "to": "球队",
+      "entries": [
+        "AC Leon Monza Brianza",
+        "AEL Larisa",
+        "AEL Limassol",
+        "AS Roma Women",
+        "ASD Calcio Pavonese",
+        "Al Markhiya",
+        "Al Raed",
+        "Al-Sadd",
+        "Al-Salmiya",
+        "Anderlecht",
+        "Andorra CF",
+        "Arema FC",
+        "Aris Limassol",
+        "Atromitos Athens",
+        "BSS Sporting Club",
+        "Badalona Women",
+        "Benfica",
+        "Besiktas JK",
+        "Bettembourg",
+        "Bidhannagar MSA"
+      ],
+      "entry_count": 79,
+      "count": 79,
+      "p0": true
+    },
+    {
+      "from": "match_2026-07-01 2",
+      "to": "其他页面",
+      "entries": [
+        "APP",
+        "AS Monaco\nVS\nGetafe",
+        "All Hot Matches",
+        "Bayer 04 Leverkusen\nVS\nSevilla FC",
+        "Benfica\nVS\nHeart of Midlothian F.C.",
+        "Brighton&Hove Albion\nVS\nAS Roma",
+        "CA Rosario Central\nVS\nAldosivi Mar del P",
+        "CF Estrela Amadora SAD\nVS\nSporting CP",
+        "Chelsea\nVS\nAC Milan",
+        "Club Brugge\nVS\nKV Kortrijk",
+        "Corinthians - SP\nVS\nInternacional - RS",
+        "Deportivo Riestra\nVS\nEstudiantes La Plat",
+        "Download on the App Store",
+        "Eintracht Frankfurt\nVS\nHull City",
+        "FC Barcelona\nVS\nNottingham Forest",
+        "FC Bayern Munich\nVS\nAston Villa",
+        "Fulham\nVS\nCrystal Palace",
+        "Home",
+        "Jagiellonia Bialystok\nVS\nRangers F.C.",
+        "Juventus\nVS\nInter Milan"
+      ],
+      "entry_count": 36,
+      "count": 72,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-15 2",
+      "to": "赛事详情",
+      "entries": [
+        "AEL LarisaVSZakynthos",
+        "AEL LimassolVSAtromitos Athens",
+        "AS MonacoVSGetafe",
+        "ASD Calcio PavoneseVSDesenzano Calvina",
+        "Al MarkhiyaVSAl-Salmiya",
+        "Al RaedVSKazma",
+        "Aris LimassolVSAl-Sadd",
+        "Badalona WomenVSBristol City Women",
+        "BenficaVSHeart of Midlothian F.C.",
+        "BettembourgVSCS Sanem",
+        "Bidhannagar MSAVSBSS Sporting Club",
+        "CD VillacanasVSCF Talavera de la Reina",
+        "CF IntercityVSVillarreal B",
+        "Chabab Atlas KhenifraVSRacing Casablanca",
+        "Club Atlético UniónVSClub Atlético Lanús",
+        "Como 1907 (W)VSAS Roma Women",
+        "CordobaVSAlmeria",
+        "Corinthians - SPVSInternacional - RS",
+        "CremoneseVSIraklis",
+        "Dos HermanasVSCA Antoniano"
+      ],
+      "entry_count": 54,
+      "count": 54,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-16 2",
+      "to": "赛事详情",
+      "entries": [
+        "AEL LarisaVSZakynthos",
+        "AEL LimassolVSAtromitos Athens",
+        "AS MonacoVSGetafe",
+        "ASD Calcio PavoneseVSDesenzano Calvina",
+        "Al MarkhiyaVSAl-Salmiya",
+        "Al RaedVSKazma",
+        "Aris LimassolVSAl-Sadd",
+        "Badalona WomenVSBristol City Women",
+        "BenficaVSHeart of Midlothian F.C.",
+        "BettembourgVSCS Sanem",
+        "Bidhannagar MSAVSBSS Sporting Club",
+        "CD VillacanasVSCF Talavera de la Reina",
+        "CF IntercityVSVillarreal B",
+        "Chabab Atlas KhenifraVSRacing Casablanca",
+        "Club Atlético UniónVSClub Atlético Lanús",
+        "Como 1907 (W)VSAS Roma Women",
+        "CordobaVSAlmeria",
+        "Corinthians - SPVSInternacional - RS",
+        "CremoneseVSIraklis",
+        "Dos HermanasVSCA Antoniano"
+      ],
+      "entry_count": 54,
+      "count": 54,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-19 2",
+      "to": "赛事详情",
+      "entries": [
+        "AEL LarisaVSZakynthos",
+        "AEL LimassolVSAtromitos Athens",
+        "AS MonacoVSGetafe",
+        "ASD Calcio PavoneseVSDesenzano Calvina",
+        "Al MarkhiyaVSAl-Salmiya",
+        "Al RaedVSKazma",
+        "Aris LimassolVSAl-Sadd",
+        "Badalona WomenVSBristol City Women",
+        "BenficaVSHeart of Midlothian F.C.",
+        "BettembourgVSCS Sanem",
+        "Bidhannagar MSAVSBSS Sporting Club",
+        "CD VillacanasVSCF Talavera de la Reina",
+        "CF IntercityVSVillarreal B",
+        "Chabab Atlas KhenifraVSRacing Casablanca",
+        "Club Atlético UniónVSClub Atlético Lanús",
+        "Como 1907 (W)VSAS Roma Women",
+        "CordobaVSAlmeria",
+        "Corinthians - SPVSInternacional - RS",
+        "CremoneseVSIraklis",
+        "Dos HermanasVSCA Antoniano"
+      ],
+      "entry_count": 54,
+      "count": 54,
+      "p0": false
+    },
+    {
+      "from": "match_Match Replay",
+      "to": "赛事详情",
+      "entries": [
+        "AEL LarisaVSZakynthos",
+        "AEL LimassolVSAtromitos Athens",
+        "AS MonacoVSGetafe",
+        "ASD Calcio PavoneseVSDesenzano Calvina",
+        "Al MarkhiyaVSAl-Salmiya",
+        "Al RaedVSKazma",
+        "Aris LimassolVSAl-Sadd",
+        "Badalona WomenVSBristol City Women",
+        "BenficaVSHeart of Midlothian F.C.",
+        "BettembourgVSCS Sanem",
+        "Bidhannagar MSAVSBSS Sporting Club",
+        "CD VillacanasVSCF Talavera de la Reina",
+        "CF IntercityVSVillarreal B",
+        "Chabab Atlas KhenifraVSRacing Casablanca",
+        "Club Atlético UniónVSClub Atlético Lanús",
+        "Como 1907 (W)VSAS Roma Women",
+        "CordobaVSAlmeria",
+        "Corinthians - SPVSInternacional - RS",
+        "CremoneseVSIraklis",
+        "Dos HermanasVSCA Antoniano"
+      ],
+      "entry_count": 54,
+      "count": 54,
+      "p0": false
+    },
+    {
+      "from": "league_UEFA Europa ",
+      "to": "其他页面",
+      "entries": [
+        "Abdellah Zoubir",
+        "Aliou Balde",
+        "Aske Emil Berg Adelgaard",
+        "Bamidele Isa Yusuf",
+        "Baptiste Santamaria",
+        "Bruno Jordão",
+        "Camel Live",
+        "Christos Zafeiris",
+        "Clément Lenglet",
+        "Dalisson De Almeida Leite",
+        "Danylo Sikan",
+        "David Goldar",
+        "Dor Peretz",
+        "Ellis Chapman",
+        "Frank Junior Adjei",
+        "Gabriel Teixeira Aragao",
+        "Giannis Konstantelias",
+        "Gonçalo Rosa Gonçalves Pereira Rodrigues",
+        "Guillem Jaime",
+        "Heine Asen Larsen"
+      ],
+      "entry_count": 52,
+      "count": 52,
+      "p0": false
+    },
+    {
+      "from": "match_FIFA World C",
+      "to": "球队",
+      "entries": [
+        "Algeria",
+        "Argentina",
+        "Australia",
+        "Austria",
+        "Belgium",
+        "Bosnia and Herzegovina",
+        "Brazil",
+        "Cabo Verde",
+        "Canada",
+        "Colombia",
+        "Cote d'Ivoire",
+        "Croatia",
+        "Curacao",
+        "Czechia",
+        "Democratic Republic of the Congo",
+        "Ecuador",
+        "Egypt",
+        "England",
+        "France",
+        "Germany"
+      ],
+      "entry_count": 48,
+      "count": 48,
+      "p0": false
+    },
+    {
+      "from": "team_Arema FC",
+      "to": "其他页面",
+      "entries": [
+        "Achmad Maulana Syarif\nAge 23/INA",
+        "Adi Satryo\nAge 25/INA",
+        "Agusti Ardiansyah\nAge 19/INA",
+        "Alfiansyah\nAge 23/INA",
+        "Andrian Casvari\nAge 27/INA",
+        "Arkhan Fikri\nAge 22/INA",
+        "Aswin\nAge 23/INA",
+        "Bayu Setiawan\nAge 27/INA",
+        "Brandon Scheunemann\nAge 22/INA",
+        "Camel Live",
+        "Dalberto Luan Belo\nAge 31/BRA",
+        "Dedik Setiawan\nAge 32/INA",
+        "Dendi Santoso\nAge 36/INA",
+        "Dwiki Mardiyanto\nAge 26/INA",
+        "Fikri Arjidan\nAge 23/INA",
+        "Gabriel Silva\nAge 30/",
+        "Gianluca Pandenuwu\nAge 28/INA",
+        "Gustavo França Amadio\nAge 28/BRA",
+        "Hamzah Tito\nAge 23/INA",
+        "Hansamu Yama Pranata\nAge 31/INA"
+      ],
+      "entry_count": 45,
+      "count": 45,
+      "p0": false
+    },
+    {
+      "from": "team_Persija Jaka",
+      "to": "其他页面",
+      "entries": [
+        "A. Ajaray\nAge 33/",
+        "Aditya Warman\nAge 21/INA",
+        "Alan Cardoso de Andrade\nAge 29/BRA",
+        "Alfriyanto Nico Saputro\nAge 23/INA",
+        "Allano Brendon De Souza Lima\nAge 31/BRA",
+        "Andritany Ardhiyasa\nAge 34/INA",
+        "Arlyansyah Abdulmanan\nAge 20/INA",
+        "Bruno Nunes De Barros\nAge 31/BRA",
+        "Camel Live",
+        "Carlos Eduardo\nAge 34/BRA",
+        "Cyrus·Margono\nAge 25/INA",
+        "Dia Syayid Alhawari\nAge 21/INA",
+        "Dony Pamungkas\nAge 21/INA",
+        "Eksel Timothy Joseph Runtukahu\nAge 27/IN",
+        "Emaxwell Souza de Lima\nAge 31/BRA",
+        "Figo Dennis Saputrananto\nAge 21/INA",
+        "Fábio da Silva Calonego\nAge 29/BRA",
+        "Gustavo Dos Santos\nAge 30/BRA",
+        "Gustavo França Amadio\nAge 28/BRA",
+        "Hanif Abdurrauf Sjahbandi\nAge 29/INA"
+      ],
+      "entry_count": 38,
+      "count": 38,
+      "p0": false
+    },
+    {
+      "from": "league_UEFA Europa ",
+      "to": "球队",
+      "entries": [
+        "11\nDerry City\n1.5\n3",
+        "13\nFC Twente Enschede\n1.5\n3",
+        "15\nDynamo Kyiv\n0.5\n2",
+        "16\nMSK Zilina\n1.0\n2",
+        "17\nHammarby\n1.0\n2",
+        "18\nSt. Gallen\n1.0\n2",
+        "19\nSheriff Tiraspol\n0.3\n1",
+        "2\nQarabag\n1.5\n6",
+        "20\nVojvodina Novi Sad\n0.5\n1",
+        "21\nTromso IL\n0.5\n1",
+        "6\nHajduk Split\n1.3\n5",
+        "Anderlecht",
+        "Benfica",
+        "Besiktas JK",
+        "CS Universitatea Craiova",
+        "CSKA Sofia",
+        "Egnatia",
+        "FC Hradec Králové",
+        "FC Iberia 1999 Tbilisi",
+        "Ferencvarosi TC"
+      ],
+      "entry_count": 37,
+      "count": 37,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-15 2",
+      "to": "其他页面",
+      "entries": [
+        "APP",
+        "AS Monaco\nVS\nGetafe",
+        "All Hot Matches",
+        "Bayer 04 Leverkusen\nVS\nSevilla FC",
+        "Benfica\nVS\nHeart of Midlothian F.C.",
+        "Brighton&Hove Albion\nVS\nAS Roma",
+        "CA Rosario Central\nVS\nAldosivi Mar del P",
+        "CF Estrela Amadora SAD\nVS\nSporting CP",
+        "Chelsea\nVS\nAC Milan",
+        "Club Brugge\nVS\nKV Kortrijk",
+        "Corinthians - SP\nVS\nInternacional - RS",
+        "Deportivo Riestra\nVS\nEstudiantes La Plat",
+        "Download on the App Store",
+        "Eintracht Frankfurt\nVS\nHull City",
+        "FC Barcelona\nVS\nNottingham Forest",
+        "FC Bayern Munich\nVS\nAston Villa",
+        "Fulham\nVS\nCrystal Palace",
+        "Home",
+        "Jagiellonia Bialystok\nVS\nRangers F.C.",
+        "Juventus\nVS\nInter Milan"
+      ],
+      "entry_count": 36,
+      "count": 36,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-16 2",
+      "to": "其他页面",
+      "entries": [
+        "APP",
+        "AS Monaco\nVS\nGetafe",
+        "All Hot Matches",
+        "Bayer 04 Leverkusen\nVS\nSevilla FC",
+        "Benfica\nVS\nHeart of Midlothian F.C.",
+        "Brighton&Hove Albion\nVS\nAS Roma",
+        "CA Rosario Central\nVS\nAldosivi Mar del P",
+        "CF Estrela Amadora SAD\nVS\nSporting CP",
+        "Chelsea\nVS\nAC Milan",
+        "Club Brugge\nVS\nKV Kortrijk",
+        "Corinthians - SP\nVS\nInternacional - RS",
+        "Deportivo Riestra\nVS\nEstudiantes La Plat",
+        "Download on the App Store",
+        "Eintracht Frankfurt\nVS\nHull City",
+        "FC Barcelona\nVS\nNottingham Forest",
+        "FC Bayern Munich\nVS\nAston Villa",
+        "Fulham\nVS\nCrystal Palace",
+        "Home",
+        "Jagiellonia Bialystok\nVS\nRangers F.C.",
+        "Juventus\nVS\nInter Milan"
+      ],
+      "entry_count": 36,
+      "count": 36,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-19 2",
+      "to": "其他页面",
+      "entries": [
+        "APP",
+        "AS Monaco\nVS\nGetafe",
+        "All Hot Matches",
+        "Bayer 04 Leverkusen\nVS\nSevilla FC",
+        "Benfica\nVS\nHeart of Midlothian F.C.",
+        "Brighton&Hove Albion\nVS\nAS Roma",
+        "CA Rosario Central\nVS\nAldosivi Mar del P",
+        "CF Estrela Amadora SAD\nVS\nSporting CP",
+        "Chelsea\nVS\nAC Milan",
+        "Club Brugge\nVS\nKV Kortrijk",
+        "Corinthians - SP\nVS\nInternacional - RS",
+        "Deportivo Riestra\nVS\nEstudiantes La Plat",
+        "Download on the App Store",
+        "Eintracht Frankfurt\nVS\nHull City",
+        "FC Barcelona\nVS\nNottingham Forest",
+        "FC Bayern Munich\nVS\nAston Villa",
+        "Fulham\nVS\nCrystal Palace",
+        "Home",
+        "Jagiellonia Bialystok\nVS\nRangers F.C.",
+        "Juventus\nVS\nInter Milan"
+      ],
+      "entry_count": 36,
+      "count": 36,
+      "p0": false
+    },
+    {
+      "from": "match_Match Replay",
+      "to": "其他页面",
+      "entries": [
+        "APP",
+        "AS Monaco\nVS\nGetafe",
+        "All Hot Matches",
+        "Bayer 04 Leverkusen\nVS\nSevilla FC",
+        "Benfica\nVS\nHeart of Midlothian F.C.",
+        "Brighton&Hove Albion\nVS\nAS Roma",
+        "CA Rosario Central\nVS\nAldosivi Mar del P",
+        "CF Estrela Amadora SAD\nVS\nSporting CP",
+        "Chelsea\nVS\nAC Milan",
+        "Club Brugge\nVS\nKV Kortrijk",
+        "Corinthians - SP\nVS\nInternacional - RS",
+        "Deportivo Riestra\nVS\nEstudiantes La Plat",
+        "Download on the App Store",
+        "Eintracht Frankfurt\nVS\nHull City",
+        "FC Barcelona\nVS\nNottingham Forest",
+        "FC Bayern Munich\nVS\nAston Villa",
+        "Fulham\nVS\nCrystal Palace",
+        "Home",
+        "Jagiellonia Bialystok\nVS\nRangers F.C.",
+        "Juventus\nVS\nInter Milan"
+      ],
+      "entry_count": 36,
+      "count": 36,
+      "p0": false
+    },
+    {
+      "from": "首页",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 34,
+      "p0": true
+    },
+    {
+      "from": "match_Match Replay",
+      "to": "回放",
+      "entries": [
+        "2026-06-29 2026 FIFA World Cup Round of ",
+        "2026-06-30 2026 FIFA World Cup Round of ",
+        "2026-07-01 2026 FIFA World Cup Round of ",
+        "2026-07-02 2026 FIFA World Cup Round of ",
+        "2026-07-03 2026 FIFA World Cup Round of ",
+        "2026-07-04 2026 FIFA World Cup Round of ",
+        "2026-07-05 2026 FIFA World Cup Round of ",
+        "2026-07-06 2026 FIFA World Cup Round of ",
+        "2026-07-07 2026 FIFA World Cup Round of ",
+        "2026-07-08 2026 FIFA World Cup Round of ",
+        "2026-07-10 2026 FIFA World Cup Quarterfi",
+        "2026-07-15 2026 FIFA World Cup Semifinal",
+        "2026-07-16 2026 FIFA World Cup Semifinal",
+        "2026-07-19 2026 FIFA World Cup Final: En",
+        "2026-07-19 2026 FIFA World Cup Third Pla"
+      ],
+      "entry_count": 15,
+      "count": 29,
+      "p0": false
+    },
+    {
+      "from": "league_Indonesian P",
+      "to": "其他页面",
+      "entries": [
+        "Agi Firmansyah",
+        "Arlyansyah Abdulmanan",
+        "Azwan Ali Rahman",
+        "Balsa·Sekulic",
+        "Camel Live",
+        "Dylan Fox",
+        "Essam Al-Subhi",
+        "Faris Ramli",
+        "Fábio da Silva Calonego",
+        "Gustavo Dos Santos",
+        "Gustavo Henrique",
+        "Hide Higashikawa",
+        "Ikhsan Chan",
+        "Kwon Chang-Hoon",
+        "Marcos Vinicius Silvestre Gaspar",
+        "Miguel Ângelo Marques Pinto Pereira",
+        "Noboru Shimura",
+        "Oscar Santis",
+        "Peeradol Chamrasamee",
+        "Ramadhan Sananta"
+      ],
+      "entry_count": 26,
+      "count": 26,
+      "p0": false
+    },
+    {
+      "from": "news_News",
+      "to": "其他页面",
+      "entries": [
+        "APP",
+        "About Us",
+        "Camel Live English",
+        "Camel Live Español",
+        "Camel Live Indonesia",
+        "Camel Live Português (Brasil)",
+        "Camel Live Português (Portugal)",
+        "Camel Live Winter Transfer Special Page",
+        "Camel Live العربية",
+        "Camel Live हिंदी",
+        "Camel Live বাংলা",
+        "Contact Us",
+        "Download on the App Store",
+        "Follow us on Facebook",
+        "Follow us on Instagram",
+        "Follow us on Telegram",
+        "Follow us on TikTok",
+        "Free Football Live Streaming — Watch Foo",
+        "Home",
+        "Subscribe on YouTube"
+      ],
+      "entry_count": 23,
+      "count": 23,
+      "p0": false
+    },
+    {
+      "from": "league_Shanghai Fut",
+      "to": "其他页面",
+      "entries": [
+        "Ashiah Haughton-Sinclair",
+        "Camel Live",
+        "Cheng Shenghan",
+        "David Makinde",
+        "Eliabe Alves",
+        "Emerson Nwaneri",
+        "Jaden Maghoma",
+        "Jayden Nyamapfene",
+        "Jayden Oba",
+        "Joaquin Adrian Amor",
+        "Lautaro Ariel Saucedo",
+        "Leonardo Damiao",
+        "Li Qiufu",
+        "Li Wenbo",
+        "Liang Jinhong",
+        "Lyu Mengyang",
+        "Martim Baptista",
+        "Martim Oliveira",
+        "Mateo Lionel Lescano",
+        "Rolf-Samuel Guie-Mien"
+      ],
+      "entry_count": 22,
+      "count": 22,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-01 2",
+      "to": "回放",
+      "entries": [
+        "2026-06-29 2026 FIFA World Cup Round of ",
+        "2026-06-30 2026 FIFA World Cup Round of ",
+        "2026-07-01 2026 FIFA World Cup Round of ",
+        "2026-07-02 2026 FIFA World Cup Round of ",
+        "2026-07-03 2026 FIFA World Cup Round of ",
+        "2026-07-04 2026 FIFA World Cup Round of ",
+        "2026-07-05 2026 FIFA World Cup Round of ",
+        "2026-07-06 2026 FIFA World Cup Round of ",
+        "2026-07-07 2026 FIFA World Cup Round of ",
+        "2026-07-08 2026 FIFA World Cup Round of ",
+        "2026-07-10 2026 FIFA World Cup Quarterfi",
+        "2026-07-19 2026 FIFA World Cup Third Pla",
+        "Match Replays"
+      ],
+      "entry_count": 13,
+      "count": 22,
+      "p0": false
+    },
+    {
+      "from": "match_Watch the ma",
+      "to": "球队",
+      "entries": [
+        "AS Monaco",
+        "Anderlecht",
+        "Arema FC",
+        "BSS Sporting Club",
+        "Benfica",
+        "Bidhannagar MSA",
+        "Chabab Atlas Khenifra",
+        "Corinthians - SP",
+        "Getafe",
+        "Heart of Midlothian F.C.",
+        "Internacional - RS",
+        "Jagiellonia Bialystok",
+        "KPTM Bangi",
+        "Kalighat FC",
+        "PAOK Saloniki",
+        "Patha Chakra",
+        "Persija Jakarta",
+        "Petro Atletico de Luanda",
+        "Racing Casablanca",
+        "Rangers F.C."
+      ],
+      "entry_count": 22,
+      "count": 22,
+      "p0": false
+    },
+    {
+      "from": "team_Petro Atleti",
+      "to": "球队",
+      "entries": [
+        "1\nPetro Atletico de Luanda\n28\n21/5/2\n59/",
+        "10\nSagrada Esperanca\n27\n8/10/9\n31/36\n34",
+        "11\nCD Sao Salvador\n29\n9/7/13\n26/32\n34",
+        "12\nAcademica Do Lobito\n29\n8/10/11\n24/29\n",
+        "13\nRecreativo do Libolo\n29\n9/6/14\n25/36\n",
+        "15\nRedonda\n29\n5/5/19\n14/46\n20",
+        "16\nRSD Guelson FC\n28\n5/3/20\n23/47\n18",
+        "2\nWiliete S.C.\n29\n18/7/4\n48/28\n61",
+        "3\nPrimeiro de Agosto\n27\n13/12/2\n44/18\n51",
+        "4\nDesportivo Huila\n27\n11/9/7\n32/23\n42",
+        "5\nBravos do Maquis\n28\n12/5/11\n32/28\n41",
+        "6\nKabuscorp do Palanca\n29\n10/11/8\n25/21\n",
+        "7\nInterclube Luanda\n29\n9/12/8\n34/27\n39",
+        "8\nEstrela Clube 1 de Maio\n29\n10/6/13\n29/",
+        "9\nProgresso da Lunda Sul\n28\n8/10/10\n23/2",
+        "Degrade Team\n14\nLuanda CIty\n29\n9/6/14\n21",
+        "Gimnastic de Tarragona",
+        "Reus FC Reddis",
+        "SD Huesca",
+        "Teruel"
+      ],
+      "entry_count": 21,
+      "count": 21,
+      "p0": false
+    },
+    {
+      "from": "league_UEFA Europa ",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 20,
+      "p0": false
+    },
+    {
+      "from": "team_Arema FC",
+      "to": "球队",
+      "entries": [
+        "1\nPersib Bandung\n34\n24/7/3\n59/22\n79",
+        "10\nPersita Tangerang\n34\n13/6/15\n38/37\n45",
+        "11\nPSIM Yogyakarta\n34\n11/12/11\n43/44\n45",
+        "12\nPersatuan sepak bola Indonesia Kediri",
+        "13\nPersatuan Sepakbola Indonesia Jepara\n",
+        "14\nMadura United\n34\n9/8/17\n37/54\n35",
+        "15\nPSM Makassar\n34\n8/10/16\n39/49\n34",
+        "17\nSemen Padang\n34\n5/5/24\n22/65\n20",
+        "18\nPSBS Biak Numfor\n34\n4/6/24\n31/95\n18",
+        "2\nBorneo FC Samarinda\n34\n25/4/5\n74/31\n79",
+        "3\nPersija Jakarta\n34\n22/5/7\n65/29\n71",
+        "4\nPersebaya Surabaya\n34\n16/10/8\n61/35\n58",
+        "5\nBhayangkara Presisi Indonesia FC\n34\n16",
+        "6\nMalut United\n34\n15/8/11\n68/53\n53",
+        "7\nDewa United FC\n34\n16/5/13\n44/37\n53",
+        "8\nBali United\n34\n14/9/11\n57/48\n51",
+        "9\nArema FC\n34\n13/9/12\n53/47\n48",
+        "DPMM FC",
+        "Degrade Team\n16\nPersis Solo FC\n34\n8/10/1",
+        "Tampines Rovers FC"
+      ],
+      "entry_count": 20,
+      "count": 20,
+      "p0": false
+    },
+    {
+      "from": "team_Persija Jaka",
+      "to": "球队",
+      "entries": [
+        "1\nPersib Bandung\n34\n24/7/3\n59/22\n79",
+        "10\nPersita Tangerang\n34\n13/6/15\n38/37\n45",
+        "11\nPSIM Yogyakarta\n34\n11/12/11\n43/44\n45",
+        "12\nPersatuan sepak bola Indonesia Kediri",
+        "13\nPersatuan Sepakbola Indonesia Jepara\n",
+        "14\nMadura United\n34\n9/8/17\n37/54\n35",
+        "15\nPSM Makassar\n34\n8/10/16\n39/49\n34",
+        "17\nSemen Padang\n34\n5/5/24\n22/65\n20",
+        "18\nPSBS Biak Numfor\n34\n4/6/24\n31/95\n18",
+        "2\nBorneo FC Samarinda\n34\n25/4/5\n74/31\n79",
+        "3\nPersija Jakarta\n34\n22/5/7\n65/29\n71",
+        "4\nPersebaya Surabaya\n34\n16/10/8\n61/35\n58",
+        "5\nBhayangkara Presisi Indonesia FC\n34\n16",
+        "6\nMalut United\n34\n15/8/11\n68/53\n53",
+        "7\nDewa United FC\n34\n16/5/13\n44/37\n53",
+        "8\nBali United\n34\n14/9/11\n57/48\n51",
+        "9\nArema FC\n34\n13/9/12\n53/47\n48",
+        "Degrade Team\n16\nPersis Solo FC\n34\n8/10/1",
+        "PSMS Medan",
+        "Port FC"
+      ],
+      "entry_count": 20,
+      "count": 20,
+      "p0": false
+    },
+    {
+      "from": "team_Arema FC",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 19,
+      "p0": false
+    },
+    {
+      "from": "team_Chabab Atlas",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 19,
+      "p0": false
+    },
+    {
+      "from": "team_Kalighat FC",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 19,
+      "p0": false
+    },
+    {
+      "from": "team_Persija Jaka",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 19,
+      "p0": false
+    },
+    {
+      "from": "team_Petro Atleti",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 19,
+      "p0": false
+    },
+    {
+      "from": "team_Racing Casab",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 19,
+      "p0": false
+    },
+    {
+      "from": "league_Internationa",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 18,
+      "p0": false
+    },
+    {
+      "from": "team_BSS Sporting",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 18,
+      "p0": false
+    },
+    {
+      "from": "team_Patha Chakra",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 18,
+      "p0": false
+    },
+    {
+      "from": "team_Petro Atleti",
+      "to": "其他页面",
+      "entries": [
+        "Antonio Rosa Ribeiro\n#19",
+        "Ariclene De Assuncao De Oliveira\n#3",
+        "Camel Live",
+        "Constantino Carlos Antonio\n#26",
+        "Dennis Sesugh\n#9 NGR",
+        "Eddie Afonso\n#0 ANG",
+        "Fernando Bumba Mendes\n#17",
+        "Francisco Marta Agostinho Da Rosa\n#21",
+        "Gerson Bruno Da Costa\n#22",
+        "Gomito Fonseca\n#6 ANG",
+        "Herenilson·Caifalo do Carmo\n#0 ANG",
+        "Jonathan Toro\n#0 HON",
+        "Maludi Francisco Caxala\n#4",
+        "Pedro Domingos Agostinho\n#24",
+        "Pedro Miguel Santos Aparício\n#0 POR",
+        "Roandro Ivan Da Fonseca Semedo\n#27",
+        "Tresor Stanisias De Sousa\n#23",
+        "Valdisney Costa Santos\n#20"
+      ],
+      "entry_count": 18,
+      "count": 18,
+      "p0": false
+    },
+    {
+      "from": "team_Reus FC Redd",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 18,
+      "p0": false
+    },
+    {
+      "from": "team_Chabab Atlas",
+      "to": "球队",
+      "entries": [
+        "1\nMaghrib Association Tetouan\n30\n14/11/5",
+        "10\nChabab Ben Guerir\n30\n8/13/9\n25/28\n37",
+        "11\nUSM Oujda\n30\n9/10/11\n29/30\n37",
+        "12\nSCCM Chabab Mohamedia\n30\n9/9/12\n25/37",
+        "13\nKAC de Kenitra\n30\n8/12/10\n35/36\n36",
+        "14\nUnion Sportive Boujaad\n30\n7/14/9\n25/2",
+        "16\nRacing Casablanca\n30\n3/9/18\n21/43\n18",
+        "2\nWydad Temara\n30\n13/14/3\n35/26\n53",
+        "3\nAmal Tiznit\n30\n10/16/4\n35/26\n46",
+        "4\nJeunesse Massira\n30\n11/11/8\n29/21\n44",
+        "5\nChabab Atlas Khenifra\n30\n11/11/8\n26/21",
+        "6\nJeunesse Sportive Soualem\n30\n10/12/8\n3",
+        "7\nStade Marocain du Rabat\n30\n11/8/11\n23/",
+        "8\nWydad Fes\n30\n9/11/10\n34/30\n38",
+        "9\nMCO Mouloudia Oujda\n30\n8/13/9\n35/38\n37",
+        "CODM Meknes",
+        "Degrade Team\n15\nRaja de Beni Mellal\n30\n6"
+      ],
+      "entry_count": 17,
+      "count": 17,
+      "p0": false
+    },
+    {
+      "from": "team_Racing Casab",
+      "to": "球队",
+      "entries": [
+        "1\nMaghrib Association Tetouan\n30\n14/11/5",
+        "10\nChabab Ben Guerir\n30\n8/13/9\n25/28\n37",
+        "11\nUSM Oujda\n30\n9/10/11\n29/30\n37",
+        "12\nSCCM Chabab Mohamedia\n30\n9/9/12\n25/37",
+        "13\nKAC de Kenitra\n30\n8/12/10\n35/36\n36",
+        "14\nUnion Sportive Boujaad\n30\n7/14/9\n25/2",
+        "16\nRacing Casablanca\n30\n3/9/18\n21/43\n18",
+        "2\nWydad Temara\n30\n13/14/3\n35/26\n53",
+        "3\nAmal Tiznit\n30\n10/16/4\n35/26\n46",
+        "4\nJeunesse Massira\n30\n11/11/8\n29/21\n44",
+        "5\nChabab Atlas Khenifra\n30\n11/11/8\n26/21",
+        "6\nJeunesse Sportive Soualem\n30\n10/12/8\n3",
+        "7\nStade Marocain du Rabat\n30\n11/8/11\n23/",
+        "8\nWydad Fes\n30\n9/11/10\n34/30\n38",
+        "9\nMCO Mouloudia Oujda\n30\n8/13/9\n35/38\n37",
+        "Degrade Team\n15\nRaja de Beni Mellal\n30\n6",
+        "Jeunesse Sportive Massira"
+      ],
+      "entry_count": 17,
+      "count": 17,
+      "p0": false
+    },
+    {
+      "from": "league_Brazilian Cu",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 16,
+      "p0": false
+    },
+    {
+      "from": "news_News",
+      "to": "资讯",
+      "entries": [
+        "Argentine Journalist Reveals: Three Play",
+        "Arteta Tells Vinicius Arsenal Will Build",
+        "As the Fireworks Fade, the Passion Endur",
+        "Barcelona Join the Race for Rodri: Real ",
+        "Dramatic Twist in Infantino’s Re-electio",
+        "FIFA Faces Crisis: Three Continental Con",
+        "FIFA Official Statement: Full Backing fo",
+        "Fourth Spell in Charge? Louis van Gaal O",
+        "How to Watch Champions League - 3rd Qual",
+        "How to Watch European Top Clubs Friendly",
+        "How to Watch Friendly Match AC Milan vs ",
+        "How to Watch Friendly Match Chelsea vs J",
+        "Manchester City Delay Negotiations: Hopi",
+        "News",
+        "Transfer Fee Up To €140 Million: Real Ma"
+      ],
+      "entry_count": 15,
+      "count": 16,
+      "p0": false
+    },
+    {
+      "from": "team_Kalighat FC",
+      "to": "球队",
+      "entries": [
+        "Bengal Nagpur Railway FC",
+        "Bhawanipore",
+        "Calcutta Customs",
+        "Calcutta Police Club",
+        "East Bengal Club II",
+        "George Telegraph FC",
+        "Kalighat FC",
+        "Kalighat Sports Lovers",
+        "Kidderpore SC",
+        "Measures Club",
+        "Mohammedan SC",
+        "Mohun Bagan SG II",
+        "Nan Samiti",
+        "Patha Chakra",
+        "Police AC",
+        "United Kolkata SC"
+      ],
+      "entry_count": 16,
+      "count": 16,
+      "p0": false
+    },
+    {
+      "from": "league_Internationa",
+      "to": "资讯",
+      "entries": [
+        "4 Wins and 1 Draw! Pochettino Guides USA",
+        "Called Up to Argentina National Team! Ke",
+        "French Football Federation Once Wanted t",
+        "How to Watch European Top Clubs Friendly",
+        "How to Watch Friendly Match AC Milan vs ",
+        "How to Watch Friendly Match Chelsea vs J",
+        "How to Watch Friendly Match Chelsea vs T",
+        "How to Watch Friendly Match Man City vs ",
+        "How to Watch International Friendly (Upd",
+        "Messi: 114 Goals, 60 Assists & 4 Trophie",
+        "Paqueta: Regret Not Scoring; Ancelotti T",
+        "Roque: Lost All Confidence When Returnin",
+        "To Boost Revenue, Barcelona Plans to Pla",
+        "Tunisia Coach: Estêvão Has Incredible Ta"
+      ],
+      "entry_count": 14,
+      "count": 15,
+      "p0": false
+    },
+    {
+      "from": "league_UEFA Europa ",
+      "to": "资讯",
+      "entries": [
+        "7/6 Wins in 3 Days! Bologna vs Aston Vil",
+        "75% Europa League Win Rate This Season! ",
+        "76% Win Rate | Nottingham Forest vs FC M",
+        "80% Win Rate | Aston Villa vs Lille Sure",
+        "Competition getting Tougher:Deep-Dive Pr",
+        "Don’t Bet Roma Win! Hidden Risks In Bolo",
+        "EXCLUSIVE Data Analysis | Stuttgart vs P",
+        "Europa League: Porto vs Stuttgart Predic",
+        "How to Watch Europa League Semi-Final : ",
+        "Mar 12th Must-Watch Football: 4 Europa L",
+        "Mar 19th Must-Watch Football: Key Matche",
+        "Must-Win Crisis! Porto vs Nottingham For",
+        "Secured the Only Premier League Win in E",
+        "Shock All-Time Europa League Rankings! S",
+        "Unprecedented Dominance! 6 Premier Leagu"
+      ],
+      "entry_count": 15,
+      "count": 15,
+      "p0": false
+    },
+    {
+      "from": "team_BSS Sporting",
+      "to": "球队",
+      "entries": [
+        "BSS Sporting Club",
+        "Bengal Nagpur Railway FC",
+        "Bidhannagar MSA",
+        "Calcutta Customs",
+        "East Bengal Club II",
+        "East Bengal FC",
+        "George Telegraph FC",
+        "Kalighat FC",
+        "Kalighat Sports Lovers",
+        "Measures Club",
+        "Mohun Bagan SG II",
+        "Patha Chakra",
+        "Police AC",
+        "Suruchi Sangha",
+        "United SC Kolkata"
+      ],
+      "entry_count": 15,
+      "count": 15,
+      "p0": false
+    },
+    {
+      "from": "team_Patha Chakra",
+      "to": "球队",
+      "entries": [
+        "BSS Sporting Club",
+        "Bengal Nagpur Railway FC",
+        "Bidhannagar MSA",
+        "Calcutta Customs",
+        "East Bengal Club II",
+        "East Bengal FC",
+        "George Telegraph FC",
+        "Kalighat FC",
+        "Kalighat Sports Lovers",
+        "Measures Club",
+        "Mohun Bagan SG II",
+        "Patha Chakra",
+        "Police AC",
+        "Suruchi Sangha",
+        "United Kolkata SC"
+      ],
+      "entry_count": 15,
+      "count": 15,
+      "p0": false
+    },
+    {
+      "from": "team_Racing Casab",
+      "to": "其他页面",
+      "entries": [
+        "Achraf Bnidihya\n#0",
+        "Ahmed Bougaizane\n#6",
+        "Amine Dghoughi\n#0 MAR",
+        "Amine Lemsen\n#0 MAR",
+        "Camel Live",
+        "Chihab Fellat\n#0 MAR",
+        "Guillaume Nicaise Horey Daho\n#0 CIV",
+        "Hamza Madani\n#0 MAR",
+        "Imad Boumahras\n#13",
+        "Mohssin El Khiyati\n#0 MAR",
+        "Rachid Kawkab\n#0 MAR",
+        "Youssef El Basri\n#0 MAR",
+        "Zakaria Amimi\n#0"
+      ],
+      "entry_count": 13,
+      "count": 13,
+      "p0": false
+    },
+    {
+      "from": "league_Brazilian Cu",
+      "to": "资讯",
+      "entries": [
+        "Brazilian Cup : Botafogo VS Vasco da Gam",
+        "Brazilian Cup : Botafogo vs. Red Bull Br",
+        "Brazilian Cup : Corinthians vs. Palmeira",
+        "Brazilian Cup : Cruzeiro VS Atlético Min",
+        "Brazilian Cup : Flamengo vs. Atlético Mi",
+        "Brazilian Cup : Fluminense VS Bahia Pred",
+        "Brazilian Cup : São Paulo vs. Athletico ",
+        "Brazilian Cup: Corinthians VS Athletico ",
+        "July 30nd Key Football Fixtures! Interna",
+        "July 31nd Key Football Fixtures! Portugu",
+        "September 10st Key Football Fixtures! Br",
+        "September 11st Key Football Fixtures! Br"
+      ],
+      "entry_count": 12,
+      "count": 12,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-15 2",
+      "to": "回放",
+      "entries": [
+        "2026-06-30 2026 FIFA World Cup Round of ",
+        "2026-07-01 2026 FIFA World Cup Round of ",
+        "2026-07-02 2026 FIFA World Cup Round of ",
+        "2026-07-03 2026 FIFA World Cup Round of ",
+        "2026-07-05 2026 FIFA World Cup Round of ",
+        "2026-07-06 2026 FIFA World Cup Round of ",
+        "2026-07-10 2026 FIFA World Cup Quarterfi",
+        "2026-07-16 2026 FIFA World Cup Semifinal",
+        "2026-07-19 2026 FIFA World Cup Third Pla",
+        "Match Replays"
+      ],
+      "entry_count": 10,
+      "count": 11,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-16 2",
+      "to": "回放",
+      "entries": [
+        "2026-06-29 2026 FIFA World Cup Round of ",
+        "2026-06-30 2026 FIFA World Cup Round of ",
+        "2026-07-03 2026 FIFA World Cup Round of ",
+        "2026-07-05 2026 FIFA World Cup Round of ",
+        "2026-07-06 2026 FIFA World Cup Round of ",
+        "2026-07-07 2026 FIFA World Cup Round of ",
+        "2026-07-19 2026 FIFA World Cup Third Pla",
+        "Match Replays"
+      ],
+      "entry_count": 8,
+      "count": 11,
+      "p0": false
+    },
+    {
+      "from": "match_2026-07-19 2",
+      "to": "回放",
+      "entries": [
+        "2026-06-29 2026 FIFA World Cup Round of ",
+        "2026-06-30 2026 FIFA World Cup Round of ",
+        "2026-07-01 2026 FIFA World Cup Round of ",
+        "2026-07-02 2026 FIFA World Cup Round of ",
+        "2026-07-05 2026 FIFA World Cup Round of ",
+        "2026-07-07 2026 FIFA World Cup Round of ",
+        "2026-07-15 2026 FIFA World Cup Semifinal",
+        "Match Replays"
+      ],
+      "entry_count": 8,
+      "count": 11,
+      "p0": false
+    },
+    {
+      "from": "match_Watch the ma",
+      "to": "联赛",
+      "entries": [
+        "Brazilian Cup",
+        "Indian Calcutta Football League",
+        "Indonesian President Cup",
+        "International Club Friendly",
+        "Malaysian University League",
+        "UEFA Europa League"
+      ],
+      "entry_count": 6,
+      "count": 11,
+      "p0": false
+    },
+    {
+      "from": "team_UKM FC",
+      "to": "其他页面",
+      "entries": [
+        "Alexandru Tudose\n#30 ROU",
+        "Camel Live",
+        "Mateo Roskam\n#15 CRO",
+        "Michael Chukwubunna Ijezie\n#9",
+        "Milad·Zanidpour\n#26",
+        "Mohamad Hariz Fazrin\n#17 MAS",
+        "Mohd Irwan Syazmin Wahab\n#19",
+        "Rafizi Hamdan\n#27",
+        "Se-In Nam\n#26",
+        "Syafiq Azri Ahmad Kamal\n#57",
+        "Waheed Akanni·Oseni\n#2"
+      ],
+      "entry_count": 11,
+      "count": 11,
+      "p0": false
+    },
+    {
+      "from": "league_Shanghai Fut",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 10,
+      "p0": false
+    },
+    {
+      "from": "team_Bidhannagar ",
+      "to": "球队",
+      "entries": [
+        "BSS Sporting Club",
+        "Bengal Nagpur Railway FC",
+        "Bidhannagar MSA",
+        "Calcutta Port Trust",
+        "Coal India",
+        "Kidderpore SC",
+        "Patha Chakra",
+        "Uttarpalli MS",
+        "Young Corner"
+      ],
+      "entry_count": 9,
+      "count": 9,
+      "p0": false
+    },
+    {
+      "from": "league_Indonesian P",
+      "to": "球队",
+      "entries": [
+        "2\nArema FC\n3\n2/0/1\n4/2\n6 / Arema FC",
+        "2\nPersija Jakarta\n3\n1/1/1\n6/4\n4 / Persija Jakarta",
+        "3\nPort FC\n3\n1/1/1\n5/4\n4 / Port FC",
+        "3\nTampines Rovers FC\n3\n0/1/2\n3/5\n1 / 6\nTampines Rovers FC\n1.0\n3",
+        "4\nDPMM FC\n3\n0/1/2\n2/5\n1 / 7\nDPMM FC\n0.7\n2",
+        "4\nPSMS Medan\n3\n0/0/3\n1/7\n0 / PSMS Medan",
+        "Qualified\n1\nPersebaya Surabaya\n3\n3/0/0\n4 / Persebaya Surabaya",
+        "Qualified\n1\nPersib Bandung\n3\n3/0/0\n3/0\n9 / Persib Bandung"
+      ],
+      "entry_count": 8,
+      "count": 8,
+      "p0": false
+    },
+    {
+      "from": "league_Shanghai Fut",
+      "to": "球队",
+      "entries": [
+        "2\nArsenal U17\n2\n1/0/1\n4/4\n3 / Arsenal U17",
+        "2\nRiver Plate U17\n2\n1/1/0\n3/2\n4 / River Plate U17",
+        "3\nBayer Leverkusen U17\n2\n0/1/1\n1/2\n1 / Bayer Leverkusen U17",
+        "3\nSporting CP U17\n2\n0/1/1\n4/5\n1 / Sporting CP U17",
+        "4\nAthletic Bilbao U17\n2\n0/1/1\n0/1\n1 / Athletic Bilbao U17",
+        "4\nTottenham Hotspur U17\n2\n0/1/1\n1/2\n1 / Tottenham Hotspur U17",
+        "Semifinal\n1\nChina U17\n2\n2/0/0\n4/2\n6 / China U17",
+        "Semifinal\n1\nShanghai U17\n2\n1/1/0\n4/3\n4 / Shanghai U17"
+      ],
+      "entry_count": 8,
+      "count": 8,
+      "p0": false
+    },
+    {
+      "from": "首页",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 8,
+      "p0": true
+    },
+    {
+      "from": "team_Bidhannagar ",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 7,
+      "p0": false
+    },
+    {
+      "from": "首页",
+      "to": "联赛",
+      "entries": [
+        "Brazilian Cup",
+        "Indian Calcutta Football League",
+        "Indonesian President Cup",
+        "International Club Friendly",
+        "Malaysian University League",
+        "Shanghai Future Star Cup\nRound 3",
+        "UEFA Europa League"
+      ],
+      "entry_count": 7,
+      "count": 7,
+      "p0": true
+    },
+    {
+      "from": "league_Indian Calcu",
+      "to": "资讯",
+      "entries": [
+        "2025 Calcutta Football League (CFL) Stan",
+        "Dominant display! East Bengal thrashes B",
+        "East Bengal beats Mohun Bagan in Calcutt",
+        "East Bengal vs Mohun Bagan Highlights, C",
+        "How to Watch 2025-26 Calcutta Premier Di",
+        "Today in Football History: The Establish"
+      ],
+      "entry_count": 6,
+      "count": 6,
+      "p0": false
+    },
+    {
+      "from": "首页",
+      "to": "回放",
+      "entries": [
+        "2026-07-01 2026 FIFA World Cup Round of ",
+        "2026-07-15 2026 FIFA World Cup Semifinal",
+        "2026-07-16 2026 FIFA World Cup Semifinal",
+        "2026-07-19 2026 FIFA World Cup Final: En",
+        "Match Replays"
+      ],
+      "entry_count": 5,
+      "count": 6,
+      "p0": true
+    },
+    {
+      "from": "league_Indonesian P",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 5,
+      "p0": false
+    },
+    {
+      "from": "team_UKM FC",
+      "to": "球队",
+      "entries": [
+        "KPTM Bangi",
+        "UITM Perlis",
+        "UKM FC",
+        "UniKLFC",
+        "UniSZA"
+      ],
+      "entry_count": 5,
+      "count": 5,
+      "p0": false
+    },
+    {
+      "from": "team_BSS Sporting",
+      "to": "其他页面",
+      "entries": [
+        "Avijit Kar\n#0",
+        "Bright Middleton Mends\n#0",
+        "Camel Live",
+        "William Opoku Asiedu\n#0 GHA"
+      ],
+      "entry_count": 4,
+      "count": 4,
+      "p0": false
+    },
+    {
+      "from": "match_Watch the ma",
+      "to": "直播间",
+      "entries": [
+        "08/09\n-\n21:30\nLiverpool\nVS\nAS Monaco",
+        "Animation",
+        "Video"
+      ],
+      "entry_count": 3,
+      "count": 3,
+      "p0": false
+    },
+    {
+      "from": "team_Arema FC",
+      "to": "联赛",
+      "entries": [
+        "Indonesian Inter Island Cup",
+        "Indonesian President Cup",
+        "Liga 1"
+      ],
+      "entry_count": 3,
+      "count": 3,
+      "p0": false
+    },
+    {
+      "from": "team_KPTM Bangi",
+      "to": "球队",
+      "entries": [
+        "KPTM Bangi",
+        "Masha University FC",
+        "UKM FC"
+      ],
+      "entry_count": 3,
+      "count": 3,
+      "p0": false
+    },
+    {
+      "from": "team_Persija Jaka",
+      "to": "联赛",
+      "entries": [
+        "Indonesian Inter Island Cup",
+        "Indonesian President Cup",
+        "Liga 1"
+      ],
+      "entry_count": 3,
+      "count": 3,
+      "p0": false
+    },
+    {
+      "from": "team_UKM FC",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 3,
+      "p0": false
+    },
+    {
+      "from": "league_Internationa",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "league_Shanghai Fut",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "match_FIFA World C",
+      "to": "其他页面",
+      "entries": [
+        "APP",
+        "Home"
+      ],
+      "entry_count": 2,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "mine_My",
+      "to": "其他页面",
+      "entries": [
+        "Home",
+        "Join Our Telegram\nFree picks Never miss "
+      ],
+      "entry_count": 2,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "news_News",
+      "to": "我的",
+      "entries": [
+        "Feedback",
+        "My"
+      ],
+      "entry_count": 2,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "team_BSS Sporting",
+      "to": "资讯",
+      "entries": [
+        "Dominant display! East Bengal thrashes B",
+        "How to Watch 2025-26 Calcutta Premier Di"
+      ],
+      "entry_count": 2,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "team_Chabab Atlas",
+      "to": "联赛",
+      "entries": [
+        "Morocco Botola 2",
+        "Morocco Excellence Cup"
+      ],
+      "entry_count": 2,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "team_Patha Chakra",
+      "to": "其他页面",
+      "entries": [
+        "Anto Pejic\n#0",
+        "Camel Live"
+      ],
+      "entry_count": 2,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "team_Petro Atleti",
+      "to": "联赛",
+      "entries": [
+        "Angolan Girabola League",
+        "CAF Champions League"
+      ],
+      "entry_count": 2,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "team_Racing Casab",
+      "to": "联赛",
+      "entries": [
+        "Morocco Botola 2",
+        "Morocco Excellence Cup"
+      ],
+      "entry_count": 2,
+      "count": 2,
+      "p0": false
+    },
+    {
+      "from": "league_Brazilian Cu",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "league_Brazilian Cu",
+      "to": "联赛",
+      "entries": [
+        "Brazil Cup"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "league_Indian Calcu",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "league_Indian Calcu",
+      "to": "联赛",
+      "entries": [
+        "Kolkata Football League"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "league_Indonesian P",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "league_Internationa",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "league_Internationa",
+      "to": "联赛",
+      "entries": [
+        "International Club Friendly Matches"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "league_Malaysian Un",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "mine_My",
+      "to": "我的",
+      "entries": [
+        "My"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "mine_My",
+      "to": "资讯",
+      "entries": [
+        "News"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Arema FC",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_BSS Sporting",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Bidhannagar ",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Bidhannagar ",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Chabab Atlas",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Chabab Atlas",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_KPTM Bangi",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_KPTM Bangi",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_KPTM Bangi",
+      "to": "赛事详情",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Kalighat FC",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Kalighat FC",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Patha Chakra",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Persija Jaka",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Petro Atleti",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Racing Casab",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Reus FC Redd",
+      "to": "其他页面",
+      "entries": [
+        "Camel Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Reus FC Redd",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_Reus FC Redd",
+      "to": "联赛",
+      "entries": [
+        "Spanish Segunda División RFEF"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "team_UKM FC",
+      "to": "直播间",
+      "entries": [
+        "Watch the match and see the score betwee"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "首页",
+      "to": "世界杯专题",
+      "entries": [
+        "FIFA World Cup 2026 Free Streaming, Live"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": true
+    },
+    {
+      "from": "首页",
+      "to": "其他页面",
+      "entries": [
+        "Home"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": false
+    },
+    {
+      "from": "首页",
+      "to": "我的",
+      "entries": [
+        "My"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": true
+    },
+    {
+      "from": "首页",
+      "to": "资讯",
+      "entries": [
+        "News"
+      ],
+      "entry_count": 1,
+      "count": 1,
+      "p0": true
+    }
+  ]
+}
