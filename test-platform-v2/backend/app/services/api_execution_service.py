@@ -348,6 +348,8 @@ def _run_assertions(
             r = _assert_type(rule, response_data)
         elif atype == "array_length":
             r = _assert_array_length(rule, response_data)
+        elif atype == "response_structure":
+            r = _assert_response_structure(rule, response_data)
         else:
             r = {"type": atype, "expected": rule.get("expected"), "actual": None,
                  "passed": False, "message": f"未知断言类型: {atype}"}
@@ -607,6 +609,123 @@ def _assert_type(rule: dict, data: Any) -> dict:
         "passed": passed,
         "message": f"{path} 类型: {type(actual).__name__} {'==' if passed else '!='} {expected_type}" + (" ✓" if passed else " ✗"),
     }
+
+
+def _assert_response_structure(rule: dict, data: Any) -> dict:
+    """响应结构断言（Batch 112）：exists / not_empty / is_object_or_array / len_lte。
+
+    语义与 scripts/sports/execute-interface-cases.py::_assert_structure 对齐（97/97 已验证）：
+    - envelope 键缺失 -> 失败；
+    - 200 信封下 data.* 动态缺失 -> warning（passed=True，不判失败，B110-5 口径）；
+    - records[0].* 记录字段以键存在为准（实时数据字段值可合法为空）；
+    - len_lte 超界 -> 失败；hint 型为信息性提示不参与判定。
+    """
+    path = str(rule.get("path") or "")
+    kind = str(rule.get("assert") or "exists")
+
+    if kind == "hint" or not path:
+        return {
+            "type": "response_structure",
+            "path": path,
+            "assert": kind,
+            "expected": "info",
+            "actual": "-",
+            "passed": True,
+            "warning": "信息性提示，不参与判定",
+        }
+
+    node = _structure_resolve(data, path)
+    dynamic_data_path = path == "data" or path.startswith("data.")
+    record_field = "records[" in path or "[0]" in path
+
+    if kind in ("exists", "not_empty", "is_object_or_array"):
+        if node is _JSONPATH_MISSING:
+            if dynamic_data_path:
+                return _structure_result(
+                    rule, node, True, f"{path} {kind} 缺失（动态数据，200 信封保留）",
+                )
+            return _structure_result(rule, node, False, f"{path} {kind} 失败")
+        if kind == "exists":
+            return _structure_result(rule, node, True, "")
+        if kind == "is_object_or_array":
+            ok = isinstance(node, (dict, list))
+            return _structure_result(
+                rule, node, ok, "" if ok else f"{path} 非对象/数组",
+            )
+        if kind == "not_empty":
+            if record_field:
+                return _structure_result(rule, node, True, "记录字段以键存在为准")
+            if node in ("", [], {}, None):
+                return _structure_result(rule, node, False, f"{path} 为空")
+            return _structure_result(rule, node, True, "")
+
+    if kind == "len_lte":
+        expected = int(rule.get("expected") or 0)
+        if isinstance(node, list) and len(node) > expected:
+            return _structure_result(
+                rule, node, False, f"{path} 长度 {len(node)} > {expected}",
+            )
+        return _structure_result(rule, node, True, "")
+
+    return _structure_result(rule, node, False, f"未知断言类型: {kind}")
+
+
+def _structure_resolve(data: Any, path: str) -> Any:
+    """按点号路径解析响应结构节点，缺失返回 _JSONPATH_MISSING。
+
+    兼容 data.records[0].field、data[0]、data.records[]（空下标跳过）。
+    """
+    node = data
+    for seg in _structure_split(path):
+        if node is _JSONPATH_MISSING:
+            return _JSONPATH_MISSING
+        if isinstance(node, dict):
+            if isinstance(seg, int):
+                return _JSONPATH_MISSING
+            node = node.get(seg, _JSONPATH_MISSING)
+        elif isinstance(node, list):
+            if isinstance(seg, int):
+                node = node[seg] if 0 <= seg < len(node) else _JSONPATH_MISSING
+            else:
+                return _JSONPATH_MISSING
+        else:
+            return _JSONPATH_MISSING
+    return node
+
+
+def _structure_split(path: str) -> list:
+    """把 data.records[0].id 拆成 ['data','records',0,'id']，空 [] 段跳过。"""
+    parts: list = []
+    for seg in path.split("."):
+        seg = seg.strip()
+        if not seg or seg == "[]":
+            continue
+        if "[" in seg and seg.endswith("]"):
+            name, _, idx = seg.partition("[")
+            idx = idx.rstrip("]")
+            if name:
+                parts.append(name)
+            if idx.isdigit():
+                parts.append(int(idx))
+        else:
+            parts.append(seg)
+    return parts
+
+
+def _structure_result(rule: dict, actual: Any, passed: bool, message: str) -> dict:
+    out = {
+        "type": "response_structure",
+        "path": rule.get("path", ""),
+        "assert": rule.get("assert", "exists"),
+        "expected": rule.get("expected"),
+        "actual": "<present>" if actual is not _JSONPATH_MISSING else "<missing>",
+        "passed": passed,
+    }
+    if message:
+        out["message"] = message
+        if passed:
+            out["warning"] = message
+    return out
 
 
 def _assert_array_length(rule: dict, data: Any) -> dict:

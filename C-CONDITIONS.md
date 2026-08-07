@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-06 (Batch 109: 邀请链接正式域名 + 生产种子演示用户开关 + 生产启用收尾)
+**最后更新**: 2026-08-07 (Batch 112: response_structure 断言引擎 + 4 端点校准 + 批量执行全绿 + C111-3)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -92,9 +92,16 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C111-1 | internal-network 自托管 runner（win-internal-001）启动后，验证 api-regression 与 prod-smoke 各 1 次成功运行（0s 失败根因=runner offline，B11） | P1 | 2026-08-06 |
-| C111-2 | C110-3 回填合入部署后，生产执行 run-batch-execution.py（170 条）并核对 TestCase 回填（last_run 分布 + has_response） | P1 | 2026-08-06 |
-| C111-3 | UI 定时回归 job+schedule 触发后核对运行报告（P0 spec 10/10） | P2 | 2026-08-06 |
+| C111-2 | C110-3 回填合入部署后，生产执行 run-batch-execution.py（170 条）并核对 TestCase 回填（last_run 分布 + has_response）→ **In-Progress**：batch-112 部署后执行 `run-batch-execution.py --label batch-112`（引擎合入后） | P1 | 2026-08-06 |
+| C111-3 | UI 定时回归 job+schedule 触发后核对运行报告（P0 spec 10/10）→ **In-Progress**：batch-112 部署后执行 `setup-ui-schedule.py --label batch-112` | P2 | 2026-08-06 |
 | C111-4 | Test5 契约补拉（konfi-service/admin-service）导入平台（内网+凭据就绪后；C95-1/C74-2 承接） | P2 | 2026-08-06 |
+
+### batch-112 — 体育平台用例生成方向承接（Batch 112 Leader 条件，用户 2026-08-07 反馈）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C112-1 | 知识中心「体育平台模块-接口-功能」关联梳理，沉淀为用例生成基座（用户端+运营端需求为主、接口为辅、真实体育平台落地补充调整） | P1 | 2026-08-07 |
+| C112-2 | UI 交互点击跳转类用例补充（当前用例缺页面交互维度） | P1 | 2026-08-07 |
 
 ### batch-96 — V1 工具审计 / 只读账号 / staging / diff 基线（Batch 96 Leader 条件）
 
