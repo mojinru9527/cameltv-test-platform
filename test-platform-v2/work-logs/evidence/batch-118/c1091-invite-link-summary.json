@@ -1,0 +1,28 @@
+{
+  "id": "C109-1",
+  "batch": "118",
+  "date": "2026-08-07",
+  "status": "closed",
+  "checks": {
+    "frontend_url": {"expected": "https://cameltv-test-platform1.vercel.app", "actual": "同（PLATFORM_FRONTEND_URL 已配置，邀请链接 base 正确）"},
+    "seed_demo_users_false": {"evidence": ["生产库 sys_user 3 用户/0 演示账号（2026-08-07，batch 112-117 多次自动部署后仍为 0）", "seed.py 仅 settings.seed_demo_users=True 时创建 tester/viewer", "登录/注册页无演示账号入口"], "conclusion": "SEED_DEMO_USERS=false 行为生效（Railway 变量无法直接读取，行为验证）"},
+    "invite_link": {
+      "url": "https://cameltv-test-platform1.vercel.app/register?invite=ZDRu9VGIAMfgD6DTpZleKkyRDYME5mWts7FkbxzE634",
+      "http_status": 200,
+      "page_title": "CamelTv 测试平台",
+      "hint_shown": true,
+      "register": {
+        "username": "c1091_check_215243",
+        "user_id": 10,
+        "result": "注册成功，跳转 /my-projects",
+        "project_membership": [{"project_id": 1, "role_id": 2}],
+        "organization_membership": [{"organization_id": 9, "role_id": 1, "name": "我的组织（个人）"}, {"organization_id": 1, "role_id": 3, "name": "我的组织（项目所属）"}]
+      }
+    },
+    "invite_code_exempted": {"code": "54J32FF4PY", "used_count": 0, "note": "有效项目邀请链接免除平台邀请码（auth_service Batch 106 逻辑实测）"},
+    "project_invite_consumed": {"used_count": 1, "status": 1},
+    "demo_accounts_after": 0
+  },
+  "screenshots": ["evidence/batch-118/c1091-register-page.png", "evidence/batch-118/c1091-after-register.png"],
+  "note": "测试账号 c1091_check_215243 保留用于后续回归；如需清理可在运营后台停用"
+}

@@ -177,6 +177,27 @@ export interface RequirementAnalysis {
   overall_assessment: string
 }
 
+export interface CoverageReportItem {
+  module: string
+  function_point: string
+  covered: boolean
+  case_count: number
+}
+
+export interface CoverageGap {
+  module: string
+  function_point: string
+}
+
+export interface CoverageReport {
+  matrix: CoverageReportItem[]
+  gaps: CoverageGap[]
+  gap_count: number
+  total_fp: number
+  covered_fp: number
+  coverage_rate: number
+}
+
 export interface AIGenerateResult {
   document_id: number
   requirement_analysis?: RequirementAnalysis | null
@@ -184,6 +205,7 @@ export interface AIGenerateResult {
   api_cases?: AIGeneratedCase[]
   raw_response: string
   extraction_summary?: string      // Lanhu extraction status info
+  coverage_report?: CoverageReport | null   // C116-3/C117-1 覆盖缺口报告
 }
 
 // ── API endpoint matching (batch-34) ──
