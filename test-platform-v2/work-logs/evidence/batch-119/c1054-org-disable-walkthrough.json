@@ -1,0 +1,23 @@
+{
+  "id": "C105-4",
+  "batch": "119",
+  "date": "2026-08-07",
+  "status": "closed",
+  "scenario": {
+    "org": {"id": 10, "name": "C1054走查组织", "type": "team", "owner_id": 4},
+    "project": {"id": 7, "name": "C1054走查项目", "organization_id": 10},
+    "steps": ["创建团队组织+挂组织项目", "DELETE /organizations/10 停用", "Playwright 走查组织入口与项目页", "清理：删除临时项目，组织保持停用隐藏"]
+  },
+  "findings": {
+    "org_entry_hidden_after_disable": true,
+    "evidence": "组织页 body 不含 C1054走查组织；GET /organizations 不再返回 org 10（成员入口不可见）",
+    "project_still_accessible": true,
+    "evidence": "my-projects 页可见 C1054走查项目；GET /projects 返回 project 7（org 10），项目仍可被访问"
+  },
+  "screenshots": [
+    "evidence/batch-119/c1054-org-entry.png",
+    "evidence/batch-119/c1054-project-still-accessible.png"
+  ],
+  "cleanup": "临时项目已删除（DELETE /projects/7 = deleted）；组织 10 保持停用（入口不可见，无残留展示）",
+  "note": "停用后组织入口不可见、项目仍可访问 — 与产品口径一致（项目成员与超管仍可访问项目）"
+}

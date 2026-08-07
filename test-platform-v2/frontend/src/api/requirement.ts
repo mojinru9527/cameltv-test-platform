@@ -232,3 +232,24 @@ export async function confirmApiMatches(
 ): Promise<ApiMatchSelection> {
   return api.post(`/requirements/${documentId}/match-api/confirm`, selection)
 }
+
+
+// ── Batch 119 / C102-4 前端差异面板 ──
+
+export async function listReleaseBundles(): Promise<{ items: Array<{ id: number; name: string; client_version: string; status: string }>; total: number }> {
+  return api.get('/release-bundles', { params: { page: 1, page_size: 100 } })
+}
+
+export async function productionDiff(
+  releaseBundleId: number,
+  productionPages: Array<{ label: string; title?: string; url?: string }>,
+): Promise<{
+  summary: { production_total: number; requirement_total: number; new_count: number; matched_count: number; missing_count: number }
+  items: Array<{ name: string; change_type: 'new' | 'matched' | 'missing'; matched_with?: string; source?: string }>
+  warnings: string[]
+}> {
+  return api.post('/requirement-modules/production-diff', {
+    release_bundle_id: releaseBundleId,
+    production_pages: productionPages,
+  })
+}
