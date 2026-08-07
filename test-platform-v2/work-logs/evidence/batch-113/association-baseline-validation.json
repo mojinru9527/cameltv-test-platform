@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-08-07T03:40:36.434243+00:00",
+  "stats": {
+    "user_modules": 13,
+    "admin_modules": 15,
+    "konfi_links": 14,
+    "interface_map": 31,
+    "production_pages": 40
+  },
+  "issues": [],
+  "valid": true,
+  "sample_paths": 34,
+  "konfi_keys": 27,
+  "nav_titles": 15
+}
