@@ -74,3 +74,49 @@ def test_endpoint_gaps_with_db_cases(client, auth_headers, db_session):
     assert data["covered_edges"] == 1
     assert data["gap_edges"] == 1
     assert data["gaps"][0]["to"] == "/worldcup-2026"
+
+
+# ── C120-1 全量拓扑入库 ──
+
+def _edges_payload():
+    return [
+        {"from_module": "首页", "entry": "Match ReplaysShow more", "to": "/match-replay", "evidence": "links"},
+        {"from_module": "首页", "entry": "FIFA World Cup 2026", "to": "/worldcup-2026", "evidence": "links"},
+        {"from_module": "首页", "entry": "All News", "to": "/q/news", "evidence": "links"},
+    ]
+
+
+def test_import_and_load_topology(client, auth_headers, db_session):
+    resp = client.post("/api/v1/interaction-coverage/import",
+                       json={"edges": _edges_payload(), "source_batch": "batch-113"}, headers=auth_headers)
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["added"] == 3
+    assert data["skipped"] == 0
+    # re-import same → all skipped
+    resp = client.post("/api/v1/interaction-coverage/import",
+                       json={"edges": _edges_payload(), "source_batch": "batch-113"}, headers=auth_headers)
+    assert resp.json()["data"]["added"] == 0
+    assert resp.json()["data"]["skipped"] == 3
+    resp = client.get("/api/v1/interaction-coverage/topology", headers=auth_headers)
+    assert resp.status_code == 200
+    assert resp.json()["data"]["total"] == 3
+
+
+def test_gaps_uses_db_topology_when_body_empty(client, auth_headers, db_session):
+    from app.models.test_case import TestCase
+
+    client.post("/api/v1/interaction-coverage/import",
+                json={"edges": _edges_payload(), "source_batch": "batch-113"}, headers=auth_headers)
+    db_session.add(TestCase(
+        project_id=1, title="首页-入口可达：Match Replays 区块跳转回放列表", module="首页",
+        case_type="manual", steps="1.打开生产首页\n2.点击首条回放链接",
+        expected_result="跳转 /match-replay", tags='["interaction:batch-113"]',
+    ))
+    db_session.commit()
+    resp = client.post("/api/v1/interaction-coverage/gaps", json={"edges": []}, headers=auth_headers)
+    assert resp.status_code == 200, resp.text
+    data = resp.json()["data"]
+    assert data["total_edges"] == 3
+    assert data["covered_edges"] == 1
+    assert data["gap_edges"] == 2

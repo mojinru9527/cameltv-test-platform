@@ -18,20 +18,12 @@ interface GapItem {
 }
 
 interface GapResult {
-  summary: { total_edges: number; covered_edges: number; gap_edges: number; coverage_rate: number }
+  total_edges: number
+  covered_edges: number
+  gap_edges: number
+  coverage_rate: number
   gaps: GapItem[]
 }
-
-const DEFAULT_EDGES: Array<{ from_module: string; entry: string; to: string }> = [
-  { from_module: '首页', entry: 'Match ReplaysShow more', to: '/match-replay' },
-  { from_module: '首页', entry: 'FIFA World Cup 2026 Free Streaming', to: '/worldcup-2026' },
-  { from_module: '首页', entry: 'Watch the match', to: '/football/as-monaco-vs-getafe/n54qllhn0vwjqvy' },
-  { from_module: '首页', entry: 'All News', to: '/q/news' },
-  { from_module: '首页', entry: 'My', to: '/my' },
-  { from_module: '联赛详情', entry: 'UEFA Europa League', to: '/league/UEFA%20Europa%20League' },
-  { from_module: '球队详情', entry: 'Rangers F.C.', to: '/team/Rangers%20F.C./kdj2ryoh0ydq1zp' },
-  { from_module: '回放列表', entry: 'Match Replays', to: '/match-replay/107123464706493798' },
-]
 
 function toLabel(url: string): string {
   const clean = url.replace(/^https?:\/\//, '').split('?')[0]
@@ -47,7 +39,7 @@ export default function InteractionGapPanel() {
     setLoading(true)
     setError('')
     try {
-      const data = await interactionCoverageGaps(DEFAULT_EDGES)
+      const data = await interactionCoverageGaps([])  // C120-1 全量（后端 DB 拓扑）
       setResult(data)
     } catch (e) {
       const msg = e instanceof Error ? e.message : '缺口计算失败'
@@ -61,7 +53,7 @@ export default function InteractionGapPanel() {
     void load()
   }, [load])
 
-  const rate = result?.summary.coverage_rate ?? 0
+  const rate = result?.coverage_rate ?? 0
   const rateLabel = `${(rate * 100).toFixed(1)}%`
 
   return (
@@ -98,7 +90,7 @@ export default function InteractionGapPanel() {
                 覆盖率 {rateLabel}
               </Badge>
               <span className="text-xs text-muted-foreground">
-                已覆盖 {result.summary.covered_edges}/{result.summary.total_edges} 边 · 缺口 {result.summary.gap_edges}
+                已覆盖 {result.covered_edges}/{result.total_edges} 边 · 缺口 {result.gap_edges}
               </span>
               <Button size="sm" variant="ghost" onClick={load} aria-label="刷新交互缺口">
                 <RefreshCw className="size-3.5" />
