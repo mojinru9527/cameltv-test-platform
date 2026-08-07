@@ -1,0 +1,4 @@
+[
+  {"case_id":"SP-FAQ-001","title":"FAQ帮助中心-分类与搜索","domain":"体育-用户端-功能","platforms":["安卓iOS","移动端-web","PC-web"],"module":"FAQ帮助/帮助中心","case_type":"manual","priority":"P2","tags":["功能用例","P2"],"preconditions":"后台配置 FAQ 分类与内容","steps":[{"step":1,"desc":"进入FAQ帮助中心","expected":"展示 FAQ 分类与问题列表"},{"step":2,"desc":"点击问题","expected":"展开/进入对应 FAQ 内容"},{"step":3,"desc":"搜索 FAQ 关键词","expected":"展示匹配的 FAQ 结果"}],"expected_result":"FAQ 分类/内容/搜索正确","source_doc":"axure_extract_test/faq.html、faq内容.html"},
+  {"case_id":"SP-FAQ-002","title":"FAQ-未解决问题引导","domain":"体育-用户端-功能","platforms":["安卓iOS","移动端-web","PC-web"],"module":"FAQ帮助/帮助中心","case_type":"manual","priority":"P2","tags":["功能用例","P2","关联:个人中心"],"preconditions":"FAQ 未解决问题","steps":[{"step":1,"desc":"在 FAQ 中未找到答案","expected":"提供'意见反馈/联系客服'引导入口"},{"step":2,"desc":"点击意见反馈","expected":"进入意见反馈页面，可提交问题"}],"expected_result":"FAQ 未解决引导与意见反馈联动正确","source_doc":"axure_extract_test/faq.html；axure_extract_test/意见反馈.html"}
+]
