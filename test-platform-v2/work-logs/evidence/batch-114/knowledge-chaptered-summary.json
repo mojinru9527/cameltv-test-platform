@@ -1,0 +1,220 @@
+{
+  "chapter_count": 13,
+  "chapters": [
+    {
+      "module": "启动与广告",
+      "title": "体育平台-启动与广告-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 18,
+        "title": "体育平台-启动与广告-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "首页",
+      "title": "体育平台-首页-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 19,
+        "title": "体育平台-首页-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "搜索",
+      "title": "体育平台-搜索-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 20,
+        "title": "体育平台-搜索-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "资讯",
+      "title": "体育平台-资讯-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 21,
+        "title": "体育平台-资讯-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "赛事详情",
+      "title": "体育平台-赛事详情-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 22,
+        "title": "体育平台-赛事详情-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "直播间",
+      "title": "体育平台-直播间-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 23,
+        "title": "体育平台-直播间-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "我的",
+      "title": "体育平台-我的-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 24,
+        "title": "体育平台-我的-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "联赛/球队/球员",
+      "title": "体育平台-联赛/球队/球员-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 25,
+        "title": "体育平台-联赛/球队/球员-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "回放",
+      "title": "体育平台-回放-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 26,
+        "title": "体育平台-回放-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "世界杯专题",
+      "title": "体育平台-世界杯专题-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 27,
+        "title": "体育平台-世界杯专题-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "UGC",
+      "title": "体育平台-UGC-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 28,
+        "title": "体育平台-UGC-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "登录注册",
+      "title": "体育平台-登录注册-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 29,
+        "title": "体育平台-登录注册-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    },
+    {
+      "module": "通用",
+      "title": "体育平台-通用-模块关联（Batch 114 章节化）",
+      "http": 200,
+      "code": 0,
+      "data": {
+        "id": 30,
+        "title": "体育平台-通用-模块关联（Batch 114 章节化）",
+        "status": "captured"
+      }
+    }
+  ],
+  "chapter_search": {
+    "首页": [
+      {
+        "source": "体育平台-登录注册-模块关联（Batch 114 章节化）",
+        "title": "体育平台-登录注册-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-首页-模块关联（Batch 114 章节化）",
+        "title": "体育平台-首页-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-启动与广告-模块关联（Batch 114 章节化）",
+        "title": "体育平台-启动与广告-模块关联（Batch 114 章节化）"
+      }
+    ],
+    "赛事详情": [
+      {
+        "source": "体育平台-赛事详情-模块关联（Batch 114 章节化）",
+        "title": "体育平台-赛事详情-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-联赛/球队/球员-模块关联（Batch 114 章节化）",
+        "title": "体育平台-联赛/球队/球员-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-直播间-模块关联（Batch 114 章节化）",
+        "title": "体育平台-直播间-模块关联（Batch 114 章节化）"
+      }
+    ],
+    "直播间": [
+      {
+        "source": "体育平台-直播间-模块关联（Batch 114 章节化）",
+        "title": "体育平台-直播间-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-世界杯专题-模块关联（Batch 114 章节化）",
+        "title": "体育平台-世界杯专题-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-赛事详情-模块关联（Batch 114 章节化）",
+        "title": "体育平台-赛事详情-模块关联（Batch 114 章节化）"
+      }
+    ],
+    "回放": [
+      {
+        "source": "体育平台-回放-模块关联（Batch 114 章节化）",
+        "title": "体育平台-回放-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-世界杯专题-模块关联（Batch 114 章节化）",
+        "title": "体育平台-世界杯专题-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-模块-接口-功能关联基座（Batch 113）",
+        "title": "体育平台-模块-接口-功能关联基座（Batch 113）"
+      }
+    ],
+    "世界杯专题": [
+      {
+        "source": "体育平台-世界杯专题-模块关联（Batch 114 章节化）",
+        "title": "体育平台-世界杯专题-模块关联（Batch 114 章节化）"
+      },
+      {
+        "source": "体育平台-模块-接口-功能关联基座（Batch 113）",
+        "title": "体育平台-模块-接口-功能关联基座（Batch 113）"
+      },
+      {
+        "source": "体育平台-功能总览（用户端/运营后台/konfi）",
+        "title": "体育平台-功能总览（用户端/运营后台/konfi）"
+      }
+    ]
+  }
+}
