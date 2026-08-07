@@ -243,7 +243,10 @@ export async function listReleaseBundles(): Promise<{ items: Array<{ id: number;
 export async function interactionCoverageGaps(
   edges: Array<{ from_module: string; entry?: string; to: string; from?: string }>,
 ): Promise<{
-  summary: { total_edges: number; covered_edges: number; gap_edges: number; coverage_rate: number }
+  total_edges: number
+  covered_edges: number
+  gap_edges: number
+  coverage_rate: number
   gaps: Array<{ from_module: string; entry: string; to: string }>
 }> {
   return api.post('/interaction-coverage/gaps', { edges })
