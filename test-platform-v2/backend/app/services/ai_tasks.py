@@ -130,11 +130,13 @@ def _run_generate(db, document_id: int) -> dict:
     from app.services.ai_service import generate_test_cases as _ai_gen
     from app.services.coverage_report import build_coverage_report, parse_extraction
 
-    result = _ai_gen(
+    import asyncio
+
+    result = asyncio.run(_ai_gen(
         content,
         file_type=doc.get("file_type", ""),
         source_ref=str(doc.get("source_ref") or ""),
-    )
+    ))
     extraction = parse_extraction(str(doc.get("extraction_raw") or ""))
     result["coverage_report"] = build_coverage_report(extraction, result)
     return result
