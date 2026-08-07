@@ -18,7 +18,10 @@ interface GapItem {
 }
 
 interface GapResult {
-  summary: { total_edges: number; covered_edges: number; gap_edges: number; coverage_rate: number }
+  total_edges: number
+  covered_edges: number
+  gap_edges: number
+  coverage_rate: number
   gaps: GapItem[]
 }
 
