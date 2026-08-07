@@ -59,7 +59,8 @@ class TestCase(Base, TimestampMixin):
     api_spec_ref: Mapped[str] = mapped_column(default="")         # 旧引用
     api_headers: Mapped[str] = mapped_column(default="{}")        # JSON: {"Content-Type":"application/json"}
     api_body: Mapped[str] = mapped_column(default="")             # JSON: 请求体
-    api_assertions: Mapped[str] = mapped_column(default="[]")     # JSON: 断言规则数组
+    api_assertions: Mapped[str] = mapped_column(default="[]")
+    depends_on_ids: Mapped[str] = mapped_column(Text, default="[]")  # C107-2 前置接口用例 id 数组     # JSON: 断言规则数组
     last_response_json: Mapped[str] = mapped_column(Text, default="")  # JSON: 最近执行实际响应
     last_run_status: Mapped[str] = mapped_column(default="")       # success/fail/skipped/error
 

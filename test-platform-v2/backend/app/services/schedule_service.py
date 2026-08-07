@@ -62,6 +62,10 @@ def list_schedules(
             "description": s.description,
             "plan_id": s.plan_id,
             "plan_name": plan_name or "",
+
+            "job_type": s.job_type,
+
+            "job_id": s.job_id,
             "cron_expression": s.cron_expression,
             "enabled": s.enabled,
             "next_run": s.next_run,
@@ -91,6 +95,10 @@ def get_schedule(db: Session, schedule_id: int, project_id: int) -> dict | None:
         "description": s.description,
         "plan_id": s.plan_id,
         "plan_name": plan_name or "",
+
+        "job_type": s.job_type,
+
+        "job_id": s.job_id,
         "cron_expression": s.cron_expression,
         "enabled": s.enabled,
         "next_run": s.next_run,
@@ -107,15 +115,35 @@ def create_schedule(
     creator_id: int,
     project_id: int,
 ) -> dict:
-    # Validate plan
-    plan = db.scalar(
-        select(TestPlan).where(
-            TestPlan.id == data.plan_id,
-            TestPlan.project_id == project_id,
+    # Validate target（B112-3：plan|ui）
+    plan = None
+    if data.job_type == "ui":
+        from app.models.ui_test import UiTestJob
+        if not data.job_id:
+            raise ValueError("job_type=ui 必须提供 job_id")
+        job = db.scalar(
+            select(UiTestJob).where(
+                UiTestJob.id == data.job_id,
+                UiTestJob.project_id == project_id,
+            )
         )
-    )
-    if not plan:
-        raise ValueError("计划不存在")
+        if not job:
+            raise ValueError("UI job 不存在")
+        plan_id = None
+        plan_name = job.name
+    else:
+        if not data.plan_id:
+            raise ValueError("job_type=plan 必须提供 plan_id")
+        plan = db.scalar(
+            select(TestPlan).where(
+                TestPlan.id == data.plan_id,
+                TestPlan.project_id == project_id,
+            )
+        )
+        if not plan:
+            raise ValueError("计划不存在")
+        plan_id = data.plan_id
+        plan_name = plan.name
 
     next_run = _compute_next_run(data.cron_expression)
 
@@ -123,7 +151,9 @@ def create_schedule(
         project_id=project_id,
         name=data.name,
         description=data.description,
-        plan_id=data.plan_id,
+        plan_id=plan_id,
+        job_type=data.job_type,
+        job_id=data.job_id if data.job_type == "ui" else None,
         cron_expression=data.cron_expression,
         enabled=data.enabled,
         next_run=next_run,
@@ -142,7 +172,9 @@ def create_schedule(
         "name": s.name,
         "description": s.description,
         "plan_id": s.plan_id,
-        "plan_name": plan.name,
+        "plan_name": plan_name,
+        "job_type": s.job_type,
+        "job_id": s.job_id,
         "cron_expression": s.cron_expression,
         "enabled": s.enabled,
         "next_run": s.next_run,
@@ -177,16 +209,29 @@ def update_schedule(
     if data.description is not None:
         s.description = data.description
         changed = True
-    if data.plan_id is not None:
-        plan = db.scalar(
-            select(TestPlan).where(
-                TestPlan.id == data.plan_id,
-                TestPlan.project_id == project_id,
-            )
-        )
-        if not plan:
-            raise ValueError("计划不存在")
-        s.plan_id = data.plan_id
+    if data.job_type is not None or data.job_id is not None or data.plan_id is not None:
+        target_type = data.job_type or s.job_type
+        if target_type == "ui":
+            from app.models.ui_test import UiTestJob
+            job_id = data.job_id if data.job_id is not None else s.job_id
+            if not job_id:
+                raise ValueError("job_type=ui 必须提供 job_id")
+            job = db.scalar(select(UiTestJob).where(UiTestJob.id == job_id, UiTestJob.project_id == project_id))
+            if not job:
+                raise ValueError("UI job 不存在")
+            s.job_type = "ui"
+            s.job_id = job_id
+            s.plan_id = None
+        else:
+            plan_id = data.plan_id if data.plan_id is not None else s.plan_id
+            if not plan_id:
+                raise ValueError("job_type=plan 必须提供 plan_id")
+            plan = db.scalar(select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == project_id))
+            if not plan:
+                raise ValueError("计划不存在")
+            s.job_type = "plan"
+            s.plan_id = plan_id
+            s.job_id = None
         changed = True
     if data.cron_expression is not None:
         s.cron_expression = data.cron_expression
@@ -220,6 +265,8 @@ def update_schedule(
         "description": s.description,
         "plan_id": s.plan_id,
         "plan_name": plan.name if plan else "",
+        "job_type": s.job_type,
+        "job_id": s.job_id,
         "cron_expression": s.cron_expression,
         "enabled": s.enabled,
         "next_run": s.next_run,

@@ -34,7 +34,6 @@ SENSITIVE_FIELD_NAMES = {
     "password", "passwd", "secret", "client_secret", "private_key",
 }
 
-
 # ═══════════════════════════════════════════════════════
 # 公共 API
 # ═══════════════════════════════════════════════════════
@@ -48,6 +47,7 @@ def execute_api_case(
     dataset_id: int | None = None,
     confirm_prod: bool = False,
     has_execute_prod: bool = False,
+    _dep_chain: frozenset[int] | None = None,
 ) -> dict:
     """执行已保存的 API 用例，返回执行结果。若提供 dataset_id 则进行参数化批量执行。"""
     case = db.get(TestCase, case_id)
@@ -63,6 +63,21 @@ def execute_api_case(
     assertions = _safe_json(case.api_assertions, [])
 
     # 构造 request
+    
+    # C107-2：前置接口依赖解析（$prev.{id}.{path} 变量注入）
+    dep_ids = _safe_json(getattr(case, "depends_on_ids", "") or "[]", [])
+    if dep_ids:
+        dep_responses = _resolve_dependencies(
+            db, dep_ids,
+            project_id=project_id,
+            environment_id=environment_id,
+            confirm_prod=confirm_prod,
+            has_execute_prod=has_execute_prod,
+            _dep_chain=(_dep_chain or frozenset()) | {case_id},
+        )
+    else:
+        dep_responses = {}
+
     request_def = {
         "method": case.api_method or "GET",
         "url": case.api_endpoint or "",
@@ -70,6 +85,8 @@ def execute_api_case(
         "body": body,
     }
 
+    if dep_responses:
+        request_def = _apply_dependency_variables(request_def, dep_responses)
     if dataset_id:
         return _execute_with_dataset(db, request_def, assertions, environment_id, dataset_id,
                                      project_id=project_id,
@@ -79,7 +96,6 @@ def execute_api_case(
                        project_id=project_id,
                        confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
                        require_release_assertions=case.review_status == "approved")
-
 
 def quick_execute(
     db: Session,
@@ -103,7 +119,6 @@ def quick_execute(
                        project_id=project_id,
                        confirm_prod=confirm_prod, has_execute_prod=has_execute_prod,
                        require_release_assertions=require_release_assertions)
-
 
 # ═══════════════════════════════════════════════════════
 # 内部实现
@@ -316,7 +331,6 @@ def _do_execute(
         "executed_at": datetime.now(timezone.utc).isoformat(),
     }
 
-
 # ── 断言引擎 ──────────────────────────────────────────
 
 def _run_assertions(
@@ -356,7 +370,6 @@ def _run_assertions(
         results.append(r)
     return results
 
-
 def _assertion_contract_error(
     assertions: list[dict],
     *,
@@ -392,7 +405,6 @@ def _assertion_contract_error(
         return f"approved release API case missing assertions: {', '.join(missing)}"
     return ""
 
-
 def _assert_status_code(rule: dict, status_code: int) -> dict:
     expected = rule.get("expected", 200)
     op = rule.get("operator", "eq")
@@ -406,7 +418,6 @@ def _assert_status_code(rule: dict, status_code: int) -> dict:
         "message": f"HTTP {status_code} {_op_label(op)} {expected}" + (" ✓" if passed else " ✗"),
     }
 
-
 def _assert_response_time(rule: dict, duration_ms: float) -> dict:
     expected = rule.get("expected", 3000)
     op = rule.get("operator", "lt")
@@ -419,7 +430,6 @@ def _assert_response_time(rule: dict, duration_ms: float) -> dict:
         "passed": passed,
         "message": f"{duration_ms}ms {_op_label(op)} {expected}ms" + (" ✓" if passed else " ✗"),
     }
-
 
 def _assert_jsonpath(rule: dict, data: Any) -> dict:
     path = rule.get("path", "$")
@@ -457,7 +467,6 @@ def _assert_jsonpath(rule: dict, data: Any) -> dict:
         "message": f"{path}: {actual} {_op_label(op)} {expected}" + (" ✓" if passed else " ✗"),
     }
 
-
 def _assert_regex(rule: dict, text: str) -> dict:
     pattern = rule.get("pattern") or rule.get("expected", "")
     try:
@@ -478,7 +487,6 @@ def _assert_regex(rule: dict, text: str) -> dict:
         "passed": passed,
         "message": f"regex /{pattern}/ {'匹配' if passed else '不匹配'}" + (" ✓" if passed else " ✗"),
     }
-
 
 # ── 新增断言类型 (Task 4) ──────────────────────────────
 
@@ -522,7 +530,6 @@ def _assert_header(rule: dict, response_headers: dict) -> dict:
         "message": f"Header {key}: {actual} {_op_label(op)} {expected}" + (" ✓" if passed else " ✗"),
     }
 
-
 def _assert_json_schema(rule: dict, data: Any) -> dict:
     """断言响应体符合 JSON Schema。"""
     schema = rule.get("expected")
@@ -543,7 +550,6 @@ def _assert_json_schema(rule: dict, data: Any) -> dict:
         "passed": passed,
         "message": f"JSON Schema {'✓' if passed else '✗: ' + '; '.join(errors[:3])}",
     }
-
 
 def _validate_json_schema(data: dict, schema: dict, path: str = "$") -> list[str]:
     """轻量 JSON Schema 验证器。"""
@@ -578,7 +584,6 @@ def _validate_json_schema(data: dict, schema: dict, path: str = "$") -> list[str
 
     return errors
 
-
 def _assert_type(rule: dict, data: Any) -> dict:
     """断言 JSONPath 字段类型。"""
     path = rule.get("path", "$")
@@ -610,6 +615,61 @@ def _assert_type(rule: dict, data: Any) -> dict:
         "message": f"{path} 类型: {type(actual).__name__} {'==' if passed else '!='} {expected_type}" + (" ✓" if passed else " ✗"),
     }
 
+_DEP_VAR_RE = re.compile(r"\$prev\.(\d+)\.([A-Za-z0-9_.\[\]\-]+)")
+
+def _resolve_dependencies(
+    db: Session,
+    dep_ids: list,
+    *,
+    project_id: int,
+    environment_id: int | None,
+    confirm_prod: bool,
+    has_execute_prod: bool,
+    _dep_chain: frozenset[int],
+) -> dict:
+    """C107-2：执行前置接口用例，返回 {dep_case_id: response_json}（递归支持多级，环检测）。"""
+    results: dict[str, Any] = {}
+    for raw in dep_ids:
+        try:
+            dep_id = int(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"非法依赖用例 id: {raw}") from None
+        if dep_id in _dep_chain:
+            raise ValueError(f"接口依赖存在环: {dep_id}")
+        dep = db.get(TestCase, dep_id)
+        if not dep:
+            raise ValueError(f"依赖用例 #{dep_id} 不存在")
+        r = execute_api_case(
+            db, dep_id,
+            project_id=project_id,
+            environment_id=environment_id,
+            confirm_prod=confirm_prod,
+            has_execute_prod=has_execute_prod,
+            _dep_chain=_dep_chain | {dep_id},
+        )
+        if not r.get("all_pass"):
+            raise ValueError(f"依赖用例 #{dep_id} 执行失败: {r.get('error') or r.get('status_code')}")
+        results[str(dep_id)] = r.get("response_body")
+    return results
+
+def _apply_dependency_variables(request_def: dict, dep_responses: dict) -> dict:
+    """把请求中的 $prev.{dep_id}.{jsonpath} 替换为前置响应值。"""
+    def _replace(m) -> str:
+        dep_id, path = m.group(1), m.group(2)
+        node = dep_responses.get(dep_id)
+        if node is None:
+            return m.group(0)
+        val = _jsonpath_get(node, path)
+        if val is _JSONPATH_MISSING:
+            return m.group(0)
+        if isinstance(val, (dict, list)):
+            return json.dumps(val, ensure_ascii=False)
+        return str(val)
+
+    out = dict(request_def)
+    out["url"] = _DEP_VAR_RE.sub(_replace, out.get("url") or "")
+    out["body"] = _DEP_VAR_RE.sub(_replace, out.get("body") or "")
+    return out
 
 def _assert_response_structure(rule: dict, data: Any) -> dict:
     """响应结构断言（Batch 112）：exists / not_empty / is_object_or_array / len_lte。
@@ -669,7 +729,6 @@ def _assert_response_structure(rule: dict, data: Any) -> dict:
 
     return _structure_result(rule, node, False, f"未知断言类型: {kind}")
 
-
 def _structure_resolve(data: Any, path: str) -> Any:
     """按点号路径解析响应结构节点，缺失返回 _JSONPATH_MISSING。
 
@@ -692,7 +751,6 @@ def _structure_resolve(data: Any, path: str) -> Any:
             return _JSONPATH_MISSING
     return node
 
-
 def _structure_split(path: str) -> list:
     """把 data.records[0].id 拆成 ['data','records',0,'id']，空 [] 段跳过。"""
     parts: list = []
@@ -711,7 +769,6 @@ def _structure_split(path: str) -> list:
             parts.append(seg)
     return parts
 
-
 def _structure_result(rule: dict, actual: Any, passed: bool, message: str) -> dict:
     out = {
         "type": "response_structure",
@@ -726,7 +783,6 @@ def _structure_result(rule: dict, actual: Any, passed: bool, message: str) -> di
         if passed:
             out["warning"] = message
     return out
-
 
 def _assert_array_length(rule: dict, data: Any) -> dict:
     """断言 JSONPath 数组长度。"""
@@ -758,7 +814,6 @@ def _assert_array_length(rule: dict, data: Any) -> dict:
         "passed": passed,
         "message": f"{path} 长度 {length} {_op_label(op)} {expected}" + (" ✓" if passed else " ✗"),
     }
-
 
 # ── 比较 ──────────────────────────────────────────────
 
@@ -808,11 +863,9 @@ def _compare(actual: Any, expected: Any, op: str) -> bool:
         return str(expected) in str(actual)
     return False
 
-
 def _op_label(op: str) -> str:
     return {"eq": "=", "equals": "=", "neq": "≠", "gt": ">", "lt": "<",
             "gte": "≥", "lte": "≤", "contains": "含"}.get(op, op)
-
 
 # ── 轻量 JSONPath ─────────────────────────────────────
 
@@ -832,7 +885,6 @@ def _jsonpath_get(data: Any, path: str) -> Any:
             return _JSONPATH_MISSING
         current = _resolve_segment(current, segment)
     return current
-
 
 def _split_path(expr: str) -> list[str]:
     """将 'key.sub[0].val' 分割为 ['key','sub','[0]','val']。"""
@@ -858,7 +910,6 @@ def _split_path(expr: str) -> list[str]:
     if buf:
         parts.append(buf)
     return parts
-
 
 def _resolve_segment(current: Any, seg: str) -> Any:
     """基于当前值解析一个路径段。"""
@@ -886,7 +937,6 @@ def _resolve_segment(current: Any, seg: str) -> Any:
 
     return _JSONPATH_MISSING
 
-
 # ── 辅助 ──────────────────────────────────────────────
 
 def _safe_json(raw: str, default: Any = None) -> Any:
@@ -898,7 +948,6 @@ def _safe_json(raw: str, default: Any = None) -> Any:
     except (json.JSONDecodeError, TypeError):
         return default
 
-
 def _safe_read_body(resp: httpx.Response) -> str:
     """安全读取响应体，限制大小。"""
     try:
@@ -909,14 +958,12 @@ def _safe_read_body(resp: httpx.Response) -> str:
     except Exception:
         return "[无法读取响应体]"
 
-
 def _prepare_headers(headers: dict, body: str) -> dict:
     """准备请求头，自动设置 Content-Type"""
     h = dict(headers) if headers else {}
     if body and "content-type" not in {k.lower() for k in h}:
         h["Content-Type"] = "application/json"
     return h
-
 
 def _resolve_mapping_variables(
     db: Session,
@@ -940,7 +987,6 @@ def _resolve_mapping_variables(
         return resolve_variables(db, environment_id, project_id, value)
     return value
 
-
 def _append_query_params(url: str, query_params: dict[str, Any]) -> str:
     if not query_params:
         return url
@@ -954,7 +1000,6 @@ def _append_query_params(url: str, query_params: dict[str, Any]) -> str:
             additions.append((key, value))
     query = urlencode([*existing, *additions], doseq=True)
     return urlunparse(parsed._replace(query=query))
-
 
 def _resolve_url(db: Session, environment_id: int | None, url: str) -> str:
     """将相对路径与环境 base_url 拼接为完整 URL。
@@ -973,7 +1018,6 @@ def _resolve_url(db: Session, environment_id: int | None, url: str) -> str:
 
     return url if url.startswith("http") else f"http://{url}"
 
-
 # ── SSRF 防护 ────────────────────────────────────────────
 
 # 禁止访问的 IP 范围（RFC 1918 + 回环 + 链路本地 + 特殊用途）
@@ -989,7 +1033,6 @@ _SSRF_BLOCKED_NETWORKS = [
     ipaddress.ip_network("fe80::/10"),        # IPv6 链路本地
 ]
 
-
 def _is_private_ip(host: str) -> bool:
     """检查 host 是否指向私有/内部 IP（SSRF 防护）。"""
     try:
@@ -1003,7 +1046,6 @@ def _is_private_ip(host: str) -> bool:
             return False  # 无法解析，放行（后续 httpx 会报错）
 
     return any(addr in net for net in _SSRF_BLOCKED_NETWORKS)
-
 
 def _validate_url_no_ssrf(url: str, allow_env_urls: bool = True) -> None:
     """验证 URL 不指向内部/私有 IP，防止 SSRF 攻击。
@@ -1026,7 +1068,6 @@ def _validate_url_no_ssrf(url: str, allow_env_urls: bool = True) -> None:
             f"如需访问内部服务，请配置测试环境 base_url。"
         )
 
-
 def _effective_port(parsed) -> int | None:
     if parsed.port is not None:
         return parsed.port
@@ -1035,7 +1076,6 @@ def _effective_port(parsed) -> int | None:
     if parsed.scheme == "http":
         return 80
     return None
-
 
 def _validate_target_url(
     db: Session,
@@ -1070,7 +1110,6 @@ def _validate_target_url(
         raise ValueError(
             "target URL must match the project environment host allowlist"
         )
-
 
 def _request_with_target_policy(
     db: Session,
@@ -1113,7 +1152,6 @@ def _request_with_target_policy(
             current_url = next_url
     raise ValueError("redirect limit exceeded")
 
-
 def _assertion_summary(assertions: list[dict]) -> dict[str, int]:
     passed = sum(1 for assertion in assertions if assertion.get("passed") is True)
     return {
@@ -1121,7 +1159,6 @@ def _assertion_summary(assertions: list[dict]) -> dict[str, int]:
         "passed": passed,
         "failed": len(assertions) - passed,
     }
-
 
 def _error_result(
     message: str,
@@ -1151,7 +1188,6 @@ def _error_result(
         "response_snapshot": {},
         "executed_at": datetime.now(timezone.utc).isoformat(),
     }
-
 
 def _build_request_snapshot(
     *,
@@ -1195,7 +1231,6 @@ def _build_request_snapshot(
     }
     return snapshot
 
-
 def _is_sensitive_field(key: str) -> bool:
     normalized = re.sub(r"[^a-z0-9]+", "_", key.casefold()).strip("_")
     return (
@@ -1205,7 +1240,6 @@ def _is_sensitive_field(key: str) -> bool:
         or normalized.endswith("_secret")
         or normalized.endswith("_api_key")
     )
-
 
 def _redact_evidence(value: Any, *, field_name: str = "") -> Any:
     """Recursively mask sensitive evidence fields while preserving safe types."""
@@ -1222,7 +1256,6 @@ def _redact_evidence(value: Any, *, field_name: str = "") -> Any:
         return [_redact_evidence(item) for item in value]
     return value
 
-
 def _snapshot_body(body: str | None) -> str:
     if not body:
         return ""
@@ -1231,7 +1264,6 @@ def _snapshot_body(body: str | None) -> str:
     except (json.JSONDecodeError, TypeError):
         return UNSUPPORTED_BODY_MASK
     return json.dumps(_redact_evidence(parsed), ensure_ascii=False, default=str)
-
 
 def _redact_url_query(url: str) -> str:
     if not url:
@@ -1242,12 +1274,10 @@ def _redact_url_query(url: str) -> str:
         safe_query.append((key, SENSITIVE_MASK if _is_sensitive_field(key) else value))
     return urlunparse(parsed._replace(query=urlencode(safe_query, doseq=True)))
 
-
 # ── 生产环境保护 ──────────────────────────────────────────
 
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 READ_METHODS = {"GET", "HEAD", "OPTIONS"}
-
 
 def _check_prod_protection(
     db: Session,
@@ -1305,7 +1335,6 @@ def _check_prod_protection(
             f"请设置 confirm_prod=true。"
         )
     return True, ""
-
 
 # ── 参数化批量执行 ──────────────────────────────────────
 
@@ -1375,13 +1404,11 @@ def _execute_with_dataset(
         "executed_at": datetime.now(timezone.utc).isoformat(),
     }
 
-
 def _substitute_columns(template: str, row: dict) -> str:
     """Replace ${column_name} in template with values from the current data row."""
     def _replacer(m: re.Match) -> str:
         return str(row.get(m.group(1), m.group(0)))
     return _COL_VAR_PATTERN.sub(_replacer, template)
-
 
 def _substitute_query_value(value: Any, row: dict) -> Any:
     if isinstance(value, str):
@@ -1389,7 +1416,6 @@ def _substitute_query_value(value: Any, row: dict) -> Any:
     if isinstance(value, list):
         return [_substitute_query_value(item, row) for item in value]
     return value
-
 
 # ── curl 复现命令生成 ────────────────────────────────────
 
@@ -1419,7 +1445,6 @@ def build_curl_command(request_snapshot: dict) -> str:
 
     return " \\\n  ".join(parts)
 
-
 def _truncate_for_preview(text: str, max_chars: int) -> str:
     """截断文本用于预览，保留开头和结尾。"""
     if not text:
@@ -1428,7 +1453,6 @@ def _truncate_for_preview(text: str, max_chars: int) -> str:
         return text
     half = max_chars // 2
     return text[:half] + f"\n... [truncated {len(text) - max_chars} chars] ...\n" + text[-half:]
-
 
 def _shell_quote(s: str) -> str:
     """简单 shell 引号（Windows cmd 兼容：优先双引号）。"""

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -18,7 +18,9 @@ class TestSchedule(Base):
     project_id: Mapped[int] = mapped_column(default=0, index=True)
     name: Mapped[str] = mapped_column(String(200), default="")
     description: Mapped[str] = mapped_column(Text, default="")
-    plan_id: Mapped[int] = mapped_column(ForeignKey("test_plan.id"), index=True)
+    plan_id: Mapped[int | None] = mapped_column(ForeignKey("test_plan.id"), nullable=True, index=True)
+    job_type: Mapped[str] = mapped_column(String(10), default="plan")  # plan | ui
+    job_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)  # job_type=ui 时指向 ui_test_job.id
     cron_expression: Mapped[str] = mapped_column(String(100), default="")
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     next_run: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None)

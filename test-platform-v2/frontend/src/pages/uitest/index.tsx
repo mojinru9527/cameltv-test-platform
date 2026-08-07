@@ -127,6 +127,8 @@ const uiJobFormSchema = z.object({
   test_spec: z.string().optional().default(''),
   browser: z.string().default('chromium'),
   environment_id: z.number().nullable().default(null),
+  cron_expression: z.string().optional().default(''),
+  schedule_enabled: z.boolean().optional().default(false),
 })
 
 type UiJobFormValues = z.infer<typeof uiJobFormSchema>
@@ -261,7 +263,7 @@ export default function UiTestPage() {
 
   const form = useForm<UiJobFormValues>({
     resolver: zodResolver(uiJobFormSchema),
-    defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null },
+    defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, cron_expression: '', schedule_enabled: false },
   })
 
   const getEnvironment = (job: UiJobItem) => (
@@ -469,6 +471,8 @@ export default function UiTestPage() {
       test_spec: r.test_spec ?? '',
       browser: r.browser ?? 'chromium',
       environment_id: r.environment_id ?? null,
+      cron_expression: r.cron_expression ?? '',
+      schedule_enabled: r.schedule_enabled ?? false,
     })
     setDrawer(true)
   }
@@ -526,7 +530,7 @@ export default function UiTestPage() {
               刷新
             </Button>
             {hasPerm('uitest:create') && (
-              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null }); setEditing(null); setDrawer(true) }}>
+              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}>
                 <Plus className="size-4" />
                 新建任务
               </Button>
@@ -562,6 +566,23 @@ export default function UiTestPage() {
                 value={form.watch('test_spec') || ''}
                 onChange={(v) => form.setValue('test_spec', v)}
               />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">定时 Cron（B112-3）</label>
+              <Input
+                placeholder="如 0 2 * * *（每日 02:00，空=不定时）"
+                value={form.watch('cron_expression') || ''}
+                onChange={(e) => form.setValue('cron_expression', e.target.value)}
+              />
+              <label className="flex items-center gap-2 mt-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.watch('schedule_enabled') || false}
+                  onChange={(e) => form.setValue('schedule_enabled', e.target.checked)}
+                />
+                启用定时回归
+              </label>
             </div>
 
             <div>
