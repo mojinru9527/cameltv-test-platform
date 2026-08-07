@@ -1,0 +1,29 @@
+{
+  "batch": "118",
+  "date": "2026-08-07",
+  "method": "production DB/API 实测 + 代码锚点 + 既有 evidence 交叉核对",
+  "items": [
+    {"id": "C103-1", "verdict": "closed", "evidence": ["生产库 485 manual 用例/390 P0/33 域/151 模块（2026-08-07 实测）", "evidence/batch-110/functional-case-audit.json total=476", "evidence/batch-111/p0-inventory.json 390 P0"], "note": "用户端 92 FP ≥184 条：全平台 485 条"},
+    {"id": "C103-2", "verdict": "closed", "evidence": ["frontend/src/pages/testcase/CaseDrawer.tsx:496-672 请求参数/断言/请求结果（最近执行回填）三栏", "ApiCaseTab.tsx 断言结果回显"], "note": "接口用例可视已完成"},
+    {"id": "C103-3", "verdict": "closed", "evidence": ["evidence/batch-112/calibration-summary.json 4 端点缺头根因修复", "evidence/batch-112/batch-execution-summary.json 170/170 按端点明细", "生产库 batch:110 real_sample tags"], "note": "真实生产参数基线+字段级覆盖"},
+    {"id": "C103-4", "verdict": "closed", "evidence": ["evidence/batch-110/functional-case-audit.json 全字段/真实值口径", "evidence/batch-112/calibration-summary.json 契约必填头补齐"], "note": "全字段覆盖+真实可靠值原则已落地"},
+    {"id": "C103-5", "verdict": "closed", "evidence": ["evidence/batch-110/xhr-samples/ 34 生产样本", "evidence/batch-116/ C116-1 平台采集 314 样本", "batch-112 执行 33 端点"], "note": "核心功能接口样本采集已收口"},
+    {"id": "C103-6", "verdict": "closed", "evidence": ["C116-3 已关：coverage_report.py 矩阵+缺口+覆盖率 单测 4/4", "ai_service.py _CHUNK_FP_LIMIT=12 分块防截断+截断重试"], "note": "截断补全+覆盖缺口报告落地"},
+    {"id": "C103-7", "verdict": "closed", "evidence": ["CaseDrawer.tsx:670 请求结果（最近执行回填）", "api_task_worker.py:147-152 last_response_json/last_run_status 回填", "C111-2 170/170 回填核对"], "note": "部署后新字段展示+回填链路闭环"},
+    {"id": "C102-2", "verdict": "closed", "evidence": ["生产 GET /knowledge/search/health 2026-08-07 vector_search_functional=true fallback=hybrid 31 源/19 嵌入", "capture source#31（C107-1 已关）+ C116-1 平台采集 314 样本"], "note": "capture 409 已修+向量检索 functional"},
+    {"id": "C102-5", "verdict": "closed", "evidence": ["ai_service.py 分块+截断重试（_CHUNK_FP_LIMIT=12）", "C116-3 coverage_report 覆盖缺口报告"], "note": "AI 生成截断自动补全落地"},
+    {"id": "C110-3", "verdict": "closed", "evidence": ["frontend/src/pages/apitest/components/TaskTab.tsx 批量执行任务 UI", "backend api_task_worker.py:147-152 执行回填", "C111-2 170/170 平台批量执行全绿"], "note": "批量执行/结果回填平台 UI 已替代脚本回填"},
+    {"id": "C101-1", "verdict": "closed", "evidence": ["PR #154 production-p0-contract.ts 第三方 POST 非写型放行/写型拦截", "本地 10/10 + 平台 run 8=9/10 收敛目标"], "note": "只读守卫放行策略已决策并收敛"},
+    {"id": "C113-1", "verdict": "closed", "evidence": ["evidence/batch-113/interaction-paths.json 3172 边→38 节点/119 边拓扑", "C115-4 平台交互 job run15+16 连续 2 次 10/10"], "note": "拓扑图化+关键交互路径挂平台 UI 自动化回归"},
+    {"id": "C114-2", "verdict": "closed", "evidence": ["C115-1 UI 定时 job#3 cron 每日触发", "C115-4 交互 job 平台 run15/16 连续 2 次 10/10"], "note": "交互 UI 自动化已纳入平台每日回归"},
+    {"id": "C114-1", "verdict": "open", "evidence": [], "note": "拓扑边 vs 交互用例覆盖矩阵缺口自动提示能力未确认，转下批（P3）"},
+    {"id": "C104-3", "verdict": "open", "evidence": ["package.json openapi-typescript ^7.4.2 未锁定", "api.d.ts 最后改动 batch-106"], "note": "锁定版本重生成未执行，转下批（P2）"},
+    {"id": "C105-3", "verdict": "open", "evidence": [], "note": "同 C104-3 持续跟踪"},
+    {"id": "C105-4", "verdict": "open", "evidence": [], "note": "停用组织 UI 走查截图证据缺失，转下批（P2）"},
+    {"id": "C106-2", "verdict": "open", "evidence": [], "note": "邀请链接灰度观察一周时间窗口未到"},
+    {"id": "C109-1", "verdict": "in-progress", "evidence": ["PLATFORM_FRONTEND_URL=https://cameltv-test-platform1.vercel.app 已配置", "生产库 3 用户/0 演示账号（2026-08-07 实测）"], "note": "本批完成 SEED_DEMO_USERS=false 确认+邀请链接端到端复测后关闭"},
+    {"id": "C117-1", "verdict": "in-progress", "evidence": [], "note": "本批实现 AiResultModal 覆盖矩阵/缺口 Tab"},
+    {"id": "C102-3", "verdict": "in-progress", "evidence": ["requirement_modules.py:368 仍强制 evidence_job_id"], "note": "本批实现直建"},
+    {"id": "C102-4", "verdict": "in-progress", "evidence": [], "note": "本批实现差异标注"}
+  ]
+}

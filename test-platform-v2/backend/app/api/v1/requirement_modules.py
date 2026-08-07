@@ -17,6 +17,7 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException, not_found
 from app.models.knowledge import KnowledgeEntity, KnowledgeRelation
+from app.models.requirement import RequirementDocument
 from app.models.requirement_module import ModuleAdminLink, RequirementModule
 from app.models.release_bundle import ReleaseBundle
 from app.schemas.common import Page, R
@@ -31,7 +32,9 @@ from app.schemas.release_bundle import (
     InteractionSaveRequest,
     ModuleAdminLinkCreate,
     ModuleAdminLinkOut,
+    BuildFromDocumentRequest,
     ModuleExtractRequest,
+    ProductionDiffRequest,
     ModuleExtractResult,
     ModuleTestSummaryOut,
     ModuleTreeNode,
@@ -385,6 +388,84 @@ def extract_modules(
         db,
         "module:extract",
         f"bundle#{bundle_id}",
+        f"{len(module_ids)} modules, {extraction.stats}",
+    )
+
+    return R.ok(ModuleExtractResult(
+        module_ids=module_ids,
+        module_count=len(extraction.modules),
+        page_count=sum(len(m.pages) for m in extraction.modules),
+        attachment_count=len(extraction.attachments),
+        changelog_entries=len(extraction.changelog_entries),
+        warnings=extraction.warnings,
+    ))
+
+
+@router.post("/build-from-document", response_model=R[ModuleExtractResult], summary="从需求文档直建模块树（C102-3）")
+def build_modules_from_document(
+    body: BuildFromDocumentRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """C102-3：不依赖蓝湖证据包，从需求文档（extraction_raw/content）直接构建模块树。
+
+    发布包解析顺序：请求体 release_bundle_id → 文档关联 release_bundle_id →
+    自动创建（名称=文档标题，client_version=文档版本或 source_version）。
+    """
+    pid = current.project_id or 0
+    document = db.get(RequirementDocument, body.document_id)
+    if not document or document.project_id != pid:
+        raise not_found("需求文档")
+
+    # Resolve release bundle context
+    bundle_id = body.release_bundle_id
+    if bundle_id is not None:
+        bundle = db.get(ReleaseBundle, bundle_id)
+        if not bundle or bundle.project_id != pid:
+            raise not_found("发布包")
+    elif document.release_bundle_id:
+        bundle_id = document.release_bundle_id
+    else:
+        bundle = ReleaseBundle(
+            project_id=pid,
+            name=document.title or "需求文档直建模块树",
+            description="Batch 118 C102-3 需求文档直建模块树",
+            client_version=document.version or body.source_version or "draft",
+            status="draft",
+        )
+        db.add(bundle)
+        db.flush()
+        bundle_id = bundle.id
+
+    from app.services.knowledge.module_extractor import (
+        build_module_tree_from_document,
+        persist_module_tree,
+    )
+
+    extraction = build_module_tree_from_document(
+        db,
+        document_id=body.document_id,
+        project_id=pid,
+        source_version=body.source_version,
+    )
+    if not extraction.modules and not extraction.warnings:
+        extraction.warnings.append("文档中未解析到模块")
+
+    module_ids = persist_module_tree(
+        db,
+        extraction=extraction,
+        release_bundle_id=bundle_id,
+        project_id=pid,
+        source_version=body.source_version or document.version or "draft",
+    )
+
+    _commit_with_audit(
+        req,
+        current,
+        db,
+        "module:build_from_document",
+        f"doc#{body.document_id}",
         f"{len(module_ids)} modules, {extraction.stats}",
     )
 
@@ -948,3 +1029,27 @@ async def extract_attachments(
         function_points_extracted=result.function_points_extracted,
         errors=result.errors,
     ))
+
+
+@router.post("/production-diff", response_model=R[dict], summary="生产页面 vs 需求原型差异标注（C102-4）")
+def production_diff_annotate(
+    body: ProductionDiffRequest,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """对比发布包模块树与生产页面清单，输出 new / matched / missing 差异标注。"""
+    pid = current.project_id or 0
+    bundle = db.get(ReleaseBundle, body.release_bundle_id)
+    if not bundle or bundle.project_id != pid:
+        raise not_found("发布包")
+
+    from app.services.knowledge.production_diff_service import compute_production_diff
+
+    result = compute_production_diff(
+        db,
+        release_bundle_id=body.release_bundle_id,
+        project_id=pid,
+        production_pages=[p.model_dump() for p in body.production_pages],
+    )
+    return R.ok(result)
+

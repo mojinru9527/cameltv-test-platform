@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { AIGenerateResult } from '@/types'
+import type { AIGenerateResult, CoverageReport } from '@/types'
 
 const mockReviewCase = vi.fn()
 const mockImportCases = vi.fn()
@@ -123,5 +123,52 @@ describe('AiResultModal edited import flow', () => {
     expect(mockImportCases).not.toHaveBeenCalled()
     expect(mockToastWarning).toHaveBeenCalledWith('请先保存或取消正在编辑的用例')
     expect(screen.getByDisplayValue('unsaved title')).toBeTruthy()
+  })
+})
+
+
+describe('AiResultModal coverage report tab (C117-1)', () => {
+  const coverage: CoverageReport = {
+    matrix: [
+      { module: '首页', function_point: '热门比赛', covered: true, case_count: 2 },
+      { module: '首页', function_point: '赛程表', covered: false, case_count: 0 },
+    ],
+    gaps: [{ module: '首页', function_point: '赛程表' }],
+    gap_count: 1,
+    total_fp: 2,
+    covered_fp: 1,
+    coverage_rate: 0.5,
+  }
+
+  it('renders coverage tab with matrix and gaps', async () => {
+    const withCoverage: AIGenerateResult = {
+      ...result,
+      coverage_report: coverage,
+    }
+    render(
+      <AiResultModal
+        open
+        result={withCoverage}
+        extractionResult={null}
+        documentId={5}
+        mode="generate"
+        onClose={vi.fn()}
+        onImportSuccess={vi.fn()}
+        onExtractionConfirmAndGenerate={vi.fn()}
+        onExtractionReject={vi.fn()}
+      />,
+    )
+    const covTab = screen.getByRole('tab', { name: /覆盖矩阵/ })
+    fireEvent.mouseDown(covTab, { button: 0 })
+    fireEvent.click(covTab)
+    await waitFor(() => expect(screen.getByText(/50\.0%/)).toBeTruthy())
+    expect(screen.getAllByText(/赛程表/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/未覆盖/)).toBeTruthy()
+    expect(screen.getByText(/覆盖缺口/)).toBeTruthy()
+  })
+
+  it('hides coverage tab when report is absent', () => {
+    renderModal()
+    expect(screen.queryByRole('tab', { name: /覆盖矩阵/ })).toBeNull()
   })
 })
