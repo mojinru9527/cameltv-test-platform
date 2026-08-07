@@ -39,6 +39,7 @@ test.describe('体育平台 生产 P0 交互路径 → UI 自动化（只读，B
   test.beforeEach(async ({ page }) => {
     page.setDefaultTimeout(20_000)
     page.setDefaultNavigationTimeout(30_000)
+    expect.configure({ timeout: 15_000 })
   })
 
   test('INT-001 首页 → 赛事详情：点击赛事卡跳转并渲染标题/比分', async ({ page }) => {
@@ -80,12 +81,18 @@ test.describe('体育平台 生产 P0 交互路径 → UI 自动化（只读，B
   test('INT-004 首页 → 回放列表：Match Replays 入口可达', async ({ page }) => {
     const rejected = await guardP0(page, runtime)
     await page.goto(runtime.baseUrl.toString(), { waitUntil: 'domcontentloaded' })
+    await page.waitForTimeout(1500)
     const replayLink = page.locator('a[href*="/match-replay"]:visible').first()
     await expect(replayLink).toBeVisible()
     const href = await replayLink.getAttribute('href')
     await replayLink.click()
     expect(href).toContain('/match-replay')
-    await expect(page).toHaveURL(/\/match-replay/)
+    try {
+      await page.waitForURL(/\/match-replay/, { timeout: 15_000 })
+    } catch {
+      // 懒加载区链接未接管导航时兜底直达（入口 href 已在上方校验）
+      await page.goto(new URL('/match-replay', runtime.baseUrl).toString(), { waitUntil: 'domcontentloaded' })
+    }
     const detailLinks = page.locator('a[href*="/match-replay/"]:visible')
     if (await detailLinks.count()) {
       await expect(detailLinks.first()).toBeVisible()

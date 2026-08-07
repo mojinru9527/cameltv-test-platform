@@ -1,0 +1,13 @@
+{
+  "job_id": 3,
+  "run_id": 10,
+  "status": "fail",
+  "result": {
+    "total": 10,
+    "pass_": 8,
+    "fail": 2,
+    "skip": 0,
+    "duration": 60.46
+  },
+  "finished_at": "2026-08-07T04:19:23.266157"
+}
