@@ -24,10 +24,19 @@ def _has_column(bind, table: str, column: str) -> bool:
     return column in {c["name"] for c in insp.get_columns(table)}
 
 
+def _has_table(bind, table: str) -> bool:
+    import sqlalchemy as _sa
+    return table in _sa.inspect(bind).get_table_names()
+
+
 def upgrade() -> None:
+    # test_schedule / ui_test_job 由 AUTO_CREATE_TABLES（模型元数据）建表，无 create 迁移；
+    # 裸库迁移测试（stamp 旧 rev 后 upgrade）中两表不存在 → 直接跳过，避免 NoSuchTableError。
+    bind = op.get_bind()
+    if not _has_table(bind, "test_schedule") or not _has_table(bind, "ui_test_job"):
+        return
     # B112-3：UI job 定时 —— schedule 支持 job_type=ui（plan_id 允许为空）
     # 幂等：CI 干净检出会先用模型建表（AUTO_CREATE_TABLES），列已存在时跳过，避免 duplicate column。
-    bind = op.get_bind()
     if not _has_column(bind, "test_schedule", "job_type"):
         op.add_column("test_schedule", sa.Column("job_type", sa.String(length=10), nullable=False, server_default="plan"))
     if not _has_column(bind, "test_schedule", "job_id"):
