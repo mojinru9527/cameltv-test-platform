@@ -1,4 +1,4 @@
-"""batch115_test_case_depends
+"""batch115_tc_depends
 
 Revision ID: 20260807_batch115_test_case_depends
 Revises: 20260807_batch115_ui_schedule
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "20260807_batch115_test_case_depends"
+revision: str = "20260807_batch115_tc_depends"
 down_revision: Union[str, None] = "20260807_batch115_ui_schedule"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
