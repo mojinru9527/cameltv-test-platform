@@ -1,9 +1,9 @@
 """Batch 122 — 体育深度用例批量导入（编写格式 → 平台 test_case，幂等）。
 
-将 `work-logs/evidence/batch-122/cases/**/*.json`（编写格式，含 platforms）展开为
-按入口区分的用例写入平台 SQLite DB：
-- module  = `{platform}/{module}`（如 安卓iOS/赛事详情/预测Pick）
-- case_id = `SP-{入口码}-{SP- 之后部分}`（如 SP-AND-PICK-001）
+将 `work-logs/evidence/batch-122/cases/**/*.json`（编写格式）展开为按入口区分的用例
+写入平台 SQLite DB：
+- 用户端/后台：module=`{platform}/{module}`，case_id=`SP-{入口码}-{SP- 之后部分}`
+- 接口用例（域=体育-接口测试）：不展开，module/case_id 原样
 - 已存在 case_id 则跳过（幂等，可重复执行）
 
 运行: <python> scripts/sports/import-case-batch.py [--cases <dir>] [--db <sqlite路径>] [--dry-run]
@@ -13,7 +13,6 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
-import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -36,8 +35,13 @@ def iter_case_files(path: Path):
 
 
 def expand(case: dict) -> list[dict]:
-    """把编写格式展开为按入口的用例列表。"""
+    """把编写格式展开为按入口的用例列表；接口用例不展开。"""
     out = []
+    if case.get("domain") == "体育-接口测试":
+        item = dict(case)
+        item["_platform"] = "接口"
+        out.append(item)
+        return out
     platforms = case.get("platforms") or []
     module = str(case.get("module", "")).strip("/")
     base = case.get("case_id", "")
@@ -52,6 +56,14 @@ def expand(case: dict) -> list[dict]:
         item["_platform"] = pf
         out.append(item)
     return out
+
+
+def _ser(v):
+    if v is None:
+        return ""
+    if isinstance(v, str):
+        return v
+    return json.dumps(v, ensure_ascii=False)
 
 
 def main() -> int:
@@ -72,7 +84,7 @@ def main() -> int:
         items = data if isinstance(data, list) else [data]
         for case in items:
             expanded.extend(expand(case))
-    print(f"[importer] 编写用例文件展开后共 {len(expanded)} 条（含按入口展开）", flush=True)
+    print(f"[importer] 展开后共 {len(expanded)} 条", flush=True)
 
     if args.dry_run:
         return 0
@@ -97,8 +109,9 @@ def main() -> int:
         cur.execute(
             """INSERT INTO test_case
                (project_id, case_id, title, domain, module, case_type, priority, status, tags,
-                preconditions, steps, expected_result, api_method, api_endpoint, api_spec_ref, api_headers, api_body, api_assertions, review_comment,
-                source, review_status, reviewer_id, created_at, updated_at)
+                preconditions, steps, expected_result, api_method, api_endpoint, api_spec_ref,
+                api_headers, api_body, api_assertions, review_comment, source, review_status,
+                reviewer_id, created_at, updated_at)
                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 PROJECT_ID, cid, c["title"], c.get("domain", ""), c["module"],
@@ -107,8 +120,8 @@ def main() -> int:
                 c.get("preconditions", ""),
                 json.dumps(c.get("steps") or [], ensure_ascii=False),
                 c.get("expected_result", ""),
-                c.get("api_method", ""), c.get("api_endpoint", ""), "", "",
-                c.get("api_body", ""), c.get("api_assertions", ""), "",
+                c.get("api_method", ""), c.get("api_endpoint", ""), "",
+                "", _ser(c.get("api_body")), _ser(c.get("api_assertions")), "",
                 "batch-122", "draft", 0, now, now,
             ),
         )
@@ -124,5 +137,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-

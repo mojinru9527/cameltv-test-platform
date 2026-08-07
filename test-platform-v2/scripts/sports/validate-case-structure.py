@@ -1,9 +1,10 @@
 """Batch 122 — 体育用例结构校验（幂等、本地执行）。
 
 校验 `work-logs/evidence/batch-122/cases/**/*.json` 的用例是否符合
-`docs/体育平台-用例结构规范.md`。支持两种格式：
-- 编写格式：`platforms` + `module`(一级/二级，无入口前缀) + `case_id`(SP-{MOD}-###)
+`docs/体育平台-用例结构规范.md`。支持三种格式：
+- 用户端/后台编写格式：`platforms` + `module`(一级/二级) + `case_id`(SP-{MOD}-###)
 - 展开格式：`module`(入口/一级/二级) + `case_id`(SP-{入口码}-...)
+- 接口格式（域=体育-接口测试）：`module`(一级/二级) + `case_id`(SP-I-...-###)，无入口
 
 校验规则：必填字段、域白名单、模块路径、编号格式、深度拦截（单步且预期过泛、
 空 preconditions/expected、接口 body 为空对象）。
@@ -60,8 +61,12 @@ def validate_case(case: dict, path: str) -> list[str]:
     parts = [p for p in module.split("/") if p]
     platforms = case.get("platforms")
     is_authoring = isinstance(platforms, list) and len(platforms) > 0
+    is_api = domain == "体育-接口测试"
 
-    if is_authoring:
+    if is_api:
+        if len(parts) < 2:
+            errs.append(f"module 层级不足（接口格式需 一级/二级）: {module!r}")
+    elif is_authoring:
         if any(p not in ENTRANCES for p in platforms):
             errs.append(f"platforms 含不合法入口: {platforms!r}")
         if len(parts) < 2:
@@ -73,7 +78,7 @@ def validate_case(case: dict, path: str) -> list[str]:
             errs.append(f"module 层级不足: {module!r}（需 入口/一级/二级）")
 
     cid = case.get("case_id", "")
-    if domain == "体育-接口测试":
+    if is_api:
         ok = bool(re.match(r"^SP-I-[A-Z0-9-]+-\d{3}$", cid))
     elif is_authoring:
         ok = bool(re.match(r"^SP-[A-Z0-9-]+-\d{3}$", cid))
@@ -114,6 +119,9 @@ def validate_case(case: dict, path: str) -> list[str]:
                     errs.append("api_body 为空对象（缺少真实请求体）")
             except Exception:
                 errs.append("api_body 非合法 JSON")
+        assertions = case.get("api_assertions")
+        if not assertions:
+            errs.append("api 用例缺 api_assertions")
     return errs
 
 
