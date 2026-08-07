@@ -101,3 +101,71 @@ class TestWorkerLifecycle:
 
         assert not thread.is_alive()
         assert ai_tasks._worker_thread is None
+
+
+class TestMultiWorkerClaimRace:
+    """C120-2：两个独立会话（worker）认领同一任务，仅一个成功。"""
+
+    def test_two_sessions_no_double_claim(self, tmp_path):
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        from app.core.db import Base
+        from app.models.ai_task import AiTask
+        from app.services.ai_tasks import claim_next_task
+
+        db_path = tmp_path / "race.sqlite"
+        engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(bind=engine)
+        SessionFactory = sessionmaker(bind=engine)
+
+        s0 = SessionFactory()
+        s0.add(AiTask(id="race-1", task_type="generate", project_id=1, document_id=5,
+                      status="pending", progress=0, result_json="null", error=""))
+        s0.commit()
+        s0.close()
+
+        sA = SessionFactory()
+        sB = SessionFactory()
+        task_a = claim_next_task(sA)
+        task_b = claim_next_task(sB)
+
+        assert task_a is not None and task_a.id == "race-1"
+        assert task_a.status == "running"
+        assert task_b is None  # 第二个 worker 认领不到（status 守卫）
+
+        sA.close()
+        sB.close()
+        engine.dispose()
+
+    def test_stale_lock_reclaimable_by_second_session(self, tmp_path):
+        from datetime import datetime, timedelta
+
+        from sqlalchemy import create_engine
+        from sqlalchemy.orm import sessionmaker
+
+        from app.core.db import Base
+        from app.models.ai_task import AiTask
+        from app.services.ai_tasks import claim_next_task
+
+        db_path = tmp_path / "race-stale.sqlite"
+        engine = create_engine(f"sqlite:///{db_path}", connect_args={"check_same_thread": False})
+        Base.metadata.create_all(bind=engine)
+        SessionFactory = sessionmaker(bind=engine)
+
+        s0 = SessionFactory()
+        s0.add(AiTask(id="race-2", task_type="generate", project_id=1, document_id=5,
+                      status="pending", progress=0, result_json="null", error="",
+                      locked_at=datetime.utcnow() - timedelta(minutes=10)))
+        s0.commit()
+        s0.close()
+
+        sA = SessionFactory()
+        sB = SessionFactory()
+        task_a = claim_next_task(sA)
+        task_b = claim_next_task(sB)
+        assert task_a is not None and task_a.id == "race-2"
+        assert task_b is None
+        sA.close()
+        sB.close()
+        engine.dispose()

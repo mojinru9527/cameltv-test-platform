@@ -11,6 +11,7 @@ import re
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.interaction_edge import InteractionEdge
 from app.models.test_case import TestCase
 
 
@@ -117,3 +118,62 @@ def load_interaction_cases(db: Session, project_id: int) -> list[dict]:
         }
         for r in rows
     ]
+
+
+# ── C120-1 全量拓扑入库 ──
+
+def load_topology_edges(db: Session, project_id: int) -> list[dict]:
+    """加载项目内全量交互拓扑边。"""
+    rows = db.scalars(
+        select(InteractionEdge)
+        .where(InteractionEdge.project_id == project_id)
+        .order_by(InteractionEdge.id)
+    ).all()
+    return [
+        {
+            "from_module": r.from_module,
+            "entry": r.entry,
+            "to": r.to,
+            "evidence": r.evidence,
+            "source_batch": r.source_batch,
+        }
+        for r in rows
+    ]
+
+
+def import_topology_edges(
+    db: Session,
+    edges: list[dict],
+    *,
+    project_id: int,
+    source_batch: str,
+) -> dict:
+    """幂等导入拓扑边（按 from_module/entry/to 去重，同键已存在则跳过）。"""
+    existing = set()
+    for r in db.scalars(select(InteractionEdge).where(InteractionEdge.project_id == project_id)).all():
+        existing.add((r.from_module, r.entry, r.to))
+    added = 0
+    skipped = 0
+    for edge in edges:
+        if not isinstance(edge, dict):
+            continue
+        key = (
+            str(edge.get("from_module") or ""),
+            str(edge.get("entry") or ""),
+            str(edge.get("to") or ""),
+        )
+        if key in existing:
+            skipped += 1
+            continue
+        db.add(InteractionEdge(
+            project_id=project_id,
+            from_module=key[0],
+            entry=key[1],
+            to=key[2],
+            evidence=str(edge.get("evidence") or ""),
+            source_batch=source_batch,
+        ))
+        existing.add(key)
+        added += 1
+    db.commit()
+    return {"added": added, "skipped": skipped}
