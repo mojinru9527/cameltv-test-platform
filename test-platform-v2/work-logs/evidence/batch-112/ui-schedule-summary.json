@@ -3,10 +3,10 @@
   "schedule_id": null,
   "env_id": 1,
   "schedule_note": "平台 /schedules 仅支持 plan 绑定（B112-3），UI job 定时待平台扩展",
-  "trigger_run_id": 7,
+  "trigger_run_id": 8,
   "run_status": "fail",
   "run_error": "",
-  "run_finished_at": "2026-08-07T02:27:40.421025",
+  "run_finished_at": "2026-08-07T02:52:44.333495",
   "stdout_tail": "",
   "stderr_tail": ""
 }

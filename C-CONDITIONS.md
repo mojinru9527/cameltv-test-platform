@@ -93,7 +93,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | C111-1 | internal-network 自托管 runner（win-internal-001）启动后，验证 api-regression 与 prod-smoke 各 1 次成功运行（0s 失败根因=runner offline，B11） | P1 | 2026-08-06 |
 | ~~C111-2~~ | ~~C110-3 回填合入部署后，生产执行 run-batch-execution.py（170 条）并核对 TestCase 回填（last_run 分布 + has_response）~~ → **Closed**：batch-112 task#4 生产批量执行 **170/170 全绿**（passed=170/failed=0）+ has_response=170，按端点明细无失败（`evidence/batch-112/batch-execution-summary.json`） | P1 | 2026-08-06 |
-| C111-3 | UI 定时回归 job+schedule 触发后核对运行报告（P0 spec 10/10）→ **In-Progress**：平台 UI job 已建并触发（run 5/6/7）；P0 只读守卫第三方遥测 POST 被主机白名单提前拦截（B112-4）→ 守卫修复后本地 10/10，待修复合入部署后平台重跑 10/10 | P2 | 2026-08-06 |
+| C111-3 | UI 定时回归 job+schedule 触发后核对运行报告（P0 spec 10/10）→ **In-Progress**：平台 UI job 已建并触发（run 5/6/7/8=9/10）；P0 只读守卫修复（B112-4：第三方遥测 POST 非写型放行，收敛版本地 10/10），待合入部署后平台重跑 10/10 | P2 | 2026-08-06 |
 | C111-4 | Test5 契约补拉（konfi-service/admin-service）导入平台（内网+凭据就绪后；C95-1/C74-2 承接） | P2 | 2026-08-06 |
 
 ### batch-112 — 体育平台用例生成方向承接（Batch 112 Leader 条件，用户 2026-08-07 反馈）
