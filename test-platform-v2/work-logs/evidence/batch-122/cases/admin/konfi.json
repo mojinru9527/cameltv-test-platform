@@ -1,8 +1,204 @@
 [
-  {"case_id":"SP-KON-001","title":"konfi-配置读取（getDataById）","domain":"体育-运营后台-功能","platforms":["konfi"],"module":"konfi/通用/配置读取","case_type":"manual","priority":"P0","tags":["功能用例","P0"],"preconditions":"konfi 已配置 formKey（如 sport_live_worldcup_telegram）","steps":[{"step":1,"desc":"调用 konfi-service getDataById 读取已知 formKey","expected":"返回配置内容（code=0，data 完整）"},{"step":2,"desc":"读取不存在的 formKey","expected":"返回明确错误码/空数据，不崩溃"}],"expected_result":"konfi 配置读取成功与异常场景行为正确","source_doc":"work-logs/evidence/batch-110/konfi-inventory-sports.json；生产 XHR getDataById"},
-  {"case_id":"SP-KON-002","title":"konfi-配置下发到用户端生效","domain":"体育-运营后台-功能","platforms":["konfi"],"module":"konfi/通用/配置下发","case_type":"manual","priority":"P0","tags":["功能用例","P0","闭环"],"preconditions":"修改某配置（如热门联赛展示顺序）","steps":[{"step":1,"desc":"在 konfi 修改配置并发布","expected":"配置版本更新"},{"step":2,"desc":"用户端刷新对应页面","expected":"按新配置展示（首页热门联赛顺序更新）"},{"step":3,"desc":"回滚配置","expected":"用户端恢复旧配置"}],"expected_result":"konfi 配置变更→下发→用户端生效→回滚 链路闭环","source_doc":"docs/体育平台-功能模块地图.md §4 konfi 实测"},
-  {"case_id":"SP-KON-003","title":"konfi-首页热门联赛配置","domain":"体育-运营后台-功能","platforms":["konfi"],"module":"konfi/首页/热门联赛","case_type":"manual","priority":"P1","tags":["功能用例","P1","关联:首页"],"preconditions":"konfi 热门联赛表 sports_live_hot_competition 有数据","steps":[{"step":1,"desc":"读取热门联赛配置","expected":"返回联赛分组与顺序"},{"step":2,"desc":"新增/调整热门联赛后用户端首页核对","expected":"首页热门联赛分组与配置一致"}],"expected_result":"热门联赛配置与首页联动正确","source_doc":"konfi-inventory-sports.json（热门联赛 25 条）"},
-  {"case_id":"SP-KON-004","title":"konfi-赛事/球队/球员/资讯配置","domain":"体育-运营后台-功能","platforms":["konfi"],"module":"konfi/赛事数据/配置","case_type":"manual","priority":"P1","tags":["功能用例","P1"],"preconditions":"konfi 存在 联赛/球队/球员/资讯 配置表","steps":[{"step":1,"desc":"分别读取 联赛/球队/球员/资讯 配置","expected":"返回对应配置数据（球队 35455 条等）"},{"step":2,"desc":"在用户端对应页面核对","expected":"页面数据与 konfi 配置一致"}],"expected_result":"赛事/球队/球员/资讯配置读取与用户端一致","source_doc":"konfi-inventory-sports.json"},
-  {"case_id":"SP-KON-005","title":"konfi-直播间/回放/世界杯/广告配置","domain":"体育-运营后台-功能","platforms":["konfi"],"module":"konfi/直播间回放/配置","case_type":"manual","priority":"P1","tags":["功能用例","P1"],"preconditions":"konfi 存在 直播间/回放/世界杯/广告 配置表","steps":[{"step":1,"desc":"读取直播间消息/关注配置","expected":"配置生效于聊天室/关注"},{"step":2,"desc":"读取回放配置","expected":"回放列表按配置展示"},{"step":3,"desc":"读取世界杯公告配置","expected":"世界杯专题公告正确下发"},{"step":4,"desc":"读取广告配置","expected":"广告位/脚本按配置展示"}],"expected_result":"直播间/回放/世界杯/广告配置正确下发到用户端","source_doc":"konfi-inventory-sports.json；docs/体育平台-功能模块地图.md"},
-  {"case_id":"SP-KON-006","title":"konfi-权限与异常","domain":"体育-运营后台-功能","platforms":["konfi"],"module":"konfi/通用/权限异常","case_type":"manual","priority":"P1","tags":["功能用例","P1","权限"],"preconditions":"无 konfi 写权限账号与非法请求","steps":[{"step":1,"desc":"无权限账号尝试写配置","expected":"被拒绝并返回无权限"},{"step":2,"desc":"传入非法 formKey/空参数","expected":"返回错误码，不产生脏数据"},{"step":3,"desc":"配置值非法（超范围/类型错误）","expected":"被校验拦截"}],"expected_result":"konfi 写权限与非法参数校验正确"}
+  {
+    "case_id": "SP-KON-001",
+    "title": "konfi-配置读取（getDataById）",
+    "domain": "体育-运营后台-功能",
+    "platforms": [
+      "konfi"
+    ],
+    "module": "通用/配置读取",
+    "case_type": "manual",
+    "priority": "P0",
+    "tags": [
+      "功能用例",
+      "P0"
+    ],
+    "preconditions": "konfi 已配置 formKey（如 sport_live_worldcup_telegram）",
+    "steps": [
+      {
+        "step": 1,
+        "desc": "调用 konfi-service getDataById 读取已知 formKey",
+        "expected": "返回配置内容（code=0，data 完整）"
+      },
+      {
+        "step": 2,
+        "desc": "读取不存在的 formKey",
+        "expected": "返回明确错误码/空数据，不崩溃"
+      }
+    ],
+    "expected_result": "konfi 配置读取成功与异常场景行为正确",
+    "source_doc": "work-logs/evidence/batch-110/konfi-inventory-sports.json；生产 XHR getDataById"
+  },
+  {
+    "case_id": "SP-KON-002",
+    "title": "konfi-配置下发到用户端生效",
+    "domain": "体育-运营后台-功能",
+    "platforms": [
+      "konfi"
+    ],
+    "module": "通用/配置下发",
+    "case_type": "manual",
+    "priority": "P0",
+    "tags": [
+      "功能用例",
+      "P0",
+      "闭环"
+    ],
+    "preconditions": "修改某配置（如热门联赛展示顺序）",
+    "steps": [
+      {
+        "step": 1,
+        "desc": "在 konfi 修改配置并发布",
+        "expected": "配置版本更新"
+      },
+      {
+        "step": 2,
+        "desc": "用户端刷新对应页面",
+        "expected": "按新配置展示（首页热门联赛顺序更新）"
+      },
+      {
+        "step": 3,
+        "desc": "回滚配置",
+        "expected": "用户端恢复旧配置"
+      }
+    ],
+    "expected_result": "konfi 配置变更→下发→用户端生效→回滚 链路闭环",
+    "source_doc": "docs/体育平台-功能模块地图.md §4 konfi 实测"
+  },
+  {
+    "case_id": "SP-KON-003",
+    "title": "konfi-首页热门联赛配置",
+    "domain": "体育-运营后台-功能",
+    "platforms": [
+      "konfi"
+    ],
+    "module": "首页/热门联赛",
+    "case_type": "manual",
+    "priority": "P1",
+    "tags": [
+      "功能用例",
+      "P1",
+      "关联:首页"
+    ],
+    "preconditions": "konfi 热门联赛表 sports_live_hot_competition 有数据",
+    "steps": [
+      {
+        "step": 1,
+        "desc": "读取热门联赛配置",
+        "expected": "返回联赛分组与顺序"
+      },
+      {
+        "step": 2,
+        "desc": "新增/调整热门联赛后用户端首页核对",
+        "expected": "首页热门联赛分组与配置一致"
+      }
+    ],
+    "expected_result": "热门联赛配置与首页联动正确",
+    "source_doc": "konfi-inventory-sports.json（热门联赛 25 条）"
+  },
+  {
+    "case_id": "SP-KON-004",
+    "title": "konfi-赛事/球队/球员/资讯配置",
+    "domain": "体育-运营后台-功能",
+    "platforms": [
+      "konfi"
+    ],
+    "module": "赛事数据/配置",
+    "case_type": "manual",
+    "priority": "P1",
+    "tags": [
+      "功能用例",
+      "P1"
+    ],
+    "preconditions": "konfi 存在 联赛/球队/球员/资讯 配置表",
+    "steps": [
+      {
+        "step": 1,
+        "desc": "分别读取 联赛/球队/球员/资讯 配置",
+        "expected": "返回对应配置数据（球队 35455 条等）"
+      },
+      {
+        "step": 2,
+        "desc": "在用户端对应页面核对",
+        "expected": "页面数据与 konfi 配置一致"
+      }
+    ],
+    "expected_result": "赛事/球队/球员/资讯配置读取与用户端一致",
+    "source_doc": "konfi-inventory-sports.json"
+  },
+  {
+    "case_id": "SP-KON-005",
+    "title": "konfi-直播间/回放/世界杯/广告配置",
+    "domain": "体育-运营后台-功能",
+    "platforms": [
+      "konfi"
+    ],
+    "module": "直播间回放/配置",
+    "case_type": "manual",
+    "priority": "P1",
+    "tags": [
+      "功能用例",
+      "P1"
+    ],
+    "preconditions": "konfi 存在 直播间/回放/世界杯/广告 配置表",
+    "steps": [
+      {
+        "step": 1,
+        "desc": "读取直播间消息/关注配置",
+        "expected": "配置生效于聊天室/关注"
+      },
+      {
+        "step": 2,
+        "desc": "读取回放配置",
+        "expected": "回放列表按配置展示"
+      },
+      {
+        "step": 3,
+        "desc": "读取世界杯公告配置",
+        "expected": "世界杯专题公告正确下发"
+      },
+      {
+        "step": 4,
+        "desc": "读取广告配置",
+        "expected": "广告位/脚本按配置展示"
+      }
+    ],
+    "expected_result": "直播间/回放/世界杯/广告配置正确下发到用户端",
+    "source_doc": "konfi-inventory-sports.json；docs/体育平台-功能模块地图.md"
+  },
+  {
+    "case_id": "SP-KON-006",
+    "title": "konfi-权限与异常",
+    "domain": "体育-运营后台-功能",
+    "platforms": [
+      "konfi"
+    ],
+    "module": "通用/权限异常",
+    "case_type": "manual",
+    "priority": "P1",
+    "tags": [
+      "功能用例",
+      "P1",
+      "权限"
+    ],
+    "preconditions": "无 konfi 写权限账号与非法请求",
+    "steps": [
+      {
+        "step": 1,
+        "desc": "无权限账号尝试写配置",
+        "expected": "被拒绝并返回无权限"
+      },
+      {
+        "step": 2,
+        "desc": "传入非法 formKey/空参数",
+        "expected": "返回错误码，不产生脏数据"
+      },
+      {
+        "step": 3,
+        "desc": "配置值非法（超范围/类型错误）",
+        "expected": "被校验拦截"
+      }
+    ],
+    "expected_result": "konfi 写权限与非法参数校验正确"
+  }
 ]
