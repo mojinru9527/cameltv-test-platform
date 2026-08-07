@@ -28,7 +28,7 @@ jobs:
         id: target
         shell: pwsh
         run: |
-          $envName = '${{ inputs.env || ''test'' }}'
+          $envName = '${{ inputs.env || 'test' }}'
           if ($envName -eq 'prod') {
             "base_url=https://api.cameltv.live"       | Out-File -FilePath $env:GITHUB_OUTPUT -Append
             "health_urls=https://www.camel1.tv/,https://api.cameltv.live/" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
