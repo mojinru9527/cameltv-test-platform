@@ -1,0 +1,4 @@
+[
+  {"case_id":"SP-ADMR-001","title":"聊天文案白名单-配置","domain":"体育-运营后台-功能","platforms":["运营后台"],"module":"风控管理/聊天文案白名单","case_type":"manual","priority":"P2","tags":["功能用例","P2","关联:聊天弹幕"],"preconditions":"运营后台有风控权限","steps":[{"step":1,"desc":"新增/编辑聊天文案白名单","expected":"保存生效，命中白名单的文案不被敏感词拦截"},{"step":2,"desc":"删除白名单文案","expected":"恢复按敏感词规则处理"}],"expected_result":"聊天文案白名单维护正确","source_doc":"axure_extract_61930a83/聊天文案白名单.html"},
+  {"case_id":"SP-ADMR-002","title":"赛事预测风控设置","domain":"体育-运营后台-功能","platforms":["运营后台"],"module":"风控管理/赛事预测风控设置","case_type":"manual","priority":"P0","tags":["功能用例","P0","闭环"],"preconditions":"运营后台有风控权限","steps":[{"step":1,"desc":"配置单场/单日参与银钻上限","expected":"保存生效，用户端下注限额即时联动"},{"step":2,"desc":"停用/启用预测活动","expected":"用户端预测入口对应关闭/开放"},{"step":3,"desc":"非法值校验（负数/非数字/超范围）","expected":"被拦截提示"}],"expected_result":"赛事预测风控设置与用户端限额/开关联动正确","source_doc":"axure_extract_61930a83/风控设置.html；axure_extract_test/预测.html 银钻限额"}
+]
