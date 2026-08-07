@@ -23,7 +23,10 @@ def main() -> int:
     ap.add_argument("--backend-url", default=os.environ.get("TP_BACKEND_URL", "https://test-platform.up.railway.app/api/v1"))
     ap.add_argument("--username", default="sportsadmin")
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
+    ap.add_argument("--label", default="batch-111", help="证据目录标签（如 batch-112）")
     args = ap.parse_args()
+    global EVIDENCE_DIR
+    EVIDENCE_DIR = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / args.label
     if not args.password:
         print("ERROR: 需要 --password / TP_ADMIN_PASSWORD", flush=True)
         return 1
@@ -81,14 +84,38 @@ def main() -> int:
         r = c.post(f"/ui-tests/{job['id']}/trigger")
         r.raise_for_status()
         run = r.json()["data"]
-        print(f"[trigger] run id={run.get('id')}", flush=True)
-        time.sleep(5)
+        run_id = run.get("id") or run.get("run_id")
+        print(f"[trigger] run id={run_id}", flush=True)
+
+        # 4) 轮询运行报告（最多 10 分钟）
+        run_status = ""
+        run_result: dict = {}
+        run_error = ""
+        run_finished = ""
+        for _ in range(60):
+            time.sleep(10)
+            rd = c.get(f"/ui-tests/runs/{run_id}").json().get("data", {})
+            run_status = rd.get("status") or ""
+            run_result = rd.get("result") or {}
+            run_error = rd.get("error_message") or ""
+            run_finished = rd.get("finished_at") or ""
+            if run_status in ("success", "failed", "cancelled", "fail", "error"):
+                print(f"[run] done status={run_status} finished={run_finished}", flush=True)
+                break
+            print(f"[run] polling status={run_status}", flush=True)
 
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
     out = EVIDENCE_DIR / "ui-schedule-summary.json"
+    stdout_tail = str(run_result.get("stdout") or "")[-1500:]
+    stderr_tail = str(run_result.get("stderr") or "")[-800:]
     out.write_text(json.dumps({
         "ui_job_id": job.get("id"), "schedule_id": sched.get("id"), "env_id": env_id,
-        "trigger_run_id": run.get("id"),
+        "trigger_run_id": run_id,
+        "run_status": run_status,
+        "run_error": run_error,
+        "run_finished_at": run_finished,
+        "stdout_tail": stdout_tail,
+        "stderr_tail": stderr_tail,
     }, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[evidence] {out.relative_to(REPO_ROOT)}")
     return 0

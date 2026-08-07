@@ -28,7 +28,10 @@ def main() -> int:
     ap.add_argument("--username", default="sportsadmin")
     ap.add_argument("--password", default=os.environ.get("TP_ADMIN_PASSWORD", ""))
     ap.add_argument("--database-url", default=os.environ.get("TP_DATABASE_URL", ""))
+    ap.add_argument("--label", default="batch-111", help="证据目录/任务名标签（如 batch-112）")
     args = ap.parse_args()
+    global EVIDENCE_DIR
+    EVIDENCE_DIR = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / args.label
     if not args.password or not args.database_url:
         print("ERROR: 需要 --password / TP_ADMIN_PASSWORD 与 --database-url / TP_DATABASE_URL", flush=True)
         return 1
@@ -67,7 +70,7 @@ def main() -> int:
         print(f"[env] {env.get('name')} id={env_id}", flush=True)
 
         r = c.post("/apitest/tasks", json={
-            "name": "体育平台-批量执行-Batch111",
+            "name": f"体育平台-批量执行-{args.label}",
             "case_ids": case_ids,
             "environment_id": env_id,
             "confirm_prod": True,
@@ -97,6 +100,15 @@ def main() -> int:
             "AND tags::text LIKE '%%batch:110%%' AND last_response_json IS NOT NULL AND last_response_json <> ''"
         )
         backfill["has_response"] = cur.fetchone()[0]
+        cur.execute(
+            "SELECT regexp_replace(api_endpoint, '\\?.*', '') AS ep, last_run_status, COUNT(*) "
+            "FROM test_case WHERE project_id=1 AND is_deleted=false AND case_type='api' "
+            "AND tags::text LIKE '%%batch:110%%' GROUP BY ep, last_run_status ORDER BY ep"
+        )
+        by_endpoint = []
+        for ep, status, cnt in cur.fetchall():
+            by_endpoint.append({"endpoint": ep, "status": status, "count": cnt})
+        backfill["by_endpoint"] = by_endpoint
     conn.close()
 
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
