@@ -73,8 +73,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | ~~C102-1~~ | ~~需求 AI 提取/生成同步超时（>300s 网关 502）：改造异步任务+轮询或分块放宽，消除大文档生成失败~~ → **Closed**：后端 async 基建+端点 + 前端 async 轮询（index/ReviewPage 接入），大文档不再同步 502 | P1 | 2026-08-06 |
 | ~~C102-2~~ | ~~知识中心入库接口修复（capture 一律 409、vector_search 非 functional）；修复后回归 /knowledge/capture 落库~~ → **Closed**：生产 /knowledge/search/health vector_search_functional=true（31 源/19 嵌入，hybrid）+ capture 正常（source#31） | P1 | 2026-08-06 |
-| C102-3 | 需求模块树/跨系统关联支持从需求文档直建（当前强制蓝湖证据包 evidence_job_id） | P2 | 2026-08-06 |
-| C102-4 | 生产页面与需求原型差异标注能力（英文站 vs 中文原型，新增 World Cup/Replays 模块） | P2 | 2026-08-06 |
+| ~~C102-3~~ | ~~需求模块树/跨系统关联支持从需求文档直建（当前强制蓝湖证据包 evidence_job_id）~~ → **Closed**：需求模块树从需求文档直建（build-from-document 端点，无需 evidence_job_id；单测 5/5） | P2 | 2026-08-06 |
+| ~~C102-4~~ | ~~生产页面与需求原型差异标注能力（英文站 vs 中文原型，新增 World Cup/Replays 模块）~~ → **Closed**：生产页面 vs 需求原型差异标注（production-diff 端点 new/matched/missing；单测 4/4） | P2 | 2026-08-06 |
 | ~~C102-5~~ | ~~AI 生成截断自动补全（块级重试+补生成+覆盖缺口报告）~~ → **Closed**：ai_service.py 分块+截断重试（_CHUNK_FP_LIMIT=12）+ C116-3 coverage_report | P2 | 2026-08-06 |
 
 ### batch-110 — 体育平台第一期收口（Batch 110 Leader 条件）
@@ -114,7 +114,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C117-1 | 覆盖缺口报告前端展示（AiResultModal 增覆盖矩阵/缺口 Tab） | P3 | 2026-08-07 |
+| ~~C117-1~~ | ~~覆盖缺口报告前端展示（AiResultModal 增覆盖矩阵/缺口 Tab）~~ → **Closed**：覆盖缺口报告前端展示（AiResultModal 覆盖矩阵/缺口 Tab；vitest 4/4） | P3 | 2026-08-07 |
 | C117-2 | 异步 AI 任务多 worker 支持（当前进程内注册表，单 worker 可用；多 worker 需外部队列） | P3 | 2026-08-07 |
 
 ### batch-116 — AI 生成链路加固 + 平台采集（Batch 116 Leader 条件）
@@ -224,6 +224,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
 | C109-1 | 生产部署配置 FRONTEND_URL + SEED_DEMO_USERS=false + 邀请链接复测 | `evidence/batch-118/c1091-invite-link-summary.json`（https 200/注册自动入项目与组织/0 演示账号） | 2026-08-07 |
+| C102-3 | 需求模块树直建（无蓝湖证据包） | `POST /requirement-modules/build-from-document` + 单测 5/5（test_requirement_modules_direct_build.py） | 2026-08-07 |
+| C102-4 | 生产页面 vs 需求原型差异标注 | `POST /requirement-modules/production-diff` + 单测 4/4（test_production_diff.py） | 2026-08-07 |
+| C117-1 | 覆盖缺口报告前端展示 | `AiResultModal` 覆盖矩阵/缺口 Tab + vitest 4/4 | 2026-08-07 |
 | C103-1 | 功能用例规范覆盖度（485 manual/390 P0/33 域/151 模块，92 FP 达标） | `evidence/batch-118/hygiene-audit-summary.json` + 生产库实测 | 2026-08-07 |
 | C103-2 | 接口用例可视（请求参数/断言/请求结果三栏） | `CaseDrawer.tsx:496-672` | 2026-08-07 |
 | C103-3 | 接口用例真实参数基线+字段覆盖 | `evidence/batch-112/calibration-summary.json` + 170/170 | 2026-08-07 |
