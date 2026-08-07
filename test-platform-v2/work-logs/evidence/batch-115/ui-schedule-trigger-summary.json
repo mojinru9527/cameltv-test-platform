@@ -1,0 +1,14 @@
+{
+  "schedule_id": 2,
+  "ui_job_id": 3,
+  "cron": "0 2 * * *",
+  "ui_run_id": 15,
+  "status": "done",
+  "result": {
+    "total": 10,
+    "pass_": 10,
+    "fail": 0,
+    "skip": 0,
+    "duration": 132.05
+  }
+}
