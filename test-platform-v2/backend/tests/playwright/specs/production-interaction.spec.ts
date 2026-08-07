@@ -52,6 +52,8 @@ async function clickMatchEntry(page: Page, runtime: P0Runtime): Promise<string |
   return href
 }
 test.describe('体育平台 生产 P0 交互路径 → UI 自动化（只读，Batch 114）', () => {
+  // 数据中心 Runner 页面崩溃/OOM flaky（B114-2）：失败自动重试 1 次
+  test.describe.configure({ retries: 1 })
   let runtime: P0Runtime
 
   test.beforeAll(() => {
