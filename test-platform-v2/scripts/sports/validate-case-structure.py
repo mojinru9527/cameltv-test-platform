@@ -1,9 +1,12 @@
 """Batch 122 — 体育用例结构校验（幂等、本地执行）。
 
 校验 `work-logs/evidence/batch-122/cases/**/*.json` 的用例是否符合
-`docs/体育平台-用例结构规范.md`：
-- 必填字段、域白名单、模块路径（入口/一级/二级）、编号格式
-- 深度拦截：单步「查看XX」无断言、空 preconditions/expected、接口 body 为空对象
+`docs/体育平台-用例结构规范.md`。支持两种格式：
+- 编写格式：`platforms` + `module`(一级/二级，无入口前缀) + `case_id`(SP-{MOD}-###)
+- 展开格式：`module`(入口/一级/二级) + `case_id`(SP-{入口码}-...)
+
+校验规则：必填字段、域白名单、模块路径、编号格式、深度拦截（单步且预期过泛、
+空 preconditions/expected、接口 body 为空对象）。
 
 运行: <python> scripts/sports/validate-case-structure.py [--cases <dir|file>]
 退出码: 0=全部通过 / 1=存在硬错误
@@ -28,9 +31,8 @@ ENTRANCES = {
     "运营后台": "ADM",
     "konfi": "KON",
 }
-INTERFACE_ENTRANCE = {"接口测试": "I"}
 ALLOWED_TYPES = {"manual", "api", "ui"}
-TRIVIAL_PATTERNS = re.compile(r"^(查看|进入|打开).{0,12}(展示|页面|模块|列表)?$")
+TRIVIAL_EXPECT = re.compile(r"^(正常展示|展示正常|无异常|无报错|正常|通过|OK|成功)?$")
 
 REQUIRED_FIELDS = ["case_id", "title", "domain", "module", "case_type", "priority",
                    "preconditions", "steps", "expected_result"]
@@ -56,14 +58,25 @@ def validate_case(case: dict, path: str) -> list[str]:
 
     module = case.get("module", "")
     parts = [p for p in module.split("/") if p]
-    if not parts or parts[0] not in ENTRANCES:
-        errs.append(f"module 入口不合法: {module!r}（需 入口/一级/二级）")
-    elif len(parts) < 2:
-        errs.append(f"module 层级不足: {module!r}（需 入口/一级/二级）")
+    platforms = case.get("platforms")
+    is_authoring = isinstance(platforms, list) and len(platforms) > 0
+
+    if is_authoring:
+        if any(p not in ENTRANCES for p in platforms):
+            errs.append(f"platforms 含不合法入口: {platforms!r}")
+        if len(parts) < 2:
+            errs.append(f"module 层级不足（编写格式需 一级/二级）: {module!r}")
+    else:
+        if not parts or parts[0] not in ENTRANCES:
+            errs.append(f"module 入口不合法: {module!r}（需 入口/一级/二级）")
+        elif len(parts) < 2:
+            errs.append(f"module 层级不足: {module!r}（需 入口/一级/二级）")
 
     cid = case.get("case_id", "")
     if domain == "体育-接口测试":
         ok = bool(re.match(r"^SP-I-[A-Z0-9-]+-\d{3}$", cid))
+    elif is_authoring:
+        ok = bool(re.match(r"^SP-[A-Z0-9-]+-\d{3}$", cid))
     else:
         entrance_code = ENTRANCES.get(parts[0] if parts else "", "")
         ok = bool(entrance_code) and cid.startswith(f"SP-{entrance_code}-")
@@ -79,16 +92,17 @@ def validate_case(case: dict, path: str) -> list[str]:
         errs.append("preconditions 为空")
 
     steps = case.get("steps") or []
+    exp = str(case.get("expected_result", "") or "").strip()
+    if not exp:
+        errs.append("expected_result 为空")
     if ct == "manual":
         if not isinstance(steps, list) or len(steps) == 0:
             errs.append("manual 用例 steps 为空")
         elif len(steps) == 1:
-            desc = str(steps[0].get("desc", "")) if isinstance(steps[0], dict) else ""
-            if TRIVIAL_PATTERNS.match(desc.strip()):
-                errs.append(f"单步冒烟用例被拦截: {desc!r}")
-    exp = str(case.get("expected_result", "") or "").strip()
-    if not exp:
-        errs.append("expected_result 为空")
+            exp_weak = (not exp) or TRIVIAL_EXPECT.match(exp.strip()) or len(exp.strip()) < 8
+            if exp_weak:
+                errs.append(f"单步用例且预期过泛被拦截: {exp!r}")
+
     if ct == "api":
         if not case.get("api_endpoint"):
             errs.append("api 用例缺 api_endpoint")
@@ -113,9 +127,9 @@ def main() -> int:
     if not root.exists():
         print(f"[validator] 目录不存在（跳过，非错误）: {root}", flush=True)
         return 0
-    total = hard = 0
+    files = hard = cases = 0
     for fp in iter_case_files(root):
-        total += 1
+        files += 1
         try:
             data = json.loads(fp.read_text(encoding="utf-8"))
         except Exception as e:
@@ -128,16 +142,16 @@ def main() -> int:
                 hard += 1
                 print(f"[validator] {fp} 非对象用例", flush=True)
                 continue
+            cases += 1
             errs = validate_case(case, str(fp))
             if errs:
                 hard += 1
                 print(f"[validator] FAIL {case.get('case_id', '?')} ({fp})", flush=True)
                 for e in errs:
                     print(f"    - {e}", flush=True)
-    print(f"[validator] files={total} hard_errors={hard}", flush=True)
+    print(f"[validator] files={files} cases={cases} hard_errors={hard}", flush=True)
     return 1 if hard else 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
