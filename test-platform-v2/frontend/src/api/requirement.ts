@@ -240,6 +240,12 @@ export async function listReleaseBundles(): Promise<{ items: Array<{ id: number;
   return api.get('/release-bundles', { params: { page: 1, page_size: 100 } })
 }
 
+export async function getCaptureTask(
+  taskId: string,
+): Promise<{ task_id: string; status: string; pages?: string[]; samples?: unknown[] }> {
+  return api.get(`/ui-tests/capture/${taskId}`)
+}
+
 export async function productionDiff(
   releaseBundleId: number,
   productionPages: Array<{ label: string; title?: string; url?: string }>,
