@@ -321,8 +321,8 @@ def _build_user_message_with_extraction(content: str, file_type: str, source_ref
             extraction_lines.append("")
             extraction_lines.append("## 模块-接口-功能关联基座（生成前按关联定位）")
             extraction_lines.extend(association_lines)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("关联基座构建失败，继续基础提取: %s", exc)
     for mod in modules:
         mod_id = mod.get("id", "")
         mod_name = mod.get("name", "")

@@ -6,12 +6,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import time
 import uuid
 from pathlib import Path
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 _STORAGE = Path(settings.storage_dir) / "xhr-capture" if getattr(settings, "storage_dir", None) else Path("storage") / "xhr-capture"
 _TASKS: dict[str, dict] = {}
@@ -71,8 +74,8 @@ def _run(task_id: str, pages: list[str]) -> None:
                 try:
                     if req.method in ("POST", "PUT", "PATCH"):
                         body = (req.post_data or "")[:4000]
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.warning("XHR body 截取失败: %s", exc)
                 req._cap = {"method": req.method, "url": req.url, "headers": headers, "body": body}
 
             def on_response(resp):
@@ -93,7 +96,7 @@ def _run(task_id: str, pages: list[str]) -> None:
                               wait_until="domcontentloaded", timeout=45000)
                     page.wait_for_timeout(1500)
                 except Exception as exc:
-                    pass
+                    logger.warning("页面访问失败，跳过 %s: %s", path, exc)
             browser.close()
 
         _STORAGE.mkdir(parents=True, exist_ok=True)
