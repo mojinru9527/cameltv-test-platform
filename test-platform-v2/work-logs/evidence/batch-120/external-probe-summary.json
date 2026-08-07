@@ -1,21 +1,43 @@
 {
   "batch": "120",
-  "date": "2026-08-07",
+  "date": "2026-08-07 (更新)",
   "probes": {
     "ios": {
-      "device_declared": true,
-      "user_note": "用户 2026-08-07 声明设备已就绪",
-      "probe": "tidevice list → usbmux ConnectionRefusedError (WinError 10061)",
-      "host_toolchain": {"tidevice": "installed (backend venv)", "solox": "2.9.3 installed", "apple_mobile_device_service": "NOT present on host"},
-      "verdict": "blocked",
-      "blocker": "宿主无 Apple Mobile Device Service / usbmuxd，iPhone 无法枚举（与设备是否就绪无关）",
-      "unblock": "安装 Apple Mobile Device Service（iTunes 或 usbmuxd）并连接已信任 iPhone 后重试"
+      "device": {
+        "udid": "00008120-000155510CE0C01E",
+        "serial": "HTWR7YKVFT",
+        "product_version": "26.5.2",
+        "conn": "usb"
+      },
+      "usbmux": "已可用（Apple Devices 启动后 AMDS 生效，tidevice list 成功）",
+      "ddi_26_5_2": {
+        "github_JinjunHan": "404",
+        "mirror_appetizer": "000/unavailable",
+        "alt_joshuaehill": "404"
+      },
+      "verdict": "partially unblocked",
+      "blocker": "solox 需 DeveloperDiskImage 26.5.2，标准源均 404；无 DDI 无法挂载，性能采集不可用",
+      "unblock": "提供 iOS 26.5.2 DeveloperDiskImage（Xcode DeviceSupport/26.5 打包 zip）或等 solox 源更新"
     },
     "test5": {
-      "probe": {"camel-admintest5.elelive.cn": "000 timeout", "gateway health": "000 timeout", "www.elelive.cn": "000 timeout"},
+      "vpn": {
+        "wsl_openvpn": "隧道已建立（tunx 10.7.7.2，TLS OK）",
+        "routes_pushed": "10.7.7.0/24, 192.168.10.0/23, 192.168.50.0/24, 多个 /32",
+        "wsl2_route_error": "sitnl rtnl error (-22) 部分路由添加失败"
+      },
+      "probe": {
+        "198.18.1.2:443/80": "timeout",
+        "198.18.1.43:443/80": "timeout",
+        "10.7.7.1": "无响应",
+        "pushed /32 列表": "全部 timeout"
+      },
+      "credentials": {
+        "konfi": "test-cameltv / test2021（用户已提供）",
+        "admin": "mjr（图形验证码待 OCR）"
+      },
       "verdict": "blocked",
-      "blocker": "VPN 未连通（本机 3 端点全部超时）；konfi 密码仍待提供",
-      "unblock": "VPN 连通 + konfi 密码落位后执行契约补拉（C74-2/C95-1/C111-4）"
+      "blocker": "隧道建立但 Test5 服务不可达（WSL2 路由添加错误 + 网关无响应）；凭据已具备",
+      "unblock": "需用户提供实际触发方式（确切命令/脚本）或确认服务侧可达后重试"
     }
   },
   "conclusion": "外部项保持 Deferred；解除条件已按最新探测更新（C-CONDITIONS.md）"
