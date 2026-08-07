@@ -1,0 +1,77 @@
+[
+  {
+    "case_id": "SP-ACT-001",
+    "title": "付费活动-首单不中退币",
+    "domain": "体育-用户端-功能",
+    "platforms": [
+      "安卓iOS",
+      "移动端-web",
+      "PC-web"
+    ],
+    "module": "付费活动/首单不中退币",
+    "case_type": "manual",
+    "priority": "P1",
+    "tags": [
+      "功能用例",
+      "P1",
+      "闭环"
+    ],
+    "preconditions": "用户从未购买过单篇付费文章",
+    "steps": [
+      {
+        "step": 1,
+        "desc": "用户首次消耗骆驼币购买单篇付费文章",
+        "expected": "购买成功"
+      },
+      {
+        "step": 2,
+        "desc": "该文章最终预测结果为 Loss",
+        "expected": "退还购买该文章所花费的所有骆驼币"
+      },
+      {
+        "step": 3,
+        "desc": "该文章预测结果为 Win/Push",
+        "expected": "不退还"
+      },
+      {
+        "step": 4,
+        "desc": "用户已购买过单篇付费文章后再购买",
+        "expected": "不再享受该活动（仅首单）"
+      }
+    ],
+    "expected_result": "首单不中退币按 首单/Loss 条件正确执行",
+    "source_doc": "axure_extract_test/付费活动.html"
+  },
+  {
+    "case_id": "SP-ACT-002",
+    "title": "付费活动-充值额外赠送骆驼币",
+    "domain": "体育-用户端-功能",
+    "platforms": [
+      "安卓iOS",
+      "移动端-web",
+      "PC-web"
+    ],
+    "module": "付费活动/充值赠送",
+    "case_type": "manual",
+    "priority": "P2",
+    "tags": [
+      "功能用例",
+      "P2"
+    ],
+    "preconditions": "后台配置充值赠币活动与关联套餐",
+    "steps": [
+      {
+        "step": 1,
+        "desc": "购买配置了赠币的骆驼币套餐",
+        "expected": "获得套餐骆驼币+活动额外赠送骆驼币"
+      },
+      {
+        "step": 2,
+        "desc": "核对到账",
+        "expected": "骆驼币余额增加正确，流水可见"
+      }
+    ],
+    "expected_result": "充值赠币按后台配置生效",
+    "source_doc": "axure_extract_test/付费活动.html；axure_extract_08b1a2b5/活动说明.html"
+  }
+]
