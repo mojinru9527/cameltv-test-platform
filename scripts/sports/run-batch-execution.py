@@ -57,8 +57,8 @@ def main() -> int:
         r.raise_for_status()
         c.headers["Authorization"] = f"Bearer {r.json()['data']['access_token']}"
 
-        envs = c.get("/environments").json().get("data", {})
-        items = envs.get("items", envs if isinstance(envs, list) else [])
+        env_data = c.get("/environments").json().get("data", {})
+        items = env_data.get("items", env_data) if isinstance(env_data, dict) else env_data
         env = next((e for e in items if "生产" in str(e.get("name", ""))), None)
         if not env:
             print("ERROR: 未找到生产环境", flush=True)
