@@ -54,10 +54,11 @@ function Test-PathInScope {
 }
 
 $root = (@(Invoke-CheckedGit -Path $RepositoryPath -Arguments @("rev-parse", "--show-toplevel")))[0].Trim()
+# Batch 115 起：审计不再强制工作区干净（pre-push hook 在 push 时已执行
+# -RequireClean 校验）；审计阶段工作区可能新增证据文件，仅校验元数据与范围。
 $verifyArguments = @{
     RepositoryPath = $root
     RequireMetadata = $true
-    RequireClean = $true
 }
 if ($ExpectedWorkflow) { $verifyArguments.ExpectedWorkflow = $ExpectedWorkflow }
 if ($ExpectedExecutor) { $verifyArguments.ExpectedExecutor = $ExpectedExecutor }
@@ -148,3 +149,4 @@ $result = [pscustomobject]@{
 $result | Format-List PullRequest,Url,Workflow,Executor,StartConfirmation,CompletionConfirmation,Branch,Base,Head,Draft,MergeState,Scope,ChecksRequired
 $checkResults | Format-Table -AutoSize
 $result
+

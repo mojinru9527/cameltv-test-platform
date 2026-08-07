@@ -1,7 +1,7 @@
 ---
 title: "CamelTv Agent 工作流规范"
 owner: "qa-team"
-last_reviewed: "2026-07-23"
+last_reviewed: "2026-08-07"
 status: "active"
 expires: "2027-01-22"
 tags: ["agent", "workflow", "git", "branching", "pr"]
@@ -147,6 +147,16 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 - 分支按任务命名；AI 执行器只写入忽略的本地元数据，pre-push 自动核对 metadata 与当前目录/分支
 - 详见 [ADR-0014](docs/adr/0014-single-main-trunk-ai-worktrees.md) 与 `scripts/git/` 可执行工具
 
+### 2.6 版本发布节奏（Batch 115 起）
+
+合入主干 ≠ 发布。主干随时合入（PR 门禁通过即可），版本按发布火车聚合：
+
+- **主干合并**：功能分支 PR 通过 required checks 即合入 main，不等待发布窗口。
+- **版本聚合**：每 2–3 天或每周从最新 main 打 `release/vX.Y.Z`（必要时切 release 分支稳定），一次 test 部署 + 一次生产验收。
+- **部署节奏**：test 每日固定窗口自动部署最近 main；生产每周 release 窗口 + 审批（见 [ADR-0015](docs/adr/0015-operations-release-control-plane.md)）。
+- **批次合并**：同域小修复归并为一个轻量批次；纯文档/证据合并提交，不单独开 PR。
+- 详见 [docs/agent-team/release-cadence.md](docs/agent-team/release-cadence.md)。
+
 ## 3. 提交前自检清单（强制）
 
 > 每次 `git push` 前必须通过以下检查。与 [.github/pull_request_template.md](.github/pull_request_template.md) 对齐。
@@ -196,16 +206,17 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 
 | 工作流 | 触发条件 | 覆盖范围 |
 |--------|---------|---------|
-| `main-quality-gate.yml` | PR → `main`、push → `main`、手动 | PR 按文件范围运行相关域全量回归；push/main 与手动始终双端全量；两个 required 汇总名称固定 |
-| `pr-check.yml` | PR → `main`、手动 | 按域运行覆盖率、PG 迁移、a11y 与 lint 观察；手动始终双端 |
-| `ai-delivery-policy.yml` | PR → `main` | 阻断：分支/本地文件/凭据策略，并执行 CI 范围分类与 workflow 契约测试 |
+| `main-quality-gate.yml` | PR → `main`、手动 | PR 按文件范围运行相关域全量回归；两个 required 汇总名称固定 |
+| `main-merge-smoke.yml` | push → `main`、手动 | 合并后轻量冒烟：后端 F821/导入/Alembic 单头 + 前端 typecheck/build（不再重复双端全量） |
+| `pr-check.yml` | 每日定时（04:00 UTC）、手动 | 质量观察：覆盖率、PG 迁移、a11y 与 lint，运行于 main 最新 HEAD，非阻塞 |
+| `ai-delivery-policy.yml` | PR → `main` | 阻断：分支/本地文件/凭据策略、CI 范围分类契约测试、workflow YAML 语法校验、deploy/release-control 冒烟 |
 
 ### 4.2 按变更范围分层
 
-- Markdown、`docs/`、`work-logs/`、Agent/Git/CI 本地工具：前后端重测试均跳过，三个 required contexts 仍返回明确结果。
-- `test-platform-v2/backend/**`、`lanhu-mcp` 子模块指针、`.gitmodules`：运行后端 required + backend/PG 扩展检查。
-- `test-platform-v2/frontend/**`：运行前端 required + frontend/a11y 扩展检查。
-- CI workflow、部署、混合、未知或空文件集：保守执行双端全量。
+- Markdown、`docs/`、`work-logs/`、Agent/Git/CI 本地工具、CI 工作流（`.github/workflows/`）、部署定义（`deploy/`、`Jenkinsfile`）：前后端重测试均跳过，三个 required contexts 仍返回明确结果；CI 工作流/deploy 变更由 `ai-delivery-policy.yml` 做 YAML 语法校验与 release-control 冒烟。
+- `test-platform-v2/backend/**`、`lanhu-mcp` 子模块指针、`.gitmodules`：运行后端 required；PG/覆盖率等扩展检查由每日 `pr-check.yml` 观察兜底。
+- `test-platform-v2/frontend/**`：运行前端 required；a11y/覆盖率等扩展检查由每日 `pr-check.yml` 观察兜底。
+- `test-platform-v2/deploy/**`、混合、未知或空文件集：保守执行双端全量。
 - 分类使用 PR base/head 的完整差异；同一受影响域每次 push 后仍对最新 SHA 重跑，不复用旧提交结果。
 - 禁止对 required workflow 使用顶层 `paths`/`paths-ignore`；分类器失败必须使固定名称汇总 job 失败。
 
@@ -214,6 +225,7 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 - 全量 Ruff、mypy、覆盖率阈值和 a11y 中仍有历史债务，暂由扩展工作流报告；运行时 F821、全量测试、类型检查和构建必须阻断
 - 单人仓库无法要求 PR 作者自己审批，因此远端以 required checks、禁止强推/删除和 Agent Team PR 审计作为合并门禁
 - `lanhu-mcp` 是后端蓝湖 Provider 的运行/开发依赖，必须通过 `.gitmodules` 在干净检出中初始化
+- push 到 `main` 不再重复双端全量；由 `main-merge-smoke.yml` 合并冒烟 + 每日定时回归（api-regression / pr-check 观察）兜底主干健康
 
 **Agent 应对**: Agent 必须在本地执行与变更范围对应的第 3 节自检，并把命令、退出码、失败集合与 CI 分类结果写入 QA 报告；不能依赖 job 名称或 skipped 状态推断质量。
 
@@ -244,3 +256,4 @@ pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor 
 - 测试策略: [docs/testing-strategy.md](docs/testing-strategy.md)
 - CI 流程: [deploy/CLAUDE.md](deploy/CLAUDE.md)
 - ADR: [ADR-0014 单一 main 主干与 AI Worktree 隔离](docs/adr/0014-single-main-trunk-ai-worktrees.md)
+
