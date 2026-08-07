@@ -1,0 +1,68 @@
+name: 主干合并冒烟
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  merge-smoke:
+    name: 主干合并冒烟
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: test-platform-v2/backend/requirements.txt
+
+      - name: Install Backend Dependencies
+        working-directory: test-platform-v2/backend
+        run: |
+          pip install -r requirements.txt
+          pip install ruff
+
+      - name: 未定义符号检查
+        working-directory: test-platform-v2/backend
+        run: ruff check app/ --select F821 --output-format=github
+
+      - name: 应用导入冒烟
+        working-directory: test-platform-v2/backend
+        run: |
+          python -c "import app.main; print('import OK: routers/models resolve on merged main')"
+
+      - name: Alembic 单头校验
+        working-directory: test-platform-v2/backend
+        run: |
+          heads="$(python -m alembic heads 2>/dev/null | grep -c '(head)')"
+          echo "alembic heads = $heads"
+          test "$heads" -eq 1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.22'
+          cache: npm
+          cache-dependency-path: test-platform-v2/frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: test-platform-v2/frontend
+        run: npm ci
+
+      - name: Type Check
+        working-directory: test-platform-v2/frontend
+        run: npm run typecheck
+
+      - name: Production Build
+        working-directory: test-platform-v2/frontend
+        run: npm run build

@@ -1,7 +1,7 @@
 ---
 title: "CamelTv 测试策略总纲"
 owner: "qa-team"
-last_reviewed: "2026-07-27"
+last_reviewed: "2026-08-07"
 status: "active"
 expires: "2026-12-26"
 tags: ["testing", "strategy", "test-pyramid", "quality"]
@@ -130,21 +130,22 @@ test-platform-v2/frontend/src/
 ## 4. CI/CD 集成策略
 
 ```
-PR 提交 ──→ GitHub Actions ──→ lint + typecheck + 单元测试 ──→ ✅/❌
-                │
-push main ──→ Jenkins ──→ 构建镜像 → 单元 → API 回归 → 部署 test → 冒烟
-                │
-每日 02:03 ──→ GitHub Actions ──→ API 全量回归 (test)
-每日 08:07 ──→ GitHub Actions ──→ 生产冒烟 (prod)
+PR 提交 ──→ GitHub Actions 质量门禁（按域全量回归，两个 required 汇总）──→ ✅/❌
+push main ──→ 主干合并冒烟（F821/导入/Alembic 单头/typecheck/build）
+每日 01:30 ──→ 响应式回归 (tablet/mobile)
+每日 02:03 ──→ API 全量回归 (test)
+每日 04:00 ──→ 质量观察（覆盖率/PG/a11y/lint，非阻塞）
+每日 08:07 ──→ 生产冒烟 (prod)
+版本发布 ──→ test 每日定时部署 + prod release 窗口审批（ADR-0015）
 ```
 
 | 触发条件 | 执行范围 | 系统 | 阻塞条件 |
 |----------|---------|------|---------|
-| PR 提交 | lint + 单元测试 | GitHub Actions | 任一失败 |
-| push main | 构建 + 单元 + API 回归 + 部署 | Jenkins | 单元/构建失败 |
-| 每日 02:03 UTC | API 全量回归 (test) | GitHub Actions | 告警 |
-| 每日 08:07 UTC | 生产冒烟 | GitHub Actions | 告警 |
-| 手动触发 | 部署 staging/prod | Jenkins | 审批 |
+| PR 提交 | 按域全量回归（后端 pytest+PG / 前端 typecheck+lint+vitest+build） | GitHub Actions | required 汇总失败 |
+| push main | 合并冒烟（不重复双端全量） | GitHub Actions | 冒烟失败（告警） |
+| 每日 04:00 UTC | 质量观察（覆盖率/PG/a11y/lint） | GitHub Actions | 告警（非阻塞） |
+| 每日 01:30 / 02:03 / 08:07 UTC | 响应式 / API 回归 (test) / 生产冒烟 | GitHub Actions | 告警 |
+| 版本发布 | test 每日定时部署；prod release 窗口 + 审批 | Jenkins + 发布控制面 | 审批 |
 
 ---
 
@@ -199,3 +200,4 @@ push main ──→ Jenkins ──→ 构建镜像 → 单元 → API 回归 →
 - v2 测试基础设施：G4 切片 (见 [test-platform-v2/docs/改进任务backlog.md](../test-platform-v2/docs/改进任务backlog.md))
 - CI/CD：[deploy/CLAUDE.md](../deploy/CLAUDE.md)
 - API 测试方案：[tests/test-case-standards/API接口测试方案.md](../tests/test-case-standards/API接口测试方案.md)
+

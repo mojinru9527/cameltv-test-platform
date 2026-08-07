@@ -2,11 +2,19 @@
 
 > 技能版本化唯一日志。凡修改 `SKILL.md` / `DEPARTMENTS.md` 必须在本文件追加一条。格式：日期 | 批次 | 变更摘要 | 动因。
 
+## 2026-08-07 | Batch 115 | 批次合并与发布节奏
+
+- **变更**：SKILL.md 新增「批次合并与发布节奏」节（同域小修复归并轻量批次、纯文档/证据合并提交、合代码 ≠ 发版本）；新增事实源 `docs/agent-team/release-cadence.md` 并加入 SKILL.md 关联；AGENTS.md §2.6 新增发布节奏小节、§4 CI 门禁说明同步（push→main 改为合并冒烟、pr-check 改每日定时观察、CI 工作流/deploy 不再触发双端全量）；deploy/CLAUDE.md、docs/testing-strategy.md、pipeline-modes.md、local-dev-workflow.md 同步。
+- **动因**：用户反馈 PR 校验规则过严、校验时间长、版本发布过频影响开发节奏；主干随时合并、版本按窗口聚合，减少每 PR 检查项与每次合并的 CI 开销。
 ## 2026-08-04 | Batch 83 | 新增本地开发操作备忘
 
 - **变更**：新增 `docs/agent-team/local-dev-workflow.md`（主干视图 / worktree 隔离 / 批次生命周期 / push 门禁 / 常见坑速查）；SKILL.md「关联」节新增该文档链接。
 - **动因**：用户要求把本地开发工作流固化为 Agent Team 常驻资产；此前 F:\CamelTv 曾停在旧分支导致"pull 不切分支、脚本缺失"等困扰（batch-82 实测）。
 
+## 2026-08-07 | Batch 115 | 批次合并与发布节奏
+
+- **变更**：SKILL.md 新增「批次合并与发布节奏」节（同域小修复归并轻量批次、纯文档/证据合并提交、合代码 ≠ 发版本）；新增事实源 `docs/agent-team/release-cadence.md` 并加入 SKILL.md 关联；AGENTS.md §2.6 新增发布节奏小节、§4 CI 门禁说明同步（push→main 改为合并冒烟、pr-check 改每日定时观察、CI 工作流/deploy 不再触发双端全量）；deploy/CLAUDE.md、docs/testing-strategy.md、pipeline-modes.md、local-dev-workflow.md 同步。
+- **动因**：用户反馈 PR 校验规则过严、校验时间长、版本发布过频影响开发节奏；主干随时合并、版本按窗口聚合，减少每 PR 检查项与每次合并的 CI 开销。
 ## 2026-08-04 | Batch 83 | Agent Team 确认门禁收敛为一次总确认
 
 - **变更**：SKILL.md/DEPARTMENTS.md/AGENTS.md/pipeline-modes.md 将「逐次 push 确认 + 二次完成确认」收敛为一次总确认（推送+创建 Draft PR+required checks 通过后合入 main）；`audit-ai-pr.ps1` 最终审计不再强制完成确认；本地开发操作备忘同步更新。

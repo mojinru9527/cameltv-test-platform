@@ -16,19 +16,22 @@ NEUTRAL_PREFIXES = (
     "scripts/git/",
     "work-logs/",
     "产品需求/",
+    # CI 工作流与部署定义属于治理/流程层：不触发前后端全量回归，
+    # 由 ai-delivery-policy.yml 做 workflow YAML 语法校验与 deploy/release-control 冒烟。
+    ".github/workflows/",
+    "deploy/",
 )
+NEUTRAL_EXACT = {"Jenkinsfile"}
 BACKEND_PREFIXES = (
     "lanhu-mcp/",
     "test-platform-v2/backend/",
 )
 FRONTEND_PREFIXES = ("test-platform-v2/frontend/",)
 CROSS_CUTTING_PREFIXES = (
-    ".github/workflows/",
-    "deploy/",
+    # 平台自身的部署编排仍与业务行为强相关，保持保守双端全量。
     "test-platform-v2/deploy/",
 )
 BACKEND_EXACT = {".gitmodules", "lanhu-mcp"}
-CROSS_CUTTING_EXACT = {"Jenkinsfile"}
 
 
 @dataclass(frozen=True)
@@ -77,11 +80,11 @@ def classify_paths(paths: Iterable[str], force_all: bool = False) -> Classificat
         elif _starts_with(path, FRONTEND_PREFIXES):
             frontend = True
             reasons.add("frontend")
-        elif path in CROSS_CUTTING_EXACT or _starts_with(path, CROSS_CUTTING_PREFIXES):
+        elif _starts_with(path, CROSS_CUTTING_PREFIXES):
             backend = True
             frontend = True
             reasons.add("cross-cutting")
-        elif _starts_with(path, NEUTRAL_PREFIXES):
+        elif path in NEUTRAL_EXACT or _starts_with(path, NEUTRAL_PREFIXES):
             reasons.add("governance")
         else:
             backend = True
