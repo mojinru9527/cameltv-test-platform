@@ -173,6 +173,13 @@ class ModuleExtractRequest(BaseModel):
     source_version: str = Field("", description="版本标识")
 
 
+class BuildFromDocumentRequest(BaseModel):
+    """C102-3 需求文档直建模块树请求体（无需蓝湖证据包）。"""
+    document_id: int = Field(..., description="RequirementDocument ID")
+    release_bundle_id: int | None = Field(None, description="可选发布包；缺省用文档关联或自动创建")
+    source_version: str = Field("", description="版本标识")
+
+
 class ModuleExtractResult(BaseModel):
     """模块提取响应体。"""
     module_ids: list[int] = Field(default_factory=list)

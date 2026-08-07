@@ -509,3 +509,106 @@ def persist_module_tree(
         release_bundle_id,
     )
     return persisted_ids
+
+# ── Document Direct Build (Batch 118, C102-3) ──
+
+def build_module_tree_from_document(
+    db: Session,
+    *,
+    document_id: int,
+    project_id: int,
+    source_version: str = "",
+) -> ExtractionResult:
+    """Build a module tree directly from a requirement document.
+
+    C102-3: 需求模块树直建 — no Lanhu evidence package required.
+    Sources (in priority order):
+      1. document.extraction_raw — confirmed Stage-1 AI extraction JSON
+         ({"modules": [{"name", "description", "function_points": [...]}]}).
+      2. document.content — markdown headings (## module / ### page /
+         #### or bullets → function points).
+    """
+    result = ExtractionResult()
+    document = db.get(RequirementDocument, document_id)
+    if not document:
+        result.warnings.append(f"Requirement document #{document_id} not found")
+        return result
+
+    platform_hint = document.platform or ""
+    raw = (document.extraction_raw or "").strip()
+    if not raw or raw == "{}":
+        raw = (document.ai_raw or "").strip()
+
+    parsed_modules: list[dict] = []
+    if raw:
+        try:
+            payload = json.loads(raw)
+        except (TypeError, ValueError):
+            payload = None
+        if isinstance(payload, dict) and isinstance(payload.get("modules"), list):
+            parsed_modules = payload["modules"]
+        elif isinstance(payload, list):
+            parsed_modules = payload
+
+    if parsed_modules:
+        for idx, mod in enumerate(parsed_modules):
+            if not isinstance(mod, dict) or not mod.get("name"):
+                continue
+            fp_list = mod.get("function_points") or []
+            if not isinstance(fp_list, list):
+                fp_list = []
+            module = ModuleNode(
+                name=str(mod.get("name")).strip(),
+                platform=platform_hint or _infer_platform(str(mod.get("name") or "")),
+                node_type="module",
+                description=str(mod.get("description") or ""),
+                sort_order=idx,
+            )
+            page = PageNode(
+                name=f"{module.name} 功能点",
+                order_index=0,
+            )
+            for fp in fp_list:
+                if not isinstance(fp, dict):
+                    continue
+                page.function_points.append(FunctionPoint(
+                    name=str(fp.get("title") or fp.get("name") or "").strip() or "(未命名功能点)",
+                    description=str(fp.get("description") or ""),
+                    category=str(fp.get("type") or ""),
+                ))
+            if page.function_points:
+                module.pages.append(page)
+            result.modules.append(module)
+        result.stats = {"source": "extraction_raw", "document_id": document_id,
+                        "module_count": len(result.modules)}
+        return result
+
+    # Fallback: parse markdown content headings
+    content = document.content or ""
+    current_module: ModuleNode | None = None
+    current_page: PageNode | None = None
+    for line in content.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("## "):
+            current_module = ModuleNode(
+                name=stripped[3:].strip(),
+                platform=platform_hint,
+                node_type="module",
+                sort_order=len(result.modules),
+            )
+            current_page = None
+            result.modules.append(current_module)
+        elif stripped.startswith("### ") and current_module is not None:
+            current_page = PageNode(name=stripped[4:].strip(), order_index=0)
+            current_module.pages.append(current_page)
+        elif (stripped.startswith("#### ") or stripped.startswith("- ") or stripped.startswith("* ")) and current_page is not None:
+            text = stripped.lstrip("#-* ").strip()
+            if text:
+                current_page.function_points.append(FunctionPoint(name=text))
+        elif current_module is not None and current_page is not None and stripped:
+            # plain line under a page → treat as description of last FP (if any)
+            if current_page.function_points:
+                current_page.function_points[-1].description += (" " if current_page.function_points[-1].description else "") + stripped
+    result.stats = {"source": "content", "document_id": document_id,
+                    "module_count": len(result.modules)}
+    return result
