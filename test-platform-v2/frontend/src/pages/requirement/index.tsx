@@ -109,6 +109,7 @@ export default function RequirementPage() {
   const [extractionResult, setExtractionResult] = useState<FeatureExtractionResult | null>(null)
   const [extracting, setExtracting] = useState(false)
   const [extractingDocId, setExtractingDocId] = useState<number | null>(null)
+  const [, setConfirmedExtractionIds] = useState<Set<number>>(new Set())
   // ── batch-28: version compare + screenshot preview states ──
   const [versionDiffData, setVersionDiffData] = useState<any>(null)
   const [showVersionCompare, setShowVersionCompare] = useState(false)
