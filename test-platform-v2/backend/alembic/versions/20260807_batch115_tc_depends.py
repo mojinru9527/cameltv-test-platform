@@ -27,8 +27,11 @@ def _has_column(bind, table: str, column: str) -> bool:
 
 
 def upgrade() -> None:
-    # C107-2：接口用例前置依赖（depends_on_ids JSON 数组）；幂等（CI 模型建表场景跳过）
+    # C107-2：接口用例前置依赖（depends_on_ids JSON 数组）；幂等（CI 模型建表/裸库迁移测试场景跳过）
     bind = op.get_bind()
+    import sqlalchemy as _sa
+    if "test_case" not in _sa.inspect(bind).get_table_names():
+        return
     if not _has_column(bind, "test_case", "depends_on_ids"):
         op.add_column("test_case", sa.Column("depends_on_ids", sa.Text(), nullable=False, server_default="[]"))
 
