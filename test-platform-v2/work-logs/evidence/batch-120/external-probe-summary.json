@@ -1,0 +1,22 @@
+{
+  "batch": "120",
+  "date": "2026-08-07",
+  "probes": {
+    "ios": {
+      "device_declared": true,
+      "user_note": "用户 2026-08-07 声明设备已就绪",
+      "probe": "tidevice list → usbmux ConnectionRefusedError (WinError 10061)",
+      "host_toolchain": {"tidevice": "installed (backend venv)", "solox": "2.9.3 installed", "apple_mobile_device_service": "NOT present on host"},
+      "verdict": "blocked",
+      "blocker": "宿主无 Apple Mobile Device Service / usbmuxd，iPhone 无法枚举（与设备是否就绪无关）",
+      "unblock": "安装 Apple Mobile Device Service（iTunes 或 usbmuxd）并连接已信任 iPhone 后重试"
+    },
+    "test5": {
+      "probe": {"camel-admintest5.elelive.cn": "000 timeout", "gateway health": "000 timeout", "www.elelive.cn": "000 timeout"},
+      "verdict": "blocked",
+      "blocker": "VPN 未连通（本机 3 端点全部超时）；konfi 密码仍待提供",
+      "unblock": "VPN 连通 + konfi 密码落位后执行契约补拉（C74-2/C95-1/C111-4）"
+    }
+  },
+  "conclusion": "外部项保持 Deferred；解除条件已按最新探测更新（C-CONDITIONS.md）"
+}

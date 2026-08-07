@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-07 (Batch 119: C118-1 + C104-3/C105-3 + C105-4 + C114-1 + C102-4 前端差异面板)
+**最后更新**: 2026-08-07 (Batch 120: C117-2 多 worker + C119-1 采集对接 + C119-2 缺口前端 + 外部项探测)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -115,7 +115,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C117-1~~ | ~~覆盖缺口报告前端展示（AiResultModal 增覆盖矩阵/缺口 Tab）~~ → **Closed**：覆盖缺口报告前端展示（AiResultModal 覆盖矩阵/缺口 Tab；vitest 4/4） | P3 | 2026-08-07 |
-| C117-2 | 异步 AI 任务多 worker 支持（当前进程内注册表，单 worker 可用；多 worker 需外部队列） | P3 | 2026-08-07 |
+| ~~C117-2~~ | ~~异步 AI 任务多 worker 支持（当前进程内注册表，单 worker 可用；多 worker 需外部队列）~~ → **Closed**：DB 队列 ai_task 表 + 原子认领（单测 6/6，alembic 单头） | P3 | 2026-08-07 |
 
 ### batch-116 — AI 生成链路加固 + 平台采集（Batch 116 Leader 条件）
 
@@ -165,7 +165,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C95-1 | Test5 窗口开启后用 konfi 账号取 token 拉契约（补 C74-2）；admin-service 登录提供后一并完成 | P2 | 2026-08-05；2026-08-05 VPN 实测：隧道通但网关路由空/health 503（服务未就绪），konfi 登录 API 已定位（/konfiapi/user/login）但密码待提供；服务就绪+密码落位后执行 |
+| C95-1 | Test5 窗口开启后用 konfi 账号取 token 拉契约（补 C74-2）；admin-service 登录提供后一并完成 | P2 | 2026-08-05；2026-08-07 探测：VPN 未连通 + konfi 密码待提供；VPN 连通+密码落位后执行 | P2 | 2026-08-05；2026-08-05 VPN 实测：隧道通但网关路由空/health 503（服务未就绪），konfi 登录 API 已定位（/konfiapi/user/login）但密码待提供；服务就绪+密码落位后执行 |
 | C95-2 | iOS 真机（CP-C2/C84-1）今晚用户执行后登记结果并关闭或转缺陷 | P2 | 2026-08-05 |
 
 ### batch-93 — 响应式回归常驻 CI（Batch 93 Leader 条件）
@@ -201,9 +201,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 解除条件 |
 |----|------|--------|---------|
-| CP-C2 | iOS 真机采集端到端验证 | P0 | 用户已连接 iPhone（Apple 驱动已装，tidevice 可识别）；**阻塞：solox 缺 iOS 26.5 DeviceSupport（GitHub 404），平台 iOS 采集不可用**；解除条件：solox 支持该版本或提供受支持 iOS 设备 |
-| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（solox 支持后执行） |
-| C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
+| CP-C2 | iOS 真机采集端到端验证 | P0 | 设备已就绪（用户 2026-08-07 声明）；**探测：宿主无 Apple Mobile Device Service/usbmuxd，tidevice usbmux 拒绝连接（WinError 10061）**；解除条件：安装 Apple 驱动/服务（iTunes 或 usbmuxd）并连接已信任 iPhone 后重试 | P0 | 用户已连接 iPhone（Apple 驱动已装，tidevice 可识别）；**阻塞：solox 缺 iOS 26.5 DeviceSupport（GitHub 404），平台 iOS 采集不可用**；解除条件：solox 支持该版本或提供受支持 iOS 设备 |
+| C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（宿主 usbmux 服务缺失，tidevice 无法枚举设备） | P1 | 同 CP-C2（solox 支持后执行） |
+| C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供；**探测 2026-08-07：VPN 未连通（camel-admintest5/网关/elelive 全部超时 000），konfi 密码仍待提供** | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
 | C65-3 | Test5 外部前置条件逐项解锁登记 | P1 | 清单 1.4 已更新（konfi 解锁登记 2026-08-05）；admin-service 已登记（2026-08-05）；业务 DB/Redis 已登记（7.1），体育平台无 MQ（N/A） |
 | C63-2 | 外部阻塞项解除时先登记提供人/日期/授权范围 | P0 | 任一外部项解锁时遵守 |
 | C27-C1 | 模块树自动提取准确率 ≥70% | P1 | staging 替代已登记（test 环境 + 本地全栈）；执行待数据/性能测量（C96-1） |
@@ -218,6 +218,17 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 ---
 
 ## Closed (已完成)
+
+### Batch 120 — 多 worker + 采集对接 + 缺口前端（2026-08-07）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C117-2 | 异步 AI 任务多 worker 支持 | `ai_task` 表 + DB 队列原子认领（`ai_tasks.py`）+ 单测 6/6 | 2026-08-07 |
+| C119-1 | 差异面板对接平台采集数据 | ProductionDiffPanel 加载 `/ui-tests/capture/{id}` pages + vitest 5/5 | 2026-08-07 |
+| C119-2 | 交互覆盖缺口前端展示 | InteractionGapPanel（需求页）+ vitest 3/3 | 2026-08-07 |
+| 外部探测 | Test5/iOS 状态更新 | `evidence/batch-120/external-probe-summary.json`（仍 Deferred，解除条件已更新） | 2026-08-07 |
+
+
 
 ### Batch 119 — 收尾与工具链清理（2026-08-07）
 
