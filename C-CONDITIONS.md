@@ -65,7 +65,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C109-1 | 生产部署后配置 FRONTEND_URL=https://cameltv-test-platform1.vercel.app 与 SEED_DEMO_USERS=false，复测项目邀请链接（https、页面 200、注册自动入项目/组织）并确认 tester/viewer 演示账号未重建 | P1 | 2026-08-06 |
+| ~~C109-1~~ | ~~生产部署后配置 FRONTEND_URL=https://cameltv-test-platform1.vercel.app 与 SEED_DEMO_USERS=false，复测项目邀请链接（https、页面 200、注册自动入项目/组织）并确认 tester/viewer 演示账号未重建~~ → **Closed**：生产实测：FRONTEND_URL 正确；SEED_DEMO_USERS=false 行为生效（多次部署后 0 演示账号）；邀请链接复测 PASS（https 200 → 注册自动入项目/组织，用户#10） | P1 | 2026-08-06 |
 
 ### batch-102 — 体育平台功能模块梳理（Batch 102 Leader 条件）
 
@@ -223,6 +223,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
+| C109-1 | 生产部署配置 FRONTEND_URL + SEED_DEMO_USERS=false + 邀请链接复测 | `evidence/batch-118/c1091-invite-link-summary.json`（https 200/注册自动入项目与组织/0 演示账号） | 2026-08-07 |
 | C103-1 | 功能用例规范覆盖度（485 manual/390 P0/33 域/151 模块，92 FP 达标） | `evidence/batch-118/hygiene-audit-summary.json` + 生产库实测 | 2026-08-07 |
 | C103-2 | 接口用例可视（请求参数/断言/请求结果三栏） | `CaseDrawer.tsx:496-672` | 2026-08-07 |
 | C103-3 | 接口用例真实参数基线+字段覆盖 | `evidence/batch-112/calibration-summary.json` + 170/170 | 2026-08-07 |
