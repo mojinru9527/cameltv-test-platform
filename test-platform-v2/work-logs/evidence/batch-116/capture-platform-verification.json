@@ -1,0 +1,14 @@
+{
+  "task": {
+    "id": "cap-69a8c94f91",
+    "status": "done",
+    "sample_count": 314,
+    "pages": [
+      "/",
+      "/q/news",
+      "/search"
+    ]
+  },
+  "api": "POST/GET /ui-tests/capture",
+  "conclusion": "C116-1 平台采集实跑闭环"
+}
