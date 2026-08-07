@@ -39,6 +39,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AsyncState } from '@/components/state'
 import AiResultModal from './AiResultModal'
 import EvidenceTaskPanel from './components/EvidenceTaskPanel'
+import ProductionDiffPanel from './components/ProductionDiffPanel'
 import VersionCompare from './components/VersionCompare'
 import PrototypePreview from './components/PrototypePreview'
 import LanhuEvidenceDialog from '@/pages/knowledge/components/LanhuEvidenceDialog'
@@ -654,6 +655,8 @@ export default function RequirementPage() {
           </CardContent>
         </Card>
       )}
+
+      <ProductionDiffPanel />
 
       {/* Document Table */}
       <Card size="sm" className="ui-surface">
