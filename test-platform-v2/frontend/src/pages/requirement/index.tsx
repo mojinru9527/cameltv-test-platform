@@ -6,9 +6,9 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth'
 import { fetchDomains } from '@/api/testcase'
 import {
-  confirmExtraction, deleteRequirement, extractFeatures, fetchGeneratedCases,
+  confirmExtraction, deleteRequirement, extractFeatures, extractFeaturesAsync, fetchGeneratedCases,
   fetchRequirement, fetchRequirementCoverage, fetchRequirements,
-  generateTestCases, getOrCreateExtraction, uploadRequirement,
+  generateTestCases, generateTestCasesAsync, runAsyncAiTask, getOrCreateExtraction, uploadRequirement,
 } from '@/api/requirement'
 import type {
   AIGenerateResult,
