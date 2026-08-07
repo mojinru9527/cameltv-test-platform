@@ -2,7 +2,7 @@
 
 > 适用仓库：CamelTv test-platform（单一 main 主干，见 [ADR-0014](../adr/0014-single-main-trunk-ai-worktrees.md)）。
 > 目标读者：本地开发者 + Agent Team 各批次执行者。
-> 最后更新：2026-08-04（batch-83）。本文件是 Agent Team 的常驻流程资产，改动须同步 SKILL.md「关联」与 CHANGELOG。
+> 最后更新：2026-08-07（Batch 115）。本文件是 Agent Team 的常驻流程资产，改动须同步 SKILL.md「关联」与 CHANGELOG。
 
 ## 1. 两条铁律
 
@@ -62,9 +62,13 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 
 ## 4. 批次生命周期
 
-一个版本批次完成（开发 + QA + Review + Leader Verdict）→ **先合入 main** → push 主干 → 验证 CI → **从最新 main 创建下一个批次**。
+一个版本批次完成（开发 + QA + Review + Leader Verdict）→ **先合入 main** → push 主干 → 验证合并冒烟（push 不再重复双端全量）→ **从最新 main 创建下一个批次**。
 
 ❌ 禁止在上一批次未合并时基于旧 main 开新批；多个并行批次完成时按交付顺序逐个合并、冲突在合并时解决。
+
+### 4.1 合代码 ≠ 发版本（Batch 115 起）
+
+合入 main 只代表代码进入主干，不代表发布。版本按发布火车聚合：每 2–3 天或每周打 `release/vX.Y.Z`，一次 test 部署 + 一次生产验收；test 每日定时部署最近 main，生产按 release 窗口 + 审批。同域小修复合并为一个轻量批次，纯文档/证据合并提交，不单独开 PR。详见 [release-cadence.md](release-cadence.md)。
 
 ## 5. 常见坑速查
 
@@ -94,3 +98,4 @@ pwsh scripts/git/verify-ai-worktree.ps1 -RequireClean -RequireMetadata -Expected
 | PR 审计 | `pwsh scripts/git/audit-ai-pr.ps1 -ExpectedWorkflow {direct|agent-team} -ExpectedExecutor {codex|claude} [-RequireSuccessfulChecks]` |
 | C 条件审计 | `pwsh scripts/git/audit-cconditions.ps1 -RequireLatestBatch` |
 | WARN 周审计 | `pwsh scripts/git/run-warn-audit.ps1 -RepositoryPath F:\CamelTv` |
+

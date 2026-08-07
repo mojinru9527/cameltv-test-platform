@@ -1,7 +1,7 @@
 ---
 title: "deploy — CI/CD 部署"
 owner: "devops-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-08-07"
 status: "active"
 expires: "2026-12-26"
 tags: ["ci-cd", "jenkins", "github-actions", "docker", "deployment"]
@@ -43,7 +43,7 @@ Checkout → Backend Lint → Backend Test → Frontend TypeCheck → Frontend T
 |------|---------|---------|
 | **本地开发** | `uvicorn` + `npm run dev` | 手动 |
 | **Jenkins 本地** | `docker compose up -d` (deploy/jenkins/) | 手动 |
-| **Test** | Jenkins Deploy 阶段自动 | develop 分支 push |
+| **Test** | 每日定时部署（最近 main，合并冒烟后） | main 每日构建窗口 |
 | **Staging** | 手动 `docker compose` | 手动 |
 | **Prod** | 手动触发 + VPN | 手动 |
 
@@ -51,8 +51,21 @@ Checkout → Backend Lint → Backend Test → Frontend TypeCheck → Frontend T
 
 | 工作流 | 触发 | 说明 |
 |--------|------|------|
+| main-quality-gate.yml | PR → main / 手动 | PR 按域全量回归（required） |
+| main-merge-smoke.yml | push → main / 手动 | 合并后轻量冒烟（不再重复双端全量） |
+| pr-check.yml | 每日 04:00 UTC / 手动 | 质量观察（覆盖率/PG/a11y/lint，非阻塞） |
+| ai-delivery-policy.yml | PR → main | 分支/凭据/CI 契约/YAML 校验/deploy 冒烟 |
 | api-regression.yml | 每日 02:03 UTC / 手动 | API 回归测试 |
 | prod-smoke-test.yml | 每日 08:07 UTC | 生产冒烟 + VPN 验证 |
+| responsive-e2e.yml | 每日 01:30 UTC / 手动 | 双视口响应式回归 |
+
+## 发布节奏
+
+合入 main ≠ 发布（AGENTS.md §2.6 / [docs/agent-team/release-cadence.md](../docs/agent-team/release-cadence.md)）：
+
+- **test**：每日固定窗口自动部署最近 main（Jenkins 每日构建 + Deploy Test 阶段）。
+- **staging**：手动 / release 窗口预发布验证。
+- **prod**：每周 release 窗口 + 审批，只接受 `TEST_VERIFIED` 的同一制品（ADR-0015）。
 
 ## 本地启动 Jenkins
 
@@ -97,3 +110,4 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 - Jenkins 部署指南：[jenkins/README.md](jenkins/README.md)
 - v2 部署：[../test-platform-v2/deploy/README.md](../test-platform-v2/deploy/README.md)
+

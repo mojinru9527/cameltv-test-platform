@@ -1,9 +1,13 @@
-name: PR 代码门禁
+name: 每日质量观察
 
 on:
-  pull_request:
-    branches: [main]
+  schedule:
+    - cron: '0 4 * * *'   # 每日 04:00 UTC（12:00 北京时间），观察项：覆盖率/PG/a11y/lint
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   detect_changes:
@@ -42,6 +46,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   backend-check:
+    name: 后端观察（ruff/mypy/覆盖率）
     needs: detect_changes
     if: ${{ needs.detect_changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
@@ -77,8 +82,7 @@ jobs:
           pip install mypy
           mypy app/ --ignore-missing-imports --no-error-summary || echo "::warning::mypy 类型检查发现问题"
 
-      # D4: pytest with coverage.  --cov-fail-under=70 is a soft gate initially
-      # (continue-on-error); will become a hard gate after 2-week observation.
+      # D4: pytest with coverage. --cov-fail-under=70 is a soft gate (continue-on-error).
       - name: Unit Tests + Coverage (pytest)
         working-directory: test-platform-v2/backend
         continue-on-error: true
@@ -95,9 +99,8 @@ jobs:
           path: test-platform-v2/backend/coverage.json
           retention-days: 7
 
-  # PostgreSQL 兼容性验证 — 校验 Alembic 迁移 + 模型导入在 PG 上通过。
-  # 与 backend-check (SQLite) 并行运行，确保 PG 升级路径不被破坏。
   backend-check-pg:
+    name: 后端观察（PostgreSQL 兼容性）
     needs: detect_changes
     if: ${{ needs.detect_changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
@@ -169,8 +172,7 @@ jobs:
 
       # D5: Detect schema drift between ORM models and Alembic migrations.
       # Runs on the same PG service — drops tables between steps so they don't
-      # interfere.  Non-blocking initially (continue-on-error); will become a
-      # hard gate once the team confirms zero false positives over 2 weeks.
+      # interfere. Non-blocking (continue-on-error).
       - name: Check Model-Migration Drift (D5)
         working-directory: test-platform-v2/backend
         env:
@@ -179,9 +181,8 @@ jobs:
         run: |
           python scripts/check_migration_drift.py
 
-  # D2: Deterministic WCAG gate. Playwright owns the Chromium version, while
-  # axe scans the login surface and the five-theme production fixture matrix.
   frontend-a11y:
+    name: 前端观察（a11y 可访问性）
     needs: detect_changes
     if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
@@ -224,6 +225,7 @@ jobs:
           retention-days: 7
 
   frontend-check:
+    name: 前端观察（tsc/lint/覆盖率）
     needs: detect_changes
     if: ${{ needs.detect_changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest

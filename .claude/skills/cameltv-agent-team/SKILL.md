@@ -41,6 +41,13 @@ description: Use for ANY change to the CamelTv test platform (test-platform-v2/)
 
 判定标准：**是否引入新行为/新接口/新配置/新依赖**。是 → 完整批次；否 → 轻量批次。拿不准时按完整批次执行。轻量批次不是免检：QA 硬门禁、Leader 判决、C 条件、流程回写与复盘卡全部照常。
 
+## 批次合并与发布节奏（Batch 115 起）
+
+- **同域小修复合并**：多个同域小修复（如本周 UI 修复）归并为一个轻量批次，走一次流水线，而不是每个修复一个批次。
+- **纯文档/证据合并**：README/ADR/work-logs 类改动合并提交，不单独开 PR。
+- **合代码 ≠ 发版本**：批次合入 main 只代表代码进入主干，不代表发布；版本按发布火车聚合（每 2–3 天或每周 release/vX.Y.Z），一次 test 部署 + 一次生产验收。
+- 详见 [release-cadence.md](../../../docs/agent-team/release-cadence.md)。
+
 ## 自我进化（Batch 75 起强制）
 
 Agent Team 必须把每批经验回写到技能与仓库知识，禁止"流程演进但技能文件长期不更新"。
@@ -279,4 +286,6 @@ Agent Team 各部门执行任务时自动通过 RAG 检索知识库。检索优�
 - `cameltv-bug-guard` skill — 编码前避坑清单
 - 嫁接单点利器：`tdd`（Dev） `diagnose`（QA） `review`（Leader） `grill-with-docs` `ubiquitous-language` `zoom-out`（Product） `design-an-interface` `prototype`（Design） `improve-codebase-architecture` `handoff`（Leader）
 - [ADR-0014](../../../docs/adr/0014-single-main-trunk-ai-worktrees.md) — 单一主干与 worktree 隔离决策
-- [local-dev-workflow.md](../../../docs/agent-team/local-dev-workflow.md) — 本地开发操作备忘（主干视图 / worktree 隔离 / 批次生命周期 / push 门禁）
+- [local-dev-workflow.md](../../../docs/agent-team/local-dev-workflow.md)
+- [release-cadence.md](../../../docs/agent-team/release-cadence.md) — 发布火车：合代码 ≠ 发版本（主干随时合并、版本按窗口聚合） — 本地开发操作备忘（主干视图 / worktree 隔离 / 批次生命周期 / push 门禁）
+

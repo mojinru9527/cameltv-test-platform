@@ -11,7 +11,7 @@ jobs:
   delivery-policy:
     name: AI/Git 交付策略
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,6 +24,44 @@ jobs:
 
       - name: Validate CI scope classifier contract
         run: python scripts/ci/test_classify_ci_changes.py
+
+      - name: Validate changed workflow YAML syntax
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          pip install pyyaml >/dev/null 2>&1
+          git diff --name-only --diff-filter=ACMR "origin/${BASE_REF}...HEAD" -- '.github/workflows/*.yml' > "$RUNNER_TEMP/workflow-files" || true
+          if [ ! -s "$RUNNER_TEMP/workflow-files" ]; then
+            echo "No workflow YAML changed; syntax validation skipped."
+            exit 0
+          fi
+          python - "$RUNNER_TEMP/workflow-files" <<'PY'
+          import sys, yaml
+          with open(sys.argv[1], encoding='utf-8') as fh:
+              files = [line.strip() for line in fh if line.strip()]
+          for f in files:
+              with open(f, encoding='utf-8') as fh:
+                  yaml.safe_load(fh)
+              print(f"OK {f}")
+          print(f"Validated {len(files)} workflow YAML file(s)")
+          PY
+
+      - name: Run deploy/release-control tests
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          git diff --name-only --diff-filter=ACMR "origin/${BASE_REF}...HEAD" -- 'deploy/release-control/' > "$RUNNER_TEMP/deploy-files" || true
+          if [ ! -s "$RUNNER_TEMP/deploy-files" ]; then
+            echo "deploy/release-control unchanged; tests skipped."
+            exit 0
+          fi
+          cd deploy/release-control
+          pip install -e . pytest >/dev/null 2>&1
+          python -m pytest -q
 
       - name: Validate branch, local-only files, and secrets
         shell: bash
