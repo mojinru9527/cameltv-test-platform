@@ -26,7 +26,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -110,7 +109,6 @@ export default function RequirementPage() {
   const [extractionResult, setExtractionResult] = useState<FeatureExtractionResult | null>(null)
   const [extracting, setExtracting] = useState(false)
   const [extractingDocId, setExtractingDocId] = useState<number | null>(null)
-  const [confirmedExtractionIds, setConfirmedExtractionIds] = useState<Set<number>>(new Set())
   // ── batch-28: version compare + screenshot preview states ──
   const [versionDiffData, setVersionDiffData] = useState<any>(null)
   const [showVersionCompare, setShowVersionCompare] = useState(false)
@@ -269,7 +267,8 @@ export default function RequirementPage() {
     setGeneratingDocId(docId)
     setGenerating(true)
     try {
-      const result = await generateTestCases(docId, { use_extraction: useExtraction })
+      const task = await generateTestCasesAsync(docId, { use_extraction: useExtraction })
+      const result = await runAsyncAiTask(task.id)
       setAiResult(result)
       setActiveDocId(docId)
       setModalMode('generate')
@@ -319,7 +318,8 @@ export default function RequirementPage() {
         action: 'reject',
         rejected_notes: '用户主动重新拆分',
       })
-      const result = await extractFeatures(docId)
+      const task = await extractFeaturesAsync(docId)
+      const result = await runAsyncAiTask(task.id)
       setExtractionResult(result)
       setActiveDocId(docId)
       setModalMode('extract')
