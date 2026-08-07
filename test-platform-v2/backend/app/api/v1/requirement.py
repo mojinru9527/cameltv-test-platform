@@ -1031,13 +1031,7 @@ async def extract_features_async(
         return R(code=404, msg="需求文档不存在")
     content = doc.get("content") or doc.get("requirement_text") or ""
 
-    def _job():
-        import asyncio
-        from app.services.ai_service import extract_features as _ai_extract
-        result = asyncio.run(_ai_extract(content, file_type=doc.get("file_type", ""), source_ref=str(doc.get("source_ref") or "")))
-        return result
-
-    task = submit_ai_task(_job, task_type="extract", project_id=current.project_id or 0)
+    task = submit_ai_task(document_id=document_id, task_type="extract", project_id=current.project_id or 0)
     return R.ok(task)
 
 
@@ -1053,16 +1047,7 @@ async def generate_test_cases_async(
         return R(code=404, msg="需求文档不存在")
     content = doc.get("content") or doc.get("requirement_text") or ""
 
-    def _job():
-        from app.services.ai_service import generate_test_cases as _ai_gen
-        from app.services.coverage_report import build_coverage_report, parse_extraction
-        result = _ai_gen(content, file_type=doc.get("file_type", ""), source_ref=str(doc.get("source_ref") or ""))
-        # C116-3：覆盖缺口报告（功能点×用例矩阵 + 缺口清单）
-        extraction = parse_extraction(str(doc.get("extraction_raw") or ""))
-        result["coverage_report"] = build_coverage_report(extraction, result)
-        return result
-
-    task = submit_ai_task(_job, task_type="generate", project_id=current.project_id or 0)
+    task = submit_ai_task(document_id=document_id, task_type="generate", project_id=current.project_id or 0)
     return R.ok(task)
 
 

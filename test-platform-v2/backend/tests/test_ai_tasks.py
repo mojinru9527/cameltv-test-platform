@@ -1,56 +1,103 @@
-"""Batch 116（C102-1）— AI 异步任务基建与端点测试（mock AI 服务）。"""
+"""Batch 120 — C117-2 AI 任务 DB 队列（多 worker 认领）测试。"""
 from __future__ import annotations
 
-import time
+import json
+import threading
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from app.services import ai_tasks
+
+def _task(db_session, task_id: str = "ai-test-1", status: str = "pending",
+          locked_at=None, task_type: str = "generate", document_id: int = 5):
+    from app.models.ai_task import AiTask
+
+    row = AiTask(
+        id=task_id,
+        task_type=task_type,
+        project_id=1,
+        document_id=document_id,
+        status=status,
+        progress=0 if status == "pending" else 5,
+        result_json="null",
+        error="",
+        locked_at=locked_at,
+    )
+    db_session.add(row)
+    db_session.commit()
+    return row
 
 
-def test_submit_and_complete_task() -> None:
-    def job():
-        return {"ok": True, "cases": 3}
+class TestClaim:
+    def test_claim_only_pending(self, db_session):
+        from app.services.ai_tasks import claim_next_task
 
-    task = ai_tasks.submit_ai_task(job, task_type="generate", project_id=1)
-    for _ in range(50):
-        t = ai_tasks.get_ai_task(task["id"])
-        if t["status"] == "done":
-            break
-        time.sleep(0.02)
-    assert t["status"] == "done"
-    assert t["result"] == {"ok": True, "cases": 3}
+        _task(db_session, "t1")
+        _task(db_session, "t2", status="running")
+        claimed = claim_next_task(db_session)
+        assert claimed is not None and claimed.id == "t1"
+        assert claimed.status == "running"
+        assert claimed.locked_at is not None
+        assert claim_next_task(db_session) is None
 
+    def test_claim_stale_lock(self, db_session):
+        from app.services.ai_tasks import claim_next_task
 
-def test_submit_task_error() -> None:
-    def bad():
-        raise ValueError("boom")
+        _task(db_session, "t1", locked_at=datetime.utcnow() - timedelta(minutes=10))
+        claimed = claim_next_task(db_session)
+        assert claimed is not None and claimed.id == "t1"
 
-    task = ai_tasks.submit_ai_task(bad, task_type="extract", project_id=1)
-    for _ in range(50):
-        t = ai_tasks.get_ai_task(task["id"])
-        if t["status"] != "running":
-            break
-        time.sleep(0.02)
-    assert t["status"] == "failed"
-    assert "boom" in t["error"]
+    def test_claim_fresh_lock_skipped(self, db_session):
+        from app.services.ai_tasks import claim_next_task
+
+        _task(db_session, "t1", locked_at=datetime.utcnow())
+        assert claim_next_task(db_session) is None
 
 
-def test_generate_async_endpoint(client, auth_headers, db_session) -> None:
-    from app.models.requirement import RequirementDocument
-    doc = RequirementDocument(project_id=1, title="doc", content="大文档内容", file_type="md")
-    db_session.add(doc)
-    db_session.flush()
-    client.headers.update(auth_headers)
-    fake = {"id": "ai-test", "status": "running", "type": "generate", "result": None, "error": ""}
-    with patch("app.services.ai_tasks.submit_ai_task", return_value=fake) as m:
-        r = client.post(f"/api/v1/requirements/{doc.id}/generate-async")
-    assert r.status_code == 200, r.text
-    assert r.json()["data"]["id"] == "ai-test"
-    m.assert_called_once()
+class TestExecute:
+    def test_execute_success_writes_result(self, db_session):
+        from app.services.ai_tasks import claim_next_task, execute_task
+
+        _task(db_session, "t1")
+        task = claim_next_task(db_session)
+        execute_task(db_session, task, dispatch=lambda task_type, doc_id, db: {"ok": True, "doc": doc_id})
+        db_session.refresh(task)
+        assert task.status == "done"
+        assert task.progress == 100
+        assert task.locked_at is None
+        assert task.finished_at is not None
+        assert json.loads(task.result_json) == {"ok": True, "doc": 5}
+
+    def test_execute_failure_writes_error(self, db_session):
+        from app.services.ai_tasks import claim_next_task, execute_task
+
+        _task(db_session, "t1")
+        task = claim_next_task(db_session)
+
+        def boom(task_type, doc_id, db):
+            raise RuntimeError("模拟失败")
+
+        execute_task(db_session, task, dispatch=boom)
+        db_session.refresh(task)
+        assert task.status == "failed"
+        assert "模拟失败" in task.error
+        assert task.locked_at is None
 
 
-def test_ai_task_status_404(client, auth_headers) -> None:
-    client.headers.update(auth_headers)
-    with patch("app.services.ai_tasks.get_ai_task", return_value=None):
-        r = client.get("/api/v1/requirements/ai-task/nope")
-    assert r.status_code == 404
+class TestWorkerLifecycle:
+    def test_shutdown_joins_worker_thread(self):
+        from app.services import ai_tasks
+
+        ai_tasks.shutdown_worker()
+
+        def wait_for_shutdown():
+            ai_tasks._shutdown_event.wait(timeout=1)
+
+        with patch.object(ai_tasks, "_worker_loop", wait_for_shutdown):
+            ai_tasks.ensure_worker_running()
+            thread = ai_tasks._worker_thread
+            assert isinstance(thread, threading.Thread)
+            assert thread.is_alive()
+            ai_tasks.shutdown_worker(timeout=1)
+
+        assert not thread.is_alive()
+        assert ai_tasks._worker_thread is None
