@@ -59,6 +59,20 @@
 状态: **有条件通过**
 必修复: 0 ｜ 条件: C111-2（部署后 170 全绿 + 回填核对）、C111-3（UI 定时 10/10 核对）
 
+## 6.1 生产验证补充（2026-08-07 部署后，C111-2/C111-3 已闭环）
+
+- **C111-2 关闭**：平台批量执行 task#4 = **170/170 全绿**（passed=170/failed=0/skipped=0），
+  has_response=170，按端点明细无失败端点。证据 `evidence/batch-112/batch-execution-summary.json`。
+- **4 端点校准落库**：`evidence/batch-112/calibration-summary.json`（login 9/9、ads 21/21、search 3/3、
+  news→get_visible 3/3；另修正 3 个标量 data 端点的 `data is_object_or_array`→`data exists`，共 9 条，
+  与真实响应对齐）。
+- **C111-3 关闭**：平台 UI job#2（生产站点环境 id=2 + PROD_ALLOWED_HOSTS）触发 run 9 =
+  **10/10 通过**（pass=10/fail=0，46.8s）。证据 `evidence/batch-112/ui-schedule-summary.json` + run 报告。
+- **B112-4 守卫修复链路**：run 5=1/10 → run 6=4/10（绑定 API 主机环境）→ 站点环境+白名单 run 7=4/10 →
+  遥测豁免 run 8=9/10 → 收敛版（第三方 POST 非写型放行）run 9=10/10。
+- **遗留**：平台 /schedules 仅支持 plan 绑定，UI job 每日定时待平台扩展（B112-3，C112-3 候选）；
+  C111-3 的「每日定时」部分以平台能力缺口登记，不以 plan 伪绑定替代。
+
 ## 7. 复盘卡
 
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
