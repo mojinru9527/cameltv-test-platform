@@ -34,6 +34,7 @@ class TestCaseOut(BaseModel):
     api_headers: str = "{}"
     api_body: str = ""
     api_assertions: str = "[]"
+    depends_on_ids: str = "[]"
     last_response_json: str = ""
     last_run_status: str = ""
     source: str = "migration"
@@ -82,6 +83,7 @@ class TestCaseCreate(BaseModel):
     api_headers: str = "{}"
     api_body: str = ""
     api_assertions: str = "[]"
+    depends_on_ids: str = "[]"
     last_response_json: str = ""
     last_run_status: str = ""
     source: str = "manual"
@@ -109,6 +111,7 @@ class TestCaseUpdate(BaseModel):
     api_headers: Optional[str] = None
     api_body: Optional[str] = None
     api_assertions: Optional[str] = None
+    depends_on_ids: Optional[str] = None
     last_response_json: Optional[str] = None
     last_run_status: Optional[str] = None
     source_req_id: Optional[str] = None
