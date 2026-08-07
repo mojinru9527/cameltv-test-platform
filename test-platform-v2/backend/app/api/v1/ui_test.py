@@ -252,6 +252,32 @@ def download_artifact(
     return FileResponse(file_path, filename=file_path.name)
 
 
+@router.post("/capture", response_model=R[dict], summary="创建页面 XHR 采集任务（C115-3）")
+def create_capture(
+    body: dict,
+    current: CurrentUser = Depends(require_permission("uitest:trigger")),
+):
+    """B10/C103-5 平台采集：pages 列表（绝对 URL 或站点相对路径）→ 后台只读采集 → 样本 JSON。"""
+    from app.services.xhr_capture_service import create_capture_task
+    pages = [str(x) for x in (body.get("pages") or []) if str(x).strip()]
+    if not pages:
+        raise HTTPException(422, "pages 不能为空")
+    task = create_capture_task(pages=pages, project_id=current.project_id or 0)
+    return R.ok(task)
+
+
+@router.get("/capture/{task_id}", response_model=R[dict], summary="采集任务状态与结果")
+def get_capture(
+    task_id: str,
+    current: CurrentUser = Depends(require_permission("uitest:detail")),
+):
+    from app.services.xhr_capture_service import get_task
+    task = get_task(task_id)
+    if not task:
+        raise HTTPException(404, "采集任务不存在")
+    return R.ok(task)
+
+
 @router.get("/runner/health", response_model=R[dict], summary="Runner 健康检查")
 def runner_health(
     current: CurrentUser = Depends(require_permission("uitest:list")),

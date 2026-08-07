@@ -858,6 +858,65 @@ def get_requirement_review_state(
     response_model=R[dict],
     summary="审查 AI 生成用例",
 )
+@router.post("/{document_id}/extract-async", response_model=R[dict], summary="异步 AI 提取（C102-1，大文档不 502）")
+async def extract_features_async(
+    document_id: int,
+    current: CurrentUser = Depends(require_permission("requirement:generate")),
+    db: Session = Depends(get_db),
+):
+    from app.services.ai_tasks import submit_ai_task
+    doc = requirement_service.get_requirement(db, document_id, project_id=current.project_id or 0)
+    if not doc:
+        return R(code=404, msg="需求文档不存在")
+    content = doc.get("content") or doc.get("requirement_text") or ""
+
+    def _job():
+        from app.core.db import SessionLocal
+        from app.services.ai_service import extract_features as _ai_extract
+        sdb = SessionLocal()
+        try:
+            result = _ai_extract(content, file_type=doc.get("file_type", ""), source_ref=str(doc.get("source_ref") or ""))
+            return result
+        finally:
+            sdb.close()
+
+    task = submit_ai_task(_job, task_type="extract", project_id=current.project_id or 0)
+    return R.ok(task)
+
+
+@router.post("/{document_id}/generate-async", response_model=R[dict], summary="异步 AI 生成用例（C102-1，大文档不 502）")
+async def generate_test_cases_async(
+    document_id: int,
+    current: CurrentUser = Depends(require_permission("requirement:generate")),
+    db: Session = Depends(get_db),
+):
+    from app.services.ai_tasks import submit_ai_task
+    doc = requirement_service.get_requirement(db, document_id, project_id=current.project_id or 0)
+    if not doc:
+        return R(code=404, msg="需求文档不存在")
+    content = doc.get("content") or doc.get("requirement_text") or ""
+
+    def _job():
+        from app.services.ai_service import generate_test_cases as _ai_gen
+        result = _ai_gen(content, file_type=doc.get("file_type", ""), source_ref=str(doc.get("source_ref") or ""))
+        return result
+
+    task = submit_ai_task(_job, task_type="generate", project_id=current.project_id or 0)
+    return R.ok(task)
+
+
+@router.get("/ai-task/{task_id}", response_model=R[dict], summary="异步 AI 任务状态（C102-1）")
+def get_ai_task_status(
+    task_id: str,
+    current: CurrentUser = Depends(require_permission("requirement:generate")),
+):
+    from app.services.ai_tasks import get_ai_task
+    task = get_ai_task(task_id)
+    if not task:
+        raise not_found("AI 任务不存在")
+    return R.ok(task)
+
+
 def review_generated_case(
     document_id: int,
     case_index: int,
