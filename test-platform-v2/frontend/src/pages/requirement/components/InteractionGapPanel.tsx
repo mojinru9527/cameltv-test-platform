@@ -9,7 +9,7 @@ import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { GitCompare, Loader2, RefreshCw } from '@/lib/icons'
+import { GitCompare, RefreshCw } from '@/lib/icons'
 
 interface GapItem {
   from_module: string
