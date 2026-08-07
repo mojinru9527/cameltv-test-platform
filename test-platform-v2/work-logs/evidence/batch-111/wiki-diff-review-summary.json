@@ -1,0 +1,178 @@
+{
+  "tasks": [
+    {
+      "id": 10,
+      "title": "体育平台-UGC（RAG vs Wiki）",
+      "status": "success",
+      "items": 42,
+      "reviewed": 42,
+      "artifacts": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ]
+    },
+    {
+      "id": 9,
+      "title": "体育平台-财务管理（RAG vs Wiki）",
+      "status": "success",
+      "items": 21,
+      "reviewed": 21,
+      "artifacts": []
+    },
+    {
+      "id": 8,
+      "title": "体育平台-世界杯（RAG vs Wiki）",
+      "status": "success",
+      "items": 7,
+      "reviewed": 7,
+      "artifacts": [
+        13,
+        14
+      ]
+    },
+    {
+      "id": 7,
+      "title": "体育平台-回放（RAG vs Wiki）",
+      "status": "success",
+      "items": 3,
+      "reviewed": 3,
+      "artifacts": [
+        15,
+        16
+      ]
+    },
+    {
+      "id": 6,
+      "title": "体育平台-我的（RAG vs Wiki）",
+      "status": "success",
+      "items": 38,
+      "reviewed": 38,
+      "artifacts": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ]
+    },
+    {
+      "id": 5,
+      "title": "体育平台-搜索（RAG vs Wiki）",
+      "status": "success",
+      "items": 11,
+      "reviewed": 11,
+      "artifacts": [
+        35,
+        36,
+        37,
+        38,
+        39
+      ]
+    },
+    {
+      "id": 4,
+      "title": "体育平台-资讯（RAG vs Wiki）",
+      "status": "success",
+      "items": 32,
+      "reviewed": 32,
+      "artifacts": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51
+      ]
+    },
+    {
+      "id": 3,
+      "title": "体育平台-直播间（RAG vs Wiki）",
+      "status": "success",
+      "items": 16,
+      "reviewed": 16,
+      "artifacts": [
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64
+      ]
+    },
+    {
+      "id": 2,
+      "title": "体育平台-赛事详情（RAG vs Wiki）",
+      "status": "success",
+      "items": 16,
+      "reviewed": 16,
+      "artifacts": [
+        65,
+        66,
+        67,
+        68,
+        69,
+        70
+      ]
+    },
+    {
+      "id": 1,
+      "title": "体育平台-首页（RAG vs Wiki）",
+      "status": "success",
+      "items": 44,
+      "reviewed": 44,
+      "artifacts": [
+        71,
+        72,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85
+      ]
+    }
+  ]
+}

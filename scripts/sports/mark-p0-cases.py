@@ -20,16 +20,20 @@ import psycopg2
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE_DIR = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / "batch-110"
 
-# 用户端关键域（全部 P0）
+# 用户端关键域（全部 P0，Batch 111 用户确认补充：广告模块/联赛/球队/球员/回放）
 P0_USER_DOMAINS = [
     "首页", "赛事详情", "直播间", "资讯", "搜索", "登录注册", "个人中心",
+    "广告系统", "启动引导", "APP端数据与排行榜",
 ]
 
 # 运营后台域（仅核心模块 P0，其余回 P1）
 ADMIN_DOMAINS = [
     "财务管理", "赛事预测", "UGC管理", "商城管理", "广告管理", "装扮管理",
-    "消息管理", "系统管理", "球队及联赛管理", "风控管理", "银钻任务管理",
+    "消息管理", "系统管理", "球队及联赛管理", "风控管理", "银钻任务管理", "用户管理",
 ]
+
+# 运营后台整域 P0（核心治理链路，用户确认口径）
+P0_ADMIN_DOMAINS = ["风控管理"]
 
 ADMIN_P0_MODULES = [
     "%用户账户%", "%充值%", "%提现%", "%预测赛事%", "%用户参与%", "%奖励%",
@@ -37,10 +41,14 @@ ADMIN_P0_MODULES = [
     "%头像框%", "%推送%", "%聊天室%", "%版本更新%", "%热门联赛%", "%热门球队%",
     "%屏蔽赛事视频%", "%风控%", "%银钻任务%", "%用户列表%", "%封禁%", "%举报%",
     "%意见反馈%", "%文章%", "%创作者%", "%购买记录%", "%勋章%",
+    "%任务内容%", "%邀请好友%", "%任务完成记录%", "%聊天文案%", "%屏蔽%",
 ]
 
-# 跨域生产新增模块
-P0_MODULE_PATTERNS = ["%回放%", "%世界杯%"]
+# 跨域生产新增模块（用户补充：联赛/球队/球员详情页 + 回放）
+P0_MODULE_PATTERNS = [
+    "%回放%", "%世界杯%", "%联赛详情%", "%球队详情%", "%球员详情%",
+    "%球队榜%", "%球员榜%", "%联赛榜%", "%开屏广告%", "%跳过广告%",
+]
 
 
 def main() -> int:
@@ -80,6 +88,14 @@ def main() -> int:
                     (dom,),
                 )
                 summary["updated"][f"admin-reset:{dom}"] = cur.rowcount
+            for dom in P0_ADMIN_DOMAINS:
+                cur.execute(
+                    "UPDATE test_case SET priority='P0', updated_at=now() "
+                    "WHERE project_id=1 AND is_deleted=false AND case_type='manual' "
+                    "AND domain=%s AND priority<>'P0'",
+                    (dom,),
+                )
+                summary["updated"][f"admin-p0-domain:{dom}"] = cur.rowcount
             for pat in ADMIN_P0_MODULES:
                 cur.execute(
                     "UPDATE test_case SET priority='P0', updated_at=now() "

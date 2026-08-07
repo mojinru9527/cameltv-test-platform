@@ -1,0 +1,687 @@
+{
+  "P0_total": 390,
+  "by_domain": {
+    "APP端数据与排行榜": [
+      {
+        "module": "比赛数据概览",
+        "count": 2
+      },
+      {
+        "module": "球员榜",
+        "count": 2
+      },
+      {
+        "module": "球员详情页",
+        "count": 2
+      },
+      {
+        "module": "球队榜",
+        "count": 2
+      },
+      {
+        "module": "球队详情页",
+        "count": 2
+      },
+      {
+        "module": "联赛详情页",
+        "count": 2
+      },
+      {
+        "module": "预测比赛列表",
+        "count": 2
+      }
+    ],
+    "PC端": [
+      {
+        "module": "UGC列表(PC)",
+        "count": 1
+      },
+      {
+        "module": "UGC详情(PC)",
+        "count": 1
+      },
+      {
+        "module": "推荐搜索(PC)",
+        "count": 1
+      },
+      {
+        "module": "球员详情(PC)",
+        "count": 2
+      },
+      {
+        "module": "赛事详情页(PC)",
+        "count": 1
+      },
+      {
+        "module": "首页(PC端)",
+        "count": 1
+      }
+    ],
+    "UGC内容": [
+      {
+        "module": "UGC列表浏览",
+        "count": 1
+      },
+      {
+        "module": "UGC详情查看",
+        "count": 1
+      },
+      {
+        "module": "创作者主页",
+        "count": 2
+      },
+      {
+        "module": "我已解锁内容",
+        "count": 1
+      }
+    ],
+    "UGC功能": [
+      {
+        "module": "说明附件-UGC功能概述",
+        "count": 1
+      }
+    ],
+    "UGC管理": [
+      {
+        "module": "创作者管理",
+        "count": 2
+      },
+      {
+        "module": "创建文章入口",
+        "count": 2
+      },
+      {
+        "module": "创建文章表单",
+        "count": 2
+      },
+      {
+        "module": "文章分类管理",
+        "count": 7
+      },
+      {
+        "module": "文章列表",
+        "count": 2
+      },
+      {
+        "module": "文章列表操作",
+        "count": 2
+      },
+      {
+        "module": "文章发布提交",
+        "count": 2
+      },
+      {
+        "module": "文章搜索与筛选",
+        "count": 4
+      },
+      {
+        "module": "文章状态流转",
+        "count": 2
+      },
+      {
+        "module": "文章统计详情",
+        "count": 3
+      },
+      {
+        "module": "查看文章详情",
+        "count": 2
+      },
+      {
+        "module": "编辑文章回显",
+        "count": 2
+      },
+      {
+        "module": "购买记录查询",
+        "count": 2
+      }
+    ],
+    "WEB端": [
+      {
+        "module": "Web端适配与性能",
+        "count": 1
+      },
+      {
+        "module": "单场比赛主播列表",
+        "count": 1
+      },
+      {
+        "module": "赛程",
+        "count": 1
+      },
+      {
+        "module": "首页(Mobile)",
+        "count": 1
+      }
+    ],
+    "个人中心": [
+      {
+        "module": "Camel商城",
+        "count": 2
+      },
+      {
+        "module": "FAQ帮助中心",
+        "count": 2
+      },
+      {
+        "module": "关于我们",
+        "count": 4
+      },
+      {
+        "module": "关注列表管理",
+        "count": 4
+      },
+      {
+        "module": "切换语言",
+        "count": 4
+      },
+      {
+        "module": "创作者中心入口",
+        "count": 2
+      },
+      {
+        "module": "意见反馈",
+        "count": 2
+      },
+      {
+        "module": "我的个人中心",
+        "count": 2
+      },
+      {
+        "module": "我的收藏",
+        "count": 3
+      },
+      {
+        "module": "我的装扮",
+        "count": 2
+      },
+      {
+        "module": "我的资料编辑",
+        "count": 4
+      },
+      {
+        "module": "订阅管理",
+        "count": 4
+      },
+      {
+        "module": "设置",
+        "count": 6
+      },
+      {
+        "module": "邀请好友",
+        "count": 2
+      },
+      {
+        "module": "银钻账户",
+        "count": 2
+      },
+      {
+        "module": "领银钻任务",
+        "count": 2
+      }
+    ],
+    "付费活动": [
+      {
+        "module": "说明附件-付费活动",
+        "count": 1
+      }
+    ],
+    "启动引导": [
+      {
+        "module": "启动页",
+        "count": 2
+      },
+      {
+        "module": "开屏广告",
+        "count": 2
+      },
+      {
+        "module": "开屏广告点击跳转",
+        "count": 2
+      },
+      {
+        "module": "权限获取引导",
+        "count": 2
+      },
+      {
+        "module": "跳过广告",
+        "count": 2
+      }
+    ],
+    "商城管理": [
+      {
+        "module": "商品上下架",
+        "count": 3
+      },
+      {
+        "module": "商品列表",
+        "count": 3
+      },
+      {
+        "module": "商品删除",
+        "count": 3
+      },
+      {
+        "module": "商品搜索与筛选",
+        "count": 5
+      },
+      {
+        "module": "新增/编辑商品",
+        "count": 5
+      },
+      {
+        "module": "购买记录查询",
+        "count": 4
+      }
+    ],
+    "回放": [
+      {
+        "module": "回放列表",
+        "count": 2
+      },
+      {
+        "module": "回放详情",
+        "count": 1
+      }
+    ],
+    "广告管理": [
+      {
+        "module": "广告位管理",
+        "count": 2
+      },
+      {
+        "module": "广告活动状态控制",
+        "count": 2
+      },
+      {
+        "module": "广告活动管理",
+        "count": 2
+      },
+      {
+        "module": "新增/编辑广告活动",
+        "count": 5
+      }
+    ],
+    "广告系统": [
+      {
+        "module": "说明附件-广告位系统",
+        "count": 5
+      }
+    ],
+    "搜索": [
+      {
+        "module": "搜索入口",
+        "count": 3
+      },
+      {
+        "module": "搜索建议",
+        "count": 3
+      },
+      {
+        "module": "搜索空状态",
+        "count": 2
+      },
+      {
+        "module": "搜索结果",
+        "count": 3
+      }
+    ],
+    "支付与账户": [
+      {
+        "module": "支付结果页",
+        "count": 2
+      },
+      {
+        "module": "数字货币支付",
+        "count": 2
+      },
+      {
+        "module": "骆驼币流水记录",
+        "count": 1
+      },
+      {
+        "module": "骆驼币账户",
+        "count": 1
+      }
+    ],
+    "活动管理": [
+      {
+        "module": "数字货币活动配置",
+        "count": 1
+      },
+      {
+        "module": "数据统计",
+        "count": 1
+      },
+      {
+        "module": "新增活动",
+        "count": 1
+      },
+      {
+        "module": "法币活动配置",
+        "count": 1
+      },
+      {
+        "module": "活动列表",
+        "count": 1
+      },
+      {
+        "module": "状态管理",
+        "count": 3
+      },
+      {
+        "module": "编辑活动",
+        "count": 1
+      }
+    ],
+    "消息管理": [
+      {
+        "module": "推送消息",
+        "count": 8
+      },
+      {
+        "module": "聊天室消息",
+        "count": 14
+      }
+    ],
+    "球队及联赛管理": [
+      {
+        "module": "屏蔽赛事视频",
+        "count": 1
+      },
+      {
+        "module": "热门联赛",
+        "count": 6
+      }
+    ],
+    "用户管理": [
+      {
+        "module": "举报记录",
+        "count": 1
+      },
+      {
+        "module": "屏蔽记录",
+        "count": 1
+      },
+      {
+        "module": "意见反馈",
+        "count": 1
+      },
+      {
+        "module": "用户列表",
+        "count": 1
+      },
+      {
+        "module": "用户封禁",
+        "count": 1
+      }
+    ],
+    "登录注册": [
+      {
+        "module": "忘记密码",
+        "count": 2
+      },
+      {
+        "module": "手机号注册",
+        "count": 2
+      },
+      {
+        "module": "手机号登录",
+        "count": 3
+      },
+      {
+        "module": "用户协议与隐私政策确认",
+        "count": 2
+      },
+      {
+        "module": "第三方登录",
+        "count": 2
+      }
+    ],
+    "直播间": [
+      {
+        "module": "主播信息查看",
+        "count": 2
+      },
+      {
+        "module": "分析数据展示",
+        "count": 2
+      },
+      {
+        "module": "同场主播推荐",
+        "count": 2
+      },
+      {
+        "module": "直播赛程切换",
+        "count": 2
+      },
+      {
+        "module": "直播间提示弹窗",
+        "count": 2
+      },
+      {
+        "module": "聊天互动",
+        "count": 4
+      },
+      {
+        "module": "赛况同步",
+        "count": 2
+      }
+    ],
+    "系统管理": [
+      {
+        "module": "版本更新",
+        "count": 6
+      }
+    ],
+    "装扮管理": [
+      {
+        "module": "勋章",
+        "count": 4
+      },
+      {
+        "module": "头像框",
+        "count": 8
+      }
+    ],
+    "财务管理": [
+      {
+        "module": "充值记录",
+        "count": 4
+      },
+      {
+        "module": "提现审核",
+        "count": 3
+      },
+      {
+        "module": "提现管理",
+        "count": 3
+      },
+      {
+        "module": "数字货币充值配置",
+        "count": 6
+      },
+      {
+        "module": "用户账户",
+        "count": 8
+      }
+    ],
+    "资讯": [
+      {
+        "module": "推送设置",
+        "count": 3
+      },
+      {
+        "module": "资讯列表",
+        "count": 4
+      },
+      {
+        "module": "资讯搜索",
+        "count": 3
+      },
+      {
+        "module": "资讯详情",
+        "count": 3
+      }
+    ],
+    "赛事详情": [
+      {
+        "module": "Picks",
+        "count": 2
+      },
+      {
+        "module": "动画直播",
+        "count": 2
+      },
+      {
+        "module": "广告",
+        "count": 2
+      },
+      {
+        "module": "指数",
+        "count": 2
+      },
+      {
+        "module": "数据",
+        "count": 2
+      },
+      {
+        "module": "用户资料卡",
+        "count": 2
+      },
+      {
+        "module": "视频直播",
+        "count": 3
+      },
+      {
+        "module": "聊天室",
+        "count": 4
+      },
+      {
+        "module": "赛况",
+        "count": 3
+      },
+      {
+        "module": "赛程",
+        "count": 3
+      },
+      {
+        "module": "阵容",
+        "count": 2
+      },
+      {
+        "module": "预测",
+        "count": 2
+      },
+      {
+        "module": "预测记录",
+        "count": 1
+      }
+    ],
+    "赛事预测": [
+      {
+        "module": "奖励发放记录",
+        "count": 2
+      },
+      {
+        "module": "新增/编辑预测赛事",
+        "count": 4
+      },
+      {
+        "module": "用户参与记录",
+        "count": 2
+      },
+      {
+        "module": "退回记录",
+        "count": 2
+      },
+      {
+        "module": "预测赛事列表",
+        "count": 2
+      },
+      {
+        "module": "风控设置",
+        "count": 2
+      }
+    ],
+    "银钻任务管理": [
+      {
+        "module": "任务内容列表",
+        "count": 2
+      },
+      {
+        "module": "任务完成记录",
+        "count": 3
+      },
+      {
+        "module": "邀请好友记录",
+        "count": 3
+      }
+    ],
+    "银钻系统": [
+      {
+        "module": "说明附件-银钻系统",
+        "count": 2
+      }
+    ],
+    "银钻预测": [
+      {
+        "module": "说明附件-银钻预测玩法",
+        "count": 1
+      }
+    ],
+    "风控管理": [
+      {
+        "module": "头像图片监控列表",
+        "count": 3
+      },
+      {
+        "module": "头像审核操作",
+        "count": 3
+      },
+      {
+        "module": "头像违规处理",
+        "count": 3
+      },
+      {
+        "module": "文案白名单列表",
+        "count": 2
+      },
+      {
+        "module": "添加/删除白名单",
+        "count": 4
+      }
+    ],
+    "首页": [
+      {
+        "module": "开播提醒入口",
+        "count": 2
+      },
+      {
+        "module": "热门联赛入口",
+        "count": 2
+      },
+      {
+        "module": "热门赛事模块",
+        "count": 2
+      },
+      {
+        "module": "赛程表模块",
+        "count": 2
+      },
+      {
+        "module": "进行中的比赛/热门比赛",
+        "count": 2
+      },
+      {
+        "module": "首页下拉刷新",
+        "count": 2
+      }
+    ],
+    "骆驼币系统": [
+      {
+        "module": "说明附件-骆驼币及绿钻",
+        "count": 1
+      }
+    ]
+  }
+}
