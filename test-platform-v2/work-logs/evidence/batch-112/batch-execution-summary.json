@@ -1,0 +1,179 @@
+{
+  "task_id": 4,
+  "env_id": 1,
+  "case_count": 170,
+  "backfill": {
+    "passed": 170,
+    "has_response": 170,
+    "by_endpoint": [
+      {
+        "endpoint": "/account-service/ee/ads/activity/get",
+        "status": "passed",
+        "count": 21
+      },
+      {
+        "endpoint": "/account-service/ee/client/general",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/account-service/ee/client/getCountryCode",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/account-service/ee/client/getHistoryMessage",
+        "status": "passed",
+        "count": 9
+      },
+      {
+        "endpoint": "/account-service/ee/client/web/getAnchorNoticeMapper",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/account-service/login/anonymous/web",
+        "status": "passed",
+        "count": 9
+      },
+      {
+        "endpoint": "/camel-service/ee/fifa/football/season/match",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/forecast/queryOddsSummaryByMatchId",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/news_kind/list",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/news/get_visible",
+        "status": "passed",
+        "count": 6
+      },
+      {
+        "endpoint": "/camel-service/ee/news/list_visible",
+        "status": "passed",
+        "count": 35
+      },
+      {
+        "endpoint": "/camel-service/ee/news/related",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/replay/get",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/replay/list",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/search/hot",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/search/query",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/search/recommend",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/setting",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/football/match/analysis",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/football/match/detail_live",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/football/match/lineup",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/football/match/team_stats/list",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/football/match/time",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/football/season/match",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/football/season/recent/table/detail",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/get_competition_by_name",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/get_team_by_name",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/hot_group_match",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/hot_match",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/hot_team",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/loadAnchorsByMatchId",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/camel-service/ee/sports_live/view_match",
+        "status": "passed",
+        "count": 3
+      },
+      {
+        "endpoint": "/konfi-service/web/getDataById",
+        "status": "passed",
+        "count": 9
+      }
+    ]
+  },
+  "before": {
+    "passed": 161
+  }
+}

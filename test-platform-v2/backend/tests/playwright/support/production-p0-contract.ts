@@ -72,11 +72,22 @@ export function assertP0RequestAllowed(
   method: string,
 ): void {
   const url = new URL(rawUrl)
+  const normalizedMethod = method.trim().toUpperCase()
+  // 只读 GET/HEAD 对任意主机放行（含第三方广告/分析/字体 CDN，数据中心 IP 下必现且域名轮换）。
+  if (normalizedMethod === 'GET' || normalizedMethod === 'HEAD') return
+  // C101-1 只读策略：第三方遥测/信标 POST（g/collect、beacon 等）先豁免，
+  // 否则会被下方主机白名单检查提前拦截（Batch 112 实测 analytics.google.com/doubleclick 即此路径）。
+  if (normalizedMethod === 'POST') {
+    const probePath = url.pathname
+    if (
+      !BUSINESS_HOSTS.has(url.hostname.toLowerCase())
+      && TELEMETRY_POST_PATTERNS.some((re) => re.test(probePath))
+    ) return
+  }
+  // 写型请求仍严格按主机白名单 + 查询型 POST 白名单拦截。
   if (!runtime.allowedHosts.has(url.hostname.toLowerCase())) {
     throw new Error(`BLOCKED host=${url.hostname} not allowlisted`)
   }
-  const normalizedMethod = method.trim().toUpperCase()
-  if (normalizedMethod === 'GET' || normalizedMethod === 'HEAD') return
   if (normalizedMethod !== 'POST') {
     throw new Error(`BLOCKED method=${normalizedMethod} not allowed in P0 read-only`)
   }
@@ -85,7 +96,6 @@ export function assertP0RequestAllowed(
   // 遥测 POST（g/collect、sa.gif 等）视为只读统计放行；业务主机内仍严格白名单。
   if (url.hostname === 'sensors.cameltv.live' && /\/sa\.gif$/.test(path)) return
   if (!BUSINESS_HOSTS.has(url.hostname.toLowerCase())) {
-    if (TELEMETRY_POST_PATTERNS.some((re) => re.test(path))) return
     throw new Error(`BLOCKED third-party POST host=${url.hostname} path=${path}`)
   }
   if (WRITE_PATTERNS.some((re) => re.test(path))) {

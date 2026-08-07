@@ -38,7 +38,7 @@ def main() -> int:
         c.headers["Authorization"] = f"Bearer {r.json()['data']['access_token']}"
 
         envs = c.get("/environments").json().get("data", {})
-        items = envs.get("items", envs if isinstance(envs, list) else [])
+        items = envs.get("items", []) if isinstance(envs, dict) else (envs if isinstance(envs, list) else [])
         env = next((e for e in items if "生产" in str(e.get("name", ""))), None)
         if not env:
             print("ERROR: 未找到生产环境", flush=True)
@@ -63,25 +63,13 @@ def main() -> int:
             job = r.json()["data"]
             print(f"[ui-job] created id={job['id']}", flush=True)
 
-        # 2) 定时任务（每日 02:00 UTC）
-        scheds = c.get("/schedules").json().get("data", {})
-        s_items = scheds.get("items", scheds if isinstance(scheds, list) else [])
-        sched = next((s for s in s_items if "P0" in str(s.get("name", ""))), None)
-        if sched:
-            print(f"[schedule] exists id={sched['id']}", flush=True)
-        else:
-            r = c.post("/schedules", json={
-                "name": "体育平台-P0-每日生产只读回归",
-                "description": "P0 UI 自动化每日回归（Batch 111）",
-                "cron_expression": "0 2 * * *",
-                "enabled": True,
-            })
-            r.raise_for_status()
-            sched = r.json()["data"]
-            print(f"[schedule] created id={sched['id']}", flush=True)
+        # 2) 定时任务：平台 /schedules 仅支持 plan_id 绑定（schedule_service 校验 TestPlan），
+        #    UiTestJob 无 cron 字段（B112-3 平台能力缺口）——UI job 定时需平台扩展，登记不阻塞。
+        sched = None
+        print("[schedule] skipped: 平台 /schedules 仅支持 plan 绑定，UI job 定时待平台扩展（B112-3）", flush=True)
 
         # 3) 触发一次
-        r = c.post(f"/ui-tests/{job['id']}/trigger")
+        r = c.post(f"/ui-tests/{job['id']}/trigger", json={"confirm_prod": True})
         r.raise_for_status()
         run = r.json()["data"]
         run_id = run.get("id") or run.get("run_id")
@@ -109,7 +97,8 @@ def main() -> int:
     stdout_tail = str(run_result.get("stdout") or "")[-1500:]
     stderr_tail = str(run_result.get("stderr") or "")[-800:]
     out.write_text(json.dumps({
-        "ui_job_id": job.get("id"), "schedule_id": sched.get("id"), "env_id": env_id,
+        "ui_job_id": job.get("id"), "schedule_id": (sched or {}).get("id"), "env_id": env_id,
+        "schedule_note": "平台 /schedules 仅支持 plan 绑定（B112-3），UI job 定时待平台扩展",
         "trigger_run_id": run_id,
         "run_status": run_status,
         "run_error": run_error,

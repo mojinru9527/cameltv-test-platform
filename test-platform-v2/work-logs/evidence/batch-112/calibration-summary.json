@@ -1,0 +1,75 @@
+{
+  "label": "batch-112",
+  "targets": [
+    {
+      "key": "login_anonymous",
+      "endpoint": "/account-service/login/anonymous/web",
+      "note": "契约=formData appCode + 必填 clientip 头（Batch 110 用例漏头导致业务 400/信封漂移）",
+      "before_count": 9,
+      "imported": 9,
+      "live_biz_status": null,
+      "used_url": "https://api.cameltv.live/account-service/login/anonymous/web",
+      "verify": {
+        "passed": 9,
+        "failed": 0,
+        "warnings": 0
+      },
+      "headers": {
+        "clientip": "8.8.8.8"
+      }
+    },
+    {
+      "key": "ads_activity_get",
+      "endpoint": "/account-service/ee/ads/activity/get",
+      "note": "契约必填 Accept-Language/deviceId/X-Real-IP（Batch 110 用例漏头导致业务 400）",
+      "before_count": 21,
+      "imported": 21,
+      "live_biz_status": 200,
+      "used_url": "https://api.cameltv.live/account-service/ee/ads/activity/get",
+      "verify": {
+        "passed": 21,
+        "failed": 0,
+        "warnings": 0
+      },
+      "headers": {
+        "Accept-Language": "en",
+        "deviceId": "calib-batch112-210ce950db3f",
+        "X-Real-IP": "8.8.8.8"
+      }
+    },
+    {
+      "key": "search_query",
+      "endpoint": "/camel-service/ee/search/query",
+      "note": "契约必填 Accept-Language（Batch 110 用例漏头导致业务 400；B110-5 动态数据根因同类）",
+      "before_count": 3,
+      "imported": 3,
+      "live_biz_status": 200,
+      "used_url": "https://api.cameltv.live/camel-service/ee/search/query?page=1&size=10&content=Real+Madrid&type=all",
+      "verify": {
+        "passed": 3,
+        "failed": 0,
+        "warnings": 0
+      },
+      "headers": {
+        "Accept-Language": "en"
+      }
+    },
+    {
+      "key": "news_get",
+      "endpoint": "/camel-service/ee/news/get",
+      "note": "news/get 生产全 id 业务 400（B112-1 服务端缺陷）；用户端实际走 get_visible，重指向用户可见端点",
+      "before_count": 6,
+      "imported": 3,
+      "live_biz_status": 200,
+      "used_url": "https://api.cameltv.live/camel-service/ee/news/get_visible?id=1106859724923470949",
+      "verify": {
+        "passed": 3,
+        "failed": 0,
+        "warnings": 0
+      },
+      "headers": {
+        "Accept-Language": "en"
+      }
+    }
+  ]
+}
