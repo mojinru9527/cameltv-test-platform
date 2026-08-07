@@ -28,7 +28,9 @@ def _job_to_dict(r: UiTestJob, creator_name: str = "") -> dict:
         "name": r.name, "description": r.description,
         "test_spec": r.test_spec, "browser": r.browser,
         "environment_id": r.environment_id,
-        "status": r.status, "last_result": r.last_result,
+        "status": r.status,
+        "cron_expression": r.cron_expression,
+        "schedule_enabled": r.schedule_enabled, "last_result": r.last_result,
         "creator_id": r.creator_id, "creator_name": creator_name,
         "created_at": r.created_at, "updated_at": r.updated_at,
         "last_run_status": "", "last_run_time": None,
@@ -150,10 +152,13 @@ def create_job(db: Session, data, creator_id: int, project_id: int) -> dict:
         project_id=project_id, name=data.name,
         description=data.description, test_spec=data.test_spec,
         browser=data.browser, environment_id=data.environment_id,
+        cron_expression=getattr(data, "cron_expression", ""),
+        schedule_enabled=getattr(data, "schedule_enabled", False),
         creator_id=creator_id,
     )
     db.add(r)
     db.flush()
+    _sync_schedule(db, r, project_id)
     return _job_to_dict(r)
 
 
@@ -161,13 +166,15 @@ def update_job(db: Session, job_id: int, data, project_id: int) -> dict | None:
     r = db.scalar(select(UiTestJob).where(UiTestJob.id == job_id, UiTestJob.project_id == project_id))
     if not r:
         return None
-    update_fields = ["name", "description", "test_spec", "browser", "environment_id"]
+    update_fields = ["name", "description", "test_spec", "browser", "environment_id",
+                     "cron_expression", "schedule_enabled"]
     update_data = data.model_dump(exclude_none=True)
     for k in update_fields:
         if k in update_data:
             setattr(r, k, update_data[k])
     db.flush()
     db.refresh(r)
+    _sync_schedule(db, r, project_id)
     return _job_to_dict(r)
 
 
@@ -175,9 +182,63 @@ def delete_job(db: Session, job_id: int, project_id: int) -> bool:
     r = db.scalar(select(UiTestJob).where(UiTestJob.id == job_id, UiTestJob.project_id == project_id))
     if not r:
         return False
+    _disable_linked_schedule(db, job_id, project_id)
     db.delete(r)
     db.flush()
     return True
+
+
+def _sync_schedule(db: Session, job, project_id: int) -> None:
+    """B112-3：UI job 定时开关与 cron 联动 TestSchedule（job_type=ui）。"""
+    from app.models.test_schedule import TestSchedule
+    from app.core.scheduler import add_schedule_job, toggle_schedule_job
+
+    sched = db.scalar(
+        select(TestSchedule).where(
+            TestSchedule.job_type == "ui",
+            TestSchedule.job_id == job.id,
+            TestSchedule.project_id == project_id,
+        )
+    )
+    if job.schedule_enabled and job.cron_expression:
+        if sched is None:
+            sched = TestSchedule(
+                project_id=project_id,
+                name=f"UI:{job.name}",
+                description=f"UI job #{job.id} 定时回归（B112-3）",
+                plan_id=None,
+                job_type="ui",
+                job_id=job.id,
+                cron_expression=job.cron_expression,
+                enabled=True,
+                creator_id=job.creator_id,
+            )
+            db.add(sched)
+            db.flush()
+            add_schedule_job(sched.id, sched.cron_expression)
+        else:
+            if sched.cron_expression != job.cron_expression or not sched.enabled:
+                sched.cron_expression = job.cron_expression
+                sched.enabled = True
+                add_schedule_job(sched.id, sched.cron_expression)
+    else:
+        _disable_linked_schedule(db, job.id, project_id)
+
+
+def _disable_linked_schedule(db: Session, job_id: int, project_id: int) -> None:
+    from app.models.test_schedule import TestSchedule
+    from app.core.scheduler import toggle_schedule_job
+
+    sched = db.scalar(
+        select(TestSchedule).where(
+            TestSchedule.job_type == "ui",
+            TestSchedule.job_id == job_id,
+            TestSchedule.project_id == project_id,
+        )
+    )
+    if sched and sched.enabled:
+        toggle_schedule_job(sched.id, False, sched.cron_expression)
+        sched.enabled = False
 
 
 def _resolve_environment(db: Session, environment_id: int | None, project_id: int):

@@ -387,6 +387,8 @@ export interface UiJobItem {
   test_spec: string
   browser: string
   environment_id: number | null
+  cron_expression: string
+  schedule_enabled: boolean
   status: string
   last_result: Record<string, any> | null
   creator_id: number
