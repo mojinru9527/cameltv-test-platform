@@ -34,6 +34,7 @@ from app.schemas.release_bundle import (
     ModuleAdminLinkOut,
     BuildFromDocumentRequest,
     ModuleExtractRequest,
+    ProductionDiffRequest,
     ModuleExtractResult,
     ModuleTestSummaryOut,
     ModuleTreeNode,
@@ -1028,3 +1029,27 @@ async def extract_attachments(
         function_points_extracted=result.function_points_extracted,
         errors=result.errors,
     ))
+
+
+@router.post("/production-diff", response_model=R[dict], summary="生产页面 vs 需求原型差异标注（C102-4）")
+def production_diff_annotate(
+    body: ProductionDiffRequest,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """对比发布包模块树与生产页面清单，输出 new / matched / missing 差异标注。"""
+    pid = current.project_id or 0
+    bundle = db.get(ReleaseBundle, body.release_bundle_id)
+    if not bundle or bundle.project_id != pid:
+        raise not_found("发布包")
+
+    from app.services.knowledge.production_diff_service import compute_production_diff
+
+    result = compute_production_diff(
+        db,
+        release_bundle_id=body.release_bundle_id,
+        project_id=pid,
+        production_pages=[p.model_dump() for p in body.production_pages],
+    )
+    return R.ok(result)
+

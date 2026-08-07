@@ -173,6 +173,19 @@ class ModuleExtractRequest(BaseModel):
     source_version: str = Field("", description="版本标识")
 
 
+class ProductionDiffPage(BaseModel):
+    """生产页面清单条目（C102-4）。"""
+    label: str = ""
+    title: str = ""
+    url: str = ""
+
+
+class ProductionDiffRequest(BaseModel):
+    """生产页面 vs 需求原型差异标注请求体。"""
+    release_bundle_id: int = Field(..., description="需求侧发布包 ID")
+    production_pages: list[ProductionDiffPage] = Field(default_factory=list, description="生产页面清单")
+
+
 class BuildFromDocumentRequest(BaseModel):
     """C102-3 需求文档直建模块树请求体（无需蓝湖证据包）。"""
     document_id: int = Field(..., description="RequirementDocument ID")
