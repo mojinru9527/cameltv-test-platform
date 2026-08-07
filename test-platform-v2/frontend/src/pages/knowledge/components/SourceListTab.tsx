@@ -17,12 +17,12 @@ import {
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { fetchKnowledgeSources, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
 import { fetchReleaseBundles } from '@/api/releaseBundles'
 import { fetchSyncCoverage } from '@/api/wiki'
@@ -284,13 +284,13 @@ export default function SourceListTab() {
       </div>
 
       {/* ── 知识源详情弹窗 ── */}
-      <Dialog open={!!selected} onOpenChange={(open) => { if (!open) closeDetail() }}>
-        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto w-[95vw]">
-          <DialogHeader>
-            <DialogTitle className="text-lg">
+      <Sheet open={!!selected} onOpenChange={(open) => { if (!open) closeDetail() }}>
+        <SheetContent className="overflow-y-auto p-4" style={{ width: '95vw', maxWidth: '42rem' }}>
+          <SheetHeader>
+            <SheetTitle className="text-lg">
               {selected?.title || '知识源详情'}
-            </DialogTitle>
-            <DialogDescription>
+            </SheetTitle>
+            <SheetDescription className="text-left">
               <div className="flex flex-wrap items-center gap-1.5 mt-1">
                 {selected?.source_type && (
                   <Badge tone="neutral">{TYPE_LABEL[selected.source_type] ?? selected.source_type}</Badge>
@@ -308,8 +308,8 @@ export default function SourceListTab() {
                   <Badge tone="neutral" className="text-xs">v{selected.version}</Badge>
                 )}
               </div>
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
           {/* 元数据摘要 */}
           {selected && (
@@ -407,8 +407,8 @@ export default function SourceListTab() {
               </div>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
