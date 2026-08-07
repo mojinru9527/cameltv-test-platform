@@ -1,0 +1,11 @@
+{
+  "ui_run_id": 16,
+  "status": "done",
+  "result": {
+    "total": 10,
+    "pass_": 10,
+    "fail": 0,
+    "skip": 0,
+    "duration": 110.94
+  }
+}

@@ -50,3 +50,10 @@
 | 计划 2d / 实际 1d | 0/0/0/2 | 2 | 工具链 | 大功能批次先拆后端单测再合前端；DB 列依赖迁移先确认部署窗口 |
 
 **技能使用**：`cameltv-agent-team`、`cameltv-bug-guard`、`playwright-cli`、`test-case-design`。
+## 6.1 生产验证补充（2026-08-07 部署后，C115-1/2/4 已闭环）
+
+- **C115-1**：UI job#3 配置 cron（0 2 * * *）+ schedule_enabled → 联动 TestSchedule#2（job_type=ui）→ 手动触发分发 UI 运行 **run15 = 10/10**（132s）。
+- **C115-4**：run15（定时触发）+ run16（直接触发）= **连续 2 次 10/10**（111s）。
+- **C115-2**：prod test_case.depends_on_ids 迁移落地（直接 DDL + 迁移文件 20260807_batch115_test_case_depends），场景用例#1833 回填 [1644]，平台 task#5 实跑 **passed**（list_visible → get_visible `$prev.1644.data.records[0].id` 注入）。
+- **B112-1**：口径 A 关闭（用户实测详情页 SSR 正常；news/get 为内部端点）。
+- **遗留**：B10 平台 API/UI 集成（C115-3，P3）；迁移文件随下一批 PR 推送（当前 prod 由直接 DDL 等效应用）。

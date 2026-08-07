@@ -114,10 +114,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C115-1 | 部署后创建 UI 定时任务（cron 每日）并触发核对 10/10（B112-3 平台验证） | P1 | 2026-08-07 |
-| C115-2 | 部署后回填场景用例#1833 depends_on_ids 并实跑串联（C107-2 平台验证） | P2 | 2026-08-07 |
+| ~~C115-1~~ | ~~部署后创建 UI 定时任务（cron 每日）并触发核对 10/10（B112-3 平台验证）~~ → **Closed**：UI job#3 cron=0 2 * * * + schedule#2（job_type=ui）触发 run15 = **10/10**（132s） | P1 | 2026-08-07 |
+| ~~C115-2~~ | ~~部署后回填场景用例#1833 depends_on_ids 并实跑串联（C107-2 平台验证）~~ → **Closed**：prod test_case.depends_on_ids 迁移+回填 [1644]，平台 task#5 实跑 **passed**（list_visible→get_visible $prev 注入） | P2 | 2026-08-07 |
 | C115-3 | B10 采集工具平台 API/UI 集成（脚本已交付，981 样本） | P3 | 2026-08-07 |
-| C115-4 | 平台交互 job 连续 2 次 10/10（B114-2 平台验证） | P2 | 2026-08-07 |
+| ~~C115-4~~ | ~~平台交互 job 连续 2 次 10/10（B114-2 平台验证）~~ → **Closed**：run15（定时触发）+ run16（直接触发）= **连续 2 次 10/10**（132s/111s） | P2 | 2026-08-07 |
 
 ### batch-114 — 交互拓扑 + UI 自动化 + 章节化（Batch 114 Leader 条件）
 
@@ -210,6 +210,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|---------|------|
 | C107-1 | 接口测试考虑点导入生产知识中心（capture source#31 + 检索命中） | `evidence/batch-115/knowledge-c1071-summary.json` | 2026-08-07 |
 | C107-2 | 接口依赖链（depends_on_ids + $prev 注入 + 环检测）单测 4/4 + 场景用例落库 | `tests/test_api_dependency_chain.py` | 2026-08-07 |
+| C115-1 | UI 定时任务（schedule job_type=ui）触发 run15 = 10/10（132s） | `evidence/batch-115/ui-schedule-trigger-summary.json` | 2026-08-07 |
+| C115-2 | 场景串联用例#1833 平台实跑 passed（$prev 注入） | `evidence/batch-115/scenario-chain-verification.json` | 2026-08-07 |
+| C115-4 | 平台交互 job run15+16 连续 2 次 10/10 | `evidence/batch-115/ui-run16-summary.json` | 2026-08-07 |
 
 
 ### Batch 114 — 知识中心章节化关闭（2026-08-07）

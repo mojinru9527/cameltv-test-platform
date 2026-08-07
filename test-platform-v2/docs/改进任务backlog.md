@@ -838,7 +838,7 @@ graph LR
 |---|------|---------------------|------|:----:|
 | B11 | internal-network 自托管 runner 离线 | GitHub runners API：`win-internal-001` status=offline；api-regression/prod-smoke 凡 `runs-on: [self-hosted, internal-network]` 均 0s 失败（"workflow file issue"） | 启动 WSL2 executor runner 或注册新 runner 后验证 api-regression/prod-smoke 各 1 次成功 | P1 |
 | B12 | 平台批量执行结果已回填但生产未部署新代码 | C110-3 回填改造合入前生产 Railway 无新 worker | 合入部署后执行 run-batch-execution.py 核对回填 | P2 |
-| B112-1 | news/get 生产全 id 业务 400（带登录态/必填头均复现），get_visible 同 id 200 正常 | 2026-08-07 生产多 id/头组合探测 | 服务端修复或业务确认口径；用户端用例已重指向 get_visible | P1 |
+| B112-1 | ~~news/get 生产全 id 业务 400~~ → **Closed（口径 A）**：2026-08-07 用户确认详情页 SSR 正常打开；news/get 为内部/管理端端点，用户端以 SSR + get_visible 为准 | 生产多 id/头探测 + 用户页面实测 | 关闭（内部端点口径） | P1 |
 | B112-2 | Batch 110 XHR 样本未采集请求头，4 端点用例缺契约必填头（login clientip / ads 三头 / search Accept-Language） | 契约对比 + 生产实跑业务 400 | 校准脚本按契约补头；采集工具（B10）补请求头捕获 | P2 |
 | B112-3 | 平台 /schedules 仅支持 plan_id 绑定（TestSchedule），UiTestJob 无 cron 字段 → UI job 无法平台定时 | 2026-08-07 实测 POST /schedules 422 + ui_test 模型无定时字段 | 平台扩展 schedule 支持 job_type=ui 或 UI job 内建 cron | P2 |
 | B112-4 | P0 只读守卫：第三方遥测 POST（analytics.google.com/doubleclick 等）被「主机白名单」检查提前拦截，C101-1 遥测豁免分支为死代码；数据中心 IP 下广告/分析域名必现 | 2026-08-07 平台 UI run 5/6/7 失败 + 本地复现 | 守卫修复：只读 GET/HEAD 任意主机放行 + 第三方遥测 POST 先豁免（已本地 10/10 验证） | P1 |
