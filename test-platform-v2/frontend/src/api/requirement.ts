@@ -45,6 +45,40 @@ export async function extractFeatures(
   return api.post(`/requirements/${documentId}/extract`, undefined, { signal })
 }
 
+export async function extractFeaturesAsync(
+  documentId: number,
+): Promise<{ id: string; status: string }> {
+  return api.post(`/requirements/${documentId}/extract-async`)
+}
+
+export async function generateTestCasesAsync(
+  documentId: number,
+  options?: Record<string, unknown>,
+): Promise<{ id: string; status: string }> {
+  return api.post(`/requirements/${documentId}/generate-async`, options || {})
+}
+
+export async function fetchAiTask(
+  taskId: string,
+): Promise<{ id: string; status: string; result?: unknown; error?: string }> {
+  return api.get(`/requirements/ai-task/${taskId}`)
+}
+
+export async function runAsyncAiTask(
+  taskId: string,
+  signal?: AbortSignal,
+): Promise<any> {
+  // C102-1/C116-2：轮询异步 AI 任务（2s/次），完成返回 result，失败抛错。
+  for (let i = 0; i < 300; i += 1) {
+    if (signal?.aborted) throw new Error('已取消')
+    const task = await fetchAiTask(taskId)
+    if (task.status === 'done') return task.result
+    if (task.status === 'failed') throw new Error(task.error || 'AI 任务失败')
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+  }
+  throw new Error('AI 任务超时')
+}
+
 export async function getExtraction(
   documentId: number,
   signal?: AbortSignal,

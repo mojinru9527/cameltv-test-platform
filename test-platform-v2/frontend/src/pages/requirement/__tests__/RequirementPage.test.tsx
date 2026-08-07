@@ -11,6 +11,9 @@ const mockFetchRequirementCoverage = vi.fn()
 const mockConfirmExtraction = vi.fn()
 const mockExtractFeatures = vi.fn()
 const mockGenerateTestCases = vi.fn()
+const mockExtractFeaturesAsync = vi.fn()
+const mockGenerateTestCasesAsync = vi.fn()
+const mockRunAsyncAiTask = vi.fn()
 
 vi.mock('@/api/testcase', () => ({
   fetchDomains: (...args: unknown[]) => mockFetchDomains(...args),
@@ -23,6 +26,9 @@ vi.mock('@/api/requirement', () => ({
   confirmExtraction: (...args: unknown[]) => mockConfirmExtraction(...args),
   deleteRequirement: vi.fn(),
   extractFeatures: (...args: unknown[]) => mockExtractFeatures(...args),
+  extractFeaturesAsync: (...args: unknown[]) => mockExtractFeaturesAsync(...args),
+  generateTestCasesAsync: (...args: unknown[]) => mockGenerateTestCasesAsync(...args),
+  runAsyncAiTask: (...args: unknown[]) => mockRunAsyncAiTask(...args),
   fetchGeneratedCases: vi.fn(),
   generateTestCases: (...args: unknown[]) => mockGenerateTestCases(...args),
   getOrCreateExtraction: vi.fn(),
@@ -125,6 +131,8 @@ describe('RequirementPage acceptance behavior', () => {
     expect(mockFetchRequirements).toHaveBeenCalledTimes(1)
     expect(mockFetchRequirement).not.toHaveBeenCalled()
 
+    mockGenerateTestCasesAsync.mockResolvedValue({ id: 'ai-g1', status: 'running' })
+    mockRunAsyncAiTask.mockResolvedValue({ functional_cases: [] })
     fireEvent.click(screen.getByRole('button', { name: '预览需求文档：第一页需求' }))
 
     expect(await screen.findByText('这是按需加载的完整正文')).toBeTruthy()
@@ -170,10 +178,11 @@ describe('RequirementPage acceptance behavior', () => {
     await screen.findByText('已确认拆分')
 
     fireEvent.click(screen.getByRole('button', { name: '生成用例(基于拆分)' }))
-    await waitFor(() => expect(mockGenerateTestCases).toHaveBeenCalledWith(
+    await waitFor(() => expect(mockGenerateTestCasesAsync).toHaveBeenCalledWith(
       1,
       { use_extraction: true },
     ))
+    expect(mockRunAsyncAiTask).toHaveBeenCalledWith('ai-g1')
 
     fireEvent.click(screen.getByRole('button', { name: '重新拆分' }))
     await waitFor(() => {
@@ -181,8 +190,8 @@ describe('RequirementPage acceptance behavior', () => {
         action: 'reject',
         rejected_notes: '用户主动重新拆分',
       })
-      expect(mockExtractFeatures).toHaveBeenCalledWith(1)
+      expect(mockExtractFeaturesAsync).toHaveBeenCalledWith(1)
     })
-    expect(mockGenerateTestCases).toHaveBeenCalledTimes(1)
+    expect(mockGenerateTestCasesAsync).toHaveBeenCalledTimes(1)
   })
 })

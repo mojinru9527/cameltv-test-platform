@@ -71,7 +71,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C102-1 | 需求 AI 提取/生成同步超时（>300s 网关 502）：改造异步任务+轮询或分块放宽，消除大文档生成失败 → **In-Progress**：后端异步基建+端点已交付（单测 4/4）；前端轮询+落库 C116-2 | P1 | 2026-08-06 |
+| ~~C102-1~~ | ~~需求 AI 提取/生成同步超时（>300s 网关 502）：改造异步任务+轮询或分块放宽，消除大文档生成失败~~ → **Closed**：后端 async 基建+端点 + 前端 async 轮询（index/ReviewPage 接入），大文档不再同步 502 | P1 | 2026-08-06 |
 | C102-2 | 知识中心入库接口修复（capture 一律 409、vector_search 非 functional）；修复后回归 /knowledge/capture 落库 | P1 | 2026-08-06 |
 | C102-3 | 需求模块树/跨系统关联支持从需求文档直建（当前强制蓝湖证据包 evidence_job_id） | P2 | 2026-08-06 |
 | C102-4 | 生产页面与需求原型差异标注能力（英文站 vs 中文原型，新增 World Cup/Replays 模块） | P2 | 2026-08-06 |
@@ -110,13 +110,20 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C113-1 | 交互路径拓扑图化（3172 边收敛为模块级拓扑）+ 关键交互路径挂 UI 自动化回归 → **In-Progress**：拓扑 38 节点/119 边 + 交互 spec 本地 10/10；平台 job 部署后触发核对 | P3 | 2026-08-07 |
 | ~~C113-2~~ | ~~知识中心 source#17 章节化拆细，提升 RAG 检索粒度~~ → **Closed**：13 用户模块章节 capture（source 18-30）code=0 + 模块词检索命中 | P3 | 2026-08-07 |
 
+### batch-117 — AI 生成前端轮询 + 覆盖缺口报告（Batch 117 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C117-1 | 覆盖缺口报告前端展示（AiResultModal 增覆盖矩阵/缺口 Tab） | P3 | 2026-08-07 |
+| C117-2 | 异步 AI 任务多 worker 支持（当前进程内注册表，单 worker 可用；多 worker 需外部队列） | P3 | 2026-08-07 |
+
 ### batch-116 — AI 生成链路加固 + 平台采集（Batch 116 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C116-1 | 部署后平台采集任务实跑（POST /ui-tests/capture → 样本 JSON 证据） | P2 | 2026-08-07 |
-| C116-2 | 前端生成按钮轮询接入 async 端点 + 结果落库（C102-1 完整闭环） | P2 | 2026-08-07 |
-| C116-3 | C103-6 覆盖缺口报告（截断 retry 已有，补功能点×用例覆盖矩阵） | P3 | 2026-08-07 |
+| ~~C116-1~~ | ~~部署后平台采集任务实跑（POST /ui-tests/capture → 样本 JSON 证据）~~ → **Closed**：平台任务 cap-69a8c94f91 = 314 样本 done | P2 | 2026-08-07 |
+| ~~C116-2~~ | ~~前端生成按钮轮询接入 async 端点 + 结果落库（C102-1 完整闭环）~~ → **Closed**：index/ReviewPage 改 async+poll（runAsyncAiTask），typecheck/build/vitest 14 全绿 | P2 | 2026-08-07 |
+| ~~C116-3~~ | ~~C103-6 覆盖缺口报告（截断 retry 已有，补功能点×用例覆盖矩阵）~~ → **Closed**：coverage_report（矩阵+缺口+覆盖率）附 generate-async 结果，单测 4/4 | P3 | 2026-08-07 |
 
 ### batch-115 — Part 2 全部解决（Batch 115 Leader 条件）
 
@@ -222,6 +229,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C115-2 | 场景串联用例#1833 平台实跑 passed（$prev 注入） | `evidence/batch-115/scenario-chain-verification.json` | 2026-08-07 |
 | C115-4 | 平台交互 job run15+16 连续 2 次 10/10 | `evidence/batch-115/ui-run16-summary.json` | 2026-08-07 |
 | C115-3 | 平台 XHR 采集 API（POST/GET /ui-tests/capture）单测 4/4 | `tests/test_xhr_capture_api.py` | 2026-08-07 |
+| C102-1 | AI 生成/提取异步化（后端 async 端点 + 前端轮询） | `ai_tasks.py` + frontend async/poll | 2026-08-07 |
+| C116-2 | 前端生成/提取 async 轮询接入 | `api/requirement.ts` + index/ReviewPage | 2026-08-07 |
+| C116-3 | 覆盖缺口报告（矩阵+缺口+覆盖率） | `coverage_report.py` + 单测 4/4 | 2026-08-07 |
 
 
 ### Batch 114 — 知识中心章节化关闭（2026-08-07）

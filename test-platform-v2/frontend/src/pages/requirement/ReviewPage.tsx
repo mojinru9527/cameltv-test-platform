@@ -18,7 +18,7 @@ import {
   ArrowLeft, CheckCircle2, XCircle, Edit, Import, ListFilter, Loader2,
   FileText, Layers, Search,
 } from '@/lib/icons'
-import { fetchReviewState, reviewCase, reviewImportCases, generateTestCases } from '@/api/requirement'
+import { fetchReviewState, reviewCase, reviewImportCases, generateTestCasesAsync, runAsyncAiTask } from '@/api/requirement'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 const PRIORITY_CLASSES: Record<string, string> = {
@@ -178,7 +178,8 @@ export default function ReviewPage() {
   const handleRegenerate = async () => {
     setGenerating(true)
     try {
-      await generateTestCases(docId, { use_extraction: true })
+      const task = await generateTestCasesAsync(docId, { use_extraction: true })
+      await runAsyncAiTask(task.id)
       toast.success('用例已重新生成')
       await load()
     } catch {
