@@ -117,9 +117,14 @@ async def lifespan(_: FastAPI):
         finally:
             _sync_db.close()
 
+    from app.services.ai_tasks import ensure_worker_running as ensure_ai_worker
+
+    ensure_ai_worker()
+
     try:
         yield
     finally:
+        from app.services.ai_tasks import shutdown_worker as shutdown_ai_worker
         from app.services.api_task_worker import (
             shutdown_processor as shutdown_api_task_worker,
         )
@@ -128,6 +133,7 @@ async def lifespan(_: FastAPI):
         )
 
         shutdown_api_task_worker()
+        shutdown_ai_worker()
         shutdown_agent_queue()
         shutdown_scheduler()
 

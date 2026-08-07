@@ -1,4 +1,5 @@
 """统一导出所有模型，确保 Base.metadata 能感知全部表。"""
+from app.models.ai_task import AiTask
 from app.models.api_asset import ApiEndpoint, ApiExecutionTask, ApiExecutionTaskItem, ApiImportBatch, ApiService
 from app.models.api_token import ApiToken
 from app.models.audit import AuditLog
