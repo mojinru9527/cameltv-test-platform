@@ -1,0 +1,60 @@
+{
+  "inserted": 3,
+  "cases": [
+    {
+      "title": "回放列表加载（赛事回放页面）",
+      "module": "回放列表",
+      "priority": "P0",
+      "positive_negative": "positive",
+      "steps": [
+        {
+          "step": 1,
+          "action": "打开生产页面 /match-replay",
+          "expected": "回放列表渲染"
+        },
+        {
+          "step": 2,
+          "action": "校验接口 replay/list 返回记录",
+          "expected": "记录非空且含标题/封面/比赛时间"
+        }
+      ],
+      "expected_result": "回放列表正常加载，接口响应结构正确",
+      "note": "生产实测：replay/list total=29，id=107123464706493798"
+    },
+    {
+      "title": "回放列表分页边界",
+      "module": "回放列表",
+      "priority": "P0",
+      "positive_negative": "boundary",
+      "steps": [
+        {
+          "step": 1,
+          "action": "请求 replay/list page=999999 size=10",
+          "expected": "返回空 records 或 4xx，不 5xx"
+        }
+      ],
+      "expected_result": "超出总页数时分页边界正确",
+      "note": "生产实测接口 replay/list"
+    },
+    {
+      "title": "回放详情页加载",
+      "module": "回放详情",
+      "priority": "P0",
+      "positive_negative": "positive",
+      "steps": [
+        {
+          "step": 1,
+          "action": "打开生产页面 /match-replay/107123464706493798",
+          "expected": "回放详情渲染（标题/封面/视频区）"
+        },
+        {
+          "step": 2,
+          "action": "校验接口 replay/get",
+          "expected": "返回 2xx 且结构正确"
+        }
+      ],
+      "expected_result": "回放详情页正常加载",
+      "note": "生产实测：replay/get 200"
+    }
+  ]
+}

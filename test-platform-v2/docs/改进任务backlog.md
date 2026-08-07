@@ -832,6 +832,13 @@ graph LR
 
 **备注**：B6/B7 关联 C110-1；B8 关联 C110-3；B9 关联 C110-2；B10 关联 C103-5 已部分落地（34 接口闭环）。
 
+### Batch 111 追加（2026-08-06，自动化落地中发现）
+
+| # | 障碍 | 实测证据（Batch 111） | 目标 | 优先级 |
+|---|------|---------------------|------|:----:|
+| B11 | internal-network 自托管 runner 离线 | GitHub runners API：`win-internal-001` status=offline；api-regression/prod-smoke 凡 `runs-on: [self-hosted, internal-network]` 均 0s 失败（"workflow file issue"） | 启动 WSL2 executor runner 或注册新 runner 后验证 api-regression/prod-smoke 各 1 次成功 | P1 |
+| B12 | 平台批量执行结果已回填但生产未部署新代码 | C110-3 回填改造合入前生产 Railway 无新 worker | 合入部署后执行 run-batch-execution.py 核对回填 | P2 |
+
 ---
 
 ## Epic CASE-QUALITY　功能用例质量与覆盖度（Batch 103 启动，C103-1）

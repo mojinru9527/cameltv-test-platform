@@ -137,6 +137,20 @@ def execute_task(task_id: int, project_id: int, worker_id: str) -> None:
                     passed += 1
                 else:
                     failed += 1
+
+                # Batch 111（C110-3/C103-7）：回填用例详情「请求结果」，
+                # 保证批量执行后用例详情三栏（请求参数/断言/请求结果）闭环。
+                from app.models.test_case import TestCase as TestCaseModel
+                case_row = db.get(TestCaseModel, item.case_id)
+                if case_row:
+                    if result.get("error"):
+                        case_row.last_response_json = json.dumps(
+                            {"error": result["error"]}, ensure_ascii=False,
+                        )
+                    else:
+                        case_row.last_response_json = _build_response_snapshot(result)
+                    case_row.last_run_status = item.status
+                    db.add(case_row)
             except Exception as e:
                 item.status = "failed"
                 item.error_message = str(e)
