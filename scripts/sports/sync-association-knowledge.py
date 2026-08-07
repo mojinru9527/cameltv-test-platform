@@ -1,4 +1,4 @@
-"""体育平台承接 — 知识中心关联基座入库与检索验证（Batch 113，C112-1）。
+"""体育平台承接 — 知识中心关联基座入库与检索验证（Batch 113 C112-1 / Batch 114 C113-2 章节化）。
 
 把「体育平台-关联基座.json」（module→function→interface→backend→konfi）转为 Markdown 章节，
 经 /knowledge/capture 入库（C110-2 已验证通道），再用 /knowledge/search 检索关键模块/接口/配置项
@@ -72,7 +72,7 @@ def main() -> int:
 
     data = json.loads(BASELINE.read_text(encoding="utf-8"))
     content = _baseline_markdown(data)
-    summary: dict = {}
+    summary: dict = {"chapters": []}
 
     with httpx.Client(base_url=args.backend_url.rstrip("/"), timeout=180,
                       headers={"Origin": "https://cameltv-test-platform1.vercel.app", "X-Project-Id": "1"}) as c:
@@ -121,10 +121,59 @@ def main() -> int:
             print(f"[search] '{q}' -> {len(res)} hits", flush=True)
         summary["search"] = hits
 
+        # ── Batch 114（C113-2）章节化：按用户模块逐章节 capture ──
+        chapter_titles = []
+        for m in data.get("user_modules", []):
+            title = f"体育平台-{m['module']}-模块关联（Batch 114 章节化）"
+            md = [f"# {m['module']}", ""]
+            if m.get("page"):
+                md.append(f"- 生产页面：{m['page']}")
+            if m.get("interfaces_raw"):
+                md.append(f"- 生产接口：{m['interfaces_raw']}")
+            if m.get("backend"):
+                md.append(f"- 运营后台：{m['backend']}")
+            if m.get("konfi"):
+                md.append(f"- konfi：{m['konfi']}")
+            cap = c.post("/knowledge/capture", json={
+                "title": title,
+                "content": "\n".join(md),
+                "source_url": "https://github.com/mojinru9527/cameltv-test-platform/blob/main/test-platform-v2/docs/体育平台-关联基座.json",
+                "tags": ["sports-platform", "association-baseline", "batch-114", f"module:{m['module']}"],
+            })
+            body = cap.json()
+            chapter_titles.append(title)
+            summary["chapters"].append({
+                "module": m["module"], "title": title,
+                "http": cap.status_code, "code": body.get("code"), "data": body.get("data"),
+            })
+            print(f"[chapter] {m['module']} -> code={body.get('code')} data={body.get('data')}", flush=True)
+        summary["chapter_count"] = len(chapter_titles)
+
+        # 章节化检索验证（模块词命中对应章节 source）
+        chapter_hits: dict = {}
+        for q in ["首页", "赛事详情", "直播间", "回放", "世界杯专题"]:
+            sr = c.post("/knowledge/search", json={"query": q, "top_k": 5, "mode": "hybrid"})
+            res = sr.json().get("data") or []
+            chapter_hits[q] = [{"source": x.get("source_name"), "title": x.get("title")} for x in res[:3]]
+            print(f"[chapter-search] '{q}' -> {len(res)} hits", flush=True)
+        summary["chapter_search"] = chapter_hits
+
     EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
     out = EVIDENCE_DIR / "knowledge-association-summary.json"
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[evidence] {out.relative_to(REPO_ROOT)}")
+    # Batch 114 章节化证据同步落 batch-114 目录
+    if summary.get("chapters"):
+        ev114 = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / "batch-114"
+        ev114.mkdir(parents=True, exist_ok=True)
+        (ev114 / "knowledge-chaptered-summary.json").write_text(
+            json.dumps({
+                "chapter_count": summary.get("chapter_count"),
+                "chapters": summary.get("chapters"),
+                "chapter_search": summary.get("chapter_search"),
+            }, ensure_ascii=False, indent=2), encoding="utf-8",
+        )
+        print(f"[evidence] {ev114.relative_to(REPO_ROOT)}/knowledge-chaptered-summary.json")
     return 0
 
 
