@@ -1,6 +1,6 @@
 """batch121_interaction_edge
 
-Revision ID: 20260808_batch121_interaction_edge
+Revision ID: 20260808_batch121_topo_edges
 Revises: 20260807_batch120_ai_task
 Create Date: 2026-08-08
 
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "20260808_batch121_interaction_edge"
+revision: str = "20260808_batch121_topo_edges"
 down_revision: Union[str, None] = "20260807_batch120_ai_task"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
