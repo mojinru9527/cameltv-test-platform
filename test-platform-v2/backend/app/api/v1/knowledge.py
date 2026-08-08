@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel
@@ -1008,6 +1009,140 @@ def import_module_associations(
         total_entities=total_e,
         total_relations=total_r,
     ))
+
+
+class DesignAssetImage(BaseModel):
+    filename: str
+    base64: str
+
+
+class DesignAssetSource(BaseModel):
+    title: str
+    source_ref: str = ""
+    text: str = ""
+    metadata: dict | None = None
+    images: list[DesignAssetImage] = []
+
+
+class DesignAssetImportRequest(BaseModel):
+    sources: list[DesignAssetSource]
+
+
+class DesignAssetImportResult(BaseModel):
+    created_sources: int = 0
+    skipped_sources: int = 0
+    created_chunks: int = 0
+    saved_images: int = 0
+
+
+def _design_storage_base() -> Path:
+    base = Path(settings.lanhu_evidence_storage_dir) if settings.lanhu_evidence_storage_dir else Path(__file__).resolve().parent.parent.parent.parent / "storage"
+    return base / "requirement-design"
+
+
+@router.post("/design-assets/import", response_model=R[DesignAssetImportResult], summary="需求/设计稿入库（文本+图片）")
+def import_design_assets(
+    body: DesignAssetImportRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """把需求原型页（文本+设计稿图片）入库为知识源，幂等（按 content_hash 去重）。"""
+    import base64
+    import hashlib
+    from pathlib import Path
+
+    pid = current.project_id or 0
+    created_s = skipped_s = created_c = saved_i = 0
+    for src in body.sources:
+        text = src.text or ""
+        content_hash = hashlib.sha1(f"{src.source_ref}|{src.title}|{text}".encode("utf-8")).hexdigest()[:32]
+        exists = db.scalar(select(KnowledgeSource.id).where(
+            KnowledgeSource.project_id == pid,
+            KnowledgeSource.content_hash == content_hash,
+        ))
+        if exists:
+            skipped_s += 1
+            continue
+        row = KnowledgeSource(
+            project_id=pid,
+            source_type="requirement",
+            title=src.title,
+            source_ref=src.source_ref,
+            content_hash=content_hash,
+            raw_content=text,
+            para_category="project",
+            knowledge_domain="project",
+            freshness_score=1.0,
+            metadata_json=json.dumps({"page": src.title, "source_ref": src.source_ref, "image_count": len(src.images)}, ensure_ascii=False),
+        )
+        db.add(row)
+        db.flush()
+        created_s += 1
+
+        img_urls: list[str] = []
+        if src.images:
+            img_dir = _design_storage_base() / str(row.id)
+            img_dir.mkdir(parents=True, exist_ok=True)
+            for img in src.images:
+                if not img.filename or not img.base64:
+                    continue
+                name = Path(img.filename).name
+                try:
+                    data = base64.b64decode(img.base64)
+                except Exception:
+                    continue
+                if len(data) > 6 * 1024 * 1024:
+                    continue
+                (img_dir / name).write_bytes(data)
+                img_urls.append(f"/api/v1/knowledge/design-assets/{row.id}/{name}")
+                saved_i += 1
+        if img_urls:
+            row.metadata_json = json.dumps({"page": src.title, "source_ref": src.source_ref, "image_count": len(src.images), "images": img_urls}, ensure_ascii=False)
+
+        if text:
+            db.add(KnowledgeChunk(
+                project_id=pid,
+                source_id=row.id,
+                chunk_type="requirement_rule",
+                title=src.title,
+                content=text,
+                content_hash=hashlib.sha1(text.encode("utf-8")).hexdigest()[:32],
+                token_count=max(1, len(text) // 4),
+                status="active",
+            ))
+            created_c += 1
+
+    db.commit()
+    _audit(req, current, db, "knowledge:design_assets_import", f"project#{pid}",
+           f"sources +{created_s} images {saved_i}")
+    return R.ok(DesignAssetImportResult(
+        created_sources=created_s,
+        skipped_sources=skipped_s,
+        created_chunks=created_c,
+        saved_images=saved_i,
+    ))
+
+
+@router.get("/design-assets/{source_id}/{filename}", summary="需求设计稿图片")
+def get_design_asset(
+    source_id: int,
+    filename: str,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """服务需求设计稿图片（路径逃逸防护）。"""
+    from fastapi.responses import FileResponse
+
+    row = db.get(KnowledgeSource, source_id)
+    if not row or row.project_id != (current.project_id or 0):
+        raise APIException(code=404, msg="知识源不存在", http_status=404)
+    safe = Path(filename).name
+    base = (_design_storage_base() / str(source_id)).resolve()
+    target = (base / safe).resolve()
+    if not target.is_relative_to(base) or not target.exists():
+        raise APIException(code=404, msg="图片不存在", http_status=404)
+    return FileResponse(str(target))
 
 
 # ═══════════════════════════════════════════════════════
