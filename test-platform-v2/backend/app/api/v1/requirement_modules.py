@@ -6,9 +6,12 @@ M3 API 层：对接 M2 ModuleExtractor / TestCaseLinker / NavigatesToExtractor /
 """
 from __future__ import annotations
 
+import json
+
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query, Request
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -1053,3 +1056,94 @@ def production_diff_annotate(
     )
     return R.ok(result)
 
+
+class ModuleTreeImportNode(BaseModel):
+    path: str
+    type: str = "page"
+    lanhu_page_id: str = ""
+    screenshots: list[str] = []
+
+
+class ModuleTreeImportRequest(BaseModel):
+    release_bundle_id: int | None = None
+    bundle_name: str = "蓝湖需求模块树"
+    source_version: str = "e6b5ce1e"
+    tree: list[ModuleTreeImportNode]
+
+
+class ModuleTreeImportResult(BaseModel):
+    created: int = 0
+    skipped: int = 0
+    total: int = 0
+
+
+@router.post("/import-tree", response_model=R[ModuleTreeImportResult], summary="导入需求模块树（蓝湖 sitemap 层级）")
+def import_module_tree(
+    body: ModuleTreeImportRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """把蓝湖导出 sitemap 的层级树导入 requirement_module（幂等）。
+
+    按 path 层级建 parent_module_id（path 即 平台/模块/页）；node_type=module|page；
+    lanhu_page_id=html 文件；screenshot_urls=设计稿截图清单。
+    """
+    pid = current.project_id or 0
+    bundle_id = body.release_bundle_id
+    if bundle_id is None:
+        bundle = ReleaseBundle(
+            project_id=pid,
+            name=body.bundle_name,
+            description="Batch 124 蓝湖需求模块树导入",
+            client_version=body.source_version,
+            status="draft",
+        )
+        db.add(bundle)
+        db.flush()
+        bundle_id = bundle.id
+
+    nodes = sorted(body.tree, key=lambda n: n.path.count("/"))
+    path_to_id: dict[str, int] = {}
+    created = skipped = 0
+    for n in nodes:
+        segs = [s for s in n.path.split("/") if s]
+        if not segs:
+            continue
+        name = segs[-1]
+        platform = segs[0]
+        parent_key = "/".join(segs[:-1])
+        parent_id = path_to_id.get(parent_key)
+
+        q = select(RequirementModule.id).where(
+            RequirementModule.project_id == pid,
+            RequirementModule.name == name,
+            RequirementModule.lanhu_page_id == n.lanhu_page_id,
+        )
+        q = q.where(RequirementModule.parent_module_id.is_(None) if parent_id is None else RequirementModule.parent_module_id == parent_id)
+        exists = db.scalar(q)
+        if exists:
+            path_to_id[n.path] = exists
+            skipped += 1
+            continue
+        row = RequirementModule(
+            project_id=pid,
+            release_bundle_id=bundle_id,
+            name=name,
+            node_type=n.type,
+            platform=platform,
+            lanhu_page_id=n.lanhu_page_id,
+            change_type="added",
+            parent_module_id=parent_id,
+            source_version=body.source_version,
+            screenshot_urls=json.dumps(n.screenshots, ensure_ascii=False),
+            sort_order=0,
+        )
+        db.add(row)
+        db.flush()
+        path_to_id[n.path] = row.id
+        created += 1
+
+    db.commit()
+    _commit_with_audit(req, current, db, "module:import_tree", f"bundle#{bundle_id}", f"created {created} skipped {skipped}")
+    return R.ok(ModuleTreeImportResult(created=created, skipped=skipped, total=len(body.tree)))
