@@ -679,7 +679,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 
 -|------|--------|---------|
-| C123-1 | 生产部署后执行 import-module-associations.py 导入 925 实体/888 关系，图谱验证模块关联可见 | P1 | 2026-08-08 |
+| ~~C123-1~~ | ~~生产部署后执行 import-module-associations.py 导入并图谱验证~~ → **Closed**：生产导入 925 实体/888 关系（修复 links_to_admin 前缀后 +57，总关系 968），图谱验证 含 tested_by 34/navigates_to 51/links_to_admin 54/configures 16；evidence/batch-123/production-module-associations-verify.json | P1 | 2026-08-08 |
 | C123-2 | 知识中心生产走查（弹窗/编译/对比/图谱/实体 截图证据） | P2 | 2026-08-08 |
 | C123-3 | wiki 页面 markdown 渲染（新增依赖评估后落地） | P3 | 2026-08-08 |
 | C123-4 | 图谱大数据量性能优化（分层/聚合） | P3 | 2026-08-08 |
@@ -698,6 +698,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 2. Product 开工前必须 `Read C-CONDITIONS.md`，在 PRD 的「非目标」段中明确哪些 Open 条件纳入本次、哪些豁免及理由
 3. PR 合入后，Dev 负责将本次满足的 C 条件从 Open → Closed
 4. 每月 1 日 Leader 审查所有 Open 条件，超过 60 天无进展的需升级优先级或明确废弃
+
 
 
 
