@@ -1,0 +1,7338 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "广告-确定按钮功能",
+    "description": "在广告页面，存在一个「确定」按钮（FP-广告-25），用于确认关闭中场广告。仅平台管理员可看到关闭按钮，点击后弹出确认弹窗，确认关闭后，所有用户将不会在该场比赛看到中场广告。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确「确定」按钮在非管理员用户下的显示状态（是否隐藏或置灰），以及点击确定后是否需要二次确认或记录操作日志。",
+      "suggestion": "明确非管理员视角下关闭按钮的展示规则，并补充操作日志记录要求。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "关闭中场广告确认弹窗",
+    "description": "点击关闭按钮后弹出确认弹窗，弹窗包含「取消」和「确定」按钮。点击确定后，所有用户将不会在该场比赛看到中场广告，正在观看的用户停止播放并重新拉取直播流。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确关闭后是否可恢复（如重新开启广告），以及关闭操作是否对已缓存或已拉取的广告流立即生效。",
+      "suggestion": "明确关闭后的持久化规则和恢复机制，并验证正在观看用户的直播流重新拉取是否成功。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述清晰，明确了广告关闭的权限控制和影响范围，但存在部分细节缺失，如非管理员视角的按钮展示、关闭后的恢复机制、操作日志等。建议补充这些边界条件以确保测试覆盖完整。"
+ },
+ "functional_cases": [
+  {
+   "title": "首页-比赛列表正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟后端返回3场比赛：1场未开始（03/05 17:00）、1场进行中（45'）、1场已结束（1:0），联赛为热门联赛",
+   "preconditions": "已登录，网络正常，后端返回正常比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载成功，显示比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛列表",
+     "expected": "列表展示3场比赛，每场包含球队名称、LOGO、时间、联赛、比分、状态等元素"
+    }
+   ],
+   "expected_result": "比赛列表完整展示，热门联赛优先，按开始时间排序，各字段显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "首页-比赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回空比赛列表（无任何比赛）",
+   "preconditions": "已登录，后端返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载成功，显示空态提示（如'暂无比赛'）"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现崩溃或白屏",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "首页-比赛列表加载失败提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或接口返回500错误",
+   "preconditions": "已登录，网络断开或接口异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面显示加载失败提示，如'加载失败，请重试'"
+    }
+   ],
+   "expected_result": "页面显示错误提示，提供重试按钮，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "首页-球队名称过长截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队名称长度为30个字符（超过显示区域），如'主场球队名称主场球队名称主场球队名称…'",
+   "preconditions": "已登录，存在长球队名称的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看长球队名称",
+     "expected": "球队名称截断显示省略号，如'主场球队名称主场球队名称主场球队名称…'"
+    }
+   ],
+   "expected_result": "球队名称截断显示，不换行，不遮挡其他元素",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "首页-球队LOGO正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队LOGO图片URL有效，返回正常图片",
+   "preconditions": "已登录，后端返回有效LOGO URL",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看球队LOGO",
+     "expected": "LOGO正常显示，无裂图"
+    }
+   ],
+   "expected_result": "LOGO图片加载成功，显示清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "首页-球队LOGO加载失败显示占位图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队LOGO图片URL无效或网络错误",
+   "preconditions": "已登录，后端返回无效LOGO URL",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看球队LOGO",
+     "expected": "显示默认占位图，不显示裂图图标"
+    }
+   ],
+   "expected_result": "LOGO区域显示占位图，不影响其他内容",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "首页-比赛时间格式正确显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间为2025-03-05 17:00:00",
+   "preconditions": "已登录，后端返回标准时间格式",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看比赛时间",
+     "expected": "显示'03/05 17:00'，格式正确"
+    }
+   ],
+   "expected_result": "时间显示为'03/05 17:00'，无时区错误",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "首页-比赛时间非法格式容错",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回非法时间格式，如'2025-13-45 25:99'",
+   "preconditions": "已登录，后端返回异常时间数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看比赛时间",
+     "expected": "页面不崩溃，时间显示为'--'或隐藏"
+    }
+   ],
+   "expected_result": "页面正常显示，非法时间被容错处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "首页-比赛状态显示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "三场比赛状态分别为：未开始、进行中（45'）、已结束（1:0）",
+   "preconditions": "已登录，后端返回不同状态的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看各比赛状态",
+     "expected": "未开始显示'未开始'，进行中显示'45''，已结束显示'已结束'及比分"
+    }
+   ],
+   "expected_result": "各状态标识正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "首页-进行中比赛时间实时刷新",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进行中比赛初始显示45'，等待1分钟后",
+   "preconditions": "已登录，存在进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，记录进行中比赛时间",
+     "expected": "显示45'"
+    },
+    {
+     "step": 2,
+     "desc": "等待1分钟",
+     "expected": "时间自动更新为46'"
+    }
+   ],
+   "expected_result": "进行中时间自动刷新，无手动操作",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "首页-联赛名称截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称为40个字符，如'联赛名称联赛名称联赛名称联赛名称 轮次'",
+   "preconditions": "已登录，存在长联赛名称的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看联赛名称",
+     "expected": "联赛名称截断显示省略号，如'联赛名称联赛名称联赛名称联赛名称 轮次'"
+    }
+   ],
+   "expected_result": "联赛名称截断显示，不换行",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "首页-联赛LOGO正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛LOGO图片URL有效",
+   "preconditions": "已登录，后端返回有效联赛LOGO URL",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看联赛LOGO",
+     "expected": "LOGO正常显示"
+    }
+   ],
+   "expected_result": "联赛LOGO加载成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "首页-热门联赛优先展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门联赛A有2场比赛（开始时间10:00、12:00），非热门联赛B有1场比赛（开始时间09:00）",
+   "preconditions": "已登录，后端返回热门联赛配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看比赛列表",
+     "expected": "热门联赛A的比赛优先展示，且按开始时间排序（10:00、12:00），非热门联赛B的比赛排在后面"
+    }
+   ],
+   "expected_result": "热门联赛优先，联赛内按开始时间升序",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "首页-热门联赛配置为空时按时间排序",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门联赛配置为空，所有比赛均为普通联赛",
+   "preconditions": "已登录，后端返回空热门联赛配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看比赛列表",
+     "expected": "所有比赛按开始时间升序展示"
+    }
+   ],
+   "expected_result": "无热门联赛时，按开始时间排序",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "首页-进行中比赛显示LIVE标识",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "进行中比赛（45'）",
+   "preconditions": "已登录，存在进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看进行中比赛",
+     "expected": "显示LIVE标识、视频/动画图标、观看人数（如1.2k）"
+    }
+   ],
+   "expected_result": "LIVE标识及观看人数正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "首页-非进行中比赛不显示LIVE标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "未开始和已结束的比赛",
+   "preconditions": "已登录，存在未开始和已结束比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，查看未开始和已结束比赛",
+     "expected": "不显示LIVE标识、视频/动画图标、观看人数"
+    }
+   ],
+   "expected_result": "非进行中比赛无LIVE相关元素",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "首页-点击比赛卡片跳转",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击进行中比赛卡片",
+   "preconditions": "已登录，存在进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击进行中比赛卡片",
+     "expected": "跳转到比赛直播页或详情页"
+    }
+   ],
+   "expected_result": "成功跳转，页面加载正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "首页-点击已结束比赛卡片跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击已结束比赛卡片",
+   "preconditions": "已登录，存在已结束比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击已结束比赛卡片",
+     "expected": "跳转到比赛详情页（赛果、数据等）"
+    }
+   ],
+   "expected_result": "跳转到详情页，展示赛果",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "首页-点击比赛卡片无响应",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击比赛卡片但网络异常",
+   "preconditions": "已登录，网络断开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击比赛卡片",
+     "expected": "提示'网络异常'或跳转失败，不崩溃"
+    }
+   ],
+   "expected_result": "有错误提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "首页-Tab切换正常",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "三个Tab：Live Matches、Favorites、Competitions",
+   "preconditions": "已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'Favorites'Tab",
+     "expected": "显示收藏的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击'Competitions'Tab",
+     "expected": "显示联赛列表"
+    }
+   ],
+   "expected_result": "Tab切换正常，内容正确加载",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "首页-Tab切换时数据加载失败",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "切换Tab时接口返回500",
+   "preconditions": "已登录，接口异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'Favorites'Tab",
+     "expected": "显示加载失败提示，不崩溃"
+    }
+   ],
+   "expected_result": "有错误提示，可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "热门赛事-banner轮播展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "banner共10张，当前显示第1张",
+   "preconditions": "已登录，进入热门赛事页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "banner显示第1张，指示器显示'1/10'"
+    },
+    {
+     "step": 2,
+     "desc": "等待自动轮播",
+     "expected": "自动切换到第2张，指示器更新为'2/10'"
+    }
+   ],
+   "expected_result": "banner自动轮播正常，指示器正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "热门赛事-banner手动切换",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "banner共10张，当前显示第1张",
+   "preconditions": "已登录，进入热门赛事页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "向左滑动banner",
+     "expected": "切换到第2张，指示器更新"
+    }
+   ],
+   "expected_result": "手动切换正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "热门赛事-banner为空时展示占位",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回空banner列表",
+   "preconditions": "已登录，进入热门赛事页面，banner数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "banner区域显示占位图或隐藏，不报错"
+    }
+   ],
+   "expected_result": "页面正常显示，无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "广告-贴片广告正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛直播页配置贴片广告",
+   "preconditions": "已登录，进入比赛直播页，存在贴片广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入比赛直播页",
+     "expected": "贴片广告正常展示，不遮挡直播内容"
+    }
+   ],
+   "expected_result": "贴片广告展示，可关闭",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "广告-贴片广告加载失败",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "广告图片URL无效",
+   "preconditions": "已登录，进入比赛直播页，广告加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入比赛直播页",
+     "expected": "广告区域显示占位或隐藏，不影响直播"
+    }
+   ],
+   "expected_result": "广告加载失败不影响直播",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "广告-中场广告正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行到中场时展示中场广告",
+   "preconditions": "已登录，进入比赛直播页，比赛进入中场",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "比赛进入中场",
+     "expected": "中场广告自动播放，显示'AD | 15s'"
+    }
+   ],
+   "expected_result": "中场广告正常播放",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "广告-平台管理员关闭中场广告",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前用户为平台管理员",
+   "preconditions": "平台管理员登录，进入比赛直播页，中场广告播放中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮",
+     "expected": "弹出确认弹窗，显示'取消'和'确定'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'",
+     "expected": "关闭中场广告，重新拉取直播流，所有用户不再看到该中场广告"
+    }
+   ],
+   "expected_result": "关闭成功，全局生效",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "广告-非管理员不显示关闭按钮",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "当前用户为普通用户",
+   "preconditions": "普通用户登录，进入比赛直播页，中场广告播放中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看中场广告",
+     "expected": "不显示关闭按钮"
+    }
+   ],
+   "expected_result": "普通用户无关闭权限",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "广告-关闭中场广告确认弹窗取消",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "平台管理员点击关闭按钮后，点击取消",
+   "preconditions": "平台管理员登录，进入比赛直播页，中场广告播放中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮",
+     "expected": "弹出确认弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'",
+     "expected": "弹窗关闭，中场广告继续播放"
+    }
+   ],
+   "expected_result": "取消后广告继续播放",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "首页-比赛列表-已结束比赛展示",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场已结束的比赛，主队A、客队B，比分1:0，状态为已结束",
+   "preconditions": "已登录，首页接口返回包含已结束比赛的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载，展示比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看已结束比赛卡片",
+     "expected": "卡片展示主队名称、客队名称、比分1:0、状态为「已结束」，时间显示为比赛开始时间（如17:00）"
+    }
+   ],
+   "expected_result": "已结束比赛正确展示，状态、比分、时间均正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "首页-比赛列表-已结束比赛状态错误",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回已结束比赛但状态字段缺失或错误",
+   "preconditions": "已登录，接口返回异常数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看状态异常的已结束比赛",
+     "expected": "若状态缺失，应显示默认状态或隐藏该卡片，不显示错误状态"
+    }
+   ],
+   "expected_result": "异常数据不导致页面崩溃，状态显示合理兜底",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "首页-比赛列表-进行中比赛展示",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场进行中比赛，主队C、客队D，比分1:0，比赛进行到45分钟",
+   "preconditions": "已登录，首页接口返回进行中比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载，展示比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看进行中比赛卡片",
+     "expected": "卡片展示主队名称、客队名称、比分1:0、状态显示为「45'」，并展示LIVE标识、视频/动画标识、观看人数（如1.2k）"
+    }
+   ],
+   "expected_result": "进行中比赛正确展示，状态、比分、LIVE标识、观看人数均正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "首页-比赛列表-进行中比赛状态显示异常",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "进行中比赛状态为0分钟（刚开赛）或90分钟（即将结束）",
+   "preconditions": "已登录，接口返回边界状态数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看状态为0'的比赛",
+     "expected": "显示0'，LIVE标识正常"
+    },
+    {
+     "step": 3,
+     "desc": "查看状态为90'的比赛",
+     "expected": "显示90'，LIVE标识正常"
+    }
+   ],
+   "expected_result": "边界状态正确显示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "首页-比赛列表-未开始比赛展示",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场未开始比赛，主队E、客队F，开始时间23:00",
+   "preconditions": "已登录，首页接口返回未开始比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载，展示比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看未开始比赛卡片",
+     "expected": "卡片展示主队名称、客队名称、开始时间23:00，状态显示为「未开始」"
+    }
+   ],
+   "expected_result": "未开始比赛正确展示，时间、状态正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "首页-比赛列表-未开始比赛时间显示错误",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回未开始比赛但开始时间为空或格式错误",
+   "preconditions": "已登录，接口返回异常数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看时间异常的未开始比赛",
+     "expected": "若时间为空，显示默认占位符（如--:--），不显示错误时间"
+    }
+   ],
+   "expected_result": "异常时间不导致页面崩溃，显示合理兜底",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "首页-比赛列表-球队名称超长展示",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队名称长度超过显示区域，如30个汉字",
+   "preconditions": "已登录，接口返回超长球队名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长球队名称的比赛",
+     "expected": "名称以省略号截断显示，不换行、不出框"
+    }
+   ],
+   "expected_result": "超长名称正确截断，界面不异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "首页-比赛列表-球队名称缺失",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回主队或客队名称为空",
+   "preconditions": "已登录，接口返回缺失名称数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看名称缺失的比赛",
+     "expected": "显示默认占位符（如「未知球队」），不显示空白"
+    }
+   ],
+   "expected_result": "名称缺失时合理兜底，不显示空白",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "首页-比赛列表-联赛名称展示",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为「英超联赛 第10轮」",
+   "preconditions": "已登录，接口返回联赛信息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛卡片上的联赛名称",
+     "expected": "显示联赛名称和轮次，如「英超联赛 第10轮」"
+    }
+   ],
+   "expected_result": "联赛名称正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "首页-比赛列表-联赛名称超长展示",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称超长，如30个汉字",
+   "preconditions": "已登录，接口返回超长联赛名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长联赛名称",
+     "expected": "名称以省略号截断显示，不换行、不出框"
+    }
+   ],
+   "expected_result": "超长联赛名称正确截断",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "首页-比赛列表-视频/动画标识展示",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有视频流，应显示视频标识；另一场比赛有动画流，应显示动画标识",
+   "preconditions": "已登录，接口返回视频/动画标识",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看有视频的比赛",
+     "expected": "显示「视频」标识"
+    },
+    {
+     "step": 3,
+     "desc": "查看有动画的比赛",
+     "expected": "显示「动画」标识"
+    }
+   ],
+   "expected_result": "视频/动画标识正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "首页-比赛列表-视频/动画标识缺失",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回无视频/动画标识的比赛",
+   "preconditions": "已登录，接口返回无标识数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看无标识的比赛",
+     "expected": "不显示视频/动画标识，卡片正常展示"
+    }
+   ],
+   "expected_result": "无标识时不显示，不影响卡片展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "首页-比赛列表-LIVE标识展示",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进行中比赛应显示LIVE标识",
+   "preconditions": "已登录，接口返回进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看进行中比赛",
+     "expected": "显示LIVE标识"
+    }
+   ],
+   "expected_result": "LIVE标识正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "首页-比赛列表-LIVE标识错误显示",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已结束比赛错误显示LIVE标识",
+   "preconditions": "已登录，接口返回已结束比赛但带LIVE标识",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看已结束比赛",
+     "expected": "不应显示LIVE标识，若显示则视为缺陷"
+    }
+   ],
+   "expected_result": "已结束比赛不显示LIVE标识",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "首页-比赛列表-观看人数展示",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "观看人数为1289，应显示为1.2k",
+   "preconditions": "已登录，接口返回观看人数",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看观看人数为1289的比赛",
+     "expected": "显示「1.2k」"
+    }
+   ],
+   "expected_result": "观看人数正确格式化展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "首页-比赛列表-观看人数为0",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "观看人数为0",
+   "preconditions": "已登录，接口返回观看人数0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看观看人数为0的比赛",
+     "expected": "显示「0」或隐藏人数，不显示异常"
+    }
+   ],
+   "expected_result": "观看人数为0时合理展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "首页-比赛列表-HD标识展示",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛视频为高清，应显示HD标识",
+   "preconditions": "已登录，接口返回HD标识",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看有HD标识的比赛",
+     "expected": "显示「HD」标识"
+    }
+   ],
+   "expected_result": "HD标识正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "首页-比赛列表-HD标识缺失",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回无HD标识的比赛",
+   "preconditions": "已登录，接口返回无HD标识数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入比赛Tab",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看无HD标识的比赛",
+     "expected": "不显示HD标识，卡片正常展示"
+    }
+   ],
+   "expected_result": "无HD标识时不显示，不影响卡片",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "首页-收藏分组-切换展示收藏比赛",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-收藏分组",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已收藏2场比赛，未收藏其他比赛",
+   "preconditions": "已登录，用户有收藏数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击「收藏分组」Tab",
+     "expected": "展示收藏的比赛列表，仅显示已收藏的比赛"
+    }
+   ],
+   "expected_result": "收藏分组正确展示收藏比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "首页-收藏分组-无收藏数据",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-收藏分组",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未收藏任何比赛",
+   "preconditions": "已登录，无收藏数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击「收藏分组」Tab",
+     "expected": "展示空状态提示，如「暂无收藏比赛」"
+    }
+   ],
+   "expected_result": "无收藏时展示空状态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "首页-比赛Tab-切换展示全部比赛",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-比赛Tab",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在多场比赛，包括已结束、进行中、未开始",
+   "preconditions": "已登录，接口返回多场比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击「比赛」Tab",
+     "expected": "展示全部比赛列表，包含所有状态的比赛"
+    }
+   ],
+   "expected_result": "比赛Tab正确展示全部比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "首页-比赛Tab-无比赛数据",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-比赛Tab",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前无任何比赛",
+   "preconditions": "已登录，接口返回空列表",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击「比赛」Tab",
+     "expected": "展示空状态提示，如「暂无比赛」"
+    }
+   ],
+   "expected_result": "无比赛时展示空状态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "首页-热门联赛分组-展示热门联赛",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-热门联赛分组",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在多个热门联赛，如英超、西甲",
+   "preconditions": "已登录，接口返回热门联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门联赛分组",
+     "expected": "展示热门联赛名称、轮次、LOGO，按配置排序"
+    }
+   ],
+   "expected_result": "热门联赛分组正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "首页-热门联赛分组-无热门联赛",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-热门联赛分组",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未配置热门联赛",
+   "preconditions": "已登录，接口返回空热门联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门联赛分组",
+     "expected": "不展示该分组或展示空状态，不报错"
+    }
+   ],
+   "expected_result": "无热门联赛时合理处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "首页-横幅广告-展示广告",
+   "priority": "P0",
+   "domain": "用户端-首页",
+   "module": "首页-横幅广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "运营配置了横幅广告",
+   "preconditions": "已登录，接口返回广告数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看横幅广告位",
+     "expected": "展示广告图片或内容，可点击跳转"
+    }
+   ],
+   "expected_result": "横幅广告正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "首页-横幅广告-无广告数据",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-横幅广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未配置广告",
+   "preconditions": "已登录，接口返回无广告数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看横幅广告位",
+     "expected": "不展示广告位或展示默认占位，不报错"
+    }
+   ],
+   "expected_result": "无广告时合理处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "首页-横幅广告-关闭广告",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-横幅广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "广告有关闭按钮，用户点击关闭",
+   "preconditions": "已登录，广告显示关闭按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击广告关闭按钮",
+     "expected": "广告关闭，不再显示"
+    }
+   ],
+   "expected_result": "广告可关闭",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "首页-横幅广告-关闭按钮权限",
+   "priority": "P1",
+   "domain": "用户端-首页",
+   "module": "首页-横幅广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "普通用户不应看到关闭按钮",
+   "preconditions": "已登录普通用户，广告显示",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看广告关闭按钮",
+     "expected": "普通用户不应看到关闭按钮，仅平台管理员可见"
+    }
+   ],
+   "expected_result": "关闭按钮权限控制正确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "未开始比赛正确展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页-比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场未开始的比赛，比赛时间为未来时间，如 2025-03-05 17:00，球队名称为「主场球队A」和「客场球队B」，联赛名称为「英超联赛」",
+   "preconditions": "已登录，首页接口返回包含一场未开始的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功，显示比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看未开始比赛卡片",
+     "expected": "比赛卡片显示比赛时间 03/05 17:00、主客队名称、联赛名称，不显示比分，状态标记为「未开始」"
+    }
+   ],
+   "expected_result": "未开始比赛正确展示，信息完整，无比分显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "未开始比赛无比分显示",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页-比赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场未开始比赛，但接口异常返回了比分数据（如 1:0）",
+   "preconditions": "已登录，接口返回未开始比赛但带比分",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该未开始比赛卡片",
+     "expected": "未开始比赛不应显示比分，即使接口返回比分也应隐藏，只显示比赛时间"
+    }
+   ],
+   "expected_result": "未开始比赛不显示比分，避免误导用户",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "热门联赛分组展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页-热门联赛分组",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造两个热门联赛分组，如「英超」和「西甲」，每个分组下各有2场比赛",
+   "preconditions": "已登录，接口返回热门联赛分组数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看「热门联赛分组」区域",
+     "expected": "显示联赛分组标题（如英超、西甲），每个分组下展示该联赛的比赛列表"
+    }
+   ],
+   "expected_result": "热门联赛分组正确展示，分组内比赛正确归属",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "热门联赛分组为空时展示空态",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页-热门联赛分组",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回热门联赛分组为空数组",
+   "preconditions": "已登录，接口返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看「热门联赛分组」区域",
+     "expected": "显示空态提示，如「暂无热门联赛」，不显示空白区域"
+    }
+   ],
+   "expected_result": "空数据时展示友好提示，不出现空白或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "今天比赛列表展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页-今天",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造今天（自然日）的3场比赛，时间分别为 00:30、12:00、23:30",
+   "preconditions": "已登录，接口返回今日比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「今天」标签",
+     "expected": "展示今日所有比赛，按开始时间排序，显示比赛时间、球队、联赛等信息"
+    }
+   ],
+   "expected_result": "今天列表正确展示今日比赛，排序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "今天列表无比赛时展示空态",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页-今天",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回今日比赛为空数组",
+   "preconditions": "已登录，接口返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「今天」标签",
+     "expected": "显示空态提示，如「今日暂无比赛」"
+    }
+   ],
+   "expected_result": "空数据时展示友好提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "横幅广告正常展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页-横幅广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "配置2个横幅广告，图片地址有效，跳转链接为赛事详情页",
+   "preconditions": "已登录，后台已配置横幅广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看横幅广告区域",
+     "expected": "显示广告图片，可轮播，点击广告跳转到对应链接"
+    }
+   ],
+   "expected_result": "横幅广告正常展示并可点击跳转",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "横幅广告图片加载失败时展示占位图",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页-横幅广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "配置一个广告，图片URL无效（返回404）",
+   "preconditions": "已登录，后台配置了无效图片地址",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看横幅广告区域",
+     "expected": "图片加载失败时显示默认占位图，不显示破图，广告区域不塌陷"
+    }
+   ],
+   "expected_result": "广告图片加载失败时优雅降级",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "国际比赛列表展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页-国际",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造国际赛事（如欧冠）比赛2场，非国际赛事（如中超）1场",
+   "preconditions": "已登录，接口返回国际比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「国际」标签",
+     "expected": "仅展示国际赛事，不展示非国际赛事"
+    }
+   ],
+   "expected_result": "国际列表正确筛选国际赛事",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "国际列表无比赛时展示空态",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页-国际",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回国际比赛为空数组",
+   "preconditions": "已登录，接口返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「国际」标签",
+     "expected": "显示空态提示，如「暂无国际赛事」"
+    }
+   ],
+   "expected_result": "空数据时展示友好提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "更多比赛入口跳转",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页-更多",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「2 >」入口，预期跳转到全部比赛列表页",
+   "preconditions": "已登录，存在更多比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「2 >」入口",
+     "expected": "跳转到全部比赛列表页，展示更多比赛"
+    }
+   ],
+   "expected_result": "点击更多入口正确跳转",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "更多比赛入口无数据时提示",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页-更多",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回比赛列表为空",
+   "preconditions": "已登录，无更多比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页，进入「比赛」Tab",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「2 >」入口",
+     "expected": "跳转到全部比赛列表页，显示空态提示「暂无比赛」"
+    }
+   ],
+   "expected_result": "无数据时展示友好提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "首页(PC端)页面正常加载并展示各Tab",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常网络环境，后台配置有比赛、联赛、LIVE、今天等数据",
+   "preconditions": "用户已登录，网络正常，后台已配置首页数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端页面",
+     "expected": "页面加载成功，显示顶部导航（比赛、联赛、LIVE、今天）"
+    },
+    {
+     "step": 2,
+     "desc": "查看各Tab内容",
+     "expected": "比赛Tab显示比赛列表，联赛Tab显示联赛列表，LIVE Tab显示进行中比赛，今天Tab显示今日比赛"
+    }
+   ],
+   "expected_result": "首页正常加载，各Tab内容正确展示，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "首页(PC端)页面加载失败时展示错误提示",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络断开或接口返回500",
+   "preconditions": "网络异常或后台服务不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "断开网络或模拟接口失败，打开首页",
+     "expected": "页面展示加载失败提示（如“加载失败，请重试”），不崩溃"
+    }
+   ],
+   "expected_result": "页面展示错误提示，用户可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "比赛Tab展示比赛列表",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置有3场不同状态的比赛（未开始、进行中、已结束）",
+   "preconditions": "已登录，后台有比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“比赛”Tab",
+     "expected": "展示比赛列表，包含联赛名称、轮次、球队、比分、时间、状态"
+    }
+   ],
+   "expected_result": "比赛列表正确展示，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "比赛Tab无数据时展示空态",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何比赛数据",
+   "preconditions": "后台比赛数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“比赛”Tab",
+     "expected": "展示空态提示（如“暂无比赛”），不显示空白页"
+    }
+   ],
+   "expected_result": "展示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "联赛Tab展示联赛列表",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置有5个联赛，包含LOGO和名称",
+   "preconditions": "已登录，后台有联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“联赛”Tab",
+     "expected": "展示联赛列表，每个联赛显示LOGO和名称"
+    }
+   ],
+   "expected_result": "联赛列表正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "联赛Tab无数据时展示空态",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何联赛数据",
+   "preconditions": "后台联赛数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“联赛”Tab",
+     "expected": "展示空态提示（如“暂无联赛”）"
+    }
+   ],
+   "expected_result": "展示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "LIVE Tab展示进行中比赛",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台有2场进行中比赛，一场有视频流，一场有动画",
+   "preconditions": "已登录，后台有进行中比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“LIVE”Tab",
+     "expected": "展示进行中比赛列表，包含视频/动画标识、LIVE标识、观看人数"
+    }
+   ],
+   "expected_result": "进行中比赛正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "LIVE Tab无进行中比赛时展示空态",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何进行中比赛",
+   "preconditions": "后台无进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“LIVE”Tab",
+     "expected": "展示空态提示（如“暂无直播”）"
+    }
+   ],
+   "expected_result": "展示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "今天Tab展示今日比赛",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台有今日（自然日）3场比赛，时间分别为10:00、15:00、20:00",
+   "preconditions": "已登录，后台有今日比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“今天”Tab",
+     "expected": "展示今日比赛列表，按开始时间排序"
+    }
+   ],
+   "expected_result": "今日比赛正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "今天Tab无今日比赛时展示空态",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台无今日比赛数据",
+   "preconditions": "后台无今日比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“今天”Tab",
+     "expected": "展示空态提示（如“今日暂无比赛”）"
+    }
+   ],
+   "expected_result": "展示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "比赛卡片展示联赛名称、轮次、球队、比分、时间、状态",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "一场已结束比赛：联赛名称“英超联赛”，轮次“第10轮”，主队“曼城”，客队“利物浦”，比分1:0，时间17:00，状态“已结束”",
+   "preconditions": "后台有该场比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在比赛Tab中查看该比赛卡片",
+     "expected": "卡片显示联赛名称、轮次、主客队名称、比分、时间、状态标识"
+    }
+   ],
+   "expected_result": "卡片信息完整且正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "比赛卡片超长名称截断显示",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "主队名称为“这是一个非常长的球队名称超过二十个字符”，客队名称类似",
+   "preconditions": "后台有该场比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在比赛Tab中查看该比赛卡片",
+     "expected": "超长名称以省略号截断显示，不换行、不出框"
+    }
+   ],
+   "expected_result": "名称截断显示，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "已结束比赛状态展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛状态为“已结束”，比分1:0",
+   "preconditions": "后台有已结束比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在比赛Tab中查看该比赛",
+     "expected": "状态显示“已结束”，比分正常展示"
+    }
+   ],
+   "expected_result": "状态正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "进行中比赛状态展示（显示比赛分钟数）",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行到45分钟，状态显示“45'”",
+   "preconditions": "后台有进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在比赛Tab或LIVE Tab中查看该比赛",
+     "expected": "状态显示“45'”，并显示LIVE标识"
+    }
+   ],
+   "expected_result": "状态正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "未开始比赛状态展示（显示开始时间）",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间为17:00，状态为“未开始”",
+   "preconditions": "后台有未开始比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在比赛Tab中查看该比赛",
+     "expected": "状态显示“17:00”，不显示比分"
+    }
+   ],
+   "expected_result": "状态正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "比赛状态异常时展示兜底",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台返回未知状态码（如99）",
+   "preconditions": "后台比赛状态字段异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在比赛Tab中查看该比赛",
+     "expected": "不崩溃，状态显示为“未知”或隐藏状态"
+    }
+   ],
+   "expected_result": "页面正常，状态有兜底处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-正面-正常展示比赛信息",
+   "priority": "P0",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟后端返回一场进行中的比赛：联赛名称='英超 第38轮'，主队='曼联'，客队='利物浦'，比赛时间='17:00'，状态='进行中'，进行时间='45''，比分='1:0'，有视频流、LIVE标识、观看人数1.2k、HD标识",
+   "preconditions": "用户已登录，首页PC端已加载，后端接口返回上述比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看比赛列表区域",
+     "expected": "页面展示比赛列表，包含联赛名称、轮次、球队LOGO、主客场球队名称、比赛时间、状态、比分、进行时间、视频/动画、LIVE、观看人数、HD等元素"
+    },
+    {
+     "step": 2,
+     "desc": "检查进行中比赛的展示",
+     "expected": "进行中比赛显示'45''、'LIVE'、'1.2k'、'HD'、比分'1:0'，且视频/动画图标可见"
+    }
+   ],
+   "expected_result": "比赛列表完整展示所有字段，进行中比赛状态标识正确，数据与后端返回一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-负面-比赛数据为空",
+   "priority": "P1",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回空比赛列表（无任何比赛数据）",
+   "preconditions": "用户已登录，后端接口返回空数组",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看比赛列表区域",
+     "expected": "页面显示空态提示，如'暂无比赛'，不显示任何比赛卡片"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-边界-比赛状态为未开始",
+   "priority": "P1",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "模拟一场未开始的比赛：比赛时间='23:00'，状态='未开始'，无比分、无进行时间、无LIVE标识",
+   "preconditions": "用户已登录，后端返回未开始比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看未开始比赛卡片",
+     "expected": "未开始比赛显示'23:00'，不显示比分、进行时间、LIVE标识，视频/动画图标可能显示但无LIVE"
+    }
+   ],
+   "expected_result": "未开始比赛正确展示，不显示进行中特有字段",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-边界-比赛状态为已结束",
+   "priority": "P1",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "模拟一场已结束的比赛：状态='已结束'，比分='1:0'，无进行时间、无LIVE标识",
+   "preconditions": "用户已登录，后端返回已结束比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看已结束比赛卡片",
+     "expected": "已结束比赛显示'已结束'标签，显示比分'1:0'，不显示进行时间、LIVE标识"
+    }
+   ],
+   "expected_result": "已结束比赛正确展示，状态标签和比分正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-负面-比赛数据字段缺失",
+   "priority": "P1",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回的比赛数据缺少主队名称、客队名称、比赛时间等关键字段",
+   "preconditions": "用户已登录，后端返回字段不完整的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看比赛列表",
+     "expected": "页面应显示默认占位符（如'--'）或隐藏缺失字段，不出现空白或布局错乱"
+    }
+   ],
+   "expected_result": "页面正常渲染，缺失字段有兜底处理，无JS错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-负面-观看人数为0",
+   "priority": "P2",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "模拟观看人数为0的比赛，LIVE标识仍显示",
+   "preconditions": "用户已登录，后端返回观看人数为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看观看人数为0的比赛",
+     "expected": "观看人数显示'0'，LIVE标识正常显示，无异常"
+    }
+   ],
+   "expected_result": "观看人数显示0，页面正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "首页PC端-资讯列表展示-正面-正常展示资讯",
+   "priority": "P0",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟资讯列表：独家情报、热门前瞻、球员花边各一条，每条包含标题、发布时间（如03/05 17:00）、联赛名称",
+   "preconditions": "用户已登录，后端返回资讯数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看资讯区块",
+     "expected": "展示'独家情报'、'热门前瞻'、'球员花边'三个分类，每个分类下列出资讯标题、发布时间、联赛名称"
+    }
+   ],
+   "expected_result": "资讯列表完整展示，分类正确，数据与后端一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "首页PC端-资讯列表展示-负面-资讯数据为空",
+   "priority": "P1",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回空资讯列表",
+   "preconditions": "用户已登录，后端返回空数组",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看资讯区块",
+     "expected": "显示空态提示，如'暂无资讯'，不显示任何资讯条目"
+    }
+   ],
+   "expected_result": "页面显示空态，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "首页PC端-资讯列表展示-边界-资讯标题超长",
+   "priority": "P2",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "模拟资讯标题超过显示宽度，如'球队名称球队名称球队名称球队名称球队名称球队名称球队名称球队名称'",
+   "preconditions": "用户已登录，后端返回超长标题",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看资讯标题",
+     "expected": "标题以省略号截断显示，不换行、不撑破布局，鼠标悬停可显示完整标题"
+    }
+   ],
+   "expected_result": "标题截断显示，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "首页PC端-我的收藏-正面-点击进入收藏列表",
+   "priority": "P1",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已收藏2场比赛和1支球队",
+   "preconditions": "用户已登录，且已有收藏数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击首页PC端的'我的收藏'入口",
+     "expected": "跳转至收藏列表页面，展示已收藏的比赛和球队"
+    }
+   ],
+   "expected_result": "成功跳转，收藏列表展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "首页PC端-我的收藏-负面-无收藏数据",
+   "priority": "P1",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未收藏任何内容",
+   "preconditions": "用户已登录，无收藏数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击首页PC端的'我的收藏'入口",
+     "expected": "跳转至收藏列表页面，显示空态提示，如'暂无收藏'"
+    }
+   ],
+   "expected_result": "显示空态，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-负面-接口异常",
+   "priority": "P1",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端接口返回500错误",
+   "preconditions": "用户已登录，接口故障",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端",
+     "expected": "页面显示错误提示，如'加载失败，请稍后重试'，并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面友好提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-边界-比赛时间跨天",
+   "priority": "P2",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "模拟比赛时间为'03/05 23:59'和'03/06 00:00'",
+   "preconditions": "用户已登录，后端返回跨天比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看跨天比赛",
+     "expected": "比赛时间正确显示日期和时间，如'03/05 23:59'和'03/06 00:00'，无格式错误"
+    }
+   ],
+   "expected_result": "时间显示正确，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "首页PC端-比赛列表展示-负面-比赛时间格式错误",
+   "priority": "P2",
+   "domain": "体育平台-用户端",
+   "module": "首页PC端",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回非法时间格式，如'2025-03-05 17:00:00'或'null'",
+   "preconditions": "用户已登录，后端返回异常时间",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，查看比赛时间",
+     "expected": "页面应显示默认值（如'--'）或隐藏时间字段，不出现乱码或JS错误"
+    }
+   ],
+   "expected_result": "页面正常，时间字段有兜底",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "球员花边列表正常展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟接口返回球员花边列表数据，包含3条记录，每条含标题、发布时间（45分钟前）、热度（1.2K）、图标。",
+   "preconditions": "用户已登录，首页PC端已加载，接口返回正常数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，定位到球员花边列表区域",
+     "expected": "球员花边列表区域可见，标题为「球员花边」"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表内容",
+     "expected": "列表展示3条记录，每条包含标题、时间（如45分钟前）、热度（如1.2K）、图标，且数据与接口返回一致"
+    }
+   ],
+   "expected_result": "球员花边列表正常展示，每条记录包含标题、相对时间、热度数值和图标，无错乱或缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "球员花边列表空数据展示",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟接口返回空列表（data: []）。",
+   "preconditions": "用户已登录，首页PC端已加载，接口返回空数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，定位到球员花边列表区域",
+     "expected": "球员花边列表区域可见"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表内容",
+     "expected": "列表区域显示空态提示，如「暂无球员花边」，且无报错"
+    }
+   ],
+   "expected_result": "球员花边列表为空时显示友好空态提示，不出现空白或异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "球员花边列表接口异常处理",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟接口返回500错误。",
+   "preconditions": "用户已登录，首页PC端已加载，接口返回500。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，定位到球员花边列表区域",
+     "expected": "页面加载中，可能显示loading"
+    },
+    {
+     "step": 2,
+     "desc": "等待接口响应",
+     "expected": "列表区域显示错误提示，如「加载失败，请稍后重试」，且不影响其他模块展示"
+    }
+   ],
+   "expected_result": "接口异常时球员花边列表显示错误提示，不导致页面崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "我的收藏列表正常展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟接口返回我的收藏列表，包含2条收藏记录（如球队、比赛）。",
+   "preconditions": "用户已登录，且已有收藏数据，首页PC端已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，定位到我的收藏区域",
+     "expected": "我的收藏区域可见，标题为「我的收藏」"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表内容",
+     "expected": "列表展示2条收藏记录，每条包含名称、图标等信息，与接口返回一致"
+    }
+   ],
+   "expected_result": "我的收藏列表正常展示，数据与接口一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "我的收藏列表空数据展示",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟接口返回空列表（data: []）。",
+   "preconditions": "用户已登录，无收藏数据，首页PC端已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，定位到我的收藏区域",
+     "expected": "我的收藏区域可见"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表内容",
+     "expected": "列表区域显示空态提示，如「暂无收藏」，且无报错"
+    }
+   ],
+   "expected_result": "我的收藏列表为空时显示友好空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "我的收藏列表接口异常处理",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟接口返回超时。",
+   "preconditions": "用户已登录，首页PC端已加载，接口超时。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，定位到我的收藏区域",
+     "expected": "页面加载中"
+    },
+    {
+     "step": 2,
+     "desc": "等待接口响应",
+     "expected": "列表区域显示错误提示，如「加载失败，请稍后重试」，且不影响其他模块"
+    }
+   ],
+   "expected_result": "接口异常时我的收藏列表显示错误提示，不导致页面崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "展开功能正常展开列表",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球员花边列表默认显示2条，点击展开后显示全部5条。",
+   "preconditions": "首页PC端已加载，球员花边列表有超过默认显示数量的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，定位到球员花边列表",
+     "expected": "列表默认显示2条，底部有「展开」按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击「展开」按钮",
+     "expected": "列表展开显示全部5条记录，按钮变为「收起」"
+    }
+   ],
+   "expected_result": "点击展开后列表完整展示，按钮状态切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "展开功能收起列表",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "列表已展开，点击收起后恢复默认显示2条。",
+   "preconditions": "首页PC端已加载，列表已展开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在展开状态下，点击「收起」按钮",
+     "expected": "列表收起，只显示默认2条，按钮变为「展开」"
+    }
+   ],
+   "expected_result": "点击收起后列表恢复默认显示，按钮状态切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "展开功能在空列表时不可用",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球员花边列表为空。",
+   "preconditions": "首页PC端已加载，球员花边列表为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，定位到球员花边列表",
+     "expected": "列表显示空态提示，且无「展开」按钮"
+    }
+   ],
+   "expected_result": "空列表时不显示展开按钮，避免无效操作。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "相对时间显示正常（45分钟前）",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "接口返回发布时间为当前时间前45分钟。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的时间显示",
+     "expected": "时间显示为「45分钟前」"
+    }
+   ],
+   "expected_result": "相对时间正确显示为45分钟前。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "相对时间显示边界值（刚刚）",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "接口返回发布时间为当前时间前1分钟。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的时间显示",
+     "expected": "时间显示为「刚刚」"
+    }
+   ],
+   "expected_result": "相对时间在1分钟内显示为「刚刚」。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "相对时间显示边界值（1小时前）",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "接口返回发布时间为当前时间前60分钟。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的时间显示",
+     "expected": "时间显示为「1小时前」"
+    }
+   ],
+   "expected_result": "相对时间在60分钟时显示为「1小时前」。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "相对时间显示异常（未来时间）",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回发布时间为当前时间之后（如未来5分钟）。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的时间显示",
+     "expected": "时间显示为「刚刚」或按需求处理，不显示负数时间"
+    }
+   ],
+   "expected_result": "未来时间被合理处理，不出现负数或异常显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "热度数值显示正常（1.2K）",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "接口返回热度数值为1200。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的热度显示",
+     "expected": "热度显示为「1.2K」"
+    }
+   ],
+   "expected_result": "热度数值正确格式化为1.2K。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "热度数值显示边界值（999）",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "接口返回热度数值为999。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的热度显示",
+     "expected": "热度显示为「999」"
+    }
+   ],
+   "expected_result": "热度数值小于1000时显示原数字。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "热度数值显示边界值（1000）",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "接口返回热度数值为1000。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的热度显示",
+     "expected": "热度显示为「1K」或「1.0K」"
+    }
+   ],
+   "expected_result": "热度数值达到1000时按K缩写显示。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "热度数值显示异常（负数）",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回热度数值为-5。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的热度显示",
+     "expected": "热度显示为「0」或按需求处理，不显示负数"
+    }
+   ],
+   "expected_result": "负数热度被合理处理，不显示负数。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "图标正常展示",
+   "priority": "P0",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "接口返回图标URL有效。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的图标",
+     "expected": "图标正常加载显示，无裂图"
+    }
+   ],
+   "expected_result": "图标正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "图标加载失败显示占位图",
+   "priority": "P1",
+   "domain": "首页",
+   "module": "首页_pc端_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回图标URL无效（404）。",
+   "preconditions": "首页PC端已加载，球员花边列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页PC端，观察球员花边列表中的图标",
+     "expected": "图标位置显示默认占位图，不显示裂图"
+    }
+   ],
+   "expected_result": "图标加载失败时显示占位图，不影响整体布局。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "进行中的比赛列表展示热门联赛优先",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含热门联赛（如英超）和非热门联赛（如某小联赛）的比赛数据，热门联赛的比赛开始时间晚于非热门联赛，验证热门联赛优先展示。",
+   "preconditions": "已登录用户，存在进行中的比赛数据，其中包含热门联赛和非热门联赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "热门联赛的比赛优先展示，即使其开始时间晚于非热门联赛"
+    }
+   ],
+   "expected_result": "进行中的比赛列表按'热门联赛优先'排序，热门联赛的比赛排在前，非热门联赛排在后。",
+   "remark": "正面用例，验证排序规则",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "进行中的比赛列表联赛内按开始时间排序",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "同一联赛（如英超）下有多场进行中的比赛，开始时间分别为17:00、18:00、19:00，验证按开始时间升序排列。",
+   "preconditions": "已登录用户，存在同一联赛的多场进行中比赛，开始时间不同。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察同一联赛下的比赛排序",
+     "expected": "比赛按开始时间从早到晚排列（17:00、18:00、19:00）"
+    }
+   ],
+   "expected_result": "同一联赛内的比赛按开始时间升序排列。",
+   "remark": "正面用例，验证联赛内排序规则",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "进行中的比赛列表不展示非进行中比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造包含已结束、未开始、进行中三种状态的比赛数据，验证仅展示进行中的比赛。",
+   "preconditions": "已登录用户，存在已结束、未开始、进行中的比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "检查列表中的比赛状态",
+     "expected": "仅展示状态为'进行中'的比赛，不展示已结束或未开始的比赛"
+    }
+   ],
+   "expected_result": "列表仅包含进行中的比赛，已结束和未开始的比赛不展示。",
+   "remark": "负面用例，验证状态过滤",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "比赛卡片展示联赛名称和轮次",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场英超第10轮的比赛，联赛名称为'英超'，轮次为'第10轮'，验证卡片展示。",
+   "preconditions": "已登录用户，存在一场进行中的英超第10轮比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片顶部展示'英超 第10轮'"
+    }
+   ],
+   "expected_result": "比赛卡片正确展示联赛名称和轮次。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "比赛卡片联赛名称过长时截断显示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造联赛名称为'联赛名称联赛名称联赛名称联赛名称'（超长）的比赛，验证截断显示。",
+   "preconditions": "已登录用户，存在一场进行中的比赛，联赛名称超长。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "联赛名称显示为'联赛名称联赛名称联赛名称联赛名称'，超出部分以省略号截断，悬浮可查看完整名称"
+    }
+   ],
+   "expected_result": "超长联赛名称被截断显示，不换行、不出框，悬浮提示完整名称。",
+   "remark": "边界用例，验证长文本处理",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "比赛卡片展示主客队名称",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场比赛，主队名称为'主场球队名称主场球队名称主场球队名称…'，客队名称为'客场球队名称客场球队名称客场球队名称…'，验证展示。",
+   "preconditions": "已登录用户，存在一场进行中的比赛，主客队名称较长。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示主队名称和客队名称，长名称以省略号截断"
+    }
+   ],
+   "expected_result": "比赛卡片正确展示主客队名称，长名称截断显示。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "比赛卡片展示比赛时间",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场比赛，开始时间为17:00，验证展示。",
+   "preconditions": "已登录用户，存在一场进行中的比赛，开始时间为17:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示'17:00'"
+    }
+   ],
+   "expected_result": "比赛卡片正确展示比赛开始时间。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "比赛卡片展示比赛状态（如45'）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场进行中的比赛，比赛进行到45分钟，验证展示'45''。",
+   "preconditions": "已登录用户，存在一场进行中的比赛，当前比赛时间为45分钟。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示'45''"
+    }
+   ],
+   "expected_result": "比赛卡片正确展示当前比赛时间（如45'）。",
+   "remark": "正面用例，验证状态展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "比赛卡片展示视频/动画标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场有视频流的比赛，验证展示视频/动画标识。",
+   "preconditions": "已登录用户，存在一场进行中的比赛，且该比赛有视频流。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示'视频/动画'图标"
+    }
+   ],
+   "expected_result": "有视频流的比赛卡片展示视频/动画标识。",
+   "remark": "正面用例，验证标识展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "比赛卡片展示LIVE标识",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场进行中的比赛，验证展示LIVE标识。",
+   "preconditions": "已登录用户，存在一场进行中的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示'LIVE'标识"
+    }
+   ],
+   "expected_result": "进行中的比赛卡片展示LIVE标识。",
+   "remark": "正面用例，验证标识展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "比赛卡片展示观看人数",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场观看人数为1.2k的比赛，验证展示。",
+   "preconditions": "已登录用户，存在一场进行中的比赛，观看人数为1.2k。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示'1.2k'"
+    }
+   ],
+   "expected_result": "比赛卡片正确展示观看人数。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "比赛卡片展示比分",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场比分为1:0的比赛，验证展示。",
+   "preconditions": "已登录用户，存在一场进行中的比赛，比分为1:0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示'1'和'0'的比分"
+    }
+   ],
+   "expected_result": "比赛卡片正确展示当前比分。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "比赛卡片展示联赛LOGO",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场英超比赛，联赛LOGO为英超官方LOGO，验证展示。",
+   "preconditions": "已登录用户，存在一场进行中的英超比赛，联赛LOGO已配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示联赛LOGO"
+    }
+   ],
+   "expected_result": "比赛卡片正确展示联赛LOGO。",
+   "remark": "正面用例，验证LOGO展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "比赛卡片展示球队LOGO",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场比赛，主客队LOGO已配置，验证展示。",
+   "preconditions": "已登录用户，存在一场进行中的比赛，主客队LOGO已配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛卡片",
+     "expected": "卡片展示主队LOGO和客队LOGO"
+    }
+   ],
+   "expected_result": "比赛卡片正确展示主客队LOGO。",
+   "remark": "正面用例，验证LOGO展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "热门比赛分组展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造多场热门比赛，验证'热门比赛'分组展示。",
+   "preconditions": "已登录用户，存在多场热门比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "向下滚动，找到'热门比赛'分组",
+     "expected": "页面展示'热门比赛'分组，分组内展示热门比赛列表"
+    }
+   ],
+   "expected_result": "页面展示'热门比赛'分组，分组内展示热门比赛。",
+   "remark": "正面用例，验证分组展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "热门比赛分组为空时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无热门比赛的数据，验证空态展示。",
+   "preconditions": "已登录用户，无热门比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "向下滚动，找到'热门比赛'分组",
+     "expected": "'热门比赛'分组显示空态提示，如'暂无热门比赛'"
+    }
+   ],
+   "expected_result": "热门比赛分组显示空态提示，不展示空白区域。",
+   "remark": "负面用例，验证空态处理",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "点击'全部热门比赛'入口跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'全部热门比赛'，验证跳转到热门赛事页面。",
+   "preconditions": "已登录用户，存在热门比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击'全部热门比赛'入口",
+     "expected": "跳转到热门赛事页面，展示全部热门比赛"
+    }
+   ],
+   "expected_result": "点击'全部热门比赛'后跳转到热门赛事页面。",
+   "remark": "正面用例，验证跳转",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "未登录用户访问进行中的比赛页面",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户访问首页，验证进行中的比赛列表可正常展示。",
+   "preconditions": "未登录用户，存在进行中的比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'进行中的比赛'Tab",
+     "expected": "页面展示进行中的比赛列表，无需登录"
+    }
+   ],
+   "expected_result": "未登录用户可正常查看进行中的比赛列表。",
+   "remark": "负面用例，验证未登录访问",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "进行中的比赛列表分页加载",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "构造超过一页的比赛数据（如20条），验证上拉加载更多。",
+   "preconditions": "已登录用户，存在超过一页的进行中比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示第一页比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "上拉加载更多",
+     "expected": "加载第二页数据，列表追加展示"
+    }
+   ],
+   "expected_result": "进行中的比赛列表支持分页加载，上拉加载更多。",
+   "remark": "正面用例，验证分页",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "进行中的比赛列表加载失败提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常，验证加载失败提示。",
+   "preconditions": "已登录用户，网络异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击'进行中的比赛'Tab",
+     "expected": "页面展示加载失败提示，如'加载失败，请重试'"
+    }
+   ],
+   "expected_result": "加载失败时展示错误提示，并提供重试按钮。",
+   "remark": "负面用例，验证异常处理",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "进行中的比赛列表正常展示（含热门联赛优先）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造进行中的比赛数据：热门联赛A下有2场比赛（开始时间分别为17:00和18:00），非热门联赛B下有1场比赛（开始时间17:30），所有比赛状态为进行中。",
+   "preconditions": "已登录，存在进行中的比赛数据，且热门联赛配置为A。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击“进行中的比赛”Tab",
+     "expected": "显示进行中的比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表顺序",
+     "expected": "热门联赛A的比赛优先展示，且联赛A内按开始时间升序（17:00在前，18:00在后），随后展示非热门联赛B的比赛"
+    }
+   ],
+   "expected_result": "列表按热门联赛优先、联赛内按开始时间升序展示，所有比赛均为进行中状态。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "比赛卡片字段完整展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场进行中的比赛，包含联赛名称、轮次、主客场球队名称（正常长度）、比赛时间、比分、状态（45'）、观看人数（1.2k）、HD标识、视频/动画标识、LIVE标识。",
+   "preconditions": "已登录，存在该比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入进行中的比赛列表",
+     "expected": "比赛卡片展示联赛名称、轮次、球队LOGO、主客场球队名称、比赛时间、比分、状态（45'）、观看人数（1.2k）、HD标识、视频/动画标识、LIVE标识"
+    }
+   ],
+   "expected_result": "卡片所有字段正确显示，无缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "超长球队名称省略展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造主场球队名称为超长字符串（如50个字符），客场球队名称正常。",
+   "preconditions": "已登录，存在该比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入进行中的比赛列表",
+     "expected": "主场球队名称显示省略号（如“主场球队名称主场球队名称…”），不换行或溢出"
+    }
+   ],
+   "expected_result": "超长名称被省略，布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "观看人数显示为1.2k",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造观看人数为1200的比赛。",
+   "preconditions": "已登录，存在该比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入进行中的比赛列表",
+     "expected": "观看人数显示为“1.2k”"
+    }
+   ],
+   "expected_result": "观看人数格式化为1.2k。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "比赛状态显示为8'",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造比赛进行到第8分钟。",
+   "preconditions": "已登录，存在该比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入进行中的比赛列表",
+     "expected": "比赛状态显示为“8'”"
+    }
+   ],
+   "expected_result": "状态正确显示为8'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "HD标识展示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场支持HD的比赛。",
+   "preconditions": "已登录，存在该比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入进行中的比赛列表",
+     "expected": "比赛卡片显示“HD”标识"
+    }
+   ],
+   "expected_result": "HD标识正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "热门比赛列表展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造热门比赛数据：包含联赛名称、轮次、球队LOGO、主客场球队名称、比赛时间、比分、状态（已结束）。",
+   "preconditions": "已登录，存在热门比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击“热门比赛”Tab",
+     "expected": "显示热门比赛列表，包含“热门比赛”标题和“全部热门比赛”入口"
+    },
+    {
+     "step": 2,
+     "desc": "观察热门比赛卡片",
+     "expected": "卡片展示联赛名称、轮次、球队LOGO、主客场球队名称、比赛时间、比分、状态（已结束）"
+    }
+   ],
+   "expected_result": "热门比赛列表正常展示，字段完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "热门比赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "无热门比赛数据。",
+   "preconditions": "已登录，无热门比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击“热门比赛”Tab",
+     "expected": "显示空态提示，如“暂无热门比赛”"
+    }
+   ],
+   "expected_result": "空态提示正确显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "点击“全部热门比赛”跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在热门比赛数据。",
+   "preconditions": "已登录，存在热门比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门比赛Tab",
+     "expected": "显示“全部热门比赛”入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击“全部热门比赛”",
+     "expected": "跳转到热门赛事页面"
+    }
+   ],
+   "expected_result": "成功跳转到热门赛事页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "排序规则验证：热门联赛优先，联赛内按开始时间",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造数据：热门联赛A有2场（开始时间17:00、18:00），非热门联赛B有1场（开始时间17:30），全部进行中。",
+   "preconditions": "已登录，存在上述数据，热门联赛配置为A。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入进行中的比赛列表",
+     "expected": "列表顺序为：A联赛17:00场、A联赛18:00场、B联赛17:30场"
+    }
+   ],
+   "expected_result": "排序符合规则。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "排序规则验证：非热门联赛按开始时间",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造数据：非热门联赛C有2场（开始时间17:00、17:00），开始时间相同。",
+   "preconditions": "已登录，存在上述数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入进行中的比赛列表",
+     "expected": "开始时间相同的比赛按某种稳定顺序展示（如按ID升序），不出现乱序"
+    }
+   ],
+   "expected_result": "排序稳定，无乱序。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "是否展示在热门赛事字段控制",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造两场比赛，一场“是否展示在热门赛事”为是，另一场为否。",
+   "preconditions": "已登录，存在上述数据，且运营后台已配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门比赛Tab",
+     "expected": "仅展示“是否展示在热门赛事”为是的比赛"
+    }
+   ],
+   "expected_result": "热门比赛列表只包含配置为展示的比赛。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "是否展示在热门赛事字段为否时不展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场“是否展示在热门赛事”为否的比赛。",
+   "preconditions": "已登录，存在该比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门比赛Tab",
+     "expected": "该比赛不显示在热门比赛列表中"
+    }
+   ],
+   "expected_result": "该比赛被过滤。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "进行中的比赛列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页-进行中的比赛_热门比赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "无进行中的比赛数据。",
+   "preconditions": "已登录，无进行中的比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入进行中的比赛Tab",
+     "expected": "显示空态提示，如“暂无进行中的比赛”"
+    }
+   ],
+   "expected_result": "空态提示正确显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "热门赛事列表正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含进行中和未开始比赛的数据，联赛名称、轮次、球队名称、LOGO、比分、时间等字段完整，且存在视频/动画、LIVE标识。",
+   "preconditions": "已登录，热门赛事接口返回正常数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击热门赛事Tab",
+     "expected": "页面展示热门赛事列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表内容",
+     "expected": "列表展示联赛名称、轮次、球队名称、LOGO、比分、时间、状态标识等元素，且数据与接口返回一致"
+    }
+   ],
+   "expected_result": "热门赛事列表正常展示，所有字段正确显示，无缺失或错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "热门赛事列表为空时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回空列表，无任何比赛数据。",
+   "preconditions": "已登录，热门赛事接口返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击热门赛事Tab",
+     "expected": "页面展示空态提示，如“暂无热门赛事”"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现空白或异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "banner正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "运营配置了banner，banner图片和跳转链接有效。",
+   "preconditions": "已登录，banner接口返回有效数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面顶部展示banner"
+    },
+    {
+     "step": 2,
+     "desc": "点击banner",
+     "expected": "跳转到对应链接页面"
+    }
+   ],
+   "expected_result": "banner正常展示，点击可跳转。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "banner为空时不展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营未配置banner，banner接口返回空。",
+   "preconditions": "已登录，banner接口返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面顶部不展示banner，且布局正常"
+    }
+   ],
+   "expected_result": "banner区域隐藏，页面布局无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "展位正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "运营配置了展位，展位内容为图片或文字。",
+   "preconditions": "已登录，展位接口返回有效数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面展示展位内容"
+    }
+   ],
+   "expected_result": "展位正常展示，内容正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "展位为空时不展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营未配置展位，展位接口返回空。",
+   "preconditions": "已登录，展位接口返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面不展示展位，且布局正常"
+    }
+   ],
+   "expected_result": "展位区域隐藏，页面布局无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "比分正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行中，主队1分客队0分，接口返回比分1:0。",
+   "preconditions": "已登录，热门赛事接口返回进行中比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表展示比分1:0"
+    }
+   ],
+   "expected_result": "比分正确显示，与接口数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "比分缺失时显示默认值",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回的比分字段为空或缺失。",
+   "preconditions": "已登录，热门赛事接口返回比分缺失的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "比分位置显示默认值，如“-”或“0:0”，不显示异常"
+    }
+   ],
+   "expected_result": "比分显示默认值，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "联赛名称和轮次正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为“英超”，轮次为“第10轮”，接口返回完整数据。",
+   "preconditions": "已登录，热门赛事接口返回联赛信息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表展示联赛名称“英超”和轮次“第10轮”"
+    }
+   ],
+   "expected_result": "联赛名称和轮次正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "联赛名称过长时截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称超过显示宽度，如“联赛名称联赛名称联赛名称联赛名称”。",
+   "preconditions": "已登录，热门赛事接口返回超长联赛名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "联赛名称截断显示，以省略号结尾，不换行"
+    }
+   ],
+   "expected_result": "联赛名称截断显示，布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "球队名称和LOGO正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "主队名称为“曼城”，客队名称为“利物浦”，LOGO图片有效。",
+   "preconditions": "已登录，热门赛事接口返回球队信息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表展示主客队名称和LOGO"
+    }
+   ],
+   "expected_result": "球队名称和LOGO正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "球队名称过长时截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队名称超过显示宽度，如“主场球队名称主场球队名称主场球队…”。",
+   "preconditions": "已登录，热门赛事接口返回超长球队名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "球队名称截断显示，以省略号结尾，不换行"
+    }
+   ],
+   "expected_result": "球队名称截断显示，布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "LOGO加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "LOGO图片URL无效或网络异常，导致加载失败。",
+   "preconditions": "已登录，热门赛事接口返回LOGO但图片加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "LOGO位置显示默认占位图，不显示裂图"
+    }
+   ],
+   "expected_result": "LOGO显示占位图，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "视频/动画标识正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有视频流或动画，接口返回标识。",
+   "preconditions": "已登录，热门赛事接口返回有视频/动画的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表展示视频/动画标识"
+    }
+   ],
+   "expected_result": "视频/动画标识正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "无视频/动画时不显示标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛无视频流和动画，接口未返回标识。",
+   "preconditions": "已登录，热门赛事接口返回无视频/动画的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表不展示视频/动画标识"
+    }
+   ],
+   "expected_result": "视频/动画标识不显示，布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "LIVE标识正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛状态为进行中，接口返回LIVE标识。",
+   "preconditions": "已登录，热门赛事接口返回进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表展示LIVE标识"
+    }
+   ],
+   "expected_result": "LIVE标识正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "非进行中比赛不显示LIVE标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛状态为未开始或已结束，接口未返回LIVE标识。",
+   "preconditions": "已登录，热门赛事接口返回非进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表不展示LIVE标识"
+    }
+   ],
+   "expected_result": "LIVE标识不显示，布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "比赛时间正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间为17:00，接口返回时间字段。",
+   "preconditions": "已登录，热门赛事接口返回比赛时间",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表展示比赛时间17:00"
+    }
+   ],
+   "expected_result": "比赛时间正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "比赛时间缺失时显示默认值",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "首页/热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回的比赛时间字段为空或缺失。",
+   "preconditions": "已登录，热门赛事接口返回时间缺失的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "时间位置显示默认值，如“--:--”，不显示异常"
+    }
+   ],
+   "expected_result": "比赛时间显示默认值，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "热门赛事-联赛列表正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含3个联赛的赛事数据，联赛名称分别为'英超'、'西甲'、'德甲'，每个联赛下有2场比赛，其中1场进行中、1场未开始",
+   "preconditions": "已登录，热门赛事页面有数据返回",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面加载完成，显示联赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛列表",
+     "expected": "联赛名称、LOGO正确显示，联赛顺序符合排序规则"
+    }
+   ],
+   "expected_result": "联赛列表展示完整，联赛名称与LOGO正确，排序符合规则",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "热门赛事-联赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回空联赛列表（无任何联赛数据）",
+   "preconditions": "热门赛事接口返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面显示'暂无联赛'或类似空态提示，不出现崩溃或空白"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "热门赛事-主播头像正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造有主播头像的进行中比赛数据，主播头像URL有效",
+   "preconditions": "热门赛事列表中存在带主播的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "进行中比赛旁显示主播头像，头像加载成功"
+    }
+   ],
+   "expected_result": "主播头像正常显示，无裂图",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "热门赛事-主播头像加载失败显示占位图",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "主播头像URL无效或网络异常导致加载失败",
+   "preconditions": "主播头像资源不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "头像位置显示默认占位图，不显示裂图图标"
+    }
+   ],
+   "expected_result": "显示默认头像占位图，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "热门赛事-更多赛事入口跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'更多赛事'按钮",
+   "preconditions": "热门赛事页面已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'更多赛事'",
+     "expected": "跳转到全部赛事页面或赛程表页面，页面正确加载"
+    }
+   ],
+   "expected_result": "成功跳转至目标页面，无404",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "热门赛事-更多赛事入口在无数据时不可用",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门赛事列表为空时，观察'更多赛事'按钮状态",
+   "preconditions": "热门赛事无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面（空数据）",
+     "expected": "'更多赛事'按钮置灰或隐藏，点击无响应"
+    }
+   ],
+   "expected_result": "按钮不可点击或隐藏，无跳转",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "热门赛事-icon正确展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含视频流、动画、LIVE标识的比赛数据",
+   "preconditions": "热门赛事列表包含多种类型的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "比赛卡片上正确显示对应icon（视频/动画/LIVE等）"
+    }
+   ],
+   "expected_result": "icon显示正确，与比赛状态匹配",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "热门赛事-icon缺失时无异常",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回的比赛数据缺少icon字段",
+   "preconditions": "接口返回数据中icon字段为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面正常显示，不显示icon或显示默认图标，无报错"
+    }
+   ],
+   "expected_result": "页面无异常，icon位置留空或显示默认",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-180"
+  },
+  {
+   "title": "热门赛事-预测入口跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户点击'预测'入口",
+   "preconditions": "用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'预测'入口",
+     "expected": "跳转到预测页面，页面正常加载"
+    }
+   ],
+   "expected_result": "成功跳转至预测页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-181"
+  },
+  {
+   "title": "热门赛事-未登录点击预测入口跳转登录",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户点击'预测'入口",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'预测'入口",
+     "expected": "跳转到登录页面，或弹出登录提示"
+    }
+   ],
+   "expected_result": "未登录用户被引导至登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-182"
+  },
+  {
+   "title": "热门赛事-资讯入口跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'资讯'入口",
+   "preconditions": "热门赛事页面已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'资讯'入口",
+     "expected": "跳转到资讯列表页面，页面正常加载"
+    }
+   ],
+   "expected_result": "成功跳转至资讯页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-183"
+  },
+  {
+   "title": "热门赛事-资讯入口无数据时展示空态",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯接口返回空列表",
+   "preconditions": "资讯列表无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'资讯'入口",
+     "expected": "资讯页面显示'暂无资讯'空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-184"
+  },
+  {
+   "title": "热门赛事-我的入口跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户点击'我的'入口",
+   "preconditions": "用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'我的'入口",
+     "expected": "跳转到个人中心页面，页面正常加载"
+    }
+   ],
+   "expected_result": "成功跳转至个人中心",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-185"
+  },
+  {
+   "title": "热门赛事-未登录点击我的跳转登录",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户点击'我的'入口",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'我的'入口",
+     "expected": "跳转到登录页面，或弹出登录提示"
+    }
+   ],
+   "expected_result": "未登录用户被引导至登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-186"
+  },
+  {
+   "title": "热门赛事-分页加载正常加载更多",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "第一页返回10条数据，第二页返回5条数据，共15条",
+   "preconditions": "热门赛事接口支持分页，总数据量超过一页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，滚动到底部",
+     "expected": "触发加载更多，显示loading，加载完成后追加显示第二页数据"
+    }
+   ],
+   "expected_result": "第二页数据成功加载并追加显示，无重复数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-187"
+  },
+  {
+   "title": "热门赛事-分页加载最后一页无更多数据",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "总数据量正好等于一页（如10条），第二页无数据",
+   "preconditions": "热门赛事数据只有一页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，滚动到底部",
+     "expected": "不触发加载更多，或提示'没有更多了'，无loading"
+    }
+   ],
+   "expected_result": "无更多数据提示，不重复请求",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-188"
+  },
+  {
+   "title": "热门赛事-分页加载失败提示重试",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "第二页请求时网络异常或接口返回500",
+   "preconditions": "第一页加载成功，第二页请求失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "滚动到底部触发加载更多",
+     "expected": "显示加载失败提示（如'加载失败，点击重试'），点击重试可重新加载"
+    }
+   ],
+   "expected_result": "加载失败有提示，重试可恢复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-189"
+  },
+  {
+   "title": "热门赛事-首次加载显示loading",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟网络延迟，首次进入页面",
+   "preconditions": "网络较慢，接口未返回",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面显示loading动画，数据加载完成后loading消失"
+    }
+   ],
+   "expected_result": "loading正常显示和消失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-190"
+  },
+  {
+   "title": "热门赛事-加载超时提示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "接口响应超时（如超过10秒）",
+   "preconditions": "网络异常导致接口超时",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "loading消失，显示超时提示（如'加载超时，请重试'）"
+    }
+   ],
+   "expected_result": "有超时提示，可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-191"
+  },
+  {
+   "title": "热门赛事-全部赛事入口跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'全部赛事'入口",
+   "preconditions": "热门赛事页面已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'全部赛事'",
+     "expected": "跳转到全部赛事列表页面，页面正常加载"
+    }
+   ],
+   "expected_result": "成功跳转至全部赛事页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-192"
+  },
+  {
+   "title": "热门赛事-全部赛事入口在无数据时不可用",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门赛事无数据时，观察'全部赛事'按钮状态",
+   "preconditions": "热门赛事无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面（空数据）",
+     "expected": "'全部赛事'按钮置灰或隐藏，点击无响应"
+    }
+   ],
+   "expected_result": "按钮不可点击或隐藏，无跳转",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-193"
+  },
+  {
+   "title": "热门赛事-赛程表入口跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'赛程表'入口",
+   "preconditions": "热门赛事页面已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'赛程表'",
+     "expected": "跳转到赛程表页面，页面正常加载"
+    }
+   ],
+   "expected_result": "成功跳转至赛程表页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-194"
+  },
+  {
+   "title": "热门赛事-赛程表入口在无数据时不可用",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门赛事无数据时，观察'赛程表'按钮状态",
+   "preconditions": "热门赛事无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面（空数据）",
+     "expected": "'赛程表'按钮置灰或隐藏，点击无响应"
+    }
+   ],
+   "expected_result": "按钮不可点击或隐藏，无跳转",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-195"
+  },
+  {
+   "title": "热门赛事-进行中分组排序规则验证",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造5场进行中比赛：A有obs视频流，B为热门球队，C有视频流，D有动画，E无特殊属性；开始时间依次为A最早、E最晚",
+   "preconditions": "热门赛事列表包含多种属性的进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，查看进行中分组",
+     "expected": "排序为：A（obs视频流）>B（热门球队）>C（视频流）>D（动画）>E（开始时间）"
+    }
+   ],
+   "expected_result": "进行中分组按规则排序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-196"
+  },
+  {
+   "title": "热门赛事-未开始分组按开始时间排序",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "构造3场未开始比赛，开始时间分别为10:00、12:00、14:00",
+   "preconditions": "热门赛事列表包含多场未开始比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，查看未开始分组",
+     "expected": "排序为：10:00、12:00、14:00（按开始时间升序）"
+    }
+   ],
+   "expected_result": "未开始分组按开始时间升序排列",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-197"
+  },
+  {
+   "title": "热门赛事-排序规则中无特殊属性比赛按开始时间排序",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造2场进行中比赛，均无特殊属性，开始时间分别为15:00和16:00",
+   "preconditions": "热门赛事列表包含无特殊属性的进行中比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，查看进行中分组",
+     "expected": "排序为：15:00的比赛在前，16:00在后（按开始时间升序）"
+    }
+   ],
+   "expected_result": "无特殊属性比赛按开始时间排序",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-198"
+  },
+  {
+   "title": "热门赛事-排序规则中热门球队优先级高于视频流",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造2场进行中比赛：A为热门球队但无视频流，B有视频流但非热门球队",
+   "preconditions": "热门赛事列表包含热门球队和视频流比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，查看进行中分组",
+     "expected": "A排在B前面（热门球队优先级高于视频流）"
+    }
+   ],
+   "expected_result": "热门球队比赛优先展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-199"
+  },
+  {
+   "title": "热门赛事列表展示说明信息",
+   "priority": "P0",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在至少一场配置为「展示在热门赛事」且状态为「进行中」的比赛，该比赛关联的联赛名称、轮次、球队名称、比分、比赛时间、视频/动画标识、LIVE标识、观看人数等说明字段均有值。",
+   "preconditions": "已登录用户，热门赛事页面有数据，且存在符合展示条件的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入首页，点击「热门赛事」入口",
+     "expected": "成功进入热门赛事页面"
+    },
+    {
+     "step": 2,
+     "desc": "观察比赛列表项",
+     "expected": "每个比赛项展示：联赛名称、轮次、球队LOGO、主客队名称、比赛时间、比分、视频/动画标识、LIVE标识、观看人数等说明信息，且信息完整无缺失"
+    }
+   ],
+   "expected_result": "热门赛事列表正确展示所有配置为「展示在热门赛事」的比赛，且每场比赛的说明信息（联赛、球队、时间、比分、视频/动画、LIVE、观看人数）完整显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-200"
+  },
+  {
+   "title": "热门赛事列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未配置任何「展示在热门赛事」的比赛，或当前无进行中/未开始的比赛。",
+   "preconditions": "热门赛事页面无任何可展示的比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面展示空态提示，如「暂无赛事」，且无报错"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现崩溃或异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-201"
+  },
+  {
+   "title": "热门赛事展示范围-仅展示配置为展示的比赛",
+   "priority": "P0",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台配置：比赛A「展示在热门赛事」=是，比赛B=否；比赛A和B均为进行中状态。",
+   "preconditions": "存在比赛A（展示=是）和比赛B（展示=否），且均为进行中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "列表仅展示比赛A，不展示比赛B"
+    }
+   ],
+   "expected_result": "热门赛事列表只展示「展示在热门赛事」为「是」的比赛，不展示为「否」的比赛。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-202"
+  },
+  {
+   "title": "热门赛事展示范围-未配置展示标志的比赛不展示",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未对某场比赛设置「展示在热门赛事」字段（即字段为空或未配置）。",
+   "preconditions": "存在一场比赛，其「展示在热门赛事」字段未配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "该比赛不展示在热门赛事列表中"
+    }
+   ],
+   "expected_result": "未配置展示标志的比赛不展示在热门赛事列表。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-203"
+  },
+  {
+   "title": "热门赛事排序-进行中分组按优先级排序",
+   "priority": "P0",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造5场进行中比赛，分别满足：A有obs视频流、B为热门球队、C有普通视频流、D有动画、E仅按开始时间。",
+   "preconditions": "存在上述5场进行中比赛，且均配置为展示在热门赛事。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，查看进行中分组",
+     "expected": "比赛顺序为：A、B、C、D、E"
+    }
+   ],
+   "expected_result": "进行中分组按 obs视频流 > 热门球队 > 存在视频流 > 存在动画 > 比赛开始时间 的优先级排序。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-204"
+  },
+  {
+   "title": "热门赛事排序-进行中分组同优先级按开始时间",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "两场进行中比赛均无视频流、非热门球队、无动画，开始时间分别为17:00和18:00。",
+   "preconditions": "存在两场进行中比赛，均无视频流、非热门球队、无动画。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，查看进行中分组",
+     "expected": "开始时间早的（17:00）排在前面"
+    }
+   ],
+   "expected_result": "同优先级下按比赛开始时间升序排列。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-205"
+  },
+  {
+   "title": "热门赛事排序-未开始分组按开始时间排序",
+   "priority": "P0",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "三场未开始比赛，开始时间分别为20:00、21:00、19:00。",
+   "preconditions": "存在三场未开始比赛，均配置为展示在热门赛事。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，查看未开始分组",
+     "expected": "比赛顺序为：19:00、20:00、21:00"
+    }
+   ],
+   "expected_result": "未开始分组按比赛开始时间升序排列。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-206"
+  },
+  {
+   "title": "热门赛事排序-未开始分组开始时间相同",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "两场未开始比赛开始时间相同（均为20:00），但联赛名称不同。",
+   "preconditions": "存在两场未开始比赛，开始时间相同。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，查看未开始分组",
+     "expected": "两场比赛均展示，顺序稳定（如按联赛名称或ID排序），无乱序"
+    }
+   ],
+   "expected_result": "开始时间相同时，排序稳定，不出现随机或错误顺序。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-207"
+  },
+  {
+   "title": "热门赛事-进行中分组包含未开始比赛时分组正确",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "同时存在进行中和未开始的比赛，且均配置为展示。",
+   "preconditions": "热门赛事页面同时有进行中和未开始的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "页面按「进行中」和「未开始」分组展示，进行中在前，未开始在后"
+    }
+   ],
+   "expected_result": "热门赛事列表正确分组，进行中比赛在前，未开始比赛在后，且各组内排序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-208"
+  },
+  {
+   "title": "热门赛事-进行中分组包含已结束比赛时不展示",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "存在一场已结束的比赛，但配置为展示在热门赛事。",
+   "preconditions": "存在已结束比赛且配置为展示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面",
+     "expected": "已结束的比赛不展示在热门赛事列表中"
+    }
+   ],
+   "expected_result": "已结束的比赛不展示在热门赛事列表，仅展示进行中和未开始的比赛。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-209"
+  },
+  {
+   "title": "热门赛事-分页加载更多赛事",
+   "priority": "P0",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门赛事列表超过一页（如每页10条，共25条比赛）。",
+   "preconditions": "热门赛事列表数据超过一页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，向下滑动到底部",
+     "expected": "触发分页加载，显示loading，加载下一页数据"
+    },
+    {
+     "step": 2,
+     "desc": "等待加载完成",
+     "expected": "新数据追加到列表底部，无重复数据"
+    }
+   ],
+   "expected_result": "分页加载正常，数据无重复，加载完成后loading消失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-210"
+  },
+  {
+   "title": "热门赛事-分页加载无更多数据时提示",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "热门赛事列表只有一页数据（如10条），已全部展示。",
+   "preconditions": "热门赛事列表数据不足一页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门赛事页面，滑动到底部",
+     "expected": "无更多数据提示，如「没有更多了」，且不再发起加载请求"
+    }
+   ],
+   "expected_result": "无更多数据时给出提示，不重复加载。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-211"
+  },
+  {
+   "title": "热门赛事-点击比赛进入详情",
+   "priority": "P0",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门赛事列表中有一场进行中的比赛。",
+   "preconditions": "热门赛事列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某场比赛卡片",
+     "expected": "跳转到该场比赛的详情页或直播页"
+    }
+   ],
+   "expected_result": "点击比赛卡片后正确跳转到对应比赛详情/直播页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-212"
+  },
+  {
+   "title": "热门赛事-点击比赛无响应时提示",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门赛事列表中的比赛数据异常（如比赛ID无效）。",
+   "preconditions": "存在异常比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击异常比赛卡片",
+     "expected": "页面提示「比赛不存在或已下架」，且不跳转"
+    }
+   ],
+   "expected_result": "点击异常比赛时给出明确提示，不跳转或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-213"
+  },
+  {
+   "title": "热门赛事-未登录用户可查看列表",
+   "priority": "P0",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "未登录用户访问热门赛事页面。",
+   "preconditions": "用户未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "未登录状态下进入热门赛事页面",
+     "expected": "正常展示热门赛事列表，无登录拦截"
+    }
+   ],
+   "expected_result": "未登录用户可正常浏览热门赛事列表。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-214"
+  },
+  {
+   "title": "热门赛事-网络异常时加载失败提示",
+   "priority": "P1",
+   "domain": "用户端/首页/热门赛事",
+   "module": "热门赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟断网或服务器返回500错误。",
+   "preconditions": "网络不可用或服务端异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "断网状态下进入热门赛事页面",
+     "expected": "页面显示加载失败提示，如「网络异常，请稍后重试」，并提供重试按钮"
+    }
+   ],
+   "expected_result": "网络异常时给出明确提示，点击重试可恢复。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-215"
+  },
+  {
+   "title": "广告列表正常加载并展示",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟后台已配置3个广告位（横幅广告、贴片广告、中场广告），广告状态均为启用",
+   "preconditions": "用户已登录，网络正常，后台已配置有效广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面加载成功，显示广告列表区域"
+    },
+    {
+     "step": 2,
+     "desc": "观察广告列表展示",
+     "expected": "广告列表按配置顺序展示横幅广告、贴片广告、中场广告，广告图片/文案正确，无加载失败"
+    }
+   ],
+   "expected_result": "广告列表正确展示所有已配置的启用广告，广告内容与后台配置一致，无异常报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-216"
+  },
+  {
+   "title": "广告列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何广告或所有广告已下架",
+   "preconditions": "用户已登录，后台无有效广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面显示空态提示，如「暂无广告」"
+    }
+   ],
+   "expected_result": "页面展示空态提示，不出现空白或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-217"
+  },
+  {
+   "title": "TAB默认选中第一个并展示对应内容",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "TAB列表包含：指数、赛程、赛况、数据、阵容、预测、Picks，默认选中第一个TAB（指数）",
+   "preconditions": "用户已登录，进入广告页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面显示TAB栏，第一个TAB（指数）处于选中状态"
+    },
+    {
+     "step": 2,
+     "desc": "查看默认内容区域",
+     "expected": "内容区域展示指数相关数据，与TAB匹配"
+    }
+   ],
+   "expected_result": "默认选中第一个TAB，内容区域正确展示对应内容",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-218"
+  },
+  {
+   "title": "点击TAB切换内容",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「赛程」TAB，该比赛有赛程数据",
+   "preconditions": "用户已登录，进入广告页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛程」TAB",
+     "expected": "TAB选中状态切换至「赛程」，内容区域加载并展示赛程信息"
+    }
+   ],
+   "expected_result": "TAB切换成功，内容区域展示对应赛程数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-219"
+  },
+  {
+   "title": "点击无数据的TAB展示空态",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击「阵容」TAB，但该比赛暂无阵容数据",
+   "preconditions": "用户已登录，进入广告页面，该比赛无阵容数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「阵容」TAB",
+     "expected": "内容区域展示空态提示，如「暂无阵容数据」"
+    }
+   ],
+   "expected_result": "内容区域显示空态提示，不出现加载失败或白屏",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-220"
+  },
+  {
+   "title": "贴片广告正常展示",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行中，后台配置了中场广告，广告时长为15秒",
+   "preconditions": "用户已登录，进入直播页面，比赛进行中且配置了中场广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入直播页面，触发中场广告",
+     "expected": "页面展示贴片广告，显示「AD | 15s」倒计时，广告内容正确"
+    }
+   ],
+   "expected_result": "贴片广告正常展示，倒计时准确，广告内容与配置一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-221"
+  },
+  {
+   "title": "非管理员不显示贴片广告关闭按钮",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "普通用户登录，观看中场广告",
+   "preconditions": "普通用户已登录，进入直播页面，中场广告正在播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察贴片广告界面",
+     "expected": "广告上不显示关闭按钮（CLOSE）"
+    }
+   ],
+   "expected_result": "普通用户看不到关闭按钮，无法关闭广告",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-222"
+  },
+  {
+   "title": "管理员关闭贴片广告需确认",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "管理员账号登录，观看中场广告",
+   "preconditions": "管理员已登录，进入直播页面，中场广告正在播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮（CLOSE）",
+     "expected": "弹出确认弹窗，显示「关闭中场广告确认弹窗」，包含「取消」和「确定」按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」",
+     "expected": "弹窗关闭，广告停止播放，重新拉取比赛直播流"
+    }
+   ],
+   "expected_result": "关闭操作需确认，确认后广告停止并重新拉流",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-223"
+  },
+  {
+   "title": "管理员取消关闭贴片广告",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "管理员点击关闭后，在弹窗中点击「取消」",
+   "preconditions": "管理员已登录，进入直播页面，中场广告正在播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮（CLOSE）",
+     "expected": "弹出确认弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」",
+     "expected": "弹窗关闭，广告继续播放，不重新拉流"
+    }
+   ],
+   "expected_result": "取消后广告继续播放，无其他影响",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-224"
+  },
+  {
+   "title": "分享功能正常分享",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "分享当前比赛页面，选择微信渠道",
+   "preconditions": "用户已登录，进入广告页面，有可分享内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分享按钮",
+     "expected": "弹出分享渠道列表（如微信、微博等）"
+    },
+    {
+     "step": 2,
+     "desc": "选择微信渠道",
+     "expected": "调起微信分享，分享成功后提示「分享成功」"
+    }
+   ],
+   "expected_result": "分享成功，分享内容正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-225"
+  },
+  {
+   "title": "分享失败提示",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或分享渠道不可用",
+   "preconditions": "用户已登录，进入广告页面，网络异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分享按钮",
+     "expected": "弹出分享渠道列表"
+    },
+    {
+     "step": 2,
+     "desc": "选择分享渠道",
+     "expected": "提示「分享失败，请重试」"
+    }
+   ],
+   "expected_result": "分享失败时给出明确提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-226"
+  },
+  {
+   "title": "聊天功能正常发送消息",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户输入合法聊天内容「加油」，点击发送",
+   "preconditions": "用户已登录，进入广告页面，聊天功能可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在聊天输入框输入「加油」",
+     "expected": "输入框正常显示输入内容"
+    },
+    {
+     "step": 2,
+     "desc": "点击发送按钮",
+     "expected": "消息发送成功，聊天区域显示该消息"
+    }
+   ],
+   "expected_result": "消息发送成功，聊天记录更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-227"
+  },
+  {
+   "title": "未登录用户发送聊天消息被拦截",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户尝试发送聊天消息",
+   "preconditions": "用户未登录，进入广告页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在聊天输入框输入内容",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 2,
+     "desc": "点击发送按钮",
+     "expected": "提示「请先登录」并跳转登录页"
+    }
+   ],
+   "expected_result": "未登录用户无法发送消息，被引导登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-228"
+  },
+  {
+   "title": "指数TAB正常展示指数数据",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有指数数据（如亚盘、欧赔）",
+   "preconditions": "用户已登录，进入广告页面，比赛有指数数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「指数」TAB",
+     "expected": "内容区域展示指数数据，如赔率、盘口等"
+    }
+   ],
+   "expected_result": "指数数据正确展示，格式清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-229"
+  },
+  {
+   "title": "指数数据加载失败提示",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟指数接口异常",
+   "preconditions": "用户已登录，进入广告页面，指数接口异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「指数」TAB",
+     "expected": "内容区域显示加载失败提示，如「加载失败，请重试」"
+    }
+   ],
+   "expected_result": "加载失败时给出明确提示，不白屏",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-230"
+  },
+  {
+   "title": "赛程TAB正常展示赛程信息",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有赛程数据，包含时间、对阵、状态",
+   "preconditions": "用户已登录，进入广告页面，比赛有赛程数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛程」TAB",
+     "expected": "内容区域展示赛程信息，如比赛时间、对阵双方、比赛状态"
+    }
+   ],
+   "expected_result": "赛程信息正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-231"
+  },
+  {
+   "title": "赛程数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛无赛程数据",
+   "preconditions": "用户已登录，进入广告页面，比赛无赛程数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛程」TAB",
+     "expected": "内容区域显示「暂无赛程数据」"
+    }
+   ],
+   "expected_result": "空态提示正确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-232"
+  },
+  {
+   "title": "赛况TAB正常展示实时赛况",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行中，有实时比分和事件",
+   "preconditions": "用户已登录，进入广告页面，比赛进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛况」TAB",
+     "expected": "内容区域展示实时比分、比赛事件（如进球、红黄牌）"
+    }
+   ],
+   "expected_result": "赛况数据实时更新，展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-233"
+  },
+  {
+   "title": "赛况数据无更新时展示提示",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛未开始，无赛况数据",
+   "preconditions": "用户已登录，进入广告页面，比赛未开始",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛况」TAB",
+     "expected": "内容区域显示「暂无赛况数据」或比赛未开始提示"
+    }
+   ],
+   "expected_result": "无赛况数据时给出提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-234"
+  },
+  {
+   "title": "数据TAB正常展示统计数据",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有统计数据（如控球率、射门次数）",
+   "preconditions": "用户已登录，进入广告页面，比赛有统计数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「数据」TAB",
+     "expected": "内容区域展示统计数据，如控球率、射门、角球等"
+    }
+   ],
+   "expected_result": "统计数据正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-235"
+  },
+  {
+   "title": "统计数据加载失败提示",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟统计数据接口异常",
+   "preconditions": "用户已登录，进入广告页面，统计数据接口异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「数据」TAB",
+     "expected": "内容区域显示「加载失败，请重试」"
+    }
+   ],
+   "expected_result": "加载失败提示明确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-236"
+  },
+  {
+   "title": "阵容TAB正常展示阵容",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有阵容数据（首发、替补）",
+   "preconditions": "用户已登录，进入广告页面，比赛有阵容数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「阵容」TAB",
+     "expected": "内容区域展示双方阵容，包括首发和替补球员"
+    }
+   ],
+   "expected_result": "阵容数据正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-237"
+  },
+  {
+   "title": "阵容数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛无阵容数据",
+   "preconditions": "用户已登录，进入广告页面，比赛无阵容数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「阵容」TAB",
+     "expected": "内容区域显示「暂无阵容数据」"
+    }
+   ],
+   "expected_result": "空态提示正确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-238"
+  },
+  {
+   "title": "预测TAB正常展示预测信息",
+   "priority": "P0",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有预测数据（如预测结果、预测人数）",
+   "preconditions": "用户已登录，进入广告页面，比赛有预测数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「预测」TAB",
+     "expected": "内容区域展示预测信息，如预测结果、预测人数"
+    }
+   ],
+   "expected_result": "预测信息正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-239"
+  },
+  {
+   "title": "预测数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛无预测数据",
+   "preconditions": "用户已登录，进入广告页面，比赛无预测数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「预测」TAB",
+     "expected": "内容区域显示「暂无预测数据」"
+    }
+   ],
+   "expected_result": "空态提示正确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-240"
+  },
+  {
+   "title": "Picks 列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在已配置的 Picks 数据（如 3 条预测推荐），用于验证列表展示",
+   "preconditions": "已登录用户，进入广告页面，后台已配置 Picks 数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面正常加载，显示 Picks 列表区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看 Picks 列表",
+     "expected": "列表展示所有已配置的 Picks 数据，每条包含标题、内容等关键信息，无乱码"
+    }
+   ],
+   "expected_result": "Picks 列表正常展示，数据完整，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-241"
+  },
+  {
+   "title": "Picks 列表空数据展示",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何 Picks 数据，验证空态展示",
+   "preconditions": "已登录用户，进入广告页面，后台无 Picks 数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面正常加载，Picks 列表区域显示空态提示（如“暂无数据”）"
+    }
+   ],
+   "expected_result": "Picks 列表显示空态提示，无报错，不展示空白区域",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-242"
+  },
+  {
+   "title": "横幅广告无数据展示",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置横幅广告，验证无广告时的占位处理",
+   "preconditions": "已登录用户，进入广告页面，后台无横幅广告配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面正常加载，横幅广告区域不显示或显示默认占位图，无报错"
+    }
+   ],
+   "expected_result": "横幅广告区域无广告时不显示空白或显示占位图，不影响其他功能",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-243"
+  },
+  {
+   "title": "CLOSE 按钮对普通用户不可见",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "普通用户登录，验证 CLOSE 按钮不可见",
+   "preconditions": "普通用户已登录，进入广告页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面正常加载，不显示 CLOSE 按钮"
+    }
+   ],
+   "expected_result": "普通用户看不到 CLOSE 按钮，无权限提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-244"
+  },
+  {
+   "title": "CLOSE 按钮对管理员可见并可点击",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "管理员登录，验证 CLOSE 按钮可见并可点击",
+   "preconditions": "管理员已登录，进入广告页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面正常加载，显示 CLOSE 按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击 CLOSE 按钮",
+     "expected": "弹出确认弹窗，弹窗包含“取消”和“确定”按钮"
+    }
+   ],
+   "expected_result": "管理员可看到 CLOSE 按钮，点击后弹出确认弹窗",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-245"
+  },
+  {
+   "title": "AD | 15s 倒计时正常显示并自动关闭",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "广告播放时显示 15s 倒计时，验证倒计时结束自动关闭",
+   "preconditions": "已登录用户，进入广告页面，广告开始播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察广告播放",
+     "expected": "广告区域显示“AD | 15s”倒计时，数字从 15 递减"
+    },
+    {
+     "step": 2,
+     "desc": "等待倒计时结束",
+     "expected": "倒计时归零后，广告自动关闭，恢复直播流或页面内容"
+    }
+   ],
+   "expected_result": "倒计时正常递减，结束后广告自动关闭，无卡顿",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-246"
+  },
+  {
+   "title": "AD | 15s 倒计时显示异常",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟倒计时显示异常（如时间跳变），验证容错",
+   "preconditions": "已登录用户，进入广告页面，广告开始播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察倒计时显示",
+     "expected": "倒计时正常递减，无跳变或卡顿"
+    }
+   ],
+   "expected_result": "倒计时显示稳定，无异常跳变，广告正常播放",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-247"
+  },
+  {
+   "title": "中场广告在比赛进行到中场时展示",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛状态为“中场休息”，验证中场广告展示",
+   "preconditions": "已登录用户，进入比赛直播页面，比赛进入中场休息状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入比赛直播页面",
+     "expected": "页面正常加载，直播流播放"
+    },
+    {
+     "step": 2,
+     "desc": "等待比赛进入中场休息",
+     "expected": "中场广告自动播放，显示广告内容"
+    }
+   ],
+   "expected_result": "中场广告在比赛进入中场时自动展示，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-248"
+  },
+  {
+   "title": "中场广告在非中场时间不展示",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "比赛状态为“进行中”但非中场，验证不展示中场广告",
+   "preconditions": "已登录用户，进入比赛直播页面，比赛处于上半场或下半场",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入比赛直播页面",
+     "expected": "页面正常加载，直播流播放，不显示中场广告"
+    }
+   ],
+   "expected_result": "非中场时间不展示中场广告，直播流正常播放",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-249"
+  },
+  {
+   "title": "LO 按钮点击切换声音状态",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "广告播放时点击 LO 按钮，验证声音关闭",
+   "preconditions": "已登录用户，进入广告页面，广告播放中且有声音",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 LO 按钮",
+     "expected": "广告声音关闭，按钮状态变为静音图标"
+    },
+    {
+     "step": 2,
+     "desc": "再次点击 LO 按钮",
+     "expected": "广告声音恢复，按钮状态变为正常图标"
+    }
+   ],
+   "expected_result": "LO 按钮可正常切换声音开/关状态",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-250"
+  },
+  {
+   "title": "LO 按钮在无声音时不可用",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "广告为静音广告，验证 LO 按钮状态",
+   "preconditions": "已登录用户，进入广告页面，广告为静音广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察 LO 按钮",
+     "expected": "LO 按钮置灰或不可点击，提示无声音"
+    }
+   ],
+   "expected_result": "无声音时 LO 按钮不可操作，避免误操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-251"
+  },
+  {
+   "title": "GO 按钮点击开始播放广告",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "广告暂停时点击 GO 按钮，验证恢复播放",
+   "preconditions": "已登录用户，进入广告页面，广告处于暂停状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 GO 按钮",
+     "expected": "广告恢复播放，按钮状态变为暂停图标"
+    }
+   ],
+   "expected_result": "GO 按钮可正常恢复广告播放",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-252"
+  },
+  {
+   "title": "GO 按钮在广告播放时不可用",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "广告播放中，验证 GO 按钮状态",
+   "preconditions": "已登录用户，进入广告页面，广告播放中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察 GO 按钮",
+     "expected": "GO 按钮置灰或不可点击，避免重复操作"
+    }
+   ],
+   "expected_result": "广告播放中 GO 按钮不可操作，防止误触",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-253"
+  },
+  {
+   "title": "声音控制默认开启",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "首次进入广告页面，验证声音默认开启",
+   "preconditions": "已登录用户，首次进入广告页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "广告播放时声音开启，声音图标为开启状态"
+    }
+   ],
+   "expected_result": "声音默认开启，广告播放有声音",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-254"
+  },
+  {
+   "title": "声音控制关闭后广告静音",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "关闭声音后播放广告，验证静音",
+   "preconditions": "已登录用户，进入广告页面，已关闭声音",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "播放广告",
+     "expected": "广告播放但无声音，声音图标为关闭状态"
+    }
+   ],
+   "expected_result": "声音关闭后广告静音播放，无声音输出",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-255"
+  },
+  {
+   "title": "功能点列表正常展示",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "广告页面存在功能点列表，验证展示",
+   "preconditions": "已登录用户，进入广告页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面正常加载，功能点列表展示完整，无缺失"
+    }
+   ],
+   "expected_result": "功能点列表正常展示，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-256"
+  },
+  {
+   "title": "功能点列表为空时展示",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置功能点，验证空态",
+   "preconditions": "已登录用户，进入广告页面，后台无功能点配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "功能点列表区域显示空态提示，无报错"
+    }
+   ],
+   "expected_result": "功能点列表为空时显示空态提示，不影响其他功能",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-257"
+  },
+  {
+   "title": "说明内容正常展示",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "广告页面存在说明文案，验证展示",
+   "preconditions": "已登录用户，进入广告页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "页面正常加载，说明文案展示完整，无错别字"
+    }
+   ],
+   "expected_result": "说明内容正常展示，无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-258"
+  },
+  {
+   "title": "说明内容为空时展示",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置说明文案，验证空态",
+   "preconditions": "已登录用户，进入广告页面，后台无说明配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入广告页面",
+     "expected": "说明区域不显示或显示默认占位，无报错"
+    }
+   ],
+   "expected_result": "说明为空时不显示或显示占位，不影响其他功能",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-259"
+  },
+  {
+   "title": "管理员关闭中场广告成功",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "管理员登录，比赛进行中，存在中场广告，验证关闭流程",
+   "preconditions": "管理员已登录，进入比赛直播页面，比赛进行中且存在中场广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入比赛直播页面",
+     "expected": "页面正常加载，显示中场广告"
+    },
+    {
+     "step": 2,
+     "desc": "点击 CLOSE 按钮",
+     "expected": "弹出确认弹窗，包含“取消”和“确定”按钮"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确定”按钮",
+     "expected": "弹窗关闭，中场广告停止播放，重新拉取比赛直播流"
+    },
+    {
+     "step": 4,
+     "desc": "其他用户进入该场比赛",
+     "expected": "其他用户不再看到中场广告，直接播放直播流"
+    }
+   ],
+   "expected_result": "管理员关闭中场广告后，所有用户不再看到该场比赛的中场广告，正在观看的用户停止广告并重新拉取直播流",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-260"
+  },
+  {
+   "title": "管理员关闭中场广告时点击取消",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "管理员点击 CLOSE 后点击取消，验证不关闭",
+   "preconditions": "管理员已登录，进入比赛直播页面，比赛进行中且存在中场广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 CLOSE 按钮",
+     "expected": "弹出确认弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击“取消”按钮",
+     "expected": "弹窗关闭，不执行关闭操作，中场广告继续播放"
+    }
+   ],
+   "expected_result": "点击取消后不关闭中场广告，广告继续播放",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-261"
+  },
+  {
+   "title": "普通用户无法看到关闭按钮",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "普通用户登录，验证无关闭按钮",
+   "preconditions": "普通用户已登录，进入比赛直播页面，比赛进行中且存在中场广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入比赛直播页面",
+     "expected": "页面正常加载，不显示 CLOSE 按钮"
+    }
+   ],
+   "expected_result": "普通用户看不到关闭按钮，无法关闭中场广告",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-262"
+  },
+  {
+   "title": "关闭中场广告后重新拉取直播流",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "管理员关闭中场广告后，验证正在观看的用户重新拉取直播流",
+   "preconditions": "管理员已登录，比赛进行中，存在中场广告，有用户正在观看中场广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "管理员关闭中场广告",
+     "expected": "正在观看中场广告的用户停止播放广告"
+    },
+    {
+     "step": 2,
+     "desc": "检查用户端直播流",
+     "expected": "用户端重新拉取比赛直播流，直播流正常播放"
+    }
+   ],
+   "expected_result": "关闭后正在观看的用户停止广告并重新拉取直播流，直播流正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-263"
+  },
+  {
+   "title": "取消按钮在确认弹窗中可正常关闭弹窗",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "管理员点击 CLOSE 后点击取消，验证弹窗关闭",
+   "preconditions": "管理员已登录，进入比赛直播页面，点击 CLOSE 弹出确认弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“取消”按钮",
+     "expected": "确认弹窗关闭，不执行关闭操作"
+    }
+   ],
+   "expected_result": "取消按钮可正常关闭弹窗，无副作用",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-264"
+  },
+  {
+   "title": "取消按钮在无弹窗时不可见",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "未点击 CLOSE 时，验证取消按钮不存在",
+   "preconditions": "管理员已登录，进入比赛直播页面，未点击 CLOSE",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察页面",
+     "expected": "页面不显示取消按钮"
+    }
+   ],
+   "expected_result": "无弹窗时取消按钮不可见，避免误操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-265"
+  },
+  {
+   "title": "管理员点击关闭按钮弹出确认弹窗",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用平台管理员账号登录，进入有中场广告的比赛直播页。",
+   "preconditions": "已登录平台管理员账号；存在一场正在播放中场广告的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该场比赛的直播页面，等待中场广告播放",
+     "expected": "页面显示中场广告，广告区域出现「关闭」按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击「关闭」按钮",
+     "expected": "弹出「关闭中场广告确认弹窗」，弹窗包含「取消」和「确定」按钮"
+    }
+   ],
+   "expected_result": "确认弹窗正常弹出，文案正确，按钮齐全。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-266"
+  },
+  {
+   "title": "非管理员不显示关闭按钮",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用普通用户账号登录，进入有中场广告的比赛直播页。",
+   "preconditions": "已登录普通用户账号；存在一场正在播放中场广告的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该场比赛的直播页面，等待中场广告播放",
+     "expected": "页面显示中场广告，但广告区域不显示「关闭」按钮"
+    }
+   ],
+   "expected_result": "普通用户看不到关闭按钮，无法触发关闭操作。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-267"
+  },
+  {
+   "title": "确认弹窗点击取消不关闭广告",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "管理员账号，弹窗出现后点击「取消」。",
+   "preconditions": "已登录管理员账号；弹出关闭中场广告确认弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击弹窗中的「取消」按钮",
+     "expected": "弹窗关闭，中场广告继续播放，不触发关闭逻辑"
+    }
+   ],
+   "expected_result": "广告继续播放，关闭操作未生效。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-268"
+  },
+  {
+   "title": "确认弹窗点击确定关闭广告并重新拉流",
+   "priority": "P0",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "管理员账号，弹窗出现后点击「确定」。",
+   "preconditions": "已登录管理员账号；弹出关闭中场广告确认弹窗；当前正在播放中场广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击弹窗中的「确定」按钮",
+     "expected": "弹窗关闭，中场广告停止播放，页面重新拉取比赛直播流"
+    },
+    {
+     "step": 2,
+     "desc": "观察直播流是否成功切换",
+     "expected": "直播流切换成功，显示比赛直播画面，不再显示中场广告"
+    }
+   ],
+   "expected_result": "广告被关闭，直播流重新拉取成功，所有用户不再看到该场比赛的中场广告。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-269"
+  },
+  {
+   "title": "关闭广告后其他用户不再看到中场广告",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "管理员关闭广告后，使用另一个普通用户账号进入同一场比赛。",
+   "preconditions": "管理员已通过确认弹窗关闭该场比赛的中场广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用普通用户账号进入该场比赛的直播页面",
+     "expected": "直播页面直接显示比赛直播流，不播放中场广告"
+    }
+   ],
+   "expected_result": "普通用户看不到中场广告，关闭操作全局生效。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-270"
+  },
+  {
+   "title": "关闭广告后正在观看的用户停止广告并重新拉流",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "管理员关闭广告时，另一个普通用户正在观看中场广告。",
+   "preconditions": "管理员和普通用户同时在线观看同一场比赛；普通用户正在播放中场广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "管理员点击确定关闭广告",
+     "expected": "普通用户端的中场广告停止播放，自动重新拉取比赛直播流"
+    },
+    {
+     "step": 2,
+     "desc": "观察普通用户端直播流是否切换成功",
+     "expected": "直播流切换成功，显示比赛直播画面"
+    }
+   ],
+   "expected_result": "正在观看的用户广告被中断，直播流重新拉取成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-271"
+  },
+  {
+   "title": "关闭广告后再次进入该场比赛不再显示广告",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "管理员关闭广告后，退出直播页再重新进入。",
+   "preconditions": "管理员已关闭该场比赛的中场广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "退出直播页面，重新进入该场比赛",
+     "expected": "直播页面直接显示比赛直播流，不播放中场广告"
+    }
+   ],
+   "expected_result": "广告关闭状态持久化，再次进入不显示广告。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-272"
+  },
+  {
+   "title": "关闭广告后其他比赛不受影响",
+   "priority": "P1",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "管理员关闭比赛A的中场广告，然后进入比赛B。",
+   "preconditions": "管理员已关闭比赛A的中场广告；比赛B存在中场广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入比赛B的直播页面",
+     "expected": "比赛B正常播放中场广告，不受比赛A关闭操作影响"
+    }
+   ],
+   "expected_result": "广告关闭仅对指定比赛生效，不影响其他比赛。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-273"
+  },
+  {
+   "title": "关闭广告后重新拉流失败时给出错误提示",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或直播流不可用，管理员点击确定关闭广告。",
+   "preconditions": "已登录管理员账号；弹出确认弹窗；网络异常或直播流源不可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击确定按钮",
+     "expected": "广告停止播放，但重新拉取直播流失败，页面显示错误提示（如「直播加载失败，请重试」）"
+    }
+   ],
+   "expected_result": "系统给出明确错误提示，用户可重试或退出。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-274"
+  },
+  {
+   "title": "重复点击确定按钮只触发一次关闭操作",
+   "priority": "P2",
+   "domain": "用户端/首页/广告",
+   "module": "广告",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "管理员在弹窗中快速连续点击「确定」按钮。",
+   "preconditions": "已登录管理员账号；弹出确认弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "快速连续点击「确定」按钮多次",
+     "expected": "只触发一次关闭操作，弹窗关闭，广告停止播放，直播流重新拉取一次"
+    }
+   ],
+   "expected_result": "系统防止重复提交，关闭操作只执行一次。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-275"
+  }
+ ],
+ "api_cases": []
+}

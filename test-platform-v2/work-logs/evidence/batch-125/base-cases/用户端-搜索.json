@@ -1,0 +1,4410 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "推荐搜索(PC)页面展示",
+    "description": "页面 推荐搜索_pc_ 展示推荐搜索列表，包含球队、联赛、球员等推荐项，以及热门搜索列表。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确推荐搜索的触发条件（是进入页面自动展示还是输入关键词后展示），以及推荐搜索与热门搜索的展示关系。",
+      "suggestion": "明确推荐搜索的展示时机和与热门搜索的布局关系。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "推荐搜索列表展示球队/联赛/球员",
+    "description": "推荐搜索列表展示球队、联赛、球员，包含LOGO和名称，最多各展示10个，排序根据热门球队及热门联赛配置的展示顺序决定。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确球员列表是否也受展示顺序影响，以及球员列表需展示所属球队信息。",
+      "suggestion": "补充球员排序规则和所属球队信息展示要求。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "热门搜索列表展示",
+    "description": "展示运营后台配置的热门搜索列表，展示配置的关键词文案，展示顺序根据配置的展示顺序数值，数值越大展示越前。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确热门搜索列表为空时的展示状态。",
+      "suggestion": "补充空态展示要求。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "热门搜索点击跳转",
+    "description": "点击热门搜索关键词后，根据运营后台配置的跳转方式：若为搜索结果页，则将该关键词作为搜索关键词并跳转至搜索结果页；若为自定义，则根据配置的链接跳转至对应页面。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确自定义链接的合法性校验和异常处理。",
+      "suggestion": "补充自定义链接无效时的处理逻辑。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "推荐搜索点击跳转",
+    "description": "点击推荐搜索中的球队、球员、联赛项后，直接进入相应详情页。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确点击球员项时跳转球员详情页还是球队详情页。",
+      "suggestion": "明确球员项的跳转目标。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述了推荐搜索页面的展示和交互，但存在多处细节不明确，如推荐搜索的触发时机、球员排序规则、空态处理等。建议补充这些细节以确保测试用例的完整性和准确性。"
+ },
+ "functional_cases": [
+  {
+   "title": "搜索页正常展示所有元素",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常进入搜索页，无特殊输入",
+   "preconditions": "用户已登录，进入搜索页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开搜索页",
+     "expected": "页面显示搜索框、历史搜索区域、热门搜索区域、推荐搜索区域、取消按钮"
+    }
+   ],
+   "expected_result": "搜索页所有元素正常展示，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "搜索页在无网络时展示错误提示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟断网环境",
+   "preconditions": "用户已登录，网络断开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开搜索页",
+     "expected": "页面显示网络错误提示，如'网络异常，请稍后重试'"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示错误提示，可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "历史搜索展示近10条去重记录",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "历史搜索",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已有历史搜索记录：'曼联'、'利物浦'、'曼联'、'切尔西'",
+   "preconditions": "用户已登录，历史搜索记录包含重复项",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域展示去重后的记录：'曼联'、'利物浦'、'切尔西'，且最多10条"
+    }
+   ],
+   "expected_result": "历史搜索记录去重且数量不超过10条",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "历史搜索记录超过10条时只展示最近10条",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "历史搜索",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户历史搜索记录共12条，均为不同关键词",
+   "preconditions": "用户已登录，历史搜索记录12条",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域只展示最近10条记录，不展示第11、12条"
+    }
+   ],
+   "expected_result": "历史搜索只展示10条",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "点击历史搜索记录跳转搜索结果页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "历史搜索",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "历史搜索记录包含'曼联'",
+   "preconditions": "用户已登录，历史搜索记录包含'曼联'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域显示'曼联'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'曼联'",
+     "expected": "跳转至搜索结果页，搜索框显示'曼联'，结果页展示相关结果"
+    }
+   ],
+   "expected_result": "成功跳转并展示搜索结果",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "历史搜索记录为空时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "历史搜索",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户首次使用搜索，无历史记录",
+   "preconditions": "用户已登录，无历史搜索记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域显示'暂无历史搜索'或隐藏该区域"
+    }
+   ],
+   "expected_result": "空态展示合理，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "清空历史搜索成功",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "清空历史搜索",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已有历史搜索记录",
+   "preconditions": "用户已登录，存在历史搜索记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域显示记录，且有'清空'按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击'清空'按钮",
+     "expected": "弹出确认框，点击确认后历史搜索记录被清空"
+    }
+   ],
+   "expected_result": "历史搜索记录被清空，区域显示空态",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "清空历史搜索时取消操作不生效",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "清空历史搜索",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户已有历史搜索记录",
+   "preconditions": "用户已登录，存在历史搜索记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击'清空'按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 3,
+     "desc": "点击'取消'",
+     "expected": "确认框关闭，历史搜索记录未被清空"
+    }
+   ],
+   "expected_result": "历史搜索记录保留",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "热门搜索列表按展示顺序降序展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "热门搜索",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台配置热门搜索：'高考结束'(顺序1)、'电影'(顺序3)、'川航机场奖励500万'(顺序2)",
+   "preconditions": "运营后台已配置热门搜索，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索区域按顺序展示：'电影'、'川航机场奖励500万'、'高考结束'"
+    }
+   ],
+   "expected_result": "热门搜索按展示顺序数值降序排列",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "热门搜索列表为空时隐藏或显示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "热门搜索",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未配置任何热门搜索",
+   "preconditions": "运营后台未配置热门搜索，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索区域不显示或显示'暂无热门搜索'"
+    }
+   ],
+   "expected_result": "无热门搜索时不报错，展示合理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "点击热门搜索（跳转方式为搜索结果页）跳转搜索结果页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "热门搜索",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门搜索'高考结束'配置跳转方式为'搜索结果页'",
+   "preconditions": "运营后台配置热门搜索'高考结束'且跳转方式为'搜索结果页'，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索区域显示'高考结束'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'高考结束'",
+     "expected": "跳转至搜索结果页，搜索框显示'高考结束'，结果页展示相关结果"
+    }
+   ],
+   "expected_result": "成功跳转并展示搜索结果",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "点击热门搜索（跳转方式为自定义）跳转自定义链接",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "热门搜索",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门搜索'电影'配置跳转方式为'自定义'，链接为'https://example.com/movie'",
+   "preconditions": "运营后台配置热门搜索'电影'且跳转方式为'自定义'，链接有效，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索区域显示'电影'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'电影'",
+     "expected": "跳转至配置的链接'https://example.com/movie'"
+    }
+   ],
+   "expected_result": "成功跳转至自定义链接",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "点击热门搜索（自定义链接非法）时提示或忽略",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "热门搜索",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门搜索'测试'配置跳转方式为'自定义'，链接为'javascript:alert(1)'",
+   "preconditions": "运营后台配置热门搜索'测试'且跳转方式为'自定义'，链接非法，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索区域显示'测试'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'测试'",
+     "expected": "不跳转或提示'链接无效'，无安全风险"
+    }
+   ],
+   "expected_result": "非法链接被拦截或提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "搜索框有内容时展示搜索按钮",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索按钮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入'曼联'",
+   "preconditions": "用户已登录，进入搜索页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'曼联'",
+     "expected": "搜索按钮显示"
+    }
+   ],
+   "expected_result": "搜索按钮可见",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "搜索框为空时不展示搜索按钮",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索按钮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索框为空",
+   "preconditions": "用户已登录，进入搜索页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不输入任何内容",
+     "expected": "搜索按钮不显示"
+    }
+   ],
+   "expected_result": "搜索按钮隐藏",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "搜索框输入纯空格时不展示搜索按钮",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索按钮",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入多个空格",
+   "preconditions": "用户已登录，进入搜索页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'   '（多个空格）",
+     "expected": "搜索按钮不显示"
+    }
+   ],
+   "expected_result": "搜索按钮隐藏",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "点击搜索按钮触发搜索并跳转",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索按钮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入'曼联'",
+   "preconditions": "用户已登录，进入搜索页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'曼联'",
+     "expected": "搜索按钮显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击搜索按钮",
+     "expected": "跳转至搜索结果页，搜索框显示'曼联'，结果页展示相关结果"
+    }
+   ],
+   "expected_result": "成功跳转并展示搜索结果",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "点击搜索按钮时输入内容为纯空格被拦截",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索按钮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入'   '（多个空格）",
+   "preconditions": "用户已登录，进入搜索页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'   '",
+     "expected": "搜索按钮不显示"
+    }
+   ],
+   "expected_result": "无法触发搜索",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "推荐搜索根据输入实时展示球队、联赛、球员",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入'曼'，运营后台配置热门球队'曼联'、热门联赛'英超'、球员'曼城球员'",
+   "preconditions": "运营后台已配置热门球队、联赛、球员，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'曼'",
+     "expected": "推荐搜索区域展示匹配的球队、联赛、球员，各最多10个，球员显示所属球队"
+    }
+   ],
+   "expected_result": "推荐搜索正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "推荐搜索无匹配结果时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入'zzzz'，无匹配",
+   "preconditions": "运营后台已配置热门球队、联赛、球员，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'zzzz'",
+     "expected": "推荐搜索区域显示'无相关推荐'或隐藏"
+    }
+   ],
+   "expected_result": "无结果时展示合理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "点击推荐搜索中的球队跳转球队详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索中展示'曼联'球队",
+   "preconditions": "运营后台配置热门球队'曼联'，用户已登录，输入'曼'触发推荐",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'曼'",
+     "expected": "推荐搜索区域展示'曼联'球队"
+    },
+    {
+     "step": 2,
+     "desc": "点击'曼联'",
+     "expected": "跳转至曼联球队详情页"
+    }
+   ],
+   "expected_result": "成功跳转球队详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "点击推荐搜索中的联赛跳转联赛详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索中展示'英超'联赛",
+   "preconditions": "运营后台配置热门联赛'英超'，用户已登录，输入'英'触发推荐",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'英'",
+     "expected": "推荐搜索区域展示'英超'联赛"
+    },
+    {
+     "step": 2,
+     "desc": "点击'英超'",
+     "expected": "跳转至英超联赛详情页"
+    }
+   ],
+   "expected_result": "成功跳转联赛详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "点击推荐搜索中的球员跳转球员详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索中展示'C罗'球员，所属球队'利雅得胜利'",
+   "preconditions": "运营后台配置球员'C罗'，用户已登录，输入'C'触发推荐",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'C'",
+     "expected": "推荐搜索区域展示'C罗'球员，并显示所属球队'利雅得胜利'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'C罗'",
+     "expected": "跳转至C罗球员详情页"
+    }
+   ],
+   "expected_result": "成功跳转球员详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "取消按钮返回上一页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "取消按钮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "从首页进入搜索页",
+   "preconditions": "用户已登录，从首页进入搜索页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'取消'按钮",
+     "expected": "返回首页，搜索框内容清空"
+    }
+   ],
+   "expected_result": "成功返回上一页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "取消按钮在无上一页时无响应或提示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "取消按钮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "直接打开搜索页（无上一页）",
+   "preconditions": "用户已登录，直接通过URL打开搜索页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'取消'按钮",
+     "expected": "无响应或提示'无法返回'，不崩溃"
+    }
+   ],
+   "expected_result": "无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "热门搜索列表展示（按展示顺序）",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台配置热门搜索：关键词“高考结束”展示顺序5、“电影”展示顺序3、“川航机场奖励500万”展示顺序1，预期按顺序5>3>1展示。",
+   "preconditions": "运营后台已配置热门搜索关键词及展示顺序；用户已登录且处于搜索页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索页加载完成，显示热门搜索区域"
+    },
+    {
+     "step": 2,
+     "desc": "观察热门搜索列表",
+     "expected": "热门搜索列表按展示顺序展示：高考结束、电影、川航机场奖励500万"
+    }
+   ],
+   "expected_result": "热门搜索列表正确展示，顺序与配置一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "热门搜索点击跳转（搜索结果页）",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门搜索关键词“高考结束”配置跳转方式为“搜索结果页”。",
+   "preconditions": "运营后台已配置关键词“高考结束”跳转方式为“搜索结果页”；用户处于搜索页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索页加载完成"
+    },
+    {
+     "step": 2,
+     "desc": "点击热门搜索“高考结束”",
+     "expected": "自动跳转至搜索结果页，搜索框显示“高考结束”，结果列表展示相关赛事/球队/联赛/资讯"
+    }
+   ],
+   "expected_result": "跳转至搜索结果页，搜索关键词为“高考结束”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "热门搜索点击跳转（自定义链接）",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门搜索关键词“电影”配置跳转方式为“自定义”，链接为https://www.example.com/movie。",
+   "preconditions": "运营后台已配置关键词“电影”跳转方式为“自定义”且链接有效；用户处于搜索页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索页加载完成"
+    },
+    {
+     "step": 2,
+     "desc": "点击热门搜索“电影”",
+     "expected": "跳转至配置的链接页面（https://www.example.com/movie）"
+    }
+   ],
+   "expected_result": "跳转至自定义链接页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "热门搜索列表为空时的展示",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未配置任何热门搜索关键词。",
+   "preconditions": "运营后台热门搜索配置为空；用户处于搜索页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索区域不展示或显示空态提示（如“暂无热门搜索”）"
+    }
+   ],
+   "expected_result": "热门搜索区域合理展示空态，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "热门搜索自定义链接非法时点击",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门搜索关键词“测试”配置跳转方式为“自定义”，链接为“javascript:alert(1)”或“not a url”。",
+   "preconditions": "运营后台配置了非法自定义链接；用户处于搜索页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索页加载完成"
+    },
+    {
+     "step": 2,
+     "desc": "点击该热门搜索关键词",
+     "expected": "不执行跳转或提示链接无效，不触发脚本执行"
+    }
+   ],
+   "expected_result": "非法链接被拦截或提示，无安全风险。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "搜索按钮在输入内容时展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "在搜索框输入“曼联”",
+   "preconditions": "用户处于搜索页，搜索框初始为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空，搜索按钮不展示"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框输入“曼联”",
+     "expected": "搜索按钮出现"
+    }
+   ],
+   "expected_result": "搜索按钮在输入内容后展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "搜索按钮在输入为空时不展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索框内容为空或仅空格",
+   "preconditions": "用户处于搜索页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空，搜索按钮不展示"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框输入空格“ ”",
+     "expected": "搜索按钮不展示（或视为无内容）"
+    }
+   ],
+   "expected_result": "搜索按钮不展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "搜索按钮在输入纯空格时点击",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "搜索框输入“   ”（三个空格）",
+   "preconditions": "用户处于搜索页，搜索框已输入空格。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入三个空格",
+     "expected": "搜索按钮可能展示（取决于实现）"
+    },
+    {
+     "step": 2,
+     "desc": "点击搜索按钮",
+     "expected": "不触发搜索或提示“请输入搜索内容”，不跳转"
+    }
+   ],
+   "expected_result": "纯空格输入不触发搜索，有合理提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "历史搜索展示近10条且去重",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户历史搜索记录为：曼联、利物浦、曼联、阿森纳、切尔西、曼城、热刺、纽卡、莱斯特城、埃弗顿、狼队（共11条，含重复“曼联”）",
+   "preconditions": "用户已登录，且历史搜索记录包含上述数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域展示去重后的记录，最多10条，顺序按最近搜索时间倒序"
+    }
+   ],
+   "expected_result": "展示10条去重后的历史搜索，重复的“曼联”只出现一次。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "历史搜索记录超过10条时只展示10条",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户历史搜索记录为12条不同的关键词",
+   "preconditions": "用户已登录，历史搜索记录有12条。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域仅展示最近10条，不展示第11、12条"
+    }
+   ],
+   "expected_result": "最多展示10条历史搜索。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "点击历史搜索记录触发搜索并跳转",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "历史搜索记录包含“曼联”",
+   "preconditions": "用户已登录，历史搜索记录包含“曼联”。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域展示“曼联”"
+    },
+    {
+     "step": 2,
+     "desc": "点击“曼联”",
+     "expected": "触发搜索事件，跳转至搜索结果页，搜索框显示“曼联”"
+    }
+   ],
+   "expected_result": "跳转至搜索结果页并展示搜索结果。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "清空历史搜索后重新进入搜索页仍为空",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已清空历史搜索",
+   "preconditions": "用户已登录，且已清空历史搜索。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "退出搜索页",
+     "expected": "返回上一页"
+    },
+    {
+     "step": 2,
+     "desc": "重新进入搜索页",
+     "expected": "历史搜索区域为空，不展示任何记录"
+    }
+   ],
+   "expected_result": "清空操作持久化，重新进入仍为空。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "清空历史搜索时无确认提示（若需求未要求）",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户历史搜索记录非空",
+   "preconditions": "用户已登录，历史搜索记录非空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索区域展示记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击“清空”按钮",
+     "expected": "直接清空，无确认弹窗（若产品设计如此）"
+    }
+   ],
+   "expected_result": "清空操作直接执行，无二次确认。",
+   "remark": "负面用例（若需求要求确认则此用例不适用）",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "推荐搜索实时展示匹配的球队、联赛、球员",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台配置热门球队“曼联”（展示顺序5）、“利物浦”（展示顺序3），热门联赛“英超”（展示顺序4）、“西甲”（展示顺序2），球员“C罗”（所属球队“曼联”）。用户输入“曼”",
+   "preconditions": "运营后台已配置上述数据；用户处于搜索页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索页加载完成"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框输入“曼”",
+     "expected": "推荐搜索区域展示匹配的球队“曼联”、联赛“英超”（若匹配）、球员“C罗”（若匹配），且球队和联赛按展示顺序排列，球员展示所属球队信息"
+    }
+   ],
+   "expected_result": "推荐搜索列表正确展示，排序正确，球员信息完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "推荐搜索最多展示10个",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "运营后台配置超过10个匹配的球队、联赛、球员（如12个）",
+   "preconditions": "运营后台配置了12个匹配项；用户处于搜索页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索页加载完成"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框输入匹配关键词",
+     "expected": "推荐搜索列表仅展示10个，不展示第11、12个"
+    }
+   ],
+   "expected_result": "推荐搜索最多展示10个。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "推荐搜索点击球队进入球队详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索列表展示“曼联”球队",
+   "preconditions": "运营后台配置热门球队“曼联”；用户输入“曼”触发推荐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“曼”",
+     "expected": "推荐搜索展示“曼联”"
+    },
+    {
+     "step": 2,
+     "desc": "点击“曼联”",
+     "expected": "跳转至曼联球队详情页"
+    }
+   ],
+   "expected_result": "跳转至对应球队详情页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "推荐搜索点击联赛进入联赛详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索列表展示“英超”联赛",
+   "preconditions": "运营后台配置热门联赛“英超”；用户输入“英”触发推荐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“英”",
+     "expected": "推荐搜索展示“英超”"
+    },
+    {
+     "step": 2,
+     "desc": "点击“英超”",
+     "expected": "跳转至英超联赛详情页"
+    }
+   ],
+   "expected_result": "跳转至对应联赛详情页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "推荐搜索点击球员进入球员详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索列表展示球员“C罗”",
+   "preconditions": "运营后台配置球员“C罗”；用户输入“C”触发推荐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“C”",
+     "expected": "推荐搜索展示“C罗”"
+    },
+    {
+     "step": 2,
+     "desc": "点击“C罗”",
+     "expected": "跳转至C罗球员详情页"
+    }
+   ],
+   "expected_result": "跳转至对应球员详情页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "推荐搜索球员展示所属球队信息",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员“C罗”所属球队“曼联”",
+   "preconditions": "运营后台配置球员“C罗”所属球队“曼联”；用户输入“C”触发推荐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“C”",
+     "expected": "推荐搜索展示“C罗”，并显示所属球队“曼联”"
+    }
+   ],
+   "expected_result": "球员列表展示所属球队信息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "推荐搜索在输入为空时不展示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索框为空",
+   "preconditions": "用户处于搜索页，搜索框为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空，推荐搜索区域不展示"
+    }
+   ],
+   "expected_result": "输入为空时不展示推荐搜索。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "热门搜索列表展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台配置热门搜索关键词：高考结束、电影、川航机场奖励500万、陈奕迅演唱会假唱、2025最新音乐、Mr.、如果我是钢铁侠，展示顺序数值分别为1-7",
+   "preconditions": "运营后台已配置热门搜索列表，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "页面展示热门搜索模块，显示配置的关键词文案"
+    },
+    {
+     "step": 2,
+     "desc": "检查热门搜索列表顺序",
+     "expected": "按照展示顺序数值从大到小排列，数值越大越靠前"
+    }
+   ],
+   "expected_result": "热门搜索列表完整展示，顺序正确，文案与配置一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "热门搜索为空时展示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未配置任何热门搜索关键词",
+   "preconditions": "运营后台热门搜索列表为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索模块不显示或显示空态提示，页面无异常"
+    }
+   ],
+   "expected_result": "页面正常展示，无热门搜索数据，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "点击热门搜索跳转搜索结果页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门搜索关键词'高考结束'，跳转方式配置为'搜索结果页'",
+   "preconditions": "运营后台已配置热门搜索'高考结束'，跳转方式为搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'高考结束'",
+     "expected": "自动跳转至搜索结果页，搜索框显示'高考结束'，展示搜索结果"
+    }
+   ],
+   "expected_result": "成功跳转至搜索结果页，搜索关键词正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "点击热门搜索跳转自定义链接",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门搜索关键词'电影'，跳转方式配置为'自定义'，链接为https://example.com/movie",
+   "preconditions": "运营后台已配置热门搜索'电影'，跳转方式为自定义链接",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'电影'",
+     "expected": "跳转至配置的自定义链接页面"
+    }
+   ],
+   "expected_result": "成功跳转至自定义链接，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "热门搜索自定义链接非法",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门搜索关键词'测试'，跳转方式为自定义，链接配置为'not-a-url'",
+   "preconditions": "运营后台配置了非法链接",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "热门搜索列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'测试'",
+     "expected": "页面提示链接无效或无法跳转，不崩溃"
+    }
+   ],
+   "expected_result": "有错误提示或停留在原页面，无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "搜索按钮展示与搜索",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入搜索关键词'曼联'",
+   "preconditions": "用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空，搜索按钮不展示"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框输入'曼联'",
+     "expected": "搜索按钮展示"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "触发搜索事件，跳转至搜索结果页，搜索框显示'曼联'"
+    }
+   ],
+   "expected_result": "搜索按钮仅在输入内容时展示，点击后正确跳转",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "搜索框为空时搜索按钮不展示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "搜索框为空",
+   "preconditions": "用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空，搜索按钮不展示"
+    }
+   ],
+   "expected_result": "搜索按钮不展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "搜索框输入纯空格",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入多个空格'   '",
+   "preconditions": "用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'   '（三个空格）",
+     "expected": "搜索按钮不展示或点击后提示输入有效内容"
+    }
+   ],
+   "expected_result": "不触发搜索或提示输入有效内容",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "历史搜索展示与去重",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户历史搜索记录：曼联、利物浦、曼联、阿森纳、切尔西、曼城、热刺、纽卡斯尔、莱斯特城、埃弗顿、西汉姆联（共11条，含重复'曼联'）",
+   "preconditions": "用户已登录，历史搜索记录包含上述数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索模块展示，显示去重后的记录，最多10条"
+    },
+    {
+     "step": 2,
+     "desc": "检查历史搜索列表",
+     "expected": "重复的'曼联'只显示一次，共10条记录"
+    }
+   ],
+   "expected_result": "历史搜索展示正确，去重且不超过10条",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "历史搜索为空时展示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户无历史搜索记录",
+   "preconditions": "用户已登录，无历史搜索记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索模块不显示或显示空态提示"
+    }
+   ],
+   "expected_result": "页面正常，无历史搜索数据",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "点击历史搜索记录跳转",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "历史搜索记录包含'曼联'",
+   "preconditions": "用户已登录，历史搜索记录包含'曼联'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'曼联'",
+     "expected": "触发搜索事件，跳转至搜索结果页，搜索框显示'曼联'"
+    }
+   ],
+   "expected_result": "成功跳转至搜索结果页，搜索关键词正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "历史搜索记录超过10条",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户历史搜索记录共15条，均不重复",
+   "preconditions": "用户已登录，历史搜索记录15条",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索模块展示，最多显示10条"
+    }
+   ],
+   "expected_result": "只显示最近10条记录",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "清空历史搜索",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户历史搜索记录包含'曼联'、'利物浦'",
+   "preconditions": "用户已登录，历史搜索记录存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'清空'按钮",
+     "expected": "历史搜索列表被清空，显示空态或隐藏模块"
+    }
+   ],
+   "expected_result": "历史搜索记录全部清除",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "清空历史搜索后再次搜索",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "清空历史搜索后，用户再次搜索'曼联'",
+   "preconditions": "用户已登录，历史搜索已清空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "历史搜索为空"
+    },
+    {
+     "step": 2,
+     "desc": "搜索'曼联'",
+     "expected": "搜索成功，历史搜索记录新增'曼联'"
+    }
+   ],
+   "expected_result": "历史搜索记录重新生成",
+   "remark": "负面用例（验证清空后行为）",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "推荐搜索展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入'Ma'，运营后台配置热门球队：Manchester United、Manchester City；热门联赛：Premier League；球员：Mason Mount（所属球队Manchester United）",
+   "preconditions": "运营后台已配置热门球队、热门联赛、球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'Ma'",
+     "expected": "下方展示推荐搜索列表，包含球队、联赛、球员，球员显示所属球队信息"
+    }
+   ],
+   "expected_result": "推荐搜索列表正确展示，排序按配置顺序",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "推荐搜索无结果",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入'zzzz'，运营后台无匹配数据",
+   "preconditions": "运营后台无匹配数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'zzzz'",
+     "expected": "推荐搜索区域显示空态或隐藏"
+    }
+   ],
+   "expected_result": "无推荐结果，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "推荐搜索点击进入球队详情",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入'Ma'，推荐列表包含球队'Manchester United'",
+   "preconditions": "运营后台已配置热门球队Manchester United",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'Ma'",
+     "expected": "推荐列表展示"
+    },
+    {
+     "step": 3,
+     "desc": "点击'Manchester United'",
+     "expected": "跳转至球队详情页"
+    }
+   ],
+   "expected_result": "成功跳转至球队详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "推荐搜索点击进入联赛详情",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入'Premier'，推荐列表包含联赛'Premier League'",
+   "preconditions": "运营后台已配置热门联赛Premier League",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'Premier'",
+     "expected": "推荐列表展示"
+    },
+    {
+     "step": 3,
+     "desc": "点击'Premier League'",
+     "expected": "跳转至联赛详情页"
+    }
+   ],
+   "expected_result": "成功跳转至联赛详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "推荐搜索点击进入球员详情",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入'Mason'，推荐列表包含球员'Mason Mount'（所属球队Manchester United）",
+   "preconditions": "运营后台已配置球员Mason Mount",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'Mason'",
+     "expected": "推荐列表展示，球员显示所属球队信息"
+    },
+    {
+     "step": 3,
+     "desc": "点击'Mason Mount'",
+     "expected": "跳转至球员详情页"
+    }
+   ],
+   "expected_result": "成功跳转至球员详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "推荐搜索列表超过10个",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入'Ma'，运营后台配置12个热门球队、12个热门联赛、12个球员，均匹配",
+   "preconditions": "运营后台配置大量匹配数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'Ma'",
+     "expected": "推荐搜索列表分别最多显示10个球队、10个联赛、10个球员"
+    }
+   ],
+   "expected_result": "每类最多展示10个",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "搜索结果页-全部展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词'曼联'，存在赛事、球队、联赛、资讯结果",
+   "preconditions": "用户已登录，搜索'曼联'有结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'曼联'并搜索",
+     "expected": "跳转至搜索结果页，展示全部结果，包含赛事、球队、联赛、资讯分类"
+    }
+   ],
+   "expected_result": "全部结果正确展示，分类清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "搜索结果页-全部无结果",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词'zzzz'，无任何结果",
+   "preconditions": "用户已登录，搜索'zzzz'无结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'zzzz'并搜索",
+     "expected": "跳转至搜索结果页，显示无结果空态"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "搜索结果页-赛事仅展示近一个月",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词'曼联'，存在一个月内的赛事和一个月前的赛事",
+   "preconditions": "用户已登录，搜索'曼联'有赛事结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'曼联'并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 3,
+     "desc": "切换到'赛事'分类",
+     "expected": "仅展示近一个月的赛事，一个月前的赛事不展示"
+    }
+   ],
+   "expected_result": "赛事列表仅包含近一个月数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "搜索结果页-赛事无结果",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词'zzzz'，无赛事结果",
+   "preconditions": "用户已登录，搜索'zzzz'无结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'zzzz'并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 3,
+     "desc": "切换到'赛事'分类",
+     "expected": "显示空态提示"
+    }
+   ],
+   "expected_result": "赛事分类显示空态",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "搜索结果页-球队名称两行展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词'Manchester'，结果包含球队'Manchester United Football Club'（超长名称）",
+   "preconditions": "用户已登录，搜索'Manchester'有球队结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'Manchester'并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 3,
+     "desc": "切换到'球队'分类",
+     "expected": "球队名称支持两行展示，超长名称换行显示"
+    }
+   ],
+   "expected_result": "球队名称完整展示，支持两行",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "搜索结果页-球队无结果",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词'zzzz'，无球队结果",
+   "preconditions": "用户已登录，搜索'zzzz'无结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'zzzz'并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 3,
+     "desc": "切换到'球队'分类",
+     "expected": "显示空态提示"
+    }
+   ],
+   "expected_result": "球队分类显示空态",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "搜索结果页-联赛展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词'Premier'，结果包含联赛'Premier League'",
+   "preconditions": "用户已登录，搜索'Premier'有联赛结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'Premier'并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 3,
+     "desc": "切换到'联赛'分类",
+     "expected": "展示联赛名称"
+    }
+   ],
+   "expected_result": "联赛名称正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "搜索结果页-联赛无结果",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词'zzzz'，无联赛结果",
+   "preconditions": "用户已登录，搜索'zzzz'无结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'zzzz'并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 3,
+     "desc": "切换到'联赛'分类",
+     "expected": "显示空态提示"
+    }
+   ],
+   "expected_result": "联赛分类显示空态",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "搜索结果页-资讯展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词'曼联'，结果包含资讯文章",
+   "preconditions": "用户已登录，搜索'曼联'有资讯结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'曼联'并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 3,
+     "desc": "切换到'资讯'分类",
+     "expected": "展示资讯列表，包含封面图片、时间、标题"
+    }
+   ],
+   "expected_result": "资讯列表正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "搜索结果页-资讯无结果",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词'zzzz'，无资讯结果",
+   "preconditions": "用户已登录，搜索'zzzz'无结果",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'zzzz'并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 3,
+     "desc": "切换到'资讯'分类",
+     "expected": "显示空态提示"
+    }
+   ],
+   "expected_result": "资讯分类显示空态",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "PC端推荐搜索展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索(PC)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入'Ma'，运营后台配置热门球队Manchester United、热门联赛Premier League",
+   "preconditions": "PC端，运营后台已配置热门球队和联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入搜索页",
+     "expected": "搜索框为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入'Ma'",
+     "expected": "下方展示推荐搜索，包含热门球队和热门联赛"
+    }
+   ],
+   "expected_result": "推荐搜索正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "PC端推荐搜索无结果",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索(PC)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入'zzzz'，无匹配数据",
+   "preconditions": "PC端，运营后台无",
+   "id": "TC-077"
+  },
+  {
+   "title": "搜索结果页正常加载并展示全部结果",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，该词在赛事、球队、联赛、资讯中均有匹配数据",
+   "preconditions": "用户已登录，存在包含「曼联」的赛事、球队、联赛、资讯数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索页输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，搜索框回显「曼联」"
+    },
+    {
+     "step": 2,
+     "desc": "观察页面展示",
+     "expected": "默认展示「全部」Tab，包含赛事、球队、联赛、资讯四个分类的结果，每个分类展示对应列表"
+    }
+   ],
+   "expected_result": "搜索结果页正常加载，展示全部类型结果，各分类列表数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "搜索结果页无结果时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索不存在的关键词「zzzzzz」",
+   "preconditions": "无",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索页输入「zzzzzz」并点击搜索",
+     "expected": "跳转至搜索结果页，搜索框回显「zzzzzz」"
+    },
+    {
+     "step": 2,
+     "desc": "观察页面展示",
+     "expected": "页面展示空态提示「暂无相关结果」，各分类列表为空"
+    }
+   ],
+   "expected_result": "页面展示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "搜索结果-全部Tab展示所有类型结果",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，该词在赛事、球队、联赛、资讯中均有匹配数据",
+   "preconditions": "已进入搜索结果页，搜索词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「全部」Tab",
+     "expected": "展示赛事、球队、联赛、资讯四个分类的混合列表"
+    },
+    {
+     "step": 2,
+     "desc": "检查各分类是否都有数据",
+     "expected": "每个分类至少展示一条结果，且分类标题正确"
+    }
+   ],
+   "expected_result": "「全部」Tab 展示所有类型结果，各分类数据完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "搜索结果-全部Tab无数据时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「zzzzzz」，无任何匹配数据",
+   "preconditions": "已进入搜索结果页，搜索词「zzzzzz」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「全部」Tab",
+     "expected": "展示空态提示「暂无相关结果」"
+    }
+   ],
+   "expected_result": "「全部」Tab 展示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "搜索结果页icon点击返回",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」进入搜索结果页",
+   "preconditions": "已进入搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击页面左上角返回icon",
+     "expected": "返回搜索页，搜索框内容保留"
+    }
+   ],
+   "expected_result": "成功返回搜索页，搜索历史记录更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "搜索结果页icon点击无响应",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「曼联」进入搜索结果页",
+   "preconditions": "已进入搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "连续快速点击返回icon 5次",
+     "expected": "页面正常返回搜索页，无卡顿或崩溃"
+    }
+   ],
+   "expected_result": "页面正常返回，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "搜索结果页搜索框回显用户输入的搜索文案",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」",
+   "preconditions": "已进入搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看搜索框内容",
+     "expected": "搜索框显示「曼联」"
+    }
+   ],
+   "expected_result": "搜索框正确回显用户输入的搜索文案",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "搜索结果页搜索框回显超长文案",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词为50个字符的字符串（如「aaaaaaaaaa...」共50个a）",
+   "preconditions": "已进入搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看搜索框内容",
+     "expected": "搜索框显示完整文案，不截断或溢出"
+    }
+   ],
+   "expected_result": "搜索框正确显示超长文案，无样式错乱",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "搜索结果页清空按钮清空搜索框内容",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」",
+   "preconditions": "已进入搜索结果页，搜索框有内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击搜索框右侧的「清空」按钮",
+     "expected": "搜索框内容被清空，搜索结果页刷新为初始状态"
+    }
+   ],
+   "expected_result": "搜索框内容清空，页面展示初始状态（如热门搜索或空态）",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "搜索结果页清空按钮在搜索框为空时不可见",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索框内容为空",
+   "preconditions": "已进入搜索结果页，搜索框无内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察搜索框右侧",
+     "expected": "不显示「清空」按钮"
+    }
+   ],
+   "expected_result": "搜索框为空时清空按钮不展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "搜索结果页更多按钮跳转对应类型列表",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，赛事分类有超过3条结果",
+   "preconditions": "已进入搜索结果页，赛事分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击赛事分类的「更多」按钮",
+     "expected": "跳转至赛事搜索结果完整列表页，展示所有匹配赛事"
+    }
+   ],
+   "expected_result": "成功跳转至赛事列表页，数据完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "搜索结果页更多按钮在无更多数据时不可点击",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「曼联」，赛事分类只有1条结果",
+   "preconditions": "已进入搜索结果页，赛事分类结果少于等于展示数量",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察赛事分类的「更多」按钮",
+     "expected": "按钮置灰或不可点击"
+    }
+   ],
+   "expected_result": "无更多数据时「更多」按钮不可点击",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "搜索结果页赛事列表展示正确信息",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，存在一场英超联赛曼联vs利物浦的比赛",
+   "preconditions": "已进入搜索结果页，赛事分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛事列表",
+     "expected": "每条赛事展示联赛名称、轮次、主场球队名称、客场球队名称、比赛时间、比分（如有）、LIVE标识（如进行中）"
+    }
+   ],
+   "expected_result": "赛事列表字段展示完整、正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "搜索结果页赛事列表展示近一个月赛事",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词「曼联」，存在一场31天前的赛事和一场30天内的赛事",
+   "preconditions": "已进入搜索结果页，赛事分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛事列表",
+     "expected": "仅展示近一个月（30天内）的赛事，31天前的赛事不展示"
+    }
+   ],
+   "expected_result": "赛事列表仅包含近一个月的赛事",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "搜索结果页赛事列表为空时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「zzzzzz」，无赛事匹配",
+   "preconditions": "已进入搜索结果页，赛事分类无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛事分类",
+     "expected": "展示空态提示「暂无相关赛事」"
+    }
+   ],
+   "expected_result": "赛事分类展示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "搜索结果页取消按钮返回搜索页",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」进入搜索结果页",
+   "preconditions": "已进入搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「取消」按钮",
+     "expected": "返回搜索页，搜索框内容清空"
+    }
+   ],
+   "expected_result": "成功返回搜索页，搜索框清空",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "搜索结果页取消按钮在无搜索历史时仍可返回",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「曼联」进入搜索结果页",
+   "preconditions": "已进入搜索结果页，且无历史搜索记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「取消」按钮",
+     "expected": "返回搜索页，无异常提示"
+    }
+   ],
+   "expected_result": "正常返回搜索页",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "搜索结果页联赛名称和轮次字段展示正确",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「英超」，存在一场英超联赛第10轮的赛事",
+   "preconditions": "已进入搜索结果页，赛事分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛事列表中的联赛名称和轮次字段",
+     "expected": "显示「英超 第10轮」"
+    }
+   ],
+   "expected_result": "联赛名称和轮次字段展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "搜索结果页联赛名称超长时截断展示",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词「超级联赛」，联赛名称为超长字符串（如50个字符）",
+   "preconditions": "已进入搜索结果页，赛事分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看联赛名称字段",
+     "expected": "超长名称以省略号截断显示，不换行或溢出"
+    }
+   ],
+   "expected_result": "联赛名称超长时截断显示，样式正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "搜索结果页球队列表展示球队名称和LOGO",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，存在球队「曼联」",
+   "preconditions": "已进入搜索结果页，球队分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球队列表",
+     "expected": "每条球队展示球队名称和LOGO"
+    }
+   ],
+   "expected_result": "球队列表字段展示完整、正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "搜索结果页球队列表为空时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「zzzzzz」，无球队匹配",
+   "preconditions": "已进入搜索结果页，球队分类无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球队分类",
+     "expected": "展示空态提示「暂无相关球队」"
+    }
+   ],
+   "expected_result": "球队分类展示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "搜索结果页LOGO正常加载",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，球队和联赛均有LOGO",
+   "preconditions": "已进入搜索结果页，球队和联赛分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球队和联赛的LOGO",
+     "expected": "LOGO正常显示，无裂图"
+    }
+   ],
+   "expected_result": "LOGO正常加载",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "搜索结果页LOGO加载失败时展示占位图",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常导致LOGO加载失败",
+   "preconditions": "已进入搜索结果页，且网络不稳定",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看LOGO",
+     "expected": "展示默认占位图，无裂图或空白"
+    }
+   ],
+   "expected_result": "LOGO加载失败时展示占位图",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "搜索结果页主场球队名称展示正确",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，存在一场曼联主场对阵利物浦的赛事",
+   "preconditions": "已进入搜索结果页，赛事分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛事列表中的主场球队名称",
+     "expected": "显示「曼联」"
+    }
+   ],
+   "expected_result": "主场球队名称展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "搜索结果页主场球队名称超长时截断展示",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词「超级球队」，主场球队名称为超长字符串（如50个字符）",
+   "preconditions": "已进入搜索结果页，赛事分类有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看主场球队名称字段",
+     "expected": "超长名称以省略号截断显示，不换行或溢出"
+    }
+   ],
+   "expected_result": "主场球队名称超长时截断显示，样式正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "搜索结果页-赛事结果项展示视频/动画图标",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的赛事结果中包含有视频/动画的比赛（如曼联vs利物浦，比赛状态为进行中）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事、球队、联赛、资讯等分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看有视频/动画的比赛项",
+     "expected": "该比赛项展示视频/动画图标，图标清晰可识别"
+    }
+   ],
+   "expected_result": "赛事结果项正确展示视频/动画图标，图标样式符合设计规范",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "搜索结果页-无视频/动画的比赛不展示图标",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「阿森纳」，返回的赛事结果中包含无视频/动画的比赛（如阿森纳vs切尔西，比赛未开始）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「阿森纳」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「阿森纳」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看无视频/动画的比赛项",
+     "expected": "该比赛项不展示视频/动画图标"
+    }
+   ],
+   "expected_result": "无视频/动画的比赛项不展示图标，避免误导用户",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "搜索结果页-赛事结果项展示LIVE标识（比赛进行中）",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的赛事结果中包含进行中的比赛（如曼联vs利物浦，状态为进行中）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看进行中的比赛项",
+     "expected": "该比赛项展示LIVE标识，标识清晰可见"
+    }
+   ],
+   "expected_result": "进行中的比赛项正确展示LIVE标识",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "搜索结果页-未开始/已结束的比赛不展示LIVE标识",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「阿森纳」，返回的赛事结果中包含未开始（如阿森纳vs切尔西）和已结束（如阿森纳vs热刺）的比赛",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「阿森纳」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「阿森纳」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看未开始和已结束的比赛项",
+     "expected": "这些比赛项均不展示LIVE标识"
+    }
+   ],
+   "expected_result": "未开始/已结束的比赛项不展示LIVE标识",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "搜索结果页-客场球队名称正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的赛事结果中包含客场球队名称（如「利物浦」）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看客场球队名称",
+     "expected": "客场球队名称完整显示，无截断"
+    }
+   ],
+   "expected_result": "客场球队名称正常展示，内容完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "搜索结果页-超长客场球队名称省略显示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词「曼联」，返回的赛事结果中包含超长客场球队名称（如「皇家马德里足球俱乐部」超过显示宽度）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看超长客场球队名称",
+     "expected": "名称超出显示区域时以省略号（…）截断，不换行"
+    }
+   ],
+   "expected_result": "超长客场球队名称以省略号截断，不影响布局",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "搜索结果页-比赛时间正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的赛事结果中包含比赛开始时间（如17:00）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看比赛时间",
+     "expected": "比赛时间以「HH:mm」格式展示，如17:00"
+    }
+   ],
+   "expected_result": "比赛时间正确展示，格式符合预期",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "搜索结果页-比赛时间缺失时展示占位",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「曼联」，返回的赛事结果中包含比赛时间缺失的比赛（如时间字段为空）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看时间缺失的比赛项",
+     "expected": "时间位置展示占位符（如「--:--」），不显示空白"
+    }
+   ],
+   "expected_result": "时间缺失时展示占位符，页面不出现空白",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "搜索结果页-联赛列表正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「英超」，返回的联赛结果中包含联赛名称（如「英格兰超级联赛」）及LOGO",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「英超」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「英超」并点击搜索",
+     "expected": "跳转至搜索结果页，展示联赛分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在联赛结果列表中，查看联赛项",
+     "expected": "联赛项展示联赛名称和LOGO，信息完整"
+    }
+   ],
+   "expected_result": "联赛列表正常展示，包含名称和LOGO",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "搜索结果页-联赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「不存在的联赛」，返回的联赛结果为空",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「不存在的联赛」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「不存在的联赛」并点击搜索",
+     "expected": "跳转至搜索结果页，展示联赛分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛结果列表",
+     "expected": "联赛列表为空，展示空态提示（如「暂无相关联赛」）"
+    }
+   ],
+   "expected_result": "联赛列表为空时展示空态提示，不出现空白页面",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "搜索结果页-球队名称正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的球队结果中包含球队名称（如「曼联」）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示球队分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在球队结果列表中，查看球队名称",
+     "expected": "球队名称完整显示，无截断"
+    }
+   ],
+   "expected_result": "球队名称正常展示，内容完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "搜索结果页-球队名称超长时支持两行显示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词「曼联」，返回的球队结果中包含超长球队名称（如「曼彻斯特联足球俱乐部」超过一行宽度）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示球队分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在球队结果列表中，查看超长球队名称",
+     "expected": "球队名称支持两行显示，第二行完整展示，不截断"
+    }
+   ],
+   "expected_result": "超长球队名称在两行内完整显示，不省略",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "搜索结果页-联赛名称正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「英超」，返回的联赛结果中包含联赛名称（如「英格兰超级联赛」）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「英超」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「英超」并点击搜索",
+     "expected": "跳转至搜索结果页，展示联赛分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在联赛结果列表中，查看联赛名称",
+     "expected": "联赛名称完整显示，无截断"
+    }
+   ],
+   "expected_result": "联赛名称正常展示，内容完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "搜索结果页-联赛名称超长时省略显示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词「英超」，返回的联赛结果中包含超长联赛名称（如「英格兰足球超级联赛」超过显示宽度）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「英超」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「英超」并点击搜索",
+     "expected": "跳转至搜索结果页，展示联赛分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在联赛结果列表中，查看超长联赛名称",
+     "expected": "名称超出显示区域时以省略号（…）截断，不换行"
+    }
+   ],
+   "expected_result": "超长联赛名称以省略号截断，不影响布局",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "搜索结果页-资讯列表正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的资讯结果中包含资讯标题、封面图片、发布时间（如45分钟前）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示资讯分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在资讯结果列表中，查看资讯项",
+     "expected": "资讯项展示标题、封面图片、发布时间，信息完整"
+    }
+   ],
+   "expected_result": "资讯列表正常展示，包含标题、封面、时间",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "搜索结果页-资讯列表为空时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「不存在的资讯」，返回的资讯结果为空",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「不存在的资讯」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「不存在的资讯」并点击搜索",
+     "expected": "跳转至搜索结果页，展示资讯分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "查看资讯结果列表",
+     "expected": "资讯列表为空，展示空态提示（如「暂无相关资讯」）"
+    }
+   ],
+   "expected_result": "资讯列表为空时展示空态提示，不出现空白页面",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "搜索结果页-资讯封面图片正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的资讯结果中包含有封面图片的资讯",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示资讯分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在资讯结果列表中，查看资讯封面图片",
+     "expected": "封面图片正常加载，显示清晰，无变形"
+    }
+   ],
+   "expected_result": "资讯封面图片正常展示，无加载失败",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "搜索结果页-资讯封面图片加载失败时展示占位图",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「曼联」，返回的资讯结果中包含封面图片加载失败的资讯（模拟网络异常或图片URL无效）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」，并模拟封面图片加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示资讯分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在资讯结果列表中，查看封面图片加载失败的资讯",
+     "expected": "封面图片位置展示默认占位图，不显示裂图"
+    }
+   ],
+   "expected_result": "封面图片加载失败时展示占位图，不影响页面布局",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "搜索结果页-资讯发布时间正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的资讯结果中包含发布时间（如45分钟前）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示资讯分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在资讯结果列表中，查看资讯发布时间",
+     "expected": "发布时间以相对时间格式展示（如45分钟前），时间准确"
+    }
+   ],
+   "expected_result": "资讯发布时间正确展示，格式符合预期",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "搜索结果页-资讯发布时间缺失时展示占位",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「曼联」，返回的资讯结果中包含发布时间缺失的资讯（如时间字段为空）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示资讯分类结果"
+    },
+    {
+     "step": 2,
+     "desc": "在资讯结果列表中，查看发布时间缺失的资讯",
+     "expected": "时间位置展示占位符（如「--」），不显示空白"
+    }
+   ],
+   "expected_result": "发布时间缺失时展示占位符，页面不出现空白",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "搜索结果页-对阵双方正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「曼联」，返回的赛事结果中包含对阵双方（如「曼联 vs 利物浦」）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看对阵双方",
+     "expected": "对阵双方以「球队名称 vs 球队名称」格式展示，名称完整"
+    }
+   ],
+   "expected_result": "对阵双方正常展示，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "搜索结果页-对阵双方名称超长时省略显示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词「曼联」，返回的赛事结果中包含超长对阵双方名称（如「曼彻斯特联足球俱乐部 vs 利物浦足球俱乐部」超过显示宽度）",
+   "preconditions": "用户已登录，进入搜索结果页，搜索关键词「曼联」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入「曼联」并点击搜索",
+     "expected": "跳转至搜索结果页，展示赛事结果"
+    },
+    {
+     "step": 2,
+     "desc": "在赛事结果列表中，查看超长对阵双方名称",
+     "expected": "名称超出显示区域时以省略号（…）截断，不换行"
+    }
+   ],
+   "expected_result": "超长对阵双方名称以省略号截断，不影响布局",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "搜索结果页-超长球队名称展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词为“皇家马德里足球俱乐部”，返回结果中包含球队名称为“皇家马德里足球俱乐部”的球队卡片，该名称长度超过常规显示宽度。",
+   "preconditions": "已登录，进入搜索结果页，搜索“皇家马德里足球俱乐部”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“皇家马德里足球俱乐部”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看球队名称展示",
+     "expected": "球队名称支持两行显示，超长部分合理截断或换行，不溢出界面"
+    }
+   ],
+   "expected_result": "超长球队名称展示正常，无样式错乱",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "搜索结果页-置顶内容展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台配置了置顶内容（如热门球队“曼联”），搜索“曼联”时置顶内容应显示在结果列表顶部。",
+   "preconditions": "运营后台已配置置顶内容，已登录，进入搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“曼联”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看结果列表",
+     "expected": "置顶内容（如曼联球队）显示在列表最上方，并带有置顶标识"
+    }
+   ],
+   "expected_result": "置顶内容正确展示在顶部",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "搜索结果页-无置顶内容时正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未配置任何置顶内容，搜索“利物浦”时结果列表应无置顶项。",
+   "preconditions": "运营后台未配置置顶内容，已登录，进入搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“利物浦”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看结果列表",
+     "expected": "结果列表无置顶标识，所有结果按默认排序展示"
+    }
+   ],
+   "expected_result": "无置顶内容时列表正常展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "搜索结果-赛事卡片展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词“曼联”，返回结果中包含赛事卡片，卡片显示联赛名称、轮次、主客队名称、比分、比赛时间等。",
+   "preconditions": "已登录，进入搜索结果页，搜索“曼联”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“曼联”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事结果区域",
+     "expected": "赛事卡片展示联赛名称、轮次、主客队名称、比分、比赛时间等字段"
+    }
+   ],
+   "expected_result": "赛事卡片信息完整展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "搜索结果-赛事点击跳转",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索结果中存在赛事卡片，点击该卡片应跳转至对应赛事详情页。",
+   "preconditions": "已登录，进入搜索结果页，搜索“曼联”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“曼联”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "点击赛事卡片",
+     "expected": "跳转至对应赛事详情页"
+    }
+   ],
+   "expected_result": "成功跳转至赛事详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "搜索结果-赛事时间范围过滤",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词“曼联”，结果中赛事时间在近一个月内（如当前日期为2025-08-24，赛事时间为2025-08-20），应展示。",
+   "preconditions": "已登录，进入搜索结果页，搜索“曼联”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“曼联”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事结果",
+     "expected": "仅展示近一个月内的赛事，超过一个月的赛事不展示"
+    }
+   ],
+   "expected_result": "赛事时间过滤正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "搜索结果-赛事时间超过一个月不展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词“曼联”，结果中存在赛事时间为两个月前的赛事（如当前日期为2025-08-24，赛事时间为2025-06-01），该赛事不应展示。",
+   "preconditions": "已登录，进入搜索结果页，搜索“曼联”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“曼联”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事结果",
+     "expected": "超过一个月的赛事不展示"
+    }
+   ],
+   "expected_result": "超过一个月的赛事被过滤",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "搜索结果-球队卡片展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词“曼联”，结果中包含球队卡片，卡片显示球队名称和LOGO。",
+   "preconditions": "已登录，进入搜索结果页，搜索“曼联”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“曼联”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看球队结果区域",
+     "expected": "球队卡片展示球队名称和LOGO"
+    }
+   ],
+   "expected_result": "球队卡片信息完整展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "搜索结果-球队点击跳转",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索结果中存在球队卡片，点击该卡片应跳转至对应球队详情页。",
+   "preconditions": "已登录，进入搜索结果页，搜索“曼联”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“曼联”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "点击球队卡片",
+     "expected": "跳转至对应球队详情页"
+    }
+   ],
+   "expected_result": "成功跳转至球队详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "搜索结果-无结果时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索不存在的关键词“不存在的球队”，搜索结果应为空，展示空态提示。",
+   "preconditions": "已登录，进入搜索结果页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“不存在的球队”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看结果区域",
+     "expected": "展示空态提示，如“暂无相关结果”"
+    }
+   ],
+   "expected_result": "空态提示正确展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "搜索结果-球队名称多行展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "搜索结果页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索关键词“皇家马德里足球俱乐部”，返回结果中球队名称较长，应支持多行显示（如三行）。",
+   "preconditions": "已登录，进入搜索结果页，搜索“皇家马德里足球俱乐部”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入“皇家马德里足球俱乐部”并搜索",
+     "expected": "跳转至搜索结果页"
+    },
+    {
+     "step": 2,
+     "desc": "查看球队名称展示",
+     "expected": "球队名称支持多行显示，不溢出界面，样式正常"
+    }
+   ],
+   "expected_result": "多行显示正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "推荐搜索页面正常展示推荐搜索列表",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台已配置热门球队、热门联赛、球员数据，各至少5条，展示顺序数值已设置。",
+   "preconditions": "用户已登录，运营后台已配置推荐搜索数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "页面正常加载，推荐搜索区域展示球队、联赛、球员列表，每个列表最多展示10个，且展示LOGO和名称。"
+    }
+   ],
+   "expected_result": "推荐搜索列表正常展示，包含球队、联赛、球员，每个列表最多10个，排序按配置的展示顺序（数值越大越前）。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "推荐搜索列表为空时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未配置任何热门球队、热门联赛、球员数据。",
+   "preconditions": "用户已登录，运营后台无推荐搜索数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "推荐搜索区域展示空态提示，如「暂无推荐」或类似文案，不展示任何列表。"
+    }
+   ],
+   "expected_result": "推荐搜索区域显示空态提示，无数据展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "推荐搜索列表展示顺序按配置数值降序",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台配置球队A展示顺序为10，球队B展示顺序为5，球队C展示顺序为1。",
+   "preconditions": "用户已登录，运营后台已配置上述数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "球队列表按展示顺序降序展示：球队A、球队B、球队C。"
+    }
+   ],
+   "expected_result": "推荐搜索列表按展示顺序数值从大到小排列。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "推荐搜索列表展示顺序相同时按默认顺序",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "boundary",
+   "test_data_note": "运营后台配置球队A和球队B展示顺序相同（如都为5）。",
+   "preconditions": "用户已登录，运营后台已配置上述数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "球队A和球队B按默认顺序（如ID升序）展示，不出现乱序。"
+    }
+   ],
+   "expected_result": "展示顺序相同的项按默认规则排序，页面正常展示。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "推荐搜索列表超过10个时只展示前10个",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "运营后台配置12个热门球队，展示顺序依次为1-12。",
+   "preconditions": "用户已登录，运营后台已配置12个热门球队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "球队列表只展示前10个（展示顺序数值最大的10个），不展示第11、12个。"
+    }
+   ],
+   "expected_result": "每个推荐列表最多展示10个，超出部分不展示。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "热门搜索列表正常展示",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台已配置热门搜索关键词：高考结束、川航机场奖励500万、陈奕迅演唱会假唱、Mr.，展示顺序分别为4、3、2、1。",
+   "preconditions": "用户已登录，运营后台已配置热门搜索数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "热门搜索区域展示配置的关键词文案，按展示顺序降序排列：高考结束、川航机场奖励500万、陈奕迅演唱会假唱、Mr.。"
+    }
+   ],
+   "expected_result": "热门搜索列表正常展示，顺序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "热门搜索列表为空时展示空态",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未配置任何热门搜索关键词。",
+   "preconditions": "用户已登录，运营后台无热门搜索数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "热门搜索区域展示空态提示，如「暂无热门搜索」或类似文案。"
+    }
+   ],
+   "expected_result": "热门搜索区域显示空态提示，无数据展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "点击热门搜索关键词跳转搜索结果页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门搜索关键词「高考结束」配置跳转方式为「搜索结果页」。",
+   "preconditions": "用户已登录，运营后台已配置热门搜索关键词「高考结束」且跳转方式为搜索结果页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "页面正常加载，热门搜索区域展示关键词。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「高考结束」",
+     "expected": "跳转至搜索结果页，搜索框显示「高考结束」，并展示搜索结果。"
+    }
+   ],
+   "expected_result": "点击热门搜索关键词后，自动跳转至搜索结果页，并执行搜索。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "点击热门搜索关键词跳转自定义链接",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "热门搜索关键词「Mr.」配置跳转方式为「自定义」，链接为https://example.com/mr。",
+   "preconditions": "用户已登录，运营后台已配置热门搜索关键词「Mr.」且跳转方式为自定义链接。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "页面正常加载，热门搜索区域展示关键词。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「Mr.」",
+     "expected": "跳转至配置的自定义链接页面。"
+    }
+   ],
+   "expected_result": "点击热门搜索关键词后，跳转至配置的自定义链接。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "点击热门搜索关键词自定义链接无效时提示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "热门搜索关键词「测试」配置跳转方式为「自定义」，链接为无效URL（如abc）。",
+   "preconditions": "用户已登录，运营后台已配置热门搜索关键词「测试」且跳转方式为自定义链接，链接无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「测试」",
+     "expected": "页面提示「链接无效」或类似错误提示，不跳转。"
+    }
+   ],
+   "expected_result": "自定义链接无效时，给出错误提示，不跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "点击推荐搜索中的球队项跳转球队详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索列表中展示球队「Manchester United」，点击后应跳转至该球队详情页。",
+   "preconditions": "用户已登录，运营后台已配置热门球队「Manchester United」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "推荐搜索区域展示球队「Manchester United」。"
+    },
+    {
+     "step": 2,
+     "desc": "点击球队「Manchester United」",
+     "expected": "跳转至Manchester United球队详情页。"
+    }
+   ],
+   "expected_result": "点击球队项后跳转至对应球队详情页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "点击推荐搜索中的联赛项跳转联赛详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索列表中展示联赛「英超」，点击后应跳转至该联赛详情页。",
+   "preconditions": "用户已登录，运营后台已配置热门联赛「英超」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "推荐搜索区域展示联赛「英超」。"
+    },
+    {
+     "step": 2,
+     "desc": "点击联赛「英超」",
+     "expected": "跳转至英超联赛详情页。"
+    }
+   ],
+   "expected_result": "点击联赛项后跳转至对应联赛详情页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "点击推荐搜索中的球员项跳转球员详情页",
+   "priority": "P0",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "推荐搜索列表中展示球员「C罗」，点击后应跳转至该球员详情页。",
+   "preconditions": "用户已登录，运营后台已配置热门球员「C罗」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "推荐搜索区域展示球员「C罗」。"
+    },
+    {
+     "step": 2,
+     "desc": "点击球员「C罗」",
+     "expected": "跳转至C罗球员详情页。"
+    }
+   ],
+   "expected_result": "点击球员项后跳转至对应球员详情页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "推荐搜索球员项展示所属球队信息",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台配置球员「C罗」所属球队为「利雅得胜利」。",
+   "preconditions": "用户已登录，运营后台已配置球员「C罗」及其所属球队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "推荐搜索区域展示球员「C罗」，并展示其所属球队「利雅得胜利」。"
+    }
+   ],
+   "expected_result": "球员项展示所属球队信息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "推荐搜索球员项未配置所属球队时展示默认",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台配置球员「张三」但未配置所属球队。",
+   "preconditions": "用户已登录，运营后台已配置球员「张三」但无所属球队信息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "球员「张三」展示时，所属球队位置显示默认占位符（如「暂无球队」）或留空，页面不报错。"
+    }
+   ],
+   "expected_result": "球员项无所属球队时正常展示，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "推荐搜索列表LOGO加载失败时展示占位图",
+   "priority": "P2",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台配置球队「Manchester United」的LOGO图片URL无效。",
+   "preconditions": "用户已登录，运营后台已配置球队LOGO但图片加载失败。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推荐搜索页面（PC端）",
+     "expected": "球队「Manchester United」的LOGO位置显示默认占位图，不显示破图图标。"
+    }
+   ],
+   "expected_result": "LOGO加载失败时展示占位图，不影响页面布局。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "推荐搜索页面在未登录状态下可访问",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "boundary",
+   "test_data_note": "用户未登录，直接访问推荐搜索页面。",
+   "preconditions": "用户未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在未登录状态下访问推荐搜索页面（PC端）",
+     "expected": "页面正常加载，推荐搜索和热门搜索列表正常展示，点击跳转时若需要登录则提示登录。"
+    }
+   ],
+   "expected_result": "未登录用户可浏览推荐搜索页面，点击跳转时按需提示登录。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "推荐搜索页面在移动端web正常展示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用移动端浏览器访问推荐搜索页面。",
+   "preconditions": "用户已登录，使用移动端浏览器。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在移动端浏览器访问推荐搜索页面",
+     "expected": "页面正常展示，布局适配移动端，推荐搜索和热门搜索列表正常显示。"
+    }
+   ],
+   "expected_result": "移动端web正常展示推荐搜索页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "web"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "推荐搜索页面在安卓iOS客户端正常展示",
+   "priority": "P1",
+   "domain": "搜索",
+   "module": "推荐搜索_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用安卓或iOS客户端访问推荐搜索页面。",
+   "preconditions": "用户已登录，使用安卓或iOS客户端。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在安卓或iOS客户端打开推荐搜索页面",
+     "expected": "页面正常展示，推荐搜索和热门搜索列表正常显示。"
+    }
+   ],
+   "expected_result": "安卓/iOS客户端正常展示推荐搜索页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-154"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-1 生成被截断，已重试",
+  "functional-chunk-3 生成被截断，已重试"
+ ]
+}

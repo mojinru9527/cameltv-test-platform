@@ -801,7 +801,7 @@ def _merge_split_results(func_result: dict | None, api_result: dict | None,
 
 # C68-3: 分批生成常量与工具（batch-69）
 _CHUNK_FP_LIMIT = 12  # Batch 103: 每用例新增设计字段后调小分块，避免输出截断导致覆盖缺口
-_CHUNK_CONCURRENCY = 2
+_CHUNK_CONCURRENCY = 5  # Batch 125: 全量模块生成提速（DeepSeek 并发安全范围内）
 
 
 def _split_extraction_chunks(
@@ -1206,3 +1206,4 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
         result["_warnings"] = warnings
 
     return result
+

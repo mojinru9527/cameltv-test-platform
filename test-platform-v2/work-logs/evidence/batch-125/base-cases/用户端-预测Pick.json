@@ -1,0 +1,7871 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "更新活动的状态，并停止用户参与该场预测活动",
+    "description": "action：更新活动的状态，并停止用户参与该场预测活动（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确活动状态更新的具体触发时机（如比赛开始时间到达）以及状态变更后的界面表现（如按钮置灰、提示文案）。",
+      "suggestion": "补充触发条件（如比赛开始时间到达）和状态变更后的UI表现（如预测按钮置灰、显示'已停止参与'提示）。"
+     },
+     {
+      "severity": "medium",
+      "description": "未说明停止参与后，用户已参与的记录如何处理（保留待开奖状态）。",
+      "suggestion": "明确停止参与后，已参与记录保留并进入待开奖状态。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "更新活动状态，并对“预测成功”的用户发放银钻奖励",
+    "description": "action：更新活动状态，并对“预测成功”的用户发放银钻奖励（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确奖励发放的触发时机（如比赛结束后自动发放）以及发放失败的处理机制。",
+      "suggestion": "明确比赛结束后自动触发发放，并补充发放失败（如用户账户异常）的重试或补偿机制。"
+     },
+     {
+      "severity": "medium",
+      "description": "未说明奖励发放后用户银钻明细的记录方式。",
+      "suggestion": "补充奖励发放后需在银钻明细中生成'预测奖励'记录。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "结束",
+    "description": "list：结束（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求描述过于简略，未明确'结束'的具体含义（活动状态变为已结束？还是流程结束？）以及结束后的界面表现。",
+      "suggestion": "明确'结束'指活动状态变为'已结束'，并补充结束后的界面展示（如按钮置灰、显示'已结束'标签）。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "预测成功的判定",
+    "description": "state：预测成功的判定（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确判定预测成功的具体规则（如比赛结果与用户选项一致），以及平局、取消等特殊情况的处理。",
+      "suggestion": "补充判定规则：比赛结果对应的选项（主胜/客胜/平局）与用户选项一致即为预测成功；比赛取消则退款。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "某场比赛的结果，所对应的预测选项(主胜、客胜、平局)，为预测成功的选项",
+    "description": "action：某场比赛的结果，所对应的预测选项(主胜、客胜、平局)，为预测成功的选项；（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确比赛结果与选项的对应关系（如主队胜对应主胜），以及比赛取消或延期时如何处理。",
+      "suggestion": "补充比赛结果与选项的映射关系，并明确比赛取消时所有选项视为未成功，进行退款。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "发放奖励的规则",
+    "description": "action：发放奖励的规则（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确奖励发放的具体规则（如按参与时赔率计算、向下取整等），以及多次参与同一选项的计算方式。",
+      "suggestion": "补充奖励计算公式：奖励银钻 = 参与时消耗银钻 × 参与时该选项赔率，向下取整；多次参与独立计算。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-7",
+    "title": "预测成功的用户，可获得的奖励银钻数额为",
+    "description": "state：预测成功的用户，可获得的奖励银钻数额为：（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确奖励数额的计算公式，以及是否包含本金。",
+      "suggestion": "明确奖励数额 = 参与时消耗银钻 × 参与时该选项赔率（不含本金），并向下取整。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-8",
+    "title": "参与时消耗的银钻 * 参与时该选项的赛前实时赔率",
+    "description": "action：参与时消耗的银钻 * 参与时该选项的赛前实时赔率（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确'赛前实时赔率'的取值时点（如参与时刻的赔率），以及赔率变化对已参与记录的影响。",
+      "suggestion": "明确赔率以用户参与时刻的实时赔率为准，后续赔率变化不影响已参与记录。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-9",
+    "title": "多次参与该选项，需分开独立计算",
+    "description": "action：，多次参与该选项，需分开独立计算；（页面 银钻预测玩法）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确多次参与时，奖励发放是否逐笔独立计算，以及是否合并发放。",
+      "suggestion": "明确多次参与同一选项时，每笔参与独立计算奖励，发放时分别入账或合并但明细可查。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述了银钻预测玩法的核心流程，但存在多处关键细节缺失：状态更新的触发时机、奖励发放的时机与失败处理、预测成功的判定规则、奖励计算公式的取整方式等。建议补充明确的状态机定义和数值计算规则，以提高可测试性。"
+ },
+ "functional_cases": [
+  {
+   "title": "预测页面正常展示比赛列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在至少一场预测中的比赛，比赛数据完整（主客队、比分、时间、联赛）",
+   "preconditions": "用户已登录，存在预测中的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "页面加载成功，展示比赛预测列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表中的比赛卡片",
+     "expected": "每张卡片展示主队图标、主队名称、客队图标、客队名称、当前比分（如0-1）、比赛时间（如75′）、半场比分（如半场0-0）、联赛名称"
+    }
+   ],
+   "expected_result": "预测页面正确展示所有预测中的比赛信息，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "预测页面无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前无任何预测中的比赛",
+   "preconditions": "用户已登录，无预测中的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "页面展示空态提示，如「暂无预测比赛」或类似文案"
+    }
+   ],
+   "expected_result": "页面不崩溃，展示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "预测页面列表按比赛时间排序",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在多场比赛，比赛时间不同（如12:00、17:00、08:00）",
+   "preconditions": "用户已登录，存在多场预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "比赛列表按比赛开始时间升序排列（如08:00、12:00、17:00）"
+    }
+   ],
+   "expected_result": "列表排序正确，符合预期",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "预测页面列表加载更多",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "比赛数量超过一页（如20场），需分页加载",
+   "preconditions": "用户已登录，存在超过一页的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "展示第一页比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "上滑或点击加载更多",
+     "expected": "加载第二页比赛，列表追加展示"
+    }
+   ],
+   "expected_result": "分页加载正常，无重复数据，无遗漏",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "预测页面下拉刷新",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛数据有更新（如比分变化）",
+   "preconditions": "用户已登录，存在预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "展示当前比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "下拉刷新页面",
+     "expected": "列表重新加载，展示最新数据"
+    }
+   ],
+   "expected_result": "刷新后数据更新，无缓存旧数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "预测页面网络异常时提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "网络断开或服务器无响应",
+   "preconditions": "用户已登录，网络异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "页面展示网络错误提示，如「网络异常，请稍后重试」"
+    }
+   ],
+   "expected_result": "页面不崩溃，展示错误提示，提供重试按钮",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "主队信息展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "主队名称为正常长度（如「皇家马德里」）",
+   "preconditions": "用户已登录，存在预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "主队图标正常显示，主队名称完整展示"
+    }
+   ],
+   "expected_result": "主队图标和名称正确展示，无错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "主队名称为空时展示占位",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "主队名称为空字符串",
+   "preconditions": "用户已登录，存在主队名称为空的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "主队名称位置展示占位符或默认名称，不显示空白"
+    }
+   ],
+   "expected_result": "页面不崩溃，主队名称有合理展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "主队名称超长时截断展示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "主队名称为超长字符串（如超过20个字符）",
+   "preconditions": "用户已登录，存在主队名称超长的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "主队名称超长部分以省略号截断，不撑破布局"
+    }
+   ],
+   "expected_result": "名称截断显示，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "客队信息展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "客队名称为正常长度（如「巴塞罗那」）",
+   "preconditions": "用户已登录，存在预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "客队图标正常显示，客队名称完整展示"
+    }
+   ],
+   "expected_result": "客队图标和名称正确展示，无错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "客队名称为空时展示占位",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "客队名称为空字符串",
+   "preconditions": "用户已登录，存在客队名称为空的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "客队名称位置展示占位符或默认名称，不显示空白"
+    }
+   ],
+   "expected_result": "页面不崩溃，客队名称有合理展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "客队名称超长时截断展示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "客队名称为超长字符串（如超过20个字符）",
+   "preconditions": "用户已登录，存在客队名称超长的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "客队名称超长部分以省略号截断，不撑破布局"
+    }
+   ],
+   "expected_result": "名称截断显示，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "比分展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "当前比分为0-1，比赛进行到75分钟",
+   "preconditions": "用户已登录，存在进行中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "比分显示为「0 - 1」，比赛时间显示为「75′」"
+    }
+   ],
+   "expected_result": "比分和时间正确展示，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "比分数据异常时展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比分数据缺失或格式错误（如null）",
+   "preconditions": "用户已登录，存在比分数据异常的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "比分位置展示占位符或默认值，不显示空白或报错"
+    }
+   ],
+   "expected_result": "页面不崩溃，比分有合理展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "半场比分展示正确",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "半场比分为0-0",
+   "preconditions": "用户已登录，存在已进行到半场的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "半场比分显示为「半场 0-0」"
+    }
+   ],
+   "expected_result": "半场比分正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "半场比分未到时不展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "比赛未到半场（如比赛时间小于45分钟）",
+   "preconditions": "用户已登录，存在未到半场的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "半场比分位置不展示或显示占位符，不显示错误数据"
+    }
+   ],
+   "expected_result": "半场比分合理处理，不误导用户",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "联赛名称展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为「欧洲杯」",
+   "preconditions": "用户已登录，存在预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "联赛名称显示为「欧洲杯」，且右侧有「>」箭头图标"
+    }
+   ],
+   "expected_result": "联赛名称正确展示，箭头图标存在",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "点击联赛名称跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为「欧洲杯」",
+   "preconditions": "用户已登录，存在预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "页面展示比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击联赛名称",
+     "expected": "跳转到联赛详情页或相关比赛列表页"
+    }
+   ],
+   "expected_result": "跳转成功，目标页面正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "联赛名称为空时展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称为空字符串",
+   "preconditions": "用户已登录，存在联赛名称为空的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测页面",
+     "expected": "联赛名称位置展示占位符或默认名称，不显示空白"
+    }
+   ],
+   "expected_result": "页面不崩溃，联赛名称有合理展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "预测页面-比赛时间字段正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间为2025/03/27 08:30，该数据为需求中明确给出的示例时间，代表一场即将开始的比赛。",
+   "preconditions": "已进入预测页面，存在一场比赛，比赛开始时间为2025/03/27 08:30。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面，查看比赛时间字段。",
+     "expected": "页面展示比赛时间'2025/03/27 08:30'，格式正确，无乱码。"
+    }
+   ],
+   "expected_result": "比赛时间字段准确显示为'2025/03/27 08:30'，与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "预测页面-比赛时间字段为空时的展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台返回的比赛开始时间为空（null），模拟数据异常场景。",
+   "preconditions": "已进入预测页面，后台返回的比赛开始时间为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面，查看比赛时间字段。",
+     "expected": "页面不展示时间字段或展示占位符'--'，不出现空白或报错。"
+    }
+   ],
+   "expected_result": "时间字段为空时页面正常显示，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "预测页面-视频直播入口正常展示并可点击",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有视频直播信号，入口应可点击。",
+   "preconditions": "已进入预测页面，当前比赛有视频直播信号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'视频直播'入口。",
+     "expected": "入口正常显示，图标和文字清晰。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'视频直播'入口。",
+     "expected": "跳转到视频直播页面，直播正常播放。"
+    }
+   ],
+   "expected_result": "视频直播入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "预测页面-视频直播入口在无直播信号时置灰或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前比赛无视频直播信号，模拟无直播场景。",
+   "preconditions": "已进入预测页面，当前比赛无视频直播信号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'视频直播'入口。",
+     "expected": "入口置灰或隐藏，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击置灰的入口（若可见）。",
+     "expected": "点击无响应，不跳转。"
+    }
+   ],
+   "expected_result": "无直播信号时入口不可用，不产生错误跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "预测页面-动画直播入口正常展示并可点击",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有动画直播数据，入口应可点击。",
+   "preconditions": "已进入预测页面，当前比赛有动画直播数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'动画直播'入口。",
+     "expected": "入口正常显示，图标和文字清晰。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'动画直播'入口。",
+     "expected": "跳转到动画直播页面，动画正常展示。"
+    }
+   ],
+   "expected_result": "动画直播入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "预测页面-动画直播入口在无动画数据时置灰或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前比赛无动画直播数据，模拟无动画场景。",
+   "preconditions": "已进入预测页面，当前比赛无动画直播数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'动画直播'入口。",
+     "expected": "入口置灰或隐藏，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击置灰的入口（若可见）。",
+     "expected": "点击无响应，不跳转。"
+    }
+   ],
+   "expected_result": "无动画数据时入口不可用，不产生错误跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "预测页面-分享功能正常唤起分享面板",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户点击分享按钮，应唤起系统分享面板。",
+   "preconditions": "已进入预测页面，用户已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'分享'按钮。",
+     "expected": "弹出分享面板，包含分享渠道（如微信、微博等）。"
+    },
+    {
+     "step": 2,
+     "desc": "选择一个分享渠道完成分享。",
+     "expected": "分享成功，提示'分享成功'。"
+    }
+   ],
+   "expected_result": "分享功能正常，可成功分享。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "预测页面-分享功能在未登录时提示登录",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录，点击分享按钮。",
+   "preconditions": "已进入预测页面，用户未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'分享'按钮。",
+     "expected": "弹出登录提示，引导用户登录。"
+    }
+   ],
+   "expected_result": "未登录时分享被拦截，提示登录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "预测页面-聊天入口正常跳转聊天室",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行中，聊天室可用。",
+   "preconditions": "已进入预测页面，比赛进行中，用户已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'聊天'入口。",
+     "expected": "跳转到聊天室页面，聊天室正常加载。"
+    }
+   ],
+   "expected_result": "聊天入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "预测页面-聊天入口在未登录时提示登录",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录，点击聊天入口。",
+   "preconditions": "已进入预测页面，用户未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'聊天'入口。",
+     "expected": "弹出登录提示，引导用户登录。"
+    }
+   ],
+   "expected_result": "未登录时聊天入口被拦截，提示登录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "预测页面-指数入口正常跳转指数页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有指数数据，入口应可点击。",
+   "preconditions": "已进入预测页面，当前比赛有指数数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'指数'入口。",
+     "expected": "跳转到指数页面，展示指数数据。"
+    }
+   ],
+   "expected_result": "指数入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "预测页面-指数入口在无指数数据时置灰或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前比赛无指数数据，模拟无指数场景。",
+   "preconditions": "已进入预测页面，当前比赛无指数数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'指数'入口。",
+     "expected": "入口置灰或隐藏，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击置灰的入口（若可见）。",
+     "expected": "点击无响应，不跳转。"
+    }
+   ],
+   "expected_result": "无指数数据时入口不可用，不产生错误跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "预测页面-赛程入口正常跳转赛程页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有赛程数据，入口应可点击。",
+   "preconditions": "已进入预测页面，当前比赛有赛程数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'赛程'入口。",
+     "expected": "跳转到赛程页面，展示赛程信息。"
+    }
+   ],
+   "expected_result": "赛程入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "预测页面-赛程入口在无赛程数据时置灰或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前比赛无赛程数据，模拟无赛程场景。",
+   "preconditions": "已进入预测页面，当前比赛无赛程数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'赛程'入口。",
+     "expected": "入口置灰或隐藏，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击置灰的入口（若可见）。",
+     "expected": "点击无响应，不跳转。"
+    }
+   ],
+   "expected_result": "无赛程数据时入口不可用，不产生错误跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "预测页面-赛况入口正常跳转赛况页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行中，有赛况数据。",
+   "preconditions": "已进入预测页面，比赛进行中，有赛况数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'赛况'入口。",
+     "expected": "跳转到赛况页面，展示实时赛况。"
+    }
+   ],
+   "expected_result": "赛况入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "预测页面-赛况入口在比赛未开始时置灰或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛未开始，无赛况数据。",
+   "preconditions": "已进入预测页面，比赛未开始。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'赛况'入口。",
+     "expected": "入口置灰或隐藏，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击置灰的入口（若可见）。",
+     "expected": "点击无响应，不跳转。"
+    }
+   ],
+   "expected_result": "无赛况数据时入口不可用，不产生错误跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "预测页面-数据入口正常跳转数据页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有统计数据，入口应可点击。",
+   "preconditions": "已进入预测页面，当前比赛有统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'数据'入口。",
+     "expected": "跳转到数据页面，展示统计数据。"
+    }
+   ],
+   "expected_result": "数据入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "预测页面-数据入口在无统计数据时置灰或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前比赛无统计数据，模拟无数据场景。",
+   "preconditions": "已进入预测页面，当前比赛无统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'数据'入口。",
+     "expected": "入口置灰或隐藏，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击置灰的入口（若可见）。",
+     "expected": "点击无响应，不跳转。"
+    }
+   ],
+   "expected_result": "无统计数据时入口不可用，不产生错误跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "预测页面-阵容入口正常跳转阵容页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有阵容数据，入口应可点击。",
+   "preconditions": "已进入预测页面，当前比赛有阵容数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'阵容'入口。",
+     "expected": "跳转到阵容页面，展示阵容信息。"
+    }
+   ],
+   "expected_result": "阵容入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "预测页面-阵容入口在无阵容数据时置灰或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前比赛无阵容数据，模拟无阵容场景。",
+   "preconditions": "已进入预测页面，当前比赛无阵容数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'阵容'入口。",
+     "expected": "入口置灰或隐藏，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击置灰的入口（若可见）。",
+     "expected": "点击无响应，不跳转。"
+    }
+   ],
+   "expected_result": "无阵容数据时入口不可用，不产生错误跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "预测页面-Picks入口正常跳转Picks页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有Picks数据，入口应可点击。",
+   "preconditions": "已进入预测页面，当前比赛有Picks数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'Picks'入口。",
+     "expected": "跳转到Picks页面，展示Picks列表。"
+    }
+   ],
+   "expected_result": "Picks入口可点击，跳转成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "预测页面-Picks入口在无Picks数据时置灰或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前比赛无Picks数据，模拟无Picks场景。",
+   "preconditions": "已进入预测页面，当前比赛无Picks数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到'Picks'入口。",
+     "expected": "入口置灰或隐藏，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击置灰的入口（若可见）。",
+     "expected": "点击无响应，不跳转。"
+    }
+   ],
+   "expected_result": "无Picks数据时入口不可用，不产生错误跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "预测页面-横幅广告正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了横幅广告，广告内容为'测试广告'。",
+   "preconditions": "已进入预测页面，后台已配置横幅广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，找到横幅广告区域。",
+     "expected": "广告正常展示，图片和文字清晰，无遮挡。"
+    }
+   ],
+   "expected_result": "横幅广告正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "预测页面-横幅广告无广告时隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置横幅广告，模拟无广告场景。",
+   "preconditions": "已进入预测页面，后台未配置横幅广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测页面，检查横幅广告区域。",
+     "expected": "广告区域不展示，页面布局正常。"
+    }
+   ],
+   "expected_result": "无广告时横幅广告区域隐藏，不影响页面布局。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "比赛预测-正常展示预测列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入预测页面，存在一场预测中的比赛：主队名称主队名称主队名称 vs 客队名称客队名称客队名称，赔率主胜1.20、客胜11.00、平局5.25",
+   "preconditions": "用户已登录，存在预测中的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面",
+     "expected": "页面加载成功，展示比赛预测列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛预测列表",
+     "expected": "展示主队、客队、比分、时间、联赛名称、预测选项（主胜/客胜/平局）及对应赔率"
+    }
+   ],
+   "expected_result": "预测列表正确展示所有预测中的比赛信息，赔率与后台配置一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "比赛预测-无预测中比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何预测中的比赛数据",
+   "preconditions": "用户已登录，后台无预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面",
+     "expected": "页面展示空态提示，如“暂无预测中的比赛”"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现异常或空白",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "比赛预测-预测选项赔率展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预测中的比赛，主胜赔率1.20，客胜赔率11.00，平局赔率5.25",
+   "preconditions": "用户已登录，存在预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面",
+     "expected": "页面展示预测选项及赔率"
+    },
+    {
+     "step": 2,
+     "desc": "核对赔率数值",
+     "expected": "主胜赔率显示1.20，客胜赔率显示11.00，平局赔率显示5.25，与后台配置一致"
+    }
+   ],
+   "expected_result": "赔率展示正确，无格式错误",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "比赛预测-赔率实时更新",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预测中的比赛，后台修改主胜赔率从1.20变为1.25",
+   "preconditions": "用户已登录，存在预测中的比赛，后台可修改赔率",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面",
+     "expected": "展示当前赔率1.20"
+    },
+    {
+     "step": 2,
+     "desc": "后台修改主胜赔率为1.25",
+     "expected": "页面赔率在刷新或实时推送后更新为1.25"
+    }
+   ],
+   "expected_result": "赔率实时更新，用户看到的赔率与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "玩法说明-点击查看玩法说明",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预测页面存在玩法说明入口",
+   "preconditions": "用户已登录，进入预测页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“玩法说明”",
+     "expected": "弹出玩法说明弹窗或跳转至玩法说明页面"
+    },
+    {
+     "step": 2,
+     "desc": "查看玩法说明内容",
+     "expected": "展示玩法流程、状态说明、预测成功判定及奖励规则"
+    }
+   ],
+   "expected_result": "玩法说明内容完整、正确，与银钻预测玩法需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "玩法说明-未登录用户点击玩法说明",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户访问预测页面",
+   "preconditions": "用户未登录，进入预测页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“玩法说明”",
+     "expected": "玩法说明可正常查看，无需登录"
+    }
+   ],
+   "expected_result": "玩法说明正常展示，不要求登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "预测更多比赛-点击跳转预测比赛列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预测页面存在“预测更多比赛”入口",
+   "preconditions": "用户已登录，进入预测页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“预测更多比赛”",
+     "expected": "跳转至预测比赛列表页面"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测比赛列表",
+     "expected": "展示所有可预测的比赛，包括预测中、待开奖等状态"
+    }
+   ],
+   "expected_result": "成功跳转至预测比赛列表，列表数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "预测更多比赛-跳转后返回预测页面",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "从预测页面点击预测更多比赛跳转至列表",
+   "preconditions": "用户已登录，进入预测页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“预测更多比赛”",
+     "expected": "跳转至预测比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击返回按钮",
+     "expected": "返回预测页面，页面状态保持"
+    }
+   ],
+   "expected_result": "返回后预测页面正常显示，无异常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "确认参与弹窗-正常参与预测",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预测中的比赛，主胜赔率1.20，用户银钻余额1000，输入参与银钻500",
+   "preconditions": "用户已登录，银钻余额≥500，比赛处于预测中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“预测主胜”",
+     "expected": "弹出确认参与弹窗，展示预测选项、赔率1.20、可赢银钻600"
+    },
+    {
+     "step": 2,
+     "desc": "输入参与银钻500",
+     "expected": "输入框可输入，显示可赢银钻600"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确认参与”",
+     "expected": "弹窗关闭，提示参与成功，银钻扣减500，预测记录新增一条"
+    }
+   ],
+   "expected_result": "参与成功，银钻扣减500，预测记录生成，状态为预测中",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "确认参与弹窗-参与银钻超过余额",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "预测中的比赛，主胜赔率1.20，用户银钻余额500，输入参与银钻501",
+   "preconditions": "用户已登录，银钻余额500，比赛处于预测中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“预测主胜”",
+     "expected": "弹出确认参与弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入参与银钻501",
+     "expected": "输入框提示“余额不足”或限制输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确认参与”",
+     "expected": "提示“银钻余额不足”，无法参与"
+    }
+   ],
+   "expected_result": "参与被拦截，银钻不扣减，无预测记录生成",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "确认参与弹窗-参与银钻为0",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "预测中的比赛，主胜赔率1.20，用户银钻余额1000，输入参与银钻0",
+   "preconditions": "用户已登录，银钻余额1000，比赛处于预测中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“预测主胜”",
+     "expected": "弹出确认参与弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入参与银钻0",
+     "expected": "输入框提示“参与银钻必须大于0”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确认参与”",
+     "expected": "提示“参与银钻必须大于0”，无法参与"
+    }
+   ],
+   "expected_result": "参与被拦截，银钻不扣减",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "确认参与弹窗-取消参与",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "预测中的比赛，主胜赔率1.20，用户银钻余额1000，输入参与银钻500",
+   "preconditions": "用户已登录，银钻余额1000，比赛处于预测中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“预测主胜”",
+     "expected": "弹出确认参与弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入参与银钻500",
+     "expected": "输入框显示500"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”",
+     "expected": "弹窗关闭，不扣减银钻，无预测记录生成"
+    }
+   ],
+   "expected_result": "取消参与成功，银钻不扣减，无记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "已结束-展示已结束比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在一场已结束的比赛，主队1-0客队，预测选项已不可点击",
+   "preconditions": "用户已登录，存在已结束的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面",
+     "expected": "页面展示已结束的比赛，比分1-0"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测选项",
+     "expected": "预测选项置灰或显示“已结束”，不可点击"
+    }
+   ],
+   "expected_result": "已结束比赛正确展示，预测选项不可操作",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "已结束-点击已结束比赛的预测选项",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已结束的比赛，主胜选项",
+   "preconditions": "用户已登录，存在已结束的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面",
+     "expected": "展示已结束的比赛"
+    },
+    {
+     "step": 2,
+     "desc": "点击“预测主胜”",
+     "expected": "无响应或提示“比赛已结束，无法预测”"
+    }
+   ],
+   "expected_result": "无法参与已结束比赛的预测，无弹窗",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "LOGO-正常展示主客队LOGO",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预测中的比赛，主队和客队均有LOGO图片",
+   "preconditions": "用户已登录，存在预测中的比赛，LOGO图片正常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面",
+     "expected": "主队和客队LOGO正常显示"
+    }
+   ],
+   "expected_result": "LOGO图片加载成功，无裂图",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "LOGO-LOGO加载失败显示占位图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "主队LOGO图片地址无效",
+   "preconditions": "用户已登录，存在预测中的比赛，主队LOGO加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测页面",
+     "expected": "主队LOGO位置显示默认占位图，不出现裂图"
+    }
+   ],
+   "expected_result": "显示占位图，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "Picks 列表正常展示所有元素",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场进行中的比赛，主队名称为「皇家马德里」，客队名称为「巴塞罗那」，比分 0-1，比赛时间 75′，半场比分 0-0，联赛名称为「西班牙甲级联赛」，确保列表有数据。",
+   "preconditions": "已登录，存在至少一场进行中的比赛且该比赛有预测活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "页面加载成功，显示 Picks 列表。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表项",
+     "expected": "列表项展示主队图标和名称「皇家马德里」、客队图标和名称「巴塞罗那」、比分「0 - 1」、比赛时间「75′」、半场比分「半场 0-0」、联赛名称「西班牙甲级联赛」及跳转箭头。"
+    }
+   ],
+   "expected_result": "Picks 列表正常展示所有元素，数据与后台一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "Picks 列表为空时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "无任何进行中的比赛或预测活动，列表数据为空。",
+   "preconditions": "已登录，后台无任何进行中的比赛或预测活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "页面加载成功，显示空态提示（如「暂无数据」）。"
+    }
+   ],
+   "expected_result": "列表为空时展示空态提示，不出现异常或空白页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "主队名称超长时显示省略号",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "主队名称为超长字符串，如「皇家马德里足球俱乐部（Real Madrid Club de Fútbol）」，超过显示区域。",
+   "preconditions": "已登录，存在一场比赛，主队名称为超长字符串。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "列表项中主队名称显示省略号，不换行不溢出。"
+    }
+   ],
+   "expected_result": "超长名称以省略号截断显示，布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "主队图标加载失败时显示占位图",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "主队图标 URL 无效或网络异常，导致图片加载失败。",
+   "preconditions": "已登录，存在一场比赛，主队图标地址无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "主队图标位置显示默认占位图，不影响其他元素展示。"
+    }
+   ],
+   "expected_result": "图标加载失败时显示占位图，不出现裂图或布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "客队名称超长时显示省略号",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "客队名称为超长字符串，如「巴塞罗那足球俱乐部（Futbol Club Barcelona）」，超过显示区域。",
+   "preconditions": "已登录，存在一场比赛，客队名称为超长字符串。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "列表项中客队名称显示省略号，不换行不溢出。"
+    }
+   ],
+   "expected_result": "超长名称以省略号截断显示，布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "比分显示为负数或异常值时的处理",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台返回异常比分数据，如 -1 - 2 或 99 - 99。",
+   "preconditions": "已登录，存在一场比赛，后台比分数据异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "比分显示为后台返回的原始值，或按需求进行格式化，不出现崩溃。"
+    }
+   ],
+   "expected_result": "异常比分数据被合理展示或过滤，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "比赛时间显示为 0′ 或超过 90′ 的边界处理",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "比赛时间分别为 0′ 和 120′（加时赛场景）。",
+   "preconditions": "已登录，存在两场比赛，一场刚开始，一场进入加时。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "比赛时间分别显示「0′」和「120′」，格式正确。"
+    }
+   ],
+   "expected_result": "边界时间正常展示，无格式错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "半场比分显示为 半场 0-0 的格式",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "半场比分为 0-0，应显示为「半场 0-0」。",
+   "preconditions": "已登录，存在一场比赛，半场比分为 0-0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "列表项显示「半场 0-0」。"
+    }
+   ],
+   "expected_result": "半场比分格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "联赛名称超长时显示省略号并可跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称为超长字符串，如「西班牙足球甲级联赛（La Liga Santander）」，超过显示区域。",
+   "preconditions": "已登录，存在一场比赛，联赛名称为超长字符串。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "联赛名称显示省略号，点击箭头可跳转至联赛详情。"
+    }
+   ],
+   "expected_result": "超长联赛名称截断显示，跳转功能正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "点击联赛名称跳转至联赛详情",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为「西班牙甲级联赛」，点击后应跳转至对应联赛详情页。",
+   "preconditions": "已登录，存在一场比赛，联赛名称为「西班牙甲级联赛」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "列表项显示联赛名称和箭头。"
+    },
+    {
+     "step": 2,
+     "desc": "点击联赛名称或箭头",
+     "expected": "跳转至「西班牙甲级联赛」详情页。"
+    }
+   ],
+   "expected_result": "点击后正确跳转至联赛详情页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "列表数据加载失败时显示错误提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或接口返回 500，导致列表数据加载失败。",
+   "preconditions": "已登录，网络异常或接口故障。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入页面 picks",
+     "expected": "页面显示加载失败提示（如「加载失败，请重试」），并提供重试按钮。"
+    }
+   ],
+   "expected_result": "加载失败时给出明确提示，可重试。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "未登录时访问 picks 页面",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/picks",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "未登录状态下直接访问 picks 页面。",
+   "preconditions": "未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "直接访问 picks 页面 URL",
+     "expected": "跳转至登录页，或提示需要登录。"
+    }
+   ],
+   "expected_result": "未登录用户被拦截，无法查看 picks 列表。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "验证比赛开始时间字段正确展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间为 2025/03/27 08:30，该时间为服务器返回的比赛开始时间，用于验证字段展示。",
+   "preconditions": "已进入页面 picks，且该比赛存在开始时间数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开页面 picks",
+     "expected": "页面正常加载，比赛信息区域展示主客队、比分等。"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛开始时间字段",
+     "expected": "显示「2025/03/27 08:30」，格式为 YYYY/MM/DD HH:mm，且与服务器返回一致。"
+    }
+   ],
+   "expected_result": "页面正确展示比赛开始时间「2025/03/27 08:30」，无乱码、无截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "验证比赛开始时间字段为空时的展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "模拟比赛开始时间为空（null）的异常数据，验证页面容错。",
+   "preconditions": "已进入页面 picks，且该比赛开始时间字段为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开页面 picks（该比赛开始时间为空）",
+     "expected": "页面正常加载，不崩溃。"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛开始时间字段",
+     "expected": "该字段显示为占位符（如「--」）或隐藏，不显示异常内容。"
+    }
+   ],
+   "expected_result": "页面不崩溃，开始时间字段以占位符或隐藏方式处理，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "点击视频直播入口进入直播页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "该比赛有视频直播流，点击视频直播入口应跳转至直播页面。",
+   "preconditions": "已进入页面 picks，且该比赛存在视频直播流。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「视频直播」入口",
+     "expected": "跳转至视频直播页面，播放该比赛直播。"
+    }
+   ],
+   "expected_result": "成功跳转至视频直播页面，直播正常播放。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "点击视频直播入口无直播流时提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该比赛无视频直播流，点击入口应给出提示。",
+   "preconditions": "已进入页面 picks，且该比赛无视频直播流。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「视频直播」入口",
+     "expected": "弹出提示「暂无视频直播」或入口置灰不可点击。"
+    }
+   ],
+   "expected_result": "给出明确提示或入口置灰，不跳转空白页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "点击动画直播入口进入动画直播页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "该比赛有动画直播数据，点击动画直播入口应跳转至动画直播页面。",
+   "preconditions": "已进入页面 picks，且该比赛存在动画直播数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「动画直播」入口",
+     "expected": "跳转至动画直播页面，展示动画直播内容。"
+    }
+   ],
+   "expected_result": "成功跳转至动画直播页面，动画直播正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "点击动画直播入口无数据时提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该比赛无动画直播数据，点击入口应给出提示。",
+   "preconditions": "已进入页面 picks，且该比赛无动画直播数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「动画直播」入口",
+     "expected": "弹出提示「暂无动画直播」或入口置灰不可点击。"
+    }
+   ],
+   "expected_result": "给出明确提示或入口置灰，不跳转空白页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "点击分享弹出分享面板",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击分享按钮，应弹出分享面板，包含分享渠道。",
+   "preconditions": "已进入页面 picks，且已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「分享」按钮",
+     "expected": "弹出分享面板，展示可分享的渠道（如微信、微博等）。"
+    }
+   ],
+   "expected_result": "分享面板正常弹出，渠道列表完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "未登录点击分享提示登录",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录状态下点击分享，应提示登录。",
+   "preconditions": "已进入页面 picks，且未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「分享」按钮",
+     "expected": "弹出提示「请先登录」或跳转登录页。"
+    }
+   ],
+   "expected_result": "提示登录，不弹出分享面板。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "点击聊天入口进入聊天室",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击聊天入口，应进入该比赛的聊天室。",
+   "preconditions": "已进入页面 picks，且已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「聊天」入口",
+     "expected": "跳转至聊天室页面，展示聊天内容。"
+    }
+   ],
+   "expected_result": "成功进入聊天室，聊天内容正常加载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "未登录点击聊天提示登录",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录状态下点击聊天，应提示登录。",
+   "preconditions": "已进入页面 picks，且未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「聊天」入口",
+     "expected": "弹出提示「请先登录」或跳转登录页。"
+    }
+   ],
+   "expected_result": "提示登录，不进入聊天室。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "点击指数入口进入指数页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击指数入口，应跳转至指数页面。",
+   "preconditions": "已进入页面 picks。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「指数」入口",
+     "expected": "跳转至指数页面，展示相关指数数据。"
+    }
+   ],
+   "expected_result": "成功跳转至指数页面，数据正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "点击指数入口无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该比赛无指数数据，点击指数入口应展示空态。",
+   "preconditions": "已进入页面 picks，且该比赛无指数数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「指数」入口",
+     "expected": "跳转至指数页面，展示「暂无指数数据」空态。"
+    }
+   ],
+   "expected_result": "指数页面展示空态提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "点击赛程入口进入赛程页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击赛程入口，应跳转至赛程页面。",
+   "preconditions": "已进入页面 picks。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛程」入口",
+     "expected": "跳转至赛程页面，展示该比赛的赛程信息。"
+    }
+   ],
+   "expected_result": "成功跳转至赛程页面，赛程信息正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "点击赛程入口无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该比赛无赛程数据，点击赛程入口应展示空态。",
+   "preconditions": "已进入页面 picks，且该比赛无赛程数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛程」入口",
+     "expected": "跳转至赛程页面，展示「暂无赛程数据」空态。"
+    }
+   ],
+   "expected_result": "赛程页面展示空态提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "点击赛况入口进入赛况页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击赛况入口，应跳转至赛况页面。",
+   "preconditions": "已进入页面 picks。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛况」入口",
+     "expected": "跳转至赛况页面，展示比赛实时赛况。"
+    }
+   ],
+   "expected_result": "成功跳转至赛况页面，赛况信息正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "点击赛况入口无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该比赛无赛况数据，点击赛况入口应展示空态。",
+   "preconditions": "已进入页面 picks，且该比赛无赛况数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「赛况」入口",
+     "expected": "跳转至赛况页面，展示「暂无赛况数据」空态。"
+    }
+   ],
+   "expected_result": "赛况页面展示空态提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "点击数据入口进入数据页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击数据入口，应跳转至数据页面。",
+   "preconditions": "已进入页面 picks。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「数据」入口",
+     "expected": "跳转至数据页面，展示比赛统计数据。"
+    }
+   ],
+   "expected_result": "成功跳转至数据页面，统计数据正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "点击数据入口无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该比赛无统计数据，点击数据入口应展示空态。",
+   "preconditions": "已进入页面 picks，且该比赛无统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「数据」入口",
+     "expected": "跳转至数据页面，展示「暂无数据」空态。"
+    }
+   ],
+   "expected_result": "数据页面展示空态提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "点击阵容入口进入阵容页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击阵容入口，应跳转至阵容页面。",
+   "preconditions": "已进入页面 picks。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「阵容」入口",
+     "expected": "跳转至阵容页面，展示双方阵容信息。"
+    }
+   ],
+   "expected_result": "成功跳转至阵容页面，阵容信息正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "点击阵容入口无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该比赛无阵容数据，点击阵容入口应展示空态。",
+   "preconditions": "已进入页面 picks，且该比赛无阵容数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「阵容」入口",
+     "expected": "跳转至阵容页面，展示「暂无阵容数据」空态。"
+    }
+   ],
+   "expected_result": "阵容页面展示空态提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "点击预测入口进入预测页面",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击预测入口，应跳转至预测页面（比赛预测）。",
+   "preconditions": "已进入页面 picks。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「预测」入口",
+     "expected": "跳转至预测页面，展示该比赛的预测选项。"
+    }
+   ],
+   "expected_result": "成功跳转至预测页面，预测选项正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "点击预测入口比赛已结束时提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该比赛已结束，点击预测入口应提示无法预测。",
+   "preconditions": "已进入页面 picks，且该比赛已结束。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「预测」入口",
+     "expected": "弹出提示「比赛已结束，无法预测」或入口置灰。"
+    }
+   ],
+   "expected_result": "给出明确提示或入口置灰，不进入预测页面。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "横幅广告正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在横幅广告数据，验证广告位正常展示。",
+   "preconditions": "已进入页面 picks，且存在横幅广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开页面 picks",
+     "expected": "横幅广告位展示广告内容，图片/文字正常。"
+    }
+   ],
+   "expected_result": "横幅广告正常展示，无错位、无乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "无横幅广告时隐藏广告位",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无横幅广告数据，验证广告位隐藏或展示占位。",
+   "preconditions": "已进入页面 picks，且无横幅广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开页面 picks",
+     "expected": "横幅广告位不展示，或展示空态占位，不影响页面布局。"
+    }
+   ],
+   "expected_result": "广告位隐藏或占位，页面布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "Picks列表正常展示多条记录",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟用户已登录，后台存在2条有效Pick记录，每条包含完整字段（昵称、Yield、Hit Rate等）",
+   "preconditions": "用户已登录，进入picks页面，后台存在至少2条有效Pick记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "页面加载成功，显示Picks标题和列表区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示2条Pick记录，每条记录包含用户昵称、Yield、Hit Rate、Avg Odds、Form、比赛时间、联赛名称、主客队名称、发布时间、骆驼币、PV、Streak、头像等元素，且数据与后台一致"
+    }
+   ],
+   "expected_result": "Picks列表正常展示所有有效记录，各字段显示正确，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "Picks列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何Pick记录",
+   "preconditions": "用户已登录，后台无Pick记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "页面显示空态提示（如“暂无相关记录”），不显示列表项"
+    }
+   ],
+   "expected_result": "页面展示空态提示，无报错，无空白异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "Picks列表加载失败时提示错误",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或接口返回500",
+   "preconditions": "用户已登录，网络异常或接口故障",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "页面显示加载失败提示（如“加载失败，请重试”），并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面提示错误，不崩溃，可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "用户昵称正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户昵称为“用户昵称用户昵称”，长度在正常范围内",
+   "preconditions": "已登录，存在一条Pick记录，昵称为“用户昵称用户昵称”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "列表项中显示用户昵称“用户昵称用户昵称”，无截断或乱码"
+    }
+   ],
+   "expected_result": "用户昵称完整显示，与后台数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "用户昵称超长时截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户昵称为50个字符（超过UI显示宽度）",
+   "preconditions": "已登录，存在一条Pick记录，昵称为50个字符",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "列表项中昵称显示为截断形式（如省略号），不换行，不撑破布局"
+    }
+   ],
+   "expected_result": "超长昵称被合理截断，页面布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "Yield字段正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "Yield值为+12.4%（正数，一位小数）",
+   "preconditions": "已登录，存在一条Pick记录，Yield为+12.4%",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "列表项中显示“Yield: +12.4%”，格式正确，正号显示"
+    }
+   ],
+   "expected_result": "Yield字段显示正确，包含正号、数值和百分号",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "Yield为负值时显示负号",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "Yield值为-5.0%（负数）",
+   "preconditions": "已登录，存在一条Pick记录，Yield为-5.0%",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "列表项中显示“Yield: -5.0%”，负号正确显示"
+    }
+   ],
+   "expected_result": "Yield负值显示正确，无格式错误",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "Yield为0%时显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "Yield值为0%",
+   "preconditions": "已登录，存在一条Pick记录，Yield为0%",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "列表项中显示“Yield: 0%”，无正负号"
+    }
+   ],
+   "expected_result": "Yield为0%时显示正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "Hit Rate字段正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "Hit Rate值为62%",
+   "preconditions": "已登录，存在一条Pick记录，Hit Rate为62%",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "列表项中显示“| Hit Rate: 62%”，格式正确，包含竖线和百分号"
+    }
+   ],
+   "expected_result": "Hit Rate字段显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "Hit Rate为100%时显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "Hit Rate值为100%",
+   "preconditions": "已登录，存在一条Pick记录，Hit Rate为100%",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "列表项中显示“| Hit Rate: 100%”，无溢出或格式错误"
+    }
+   ],
+   "expected_result": "Hit Rate为100%时显示正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "Hit Rate为0%时显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "Hit Rate值为0%",
+   "preconditions": "已登录，存在一条Pick记录，Hit Rate为0%",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "列表项中显示“| Hit Rate: 0%”，无异常"
+    }
+   ],
+   "expected_result": "Hit Rate为0%时显示正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "未登录访问Picks页面",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "用户端/预测Pick/picks",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录",
+   "preconditions": "用户未登录，直接访问picks页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开picks页面",
+     "expected": "跳转至登录页或提示需要登录，不展示列表数据"
+    }
+   ],
+   "expected_result": "未登录用户被拦截，无法查看Picks列表",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "预测比赛列表页面正常加载并展示比赛列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在至少一场预测中的比赛（如欧洲杯 12:00 主队A VS 客队B）",
+   "preconditions": "用户已登录，且存在至少一场预测中的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面正常加载，显示'预测比赛列表'标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表内容",
+     "expected": "列表展示预测中的比赛卡片，包含联赛名称、比赛时间、主客队名称、赔率、参与按钮等"
+    }
+   ],
+   "expected_result": "页面成功展示预测比赛列表，数据完整，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "预测比赛列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前日期无任何预测比赛数据",
+   "preconditions": "用户已登录，且当前日期无任何预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面正常加载，显示'预测比赛列表'标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表内容",
+     "expected": "列表区域显示空态提示（如'暂无预测比赛'），无报错"
+    }
+   ],
+   "expected_result": "页面展示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "预测比赛列表加载失败时提示错误",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或服务端返回错误",
+   "preconditions": "用户已登录，网络异常或服务端不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面显示加载失败提示（如'加载失败，请重试'），并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面显示错误提示，用户可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "预测比赛列表展示比赛信息完整",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在一场预测中的比赛，包含联赛名称、比赛时间、主客队名称、赔率等",
+   "preconditions": "用户已登录，存在一场预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛卡片",
+     "expected": "卡片展示联赛名称（如'欧洲杯'）、比赛时间（如'12:00'）、主队名称、客队名称、状态（预测中）、赔率（如1.20）和参与按钮"
+    }
+   ],
+   "expected_result": "比赛信息展示完整、正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "预测比赛列表比赛信息缺失时展示默认值",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "某场比赛缺少客队名称或赔率等字段",
+   "preconditions": "用户已登录，存在一场字段不完整的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该比赛卡片",
+     "expected": "缺失字段显示占位符（如'--'），页面不报错"
+    }
+   ],
+   "expected_result": "页面正常展示，缺失字段有占位处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "点击'今天'Tab筛选出今天的预测比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在今天的预测比赛（如欧洲杯 12:00）和明天的预测比赛",
+   "preconditions": "用户已登录，存在今天和明天的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功，默认显示'今天'Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击'今天'Tab",
+     "expected": "列表仅展示今天的预测比赛，不展示其他日期的比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出今天的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "点击'今天'Tab无今天比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "今天无任何预测比赛，但其他日期有",
+   "preconditions": "用户已登录，今天无预测比赛，其他日期有",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'今天'Tab",
+     "expected": "列表显示空态提示（如'暂无今天的比赛'）"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "点击日期'03/06'Tab筛选出对应日期的预测比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在03/06的预测比赛（如欧洲杯 08:00）",
+   "preconditions": "用户已登录，存在03/06的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/06'Tab",
+     "expected": "列表仅展示03/06的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出03/06的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "点击日期'03/06'Tab无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "03/06无任何预测比赛",
+   "preconditions": "用户已登录，03/06无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/06'Tab",
+     "expected": "列表显示空态提示（如'暂无比赛'）"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "点击星期标签'星期四'筛选出对应日期的预测比赛",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在星期四（03/06）的预测比赛",
+   "preconditions": "用户已登录，存在星期四的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'星期四'Tab",
+     "expected": "列表展示星期四（03/06）的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出星期四的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "点击星期标签'星期四'无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "星期四无任何预测比赛",
+   "preconditions": "用户已登录，星期四无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'星期四'Tab",
+     "expected": "列表显示空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "点击日期'03/07'Tab筛选出对应日期的预测比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在03/07的预测比赛",
+   "preconditions": "用户已登录，存在03/07的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/07'Tab",
+     "expected": "列表仅展示03/07的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出03/07的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "点击日期'03/07'Tab无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "03/07无任何预测比赛",
+   "preconditions": "用户已登录，03/07无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/07'Tab",
+     "expected": "列表显示空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "点击星期标签'星期五'筛选出对应日期的预测比赛",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在星期五（03/07）的预测比赛",
+   "preconditions": "用户已登录，存在星期五的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'星期五'Tab",
+     "expected": "列表展示星期五（03/07）的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出星期五的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "点击星期标签'星期五'无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "星期五无任何预测比赛",
+   "preconditions": "用户已登录，星期五无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'星期五'Tab",
+     "expected": "列表显示空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "点击日期'03/08'Tab筛选出对应日期的预测比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在03/08的预测比赛",
+   "preconditions": "用户已登录，存在03/08的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/08'Tab",
+     "expected": "列表仅展示03/08的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出03/08的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "点击日期'03/08'Tab无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "03/08无任何预测比赛",
+   "preconditions": "用户已登录，03/08无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/08'Tab",
+     "expected": "列表显示空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "点击星期标签'星期六'筛选出对应日期的预测比赛",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在星期六（03/08）的预测比赛",
+   "preconditions": "用户已登录，存在星期六的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'星期六'Tab",
+     "expected": "列表展示星期六（03/08）的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出星期六的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "点击星期标签'星期六'无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "星期六无任何预测比赛",
+   "preconditions": "用户已登录，星期六无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'星期六'Tab",
+     "expected": "列表显示空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "点击日期'03/09'Tab筛选出对应日期的预测比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在03/09的预测比赛",
+   "preconditions": "用户已登录，存在03/09的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/09'Tab",
+     "expected": "列表仅展示03/09的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出03/09的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "点击日期'03/09'Tab无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "03/09无任何预测比赛",
+   "preconditions": "用户已登录，03/09无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/09'Tab",
+     "expected": "列表显示空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "点击星期标签'星期日'筛选出对应日期的预测比赛",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在星期日（03/09）的预测比赛",
+   "preconditions": "用户已登录，存在星期日的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'星期日'Tab",
+     "expected": "列表展示星期日（03/09）的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出星期日的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "点击星期标签'星期日'无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "星期日无任何预测比赛",
+   "preconditions": "用户已登录，星期日无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'星期日'Tab",
+     "expected": "列表显示空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "点击日期'03/10'Tab筛选出对应日期的预测比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在03/10的预测比赛",
+   "preconditions": "用户已登录，存在03/10的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/10'Tab",
+     "expected": "列表仅展示03/10的预测比赛"
+    }
+   ],
+   "expected_result": "列表正确筛选出03/10的比赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "点击日期'03/10'Tab无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "03/10无任何预测比赛",
+   "preconditions": "用户已登录，03/10无预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/10'Tab",
+     "expected": "列表显示空态提示"
+    }
+   ],
+   "expected_result": "显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "预测比赛列表日期Tab切换后数据正确刷新",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在今天、03/06、03/07等多个日期的比赛",
+   "preconditions": "用户已登录，存在多个日期的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功，默认显示'今天'Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击'03/06'Tab",
+     "expected": "列表刷新为03/06的比赛"
+    },
+    {
+     "step": 3,
+     "desc": "点击'03/07'Tab",
+     "expected": "列表刷新为03/07的比赛"
+    }
+   ],
+   "expected_result": "每次切换Tab，列表数据正确刷新，无残留",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "预测比赛列表日期Tab快速连续点击无异常",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "快速连续点击多个日期Tab",
+   "preconditions": "用户已登录，存在多个日期的预测比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "快速连续点击'今天'、'03/06'、'03/07'Tab",
+     "expected": "页面无卡顿、无崩溃，最终展示最后一次点击的Tab对应数据"
+    }
+   ],
+   "expected_result": "页面稳定，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "预测比赛列表页面在弱网环境下加载",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟弱网（如3G网络）",
+   "preconditions": "用户已登录，网络为弱网",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面显示加载中状态，最终加载成功或超时提示"
+    }
+   ],
+   "expected_result": "页面有加载提示，超时或失败有明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "验证预测比赛列表展示星期一标签",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "进入预测比赛列表页面，默认展示日期标签，包含“星期一”标签，代表周一有比赛。",
+   "preconditions": "用户已登录，存在周一（如2025/03/10）有预测比赛的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "页面加载成功，顶部日期标签区域显示“星期一”标签"
+    }
+   ],
+   "expected_result": "日期标签区域显示“星期一”标签，且可点击切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "验证预测比赛列表星期一标签无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择星期一标签，但该日期下无任何预测比赛，验证空态展示。",
+   "preconditions": "用户已登录，存在星期一标签但该日期无预测比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "页面加载成功，日期标签区域显示“星期一”标签"
+    },
+    {
+     "step": 2,
+     "desc": "点击“星期一”标签",
+     "expected": "列表区域显示空态提示（如“暂无相关比赛”）"
+    }
+   ],
+   "expected_result": "列表区域显示空态提示，无比赛数据展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "验证预测比赛列表展示03/04日期标签",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "进入预测比赛列表页面，日期标签区域展示“03/04”标签，代表3月4日有比赛。",
+   "preconditions": "用户已登录，存在2025/03/04有预测比赛的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "页面加载成功，日期标签区域显示“03/04”标签"
+    }
+   ],
+   "expected_result": "日期标签区域显示“03/04”标签，且可点击切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "验证预测比赛列表03/04标签点击后展示对应比赛",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击“03/04”标签，验证列表展示该日期的比赛数据，如“欧洲杯 12:00”等。",
+   "preconditions": "用户已登录，存在2025/03/04的预测比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "页面加载成功，日期标签区域显示“03/04”标签"
+    },
+    {
+     "step": 2,
+     "desc": "点击“03/04”标签",
+     "expected": "列表区域展示该日期的比赛列表，包含比赛时间、对阵信息等"
+    }
+   ],
+   "expected_result": "列表展示2025/03/04的比赛数据，且比赛信息完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "验证预测比赛列表展示星期二标签",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "进入预测比赛列表页面，日期标签区域展示“星期二”标签，代表周二有比赛。",
+   "preconditions": "用户已登录，存在周二（如2025/03/11）有预测比赛的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "页面加载成功，日期标签区域显示“星期二”标签"
+    }
+   ],
+   "expected_result": "日期标签区域显示“星期二”标签，且可点击切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "验证预测比赛列表星期二标签无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择星期二标签，但该日期下无任何预测比赛，验证空态展示。",
+   "preconditions": "用户已登录，存在星期二标签但该日期无预测比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "页面加载成功，日期标签区域显示“星期二”标签"
+    },
+    {
+     "step": 2,
+     "desc": "点击“星期二”标签",
+     "expected": "列表区域显示空态提示（如“暂无相关比赛”）"
+    }
+   ],
+   "expected_result": "列表区域显示空态提示，无比赛数据展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "验证预测比赛列表展示比赛时间字段“欧洲杯 12:00”",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表项展示比赛时间“欧洲杯 12:00”，其中“欧洲杯”为赛事名称，“12:00”为开赛时间。",
+   "preconditions": "用户已登录，存在一场欧洲杯赛事，开赛时间为12:00，且处于预测中状态。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示“欧洲杯 12:00”字段"
+    }
+   ],
+   "expected_result": "列表项正确展示“欧洲杯 12:00”，格式为“赛事名称 时间”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "验证预测比赛列表比赛时间字段缺失时展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回的比赛时间字段为空，验证前端展示。",
+   "preconditions": "用户已登录，存在一场比赛时间字段为空的预测比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中时间字段位置显示占位符或空，不导致页面崩溃"
+    }
+   ],
+   "expected_result": "时间字段为空时，列表项正常展示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "验证预测比赛列表展示“预测中”状态标签",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表项展示“预测中”状态，表示该比赛当前可参与预测。",
+   "preconditions": "用户已登录，存在一场状态为“预测中”的预测比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示“预测中”状态标签"
+    }
+   ],
+   "expected_result": "列表项正确展示“预测中”状态标签。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "验证预测比赛列表非“预测中”状态（如已开奖）展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "列表项展示“已开奖”状态，验证非预测中状态的展示。",
+   "preconditions": "用户已登录，存在一场状态为“已开奖”的预测比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示“已开奖”状态标签，且“参与”按钮不可点击或隐藏"
+    }
+   ],
+   "expected_result": "非预测中状态的比赛展示对应状态标签，且不可参与。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "验证预测比赛列表展示主队信息",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表项展示主队信息，包括主队名称和LOGO。",
+   "preconditions": "用户已登录，存在一场预测比赛，主队信息完整。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示主队名称和LOGO"
+    }
+   ],
+   "expected_result": "主队名称和LOGO正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "验证预测比赛列表主队LOGO加载失败时展示默认图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟主队LOGO图片加载失败，验证前端展示默认占位图。",
+   "preconditions": "用户已登录，存在一场预测比赛，主队LOGO地址无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "主队LOGO位置显示默认占位图，不显示破图"
+    }
+   ],
+   "expected_result": "LOGO加载失败时显示默认占位图，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "验证预测比赛列表展示“主队名称 VS”字段",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表项展示“主队名称 VS”，其中“VS”为对阵标识。",
+   "preconditions": "用户已登录，存在一场预测比赛，主队名称为“主队名称”。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示“主队名称 VS”"
+    }
+   ],
+   "expected_result": "正确展示“主队名称 VS”文本。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "验证预测比赛列表主队名称为空时展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟主队名称为空，验证前端展示。",
+   "preconditions": "用户已登录，存在一场预测比赛，主队名称为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中主队名称位置显示占位符或空，不导致页面崩溃"
+    }
+   ],
+   "expected_result": "主队名称为空时，列表项正常展示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "验证预测比赛列表展示“客队名称 >”字段",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表项展示“客队名称 >”，其中“>”为跳转标识。",
+   "preconditions": "用户已登录，存在一场预测比赛，客队名称为“客队名称”。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示“客队名称 >”"
+    }
+   ],
+   "expected_result": "正确展示“客队名称 >”文本。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "验证预测比赛列表客队名称为空时展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟客队名称为空，验证前端展示。",
+   "preconditions": "用户已登录，存在一场预测比赛，客队名称为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中客队名称位置显示占位符或空，不导致页面崩溃"
+    }
+   ],
+   "expected_result": "客队名称为空时，列表项正常展示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "验证预测比赛列表展示比赛时间字段“欧洲杯 17:00”",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表项展示比赛时间“欧洲杯 17:00”，其中“欧洲杯”为赛事名称，“17:00”为开赛时间。",
+   "preconditions": "用户已登录，存在一场欧洲杯赛事，开赛时间为17:00，且处于预测中状态。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示“欧洲杯 17:00”字段"
+    }
+   ],
+   "expected_result": "列表项正确展示“欧洲杯 17:00”，格式为“赛事名称 时间”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "验证预测比赛列表比赛时间字段格式错误时展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回的比赛时间格式错误（如“25:99”），验证前端展示。",
+   "preconditions": "用户已登录，存在一场比赛时间格式错误的预测比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中时间字段显示原始值或占位符，不导致页面崩溃"
+    }
+   ],
+   "expected_result": "时间格式错误时，列表项正常展示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "验证预测比赛列表展示长主队名称“主队名称主队名称主队名称”",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "列表项展示超长主队名称“主队名称主队名称主队名称”，验证文本截断或换行处理。",
+   "preconditions": "用户已登录，存在一场预测比赛，主队名称为“主队名称主队名称主队名称”。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示主队名称，若超长则截断或换行，不撑破布局"
+    }
+   ],
+   "expected_result": "长主队名称正确展示，不影响列表布局。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "验证预测比赛列表超长主队名称导致布局错乱",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "模拟主队名称超长（如100个字符），验证布局是否错乱。",
+   "preconditions": "用户已登录，存在一场预测比赛，主队名称为超长字符串。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项布局正常，主队名称截断或换行，不出现横向滚动条"
+    }
+   ],
+   "expected_result": "超长名称不导致布局错乱，页面正常显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "验证预测比赛列表展示赔率字段",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表项展示赔率值，如1.20，代表主胜赔率。",
+   "preconditions": "用户已登录，存在一场预测比赛，主胜赔率为1.20。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示“赔率 1.20”"
+    }
+   ],
+   "expected_result": "正确展示赔率值，格式为“赔率 数值”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "验证预测比赛列表赔率为0时展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "模拟赔率为0，验证前端展示。",
+   "preconditions": "用户已登录，存在一场预测比赛，赔率为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开预测比赛列表页面",
+     "expected": "列表项中展示“赔率 0”，且“参与”按钮可能不可点击"
+    }
+   ],
+   "expected_result": "赔率为0时正常展示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "预测比赛列表-赔率1.20正确展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场预测中的比赛，其主胜、客胜、平局赔率均为1.20，验证列表展示正确。",
+   "preconditions": "已登录，存在一场预测中的比赛，该比赛三个选项赔率均为1.20。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功，显示预测比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的预测选项",
+     "expected": "主胜、客胜、平局三个选项均显示赔率1.20"
+    }
+   ],
+   "expected_result": "列表正确展示赔率1.20，数值与后台配置一致，无格式错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "预测比赛列表-赔率非1.20时展示实际赔率",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用一场预测中的比赛，其主胜赔率为2.50，客胜为3.20，平局为3.00，验证列表展示实际赔率而非固定1.20。",
+   "preconditions": "已登录，存在一场预测中的比赛，赔率分别为2.50/3.20/3.00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的预测选项赔率",
+     "expected": "主胜显示2.50，客胜显示3.20，平局显示3.00"
+    }
+   ],
+   "expected_result": "列表展示实际赔率，不固定为1.20，数值与后台一致。",
+   "remark": "负面用例，验证赔率非固定值",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "预测比赛列表-点击参与按钮弹出确认参与弹窗",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场预测中的比赛，点击“参与”按钮，验证弹出确认参与弹窗。",
+   "preconditions": "已登录，存在一场预测中的比赛，且该比赛可参与。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击某场比赛的“参与”按钮",
+     "expected": "弹出确认参与弹窗，弹窗显示比赛信息、选项、赔率、参与银钻输入框等"
+    }
+   ],
+   "expected_result": "点击参与后弹出确认参与弹窗，弹窗内容完整，可进行后续操作。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "预测比赛列表-已开奖比赛点击参与被拦截",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用一场已开奖的比赛，点击其“参与”按钮，验证被拦截并提示。",
+   "preconditions": "已登录，存在一场已开奖的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "找到已开奖的比赛，点击其“参与”按钮",
+     "expected": "按钮不可点击或点击后提示“该比赛已开奖，无法参与”"
+    }
+   ],
+   "expected_result": "已开奖比赛的参与按钮不可用或点击后给出明确提示，无法进入参与流程。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "预测比赛列表-客队名称完整展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "使用客队名称为“客队名称客队名称客队名称”的比赛，验证名称完整展示。",
+   "preconditions": "已登录，存在一场客队名称为“客队名称客队名称客队名称”的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的客队名称",
+     "expected": "客队名称完整显示，无截断或遮挡"
+    }
+   ],
+   "expected_result": "客队名称完整展示，不影响阅读。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "预测比赛列表-超长客队名称截断处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用客队名称为超长字符串（如50个汉字）的比赛，验证名称截断或悬浮提示。",
+   "preconditions": "已登录，存在一场客队名称为超长字符串的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的客队名称",
+     "expected": "名称显示截断（如省略号），或悬浮显示完整名称"
+    }
+   ],
+   "expected_result": "超长名称合理截断，不破坏布局，且可通过悬浮查看完整名称。",
+   "remark": "负面用例，边界值",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "预测比赛列表-平局选项展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场预测中的比赛，验证平局选项展示赔率和参与按钮。",
+   "preconditions": "已登录，存在一场预测中的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的预测选项",
+     "expected": "平局选项显示，包含赔率和参与按钮"
+    }
+   ],
+   "expected_result": "平局选项正常展示，赔率正确，参与按钮可用。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "预测比赛列表-平局选项赔率异常时展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用一场平局赔率为0或负数的比赛（异常数据），验证列表展示处理。",
+   "preconditions": "已登录，存在一场平局赔率为0或负数的比赛（模拟异常数据）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的平局选项",
+     "expected": "赔率显示为0或负数，或显示占位符，不崩溃"
+    }
+   ],
+   "expected_result": "异常赔率不导致页面崩溃，展示合理或提示数据异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "预测比赛列表-比赛时间格式展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场比赛时间为“欧洲杯 08:00”的比赛，验证时间展示格式。",
+   "preconditions": "已登录，存在一场比赛时间为“欧洲杯 08:00”的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的时间展示",
+     "expected": "显示“欧洲杯 08:00”，格式正确"
+    }
+   ],
+   "expected_result": "比赛时间以“联赛名称 HH:mm”格式展示，时间准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "预测比赛列表-比赛时间跨天展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用一场比赛时间为“欧洲杯 23:59”和“欧洲杯 00:00”的比赛，验证时间展示。",
+   "preconditions": "已登录，存在两场比赛，时间分别为23:59和00:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看这两场比赛的时间展示",
+     "expected": "分别显示“欧洲杯 23:59”和“欧洲杯 00:00”，无格式错误"
+    }
+   ],
+   "expected_result": "边界时间正确展示，无格式错误。",
+   "remark": "负面用例，边界值",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "预测比赛列表-已开奖状态标识展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场已开奖的比赛，验证列表展示“已开奖”状态标识。",
+   "preconditions": "已登录，存在一场已开奖的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的状态标识",
+     "expected": "显示“已开奖”标识"
+    }
+   ],
+   "expected_result": "已开奖比赛正确显示“已开奖”状态。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "预测比赛列表-已开奖比赛预测选项置灰",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测Pick/预测比赛列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用一场已开奖的比赛，验证其预测选项（主胜、客胜、平局）的展示状态。",
+   "preconditions": "已登录，存在一场已开奖的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测比赛列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的预测选项",
+     "expected": "预测选项置灰，参与按钮不可点击或隐藏"
+    }
+   ],
+   "expected_result": "已开奖比赛的预测选项不可操作，避免误参与。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "预测记录列表正常展示（全部TAB）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已有多条预测记录，包含不同状态（待开奖、已开奖、已退款），创建时间不同，用于验证列表展示和排序。",
+   "preconditions": "用户已登录，且存在至少3条预测记录，创建时间分别为2025-12-13 12:00:00、2025-12-12 10:00:00、2025-12-11 09:00:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面（从个人中心入口）",
+     "expected": "页面正常加载，显示“预测记录”标题，顶部有icon。"
+    },
+    {
+     "step": 2,
+     "desc": "查看筛选TAB",
+     "expected": "仅显示“全部”TAB，“本场”TAB不显示（因为非从比赛详情页进入）。"
+    },
+    {
+     "step": 3,
+     "desc": "查看记录列表",
+     "expected": "列表按创建时间倒序展示，最新记录（2025-12-13 12:00:00）在最上方。每条记录包含创建时间、主队LOGO、主队名称 VS 客队名称、预测选项、赔率、参与银钻、状态。"
+    }
+   ],
+   "expected_result": "预测记录列表完整展示，排序正确，字段齐全。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "预测记录列表空态展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户没有任何预测记录，用于验证空态提示。",
+   "preconditions": "用户已登录，且无任何预测记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面显示“暂无相关记录”提示，无列表数据。"
+    }
+   ],
+   "expected_result": "页面展示“暂无相关记录”，无其他异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "预测记录列表排序验证（新记录在前）",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造两条创建时间相同的记录，验证排序稳定性；同时构造一条时间较早的记录，验证倒序。",
+   "preconditions": "用户已登录，存在3条记录：记录A（2025-12-13 12:00:00）、记录B（2025-12-13 12:00:00）、记录C（2025-12-12 10:00:00）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录A和B在C之前，A和B的顺序按记录ID倒序（如B在A前）。"
+    }
+   ],
+   "expected_result": "列表按创建时间倒序，相同时间记录按ID倒序，新记录在前。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "预测记录icon展示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "正常进入预测记录页面，验证icon显示。",
+   "preconditions": "用户已登录，有预测记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面顶部显示icon，样式与设计稿一致。"
+    }
+   ],
+   "expected_result": "icon正常显示，无缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "预测记录icon缺失处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟icon资源加载失败（如网络异常或资源缺失）。",
+   "preconditions": "用户已登录，网络异常导致icon加载失败。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "icon位置显示占位图或空白，不影响页面其他功能。"
+    }
+   ],
+   "expected_result": "icon加载失败时页面不崩溃，有占位处理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "预测记录创建时间格式展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录创建时间为2025-12-13 12:00:00，验证格式。",
+   "preconditions": "用户已登录，存在一条创建时间为2025-12-13 12:00:00的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录展示创建时间“2025 12-13 12:00:00”，格式与需求一致。"
+    }
+   ],
+   "expected_result": "时间格式正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "预测记录创建时间异常格式处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回异常时间格式（如null、空字符串、非法日期）。",
+   "preconditions": "用户已登录，后端返回异常时间数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面不崩溃，时间字段显示为空或占位符，不影响其他字段展示。"
+    }
+   ],
+   "expected_result": "异常时间数据被容错处理，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "预测记录主队信息展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录包含主队名称和LOGO，验证展示。",
+   "preconditions": "用户已登录，存在一条预测记录，主队名称为“主队名称”，LOGO正常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录中展示主队LOGO和主队名称“主队名称”。"
+    }
+   ],
+   "expected_result": "主队信息完整展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "预测记录主队LOGO加载失败处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟主队LOGO加载失败（网络异常或资源缺失）。",
+   "preconditions": "用户已登录，主队LOGO加载失败。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "LOGO位置显示默认占位图或文字，不影响其他信息展示。"
+    }
+   ],
+   "expected_result": "LOGO加载失败有占位处理，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "预测记录对阵信息展示及跳转",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "记录包含主队名称“主队名称”和客队名称“客队名称”，点击“>”跳转。",
+   "preconditions": "用户已登录，存在一条预测记录，对阵为“主队名称 VS 客队名称”。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录展示“主队名称 VS 客队名称”，右侧有“>”图标。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“>”图标",
+     "expected": "跳转到对应比赛详情页，页面加载正常。"
+    }
+   ],
+   "expected_result": "对阵信息展示正确，点击可跳转。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "预测记录对阵信息跳转异常处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟比赛已删除或不存在，点击“>”跳转失败。",
+   "preconditions": "用户已登录，预测记录关联的比赛已下架或删除。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录正常展示。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“>”图标",
+     "expected": "提示“比赛不存在”或跳转到空页面，不崩溃。"
+    }
+   ],
+   "expected_result": "跳转失败有友好提示，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-180"
+  },
+  {
+   "title": "预测记录预测选项展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录预测选项为“主胜”，验证展示。",
+   "preconditions": "用户已登录，存在一条预测选项为“主胜”的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录展示“预测 主胜”。"
+    }
+   ],
+   "expected_result": "预测选项正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-181"
+  },
+  {
+   "title": "预测记录预测选项异常值处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回未知预测选项（如“让球胜”）。",
+   "preconditions": "用户已登录，后端返回异常预测选项。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面不崩溃，预测选项显示为原值或“未知”，不影响其他字段。"
+    }
+   ],
+   "expected_result": "异常选项被容错处理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-182"
+  },
+  {
+   "title": "预测记录赔率展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录赔率为1.20，验证展示。",
+   "preconditions": "用户已登录，存在一条赔率为1.20的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录展示“赔率 1.20”。"
+    }
+   ],
+   "expected_result": "赔率正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-183"
+  },
+  {
+   "title": "预测记录赔率异常值处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟赔率为0、负数或非数字。",
+   "preconditions": "用户已登录，后端返回异常赔率。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面不崩溃，赔率显示为“--”或0，不影响其他字段。"
+    }
+   ],
+   "expected_result": "异常赔率被容错处理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-184"
+  },
+  {
+   "title": "预测记录参与银钻展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录参与银钻为500，验证展示。",
+   "preconditions": "用户已登录，存在一条参与银钻为500的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录展示“参与银钻 500”。"
+    }
+   ],
+   "expected_result": "参与银钻正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-185"
+  },
+  {
+   "title": "预测记录参与银钻异常值处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟参与银钻为0、负数或非数字。",
+   "preconditions": "用户已登录，后端返回异常银钻数额。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面不崩溃，银钻显示为“--”或0，不影响其他字段。"
+    }
+   ],
+   "expected_result": "异常银钻被容错处理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-186"
+  },
+  {
+   "title": "预测记录状态展示（待开奖）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录状态为“待开奖”，验证展示。",
+   "preconditions": "用户已登录，存在一条状态为“待开奖”的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录展示状态“待开奖”。"
+    }
+   ],
+   "expected_result": "状态正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-187"
+  },
+  {
+   "title": "预测记录状态展示（已退款）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录状态为“已退款”，验证展示。",
+   "preconditions": "用户已登录，存在一条状态为“已退款”的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录展示状态“已退款”。"
+    }
+   ],
+   "expected_result": "状态正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-188"
+  },
+  {
+   "title": "预测记录状态展示（已开奖）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录状态为“已开奖”，且预测成功，验证展示奖励银钻。",
+   "preconditions": "用户已登录，存在一条状态为“已开奖”且预测成功的记录，奖励银钻为5500。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录展示状态“已开奖”，并展示“奖励银钻 5500”。"
+    }
+   ],
+   "expected_result": "状态和奖励银钻正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-189"
+  },
+  {
+   "title": "预测记录状态异常值处理",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回未知状态（如“已关闭”）。",
+   "preconditions": "用户已登录，后端返回异常状态。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面不崩溃，状态显示为原值或“未知”，不影响其他字段。"
+    }
+   ],
+   "expected_result": "异常状态被容错处理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-190"
+  },
+  {
+   "title": "预测记录筛选TAB-从比赛详情页进入显示本场",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "从比赛详情页进入预测记录，验证显示“全部”和“本场”TAB。",
+   "preconditions": "用户已登录，从某场比赛详情页进入预测记录页面，该场比赛关联的预测活动有记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从比赛详情页点击“预测记录”入口进入",
+     "expected": "页面显示“全部”和“本场”两个TAB，默认选中“本场”。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“本场”TAB",
+     "expected": "列表展示该场比赛关联的预测活动记录。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“全部”TAB",
+     "expected": "列表展示该用户所有预测活动记录。"
+    }
+   ],
+   "expected_result": "TAB显示正确，切换后列表数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-191"
+  },
+  {
+   "title": "预测记录筛选TAB-从其他入口进入不显示本场",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "从个人中心进入预测记录，验证不显示“本场”TAB。",
+   "preconditions": "用户已登录，从个人中心进入预测记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从个人中心进入预测记录页面",
+     "expected": "页面仅显示“全部”TAB，不显示“本场”TAB。"
+    }
+   ],
+   "expected_result": "TAB显示符合预期。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-192"
+  },
+  {
+   "title": "预测记录筛选TAB-本场无记录时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "从比赛详情页进入，但该场比赛无预测记录，验证空态。",
+   "preconditions": "用户已登录，从某场比赛详情页进入预测记录，但该场比赛无任何预测记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从比赛详情页进入预测记录页面",
+     "expected": "默认选中“本场”，列表显示“暂无相关记录”。"
+    }
+   ],
+   "expected_result": "空态提示正确。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-193"
+  },
+  {
+   "title": "预测记录筛选TAB-全部无记录时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户无任何预测记录，验证全部TAB空态。",
+   "preconditions": "用户已登录，无任何预测记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "列表显示“暂无相关记录”。"
+    }
+   ],
+   "expected_result": "空态提示正确。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-194"
+  },
+  {
+   "title": "预测记录排序-新记录在前",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户有多条记录，创建时间不同，验证排序。",
+   "preconditions": "用户已登录，存在记录A（2025-12-13 12:00:00）、记录B（2025-12-12 10:00:00）、记录C（2025-12-11 09:00:00）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "列表顺序为A、B、C，即新记录在前。"
+    }
+   ],
+   "expected_result": "排序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-195"
+  },
+  {
+   "title": "预测记录排序-相同时间记录顺序稳定",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "两条记录创建时间相同，验证顺序稳定。",
+   "preconditions": "用户已登录，存在记录A和B，创建时间均为2025-12-13 12:00:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录A和B顺序固定（如按ID倒序），不随机变化。"
+    }
+   ],
+   "expected_result": "相同时间记录顺序稳定。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-196"
+  },
+  {
+   "title": "预测记录-参与银钻500-正确展示投入银钻数额",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已参与某场预测活动，投入银钻500，记录状态为待开奖。",
+   "preconditions": "用户已登录，且存在一条预测记录，参与银钻数额为500。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面正常加载，显示预测记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该条记录的参与银钻字段",
+     "expected": "显示“参与银钻 500”，数值与参与时一致"
+    }
+   ],
+   "expected_result": "预测记录列表中，该条记录的“参与银钻”字段正确显示为500，无格式错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-197"
+  },
+  {
+   "title": "预测记录-参与银钻500-数值为0或负数的边界处理",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造参与银钻为0或负数的异常数据，验证页面展示是否合理。",
+   "preconditions": "测试环境可构造异常参与银钻数据（如通过数据库修改）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造一条参与银钻为0的预测记录",
+     "expected": "页面展示“参与银钻 0”，无异常报错"
+    },
+    {
+     "step": 2,
+     "desc": "构造一条参与银钻为-100的预测记录",
+     "expected": "页面展示“参与银钻 -100”或进行数据校验，不出现崩溃"
+    }
+   ],
+   "expected_result": "页面能正常展示异常数值，不出现崩溃或空白，且数值显示符合预期。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-198"
+  },
+  {
+   "title": "预测记录-待开奖状态-正确展示状态标识",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户有一条预测记录，状态为待开奖。",
+   "preconditions": "已登录，存在状态为“待开奖”的预测记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面加载，显示记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该条记录的状态字段",
+     "expected": "显示“待开奖”状态标识，样式清晰可辨"
+    }
+   ],
+   "expected_result": "状态为“待开奖”的记录正确显示“待开奖”标识，无缺失或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-199"
+  },
+  {
+   "title": "预测记录-待开奖状态-状态为其他值时的展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造状态为未知值（如“已取消”）的记录，验证页面是否正常展示。",
+   "preconditions": "测试环境可构造异常状态数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造一条状态为“已取消”的预测记录",
+     "expected": "页面展示“已取消”状态，或按需求映射为其他状态，不出现空白"
+    },
+    {
+     "step": 2,
+     "desc": "构造一条状态为null的预测记录",
+     "expected": "页面展示默认状态或空，不崩溃"
+    }
+   ],
+   "expected_result": "页面能正常展示非“待开奖”状态，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-200"
+  },
+  {
+   "title": "预测记录-客胜选项-正确展示预测选项",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户预测了客胜选项，记录中应显示“客胜”。",
+   "preconditions": "已登录，存在预测选项为“客胜”的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面加载，显示记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该条记录的预测选项字段",
+     "expected": "显示“客胜”，与参与时一致"
+    }
+   ],
+   "expected_result": "预测选项为“客胜”的记录正确显示“客胜”，无错别字或格式错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-201"
+  },
+  {
+   "title": "预测记录-客胜选项-选项为其他值时的展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造预测选项为“主胜”或“平局”的记录，验证展示。",
+   "preconditions": "已登录，存在预测选项为“主胜”或“平局”的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测选项为“主胜”的记录",
+     "expected": "显示“主胜”"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测选项为“平局”的记录",
+     "expected": "显示“平局”"
+    }
+   ],
+   "expected_result": "不同预测选项均能正确展示，无异常。",
+   "remark": "负面用例（覆盖其他选项）",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-202"
+  },
+  {
+   "title": "预测记录-赔率11.00-正确展示赔率数值",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户参与时赔率为11.00，记录中应显示11.00。",
+   "preconditions": "已登录，存在赔率为11.00的预测记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面加载，显示记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该条记录的赔率字段",
+     "expected": "显示“11.00”，保留两位小数"
+    }
+   ],
+   "expected_result": "赔率字段正确显示为11.00，格式统一。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-203"
+  },
+  {
+   "title": "预测记录-赔率11.00-赔率为整数或小数位数不同的展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造赔率为1.2、1.20、11、11.0等不同格式，验证展示。",
+   "preconditions": "测试环境可构造不同赔率数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造赔率为1.2的记录",
+     "expected": "显示“1.20”或“1.2”，取决于格式化规则，但应统一"
+    },
+    {
+     "step": 2,
+     "desc": "构造赔率为11的记录",
+     "expected": "显示“11.00”或“11”，但应统一"
+    }
+   ],
+   "expected_result": "赔率展示格式统一，不出现乱码或缺失。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-204"
+  },
+  {
+   "title": "预测记录-已退款状态-正确展示状态标识",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户有一条预测记录，状态为已退款。",
+   "preconditions": "已登录，存在状态为“已退款”的预测记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面加载，显示记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该条记录的状态字段",
+     "expected": "显示“已退款”状态标识"
+    }
+   ],
+   "expected_result": "状态为“已退款”的记录正确显示“已退款”，无缺失或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-205"
+  },
+  {
+   "title": "预测记录-已退款状态-状态为其他值时的展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造状态为“已开奖”或“已关闭”的记录，验证展示。",
+   "preconditions": "测试环境可构造异常状态数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造状态为“已开奖”的记录",
+     "expected": "显示“已开奖”"
+    },
+    {
+     "step": 2,
+     "desc": "构造状态为“已关闭”的记录",
+     "expected": "显示“已关闭”"
+    }
+   ],
+   "expected_result": "不同状态均能正确展示，无异常。",
+   "remark": "负面用例（覆盖其他状态）",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-206"
+  },
+  {
+   "title": "预测记录-平局选项-正确展示预测选项",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户预测了平局选项，记录中应显示“平局”。",
+   "preconditions": "已登录，存在预测选项为“平局”的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面加载，显示记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该条记录的预测选项字段",
+     "expected": "显示“平局”，与参与时一致"
+    }
+   ],
+   "expected_result": "预测选项为“平局”的记录正确显示“平局”，无错别字或格式错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-207"
+  },
+  {
+   "title": "预测记录-平局选项-选项为空或null时的展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造预测选项为null或空字符串的记录，验证页面是否正常。",
+   "preconditions": "测试环境可构造异常数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造预测选项为null的记录",
+     "expected": "页面展示默认文案或空，不崩溃"
+    },
+    {
+     "step": 2,
+     "desc": "构造预测选项为空字符串的记录",
+     "expected": "页面展示空或默认文案，不崩溃"
+    }
+   ],
+   "expected_result": "页面能正常处理空选项，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-208"
+  },
+  {
+   "title": "预测记录-参与银钻500奖励银钻-正确展示参与和奖励数额",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户参与银钻500，赔率11.00，预测成功，奖励银钻应为500*11.00=5500。",
+   "preconditions": "已登录，存在一条预测成功且奖励银钻为5500的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面加载，显示记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该条记录的参与银钻和奖励银钻字段",
+     "expected": "显示“参与银钻 500 奖励银钻 5500”，数值正确"
+    }
+   ],
+   "expected_result": "参与银钻和奖励银钻均正确显示，奖励计算正确（500*11.00=5500）。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-209"
+  },
+  {
+   "title": "预测记录-参与银钻500奖励银钻-奖励银钻计算错误的边界",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造参与银钻为0或赔率为0的记录，验证奖励计算。",
+   "preconditions": "测试环境可构造异常数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造参与银钻为0的记录",
+     "expected": "奖励银钻应为0，展示“奖励银钻 0”"
+    },
+    {
+     "step": 2,
+     "desc": "构造赔率为0的记录",
+     "expected": "奖励银钻应为0，展示“奖励银钻 0”"
+    }
+   ],
+   "expected_result": "奖励银钻计算正确，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-210"
+  },
+  {
+   "title": "预测记录-我预测记录入口-点击进入预测记录列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户从比赛详情页进入预测记录页面，点击“我预测记录”入口。",
+   "preconditions": "已登录，从比赛详情页进入预测记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面显示“我预测记录”入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击“我预测记录”",
+     "expected": "跳转到预测记录列表，展示该用户所有预测记录"
+    }
+   ],
+   "expected_result": "点击“我预测记录”后成功跳转至预测记录列表，展示全部记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-211"
+  },
+  {
+   "title": "预测记录-我预测记录入口-未登录时点击",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户尝试点击“我预测记录”入口。",
+   "preconditions": "未登录，进入预测记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "未登录状态下进入预测记录页面",
+     "expected": "页面可能不显示“我预测记录”入口，或显示登录提示"
+    },
+    {
+     "step": 2,
+     "desc": "若入口可见，点击“我预测记录”",
+     "expected": "跳转登录页或提示登录"
+    }
+   ],
+   "expected_result": "未登录用户无法查看预测记录，被引导登录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-212"
+  },
+  {
+   "title": "预测记录-本场筛选-从比赛详情页进入时展示本场TAB",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户从比赛详情页进入预测记录页面，应展示“本场”TAB。",
+   "preconditions": "已登录，从比赛详情页进入预测记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从比赛详情页进入预测记录页面",
+     "expected": "页面展示筛选TAB，包含“全部”和“本场”"
+    },
+    {
+     "step": 2,
+     "desc": "点击“本场”TAB",
+     "expected": "列表展示当前比赛关联的预测活动参与记录"
+    }
+   ],
+   "expected_result": "从比赛详情页进入时，“本场”TAB可见，点击后正确筛选出本场记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-213"
+  },
+  {
+   "title": "预测记录-本场筛选-从其他入口进入时不展示本场TAB",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户从其他入口（如个人中心）进入预测记录页面，不应展示“本场”TAB。",
+   "preconditions": "已登录，从非比赛详情页入口进入预测记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从其他入口进入预测记录页面",
+     "expected": "页面仅展示“全部”TAB，不展示“本场”TAB"
+    }
+   ],
+   "expected_result": "非比赛详情页进入时，“本场”TAB不展示，符合需求。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-214"
+  },
+  {
+   "title": "预测记录-功能点说明-正确展示说明内容",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预测记录页面应展示“功能点”说明区域，内容为需求中描述的说明。",
+   "preconditions": "已登录，进入预测记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面展示“功能点”说明区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看说明内容",
+     "expected": "展示需求中定义的说明文案，如“1、仅用户从比赛详情页进入该页面时，才展示该信息；”等"
+    }
+   ],
+   "expected_result": "“功能点”说明区域正确展示，内容与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-215"
+  },
+  {
+   "title": "预测记录-功能点说明-说明内容为空时的展示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造说明内容为空或缺失的数据，验证页面是否正常。",
+   "preconditions": "测试环境可构造说明内容为空的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造说明内容为空的预测记录页面",
+     "expected": "页面不展示“功能点”区域，或展示空区域，不崩溃"
+    }
+   ],
+   "expected_result": "说明内容为空时，页面正常显示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-216"
+  },
+  {
+   "title": "预测记录-说明-正确展示说明内容",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预测记录页面应展示“说明”区域，内容为需求中描述的说明。",
+   "preconditions": "已登录，进入预测记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面展示“说明”区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看说明内容",
+     "expected": "展示需求中定义的说明文案，如“2、本场展示该用户，进入该页面比赛所关联的预测活动的参与记录信息；”等"
+    }
+   ],
+   "expected_result": "“说明”区域正确展示，内容与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-217"
+  },
+  {
+   "title": "预测记录-说明-说明内容为空时的展示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造说明内容为空或缺失的数据，验证页面是否正常。",
+   "preconditions": "测试环境可构造说明内容为空的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造说明内容为空的预测记录页面",
+     "expected": "页面不展示“说明”区域，或展示空区域，不崩溃"
+    }
+   ],
+   "expected_result": "说明内容为空时，页面正常显示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-218"
+  },
+  {
+   "title": "预测记录-筛选TAB-默认展示全部TAB",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户进入预测记录页面，默认应选中“全部”TAB。",
+   "preconditions": "已登录，进入预测记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "页面展示筛选TAB，默认选中“全部”"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表内容",
+     "expected": "展示该用户所有预测活动的参与记录"
+    }
+   ],
+   "expected_result": "默认选中“全部”TAB，列表展示全部记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-219"
+  },
+  {
+   "title": "预测记录-筛选TAB-切换TAB后列表刷新",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户从“全部”切换到“本场”，列表应刷新为本场记录。",
+   "preconditions": "已登录，从比赛详情页进入预测记录页面，存在本场记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面，默认“全部”",
+     "expected": "展示全部记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击“本场”TAB",
+     "expected": "列表刷新，展示本场记录"
+    }
+   ],
+   "expected_result": "切换TAB后列表正确刷新，展示对应范围的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-220"
+  },
+  {
+   "title": "预测记录-筛选TAB-无记录时的空态展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户没有任何预测记录，或“本场”无记录时，应展示空态。",
+   "preconditions": "已登录，但无任何预测记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "展示“暂无相关记录”空态提示"
+    },
+    {
+     "step": 2,
+     "desc": "若有“本场”TAB，点击“本场”",
+     "expected": "同样展示“暂无相关记录”"
+    }
+   ],
+   "expected_result": "无记录时展示空态提示，不出现空白或异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-221"
+  },
+  {
+   "title": "从比赛详情页进入预测记录页，默认展示“本场”TAB且显示关联预测活动的参与记录",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在一场比赛（比赛ID=1001），该比赛关联预测活动（活动ID=2001），用户在该活动中参与过主胜，参与银钻500，赔率1.20，状态待开奖。",
+   "preconditions": "用户已登录；存在比赛ID=1001且关联预测活动ID=2001；用户在该活动中有参与记录；从比赛详情页进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从比赛详情页点击“预测记录”入口进入预测记录页",
+     "expected": "页面展示筛选TAB，默认选中“本场”"
+    },
+    {
+     "step": 2,
+     "desc": "查看“本场”TAB下的记录列表",
+     "expected": "仅展示与比赛ID=1001关联的预测活动（活动ID=2001）的参与记录，共1条"
+    },
+    {
+     "step": 3,
+     "desc": "查看该记录内容",
+     "expected": "记录展示创建时间、比赛信息（主队VS客队）、预测选项（主胜）、赔率1.20、参与银钻500、状态“待开奖”"
+    }
+   ],
+   "expected_result": "“本场”TAB下仅展示当前比赛关联预测活动的参与记录，记录字段完整，状态正确。",
+   "remark": "正面用例，覆盖FP-预测记录-25",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-222"
+  },
+  {
+   "title": "从其他页面（非比赛详情页）进入预测记录页，“本场”TAB不展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户已登录，从“我的”页面进入预测记录页，无比赛上下文。",
+   "preconditions": "用户已登录；从非比赛详情页（如“我的”页面）进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从“我的”页面点击“预测记录”入口进入预测记录页",
+     "expected": "页面展示筛选TAB，但“本场”TAB不展示（或隐藏），仅展示“全部”TAB"
+    },
+    {
+     "step": 2,
+     "desc": "查看TAB列表",
+     "expected": "无“本场”TAB，默认选中“全部”TAB"
+    }
+   ],
+   "expected_result": "非比赛详情页进入时，“本场”TAB不展示，避免无关联比赛导致空数据。",
+   "remark": "负面用例，覆盖FP-预测记录-25的边界条件",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-223"
+  },
+  {
+   "title": "“本场”TAB下无关联预测活动参与记录时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "boundary",
+   "test_data_note": "用户已登录，从比赛详情页（比赛ID=1002）进入，该比赛无关联预测活动或用户未参与。",
+   "preconditions": "用户已登录；比赛ID=1002无关联预测活动或用户未参与；从比赛详情页进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从比赛详情页（比赛ID=1002）进入预测记录页",
+     "expected": "默认选中“本场”TAB"
+    },
+    {
+     "step": 2,
+     "desc": "查看“本场”TAB下的记录列表",
+     "expected": "展示空态提示“暂无相关记录”，无任何记录条目"
+    }
+   ],
+   "expected_result": "“本场”TAB无记录时展示空态提示，不报错。",
+   "remark": "边界用例，覆盖FP-预测记录-25的空态",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-224"
+  },
+  {
+   "title": "“全部”TAB展示该用户所有预测活动的参与记录",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在多个预测活动（活动ID=2001、2002、2003），用户均有参与记录，状态分别为待开奖、已退款、已开奖。",
+   "preconditions": "用户已登录；用户在不同预测活动中有多条参与记录；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，点击“全部”TAB",
+     "expected": "展示该用户所有预测活动的参与记录，包括不同活动、不同状态的记录"
+    },
+    {
+     "step": 2,
+     "desc": "统计记录条数",
+     "expected": "记录条数等于用户所有参与记录总数（如3条）"
+    }
+   ],
+   "expected_result": "“全部”TAB展示所有预测活动的参与记录，无遗漏。",
+   "remark": "正面用例，覆盖FP-预测记录-26",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-225"
+  },
+  {
+   "title": "“全部”TAB下无任何参与记录时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "新注册用户，从未参与任何预测活动。",
+   "preconditions": "用户已登录且从未参与任何预测活动；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，点击“全部”TAB",
+     "expected": "展示空态提示“暂无相关记录”"
+    }
+   ],
+   "expected_result": "“全部”TAB无记录时展示空态提示，不报错。",
+   "remark": "负面用例，覆盖FP-预测记录-26的空态",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-226"
+  },
+  {
+   "title": "预测记录按创建时间倒序排列，新记录在前",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，有三条参与记录，创建时间分别为2025-12-13 12:00:00、2025-12-13 11:00:00、2025-12-13 10:00:00。",
+   "preconditions": "用户已登录；存在三条创建时间不同的参与记录；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看“全部”TAB下的记录列表",
+     "expected": "记录按创建时间倒序排列：第一条为12:00:00，第二条为11:00:00，第三条为10:00:00"
+    }
+   ],
+   "expected_result": "记录按创建时间从新到旧排列，最新记录在最上方。",
+   "remark": "正面用例，覆盖FP-预测记录-27",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-227"
+  },
+  {
+   "title": "创建时间相同的记录排序稳定（不报错且顺序可预期）",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户已登录，有两条参与记录创建时间完全相同（2025-12-13 12:00:00）。",
+   "preconditions": "用户已登录；存在两条创建时间完全相同的参与记录；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看“全部”TAB下的记录列表",
+     "expected": "两条记录均展示，顺序稳定（如按记录ID升序），不出现乱序或缺失"
+    }
+   ],
+   "expected_result": "创建时间相同时记录仍正常展示，排序稳定，无异常。",
+   "remark": "边界用例，覆盖FP-预测记录-27的边界",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-228"
+  },
+  {
+   "title": "预测记录展示创建时间字段",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在一条参与记录，创建时间为2025-12-13 12:00:00。",
+   "preconditions": "用户已登录；存在参与记录；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看任意一条记录",
+     "expected": "记录中展示创建时间字段，格式为“2025 12-13 12:00:00”"
+    }
+   ],
+   "expected_result": "每条记录均展示创建时间，格式正确。",
+   "remark": "正面用例，覆盖FP-预测记录-28和FP-预测记录-29",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-229"
+  },
+  {
+   "title": "创建时间字段缺失或为空时记录仍正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回记录时创建时间为空或缺失。",
+   "preconditions": "用户已登录；后端返回的参与记录中创建时间为空；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看创建时间为空的记录",
+     "expected": "记录正常展示，创建时间位置显示为空或占位符（如“--”），页面不报错"
+    }
+   ],
+   "expected_result": "创建时间缺失时页面不崩溃，记录其他字段正常展示。",
+   "remark": "负面用例，覆盖FP-预测记录-29的异常",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-230"
+  },
+  {
+   "title": "预测记录展示状态信息（待开奖）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在一条参与记录，状态为“待开奖”。",
+   "preconditions": "用户已登录；存在状态为“待开奖”的参与记录；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看状态为“待开奖”的记录",
+     "expected": "记录中展示状态信息“待开奖”，样式正确（如标签颜色）"
+    }
+   ],
+   "expected_result": "记录展示正确的状态文案“待开奖”。",
+   "remark": "正面用例，覆盖FP-预测记录-30",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-231"
+  },
+  {
+   "title": "预测记录展示状态信息（已退款）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在一条参与记录，状态为“已退款”。",
+   "preconditions": "用户已登录；存在状态为“已退款”的参与记录；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看状态为“已退款”的记录",
+     "expected": "记录中展示状态信息“已退款”，样式正确"
+    }
+   ],
+   "expected_result": "记录展示正确的状态文案“已退款”。",
+   "remark": "正面用例，覆盖FP-预测记录-30",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-232"
+  },
+  {
+   "title": "预测记录展示状态信息（已开奖-平局）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在一条参与记录，状态为“已开奖”，预测选项为“平局”，且中奖。",
+   "preconditions": "用户已登录；存在状态为“已开奖”且中奖的参与记录；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看状态为“已开奖”的记录",
+     "expected": "记录中展示状态信息“平局”（或“已开奖”），并展示奖励银钻数额"
+    }
+   ],
+   "expected_result": "记录展示正确的状态文案和奖励信息。",
+   "remark": "正面用例，覆盖FP-预测记录-30",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-233"
+  },
+  {
+   "title": "预测记录展示状态信息（已取消）",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在一条参与记录，状态为“已取消”。",
+   "preconditions": "用户已登录；存在状态为“已取消”的参与记录；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看状态为“已取消”的记录",
+     "expected": "记录中展示状态信息“已取消”，样式正确"
+    }
+   ],
+   "expected_result": "记录展示正确的状态文案“已取消”。",
+   "remark": "正面用例，覆盖FP-预测记录-30",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-234"
+  },
+  {
+   "title": "状态信息缺失或未知时记录仍正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回记录时状态字段为空或为未知值（如“unknown”）。",
+   "preconditions": "用户已登录；后端返回的参与记录中状态为空或未知；进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，查看状态异常的记录",
+     "expected": "记录正常展示，状态位置显示为默认文案（如“未知”）或空，页面不报错"
+    }
+   ],
+   "expected_result": "状态缺失或未知时页面不崩溃，记录其他字段正常展示。",
+   "remark": "负面用例，覆盖FP-预测记录-30的异常",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-235"
+  },
+  {
+   "title": "“本场”TAB下记录也按创建时间倒序排列",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，从比赛详情页（比赛ID=1001）进入，该比赛关联预测活动，用户有多条参与记录，创建时间不同。",
+   "preconditions": "用户已登录；比赛ID=1001关联预测活动，用户有多条参与记录；从比赛详情页进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从比赛详情页进入预测记录页，默认“本场”TAB",
+     "expected": "“本场”TAB下的记录按创建时间倒序排列，新记录在前"
+    }
+   ],
+   "expected_result": "“本场”TAB下记录排序正确。",
+   "remark": "正面用例，覆盖FP-预测记录-27在“本场”TAB下的应用",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-236"
+  },
+  {
+   "title": "切换TAB时记录列表正确刷新",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，从比赛详情页（比赛ID=1001）进入，该比赛关联预测活动，用户在该活动有记录，同时在其他活动也有记录。",
+   "preconditions": "用户已登录；存在比赛ID=1001关联预测活动的参与记录，以及其他活动的参与记录；从比赛详情页进入预测记录页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页，默认“本场”TAB，查看记录",
+     "expected": "仅展示与比赛ID=1001关联的记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击“全部”TAB",
+     "expected": "列表刷新，展示所有预测活动的参与记录，包含本场记录和其他记录"
+    },
+    {
+     "step": 3,
+     "desc": "再次点击“本场”TAB",
+     "expected": "列表刷新，仅展示本场关联记录"
+    }
+   ],
+   "expected_result": "TAB切换后列表内容正确刷新，无数据残留。",
+   "remark": "正面用例，覆盖FP-预测记录-25和FP-预测记录-26的联动",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-237"
+  },
+  {
+   "title": "预测记录页在未登录状态下访问被拦截",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "预测记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录，尝试访问预测记录页。",
+   "preconditions": "用户未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "未登录状态下尝试进入预测记录页",
+     "expected": "跳转至登录页，或提示“请先登录”，无法查看预测记录"
+    }
+   ],
+   "expected_result": "未登录用户无法访问预测记录页，被引导登录。",
+   "remark": "负面用例，覆盖权限控制",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-238"
+  },
+  {
+   "title": "银钻预测玩法页面正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "正常访问页面，无需特殊数据",
+   "preconditions": "用户已登录，存在至少一场预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "页面正常加载，显示标题“银钻预测玩法”"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面内容",
+     "expected": "页面展示玩法流程、状态列表（预测中、待开奖、已开奖、已取消）等元素"
+    }
+   ],
+   "expected_result": "页面正常展示，无报错，所有元素可见",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-239"
+  },
+  {
+   "title": "未登录访问银钻预测玩法页面被拦截",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录状态",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试访问银钻预测玩法页面",
+     "expected": "跳转至登录页或提示需要登录"
+    }
+   ],
+   "expected_result": "未登录用户无法访问，被拦截并提示登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-240"
+  },
+  {
+   "title": "玩法流程展示完整步骤",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "正常页面数据",
+   "preconditions": "已进入银钻预测玩法页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看玩法流程区域",
+     "expected": "玩法流程以列表或步骤图形式展示，包含开始、创建预测活动、用户参与、记录信息、时间到达、更新状态、发放奖励、结束等步骤"
+    }
+   ],
+   "expected_result": "玩法流程完整展示，步骤清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-241"
+  },
+  {
+   "title": "玩法流程为空时展示空态",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无玩法流程数据",
+   "preconditions": "后台未配置玩法流程",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "玩法流程区域显示“暂无玩法流程”或类似空态提示"
+    }
+   ],
+   "expected_result": "空态展示合理，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-242"
+  },
+  {
+   "title": "状态列表展示所有状态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "正常状态数据",
+   "preconditions": "已进入银钻预测玩法页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看状态列表区域",
+     "expected": "状态列表包含预测中、待开奖、已开奖、已取消四种状态"
+    }
+   ],
+   "expected_result": "所有状态均展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-243"
+  },
+  {
+   "title": "状态列表缺少状态时展示异常",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置缺失状态",
+   "preconditions": "后台配置状态列表时遗漏“已取消”状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "状态列表不显示“已取消”，但页面无报错"
+    }
+   ],
+   "expected_result": "页面正常展示，但状态不完整，需提示后台配置错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-244"
+  },
+  {
+   "title": "预测中状态展示可参与预测",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在预测中的比赛，用户已登录",
+   "preconditions": "存在预测中的比赛，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "预测中状态对应的比赛显示可参与预测，展示主胜、客胜、平局选项及赔率"
+    }
+   ],
+   "expected_result": "预测中状态展示正常，用户可进行参与操作",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-245"
+  },
+  {
+   "title": "预测中状态无比赛时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无预测中的比赛",
+   "preconditions": "当前无预测中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "预测中区域显示“暂无预测中的比赛”或类似提示"
+    }
+   ],
+   "expected_result": "空态展示合理，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-246"
+  },
+  {
+   "title": "待开奖状态展示等待开奖信息",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在待开奖的比赛",
+   "preconditions": "存在待开奖的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "待开奖状态对应的比赛显示“待开奖”标识，不可参与预测"
+    }
+   ],
+   "expected_result": "待开奖状态展示正常，用户不可操作",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-247"
+  },
+  {
+   "title": "待开奖状态尝试参与预测被拦截",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "待开奖的比赛",
+   "preconditions": "存在待开奖的比赛，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "待开奖比赛无参与按钮或点击参与提示“预测已结束”"
+    }
+   ],
+   "expected_result": "用户无法参与待开奖比赛，有明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-248"
+  },
+  {
+   "title": "已开奖状态展示开奖结果",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在已开奖的比赛",
+   "preconditions": "存在已开奖的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "已开奖状态对应的比赛显示开奖结果，如主胜、客胜、平局，并标记WIN"
+    }
+   ],
+   "expected_result": "已开奖状态展示正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-249"
+  },
+  {
+   "title": "已开奖状态无结果时展示异常",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已开奖但结果未同步",
+   "preconditions": "比赛已开奖但结果未同步",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "已开奖比赛显示“结果待同步”或类似提示，无报错"
+    }
+   ],
+   "expected_result": "页面正常展示，但结果缺失需提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-250"
+  },
+  {
+   "title": "已取消状态展示取消信息",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在已取消的比赛",
+   "preconditions": "存在已取消的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "已取消状态对应的比赛显示“已取消”标识，并展示退款信息"
+    }
+   ],
+   "expected_result": "已取消状态展示正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-251"
+  },
+  {
+   "title": "已取消状态无退款信息时展示异常",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已取消但退款未处理",
+   "preconditions": "比赛已取消但退款未处理",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "已取消比赛显示“退款处理中”或类似提示，无报错"
+    }
+   ],
+   "expected_result": "页面正常展示，但退款信息缺失需提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-252"
+  },
+  {
+   "title": "开始步骤展示为流程起点",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "正常页面数据",
+   "preconditions": "已进入银钻预测玩法页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看玩法流程中的“开始”步骤",
+     "expected": "“开始”作为流程的第一步展示"
+    }
+   ],
+   "expected_result": "开始步骤展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-253"
+  },
+  {
+   "title": "开始步骤缺失时流程不完整",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置缺失开始步骤",
+   "preconditions": "后台配置玩法流程时遗漏“开始”步骤",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "玩法流程缺少“开始”步骤，但页面无报错"
+    }
+   ],
+   "expected_result": "页面正常展示，但流程不完整，需提示后台配置错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-254"
+  },
+  {
+   "title": "创建预测活动成功",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "管理员创建预测活动，比赛ID为1001，比赛开始时间为2025-03-27 08:30",
+   "preconditions": "用户为管理员，存在比赛ID=1001，比赛未开始",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测活动管理页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "选择比赛ID=1001，点击创建预测活动",
+     "expected": "系统提示创建成功，生成预测活动ID，活动状态为“预测中”"
+    }
+   ],
+   "expected_result": "预测活动创建成功，状态为预测中，数据库新增记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-255"
+  },
+  {
+   "title": "创建预测活动时比赛已开始被拒绝",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "比赛ID=1002，比赛开始时间为2025-03-27 08:30，当前时间已过08:30",
+   "preconditions": "用户为管理员，存在比赛ID=1002，比赛已开始",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测活动管理页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "选择比赛ID=1002，点击创建预测活动",
+     "expected": "系统提示“比赛已开始，无法创建预测活动”，不生成预测活动"
+    }
+   ],
+   "expected_result": "创建被拒绝，无新预测活动生成",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-256"
+  },
+  {
+   "title": "用户使用银钻参与预测成功",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户银钻余额1000，预测活动ID=2001，选择主胜，赔率1.20，参与银钻500",
+   "preconditions": "用户已登录，银钻余额1000，存在预测中活动ID=2001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测活动ID=2001的详情页",
+     "expected": "页面展示主胜、客胜、平局选项及赔率"
+    },
+    {
+     "step": 2,
+     "desc": "点击“预测主胜”",
+     "expected": "弹出确认参与弹窗，显示赔率1.20"
+    },
+    {
+     "step": 3,
+     "desc": "输入参与银钻500，点击确认",
+     "expected": "提示参与成功，银钻余额扣减500，预测记录新增一条记录"
+    }
+   ],
+   "expected_result": "参与成功，银钻扣减，记录生成",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-257"
+  },
+  {
+   "title": "用户银钻余额不足参与失败",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户银钻余额100，预测活动ID=2001，选择主胜，参与银钻500",
+   "preconditions": "用户已登录，银钻余额100，存在预测中活动ID=2001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测活动ID=2001的详情页",
+     "expected": "页面展示选项及赔率"
+    },
+    {
+     "step": 2,
+     "desc": "点击“预测主胜”，输入参与银钻500，点击确认",
+     "expected": "提示“银钻余额不足”，参与失败，银钻不扣减"
+    }
+   ],
+   "expected_result": "参与失败，余额不足提示，无记录生成",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-258"
+  },
+  {
+   "title": "参与银钻数额为0被拒绝",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户银钻余额1000，预测活动ID=2001，参与银钻0",
+   "preconditions": "用户已登录，银钻余额1000，存在预测中活动ID=2001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测活动ID=2001的详情页",
+     "expected": "页面展示选项及赔率"
+    },
+    {
+     "step": 2,
+     "desc": "点击“预测主胜”，输入参与银钻0，点击确认",
+     "expected": "提示“参与银钻必须大于0”，参与失败"
+    }
+   ],
+   "expected_result": "参与失败，提示数额必须大于0",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-259"
+  },
+  {
+   "title": "参与银钻数额超过单场上限被拒绝",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "单场上限10000，用户银钻余额20000，预测活动ID=2001，参与银钻10001",
+   "preconditions": "用户已登录，银钻余额20000，存在预测中活动ID=2001，单场上限10000",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测活动ID=2001的详情页",
+     "expected": "页面展示选项及赔率"
+    },
+    {
+     "step": 2,
+     "desc": "点击“预测主胜”，输入参与银钻10001，点击确认",
+     "expected": "提示“超过单场参与上限”，参与失败"
+    }
+   ],
+   "expected_result": "参与失败，提示超过上限",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-260"
+  },
+  {
+   "title": "记录用户参与信息正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户参与主胜，银钻500，赔率1.20",
+   "preconditions": "用户已登录，银钻余额1000，存在预测中活动ID=2001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "参与预测主胜，银钻500",
+     "expected": "参与成功"
+    },
+    {
+     "step": 2,
+     "desc": "进入预测记录页面",
+     "expected": "记录显示选项“主胜”，参与银钻500，赔率1.20，状态“预测中”"
+    }
+   ],
+   "expected_result": "记录信息完整准确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-261"
+  },
+  {
+   "title": "记录信息缺失时展示异常",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟记录数据缺失赔率字段",
+   "preconditions": "存在一条预测记录，但赔率字段为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测记录页面",
+     "expected": "记录显示赔率为“-”或“暂无”，无报错"
+    }
+   ],
+   "expected_result": "页面正常展示，但数据缺失需提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-262"
+  },
+  {
+   "title": "时间到达比赛开始时间后活动状态更新为待开奖",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间2025-03-27 08:30，当前时间到达08:30",
+   "preconditions": "存在预测中活动ID=2001，关联比赛开始时间2025-03-27 08:30",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "等待系统时间到达比赛开始时间",
+     "expected": "活动状态自动更新为“待开奖”"
+    },
+    {
+     "step": 2,
+     "desc": "尝试参与该活动",
+     "expected": "提示“预测已结束”，无法参与"
+    }
+   ],
+   "expected_result": "活动状态更新为待开奖，停止参与",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-263"
+  },
+  {
+   "title": "时间未到达比赛开始时间时活动保持预测中",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "比赛开始时间2025-03-27 08:30，当前时间08:29",
+   "preconditions": "存在预测中活动ID=2001，关联比赛开始时间2025-03-27 08:30",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在08:29时查看活动状态",
+     "expected": "活动状态仍为“预测中”，可参与"
+    }
+   ],
+   "expected_result": "活动保持预测中，可参与",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-264"
+  },
+  {
+   "title": "时间到达比赛开始时间后系统自动停止参与",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间2025-03-27 08:30，当前时间08:30",
+   "preconditions": "存在预测中活动ID=2001，关联比赛开始时间2025-03-27 08:30",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "等待时间到达08:30",
+     "expected": "活动状态更新为待开奖"
+    },
+    {
+     "step": 2,
+     "desc": "尝试参与预测",
+     "expected": "提示“预测已结束”，无法参与"
+    }
+   ],
+   "expected_result": "停止参与，有明确提示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-265"
+  },
+  {
+   "title": "时间到达比赛开始时间后仍可参与（异常）",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛开始时间2025-03-27 08:30，当前时间08:31",
+   "preconditions": "存在预测中活动ID=2001，关联比赛开始时间2025-03-27 08:30",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在08:31时尝试参与预测",
+     "expected": "系统应拦截，提示“预测已结束”"
+    }
+   ],
+   "expected_result": "系统拦截参与，若未拦截则为缺陷",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-266"
+  },
+  {
+   "title": "比赛开始时间到达，活动状态更新为待开奖，用户无法继续参与",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间已到，活动状态从'预测中'变为'待开奖'，用户尝试参与预测",
+   "preconditions": "存在一场预测中活动，关联比赛开始时间已到；用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面，查看活动状态",
+     "expected": "活动状态显示为'待开奖'，预测按钮置灰或不可点击"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击预测主胜按钮",
+     "expected": "提示'预测已停止'，无法参与"
+    }
+   ],
+   "expected_result": "活动状态更新为待开奖，用户无法继续参与，已参与记录保留",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-267"
+  },
+  {
+   "title": "比赛开始时间未到，活动状态仍为预测中，用户可正常参与",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛开始时间未到，活动状态为'预测中'，用户参与预测",
+   "preconditions": "存在一场预测中活动，关联比赛开始时间未到；用户已登录，银钻充足",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面，查看活动状态",
+     "expected": "活动状态显示为'预测中'，预测按钮可点击"
+    },
+    {
+     "step": 2,
+     "desc": "点击预测主胜，输入参与银钻500，确认参与",
+     "expected": "参与成功，银钻扣减500，预测记录新增"
+    }
+   ],
+   "expected_result": "活动状态为预测中，用户可正常参与",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-268"
+  },
+  {
+   "title": "比赛开始时间到达，活动状态未更新（异常）",
+   "priority": "P1",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛开始时间已到，但活动状态仍显示'预测中'，用户尝试参与",
+   "preconditions": "存在一场预测中活动，关联比赛开始时间已到，但系统未自动更新状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面，查看活动状态",
+     "expected": "活动状态仍显示'预测中'（异常）"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击预测主胜，输入参与银钻500，确认参与",
+     "expected": "系统应拦截并提示'预测已停止'，不允许参与"
+    }
+   ],
+   "expected_result": "即使状态未更新，系统也应阻止用户参与，保证业务一致性",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-269"
+  },
+  {
+   "title": "比赛结束后，活动状态更新为已开奖，预测成功的用户获得银钻奖励",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛结束，主队胜，用户预测主胜，参与银钻500，赔率1.20",
+   "preconditions": "存在一场已结束比赛，活动状态为待开奖；用户已登录，且预测主胜成功",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面，查看活动状态",
+     "expected": "活动状态显示为'已开奖'"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测记录，确认预测主胜的记录状态",
+     "expected": "记录状态变为'已开奖'，显示奖励银钻600"
+    },
+    {
+     "step": 3,
+     "desc": "查看银钻明细",
+     "expected": "银钻明细新增一条'预测奖励'入账600"
+    }
+   ],
+   "expected_result": "活动状态更新为已开奖，预测成功用户获得奖励银钻600（500*1.20）",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-270"
+  },
+  {
+   "title": "比赛结束后，活动状态未更新（异常）",
+   "priority": "P1",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛已结束，但活动状态仍为待开奖，用户查看预测记录",
+   "preconditions": "存在一场已结束比赛，活动状态仍为待开奖（异常）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面，查看活动状态",
+     "expected": "活动状态仍显示'待开奖'（异常）"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测记录",
+     "expected": "记录状态仍为'待开奖'，未发放奖励"
+    }
+   ],
+   "expected_result": "系统应自动更新状态并发放奖励，若未更新则需告警或手动触发",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-271"
+  },
+  {
+   "title": "活动结束后，页面显示'已结束'状态",
+   "priority": "P1",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "活动已结束，页面展示'已结束'标签",
+   "preconditions": "存在一场已结束的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "页面显示'已结束'标签，预测按钮置灰"
+    }
+   ],
+   "expected_result": "活动结束后，页面正确显示'已结束'状态",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-272"
+  },
+  {
+   "title": "活动未结束，页面不显示'已结束'标签",
+   "priority": "P1",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "活动状态为预测中，页面不应显示'已结束'标签",
+   "preconditions": "存在一场预测中的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻预测玩法页面",
+     "expected": "页面不显示'已结束'标签，预测按钮可点击"
+    }
+   ],
+   "expected_result": "活动未结束时，不显示'已结束'标签",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-273"
+  },
+  {
+   "title": "比赛结果为主胜，预测主胜的用户判定为预测成功",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛结果主队胜，用户预测主胜",
+   "preconditions": "比赛已结束，主队胜；用户已预测主胜",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录中该用户预测主胜的记录",
+     "expected": "记录状态变为'已开奖'，标记为预测成功"
+    }
+   ],
+   "expected_result": "预测主胜的用户被判定为预测成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-274"
+  },
+  {
+   "title": "比赛结果为主胜，预测客胜的用户判定为预测失败",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "比赛结果主队胜，用户预测客胜",
+   "preconditions": "比赛已结束，主队胜；用户已预测客胜",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录中该用户预测客胜的记录",
+     "expected": "记录状态变为'已开奖'，标记为预测失败，无奖励"
+    }
+   ],
+   "expected_result": "预测客胜的用户判定为预测失败，不发放奖励",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-275"
+  },
+  {
+   "title": "比赛结果为平局，预测平局的用户判定为预测成功",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛结果为平局，用户预测平局",
+   "preconditions": "比赛已结束，结果为平局；用户已预测平局",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录中该用户预测平局的记录",
+     "expected": "记录状态变为'已开奖'，标记为预测成功"
+    }
+   ],
+   "expected_result": "预测平局的用户判定为预测成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-276"
+  },
+  {
+   "title": "比赛取消，所有预测选项判定为预测失败并退款",
+   "priority": "P1",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "比赛取消，用户已预测主胜，参与银钻500",
+   "preconditions": "比赛取消，活动状态变为已取消；用户已预测主胜",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录中该用户预测主胜的记录",
+     "expected": "记录状态变为'已退款'，参与银钻500退回"
+    }
+   ],
+   "expected_result": "比赛取消时，所有预测选项判定为失败，并退还参与银钻",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-277"
+  },
+  {
+   "title": "预测成功用户获得奖励银钻 = 参与银钻 × 赔率（向下取整）",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "参与银钻500，赔率1.20，奖励=500*1.20=600",
+   "preconditions": "比赛已结束，用户预测成功，参与银钻500，赔率1.20",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录中该用户的记录",
+     "expected": "记录显示奖励银钻600"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻明细",
+     "expected": "银钻明细新增'预测奖励'600"
+    }
+   ],
+   "expected_result": "奖励银钻=参与银钻×赔率，向下取整，正确入账",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-278"
+  },
+  {
+   "title": "奖励银钻计算向下取整（小数部分舍弃）",
+   "priority": "P1",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "参与银钻100，赔率1.05，奖励=105，但向下取整为105（整数）；参与银钻100，赔率1.01，奖励=101，向下取整为101",
+   "preconditions": "比赛已结束，用户预测成功，参与银钻100，赔率1.01",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录中该用户的记录",
+     "expected": "记录显示奖励银钻101"
+    }
+   ],
+   "expected_result": "奖励银钻向下取整，小数部分舍弃",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-279"
+  },
+  {
+   "title": "奖励银钻计算使用参与时赔率，而非当前赔率",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "参与时赔率1.20，开奖前赔率变为1.50，奖励按1.20计算",
+   "preconditions": "用户参与时赔率1.20，比赛结束后赔率变为1.50",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录中该用户的记录",
+     "expected": "记录显示奖励银钻=参与银钻×1.20，而非1.50"
+    }
+   ],
+   "expected_result": "奖励按参与时赔率计算，不受后续赔率变化影响",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-280"
+  },
+  {
+   "title": "多次参与同一选项，每笔独立计算奖励",
+   "priority": "P0",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户两次预测主胜，第一次参与银钻500赔率1.20，第二次参与银钻300赔率1.10，奖励分别为600和330",
+   "preconditions": "比赛已结束，用户两次预测主胜成功",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录中该用户的两条预测主胜记录",
+     "expected": "两条记录分别显示奖励银钻600和330"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻明细",
+     "expected": "银钻明细新增两条'预测奖励'入账，分别为600和330"
+    }
+   ],
+   "expected_result": "多次参与独立计算，奖励分别发放",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-281"
+  },
+  {
+   "title": "多次参与同一选项，奖励合并发放但明细可查",
+   "priority": "P1",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户两次预测主胜，奖励分别为600和330，合并发放930",
+   "preconditions": "比赛已结束，用户两次预测主胜成功",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看银钻明细",
+     "expected": "银钻明细新增一条'预测奖励'入账930，或两条分别入账但总额一致"
+    }
+   ],
+   "expected_result": "奖励可合并发放，但明细需可追溯",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-282"
+  },
+  {
+   "title": "多次参与同一选项，其中一次预测失败，仅成功部分发放奖励",
+   "priority": "P1",
+   "domain": "体育-用户端/预测Pick/银钻预测玩法",
+   "module": "银钻预测玩法",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户两次预测主胜，第一次成功，第二次因比赛取消退款",
+   "preconditions": "比赛取消，用户两次预测主胜，第一次成功，第二次退款",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看预测记录",
+     "expected": "第一条记录显示已开奖并发放奖励，第二条显示已退款"
+    }
+   ],
+   "expected_result": "多次参与独立处理，成功部分发放奖励，失败部分退款",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-283"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-13 生成被截断，已重试"
+ ]
+}

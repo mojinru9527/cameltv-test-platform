@@ -1,0 +1,2890 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "关联信息展示（比赛/球队/联赛）",
+    "description": "资讯详情页根据关联的不同类型信息（比赛、球队、联赛）进行相应展示：关联信息为比赛时展示主客队名称及icon；关联信息为球队时展示球队名称及icon；关联信息为联赛时展示联赛名称及icon。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确当关联信息类型未知或为空时的展示行为（如隐藏、占位、提示）。",
+      "suggestion": "补充说明无关联信息或未知类型时的默认展示规则。"
+     },
+     {
+      "severity": "low",
+      "description": "需求未说明关联信息展示的样式细节（如icon尺寸、名称截断规则）。",
+      "suggestion": "补充UI规范或参考设计稿。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "语种相同相关资讯推荐",
+    "description": "根据当前资讯的关联比赛、球队、联赛等信息，查询出关联了相同比赛、球队、联赛且语种相同的5篇资讯，优先级为比赛>球队>联赛。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确当关联信息不足（如仅关联球队）时，推荐逻辑如何降级（是否只按球队推荐，还是补充其他条件）。",
+      "suggestion": "明确降级策略和推荐数量不足5篇时的处理。"
+     },
+     {
+      "severity": "medium",
+      "description": "需求未明确语种相同的具体判断标准（如语言代码一致，是否考虑多语言版本）。",
+      "suggestion": "明确语种字段和匹配规则。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体清晰，明确了资讯详情页关联信息的展示类型和相关资讯推荐逻辑，但存在部分边界情况未定义（如无关联信息、推荐数量不足、语种匹配细节），建议补充完善。"
+ },
+ "functional_cases": [
+  {
+   "title": "资讯列表正常展示38%进度标识",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条资讯，其进度字段值为38%，用于验证正常展示。",
+   "preconditions": "已登录，资讯列表接口返回包含进度字段为38%的资讯数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功，显示资讯列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看第一条资讯的进度标识",
+     "expected": "该资讯条目上显示“38%”字样，样式与设计稿一致"
+    }
+   ],
+   "expected_result": "资讯列表正常展示38%进度标识，无乱码或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "资讯列表进度字段为空时隐藏或显示默认值",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条资讯，其进度字段为null或空字符串，验证边界处理。",
+   "preconditions": "已登录，资讯列表接口返回包含进度字段为null或空字符串的资讯数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看进度字段为空的资讯条目",
+     "expected": "该条目不显示进度百分比，或显示默认值（如0%），且页面布局不异常"
+    }
+   ],
+   "expected_result": "进度字段为空时，页面正常展示，不出现空白或错误。",
+   "remark": "负面/边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "资讯列表已收藏状态正常显示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条已收藏的资讯，其收藏状态为true。",
+   "preconditions": "已登录，存在一条已收藏的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该已收藏资讯的收藏标识",
+     "expected": "该资讯条目上显示已收藏状态（如红色图标或“已收藏”文字）"
+    }
+   ],
+   "expected_result": "已收藏状态正确显示，与未收藏状态区分明显。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "资讯列表未收藏状态正常显示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条未收藏的资讯，其收藏状态为false。",
+   "preconditions": "已登录，存在一条未收藏的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该未收藏资讯的收藏标识",
+     "expected": "该资讯条目上显示未收藏状态（如灰色图标或“收藏”文字）"
+    }
+   ],
+   "expected_result": "未收藏状态正确显示，与已收藏状态区分明显。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "资讯列表封面图片正常加载",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条资讯，其封面图片URL有效。",
+   "preconditions": "已登录，资讯列表接口返回包含有效封面图片URL的资讯数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看资讯条目的封面图片",
+     "expected": "封面图片正常显示，无裂图，尺寸符合设计稿"
+    }
+   ],
+   "expected_result": "封面图片正常加载显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "资讯列表封面图片加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条资讯，其封面图片URL无效或网络异常。",
+   "preconditions": "已登录，资讯列表接口返回包含无效封面图片URL的资讯数据，或断网。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看封面图片加载失败的资讯条目",
+     "expected": "显示默认占位图，不出现裂图或空白，且不影响其他内容展示"
+    }
+   ],
+   "expected_result": "封面图片加载失败时显示占位图，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "资讯列表发布时间显示为相对时间（45分钟前）",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条资讯，其发布时间为当前时间前45分钟。",
+   "preconditions": "已登录，资讯列表接口返回发布时间为45分钟前的资讯数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该资讯的发布时间",
+     "expected": "显示“45分钟前”，格式正确"
+    }
+   ],
+   "expected_result": "发布时间以相对时间显示为“45分钟前”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "资讯列表发布时间超过24小时显示绝对日期",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条资讯，其发布时间为当前时间前25小时。",
+   "preconditions": "已登录，资讯列表接口返回发布时间为25小时前的资讯数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该资讯的发布时间",
+     "expected": "显示绝对日期（如“2023-08-01”），而非相对时间"
+    }
+   ],
+   "expected_result": "超过24小时显示绝对日期，符合规则。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "资讯列表展示关联比赛球队名称（主队 vs 客队）",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条资讯，关联比赛，主队名称为“皇家马德里”，客队名称为“巴塞罗那”。",
+   "preconditions": "已登录，资讯列表接口返回关联比赛数据的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该资讯的球队名称字段",
+     "expected": "显示“皇家马德里 vs 巴塞罗那”，格式正确"
+    }
+   ],
+   "expected_result": "球队名称以“主队 vs 客队”格式展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "资讯列表无关联比赛时不显示球队名称",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条资讯，不关联任何比赛。",
+   "preconditions": "已登录，资讯列表接口返回无关联比赛的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该资讯的球队名称字段",
+     "expected": "不显示“vs”格式的球队名称，或该字段隐藏"
+    }
+   ],
+   "expected_result": "无关联比赛时不显示球队名称，布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "资讯列表展示关联球队名称（单队）",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条资讯，关联球队，球队名称为“曼城”，联赛名称为“英超”。",
+   "preconditions": "已登录，资讯列表接口返回关联球队数据的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该资讯的球队名称字段",
+     "expected": "显示“曼城英超”或类似格式，与设计稿一致"
+    }
+   ],
+   "expected_result": "球队名称字段正确展示关联球队信息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "资讯列表无关联球队时不显示球队名称",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条资讯，不关联任何球队。",
+   "preconditions": "已登录，资讯列表接口返回无关联球队的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该资讯的球队名称字段",
+     "expected": "不显示球队名称，或该字段隐藏"
+    }
+   ],
+   "expected_result": "无关联球队时不显示球队名称，布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "资讯列表icon正常显示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条资讯，其icon字段为有效图标。",
+   "preconditions": "已登录，资讯列表接口返回包含有效icon的资讯数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看资讯条目的icon",
+     "expected": "icon正常显示，样式与设计稿一致"
+    }
+   ],
+   "expected_result": "icon正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "资讯列表icon缺失时显示默认图标",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条资讯，其icon字段为空或无效。",
+   "preconditions": "已登录，资讯列表接口返回icon为空的资讯数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看icon缺失的资讯条目",
+     "expected": "显示默认图标，不出现空白或异常"
+    }
+   ],
+   "expected_result": "icon缺失时显示默认图标，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "资讯列表正常展示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已发布且可见的资讯数据，包含标题、发布时间（45分钟前）、浏览量（1.2K）等字段",
+   "preconditions": "用户已登录，存在至少一条可见资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页（/q/news）",
+     "expected": "页面加载成功，展示资讯列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表项",
+     "expected": "每个列表项展示资讯标题、发布时间（如45分钟前）、浏览量（如1.2K）、icon等元素"
+    }
+   ],
+   "expected_result": "资讯列表正常展示，各元素显示正确，无乱码或缺失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "资讯列表空数据展示",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟无可见资讯数据（如后台下架所有资讯）",
+   "preconditions": "用户已登录，后台无可见资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "页面展示空态提示，如「暂无资讯」"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现空白页或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "资讯列表分页加载",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造超过一页的资讯数据（如每页10条，共25条）",
+   "preconditions": "用户已登录，存在超过一页的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页，滑动到底部",
+     "expected": "自动加载下一页数据，或出现「加载更多」按钮"
+    },
+    {
+     "step": 2,
+     "desc": "持续加载至最后一页",
+     "expected": "加载完全部数据后，提示「没有更多了」"
+    }
+   ],
+   "expected_result": "分页加载正常，无重复数据，无漏数据",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "球员详情-资讯列表展示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "球员详情-资讯",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一名有关联资讯的球员，如球员ID=1001，存在关联资讯",
+   "preconditions": "用户已登录，球员详情页存在关联资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员详情页",
+     "expected": "页面展示球员基本信息（名称、头像）"
+    },
+    {
+     "step": 2,
+     "desc": "切换到「资讯」Tab",
+     "expected": "展示该球员相关的资讯列表，包含资讯标题、发布时间、浏览量等"
+    }
+   ],
+   "expected_result": "资讯列表正确展示，且均为该球员相关资讯",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "球员详情-资讯列表空数据",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "球员详情-资讯",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择一名无关联资讯的球员，如新注册球员",
+   "preconditions": "用户已登录，球员无关联资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员详情页",
+     "expected": "页面正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "切换到「资讯」Tab",
+     "expected": "展示空态提示，如「暂无相关资讯」"
+    }
+   ],
+   "expected_result": "显示空态提示，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "资讯列表元素完整性",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用包含完整字段的资讯数据：球员名称、头像、收藏状态、比赛信息、资料、发布时间、浏览量、icon",
+   "preconditions": "用户已登录，存在一条包含所有元素的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "列表项展示所有元素：球员名称、头像、收藏图标、比赛信息、资料、发布时间、浏览量、icon"
+    }
+   ],
+   "expected_result": "所有元素均正确展示，无缺失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "资讯列表元素缺失处理",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条缺少比赛信息和资料的资讯数据",
+   "preconditions": "用户已登录，存在一条缺少部分元素的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页",
+     "expected": "列表项正常展示，缺失的元素不显示，不影响其他元素展示"
+    }
+   ],
+   "expected_result": "页面不报错，缺失元素隐藏，其他元素正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "资讯详情页正常展示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用一篇已发布且可见的资讯，包含文章内容、LOGO、骆驼TV标识、相关资讯等",
+   "preconditions": "用户已登录，存在一篇可见资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "从资讯列表点击一篇资讯",
+     "expected": "跳转到资讯详情页"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面内容",
+     "expected": "展示文章内容、LOGO、骆驼TV、相关资讯、分享、收藏、点赞按钮，底部固定悬浮按钮"
+    }
+   ],
+   "expected_result": "详情页正常展示，所有元素可见",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "资讯详情页未登录操作拦截",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户访问资讯详情页",
+   "preconditions": "用户未登录，存在一篇可见资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「收藏」按钮",
+     "expected": "弹出登录提示，如「请先登录」"
+    },
+    {
+     "step": 3,
+     "desc": "点击「点赞」按钮",
+     "expected": "同样弹出登录提示"
+    },
+    {
+     "step": 4,
+     "desc": "点击「分享」按钮",
+     "expected": "分享功能可用，或同样提示登录"
+    }
+   ],
+   "expected_result": "未登录操作被拦截，提示登录，不产生实际收藏/点赞",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "资讯详情-收藏成功",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，选择一篇未收藏的资讯",
+   "preconditions": "用户已登录，资讯未收藏",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "收藏按钮显示为未收藏状态"
+    },
+    {
+     "step": 2,
+     "desc": "点击「收藏」按钮",
+     "expected": "按钮变为已收藏状态，提示「收藏成功」"
+    }
+   ],
+   "expected_result": "收藏成功，状态更新，数据库记录新增",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "资讯详情-取消收藏",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，选择一篇已收藏的资讯",
+   "preconditions": "用户已登录，资讯已收藏",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "收藏按钮显示为已收藏状态"
+    },
+    {
+     "step": 2,
+     "desc": "点击「已收藏」按钮",
+     "expected": "按钮变为未收藏状态，提示「取消收藏成功」"
+    }
+   ],
+   "expected_result": "取消收藏成功，状态更新，数据库记录删除",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "资讯详情-点赞成功",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，选择一篇未点赞的资讯",
+   "preconditions": "用户已登录，资讯未点赞",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "点赞按钮显示为未点赞状态"
+    },
+    {
+     "step": 2,
+     "desc": "点击「点赞」按钮",
+     "expected": "按钮变为已点赞状态，点赞数+1，提示「点赞成功」"
+    }
+   ],
+   "expected_result": "点赞成功，状态更新，点赞数增加",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "资讯详情-取消点赞",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，选择一篇已点赞的资讯",
+   "preconditions": "用户已登录，资讯已点赞",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "点赞按钮显示为已点赞状态"
+    },
+    {
+     "step": 2,
+     "desc": "点击「已点赞」按钮",
+     "expected": "按钮变为未点赞状态，点赞数-1，提示「取消点赞成功」"
+    }
+   ],
+   "expected_result": "取消点赞成功，状态更新，点赞数减少",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "资讯详情-相关资讯展示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前资讯关联了比赛、球队、联赛，且存在语种相同的其他资讯",
+   "preconditions": "用户已登录，当前资讯有关联信息，且存在相关资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面展示「相关资讯」区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看相关资讯列表",
+     "expected": "展示5篇语种相同、关联相同比赛/球队/联赛的资讯，优先级为比赛>球队>联赛"
+    }
+   ],
+   "expected_result": "相关资讯正确展示，数量为5篇，排序符合优先级",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "资讯详情-无相关资讯",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前资讯未关联任何比赛、球队、联赛，或没有语种相同的其他资讯",
+   "preconditions": "用户已登录，当前资讯无相关资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面不展示「相关资讯」区域，或展示空态提示"
+    }
+   ],
+   "expected_result": "无相关资讯时不展示该区域，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "资讯详情-关联比赛展示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联信息类型为「比赛」，包含主队名称、客队名称、主客队logo",
+   "preconditions": "用户已登录，资讯关联了比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "展示关联比赛区域，包含主队logo、主队名称、VS、客队名称、客队logo"
+    }
+   ],
+   "expected_result": "关联比赛信息正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "资讯详情-关联球队展示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联信息类型为「球队」，包含球队名称和logo",
+   "preconditions": "用户已登录，资讯关联了球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "展示关联球队区域，包含球队logo和球队名称"
+    }
+   ],
+   "expected_result": "关联球队信息正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "资讯详情-关联联赛展示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联信息类型为「联赛」，包含联赛名称和logo",
+   "preconditions": "用户已登录，资讯关联了联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "展示关联联赛区域，包含联赛logo和联赛名称"
+    }
+   ],
+   "expected_result": "关联联赛信息正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "资讯详情-关联球员展示",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联信息类型为「球员」，包含球员头像和名称",
+   "preconditions": "用户已登录，资讯关联了球员",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "展示关联球员区域，包含球员头像和球员名称"
+    }
+   ],
+   "expected_result": "关联球员信息正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "资讯详情-无关联信息",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯未关联任何比赛、球队、联赛、球员",
+   "preconditions": "用户已登录，资讯无关联信息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "不展示关联信息区域，页面正常显示文章内容"
+    }
+   ],
+   "expected_result": "无关联信息时不展示该区域，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "资讯详情-底部悬浮按钮固定",
+   "priority": "P2",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "长文章内容，需要滚动",
+   "preconditions": "用户已登录，进入资讯详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "底部显示固定悬浮按钮（分享、收藏、点赞）"
+    },
+    {
+     "step": 2,
+     "desc": "滚动页面",
+     "expected": "悬浮按钮始终固定在底部，不随滚动消失"
+    }
+   ],
+   "expected_result": "悬浮按钮固定底部，滚动时保持可见",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "资讯详情-分享功能",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，点击分享按钮",
+   "preconditions": "用户已登录，进入资讯详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「分享」按钮",
+     "expected": "弹出分享面板，可选择分享到微信、微博等平台"
+    },
+    {
+     "step": 2,
+     "desc": "选择一个平台完成分享",
+     "expected": "提示「分享成功」"
+    }
+   ],
+   "expected_result": "分享功能正常，分享成功有提示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "资讯详情-分享取消",
+   "priority": "P2",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击分享后取消",
+   "preconditions": "用户已登录，进入资讯详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「分享」按钮",
+     "expected": "弹出分享面板"
+    },
+    {
+     "step": 2,
+     "desc": "点击取消或关闭面板",
+     "expected": "面板关闭，无任何提示，页面状态不变"
+    }
+   ],
+   "expected_result": "取消分享无异常，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "资讯详情页面正常展示文章内容",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台配置的一篇有效资讯，包含标题、正文、封面图等，文章状态为已发布。",
+   "preconditions": "后台已配置一篇已发布的资讯，且该资讯关联了比赛、球队或联赛；用户已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯列表页，点击该资讯的标题或封面图",
+     "expected": "跳转到资讯详情页"
+    },
+    {
+     "step": 2,
+     "desc": "观察页面加载",
+     "expected": "页面正常加载，无白屏或报错"
+    }
+   ],
+   "expected_result": "资讯详情页展示文章标题、正文内容、封面图、发布时间、作者等信息，内容与后台配置一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "资讯详情页面文章内容加载失败时显示占位",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或后台文章内容为空，文章ID为有效ID。",
+   "preconditions": "网络断开或后台文章内容为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面加载，但文章内容区域显示加载失败提示或空态"
+    }
+   ],
+   "expected_result": "页面不崩溃，文章内容区域显示“加载失败”或“暂无内容”提示，且不影响其他模块（如LOGO、相关资讯）展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "资讯详情页面LOGO展示",
+   "priority": "P2",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用平台配置的LOGO图片，路径有效。",
+   "preconditions": "平台已配置LOGO图片。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面顶部或指定位置展示LOGO图片"
+    }
+   ],
+   "expected_result": "LOGO图片正常显示，无裂图，点击可跳转至首页或指定页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "资讯详情页面LOGO加载失败时显示占位",
+   "priority": "P2",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟LOGO图片地址无效或网络异常。",
+   "preconditions": "LOGO图片地址无效或网络异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "LOGO区域显示默认占位图或隐藏"
+    }
+   ],
+   "expected_result": "页面不崩溃，LOGO区域显示占位图或隐藏，不影响其他功能。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "资讯详情页面骆驼TV入口展示",
+   "priority": "P2",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联了骆驼TV视频内容。",
+   "preconditions": "资讯关联了骆驼TV视频内容。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面展示骆驼TV入口（如视频播放区域或按钮）"
+    }
+   ],
+   "expected_result": "骆驼TV入口正常展示，点击可播放视频或跳转至骆驼TV页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "资讯详情页面骆驼TV无内容时隐藏",
+   "priority": "P2",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯未关联骆驼TV视频内容。",
+   "preconditions": "资讯未关联骆驼TV视频内容。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面不展示骆驼TV入口"
+    }
+   ],
+   "expected_result": "骆驼TV入口不显示，页面布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "相关资讯正常展示5篇",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前资讯关联了比赛A，后台存在5篇关联比赛A且语种相同的已发布资讯。",
+   "preconditions": "当前资讯关联了比赛A，且后台存在至少5篇关联比赛A且语种相同的已发布资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面展示相关资讯模块"
+    },
+    {
+     "step": 2,
+     "desc": "查看相关资讯列表",
+     "expected": "展示5篇相关资讯，每篇包含标题、封面图、发布时间等"
+    }
+   ],
+   "expected_result": "相关资讯模块展示5篇资讯，且与当前资讯关联同一比赛，语种一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "相关资讯不足5篇时展示实际数量",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "当前资讯关联了球队B，后台只有2篇关联球队B且语种相同的已发布资讯。",
+   "preconditions": "当前资讯关联了球队B，后台只有2篇关联球队B且语种相同的已发布资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "相关资讯模块展示2篇资讯"
+    }
+   ],
+   "expected_result": "相关资讯模块展示实际存在的2篇资讯，不强制补足5篇。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "相关资讯未关联任何信息时模块隐藏",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前资讯未关联任何比赛、球队或联赛。",
+   "preconditions": "当前资讯未关联任何比赛、球队或联赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面不展示相关资讯模块"
+    }
+   ],
+   "expected_result": "相关资讯模块不显示，页面布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "分享功能正常分享",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效资讯，分享渠道选择“复制链接”。",
+   "preconditions": "用户已登录，资讯详情页正常展示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分享按钮",
+     "expected": "弹出分享面板，包含分享渠道（如微信、微博、复制链接等）"
+    },
+    {
+     "step": 2,
+     "desc": "选择“复制链接”",
+     "expected": "提示“链接已复制”"
+    }
+   ],
+   "expected_result": "分享面板正常弹出，选择复制链接后提示成功，剪贴板中可粘贴出资讯链接。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "分享功能取消分享",
+   "priority": "P2",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用有效资讯，分享面板弹出后点击取消或关闭。",
+   "preconditions": "用户已登录，资讯详情页正常展示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分享按钮",
+     "expected": "弹出分享面板"
+    },
+    {
+     "step": 2,
+     "desc": "点击取消或关闭按钮",
+     "expected": "分享面板关闭，页面无变化"
+    }
+   ],
+   "expected_result": "分享面板正常关闭，不产生任何分享记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "收藏功能正常收藏",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效资讯，用户未收藏过该资讯。",
+   "preconditions": "用户已登录，资讯详情页正常展示，该资讯未被当前用户收藏。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击收藏按钮",
+     "expected": "按钮状态变为“已收藏”，并提示“收藏成功”"
+    }
+   ],
+   "expected_result": "收藏成功，按钮变为“已收藏”，后台收藏记录新增一条。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "未登录点击收藏提示登录",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用有效资讯，用户未登录。",
+   "preconditions": "用户未登录，资讯详情页正常展示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击收藏按钮",
+     "expected": "弹出登录提示，如“请先登录”"
+    }
+   ],
+   "expected_result": "弹出登录提示，不执行收藏操作，收藏按钮状态不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "已收藏状态展示",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效资讯，用户已收藏过该资讯。",
+   "preconditions": "用户已登录，且已收藏该资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "收藏按钮显示为“已收藏”状态"
+    }
+   ],
+   "expected_result": "收藏按钮显示为“已收藏”，点击可取消收藏。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "取消收藏",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用有效资讯，用户已收藏该资讯。",
+   "preconditions": "用户已登录，且已收藏该资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“已收藏”按钮",
+     "expected": "按钮状态变为“收藏”，并提示“已取消收藏”"
+    }
+   ],
+   "expected_result": "取消收藏成功，按钮变为“收藏”，后台收藏记录删除。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "点赞功能正常点赞",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效资讯，用户未点赞过该资讯。",
+   "preconditions": "用户已登录，资讯详情页正常展示，该资讯未被当前用户点赞。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击点赞按钮",
+     "expected": "按钮状态变为“已点赞”，点赞数+1，并提示“点赞成功”"
+    }
+   ],
+   "expected_result": "点赞成功，按钮变为“已点赞”，点赞数增加1，后台点赞记录新增。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "未登录点击点赞提示登录",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用有效资讯，用户未登录。",
+   "preconditions": "用户未登录，资讯详情页正常展示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击点赞按钮",
+     "expected": "弹出登录提示，如“请先登录”"
+    }
+   ],
+   "expected_result": "弹出登录提示，不执行点赞操作，点赞按钮状态不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "已点赞状态展示",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效资讯，用户已点赞过该资讯。",
+   "preconditions": "用户已登录，且已点赞该资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "点赞按钮显示为“已点赞”状态"
+    }
+   ],
+   "expected_result": "点赞按钮显示为“已点赞”，点击可取消点赞。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "取消点赞",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用有效资讯，用户已点赞该资讯。",
+   "preconditions": "用户已登录，且已点赞该资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“已点赞”按钮",
+     "expected": "按钮状态变为“点赞”，点赞数-1，并提示“已取消点赞”"
+    }
+   ],
+   "expected_result": "取消点赞成功，按钮变为“点赞”，点赞数减少1，后台点赞记录删除。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "关联信息为比赛时展示主客队",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联了一场已发布的比赛，比赛包含主队名称、客队名称及双方icon。",
+   "preconditions": "资讯关联了比赛，且比赛信息完整。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面展示关联比赛区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联比赛区域",
+     "expected": "展示主队名称、客队名称及双方icon，中间有VS标识"
+    }
+   ],
+   "expected_result": "关联比赛区域正确展示主客队名称、icon和VS标识，点击可跳转至比赛详情。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "关联信息为比赛但icon缺失时显示占位",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯关联了比赛，但主队或客队的icon地址无效。",
+   "preconditions": "资讯关联了比赛，但比赛icon缺失或无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "关联比赛区域展示，但icon位置显示默认占位图"
+    }
+   ],
+   "expected_result": "页面不崩溃，icon位置显示占位图，名称和VS正常展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "关联信息为球队时展示球队",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联了一支球队，球队包含名称和icon。",
+   "preconditions": "资讯关联了球队，且球队信息完整。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面展示关联球队区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联球队区域",
+     "expected": "展示球队名称及icon"
+    }
+   ],
+   "expected_result": "关联球队区域正确展示球队名称和icon，点击可跳转至球队详情。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "关联信息为球队但icon缺失时显示占位",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯关联了球队，但球队icon地址无效。",
+   "preconditions": "资讯关联了球队，但球队icon缺失或无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "关联球队区域展示，但icon位置显示默认占位图"
+    }
+   ],
+   "expected_result": "页面不崩溃，icon位置显示占位图，球队名称正常展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "关联信息为联赛时展示联赛",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联了一个联赛，联赛包含名称和icon。",
+   "preconditions": "资讯关联了联赛，且联赛信息完整。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面展示关联联赛区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联联赛区域",
+     "expected": "展示联赛名称及icon"
+    }
+   ],
+   "expected_result": "关联联赛区域正确展示联赛名称和icon，点击可跳转至联赛详情。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "关联信息为联赛但icon缺失时显示占位",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯关联了联赛，但联赛icon地址无效。",
+   "preconditions": "资讯关联了联赛，但联赛icon缺失或无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "关联联赛区域展示，但icon位置显示默认占位图"
+    }
+   ],
+   "expected_result": "页面不崩溃，icon位置显示占位图，联赛名称正常展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "关联信息为球员时展示球员",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "资讯关联了一名球员，球员包含名称和头像。",
+   "preconditions": "资讯关联了球员，且球员信息完整。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "页面展示关联球员区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联球员区域",
+     "expected": "展示球员名称及头像"
+    }
+   ],
+   "expected_result": "关联球员区域正确展示球员名称和头像，点击可跳转至球员详情。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "关联信息为球员但头像缺失时显示占位",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯关联了球员，但球员头像地址无效。",
+   "preconditions": "资讯关联了球员，但球员头像缺失或无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页",
+     "expected": "关联球员区域展示，但头像位置显示默认占位图"
+    }
+   ],
+   "expected_result": "页面不崩溃，头像位置显示占位图，球员名称正常展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "资讯详情-主队名称展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联信息为比赛，比赛ID=1001，主队名称为'曼城'",
+   "preconditions": "已登录，存在一条关联比赛ID=1001的资讯，比赛数据中主队名称为'曼城'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页，进入关联信息为比赛的资讯",
+     "expected": "页面展示关联信息区域，包含主队名称'曼城'"
+    }
+   ],
+   "expected_result": "主队名称'曼城'正确显示在关联信息区域",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "资讯详情-主队名称展示-负向（无关联比赛）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯未关联任何比赛，关联信息为空",
+   "preconditions": "已登录，存在一条未关联任何比赛的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "关联信息区域不显示主队名称，或整个关联信息区域不展示"
+    }
+   ],
+   "expected_result": "不显示主队名称，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "资讯详情-VS展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联信息为比赛，主队'曼城'，客队'利物浦'",
+   "preconditions": "已登录，存在一条关联比赛ID=1001的资讯，比赛数据中主队'曼城'，客队'利物浦'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页，进入关联信息为比赛的资讯",
+     "expected": "关联信息区域展示'曼城 VS 利物浦'，VS位于主客队名称之间"
+    }
+   ],
+   "expected_result": "VS正确显示在主队名称和客队名称之间",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "资讯详情-VS展示-负向（无比赛关联）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯未关联比赛",
+   "preconditions": "已登录，存在一条未关联比赛的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "不显示VS，页面无报错"
+    }
+   ],
+   "expected_result": "不显示VS，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "资讯详情-客队名称展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联信息为比赛，客队名称为'利物浦'",
+   "preconditions": "已登录，存在一条关联比赛ID=1001的资讯，比赛数据中客队名称为'利物浦'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页，进入关联信息为比赛的资讯",
+     "expected": "关联信息区域展示客队名称'利物浦'"
+    }
+   ],
+   "expected_result": "客队名称'利物浦'正确显示在关联信息区域",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "资讯详情-客队名称展示-负向（无关联比赛）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯未关联比赛",
+   "preconditions": "已登录，存在一条未关联比赛的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "不显示客队名称，页面无报错"
+    }
+   ],
+   "expected_result": "不显示客队名称，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "资讯详情-球队名称展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联信息为球队，球队名称为'皇家马德里'",
+   "preconditions": "已登录，存在一条关联球队ID=2001的资讯，球队数据中名称为'皇家马德里'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页，进入关联信息为球队的资讯",
+     "expected": "关联信息区域展示球队名称'皇家马德里'"
+    }
+   ],
+   "expected_result": "球队名称'皇家马德里'正确显示在关联信息区域",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "资讯详情-球队名称展示-负向（无关联球队）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯未关联球队",
+   "preconditions": "已登录，存在一条未关联球队的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "不显示球队名称，页面无报错"
+    }
+   ],
+   "expected_result": "不显示球队名称，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "资讯详情-联赛展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联信息为联赛，联赛ID=3001，联赛名称为'英超'",
+   "preconditions": "已登录，存在一条关联联赛ID=3001的资讯，联赛数据中名称为'英超'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页，进入关联信息为联赛的资讯",
+     "expected": "关联信息区域展示联赛名称'英超'及联赛logo"
+    }
+   ],
+   "expected_result": "联赛名称'英超'及logo正确显示在关联信息区域",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "资讯详情-联赛展示-负向（无关联联赛）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯未关联联赛",
+   "preconditions": "已登录，存在一条未关联联赛的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "不显示联赛信息，页面无报错"
+    }
+   ],
+   "expected_result": "不显示联赛信息，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "资讯详情-联赛名称展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联信息为联赛，联赛名称为'西甲'",
+   "preconditions": "已登录，存在一条关联联赛ID=3002的资讯，联赛数据中名称为'西甲'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页，进入关联信息为联赛的资讯",
+     "expected": "关联信息区域展示联赛名称'西甲'"
+    }
+   ],
+   "expected_result": "联赛名称'西甲'正确显示在关联信息区域",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "资讯详情-联赛名称展示-负向（联赛名称为空）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "关联联赛存在，但联赛名称为空字符串",
+   "preconditions": "已登录，存在一条关联联赛ID=3003的资讯，联赛数据中名称为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "联赛名称位置显示为空，或显示占位符，页面无报错"
+    }
+   ],
+   "expected_result": "联赛名称不显示，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "资讯详情-球员展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联信息为球员，球员ID=4001，球员名称为'梅西'",
+   "preconditions": "已登录，存在一条关联球员ID=4001的资讯，球员数据中名称为'梅西'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页，进入关联信息为球员的资讯",
+     "expected": "关联信息区域展示球员头像和球员名称'梅西'"
+    }
+   ],
+   "expected_result": "球员头像和名称'梅西'正确显示在关联信息区域",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "资讯详情-球员展示-负向（无关联球员）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯未关联球员",
+   "preconditions": "已登录，存在一条未关联球员的资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "不显示球员信息，页面无报错"
+    }
+   ],
+   "expected_result": "不显示球员信息，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "资讯详情-头像展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联球员存在，球员头像URL有效",
+   "preconditions": "已登录，存在一条关联球员ID=4001的资讯，球员头像URL有效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "球员头像正常加载显示"
+    }
+   ],
+   "expected_result": "球员头像正常显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "资讯详情-头像展示-负向（头像URL无效）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "关联球员存在，但球员头像URL无效（如404）",
+   "preconditions": "已登录，存在一条关联球员ID=4002的资讯，球员头像URL无效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "头像位置显示默认占位图，页面无报错"
+    }
+   ],
+   "expected_result": "显示默认占位图，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "资讯详情-球员名称展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关联球员存在，球员名称为'C罗'",
+   "preconditions": "已登录，存在一条关联球员ID=4003的资讯，球员数据中名称为'C罗'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "关联信息区域展示球员名称'C罗'"
+    }
+   ],
+   "expected_result": "球员名称'C罗'正确显示在关联信息区域",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "资讯详情-球员名称展示-负向（球员名称为空）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "关联球员存在，但球员名称为空字符串",
+   "preconditions": "已登录，存在一条关联球员ID=4004的资讯，球员数据中名称为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "球员名称位置显示为空，或显示占位符，页面无报错"
+    }
+   ],
+   "expected_result": "球员名称不显示，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "资讯详情-45分钟前展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯发布时间为当前时间前45分钟",
+   "preconditions": "已登录，存在一条资讯，发布时间为当前时间前45分钟",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "页面展示发布时间'45分钟前'"
+    }
+   ],
+   "expected_result": "发布时间显示为'45分钟前'",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "资讯详情-45分钟前展示-负向（发布时间为空）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯发布时间字段为空",
+   "preconditions": "已登录，存在一条资讯，发布时间字段为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "发布时间位置显示为空，或显示默认值，页面无报错"
+    }
+   ],
+   "expected_result": "发布时间不显示，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "资讯详情-功能点展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "资讯详情页包含分享、收藏、点赞功能点",
+   "preconditions": "已登录，打开任意资讯详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页",
+     "expected": "页面底部展示分享、收藏、点赞按钮，且可点击"
+    }
+   ],
+   "expected_result": "功能点按钮正常展示并可交互",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "资讯详情-功能点展示-负向（未登录）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户访问资讯详情页",
+   "preconditions": "未登录，打开任意资讯详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页",
+     "expected": "点击收藏或点赞时，弹出登录提示，不执行操作"
+    }
+   ],
+   "expected_result": "未登录点击收藏/点赞，弹出登录提示，不执行操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "资讯详情-说明展示-正向",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "资讯详情页包含说明区域，展示关联信息说明文案",
+   "preconditions": "已登录，打开任意资讯详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开资讯详情页",
+     "expected": "页面展示说明区域，文案内容正确"
+    }
+   ],
+   "expected_result": "说明区域正常展示，文案正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "资讯详情-说明展示-负向（说明内容为空）",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯详情页的说明内容为空",
+   "preconditions": "已登录，打开一条说明内容为空的资讯详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该资讯详情页",
+     "expected": "说明区域不显示，或显示空白，页面无报错"
+    }
+   ],
+   "expected_result": "说明区域不显示，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "关联信息为比赛时展示主客队名称及icon",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条关联信息类型为比赛的资讯，主队名称为'巴西'，客队名称为'德国'，均配置对应icon。",
+   "preconditions": "已登录，存在一条关联了比赛（主队巴西、客队德国）的资讯，且该资讯已发布可见。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入资讯详情页，打开该资讯",
+     "expected": "页面正常加载，展示资讯内容"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联信息区域",
+     "expected": "展示主队名称'巴西'及icon、VS标识、客队名称'德国'及icon，主客队名称和icon均正确显示"
+    }
+   ],
+   "expected_result": "关联信息区域正确展示主客队名称及icon，无错位、无缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "关联信息为比赛但主客队icon缺失时展示",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造关联比赛资讯，主队有icon，客队icon字段为空。",
+   "preconditions": "存在关联比赛资讯，客队icon未配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联信息区域",
+     "expected": "主队icon正常显示，客队icon位置显示默认占位图或隐藏，不出现破图或布局错乱"
+    }
+   ],
+   "expected_result": "客队icon缺失时不影响整体展示，无破图或布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "关联信息为球队时展示球队名称及icon",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造关联信息类型为球队的资讯，球队名称为'皇家马德里'，配置icon。",
+   "preconditions": "存在关联了球队（皇家马德里）的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联信息区域",
+     "expected": "展示球队名称'皇家马德里'及icon，名称和icon正确"
+    }
+   ],
+   "expected_result": "关联信息区域正确展示球队名称及icon。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "关联信息为球队但球队名称为空时展示",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造关联球队资讯，球队名称为空字符串，icon正常。",
+   "preconditions": "存在关联球队但名称为空的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联信息区域",
+     "expected": "不展示球队名称，仅展示icon或隐藏整个关联信息块，不出现空白占位或异常"
+    }
+   ],
+   "expected_result": "球队名称为空时展示合理，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "关联信息为联赛时展示联赛名称及icon",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造关联信息类型为联赛的资讯，联赛名称为'英超'，配置icon。",
+   "preconditions": "存在关联了联赛（英超）的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联信息区域",
+     "expected": "展示联赛名称'英超'及icon，名称和icon正确"
+    }
+   ],
+   "expected_result": "关联信息区域正确展示联赛名称及icon。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "关联信息为联赛但icon缺失时展示",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造关联联赛资讯，联赛icon字段为空。",
+   "preconditions": "存在关联联赛但icon未配置的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联信息区域",
+     "expected": "联赛名称正常显示，icon位置显示默认占位图或隐藏，不出现破图"
+    }
+   ],
+   "expected_result": "icon缺失时不影响名称展示，无破图。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "无关联信息时不展示关联信息区域",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条未关联任何比赛、球队、联赛的资讯。",
+   "preconditions": "存在未关联任何信息的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联信息区域",
+     "expected": "不显示关联信息区域，或显示空态提示，不影响其他内容展示"
+    }
+   ],
+   "expected_result": "无关联信息时区域隐藏或显示空态，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "关联信息类型为未知类型时展示兜底",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造关联信息类型为'其他'（非比赛/球队/联赛）的资讯。",
+   "preconditions": "存在关联类型为未知的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联信息区域",
+     "expected": "不展示关联信息或展示通用占位，不报错"
+    }
+   ],
+   "expected_result": "未知类型不导致页面异常，展示合理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "相关资讯推荐-关联比赛且语种相同",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前资讯关联比赛A（巴西vs德国），语种为中文，系统存在5篇关联相同比赛且语种为中文的资讯。",
+   "preconditions": "存在关联比赛A的资讯，且系统中有5篇关联比赛A且语种为中文的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入当前资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'相关资讯'区域",
+     "expected": "展示5篇相关资讯，均为关联比赛A且语种为中文，按优先级（比赛）排序，无其他语种资讯"
+    }
+   ],
+   "expected_result": "相关资讯区域展示5篇语种相同且关联相同比赛的资讯。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "相关资讯推荐-关联球队且语种相同",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前资讯仅关联球队B（皇家马德里），语种为英文，系统存在5篇关联球队B且语种为英文的资讯。",
+   "preconditions": "存在关联球队B的资讯，且系统中有5篇关联球队B且语种为英文的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入当前资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'相关资讯'区域",
+     "expected": "展示5篇相关资讯，均为关联球队B且语种为英文，按优先级（球队）排序"
+    }
+   ],
+   "expected_result": "相关资讯区域展示5篇语种相同且关联相同球队的资讯。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "相关资讯推荐-关联联赛且语种相同",
+   "priority": "P0",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前资讯仅关联联赛C（英超），语种为中文，系统存在5篇关联联赛C且语种为中文的资讯。",
+   "preconditions": "存在关联联赛C的资讯，且系统中有5篇关联联赛C且语种为中文的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入当前资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'相关资讯'区域",
+     "expected": "展示5篇相关资讯，均为关联联赛C且语种为中文，按优先级（联赛）排序"
+    }
+   ],
+   "expected_result": "相关资讯区域展示5篇语种相同且关联相同联赛的资讯。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "相关资讯推荐-关联比赛和球队时优先比赛",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前资讯同时关联比赛A和球队B，语种为中文，系统存在关联比赛A的中文资讯3篇，关联球队B的中文资讯5篇。",
+   "preconditions": "存在同时关联比赛A和球队B的资讯，且相关资讯数量满足条件。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入当前资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'相关资讯'区域",
+     "expected": "优先展示关联比赛A的3篇资讯，再补充关联球队B的2篇资讯，共5篇，且均为中文"
+    }
+   ],
+   "expected_result": "相关资讯按优先级（比赛>球队）展示，共5篇。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "相关资讯推荐-语种不同不展示",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "当前资讯关联比赛A，语种为中文，系统存在关联比赛A但语种为英文的资讯5篇。",
+   "preconditions": "存在关联比赛A的资讯，但相关资讯语种均为英文。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入当前资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'相关资讯'区域",
+     "expected": "不展示任何相关资讯，或显示空态提示，不展示英文资讯"
+    }
+   ],
+   "expected_result": "语种不同的资讯不被推荐，相关资讯区域为空或空态。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "相关资讯推荐-不足5篇时展示实际数量",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "当前资讯关联比赛A，语种为中文，系统仅存在2篇关联比赛A且语种为中文的资讯。",
+   "preconditions": "存在关联比赛A的资讯，且相关资讯仅2篇。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入当前资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'相关资讯'区域",
+     "expected": "展示2篇相关资讯，不强制补足5篇，无空白占位"
+    }
+   ],
+   "expected_result": "相关资讯展示实际存在的2篇，不报错。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "相关资讯推荐-无任何关联信息时为空态",
+   "priority": "P1",
+   "domain": "资讯",
+   "module": "资讯详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前资讯未关联任何比赛、球队、联赛。",
+   "preconditions": "存在未关联任何信息的资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该资讯详情页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'相关资讯'区域",
+     "expected": "显示空态提示（如'暂无相关资讯'），不展示任何资讯"
+    }
+   ],
+   "expected_result": "无关联信息时相关资讯区域显示空态，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-103"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-1 生成被截断，已重试",
+  "functional-chunk-1 生成失败：AI 返回的 JSON 格式异常，无法解析。\n原始错误: Expecting ',' delimiter (行 886, 列 10)\n修复后错误: Expecting property name enclosed in double quotes (行 13, 列 144)\n错误位置附近内容 (chars 23661-23861):\nest_data_note\": \"联赛无赛程数据。\",\\n      \"preconditions\": \"用户已登录，联赛详情页已打开，赛程无数据。\",\\n      \"steps\": [\\n        {\\n          \"step\": 1,\\n          \"desc\": \"进入联赛详情页，查看赛程\",\\n          \"expected\": \"显示'暂无赛程'\"\\n        }（该块未产出用例）"
+ ]
+}

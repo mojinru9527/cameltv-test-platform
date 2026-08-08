@@ -1,0 +1,5155 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "意见反馈列表数据报错处理",
+    "description": "页面 意见反馈 的 list 功能：数据报错（FP-意见反馈-25）。当列表数据加载或展示时出现错误，系统应正确处理并给出提示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确数据报错的具体场景（如接口异常、数据格式错误、权限不足等）以及对应的错误提示文案和用户交互。",
+      "suggestion": "建议明确数据报错时的提示语、是否提供重试按钮、以及错误日志记录要求。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "意见反馈列表时间字段展示",
+    "description": "页面 意见反馈 的 field：2019-03-18 01:27:08（FP-意见反馈-26）。列表中的反馈时间字段应正确展示日期时间。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求仅给出一个示例时间值，未明确时间格式（如是否精确到秒）、时区处理、以及排序规则。",
+      "suggestion": "建议明确时间格式为 YYYY-MM-DD HH:mm:ss，并说明按时间倒序排列。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "意见反馈列表反馈内容字段展示",
+    "description": "页面 意见反馈 的 field：Eleid:10057815 (林峰) Very annoying Keep call VJ add his wechat and using Hong Kong star name and pictures. Also keep scolding all the fans in the live room by using curse word.（FP-意见反馈-27）。反馈内容字段应完整展示用户提交的文本。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求仅给出一个长文本示例，未明确超长文本的展示方式（如截断、换行、悬浮提示）。",
+      "suggestion": "建议明确超长文本的展示策略，如超过一定字符数显示省略号并提供悬浮提示或展开查看。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "意见反馈列表账号字段展示",
+    "description": "页面 意见反馈 的 field：账号（FP-意见反馈-28）。列表应展示反馈用户的账号信息。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求仅给出字段名，未明确账号字段的具体含义（如用户ID、昵称、手机号）及展示格式。",
+      "suggestion": "建议明确账号字段为用户编号，并展示为数字格式。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "意见反馈列表问题类型字段展示",
+    "description": "页面 意见反馈 的 list：相关（FP-意见反馈-29）。列表应展示问题类型字段。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求中“相关”含义不明确，可能指问题类型字段，但未明确可选值（如账号相关、卡顿、页面优化等）。",
+      "suggestion": "建议明确问题类型的枚举值，并确保与需求文档一致。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "意见反馈列表问题类型字段值展示",
+    "description": "页面 意见反馈 的 field：账号相关（FP-意见反馈-30）。问题类型字段应展示具体的类型值，如“账号相关”。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求仅给出一个示例值，未明确所有可能的问题类型及其展示样式。",
+      "suggestion": "建议明确问题类型的完整枚举及对应展示文本。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求描述较为零散，仅列出了页面字段和示例数据，缺乏对功能交互、数据校验、异常处理等细节的明确说明。整体清晰度不足，需要补充字段定义、列表交互（如搜索、分页）、数据来源和错误处理等要求。建议完善需求文档后再进行详细测试设计。"
+ },
+ "functional_cases": [
+  {
+   "title": "联赛及球队管理-列表展示-默认加载",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在已配置的联赛和球队数据（如联赛：英超、西甲；球队：曼联、皇马等），用于验证列表默认展示。",
+   "preconditions": "已登录运营后台，具有用户管理-联赛及球队管理查看权限；系统已存在至少一条联赛和球队数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单'用户管理'下的'联赛及球队管理'",
+     "expected": "成功进入联赛及球队管理页面，页面标题显示'联赛及球队管理'"
+    },
+    {
+     "step": 2,
+     "desc": "观察页面列表展示",
+     "expected": "列表展示所有联赛及球队数据，包含字段（如联赛名称、球队名称、状态、创建时间等），数据按默认排序（如创建时间倒序）展示"
+    }
+   ],
+   "expected_result": "页面正常加载，列表展示已有联赛及球队数据，字段完整，无报错。",
+   "remark": "正面用例，验证基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "联赛及球队管理-列表展示-无数据空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "系统中无任何联赛和球队数据（清空或新环境），用于验证空态展示。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中无联赛和球队数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表区域",
+     "expected": "列表显示'暂无数据'或空态提示，不出现空白页或报错"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无异常。",
+   "remark": "负面用例，验证空态",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "联赛及球队管理-新增联赛-成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "新增联赛名称为'英超'，联赛状态为'启用'，联赛编号为'EPL'（唯一），用于验证新增功能。",
+   "preconditions": "已登录运营后台，具有联赛及球队管理的新增权限；系统中不存在名称为'英超'的联赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，点击'新增'按钮",
+     "expected": "弹出新增联赛/球队的对话框或表单"
+    },
+    {
+     "step": 2,
+     "desc": "在表单中输入联赛名称'英超'，联赛编号'EPL'，选择状态'启用'，点击'保存'",
+     "expected": "保存成功，提示'保存成功'，对话框关闭"
+    },
+    {
+     "step": 3,
+     "desc": "在列表中查看新增的联赛",
+     "expected": "列表第一条显示新增的联赛'英超'，状态为'启用'，数据与输入一致"
+    }
+   ],
+   "expected_result": "新增联赛成功，列表出现新记录，数据库新增对应记录。",
+   "remark": "正面用例，验证新增基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "联赛及球队管理-新增联赛-名称为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称为空字符串，联赛编号'EPL2'，状态'启用'，用于验证必填项校验。",
+   "preconditions": "已登录运营后台，具有新增权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，点击'新增'按钮",
+     "expected": "弹出新增表单"
+    },
+    {
+     "step": 2,
+     "desc": "联赛名称留空，联赛编号输入'EPL2'，状态选择'启用'，点击'保存'",
+     "expected": "保存失败，提示'联赛名称不能为空'，表单不关闭，数据库无新增记录"
+    }
+   ],
+   "expected_result": "系统拦截空名称，提示明确错误，不保存数据。",
+   "remark": "负面用例，验证必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "联赛及球队管理-新增联赛-名称重复",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "系统中已存在联赛'英超'，再次新增联赛名称'英超'，联赛编号'EPL3'，用于验证唯一性校验。",
+   "preconditions": "已登录运营后台，具有新增权限；系统中已存在名称为'英超'的联赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，点击'新增'按钮",
+     "expected": "弹出新增表单"
+    },
+    {
+     "step": 2,
+     "desc": "联赛名称输入'英超'，联赛编号输入'EPL3'，状态选择'启用'，点击'保存'",
+     "expected": "保存失败，提示'联赛名称已存在'，表单不关闭，数据库无新增记录"
+    }
+   ],
+   "expected_result": "系统拦截重复名称，提示明确错误，不保存数据。",
+   "remark": "负面用例，验证唯一性校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "联赛及球队管理-编辑球队-成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "编辑球队'曼联'，将其所属联赛从'英超'改为'英冠'，状态保持'启用'，用于验证编辑功能。",
+   "preconditions": "已登录运营后台，具有编辑权限；系统中存在球队'曼联'。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，找到球队'曼联'，点击'编辑'按钮",
+     "expected": "弹出编辑表单，回显当前数据（球队名称'曼联'，所属联赛'英超'，状态'启用'）"
+    },
+    {
+     "step": 2,
+     "desc": "将所属联赛修改为'英冠'，点击'保存'",
+     "expected": "保存成功，提示'保存成功'，对话框关闭"
+    },
+    {
+     "step": 3,
+     "desc": "在列表中查看球队'曼联'",
+     "expected": "球队'曼联'的所属联赛显示为'英冠'，数据已更新"
+    }
+   ],
+   "expected_result": "编辑球队成功，列表数据更新，数据库对应记录更新。",
+   "remark": "正面用例，验证编辑基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "联赛及球队管理-编辑球队-所属联赛为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "编辑球队'曼联'，将所属联赛清空，用于验证必填项校验。",
+   "preconditions": "已登录运营后台，具有编辑权限；系统中存在球队'曼联'。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，找到球队'曼联'，点击'编辑'按钮",
+     "expected": "弹出编辑表单，回显当前数据"
+    },
+    {
+     "step": 2,
+     "desc": "将所属联赛清空，点击'保存'",
+     "expected": "保存失败，提示'所属联赛不能为空'，表单不关闭，数据库无更新"
+    }
+   ],
+   "expected_result": "系统拦截空联赛，提示明确错误，不保存数据。",
+   "remark": "负面用例，验证必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "联赛及球队管理-删除联赛-成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除联赛'英冠'，该联赛下无球队关联，用于验证删除功能。",
+   "preconditions": "已登录运营后台，具有删除权限；系统中存在联赛'英冠'且其下无球队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，找到联赛'英冠'，点击'删除'按钮",
+     "expected": "弹出确认删除对话框，提示'确定删除该联赛吗？'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'",
+     "expected": "删除成功，提示'删除成功'，列表不再显示该联赛"
+    }
+   ],
+   "expected_result": "删除联赛成功，列表移除该记录，数据库记录删除。",
+   "remark": "正面用例，验证删除基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "联赛及球队管理-删除联赛-有关联球队",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "删除联赛'英超'，该联赛下存在球队'曼联'，用于验证关联数据删除限制。",
+   "preconditions": "已登录运营后台，具有删除权限；系统中存在联赛'英超'且其下存在球队'曼联'。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，找到联赛'英超'，点击'删除'按钮",
+     "expected": "弹出确认删除对话框"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'",
+     "expected": "删除失败，提示'该联赛下存在球队，无法删除'，列表仍显示该联赛"
+    }
+   ],
+   "expected_result": "系统拦截删除有关联数据的联赛，提示明确错误，数据未删除。",
+   "remark": "负面用例，验证关联数据保护",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "联赛及球队管理-搜索-按名称模糊查询",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词'英'，系统存在'英超'、'英冠'等联赛，用于验证模糊搜索。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中存在名称包含'英'的联赛和球队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，在搜索框输入'英'",
+     "expected": "输入框正常显示'英'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表仅显示名称包含'英'的联赛和球队，如'英超'、'英冠'，其他数据不显示"
+    }
+   ],
+   "expected_result": "搜索功能正常，列表按条件过滤。",
+   "remark": "正面用例，验证搜索功能",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "联赛及球队管理-搜索-无匹配结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词'不存在的联赛'，系统中无匹配数据，用于验证无结果场景。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中无名称包含'不存在的联赛'的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面，在搜索框输入'不存在的联赛'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示'暂无数据'，不出现报错"
+    }
+   ],
+   "expected_result": "搜索无结果时显示空态，无异常。",
+   "remark": "负面用例，验证无结果场景",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "联赛及球队管理-权限校验-无权限访问",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/联赛及球队管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用无'联赛及球队管理'权限的运营账号登录，用于验证权限控制。",
+   "preconditions": "存在一个无联赛及球队管理权限的运营账号（如仅具有内容管理权限）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台",
+     "expected": "登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "尝试访问联赛及球队管理页面（直接输入URL或点击菜单）",
+     "expected": "页面提示'无权限访问'或菜单不可见，无法进入该页面"
+    }
+   ],
+   "expected_result": "无权限用户无法访问该功能，系统拦截并提示。",
+   "remark": "负面用例，验证权限控制",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "封禁记录-列表展示-默认加载",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "系统中存在封禁记录数据，如创建时间'2018-06-08 11:02:45'，操作类型'解除聊天室禁言'，比赛名称'-'，封禁时长'6小时'，操作人'系统'，备注'已达禁'，用于验证列表展示。",
+   "preconditions": "已登录运营后台，具有封禁记录查看权限；系统中存在至少一条封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单'用户管理'下的'封禁记录'",
+     "expected": "成功进入封禁记录页面，页面标题显示'封禁记录'"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表展示",
+     "expected": "列表展示封禁记录，包含字段：创建时间、操作类型、比赛名称、封禁时长、操作人、备注、操作；数据按创建时间倒序排列"
+    }
+   ],
+   "expected_result": "页面正常加载，列表展示封禁记录，字段完整，无报错。",
+   "remark": "正面用例，验证基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "封禁记录-列表展示-无数据空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "系统中无任何封禁记录（清空或新环境），用于验证空态展示。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中无封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表区域",
+     "expected": "列表显示'暂无数据'或空态提示，不出现空白页或报错"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无异常。",
+   "remark": "负面用例，验证空态",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "封禁记录-搜索-按创建时间范围查询",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "设置创建时间范围为'2018-06-01 00:00:00'至'2018-06-30 23:59:59'，系统存在该时间范围内的记录，用于验证时间范围查询。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中存在创建时间在2018年6月的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击创建时间输入框",
+     "expected": "弹出日期时间选择器"
+    },
+    {
+     "step": 2,
+     "desc": "选择开始时间'2018-06-01 00:00:00'，结束时间'2018-06-30 23:59:59'",
+     "expected": "输入框正确显示所选时间"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表仅显示创建时间在2018年6月内的记录，其他记录不显示"
+    }
+   ],
+   "expected_result": "按时间范围过滤成功，列表数据符合条件。",
+   "remark": "正面用例，验证搜索功能",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "封禁记录-搜索-创建时间范围无效（开始大于结束）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "设置开始时间'2018-06-30 00:00:00'，结束时间'2018-06-01 00:00:00'，用于验证时间范围校验。",
+   "preconditions": "已登录运营后台，具有查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，设置开始时间'2018-06-30 00:00:00'，结束时间'2018-06-01 00:00:00'",
+     "expected": "输入框显示所选时间"
+    },
+    {
+     "step": 2,
+     "desc": "点击'搜索'按钮",
+     "expected": "提示'开始时间不能大于结束时间'，不执行查询，列表保持原样"
+    }
+   ],
+   "expected_result": "系统拦截无效时间范围，提示明确错误，不查询。",
+   "remark": "负面用例，验证时间范围校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "封禁记录-搜索-按操作类型筛选",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "操作类型选择'解除聊天室禁言'，系统存在该类型的记录，用于验证下拉筛选。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中存在操作类型为'解除聊天室禁言'的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，在操作类型下拉框选择'解除聊天室禁言'",
+     "expected": "下拉框正确显示所选值"
+    },
+    {
+     "step": 2,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表仅显示操作类型为'解除聊天室禁言'的记录"
+    }
+   ],
+   "expected_result": "按操作类型筛选成功，列表数据符合条件。",
+   "remark": "正面用例，验证筛选功能",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "封禁记录-搜索-操作类型选择'全部'",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "操作类型下拉框选择'全部'，用于验证默认筛选。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中存在多条不同操作类型的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，操作类型下拉框选择'全部'",
+     "expected": "下拉框显示'全部'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示所有封禁记录，不按操作类型过滤"
+    }
+   ],
+   "expected_result": "选择'全部'时展示所有记录，符合预期。",
+   "remark": "正面用例，验证默认筛选",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "封禁记录-分页-翻页查看",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在超过一页的封禁记录（如共15条，每页10条），用于验证分页。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中存在超过10条封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，观察分页控件",
+     "expected": "分页控件显示总页数、当前页、每页条数（默认10条/页）"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页或页码'2'",
+     "expected": "列表显示第二页数据，当前页变为2，数据不重复"
+    }
+   ],
+   "expected_result": "分页功能正常，翻页后数据正确加载。",
+   "remark": "正面用例，验证分页基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "封禁记录-分页-每页条数切换",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "将每页条数从10条/页切换为20条/页，系统存在至少20条记录，用于验证每页条数切换。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中存在至少20条封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击每页条数下拉框",
+     "expected": "弹出选项：10条/页、20条/页、50条/页等"
+    },
+    {
+     "step": 2,
+     "desc": "选择'20条/页'",
+     "expected": "列表刷新，每页显示20条记录，分页总页数相应减少"
+    }
+   ],
+   "expected_result": "每页条数切换成功，列表正确显示。",
+   "remark": "正面用例，验证分页设置",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "封禁记录-导出-成功导出",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前列表有封禁记录数据，点击导出按钮，用于验证导出功能。",
+   "preconditions": "已登录运营后台，具有导出权限；当前列表存在至少一条封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击'导出'按钮",
+     "expected": "系统生成导出任务，提示'导出成功'或自动下载文件"
+    },
+    {
+     "step": 2,
+     "desc": "打开下载的Excel文件",
+     "expected": "文件内容包含当前列表的封禁记录，字段与页面一致，无乱码"
+    }
+   ],
+   "expected_result": "导出成功，文件内容正确。",
+   "remark": "正面用例，验证导出基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "封禁记录-导出-无数据时导出",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "当前列表无任何封禁记录（通过搜索无结果），点击导出，用于验证空数据导出。",
+   "preconditions": "已登录运营后台，具有导出权限；当前列表无数据（如搜索无结果）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，搜索一个不存在的条件使列表为空",
+     "expected": "列表显示'暂无数据'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'导出'按钮",
+     "expected": "提示'暂无数据可导出'或导出文件仅包含表头，不报错"
+    }
+   ],
+   "expected_result": "无数据时导出有明确提示或导出空表，无异常。",
+   "remark": "负面用例，验证空数据导出",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "封禁记录-权限校验-无权限访问",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用无'封禁记录'查看权限的运营账号登录，用于验证权限控制。",
+   "preconditions": "存在一个无封禁记录查看权限的运营账号（如仅具有内容管理权限）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台",
+     "expected": "登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "尝试访问封禁记录页面（直接输入URL或点击菜单）",
+     "expected": "页面提示'无权限访问'或菜单不可见，无法进入该页面"
+    }
+   ],
+   "expected_result": "无权限用户无法访问该功能，系统拦截并提示。",
+   "remark": "负面用例，验证权限控制",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "封禁记录-操作-查看详情",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击某条封禁记录的'操作'列中的'查看'按钮，用于验证详情查看。",
+   "preconditions": "已登录运营后台，具有查看权限；系统中存在至少一条封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，找到一条记录，点击'操作'列中的'查看'按钮",
+     "expected": "弹出详情对话框，展示该记录的完整信息（创建时间、操作类型、比赛名称、封禁时长、操作人、备注等）"
+    },
+    {
+     "step": 2,
+     "desc": "点击'关闭'或'取消'按钮",
+     "expected": "对话框关闭，返回列表"
+    }
+   ],
+   "expected_result": "详情查看正常，信息完整，可正常关闭。",
+   "remark": "正面用例，验证详情查看",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "封禁记录-操作-查看详情-无操作按钮",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/用户列表/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "假设某条记录无'操作'按钮（如系统自动记录），用于验证操作列展示。",
+   "preconditions": "已登录运营后台，具有查看权限；存在一条无操作按钮的记录（如系统自动生成的记录）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，观察操作列",
+     "expected": "该记录的操作列显示'—'或为空，不显示可点击按钮"
+    }
+   ],
+   "expected_result": "无操作按钮的记录正常展示，不报错。",
+   "remark": "负面用例，验证操作列空态",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "封禁记录列表默认展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在多条封禁记录，包含不同操作类型、时长、操作人等，用于验证列表展示。",
+   "preconditions": "运营后台已登录，存在至少10条封禁记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击用户管理-封禁记录菜单",
+     "expected": "页面正常打开，显示封禁记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表表头",
+     "expected": "表头包含创建时间、操作类型、比赛名称、封禁时长、操作人、备注、操作列"
+    },
+    {
+     "step": 3,
+     "desc": "查看列表数据",
+     "expected": "每条记录显示对应字段值，如创建时间'2018-06-08 11:02:45'、操作类型'解除聊天室禁言'、封禁时长'6小时'、操作人'系统'、备注'已达禁'"
+    }
+   ],
+   "expected_result": "封禁记录列表正常展示，字段完整，数据与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "封禁记录列表空数据展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "系统中无任何封禁记录，用于验证空态。",
+   "preconditions": "运营后台已登录，数据库中无封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面显示空态提示，如'暂无数据'，列表无记录"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "创建时间字段格式校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录创建时间为'2018-06-08 11:02:45'，验证格式正确。",
+   "preconditions": "存在一条创建时间为'2018-06-08 11:02:45'的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的创建时间",
+     "expected": "显示'2018-06-08 11:02:45'，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "创建时间格式正确，无乱码或截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "创建时间字段异常值展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中创建时间字段为NULL或非法值（如'0000-00-00 00:00:00'），用于验证容错。",
+   "preconditions": "存在一条创建时间为NULL或非法值的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的创建时间",
+     "expected": "页面不崩溃，显示'--'或空，不显示非法值"
+    }
+   ],
+   "expected_result": "页面正常展示，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "操作类型字段展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "操作类型为'解除聊天室禁言'，验证展示。",
+   "preconditions": "存在一条操作类型为'解除聊天室禁言'的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的操作类型",
+     "expected": "显示'解除聊天室禁言'"
+    }
+   ],
+   "expected_result": "操作类型正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "操作类型字段未知值展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中操作类型为未定义的枚举值（如'未知类型'），用于验证容错。",
+   "preconditions": "存在一条操作类型为未知值的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的操作类型",
+     "expected": "页面正常显示该值，不报错"
+    }
+   ],
+   "expected_result": "页面正常展示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "比赛名称字段展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛名称为'主队名称 VS 客队名称'，验证展示。",
+   "preconditions": "存在一条比赛名称为'主队名称 VS 客队名称'的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的比赛名称",
+     "expected": "显示'主队名称 VS 客队名称'"
+    }
+   ],
+   "expected_result": "比赛名称正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "比赛名称超长展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "比赛名称超过列宽，如'主队名称很长很长 VS 客队名称很长很长'，验证截断或悬浮提示。",
+   "preconditions": "存在一条比赛名称超长的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的比赛名称",
+     "expected": "名称截断显示，鼠标悬浮显示完整名称"
+    }
+   ],
+   "expected_result": "页面布局正常，无溢出。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "封禁时长字段展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "封禁时长为'6小时'，验证展示。",
+   "preconditions": "存在一条封禁时长为'6小时'的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的封禁时长",
+     "expected": "显示'6小时'"
+    }
+   ],
+   "expected_result": "封禁时长正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "封禁时长字段空值展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "封禁时长为空或NULL，用于验证容错。",
+   "preconditions": "存在一条封禁时长为空的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的封禁时长",
+     "expected": "显示'--'或空，不报错"
+    }
+   ],
+   "expected_result": "页面正常展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "操作人字段展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "操作人为'系统'，验证展示。",
+   "preconditions": "存在一条操作人为'系统'的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的操作人",
+     "expected": "显示'系统'"
+    }
+   ],
+   "expected_result": "操作人正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "操作人字段超长展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "操作人名称超长，如'管理员A'，验证截断或悬浮提示。",
+   "preconditions": "存在一条操作人名称超长的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的操作人",
+     "expected": "名称截断显示，鼠标悬浮显示完整名称"
+    }
+   ],
+   "expected_result": "页面布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "备注字段展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "备注为'已达禁'，验证展示。",
+   "preconditions": "存在一条备注为'已达禁'的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的备注",
+     "expected": "显示'已达禁'"
+    }
+   ],
+   "expected_result": "备注正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "备注字段超长展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "备注内容超长，如'这是一条很长的备注信息，用于测试超长文本的展示效果'，验证截断或悬浮提示。",
+   "preconditions": "存在一条备注超长的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，查看该记录的备注",
+     "expected": "备注截断显示，鼠标悬浮显示完整内容"
+    }
+   ],
+   "expected_result": "页面布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "解除聊天室禁言-正常操作",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条封禁记录，操作类型为'解除聊天室禁言'，点击操作按钮，弹出对话框，确认解除。",
+   "preconditions": "运营后台已登录，存在一条封禁记录且当前用户有解除权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，找到一条操作类型为'解除聊天室禁言'的记录",
+     "expected": "记录显示操作按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录的'解除聊天室禁言'按钮",
+     "expected": "弹出确认对话框，显示比赛名称、主队名称、客队名称、聊天记录等信息"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "提示操作成功，列表刷新，该记录状态更新（如操作类型变为已解除）"
+    }
+   ],
+   "expected_result": "解除成功，数据库对应记录更新，操作日志新增。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "解除聊天室禁言-取消操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "点击解除按钮后，在对话框中点击'取消'，验证不执行解除。",
+   "preconditions": "运营后台已登录，存在一条封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击某条记录的'解除聊天室禁言'按钮",
+     "expected": "弹出确认对话框"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'按钮",
+     "expected": "对话框关闭，不执行任何操作，列表不变"
+    }
+   ],
+   "expected_result": "解除操作未执行，数据库无变化。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "解除聊天室禁言-无权限操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前登录用户无解除聊天室禁言的权限，点击操作按钮。",
+   "preconditions": "运营后台已登录，当前用户无解除权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击某条记录的'解除聊天室禁言'按钮",
+     "expected": "按钮置灰或点击提示'无权限'，不弹出对话框"
+    }
+   ],
+   "expected_result": "操作被拦截，提示无权限。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "解除聊天室禁言-重复操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "对已解除的记录再次点击解除按钮，验证拦截。",
+   "preconditions": "存在一条已解除的记录，当前用户有权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，找到一条已解除的记录",
+     "expected": "操作按钮可能置灰或显示'已解除'"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录的'解除聊天室禁言'按钮",
+     "expected": "提示'该记录已解除'或按钮不可点击"
+    }
+   ],
+   "expected_result": "重复操作被拦截，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "解除聊天室禁言-对话框信息展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "对话框展示比赛名称、主队名称、客队名称、聊天记录等信息，验证字段完整。",
+   "preconditions": "存在一条封禁记录，点击解除按钮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击某条记录的'解除聊天室禁言'按钮",
+     "expected": "弹出对话框，显示比赛名称、主队名称、客队名称、聊天记录等字段，且数据正确"
+    }
+   ],
+   "expected_result": "对话框信息完整，与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "解除聊天室禁言-对话框聊天记录为空",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "该封禁记录对应的聊天记录为空，验证对话框展示。",
+   "preconditions": "存在一条聊天记录为空的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击该记录的'解除聊天室禁言'按钮",
+     "expected": "对话框正常弹出，聊天记录区域显示'暂无聊天记录'"
+    }
+   ],
+   "expected_result": "对话框正常展示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "封禁记录列表分页功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在超过一页的封禁记录（如20条），验证分页。",
+   "preconditions": "运营后台已登录，存在20条封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "显示第一页数据，每页默认10条"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页或页码",
+     "expected": "正确显示第二页数据，页码高亮"
+    }
+   ],
+   "expected_result": "分页正常，数据不重复不遗漏。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "封禁记录列表分页-边界值",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "系统存在正好10条记录，验证分页边界。",
+   "preconditions": "存在10条封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "显示10条记录，分页显示共1页，无下一页"
+    }
+   ],
+   "expected_result": "分页正确，无多余分页。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "封禁记录列表排序",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "多条记录创建时间不同，验证默认按创建时间倒序。",
+   "preconditions": "存在多条创建时间不同的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "列表按创建时间倒序排列，最新记录在最上面"
+    }
+   ],
+   "expected_result": "排序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "封禁记录列表排序-相同时间",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "多条记录创建时间相同，验证排序稳定性。",
+   "preconditions": "存在多条创建时间相同的封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "相同时间的记录按其他字段（如ID）稳定排序，不出现乱序"
+    }
+   ],
+   "expected_result": "排序稳定。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "封禁记录列表搜索-按操作人",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "操作人输入'系统'，搜索出所有操作人为系统的记录。",
+   "preconditions": "运营后台已登录，存在操作人为'系统'的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，在操作人输入框输入'系统'",
+     "expected": "输入正常"
+    },
+    {
+     "step": 2,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示所有操作人为'系统'的记录"
+    }
+   ],
+   "expected_result": "搜索功能正常，结果准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "封禁记录列表搜索-无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "操作人输入不存在的名称'不存在的人'，验证无结果提示。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，在操作人输入框输入'不存在的人'",
+     "expected": "输入正常"
+    },
+    {
+     "step": 2,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示'暂无数据'，提示无匹配记录"
+    }
+   ],
+   "expected_result": "搜索无结果时正确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "封禁记录列表搜索-重置",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索后点击重置，验证恢复默认列表。",
+   "preconditions": "已执行搜索操作。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在操作人输入框输入'系统'并搜索",
+     "expected": "列表显示过滤结果"
+    },
+    {
+     "step": 2,
+     "desc": "点击重置按钮",
+     "expected": "输入框清空，列表恢复全部记录"
+    }
+   ],
+   "expected_result": "重置功能正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "封禁记录列表导出",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击导出按钮，验证导出文件内容与列表一致。",
+   "preconditions": "运营后台已登录，存在封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击导出按钮",
+     "expected": "浏览器下载导出文件（如Excel）"
+    },
+    {
+     "step": 2,
+     "desc": "打开导出文件",
+     "expected": "文件包含所有列表字段，数据与页面一致"
+    }
+   ],
+   "expected_result": "导出成功，文件内容正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "封禁记录列表导出-无数据",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "列表无数据时点击导出，验证提示。",
+   "preconditions": "无封禁记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击导出按钮",
+     "expected": "提示'暂无数据可导出'，不生成文件"
+    }
+   ],
+   "expected_result": "正确提示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "查看聊天室禁言记录-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条已存在的聊天室禁言记录，操作类型为「聊天室禁言」，禁言时长为6小时，操作人为系统，创建时间为2018-06-08 11:02:45",
+   "preconditions": "运营后台已登录，存在至少一条聊天室禁言记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「用户管理」-「封禁记录」",
+     "expected": "页面加载成功，显示封禁记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找操作类型为「聊天室禁言」的记录",
+     "expected": "列表中存在该记录，操作类型列显示「聊天室禁言」"
+    },
+    {
+     "step": 3,
+     "desc": "查看该记录的创建时间、封禁时长、操作人、备注等字段",
+     "expected": "创建时间显示2018-06-08 11:02:45，封禁时长显示6小时，操作人显示系统，备注显示「已达禁」"
+    }
+   ],
+   "expected_result": "聊天室禁言记录完整展示，各字段与数据库数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "查看聊天室禁言记录-无记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何聊天室禁言记录",
+   "preconditions": "运营后台已登录，数据库中无聊天室禁言记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功，列表显示空态提示「暂无数据」"
+    },
+    {
+     "step": 2,
+     "desc": "检查操作类型列",
+     "expected": "无任何记录，不显示「聊天室禁言」"
+    }
+   ],
+   "expected_result": "页面显示空态，无聊天室禁言记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "查看主队名称-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条关联比赛记录，主队名称为「皇家马德里」",
+   "preconditions": "运营后台已登录，存在一条关联比赛的封禁记录，主队名称为「皇家马德里」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的主队名称字段",
+     "expected": "主队名称显示「皇家马德里」，与数据库一致"
+    }
+   ],
+   "expected_result": "主队名称正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "查看主队名称-空值",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用一条未关联比赛的封禁记录，主队名称为空",
+   "preconditions": "运营后台已登录，存在一条封禁记录，其主队名称为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的主队名称字段",
+     "expected": "主队名称显示为「-」或空，不报错"
+    }
+   ],
+   "expected_result": "主队名称为空时显示占位符，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "查看VS分隔符-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条主客队名称均存在的记录，主队「皇家马德里」，客队「巴塞罗那」",
+   "preconditions": "运营后台已登录，存在一条主客队名称均非空的封禁记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的比赛名称字段",
+     "expected": "显示「皇家马德里 VS 巴塞罗那」，VS 位于中间"
+    }
+   ],
+   "expected_result": "VS 分隔符正确显示在主客队名称之间",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "查看VS分隔符-主队为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用一条主队名称为空、客队名称为「巴塞罗那」的记录",
+   "preconditions": "运营后台已登录，存在一条主队名称为空的封禁记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的比赛名称字段",
+     "expected": "显示「- VS 巴塞罗那」或「VS 巴塞罗那」，不报错"
+    }
+   ],
+   "expected_result": "主队为空时 VS 仍显示，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "查看客队名称-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条关联比赛记录，客队名称为「巴塞罗那」",
+   "preconditions": "运营后台已登录，存在一条关联比赛的封禁记录，客队名称为「巴塞罗那」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的客队名称字段",
+     "expected": "客队名称显示「巴塞罗那」，与数据库一致"
+    }
+   ],
+   "expected_result": "客队名称正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "查看客队名称-空值",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用一条未关联比赛的封禁记录，客队名称为空",
+   "preconditions": "运营后台已登录，存在一条封禁记录，其客队名称为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的客队名称字段",
+     "expected": "客队名称显示为「-」或空，不报错"
+    }
+   ],
+   "expected_result": "客队名称为空时显示占位符，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "查看聊天记录-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条存在聊天记录的封禁记录，点击「聊天记录」按钮，预期展示近10条聊天记录",
+   "preconditions": "运营后台已登录，存在一条封禁记录，且该用户有聊天记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "找到一条记录，点击「聊天记录」按钮",
+     "expected": "弹出聊天记录弹窗，展示该用户近10条聊天记录"
+    },
+    {
+     "step": 3,
+     "desc": "查看弹窗内容",
+     "expected": "聊天记录按时间倒序展示，包含发送时间、发送人、内容等字段"
+    }
+   ],
+   "expected_result": "聊天记录弹窗正确展示近10条记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "查看聊天记录-无记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用一条无聊天记录的封禁记录，点击「聊天记录」按钮",
+   "preconditions": "运营后台已登录，存在一条封禁记录，但该用户无聊天记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "找到该记录，点击「聊天记录」按钮",
+     "expected": "弹出弹窗，显示「暂无聊天记录」或空态提示"
+    }
+   ],
+   "expected_result": "无聊天记录时显示空态提示，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "点击取消按钮-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在聊天记录弹窗中点击「取消」按钮，预期关闭弹窗",
+   "preconditions": "运营后台已登录，已打开聊天记录弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面，点击「聊天记录」按钮打开弹窗",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击弹窗中的「取消」按钮",
+     "expected": "弹窗关闭，返回封禁记录页面"
+    }
+   ],
+   "expected_result": "取消按钮关闭弹窗，不保存任何修改",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "点击取消按钮-无弹窗",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在封禁记录页面未打开任何弹窗时，检查是否存在取消按钮",
+   "preconditions": "运营后台已登录，进入封禁记录页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "检查页面是否有「取消」按钮",
+     "expected": "页面无「取消」按钮，或按钮置灰不可点击"
+    }
+   ],
+   "expected_result": "无弹窗时取消按钮不可用或不存在",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "点击保存按钮-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "修改一条封禁记录的备注为「已处理」，点击「保存」按钮，预期保存成功并提示",
+   "preconditions": "运营后台已登录，存在一条封禁记录，且备注可编辑",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "找到一条记录，点击「编辑」或直接修改备注字段",
+     "expected": "备注字段可编辑"
+    },
+    {
+     "step": 3,
+     "desc": "将备注修改为「已处理」，点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，列表刷新显示新备注"
+    }
+   ],
+   "expected_result": "保存成功，数据库备注更新为「已处理」",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "点击保存按钮-备注为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "封禁记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "将备注清空后点击「保存」，预期提示备注不能为空或允许保存",
+   "preconditions": "运营后台已登录，存在一条封禁记录，备注可编辑",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入封禁记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "找到一条记录，清空备注字段",
+     "expected": "备注字段为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "若备注必填，则提示「备注不能为空」；若允许为空，则保存成功"
+    }
+   ],
+   "expected_result": "根据业务规则给出相应提示，不产生脏数据",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "搜索-按操作人精确搜索返回匹配记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "操作人输入框输入已存在的操作人ID：10070490（对应示例数据中的操作人），验证精确匹配。",
+   "preconditions": "已登录运营后台，有屏蔽记录数据，存在操作人为10070490的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载，显示搜索区域和记录列表。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入10070490",
+     "expected": "输入成功，无异常提示。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表刷新，仅显示操作人为10070490的记录，共X条显示对应数量。"
+    }
+   ],
+   "expected_result": "列表仅显示操作人为10070490的屏蔽记录，记录总数与筛选结果一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "搜索-按操作人搜索无匹配记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "操作人输入框输入不存在的操作人ID：99999999，验证无匹配记录时的处理。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据，但不存在操作人为99999999的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入99999999",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示无数据，共X条显示0，页面提示无匹配记录。"
+    }
+   ],
+   "expected_result": "列表无数据，共X条显示0，页面提示无匹配记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "搜索-按被屏蔽者模糊搜索返回匹配记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "被屏蔽者输入框输入部分ID：100704（示例数据中被屏蔽者ID为10070488、10070489、10070490），验证模糊匹配。",
+   "preconditions": "已登录运营后台，存在被屏蔽者ID包含100704的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在被屏蔽者输入框输入100704",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示所有被屏蔽者ID包含100704的记录，共X条显示对应数量。"
+    }
+   ],
+   "expected_result": "列表显示所有被屏蔽者ID包含100704的记录，记录总数与筛选结果一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "搜索-被屏蔽者输入框为空点击搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "被屏蔽者输入框留空，验证空值搜索行为。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "不输入任何内容，直接点击搜索按钮",
+     "expected": "列表显示所有屏蔽记录，共X条显示总记录数。"
+    }
+   ],
+   "expected_result": "列表显示所有屏蔽记录，共X条显示总记录数。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "搜索-输入特殊字符搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "操作人输入框输入特殊字符如'@#￥%'，验证系统对非法字符的处理。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入'@#￥%'",
+     "expected": "输入成功或系统提示非法字符。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示输入非法或返回无匹配记录，不出现系统错误。"
+    }
+   ],
+   "expected_result": "系统提示输入非法或返回无匹配记录，不出现系统错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "搜索-重置按钮清空搜索条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先输入搜索条件，再点击重置，验证条件清空和列表恢复。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入10070490",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示筛选结果。"
+    },
+    {
+     "step": 4,
+     "desc": "点击重置按钮",
+     "expected": "操作人输入框清空，列表恢复显示所有记录，共X条显示总记录数。"
+    }
+   ],
+   "expected_result": "操作人输入框清空，列表恢复显示所有记录，共X条显示总记录数。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "列表-分页显示与翻页",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在超过10条屏蔽记录，验证分页功能。",
+   "preconditions": "已登录运营后台，屏蔽记录总数大于10条。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载，列表显示第一页数据，每页10条。"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页按钮",
+     "expected": "列表显示第二页数据，页码高亮更新。"
+    },
+    {
+     "step": 3,
+     "desc": "点击跳转页输入框输入5并确认",
+     "expected": "列表跳转到第5页，显示对应数据。"
+    }
+   ],
+   "expected_result": "分页功能正常，可翻页和跳转，每页显示10条记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "列表-无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索一个不存在的条件，使列表无数据，验证空态展示。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据，但搜索条件无匹配。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入99999999",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示无数据，共X条显示0，页面提示无匹配记录。"
+    }
+   ],
+   "expected_result": "列表显示无数据，共X条显示0，页面提示无匹配记录。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "列表-创建时间字段展示格式",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "检查列表中的创建时间字段是否按YYYY-MM-DD HH:mm:ss格式展示，如2019-03-21 23:16:35。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的创建时间列",
+     "expected": "创建时间字段显示为YYYY-MM-DD HH:mm:ss格式，如2019-03-21 23:16:35。"
+    }
+   ],
+   "expected_result": "创建时间字段显示为YYYY-MM-DD HH:mm:ss格式。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "列表-操作人字段展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "检查列表中的操作人字段是否正常显示，如10070490。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的操作人列",
+     "expected": "操作人字段显示对应值，如10070490。"
+    }
+   ],
+   "expected_result": "操作人字段正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "列表-被屏蔽者字段展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "检查列表中的被屏蔽者字段是否正常显示，如10070490。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的被屏蔽者列",
+     "expected": "被屏蔽者字段显示对应值，如10070490。"
+    }
+   ],
+   "expected_result": "被屏蔽者字段正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "列表-共X条记录数显示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "检查列表底部共X条记录数是否与当前列表数据一致。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表底部的共X条",
+     "expected": "共X条显示当前筛选条件下的记录总数，与列表数据一致。"
+    }
+   ],
+   "expected_result": "共X条显示正确的记录总数。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "搜索-创建时间范围搜索",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "设置创建时间范围为2019-03-21 00:00:00至2019-03-21 23:59:59，验证能筛选出该时间段内的记录。",
+   "preconditions": "已登录运营后台，存在创建时间在2019-03-21的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在创建时间范围选择器中选择开始时间2019-03-21 00:00:00，结束时间2019-03-21 23:59:59",
+     "expected": "时间选择成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示创建时间在2019-03-21的记录，共X条显示对应数量。"
+    }
+   ],
+   "expected_result": "列表显示创建时间在2019-03-21的记录，记录总数与筛选结果一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "搜索-创建时间范围开始时间晚于结束时间",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "设置创建时间开始时间为2019-03-22，结束时间为2019-03-21，验证系统对非法时间范围的提示。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在创建时间范围选择器中选择开始时间2019-03-22，结束时间2019-03-21",
+     "expected": "系统提示开始时间不能晚于结束时间，或自动交换时间。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统拦截搜索或提示时间范围错误，不执行搜索。"
+    }
+   ],
+   "expected_result": "系统提示时间范围错误，不执行搜索。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "搜索-创建时间范围为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "不设置创建时间范围，验证默认搜索行为。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "不设置创建时间范围，直接点击搜索按钮",
+     "expected": "列表显示所有屏蔽记录，共X条显示总记录数。"
+    }
+   ],
+   "expected_result": "列表显示所有屏蔽记录，共X条显示总记录数。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "搜索-操作人输入超长字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "操作人输入框输入超过最大长度限制的字符串（如100个字符），验证长度限制。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入100个字符的字符串",
+     "expected": "输入框限制输入长度，或提示超出长度限制。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统按输入内容搜索或提示长度超限。"
+    }
+   ],
+   "expected_result": "系统限制输入长度或提示超长，不出现异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "搜索-操作人输入空格",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "操作人输入框输入空格，验证系统对空格的校验。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入空格",
+     "expected": "输入成功，但系统可能提示不能为空格。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示操作人不能为空格，或按无操作人搜索。"
+    }
+   ],
+   "expected_result": "系统提示操作人不能为空格，或按无操作人搜索。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "列表-导出功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击导出按钮，验证导出当前列表数据为文件。",
+   "preconditions": "已登录运营后台，存在屏蔽记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击导出按钮",
+     "expected": "系统生成并下载导出文件，文件内容与当前列表数据一致。"
+    }
+   ],
+   "expected_result": "导出文件成功下载，内容与列表数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "列表-导出功能无数据时",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "在无匹配记录的情况下点击导出，验证系统处理。",
+   "preconditions": "已登录运营后台，搜索条件无匹配记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "搜索不存在的条件，使列表无数据",
+     "expected": "列表显示无数据。"
+    },
+    {
+     "step": 3,
+     "desc": "点击导出按钮",
+     "expected": "系统提示无数据可导出，或导出空文件。"
+    }
+   ],
+   "expected_result": "系统提示无数据可导出，或导出空文件。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "页面-联赛及球队管理入口跳转",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击联赛及球队管理入口，验证跳转到对应页面。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击联赛及球队管理入口",
+     "expected": "跳转到联赛及球队管理页面。"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "页面-未登录访问屏蔽记录页面",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "未登录状态下直接访问屏蔽记录页面URL，验证权限控制。",
+   "preconditions": "未登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在浏览器中直接输入屏蔽记录页面URL",
+     "expected": "系统跳转到登录页面，提示需要登录。"
+    }
+   ],
+   "expected_result": "系统跳转到登录页面，提示需要登录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "页面-无权限用户访问屏蔽记录页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用无屏蔽记录查看权限的账号登录，访问屏蔽记录页面，验证权限拦截。",
+   "preconditions": "已登录运营后台，但当前账号无屏蔽记录查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台",
+     "expected": "登录成功。"
+    },
+    {
+     "step": 2,
+     "desc": "访问屏蔽记录页面",
+     "expected": "系统提示无权限访问，或隐藏该菜单入口。"
+    }
+   ],
+   "expected_result": "系统提示无权限访问，或隐藏该菜单入口。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "验证屏蔽记录列表正确显示创建时间字段值",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用需求中给出的创建时间值：2015-10-02 00:00:00 和 2015-10-02 10:20:28，代表屏蔽记录创建的具体时间点。",
+   "preconditions": "已登录运营后台，具有用户管理-屏蔽记录页面的查看权限；屏蔽记录列表中存在创建时间为 2015-10-02 00:00:00 和 2015-10-02 10:20:28 的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「用户管理」下的「屏蔽记录」",
+     "expected": "成功进入屏蔽记录页面，页面标题显示「屏蔽记录」"
+    },
+    {
+     "step": 2,
+     "desc": "查看屏蔽记录列表中的「创建时间」列",
+     "expected": "列表正确显示每条记录的创建时间，格式为 YYYY-MM-DD HH:mm:ss，例如 2015-10-02 00:00:00 和 2015-10-02 10:20:28，且与数据库记录一致"
+    }
+   ],
+   "expected_result": "屏蔽记录列表的「创建时间」列正确显示所有记录的创建时间，格式统一为 YYYY-MM-DD HH:mm:ss，数据与后台存储一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "验证创建时间字段为空时的显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条创建时间为 NULL 的屏蔽记录，代表系统异常或数据缺失场景。",
+   "preconditions": "已登录运营后台，具有屏蔽记录页面查看权限；数据库中有一条创建时间为 NULL 的屏蔽记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间字段为 NULL 的记录",
+     "expected": "创建时间列显示为空或显示占位符（如 '-'），页面不报错，其他字段正常显示"
+    }
+   ],
+   "expected_result": "创建时间字段为 NULL 时，页面不崩溃，显示为空或占位符，不影响其他列展示。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "验证创建时间字段格式错误时的显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条创建时间为 '2015/10/02' 的记录，代表格式不规范的异常数据。",
+   "preconditions": "已登录运营后台，具有屏蔽记录页面查看权限；数据库中有一条创建时间为 '2015/10/02' 的屏蔽记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间格式错误的记录",
+     "expected": "页面按原样显示或进行格式化处理，不出现乱码或报错，其他功能正常"
+    }
+   ],
+   "expected_result": "创建时间格式异常时，页面能正常显示，不崩溃，且不影响其他记录展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "验证创建时间字段的排序功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用需求中的两个时间值 2015-10-02 00:00:00 和 2015-10-02 10:20:28，验证列表排序。",
+   "preconditions": "已登录运营后台，具有屏蔽记录页面查看权限；列表中存在多条创建时间不同的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击「创建时间」列标题进行排序",
+     "expected": "列表按创建时间升序或降序排列，点击一次升序，再次点击降序，排序正确"
+    }
+   ],
+   "expected_result": "点击创建时间列标题可正确排序，升序时 2015-10-02 00:00:00 在 2015-10-02 10:20:28 之前，降序反之。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "验证创建时间字段的筛选功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "使用创建时间范围筛选，起始时间 2015-10-02 00:00:00，结束时间 2015-10-02 10:20:28，代表筛选该时间段内的记录。",
+   "preconditions": "已登录运营后台，具有屏蔽记录页面查看权限；列表中存在创建时间在 2015-10-02 00:00:00 至 2015-10-02 10:20:28 之间的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在筛选条件中输入创建时间范围：开始时间 2015-10-02 00:00:00，结束时间 2015-10-02 10:20:28",
+     "expected": "输入框正确显示输入的时间"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅显示创建时间在该范围内的记录，其他记录被过滤"
+    }
+   ],
+   "expected_result": "按创建时间范围筛选后，列表只显示指定时间段内的记录，筛选结果正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "验证创建时间筛选的边界值（开始时间等于结束时间）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "开始时间和结束时间均设置为 2015-10-02 00:00:00，代表筛选该精确时间点的记录。",
+   "preconditions": "已登录运营后台，具有屏蔽记录页面查看权限；列表中存在创建时间恰好为 2015-10-02 00:00:00 的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在筛选条件中输入创建时间范围：开始时间 2015-10-02 00:00:00，结束时间 2015-10-02 00:00:00",
+     "expected": "输入框正确显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示创建时间等于 2015-10-02 00:00:00 的记录，不报错"
+    }
+   ],
+   "expected_result": "开始时间等于结束时间时，筛选出该时间点的记录，结果正确。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "验证创建时间筛选的异常输入（开始时间晚于结束时间）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "开始时间 2015-10-02 10:20:28，结束时间 2015-10-02 00:00:00，代表非法的时间范围。",
+   "preconditions": "已登录运营后台，具有屏蔽记录页面查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在筛选条件中输入创建时间范围：开始时间 2015-10-02 10:20:28，结束时间 2015-10-02 00:00:00",
+     "expected": "输入框正确显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "系统提示「开始时间不能晚于结束时间」或类似提示，不执行查询"
+    }
+   ],
+   "expected_result": "开始时间晚于结束时间时，系统给出明确错误提示，不执行查询。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "验证创建时间字段的导出功能",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理-屏蔽记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "导出当前列表数据，包含创建时间字段，验证导出内容正确。",
+   "preconditions": "已登录运营后台，具有屏蔽记录页面查看权限；列表中存在记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击「导出」按钮",
+     "expected": "系统生成导出文件并下载"
+    },
+    {
+     "step": 3,
+     "desc": "打开导出的文件，检查创建时间字段",
+     "expected": "导出文件中创建时间字段与页面显示一致，格式正确，无乱码"
+    }
+   ],
+   "expected_result": "导出文件中的创建时间字段与页面显示一致，格式正确，无乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "搜索-按操作人精确搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "操作人输入已存在的用户ID 10070490，该ID在列表中存在对应记录。",
+   "preconditions": "已登录运营后台，有举报记录数据，其中操作人为10070490的记录存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载，显示举报记录列表。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入“10070490”",
+     "expected": "输入框显示10070490。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表刷新，仅显示操作人为10070490的记录。"
+    }
+   ],
+   "expected_result": "列表仅显示操作人为10070490的记录，共X条显示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "搜索-按操作人搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "操作人输入不存在的用户ID 99999999，该ID在系统中不存在。",
+   "preconditions": "已登录运营后台，有举报记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入“99999999”",
+     "expected": "输入框显示99999999。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示无数据，共0条。"
+    }
+   ],
+   "expected_result": "列表显示无数据，提示“共0条”。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "搜索-按被举报人搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "被举报人输入已存在的用户ID 10070490，该ID在列表中存在对应记录。",
+   "preconditions": "已登录运营后台，有举报记录数据，其中被举报人为10070490的记录存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在被举报人输入框输入“10070490”",
+     "expected": "输入框显示10070490。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表刷新，仅显示被举报人为10070490的记录。"
+    }
+   ],
+   "expected_result": "列表仅显示被举报人为10070490的记录，共X条显示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "搜索-按被举报人搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "被举报人输入不存在的用户ID 88888888，该ID在系统中不存在。",
+   "preconditions": "已登录运营后台，有举报记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在被举报人输入框输入“88888888”",
+     "expected": "输入框显示88888888。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示无数据，共0条。"
+    }
+   ],
+   "expected_result": "列表显示无数据，提示“共0条”。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "搜索-操作人输入为空点击搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "操作人输入框留空，点击搜索，应展示全部记录。",
+   "preconditions": "已登录运营后台，有举报记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "操作人输入框留空",
+     "expected": "输入框为空。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示全部举报记录。"
+    }
+   ],
+   "expected_result": "列表显示全部举报记录，共X条为总记录数。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "搜索-操作人输入特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "操作人输入特殊字符“@#￥%”，系统应进行校验或提示。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入“@#￥%”",
+     "expected": "输入框显示@#￥%。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "系统提示输入不合法，或列表显示无数据。"
+    }
+   ],
+   "expected_result": "系统给出明确提示（如“请输入合法字符”）或显示无数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "搜索-重置按钮清空条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已输入操作人和被举报人条件，点击重置后条件清空，列表恢复全部数据。",
+   "preconditions": "已登录运营后台，有举报记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入“10070490”，在被举报人输入框输入“10070489”",
+     "expected": "两个输入框分别显示对应值。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“重置”按钮",
+     "expected": "两个输入框被清空，列表恢复显示全部记录。"
+    }
+   ],
+   "expected_result": "输入框清空，列表显示全部记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "列表-操作人字段展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表中存在操作人为10070490的记录，验证该字段展示为10070490。",
+   "preconditions": "已登录运营后台，存在操作人为10070490的举报记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载，列表显示记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看操作人列",
+     "expected": "操作人列显示对应的用户ID，如10070490。"
+    }
+   ],
+   "expected_result": "操作人列正确显示用户ID。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "列表-被举报人字段展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表中存在被举报人为10070490的记录，验证该字段展示为10070490。",
+   "preconditions": "已登录运营后台，存在被举报人为10070490的举报记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载，列表显示记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看被举报人列",
+     "expected": "被举报人列显示对应的用户ID，如10070490。"
+    }
+   ],
+   "expected_result": "被举报人列正确显示用户ID。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "列表-创建时间字段展示格式正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表中存在创建时间为2019-03-21 23:16:35的记录，验证格式为“YYYY-MM-DD HH:mm:ss”。",
+   "preconditions": "已登录运营后台，存在创建时间为2019-03-21 23:16:35的举报记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间显示为“2019-03-21 23:16:35”。"
+    }
+   ],
+   "expected_result": "创建时间格式正确，精确到秒。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "列表-创建时间字段为空或异常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条创建时间为空的记录，验证列表展示。",
+   "preconditions": "已登录运营后台，存在创建时间为空的举报记录（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间显示为空或“-”。"
+    }
+   ],
+   "expected_result": "创建时间列显示为空或“-”，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "分页-共X条显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "当前列表有3条记录，验证“共3条”显示。",
+   "preconditions": "已登录运营后台，举报记录总数为3条。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表底部“共X条”",
+     "expected": "显示“共3条”。"
+    }
+   ],
+   "expected_result": "共X条显示正确，与实际记录数一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "分页-无数据时共0条",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索不存在的条件，列表无数据，验证“共0条”显示。",
+   "preconditions": "已登录运营后台，搜索条件无匹配记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入“99999999”并点击搜索",
+     "expected": "列表无数据。"
+    },
+    {
+     "step": 3,
+     "desc": "查看“共X条”",
+     "expected": "显示“共0条”。"
+    }
+   ],
+   "expected_result": "共0条显示正确。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "分页-翻页功能正常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "总记录数超过每页条数（如10条），验证翻页。",
+   "preconditions": "已登录运营后台，举报记录总数大于10条。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载，显示第一页数据。"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页按钮",
+     "expected": "列表显示第二页数据，页码变为2。"
+    }
+   ],
+   "expected_result": "翻页正常，数据正确切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "分页-跳页功能正常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "总页数为5，跳转到第5页。",
+   "preconditions": "已登录运营后台，举报记录总页数大于等于5。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在跳页输入框输入“5”并确认",
+     "expected": "列表显示第5页数据，页码变为5。"
+    }
+   ],
+   "expected_result": "跳页成功，显示第5页数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "分页-跳页输入超出范围",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "跳页输入999，超出总页数，验证系统处理。",
+   "preconditions": "已登录运营后台，总页数小于999。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在跳页输入框输入“999”并确认",
+     "expected": "系统提示页码超出范围，或停留在当前页。"
+    }
+   ],
+   "expected_result": "系统给出提示或停留在当前页，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "导航-点击“联赛及球队管理”跳转",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击左侧导航“联赛及球队管理”，应跳转到对应页面。",
+   "preconditions": "已登录运营后台，有联赛及球队管理页面权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击左侧菜单“联赛及球队管理”",
+     "expected": "跳转到联赛及球队管理页面。"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "搜索-操作人和被举报人组合搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "同时输入操作人10070490和被举报人10070489，验证组合搜索。",
+   "preconditions": "已登录运营后台，存在同时满足操作人为10070490且被举报人为10070489的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在操作人输入框输入“10070490”，在被举报人输入框输入“10070489”",
+     "expected": "两个输入框分别显示对应值。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表仅显示同时满足两个条件的记录。"
+    }
+   ],
+   "expected_result": "列表显示同时满足操作人和被举报人条件的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "列表-操作列查看聊天记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击某条记录的“聊天记录”操作，应弹出对话框展示被举报时近10条聊天记录。",
+   "preconditions": "已登录运营后台，存在一条举报记录，且该记录有聊天记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条记录操作列的“聊天记录”按钮",
+     "expected": "弹出对话框，展示被举报时近10条聊天记录。"
+    }
+   ],
+   "expected_result": "对话框展示近10条聊天记录，内容正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "列表-查看聊天记录时无数据",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击一条没有聊天记录的举报记录的“聊天记录”按钮，验证空态展示。",
+   "preconditions": "已登录运营后台，存在一条举报记录，但该记录无聊天记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录操作列的“聊天记录”按钮",
+     "expected": "弹出对话框，显示“暂无聊天记录”或空列表。"
+    }
+   ],
+   "expected_result": "对话框显示空态提示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "列表-导出无数据时",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索无结果后点击导出，验证系统处理。",
+   "preconditions": "已登录运营后台，搜索条件无匹配记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "搜索不存在的条件，使列表无数据",
+     "expected": "列表显示无数据。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“导出”按钮",
+     "expected": "系统提示“无数据可导出”或导出空文件。"
+    }
+   ],
+   "expected_result": "系统给出提示或导出空文件，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "列表-创建时间排序（如支持）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击创建时间列头，验证排序功能。",
+   "preconditions": "已登录运营后台，有举报记录数据，且创建时间列支持排序。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“创建时间”列头",
+     "expected": "列表按创建时间升序或降序排列。"
+    }
+   ],
+   "expected_result": "列表按创建时间正确排序。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "列表-操作人字段为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条操作人为空的记录，验证列表展示。",
+   "preconditions": "已登录运营后台，存在操作人为空的举报记录（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入举报记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看操作人列",
+     "expected": "操作人列显示为空或“-”。"
+    }
+   ],
+   "expected_result": "操作人列显示为空或“-”，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "查看举报记录列表-创建时间正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有举报记录数据，创建时间为 2015-10-02 10:20:28，代表一条真实举报记录。",
+   "preconditions": "已登录运营后台，存在至少一条举报记录，且创建时间为 2015-10-02 10:20:28。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「用户管理-举报记录」页面",
+     "expected": "页面正常加载，显示举报记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中「创建时间」列",
+     "expected": "创建时间列显示格式为 yyyy-MM-dd HH:mm:ss，如 2015-10-02 10:20:28，与数据库记录一致"
+    }
+   ],
+   "expected_result": "创建时间字段正确展示，格式符合预期，数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "查看举报记录列表-创建时间为空或异常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条创建时间为空或格式异常的举报记录（如 2015-10-02 10:20:28 缺失），用于验证异常数据处理。",
+   "preconditions": "已登录运营后台，存在一条创建时间为空或格式异常的举报记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「用户管理-举报记录」页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该条记录的「创建时间」列",
+     "expected": "若为空，显示为空或占位符（如 '-'），不报错；若格式异常，按原样显示或提示数据异常，但不影响页面其他功能"
+    }
+   ],
+   "expected_result": "异常创建时间不导致页面崩溃，展示合理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "点击聊天记录按钮-弹出聊天记录窗口",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条有聊天记录的举报记录，点击「聊天记录」按钮。",
+   "preconditions": "已登录运营后台，存在至少一条举报记录，且该记录有聊天记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「用户管理-举报记录」页面",
+     "expected": "页面正常加载，列表显示操作列"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条记录操作列的「聊天记录」按钮",
+     "expected": "弹出聊天记录查看窗口，窗口标题为「聊天记录」，窗口内展示聊天记录内容"
+    }
+   ],
+   "expected_result": "聊天记录窗口正常弹出，内容加载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "点击聊天记录按钮-无聊天记录时提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条没有聊天记录的举报记录，点击「聊天记录」按钮。",
+   "preconditions": "已登录运营后台，存在一条举报记录，但该记录无聊天记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「用户管理-举报记录」页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击该条记录操作列的「聊天记录」按钮",
+     "expected": "弹出聊天记录窗口，窗口内显示「暂无聊天记录」或类似空态提示，不报错"
+    }
+   ],
+   "expected_result": "无聊天记录时给出明确空态提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "聊天记录窗口展示近10条记录-正常场景",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条举报记录，其聊天记录超过10条（如15条），验证只展示近10条。",
+   "preconditions": "已登录运营后台，存在一条举报记录，其聊天记录共15条。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「用户管理-举报记录」页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击该条记录的「聊天记录」按钮",
+     "expected": "弹出聊天记录窗口，展示最近10条聊天记录，且按时间倒序排列（最新在前）"
+    }
+   ],
+   "expected_result": "窗口内展示10条聊天记录，且为最近的10条，排序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "聊天记录窗口展示近10条记录-不足10条时全部展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条举报记录，其聊天记录只有5条，验证展示全部5条。",
+   "preconditions": "已登录运营后台，存在一条举报记录，其聊天记录共5条。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「用户管理-举报记录」页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击该条记录的「聊天记录」按钮",
+     "expected": "弹出聊天记录窗口，展示全部5条聊天记录，不补空"
+    }
+   ],
+   "expected_result": "聊天记录不足10条时全部展示，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "聊天记录窗口-取消按钮关闭窗口",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "打开聊天记录窗口，不进行任何修改，点击「取消」按钮。",
+   "preconditions": "已登录运营后台，已打开某条举报记录的聊天记录窗口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开聊天记录窗口",
+     "expected": "窗口正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "窗口关闭，返回举报记录列表，不保存任何修改"
+    }
+   ],
+   "expected_result": "取消操作生效，窗口关闭，无数据变更。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "聊天记录窗口-取消按钮放弃修改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在聊天记录窗口中修改备注（如输入「已处理」），然后点击「取消」按钮。",
+   "preconditions": "已登录运营后台，已打开某条举报记录的聊天记录窗口，且该窗口支持备注编辑。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开聊天记录窗口",
+     "expected": "窗口正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在备注输入框中输入「已处理」",
+     "expected": "输入内容正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "窗口关闭，备注修改不保存，数据库记录不变"
+    }
+   ],
+   "expected_result": "取消后修改被丢弃，数据未更新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "聊天记录窗口-保存按钮保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在聊天记录窗口中修改备注（如输入「已核实」），点击「保存」按钮。",
+   "preconditions": "已登录运营后台，已打开某条举报记录的聊天记录窗口，且该窗口支持备注编辑。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开聊天记录窗口",
+     "expected": "窗口正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在备注输入框中输入「已核实」",
+     "expected": "输入内容正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "提示保存成功，窗口关闭，数据库备注字段更新为「已核实」"
+    }
+   ],
+   "expected_result": "保存成功，数据持久化，提示明确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "聊天记录窗口-保存按钮未修改时保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "打开聊天记录窗口，不进行任何修改，直接点击「保存」按钮。",
+   "preconditions": "已登录运营后台，已打开某条举报记录的聊天记录窗口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开聊天记录窗口",
+     "expected": "窗口正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "直接点击「保存」按钮",
+     "expected": "提示保存成功（或提示无修改），窗口关闭，数据库无变化"
+    }
+   ],
+   "expected_result": "无修改时保存不报错，处理合理。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "聊天记录窗口-保存按钮备注为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "在聊天记录窗口中清空备注（若允许），点击「保存」按钮。",
+   "preconditions": "已登录运营后台，已打开某条举报记录的聊天记录窗口，且备注可编辑。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开聊天记录窗口",
+     "expected": "窗口正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "清空备注输入框",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "若备注为必填，则提示「备注不能为空」并阻止保存；若允许为空，则保存成功，备注清空"
+    }
+   ],
+   "expected_result": "根据业务规则处理，不出现未定义行为。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "聊天记录窗口-保存按钮备注超长",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/举报记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "在备注输入框中输入超过最大长度限制的文本（如500个字符，假设限制200），点击「保存」。",
+   "preconditions": "已登录运营后台，已打开某条举报记录的聊天记录窗口，且备注有长度限制。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开聊天记录窗口",
+     "expected": "窗口正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在备注输入框中输入500个字符",
+     "expected": "输入框限制输入长度，或提示超长"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "若输入被限制，则保存成功；若未限制，则提示「备注长度不能超过200」并阻止保存"
+    }
+   ],
+   "expected_result": "超长备注被合理处理，不保存非法数据。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "点击联赛及球队管理入口跳转至对应管理页面",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击左侧菜单或页面内链接「联赛及球队管理」",
+   "preconditions": "已登录运营后台，具有用户管理模块权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载，显示反馈列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击「联赛及球队管理」入口",
+     "expected": "跳转至联赛及球队管理页面，URL变化，页面标题显示「联赛及球队管理」"
+    }
+   ],
+   "expected_result": "成功跳转至联赛及球队管理页面，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "联赛及球队管理入口在无权限时不可见或点击被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无用户管理模块权限的运营账号",
+   "preconditions": "已登录运营后台，账号无用户管理模块权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载，但「联赛及球队管理」入口不可见或置灰"
+    },
+    {
+     "step": 2,
+     "desc": "若入口可见，尝试点击",
+     "expected": "点击无响应或提示「无权限访问」"
+    }
+   ],
+   "expected_result": "无权限用户无法访问联赛及球队管理功能",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "按用户编号精确搜索反馈记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入存在的用户编号10070650（来自示例数据）",
+   "preconditions": "已登录运营后台，存在用户编号为10070650的反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框输入用户编号10070650",
+     "expected": "输入框显示该编号"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示用户编号为10070650的反馈记录"
+    }
+   ],
+   "expected_result": "搜索结果准确，只显示匹配记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "搜索不存在的用户编号返回空列表",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的用户编号99999999",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框输入不存在的用户编号99999999",
+     "expected": "输入框显示该编号"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示「暂无数据」或空列表，提示「共0条」"
+    }
+   ],
+   "expected_result": "返回空列表，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "按反馈时间范围筛选记录（开始时间早于结束时间）",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "选择反馈时间范围2015-10-02至2015-10-10（示例数据）",
+   "preconditions": "已登录运营后台，存在该时间范围内的反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击反馈时间选择器，选择开始时间2015-10-02，结束时间2015-10-10",
+     "expected": "时间选择器正确显示所选范围"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示反馈时间在2015-10-02 00:00:00至2015-10-10 23:59:59之间的记录"
+    }
+   ],
+   "expected_result": "筛选结果正确，包含边界日期记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "反馈时间开始时间晚于结束时间时提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择开始时间2015-10-10，结束时间2015-10-02",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击反馈时间选择器，选择开始时间2015-10-10，结束时间2015-10-02",
+     "expected": "时间选择器可能自动交换或提示错误"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "提示「开始时间不能晚于结束时间」，不发起搜索请求"
+    }
+   ],
+   "expected_result": "搜索被拦截，提示明确错误信息",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "反馈时间范围选择同一天（开始等于结束）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "选择开始时间2015-10-02，结束时间2015-10-02",
+   "preconditions": "已登录运营后台，存在该日期的反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "选择反馈时间范围2015-10-02至2015-10-02",
+     "expected": "时间选择器正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示2015-10-02当天的反馈记录，无报错"
+    }
+   ],
+   "expected_result": "可正常查询当天记录",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "反馈时间字段展示格式正确",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看示例数据2019-03-21 23:16:35",
+   "preconditions": "已登录运营后台，存在反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的反馈时间列",
+     "expected": "时间格式为YYYY-MM-DD HH:mm:ss，如2019-03-21 23:16:35"
+    }
+   ],
+   "expected_result": "时间格式统一，无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "反馈时间字段为空时显示占位符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条反馈时间字段为空的记录",
+   "preconditions": "已登录运营后台，存在反馈时间字段为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看反馈时间列",
+     "expected": "显示「-」或「暂无」等占位符，不显示空白"
+    }
+   ],
+   "expected_result": "空值有明确占位显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "用户编号字段展示正确",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看示例数据用户编号10070650",
+   "preconditions": "已登录运营后台，存在反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "显示完整用户编号，如10070650"
+    }
+   ],
+   "expected_result": "用户编号完整显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "用户编号超长时显示截断或悬浮提示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造用户编号超过列宽长度的记录（如20位数字）",
+   "preconditions": "已登录运营后台，存在超长用户编号的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "超长编号以省略号截断，鼠标悬浮显示完整编号"
+    }
+   ],
+   "expected_result": "超长内容不撑破表格，有悬浮提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "创建时间字段展示正确",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看示例数据创建时间2019-03-21 23:16:35",
+   "preconditions": "已登录运营后台，存在反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "显示格式为YYYY-MM-DD HH:mm:ss，如2019-03-21 23:16:35"
+    }
+   ],
+   "expected_result": "创建时间格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "创建时间为空时显示占位符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造创建时间为空的记录",
+   "preconditions": "已登录运营后台，存在创建时间为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "显示「-」或「暂无」"
+    }
+   ],
+   "expected_result": "空值有占位显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "反馈内容字段完整展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看示例反馈内容「建议在直播里加个职务...」",
+   "preconditions": "已登录运营后台，存在反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看反馈内容列",
+     "expected": "显示完整反馈内容，或截断但鼠标悬浮可查看完整内容"
+    }
+   ],
+   "expected_result": "反馈内容可读，无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "反馈内容为空时显示占位符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造反馈内容为空的记录",
+   "preconditions": "已登录运营后台，存在反馈内容为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看反馈内容列",
+     "expected": "显示「-」或「暂无」"
+    }
+   ],
+   "expected_result": "空值有占位显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "反馈内容超长时显示截断并可悬浮查看完整内容",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造反馈内容超过500字符的记录",
+   "preconditions": "已登录运营后台，存在超长反馈内容的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看反馈内容列",
+     "expected": "内容截断显示省略号，鼠标悬浮弹出完整内容"
+    }
+   ],
+   "expected_result": "超长内容不撑破表格，可查看完整",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "图片字段正常显示缩略图",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看带有图片的反馈记录",
+   "preconditions": "已登录运营后台，存在带图片的反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看图片列",
+     "expected": "显示缩略图，点击可查看大图"
+    }
+   ],
+   "expected_result": "图片正常加载，可点击放大",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "图片加载失败时显示默认占位图",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造图片URL无效的记录",
+   "preconditions": "已登录运营后台，存在图片URL无效的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看图片列",
+     "expected": "显示默认占位图或「图片加载失败」提示，不显示裂图"
+    }
+   ],
+   "expected_result": "加载失败有友好提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "无图片时显示占位符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无图片的反馈记录",
+   "preconditions": "已登录运营后台，存在无图片的反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看图片列",
+     "expected": "显示「-」或「暂无图片」"
+    }
+   ],
+   "expected_result": "无图片有占位显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "问题类型字段展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看示例问题类型「账号相关」「卡顿」「页面优化」等",
+   "preconditions": "已登录运营后台，存在反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看问题类型列",
+     "expected": "显示对应类型名称，如「账号相关」"
+    }
+   ],
+   "expected_result": "问题类型显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "问题类型为空时显示占位符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造问题类型为空的记录",
+   "preconditions": "已登录运营后台，存在问题类型为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看问题类型列",
+     "expected": "显示「-」或「暂无」"
+    }
+   ],
+   "expected_result": "空值有占位显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "联系方式字段展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看示例联系方式（如手机号、邮箱等）",
+   "preconditions": "已登录运营后台，存在带联系方式的反馈记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看联系方式列",
+     "expected": "显示用户填写的联系方式，如手机号或邮箱"
+    }
+   ],
+   "expected_result": "联系方式正常显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "联系方式为空时显示占位符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造联系方式为空的记录",
+   "preconditions": "已登录运营后台，存在联系方式为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看联系方式列",
+     "expected": "显示「-」或「暂无」"
+    }
+   ],
+   "expected_result": "空值有占位显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "反馈时间具体值展示正确（如2019-03-21 23:16:35）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看示例反馈时间2019-03-21 23:16:35",
+   "preconditions": "已登录运营后台，存在该反馈时间的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看反馈时间列",
+     "expected": "显示2019-03-21 23:16:35，格式正确"
+    }
+   ],
+   "expected_result": "反馈时间显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "反馈时间具体值为空时显示占位符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造反馈时间为空的记录",
+   "preconditions": "已登录运营后台，存在反馈时间为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看反馈时间列",
+     "expected": "显示「-」或「暂无」"
+    }
+   ],
+   "expected_result": "空值有占位显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "查看举报用户反馈记录-正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的举报记录：举报用户ID=10070650，举报理由=盗用TA人作品，举报描述为空。",
+   "preconditions": "运营人员已登录运营后台，且存在至少一条举报用户反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「用户管理」-「意见反馈」",
+     "expected": "页面加载成功，显示意见反馈列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找举报用户ID为10070650的记录",
+     "expected": "记录存在，显示举报用户ID、举报理由、举报描述等信息"
+    },
+    {
+     "step": 3,
+     "desc": "查看该记录的举报理由和举报描述",
+     "expected": "举报理由显示为「盗用TA人作品」，举报描述为空"
+    }
+   ],
+   "expected_result": "举报用户反馈记录正确展示，字段与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "查看举报用户反馈记录-记录不存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用不存在的举报用户ID=99999999。",
+   "preconditions": "运营人员已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框中输入不存在的举报用户ID 99999999，点击搜索",
+     "expected": "列表显示无数据，提示「暂无数据」"
+    }
+   ],
+   "expected_result": "系统不报错，显示空列表。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "问题类型列表展示-正常显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "问题类型包括：其他、卡顿、页面优化、无法连接、账号相关等。",
+   "preconditions": "运营人员已登录运营后台，且存在多条不同问题类型的反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功，显示反馈列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「问题类型」列",
+     "expected": "问题类型列显示各种类型，如「其他」「卡顿」「页面优化」「无法连接」等"
+    }
+   ],
+   "expected_result": "问题类型列表正确展示，与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "问题类型列表展示-空数据",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无任何反馈记录。",
+   "preconditions": "运营人员已登录运营后台，且系统中无任何反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功，列表显示空"
+    },
+    {
+     "step": 2,
+     "desc": "查看问题类型列",
+     "expected": "无数据可显示，列表为空"
+    }
+   ],
+   "expected_result": "空列表正确展示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "反馈时间字段展示-正常格式",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的反馈记录，反馈时间=2019-03-21 22:33:46。",
+   "preconditions": "运营人员已登录运营后台，且存在反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「创建时间」列",
+     "expected": "时间显示为「2019-03-21 22:33:46」格式"
+    }
+   ],
+   "expected_result": "反馈时间以「YYYY-MM-DD HH:mm:ss」格式正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "反馈时间字段展示-非法时间格式",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中反馈时间字段被篡改为非法格式，如'2019/03/21'。",
+   "preconditions": "运营人员已登录运营后台，且存在一条反馈记录的时间格式异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的创建时间",
+     "expected": "时间显示可能异常，但页面不应崩溃"
+    }
+   ],
+   "expected_result": "系统对异常时间格式有容错处理，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "查看举报直播用户反馈记录-正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的举报直播用户记录：举报用户ID=10001797，举报理由=侮辱谩骂，举报描述=在直播间骂粗口骂了很久影响主播直播也影响玩家。",
+   "preconditions": "运营人员已登录运营后台，且存在至少一条举报直播用户反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查找举报直播用户ID为10001797的记录",
+     "expected": "记录存在，显示举报用户ID、举报理由、举报描述等信息"
+    },
+    {
+     "step": 3,
+     "desc": "查看该记录的举报理由和举报描述",
+     "expected": "举报理由显示为「侮辱谩骂」，举报描述显示为「在直播间骂粗口骂了很久影响主播直播也影响玩家」"
+    }
+   ],
+   "expected_result": "举报直播用户反馈记录正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "查看举报直播用户反馈记录-记录不存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用不存在的举报直播用户ID=88888888。",
+   "preconditions": "运营人员已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索框中输入不存在的举报直播用户ID 88888888，点击搜索",
+     "expected": "列表显示无数据，提示「暂无数据」"
+    }
+   ],
+   "expected_result": "系统不报错，显示空列表。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "反馈内容字段展示-正常长文本",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的反馈记录，反馈内容为「建议在直播里加个职务 主播可以给自己的粉丝添加房管 让一些说话没脑 侮辱其他人的会员 踢出房间 被踢出的给个惩罚一个星期时间不能进直播房间」。",
+   "preconditions": "运营人员已登录运营后台，且存在该反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看反馈内容列",
+     "expected": "反馈内容完整显示，无截断"
+    }
+   ],
+   "expected_result": "反馈内容正确展示，无乱码或截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "反馈内容字段展示-超长文本",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条反馈内容超过1000字符的记录。",
+   "preconditions": "运营人员已登录运营后台，且存在一条反馈内容超长的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的反馈内容",
+     "expected": "超长文本可能被截断或出现滚动条，但页面布局不混乱"
+    }
+   ],
+   "expected_result": "超长文本展示合理，不影响页面布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "意见反馈列表正常加载并展示数据",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台已有反馈数据，包含多条不同时间、类型、内容的记录，如反馈时间2019-03-18 01:27:08、问题类型“账号相关”、反馈内容“Eleid:10057815 (林峰) Very annoying...”。",
+   "preconditions": "运营后台已登录，存在至少一条意见反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击“用户管理”->“意见反馈”",
+     "expected": "页面成功打开，显示意见反馈列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表数据",
+     "expected": "列表展示所有反馈记录，字段包括：反馈时间、用户编号、反馈内容、图片、问题类型、联系方式等，数据与后台一致"
+    }
+   ],
+   "expected_result": "列表正常展示，无报错，数据完整，时间格式为YYYY-MM-DD HH:mm:ss，问题类型显示为“账号相关”等。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "意见反馈列表数据加载失败时给出错误提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端接口返回500错误或网络异常，无实际数据。",
+   "preconditions": "运营后台已登录，后端服务异常或网络断开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈页面",
+     "expected": "页面显示加载失败提示，如“数据加载失败，请稍后重试”，并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示明确的错误提示，点击重试可重新加载。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "意见反馈列表反馈时间字段展示正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用反馈时间为2019-03-18 01:27:08的记录，验证时间格式。",
+   "preconditions": "存在反馈时间为2019-03-18 01:27:08的反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈列表",
+     "expected": "列表展示该记录，反馈时间列显示“2019-03-18 01:27:08”"
+    }
+   ],
+   "expected_result": "时间格式正确，精确到秒，与数据库存储一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "意见反馈列表反馈时间字段为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条反馈时间为空的记录（数据库字段为NULL或空字符串）。",
+   "preconditions": "存在反馈时间为空的反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈列表",
+     "expected": "反馈时间列显示为空或“--”，不显示异常字符"
+    }
+   ],
+   "expected_result": "空时间显示为占位符，页面无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "意见反馈列表反馈内容字段完整展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用反馈内容为“Eleid:10057815 (林峰) Very annoying Keep call VJ add his wechat and using Hong Kong star name and pictures. Also keep scolding all the fans in the live room by using curse word.”的记录。",
+   "preconditions": "存在该反馈内容的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈列表",
+     "expected": "反馈内容列完整显示该文本，无截断或乱码"
+    }
+   ],
+   "expected_result": "反馈内容完整展示，换行和特殊字符正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "意见反馈列表反馈内容超长时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条反馈内容超过500字符的记录（如重复长文本）。",
+   "preconditions": "存在超长反馈内容的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈列表",
+     "expected": "反馈内容列显示省略号或悬浮提示，点击可查看完整内容"
+    }
+   ],
+   "expected_result": "超长内容不撑破布局，提供查看完整内容的交互。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "意见反馈列表账号字段展示正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用用户编号为10057815的反馈记录。",
+   "preconditions": "存在用户编号为10057815的反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈列表",
+     "expected": "账号列显示“10057815”"
+    }
+   ],
+   "expected_result": "账号字段正确展示，为数字格式。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "意见反馈列表账号字段为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条用户编号为空的反馈记录。",
+   "preconditions": "存在用户编号为空的反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈列表",
+     "expected": "账号列显示为空或“--”"
+    }
+   ],
+   "expected_result": "空账号显示占位符，页面无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "意见反馈列表问题类型字段展示正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用问题类型为“账号相关”的反馈记录。",
+   "preconditions": "存在问题类型为“账号相关”的反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈列表",
+     "expected": "问题类型列显示“账号相关”"
+    }
+   ],
+   "expected_result": "问题类型正确展示，与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "意见反馈列表问题类型字段为未知值时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "用户管理/意见反馈",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条问题类型为“未知类型”或NULL的记录。",
+   "preconditions": "存在问题类型为未知值的反馈记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入意见反馈列表",
+     "expected": "问题类型列显示“其他”或空，不显示异常字符"
+    }
+   ],
+   "expected_result": "未知类型被合理处理，页面无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-178"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-6 生成被截断，已重试"
+ ]
+}

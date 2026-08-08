@@ -1,0 +1,5765 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "进度条滑块：展示并控制视频播放画面的所在位置",
+    "description": "在赛事回放详情页（移动端）中，进度条滑块用于展示当前播放位置，并允许用户通过拖动滑块控制视频播放位置。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确进度条滑块的最小拖动步长、是否支持点击跳转、拖动时是否实时预览画面等交互细节。",
+      "suggestion": "建议补充进度条交互规范，如拖动时是否显示时间提示、是否支持键盘操作（PC端）等。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "静音按钮：控制视频是否静音",
+    "description": "在赛事回放详情页中，提供静音按钮，用户点击可切换视频静音/取消静音状态。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确静音状态是否持久化（如退出页面后再次进入是否保持静音）。",
+      "suggestion": "建议明确静音状态的记忆策略。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "全屏按钮：进入/退出全屏模式",
+    "description": "在赛事回放详情页中，提供全屏按钮，点击后视频播放区域进入全屏模式，再次点击退出全屏。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确全屏模式下操作面板（如进度条、静音等）的显示与隐藏逻辑，以及不同端（移动端/PC）的全屏行为差异。",
+      "suggestion": "建议补充全屏模式下的UI规范，如自动隐藏操作面板、手势操作等。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "更多回放列表：展示其他可观看的回放视频",
+    "description": "在赛事回放详情页中，提供更多回放列表，展示其他相关或热门回放，用户可点击跳转至对应回放详情。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确更多回放列表的数据来源、排序规则、是否分页加载，以及点击后是否替换当前视频还是新开页面。",
+      "suggestion": "建议明确列表数据接口、排序逻辑和跳转行为。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述了赛事回放详情页的核心播放控制功能，但细节不足，如进度条交互、静音持久化、全屏模式行为、更多回放列表的数据规则等均未明确。建议补充交互细节和边界条件，以便测试用例设计更全面。"
+ },
+ "functional_cases": [
+  {
+   "title": "赛事回放列表(PC) - 正常加载显示列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟接口返回包含热门比赛、进行中的比赛、全部热门比赛各10条数据，联赛名称、主客队名称正常。",
+   "preconditions": "已进入赛事回放列表页面，网络正常，接口可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放列表页面",
+     "expected": "页面加载成功，显示顶部导航、热门比赛、进行中的比赛、全部热门比赛等模块"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门比赛模块",
+     "expected": "展示比赛卡片，包含主队名称 vs 客队名称、联赛名称"
+    },
+    {
+     "step": 3,
+     "desc": "查看进行中的比赛模块",
+     "expected": "展示进行中的比赛卡片，包含比分、时间等"
+    },
+    {
+     "step": 4,
+     "desc": "查看全部热门比赛模块",
+     "expected": "展示更多比赛卡片，可滚动加载"
+    }
+   ],
+   "expected_result": "列表正常展示，各模块数据完整，无报错。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "赛事回放列表(PC) - 接口异常时展示错误提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟接口返回500错误或超时。",
+   "preconditions": "已进入赛事回放列表页面，接口故障。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放列表页面",
+     "expected": "页面显示加载失败提示，如'加载失败，请重试'，并提供重试按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击重试按钮",
+     "expected": "重新请求接口，若恢复则正常显示列表"
+    }
+   ],
+   "expected_result": "页面不崩溃，有错误提示和重试机制。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "赛事回放列表(PC) - 空数据展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "模拟接口返回空列表（无任何比赛）。",
+   "preconditions": "已进入赛事回放列表页面，接口返回空数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放列表页面",
+     "expected": "各模块显示空态提示，如'暂无比赛'，页面布局正常"
+    }
+   ],
+   "expected_result": "页面显示空态，无异常报错。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "App Store - 点击跳转应用商店",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击App Store图标，预期跳转至对应应用商店。",
+   "preconditions": "页面底部显示App Store入口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击App Store图标",
+     "expected": "跳转至App Store应用商店（iOS）或Google Play（Android）"
+    }
+   ],
+   "expected_result": "正确跳转至应用商店。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "App Store - 点击无反应或链接错误",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟链接失效或网络异常。",
+   "preconditions": "页面底部显示App Store入口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击App Store图标",
+     "expected": "若链接失效，提示'无法打开'或无反应；若网络异常，提示网络错误"
+    }
+   ],
+   "expected_result": "有相应错误提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "Email - 点击发送邮件",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击Email图标，预期调用邮件客户端。",
+   "preconditions": "页面底部显示Email入口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Email图标",
+     "expected": "打开系统邮件客户端，收件人自动填充为指定邮箱"
+    }
+   ],
+   "expected_result": "邮件客户端打开，收件人正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "Email - 邮件客户端未安装",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟系统未安装邮件客户端。",
+   "preconditions": "页面底部显示Email入口，系统无邮件客户端。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Email图标",
+     "expected": "提示'未找到邮件应用'或类似提示"
+    }
+   ],
+   "expected_result": "有提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "Whats - 点击跳转WhatsApp",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击Whats图标，预期跳转WhatsApp。",
+   "preconditions": "页面底部显示Whats入口，系统已安装WhatsApp。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Whats图标",
+     "expected": "跳转至WhatsApp，并打开与指定号码的聊天窗口"
+    }
+   ],
+   "expected_result": "正确跳转至WhatsApp。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "Whats - WhatsApp未安装",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟系统未安装WhatsApp。",
+   "preconditions": "页面底部显示Whats入口，系统无WhatsApp。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Whats图标",
+     "expected": "提示'未安装WhatsApp'或跳转至应用商店"
+    }
+   ],
+   "expected_result": "有提示或跳转，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "APP - 点击下载APP",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击APP图标，预期下载或跳转下载页。",
+   "preconditions": "页面底部显示APP入口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击APP图标",
+     "expected": "根据平台跳转至对应下载链接（iOS/Android）"
+    }
+   ],
+   "expected_result": "正确跳转下载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "APP - 下载链接失效",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟下载链接404。",
+   "preconditions": "页面底部显示APP入口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击APP图标",
+     "expected": "提示'下载链接失效'或无法访问"
+    }
+   ],
+   "expected_result": "有提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "热门比赛 - 展示热门比赛列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "接口返回热门比赛数据，包含5场比赛。",
+   "preconditions": "已进入列表页，接口返回热门比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看热门比赛模块",
+     "expected": "展示比赛卡片，包含主队名称 vs 客队名称、联赛名称"
+    }
+   ],
+   "expected_result": "热门比赛正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "热门比赛 - 无热门比赛数据",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回热门比赛为空。",
+   "preconditions": "已进入列表页，接口返回空热门比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看热门比赛模块",
+     "expected": "显示'暂无热门比赛'空态"
+    }
+   ],
+   "expected_result": "空态展示正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "进行中的比赛 - 展示进行中的比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "接口返回进行中的比赛数据，包含比分、时间。",
+   "preconditions": "已进入列表页，接口返回进行中比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看进行中的比赛模块",
+     "expected": "展示比赛卡片，包含主队名称 vs 客队名称、比分、比赛时间"
+    }
+   ],
+   "expected_result": "进行中的比赛正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "进行中的比赛 - 无进行中的比赛",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回进行中比赛为空。",
+   "preconditions": "已进入列表页，接口返回空进行中比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看进行中的比赛模块",
+     "expected": "显示'暂无进行中的比赛'空态"
+    }
+   ],
+   "expected_result": "空态展示正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "主队名称 vs 客队名称 - 正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "主队名称'皇家马德里'，客队名称'巴塞罗那'。",
+   "preconditions": "比赛卡片存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看比赛卡片",
+     "expected": "显示'皇家马德里 vs 巴塞罗那'"
+    }
+   ],
+   "expected_result": "名称正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "主队名称 vs 客队名称 - 名称过长截断",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "主队名称'这是一个非常非常长的球队名称测试'，客队名称'另一个非常长的球队名称测试'。",
+   "preconditions": "比赛卡片存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看比赛卡片",
+     "expected": "名称过长时截断显示，并可能提供悬浮提示完整名称"
+    }
+   ],
+   "expected_result": "名称截断显示，不溢出。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "全部热门比赛 - 展示全部热门比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "接口返回全部热门比赛，共20条。",
+   "preconditions": "已进入列表页，接口返回全部热门比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看全部热门比赛模块",
+     "expected": "展示比赛卡片列表，可滚动加载更多"
+    }
+   ],
+   "expected_result": "全部热门比赛正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "全部热门比赛 - 无数据",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "接口返回全部热门比赛为空。",
+   "preconditions": "已进入列表页，接口返回空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看全部热门比赛模块",
+     "expected": "显示'暂无热门比赛'空态"
+    }
+   ],
+   "expected_result": "空态展示正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "联赛名称 - 正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称'英超'。",
+   "preconditions": "比赛卡片存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看比赛卡片",
+     "expected": "显示联赛名称'英超'"
+    }
+   ],
+   "expected_result": "联赛名称正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "联赛名称 - 名称为空",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称为空字符串。",
+   "preconditions": "比赛卡片存在，联赛名称为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看比赛卡片",
+     "expected": "联赛名称位置显示占位符或隐藏，不显示空白"
+    }
+   ],
+   "expected_result": "空名称处理正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "Camel Live - 点击品牌标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击Camel Live标识。",
+   "preconditions": "页面顶部显示Camel Live。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Camel Live标识",
+     "expected": "跳转至首页或刷新当前页"
+    }
+   ],
+   "expected_result": "正确跳转。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "Camel Live - 点击无反应",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟点击事件未绑定。",
+   "preconditions": "页面顶部显示Camel Live。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Camel Live标识",
+     "expected": "无反应或提示'功能暂未开放'"
+    }
+   ],
+   "expected_result": "有反馈，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "العربية - 切换至阿拉伯语",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择语言为阿拉伯语。",
+   "preconditions": "页面顶部有语言切换选项。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击语言切换，选择'العربية'",
+     "expected": "页面文字切换为阿拉伯语，布局适配RTL"
+    }
+   ],
+   "expected_result": "语言切换成功，页面显示阿拉伯语。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "العربية - 切换后部分内容未翻译",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表(PC)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "切换至阿拉伯语后，检查所有文字资源。",
+   "preconditions": "已切换至阿拉伯语。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "检查页面所有文字",
+     "expected": "所有静态文字均已翻译，无英文残留"
+    }
+   ],
+   "expected_result": "无未翻译内容。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "赛事回放列表页切换语言为हिंदी成功",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择语言列表中的「हिंदी」选项，代表印地语，验证页面语言切换功能。",
+   "preconditions": "已打开赛事回放列表页（PC），页面正常加载，语言下拉菜单可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击页面顶部的「语言」下拉菜单",
+     "expected": "下拉菜单展开，显示所有语言选项，包括 हिंदी"
+    },
+    {
+     "step": 2,
+     "desc": "选择「हिंदी」选项",
+     "expected": "页面语言切换为印地语，所有界面文本（如标题、按钮、菜单）显示为印地语"
+    }
+   ],
+   "expected_result": "页面语言成功切换为印地语，所有静态文本和动态内容（如比赛名称、联赛名称）均显示为印地语，无乱码或未翻译内容。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "赛事回放列表页切换语言为বাংলা成功",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择语言列表中的「বাংলা」选项，代表孟加拉语，验证语言切换功能。",
+   "preconditions": "已打开赛事回放列表页（PC），页面正常加载，语言下拉菜单可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「语言」下拉菜单",
+     "expected": "下拉菜单展开，显示বাংলা选项"
+    },
+    {
+     "step": 2,
+     "desc": "选择「বাংলা」",
+     "expected": "页面语言切换为孟加拉语，界面文本更新"
+    }
+   ],
+   "expected_result": "页面语言成功切换为孟加拉语，所有界面元素显示正确，无布局错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "赛事回放列表页切换语言为English成功",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择语言列表中的「English」选项，代表英语，验证默认语言切换。",
+   "preconditions": "已打开赛事回放列表页（PC），页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「语言」下拉菜单",
+     "expected": "下拉菜单展开，显示English选项"
+    },
+    {
+     "step": 2,
+     "desc": "选择「English」",
+     "expected": "页面语言切换为英语，所有文本显示为英文"
+    }
+   ],
+   "expected_result": "页面语言成功切换为英语，界面显示正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "赛事回放列表页切换语言为हिन्दी成功",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择语言列表中的「हिन्दी」选项，代表印地语（另一种拼写），验证语言切换。",
+   "preconditions": "已打开赛事回放列表页（PC），页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「语言」下拉菜单",
+     "expected": "下拉菜单展开，显示हिन्दी选项"
+    },
+    {
+     "step": 2,
+     "desc": "选择「हिन्दी」",
+     "expected": "页面语言切换为印地语，界面文本更新"
+    }
+   ],
+   "expected_result": "页面语言成功切换为印地语，界面显示正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "赛事回放列表页切换语言为العربية成功",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择语言列表中的「العربية」选项，代表阿拉伯语，验证RTL语言切换。",
+   "preconditions": "已打开赛事回放列表页（PC），页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「语言」下拉菜单",
+     "expected": "下拉菜单展开，显示العربية选项"
+    },
+    {
+     "step": 2,
+     "desc": "选择「العربية」",
+     "expected": "页面语言切换为阿拉伯语，布局应适配RTL方向"
+    }
+   ],
+   "expected_result": "页面语言成功切换为阿拉伯语，界面布局正确适配从右到左，无错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "赛事回放列表页语言下拉菜单为空时点击无响应",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟语言列表为空（如接口返回空数组），验证页面容错。",
+   "preconditions": "已打开赛事回放列表页（PC），语言列表数据为空（通过接口mock或配置）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「语言」下拉菜单",
+     "expected": "下拉菜单不展开或展开后显示空列表，页面无报错"
+    }
+   ],
+   "expected_result": "页面不崩溃，下拉菜单无内容或提示暂无语言选项，用户无法切换语言。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "赛事回放列表页点击「更多 v」展开下拉菜单",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「更多 v」按钮，验证展开功能。",
+   "preconditions": "已打开赛事回放列表页（PC），页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击页面顶部的「更多 v」按钮",
+     "expected": "下拉菜单展开，显示更多选项（如语言、国旗等）"
+    }
+   ],
+   "expected_result": "「更多 v」下拉菜单成功展开，显示所有预设选项，无遮挡。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "赛事回放列表页点击「更多 v」后再次点击收起",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "再次点击「更多 v」按钮，验证收起功能。",
+   "preconditions": "已打开赛事回放列表页（PC），「更多 v」菜单已展开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "再次点击「更多 v」按钮",
+     "expected": "下拉菜单收起，恢复初始状态"
+    }
+   ],
+   "expected_result": "「更多 v」下拉菜单成功收起，页面其他区域正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "赛事回放列表页点击「更多 v」后点击页面其他区域收起",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击页面空白区域，验证菜单自动收起。",
+   "preconditions": "已打开赛事回放列表页（PC），「更多 v」菜单已展开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击页面其他区域（如比赛列表空白处）",
+     "expected": "下拉菜单自动收起"
+    }
+   ],
+   "expected_result": "「更多 v」下拉菜单自动收起，无残留。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "赛事回放列表页「更多 v」菜单展开时点击无效区域不收起",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击菜单内部空白区域，验证菜单不意外收起。",
+   "preconditions": "已打开赛事回放列表页（PC），「更多 v」菜单已展开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「更多 v」菜单内部的空白区域（非选项）",
+     "expected": "菜单保持展开状态，不收起"
+    }
+   ],
+   "expected_result": "菜单保持展开，点击内部空白不触发收起。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "赛事回放列表页国旗图标正常显示",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有国旗数据的比赛（如中国 vs 巴西），验证国旗图标显示。",
+   "preconditions": "已打开赛事回放列表页（PC），列表中存在带有国家/地区信息的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看比赛列表中的国旗图标",
+     "expected": "每个比赛条目显示对应的国旗图标，图标清晰可辨"
+    }
+   ],
+   "expected_result": "国旗图标正确显示，与比赛所属国家/地区对应，无缺失或错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "赛事回放列表页国旗图标缺失时显示占位图",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某比赛无国旗数据（如国家代码为空），验证占位显示。",
+   "preconditions": "已打开赛事回放列表页（PC），存在无国旗数据的比赛（通过接口mock）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看无国旗数据的比赛条目",
+     "expected": "显示默认占位图标，而非空白或破图"
+    }
+   ],
+   "expected_result": "无国旗数据时显示占位图标，页面布局正常，无破图。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "赛事回放列表页 icon 正常显示",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表页中的 icon 元素（如回放类型图标），验证显示。",
+   "preconditions": "已打开赛事回放列表页（PC），列表正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面中的 icon 元素",
+     "expected": "icon 正常显示，无缺失或错位"
+    }
+   ],
+   "expected_result": "icon 正常显示，样式正确，无破图。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "赛事回放列表页 icon 加载失败时显示占位",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟 icon 资源加载失败（如网络中断或资源404），验证容错。",
+   "preconditions": "已打开赛事回放列表页（PC），icon 资源不可用（通过断网或修改资源路径）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面中的 icon 元素",
+     "expected": "icon 显示为占位图或隐藏，页面无报错"
+    }
+   ],
+   "expected_result": "icon 加载失败时页面不崩溃，显示占位或隐藏，不影响其他功能。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "赛事回放列表页点击「更多」按钮加载更多回放",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「更多」按钮，验证加载更多回放列表。",
+   "preconditions": "已打开赛事回放列表页（PC），列表有分页数据，当前页未显示全部。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「更多」按钮",
+     "expected": "页面加载更多回放列表，列表长度增加"
+    }
+   ],
+   "expected_result": "点击「更多」后成功加载下一页数据，列表更新，无重复数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "赛事回放列表页「更多」按钮在无更多数据时置灰或隐藏",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "模拟列表已加载全部数据（如只有一页），验证「更多」按钮状态。",
+   "preconditions": "已打开赛事回放列表页（PC），列表数据只有一页，无更多数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看「更多」按钮状态",
+     "expected": "按钮置灰或隐藏，点击无响应"
+    }
+   ],
+   "expected_result": "无更多数据时「更多」按钮置灰或隐藏，点击不触发请求。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "赛事回放列表页「更多」按钮点击后加载失败提示",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放列表_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常导致加载更多失败，验证错误提示。",
+   "preconditions": "已打开赛事回放列表页（PC），网络异常（如断网）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「更多」按钮",
+     "expected": "页面提示加载失败，如「加载失败，请重试」，列表不变化"
+    }
+   ],
+   "expected_result": "加载失败时给出明确错误提示，列表保持原状，无重复加载。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "赛事回放详情(PC)页面正常加载并展示所有核心模块",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用一个有效的赛事回放ID（如2026世界杯决赛回放），确保后端返回完整的回放数据，包括封面图、视频地址、广告位数据等。",
+   "preconditions": "用户已登录，网络正常，赛事回放数据存在且状态为已发布。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开PC端浏览器，输入赛事回放详情页URL（如/match-replay/1001）",
+     "expected": "页面正常加载，无白屏或报错"
+    },
+    {
+     "step": 2,
+     "desc": "观察页面顶部导航区域",
+     "expected": "显示Camel Live logo、导航菜单（赛事、球队、联赛、资讯）、语言切换入口（含国旗图标）、更多按钮"
+    },
+    {
+     "step": 3,
+     "desc": "观察页面主体区域",
+     "expected": "显示封面图、横幅广告、侧边栏上方/下方广告、视频播放区域（含播放按钮、进度条、静音、全屏等控件）"
+    },
+    {
+     "step": 4,
+     "desc": "观察页面底部区域",
+     "expected": "显示页脚信息（如关于我们、联系方式、版权等）"
+    }
+   ],
+   "expected_result": "页面所有核心模块均正常展示，无缺失或错位，各模块数据正确加载。",
+   "remark": "正面用例，验证页面整体加载",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "赛事回放详情(PC)页面在无数据时显示空态或错误提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用一个不存在的赛事回放ID（如999999），模拟后端返回无数据或错误。",
+   "preconditions": "用户已登录，网络正常，但赛事回放ID无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开PC端浏览器，输入无效的赛事回放详情页URL（如/match-replay/999999）",
+     "expected": "页面显示友好的错误提示，如“回放不存在或已下架”，且不出现空白页或崩溃"
+    },
+    {
+     "step": 2,
+     "desc": "观察页面是否仍显示其他模块（如广告、导航）",
+     "expected": "导航和广告等公共模块正常显示，但视频区域和封面图显示空态或占位图"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示明确错误提示，且公共模块不受影响。",
+   "remark": "负面用例，验证无效ID的容错",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "侧边栏上方广告正常展示并可点击跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端配置一条有效的侧边栏上方广告，广告图片URL有效，跳转链接为https://www.example.com/promo。",
+   "preconditions": "用户已登录，广告数据存在且状态为启用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察侧边栏上方广告位",
+     "expected": "广告图片正常显示，无裂图"
+    },
+    {
+     "step": 2,
+     "desc": "点击该广告",
+     "expected": "新窗口打开广告跳转链接https://www.example.com/promo"
+    }
+   ],
+   "expected_result": "广告展示正常，点击后正确跳转。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "侧边栏上方广告无数据时显示占位或隐藏",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端未配置侧边栏上方广告，或广告状态为停用。",
+   "preconditions": "用户已登录，广告数据为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察侧边栏上方广告位",
+     "expected": "广告位不显示任何内容，或显示默认占位图，且不影响页面布局"
+    }
+   ],
+   "expected_result": "广告位为空时不显示或显示占位，页面无错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "侧边栏下方广告正常展示并可点击跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端配置一条有效的侧边栏下方广告，广告图片URL有效，跳转链接为https://www.example.com/app-download。",
+   "preconditions": "用户已登录，广告数据存在且状态为启用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，滚动至侧边栏下方广告位",
+     "expected": "广告图片正常显示，无裂图"
+    },
+    {
+     "step": 2,
+     "desc": "点击该广告",
+     "expected": "新窗口打开广告跳转链接https://www.example.com/app-download"
+    }
+   ],
+   "expected_result": "广告展示正常，点击后正确跳转。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "侧边栏下方广告图片加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端配置的广告图片URL无效（如返回404），但广告数据存在。",
+   "preconditions": "用户已登录，广告数据存在但图片URL失效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察侧边栏下方广告位",
+     "expected": "广告位显示默认占位图，不显示裂图图标，且页面布局正常"
+    }
+   ],
+   "expected_result": "图片加载失败时显示占位图，不影响页面其他功能。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "封面图正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事回放数据中封面图URL有效，图片格式为jpg，尺寸符合页面要求。",
+   "preconditions": "用户已登录，赛事回放数据存在且封面图URL有效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察封面图区域",
+     "expected": "封面图正常显示，无裂图，比例协调"
+    }
+   ],
+   "expected_result": "封面图正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "封面图加载失败时显示默认占位图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "赛事回放数据中封面图URL无效（如返回404）。",
+   "preconditions": "用户已登录，赛事回放数据存在但封面图URL失效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察封面图区域",
+     "expected": "显示默认占位图，不显示裂图图标，页面布局正常"
+    }
+   ],
+   "expected_result": "封面图加载失败时显示占位图。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "横幅广告正常展示并可点击跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端配置一条有效的横幅广告，广告图片URL有效，跳转链接为https://www.example.com/banner。",
+   "preconditions": "用户已登录，广告数据存在且状态为启用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察横幅广告位",
+     "expected": "广告图片正常显示，无裂图"
+    },
+    {
+     "step": 2,
+     "desc": "点击该广告",
+     "expected": "新窗口打开广告跳转链接https://www.example.com/banner"
+    }
+   ],
+   "expected_result": "横幅广告展示正常，点击后正确跳转。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "横幅广告无数据时隐藏或显示占位",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端未配置横幅广告，或广告状态为停用。",
+   "preconditions": "用户已登录，广告数据为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察横幅广告位",
+     "expected": "广告位不显示任何内容，或显示默认占位图，且不影响页面布局"
+    }
+   ],
+   "expected_result": "横幅广告为空时不显示或显示占位，页面无错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "页面顶部icon（Camel Live logo）正常显示并可点击返回首页",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效的赛事回放详情页，Camel Live logo为默认品牌图标。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察顶部Camel Live logo",
+     "expected": "logo正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击该logo",
+     "expected": "跳转至首页（如/match-replay列表页或平台首页）"
+    }
+   ],
+   "expected_result": "logo显示正常，点击后跳转至预期页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "点击页面顶部icon（如语言切换图标）无响应或报错",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟页面脚本错误或网络异常，导致icon点击事件未绑定。",
+   "preconditions": "用户已登录，但页面JS加载异常（可通过开发者工具模拟）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，在开发者工具中禁用JS后刷新页面",
+     "expected": "页面可能无法正常渲染，但若部分渲染，点击icon不应导致页面崩溃"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击语言切换图标",
+     "expected": "无响应或提示错误，但页面不崩溃"
+    }
+   ],
+   "expected_result": "icon点击异常时页面保持稳定，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "Camel Live导航菜单正常显示并可跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "导航菜单包含“赛事”、“球队”、“联赛”、“资讯”四个入口，链接分别指向对应列表页。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察顶部导航菜单",
+     "expected": "显示“赛事”、“球队”、“联赛”、“资讯”四个菜单项"
+    },
+    {
+     "step": 2,
+     "desc": "点击“赛事”菜单",
+     "expected": "跳转至赛事列表页"
+    },
+    {
+     "step": 3,
+     "desc": "返回详情页，依次点击“球队”、“联赛”、“资讯”",
+     "expected": "分别跳转至对应页面"
+    }
+   ],
+   "expected_result": "导航菜单显示正常，点击后正确跳转。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "Camel Live导航菜单在无权限时提示或拦截",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟用户未登录或权限不足，点击“资讯”菜单（假设需要登录）。",
+   "preconditions": "用户未登录，或登录但无资讯模块权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，点击“资讯”菜单",
+     "expected": "若需登录，则跳转登录页；若权限不足，则提示“无权限访问”"
+    }
+   ],
+   "expected_result": "未登录或权限不足时给出明确提示，不直接跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "“更多”下拉菜单正常展开并显示选项",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "“更多”菜单包含“帮助中心”、“关于我们”等选项。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，点击“更多”按钮",
+     "expected": "下拉菜单展开，显示菜单项列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击“帮助中心”",
+     "expected": "跳转至帮助中心页面"
+    }
+   ],
+   "expected_result": "下拉菜单正常展开，选项可点击并跳转。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "“更多”下拉菜单在点击外部区域时关闭",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "打开“更多”菜单后，点击页面其他区域。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，点击“更多”按钮展开菜单",
+     "expected": "菜单展开"
+    },
+    {
+     "step": 2,
+     "desc": "点击页面空白区域",
+     "expected": "菜单自动关闭"
+    }
+   ],
+   "expected_result": "点击外部区域时菜单关闭。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "语言切换功能正常切换至英文",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "当前语言为中文，切换至英文（English）。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，点击语言切换入口",
+     "expected": "显示语言列表，包含English、हिन्दी、বাংলা、العربية等"
+    },
+    {
+     "step": 2,
+     "desc": "选择“English”",
+     "expected": "页面所有文本切换为英文，且无乱码"
+    }
+   ],
+   "expected_result": "语言切换成功，页面内容即时刷新为英文。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "语言切换至印地语（हिन्दी）后页面显示正常",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "当前语言为英文，切换至印地语（हिन्दी）。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，点击语言切换入口",
+     "expected": "显示语言列表"
+    },
+    {
+     "step": 2,
+     "desc": "选择“हिन्दी”",
+     "expected": "页面文本切换为印地语，且无乱码，布局不混乱"
+    }
+   ],
+   "expected_result": "语言切换成功，印地语显示正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "语言切换时网络异常导致切换失败",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络断开，点击语言切换。",
+   "preconditions": "用户已登录，但网络中断。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，断网后点击语言切换入口",
+     "expected": "语言列表可能无法加载，或切换后页面仍显示原语言，并提示网络错误"
+    }
+   ],
+   "expected_result": "网络异常时给出提示，页面不崩溃，语言不切换。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "国旗图标正常显示并标识当前语言",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "当前语言为英文，国旗图标应显示英国国旗。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察语言切换入口旁的国旗图标",
+     "expected": "显示与当前语言对应的国旗（如英文对应英国国旗）"
+    }
+   ],
+   "expected_result": "国旗图标正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "国旗图标加载失败时显示默认图标",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "国旗图标URL无效（如404）。",
+   "preconditions": "用户已登录，但国旗图标资源加载失败。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，观察国旗图标",
+     "expected": "显示默认占位图标，不显示裂图"
+    }
+   ],
+   "expected_result": "国旗图标加载失败时显示占位图。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "英文语言选项在语言列表中正常显示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "打开语言列表，检查是否包含“English”选项。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，点击语言切换入口",
+     "expected": "语言列表中显示“English”选项"
+    }
+   ],
+   "expected_result": "英文选项正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "语言列表中英文选项缺失或显示异常",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟语言配置缺失，语言列表中无“English”选项。",
+   "preconditions": "用户已登录，但语言配置异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，点击语言切换入口",
+     "expected": "语言列表可能不显示“English”，或显示异常，但页面不崩溃"
+    }
+   ],
+   "expected_result": "语言选项缺失时页面不崩溃，可提示错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "印地语（हिन्दी）选项在语言列表中正常显示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "打开语言列表，检查是否包含“हिन्दी”选项。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，点击语言切换入口",
+     "expected": "语言列表中显示“हिन्दी”选项"
+    }
+   ],
+   "expected_result": "印地语选项正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "印地语选项点击后页面文本未正确切换",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择“हिन्दी”后，部分文本仍显示英文。",
+   "preconditions": "用户已登录，页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，切换语言至“हिन्दी”",
+     "expected": "页面所有文本应切换为印地语，若部分未切换则视为缺陷"
+    }
+   ],
+   "expected_result": "所有文本正确切换为印地语，无遗漏。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "验证বাংলা分享入口可点击并弹出分享面板",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用默认回放详情页，点击বাংলা分享按钮",
+   "preconditions": "已打开赛事回放详情页（PC端）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在页面中找到বাংলা分享入口",
+     "expected": "বাংলা入口可见且可点击"
+    },
+    {
+     "step": 2,
+     "desc": "点击বাংলা入口",
+     "expected": "弹出分享面板，包含孟加拉语分享选项"
+    }
+   ],
+   "expected_result": "点击বাংলা后弹出分享面板，面板内容为孟加拉语，且包含可用的分享方式",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "验证বাংলা分享入口在未登录状态下点击提示登录",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户点击বাংলা分享",
+   "preconditions": "未登录，打开赛事回放详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击বাংলা分享入口",
+     "expected": "弹出登录提示或跳转登录页"
+    }
+   ],
+   "expected_result": "未登录时点击বাংলা分享，系统提示需要登录或跳转登录页，不执行分享操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "验证App Store分享入口可跳转至应用商店",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击App Store分享按钮",
+   "preconditions": "已打开赛事回放详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击App Store分享入口",
+     "expected": "跳转至App Store应用商店页面或弹出下载引导"
+    }
+   ],
+   "expected_result": "点击App Store后跳转至应用商店（或弹出下载引导），且能正常返回原页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "验证App Store分享入口在无网络时提示网络错误",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "断网状态下点击App Store分享",
+   "preconditions": "已打开赛事回放详情页，网络断开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击App Store分享入口",
+     "expected": "提示网络错误或加载失败，不跳转"
+    }
+   ],
+   "expected_result": "无网络时点击App Store，页面提示网络错误，不跳转至应用商店",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "验证Email分享入口可唤起邮件客户端并预填内容",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击Email分享按钮",
+   "preconditions": "已打开赛事回放详情页，系统已配置邮件客户端",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Email分享入口",
+     "expected": "唤起邮件客户端，收件人为空，主题和正文预填回放链接"
+    }
+   ],
+   "expected_result": "点击Email后唤起邮件客户端，邮件内容包含回放链接，可正常发送",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "验证Email分享入口在未配置邮件客户端时提示错误",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "系统无邮件客户端时点击Email分享",
+   "preconditions": "已打开赛事回放详情页，系统未安装邮件客户端",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Email分享入口",
+     "expected": "提示未检测到邮件客户端或无法唤起"
+    }
+   ],
+   "expected_result": "无邮件客户端时点击Email，页面提示无法唤起邮件客户端，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "验证Whats分享入口可唤起WhatsApp并预填内容",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击Whats分享按钮",
+   "preconditions": "已打开赛事回放详情页，系统已安装WhatsApp",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Whats分享入口",
+     "expected": "唤起WhatsApp，预填回放链接或文本"
+    }
+   ],
+   "expected_result": "点击Whats后唤起WhatsApp，可正常分享回放链接",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "验证Whats分享入口在未安装WhatsApp时提示错误",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "系统未安装WhatsApp时点击Whats分享",
+   "preconditions": "已打开赛事回放详情页，系统未安装WhatsApp",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Whats分享入口",
+     "expected": "提示未安装WhatsApp或无法唤起"
+    }
+   ],
+   "expected_result": "未安装WhatsApp时点击Whats，页面提示无法唤起，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "验证APP分享入口可下载APP或跳转下载页",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击APP分享按钮",
+   "preconditions": "已打开赛事回放详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击APP分享入口",
+     "expected": "跳转至APP下载页面或弹出下载二维码"
+    }
+   ],
+   "expected_result": "点击APP后跳转至下载页或弹出二维码，可正常下载APP",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "验证APP分享入口在移动端点击可唤起APP",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在移动端浏览器点击APP分享",
+   "preconditions": "已打开赛事回放详情页（移动端web）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击APP分享入口",
+     "expected": "尝试唤起已安装的APP，若未安装则跳转下载页"
+    }
+   ],
+   "expected_result": "移动端点击APP分享，若已安装APP则唤起，否则跳转下载页",
+   "remark": "正面用例",
+   "client_scope": [
+    "web"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "验证热门比赛列表展示进行中的比赛",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在进行中的比赛数据",
+   "preconditions": "已打开赛事回放详情页，存在进行中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看热门比赛区域",
+     "expected": "显示进行中的比赛列表，每条包含主队名称 vs 客队名称"
+    }
+   ],
+   "expected_result": "热门比赛区域展示进行中的比赛，格式为'主队名称 vs 客队名称'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "验证热门比赛列表无数据时显示空态",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无进行中的比赛数据",
+   "preconditions": "已打开赛事回放详情页，无进行中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看热门比赛区域",
+     "expected": "显示空态提示，如'暂无进行中的比赛'"
+    }
+   ],
+   "expected_result": "无进行中比赛时，热门比赛区域显示空态提示，不显示空白",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "验证全部热门比赛列表展示所有热门比赛",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在多条热门比赛数据",
+   "preconditions": "已打开赛事回放详情页，存在热门比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看全部热门比赛区域",
+     "expected": "显示所有热门比赛，每条包含主队名称 vs 客队名称"
+    }
+   ],
+   "expected_result": "全部热门比赛区域展示所有热门比赛，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "验证全部热门比赛列表超过一屏时可滚动",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "热门比赛数量超过一屏显示范围",
+   "preconditions": "已打开赛事回放详情页，热门比赛数量超过10条",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "滚动全部热门比赛列表",
+     "expected": "列表可正常滚动，无卡顿"
+    }
+   ],
+   "expected_result": "全部热门比赛列表可滚动，所有条目可查看",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "验证联赛名称列表展示联赛名称",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在联赛数据",
+   "preconditions": "已打开赛事回放详情页，存在联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看联赛名称区域",
+     "expected": "显示联赛名称列表"
+    }
+   ],
+   "expected_result": "联赛名称区域展示联赛名称，无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "验证联赛名称列表为空时显示空态",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无联赛数据",
+   "preconditions": "已打开赛事回放详情页，无联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看联赛名称区域",
+     "expected": "显示空态提示，如'暂无联赛'"
+    }
+   ],
+   "expected_result": "无联赛数据时，联赛名称区域显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "验证语言切换为العربية后页面文字变为阿拉伯语",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择阿拉伯语语言",
+   "preconditions": "已打开赛事回放详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击语言切换按钮，选择العربية",
+     "expected": "页面文字变为阿拉伯语，布局适配RTL"
+    }
+   ],
+   "expected_result": "切换至阿拉伯语后，页面所有文字变为阿拉伯语，布局正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "验证语言切换为हिंदी后页面文字变为印地语",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择印地语语言",
+   "preconditions": "已打开赛事回放详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击语言切换按钮，选择हिंदी",
+     "expected": "页面文字变为印地语"
+    }
+   ],
+   "expected_result": "切换至印地语后，页面所有文字变为印地语",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "验证语言切换为বাংলা后页面文字变为孟加拉语",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择孟加拉语语言",
+   "preconditions": "已打开赛事回放详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击语言切换按钮，选择বাংলা",
+     "expected": "页面文字变为孟加拉语"
+    }
+   ],
+   "expected_result": "切换至孟加拉语后，页面所有文字变为孟加拉语",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "验证语言切换后刷新页面语言保持",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "切换语言后刷新页面",
+   "preconditions": "已打开赛事回放详情页，已切换至العربية",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "刷新页面",
+     "expected": "页面仍为阿拉伯语"
+    }
+   ],
+   "expected_result": "刷新后语言保持为阿拉伯语，说明语言选择已持久化",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "验证语言切换后URL参数正确",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "切换语言后检查URL",
+   "preconditions": "已打开赛事回放详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "切换语言为हिंदी，观察URL变化",
+     "expected": "URL中语言参数变为hi或类似标识"
+    }
+   ],
+   "expected_result": "URL中包含正确的语言参数，且刷新后语言正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "验证语言切换后页面无乱码",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "切换至বাংলা后检查页面文字",
+   "preconditions": "已打开赛事回放详情页",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "切换语言为বাংলা",
+     "expected": "页面文字显示正常，无乱码"
+    }
+   ],
+   "expected_result": "切换至孟加拉语后，页面文字正常显示，无乱码",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "点击播放按钮成功播放视频",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效的回放视频数据，视频ID为replay_2026_wc_001，视频源地址有效。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频源可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），进入视频播放区域",
+     "expected": "页面正常显示视频播放区域，封面图展示，播放按钮可见"
+    },
+    {
+     "step": 2,
+     "desc": "点击播放按钮",
+     "expected": "视频开始播放，播放按钮变为暂停状态，视频画面正常显示"
+    }
+   ],
+   "expected_result": "视频成功播放，播放进度条开始走动，当前时间显示从00:00开始递增。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "点击播放按钮时视频源不可用",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟视频源地址失效（如404），视频ID为replay_2026_wc_002。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频源地址被篡改为无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），进入视频播放区域",
+     "expected": "页面正常显示视频播放区域，封面图展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击播放按钮",
+     "expected": "视频无法播放，页面显示错误提示（如“视频加载失败，请稍后重试”），播放按钮保持可点击"
+    }
+   ],
+   "expected_result": "视频播放失败，页面出现明确错误提示，且不会导致页面崩溃或卡死。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "页底悬浮广告正常显示且不遮挡视频控制栏",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效的广告数据，广告位ID为ad_bottom_float，广告内容为图片。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，广告配置有效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），滚动页面至底部",
+     "expected": "页底悬浮广告显示在页面底部，不遮挡视频播放区域和视频控制栏"
+    },
+    {
+     "step": 2,
+     "desc": "点击广告",
+     "expected": "广告正常跳转至对应链接（如活动页）"
+    }
+   ],
+   "expected_result": "广告正常展示并可点击跳转，且不影响视频播放操作。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "页底悬浮广告遮挡视频控制栏",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟广告内容过长或位置异常，导致遮挡视频控制栏。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，广告配置异常（如高度过大）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），滚动页面至底部",
+     "expected": "页底悬浮广告显示，但可能遮挡视频控制栏"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击视频控制栏的播放/暂停按钮",
+     "expected": "若广告遮挡，则无法点击控制栏，或点击被广告拦截"
+    }
+   ],
+   "expected_result": "广告不应遮挡视频控制栏，若遮挡则视为缺陷，需调整广告布局。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "视频播放区域正常显示并自适应窗口大小",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_003，视频分辨率为1920x1080。",
+   "preconditions": "用户已登录，赛事回放详情页已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），查看视频播放区域",
+     "expected": "视频播放区域正常显示，宽高比与视频源一致（16:9）"
+    },
+    {
+     "step": 2,
+     "desc": "调整浏览器窗口大小（如缩小至800px宽）",
+     "expected": "视频播放区域自适应缩放，保持比例，不出现黑边或变形"
+    }
+   ],
+   "expected_result": "视频播放区域正常显示并随窗口大小自适应，无布局错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "视频播放区域无视频数据时显示占位图",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "模拟视频数据为空（如视频ID不存在），视频ID为replay_2026_wc_004。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，后端返回无视频数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），查看视频播放区域",
+     "expected": "视频播放区域显示占位图（如“暂无视频”），播放按钮不可用"
+    }
+   ],
+   "expected_result": "视频播放区域显示占位图，且不会出现空白或报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "点击全屏按钮进入全屏模式",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_005。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频正在播放。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），播放视频",
+     "expected": "视频正常播放"
+    },
+    {
+     "step": 2,
+     "desc": "点击全屏按钮",
+     "expected": "视频播放区域进入全屏模式，浏览器全屏API被调用，视频铺满屏幕"
+    }
+   ],
+   "expected_result": "视频进入全屏模式，全屏按钮图标变为退出全屏状态，按ESC键可退出全屏。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "全屏模式下按ESC键退出全屏",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_006。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频已进入全屏模式。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在视频全屏模式下，按键盘ESC键",
+     "expected": "视频退出全屏模式，恢复原始播放区域大小"
+    }
+   ],
+   "expected_result": "视频成功退出全屏，页面布局恢复正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "全屏模式下点击退出全屏按钮",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_007。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频已进入全屏模式。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在视频全屏模式下，点击全屏按钮（此时为退出全屏状态）",
+     "expected": "视频退出全屏模式，恢复原始播放区域大小"
+    }
+   ],
+   "expected_result": "视频成功退出全屏，全屏按钮图标恢复为进入全屏状态。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "点击静音按钮静音视频",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_008。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频正在播放且音量正常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），播放视频",
+     "expected": "视频正常播放，有声音"
+    },
+    {
+     "step": 2,
+     "desc": "点击静音按钮",
+     "expected": "视频静音，静音按钮图标变为静音状态（如喇叭带斜线）"
+    }
+   ],
+   "expected_result": "视频静音成功，无声音输出，静音按钮状态正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "再次点击静音按钮取消静音",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_009。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频已静音。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在视频静音状态下，再次点击静音按钮",
+     "expected": "视频取消静音，恢复声音，静音按钮图标恢复为正常状态"
+    }
+   ],
+   "expected_result": "视频恢复声音，静音按钮状态正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "静音状态下重新播放视频保持静音",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_010。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频已静音。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在视频静音状态下，暂停视频",
+     "expected": "视频暂停"
+    },
+    {
+     "step": 2,
+     "desc": "再次点击播放按钮恢复播放",
+     "expected": "视频恢复播放，且仍为静音状态"
+    }
+   ],
+   "expected_result": "视频恢复播放后仍保持静音，静音状态不丢失。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "视频播放时当前时间显示为06:24",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_011，视频总时长为112:57，播放至6分24秒。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频已播放至06:24。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），播放视频",
+     "expected": "视频正常播放"
+    },
+    {
+     "step": 2,
+     "desc": "将视频进度拖至6分24秒处",
+     "expected": "视频播放至06:24，时间显示为“06:24”"
+    }
+   ],
+   "expected_result": "视频时间显示正确为“06:24”，格式为MM:SS。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "视频时间显示格式校验（超过1小时）",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用有效视频数据，视频ID为replay_2026_wc_012，视频总时长为112:57，播放至1小时2分57秒。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，视频已播放至01:02:57。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），播放视频",
+     "expected": "视频正常播放"
+    },
+    {
+     "step": 2,
+     "desc": "将视频进度拖至1小时2分57秒处",
+     "expected": "视频播放至01:02:57，时间显示为“01:02:57”或“62:57”"
+    }
+   ],
+   "expected_result": "时间显示符合需求规定的格式（如H:MM:SS或MM:SS），且数值正确。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "视频时间显示为负数或非法值时不显示",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟视频时间数据异常（如返回-1或非数字），视频ID为replay_2026_wc_013。",
+   "preconditions": "用户已登录，赛事回放详情页已加载，后端返回异常时间数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页（PC），查看视频时间显示",
+     "expected": "时间显示区域不显示非法值，可能显示“00:00”或隐藏"
+    }
+   ],
+   "expected_result": "时间显示不出现负数或乱码，页面不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "赛事回放入口列表正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含3场已结束比赛和2场进行中比赛的赛事回放数据，比赛时间分别为03/05 17:00、03/04 19:30等，联赛名称包含'英超'、'西甲'，球队名称如'曼城'、'利物浦'。",
+   "preconditions": "已登录用户，后端接口返回正常赛事回放列表数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "页面加载成功，显示赛事回放入口列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表项展示",
+     "expected": "每个列表项展示球队名称、球队LOGO、比赛时间（如03/05 17:00）、联赛名称、轮次、主客场球队名称、比赛状态（已结束/进行中）"
+    }
+   ],
+   "expected_result": "列表正常展示所有赛事回放数据，字段完整，无乱码或缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "赛事回放入口列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回空列表（无任何赛事回放记录）。",
+   "preconditions": "已登录用户，后端接口返回空数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "页面加载成功，但列表区域显示空态提示（如'暂无赛事回放'）"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示空态提示，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "赛事回放入口列表项点击跳转详情",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一场已结束的比赛（如曼城 vs 利物浦，03/05 17:00）作为点击对象。",
+   "preconditions": "已登录用户，列表已加载出至少一条赛事回放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表展示正常"
+    },
+    {
+     "step": 2,
+     "desc": "点击任意一场比赛的列表项",
+     "expected": "跳转到对应的赛事回放详情页，并加载该场比赛的回放视频"
+    }
+   ],
+   "expected_result": "成功跳转到详情页，详情页展示正确的比赛信息和回放视频。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "赛事回放入口列表项点击无响应（异常）",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端接口异常（如500错误），列表无法加载数据。",
+   "preconditions": "已登录用户，后端接口返回500错误。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "页面显示加载失败提示（如'加载失败，请重试'）"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击列表区域",
+     "expected": "无跳转，页面保持当前状态，不崩溃"
+    }
+   ],
+   "expected_result": "页面显示错误提示，点击无响应但无崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "球队名称过长时截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个球队名称为超长字符串（如'皇家马德里足球俱乐部'，超过显示宽度）的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含超长球队名称的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中球队名称显示为截断形式，如'皇家马德里足球俱乐…'"
+    }
+   ],
+   "expected_result": "球队名称截断显示，不换行、不出框，布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "联赛名称过长时截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个联赛名称为超长字符串（如'英格兰足球超级联赛'，超过显示宽度）的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含超长联赛名称的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中联赛名称显示为截断形式，如'英格兰足球超级联…'"
+    }
+   ],
+   "expected_result": "联赛名称截断显示，不换行、不出框，布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "比赛时间格式正确展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造比赛时间为'03/05 17:00'（月/日 时:分）的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含比赛时间的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中比赛时间显示为'03/05 17:00'格式"
+    }
+   ],
+   "expected_result": "比赛时间格式正确，无乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "比赛时间格式异常处理",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造比赛时间为空或格式错误（如'2025-03-05'）的数据。",
+   "preconditions": "已登录用户，后端返回包含异常时间的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中比赛时间显示为'--'或默认格式，不崩溃"
+    }
+   ],
+   "expected_result": "页面正常展示，异常时间有兜底显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "比赛状态为已结束时展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场已结束的比赛（状态='已结束'）。",
+   "preconditions": "已登录用户，后端返回包含已结束状态的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中显示'已结束'标识"
+    }
+   ],
+   "expected_result": "已结束状态正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "比赛状态为进行中时展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场进行中的比赛（状态='进行中'，如显示'45''）。",
+   "preconditions": "已登录用户，后端返回包含进行中状态的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中显示'进行中'标识及比赛进行时间（如45'）"
+    }
+   ],
+   "expected_result": "进行中状态正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "比赛状态为未知时展示兜底",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造比赛状态字段为null或未知值（如'unknown'）的数据。",
+   "preconditions": "已登录用户，后端返回包含异常状态的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中状态显示为'--'或默认样式，不崩溃"
+    }
+   ],
+   "expected_result": "页面正常展示，异常状态有兜底显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "主客场球队名称展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造主队名称为'曼城'，客队名称为'利物浦'的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含主客场球队名称的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中分别显示主场球队名称和客场球队名称"
+    }
+   ],
+   "expected_result": "主客场球队名称正确展示，无错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "主客场球队名称为空时展示兜底",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造主队名称为空、客队名称为空的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含空球队名称的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中主客场球队名称显示为'--'或默认占位，不崩溃"
+    }
+   ],
+   "expected_result": "页面正常展示，空名称有兜底显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "联赛LOGO展示正确",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造联赛LOGO图片URL有效的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含有效LOGO URL的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中联赛LOGO正常显示"
+    }
+   ],
+   "expected_result": "LOGO图片加载成功，无裂图。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "联赛LOGO加载失败时展示占位图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造联赛LOGO图片URL无效（如404）的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含无效LOGO URL的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中联赛LOGO显示为默认占位图，不显示裂图"
+    }
+   ],
+   "expected_result": "LOGO加载失败时显示占位图，页面布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "轮次信息展示正确",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造轮次为'第10轮'的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含轮次信息的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中显示轮次信息，如'第10轮'"
+    }
+   ],
+   "expected_result": "轮次信息正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "轮次信息缺失时展示兜底",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造轮次字段为null的比赛数据。",
+   "preconditions": "已登录用户，后端返回包含缺失轮次的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口(MB)页面",
+     "expected": "列表项中轮次位置显示为'--'或默认占位，不崩溃"
+    }
+   ],
+   "expected_result": "页面正常展示，缺失轮次有兜底显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "已结束赛事展示“已结束”状态标识",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场已结束的赛事，状态为已结束，用于验证状态标识展示。",
+   "preconditions": "用户已登录，赛事回放入口页面存在已结束的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载，显示赛事列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看已结束赛事的卡片",
+     "expected": "在赛事卡片上显示“已结束”状态标识，文字清晰可读"
+    }
+   ],
+   "expected_result": "已结束的赛事卡片上显示“已结束”标识，且不影响其他信息展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "未结束赛事不显示“已结束”标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场进行中的赛事（状态为进行中），用于验证不显示已结束标识。",
+   "preconditions": "赛事回放入口页面存在进行中的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看进行中赛事的卡片",
+     "expected": "卡片上不显示“已结束”标识，而是显示“LIVE”或比赛时间"
+    }
+   ],
+   "expected_result": "进行中的赛事不显示“已结束”标识。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "主场球队名称正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场主场球队名称为“皇家马德里”的赛事，验证正常显示。",
+   "preconditions": "赛事回放入口页面存在主场球队名称的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事卡片中的主场球队名称",
+     "expected": "显示“皇家马德里”，文字完整无截断"
+    }
+   ],
+   "expected_result": "主场球队名称完整显示，无截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "超长主场球队名称截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一场主场球队名称为“主场球队名称主场球队名称主场球队名称主场球队名称主场球队名称”的超长名称，验证截断。",
+   "preconditions": "赛事回放入口页面存在超长主场球队名称的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长主场球队名称的赛事卡片",
+     "expected": "名称被截断，显示省略号，如“主场球队名称主场球队名称…”"
+    }
+   ],
+   "expected_result": "超长名称截断显示，不撑破卡片布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "客场球队名称正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场客场球队名称为“巴塞罗那”的赛事，验证正常显示。",
+   "preconditions": "赛事回放入口页面存在客场球队名称的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事卡片中的客场球队名称",
+     "expected": "显示“巴塞罗那”，文字完整无截断"
+    }
+   ],
+   "expected_result": "客场球队名称完整显示，无截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "超长客场球队名称截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一场客场球队名称为“客场球队名称客场球队名称客场球队名称客场球队名称客场球队名称”的超长名称，验证截断。",
+   "preconditions": "赛事回放入口页面存在超长客场球队名称的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长客场球队名称的赛事卡片",
+     "expected": "名称被截断，显示省略号，如“客场球队名称客场球队名称…”"
+    }
+   ],
+   "expected_result": "超长名称截断显示，不撑破卡片布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "比赛进行时间45’正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场比赛进行到第45分钟的赛事，验证时间显示为“45’”。",
+   "preconditions": "赛事回放入口页面存在比赛进行时间为45分钟的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的比赛时间位置",
+     "expected": "显示“45’”，格式正确"
+    }
+   ],
+   "expected_result": "比赛时间显示为“45’”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "比赛进行时间0’显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一场比赛刚开始（第0分钟）的赛事，验证时间显示为“0’”。",
+   "preconditions": "赛事回放入口页面存在比赛进行时间为0分钟的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的比赛时间位置",
+     "expected": "显示“0’”，格式正确"
+    }
+   ],
+   "expected_result": "比赛时间显示为“0’”。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "视频/动画标识正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场有视频回放的赛事，验证“视频/动画”标识显示。",
+   "preconditions": "赛事回放入口页面存在有视频回放的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的标识区域",
+     "expected": "显示“视频/动画”标识"
+    }
+   ],
+   "expected_result": "有视频回放的赛事显示“视频/动画”标识。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "无视频回放的赛事不显示视频/动画标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场无视频回放的赛事，验证不显示“视频/动画”标识。",
+   "preconditions": "赛事回放入口页面存在无视频回放的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的标识区域",
+     "expected": "不显示“视频/动画”标识"
+    }
+   ],
+   "expected_result": "无视频回放的赛事不显示“视频/动画”标识。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "LIVE标识正常展示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场正在直播的赛事，验证“LIVE”标识显示。",
+   "preconditions": "赛事回放入口页面存在正在直播的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的标识区域",
+     "expected": "显示“LIVE”标识"
+    }
+   ],
+   "expected_result": "正在直播的赛事显示“LIVE”标识。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "非直播赛事不显示LIVE标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场已结束的赛事，验证不显示“LIVE”标识。",
+   "preconditions": "赛事回放入口页面存在已结束的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的标识区域",
+     "expected": "不显示“LIVE”标识"
+    }
+   ],
+   "expected_result": "非直播赛事不显示“LIVE”标识。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "观看人数1.2k正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场观看人数为1200的赛事，验证显示为“1.2k”。",
+   "preconditions": "赛事回放入口页面存在观看人数为1200的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的观看人数位置",
+     "expected": "显示“1.2k”"
+    }
+   ],
+   "expected_result": "观看人数显示为“1.2k”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "观看人数为0时显示0",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一场观看人数为0的赛事，验证显示为“0”。",
+   "preconditions": "赛事回放入口页面存在观看人数为0的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的观看人数位置",
+     "expected": "显示“0”"
+    }
+   ],
+   "expected_result": "观看人数显示为“0”。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "比赛进行时间8’正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场比赛进行到第8分钟的赛事，验证时间显示为“8’”。",
+   "preconditions": "赛事回放入口页面存在比赛进行时间为8分钟的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的比赛时间位置",
+     "expected": "显示“8’”，格式正确"
+    }
+   ],
+   "expected_result": "比赛时间显示为“8’”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "比赛进行时间90’显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一场比赛进行到第90分钟的赛事，验证时间显示为“90’”。",
+   "preconditions": "赛事回放入口页面存在比赛进行时间为90分钟的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的比赛时间位置",
+     "expected": "显示“90’”，格式正确"
+    }
+   ],
+   "expected_result": "比赛时间显示为“90’”。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "HD标识正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场提供高清视频的赛事，验证“HD”标识显示。",
+   "preconditions": "赛事回放入口页面存在提供高清视频的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的标识区域",
+     "expected": "显示“HD”标识"
+    }
+   ],
+   "expected_result": "提供高清视频的赛事显示“HD”标识。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "非高清赛事不显示HD标识",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场不提供高清视频的赛事，验证不显示“HD”标识。",
+   "preconditions": "赛事回放入口页面存在不提供高清视频的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的标识区域",
+     "expected": "不显示“HD”标识"
+    }
+   ],
+   "expected_result": "非高清赛事不显示“HD”标识。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "收藏分组入口正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "验证赛事回放入口页面存在“收藏分组”入口。",
+   "preconditions": "用户已登录，赛事回放入口页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面中的收藏分组入口",
+     "expected": "显示“收藏分组”入口，可点击"
+    }
+   ],
+   "expected_result": "收藏分组入口正常展示且可点击。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "未登录用户点击收藏分组提示登录",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户点击收藏分组入口，验证提示登录。",
+   "preconditions": "用户未登录，赛事回放入口页面正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“收藏分组”入口",
+     "expected": "弹出登录提示，引导用户登录"
+    }
+   ],
+   "expected_result": "未登录用户点击收藏分组被拦截，提示登录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "今天标签正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场比赛日期为今天的赛事，验证显示“今天”标签。",
+   "preconditions": "赛事回放入口页面存在比赛日期为今天的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的日期标签",
+     "expected": "显示“今天”标签"
+    }
+   ],
+   "expected_result": "今天的赛事显示“今天”标签。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "非今天赛事不显示今天标签",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场比赛日期为明天的赛事，验证不显示“今天”标签。",
+   "preconditions": "赛事回放入口页面存在比赛日期为明天的赛事数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该赛事的日期标签",
+     "expected": "不显示“今天”标签，显示具体日期如“03/06”"
+    }
+   ],
+   "expected_result": "非今天的赛事不显示“今天”标签。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "横幅广告正常展示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "验证赛事回放入口页面存在横幅广告位。",
+   "preconditions": "赛事回放入口页面正常加载，且存在广告配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面中的横幅广告位",
+     "expected": "显示横幅广告，内容清晰"
+    }
+   ],
+   "expected_result": "横幅广告正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "无广告配置时横幅广告位不显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟无广告配置的场景，验证横幅广告位不显示。",
+   "preconditions": "赛事回放入口页面正常加载，且无广告配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放入口页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面中的横幅广告位",
+     "expected": "不显示横幅广告，页面布局正常"
+    }
+   ],
+   "expected_result": "无广告配置时横幅广告位不显示，不影响页面布局。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "点击More>跳转至回放列表页",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在赛事回放入口页面，点击'More >'入口，预期跳转至赛事回放列表页。",
+   "preconditions": "用户已打开赛事回放入口页面（MB），且页面加载完成。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'More >'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'More >'入口",
+     "expected": "页面跳转至赛事回放列表页，列表页正常加载。"
+    }
+   ],
+   "expected_result": "点击'More >'后成功跳转至赛事回放列表页，且列表页展示回放赛事数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "More>入口在无更多回放时点击无响应或提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在赛事回放入口页面，当后台无更多回放数据时，点击'More >'入口。",
+   "preconditions": "赛事回放入口页面已加载，且后台无更多回放数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，'More >'入口存在。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'More >'入口",
+     "expected": "页面不跳转或提示'暂无更多回放'，无异常报错。"
+    }
+   ],
+   "expected_result": "点击'More >'后无异常跳转，页面给出友好提示或保持当前页面。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "点击icon进入回放功能",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在赛事回放入口页面，点击icon入口，预期进入回放相关功能。",
+   "preconditions": "用户已打开赛事回放入口页面（MB），且页面加载完成。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含icon入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击icon入口",
+     "expected": "进入回放相关功能页面（如回放列表或详情）。"
+    }
+   ],
+   "expected_result": "点击icon后成功进入回放功能页面，页面正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "icon入口在未登录状态下点击跳转登录页",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在赛事回放入口页面，未登录状态下点击icon入口。",
+   "preconditions": "用户未登录，已打开赛事回放入口页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含icon入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击icon入口",
+     "expected": "若该功能需要登录，则跳转至登录页；若无需登录，则正常进入。"
+    }
+   ],
+   "expected_result": "点击icon后，若功能需要登录则跳转登录页，否则正常进入功能页面。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "点击预测入口进入预测功能",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在赛事回放入口页面，点击'预测'入口，预期进入预测功能页面。",
+   "preconditions": "用户已打开赛事回放入口页面（MB），且页面加载完成。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'预测'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'预测'入口",
+     "expected": "跳转至预测功能页面，页面正常加载。"
+    }
+   ],
+   "expected_result": "点击'预测'后成功跳转至预测功能页面，页面展示预测相关数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "预测入口在预测功能维护时点击提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在赛事回放入口页面，当预测功能处于维护状态时，点击'预测'入口。",
+   "preconditions": "预测功能处于维护状态，赛事回放入口页面已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'预测'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'预测'入口",
+     "expected": "提示'预测功能维护中'，不跳转或跳转至维护提示页。"
+    }
+   ],
+   "expected_result": "点击'预测'后给出维护提示，不进入预测功能。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "点击资讯入口进入资讯功能",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在赛事回放入口页面，点击'资讯'入口，预期进入资讯功能页面。",
+   "preconditions": "用户已打开赛事回放入口页面（MB），且页面加载完成。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'资讯'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'资讯'入口",
+     "expected": "跳转至资讯功能页面，页面正常加载。"
+    }
+   ],
+   "expected_result": "点击'资讯'后成功跳转至资讯功能页面，页面展示资讯列表。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "资讯入口在无资讯数据时点击展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在赛事回放入口页面，当后台无资讯数据时，点击'资讯'入口。",
+   "preconditions": "后台无资讯数据，赛事回放入口页面已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'资讯'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'资讯'入口",
+     "expected": "跳转至资讯页面，展示空态提示'暂无资讯'。"
+    }
+   ],
+   "expected_result": "点击'资讯'后进入资讯页面，展示空态提示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "点击我的入口进入个人中心",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在赛事回放入口页面，点击'我的'入口，预期进入个人中心。",
+   "preconditions": "用户已登录，已打开赛事回放入口页面（MB）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'我的'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'我的'入口",
+     "expected": "跳转至个人中心页面，展示用户信息。"
+    }
+   ],
+   "expected_result": "点击'我的'后成功跳转至个人中心页面，页面展示用户信息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "未登录点击我的入口跳转登录页",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在赛事回放入口页面，未登录状态下点击'我的'入口。",
+   "preconditions": "用户未登录，已打开赛事回放入口页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'我的'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'我的'入口",
+     "expected": "跳转至登录页，提示用户登录。"
+    }
+   ],
+   "expected_result": "点击'我的'后跳转至登录页，未进入个人中心。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "点击比赛入口进入比赛列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在赛事回放入口页面，点击'比赛'入口，预期进入比赛列表页面。",
+   "preconditions": "用户已打开赛事回放入口页面（MB），且页面加载完成。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'比赛'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'比赛'入口",
+     "expected": "跳转至比赛列表页面，页面正常加载。"
+    }
+   ],
+   "expected_result": "点击'比赛'后成功跳转至比赛列表页面，页面展示比赛数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "比赛入口在无比赛数据时点击展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放入口",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在赛事回放入口页面，当后台无比赛数据时，点击'比赛'入口。",
+   "preconditions": "后台无比赛数据，赛事回放入口页面已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放入口页面",
+     "expected": "页面正常显示，包含'比赛'入口。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'比赛'入口",
+     "expected": "跳转至比赛列表页面，展示空态提示'暂无比赛'。"
+    }
+   ],
+   "expected_result": "点击'比赛'后进入比赛列表页面，展示空态提示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "web"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "赛事回放列表(MB)正常展示回放列表",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台存在已结束且已生成回放的比赛数据，如 2026 World Cup 决赛（主队 A vs 客队 B，回放时长 112:57）",
+   "preconditions": "已登录用户，网络正常，后台存在至少 10 条回放记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页（/match-replay）",
+     "expected": "页面加载成功，显示回放列表区域"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表内容",
+     "expected": "列表展示回放条目，每条包含标题、封面图、时长等，数据与后台一致"
+    }
+   ],
+   "expected_result": "回放列表正常展示，无加载失败或白屏，列表项可点击进入详情",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "赛事回放列表(MB)无数据时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何回放记录（清空回放数据）",
+   "preconditions": "后台回放数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表区域",
+     "expected": "显示空态提示，如「暂无回放」，且无报错"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现崩溃或异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "赛事回放列表正常展示回放条目",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台存在多条回放记录，包含不同联赛、球队、时长",
+   "preconditions": "已登录，后台有回放数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表项",
+     "expected": "每条回放显示标题、封面、时长等信息，点击可跳转详情"
+    }
+   ],
+   "expected_result": "列表展示正确，条目信息完整，可点击进入详情",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "赛事回放列表接口异常时展示错误提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟接口返回 500 或超时",
+   "preconditions": "网络异常或服务端故障",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面加载失败"
+    },
+    {
+     "step": 2,
+     "desc": "观察页面提示",
+     "expected": "显示错误提示，如「加载失败，请重试」，且不崩溃"
+    }
+   ],
+   "expected_result": "页面显示友好错误提示，提供重试入口",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "icon 正常显示且可点击",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "页面正常加载，icon 为页面顶部图标（如返回或菜单）",
+   "preconditions": "页面可正常访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面顶部显示 icon"
+    },
+    {
+     "step": 2,
+     "desc": "点击 icon",
+     "expected": "执行对应功能（如返回上一页或打开菜单）"
+    }
+   ],
+   "expected_result": "icon 显示正常，点击后功能正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "icon 缺失或加载失败时不影响页面主体",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟 icon 资源加载失败（如断网或资源 404）",
+   "preconditions": "icon 资源不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面加载，icon 位置显示占位或空白"
+    },
+    {
+     "step": 2,
+     "desc": "观察页面其他功能",
+     "expected": "列表、搜索等主体功能正常，无布局错乱"
+    }
+   ],
+   "expected_result": "icon 加载失败不影响页面主体功能",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "Camel Live 品牌标识正常显示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "页面正常加载，品牌标识位于顶部",
+   "preconditions": "页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面顶部显示 Camel Live 标识"
+    },
+    {
+     "step": 2,
+     "desc": "点击 Camel Live 标识",
+     "expected": "跳转至首页或刷新当前页（按需求定义）"
+    }
+   ],
+   "expected_result": "品牌标识显示正确，点击行为符合预期",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "Camel Live 标识点击无响应时提示",
+   "priority": "P2",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟点击事件被阻断（如 JS 错误）",
+   "preconditions": "页面存在 JS 错误",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击 Camel Live 标识",
+     "expected": "无跳转或提示，但页面不崩溃"
+    }
+   ],
+   "expected_result": "点击无响应时页面不崩溃，可正常浏览",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "APP 下载入口正常跳转",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击 APP 入口，跳转至应用商店或下载页",
+   "preconditions": "已配置 APP 下载链接",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面显示 APP 入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击 APP 入口",
+     "expected": "跳转至对应应用商店（iOS 跳 App Store，Android 跳 Google Play）或下载页"
+    }
+   ],
+   "expected_result": "APP 入口跳转正确，目标页面可访问",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "APP 下载链接失效时提示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "赛事回放列表_mb_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟下载链接返回 404",
+   "preconditions": "APP 下载链接配置错误",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放列表页",
+     "expected": "页面显示 APP 入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击 APP 入口",
+     "expected": "跳转失败，显示错误提示或停留在当前页"
+    }
+   ],
+   "expected_result": "链接失效时给出提示，不出现白屏",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "默认状态页面元素完整展示",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常加载赛事回放详情页，无特殊参数",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功，显示默认状态"
+    },
+    {
+     "step": 2,
+     "desc": "检查页面元素",
+     "expected": "icon、Camel Live、APP、封面图、播放按钮、横幅广告、视频播放区域均可见"
+    }
+   ],
+   "expected_result": "页面所有默认元素正常展示，无缺失或错位",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "默认状态视频不自动播放",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "正常加载页面，不点击播放",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功，视频处于暂停状态"
+    },
+    {
+     "step": 2,
+     "desc": "观察视频播放区域",
+     "expected": "视频不自动播放，显示封面图或暂停画面"
+    }
+   ],
+   "expected_result": "视频不自动播放，用户需手动点击播放",
+   "remark": "负面用例，验证默认不自动播放",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "icon 加载失败时显示占位符",
+   "priority": "P2",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟 icon 资源加载失败",
+   "preconditions": "已登录，网络异常或 icon 资源缺失",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "观察 icon 区域",
+     "expected": "显示默认占位图标或隐藏，不影响页面布局"
+    }
+   ],
+   "expected_result": "icon 加载失败时页面不报错，有兜底展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "Camel Live 品牌标识正常展示",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "正常加载页面，品牌标识存在",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "检查 Camel Live 标识",
+     "expected": "标识清晰可见，无错位"
+    }
+   ],
+   "expected_result": "Camel Live 品牌标识正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "Camel Live 标识点击跳转首页",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常加载页面，点击品牌标识",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击 Camel Live 标识",
+     "expected": "跳转到首页或指定页面"
+    }
+   ],
+   "expected_result": "点击品牌标识跳转正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "APP 下载入口正常展示",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "正常加载页面，APP 入口存在",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "检查 APP 下载入口",
+     "expected": "入口可见且可点击"
+    }
+   ],
+   "expected_result": "APP 下载入口正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "点击 APP 入口跳转应用商店",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常加载页面，点击 APP 入口",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击 APP 下载入口",
+     "expected": "跳转到应用商店或下载页面"
+    }
+   ],
+   "expected_result": "点击 APP 入口跳转正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "封面图加载失败显示占位图",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟封面图资源加载失败",
+   "preconditions": "已登录，网络异常或封面图资源缺失",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "观察封面图区域",
+     "expected": "显示默认占位图或隐藏，不影响页面布局"
+    }
+   ],
+   "expected_result": "封面图加载失败时页面不报错，有兜底展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "点击播放按钮开始播放视频",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常加载页面，视频资源有效",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频可正常播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功，视频处于暂停状态"
+    },
+    {
+     "step": 2,
+     "desc": "点击播放按钮",
+     "expected": "视频开始播放，播放按钮变为暂停图标"
+    }
+   ],
+   "expected_result": "视频正常播放，进度条开始走动",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "视频加载失败时提示错误",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟视频资源加载失败（如网络中断）",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频资源不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击播放按钮",
+     "expected": "提示视频加载失败，并提供重试或返回操作"
+    }
+   ],
+   "expected_result": "视频加载失败时给出明确错误提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "横幅广告加载失败时隐藏",
+   "priority": "P2",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟广告资源加载失败",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，广告资源不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "观察横幅广告区域",
+     "expected": "广告区域隐藏或显示占位，不影响页面布局"
+    }
+   ],
+   "expected_result": "广告加载失败时页面不报错，有兜底处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "视频播放区域显示时长信息",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "正常播放视频，视频总时长 112:57",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频可正常播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击播放按钮",
+     "expected": "视频开始播放"
+    },
+    {
+     "step": 3,
+     "desc": "观察播放器控件",
+     "expected": "显示当前播放时长和总时长，进度条滑块可拖动"
+    }
+   ],
+   "expected_result": "播放器正确显示时长信息，进度条可操作",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "视频播放区域无视频时显示空状态",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟赛事回放视频不存在或为空",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，但视频源为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "观察视频播放区域",
+     "expected": "显示无视频提示或占位图，不崩溃"
+    }
+   ],
+   "expected_result": "视频为空时给出明确提示，不影响页面其他功能",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-180"
+  },
+  {
+   "title": "进入沉浸模式隐藏非必要UI",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频播放中，触发沉浸模式",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频正在播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页并播放视频",
+     "expected": "视频正常播放"
+    },
+    {
+     "step": 2,
+     "desc": "触发沉浸模式（如点击视频区域或特定按钮）",
+     "expected": "页面非必要 UI（如导航栏、广告）隐藏，仅保留视频和必要控件"
+    }
+   ],
+   "expected_result": "沉浸模式生效，UI 简洁",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-181"
+  },
+  {
+   "title": "沉浸模式下退出恢复UI",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频播放中，已进入沉浸模式",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频正在播放且处于沉浸模式",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在沉浸模式下点击屏幕或特定按钮",
+     "expected": "退出沉浸模式，恢复显示所有 UI 元素"
+    }
+   ],
+   "expected_result": "沉浸模式可正常退出，UI 恢复",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-182"
+  },
+  {
+   "title": "全屏播放功能正常",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频播放中，点击全屏按钮",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频正在播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页并播放视频",
+     "expected": "视频正常播放"
+    },
+    {
+     "step": 2,
+     "desc": "点击全屏按钮",
+     "expected": "视频全屏显示，页面旋转为横屏（如支持）"
+    }
+   ],
+   "expected_result": "全屏播放正常，视频铺满屏幕",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-183"
+  },
+  {
+   "title": "退出全屏恢复原状",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频全屏播放中，点击退出全屏",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频正在全屏播放",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在全屏模式下点击退出全屏按钮",
+     "expected": "视频退出全屏，恢复原页面布局"
+    }
+   ],
+   "expected_result": "退出全屏后页面恢复正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-184"
+  },
+  {
+   "title": "静音功能正常",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "视频播放中，点击静音按钮",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频正在播放且有声音",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页并播放视频",
+     "expected": "视频正常播放且有声音"
+    },
+    {
+     "step": 2,
+     "desc": "点击静音按钮",
+     "expected": "视频静音，静音图标变化"
+    }
+   ],
+   "expected_result": "静音生效，无声音输出",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-185"
+  },
+  {
+   "title": "取消静音恢复声音",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情(MB)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频静音中，再次点击静音按钮",
+   "preconditions": "已登录，存在一场已结束的赛事回放数据，视频正在播放且已静音",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在静音状态下点击静音按钮",
+     "expected": "取消静音，恢复声音输出，静音图标恢复"
+    }
+   ],
+   "expected_result": "取消静音后声音恢复",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-186"
+  },
+  {
+   "title": "点击播放按钮后视频开始播放",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场已结束的2026世界杯比赛回放，视频总时长112:57，当前处于暂停状态。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频加载完成且处于暂停状态。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击播放/暂停按钮（当前为播放图标）",
+     "expected": "按钮变为暂停图标，视频开始播放，当前时长开始递增。"
+    }
+   ],
+   "expected_result": "视频正常播放，播放/暂停按钮状态切换为暂停图标，当前时长从暂停位置继续增加。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-187"
+  },
+  {
+   "title": "点击暂停按钮后视频暂停",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频正在播放中，当前时长约06:24。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频正在播放。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击播放/暂停按钮（当前为暂停图标）",
+     "expected": "按钮变为播放图标，视频暂停，当前时长停止递增。"
+    }
+   ],
+   "expected_result": "视频暂停，播放/暂停按钮状态切换为播放图标，当前时长保持不变。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-188"
+  },
+  {
+   "title": "视频加载失败时点击播放按钮无响应并提示",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟视频源不可用（如网络断开或视频地址失效）。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频加载失败（显示错误提示）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击播放/暂停按钮",
+     "expected": "视频无法播放，页面提示「视频加载失败，请稍后重试」，按钮状态不变。"
+    }
+   ],
+   "expected_result": "播放操作被拦截，给出明确错误提示，不进入播放状态。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-189"
+  },
+  {
+   "title": "拖动进度条滑块到指定位置后视频跳转播放",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "视频总时长112:57，将滑块拖到中间位置约56:28。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "拖动进度条滑块到56:28位置",
+     "expected": "当前时长显示变为56:28，视频画面跳转到对应位置并继续播放。"
+    }
+   ],
+   "expected_result": "视频跳转到指定时间点播放，当前时长更新为56:28，进度条滑块位置同步。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-190"
+  },
+  {
+   "title": "拖动进度条滑块到总时长末尾（112:57）",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "视频总时长112:57，将滑块拖到最右端。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "拖动进度条滑块到最右端（112:57）",
+     "expected": "当前时长显示112:57，视频跳转到末尾，若视频结束则自动暂停，按钮变为播放图标。"
+    }
+   ],
+   "expected_result": "视频定位到末尾，若播放结束则自动暂停，当前时长等于总时长，进度条滑块在末端。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-191"
+  },
+  {
+   "title": "拖动进度条滑块到负值或超出总时长",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "尝试将滑块拖到进度条左端之外（负值）或右端之外（超过总时长）。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试将滑块拖到进度条左端之外（负值）",
+     "expected": "滑块被限制在0位置，当前时长显示00:00，视频跳转到开头。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试将滑块拖到进度条右端之外（超过总时长）",
+     "expected": "滑块被限制在总时长位置，当前时长显示112:57，视频跳转到末尾。"
+    }
+   ],
+   "expected_result": "滑块位置被限制在有效范围内，不会出现负值或超过总时长的情况。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-192"
+  },
+  {
+   "title": "当前时长和总时长显示格式正确",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "视频总时长112:57，播放到06:24时检查显示。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频播放到06:24。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察当前时长和总时长显示",
+     "expected": "当前时长显示06:24，总时长显示112:57，格式为MM:SS（超过1小时显示HH:MM:SS）。"
+    }
+   ],
+   "expected_result": "时间显示正确，格式统一，无乱码或截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-193"
+  },
+  {
+   "title": "当前时长超过1小时时显示格式正确",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "视频总时长112:57，播放到1小时整（60:00）时检查显示。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频播放到60:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察当前时长显示",
+     "expected": "当前时长显示01:00:00（HH:MM:SS格式）。"
+    }
+   ],
+   "expected_result": "超过1小时的时间显示为HH:MM:SS格式，无歧义。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-194"
+  },
+  {
+   "title": "视频加载中时时间显示为00:00",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络慢，视频元数据未加载完成。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频仍在加载中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察当前时长和总时长显示",
+     "expected": "当前时长显示00:00，总时长显示00:00或加载中占位符。"
+    }
+   ],
+   "expected_result": "加载中时间显示为00:00，不显示错误或异常值。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-195"
+  },
+  {
+   "title": "点击静音按钮后视频静音",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频正在播放，当前有声音。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频正在播放且未静音。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击静音按钮",
+     "expected": "按钮变为静音图标，视频声音关闭，无声音输出。"
+    }
+   ],
+   "expected_result": "视频静音，静音按钮状态切换为静音图标，声音消失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-196"
+  },
+  {
+   "title": "视频加载失败时点击静音按钮无响应",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟视频源不可用。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频加载失败。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击静音按钮",
+     "expected": "按钮无响应或置灰，不改变静音状态。"
+    }
+   ],
+   "expected_result": "静音操作被禁用，不产生任何效果。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-197"
+  },
+  {
+   "title": "全屏模式下点击退出全屏按钮返回原页面",
+   "priority": "P0",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频已处于全屏模式。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频已全屏。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击退出全屏按钮",
+     "expected": "视频退出全屏，恢复原页面布局，全屏按钮变为进入全屏图标。"
+    }
+   ],
+   "expected_result": "退出全屏模式，页面布局恢复，视频继续播放。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-198"
+  },
+  {
+   "title": "视频加载失败时点击全屏按钮无响应",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟视频源不可用。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频加载失败。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击全屏按钮",
+     "expected": "按钮无响应或置灰，不进入全屏模式。"
+    }
+   ],
+   "expected_result": "全屏操作被禁用，不产生任何效果。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-199"
+  },
+  {
+   "title": "操作面板在视频播放时自动隐藏",
+   "priority": "P2",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频正在播放，鼠标或手指未操作。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频正在播放。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "等待3秒无操作",
+     "expected": "操作面板自动隐藏，仅显示视频画面。"
+    }
+   ],
+   "expected_result": "操作面板自动隐藏，移动鼠标或点击屏幕可重新显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-200"
+  },
+  {
+   "title": "操作面板在视频暂停时保持显示",
+   "priority": "P2",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "视频已暂停。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频已暂停。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "暂停视频后等待3秒",
+     "expected": "操作面板保持显示，不自动隐藏。"
+    }
+   ],
+   "expected_result": "操作面板在暂停状态下持续显示，方便用户操作。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-201"
+  },
+  {
+   "title": "操作面板在视频加载失败时显示错误提示",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟视频源不可用。",
+   "preconditions": "已登录用户，进入赛事回放详情页，视频加载失败。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "观察操作面板",
+     "expected": "操作面板显示错误提示「视频加载失败，请稍后重试」，播放/暂停、静音、全屏按钮置灰。"
+    }
+   ],
+   "expected_result": "操作面板给出明确错误提示，相关按钮不可操作。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-202"
+  },
+  {
+   "title": "未登录用户进入赛事回放详情页可正常播放",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "未登录用户访问公开回放视频。",
+   "preconditions": "未登录用户，直接访问赛事回放详情页URL。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入赛事回放详情页",
+     "expected": "页面正常加载，视频可播放，操作面板功能正常。"
+    }
+   ],
+   "expected_result": "未登录用户可正常观看回放，所有播放控制功能可用。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-203"
+  },
+  {
+   "title": "未登录用户点击播放按钮时提示登录",
+   "priority": "P1",
+   "domain": "回放",
+   "module": "赛事回放详情",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "假设回放视频需要登录才能观看（根据需求未明确，此处假设需登录）。",
+   "preconditions": "未登录用户，进入赛事回放详情页，视频被锁定。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击播放按钮",
+     "expected": "弹出登录提示「请先登录后再观看」，不播放视频。"
+    }
+   ],
+   "expected_result": "播放操作被拦截，提示用户登录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-204"
+  },
+  {
+   "title": "进度条滑块正常展示当前播放位置",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场已结束的2026世界杯回放视频，视频总时长为112分57秒（112:57），当前播放至06:24。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频已加载并开始播放。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事回放详情页，等待视频加载完成。",
+     "expected": "视频播放区域显示封面图，播放按钮可用。"
+    },
+    {
+     "step": 2,
+     "desc": "点击播放按钮开始播放视频。",
+     "expected": "视频开始播放，进度条滑块随播放进度移动，当前时长显示递增。"
+    },
+    {
+     "step": 3,
+     "desc": "观察进度条滑块位置。",
+     "expected": "进度条滑块位置与当前播放时长（如06:24）对应，总时长显示112:57。"
+    }
+   ],
+   "expected_result": "进度条滑块正确展示当前播放位置，当前时长与滑块位置一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-205"
+  },
+  {
+   "title": "拖动进度条滑块控制视频播放位置",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "使用同一回放视频，拖动滑块至视频中间位置（如56:00）和接近末尾位置（如112:00）。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频已开始播放。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "将进度条滑块拖动至视频中间位置（如56:00）。",
+     "expected": "视频画面跳转至对应时间点，当前时长更新为56:00，滑块位置同步。"
+    },
+    {
+     "step": 2,
+     "desc": "将进度条滑块拖动至接近末尾位置（如112:00）。",
+     "expected": "视频画面跳转至112:00，当前时长更新，滑块位置同步。"
+    }
+   ],
+   "expected_result": "拖动滑块后视频播放位置正确跳转，当前时长和滑块位置同步更新。",
+   "remark": "正向用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-206"
+  },
+  {
+   "title": "拖动进度条滑块至视频末尾边界",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用同一回放视频，将滑块拖动至总时长112:57的末尾位置。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频已开始播放。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "将进度条滑块拖动至最右端（总时长112:57）。",
+     "expected": "视频跳转至末尾，画面显示最后一帧，当前时长显示112:57，滑块停在最右端。"
+    }
+   ],
+   "expected_result": "滑块可拖动至视频末尾，视频停止在最后一帧，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-207"
+  },
+  {
+   "title": "静音按钮切换静音状态",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场回放视频，初始状态为有声播放。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频正在播放且有声音。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击静音按钮。",
+     "expected": "视频声音被关闭，静音按钮图标变为静音状态（如带斜线喇叭）。"
+    },
+    {
+     "step": 2,
+     "desc": "再次点击静音按钮。",
+     "expected": "视频声音恢复，静音按钮图标变为正常状态。"
+    }
+   ],
+   "expected_result": "静音按钮可正常切换视频的静音/非静音状态，图标同步变化。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-208"
+  },
+  {
+   "title": "静音状态下拖动进度条后仍保持静音",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用同一回放视频，先静音，再拖动进度条至其他位置。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频已静音。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击静音按钮使视频静音。",
+     "expected": "视频静音，图标变为静音状态。"
+    },
+    {
+     "step": 2,
+     "desc": "拖动进度条滑块至其他位置（如30:00）。",
+     "expected": "视频跳转至30:00，声音仍为静音状态。"
+    }
+   ],
+   "expected_result": "静音状态在拖动进度条后保持不变。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-209"
+  },
+  {
+   "title": "静音按钮在视频未播放时不可用",
+   "priority": "P2",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "视频尚未加载完成或处于暂停状态。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频未开始播放（或加载中）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在视频未播放时点击静音按钮。",
+     "expected": "静音按钮无响应或置灰，不改变静音状态。"
+    }
+   ],
+   "expected_result": "静音按钮在视频未播放时不可操作，避免误操作。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-210"
+  },
+  {
+   "title": "点击全屏按钮退出全屏模式",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用同一回放视频，当前处于全屏模式。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频已进入全屏模式。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在全屏模式下点击全屏按钮（或退出全屏图标）。",
+     "expected": "视频退出全屏模式，恢复至页面内播放区域，操作面板正常显示。"
+    }
+   ],
+   "expected_result": "视频退出全屏模式，页面布局恢复正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-211"
+  },
+  {
+   "title": "全屏模式下点击静音按钮仍可控制静音",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用同一回放视频，进入全屏模式后点击静音。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频已进入全屏模式。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在全屏模式下点击静音按钮。",
+     "expected": "视频静音，静音图标变为静音状态。"
+    }
+   ],
+   "expected_result": "全屏模式下静音功能正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-212"
+  },
+  {
+   "title": "全屏模式下点击进度条滑块可跳转",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用同一回放视频，进入全屏模式后拖动进度条。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频已进入全屏模式。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在全屏模式下拖动进度条滑块至其他位置（如40:00）。",
+     "expected": "视频跳转至40:00，当前时长更新。"
+    }
+   ],
+   "expected_result": "全屏模式下进度条控制正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-213"
+  },
+  {
+   "title": "更多回放列表展示其他回放视频",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "当前回放详情页存在至少3条其他回放记录（如其他世界杯比赛）。",
+   "preconditions": "用户已登录，进入赛事回放详情页，视频已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在详情页下方查看更多回放列表。",
+     "expected": "列表展示其他回放视频的标题、封面图等信息，数量与后台配置一致。"
+    }
+   ],
+   "expected_result": "更多回放列表正常展示，包含其他回放视频。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-214"
+  },
+  {
+   "title": "点击更多回放列表中的视频跳转至对应详情页",
+   "priority": "P0",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "更多回放列表中存在一条可用的回放记录（如另一场世界杯比赛）。",
+   "preconditions": "用户已登录，进入赛事回放详情页，更多回放列表已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击更多回放列表中的某条回放记录。",
+     "expected": "页面跳转至该回放的详情页，视频加载并开始播放。"
+    }
+   ],
+   "expected_result": "点击后成功跳转至对应回放详情页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-215"
+  },
+  {
+   "title": "更多回放列表为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台配置无其他回放数据（空列表）。",
+   "preconditions": "用户已登录，进入赛事回放详情页，后台无其他回放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看更多回放列表区域。",
+     "expected": "显示空态提示，如「暂无更多回放」，无异常报错。"
+    }
+   ],
+   "expected_result": "更多回放列表为空时显示友好提示，页面无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-216"
+  },
+  {
+   "title": "更多回放列表加载失败时显示错误提示",
+   "priority": "P1",
+   "domain": "用户端/回放",
+   "module": "赛事回放详情_mb_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或接口返回错误（如500）。",
+   "preconditions": "用户已登录，进入赛事回放详情页，但网络异常或接口故障。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在更多回放列表加载时断网或模拟接口错误。",
+     "expected": "列表区域显示加载失败提示，如「加载失败，请重试」，并提供重试按钮。"
+    }
+   ],
+   "expected_result": "加载失败时给出明确错误提示，用户可重试。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-217"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-2 生成被截断，已重试",
+  "functional-chunk-9 生成被截断，已重试"
+ ]
+}

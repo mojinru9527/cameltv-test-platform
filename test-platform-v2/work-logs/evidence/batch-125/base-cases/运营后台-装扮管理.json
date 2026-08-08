@@ -1,0 +1,6230 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "勋章展示图片尺寸限制为300*300",
+    "description": "在新增/编辑勋章页面，展示图片的尺寸必须为300*300像素。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求仅说明尺寸为300*300，未明确是否允许小于该尺寸或必须精确匹配，以及是否自动裁剪或拉伸。",
+      "suggestion": "建议明确尺寸校验规则：是必须精确300*300，还是允许按比例缩放后上传；若不符合是否自动处理或提示错误。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "勋章展示图片上传功能",
+    "description": "新增/编辑勋章页面提供展示图片上传功能，用于上传勋章的展示图片。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未说明上传交互细节，如是否支持拖拽、点击上传、上传进度显示、上传成功/失败提示等。",
+      "suggestion": "建议补充上传交互规范，包括上传中状态、成功/失败提示、文件选择限制等。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "勋章展示图片大小限制为1M以下",
+    "description": "新增/编辑勋章页面，展示图片的文件大小必须小于1MB。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求仅说明1M以下，未明确边界值（恰好1MB是否允许）以及是否区分字节单位（1MB=1024KB）。",
+      "suggestion": "建议明确边界值处理：等于1MB应视为不符合，并提示用户压缩图片。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "勋章展示图片格式限制为PNG、VAP",
+    "description": "新增/编辑勋章页面，展示图片的格式仅支持PNG和VAP。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未说明VAP格式的具体含义及校验方式，可能为动态图片格式，需明确支持范围。",
+      "suggestion": "建议补充VAP格式说明，并明确不支持其他格式时的提示信息。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "勋章资源文件上传功能",
+    "description": "新增/编辑勋章页面提供资源文件上传功能，用于上传勋章的动态资源文件（如VAP动画）。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未说明资源文件的尺寸、大小限制，仅展示图片有明确限制，资源文件是否沿用相同限制不明确。",
+      "suggestion": "建议明确资源文件的尺寸、大小、格式要求，或说明与展示图片一致。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体清晰，明确了勋章新增/编辑页面中展示图片的尺寸、大小和格式限制，以及资源文件上传功能。但存在一些细节模糊之处，如边界值处理、上传交互细节、资源文件的具体限制等，建议补充完善。整体功能点简单，测试用例设计难度较低。"
+ },
+ "functional_cases": [
+  {
+   "title": "搜索-输入存在的内部名称，点击搜索，列表展示匹配记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "内部名称输入“最受欢迎主播金奖”，该名称在列表中存在对应记录（如记录1）",
+   "preconditions": "已登录运营后台，有头像框列表数据，其中存在内部名称为“最受欢迎主播金奖”的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页",
+     "expected": "页面正常显示列表，共X条记录"
+    },
+    {
+     "step": 2,
+     "desc": "在内部名称输入框输入“最受欢迎主播金奖”",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表刷新，仅显示内部名称为“最受欢迎主播金奖”的记录，共1条"
+    }
+   ],
+   "expected_result": "列表仅显示匹配的记录，共X条更新为1条",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "搜索-输入不存在的内部名称，点击搜索，列表无数据",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "内部名称输入“不存在的名称”，该名称在系统中不存在",
+   "preconditions": "已登录运营后台，有头像框列表数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页",
+     "expected": "页面正常显示列表"
+    },
+    {
+     "step": 2,
+     "desc": "在内部名称输入框输入“不存在的名称”",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示无数据，共0条，并提示“暂无数据”"
+    }
+   ],
+   "expected_result": "列表无数据，共0条，有相应空状态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "搜索-内部名称输入为空，点击搜索，列表展示全部记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "内部名称输入框留空，即搜索条件为空",
+   "preconditions": "已登录运营后台，有头像框列表数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页",
+     "expected": "页面正常显示列表"
+    },
+    {
+     "step": 2,
+     "desc": "内部名称输入框不输入任何内容",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表展示全部记录，共X条为总记录数"
+    }
+   ],
+   "expected_result": "列表展示全部记录，共X条为总记录数",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "搜索-点击重置，清空搜索条件并刷新列表",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先输入搜索条件“最受欢迎主播金奖”并搜索，再点击重置",
+   "preconditions": "已登录运营后台，有头像框列表数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页",
+     "expected": "页面正常显示列表"
+    },
+    {
+     "step": 2,
+     "desc": "在内部名称输入框输入“最受欢迎主播金奖”并点击搜索",
+     "expected": "列表仅显示匹配记录"
+    },
+    {
+     "step": 3,
+     "desc": "点击“重置”按钮",
+     "expected": "内部名称输入框清空，列表刷新展示全部记录，共X条为总记录数"
+    }
+   ],
+   "expected_result": "搜索条件清空，列表恢复全部记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "列表-展示内部名称、装扮编号、头像挂件名称、关联用户数、奖项字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "列表中存在一条完整记录，内部名称“最受欢迎主播金奖”，装扮编号“928198309127”，头像挂件名称“最受欢迎主播金奖”，关联用户数1，奖项为“最受欢迎主播金奖”",
+   "preconditions": "已登录运营后台，存在一条包含所有字段的头像框记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页",
+     "expected": "列表正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表第一行记录",
+     "expected": "该行展示图片、装扮编号“928198309127”、头像挂件名称“最受欢迎主播金奖”、关联用户数“1”、奖项“最受欢迎主播金奖”"
+    }
+   ],
+   "expected_result": "列表各字段正确展示，与数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "列表-关联用户数为0时，显示0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "存在一条记录，其关联用户数为0",
+   "preconditions": "已登录运营后台，存在关联用户数为0的头像框记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页",
+     "expected": "列表正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "找到关联用户数为0的记录",
+     "expected": "该记录的关联用户数显示为“0”"
+    }
+   ],
+   "expected_result": "关联用户数显示为0",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "列表-图片加载失败时显示默认占位图",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "某条记录的图片URL无效或图片文件缺失",
+   "preconditions": "已登录运营后台，存在图片加载失败的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页",
+     "expected": "列表正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "观察图片加载失败的记录",
+     "expected": "图片位置显示默认占位图，不显示裂图"
+    }
+   ],
+   "expected_result": "显示默认占位图，无裂图",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "分页-共X条显示总记录数，翻页时更新",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "列表总记录数为50条，每页10条，共5页",
+   "preconditions": "已登录运营后台，存在50条头像框记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页",
+     "expected": "共X条显示“共50条”"
+    },
+    {
+     "step": 2,
+     "desc": "点击第2页",
+     "expected": "列表显示第2页数据，共X条仍为“共50条”"
+    }
+   ],
+   "expected_result": "共X条始终显示总记录数50",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "新增-填写必填项并上传合规图片，保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "内部名称“测试头像框”，展示名称“测试展示名”，英文名称“Test”，阿语名称“اختبار”，上传300K以下PNG图片（尺寸300*300）作为展示图片，上传1M以下PNG资源文件",
+   "preconditions": "已登录运营后台，有新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页，点击“新增”按钮",
+     "expected": "弹出新增头像框弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入内部名称“测试头像框”",
+     "expected": "输入框显示内容"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示名称“测试展示名”",
+     "expected": "输入框显示内容"
+    },
+    {
+     "step": 4,
+     "desc": "输入英文名称“Test”",
+     "expected": "输入框显示内容"
+    },
+    {
+     "step": 5,
+     "desc": "输入阿语名称“اختبار”",
+     "expected": "输入框显示内容"
+    },
+    {
+     "step": 6,
+     "desc": "上传合规的展示图片（PNG，300K以下，300*300）",
+     "expected": "图片上传成功，显示预览"
+    },
+    {
+     "step": 7,
+     "desc": "上传合规的资源文件（PNG，1M以下）",
+     "expected": "文件上传成功，显示文件名"
+    },
+    {
+     "step": 8,
+     "desc": "点击“保存”按钮",
+     "expected": "弹窗关闭，列表刷新，新增记录出现在列表中，共X条+1"
+    }
+   ],
+   "expected_result": "新增成功，列表出现新记录，数据库新增对应记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "新增-内部名称留空，点击保存，提示必填",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "内部名称输入框留空，其他字段填写合规",
+   "preconditions": "已登录运营后台，有新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页，点击“新增”按钮",
+     "expected": "弹出新增头像框弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "不输入内部名称，其他字段填写合规",
+     "expected": "内部名称输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“内部名称不能为空”，不关闭弹窗，不新增记录"
+    }
+   ],
+   "expected_result": "提示内部名称必填，不保存",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "新增-上传超过300K的展示图片，提示格式或大小错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上传一张350K的PNG图片作为展示图片",
+   "preconditions": "已登录运营后台，有新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页，点击“新增”按钮",
+     "expected": "弹出新增头像框弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击上传展示图片，选择350K的PNG图片",
+     "expected": "提示“图片大小不能超过300K”，上传失败"
+    }
+   ],
+   "expected_result": "上传被拒绝，提示大小超限",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "新增-上传非PNG格式的展示图片，提示格式错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "上传一张JPG格式的图片作为展示图片",
+   "preconditions": "已登录运营后台，有新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页，点击“新增”按钮",
+     "expected": "弹出新增头像框弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击上传展示图片，选择JPG图片",
+     "expected": "提示“图片格式必须为PNG”，上传失败"
+    }
+   ],
+   "expected_result": "上传被拒绝，提示格式错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "新增-内部名称重复，保存时提示唯一性校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "内部名称输入“最受欢迎主播金奖”，该名称已存在",
+   "preconditions": "已登录运营后台，存在内部名称为“最受欢迎主播金奖”的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页，点击“新增”按钮",
+     "expected": "弹出新增头像框弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入内部名称“最受欢迎主播金奖”，其他字段合规",
+     "expected": "输入框显示内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“内部名称已存在”，不保存"
+    }
+   ],
+   "expected_result": "提示内部名称重复，不保存",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "新增-点击取消，关闭弹窗且不保存",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增弹窗填写部分信息后点击取消",
+   "preconditions": "已登录运营后台，有新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像框列表页，点击“新增”按钮",
+     "expected": "弹出新增头像框弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入内部名称“测试”",
+     "expected": "输入框显示内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”按钮",
+     "expected": "弹窗关闭，列表无变化，不新增记录"
+    }
+   ],
+   "expected_result": "弹窗关闭，不保存",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "用户编号输入框-输入合法数字编号",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入用户编号'10044654'，该编号在系统中存在，用于关联用户。",
+   "preconditions": "已登录运营后台，进入头像框页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击用户编号输入框",
+     "expected": "输入框获得焦点"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号'10044654'",
+     "expected": "输入框显示'10044654'"
+    }
+   ],
+   "expected_result": "输入框可正常输入数字，无报错。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "用户编号输入框-输入非数字字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入'abc'，非数字字符，验证输入校验。",
+   "preconditions": "已登录运营后台，进入头像框页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击用户编号输入框",
+     "expected": "输入框获得焦点"
+    },
+    {
+     "step": 2,
+     "desc": "输入'abc'",
+     "expected": "输入框可能拒绝输入或提示格式错误"
+    }
+   ],
+   "expected_result": "系统提示用户编号格式不正确，或输入框不允许输入非数字。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "皮肤编号输入框-输入合法皮肤编号",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入皮肤编号'928198309127'，该编号在系统中存在。",
+   "preconditions": "已登录运营后台，进入头像框页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击皮肤编号输入框",
+     "expected": "输入框获得焦点"
+    },
+    {
+     "step": 2,
+     "desc": "输入皮肤编号'928198309127'",
+     "expected": "输入框显示'928198309127'"
+    }
+   ],
+   "expected_result": "输入框可正常输入数字，无报错。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "皮肤编号输入框-输入超长数字",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过20位的数字，如'123456789012345678901'，验证长度限制。",
+   "preconditions": "已登录运营后台，进入头像框页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击皮肤编号输入框",
+     "expected": "输入框获得焦点"
+    },
+    {
+     "step": 2,
+     "desc": "输入超长数字'123456789012345678901'",
+     "expected": "输入框可能限制长度或提示超长"
+    }
+   ],
+   "expected_result": "系统限制输入长度或提示皮肤编号过长。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "取消按钮-点击取消关闭弹窗且不保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增头像框弹窗中填写部分内容后点击取消，验证不保存。",
+   "preconditions": "已登录运营后台，进入头像框页面，点击新增按钮打开弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在新增弹窗中填写内部名称'测试头像框'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击取消按钮",
+     "expected": "弹窗关闭，不保存任何数据"
+    }
+   ],
+   "expected_result": "弹窗关闭，列表无新增记录，数据库无新增数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "取消按钮-点击取消后再次打开弹窗内容清空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "在新增弹窗填写内容后取消，再次打开弹窗验证内容是否清空。",
+   "preconditions": "已登录运营后台，进入头像框页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮打开弹窗",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "在内部名称输入'测试'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击取消按钮",
+     "expected": "弹窗关闭"
+    },
+    {
+     "step": 4,
+     "desc": "再次点击新增按钮",
+     "expected": "弹窗打开，内部名称应为空"
+    }
+   ],
+   "expected_result": "再次打开弹窗时，之前填写的内容已清空。",
+   "remark": "负面用例（验证取消后状态）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "确定按钮-删除确认弹窗点击确定执行删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条头像框记录，点击删除，在确认弹窗中点击确定，验证删除成功。",
+   "preconditions": "已登录运营后台，进入头像框页面，存在至少一条头像框记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的删除按钮",
+     "expected": "弹出确认提示'确定要删除此头像框？'"
+    },
+    {
+     "step": 2,
+     "desc": "点击确定按钮",
+     "expected": "删除成功，列表刷新，该记录消失"
+    }
+   ],
+   "expected_result": "该头像框记录被删除，列表不再显示，数据库记录被删除或标记删除。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "确定按钮-删除确认弹窗点击取消不删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条头像框记录，点击删除，在确认弹窗中点击取消，验证不删除。",
+   "preconditions": "已登录运营后台，进入头像框页面，存在至少一条头像框记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的删除按钮",
+     "expected": "弹出确认提示"
+    },
+    {
+     "step": 2,
+     "desc": "点击取消按钮",
+     "expected": "弹窗关闭，记录未被删除"
+    }
+   ],
+   "expected_result": "该头像框记录仍存在，列表不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "删除确认提示-删除已关联用户的头像框",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条关联用户数大于0的头像框记录，点击删除并确认，验证关联用户处理。",
+   "preconditions": "已登录运营后台，进入头像框页面，存在关联用户数大于0的头像框",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关联用户数大于0的记录删除按钮",
+     "expected": "弹出确认提示"
+    },
+    {
+     "step": 2,
+     "desc": "点击确定",
+     "expected": "删除成功，但需确认关联用户是否被解除"
+    }
+   ],
+   "expected_result": "删除成功，关联用户列表中的该头像框被移除，或系统提示无法删除。",
+   "remark": "负面/边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "联赛及球队管理菜单-点击跳转",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击左侧菜单'联赛及球队管理'，验证跳转。",
+   "preconditions": "已登录运营后台，进入头像框页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击左侧菜单'联赛及球队管理'",
+     "expected": "跳转到联赛及球队管理页面"
+    }
+   ],
+   "expected_result": "页面跳转到联赛及球队管理页面，URL变化。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "联赛及球队管理菜单-无权限访问",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的账号登录，点击菜单，验证权限控制。",
+   "preconditions": "使用无权限账号登录运营后台，进入头像框页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击左侧菜单'联赛及球队管理'",
+     "expected": "提示无权限或菜单不可点击"
+    }
+   ],
+   "expected_result": "系统提示无权限访问，或菜单置灰不可点击。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "编辑操作-点击编辑进入编辑页面",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条头像框记录，点击编辑，验证进入编辑页面且数据回显。",
+   "preconditions": "已登录运营后台，进入头像框页面，存在至少一条头像框记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的编辑按钮",
+     "expected": "进入编辑头像框页面，表单数据回显"
+    }
+   ],
+   "expected_result": "编辑页面打开，内部名称、展示名称等字段显示原值。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "编辑操作-修改内部名称为空保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "编辑一条记录，将内部名称清空后保存，验证必填校验。",
+   "preconditions": "已登录运营后台，进入编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击编辑按钮进入编辑页面",
+     "expected": "进入编辑页面"
+    },
+    {
+     "step": 2,
+     "desc": "清空内部名称输入框",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "提示内部名称不能为空，保存失败"
+    }
+   ],
+   "expected_result": "系统提示内部名称必填，不保存。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "关联用户操作-点击关联用户进入关联页面",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条头像框记录，点击关联用户，验证进入关联用户页面。",
+   "preconditions": "已登录运营后台，进入头像框页面，存在至少一条头像框记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的关联用户按钮",
+     "expected": "进入关联用户页面，显示已关联用户列表"
+    }
+   ],
+   "expected_result": "关联用户页面打开，显示该头像框已关联的用户列表。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "关联用户操作-无关联用户时进入页面显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条关联用户数为0的头像框记录，点击关联用户，验证空态展示。",
+   "preconditions": "已登录运营后台，进入头像框页面，存在关联用户数为0的头像框",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关联用户数为0的记录关联用户按钮",
+     "expected": "进入关联用户页面，列表为空"
+    }
+   ],
+   "expected_result": "关联用户页面显示空列表，无数据。",
+   "remark": "负面/边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "删除操作-删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条头像框记录，执行删除并确认，验证删除成功。",
+   "preconditions": "已登录运营后台，进入头像框页面，存在至少一条头像框记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的删除按钮",
+     "expected": "弹出确认提示"
+    },
+    {
+     "step": 2,
+     "desc": "点击确定",
+     "expected": "删除成功，列表刷新"
+    }
+   ],
+   "expected_result": "该记录从列表中消失，数据库记录被删除。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "删除操作-删除不存在的记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "通过修改URL或并发操作尝试删除已被删除的记录，验证异常处理。",
+   "preconditions": "已登录运营后台，存在一条已被删除的头像框记录ID",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "构造删除请求，使用已删除记录的ID",
+     "expected": "系统提示记录不存在或删除失败"
+    }
+   ],
+   "expected_result": "系统提示删除失败，记录不存在。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "新增头像框-填写全部必填项并上传合规图片保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "内部名称='内部测试头像框'，展示名称='测试头像框'，英文名称='TestFrame'，阿语名称='إطار اختبار'，上传图片为300*300像素、PNG格式、大小200K。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增权限，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增_编辑头像框弹窗",
+     "expected": "弹窗标题显示「新增/编辑头像框」，各字段为空，保存和取消按钮可用。"
+    },
+    {
+     "step": 2,
+     "desc": "输入内部名称：内部测试头像框",
+     "expected": "输入成功，无报错。"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示名称：测试头像框",
+     "expected": "输入成功，无报错。"
+    },
+    {
+     "step": 4,
+     "desc": "输入英文名称：TestFrame",
+     "expected": "输入成功，无报错。"
+    },
+    {
+     "step": 5,
+     "desc": "输入阿语名称：إطار اختبار",
+     "expected": "输入成功，无报错。"
+    },
+    {
+     "step": 6,
+     "desc": "点击「上传」按钮，选择合规图片（300*300、PNG、200K）",
+     "expected": "图片上传成功，预览显示图片，无错误提示。"
+    },
+    {
+     "step": 7,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，弹窗关闭，列表刷新并显示新记录。"
+    }
+   ],
+   "expected_result": "新增头像框成功，数据库新增对应记录，列表出现新记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "新增头像框-内部名称为空保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "内部名称留空，其他字段填写合规，图片合规。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开新增弹窗，不输入内部名称，其他字段填写合规",
+     "expected": "内部名称输入框为空。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「内部名称不能为空」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "保存被拦截，提示内部名称必填，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "编辑头像框-修改展示名称并保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已有头像框记录，内部名称='内部测试头像框'，展示名称改为'新展示名称'，其他字段不变。",
+   "preconditions": "已登录运营后台，存在一条头像框记录，进入编辑页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在头像框列表点击「编辑」按钮",
+     "expected": "打开编辑弹窗，各字段预填原值。"
+    },
+    {
+     "step": 2,
+     "desc": "修改展示名称为'新展示名称'",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，弹窗关闭，列表刷新显示更新后的名称。"
+    }
+   ],
+   "expected_result": "编辑成功，数据库记录更新，列表显示新名称。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "编辑头像框-修改内部名称为已存在的名称保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已存在两个头像框，内部名称分别为'内部测试头像框'和'内部测试头像框2'，编辑第二个时将其内部名称改为第一个的名称。",
+   "preconditions": "已登录运营后台，存在两条头像框记录，进入编辑第二条记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "编辑第二条记录，将内部名称改为'内部测试头像框'（与第一条重复）",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「内部名称已存在」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "保存被拦截，提示内部名称重复，数据库无更新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "取消新增-填写部分信息后点击取消不保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "填写内部名称='临时名称'，展示名称='临时展示'，未上传图片。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写部分字段（内部名称、展示名称）",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，不保存任何数据，列表无新增记录。"
+    }
+   ],
+   "expected_result": "取消后无新增记录，数据库无变化。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "展示名称输入超长字符保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示名称输入超过最大长度（假设最大50字符），输入51个字符。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入展示名称：51个字符（如'A'重复51次）",
+     "expected": "输入框可能限制输入或允许输入但保存时校验。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项并上传合规图片",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「展示名称长度不能超过50个字符」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "保存被拦截，提示长度超限，数据库无新增。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "英文名称输入包含中文保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "英文名称输入'Test中文'，包含中文字符。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入英文名称：Test中文",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项并上传合规图片",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「英文名称只能包含英文字母和数字」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "保存被拦截，提示格式错误，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "阿语名称输入非法字符保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "阿语名称输入'Test'（非阿语字符）。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入阿语名称：Test",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项并上传合规图片",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「阿语名称只能包含阿拉伯语字符」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "保存被拦截，提示格式错误，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "上传图片大小恰好300K保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "上传一张300*300像素、PNG格式、大小恰好300K的图片。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择大小恰好300K的PNG图片",
+     "expected": "图片上传成功，无错误提示。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，弹窗关闭。"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "上传图片大小超过300K保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上传一张300*300像素、PNG格式、大小301K的图片。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择大小301K的PNG图片",
+     "expected": "上传失败，提示「图片大小不能超过300K」。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「请上传合规图片」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "上传被拦截，保存失败，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "上传非PNG格式图片保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "上传一张300*300像素、JPG格式、大小200K的图片。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择JPG格式图片",
+     "expected": "上传失败，提示「图片格式必须为PNG」。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「请上传合规图片」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "上传被拦截，保存失败，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "上传尺寸非300*300的图片保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "上传一张400*400像素、PNG格式、大小200K的图片。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择400*400的PNG图片",
+     "expected": "上传失败，提示「图片尺寸必须为300*300」。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「请上传合规图片」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "上传被拦截，保存失败，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "上传PNG格式但大小写为png的图片保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "上传一张300*300像素、格式为png（小写）、大小200K的图片。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择小写png格式图片",
+     "expected": "上传成功，无错误提示。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，弹窗关闭。"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "保存时未上传图片保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "填写所有名称字段，但不点击上传图片。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写内部名称、展示名称、英文名称、阿语名称",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "不点击上传，直接点击「保存」按钮",
+     "expected": "保存失败，提示「请上传图片」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "保存被拦截，提示图片必传，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "编辑时清空内部名称保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "编辑已有头像框，将内部名称清空。",
+   "preconditions": "已登录运营后台，存在一条头像框记录，进入编辑页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "编辑已有记录，清空内部名称",
+     "expected": "输入框为空。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「内部名称不能为空」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "保存被拦截，提示必填，数据库无更新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "保存时网络异常提示保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "填写合规数据，模拟网络断开。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面，可控制网络。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写所有必填项并上传合规图片",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "断开网络，点击「保存」按钮",
+     "expected": "保存失败，提示「网络异常，请稍后重试」，弹窗不关闭。"
+    }
+   ],
+   "expected_result": "保存失败，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "新增头像框-展示名称包含特殊字符保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "展示名称输入'测试@#￥%'，包含特殊字符。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入展示名称：测试@#￥%",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项并上传合规图片",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，弹窗关闭。"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "新增头像框-内部名称包含空格保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "内部名称输入'内部 测试'，包含空格。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入内部名称：内部 测试",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项并上传合规图片",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，弹窗关闭。"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "新增头像框-英文名称输入数字和字母组合保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "英文名称输入'Frame2024'，包含数字和字母。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入英文名称：Frame2024",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项并上传合规图片",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，弹窗关闭。"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "新增头像框-阿语名称输入纯阿语字符保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "阿语名称输入'إطار اختبار'，纯阿语字符。",
+   "preconditions": "已登录运营后台，进入新增_编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入阿语名称：إطار اختبار",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填项并上传合规图片",
+     "expected": "其他字段正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，弹窗关闭。"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "上传尺寸为300*300的展示图片成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一张尺寸恰好为300*300像素、格式为PNG、大小小于1M的图片，代表符合尺寸要求的正常业务场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张尺寸为300*300、格式为PNG、大小小于1M的图片并确认",
+     "expected": "图片上传成功，页面显示图片预览，且无错误提示"
+    }
+   ],
+   "expected_result": "展示图片上传成功，预览显示300*300的图片，无错误提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "上传尺寸非300*300的展示图片被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用一张尺寸为400*400像素、格式为PNG、大小小于1M的图片，代表尺寸不符合要求的业务场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张尺寸为400*400、格式为PNG、大小小于1M的图片并确认",
+     "expected": "上传被拒绝，提示「图片尺寸必须为300*300」"
+    }
+   ],
+   "expected_result": "上传被拒绝，页面提示尺寸不符合要求，图片未上传成功。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "上传尺寸恰好为300*300的展示图片（边界值）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用一张尺寸恰好为300*300像素、格式为PNG、大小小于1M的图片，验证边界值是否被接受。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张尺寸恰好为300*300、格式为PNG、大小小于1M的图片并确认",
+     "expected": "上传成功，预览显示300*300图片"
+    }
+   ],
+   "expected_result": "上传成功，无错误提示。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "上传大小恰好为1M的展示图片（边界值）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用一张大小恰好为1M（1048576字节）、格式为PNG、尺寸为300*300的图片，验证大小边界值是否被接受。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张大小恰好为1M、格式为PNG、尺寸为300*300的图片并确认",
+     "expected": "根据需求「1M以下」，若等于1M被拒绝则提示「图片大小需小于1M」；若允许则上传成功"
+    }
+   ],
+   "expected_result": "根据实际规则，若等于1M被拒绝则提示错误，否则上传成功。",
+   "remark": "边界用例，需确认需求边界定义",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "上传大小超过1M的展示图片被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用一张大小为2M、格式为PNG、尺寸为300*300的图片，代表大小超限的业务场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张大小为2M、格式为PNG、尺寸为300*300的图片并确认",
+     "expected": "上传被拒绝，提示「图片大小需小于1M」"
+    }
+   ],
+   "expected_result": "上传被拒绝，页面提示大小超限，图片未上传成功。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "上传PNG格式的展示图片成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一张格式为PNG、尺寸为300*300、大小小于1M的图片，代表支持格式的正常场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张格式为PNG、尺寸为300*300、大小小于1M的图片并确认",
+     "expected": "上传成功，预览显示图片"
+    }
+   ],
+   "expected_result": "上传成功，无错误提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "上传VAP格式的展示图片成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一个格式为VAP、尺寸为300*300、大小小于1M的资源文件，代表支持格式的正常场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一个格式为VAP、尺寸为300*300、大小小于1M的资源文件并确认",
+     "expected": "上传成功，预览显示动画效果"
+    }
+   ],
+   "expected_result": "上传成功，无错误提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "上传JPG格式的展示图片被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用一张格式为JPG、尺寸为300*300、大小小于1M的图片，代表不支持格式的业务场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张格式为JPG、尺寸为300*300、大小小于1M的图片并确认",
+     "expected": "上传被拒绝，提示「仅支持PNG、VAP格式」"
+    }
+   ],
+   "expected_result": "上传被拒绝，页面提示格式不支持，图片未上传成功。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "上传资源文件成功（PNG格式）",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一个格式为PNG、大小小于1M的资源文件，代表资源文件正常上传场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「资源文件」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一个格式为PNG、大小小于1M的资源文件并确认",
+     "expected": "上传成功，页面显示资源文件名称或预览"
+    }
+   ],
+   "expected_result": "资源文件上传成功，无错误提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "上传资源文件大小超过1M被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用一个大小为2M、格式为PNG的资源文件，代表资源文件大小超限的业务场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「资源文件」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一个大小为2M、格式为PNG的资源文件并确认",
+     "expected": "上传被拒绝，提示「资源文件大小需小于1M」"
+    }
+   ],
+   "expected_result": "上传被拒绝，页面提示大小超限，资源文件未上传成功。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "上传资源文件格式为JPG被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用一个格式为JPG、大小小于1M的资源文件，代表资源文件格式不支持的业务场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「资源文件」区域的上传按钮",
+     "expected": "弹出文件选择窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择一个格式为JPG、大小小于1M的资源文件并确认",
+     "expected": "上传被拒绝，提示「仅支持PNG、VAP格式」"
+    }
+   ],
+   "expected_result": "上传被拒绝，页面提示格式不支持，资源文件未上传成功。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "不选择展示图片直接保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "不选择任何展示图片，直接点击保存，代表未上传必填项的业务场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不点击「展示图片」上传按钮，直接点击「保存」按钮",
+     "expected": "保存被拦截，提示「请上传展示图片」"
+    }
+   ],
+   "expected_result": "保存失败，页面提示展示图片必填。",
+   "remark": "负面用例，假设展示图片必填",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "不选择资源文件直接保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/新增_编辑头像框",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "不选择任何资源文件，直接点击保存，代表未上传必填项的业务场景。",
+   "preconditions": "已登录运营后台，具有装扮管理-头像框的新增/编辑权限；进入新增/编辑头像框页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不点击「资源文件」上传按钮，直接点击「保存」按钮",
+     "expected": "保存被拦截，提示「请上传资源文件」"
+    }
+   ],
+   "expected_result": "保存失败，页面提示资源文件必填。",
+   "remark": "负面用例，假设资源文件必填",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "关联用户列表展示-正常展示已关联用户",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的关联用户数据，如用户编号10044654、10029291、10043789，对应昵称和显示时间。",
+   "preconditions": "运营后台已登录，存在至少一条关联用户记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「装扮管理」-「头像框」-「关联用户」",
+     "expected": "页面正常加载，显示关联用户列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表字段",
+     "expected": "列表展示用户编号、用户昵称、显示开始时间、显示结束时间、永久标识、操作（移除）等列"
+    },
+    {
+     "step": 3,
+     "desc": "查看具体数据行",
+     "expected": "用户编号10044654显示昵称「专属MiMi的LQE🌻💜」，显示时间永久；用户编号10029291显示昵称「༺❄Harris❄༻」，显示时间2018-09-09 14:20:00至2018-09-10 14:20:00"
+    }
+   ],
+   "expected_result": "列表正确展示所有已关联用户，字段数据与后台存储一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "关联用户列表展示-无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "当前头像框无任何关联用户。",
+   "preconditions": "运营后台已登录，当前头像框无关联用户。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "页面显示空列表，提示「暂无数据」或类似空态提示"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "用户编号字段-正确显示用户编号",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的用户编号10044654，该编号为有效用户。",
+   "preconditions": "存在关联用户记录，用户编号为10044654。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "列表中的用户编号列显示「10044654」"
+    }
+   ],
+   "expected_result": "用户编号正确显示，与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "用户编号字段-超长编号显示完整",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个超长用户编号（如20位数字），模拟极端情况。",
+   "preconditions": "存在一个用户编号为20位数字的关联记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "用户编号列完整显示该超长编号，无截断或溢出"
+    }
+   ],
+   "expected_result": "超长编号完整显示，不影响布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "用户昵称字段-正确显示用户昵称",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的用户昵称「༺❄Harris❄༻」，该昵称包含特殊字符。",
+   "preconditions": "存在关联用户记录，用户昵称为「༺❄Harris❄༻」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "用户昵称列显示「༺❄Harris❄༻」"
+    }
+   ],
+   "expected_result": "用户昵称正确显示，特殊字符无乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "用户昵称字段-超长昵称显示完整",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个超长昵称（如50个字符），模拟极端情况。",
+   "preconditions": "存在一个昵称长度为50字符的关联记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "用户昵称列完整显示该超长昵称，无截断或溢出"
+    }
+   ],
+   "expected_result": "超长昵称完整显示，不影响布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "显示开始时间字段-正确显示开始时间",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的开始时间2018-09-09 14:20:00。",
+   "preconditions": "存在关联用户记录，显示开始时间为2018-09-09 14:20:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "显示开始时间列显示「2018-09-09 14:20:00」"
+    }
+   ],
+   "expected_result": "显示开始时间正确显示，格式为YYYY-MM-DD HH:mm:ss。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "显示开始时间字段-永久关联时开始时间显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用永久关联的用户记录，如用户编号10044654。",
+   "preconditions": "存在永久关联的用户记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "永久关联的用户，显示开始时间列显示「永久」或为空，具体以需求为准"
+    }
+   ],
+   "expected_result": "永久关联时开始时间显示符合预期，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "显示结束时间字段-正确显示结束时间",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的结束时间2018-09-10 14:20:00。",
+   "preconditions": "存在关联用户记录，显示结束时间为2018-09-10 14:20:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "显示结束时间列显示「2018-09-10 14:20:00」"
+    }
+   ],
+   "expected_result": "显示结束时间正确显示，格式为YYYY-MM-DD HH:mm:ss。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "显示结束时间字段-永久关联时结束时间显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用永久关联的用户记录，如用户编号10044654。",
+   "preconditions": "存在永久关联的用户记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "永久关联的用户，显示结束时间列显示「永久」或为空，具体以需求为准"
+    }
+   ],
+   "expected_result": "永久关联时结束时间显示符合预期，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "永久标识-正确显示永久状态",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用永久关联的用户记录，如用户编号10044654。",
+   "preconditions": "存在永久关联的用户记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "永久列显示「永久」标识"
+    }
+   ],
+   "expected_result": "永久标识正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "永久标识-非永久关联时显示为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用定时关联的用户记录，如用户编号10029291。",
+   "preconditions": "存在定时关联的用户记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "永久列不显示「永久」标识，可能为空或显示「定时」"
+    }
+   ],
+   "expected_result": "非永久关联时永久列显示符合预期。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "移除操作-确认后成功移除关联用户",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条关联用户记录，如用户编号10029291。",
+   "preconditions": "存在至少一条关联用户记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击目标用户行的「移除」按钮",
+     "expected": "弹出确认提示「确定移除该用户吗？」"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」",
+     "expected": "提示移除成功，列表刷新，该用户不再显示"
+    }
+   ],
+   "expected_result": "移除成功，数据库中该关联记录被删除，列表刷新后无该用户。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "移除操作-取消移除不生效",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条关联用户记录，如用户编号10029291。",
+   "preconditions": "存在至少一条关联用户记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击目标用户行的「移除」按钮",
+     "expected": "弹出确认提示「确定移除该用户吗？」"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」",
+     "expected": "提示关闭，列表无变化，该用户仍存在"
+    }
+   ],
+   "expected_result": "取消移除后，关联记录未被删除，列表不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "移除操作-移除不存在的用户提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟并发场景，另一管理员已移除该用户，当前页面仍显示。",
+   "preconditions": "存在一条关联用户记录，且已被其他管理员移除（模拟并发）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "列表显示该用户（数据已过期）"
+    },
+    {
+     "step": 2,
+     "desc": "点击该用户的「移除」按钮",
+     "expected": "弹出确认提示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」",
+     "expected": "提示「移除失败，该用户不存在或已被移除」"
+    }
+   ],
+   "expected_result": "系统给出明确错误提示，不产生异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "添加用户-输入有效用户编号并保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效用户编号10044654，选择永久有效期。",
+   "preconditions": "运营后台已登录，存在用户编号10044654。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择有效期「永久」",
+     "expected": "显示时间区域隐藏或置灰"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "提示保存成功，对话框关闭，列表刷新，新增该用户记录"
+    }
+   ],
+   "expected_result": "添加成功，数据库中新增关联记录，列表显示该用户。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "添加用户-用户编号为空提示必填",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号留空。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "不输入用户编号",
+     "expected": "用户编号为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "提示「用户编号不能为空」，不提交"
+    }
+   ],
+   "expected_result": "保存被阻止，给出必填提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "添加用户-用户编号不存在提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用不存在的用户编号99999999。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号99999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择有效期「永久」",
+     "expected": "显示时间区域隐藏"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "提示「用户不存在」，不保存"
+    }
+   ],
+   "expected_result": "保存被阻止，给出明确错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "添加用户-重复关联同一用户提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用已关联的用户编号10044654。",
+   "preconditions": "用户10044654已关联当前头像框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入已关联的用户编号10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择有效期「永久」",
+     "expected": "显示时间区域隐藏"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "提示「该用户已关联」，不保存"
+    }
+   ],
+   "expected_result": "保存被阻止，给出重复关联提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "添加用户-定时有效期设置显示时间并保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效用户编号10029291，选择定时，显示时间2018-09-09 14:20:00至2018-09-10 14:20:00。",
+   "preconditions": "运营后台已登录，存在用户编号10029291。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号10029291",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择有效期「定时」",
+     "expected": "显示时间区域出现，可编辑"
+    },
+    {
+     "step": 4,
+     "desc": "设置显示时间：开始2018-09-09 14:20:00，结束2018-09-10 14:20:00",
+     "expected": "时间设置成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」",
+     "expected": "提示保存成功，对话框关闭，列表刷新，新增该用户记录"
+    }
+   ],
+   "expected_result": "添加成功，数据库中新增关联记录，显示时间正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "添加用户-定时时开始时间晚于结束时间提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用有效用户编号10029291，设置开始时间2018-09-10 14:20:00，结束时间2018-09-09 14:20:00。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号10029291",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择有效期「定时」",
+     "expected": "显示时间区域出现"
+    },
+    {
+     "step": 4,
+     "desc": "设置开始时间晚于结束时间",
+     "expected": "时间设置成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」",
+     "expected": "提示「开始时间不能晚于结束时间」，不保存"
+    }
+   ],
+   "expected_result": "保存被阻止，给出时间范围错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "添加用户-定时时开始时间等于结束时间允许保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用有效用户编号10029291，设置开始时间等于结束时间2018-09-09 14:20:00。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号10029291",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择有效期「定时」",
+     "expected": "显示时间区域出现"
+    },
+    {
+     "step": 4,
+     "desc": "设置开始时间等于结束时间",
+     "expected": "时间设置成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」",
+     "expected": "保存成功，允许相等时间"
+    }
+   ],
+   "expected_result": "保存成功，视为有效时间范围。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "添加用户-取消添加不保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "输入用户编号10044654，但点击取消。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」",
+     "expected": "对话框关闭，无新增记录"
+    }
+   ],
+   "expected_result": "取消后不保存，列表无变化。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "批量添加用户-导入有效用户编号并保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "准备包含100个有效用户编号的TXT文件，每行一个。",
+   "preconditions": "运营后台已登录，存在这些用户编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "在对话框中找到批量添加入口（如导入按钮）",
+     "expected": "可上传文件"
+    },
+    {
+     "step": 3,
+     "desc": "上传包含100个有效用户编号的文件",
+     "expected": "文件上传成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "提示批量添加结果：共100条，成功100条，失败0条"
+    }
+   ],
+   "expected_result": "批量添加成功，所有用户关联成功，列表新增100条记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "批量添加用户-部分失败时展示失败信息并可导出",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "准备包含1000个用户编号的文件，其中234个无效（不存在或已关联）。",
+   "preconditions": "运营后台已登录，部分用户编号无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "上传包含1000个用户编号的文件",
+     "expected": "文件上传成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "提示批量添加结果：共1000条，成功766条，失败234条，并提供「导出失败信息」按钮"
+    },
+    {
+     "step": 4,
+     "desc": "点击「导出失败信息」",
+     "expected": "下载失败信息文件，包含失败的用户编号及原因"
+    }
+   ],
+   "expected_result": "批量添加部分成功，失败信息可导出，成功用户已关联。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "批量添加用户-文件格式不正确提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "上传一个非TXT/CSV格式的文件，如PDF。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "上传一个PDF文件",
+     "expected": "提示「文件格式不支持，请上传TXT或CSV文件」"
+    }
+   ],
+   "expected_result": "文件上传被拒绝，给出格式错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "批量添加用户-文件为空提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上传一个空文件（0字节）。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "上传空文件",
+     "expected": "提示「文件内容为空，请检查后重新上传」"
+    }
+   ],
+   "expected_result": "文件上传被拒绝，给出空文件提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "批量添加用户-文件内用户编号格式错误提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "文件内包含非数字字符的行，如「abc」。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面，点击「添加用户」",
+     "expected": "弹出添加用户对话框"
+    },
+    {
+     "step": 2,
+     "desc": "上传包含非数字行的文件",
+     "expected": "提示「第X行用户编号格式错误」"
+    }
+   ],
+   "expected_result": "系统指出格式错误的行，不保存该行。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "取消添加用户弹窗不保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在添加用户弹窗中输入用户编号10044654，选择永久，不点击保存，直接点击取消。",
+   "preconditions": "已登录运营后台，进入头像框列表，点击某头像框的关联用户，点击添加用户按钮打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击添加用户按钮，打开添加用户弹窗",
+     "expected": "弹窗显示，包含用户编号、有效期、显示时间等字段"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号10044654，选择有效期永久",
+     "expected": "输入和选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击取消按钮",
+     "expected": "弹窗关闭，且关联用户列表无新增记录，数据库无新增关联数据"
+    }
+   ],
+   "expected_result": "弹窗关闭，不保存任何更改，关联用户列表无新增记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "取消按钮在未输入任何数据时关闭弹窗",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "打开添加用户弹窗，不输入任何数据，直接点击取消。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开添加用户弹窗",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "直接点击取消按钮",
+     "expected": "弹窗关闭，无任何提示，无数据保存"
+    }
+   ],
+   "expected_result": "弹窗正常关闭，无异常报错。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "保存添加用户成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入有效用户编号10044654，选择有效期永久，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗，用户10044654存在且未关联。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期永久",
+     "expected": "显示时间字段隐藏或禁用"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "弹窗关闭，关联用户列表新增该用户，显示开始时间和结束时间均为永久，数据库新增关联记录"
+    }
+   ],
+   "expected_result": "保存成功，关联用户列表新增记录，数据库持久化。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "保存时用户编号为空提示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号留空，选择有效期永久，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不输入用户编号",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期永久",
+     "expected": "选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "提示“用户编号不能为空”，弹窗不关闭，不保存"
+    }
+   ],
+   "expected_result": "保存被拦截，提示用户编号必填。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "保存时用户编号不存在提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的用户编号99999999，选择永久，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗，用户99999999不存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号99999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期永久",
+     "expected": "选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "提示“用户不存在”，弹窗不关闭，不保存"
+    }
+   ],
+   "expected_result": "保存被拦截，提示用户不存在。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "保存时用户编号重复提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入已关联的用户编号10044654，选择永久，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，用户10044654已关联当前头像框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期永久",
+     "expected": "选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "提示“该用户已关联”，弹窗不关闭，不保存"
+    }
+   ],
+   "expected_result": "保存被拦截，提示用户已关联。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "用户编号输入非数字字符校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入包含字母的用户编号abc123，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号abc123",
+     "expected": "输入框可能接受或拒绝，若接受则保存时校验"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期永久",
+     "expected": "选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "提示“用户编号格式不正确”，弹窗不关闭，不保存"
+    }
+   ],
+   "expected_result": "保存被拦截，提示格式错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "用户编号超长输入校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过20位的数字用户编号123456789012345678901，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号123456789012345678901",
+     "expected": "输入框可能限制长度或接受"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期永久",
+     "expected": "选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "提示“用户编号长度不能超过20位”，弹窗不关闭，不保存"
+    }
+   ],
+   "expected_result": "保存被拦截，提示长度超限。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "选择定时时显示时间必填校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择有效期定时，不填写显示时间，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗，输入有效用户编号10044654。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期定时",
+     "expected": "显示时间字段变为可编辑且必填"
+    },
+    {
+     "step": 3,
+     "desc": "不填写显示时间，点击保存",
+     "expected": "提示“请选择显示时间”，弹窗不关闭，不保存"
+    }
+   ],
+   "expected_result": "保存被拦截，提示显示时间必填。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "选择定时时显示时间开始晚于结束时间校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择定时，设置显示开始时间2018-09-10 14:20:00，结束时间2018-09-09 14:20:00，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗，输入有效用户编号10044654。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期定时",
+     "expected": "显示时间字段可编辑"
+    },
+    {
+     "step": 3,
+     "desc": "设置开始时间2018-09-10 14:20:00，结束时间2018-09-09 14:20:00",
+     "expected": "时间设置成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存按钮",
+     "expected": "提示“开始时间不能晚于结束时间”，弹窗不关闭，不保存"
+    }
+   ],
+   "expected_result": "保存被拦截，提示时间逻辑错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "选择定时时显示时间开始等于结束时间保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "选择定时，设置开始和结束时间均为2018-09-09 14:20:00，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗，输入有效用户编号10044654。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期定时",
+     "expected": "显示时间字段可编辑"
+    },
+    {
+     "step": 3,
+     "desc": "设置开始和结束时间均为2018-09-09 14:20:00",
+     "expected": "时间设置成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，弹窗关闭，关联用户列表新增记录，显示开始和结束时间相同"
+    }
+   ],
+   "expected_result": "保存成功，允许开始等于结束时间。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "选择永久时显示时间字段隐藏或禁用",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择有效期永久，观察显示时间字段状态。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开添加用户弹窗",
+     "expected": "弹窗显示，有效期默认选中永久"
+    },
+    {
+     "step": 2,
+     "desc": "观察显示时间字段",
+     "expected": "显示时间字段隐藏或置灰不可编辑"
+    }
+   ],
+   "expected_result": "显示时间字段不可编辑，符合永久有效期逻辑。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "选择定时时显示时间字段可编辑",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择有效期定时，观察显示时间字段状态。",
+   "preconditions": "已登录运营后台，进入关联用户页面，打开添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开添加用户弹窗",
+     "expected": "弹窗显示，有效期默认选中永久"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期定时",
+     "expected": "显示时间字段变为可编辑，且必填"
+    }
+   ],
+   "expected_result": "显示时间字段可编辑，且必填。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "导出失败信息成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "批量添加用户后，存在失败记录，点击导出失败信息按钮。",
+   "preconditions": "已登录运营后台，进入关联用户页面，执行批量添加操作，存在失败记录，批量添加结果弹窗已打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开批量添加结果弹窗",
+     "expected": "弹窗显示成功和失败条数"
+    },
+    {
+     "step": 2,
+     "desc": "点击导出失败信息按钮",
+     "expected": "浏览器下载失败信息文件（如Excel），文件包含失败用户编号及失败原因"
+    }
+   ],
+   "expected_result": "成功导出失败信息文件，内容正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "无失败信息时导出按钮不可用",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "批量添加用户全部成功，无失败记录，观察导出失败信息按钮状态。",
+   "preconditions": "已登录运营后台，进入关联用户页面，执行批量添加操作，全部成功，批量添加结果弹窗已打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开批量添加结果弹窗",
+     "expected": "弹窗显示成功条数，失败条数为0"
+    },
+    {
+     "step": 2,
+     "desc": "观察导出失败信息按钮",
+     "expected": "按钮置灰不可点击"
+    }
+   ],
+   "expected_result": "导出按钮置灰，不可点击。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "批量添加结果弹窗显示成功条数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "批量添加1000个用户，全部成功，查看弹窗成功条数。",
+   "preconditions": "已登录运营后台，进入关联用户页面，执行批量添加操作，1000个用户全部有效且未关联。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "执行批量添加1000个用户",
+     "expected": "批量添加完成"
+    },
+    {
+     "step": 2,
+     "desc": "查看批量添加结果弹窗",
+     "expected": "弹窗显示“共1000条信息，成功1000条，失败0条”"
+    }
+   ],
+   "expected_result": "成功条数显示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "批量添加结果弹窗显示失败条数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "批量添加1000个用户，其中234个用户不存在或已关联，查看弹窗失败条数。",
+   "preconditions": "已登录运营后台，进入关联用户页面，执行批量添加操作，其中234个用户无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "执行批量添加1000个用户",
+     "expected": "批量添加完成"
+    },
+    {
+     "step": 2,
+     "desc": "查看批量添加结果弹窗",
+     "expected": "弹窗显示“共1000条信息，成功766条，失败234条”"
+    }
+   ],
+   "expected_result": "失败条数显示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "批量添加结果弹窗关闭",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "批量添加用户后，点击关闭按钮关闭弹窗。",
+   "preconditions": "已登录运营后台，进入关联用户页面，执行批量添加操作，批量添加结果弹窗已打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开批量添加结果弹窗",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击关闭按钮",
+     "expected": "弹窗关闭，页面回到关联用户列表"
+    }
+   ],
+   "expected_result": "弹窗正常关闭。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "批量添加结果弹窗关闭后数据清空",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "关闭批量添加结果弹窗后，再次打开，观察是否显示上次数据。",
+   "preconditions": "已登录运营后台，进入关联用户页面，执行批量添加操作，关闭结果弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "执行批量添加操作，关闭结果弹窗",
+     "expected": "弹窗关闭"
+    },
+    {
+     "step": 2,
+     "desc": "再次执行批量添加操作，打开结果弹窗",
+     "expected": "弹窗显示新的结果，不残留上次数据"
+    }
+   ],
+   "expected_result": "弹窗数据已清空，显示新结果。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "批量添加结果弹窗展示成功和失败条数",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "批量添加用户后，查看弹窗中成功和失败条数。",
+   "preconditions": "已登录运营后台，进入关联用户页面，执行批量添加操作，存在成功和失败记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "执行批量添加用户",
+     "expected": "批量添加完成"
+    },
+    {
+     "step": 2,
+     "desc": "查看批量添加结果弹窗",
+     "expected": "弹窗显示“共X条信息，成功Y条，失败Z条”，且Y+Z=X"
+    }
+   ],
+   "expected_result": "弹窗正确展示成功和失败条数。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "确定移除单个用户-成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已关联的用户编号10044654，该用户当前显示时间为永久，用于验证移除操作。",
+   "preconditions": "已登录运营后台，进入头像框管理页，点击某头像框的「关联用户」进入关联用户页面，列表中存在用户10044654。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击用户10044654所在行的「移除」按钮",
+     "expected": "弹出确认弹窗，提示「确定移除该用户吗？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击弹窗中的「确定」按钮",
+     "expected": "弹窗关闭，列表刷新，该用户从列表中移除，并出现成功提示「移除成功」"
+    }
+   ],
+   "expected_result": "用户10044654从关联用户列表中移除，数据库关联关系删除，页面显示成功提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "确定移除单个用户-取消",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用已关联的用户10029291，验证取消移除操作。",
+   "preconditions": "已登录运营后台，进入关联用户页面，列表中存在用户10029291。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击用户10029291所在行的「移除」按钮",
+     "expected": "弹出确认弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击弹窗中的「取消」按钮",
+     "expected": "弹窗关闭，列表不变，用户仍保留在列表中"
+    }
+   ],
+   "expected_result": "用户10029291仍保留在关联用户列表中，数据库无变化。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "用户列表展示-正常显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有用户数据：用户编号10044654、10029291、10043789，分别对应永久、定时显示等不同情况。",
+   "preconditions": "已登录运营后台，进入关联用户页面，存在至少3条关联用户记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开关联用户页面",
+     "expected": "页面展示用户列表，包含列：用户编号、用户昵称、显示开始时间、显示结束时间、操作"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表数据",
+     "expected": "每条记录显示正确的用户编号、昵称、显示时间；永久显示的用户显示「永久」，定时显示的用户显示具体时间范围"
+    }
+   ],
+   "expected_result": "列表数据完整、格式正确，与数据库记录一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "用户列表展示-空数据",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无关联用户的头像框，验证空列表展示。",
+   "preconditions": "已登录运营后台，进入一个无关联用户的头像框的关联用户页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开关联用户页面",
+     "expected": "列表显示空数据，页面展示「暂无数据」或空列表，不报错"
+    }
+   ],
+   "expected_result": "页面正常展示空状态，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "确认弹窗-确定移除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用用户10043789，验证确认移除操作。",
+   "preconditions": "已登录运营后台，进入关联用户页面，存在用户10043789。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击用户10043789的「移除」按钮",
+     "expected": "弹出确认弹窗，显示「确定移除该用户吗？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，列表移除该用户，出现成功提示"
+    }
+   ],
+   "expected_result": "用户10043789被移除，数据库关联关系删除。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "确认弹窗-取消移除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "使用用户10044654，验证取消操作。",
+   "preconditions": "已登录运营后台，进入关联用户页面，存在用户10044654。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击用户10044654的「移除」按钮",
+     "expected": "弹出确认弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，列表不变"
+    }
+   ],
+   "expected_result": "用户10044654仍保留，数据库无变化。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "批量移除选中用户-成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用用户10044654和10029291，两个用户均存在且可移除。",
+   "preconditions": "已登录运营后台，进入关联用户页面，列表中存在至少两个用户。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "勾选用户10044654和10029291的复选框",
+     "expected": "复选框被选中，页面显示已选数量"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定移除选中用户」按钮",
+     "expected": "弹出确认弹窗，提示「确定移除选中用户吗？」"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，列表刷新，这两个用户被移除，出现成功提示「移除成功」"
+    }
+   ],
+   "expected_result": "选中的两个用户均被移除，数据库关联关系删除。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "批量移除选中用户-未选中任何用户",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "不勾选任何用户，直接点击批量移除按钮。",
+   "preconditions": "已登录运营后台，进入关联用户页面，列表有数据但未勾选任何用户。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不勾选任何用户，直接点击「确定移除选中用户」按钮",
+     "expected": "按钮不可点击或点击后提示「请先选择要移除的用户」"
+    }
+   ],
+   "expected_result": "无法执行批量移除，提示用户先选择。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "批量移除选中用户-部分失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "勾选一个正常用户和一个已被删除的用户（模拟数据不一致），验证部分失败处理。",
+   "preconditions": "已登录运营后台，进入关联用户页面，存在一个正常用户，另一个用户数据已被其他操作删除。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "勾选正常用户和异常用户",
+     "expected": "复选框选中"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定移除选中用户」并确认",
+     "expected": "正常用户被移除，异常用户提示失败，页面显示「成功1条，失败1条」"
+    }
+   ],
+   "expected_result": "部分成功部分失败，有明确提示，正常用户已移除，异常用户未移除。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "添加用户-单个添加成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入有效的用户编号10012345，选择有效期「永久」，点击保存。",
+   "preconditions": "已登录运营后台，进入关联用户页面，点击「添加用户」打开添加弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「添加用户」按钮",
+     "expected": "弹出添加用户弹窗，包含用户编号输入框、有效期选择、显示时间设置等"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号10012345",
+     "expected": "输入框显示该编号"
+    },
+    {
+     "step": 3,
+     "desc": "选择有效期「永久」",
+     "expected": "显示时间区域隐藏或置灰"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "弹窗关闭，列表新增该用户，显示「永久」，出现成功提示"
+    }
+   ],
+   "expected_result": "用户10012345成功关联，数据库新增关联记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "添加用户-用户编号为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号输入框留空，点击保存。",
+   "preconditions": "已登录运营后台，进入添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开添加用户弹窗",
+     "expected": "弹窗正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "不输入用户编号，直接点击「保存」",
+     "expected": "提示「请输入用户编号」，保存不执行"
+    }
+   ],
+   "expected_result": "无法保存，提示用户编号必填。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "添加用户-用户编号不存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入一个不存在的用户编号99999999，验证系统校验。",
+   "preconditions": "已登录运营后台，进入添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入不存在的用户编号99999999",
+     "expected": "输入框显示该编号"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "提示「用户不存在」或「用户编号无效」，保存不执行"
+    }
+   ],
+   "expected_result": "无法添加不存在的用户，有明确错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "添加用户-定时有效期设置",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入用户编号10067890，选择有效期「定时」，设置显示时间2024-01-01 00:00:00 ~ 2024-12-31 23:59:59。",
+   "preconditions": "已登录运营后台，进入添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号10067890",
+     "expected": "输入框显示"
+    },
+    {
+     "step": 2,
+     "desc": "选择有效期「定时」",
+     "expected": "显示时间区域可编辑"
+    },
+    {
+     "step": 3,
+     "desc": "设置显示时间为2024-01-01 00:00:00 ~ 2024-12-31 23:59:59",
+     "expected": "时间正确显示"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "弹窗关闭，列表新增该用户，显示开始和结束时间，出现成功提示"
+    }
+   ],
+   "expected_result": "用户10067890成功关联，显示时间正确，数据库记录正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "添加用户-定时时间范围错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "设置开始时间晚于结束时间，如2024-12-31 23:59:59 ~ 2024-01-01 00:00:00。",
+   "preconditions": "已登录运营后台，进入添加用户弹窗，选择定时。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择有效期「定时」",
+     "expected": "时间输入框可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "输入开始时间2024-12-31 23:59:59，结束时间2024-01-01 00:00:00",
+     "expected": "时间输入框显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "提示「开始时间不能晚于结束时间」，保存不执行"
+    }
+   ],
+   "expected_result": "无法保存，提示时间范围错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "添加用户-批量添加成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用批量添加功能，输入多个用户编号（如100111,100222,100333），选择永久，点击保存。",
+   "preconditions": "已登录运营后台，进入添加用户弹窗，支持批量输入。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「添加用户」按钮",
+     "expected": "弹出添加弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框中输入多个编号，用逗号或换行分隔：100111,100222,100333",
+     "expected": "输入框显示多个编号"
+    },
+    {
+     "step": 3,
+     "desc": "选择有效期「永久」",
+     "expected": "显示时间隐藏"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "弹窗关闭，列表新增3个用户，出现成功提示「成功3条，失败0条」"
+    }
+   ],
+   "expected_result": "三个用户均成功关联，数据库新增3条记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "添加用户-批量添加部分失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入两个有效用户编号和一个无效编号（如100111,999999,100222），验证部分失败。",
+   "preconditions": "已登录运营后台，进入添加用户弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入用户编号：100111,999999,100222",
+     "expected": "输入框显示"
+    },
+    {
+     "step": 2,
+     "desc": "选择永久，点击「保存」",
+     "expected": "弹窗关闭，列表新增两个有效用户，弹出「批量添加结果」提示：共3条信息，成功2条，失败1条，并提供「导出失败信息」按钮"
+    }
+   ],
+   "expected_result": "有效用户添加成功，无效用户失败，有明确统计和导出功能。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "展示内部名称-正常显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用头像框「最受欢迎主播金奖」的内部名称，验证页面展示。",
+   "preconditions": "已登录运营后台，进入头像框管理页，点击「关联用户」进入关联用户页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入关联用户页面",
+     "expected": "页面顶部或标题位置展示当前头像框的内部名称，如「最受欢迎主播金奖」"
+    }
+   ],
+   "expected_result": "内部名称正确显示，与头像框管理页一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "展示内部名称-特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/头像框/关联用户",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用包含特殊字符的内部名称（如「测试&*%」）的头像框，验证展示。",
+   "preconditions": "已登录运营后台，存在一个内部名称包含特殊字符的头像框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入该头像框的关联用户页面",
+     "expected": "内部名称完整显示，无乱码或截断"
+    }
+   ],
+   "expected_result": "内部名称正确显示，特殊字符正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "搜索勋章-按内部名称精确匹配",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已存在的勋章内部名称'最受欢迎主播金奖'，该名称在列表中存在。",
+   "preconditions": "已登录运营后台，勋章列表存在名称为'最受欢迎主播金奖'的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "页面正常显示勋章列表"
+    },
+    {
+     "step": 2,
+     "desc": "在内部名称搜索框输入'最受欢迎主播金奖'",
+     "expected": "输入框显示该文本"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表刷新，仅显示内部名称为'最受欢迎主播金奖'的记录，共X条显示为1"
+    }
+   ],
+   "expected_result": "搜索成功，列表只显示匹配的记录，共X条正确更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "搜索勋章-输入不存在的内部名称",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的内部名称'不存在的勋章'，确保无匹配记录。",
+   "preconditions": "已登录运营后台，勋章列表无该名称记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "页面正常显示勋章列表"
+    },
+    {
+     "step": 2,
+     "desc": "在内部名称搜索框输入'不存在的勋章'",
+     "expected": "输入框显示该文本"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示空数据，共X条显示为0，页面提示'暂无数据'"
+    }
+   ],
+   "expected_result": "搜索无结果，列表为空，共X条为0。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "搜索勋章-重置搜索条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先搜索'最受欢迎主播金奖'，再点击重置，应恢复全部列表。",
+   "preconditions": "已登录运营后台，勋章列表有多条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，输入内部名称'最受欢迎主播金奖'并搜索",
+     "expected": "列表仅显示该记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击重置按钮",
+     "expected": "搜索框清空，列表恢复显示全部勋章记录，共X条恢复为总数"
+    }
+   ],
+   "expected_result": "重置后搜索条件清空，列表恢复全部数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "搜索勋章-输入特殊字符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符'%_@'，验证系统能正确处理，不报错。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，在内部名称搜索框输入'%_@'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示空数据或提示无匹配，不出现系统错误"
+    }
+   ],
+   "expected_result": "系统正常处理特殊字符，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "内部名称-列表展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的勋章记录，内部名称列显示'最受欢迎主播金奖'等。",
+   "preconditions": "已登录运营后台，勋章列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看内部名称列",
+     "expected": "每行显示对应的内部名称，如'最受欢迎主播金奖'"
+    }
+   ],
+   "expected_result": "内部名称列正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "内部名称-新增时为空校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增勋章时，内部名称留空，验证必填校验。",
+   "preconditions": "已登录运营后台，点击新增按钮打开新增弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "内部名称留空，其他字段填写合法值",
+     "expected": "内部名称输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "提示'内部名称不能为空'，保存不成功"
+    }
+   ],
+   "expected_result": "内部名称为空时无法保存，给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "内部名称-长度边界校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "内部名称输入50个字符（假设上限50），验证边界。",
+   "preconditions": "已登录运营后台，新增勋章弹窗打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "在内部名称输入50个字符'奖'重复50次",
+     "expected": "输入框允许输入50个字符"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存成功，列表出现该记录"
+    }
+   ],
+   "expected_result": "50字符边界可保存。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "内部名称-超长校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "内部名称输入51个字符，验证超长限制。",
+   "preconditions": "已登录运营后台，新增勋章弹窗打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "在内部名称输入51个字符'奖'重复51次",
+     "expected": "输入框限制最多50个字符，无法输入第51个"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存成功（若输入被截断）或提示超长"
+    }
+   ],
+   "expected_result": "超长输入被限制或提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "请输入占位符显示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "检查搜索框和新增弹窗输入框的占位符。",
+   "preconditions": "已登录运营后台，进入勋章页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看搜索框",
+     "expected": "显示占位符'请输入'"
+    },
+    {
+     "step": 2,
+     "desc": "点击新增按钮，查看内部名称输入框",
+     "expected": "显示占位符'请输入'"
+    }
+   ],
+   "expected_result": "占位符正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "共X条-显示正确总数",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "勋章列表有3条记录，验证共X条显示3。",
+   "preconditions": "已登录运营后台，勋章列表有3条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示3条记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看共X条文本",
+     "expected": "显示'共3条'"
+    }
+   ],
+   "expected_result": "共X条正确显示记录总数。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "共X条-搜索后更新",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "搜索'最受欢迎主播金奖'后，共X条应变为1。",
+   "preconditions": "已登录运营后台，勋章列表有多条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，搜索'最受欢迎主播金奖'",
+     "expected": "列表仅显示该记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看共X条",
+     "expected": "显示'共1条'"
+    }
+   ],
+   "expected_result": "共X条随搜索条件更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "图片-正常显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "勋章记录有图片，验证图片列显示缩略图。",
+   "preconditions": "已登录运营后台，勋章列表有带图片的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看图片列",
+     "expected": "每行显示对应的勋章图片缩略图"
+    }
+   ],
+   "expected_result": "图片正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "图片-加载失败占位",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟图片加载失败，验证显示默认占位图。",
+   "preconditions": "已登录运营后台，存在图片损坏或无法访问的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看图片列",
+     "expected": "加载失败的图片显示默认占位图，不显示裂图"
+    }
+   ],
+   "expected_result": "图片加载失败时显示占位图。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "装扮编号-正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看勋章记录的装扮编号，如'928198309127'。",
+   "preconditions": "已登录运营后台，勋章列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看装扮编号列",
+     "expected": "每行显示对应的装扮编号，如'928198309127'"
+    }
+   ],
+   "expected_result": "装扮编号正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "头像挂件名称-正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看勋章记录的头像挂件名称，如'最受欢迎主播金奖'。",
+   "preconditions": "已登录运营后台，勋章列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看头像挂件名称列",
+     "expected": "每行显示对应的头像挂件名称"
+    }
+   ],
+   "expected_result": "头像挂件名称正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "关联用户数-正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看勋章记录的关联用户数，如'1'。",
+   "preconditions": "已登录运营后台，勋章列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联用户数列",
+     "expected": "每行显示对应的关联用户数，如'1'"
+    }
+   ],
+   "expected_result": "关联用户数正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "最受欢迎主播金奖-列表展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "验证名称为'最受欢迎主播金奖'的勋章在列表中显示。",
+   "preconditions": "已登录运营后台，勋章列表包含该记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查找'最受欢迎主播金奖'记录",
+     "expected": "列表中存在该名称的记录，且数据正确"
+    }
+   ],
+   "expected_result": "该勋章正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "大人物铜奖-列表展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "验证名称为'大人物铜奖'的勋章在列表中显示。",
+   "preconditions": "已登录运营后台，勋章列表包含该记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查找'大人物铜奖'记录",
+     "expected": "列表中存在该名称的记录，且数据正确"
+    }
+   ],
+   "expected_result": "该勋章正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "大人物银奖-列表展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "验证名称为'大人物银奖'的勋章在列表中显示。",
+   "preconditions": "已登录运营后台，勋章列表包含该记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "列表显示勋章记录"
+    },
+    {
+     "step": 2,
+     "desc": "查找'大人物银奖'记录",
+     "expected": "列表中存在该名称的记录，且数据正确"
+    }
+   ],
+   "expected_result": "该勋章正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "新增勋章-成功新增",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "填写合法数据：内部名称'测试勋章'，展示名称'测试勋章'，英文名称'Test'，阿语名称'اختبار'，上传符合要求的图片。",
+   "preconditions": "已登录运营后台，有新增权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写内部名称'测试勋章'，展示名称'测试勋章'，英文名称'Test'，阿语名称'اختبار'",
+     "expected": "各字段正确显示"
+    },
+    {
+     "step": 3,
+     "desc": "上传符合要求的展示图片（PNG，300*300，小于300K）",
+     "expected": "图片上传成功，显示预览"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，弹窗关闭，列表刷新出现新记录'测试勋章'"
+    }
+   ],
+   "expected_result": "新增勋章成功，列表出现新记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "新增勋章-必填字段缺失",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "内部名称、展示名称、英文名称、阿语名称均留空，图片不上传。",
+   "preconditions": "已登录运营后台，新增弹窗打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "所有字段留空，不传图片",
+     "expected": "各字段为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "提示必填项不能为空，如'内部名称不能为空'，保存不成功"
+    }
+   ],
+   "expected_result": "必填项缺失时无法保存，给出提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "新增勋章-图片格式错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "上传JPG格式图片（应仅支持PNG），验证格式校验。",
+   "preconditions": "已登录运营后台，新增弹窗打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "上传一个JPG格式的图片文件",
+     "expected": "系统提示'格式不支持，仅支持PNG'，上传失败"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存不成功，提示图片格式错误"
+    }
+   ],
+   "expected_result": "图片格式错误时上传失败并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "新增勋章-图片大小超限",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "上传大小为300K的图片（边界值），验证是否允许。",
+   "preconditions": "已登录运营后台，新增弹窗打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "上传一个正好300K的PNG图片",
+     "expected": "上传成功（若边界允许）或提示'大小不能超过300K'"
+    }
+   ],
+   "expected_result": "边界大小图片处理正确。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "新增勋章-取消操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理-勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "填写部分信息后点击取消，验证弹窗关闭且不保存。",
+   "preconditions": "已登录运营后台，新增弹窗打开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写内部名称'测试'",
+     "expected": "输入框显示'测试'"
+    },
+    {
+     "step": 3,
+     "desc": "点击取消按钮",
+     "expected": "弹窗关闭，列表无新增记录"
+    }
+   ],
+   "expected_result": "取消后不保存，弹窗关闭。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "新增勋章-输入有效用户编号和皮肤编号后点击确定，关联成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号：10044654（系统中存在的用户），皮肤编号：928198309127（系统中存在的勋章皮肤编号）",
+   "preconditions": "已登录运营后台，具有勋章管理权限；存在用户编号10044654和皮肤编号928198309127",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗，包含用户编号、皮肤编号输入框和取消、确定按钮"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入10044654",
+     "expected": "输入成功，无异常提示"
+    },
+    {
+     "step": 3,
+     "desc": "在皮肤编号输入框输入928198309127",
+     "expected": "输入成功，无异常提示"
+    },
+    {
+     "step": 4,
+     "desc": "点击确定按钮",
+     "expected": "弹窗关闭，提示“关联成功”；数据库新增关联记录，勋章列表关联用户数增加"
+    }
+   ],
+   "expected_result": "关联成功，弹窗关闭，数据库新增关联记录，列表关联用户数更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "新增勋章-用户编号为空时点击确定，提示必填",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号留空，皮肤编号输入有效值928198309127",
+   "preconditions": "已登录运营后台，具有勋章管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "用户编号输入框留空",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "皮肤编号输入928198309127",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击确定按钮",
+     "expected": "提示“用户编号不能为空”，弹窗不关闭，不提交请求"
+    }
+   ],
+   "expected_result": "提示用户编号必填，弹窗不关闭，无数据提交",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "新增勋章-皮肤编号为空时点击确定，提示必填",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号输入有效值10044654，皮肤编号留空",
+   "preconditions": "已登录运营后台，具有勋章管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "用户编号输入10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "皮肤编号输入框留空",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击确定按钮",
+     "expected": "提示“皮肤编号不能为空”，弹窗不关闭，不提交请求"
+    }
+   ],
+   "expected_result": "提示皮肤编号必填，弹窗不关闭，无数据提交",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "新增勋章-用户编号格式非法（含字母）时点击确定，提示格式错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：abc123（非纯数字），皮肤编号：928198309127",
+   "preconditions": "已登录运营后台，具有勋章管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "用户编号输入abc123",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "皮肤编号输入928198309127",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击确定按钮",
+     "expected": "提示“用户编号格式错误，请输入数字”，弹窗不关闭，不提交请求"
+    }
+   ],
+   "expected_result": "提示用户编号格式错误，弹窗不关闭，无数据提交",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "新增勋章-皮肤编号格式非法（含特殊字符）时点击确定，提示格式错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：10044654，皮肤编号：9281@98309127（含@）",
+   "preconditions": "已登录运营后台，具有勋章管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "用户编号输入10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "皮肤编号输入9281@98309127",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击确定按钮",
+     "expected": "提示“皮肤编号格式错误，请输入数字”，弹窗不关闭，不提交请求"
+    }
+   ],
+   "expected_result": "提示皮肤编号格式错误，弹窗不关闭，无数据提交",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "新增勋章-用户编号不存在时点击确定，提示用户不存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：99999999（系统中不存在的用户），皮肤编号：928198309127",
+   "preconditions": "已登录运营后台，具有勋章管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "用户编号输入99999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "皮肤编号输入928198309127",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击确定按钮",
+     "expected": "提示“用户不存在”，弹窗不关闭，不提交请求"
+    }
+   ],
+   "expected_result": "提示用户不存在，弹窗不关闭，无数据提交",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "新增勋章-皮肤编号不存在时点击确定，提示皮肤不存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：10044654，皮肤编号：00000000（系统中不存在的皮肤编号）",
+   "preconditions": "已登录运营后台，具有勋章管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "用户编号输入10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "皮肤编号输入00000000",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击确定按钮",
+     "expected": "提示“皮肤不存在”，弹窗不关闭，不提交请求"
+    }
+   ],
+   "expected_result": "提示皮肤不存在，弹窗不关闭，无数据提交",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "新增勋章-重复关联同一用户和皮肤时点击确定，提示已关联",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：10044654，皮肤编号：928198309127，且该关联已存在",
+   "preconditions": "已登录运营后台，具有勋章管理权限；用户10044654已关联皮肤928198309127",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "用户编号输入10044654",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "皮肤编号输入928198309127",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击确定按钮",
+     "expected": "提示“该用户已关联此勋章”，弹窗不关闭，不提交请求"
+    }
+   ],
+   "expected_result": "提示重复关联，弹窗不关闭，无数据提交",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "新增勋章-点击取消按钮，弹窗关闭且不保存数据",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号：10044654，皮肤编号：928198309127（输入后取消）",
+   "preconditions": "已登录运营后台，具有勋章管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“新增”按钮",
+     "expected": "弹出新增勋章弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号10044654和皮肤编号928198309127",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击取消按钮",
+     "expected": "弹窗关闭，输入内容清空，数据库无新增关联记录"
+    }
+   ],
+   "expected_result": "弹窗关闭，无数据提交，数据库无变化",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "删除勋章-点击删除后确认，勋章被删除且列表刷新",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择勋章“最受欢迎主播金奖”（装扮编号928198309127）进行删除",
+   "preconditions": "已登录运营后台，具有勋章管理权限；存在勋章“最受欢迎主播金奖”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，找到“最受欢迎主播金奖”行",
+     "expected": "列表显示该勋章"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行“删除”按钮",
+     "expected": "弹出确认框，提示“确定要删除此勋章？”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确定”",
+     "expected": "提示“删除成功”，列表刷新，该勋章不再显示；数据库记录删除"
+    }
+   ],
+   "expected_result": "删除成功，列表刷新，数据库记录删除",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "删除勋章-点击删除后取消，勋章未被删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择勋章“大人物铜奖”（装扮编号908981283911）进行删除，但取消确认",
+   "preconditions": "已登录运营后台，具有勋章管理权限；存在勋章“大人物铜奖”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，找到“大人物铜奖”行",
+     "expected": "列表显示该勋章"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行“删除”按钮",
+     "expected": "弹出确认框，提示“确定要删除此勋章？”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”",
+     "expected": "确认框关闭，列表无变化，数据库记录未删除"
+    }
+   ],
+   "expected_result": "取消删除，勋章保留，数据库无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "删除勋章-删除已关联用户的勋章，确认后关联关系解除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "positive",
+   "test_data_note": "勋章“最受欢迎主播金奖”已关联用户10044654，删除该勋章",
+   "preconditions": "已登录运营后台，具有勋章管理权限；勋章“最受欢迎主播金奖”已关联用户10044654",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，找到“最受欢迎主播金奖”行",
+     "expected": "列表显示该勋章，关联用户数为1"
+    },
+    {
+     "step": 2,
+     "desc": "点击“删除”按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确定”",
+     "expected": "删除成功，列表刷新；关联用户表中该勋章与用户的关联记录被删除"
+    }
+   ],
+   "expected_result": "勋章删除，关联关系解除，数据库关联记录删除",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "编辑勋章-点击编辑按钮，弹窗回显勋章信息并可保存修改",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "编辑勋章“大人物银奖”（装扮编号981276276711），修改内部名称为“大人物银奖-新”",
+   "preconditions": "已登录运营后台，具有勋章管理权限；存在勋章“大人物银奖”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，找到“大人物银奖”行",
+     "expected": "列表显示该勋章"
+    },
+    {
+     "step": 2,
+     "desc": "点击“编辑”按钮",
+     "expected": "弹出编辑勋章弹窗，字段回显当前信息（内部名称、展示名称等）"
+    },
+    {
+     "step": 3,
+     "desc": "修改内部名称为“大人物银奖-新”",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”",
+     "expected": "提示“保存成功”，弹窗关闭，列表刷新显示新名称；数据库记录更新"
+    }
+   ],
+   "expected_result": "保存成功，列表刷新，数据库记录更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "编辑勋章-内部名称重复时保存，提示名称已存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "编辑勋章“大人物银奖”，将内部名称改为“最受欢迎主播金奖”（已存在）",
+   "preconditions": "已登录运营后台，具有勋章管理权限；存在勋章“最受欢迎主播金奖”和“大人物银奖”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，找到“大人物银奖”行",
+     "expected": "列表显示该勋章"
+    },
+    {
+     "step": 2,
+     "desc": "点击“编辑”按钮",
+     "expected": "弹出编辑勋章弹窗"
+    },
+    {
+     "step": 3,
+     "desc": "将内部名称修改为“最受欢迎主播金奖”",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”",
+     "expected": "提示“内部名称已存在”，弹窗不关闭，数据库无更新"
+    }
+   ],
+   "expected_result": "提示名称重复，保存失败，数据库无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "关联用户-点击关联用户按钮，进入关联用户弹窗并展示已关联用户列表",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "勋章“最受欢迎主播金奖”已关联用户10044654，进入关联用户弹窗",
+   "preconditions": "已登录运营后台，具有勋章管理权限；勋章“最受欢迎主播金奖”已关联用户10044654",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，找到“最受欢迎主播金奖”行",
+     "expected": "列表显示该勋章"
+    },
+    {
+     "step": 2,
+     "desc": "点击“关联用户”按钮",
+     "expected": "弹出关联用户弹窗，显示已关联用户列表（用户编号、昵称、显示时间、操作）"
+    }
+   ],
+   "expected_result": "弹窗打开，已关联用户列表正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "关联用户-添加用户时用户编号为空，提示必填",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号留空，有效期选择永久",
+   "preconditions": "已登录运营后台，具有勋章管理权限；已打开关联用户弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“关联用户”按钮",
+     "expected": "弹出关联用户弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击“添加用户”按钮",
+     "expected": "出现添加用户输入区域"
+    },
+    {
+     "step": 3,
+     "desc": "用户编号输入框留空",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”",
+     "expected": "提示“用户编号不能为空”，不提交请求"
+    }
+   ],
+   "expected_result": "提示用户编号必填，保存失败",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "关联用户-添加用户时用户编号不存在，提示用户不存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：99999999（不存在），有效期选择永久",
+   "preconditions": "已登录运营后台，具有勋章管理权限；已打开关联用户弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“关联用户”按钮",
+     "expected": "弹出关联用户弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击“添加用户”按钮",
+     "expected": "出现添加用户输入区域"
+    },
+    {
+     "step": 3,
+     "desc": "用户编号输入99999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”",
+     "expected": "提示“用户不存在”，不提交请求"
+    }
+   ],
+   "expected_result": "提示用户不存在，保存失败",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "关联用户-添加用户时有效期选择定时且显示时间结束早于开始，提示时间错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：10029291，有效期选择定时，显示时间：2018-09-10 14:20:00 ~ 2018-09-09 14:20:00（结束早于开始）",
+   "preconditions": "已登录运营后台，具有勋章管理权限；已打开关联用户弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“关联用户”按钮",
+     "expected": "弹出关联用户弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击“添加用户”按钮",
+     "expected": "出现添加用户输入区域"
+    },
+    {
+     "step": 3,
+     "desc": "用户编号输入10029291",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "有效期选择“定时”",
+     "expected": "显示时间输入框变为可编辑"
+    },
+    {
+     "step": 5,
+     "desc": "设置显示时间为2018-09-10 14:20:00 ~ 2018-09-09 14:20:00",
+     "expected": "输入成功"
+    },
+    {
+     "step": 6,
+     "desc": "点击“保存”",
+     "expected": "提示“结束时间不能早于开始时间”，不提交请求"
+    }
+   ],
+   "expected_result": "提示时间范围错误，保存失败",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "关联用户-移除已关联用户，确认后关联关系解除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "勋章“最受欢迎主播金奖”已关联用户10044654，移除该用户",
+   "preconditions": "已登录运营后台，具有勋章管理权限；勋章“最受欢迎主播金奖”已关联用户10044654",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“关联用户”按钮",
+     "expected": "弹出关联用户弹窗，列表显示用户10044654"
+    },
+    {
+     "step": 2,
+     "desc": "点击用户10044654行的“移除”按钮",
+     "expected": "弹出确认框，提示“确定移除该用户吗？”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确定”",
+     "expected": "提示“移除成功”，列表刷新，该用户不再显示；数据库关联记录删除"
+    }
+   ],
+   "expected_result": "移除成功，关联关系解除，数据库记录删除",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "关联用户-移除用户时点击取消，关联关系保留",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "勋章“最受欢迎主播金奖”已关联用户10044654，移除时取消",
+   "preconditions": "已登录运营后台，具有勋章管理权限；勋章“最受欢迎主播金奖”已关联用户10044654",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面，点击“关联用户”按钮",
+     "expected": "弹出关联用户弹窗，列表显示用户10044654"
+    },
+    {
+     "step": 2,
+     "desc": "点击用户10044654行的“移除”按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”",
+     "expected": "确认框关闭，列表无变化，数据库关联记录未删除"
+    }
+   ],
+   "expected_result": "取消移除，关联关系保留，数据库无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "联赛及球队管理-点击菜单跳转到对应页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "无特殊数据，仅验证导航跳转",
+   "preconditions": "已登录运营后台，具有勋章管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击左侧菜单“联赛及球队管理”",
+     "expected": "跳转到联赛及球队管理页面，URL正确"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "联赛及球队管理-无权限用户点击菜单，提示无权限",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的账号",
+   "preconditions": "已登录运营后台，但账号无联赛及球队管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入勋章页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击左侧菜单“联赛及球队管理”",
+     "expected": "提示“无权限访问”，不跳转"
+    }
+   ],
+   "expected_result": "提示无权限，不跳转",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "新增勋章-填写全部必填项并保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "内部名称='medal_001'（唯一标识），展示名称='最受欢迎主播金奖'（业务名称），英文名称='Most Popular Anchor Gold'，阿语名称='جائزة المذيع الأكثر شعبية الذهبية'，上传图片为300x300的PNG文件（大小200KB）",
+   "preconditions": "运营后台已登录，拥有装扮管理-勋章的新增权限，进入新增_编辑勋章页面（新增模式）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮进入新增勋章页面",
+     "expected": "页面显示标题「新增/编辑勋章」，各字段为空"
+    },
+    {
+     "step": 2,
+     "desc": "在「内部名称」输入框输入 'medal_001'",
+     "expected": "输入成功，显示 'medal_001'"
+    },
+    {
+     "step": 3,
+     "desc": "在「展示名称」输入框输入 '最受欢迎主播金奖'",
+     "expected": "输入成功，显示 '最受欢迎主播金奖'"
+    },
+    {
+     "step": 4,
+     "desc": "在「英文名称」输入框输入 'Most Popular Anchor Gold'",
+     "expected": "输入成功，显示 'Most Popular Anchor Gold'"
+    },
+    {
+     "step": 5,
+     "desc": "在「阿语名称」输入框输入 'جائزة المذيع الأكثر شعبية الذهبية'",
+     "expected": "输入成功，显示 'جائزة المذيع الأكثر شعبية الذهبية'"
+    },
+    {
+     "step": 6,
+     "desc": "点击「上传」按钮，选择符合要求的PNG图片（300x300，200KB）",
+     "expected": "图片上传成功，页面显示图片预览"
+    },
+    {
+     "step": 7,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，页面跳转回勋章列表页，列表新增该勋章记录"
+    }
+   ],
+   "expected_result": "勋章新增成功，数据库新增一条记录，内部名称、展示名称、英文名称、阿语名称、图片均正确保存，列表页可查询到该勋章。",
+   "remark": "正面用例，覆盖新增勋章基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "新增勋章-内部名称为空时保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "内部名称留空，其他字段填写有效值（展示名称='测试勋章'，英文名称='Test Medal'，阿语名称='وسام اختبار'，上传有效PNG图片）",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「内部名称」输入框不输入任何内容",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段（展示名称、英文名称、阿语名称）并上传有效图片",
+     "expected": "各字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「内部名称不能为空」，页面不跳转，数据库无新增记录"
+    }
+   ],
+   "expected_result": "保存失败，提示内部名称必填，不提交数据。",
+   "remark": "负面用例，验证必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "新增勋章-内部名称超过长度限制被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "内部名称输入51个字符（假设最大长度50），如 'a'重复51次，其他字段有效",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「内部名称」输入框输入51个字符 'aaaaaaaaaa...'（共51个a）",
+     "expected": "输入被限制或提示超长"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段并上传有效图片",
+     "expected": "其他字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「内部名称长度不能超过50个字符」，数据库无新增记录"
+    }
+   ],
+   "expected_result": "保存失败，提示长度超限，不提交数据。",
+   "remark": "边界用例，验证长度上限",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "编辑勋章-修改展示名称并保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已有勋章（内部名称='medal_001'，展示名称='旧名称'），编辑时将展示名称改为'新名称'，其他字段不变",
+   "preconditions": "运营后台已登录，勋章列表存在一条勋章记录，进入编辑模式",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在勋章列表点击该勋章的「编辑」按钮",
+     "expected": "进入编辑页面，各字段回显原有数据"
+    },
+    {
+     "step": 2,
+     "desc": "修改「展示名称」为 '新名称'",
+     "expected": "输入成功，显示 '新名称'"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，返回列表页，该勋章展示名称更新为 '新名称'"
+    }
+   ],
+   "expected_result": "勋章信息更新成功，数据库记录展示名称变为'新名称'，列表页显示更新后的名称。",
+   "remark": "正面用例，覆盖编辑基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-180"
+  },
+  {
+   "title": "编辑勋章-内部名称修改为已存在的名称被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "存在两个勋章：勋章A（内部名称='medal_001'），勋章B（内部名称='medal_002'），编辑勋章B时将内部名称改为'medal_001'",
+   "preconditions": "运营后台已登录，勋章列表存在勋章A和勋章B，进入勋章B的编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在编辑勋章B页面，将「内部名称」修改为 'medal_001'（与勋章A重复）",
+     "expected": "输入成功，显示 'medal_001'"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「内部名称已存在」，数据库无更新"
+    }
+   ],
+   "expected_result": "保存失败，提示内部名称重复，不更新数据。",
+   "remark": "负面用例，验证唯一性校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-181"
+  },
+  {
+   "title": "新增勋章-上传超过300K的PNG图片被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上传一个301KB的PNG图片（尺寸300x300），其他字段有效",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择301KB的PNG图片",
+     "expected": "上传被拒绝，提示「图片大小不能超过300K」"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段",
+     "expected": "其他字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「请上传符合要求的图片」，数据库无新增记录"
+    }
+   ],
+   "expected_result": "上传失败，保存被拦截，不提交数据。",
+   "remark": "负面用例，验证图片大小限制",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-182"
+  },
+  {
+   "title": "新增勋章-上传JPG格式图片被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "上传一个JPG格式图片（大小200KB，尺寸300x300），其他字段有效",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择JPG格式图片",
+     "expected": "上传被拒绝，提示「图片格式必须为PNG」"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段",
+     "expected": "其他字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「请上传符合要求的图片」，数据库无新增记录"
+    }
+   ],
+   "expected_result": "上传失败，保存被拦截，不提交数据。",
+   "remark": "负面用例，验证图片格式限制",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-183"
+  },
+  {
+   "title": "新增勋章-上传尺寸不符的图片被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上传一个PNG图片（大小200KB，尺寸299x300），其他字段有效",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择尺寸为299x300的PNG图片",
+     "expected": "上传被拒绝，提示「图片尺寸必须为300*300」"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段",
+     "expected": "其他字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「请上传符合要求的图片」，数据库无新增记录"
+    }
+   ],
+   "expected_result": "上传失败，保存被拦截，不提交数据。",
+   "remark": "负面用例，验证图片尺寸限制",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-184"
+  },
+  {
+   "title": "新增勋章-点击取消按钮放弃操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "在新增页面填写了部分字段（如内部名称='temp'），未保存",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「内部名称」输入框输入 'temp'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "页面关闭或返回列表页，输入内容不保存，数据库无新增记录"
+    }
+   ],
+   "expected_result": "取消操作成功，不保存任何数据，返回上一页或关闭弹窗。",
+   "remark": "负面用例，验证取消功能",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-185"
+  },
+  {
+   "title": "新增勋章-展示名称为空时保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "展示名称留空，其他字段有效（内部名称='medal_002'，英文名称='Test'，阿语名称='اختبار'，上传有效图片）",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「展示名称」输入框不输入任何内容",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段并上传有效图片",
+     "expected": "其他字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「展示名称不能为空」，数据库无新增记录"
+    }
+   ],
+   "expected_result": "保存失败，提示展示名称必填，不提交数据。",
+   "remark": "负面用例，验证必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-186"
+  },
+  {
+   "title": "新增勋章-英文名称包含非法字符被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "英文名称输入 'Test@123'（包含@符号），其他字段有效",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「英文名称」输入框输入 'Test@123'",
+     "expected": "输入成功，显示 'Test@123'"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段并上传有效图片",
+     "expected": "其他字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「英文名称只能包含英文字母、数字和空格」，数据库无新增记录"
+    }
+   ],
+   "expected_result": "保存失败，提示英文名称格式错误，不提交数据。",
+   "remark": "负面用例，验证英文名称格式校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-187"
+  },
+  {
+   "title": "新增勋章-阿语名称包含非法字符被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "阿语名称输入 'Test'（非阿语字符），其他字段有效",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「阿语名称」输入框输入 'Test'",
+     "expected": "输入成功，显示 'Test'"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段并上传有效图片",
+     "expected": "其他字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被拦截，提示「阿语名称只能包含阿拉伯字符」，数据库无新增记录"
+    }
+   ],
+   "expected_result": "保存失败，提示阿语名称格式错误，不提交数据。",
+   "remark": "负面用例，验证阿语名称格式校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-188"
+  },
+  {
+   "title": "新增勋章-点击联赛及球队管理菜单跳转",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "无特殊数据，仅验证菜单跳转",
+   "preconditions": "运营后台已登录，进入新增勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击左侧菜单「联赛及球队管理」",
+     "expected": "页面跳转到联赛及球队管理页面"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面。",
+   "remark": "正面用例，验证菜单导航",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-189"
+  },
+  {
+   "title": "新增勋章-未登录访问页面被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录状态，直接访问新增勋章页面URL",
+   "preconditions": "未登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在浏览器直接输入新增勋章页面的URL",
+     "expected": "被重定向到登录页面，无法访问该页面"
+    }
+   ],
+   "expected_result": "未登录用户无法访问，被重定向至登录页。",
+   "remark": "负面用例，验证权限控制",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-190"
+  },
+  {
+   "title": "新增勋章-无权限用户访问被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无装扮管理权限的运营账号登录",
+   "preconditions": "运营后台已登录，账号无装扮管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试访问新增勋章页面",
+     "expected": "页面提示无权限访问，或菜单不可见"
+    }
+   ],
+   "expected_result": "无权限用户无法访问新增勋章页面。",
+   "remark": "负面用例，验证权限控制",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-191"
+  },
+  {
+   "title": "上传尺寸为300*300的PNG展示图片成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一张尺寸为300*300像素、格式为PNG、大小小于1MB的图片，代表符合所有限制的正常业务场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择尺寸为300*300、格式为PNG、大小小于1MB的图片文件",
+     "expected": "文件被选中，上传区域显示该图片预览"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，勋章列表中出现该勋章，展示图片正常显示"
+    }
+   ],
+   "expected_result": "展示图片上传成功，保存成功，勋章创建成功，图片在列表中正常展示。",
+   "remark": "正面用例，覆盖尺寸、格式、大小均符合要求的情况",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-192"
+  },
+  {
+   "title": "上传尺寸为300*300但格式为JPG的展示图片被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用一张尺寸为300*300像素、格式为JPG、大小小于1MB的图片，代表格式不符合要求的业务场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择尺寸为300*300、格式为JPG、大小小于1MB的图片文件",
+     "expected": "系统提示「仅支持PNG、VAP格式」，文件不被接受"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被阻止，无法提交，提示格式错误"
+    }
+   ],
+   "expected_result": "上传被拒绝，保存被阻止，提示格式不符合要求。",
+   "remark": "负面用例，验证格式校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-193"
+  },
+  {
+   "title": "上传大小等于1MB的展示图片被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用一张尺寸为300*300像素、格式为PNG、大小恰好为1MB（1024KB）的图片，代表边界值场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择尺寸为300*300、格式为PNG、大小恰好为1MB的图片文件",
+     "expected": "系统提示「图片大小需小于1MB」，文件不被接受"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被阻止，无法提交，提示大小错误"
+    }
+   ],
+   "expected_result": "上传被拒绝，保存被阻止，提示大小不符合要求。",
+   "remark": "边界用例，验证大小上限边界值",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-194"
+  },
+  {
+   "title": "上传大小小于1MB的展示图片成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用一张尺寸为300*300像素、格式为PNG、大小恰好为1023KB（小于1MB）的图片，代表边界内正常场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮，选择尺寸为300*300、格式为PNG、大小1023KB的图片文件",
+     "expected": "文件被选中，上传区域显示该图片预览"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，勋章列表中出现该勋章"
+    }
+   ],
+   "expected_result": "上传成功，保存成功，勋章创建成功。",
+   "remark": "边界用例，验证大小上限边界值内正常",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-195"
+  },
+  {
+   "title": "上传资源文件成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一个符合要求的资源文件（如VAP动画文件），代表正常业务场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「资源文件」对应的「上传」按钮，选择一个VAP格式、大小小于1MB的资源文件",
+     "expected": "文件被选中，上传区域显示资源文件名称或预览"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，勋章创建成功，资源文件生效"
+    }
+   ],
+   "expected_result": "资源文件上传成功，保存成功，勋章创建成功。",
+   "remark": "正面用例，验证资源文件上传功能",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-196"
+  },
+  {
+   "title": "上传格式不支持的资源文件被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用一个GIF格式的资源文件，代表格式不符合要求的业务场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「资源文件」对应的「上传」按钮，选择一个GIF格式的资源文件",
+     "expected": "系统提示「仅支持PNG、VAP格式」，文件不被接受"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被阻止，无法提交，提示格式错误"
+    }
+   ],
+   "expected_result": "上传被拒绝，保存被阻止，提示格式不符合要求。",
+   "remark": "负面用例，验证资源文件格式校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-197"
+  },
+  {
+   "title": "上传大小超过1MB的资源文件被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用一个大小为2MB的VAP资源文件，代表大小超限的业务场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「资源文件」对应的「上传」按钮，选择一个大小为2MB的VAP资源文件",
+     "expected": "系统提示「资源文件大小需小于1MB」，文件不被接受"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存被阻止，无法提交，提示大小错误"
+    }
+   ],
+   "expected_result": "上传被拒绝，保存被阻止，提示大小不符合要求。",
+   "remark": "负面用例，验证资源文件大小校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-198"
+  },
+  {
+   "title": "不选择展示图片直接保存被阻止",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "不选择任何展示图片，直接点击保存，代表必填项缺失的业务场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不点击「上传」按钮，直接点击「保存」按钮",
+     "expected": "系统提示「请上传展示图片」，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示必须上传展示图片。",
+   "remark": "负面用例，验证必填项校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-199"
+  },
+  {
+   "title": "不选择资源文件直接保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "装扮管理/勋章/新增_编辑勋章",
+   "case_design_method": "错误推测",
+   "positive_negative": "positive",
+   "test_data_note": "不选择资源文件，仅上传展示图片，代表资源文件非必填的业务场景。",
+   "preconditions": "已登录运营后台，进入新增/编辑勋章页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "上传一张符合要求的展示图片，不选择资源文件",
+     "expected": "展示图片上传成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，勋章创建成功"
+    }
+   ],
+   "expected_result": "保存成功，勋章创建成功，资源文件为空。",
+   "remark": "正面用例，验证资源文件非必填",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-200"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-1 生成被截断，已重试",
+  "functional-chunk-3 生成被截断，已重试",
+  "functional-chunk-8 生成被截断，已重试"
+ ]
+}

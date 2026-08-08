@@ -1,0 +1,3128 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "Win 标签展示",
+    "description": "在「我已解锁」页面列表中，展示带有 Win 标签的已解锁预测文章。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确 Win 标签的具体含义（如预测结果正确）及展示条件（如仅已开奖且命中的预测显示）。",
+      "suggestion": "建议明确 Win 标签的业务定义和触发条件，以及与其他状态标签（如 Pending、Unlocked）的互斥关系。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "相对时间展示（1小时前）",
+    "description": "在「我已解锁」页面列表中，展示预测文章的相对发布时间，如「1小时前」。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确相对时间的计算规则（如超过24小时是否显示具体日期）和刷新机制（是否实时更新）。",
+      "suggestion": "建议明确相对时间与绝对时间的切换阈值，以及页面刷新时时间的更新策略。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "Premium 标签展示",
+    "description": "在「我已解锁」页面列表中，展示带有 Premium 标签的已解锁预测文章。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未说明 Premium 标签的样式和位置，以及是否与 Exclusive 标签互斥。",
+      "suggestion": "建议补充 UI 设计规范，明确标签的视觉呈现和组合规则。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "Exclusive 标签展示",
+    "description": "在「我已解锁」页面列表中，展示带有 Exclusive 标签的已解锁预测文章。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未说明 Exclusive 标签的展示条件（如是否为特定用户群体可见）。",
+      "suggestion": "建议明确 Exclusive 标签的权限控制逻辑。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "功能点入口",
+    "description": "在「我已解锁」页面中，提供「功能点」入口，用于查看页面功能说明。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确「功能点」入口的交互形式（如按钮、链接）和点击后的展示内容。",
+      "suggestion": "建议补充交互设计说明。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "说明入口",
+    "description": "在「我已解锁」页面中，提供「说明」入口，用于查看页面使用说明。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确「说明」入口的展示形式（如弹窗、新页面）和内容来源。",
+      "suggestion": "建议补充说明文档的静态内容或接口。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述了「我已解锁」页面的列表展示功能，但描述较为简略，仅列出了几个展示元素（Win、1小时前、Premium、Exclusive、功能点、说明），缺乏详细的交互逻辑、数据来源和边界条件。建议补充每个元素的详细定义、展示规则、异常处理以及与其他模块的关联，以提高需求的可测试性。"
+ },
+ "functional_cases": [
+  {
+   "title": "我的装扮-列表展示-正常显示已获得装扮",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已获得2个头像框和1个勋章，获得时间分别为2025-09-01、2025-09-05、2025-09-10，预期按时间倒序展示。",
+   "preconditions": "用户已登录，且拥有至少2个不同类型装扮（头像框、勋章），装扮数据已配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的'页面，点击'我的装扮'入口",
+     "expected": "进入'我的装扮'页面，默认展示'我的装扮-头像框'分类。"
+    },
+    {
+     "step": 2,
+     "desc": "查看装扮列表",
+     "expected": "列表展示所有已获得的头像框装扮，按获得时间倒序排列（最新获得的在前）。每个装扮项展示：头像框图片、展示名称、有效期至（格式：年-月-日 时:分:秒）。"
+    }
+   ],
+   "expected_result": "装扮列表正确展示，排序符合'新获得的装扮展示在前'，信息完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "我的装扮-列表展示-无装扮时显示空态",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未获得任何装扮，装扮列表为空。",
+   "preconditions": "用户已登录，且未获得任何装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "页面显示空态提示，如'暂无装扮'，且不显示任何装扮项。"
+    }
+   ],
+   "expected_result": "空态展示合理，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "我的装扮-头像框分类-切换分类展示对应装扮",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有头像框和勋章各2个，切换分类验证展示。",
+   "preconditions": "用户已登录，且拥有头像框和勋章装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，默认显示'我的装扮-头像框'",
+     "expected": "展示所有头像框装扮。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'我的装扮-勋章'分类",
+     "expected": "切换至勋章列表，展示所有勋章装扮。"
+    }
+   ],
+   "expected_result": "分类切换正常，各分类展示对应类型的装扮。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "我的装扮-头像框分类-分类无数据时显示空态",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户只有勋章，没有头像框，切换到头像框分类。",
+   "preconditions": "用户已登录，且只拥有勋章装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，默认显示'我的装扮-头像框'",
+     "expected": "显示空态提示，如'暂无头像框'。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'我的装扮-勋章'分类",
+     "expected": "展示勋章列表。"
+    }
+   ],
+   "expected_result": "无数据的分类显示空态，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "我的装扮-装扮信息-展示名称正确显示",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "装扮配置的展示名称为'黄金头像框'，预期显示该名称。",
+   "preconditions": "用户已登录，且拥有一个展示名称为'黄金头像框'的装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "在装扮列表中，对应装扮项显示'黄金头像框'。"
+    }
+   ],
+   "expected_result": "展示名称与配置一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "我的装扮-装扮信息-展示名称超长截断或换行",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "展示名称为超长字符串（如50个字符），验证显示效果。",
+   "preconditions": "用户已登录，且拥有一个展示名称超长的装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "展示名称超长时，页面不出现横向滚动条，文本截断或换行显示，且不遮挡其他信息。"
+    }
+   ],
+   "expected_result": "超长名称处理合理，不影响布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "我的装扮-有效期-正常显示格式",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "装扮有效期为2025-09-12 12:45:59，预期显示'2025-09-12 12:45:59'。",
+   "preconditions": "用户已登录，且拥有一个有效期为2025-09-12 12:45:59的装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "对应装扮项显示'有效期至：2025-09-12 12:45:59'，格式为'年-月-日 时:分:秒'。"
+    }
+   ],
+   "expected_result": "有效期显示正确，格式符合要求。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "我的装扮-有效期-非法时间格式处理",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "装扮有效期为'2025-09-12 12:45:60'（秒数60非法），验证系统处理。",
+   "preconditions": "用户已登录，且拥有一个有效期为'2025-09-12 12:45:60'的装扮（模拟脏数据）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "页面不崩溃，有效期显示为'2025-09-12 12:45:60'或进行格式化处理，但不应出现异常报错。"
+    }
+   ],
+   "expected_result": "非法时间被容错处理，页面正常展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "我的装扮-佩戴-未佩戴装扮显示佩戴按钮并可佩戴",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户有一个未佩戴的头像框，点击佩戴后状态变为佩戴中。",
+   "preconditions": "用户已登录，且拥有至少一个未佩戴的头像框装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，选择'我的装扮-头像框'分类",
+     "expected": "未佩戴的装扮项显示'佩戴'按钮。"
+    },
+    {
+     "step": 2,
+     "desc": "点击该装扮的'佩戴'按钮",
+     "expected": "按钮变为'卸下'，该装扮显示'佩戴中'标识，且用户头像更新为该头像框。"
+    }
+   ],
+   "expected_result": "佩戴成功，状态和头像更新正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "我的装扮-佩戴-已佩戴装扮不显示佩戴按钮",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户已佩戴一个头像框，该装扮不应显示'佩戴'按钮。",
+   "preconditions": "用户已登录，且已佩戴一个头像框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，选择'我的装扮-头像框'分类",
+     "expected": "已佩戴的装扮项不显示'佩戴'按钮，仅显示'卸下'按钮和'佩戴中'标识。"
+    }
+   ],
+   "expected_result": "按钮显示符合规则。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "我的装扮-佩戴-同类型装扮佩戴替换",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已佩戴头像框A，再佩戴头像框B，预期A自动卸下，B佩戴成功。",
+   "preconditions": "用户已登录，且拥有两个头像框A和B，A已佩戴。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，选择'我的装扮-头像框'分类",
+     "expected": "A显示'卸下'，B显示'佩戴'。"
+    },
+    {
+     "step": 2,
+     "desc": "点击B的'佩戴'按钮",
+     "expected": "B变为佩戴中，A变为未佩戴，用户头像更新为B。"
+    }
+   ],
+   "expected_result": "同类型装扮佩戴替换逻辑正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "我的装扮-卸下-佩戴中装扮显示卸下按钮并可卸下",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已佩戴一个勋章，点击卸下后状态变为未佩戴。",
+   "preconditions": "用户已登录，且已佩戴一个勋章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，选择'我的装扮-勋章'分类",
+     "expected": "已佩戴的勋章显示'卸下'按钮和'佩戴中'标识。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'卸下'按钮",
+     "expected": "该勋章变为未佩戴，'卸下'按钮消失，'佩戴'按钮出现，用户头像恢复默认（无该勋章）。"
+    }
+   ],
+   "expected_result": "卸下成功，状态和头像更新正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "我的装扮-卸下-未佩戴装扮不显示卸下按钮",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户有一个未佩戴的勋章，该装扮不应显示'卸下'按钮。",
+   "preconditions": "用户已登录，且拥有一个未佩戴的勋章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，选择'我的装扮-勋章'分类",
+     "expected": "未佩戴的勋章项不显示'卸下'按钮，仅显示'佩戴'按钮。"
+    }
+   ],
+   "expected_result": "按钮显示符合规则。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "我的装扮-佩戴中标识-正确显示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已佩戴一个头像框，该装扮应显示佩戴中标识（如✓）。",
+   "preconditions": "用户已登录，且已佩戴一个头像框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，选择'我的装扮-头像框'分类",
+     "expected": "已佩戴的装扮项显示'佩戴中'标识（如✓图标）。"
+    }
+   ],
+   "expected_result": "佩戴中标识正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "我的装扮-佩戴中标识-未佩戴装扮不显示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户有一个未佩戴的勋章，该装扮不应显示佩戴中标识。",
+   "preconditions": "用户已登录，且拥有一个未佩戴的勋章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面，选择'我的装扮-勋章'分类",
+     "expected": "未佩戴的装扮项不显示'佩戴中'标识。"
+    }
+   ],
+   "expected_result": "标识显示符合规则。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "我的装扮-异常处理-网络异常时加载失败提示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络断开，进入我的装扮页面，验证加载失败提示。",
+   "preconditions": "用户已登录，但网络不可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "页面显示加载失败提示，如'网络异常，请稍后重试'，并提供重试按钮。"
+    }
+   ],
+   "expected_result": "加载失败有明确提示，可重试。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "我的装扮-异常处理-佩戴操作失败提示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟佩戴接口返回失败，验证错误提示。",
+   "preconditions": "用户已登录，且拥有未佩戴装扮，但佩戴接口异常（可模拟）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "页面正常展示。"
+    },
+    {
+     "step": 2,
+     "desc": "点击未佩戴装扮的'佩戴'按钮",
+     "expected": "提示'佩戴失败，请稍后重试'，装扮状态不变。"
+    }
+   ],
+   "expected_result": "佩戴失败有明确提示，状态未改变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "我的装扮-异常处理-卸下操作失败提示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟卸下接口返回失败，验证错误提示。",
+   "preconditions": "用户已登录，且已佩戴装扮，但卸下接口异常（可模拟）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "页面正常展示。"
+    },
+    {
+     "step": 2,
+     "desc": "点击已佩戴装扮的'卸下'按钮",
+     "expected": "提示'卸下失败，请稍后重试'，装扮状态不变。"
+    }
+   ],
+   "expected_result": "卸下失败有明确提示，状态未改变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "我的装扮-功能点-页面元素完整性",
+   "priority": "P2",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "验证页面包含所有必需元素：分类、装扮图片、名称、有效期、佩戴/卸下按钮、佩戴中标识。",
+   "preconditions": "用户已登录，且拥有至少一个装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入'我的装扮'页面",
+     "expected": "页面包含'我的装扮'标题，分类切换（头像框/勋章），每个装扮项包含图片、展示名称、有效期至、操作按钮（佩戴/卸下），佩戴中标识。"
+    }
+   ],
+   "expected_result": "页面元素完整，无缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "我的装扮-功能点-未登录访问拦截",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户尝试访问我的装扮页面，应被拦截或引导登录。",
+   "preconditions": "用户未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试访问'我的装扮'页面",
+     "expected": "跳转至登录页或弹出登录提示，无法查看装扮内容。"
+    }
+   ],
+   "expected_result": "未登录用户无法访问，被正确拦截。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "我的装扮页面正常展示说明信息",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录且拥有至少一个装扮，页面应展示说明文案",
+   "preconditions": "用户已登录，且拥有至少一个装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "页面正常加载，顶部显示说明信息，内容与需求一致"
+    }
+   ],
+   "expected_result": "页面展示说明信息，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "无装扮时说明信息展示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "新注册用户无任何装扮，验证空状态下的说明展示",
+   "preconditions": "用户已登录，但未拥有任何装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "页面正常加载，说明信息正常展示，装扮列表为空，无异常报错"
+    }
+   ],
+   "expected_result": "说明信息正常展示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "装扮列表按获得时间倒序展示",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有3个装扮，获得时间分别为2025-01-01、2025-02-01、2025-03-01，验证排序",
+   "preconditions": "用户已登录，且拥有多个获得时间不同的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "装扮列表按获得时间倒序排列，最新获得的装扮（2025-03-01）展示在最前"
+    }
+   ],
+   "expected_result": "列表排序正确，最新装扮在前",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "装扮列表排序异常处理",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户拥有两个获得时间相同的装扮，验证排序稳定性",
+   "preconditions": "用户已登录，且拥有两个获得时间完全相同的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "列表正常展示，两个装扮顺序稳定，无报错"
+    }
+   ],
+   "expected_result": "列表正常展示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "装扮图片正常展示",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有头像框和勋章各一个，图片URL有效",
+   "preconditions": "用户已登录，且拥有至少一个装扮，图片资源可正常访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "每个装扮的图片正常加载显示，无裂图"
+    }
+   ],
+   "expected_result": "图片正常显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "装扮图片加载失败处理",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟图片URL失效或网络异常，验证占位图展示",
+   "preconditions": "用户已登录，且拥有装扮，但图片资源不可访问（如断网或URL错误）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "图片区域显示默认占位图，页面无崩溃，其他信息正常展示"
+    }
+   ],
+   "expected_result": "显示占位图，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "装扮名称正常展示",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "装扮配置的展示名称为“王者头像框”，长度适中",
+   "preconditions": "用户已登录，且拥有装扮，装扮配置有展示名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "每个装扮下方展示其配置的展示名称，与配置一致"
+    }
+   ],
+   "expected_result": "名称正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "超长装扮名称展示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "装扮名称长度为50个字符，验证超长名称的展示",
+   "preconditions": "用户已登录，且拥有一个名称超长的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "名称完整展示或截断显示省略号，不遮挡其他元素，无布局错乱"
+    }
+   ],
+   "expected_result": "名称展示合理，无布局异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "佩戴中标识正常展示",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户当前佩戴了一个头像框，验证佩戴中标识",
+   "preconditions": "用户已登录，且至少有一个装扮处于佩戴中状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "佩戴中的装扮上显示“佩戴中”标识（如对勾），未佩戴的装扮不显示"
+    }
+   ],
+   "expected_result": "标识正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "无佩戴中装扮时标识不显示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户所有装扮均为未佩戴状态",
+   "preconditions": "用户已登录，但没有任何佩戴中的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "所有装扮均不显示佩戴中标识，页面正常"
+    }
+   ],
+   "expected_result": "无佩戴中标识，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "操作面板正常展示",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有未佩戴和佩戴中的装扮各一个",
+   "preconditions": "用户已登录，且拥有至少一个未佩戴和一个佩戴中的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "未佩戴的装扮显示“佩戴”按钮，佩戴中的装扮显示“卸下”按钮，操作面板布局正常"
+    }
+   ],
+   "expected_result": "操作按钮正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "操作面板按钮缺失处理",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟装扮状态异常（如已过期），验证操作面板",
+   "preconditions": "用户已登录，且拥有一个已过期的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "已过期的装扮不显示佩戴/卸下按钮，或显示置灰按钮，页面无异常"
+    }
+   ],
+   "expected_result": "操作按钮合理处理，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "有效期正常展示",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "装扮有效期为2025-09-12 12:45:59，验证格式",
+   "preconditions": "用户已登录，且拥有一个未过期的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "有效期展示为“2025-09-12 12:45:59”，格式为“年-月-日 时:分:秒”"
+    }
+   ],
+   "expected_result": "有效期格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "有效期格式错误处理",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回非法时间格式（如2025-09-12 12:45:60），验证前端处理",
+   "preconditions": "用户已登录，且拥有一个装扮，其有效期数据异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "页面正常展示，有效期显示为“--”或默认值，不崩溃"
+    }
+   ],
+   "expected_result": "异常数据被合理处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "佩戴未佩戴的装扮成功",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有一个未佩戴的头像框，点击佩戴",
+   "preconditions": "用户已登录，且拥有至少一个未佩戴的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "未佩戴的装扮显示“佩戴”按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击“佩戴”按钮",
+     "expected": "按钮变为“卸下”，装扮状态变为佩戴中，佩戴中标识出现，页面刷新"
+    }
+   ],
+   "expected_result": "佩戴成功，状态更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "佩戴已佩戴的装扮被拦截",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户已佩戴一个装扮，尝试再次佩戴该装扮",
+   "preconditions": "用户已登录，且有一个装扮处于佩戴中状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "佩戴中的装扮不显示“佩戴”按钮，只显示“卸下”按钮"
+    }
+   ],
+   "expected_result": "无法对已佩戴装扮执行佩戴操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "卸下佩戴中的装扮成功",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户当前佩戴了一个勋章，点击卸下",
+   "preconditions": "用户已登录，且至少有一个装扮处于佩戴中状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "佩戴中的装扮显示“卸下”按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击“卸下”按钮",
+     "expected": "按钮变为“佩戴”，装扮状态变为未佩戴，佩戴中标识消失，页面刷新"
+    }
+   ],
+   "expected_result": "卸下成功，状态更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "卸下未佩戴的装扮被拦截",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户有一个未佩戴的装扮，尝试卸下",
+   "preconditions": "用户已登录，且拥有至少一个未佩戴的装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "未佩戴的装扮不显示“卸下”按钮，只显示“佩戴”按钮"
+    }
+   ],
+   "expected_result": "无法对未佩戴装扮执行卸下操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "页面展示3个装扮",
+   "priority": "P0",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有3个装扮，验证页面展示数量",
+   "preconditions": "用户已登录，且拥有3个装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "页面展示3个装扮，布局正常"
+    }
+   ],
+   "expected_result": "3个装扮正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "装扮数量少于3个时展示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户仅拥有1个装扮，验证页面展示",
+   "preconditions": "用户已登录，且仅拥有1个装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "页面正常展示1个装扮，无空白占位，无异常"
+    }
+   ],
+   "expected_result": "1个装扮正常展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "装扮数量多于3个时展示",
+   "priority": "P1",
+   "domain": "装扮",
+   "module": "我的装扮",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户拥有5个装扮，验证页面展示",
+   "preconditions": "用户已登录，且拥有5个装扮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入“我的装扮”页面",
+     "expected": "页面正常展示5个装扮，可滚动查看，布局正常"
+    }
+   ],
+   "expected_result": "5个装扮正常展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "我的装扮-异常处理-网络异常时展示错误提示并可重试",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络断开或服务器无响应，用于验证异常处理机制。",
+   "preconditions": "已登录用户，进入「我的装扮」页面；网络连接正常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，正常加载装扮列表。",
+     "expected": "页面展示装扮列表，无异常提示。"
+    },
+    {
+     "step": 2,
+     "desc": "断开网络连接（或使用抓包工具模拟接口超时）。",
+     "expected": "页面出现网络异常提示，如「网络异常，请稍后重试」。"
+    },
+    {
+     "step": 3,
+     "desc": "恢复网络连接，点击「重试」按钮。",
+     "expected": "页面重新加载装扮列表，数据正常展示。"
+    }
+   ],
+   "expected_result": "网络异常时页面展示友好错误提示，并提供重试入口；重试后能正常加载数据。",
+   "remark": "负面用例，覆盖异常处理中的网络异常场景。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "我的装扮-异常处理-无装扮数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用一个从未获得任何装扮的新用户账号，确保装扮列表为空。",
+   "preconditions": "已登录一个无任何装扮的用户账号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面。",
+     "expected": "页面展示空态提示，如「暂无装扮，快去获取吧」，且不展示任何装扮卡片。"
+    }
+   ],
+   "expected_result": "无装扮数据时页面展示空态提示，引导用户获取装扮。",
+   "remark": "负面用例，覆盖无数据场景。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "我的装扮-异常处理-佩戴操作失败时提示失败并保持原状态",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟佩戴接口返回失败（如服务器错误），验证失败处理。",
+   "preconditions": "已登录用户，拥有至少一个未佩戴的装扮；佩戴接口可被模拟为失败。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，选择一个未佩戴的装扮。",
+     "expected": "该装扮显示「佩戴」按钮。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「佩戴」按钮，同时模拟接口返回失败（如返回500）。",
+     "expected": "页面提示「佩戴失败，请稍后重试」，该装扮仍为未佩戴状态，「佩戴」按钮仍显示。"
+    }
+   ],
+   "expected_result": "佩戴失败时提示失败原因，且装扮状态不被错误修改。",
+   "remark": "负面用例，覆盖操作失败场景。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "我的装扮-场景-按获得时间倒序展示装扮列表",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有多个装扮，获得时间分别为：2025-01-01（头像框A）、2025-02-01（勋章B）、2025-03-01（头像框C），预期展示顺序为C、B、A。",
+   "preconditions": "已登录用户，拥有至少3个不同获得时间的装扮（头像框和勋章）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面。",
+     "expected": "页面展示装扮列表，顺序为：最新获得的装扮（2025-03-01的头像框C）在最前，其次是2025-02-01的勋章B，最后是2025-01-01的头像框A。"
+    }
+   ],
+   "expected_result": "装扮列表按获得时间倒序排列，新获得的在前。",
+   "remark": "正面用例，验证排序规则。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "我的装扮-场景-装扮卡片展示图片、名称、佩戴中标识和有效期",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有一个已佩戴的勋章（展示名称「冠军勋章」，有效期至2025-12-31 23:59:59）和一个未佩戴的头像框（展示名称「火焰头像框」，有效期至2025-09-12 12:45:60）。",
+   "preconditions": "已登录用户，拥有至少一个佩戴中的装扮和一个未佩戴的装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，查看佩戴中的勋章卡片。",
+     "expected": "卡片展示勋章图片、展示名称「冠军勋章」、佩戴中标识（如✓）、有效期「2025-12-31 23:59:59」。"
+    },
+    {
+     "step": 2,
+     "desc": "查看未佩戴的头像框卡片。",
+     "expected": "卡片展示头像框图片、展示名称「火焰头像框」、无佩戴中标识、有效期「2025-09-12 12:45:60」。"
+    }
+   ],
+   "expected_result": "装扮卡片完整展示图片、名称、佩戴状态和有效期，且格式正确。",
+   "remark": "正面用例，验证卡片信息展示。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "我的装扮-场景-佩戴中装扮不显示佩戴按钮，未佩戴装扮不显示卸下按钮",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有一个佩戴中的头像框和一个未佩戴的勋章。",
+   "preconditions": "已登录用户，拥有至少一个佩戴中装扮和一个未佩戴装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，查看佩戴中的头像框卡片。",
+     "expected": "该卡片显示「卸下」按钮，不显示「佩戴」按钮。"
+    },
+    {
+     "step": 2,
+     "desc": "查看未佩戴的勋章卡片。",
+     "expected": "该卡片显示「佩戴」按钮，不显示「卸下」按钮。"
+    }
+   ],
+   "expected_result": "按钮显示逻辑正确：佩戴中显示卸下，未佩戴显示佩戴。",
+   "remark": "正面用例，验证按钮显隐规则。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "我的装扮-处理方式-佩戴未佩戴的装扮成功",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有一个未佩戴的勋章（展示名称「冠军勋章」），点击佩戴后预期该勋章变为佩戴中。",
+   "preconditions": "已登录用户，拥有至少一个未佩戴的装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，选择一个未佩戴的勋章。",
+     "expected": "该勋章卡片显示「佩戴」按钮。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「佩戴」按钮。",
+     "expected": "页面提示「佩戴成功」，该勋章卡片变为佩戴中状态，显示「卸下」按钮，且佩戴中标识出现。"
+    }
+   ],
+   "expected_result": "佩戴操作成功，装扮状态更新为佩戴中，界面反馈正确。",
+   "remark": "正面用例，验证佩戴操作。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "我的装扮-处理方式-卸下佩戴中的装扮成功",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有一个佩戴中的头像框（展示名称「火焰头像框」），点击卸下后预期该头像框变为未佩戴。",
+   "preconditions": "已登录用户，拥有至少一个佩戴中的装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，选择一个佩戴中的头像框。",
+     "expected": "该头像框卡片显示「卸下」按钮。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「卸下」按钮。",
+     "expected": "页面提示「已卸下」，该头像框卡片变为未佩戴状态，显示「佩戴」按钮，佩戴中标识消失。"
+    }
+   ],
+   "expected_result": "卸下操作成功，装扮状态更新为未佩戴，界面反馈正确。",
+   "remark": "正面用例，验证卸下操作。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "我的装扮-处理方式-有效期格式为“年-月-日 时:分:秒”",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户拥有一个有效期至2025-09-12 12:45:60的装扮，验证展示格式。",
+   "preconditions": "已登录用户，拥有一个有效期明确的装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，查看该装扮的有效期字段。",
+     "expected": "有效期展示为「2025-09-12 12:45:60」，格式为年-月-日 时:分:秒。"
+    }
+   ],
+   "expected_result": "有效期展示格式正确。",
+   "remark": "正面用例，验证有效期格式。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "我的装扮-处理方式-有效期已过期的装扮不可佩戴",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户拥有一个有效期已过期的装扮（如有效期至2025-01-01 00:00:00，当前时间已过），预期该装扮不可佩戴。",
+   "preconditions": "已登录用户，拥有一个已过期的装扮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，查看已过期的装扮卡片。",
+     "expected": "该装扮卡片显示「已过期」或「佩戴」按钮置灰，不可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击「佩戴」按钮（若可点击）。",
+     "expected": "若按钮可点击，点击后提示「该装扮已过期，无法佩戴」；若按钮置灰，则无法点击。"
+    }
+   ],
+   "expected_result": "过期装扮不可佩戴，且有明确提示或置灰。",
+   "remark": "边界用例，覆盖有效期边界。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "我的装扮-处理方式-有效期临界值（当前时间等于有效期）仍可佩戴",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户拥有一个有效期恰好为当前时间的装扮（如有效期至2025-09-12 12:45:60，当前时间正好为该时刻），预期该装扮仍可佩戴。",
+   "preconditions": "已登录用户，拥有一个有效期恰好为当前时间的装扮（可通过修改系统时间或测试数据构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面，查看该装扮卡片。",
+     "expected": "该装扮显示「佩戴」按钮，且可正常点击。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「佩戴」按钮。",
+     "expected": "佩戴成功，提示「佩戴成功」，装扮变为佩戴中。"
+    }
+   ],
+   "expected_result": "有效期临界值（等于当前时间）的装扮仍可正常佩戴。",
+   "remark": "边界用例，覆盖有效期临界值。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "我的装扮-处理方式-佩戴时未登录用户被拦截",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户尝试访问「我的装扮」页面，预期被引导登录。",
+   "preconditions": "未登录状态。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "未登录状态下，尝试访问「我的装扮」页面。",
+     "expected": "页面跳转至登录页，或弹出登录提示，如「请先登录」。"
+    }
+   ],
+   "expected_result": "未登录用户无法访问我的装扮，被引导登录。",
+   "remark": "负面用例，覆盖权限控制。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "我的装扮-场景-头像框和勋章分类展示",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我的装扮",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户同时拥有头像框和勋章装扮，验证页面是否按类型分类展示（如Tab切换或分区展示）。",
+   "preconditions": "已登录用户，同时拥有至少一个头像框和一个勋章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我的装扮」页面。",
+     "expected": "页面展示「头像框」和「勋章」两个分类（如Tab或分区），分别展示对应类型的装扮。"
+    }
+   ],
+   "expected_result": "装扮按类型分类展示，便于用户区分。",
+   "remark": "正面用例，验证分类展示。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "已解锁列表正常展示所有字段",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已解锁至少一条Pick，包含完整字段：标题、头像、昵称、Yield=+12.4%、Hit Rate=62%、Avg Odds=1.95、Form(30)=22W-6L-2P | 73%",
+   "preconditions": "用户已登录，且存在已解锁的Pick数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁Pick列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表项",
+     "expected": "每个列表项展示[Pick]标题、头像、用户昵称、Yield、Hit Rate、Avg Odds、Form(30)等字段，且数据与后台一致"
+    }
+   ],
+   "expected_result": "列表正常展示，所有字段完整且正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "已解锁列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户没有任何已解锁的Pick",
+   "preconditions": "用户已登录，且无已解锁Pick数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面显示空态提示，如'暂无已解锁内容'，且无列表项"
+    }
+   ],
+   "expected_result": "页面展示空态，不出现异常或空白",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "点击文章详情-未解锁跳转详情页",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "列表中存在文章详情-未解锁的Pick",
+   "preconditions": "用户已登录，且存在未解锁的文章详情Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "列表正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击文章详情-未解锁的列表项",
+     "expected": "跳转到文章详情页，且显示未解锁状态（如锁定图标或提示）"
+    }
+   ],
+   "expected_result": "成功跳转至文章详情页，并展示未解锁状态",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "点击文章详情-未解锁时网络异常",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击时断网",
+   "preconditions": "用户已登录，存在未解锁文章详情Pick，且网络断开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "列表加载成功（缓存或已加载）"
+    },
+    {
+     "step": 2,
+     "desc": "点击文章详情-未解锁",
+     "expected": "提示网络错误，不跳转或跳转后显示错误页"
+    }
+   ],
+   "expected_result": "给出网络异常提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "[Pick]标题过长时省略显示",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "标题长度为50个字符（超过显示宽度）",
+   "preconditions": "用户已登录，存在标题超长的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "列表项中标题显示省略号，不换行或溢出"
+    }
+   ],
+   "expected_result": "标题被截断显示省略号，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "[Pick]标题为空时显示占位",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "标题字段为空字符串",
+   "preconditions": "用户已登录，存在标题为空的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "列表项标题位置显示占位文本或留空，不显示异常"
+    }
+   ],
+   "expected_result": "标题为空时页面正常，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "头像正常加载显示",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户头像URL有效，且存在头像框",
+   "preconditions": "用户已登录，存在带头像框的头像",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "头像正常显示，头像框样式正确"
+    }
+   ],
+   "expected_result": "头像和头像框正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "头像加载失败时显示默认头像",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "头像URL无效或图片不存在",
+   "preconditions": "用户已登录，存在头像URL无效的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "头像位置显示默认头像占位图，不显示裂图"
+    }
+   ],
+   "expected_result": "显示默认头像，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "用户昵称正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户昵称为'用户昵称用户昵称'（正常长度）",
+   "preconditions": "用户已登录，存在正常昵称的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "昵称完整显示，无截断"
+    }
+   ],
+   "expected_result": "昵称正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "用户昵称过长时截断显示",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户昵称为20个字符（超过显示宽度）",
+   "preconditions": "用户已登录，存在昵称超长的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "昵称显示省略号或截断，布局正常"
+    }
+   ],
+   "expected_result": "昵称截断显示，不溢出",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "Yield字段正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "Yield值为+12.4%（正数，一位小数）",
+   "preconditions": "用户已登录，存在Yield为正数的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "Yield显示为'+12.4%'，格式正确"
+    }
+   ],
+   "expected_result": "Yield字段正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "Yield为负数时显示负号",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "Yield值为-5.2%（负数）",
+   "preconditions": "用户已登录，存在Yield为负数的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "Yield显示为'-5.2%'，带负号"
+    }
+   ],
+   "expected_result": "Yield负数正确展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "Hit Rate字段正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "Hit Rate值为62%",
+   "preconditions": "用户已登录，存在Hit Rate为62%的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "Hit Rate显示为'62%'，格式正确"
+    }
+   ],
+   "expected_result": "Hit Rate字段正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "Hit Rate为0%时显示",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "Hit Rate值为0%",
+   "preconditions": "用户已登录，存在Hit Rate为0%的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "Hit Rate显示为'0%'，无异常"
+    }
+   ],
+   "expected_result": "Hit Rate为0%时正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "Avg Odds字段正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "Avg Odds值为1.95",
+   "preconditions": "用户已登录，存在Avg Odds为1.95的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "Avg Odds显示为'1.95'，格式正确"
+    }
+   ],
+   "expected_result": "Avg Odds字段正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "Avg Odds为0时显示",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "Avg Odds值为0",
+   "preconditions": "用户已登录，存在Avg Odds为0的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "Avg Odds显示为'0'，无异常"
+    }
+   ],
+   "expected_result": "Avg Odds为0时正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "Form(30)字段正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "Form(30)值为'22W-6L-2P | 73%'",
+   "preconditions": "用户已登录，存在Form(30)为'22W-6L-2P | 73%'的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "Form(30)显示为'22W-6L-2P | 73%'，格式正确"
+    }
+   ],
+   "expected_result": "Form(30)字段正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "Form(30)字段为空时显示",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "Form(30)字段为空字符串",
+   "preconditions": "用户已登录，存在Form(30)为空的Pick",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "Form(30)位置显示占位或留空，不显示异常"
+    }
+   ],
+   "expected_result": "Form(30)为空时页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "未登录访问我已解锁页面",
+   "priority": "P0",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开「我已解锁」页面",
+     "expected": "提示登录或跳转登录页，不展示列表"
+    }
+   ],
+   "expected_result": "未登录时被拦截，提示登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "页面加载失败时显示错误提示",
+   "priority": "P1",
+   "domain": "用户端/装扮",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "网络异常或服务器错误",
+   "preconditions": "用户已登录，但网络异常或服务器返回错误",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "显示加载失败提示，如'加载失败，请重试'，并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面显示错误提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "验证 Today 08:30 字段正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条解锁时间为当天 08:30 的 Pick 记录，验证字段显示为 Today 08:30",
+   "preconditions": "用户已登录，存在一条解锁时间为当天 08:30 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的时间字段",
+     "expected": "时间字段显示为「Today 08:30」，格式正确"
+    }
+   ],
+   "expected_result": "时间字段正确显示为 Today 08:30，无格式错误",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "验证 Today 08:30 字段在非当天时间不显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条解锁时间为昨天 08:30 的 Pick 记录，验证不显示 Today 08:30",
+   "preconditions": "用户已登录，存在一条解锁时间为昨天 08:30 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的时间字段",
+     "expected": "时间字段不显示为「Today 08:30」，而显示为相对时间或具体日期"
+    }
+   ],
+   "expected_result": "非当天时间不显示 Today 格式，显示正确的时间描述",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "验证比赛信息字段正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条比赛信息为 [英超] 曼联 VS 利物浦 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条比赛信息为 [英超] 曼联 VS 利物浦 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的比赛信息字段",
+     "expected": "显示为「[英超] 曼联 VS 利物浦」，格式正确"
+    }
+   ],
+   "expected_result": "比赛信息正确显示为 [联赛名称] 主队名称 VS 客队名称",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "验证比赛信息字段超长名称的显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条比赛信息为 [超级超级超级超级超级超级超级超级联赛] 主队名称特别特别特别特别特别特别特别特别长 VS 客队名称特别特别特别特别特别特别特别特别长 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条比赛信息超长的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的比赛信息字段",
+     "expected": "超长名称被截断或省略，不破坏页面布局"
+    }
+   ],
+   "expected_result": "超长名称合理显示，无溢出或布局错乱",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "验证相对时间 5分钟前 正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条解锁时间为当前时间前 5 分钟的 Pick 记录",
+   "preconditions": "用户已登录，存在一条解锁时间为当前时间前 5 分钟的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的相对时间字段",
+     "expected": "显示为「5分钟前」"
+    }
+   ],
+   "expected_result": "相对时间正确显示为 5分钟前",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "验证相对时间 5分钟前 在超过5分钟时不显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条解锁时间为当前时间前 6 分钟的 Pick 记录",
+   "preconditions": "用户已登录，存在一条解锁时间为当前时间前 6 分钟的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的相对时间字段",
+     "expected": "不显示「5分钟前」，而显示为「6分钟前」或更长时间"
+    }
+   ],
+   "expected_result": "相对时间准确反映实际时间差",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "验证 Unlocked 状态正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条状态为 Unlocked 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条状态为 Unlocked 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的状态标识",
+     "expected": "显示「Unlocked」标识"
+    }
+   ],
+   "expected_result": "状态标识正确显示为 Unlocked",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "验证非 Unlocked 状态不显示 Unlocked 标识",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条状态为 Pending 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条状态为 Pending 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的状态标识",
+     "expected": "不显示「Unlocked」，而显示「Pending」"
+    }
+   ],
+   "expected_result": "状态标识与记录状态一致",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "验证 $PV 收益字段正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条收益为 +12.4 的 Pick 记录，验证显示 $PV",
+   "preconditions": "用户已登录，存在一条收益为 +12.4 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的收益字段",
+     "expected": "显示为「$PV」，且数值正确"
+    }
+   ],
+   "expected_result": "收益字段正确显示为 $PV 及对应数值",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "验证 $PV 收益字段在无收益时不显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条收益为 0 的 Pick 记录，验证不显示 $PV",
+   "preconditions": "用户已登录，存在一条收益为 0 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的收益字段",
+     "expected": "不显示「$PV」，或显示为 $0.00"
+    }
+   ],
+   "expected_result": "收益字段处理正确，无异常显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "验证 ic 标签正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条带 ic 标签的 Pick 记录",
+   "preconditions": "用户已登录，存在一条带 ic 标签的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的标签",
+     "expected": "显示「ic」标签"
+    }
+   ],
+   "expected_result": "ic 标签正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "验证无 ic 标签时不显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条无 ic 标签的 Pick 记录",
+   "preconditions": "用户已登录，存在一条无 ic 标签的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的标签",
+     "expected": "不显示「ic」标签"
+    }
+   ],
+   "expected_result": "无 ic 标签时不显示，无残留",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "验证 on 标签正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条带 on 标签的 Pick 记录",
+   "preconditions": "用户已登录，存在一条带 on 标签的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的标签",
+     "expected": "显示「on」标签"
+    }
+   ],
+   "expected_result": "on 标签正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "验证无 on 标签时不显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条无 on 标签的 Pick 记录",
+   "preconditions": "用户已登录，存在一条无 on 标签的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的标签",
+     "expected": "不显示「on」标签"
+    }
+   ],
+   "expected_result": "无 on 标签时不显示，无残留",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "验证 5 Streak 连胜记录正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条连胜次数为 5 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条连胜次数为 5 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的连胜字段",
+     "expected": "显示「5 Streak」"
+    }
+   ],
+   "expected_result": "连胜记录正确显示为 5 Streak",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "验证连胜记录为 0 时不显示 Streak",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条连胜次数为 0 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条连胜次数为 0 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的连胜字段",
+     "expected": "不显示「Streak」或显示「0 Streak」"
+    }
+   ],
+   "expected_result": "连胜记录处理正确，无异常显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "验证相对时间 30分钟前 正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条解锁时间为当前时间前 30 分钟的 Pick 记录",
+   "preconditions": "用户已登录，存在一条解锁时间为当前时间前 30 分钟的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的相对时间字段",
+     "expected": "显示为「30分钟前」"
+    }
+   ],
+   "expected_result": "相对时间正确显示为 30分钟前",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "验证相对时间 30分钟前 在超过30分钟时不显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条解锁时间为当前时间前 31 分钟的 Pick 记录",
+   "preconditions": "用户已登录，存在一条解锁时间为当前时间前 31 分钟的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的相对时间字段",
+     "expected": "不显示「30分钟前」，而显示为「31分钟前」或更长时间"
+    }
+   ],
+   "expected_result": "相对时间准确反映实际时间差",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "验证相对时间 2小时前 正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条解锁时间为当前时间前 2 小时的 Pick 记录",
+   "preconditions": "用户已登录，存在一条解锁时间为当前时间前 2 小时的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的相对时间字段",
+     "expected": "显示为「2小时前」"
+    }
+   ],
+   "expected_result": "相对时间正确显示为 2小时前",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "验证相对时间 2小时前 在超过2小时时不显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条解锁时间为当前时间前 3 小时的 Pick 记录",
+   "preconditions": "用户已登录，存在一条解锁时间为当前时间前 3 小时的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的相对时间字段",
+     "expected": "不显示「2小时前」，而显示为「3小时前」或更长时间"
+    }
+   ],
+   "expected_result": "相对时间准确反映实际时间差",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "验证 Pending 状态正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条状态为 Pending 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条状态为 Pending 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的状态标识",
+     "expected": "显示「Pending」标识"
+    }
+   ],
+   "expected_result": "状态标识正确显示为 Pending",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "验证非 Pending 状态不显示 Pending 标识",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条状态为 Unlocked 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条状态为 Unlocked 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的状态标识",
+     "expected": "不显示「Pending」，而显示「Unlocked」"
+    }
+   ],
+   "expected_result": "状态标识与记录状态一致",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "验证具体时间 03/31 12:45:38 正常显示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条解锁时间为 03/31 12:45:38 的 Pick 记录",
+   "preconditions": "用户已登录，存在一条解锁时间为 03/31 12:45:38 的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的具体时间字段",
+     "expected": "显示为「03/31 12:45:38」，格式正确"
+    }
+   ],
+   "expected_result": "具体时间正确显示为 03/31 12:45:38",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "验证具体时间字段在时间无效时不显示",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条解锁时间为无效值（如 02/30 25:61:99）的 Pick 记录",
+   "preconditions": "用户已登录，存在一条解锁时间为无效值的 Pick 记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁 Pick 列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看该 Pick 的具体时间字段",
+     "expected": "不显示无效时间，或显示为占位符，不崩溃"
+    }
+   ],
+   "expected_result": "无效时间被合理处理，无异常显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "Win 标签正常展示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已解锁的预测文章，状态为 Win（预测命中），发布时间为 1小时前，标签为 Premium 和 Exclusive 之一。",
+   "preconditions": "用户已登录，且至少有一条已解锁的预测文章状态为 Win。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁预测文章列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中状态为 Win 的文章",
+     "expected": "该文章卡片上显示「Win」标签，标签样式与设计稿一致"
+    }
+   ],
+   "expected_result": "状态为 Win 的已解锁预测文章在列表中正常展示，并带有「Win」标签。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "Win 标签不显示于非 Win 状态",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "已解锁的预测文章，状态为 Pending（待开奖）或 Unlocked（已解锁但未开奖）。",
+   "preconditions": "用户已登录，且至少有一条已解锁的预测文章状态为 Pending 或 Unlocked。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁预测文章列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中状态为 Pending 或 Unlocked 的文章",
+     "expected": "该文章卡片上不显示「Win」标签"
+    }
+   ],
+   "expected_result": "非 Win 状态的已解锁预测文章不显示「Win」标签。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "相对时间「1小时前」正常展示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "已解锁的预测文章，发布时间为当前时间前 1 小时整。",
+   "preconditions": "用户已登录，且存在发布时间为 1 小时前的已解锁预测文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁预测文章列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看发布时间为 1 小时前的文章",
+     "expected": "该文章卡片上显示「1小时前」"
+    }
+   ],
+   "expected_result": "发布时间为 1 小时前的文章显示「1小时前」相对时间。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "相对时间超过 24 小时不显示「1小时前」",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "已解锁的预测文章，发布时间为当前时间前 25 小时。",
+   "preconditions": "用户已登录，且存在发布时间为 25 小时前的已解锁预测文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁预测文章列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看发布时间为 25 小时前的文章",
+     "expected": "该文章卡片上不显示「1小时前」，而是显示具体日期时间（如 03/31 12:45:38）"
+    }
+   ],
+   "expected_result": "发布时间超过 24 小时的文章不显示「1小时前」，显示绝对时间。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "Premium 标签正常展示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已解锁的预测文章，类型为 Premium（付费预测）。",
+   "preconditions": "用户已登录，且至少有一条已解锁的预测文章类型为 Premium。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁预测文章列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看类型为 Premium 的文章",
+     "expected": "该文章卡片上显示「Premium」标签"
+    }
+   ],
+   "expected_result": "类型为 Premium 的已解锁预测文章在列表中正常展示，并带有「Premium」标签。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "非 Premium 文章不显示 Premium 标签",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "已解锁的预测文章，类型为普通（非 Premium）。",
+   "preconditions": "用户已登录，且至少有一条已解锁的预测文章类型为普通。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁预测文章列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看类型为普通的文章",
+     "expected": "该文章卡片上不显示「Premium」标签"
+    }
+   ],
+   "expected_result": "非 Premium 类型的已解锁预测文章不显示「Premium」标签。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "Exclusive 标签正常展示",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已解锁的预测文章，类型为 Exclusive（独家预测）。",
+   "preconditions": "用户已登录，且至少有一条已解锁的预测文章类型为 Exclusive。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁预测文章列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看类型为 Exclusive 的文章",
+     "expected": "该文章卡片上显示「Exclusive」标签"
+    }
+   ],
+   "expected_result": "类型为 Exclusive 的已解锁预测文章在列表中正常展示，并带有「Exclusive」标签。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "非 Exclusive 文章不显示 Exclusive 标签",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "已解锁的预测文章，类型为普通（非 Exclusive）。",
+   "preconditions": "用户已登录，且至少有一条已解锁的预测文章类型为普通。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示已解锁预测文章列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看类型为普通的文章",
+     "expected": "该文章卡片上不显示「Exclusive」标签"
+    }
+   ],
+   "expected_result": "非 Exclusive 类型的已解锁预测文章不显示「Exclusive」标签。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "功能点入口正常展示并可点击",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "页面存在「功能点」入口，点击后展示功能说明。",
+   "preconditions": "用户已登录，进入「我已解锁」页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示「功能点」入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击「功能点」入口",
+     "expected": "弹出功能说明弹窗或跳转至功能说明页面，内容与设计稿一致"
+    }
+   ],
+   "expected_result": "「功能点」入口正常展示，点击后能查看功能说明。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "功能点入口在无内容时仍可点击",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "页面无任何已解锁预测文章（空列表），但「功能点」入口仍存在。",
+   "preconditions": "用户已登录，且无任何已解锁预测文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示空列表，但「功能点」入口仍存在"
+    },
+    {
+     "step": 2,
+     "desc": "点击「功能点」入口",
+     "expected": "仍能正常弹出功能说明，不因列表为空而失效"
+    }
+   ],
+   "expected_result": "空列表时「功能点」入口仍可正常点击并展示功能说明。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "说明入口正常展示并可点击",
+   "priority": "P0",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "页面存在「说明」入口，点击后展示使用说明。",
+   "preconditions": "用户已登录，进入「我已解锁」页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示「说明」入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击「说明」入口",
+     "expected": "弹出使用说明弹窗或跳转至说明页面，内容与设计稿一致"
+    }
+   ],
+   "expected_result": "「说明」入口正常展示，点击后能查看使用说明。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "说明入口在无内容时仍可点击",
+   "priority": "P1",
+   "domain": "用户端/装扮/我已解锁",
+   "module": "我已解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "页面无任何已解锁预测文章（空列表），但「说明」入口仍存在。",
+   "preconditions": "用户已登录，且无任何已解锁预测文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入「我已解锁」页面",
+     "expected": "页面正常加载，显示空列表，但「说明」入口仍存在"
+    },
+    {
+     "step": 2,
+     "desc": "点击「说明」入口",
+     "expected": "仍能正常弹出使用说明，不因列表为空而失效"
+    }
+   ],
+   "expected_result": "空列表时「说明」入口仍可正常点击并展示使用说明。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-110"
+  }
+ ],
+ "api_cases": []
+}

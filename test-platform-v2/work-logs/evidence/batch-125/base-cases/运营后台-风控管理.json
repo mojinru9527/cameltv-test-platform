@@ -1,0 +1,1466 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "头像图片监控列表展示",
+    "description": "运营后台风控管理下的头像图片监控页面，以列表形式展示头像图片监控数据，包含字段：创建时间、用户编号、用户昵称、监测帧、类型、置信度、操作。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确列表的排序规则（如按创建时间倒序）、分页方式、每页条数、是否支持筛选和搜索。",
+      "suggestion": "建议补充列表排序、分页、筛选条件（如按类型、用户编号）等交互细节。"
+     },
+     {
+      "severity": "low",
+      "description": "需求未说明列表数据来源（如实时监测数据或历史记录），以及数据刷新机制。",
+      "suggestion": "建议明确数据来源和刷新策略。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "类型筛选（李四/暴力/血腥）",
+    "description": "列表提供类型筛选功能，类型选项包括：李四、暴力、血腥、已删除，用于过滤不同类型的头像图片监控记录。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求中类型选项包含'李四'，但'李四'通常是人名而非类型，可能为示例数据或需求描述错误，需确认。",
+      "suggestion": "建议确认类型选项的真实含义，如'李四'是否应为'色情'或其他分类。"
+     },
+     {
+      "severity": "low",
+      "description": "未说明筛选后是否支持组合筛选（如同时选择多个类型）或仅单选。",
+      "suggestion": "建议明确筛选交互（单选/多选）。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "列表总数显示（共X条）",
+    "description": "列表底部或顶部显示当前筛选条件下的记录总数，格式为'共X条'。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未说明总数是当前页条数还是总记录数，以及分页时如何更新。",
+      "suggestion": "建议明确'共X条'指总记录数，并随筛选条件变化更新。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "删除头像操作",
+    "description": "列表操作列提供'删除头像'按钮，点击后弹出确认对话框，提示'确定要删除此勋章？'，提供'取消'和'确定'按钮，确认后删除该头像记录。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求中确认提示文案为'确定要删除此勋章？'，但操作对象是头像图片，文案与业务不符，应为'确定要删除此头像？'。",
+      "suggestion": "建议修正确认提示文案为'确定要删除此头像？'。"
+     },
+     {
+      "severity": "medium",
+      "description": "未说明删除后是否需要刷新列表、是否支持批量删除、删除权限控制。",
+      "suggestion": "建议补充删除后的交互和权限要求。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "确认对话框（取消/确定）",
+    "description": "删除操作弹出确认对话框，包含'取消'和'确定'按钮，点击'取消'关闭对话框不执行删除，点击'确定'执行删除操作。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未说明对话框关闭方式（如点击遮罩是否关闭）、键盘操作（Esc键）。",
+      "suggestion": "建议补充对话框交互细节。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述了头像图片监控页面的基本列表展示、类型筛选、总数显示和删除操作，功能点清晰但存在若干细节缺失：类型选项'李四'含义不明、删除确认文案与业务不符、列表排序与筛选交互未明确。建议在测试前与产品确认这些细节，以便设计更准确的用例。"
+ },
+ "functional_cases": [
+  {
+   "title": "新增白名单文案-输入合法内容并保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "文案内容：'这是一条广告'，符合业务语义，为常见广告文案。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增弹窗，包含「文案内容」输入框和「确定」「取消」按钮"
+    },
+    {
+     "step": 2,
+     "desc": "在「文案内容」输入框中输入'这是一条广告'",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，列表新增一条记录，文案内容为'这是一条广告'，创建人为当前登录用户，创建时间为当前时间"
+    }
+   ],
+   "expected_result": "新增成功，列表出现新记录，数据持久化到数据库。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "新增白名单文案-文案内容为空时点击确定",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "文案内容为空字符串，验证必填校验。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "不输入任何内容，直接点击「确定」按钮",
+     "expected": "提示「文案内容不能为空」，弹窗不关闭，不新增记录"
+    }
+   ],
+   "expected_result": "新增被拦截，提示错误信息，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "新增白名单文案-文案内容超长",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "文案内容为超过系统最大长度限制的字符串（如500个字符），验证长度限制。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "在「文案内容」输入框中输入500个字符（假设最大长度为200）",
+     "expected": "输入框可能限制输入或提示超长"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "若输入被限制则无法输入超长内容；若可输入则提示「文案内容长度不能超过200个字符」，不新增记录"
+    }
+   ],
+   "expected_result": "超长内容被拦截或限制，数据库无新增记录。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "新增白名单文案-文案内容含特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "文案内容包含特殊字符如'@#￥%'，验证是否允许。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "在「文案内容」输入框中输入'@#￥%'",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "若允许则新增成功；若不允许则提示「文案内容不能包含特殊字符」"
+    }
+   ],
+   "expected_result": "根据系统规则，要么成功新增，要么被拦截并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "删除白名单文案-确认删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条已存在的白名单文案记录，如'这是一条广告'。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面，且列表中存在至少一条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在列表中找到一条记录，点击该记录对应的「删除」按钮",
+     "expected": "弹出确认框，提示「确定要删除？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」按钮",
+     "expected": "确认框关闭，列表刷新，该记录被移除"
+    }
+   ],
+   "expected_result": "删除成功，数据库记录被删除（或标记删除），列表不再显示该记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "删除白名单文案-取消删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条已存在的白名单文案记录，如'这是一条广告'。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面，且列表中存在至少一条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的「删除」按钮",
+     "expected": "弹出确认框，提示「确定要删除？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "确认框关闭，列表无变化，记录未被删除"
+    }
+   ],
+   "expected_result": "取消删除，记录保留，数据库无变化。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "删除白名单文案-删除不存在的记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "尝试删除一条已被删除或不存在的记录（通过并发或直接操作数据库构造）。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "通过数据库直接删除某条记录，或使用另一会话删除该记录",
+     "expected": "记录已不存在"
+    },
+    {
+     "step": 2,
+     "desc": "在当前页面点击该记录的「删除」按钮（如果仍显示）",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」",
+     "expected": "提示「删除失败，记录不存在」或类似错误，列表刷新后该记录消失"
+    }
+   ],
+   "expected_result": "删除操作被正确处理，不会产生异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "新增白名单文案-取消新增",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "在新增弹窗中输入部分内容后点击取消。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "在「文案内容」输入框中输入'测试文案'",
+     "expected": "输入框显示内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，列表无变化，不新增记录"
+    }
+   ],
+   "expected_result": "取消新增，不保存数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "新增白名单文案-重复文案内容",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/聊天文案白名单",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "文案内容与已有记录重复，如'这是一条广告'已存在。",
+   "preconditions": "已登录运营后台，具有风控管理权限，进入聊天文案白名单页面，且列表中存在文案内容为'这是一条广告'的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "在「文案内容」输入框中输入'这是一条广告'",
+     "expected": "输入框显示内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "若允许重复则新增成功；若不允许则提示「该文案已存在」"
+    }
+   ],
+   "expected_result": "根据系统规则，要么成功新增，要么被拦截并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "验证头像图片监控列表正常展示所有字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有数据，包含创建时间2018-06-05 11:02:45、用户编号12313121、用户昵称王二小、监测帧图片、类型黄图、置信度87等。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在至少一条头像图片监控记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击风控管理-头像图片监控",
+     "expected": "页面正常加载，显示头像图片监控列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表表头",
+     "expected": "表头包含：创建时间、用户编号、用户昵称、监测帧、类型、置信度、操作"
+    },
+    {
+     "step": 3,
+     "desc": "查看列表数据",
+     "expected": "列表展示所有记录，每条记录包含对应字段值，如创建时间2018-06-05 11:02:45、用户编号12313121、用户昵称王二小、监测帧图片、类型黄图、置信度87"
+    }
+   ],
+   "expected_result": "列表正常展示，所有字段值正确显示，无乱码或缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "验证头像图片监控列表无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何头像图片监控记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库无相关记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击风控管理-头像图片监控",
+     "expected": "页面正常加载，显示空列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表区域",
+     "expected": "显示'暂无数据'或'共0条'，表格无数据行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "验证创建时间字段格式正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有数据，创建时间为2018-06-05 11:02:45。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在创建时间为2018-06-05 11:02:45的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间显示为'2018-06-05 11:02:45'，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "创建时间格式正确，无时分秒缺失或格式错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "验证创建时间字段为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条创建时间为空的记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在创建时间为NULL的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间显示为空或'--'，不显示异常字符"
+    }
+   ],
+   "expected_result": "空值处理正常，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "验证用户编号字段正确显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有数据，用户编号为12313121。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在用户编号为12313121的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "用户编号显示为'12313121'，无格式错误"
+    }
+   ],
+   "expected_result": "用户编号正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "验证用户编号超长时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造用户编号为超过20位数字的记录，如123456789012345678901。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在超长用户编号的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "用户编号完整显示或截断显示，但页面布局不混乱，无横向滚动条"
+    }
+   ],
+   "expected_result": "超长数据展示合理，不影响页面布局。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "验证用户昵称列表正确展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有数据，用户昵称包括王二小、张三、李四等。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在多条不同昵称的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户昵称列",
+     "expected": "用户昵称正确显示，如'王二小'、'张三'、'李四'，无乱码"
+    }
+   ],
+   "expected_result": "用户昵称列表展示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "验证用户昵称包含特殊字符时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造用户昵称包含特殊字符如'<script>'的记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在昵称含特殊字符的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户昵称列",
+     "expected": "昵称按文本显示，不执行HTML或脚本，无XSS漏洞"
+    }
+   ],
+   "expected_result": "特殊字符被转义，无安全风险。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "验证监测帧图片正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有数据，监测帧为一张有效的图片URL。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在监测帧图片URL有效的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看监测帧列",
+     "expected": "监测帧以缩略图形式显示，图片可正常加载，无裂图"
+    }
+   ],
+   "expected_result": "监测帧图片正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "验证监测帧图片加载失败时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造监测帧图片URL无效或无法访问的记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在监测帧图片URL无效的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看监测帧列",
+     "expected": "显示默认占位图或'图片加载失败'提示，页面无异常"
+    }
+   ],
+   "expected_result": "加载失败处理友好，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "验证类型列表正确展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有数据，类型包括黄图、暴力、血腥、疑似图片。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在不同类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看类型列",
+     "expected": "类型正确显示，如'黄图'、'暴力'、'血腥'、'疑似图片'，无乱码"
+    }
+   ],
+   "expected_result": "类型列表展示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "验证类型为未知值时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造类型为'未知类型'的记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在类型为未知值的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看类型列",
+     "expected": "类型显示为原始值，不报错，页面正常"
+    }
+   ],
+   "expected_result": "未知类型正常显示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "验证置信度字段正确显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有数据，置信度为87。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在置信度为87的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看置信度列",
+     "expected": "置信度显示为'87'，可能带百分号或小数，但格式统一"
+    }
+   ],
+   "expected_result": "置信度正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "验证置信度超出范围时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造置信度为150的记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在置信度大于100的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看置信度列",
+     "expected": "置信度显示为'150'，但页面不报错，可能提示数据异常"
+    }
+   ],
+   "expected_result": "超范围数据展示不崩溃，有合理提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "验证列表分页功能正常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中存在超过一页的数据，如20条记录，每页10条。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在多条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载，显示第一页数据"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "显示第二页数据，页码更新"
+    },
+    {
+     "step": 3,
+     "desc": "点击上一页",
+     "expected": "返回第一页数据"
+    }
+   ],
+   "expected_result": "分页功能正常，数据正确切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "验证列表分页边界（最后一页）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中存在11条记录，每页10条，最后一页只有1条。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在11条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "显示第一页10条记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "显示第二页1条记录，页码为2"
+    },
+    {
+     "step": 3,
+     "desc": "再次点击下一页",
+     "expected": "按钮置灰或不可点击，无数据变化"
+    }
+   ],
+   "expected_result": "最后一页正确显示，无越界错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "验证类型筛选功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中存在类型为黄图和暴力的记录，选择类型'黄图'进行筛选。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在不同类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "在类型筛选下拉框选择'黄图'",
+     "expected": "列表仅显示类型为黄图的记录"
+    },
+    {
+     "step": 3,
+     "desc": "点击查询或筛选按钮",
+     "expected": "列表刷新，只显示黄图记录"
+    }
+   ],
+   "expected_result": "筛选功能正常，结果准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "验证类型筛选无结果时的提示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择类型'血腥'，但数据库中没有该类型记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中没有类型为血腥的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "在类型筛选下拉框选择'血腥'",
+     "expected": "列表显示'暂无数据'或'共0条'"
+    }
+   ],
+   "expected_result": "无结果时显示空态，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "验证删除头像操作成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条记录，点击删除头像按钮。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；存在一条可删除的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条记录的'删除头像'按钮",
+     "expected": "弹出确认对话框，提示'确定要删除此勋章？'"
+    },
+    {
+     "step": 3,
+     "desc": "点击'确定'",
+     "expected": "记录被删除，列表刷新，该记录不再显示"
+    }
+   ],
+   "expected_result": "删除成功，数据库记录被删除或标记删除，列表更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "验证删除头像操作取消",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条记录，点击删除头像按钮，然后取消。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；存在一条可删除的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条记录的'删除头像'按钮",
+     "expected": "弹出确认对话框"
+    },
+    {
+     "step": 3,
+     "desc": "点击'取消'",
+     "expected": "对话框关闭，记录未被删除，列表不变"
+    }
+   ],
+   "expected_result": "取消删除，数据不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "验证删除头像时无权限操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无删除权限的账号登录。",
+   "preconditions": "运营后台已登录，但账号无删除头像权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看操作列",
+     "expected": "删除头像按钮置灰或不可点击，或点击后提示无权限"
+    }
+   ],
+   "expected_result": "无权限操作被拦截，提示权限不足。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "验证列表数据排序（按创建时间）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中存在多条不同创建时间的记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在多条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击创建时间列头",
+     "expected": "列表按创建时间升序或降序排列"
+    }
+   ],
+   "expected_result": "排序功能正常，数据顺序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "验证列表数据排序（按置信度）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中存在多条不同置信度的记录。",
+   "preconditions": "运营后台已登录，且有头像图片监控权限；数据库中存在多条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击置信度列头",
+     "expected": "列表按置信度升序或降序排列"
+    }
+   ],
+   "expected_result": "排序功能正常，数据顺序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "列表默认展示所有头像监控记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置多条不同类型（黄图、暴力、血腥）的头像监控记录，包含完整字段（创建时间、用户编号、用户昵称、监测帧、类型、置信度）",
+   "preconditions": "已登录运营后台账号，具有风控管理-头像图片监控的查看权限；系统中存在至少3条不同类型的头像监控记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单'风控管理'，展开后点击'头像图片监控'",
+     "expected": "页面成功加载，显示头像图片监控列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表展示",
+     "expected": "列表展示所有记录，每条记录包含创建时间、用户编号、用户昵称、监测帧、类型、置信度、操作列；数据与数据库记录一致"
+    }
+   ],
+   "expected_result": "列表默认展示全部头像监控记录，字段完整，数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "列表无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "系统中无任何头像监控记录",
+   "preconditions": "已登录运营后台账号，具有查看权限；数据库头像监控表为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "页面加载，列表显示空态提示（如'暂无数据'），且'共0条'显示正确"
+    }
+   ],
+   "expected_result": "列表显示空态提示，总数显示'共0条'",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "类型筛选-选择'暴力'筛选出对应记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置类型为'暴力'的记录2条，'黄图'记录1条，'血腥'记录1条",
+   "preconditions": "已登录运营后台，具有查看权限；存在上述测试数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "列表展示所有记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击类型筛选下拉框，选择'暴力'",
+     "expected": "列表刷新，仅显示类型为'暴力'的记录，共2条"
+    }
+   ],
+   "expected_result": "列表仅显示类型为'暴力'的记录，总数显示'共2条'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "类型筛选-选择'李四'无匹配数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "系统中不存在类型为'李四'的记录",
+   "preconditions": "已登录运营后台，具有查看权限；系统中无类型为'李四'的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "列表展示所有记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击类型筛选下拉框，选择'李四'",
+     "expected": "列表显示空态提示，总数显示'共0条'"
+    }
+   ],
+   "expected_result": "列表显示空态，总数显示'共0条'",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "类型筛选-选择'血腥'筛选出对应记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置类型为'血腥'的记录1条，'暴力'记录1条",
+   "preconditions": "已登录运营后台，具有查看权限；存在上述测试数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "列表展示所有记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击类型筛选下拉框，选择'血腥'",
+     "expected": "列表刷新，仅显示类型为'血腥'的记录，共1条"
+    }
+   ],
+   "expected_result": "列表仅显示类型为'血腥'的记录，总数显示'共1条'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "类型筛选-选择'已删除'筛选出已删除记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置1条已删除的头像记录（逻辑删除），以及1条未删除记录",
+   "preconditions": "已登录运营后台，具有查看权限；存在上述测试数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "列表展示所有记录（默认不显示已删除）"
+    },
+    {
+     "step": 2,
+     "desc": "点击类型筛选下拉框，选择'已删除'",
+     "expected": "列表刷新，仅显示已删除的记录，共1条"
+    }
+   ],
+   "expected_result": "列表仅显示已删除记录，总数显示'共1条'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "列表总数显示正确（共X条）",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置5条头像监控记录",
+   "preconditions": "已登录运营后台，具有查看权限；存在5条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "列表展示5条记录，页面显示'共5条'"
+    }
+   ],
+   "expected_result": "总数显示'共5条'，与列表记录数一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "列表总数在筛选后更新",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置类型为'暴力'的记录2条，'黄图'记录3条",
+   "preconditions": "已登录运营后台，具有查看权限；存在上述测试数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "列表展示5条记录，总数显示'共5条'"
+    },
+    {
+     "step": 2,
+     "desc": "选择类型'暴力'",
+     "expected": "列表刷新，显示2条记录，总数显示'共2条'"
+    }
+   ],
+   "expected_result": "筛选后总数更新为'共2条'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "删除头像-确认删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置1条头像监控记录，记录ID=1001",
+   "preconditions": "已登录运营后台，具有删除权限；存在该记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面，找到目标记录",
+     "expected": "列表展示该记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录操作列的'删除头像'按钮",
+     "expected": "弹出确认对话框，提示'确定要删除此勋章？'，包含'取消'和'确定'按钮"
+    },
+    {
+     "step": 3,
+     "desc": "点击'确定'按钮",
+     "expected": "对话框关闭，列表刷新，该记录不再显示；数据库该记录被删除（或标记为已删除）"
+    }
+   ],
+   "expected_result": "删除成功，列表刷新，数据库记录被删除或标记为已删除",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "删除头像-点击取消不删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "预置1条头像监控记录，记录ID=1002",
+   "preconditions": "已登录运营后台，具有删除权限；存在该记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面，找到目标记录",
+     "expected": "列表展示该记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录操作列的'删除头像'按钮",
+     "expected": "弹出确认对话框"
+    },
+    {
+     "step": 3,
+     "desc": "点击'取消'按钮",
+     "expected": "对话框关闭，列表不变，该记录仍存在；数据库记录未被删除"
+    }
+   ],
+   "expected_result": "取消删除，记录保留，数据库无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "删除头像-连续点击删除按钮只弹出一个对话框",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "预置1条头像监控记录",
+   "preconditions": "已登录运营后台，具有删除权限；存在该记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面，找到目标记录",
+     "expected": "列表展示该记录"
+    },
+    {
+     "step": 2,
+     "desc": "快速连续点击两次'删除头像'按钮",
+     "expected": "仅弹出一个确认对话框，不会出现多个对话框"
+    }
+   ],
+   "expected_result": "只弹出一个确认对话框，无重复弹窗",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "删除头像-删除后列表总数更新",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置3条头像监控记录",
+   "preconditions": "已登录运营后台，具有删除权限；存在3条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "列表展示3条记录，总数显示'共3条'"
+    },
+    {
+     "step": 2,
+     "desc": "删除其中一条记录（点击删除头像→确定）",
+     "expected": "列表刷新，剩余2条记录，总数显示'共2条'"
+    }
+   ],
+   "expected_result": "删除后总数更新为'共2条'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "删除头像-无删除权限时按钮不可用或操作被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无删除权限的运营账号登录",
+   "preconditions": "已登录无删除权限的运营账号，具有查看权限；存在头像监控记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面",
+     "expected": "列表正常展示，但'删除头像'按钮置灰或点击后提示无权限"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击'删除头像'按钮（若可点击）",
+     "expected": "若按钮置灰则无法点击；若可点击则弹出提示'无权限操作'，不弹出确认对话框"
+    }
+   ],
+   "expected_result": "无权限用户无法执行删除操作，有明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "确认对话框-点击遮罩或按Esc键关闭",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "positive",
+   "test_data_note": "预置1条头像监控记录",
+   "preconditions": "已登录运营后台，具有删除权限；存在该记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面，点击'删除头像'按钮",
+     "expected": "弹出确认对话框"
+    },
+    {
+     "step": 2,
+     "desc": "点击对话框遮罩区域或按Esc键",
+     "expected": "对话框关闭，不执行删除，记录保留"
+    }
+   ],
+   "expected_result": "对话框可关闭，删除操作未执行",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "确认对话框-文案与业务一致性检查",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "风控管理/头像图片监控",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "预置1条头像监控记录",
+   "preconditions": "已登录运营后台，具有删除权限；存在该记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入头像图片监控页面，点击'删除头像'按钮",
+     "expected": "弹出确认对话框，文案显示'确定要删除此勋章？'"
+    }
+   ],
+   "expected_result": "发现文案为'确定要删除此勋章？'，与业务（删除头像）不符，应记录缺陷",
+   "remark": "负面用例，验证文案正确性",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-1 生成被截断，已重试",
+  "functional-chunk-1 生成失败：AI 返回的 JSON 格式异常，无法解析。\n原始错误: Expecting ',' delimiter (行 883, 列 10)\n修复后错误: Expecting property name enclosed in double quotes (行 13, 列 121)\n错误位置附近内容 (chars 23166-23366):\n   \"step\": 2,\\n          \"desc\": \"输入'你好，世界！'\",\\n          \"expected\": \"输入正常显示\"\\n        },\\n        {\\n          \"step\": 3,\\n          \"desc\": \"点击'保存'按钮\",\\n          \"expected\": \"保存成功，列表展示'你好，世界！'\"\\n        }（该块未产出用例）",
+  "functional-chunk-4 生成被截断，已重试"
+ ]
+}

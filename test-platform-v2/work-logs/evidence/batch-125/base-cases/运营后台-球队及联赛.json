@@ -1,0 +1,5168 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "屏蔽网站",
+    "description": "在屏蔽赛事视频页面，运营人员可对指定联赛设置屏蔽网站，即输入多个网站地址（网站地址1-5）来屏蔽该联赛的视频播放。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确屏蔽网站字段的格式校验规则（如URL格式、必填性、最大长度、是否允许重复）。",
+      "suggestion": "建议明确网站地址的输入校验规则，如必须为合法URL、最多5个、可留空等。"
+     },
+     {
+      "severity": "medium",
+      "description": "需求未说明屏蔽网站与联赛的关联关系，以及保存后对前端视频播放的具体影响。",
+      "suggestion": "建议补充说明保存后前端如何应用屏蔽规则，以及是否立即生效。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "网站地址1-5",
+    "description": "在屏蔽赛事视频的新增/编辑弹窗中，提供5个网站地址输入框，用于填写需要屏蔽的网站地址。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确网站地址是否必填、是否允许部分填写、是否支持重复地址。",
+      "suggestion": "建议明确每个地址的可选性及重复校验。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "确定",
+    "description": "在新增/编辑屏蔽赛事视频弹窗中，点击确定按钮提交表单，保存屏蔽配置。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确确定按钮的校验逻辑，如联赛编号必填、网站地址格式校验等。",
+      "suggestion": "建议明确确定按钮的校验规则及保存成功后的反馈。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "取消",
+    "description": "在新增/编辑屏蔽赛事视频弹窗中，点击取消按钮关闭弹窗，不保存任何修改。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确取消时是否提示未保存内容。",
+      "suggestion": "建议明确取消时是否弹出确认提示。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "确认删除",
+    "description": "在屏蔽赛事视频列表中，点击删除操作后弹出确认删除对话框，确认后删除该联赛的屏蔽配置。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确删除后是否可恢复，以及删除对前端屏蔽效果的影响。",
+      "suggestion": "建议明确删除的不可逆性及前端屏蔽立即解除。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "确认删除该联赛？",
+    "description": "删除确认对话框的提示文案，用于二次确认是否删除该联赛的屏蔽配置。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "文案已明确，但未说明确认和取消按钮的行为。",
+      "suggestion": "建议明确确认后执行删除，取消后关闭弹窗。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-7",
+    "title": "联赛及球队管理",
+    "description": "页面顶部或面包屑导航中的入口，点击可返回联赛及球队管理主页面。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确该入口的具体跳转目标。",
+      "suggestion": "建议明确跳转路径。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求描述了屏蔽赛事视频页面的基本功能点，但细节不足，特别是输入校验、删除确认、保存逻辑等方面存在模糊之处。建议补充字段校验规则、保存成功反馈、删除影响等细节，以确保用例设计的准确性。"
+ },
+ "functional_cases": [
+  {
+   "title": "新增分类-成功创建",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "分类展示名称：'热门联赛A'，展示顺序：1，英文名称：'Hot League A'，阿语名称：'دوري ساخن أ'",
+   "preconditions": "运营人员已登录运营后台，且有热门联赛管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗，包含分类展示名称、展示顺序、英文名称、阿语名称等字段"
+    },
+    {
+     "step": 2,
+     "desc": "输入分类展示名称：'热门联赛A'，展示顺序：1，英文名称：'Hot League A'，阿语名称：'دوري ساخن أ'",
+     "expected": "输入成功，无错误提示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹窗关闭，列表新增一条记录，分类编号自动生成，关联联赛数为0"
+    }
+   ],
+   "expected_result": "新增分类成功，列表出现新记录，分类编号唯一，展示顺序为1，关联联赛数为0",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "新增分类-分类展示名称为空",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "分类展示名称留空，其他字段正常填写",
+   "preconditions": "运营人员已登录运营后台，且有热门联赛管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "分类展示名称留空，展示顺序填1，英文名称填'Hot League A'，阿语名称填'دوري ساخن أ'",
+     "expected": "分类展示名称字段为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「分类展示名称不能为空」，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拦截，提示分类展示名称必填",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "新增分类-展示顺序为负数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序填-1，其他字段正常",
+   "preconditions": "运营人员已登录运营后台，且有热门联赛管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "分类展示名称填'热门联赛B'，展示顺序填-1，英文名称填'Hot League B'，阿语名称填'دوري ساخن ب'",
+     "expected": "展示顺序输入-1"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「展示顺序不能为负数」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示顺序不能为负数",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "新增分类-展示顺序为0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "展示顺序填0，其他字段正常",
+   "preconditions": "运营人员已登录运营后台，且有热门联赛管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "分类展示名称填'热门联赛C'，展示顺序填0，英文名称填'Hot League C'，阿语名称填'دوري ساخن ج'",
+     "expected": "展示顺序输入0"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，列表新增记录，展示顺序为0"
+    }
+   ],
+   "expected_result": "保存成功，展示顺序为0",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "分类编号-列表展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有分类数据，分类编号为系统生成的唯一值",
+   "preconditions": "热门联赛列表中已有至少一条分类记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面",
+     "expected": "列表展示所有分类，每行包含分类编号字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看分类编号列",
+     "expected": "分类编号非空，且每条记录编号唯一"
+    }
+   ],
+   "expected_result": "分类编号正确展示，且唯一",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "分类编号-编辑时不可修改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已有分类记录，分类编号为'C001'",
+   "preconditions": "热门联赛列表中已有一条分类记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击某条记录的「编辑」按钮",
+     "expected": "弹出编辑弹窗，分类编号字段置灰不可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "尝试修改分类编号",
+     "expected": "无法修改，字段为只读"
+    }
+   ],
+   "expected_result": "分类编号不可编辑",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "分类展示名称-列表展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有分类，分类展示名称为'热门联赛A'",
+   "preconditions": "热门联赛列表中已有分类记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面",
+     "expected": "列表展示分类展示名称列"
+    },
+    {
+     "step": 2,
+     "desc": "查看分类展示名称列",
+     "expected": "显示正确的分类展示名称，如'热门联赛A'"
+    }
+   ],
+   "expected_result": "分类展示名称正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "分类展示名称-超长字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "分类展示名称输入超过50个字符的字符串",
+   "preconditions": "运营人员已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "分类展示名称输入51个字符，其他字段正常",
+     "expected": "输入框限制最大长度，或输入后提示超长"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「分类展示名称长度不能超过50个字符」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示长度超限",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "展示顺序-列表展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有分类，展示顺序为1",
+   "preconditions": "热门联赛列表中已有分类记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面",
+     "expected": "列表展示展示顺序列"
+    },
+    {
+     "step": 2,
+     "desc": "查看展示顺序列",
+     "expected": "显示正确的展示顺序，如1"
+    }
+   ],
+   "expected_result": "展示顺序正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "展示顺序-重复值",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "两个分类的展示顺序都设为1",
+   "preconditions": "热门联赛列表中已有一个分类展示顺序为1",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "分类展示名称填'热门联赛D'，展示顺序填1，其他字段正常",
+     "expected": "展示顺序输入1"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，列表出现两条展示顺序为1的记录，前端排序按其他规则处理"
+    }
+   ],
+   "expected_result": "允许重复展示顺序，保存成功",
+   "remark": "负面用例（但允许重复）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "关联联赛数-展示为0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "新分类无关联联赛",
+   "preconditions": "热门联赛列表中有一个新分类，未关联任何联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面",
+     "expected": "列表展示关联联赛数列"
+    },
+    {
+     "step": 2,
+     "desc": "查看该分类的关联联赛数",
+     "expected": "显示0"
+    }
+   ],
+   "expected_result": "关联联赛数显示为0",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "关联联赛数-展示非0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "分类下已关联3个联赛",
+   "preconditions": "热门联赛列表中有一个分类，已关联3个联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面",
+     "expected": "列表展示关联联赛数列"
+    },
+    {
+     "step": 2,
+     "desc": "查看该分类的关联联赛数",
+     "expected": "显示3"
+    }
+   ],
+   "expected_result": "关联联赛数显示为3",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "英文名称-列表展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "分类英文名称为'Hot League A'",
+   "preconditions": "热门联赛列表中已有分类记录，英文名称为'Hot League A'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面",
+     "expected": "列表展示英文名称列"
+    },
+    {
+     "step": 2,
+     "desc": "查看英文名称列",
+     "expected": "显示'Hot League A'"
+    }
+   ],
+   "expected_result": "英文名称正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "英文名称-包含特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "英文名称输入'Hot@League'，包含特殊字符@",
+   "preconditions": "运营人员已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "英文名称输入'Hot@League'，其他字段正常",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「英文名称不能包含特殊字符」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示特殊字符不允许",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "阿语名称-列表展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "分类阿语名称为'دوري ساخن أ'",
+   "preconditions": "热门联赛列表中已有分类记录，阿语名称为'دوري ساخن أ'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面",
+     "expected": "列表展示阿语名称列"
+    },
+    {
+     "step": 2,
+     "desc": "查看阿语名称列",
+     "expected": "显示'دوري ساخن أ'"
+    }
+   ],
+   "expected_result": "阿语名称正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "阿语名称-为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "阿语名称留空，其他字段正常",
+   "preconditions": "运营人员已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "阿语名称留空，其他字段正常填写",
+     "expected": "阿语名称字段为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「阿语名称不能为空」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示阿语名称必填",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "删除-成功删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除一个无关联联赛的分类",
+   "preconditions": "热门联赛列表中有一个分类，关联联赛数为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击某条记录的「删除」按钮",
+     "expected": "弹出确认删除弹窗，提示「确认删除该分类？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」按钮",
+     "expected": "删除成功，列表刷新，该分类消失"
+    }
+   ],
+   "expected_result": "分类被删除，列表不再显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "删除-有关联联赛时删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "删除一个已关联3个联赛的分类",
+   "preconditions": "热门联赛列表中有一个分类，关联联赛数为3",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击该分类的「删除」按钮",
+     "expected": "弹出确认删除弹窗，提示「确认删除该分类？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」按钮",
+     "expected": "删除失败，提示「该分类下存在关联联赛，无法删除」"
+    }
+   ],
+   "expected_result": "删除被拦截，提示有关联联赛",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "编辑-成功编辑",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "修改分类展示名称为'热门联赛A-修改'，展示顺序改为2",
+   "preconditions": "热门联赛列表中有一个分类，分类编号为C001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击该分类的「编辑」按钮",
+     "expected": "弹出编辑弹窗，字段回显当前值"
+    },
+    {
+     "step": 2,
+     "desc": "修改分类展示名称为'热门联赛A-修改'，展示顺序改为2",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹窗关闭，列表刷新，展示更新后的名称和顺序"
+    }
+   ],
+   "expected_result": "编辑成功，列表数据更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "编辑-分类展示名称重复",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "将分类展示名称改为已存在的名称'热门联赛B'",
+   "preconditions": "热门联赛列表中已有两个分类，名称分别为'热门联赛A'和'热门联赛B'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击分类'热门联赛A'的「编辑」按钮",
+     "expected": "弹出编辑弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "将分类展示名称改为'热门联赛B'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「分类展示名称已存在」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示名称重复",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "管理-进入联赛管理页面",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击分类的「管理」按钮",
+   "preconditions": "热门联赛列表中有一个分类",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，点击某分类的「管理」按钮",
+     "expected": "跳转到该分类的联赛管理页面，页面标题显示分类名称"
+    }
+   ],
+   "expected_result": "成功进入管理页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "管理-无权限访问",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "无管理权限的运营人员点击管理按钮",
+   "preconditions": "当前登录账号无热门联赛管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面",
+     "expected": "列表展示，但管理按钮可能不可见或置灰"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击管理按钮",
+     "expected": "无法点击，或提示无权限"
+    }
+   ],
+   "expected_result": "无权限用户无法进入管理页面",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "联赛编号-搜索成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入存在的联赛编号'8917389126386'",
+   "preconditions": "热门联赛页面存在联赛编号搜索框",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，在联赛编号输入框输入'8917389126386'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表展示匹配的联赛记录"
+    }
+   ],
+   "expected_result": "搜索成功，展示对应联赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "联赛编号-搜索不存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的联赛编号'999999'",
+   "preconditions": "热门联赛页面存在联赛编号搜索框",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门联赛页面，在联赛编号输入框输入'999999'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表无数据，提示「暂无数据」"
+    }
+   ],
+   "expected_result": "搜索无结果，展示空态",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "新增-新增联赛成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：'L001'，联赛名称：'英超'，展示顺序：1",
+   "preconditions": "运营人员已登录运营后台，且已进入某分类的管理页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入管理页面，点击「新增联赛」按钮",
+     "expected": "弹出新增联赛弹窗，包含联赛编号、联赛名称、展示顺序等字段"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号'L001'，联赛名称'英超'，展示顺序1",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹窗关闭，列表新增记录"
+    }
+   ],
+   "expected_result": "新增联赛成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "新增-联赛编号重复",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号输入已存在的'8917389126386'",
+   "preconditions": "管理页面中已有联赛编号为'8917389126386'的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入管理页面，点击「新增联赛」按钮",
+     "expected": "弹出新增联赛弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号'8917389126386'，联赛名称'测试联赛'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「联赛编号已存在」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示联赛编号重复",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "新增分类弹窗-点击取消关闭弹窗且不保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增分类弹窗中输入展示名称「英超」和展示顺序「1」，然后点击取消，验证弹窗关闭且列表无新增。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗，包含展示名称、展示顺序输入框及保存、取消按钮"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「英超」，展示顺序「1」",
+     "expected": "输入成功，输入框显示相应内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，列表无新增分类，数据库无新增记录"
+    }
+   ],
+   "expected_result": "弹窗关闭，列表数据不变，数据库无新增记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "新增分类弹窗-点击取消后重新打开弹窗输入内容不保留",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "在新增分类弹窗中输入展示名称「西甲」和展示顺序「2」，点击取消后再次打开弹窗，验证输入内容被清空。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「西甲」，展示顺序「2」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭"
+    },
+    {
+     "step": 4,
+     "desc": "再次点击「新增分类」按钮",
+     "expected": "弹窗重新打开，展示名称和展示顺序输入框为空"
+    }
+   ],
+   "expected_result": "再次打开弹窗时，输入框为空，不保留上次输入内容。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "新增分类-填写合法数据保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "展示名称「德甲」，展示顺序「3」，均为合法数据，验证保存成功。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「德甲」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「3」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "弹窗关闭，列表新增分类「德甲」，展示顺序为3，数据库新增对应记录"
+    }
+   ],
+   "expected_result": "保存成功，列表刷新出现新分类，数据库新增记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "新增分类-展示名称为空保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示名称为空字符串，展示顺序为「1」，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "展示名称留空",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「1」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「展示名称不能为空」，弹窗不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示名称不能为空，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "新增分类-展示顺序为空保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示名称「意甲」，展示顺序为空，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「意甲」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "展示顺序留空",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「展示顺序不能为空」，弹窗不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示顺序不能为空，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "新增分类-展示顺序输入非数字保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "展示名称「法甲」，展示顺序输入「abc」，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「法甲」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「abc」",
+     "expected": "输入成功（或输入框限制）"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「展示顺序必须为数字」，弹窗不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示顺序必须为数字，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "新增分类-展示顺序输入负数保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示名称「葡超」，展示顺序输入「-1」，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「葡超」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「-1」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「展示顺序必须为正整数」，弹窗不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示顺序必须为正整数，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "新增分类-展示顺序输入0保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "展示名称「荷甲」，展示顺序输入「0」，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「荷甲」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「0」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「展示顺序必须大于0」，弹窗不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示顺序必须大于0，数据库无新增记录。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "新增分类-展示顺序输入极大值保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "展示名称「比甲」，展示顺序输入「9999」，验证保存成功。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「比甲」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「9999」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，列表新增分类「比甲」，展示顺序为9999"
+    }
+   ],
+   "expected_result": "保存成功，列表新增分类，数据库新增记录。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "新增分类-展示名称超长保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示名称输入51个字符（假设长度限制50），展示顺序「1」，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa」（51个a）",
+     "expected": "输入成功（或输入框限制）"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「1」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「展示名称长度不能超过50」，弹窗不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示名称长度超限，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "新增分类-展示名称含特殊字符保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "展示名称输入「英超@#」，展示顺序「1」，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，点击「新增分类」按钮弹出弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「英超@#」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「1」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「展示名称不能包含特殊字符」，弹窗不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示名称含特殊字符，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "新增分类-展示名称重复保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已存在分类「英超」，再次新增展示名称「英超」，展示顺序「2」，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，已存在分类「英超」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增分类」按钮",
+     "expected": "弹出新增分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入展示名称「英超」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序「2」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「展示名称已存在」，弹窗不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示名称重复，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "编辑分类-修改展示名称和展示顺序保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "编辑分类「英超」，将展示名称改为「英超联赛」，展示顺序从1改为5，点击确定，验证保存成功。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，存在分类「英超」，展示顺序为1。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分类「英超」所在行的「编辑」按钮",
+     "expected": "弹出编辑分类弹窗，展示名称显示「英超」，展示顺序显示1"
+    },
+    {
+     "step": 2,
+     "desc": "修改展示名称为「英超联赛」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "修改展示顺序为「5」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，列表更新分类名称为「英超联赛」，展示顺序为5，数据库记录已更新"
+    }
+   ],
+   "expected_result": "保存成功，列表刷新显示修改后的数据，数据库记录更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "编辑分类-展示名称为空保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "编辑分类「英超」，将展示名称清空，展示顺序保持1，点击确定，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，存在分类「英超」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分类「英超」所在行的「编辑」按钮",
+     "expected": "弹出编辑分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "清空展示名称",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "提示「展示名称不能为空」，弹窗不关闭，列表数据不变"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示名称不能为空，数据库记录未更新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "编辑分类-展示顺序输入非数字保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "编辑分类「英超」，将展示顺序改为「abc」，点击确定，验证保存被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，存在分类「英超」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分类「英超」所在行的「编辑」按钮",
+     "expected": "弹出编辑分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "修改展示顺序为「abc」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "提示「展示顺序必须为数字」，弹窗不关闭，列表数据不变"
+    }
+   ],
+   "expected_result": "保存被拦截，提示展示顺序必须为数字，数据库记录未更新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "编辑分类-点击取消不保存修改",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "编辑分类「英超」，将展示名称改为「英超联赛」，展示顺序改为5，点击取消，验证修改不生效。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，存在分类「英超」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分类「英超」所在行的「编辑」按钮",
+     "expected": "弹出编辑分类弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "修改展示名称为「英超联赛」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "修改展示顺序为「5」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，列表仍显示「英超」和展示顺序1，数据库记录未更新"
+    }
+   ],
+   "expected_result": "取消后修改不生效，列表数据不变，数据库记录未更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "删除分类-确认删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除分类「英超」，该分类关联联赛数为0，点击确认删除，验证删除成功。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，存在分类「英超」，关联联赛数为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分类「英超」所在行的「删除」按钮",
+     "expected": "弹出确认删除对话框，提示「确认删除该分类？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确认删除」按钮",
+     "expected": "对话框关闭，列表移除「英超」，数据库记录删除"
+    }
+   ],
+   "expected_result": "删除成功，列表不再显示该分类，数据库记录已删除。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "删除分类-点击取消不删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "删除分类「英超」，点击取消，验证删除操作被取消。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，存在分类「英超」。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分类「英超」所在行的「删除」按钮",
+     "expected": "弹出确认删除对话框，提示「确认删除该分类？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "对话框关闭，列表仍显示「英超」，数据库记录未删除"
+    }
+   ],
+   "expected_result": "取消后不删除，列表数据不变，数据库记录未删除。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "删除分类-有关联联赛时提示不可删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "删除分类「英超」，该分类关联联赛数为3，点击确认删除，验证删除被拦截。",
+   "preconditions": "已登录运营后台，进入热门联赛页面，存在分类「英超」，关联联赛数为3。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分类「英超」所在行的「删除」按钮",
+     "expected": "弹出确认删除对话框，提示「确认删除该分类？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确认删除」按钮",
+     "expected": "提示「该分类下有关联联赛，无法删除」，对话框关闭，列表仍显示「英超」"
+    }
+   ],
+   "expected_result": "删除被拦截，提示有关联联赛无法删除，数据库记录未删除。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "页面标题展示为「联赛及球队管理」",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "进入热门联赛页面，验证页面标题显示为「联赛及球队管理」。",
+   "preconditions": "已登录运营后台，进入热门联赛页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开热门联赛页面",
+     "expected": "页面标题显示「联赛及球队管理」"
+    }
+   ],
+   "expected_result": "页面标题正确显示「联赛及球队管理」。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "页面标题展示错误",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "热门联赛",
+   "case_design_method": "界面测试",
+   "positive_negative": "negative",
+   "test_data_note": "进入热门联赛页面，验证页面标题不是「联赛及球队管理」时视为缺陷。",
+   "preconditions": "已登录运营后台，进入热门联赛页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开热门联赛页面",
+     "expected": "页面标题显示「联赛及球队管理」"
+    }
+   ],
+   "expected_result": "若标题不是「联赛及球队管理」，则视为缺陷。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "管理列表正常展示联赛数据",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已存在联赛数据：联赛编号8917389126386，联赛名称展示联赛名称，是否展示在热门赛事=否，是否启用=是，展示顺序=10",
+   "preconditions": "运营后台已登录，热门联赛管理页面存在至少一条联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击球队及联赛->热门联赛->管理",
+     "expected": "页面正常加载，显示联赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表字段",
+     "expected": "列表展示分类名称、联赛编号、联赛名称、是否展示在热门赛事、是否启用、展示顺序、操作列，数据与数据库一致"
+    }
+   ],
+   "expected_result": "列表正确展示所有联赛数据，字段完整，数据准确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "管理列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何联赛数据",
+   "preconditions": "运营后台已登录，热门联赛管理页面无任何联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入管理页面",
+     "expected": "页面显示空态提示，如'暂无数据'"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "新增联赛成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：1234567890（数字，长度10），联赛名称：英超联赛，展示顺序：5，是否展示在热门赛事：是，是否启用：是",
+   "preconditions": "运营后台已登录，管理页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增联赛'按钮",
+     "expected": "弹出新增联赛表单"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1234567890",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入联赛名称：英超联赛",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入展示顺序：5",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "选择是否展示在热门赛事：是",
+     "expected": "选择成功"
+    },
+    {
+     "step": 6,
+     "desc": "选择是否启用：是",
+     "expected": "选择成功"
+    },
+    {
+     "step": 7,
+     "desc": "点击'保存'按钮",
+     "expected": "提示保存成功，表单关闭，列表刷新并显示新增联赛"
+    }
+   ],
+   "expected_result": "新增联赛成功，数据库新增记录，列表展示新联赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "新增联赛-联赛编号为空校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号为空，其他字段合法",
+   "preconditions": "运营后台已登录，管理页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增联赛'按钮",
+     "expected": "弹出新增联赛表单"
+    },
+    {
+     "step": 2,
+     "desc": "联赛编号留空",
+     "expected": "输入为空"
+    },
+    {
+     "step": 3,
+     "desc": "填写其他必填字段（联赛名称、展示顺序等）",
+     "expected": "填写成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'联赛编号不能为空'，保存不成功"
+    }
+   ],
+   "expected_result": "保存被拦截，提示联赛编号不能为空，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "新增联赛-联赛编号重复校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：8917389126386（已存在），其他字段合法",
+   "preconditions": "运营后台已登录，管理页面已打开，存在联赛编号8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增联赛'按钮",
+     "expected": "弹出新增联赛表单"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：8917389126386",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "填写其他字段",
+     "expected": "填写成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'联赛编号已存在'，保存不成功"
+    }
+   ],
+   "expected_result": "保存被拦截，提示联赛编号已存在，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "新增联赛-展示顺序边界值",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "展示顺序输入0（最小值边界），其他字段合法",
+   "preconditions": "运营后台已登录，管理页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增联赛'按钮",
+     "expected": "弹出新增联赛表单"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1234567891",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入联赛名称：测试联赛",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入展示顺序：0",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击'保存'按钮",
+     "expected": "若规则允许0则保存成功，否则提示'展示顺序必须为正整数'"
+    }
+   ],
+   "expected_result": "根据规则校验展示顺序，若允许0则保存成功，否则提示错误",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "编辑联赛成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "编辑联赛编号8917389126386，修改联赛名称为'新联赛名称'，展示顺序改为15，是否展示在热门赛事改为是",
+   "preconditions": "运营后台已登录，管理页面存在联赛8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击联赛8917389126386所在行的'编辑'按钮",
+     "expected": "弹出编辑联赛表单，回显当前数据"
+    },
+    {
+     "step": 2,
+     "desc": "修改联赛名称为'新联赛名称'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "修改展示顺序为15",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "修改是否展示在热门赛事为'是'",
+     "expected": "选择成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击'保存'按钮",
+     "expected": "提示保存成功，表单关闭，列表刷新显示更新后的数据"
+    }
+   ],
+   "expected_result": "编辑成功，数据库记录更新，列表展示新数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "编辑联赛-联赛编号不可修改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "编辑联赛8917389126386，尝试修改联赛编号为999",
+   "preconditions": "运营后台已登录，管理页面存在联赛8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'编辑'按钮",
+     "expected": "弹出编辑表单"
+    },
+    {
+     "step": 2,
+     "desc": "尝试修改联赛编号为999",
+     "expected": "联赛编号字段不可编辑（置灰或只读）"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "保存成功，联赛编号不变"
+    }
+   ],
+   "expected_result": "联赛编号不可修改，保存后联赛编号仍为原值",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "删除联赛成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除联赛编号8917389126386",
+   "preconditions": "运营后台已登录，管理页面存在联赛8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击联赛8917389126386所在行的'删除'按钮",
+     "expected": "弹出确认删除提示框，显示'确认删除该分类？'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'按钮",
+     "expected": "提示删除成功，列表刷新，该联赛不再显示"
+    }
+   ],
+   "expected_result": "删除成功，数据库记录删除，列表不再显示该联赛",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "删除联赛-取消删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "删除联赛8917389126386，点击取消",
+   "preconditions": "运营后台已登录，管理页面存在联赛8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'删除'按钮",
+     "expected": "弹出确认删除提示框"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'按钮",
+     "expected": "提示框关闭，联赛未被删除"
+    }
+   ],
+   "expected_result": "取消删除，联赛仍存在，数据库无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "新增/编辑联赛-取消操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "新增联赛表单填写部分数据后点击取消",
+   "preconditions": "运营后台已登录，管理页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增联赛'按钮",
+     "expected": "弹出新增联赛表单"
+    },
+    {
+     "step": 2,
+     "desc": "填写联赛编号、联赛名称等字段",
+     "expected": "填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'取消'按钮",
+     "expected": "表单关闭，不保存数据，列表无变化"
+    }
+   ],
+   "expected_result": "取消操作，表单关闭，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "保存联赛配置-正向-合法数据保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：8917389126386（已有联赛编号），展示顺序：10，是否展示在热门赛事：是，是否启用：是",
+   "preconditions": "已登录运营后台，进入管理页面，存在一个联赛记录（联赛编号8917389126386）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击该联赛的'编辑'按钮",
+     "expected": "弹出新增/编辑联赛弹窗，各字段回显原有数据"
+    },
+    {
+     "step": 2,
+     "desc": "修改展示顺序为10，是否展示在热门赛事选择'是'，是否启用选择'是'",
+     "expected": "输入框可正常输入，下拉选项可正常选择"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'保存成功'，弹窗关闭，列表数据刷新，该联赛的展示顺序变为10，热门赛事状态为'是'，启用状态为'是'"
+    }
+   ],
+   "expected_result": "保存成功，数据更新到数据库，列表刷新显示最新数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "保存联赛配置-负向-联赛编号为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号为空，展示顺序：5，是否展示在热门赛事：是，是否启用：是",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在新增/编辑联赛弹窗中，联赛编号留空",
+     "expected": "联赛编号输入框为空"
+    },
+    {
+     "step": 2,
+     "desc": "填写展示顺序为5，是否展示在热门赛事选择'是'，是否启用选择'是'",
+     "expected": "其他字段可正常填写"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'联赛编号不能为空'，保存失败，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存失败，提示联赛编号必填，数据未保存",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "联赛编号字段-正向-合法编号输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：1234567890123（13位数字，符合常见编号格式）",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在联赛编号输入框中输入'1234567890123'",
+     "expected": "输入框接受输入，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'按钮",
+     "expected": "保存成功，提示'保存成功'"
+    }
+   ],
+   "expected_result": "联赛编号可正常输入并保存",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "联赛编号字段-负向-超长编号输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：12345678901234567890（20位数字，超出常见长度限制）",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在联赛编号输入框中输入'12345678901234567890'",
+     "expected": "输入框可能限制输入长度，或允许输入但保存时校验"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'联赛编号长度超出限制'，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示长度超限",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "展示顺序字段-正向-合法顺序输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "展示顺序：10（正整数，在合理范围内）",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在展示顺序输入框中输入'10'",
+     "expected": "输入框接受输入"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'按钮",
+     "expected": "保存成功，提示'保存成功'"
+    }
+   ],
+   "expected_result": "展示顺序可正常输入并保存",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "展示顺序字段-负向-负数输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序：-1（负数，不符合排序规则）",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在展示顺序输入框中输入'-1'",
+     "expected": "输入框可能拒绝输入，或允许输入但保存时校验"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'展示顺序必须为非负整数'，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示展示顺序不合法",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "是否展示在热门赛事-正向-选择'是'",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "是否展示在热门赛事：是",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在是否展示在热门赛事下拉框中选择'是'",
+     "expected": "下拉框显示'是'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'按钮",
+     "expected": "保存成功，提示'保存成功'"
+    }
+   ],
+   "expected_result": "保存成功，联赛展示在热门赛事中",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "是否展示在热门赛事-负向-选择'否'",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "是否展示在热门赛事：否",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在是否展示在热门赛事下拉框中选择'否'",
+     "expected": "下拉框显示'否'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'按钮",
+     "expected": "保存成功，提示'保存成功'"
+    }
+   ],
+   "expected_result": "保存成功，联赛不展示在热门赛事中",
+   "remark": "负面用例（验证不展示场景）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "是否启用-正向-选择'是'",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "是否启用：是",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在是否启用下拉框中选择'是'",
+     "expected": "下拉框显示'是'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'按钮",
+     "expected": "保存成功，提示'保存成功'"
+    }
+   ],
+   "expected_result": "保存成功，联赛启用",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "是否启用-负向-选择'否'",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "是否启用：否",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在是否启用下拉框中选择'否'",
+     "expected": "下拉框显示'否'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'按钮",
+     "expected": "保存成功，提示'保存成功'"
+    }
+   ],
+   "expected_result": "保存成功，联赛停用",
+   "remark": "负面用例（验证停用场景）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "确定按钮-正向-点击确定保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：1234567890123，展示顺序：5，是否展示在热门赛事：是，是否启用：是",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮，填写合法数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写联赛编号、展示顺序、是否展示在热门赛事、是否启用",
+     "expected": "各字段填写正确"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'按钮",
+     "expected": "保存成功，提示'保存成功'，弹窗关闭"
+    }
+   ],
+   "expected_result": "保存成功，数据更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "确定按钮-负向-未填写必填字段点击确定",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号为空，其他字段正常",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "联赛编号留空，其他字段填写合法",
+     "expected": "联赛编号为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'按钮",
+     "expected": "提示'联赛编号不能为空'，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示必填",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "取消按钮-正向-取消操作不保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：1234567890123，展示顺序：5，是否展示在热门赛事：是，是否启用：是",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写联赛编号、展示顺序等字段",
+     "expected": "字段填写完成"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'按钮",
+     "expected": "弹窗关闭，数据不保存，列表无新增记录"
+    }
+   ],
+   "expected_result": "取消成功，数据未保存",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "取消按钮-负向-取消后再次打开弹窗数据不保留",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：1234567890123，展示顺序：5",
+   "preconditions": "已登录运营后台，进入管理页面，点击'新增联赛'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写联赛编号、展示顺序等字段",
+     "expected": "字段填写完成"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'按钮",
+     "expected": "弹窗关闭"
+    },
+    {
+     "step": 3,
+     "desc": "再次点击'新增联赛'按钮",
+     "expected": "弹窗重新打开，所有字段为空，之前输入的数据不保留"
+    }
+   ],
+   "expected_result": "取消后数据不保留，符合预期",
+   "remark": "负面用例（验证数据不保留）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "确认删除-正向-确认删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除联赛编号：8917389126386",
+   "preconditions": "已登录运营后台，进入管理页面，存在联赛记录8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击该联赛的'删除'按钮",
+     "expected": "弹出确认删除弹窗，提示'确认删除该分类？'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'按钮",
+     "expected": "删除成功，提示'删除成功'，列表刷新，该记录消失"
+    }
+   ],
+   "expected_result": "删除成功，数据从数据库移除",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "确认删除-负向-取消删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "删除联赛编号：8917389126386",
+   "preconditions": "已登录运营后台，进入管理页面，存在联赛记录8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击该联赛的'删除'按钮",
+     "expected": "弹出确认删除弹窗，提示'确认删除该分类？'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'按钮",
+     "expected": "弹窗关闭，删除操作取消，列表数据不变"
+    }
+   ],
+   "expected_result": "取消删除，数据未删除",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "确认删除该分类？-正向-弹窗文案正确",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "无特殊数据，验证弹窗文案",
+   "preconditions": "已登录运营后台，进入管理页面，点击任意联赛的'删除'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'删除'按钮",
+     "expected": "弹出确认删除弹窗，文案显示'确认删除该分类？'"
+    }
+   ],
+   "expected_result": "弹窗文案正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "确认删除该分类？-负向-弹窗按钮功能验证",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "界面测试",
+   "positive_negative": "negative",
+   "test_data_note": "无特殊数据，验证弹窗按钮",
+   "preconditions": "已登录运营后台，进入管理页面，点击任意联赛的'删除'按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'删除'按钮",
+     "expected": "弹出确认删除弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击弹窗右上角关闭按钮（X）",
+     "expected": "弹窗关闭，删除操作取消"
+    }
+   ],
+   "expected_result": "弹窗可关闭，删除取消",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "编辑功能-正向-编辑已有联赛成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：8917389126386，修改展示顺序为10",
+   "preconditions": "已登录运营后台，进入管理页面，存在联赛记录8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击该联赛的'编辑'按钮",
+     "expected": "弹出新增/编辑联赛弹窗，各字段回显原有数据"
+    },
+    {
+     "step": 2,
+     "desc": "修改展示顺序为10",
+     "expected": "展示顺序输入框可修改"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "保存成功，提示'保存成功'，列表刷新，展示顺序更新为10"
+    }
+   ],
+   "expected_result": "编辑成功，数据更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "编辑功能-负向-编辑时清空必填字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：8917389126386，编辑时清空联赛编号",
+   "preconditions": "已登录运营后台，进入管理页面，存在联赛记录8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击该联赛的'编辑'按钮",
+     "expected": "弹窗打开，联赛编号显示8917389126386"
+    },
+    {
+     "step": 2,
+     "desc": "清空联赛编号输入框",
+     "expected": "联赛编号为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'联赛编号不能为空'，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示必填",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "功能列-正向-显示编辑和删除按钮",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "无特殊数据，验证列表功能列",
+   "preconditions": "已登录运营后台，进入管理页面，列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看列表的'功能'列",
+     "expected": "每个联赛记录的功能列显示'编辑'和'删除'按钮"
+    }
+   ],
+   "expected_result": "功能列显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "功能列-负向-无数据时功能列显示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "界面测试",
+   "positive_negative": "negative",
+   "test_data_note": "无联赛数据",
+   "preconditions": "已登录运营后台，进入管理页面，列表无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看列表的'功能'列",
+     "expected": "列表为空，无功能列按钮显示"
+    }
+   ],
+   "expected_result": "空列表无功能按钮",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "描述列-正向-显示联赛描述",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "联赛记录存在描述信息",
+   "preconditions": "已登录运营后台，进入管理页面，列表有数据且包含描述信息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看列表的'描述'列",
+     "expected": "显示联赛的描述信息"
+    }
+   ],
+   "expected_result": "描述列显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "描述列-负向-描述为空",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "界面测试",
+   "positive_negative": "negative",
+   "test_data_note": "联赛记录无描述信息",
+   "preconditions": "已登录运营后台，进入管理页面，列表有数据但描述为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看列表的'描述'列",
+     "expected": "显示为空或显示'-'"
+    }
+   ],
+   "expected_result": "描述列为空显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "列表页正常展示联赛列表",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置联赛数据：联赛编号8917389126386，联赛名称'展示联赛名称'，是否展示在热门赛事=否，是否启用=是，展示顺序=10；联赛编号0829319073971，联赛名称'展示联赛名称'，是否展示在热门赛事=是，是否启用=否，展示顺序=8。",
+   "preconditions": "已登录运营后台，存在至少2条联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「球队及联赛」-「热门联赛」-「管理」",
+     "expected": "进入管理页面，显示联赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表字段",
+     "expected": "列表展示联赛编号、联赛名称、是否展示在热门赛事、是否启用、展示顺序、操作列（删除、编辑）"
+    },
+    {
+     "step": 3,
+     "desc": "核对列表数据",
+     "expected": "列表数据与预置数据一致，展示顺序按升序排列（8、10）"
+    }
+   ],
+   "expected_result": "列表正常展示所有联赛，字段完整，数据正确，排序符合预期。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "列表页无数据时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "无任何联赛数据",
+   "preconditions": "已登录运营后台，数据库中无联赛记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入管理页面",
+     "expected": "页面显示空列表，无数据行"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面提示",
+     "expected": "显示'暂无数据'或类似空态提示"
+    }
+   ],
+   "expected_result": "空态展示合理，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "新增联赛时联赛编号为空",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号留空，其他字段正常填写",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增联赛」",
+     "expected": "弹出新增/编辑联赛弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "联赛编号留空，填写其他字段",
+     "expected": "联赛编号为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "提示'联赛编号不能为空'，保存失败，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拦截，提示明确错误信息，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "新增联赛时联赛编号重复",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：8917389126386（已存在），展示顺序：5，是否展示在热门赛事：是，是否启用：是",
+   "preconditions": "已登录运营后台，联赛编号8917389126386已存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增联赛」",
+     "expected": "弹出新增/编辑联赛弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：8917389126386",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "填写其他字段",
+     "expected": "填写成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "提示'联赛编号已存在'，保存失败，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拦截，提示重复错误，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "新增联赛时展示顺序为负数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：1234567891，展示顺序：-1（负数）",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增联赛」",
+     "expected": "弹出新增/编辑联赛弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1234567891",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序：-1",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "提示'展示顺序必须为非负整数'，保存失败"
+    }
+   ],
+   "expected_result": "保存被拦截，提示明确错误信息，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "新增联赛时展示顺序为0（边界值）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛编号：1234567892，展示顺序：0（最小值）",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增联赛」",
+     "expected": "弹出新增/编辑联赛弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1234567892",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入展示顺序：0",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "保存成功，列表新增记录，展示顺序为0"
+    }
+   ],
+   "expected_result": "保存成功，展示顺序0被接受。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "编辑联赛时联赛编号被修改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "编辑联赛8917389126386，将联赛编号改为0829319073971（已存在）",
+   "preconditions": "已登录运营后台，联赛8917389126386和0829319073971均存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击联赛8917389126386的「编辑」",
+     "expected": "弹出编辑弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "修改联赛编号为0829319073971",
+     "expected": "修改成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "提示'联赛编号已存在'，保存失败"
+    }
+   ],
+   "expected_result": "保存被拦截，提示重复错误，数据库记录不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "删除联赛时取消操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "删除联赛0829319073971，但点击取消",
+   "preconditions": "已登录运营后台，存在联赛0829319073971",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击联赛0829319073971的「删除」按钮",
+     "expected": "弹出确认删除弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」",
+     "expected": "弹窗关闭，不删除，列表不变"
+    }
+   ],
+   "expected_result": "取消删除，数据库记录不变，列表不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "搜索联赛编号",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索联赛编号：8917389126386（精确匹配）",
+   "preconditions": "已登录运营后台，存在联赛8917389126386",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入联赛编号：8917389126386",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅显示该联赛记录"
+    }
+   ],
+   "expected_result": "搜索结果准确，只显示匹配的联赛。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "搜索不存在的联赛编号",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索联赛编号：9999999999（不存在）",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入联赛编号：9999999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「搜索」",
+     "expected": "列表显示'暂无数据'"
+    }
+   ],
+   "expected_result": "搜索无结果，显示空态。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "重置搜索条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先搜索联赛编号8917389126386，再点击重置",
+   "preconditions": "已登录运营后台，存在多条联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入搜索条件并搜索",
+     "expected": "列表显示过滤结果"
+    },
+    {
+     "step": 2,
+     "desc": "点击「重置」按钮",
+     "expected": "搜索框清空，列表恢复显示全部联赛"
+    }
+   ],
+   "expected_result": "重置成功，列表恢复全量数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "新增联赛弹窗取消操作",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "在新增弹窗填写部分字段后点击取消",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增联赛」",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写联赛编号、展示顺序等字段",
+     "expected": "填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」",
+     "expected": "弹窗关闭，不保存，列表不变"
+    }
+   ],
+   "expected_result": "取消操作生效，无数据变更。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "列表分页功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置超过一页的联赛数据（如11条）",
+   "preconditions": "已登录运营后台，存在超过10条联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入管理页面",
+     "expected": "列表显示第一页数据，每页10条"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "显示第二页数据"
+    }
+   ],
+   "expected_result": "分页正常，数据正确切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "列表分页边界（最后一页）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "预置11条联赛数据，最后一页只有1条",
+   "preconditions": "已登录运营后台，存在11条联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入管理页面",
+     "expected": "显示第一页10条"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "显示第二页1条"
+    },
+    {
+     "step": 3,
+     "desc": "点击下一页",
+     "expected": "按钮置灰或不可点击"
+    }
+   ],
+   "expected_result": "分页边界处理正确，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "未登录访问管理页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录状态直接访问管理页面URL",
+   "preconditions": "未登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在浏览器中直接输入管理页面URL",
+     "expected": "跳转至登录页，无法访问管理页面"
+    }
+   ],
+   "expected_result": "未登录被拦截，跳转登录页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "无权限用户访问管理页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门联赛/管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无管理权限的运营账号登录",
+   "preconditions": "已登录无管理权限的账号",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试进入管理页面",
+     "expected": "提示无权限或隐藏入口，无法访问"
+    }
+   ],
+   "expected_result": "无权限用户被拦截，无法访问管理功能。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "热门球队管理列表默认展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置热门球队数据：球队ID=vl7oqdehj3r510j，球队名称=澳大利亚女足；球队ID=gx7lm7ph88wm2wd，球队名称=北西兰后备队",
+   "preconditions": "运营后台已登录，热门球队页面有至少2条数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击菜单“球队及联赛-热门球队”",
+     "expected": "页面加载成功，显示“热门球队管理”标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示球队ID、球队名称、操作列；数据与预置一致，分页控件显示总条数"
+    }
+   ],
+   "expected_result": "列表正确展示所有热门球队，字段完整，分页正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "热门球队列表为空时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "无预置数据，热门球队列表为空",
+   "preconditions": "运营后台已登录，热门球队列表无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入热门球队页面",
+     "expected": "列表显示“暂无数据”或空态提示，分页显示0条"
+    }
+   ],
+   "expected_result": "页面正常展示空态，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "按球队ID精确搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索球队ID=vl7oqdehj3r510j（预置数据中的真实ID）",
+   "preconditions": "热门球队列表存在球队ID=vl7oqdehj3r510j的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在“球队ID：”输入框输入 vl7oqdehj3r510j",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表仅显示球队ID=vl7oqdehj3r510j的记录"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "按不存在的球队ID搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索不存在的球队ID=notexist123",
+   "preconditions": "热门球队列表无此ID数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在“球队ID：”输入框输入 notexist123",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示“暂无数据”，无报错"
+    }
+   ],
+   "expected_result": "搜索无结果，页面提示无数据",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "按球队名称模糊搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索球队名称包含“女足”的记录（预置数据“澳大利亚女足”）",
+   "preconditions": "热门球队列表存在“澳大利亚女足”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在“球队名称：”输入框输入“女足”",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示球队名称包含“女足”的记录"
+    }
+   ],
+   "expected_result": "搜索结果正确，支持模糊匹配",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "搜索条件为空时点击搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球队ID和球队名称输入框均为空",
+   "preconditions": "热门球队页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不输入任何搜索条件，直接点击“搜索”按钮",
+     "expected": "列表展示全部热门球队数据"
+    }
+   ],
+   "expected_result": "空条件搜索返回全部数据，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "点击重置清空搜索条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已输入球队ID=vl7oqdehj3r510j",
+   "preconditions": "热门球队页面已打开，已输入搜索条件",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在球队ID输入框输入 vl7oqdehj3r510j",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击“重置”按钮",
+     "expected": "输入框清空，列表恢复显示全部数据"
+    }
+   ],
+   "expected_result": "重置功能正常，搜索条件清空，列表恢复",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "添加热门球队-必填字段校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "球队ID和球队名称均留空",
+   "preconditions": "热门球队页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“添加”按钮",
+     "expected": "弹出添加表单，包含球队ID、球队名称输入框"
+    },
+    {
+     "step": 2,
+     "desc": "不输入任何内容，直接点击“保存”",
+     "expected": "提示“球队ID不能为空”和“球队名称不能为空”，保存不成功"
+    }
+   ],
+   "expected_result": "必填校验生效，表单不提交",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "添加热门球队-合法数据保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队ID=test123456，球队名称=测试球队（符合格式要求）",
+   "preconditions": "热门球队页面已打开，无重复ID",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“添加”按钮",
+     "expected": "弹出添加表单"
+    },
+    {
+     "step": 2,
+     "desc": "输入球队ID=test123456，球队名称=测试球队",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存成功，表单关闭，列表新增该记录"
+    }
+   ],
+   "expected_result": "新增成功，列表刷新显示新记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "添加热门球队-球队ID重复校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队ID=vl7oqdehj3r510j（已存在），球队名称=新名称",
+   "preconditions": "热门球队列表已存在球队ID=vl7oqdehj3r510j",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“添加”按钮",
+     "expected": "弹出添加表单"
+    },
+    {
+     "step": 2,
+     "desc": "输入球队ID=vl7oqdehj3r510j，球队名称=新名称",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“球队ID已存在”，保存不成功"
+    }
+   ],
+   "expected_result": "重复ID被拦截，不新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "添加热门球队-球队ID超长校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队ID长度为21字符（假设上限20字符），如 abcdefghijklmnopqrstu",
+   "preconditions": "热门球队页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“添加”按钮",
+     "expected": "弹出添加表单"
+    },
+    {
+     "step": 2,
+     "desc": "输入球队ID=abcdefghijklmnopqrstu（21字符），球队名称=测试",
+     "expected": "输入框限制输入或提示超长"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“球队ID长度不能超过20”，保存不成功"
+    }
+   ],
+   "expected_result": "超长ID被拦截",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "添加热门球队-取消操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已输入球队ID=temp123，球队名称=临时球队",
+   "preconditions": "热门球队页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“添加”按钮",
+     "expected": "弹出添加表单"
+    },
+    {
+     "step": 2,
+     "desc": "输入球队ID=temp123，球队名称=临时球队",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”按钮",
+     "expected": "表单关闭，不保存任何数据"
+    }
+   ],
+   "expected_result": "取消后不新增记录，列表无变化",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "移除热门球队-确认移除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择球队ID=vl7oqdehj3r510j（澳大利亚女足）进行移除",
+   "preconditions": "热门球队列表存在该球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在列表中找到球队“澳大利亚女足”",
+     "expected": "该行操作列有“移除”按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击“移除”按钮",
+     "expected": "弹出确认框“确认要移除该球队”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确定”",
+     "expected": "移除成功，列表不再显示该球队"
+    }
+   ],
+   "expected_result": "移除成功，列表刷新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "移除热门球队-取消移除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择球队ID=gx7lm7ph88wm2wd（北西兰后备队）进行移除",
+   "preconditions": "热门球队列表存在该球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“移除”按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 2,
+     "desc": "点击“取消”",
+     "expected": "确认框关闭，列表数据不变"
+    }
+   ],
+   "expected_result": "取消后不移除，列表无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "设置时间范围-选择未来一天保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择“未来一天”时间范围",
+   "preconditions": "热门球队页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“设置时间范围”按钮",
+     "expected": "弹出设置窗口，包含“未来一天”“未来三天”“未来七天”选项"
+    },
+    {
+     "step": 2,
+     "desc": "选择“未来一天”",
+     "expected": "选项被选中"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”",
+     "expected": "保存成功，窗口关闭，提示“设置成功”"
+    }
+   ],
+   "expected_result": "时间范围设置成功，前端热预告按未来一天展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "设置时间范围-不选择直接保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "不选择任何时间范围选项",
+   "preconditions": "热门球队页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“设置时间范围”按钮",
+     "expected": "弹出设置窗口"
+    },
+    {
+     "step": 2,
+     "desc": "不选择任何选项，直接点击“保存”",
+     "expected": "提示“请选择时间范围”，保存不成功"
+    }
+   ],
+   "expected_result": "必选校验生效，不保存",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "设置时间范围-取消操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已选择“未来三天”",
+   "preconditions": "热门球队页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“设置时间范围”按钮",
+     "expected": "弹出设置窗口"
+    },
+    {
+     "step": 2,
+     "desc": "选择“未来三天”",
+     "expected": "选项被选中"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”",
+     "expected": "窗口关闭，设置不生效"
+    }
+   ],
+   "expected_result": "取消后不保存，原设置不变",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "设置时间范围-选择未来一天并确定",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择「未来一天」作为时间范围，代表前端热预告仅展示未来24小时的比赛。",
+   "preconditions": "已登录运营后台，进入热门球队页面，点击「设置时间范围」按钮打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「设置时间范围」按钮，打开弹窗",
+     "expected": "弹窗显示，标题为「设置时间范围」，包含「未来一天」「未来三天」「未来七天」三个选项及「确定」「取消」按钮。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「未来一天」选项",
+     "expected": "「未来一天」选项被选中，其他选项取消选中。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，时间范围设置为「未来一天」，页面出现成功提示（如「设置成功」），且设置被保存。"
+    }
+   ],
+   "expected_result": "时间范围成功设置为「未来一天」，弹窗关闭，设置持久化，前端热预告展示未来一天的比赛。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "设置时间范围-选择未来三天并确定",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择「未来三天」作为时间范围，代表前端热预告展示未来72小时的比赛。",
+   "preconditions": "已登录运营后台，进入热门球队页面，点击「设置时间范围」按钮打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「设置时间范围」按钮，打开弹窗",
+     "expected": "弹窗显示，包含三个时间范围选项。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「未来三天」选项",
+     "expected": "「未来三天」选项被选中。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，时间范围设置为「未来三天」，出现成功提示。"
+    }
+   ],
+   "expected_result": "时间范围成功设置为「未来三天」，弹窗关闭，设置持久化。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "设置时间范围-选择未来七天并确定",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择「未来七天」作为时间范围，代表前端热预告展示未来一周的比赛。",
+   "preconditions": "已登录运营后台，进入热门球队页面，点击「设置时间范围」按钮打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「设置时间范围」按钮，打开弹窗",
+     "expected": "弹窗显示，包含三个时间范围选项。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「未来七天」选项",
+     "expected": "「未来七天」选项被选中。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，时间范围设置为「未来七天」，出现成功提示。"
+    }
+   ],
+   "expected_result": "时间范围成功设置为「未来七天」，弹窗关闭，设置持久化。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "设置时间范围-不选择任何选项直接确定",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "不选择任何时间范围选项，直接点击「确定」，验证系统是否拦截。",
+   "preconditions": "已登录运营后台，进入热门球队页面，打开设置时间范围弹窗，且当前无默认选中项。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开设置时间范围弹窗",
+     "expected": "弹窗显示，三个选项均未选中。"
+    },
+    {
+     "step": 2,
+     "desc": "直接点击「确定」按钮",
+     "expected": "系统提示「请选择时间范围」或「至少选择一项」，弹窗不关闭，设置不保存。"
+    }
+   ],
+   "expected_result": "未选择时间范围时点击确定被拦截，并给出明确提示，设置不生效。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "设置时间范围-点击取消不保存更改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "在弹窗中更改选择后点击「取消」，验证原设置不被修改。",
+   "preconditions": "已登录运营后台，进入热门球队页面，当前时间范围为「未来一天」，打开设置时间范围弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开设置时间范围弹窗，当前选中「未来一天」",
+     "expected": "弹窗显示，「未来一天」处于选中状态。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「未来三天」选项",
+     "expected": "「未来三天」被选中。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，时间范围仍为「未来一天」，无成功提示。"
+    }
+   ],
+   "expected_result": "点击取消后，弹窗关闭，原时间范围设置保持不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "移除球队-确认删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "对球队ID为vl7oqdehj3r510j（澳大利亚女足）执行移除操作，并确认删除。",
+   "preconditions": "已登录运营后台，进入热门球队页面，列表中存在球队「澳大利亚女足」（ID: vl7oqdehj3r510j）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在热门球队列表中找到「澳大利亚女足」所在行，点击「移除」按钮",
+     "expected": "弹出确认删除弹窗，显示「确认要移除该球队」及「确认删除」「取消」按钮。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确认删除」按钮",
+     "expected": "弹窗关闭，列表刷新，「澳大利亚女足」从热门球队列表中移除，出现成功提示（如「移除成功」）。"
+    }
+   ],
+   "expected_result": "球队成功从热门球队中移除，列表刷新，数据持久化。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "移除球队-取消删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "对球队ID为gx7lm7ph88wm2wd（北西兰后备队）执行移除操作，但在确认弹窗中点击「取消」。",
+   "preconditions": "已登录运营后台，进入热门球队页面，列表中存在球队「北西兰后备队」（ID: gx7lm7ph88wm2wd）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在热门球队列表中找到「北西兰后备队」所在行，点击「移除」按钮",
+     "expected": "弹出确认删除弹窗。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，列表无变化，「北西兰后备队」仍保留在热门球队列表中。"
+    }
+   ],
+   "expected_result": "取消移除操作，球队未被移除，列表保持不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "移除球队-确认删除后列表刷新",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "错误推测",
+   "positive_negative": "positive",
+   "test_data_note": "移除球队后，验证列表是否自动刷新且不再显示该球队。",
+   "preconditions": "已登录运营后台，进入热门球队页面，列表中存在至少一支球队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "对任意球队执行移除操作并确认删除",
+     "expected": "弹窗关闭，列表自动刷新。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表是否还包含被移除的球队",
+     "expected": "被移除的球队不再出现在列表中，列表数据与数据库一致。"
+    }
+   ],
+   "expected_result": "移除后列表刷新，被移除球队不再显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "联赛及球队管理入口跳转",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「联赛及球队管理」入口，验证跳转到联赛及球队管理页面。",
+   "preconditions": "已登录运营后台，进入热门球队页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击页面上的「联赛及球队管理」入口",
+     "expected": "页面跳转到联赛及球队管理模块，显示联赛及球队管理相关功能。"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面，URL正确，页面正常加载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "联赛及球队管理入口-未登录访问",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/热门球队",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录状态下直接访问热门球队页面，验证是否被拦截。",
+   "preconditions": "未登录运营后台，直接访问热门球队页面URL。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在浏览器中直接输入热门球队页面URL并访问",
+     "expected": "系统跳转到登录页面，提示需要登录。"
+    }
+   ],
+   "expected_result": "未登录访问被拦截，跳转至登录页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "新增屏蔽赛事视频-填写合法数据保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：1098891826（不存在的编号，数字格式）；屏蔽网站：example.com；网站地址1-5：http://www.example1.com 等合法URL",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框，包含联赛编号、屏蔽网站、网站地址1-5等输入项"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1098891826",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入屏蔽网站：example.com",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入网站地址1：http://www.example1.com，网站地址2：http://www.example2.com，网站地址3：http://www.example3.com，网站地址4：http://www.example4.com，网站地址5：http://www.example5.com",
+     "expected": "所有地址输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹出成功提示，列表刷新并显示新增记录"
+    }
+   ],
+   "expected_result": "新增记录成功，列表中出现联赛编号1098891826的记录，且联赛名称、屏蔽网站、网址1-3等字段正确展示；数据库新增对应记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "新增屏蔽赛事视频-联赛编号为空保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号为空，其他字段合法（屏蔽网站：example.com，网站地址1-5合法URL）",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "联赛编号留空，其他字段填写合法数据",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「联赛编号不能为空」，对话框不关闭"
+    }
+   ],
+   "expected_result": "保存失败，提示联赛编号不能为空，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "新增屏蔽赛事视频-联赛编号重复保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：1098891823（已存在），其他字段合法",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；已存在联赛编号1098891823的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1098891823，其他字段合法",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「联赛编号已存在」，对话框不关闭"
+    }
+   ],
+   "expected_result": "保存失败，提示联赛编号已存在，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "新增屏蔽赛事视频-联赛编号格式非法保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：abc123（非数字格式），其他字段合法",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：abc123",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「联赛编号格式不正确」，对话框不关闭"
+    }
+   ],
+   "expected_result": "保存失败，提示联赛编号格式不正确，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "新增屏蔽赛事视频-网站地址格式非法保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号合法（1098891826），屏蔽网站合法，网站地址1：not-a-url（非法URL格式）",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入合法联赛编号和屏蔽网站，网站地址1输入非法格式",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「网站地址1格式不正确」，对话框不关闭"
+    }
+   ],
+   "expected_result": "保存失败，提示网站地址1格式不正确，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "新增屏蔽赛事视频-取消操作不保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：1098891826，屏蔽网站：example.com，网站地址1-5合法URL",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "填写所有字段合法数据",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "对话框关闭，不保存任何数据，列表无变化"
+    }
+   ],
+   "expected_result": "对话框关闭，数据库无新增记录，列表无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "列表展示联赛编号字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录联赛编号：1098891823",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在联赛编号1098891823的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开屏蔽赛事视频页面",
+     "expected": "列表展示所有屏蔽赛事视频记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛编号列",
+     "expected": "每条记录显示正确的联赛编号，如1098891823"
+    }
+   ],
+   "expected_result": "联赛编号列正确展示，与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "列表展示联赛名称字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录联赛编号1098891823对应的联赛名称为「英超」",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在联赛编号1098891823的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开屏蔽赛事视频页面",
+     "expected": "列表展示所有屏蔽赛事视频记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛名称列",
+     "expected": "每条记录显示正确的联赛名称，如「英超」"
+    }
+   ],
+   "expected_result": "联赛名称列正确展示，与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "列表展示屏蔽网站字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录屏蔽网站为「example.com」",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在屏蔽网站为example.com的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开屏蔽赛事视频页面",
+     "expected": "列表展示所有屏蔽赛事视频记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看屏蔽网站列",
+     "expected": "每条记录显示正确的屏蔽网站，如example.com"
+    }
+   ],
+   "expected_result": "屏蔽网站列正确展示，与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "列表展示联赛英文名称字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录联赛英文名称为「Premier League」",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在联赛英文名称为Premier League的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开屏蔽赛事视频页面",
+     "expected": "列表展示所有屏蔽赛事视频记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看展示联赛的英文名称列",
+     "expected": "每条记录显示正确的英文名称，如Premier League"
+    }
+   ],
+   "expected_result": "展示联赛的英文名称列正确展示，与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "列表展示网址1字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录网址1为「http://www.example1.com」",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在网址1为http://www.example1.com的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开屏蔽赛事视频页面",
+     "expected": "列表展示所有屏蔽赛事视频记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看网址1列",
+     "expected": "每条记录显示正确的网址1，如http://www.example1.com"
+    }
+   ],
+   "expected_result": "网址1列正确展示，与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "列表展示网址2字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录网址2为「http://www.example2.com」",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在网址2为http://www.example2.com的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开屏蔽赛事视频页面",
+     "expected": "列表展示所有屏蔽赛事视频记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看网址2列",
+     "expected": "每条记录显示正确的网址2，如http://www.example2.com"
+    }
+   ],
+   "expected_result": "网址2列正确展示，与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "列表展示网址3字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录网址3为「http://www.example3.com」",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在网址3为http://www.example3.com的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开屏蔽赛事视频页面",
+     "expected": "列表展示所有屏蔽赛事视频记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看网址3列",
+     "expected": "每条记录显示正确的网址3，如http://www.example3.com"
+    }
+   ],
+   "expected_result": "网址3列正确展示，与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "删除屏蔽赛事视频-确认删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除联赛编号1098891823的记录",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在联赛编号1098891823的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "找到联赛编号1098891823的记录，点击「删除」按钮",
+     "expected": "弹出确认删除对话框，提示「确认删除该联赛？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」按钮",
+     "expected": "删除成功，列表刷新，该记录消失"
+    }
+   ],
+   "expected_result": "删除成功，数据库记录被删除，列表不再显示该记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "删除屏蔽赛事视频-取消删除不生效",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "删除联赛编号1098891823的记录",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在联赛编号1098891823的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "找到联赛编号1098891823的记录，点击「删除」按钮",
+     "expected": "弹出确认删除对话框，提示「确认删除该联赛？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "对话框关闭，记录未被删除，列表无变化"
+    }
+   ],
+   "expected_result": "记录未被删除，数据库记录仍存在，列表无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "联赛编号搜索-精确匹配成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索联赛编号1098891823",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；存在联赛编号1098891823的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在联赛编号搜索框输入1098891823",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表只显示联赛编号为1098891823的记录"
+    }
+   ],
+   "expected_result": "列表正确过滤，只显示匹配的记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "联赛编号搜索-无匹配结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索联赛编号9999999999（不存在的编号）",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在联赛编号搜索框输入9999999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示无数据，提示「暂无数据」"
+    }
+   ],
+   "expected_result": "列表显示空态，提示无数据",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "联赛编号搜索-空值搜索显示全部",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索框为空",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "联赛编号搜索框留空",
+     "expected": "输入为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示所有屏蔽赛事视频记录"
+    }
+   ],
+   "expected_result": "列表显示全部记录，无过滤",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "新增对话框-联赛编号输入超长字符校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛编号输入20位数字（假设最大长度10位）",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：12345678901234567890（20位数字）",
+     "expected": "输入被限制或提示超长"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「联赛编号长度不能超过10位」"
+    }
+   ],
+   "expected_result": "保存失败，提示联赛编号长度超限，数据库无新增记录",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "新增对话框-屏蔽网站为空保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号合法（1098891826），屏蔽网站为空，网站地址1-5合法",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入合法联赛编号，屏蔽网站留空，其他字段合法",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「屏蔽网站不能为空」"
+    }
+   ],
+   "expected_result": "保存失败，提示屏蔽网站不能为空，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "新增对话框-网站地址1为空保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号合法（1098891826），屏蔽网站合法，网站地址1为空，网站地址2-5合法",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入合法联赛编号和屏蔽网站，网站地址1留空，其他地址合法",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，列表刷新显示新增记录，网址1列为空"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录，网址1字段为空",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "新增对话框-所有网站地址为空保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号合法（1098891826），屏蔽网站合法，网站地址1-5全部为空",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入合法联赛编号和屏蔽网站，网站地址1-5全部留空",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，列表刷新显示新增记录，网址1-3列为空"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录，网址字段为空",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "新增对话框-屏蔽网站格式非法保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号合法（1098891826），屏蔽网站：invalid domain（非法域名格式）",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入合法联赛编号，屏蔽网站输入非法格式",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「屏蔽网站格式不正确」"
+    }
+   ],
+   "expected_result": "保存失败，提示屏蔽网站格式不正确，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "新增对话框-保存成功列表刷新",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：1098891826，屏蔽网站：example.com，网站地址1-5合法URL",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入合法数据",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹出成功提示，列表自动刷新并显示新记录"
+    }
+   ],
+   "expected_result": "保存成功，列表刷新，新记录出现在列表中",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "新增对话框-保存失败提示错误信息",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "球队及联赛/屏蔽赛事视频",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：1098891826，屏蔽网站：example.com，网站地址1：http://www.example1.com，网站地址2：http://www.example2.com，网站地址3：http://www.example3.com，网站地址4：http://www.example4.com，网站地址5：http://www.example5.com，但服务器异常",
+   "preconditions": "已登录运营后台，具有屏蔽赛事视频管理权限；屏蔽赛事视频页面已打开；模拟服务器异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入合法数据",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「保存失败，请稍后重试」"
+    }
+   ],
+   "expected_result": "保存失败，提示错误信息，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "新增屏蔽赛事视频-填写完整信息保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛编号：1098891823（已存在的联赛编号）；屏蔽网站：填写5个合法网址，如 https://www.example1.com, https://www.example2.com, https://www.example3.com, https://www.example4.com, https://www.example5.com",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限；存在联赛编号1098891823",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，点击「新增」按钮",
+     "expected": "弹出新增弹窗，包含联赛编号、屏蔽网站（网站地址1-5）输入框"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1098891823",
+     "expected": "输入成功，无错误提示"
+    },
+    {
+     "step": 3,
+     "desc": "在网站地址1-5分别输入合法网址",
+     "expected": "输入成功，无格式错误提示"
+    },
+    {
+     "step": 4,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，列表新增一条记录，联赛编号为1098891823，屏蔽网站显示5个网址；数据库新增对应记录"
+    }
+   ],
+   "expected_result": "新增成功，列表出现新记录，数据库新增对应屏蔽配置",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "新增屏蔽赛事视频-联赛编号为空校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号留空；屏蔽网站填写一个合法网址 https://www.example.com",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "联赛编号留空，填写网站地址1为 https://www.example.com",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "提示「联赛编号不能为空」，弹窗不关闭，不保存数据"
+    }
+   ],
+   "expected_result": "保存被拦截，提示联赛编号必填",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "新增屏蔽赛事视频-网站地址格式非法校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：1098891823；网站地址1输入非法格式：'not a url'",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1098891823",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "在网站地址1输入'not a url'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「确定」按钮",
+     "expected": "提示「网站地址格式不正确」，弹窗不关闭，不保存数据"
+    }
+   ],
+   "expected_result": "保存被拦截，提示网站地址格式错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "新增屏蔽赛事视频-网站地址数量边界（全部填写）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛编号：1098891823；网站地址1-5全部填写合法网址",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1098891823",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "在网站地址1-5分别输入合法网址",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「确定」按钮",
+     "expected": "保存成功，列表显示5个网址"
+    }
+   ],
+   "expected_result": "保存成功，5个网址均被保存",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "新增屏蔽赛事视频-网站地址数量边界（全部留空）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛编号：1098891823；网站地址1-5全部留空",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1098891823",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "网站地址1-5全部留空",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「确定」按钮",
+     "expected": "保存成功，列表显示该联赛但屏蔽网站为空"
+    }
+   ],
+   "expected_result": "保存成功，允许不填写任何网站地址",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "编辑屏蔽赛事视频-修改网站地址保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录：联赛编号1098891823，屏蔽网站为网址1、网址2、网址3；修改为网址1、网址2、网址3、网址4、网址5",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限；存在联赛编号1098891823的屏蔽记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，找到联赛编号1098891823的记录，点击「编辑」按钮",
+     "expected": "弹出编辑弹窗，回显原有数据"
+    },
+    {
+     "step": 2,
+     "desc": "修改网站地址，增加网址4和网址5",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，列表更新为5个网址，数据库更新成功"
+    }
+   ],
+   "expected_result": "编辑成功，屏蔽网站更新为5个网址",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "编辑屏蔽赛事视频-联赛编号不可修改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已有记录：联赛编号1098891823；尝试修改联赛编号为1098891824",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限；存在联赛编号1098891823的屏蔽记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，找到联赛编号1098891823的记录，点击「编辑」按钮",
+     "expected": "弹出编辑弹窗，联赛编号字段为只读或不可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "尝试修改联赛编号为1098891824",
+     "expected": "无法修改，或修改后保存时提示「联赛编号不可修改」"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」按钮",
+     "expected": "保存失败或联赛编号保持原值"
+    }
+   ],
+   "expected_result": "联赛编号不可修改，或修改被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "删除屏蔽赛事视频-取消删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已有记录：联赛编号1098891823",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限；存在联赛编号1098891823的屏蔽记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，找到联赛编号1098891823的记录，点击「删除」按钮",
+     "expected": "弹出确认删除对话框，提示「确认删除该联赛？」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，列表记录保持不变，数据库无变化"
+    }
+   ],
+   "expected_result": "取消删除，记录保留",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "取消新增屏蔽赛事视频-不保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛编号：1098891823；网站地址1填写 https://www.example.com",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面，点击「新增」按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入联赛编号：1098891823，网站地址1填写 https://www.example.com",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，列表无新增记录，数据库无变化"
+    }
+   ],
+   "expected_result": "取消后不保存任何数据",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "列表展示-屏蔽网站列显示多个网址",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有记录：联赛编号1098891823，屏蔽网站包含网址1、网址2、网址3",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限；存在联赛编号1098891823的屏蔽记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面",
+     "expected": "列表显示所有屏蔽记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛编号1098891823的「屏蔽网站」列",
+     "expected": "显示网址1、网址2、网址3，多个网址以逗号或换行分隔"
+    }
+   ],
+   "expected_result": "屏蔽网站列正确展示多个网址",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "列表展示-屏蔽网站为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "boundary",
+   "test_data_note": "已有记录：联赛编号1098891824，屏蔽网站为空",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限；存在联赛编号1098891824的屏蔽记录且屏蔽网站为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面",
+     "expected": "列表显示所有屏蔽记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛编号1098891824的「屏蔽网站」列",
+     "expected": "显示为空或显示「-」"
+    }
+   ],
+   "expected_result": "屏蔽网站为空时正常展示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "搜索-按联赛编号精确搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词：1098891823（已存在的联赛编号）",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限；存在联赛编号1098891823的屏蔽记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面",
+     "expected": "列表显示所有屏蔽记录"
+    },
+    {
+     "step": 2,
+     "desc": "在联赛编号搜索框输入1098891823",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅显示联赛编号为1098891823的记录"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "搜索-不存在的联赛编号",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "屏蔽赛事视频",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词：9999999999（不存在的联赛编号）",
+   "preconditions": "运营人员已登录运营后台，且具有屏蔽赛事视频管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入屏蔽赛事视频页面",
+     "expected": "列表显示所有屏蔽记录"
+    },
+    {
+     "step": 2,
+     "desc": "在联赛编号搜索框输入9999999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示无数据，提示「暂无数据」"
+    }
+   ],
+   "expected_result": "搜索无结果，显示空态",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-163"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-3 生成被截断，已重试"
+ ]
+}

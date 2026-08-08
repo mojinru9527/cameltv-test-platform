@@ -1,0 +1,3191 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "球队列表展示",
+    "description": "球员详情页展示球队列表，包含球队LOGO、俱乐部名称、国家队名称、国家队等字段。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确球队列表的排序规则、是否区分当前球队与历史球队、以及球队数量上限。",
+      "suggestion": "建议明确球队列表的排序逻辑（如按时间倒序）、是否展示所有历史球队、以及列表为空时的展示。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "LOGO展示",
+    "description": "球员详情页展示球队LOGO。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确LOGO的尺寸、格式、加载失败时的占位图。",
+      "suggestion": "建议定义LOGO的尺寸规范、支持格式（如PNG/JPG）、加载失败时显示默认占位图。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "俱乐部名称展示",
+    "description": "球员详情页展示俱乐部名称。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确俱乐部名称的展示格式（如全称/简称）、是否支持多语言。",
+      "suggestion": "建议明确俱乐部名称的展示格式及多语言支持。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "国家队名称展示",
+    "description": "球员详情页展示国家队名称。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确国家队名称的展示格式、是否与国籍字段关联。",
+      "suggestion": "建议明确国家队名称的展示格式及与国籍字段的关联。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "国家队列表展示",
+    "description": "球员详情页展示国家队列表。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确国家队列表的展示形式（如标签、下拉）、是否可点击跳转、以及列表为空时的处理。",
+      "suggestion": "建议明确国家队列表的展示形式、点击行为及空态处理。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "市场价值展示",
+    "description": "球员详情页展示市场价值，如14.5M $。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确市场价值的货币单位、格式（如小数位）、以及数值为0或空时的展示。",
+      "suggestion": "建议明确市场价值的货币单位、格式规范、以及特殊值（0、空）的展示。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体较为清晰，列出了球员详情页需要展示的字段，但部分字段（如球队列表、国家队列表、市场价值）的展示细节、交互行为、边界情况未明确，存在模糊之处。建议补充字段的展示规则、空态处理、数据来源等，以提高用例设计的准确性。"
+ },
+ "functional_cases": [
+  {
+   "title": "球员详情页整体展示正常",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实球员数据，如球员名称为'张三'，头像为有效图片URL，俱乐部名称为'皇家马德里'，国家队名称为'中国'，市场价值'14.5M $'等。",
+   "preconditions": "已登录，网络正常，球员数据存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "页面加载成功，显示球员名称、头像、收藏按钮、比赛、资料、资讯、球队等模块。"
+    }
+   ],
+   "expected_result": "页面各模块正常展示，无报错，数据与后台一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "球员详情页数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造球员数据，但比赛、资讯、转会历史等列表为空。",
+   "preconditions": "已登录，网络正常，球员存在但无比赛/资讯/转会记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该球员详情页",
+     "expected": "比赛、资讯、转会历史等模块显示空态提示，如'暂无比赛'、'暂无资讯'，页面不报错。"
+    }
+   ],
+   "expected_result": "各空模块显示友好空态提示，页面布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "球员详情-资料字段展示正确",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情-资料",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实球员数据：国籍'CHN'，出生日期'1994.01.06'，年龄'31 YRS'，身高'173 CM'，惯用脚'右脚'，位置'MF'，球衣号码'10'，市场价值'14.5M $'，体重'72 KG'。",
+   "preconditions": "已登录，网络正常，球员资料数据完整。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，进入资料模块",
+     "expected": "资料模块展示所有字段，格式与需求一致：国籍'CHN'、出生日期'1994.01.06'、年龄'31 YRS'、身高'173 CM'、惯用脚'右脚'、位置'MF'、球衣号码'10'、市场价值'14.5M $'、体重'72 KG'。"
+    }
+   ],
+   "expected_result": "所有资料字段正确展示，无缺失、无乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "球员资料字段缺失时展示占位符",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情-资料",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造球员数据，部分字段如身高、体重为空。",
+   "preconditions": "已登录，网络正常，球员资料部分字段缺失。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该球员详情页资料模块",
+     "expected": "缺失字段显示占位符（如'-'），页面不报错，其他字段正常展示。"
+    }
+   ],
+   "expected_result": "缺失字段以占位符展示，页面布局正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "球员名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实球员名称，如'Cristiano Ronaldo'。",
+   "preconditions": "已登录，网络正常，球员名称存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "页面顶部显示球员名称'Cristiano Ronaldo'，字体清晰，无截断。"
+    }
+   ],
+   "expected_result": "球员名称完整显示，与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "球员名称超长时截断或换行",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造超长球员名称，如'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'（超过50字符）。",
+   "preconditions": "已登录，网络正常，球员名称超长。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开该球员详情页",
+     "expected": "球员名称按设计规则截断显示省略号或换行，不撑破布局。"
+    }
+   ],
+   "expected_result": "超长名称处理合理，页面布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "球员头像正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "头像",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有效头像图片URL。",
+   "preconditions": "已登录，网络正常，头像URL有效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "头像区域显示球员头像图片，清晰无变形。"
+    }
+   ],
+   "expected_result": "头像正常加载显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "球员头像加载失败显示默认图",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "头像",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无效头像URL或断网。",
+   "preconditions": "已登录，头像URL无效或网络异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "头像区域显示默认占位图，页面不报错。"
+    }
+   ],
+   "expected_result": "显示默认头像，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "已登录用户收藏球员成功",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "收藏",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，球员ID为1001。",
+   "preconditions": "已登录，球员未收藏。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "收藏按钮显示未收藏状态（如空心星）。"
+    },
+    {
+     "step": 2,
+     "desc": "点击收藏按钮",
+     "expected": "按钮变为已收藏状态（如实心星），提示'收藏成功'，后台收藏列表新增该球员。"
+    }
+   ],
+   "expected_result": "收藏成功，状态同步，可在我的关注中看到该球员。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "未登录用户点击收藏弹登录提示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "收藏",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户，球员ID为1001。",
+   "preconditions": "未登录，打开球员详情页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击收藏按钮",
+     "expected": "弹出登录提示，如'请先登录'，并提供登录/注册入口，不执行收藏操作。"
+    }
+   ],
+   "expected_result": "未登录点击收藏被拦截，提示登录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "已收藏球员再次点击取消收藏",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "收藏",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，球员已收藏。",
+   "preconditions": "已登录，球员已收藏。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "收藏按钮显示已收藏状态。"
+    },
+    {
+     "step": 2,
+     "desc": "点击收藏按钮",
+     "expected": "按钮变为未收藏状态，提示'取消收藏成功'，后台收藏列表移除该球员。"
+    }
+   ],
+   "expected_result": "取消收藏成功，状态同步。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "比赛列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "比赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实比赛数据，包含比赛时间、对手、比分等。",
+   "preconditions": "已登录，网络正常，球员有比赛记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，点击比赛Tab",
+     "expected": "展示比赛列表，按时间倒序排列，每条显示比赛时间、对手、比分等。"
+    }
+   ],
+   "expected_result": "比赛列表正确展示，数据与后台一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "比赛列表为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "比赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无比赛记录的球员。",
+   "preconditions": "已登录，球员无比赛记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，点击比赛Tab",
+     "expected": "显示空态提示，如'暂无比赛'，页面不报错。"
+    }
+   ],
+   "expected_result": "空态展示正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "资料模块正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "资料",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实球员资料数据。",
+   "preconditions": "已登录，网络正常，球员资料完整。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，点击资料Tab",
+     "expected": "展示球员详细资料，包括国籍、出生日期、身高、体重、位置等。"
+    }
+   ],
+   "expected_result": "资料模块正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "资料模块数据缺失时显示占位符",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "资料",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造部分资料字段缺失的球员。",
+   "preconditions": "已登录，球员部分资料缺失。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，点击资料Tab",
+     "expected": "缺失字段显示占位符，页面不报错。"
+    }
+   ],
+   "expected_result": "缺失字段占位符展示，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "资讯列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "资讯",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实资讯数据，包含标题、发布时间、浏览量等。",
+   "preconditions": "已登录，网络正常，球员有相关资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，点击资讯Tab",
+     "expected": "展示资讯列表，按发布时间倒序，每条显示标题、时间、浏览量。"
+    }
+   ],
+   "expected_result": "资讯列表正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "资讯列表为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "资讯",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无相关资讯的球员。",
+   "preconditions": "已登录，球员无资讯。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，点击资讯Tab",
+     "expected": "显示空态提示，如'暂无资讯'。"
+    }
+   ],
+   "expected_result": "空态展示正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "球队模块正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球队",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实球队数据，俱乐部名称为'皇家马德里'，国家队名称为'西班牙'，LOGO为有效图片。",
+   "preconditions": "已登录，网络正常，球员有所属俱乐部和国家队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，查看球队模块",
+     "expected": "展示俱乐部LOGO和名称、国家队LOGO和名称，LOGO清晰。"
+    }
+   ],
+   "expected_result": "球队模块正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "球队LOGO加载失败显示默认图",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球队",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造LOGO URL无效的球队数据。",
+   "preconditions": "已登录，球队LOGO URL无效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，查看球队模块",
+     "expected": "LOGO区域显示默认占位图，球队名称正常显示。"
+    }
+   ],
+   "expected_result": "LOGO加载失败时显示默认图，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "俱乐部名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "俱乐部名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实俱乐部名称，如'皇家马德里'。",
+   "preconditions": "已登录，网络正常，俱乐部名称存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，查看球队模块",
+     "expected": "俱乐部名称'皇家马德里'完整显示。"
+    }
+   ],
+   "expected_result": "俱乐部名称正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "俱乐部名称超长时截断或换行",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "俱乐部名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造超长俱乐部名称，如'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz'。",
+   "preconditions": "已登录，俱乐部名称超长。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，查看球队模块",
+     "expected": "俱乐部名称按设计规则截断或换行，不撑破布局。"
+    }
+   ],
+   "expected_result": "超长名称处理合理。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "球员详情页-国家队名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有国家队数据的球员，如球员所属国家队为「中国」",
+   "preconditions": "已进入球员详情页，球员资料包含国家队名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，资料区域显示「国家队名称」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看国家队名称字段的值",
+     "expected": "显示正确的国家队名称，如「中国」，与后台数据一致"
+    }
+   ],
+   "expected_result": "国家队名称字段正确显示，无乱码或截断",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "球员详情页-国家队名称为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无国家队数据的球员，如自由球员",
+   "preconditions": "已进入球员详情页，球员资料中国家队名称为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，资料区域显示「国家队名称」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看国家队名称字段的值",
+     "expected": "显示空值或占位符（如「-」），不出现异常报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "球员详情页-国家队列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有国家队历史的球员，如曾效力于多个国家队",
+   "preconditions": "已进入球员详情页，球员有国家队历史记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到国家队列表区域",
+     "expected": "页面正常加载，显示「国家队」列表标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表内容",
+     "expected": "列表展示所有国家队记录，每条记录包含国家队名称，顺序与后台一致"
+    }
+   ],
+   "expected_result": "国家队列表完整展示，无遗漏",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "球员详情页-国家队列表为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无国家队历史的球员",
+   "preconditions": "已进入球员详情页，球员无国家队历史记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到国家队列表区域",
+     "expected": "页面正常加载，显示「国家队」列表标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表内容",
+     "expected": "显示空态提示（如「暂无数据」），无异常报错"
+    }
+   ],
+   "expected_result": "空态提示友好，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "球员详情页-国籍正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有国籍数据的球员，如国籍为「中国」",
+   "preconditions": "已进入球员详情页，球员资料包含国籍",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示「国籍」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看国籍字段的值",
+     "expected": "显示正确的国籍名称，如「中国」，与后台数据一致"
+    }
+   ],
+   "expected_result": "国籍字段正确显示，无乱码或截断",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "球员详情页-国籍为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无国籍数据的球员",
+   "preconditions": "已进入球员详情页，球员资料中国籍为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示「国籍」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看国籍字段的值",
+     "expected": "显示空值或占位符（如「-」），不出现异常报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "球员详情页-CHN字段正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用国籍代码为CHN的球员",
+   "preconditions": "已进入球员详情页，球员资料包含CHN字段",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示CHN字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看CHN字段的值",
+     "expected": "显示「CHN」，与后台数据一致"
+    }
+   ],
+   "expected_result": "CHN字段正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "球员详情页-CHN字段为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无CHN字段的球员",
+   "preconditions": "已进入球员详情页，球员资料中CHN字段为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示CHN字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看CHN字段的值",
+     "expected": "显示空值或占位符（如「-」），不出现异常报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "球员详情页-出生日期正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用出生日期为1994.01.06的球员",
+   "preconditions": "已进入球员详情页，球员资料包含出生日期",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示出生日期字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看出生日期字段的值",
+     "expected": "显示「1994.01.06」，格式正确，与后台数据一致"
+    }
+   ],
+   "expected_result": "出生日期正确显示，格式符合要求",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "球员详情页-出生日期为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无出生日期的球员",
+   "preconditions": "已进入球员详情页，球员资料中出生日期为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示出生日期字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看出生日期字段的值",
+     "expected": "显示空值或占位符（如「-」），不出现异常报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "球员详情页-年龄正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用年龄为31岁的球员",
+   "preconditions": "已进入球员详情页，球员资料包含年龄",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示年龄字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看年龄字段的值",
+     "expected": "显示「31 YRS」，单位正确，与后台数据一致"
+    }
+   ],
+   "expected_result": "年龄正确显示，单位正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "球员详情页-年龄为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无年龄数据的球员",
+   "preconditions": "已进入球员详情页，球员资料中年龄为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示年龄字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看年龄字段的值",
+     "expected": "显示空值或占位符（如「-」），不出现异常报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "球员详情页-身高字段正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有身高数据的球员，如身高173CM",
+   "preconditions": "已进入球员详情页，球员资料包含身高",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示「身高」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看身高字段的值",
+     "expected": "显示「173 CM」，单位正确，与后台数据一致"
+    }
+   ],
+   "expected_result": "身高字段正确显示，单位正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "球员详情页-身高为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无身高数据的球员",
+   "preconditions": "已进入球员详情页，球员资料中身高为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示「身高」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看身高字段的值",
+     "expected": "显示空值或占位符（如「-」），不出现异常报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "球员详情页-身高数值正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用身高为173CM的球员",
+   "preconditions": "已进入球员详情页，球员资料包含身高数值",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示身高数值"
+    },
+    {
+     "step": 2,
+     "desc": "查看身高数值",
+     "expected": "显示「173 CM」，数值和单位正确"
+    }
+   ],
+   "expected_result": "身高数值正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "球员详情页-身高数值为0时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用身高为0的球员（异常数据）",
+   "preconditions": "已进入球员详情页，球员资料中身高为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示身高数值"
+    },
+    {
+     "step": 2,
+     "desc": "查看身高数值",
+     "expected": "显示「0 CM」或空值，不出现异常报错"
+    }
+   ],
+   "expected_result": "异常值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "球员详情页-惯用脚字段正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用惯用脚为右脚的球员",
+   "preconditions": "已进入球员详情页，球员资料包含惯用脚",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示「惯用脚」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看惯用脚字段的值",
+     "expected": "显示「右脚」，与后台数据一致"
+    }
+   ],
+   "expected_result": "惯用脚字段正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "球员详情页-惯用脚为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无惯用脚数据的球员",
+   "preconditions": "已进入球员详情页，球员资料中惯用脚为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示「惯用脚」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看惯用脚字段的值",
+     "expected": "显示空值或占位符（如「-」），不出现异常报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "球员详情页-惯用脚数值正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用惯用脚为右脚的球员",
+   "preconditions": "已进入球员详情页，球员资料包含惯用脚数值",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示惯用脚数值"
+    },
+    {
+     "step": 2,
+     "desc": "查看惯用脚数值",
+     "expected": "显示「右脚」，与后台数据一致"
+    }
+   ],
+   "expected_result": "惯用脚数值正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "球员详情页-惯用脚数值为未知时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用惯用脚为未知的球员",
+   "preconditions": "已进入球员详情页，球员资料中惯用脚为未知",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示惯用脚数值"
+    },
+    {
+     "step": 2,
+     "desc": "查看惯用脚数值",
+     "expected": "显示「未知」或空值，不出现异常报错"
+    }
+   ],
+   "expected_result": "异常值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "球员详情页-位置字段正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用位置为MF的球员",
+   "preconditions": "已进入球员详情页，球员资料包含位置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示「位置」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看位置字段的值",
+     "expected": "显示「MF」，与后台数据一致"
+    }
+   ],
+   "expected_result": "位置字段正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "球员详情页-位置为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用无位置数据的球员",
+   "preconditions": "已进入球员详情页，球员资料中位置为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示「位置」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看位置字段的值",
+     "expected": "显示空值或占位符（如「-」），不出现异常报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "球员详情页-位置数值正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用位置为MF的球员",
+   "preconditions": "已进入球员详情页，球员资料包含位置数值",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示位置数值"
+    },
+    {
+     "step": 2,
+     "desc": "查看位置数值",
+     "expected": "显示「MF」，与后台数据一致"
+    }
+   ],
+   "expected_result": "位置数值正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "球员详情页-位置数值为未知时展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "使用位置为未知的球员",
+   "preconditions": "已进入球员详情页，球员资料中位置为未知",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到资料区域",
+     "expected": "页面正常加载，显示位置数值"
+    },
+    {
+     "step": 2,
+     "desc": "查看位置数值",
+     "expected": "显示「未知」或空值，不出现异常报错"
+    }
+   ],
+   "expected_result": "异常值处理合理，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "球衣号码正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员数据包含球衣号码为 10（正常数字）",
+   "preconditions": "已进入球员详情页，球员资料完整",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「球衣号码」字段",
+     "expected": "页面显示「球衣号码」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看球衣号码的值",
+     "expected": "显示数字 10，格式正确，无乱码"
+    }
+   ],
+   "expected_result": "球衣号码字段正确显示为 10，与球员资料一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "球衣号码为空时的展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球员数据中球衣号码字段为空（null）",
+   "preconditions": "已进入球员详情页，该球员无球衣号码数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「球衣号码」字段",
+     "expected": "页面显示「球衣号码」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看球衣号码的值",
+     "expected": "显示占位符 '-' 或「暂无」，不显示空白或报错"
+    }
+   ],
+   "expected_result": "球衣号码为空时页面正常展示占位符，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "球衣号码超长数据展示",
+   "priority": "P2",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球衣号码为超长字符串（如 20 位数字）",
+   "preconditions": "已进入球员详情页，球员球衣号码为超长数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「球衣号码」字段",
+     "expected": "页面显示「球衣号码」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看球衣号码的值",
+     "expected": "超长内容不撑破布局，显示省略号或滚动，无错位"
+    }
+   ],
+   "expected_result": "超长球衣号码展示不影响页面布局，内容可读",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "市场价值正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员市场价值为 14.5M $（带单位）",
+   "preconditions": "已进入球员详情页，球员资料完整",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「市场价值」字段",
+     "expected": "页面显示「市场价值」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看市场价值的值",
+     "expected": "显示 14.5M $，单位正确，无乱码"
+    }
+   ],
+   "expected_result": "市场价值字段正确显示为 14.5M $",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "市场价值为空时的展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球员市场价值字段为空（null）",
+   "preconditions": "已进入球员详情页，该球员无市场价值数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「市场价值」字段",
+     "expected": "页面显示「市场价值」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看市场价值的值",
+     "expected": "显示占位符 '-' 或「暂无」，不显示空白或报错"
+    }
+   ],
+   "expected_result": "市场价值为空时页面正常展示占位符，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "市场价值格式异常展示",
+   "priority": "P2",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "市场价值数据格式异常，如 'abc' 或 '14.5'（无单位）",
+   "preconditions": "已进入球员详情页，该球员市场价值数据异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「市场价值」字段",
+     "expected": "页面显示「市场价值」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看市场价值的值",
+     "expected": "页面不崩溃，显示原始数据或占位符，不出现乱码"
+    }
+   ],
+   "expected_result": "异常市场价值数据不影响页面正常展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "体重正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员体重为 72 KG（带单位）",
+   "preconditions": "已进入球员详情页，球员资料完整",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「体重」字段",
+     "expected": "页面显示「体重」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看体重的值",
+     "expected": "显示 72 KG，单位正确，无乱码"
+    }
+   ],
+   "expected_result": "体重字段正确显示为 72 KG",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "体重为空时的展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球员体重字段为空（null）",
+   "preconditions": "已进入球员详情页，该球员无体重数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「体重」字段",
+     "expected": "页面显示「体重」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看体重的值",
+     "expected": "显示占位符 '-' 或「暂无」，不显示空白或报错"
+    }
+   ],
+   "expected_result": "体重为空时页面正常展示占位符，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "体重数值边界展示",
+   "priority": "P2",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "体重为极端值，如 0 KG 或 300 KG",
+   "preconditions": "已进入球员详情页，该球员体重为极端值",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到「体重」字段",
+     "expected": "页面显示「体重」标签"
+    },
+    {
+     "step": 2,
+     "desc": "查看体重的值",
+     "expected": "显示对应数值和单位，无格式错误"
+    }
+   ],
+   "expected_result": "极端体重值正常展示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "转会历史正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球员有转会记录，包含转出球队 AS Monaco、转入球队 Paris Saint Germain、时间 2021.08.10、类型 Transfer、金额 180.0 $",
+   "preconditions": "已进入球员详情页，该球员有转会历史数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，滚动到「转会历史」区域",
+     "expected": "显示「转会历史」标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看转会列表",
+     "expected": "每条记录显示转出球队、转入球队、时间、类型、金额，格式正确"
+    }
+   ],
+   "expected_result": "转会历史列表完整展示，字段正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "转会历史为空时的展示",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球员无转会记录（空列表）",
+   "preconditions": "已进入球员详情页，该球员无转会历史",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，滚动到「转会历史」区域",
+     "expected": "显示「转会历史」标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看转会列表",
+     "expected": "显示空态提示，如「暂无转会记录」，不显示空白或报错"
+    }
+   ],
+   "expected_result": "转会历史为空时显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "转会历史排序验证",
+   "priority": "P1",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球员有多条转会记录，时间分别为 2020.01.01、2021.08.10、2022.05.05",
+   "preconditions": "已进入球员详情页，该球员有多条转会记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，滚动到「转会历史」区域",
+     "expected": "显示「转会历史」标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看转会列表的排序",
+     "expected": "记录按时间倒序排列（最新在前），如 2022.05.05、2021.08.10、2020.01.01"
+    }
+   ],
+   "expected_result": "转会历史按时间倒序排列",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "转会历史金额格式验证",
+   "priority": "P2",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "转会金额为 180.0 $（带一位小数和货币符号）",
+   "preconditions": "已进入球员详情页，该球员有转会记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，滚动到「转会历史」区域",
+     "expected": "显示「转会历史」标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看转会金额的格式",
+     "expected": "金额显示为 180.0 $，货币符号和单位正确"
+    }
+   ],
+   "expected_result": "转会金额格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "转会历史类型展示验证",
+   "priority": "P2",
+   "domain": "用户端/球员",
+   "module": "球员详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "转会类型为 Transfer 和 End of Loan",
+   "preconditions": "已进入球员详情页，该球员有转会记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，滚动到「转会历史」区域",
+     "expected": "显示「转会历史」标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看转会类型字段",
+     "expected": "类型显示为 Transfer 或 End of Loan，无乱码"
+    }
+   ],
+   "expected_result": "转会类型正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "球员详情页基本信息展示正确",
+   "priority": "P0",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用真实球员数据：球员名称为「张三」，国籍 CHN，出生日期 1994.01.06，年龄 31 YRS，身高 173 CM，惯用脚右脚，位置 MF，球衣号码 10，市场价值 14.5M $，体重 72 KG，俱乐部 AS Monaco，国家队中国。",
+   "preconditions": "已进入球员详情页（PC端），球员数据完整。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "页面加载成功，显示球员头像、名称、球队LOGO、俱乐部名称、国家队名称、国籍、出生日期、年龄、身高、惯用脚、位置、球衣号码、市场价值、体重等信息。"
+    }
+   ],
+   "expected_result": "所有字段均正确显示，格式符合需求（如日期格式 YYYY.MM.DD，年龄带 YRS，身高带 CM，市场价值带 $）。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "球员详情页数据缺失时展示空态",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟球员数据缺失：球员无头像、无俱乐部、无国家队、无转会历史等。",
+   "preconditions": "已进入球员详情页，但球员数据不完整（如无头像、无俱乐部）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "页面正常加载，缺失字段显示占位符或留空，不出现页面错乱或崩溃。"
+    }
+   ],
+   "expected_result": "页面稳定，缺失数据有合理展示（如默认头像、'暂无'提示），无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "icon 图标正常显示且可点击",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "页面中的 icon 图标（如语言切换、分享等）均正常加载。",
+   "preconditions": "已进入球员详情页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面中的 icon 图标",
+     "expected": "所有 icon 正常显示，无裂图。"
+    },
+    {
+     "step": 2,
+     "desc": "点击其中一个 icon（如语言切换）",
+     "expected": "触发对应功能（如弹出语言选择菜单）。"
+    }
+   ],
+   "expected_result": "icon 显示完整，点击行为正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "icon 图标加载失败时显示占位",
+   "priority": "P2",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟 icon 资源加载失败（如网络中断或资源缺失）。",
+   "preconditions": "已进入球员详情页，但 icon 资源无法加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页",
+     "expected": "icon 位置显示占位图或空白，页面布局不混乱。"
+    }
+   ],
+   "expected_result": "页面不崩溃，icon 区域有合理占位。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "Camel Live 入口正常跳转",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击 Camel Live 入口，预期跳转至直播页面或相关功能。",
+   "preconditions": "已进入球员详情页，存在 Camel Live 入口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 Camel Live 入口",
+     "expected": "跳转至 Camel Live 相关页面（如直播列表或赛事直播）。"
+    }
+   ],
+   "expected_result": "跳转成功，目标页面正确加载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "Camel Live 入口无直播时提示",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前无相关直播赛事，点击 Camel Live 入口。",
+   "preconditions": "已进入球员详情页，且当前无直播。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 Camel Live 入口",
+     "expected": "提示「暂无直播」或跳转至空态页面，不报错。"
+    }
+   ],
+   "expected_result": "有合理提示，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "更多菜单展开显示选项",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "点击「更多」按钮，预期弹出菜单项（如分享、收藏等）。",
+   "preconditions": "已进入球员详情页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「更多」按钮",
+     "expected": "弹出菜单，显示所有可用选项。"
+    }
+   ],
+   "expected_result": "菜单正常展开，选项完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "更多菜单在无选项时置灰",
+   "priority": "P2",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟无更多操作可用（如未登录且无分享权限）。",
+   "preconditions": "已进入球员详情页，且无更多操作可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看「更多」按钮",
+     "expected": "按钮置灰或点击无响应，不弹出空菜单。"
+    }
+   ],
+   "expected_result": "按钮状态正确，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "语言切换为 English 成功",
+   "priority": "P0",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择 English 语言，页面所有文本切换为英文。",
+   "preconditions": "已进入球员详情页，当前语言非英文。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击语言切换按钮，选择 English",
+     "expected": "页面文本立即切换为英文，包括球员信息、菜单等。"
+    }
+   ],
+   "expected_result": "页面语言全部变为英文，无残留其他语言。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "语言切换为 हिन्दी 成功",
+   "priority": "P0",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择 हिन्दी（印地语）语言，页面文本切换为印地语。",
+   "preconditions": "已进入球员详情页，当前语言非印地语。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击语言切换按钮，选择 हिन्दी",
+     "expected": "页面文本切换为印地语，包括球员信息、菜单等。"
+    }
+   ],
+   "expected_result": "页面语言全部变为印地语，无残留其他语言。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "语言切换为 বাংলা 成功",
+   "priority": "P0",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择 বাংলা（孟加拉语）语言，页面文本切换为孟加拉语。",
+   "preconditions": "已进入球员详情页，当前语言非孟加拉语。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击语言切换按钮，选择 বাংলা",
+     "expected": "页面文本切换为孟加拉语，包括球员信息、菜单等。"
+    }
+   ],
+   "expected_result": "页面语言全部变为孟加拉语，无残留其他语言。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "语言切换后部分文本未翻译",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "切换到 हिन्दी 后，检查所有文本是否翻译，特别是动态内容（如球员名、转会历史）。",
+   "preconditions": "已进入球员详情页，切换语言为 हिन्दी。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "切换语言为 हिन्दी",
+     "expected": "所有静态文本翻译为印地语，动态数据（如球员名）保持原文。"
+    }
+   ],
+   "expected_result": "无未翻译的英文残留，动态数据正常显示。",
+   "remark": "负面用例（检查翻译完整性）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "国旗图标显示正确",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员国籍为 CHN，页面显示中国国旗图标。",
+   "preconditions": "已进入球员详情页，球员国籍为 CHN。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员国籍旁的国旗图标",
+     "expected": "显示中国国旗图标，与国籍匹配。"
+    }
+   ],
+   "expected_result": "国旗正确显示，无错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "国旗图标加载失败时显示占位",
+   "priority": "P2",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟国旗图标资源加载失败。",
+   "preconditions": "已进入球员详情页，国旗图标无法加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看国旗图标",
+     "expected": "显示占位图或空白，不出现裂图。"
+    }
+   ],
+   "expected_result": "页面布局正常，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "App Store 下载入口跳转正确",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击 App Store 图标，预期跳转至 App Store 应用页面。",
+   "preconditions": "已进入球员详情页，且设备为 iOS 或模拟器。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 App Store 图标",
+     "expected": "跳转至 App Store 中该应用的下载页面。"
+    }
+   ],
+   "expected_result": "跳转成功，目标页面正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "App Store 下载入口在非 iOS 平台提示",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在 Android 或 PC 上点击 App Store 图标。",
+   "preconditions": "已进入球员详情页，设备非 iOS。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 App Store 图标",
+     "expected": "提示「请使用 iOS 设备访问」或跳转至 Google Play，不报错。"
+    }
+   ],
+   "expected_result": "有合理提示或跳转，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "Email 联系入口正常唤起邮件客户端",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击 Email 图标，预期唤起系统邮件客户端，收件人为平台邮箱。",
+   "preconditions": "已进入球员详情页，系统已配置邮件客户端。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 Email 图标",
+     "expected": "唤起邮件客户端，收件人自动填入平台邮箱。"
+    }
+   ],
+   "expected_result": "邮件客户端正常打开，收件人正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "Email 联系入口无邮件客户端时提示",
+   "priority": "P2",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "系统未安装邮件客户端，点击 Email 图标。",
+   "preconditions": "已进入球员详情页，系统无邮件客户端。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 Email 图标",
+     "expected": "提示「未检测到邮件客户端」或提供复制邮箱地址的选项。"
+    }
+   ],
+   "expected_result": "有合理提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "Whats 联系入口正常跳转 WhatsApp",
+   "priority": "P1",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击 Whats 图标，预期跳转至 WhatsApp 聊天界面，号码为平台客服。",
+   "preconditions": "已进入球员详情页，设备已安装 WhatsApp。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 Whats 图标",
+     "expected": "跳转至 WhatsApp 聊天界面，收件人为平台客服号码。"
+    }
+   ],
+   "expected_result": "跳转成功，聊天对象正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "Whats 联系入口未安装 WhatsApp 时提示",
+   "priority": "P2",
+   "domain": "球员",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "设备未安装 WhatsApp，点击 Whats 图标。",
+   "preconditions": "已进入球员详情页，设备未安装 WhatsApp。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击 Whats 图标",
+     "expected": "提示「未安装 WhatsApp」或跳转至应用商店下载页。"
+    }
+   ],
+   "expected_result": "有合理提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "APP列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "页面存在APP列表数据（如App Store、Google Play等下载入口）",
+   "preconditions": "已进入球员详情_pc_页面，且APP列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看APP列表区域",
+     "expected": "APP列表展示所有APP入口（如App Store、Google Play），图标和名称正确"
+    }
+   ],
+   "expected_result": "APP列表完整展示，每个APP入口图标和名称正确，点击可跳转对应下载页",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "APP列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟APP列表无数据（如后台未配置APP下载信息）",
+   "preconditions": "已进入球员详情_pc_页面，且APP列表无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看APP列表区域",
+     "expected": "显示空态提示（如暂无APP信息），不展示任何APP入口"
+    }
+   ],
+   "expected_result": "APP列表区域显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "热门比赛列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在热门比赛数据（如英超、西甲等联赛的比赛）",
+   "preconditions": "已进入球员详情_pc_页面，且热门比赛有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门比赛列表",
+     "expected": "列表展示多场比赛，每场包含主队名称 vs 客队名称、联赛名称等字段"
+    }
+   ],
+   "expected_result": "热门比赛列表完整展示，比赛信息正确，点击比赛可跳转赛事详情",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "热门比赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟热门比赛无数据（如无热门赛事）",
+   "preconditions": "已进入球员详情_pc_页面，且热门比赛无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门比赛列表",
+     "expected": "显示空态提示（如暂无热门比赛），不展示任何比赛"
+    }
+   ],
+   "expected_result": "热门比赛列表显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "进行中的比赛状态展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在进行中的比赛（如当前时间在比赛开始和结束之间）",
+   "preconditions": "已进入球员详情_pc_页面，且存在进行中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看进行中的比赛区域",
+     "expected": "进行中的比赛以特殊标识（如LIVE标签）展示，比赛信息正确"
+    }
+   ],
+   "expected_result": "进行中的比赛被正确标识，状态显示为进行中",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "无进行中的比赛时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟无进行中的比赛（如所有比赛未开始或已结束）",
+   "preconditions": "已进入球员详情_pc_页面，且无进行中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看进行中的比赛区域",
+     "expected": "显示空态提示（如暂无进行中的比赛），不展示任何比赛"
+    }
+   ],
+   "expected_result": "进行中的比赛区域显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "主队名称 vs 客队名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛对阵双方名称正常（如'皇家马德里 vs 巴塞罗那'）",
+   "preconditions": "已进入球员详情_pc_页面，且存在比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛列表中的对阵信息",
+     "expected": "每场比赛以'主队名称 vs 客队名称'格式展示，名称正确"
+    }
+   ],
+   "expected_result": "对阵名称格式正确，主客队名称与数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "主队或客队名称为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某场比赛主队名称为空或客队名称为空",
+   "preconditions": "已进入球员详情_pc_页面，且存在名称为空的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的对阵信息",
+     "expected": "空名称以占位符（如'未知'）展示，或该场比赛不展示，无页面错乱"
+    }
+   ],
+   "expected_result": "对阵信息处理合理，无页面错乱或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "全部热门比赛列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在多场热门比赛数据",
+   "preconditions": "已进入球员详情_pc_页面，且全部热门比赛有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'全部热门比赛'入口",
+     "expected": "跳转至全部热门比赛列表页或展开完整列表，展示所有热门比赛"
+    }
+   ],
+   "expected_result": "全部热门比赛列表完整展示，比赛信息正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "全部热门比赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟全部热门比赛无数据",
+   "preconditions": "已进入球员详情_pc_页面，且全部热门比赛无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'全部热门比赛'入口",
+     "expected": "显示空态提示（如暂无热门比赛），不展示任何比赛"
+    }
+   ],
+   "expected_result": "全部热门比赛列表显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "联赛名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛关联的联赛名称存在（如'英超'）",
+   "preconditions": "已进入球员详情_pc_页面，且比赛数据包含联赛名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛列表中的联赛名称",
+     "expected": "每场比赛正确展示所属联赛名称"
+    }
+   ],
+   "expected_result": "联赛名称展示正确，与比赛关联一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "联赛名称为空时展示",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某场比赛联赛名称为空",
+   "preconditions": "已进入球员详情_pc_页面，且存在联赛名称为空的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该场比赛的联赛名称",
+     "expected": "联赛名称位置显示占位符（如'未知联赛'）或隐藏，无页面错乱"
+    }
+   ],
+   "expected_result": "联赛名称处理合理，无页面错乱或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "阿拉伯语列表正常展示",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "页面语言切换为阿拉伯语，存在阿拉伯语内容",
+   "preconditions": "已进入球员详情_pc_页面，且语言设置为阿拉伯语",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "将页面语言切换为阿拉伯语",
+     "expected": "页面语言切换成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看阿拉伯语列表区域",
+     "expected": "列表内容以阿拉伯语展示，无乱码或错位"
+    }
+   ],
+   "expected_result": "阿拉伯语列表正常展示，文字方向正确（RTL）",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "阿拉伯语列表无数据时展示空态",
+   "priority": "P2",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟阿拉伯语内容无数据",
+   "preconditions": "已进入球员详情_pc_页面，且语言设置为阿拉伯语，无阿拉伯语数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "将页面语言切换为阿拉伯语",
+     "expected": "页面语言切换成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看阿拉伯语列表区域",
+     "expected": "显示空态提示（如'لا توجد بيانات'），无异常报错"
+    }
+   ],
+   "expected_result": "阿拉伯语列表显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "印地语列表正常展示",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "页面语言切换为印地语，存在印地语内容",
+   "preconditions": "已进入球员详情_pc_页面，且语言设置为印地语",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "将页面语言切换为印地语",
+     "expected": "页面语言切换成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看印地语列表区域",
+     "expected": "列表内容以印地语展示，无乱码或错位"
+    }
+   ],
+   "expected_result": "印地语列表正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "印地语列表无数据时展示空态",
+   "priority": "P2",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟印地语内容无数据",
+   "preconditions": "已进入球员详情_pc_页面，且语言设置为印地语，无印地语数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "将页面语言切换为印地语",
+     "expected": "页面语言切换成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看印地语列表区域",
+     "expected": "显示空态提示（如'कोई डेटा नहीं'），无异常报错"
+    }
+   ],
+   "expected_result": "印地语列表显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "转会历史列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员存在转会记录（如'AS Monaco'转入'Paris Saint Germain'，金额180.0$）",
+   "preconditions": "已进入球员详情_pc_页面，且球员有转会历史数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看转会历史列表",
+     "expected": "列表展示每条转会记录，包含转出球队、转入球队、时间、类型、金额及货币单位"
+    }
+   ],
+   "expected_result": "转会历史列表完整展示，字段正确，排序按时间倒序",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "转会历史列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟球员无转会记录",
+   "preconditions": "已进入球员详情_pc_页面，且球员无转会历史数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看转会历史列表",
+     "expected": "显示空态提示（如'暂无转会历史'），不展示任何记录"
+    }
+   ],
+   "expected_result": "转会历史列表显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "转会历史金额格式正确展示",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "转会金额为0或极大值（如0.0$、999999999.99$）",
+   "preconditions": "已进入球员详情_pc_页面，且存在金额为0或极大的转会记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看转会历史中的金额",
+     "expected": "金额以正确格式展示（如0.0$、999999999.99$），无科学计数法或乱码"
+    }
+   ],
+   "expected_result": "金额格式正确，无显示异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "球员列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在球员数据（如球员名称、头像等）",
+   "preconditions": "已进入球员详情_pc_页面，且球员列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看球员列表区域",
+     "expected": "列表展示球员头像和名称，信息正确"
+    }
+   ],
+   "expected_result": "球员列表完整展示，头像和名称正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "球员列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟球员列表无数据",
+   "preconditions": "已进入球员详情_pc_页面，且球员列表无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看球员列表区域",
+     "expected": "显示空态提示（如'暂无球员'），不展示任何球员"
+    }
+   ],
+   "expected_result": "球员列表显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "球员头像加载失败时展示默认图",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟球员头像图片加载失败（如网络错误或图片不存在）",
+   "preconditions": "已进入球员详情_pc_页面，且球员头像加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看球员头像",
+     "expected": "显示默认占位图，无裂图或报错"
+    }
+   ],
+   "expected_result": "头像位置显示默认占位图，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "球员名称为空时展示占位符",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "模拟球员名称为空字符串",
+   "preconditions": "已进入球员详情_pc_页面，且球员名称为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情_pc_页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看球员名称",
+     "expected": "显示占位符（如'未知球员'）或隐藏，无页面错乱"
+    }
+   ],
+   "expected_result": "球员名称处理合理，无页面错乱或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web",
+    "app"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "球队列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球员数据包含至少一个球队（如AS Monaco），且该球队有LOGO、俱乐部名称、国家队名称、国家队信息。",
+   "preconditions": "已进入球员详情页，球员数据中存在球队信息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到球队区域",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看球队列表",
+     "expected": "球队列表展示，每个球队包含LOGO、俱乐部名称、国家队名称、国家队字段，且信息与后台数据一致"
+    }
+   ],
+   "expected_result": "球队列表正常展示，字段完整，数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "球队列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球员无任何球队数据（如新秀球员）。",
+   "preconditions": "已进入球员详情页，球员数据中无球队信息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到球队区域",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看球队列表",
+     "expected": "显示空态提示，如「暂无球队信息」，且不展示任何球队条目"
+    }
+   ],
+   "expected_result": "球队列表为空时显示空态提示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "LOGO正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队LOGO图片存在且格式正确（如PNG）。",
+   "preconditions": "已进入球员详情页，球队LOGO图片可正常加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到球队LOGO",
+     "expected": "LOGO图片正常显示，无裂图"
+    }
+   ],
+   "expected_result": "LOGO正常显示，清晰可辨。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "LOGO加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟LOGO图片URL失效或网络异常。",
+   "preconditions": "已进入球员详情页，但LOGO图片无法加载（如断网或图片资源缺失）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到球队LOGO",
+     "expected": "LOGO位置显示默认占位图，而非裂图或空白"
+    }
+   ],
+   "expected_result": "LOGO加载失败时显示占位图，不影响页面整体布局。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "俱乐部名称为空时显示占位符",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "俱乐部名称为空字符串或null。",
+   "preconditions": "已进入球员详情页，球员数据中俱乐部名称为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到俱乐部名称字段",
+     "expected": "显示占位符（如「-」）或「暂无」，不显示空白"
+    }
+   ],
+   "expected_result": "俱乐部名称为空时显示占位符，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "国家队名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "国家队名称为有效字符串，如「中国」。",
+   "preconditions": "已进入球员详情页，球员数据中存在国家队名称。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到国家队名称字段",
+     "expected": "国家队名称正确显示，与后台数据一致"
+    }
+   ],
+   "expected_result": "国家队名称正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "国家队名称为空时显示占位符",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "国家队名称为空字符串或null。",
+   "preconditions": "已进入球员详情页，球员数据中国家队名称为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到国家队名称字段",
+     "expected": "显示占位符（如「-」）或「暂无」，不显示空白"
+    }
+   ],
+   "expected_result": "国家队名称为空时显示占位符，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "国家队列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球员有多个国家队经历（如青年队、成年队），每个国家队有名称和LOGO。",
+   "preconditions": "已进入球员详情页，球员数据中存在多个国家队信息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到国家队列表区域",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看国家队列表",
+     "expected": "国家队列表展示，每个条目包含国家队名称和LOGO，且与后台数据一致"
+    }
+   ],
+   "expected_result": "国家队列表正常展示，字段完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "国家队列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球员无任何国家队经历。",
+   "preconditions": "已进入球员详情页，球员数据中无国家队信息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到国家队列表区域",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看国家队列表",
+     "expected": "显示空态提示，如「暂无国家队信息」，且不展示任何国家队条目"
+    }
+   ],
+   "expected_result": "国家队列表为空时显示空态提示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "市场价值为0时展示",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "市场价值为0，表示球员暂无市场估值。",
+   "preconditions": "已进入球员详情页，球员数据中市场价值为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到市场价值字段",
+     "expected": "显示「0」或「-」，不显示异常格式"
+    }
+   ],
+   "expected_result": "市场价值为0时正常显示，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "市场价值为空时展示占位符",
+   "priority": "P1",
+   "domain": "用户端/球员/球员详情_pc_",
+   "module": "球员详情_pc_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "市场价值字段为null或空字符串。",
+   "preconditions": "已进入球员详情页，球员数据中市场价值为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球员详情页，定位到市场价值字段",
+     "expected": "显示占位符（如「-」）或「暂无」，不显示空白"
+    }
+   ],
+   "expected_result": "市场价值为空时显示占位符，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  }
+ ],
+ "api_cases": []
+}

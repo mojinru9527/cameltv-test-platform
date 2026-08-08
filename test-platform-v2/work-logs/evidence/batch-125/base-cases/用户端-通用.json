@@ -1,0 +1,8082 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "Picks列表展示",
+    "description": "在game_移动_页面展示Picks列表，包含预测/精选内容，支持点击查看详情。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确Picks列表的数据来源、排序规则、分页方式及空态展示。",
+      "suggestion": "补充数据来源、排序规则、分页参数及空态设计说明。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "横幅广告展示",
+    "description": "在game_移动_页面展示横幅广告，支持点击跳转，需处理加载失败情况。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确横幅广告的展示位置、数量、轮播规则及点击跳转目标。",
+      "suggestion": "明确广告位、数量、轮播间隔及跳转链接配置。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "游戏页面内容展示",
+    "description": "展示游戏页面主要内容，包括赛事、联赛、图标等信息。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求描述较笼统，未明确具体内容模块及数据加载方式。",
+      "suggestion": "细化内容模块清单及数据接口。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "关闭提示弹窗",
+    "description": "在关闭页面或弹窗时，显示确认提示，防止误操作。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确哪些操作需要关闭提示，以及提示文案。",
+      "suggestion": "明确触发场景和提示文案。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "取消按钮功能",
+    "description": "在弹窗或对话框中提供取消按钮，点击后关闭弹窗且不执行任何操作。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确取消按钮的样式和位置。",
+      "suggestion": "参考通用组件规范。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "确定按钮功能",
+    "description": "在弹窗或对话框中提供确定按钮，点击后执行确认操作。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确确定按钮的具体行为。",
+      "suggestion": "根据具体弹窗场景定义。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述较为简略，仅列出功能点名称，缺乏详细的行为定义、边界条件和异常处理说明。各功能点均需补充具体交互细节、数据规则和异常场景，才能保证测试用例的完整性和可执行性。建议完善需求文档后再进行详细测试设计。"
+ },
+ "functional_cases": [
+  {
+   "title": "通用组件列表展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入通用组件页面，验证所有组件元素可见",
+   "preconditions": "用户已登录，进入通用组件页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开通用组件页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "检查页面上的通用组件列表",
+     "expected": "所有组件（底层页面、取消、确定、摩态窗、页面加载动画、Loading、关闭、稍后再说、立即更新、发现新版本、非强制更新）均可见且布局正确"
+    }
+   ],
+   "expected_result": "通用组件页面完整展示所有组件，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "通用组件页面加载失败处理",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或服务端错误，验证页面错误提示",
+   "preconditions": "网络断开或服务端返回错误",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在无网络环境下打开通用组件页面",
+     "expected": "页面显示加载失败提示，如“网络异常，请稍后重试”"
+    },
+    {
+     "step": 2,
+     "desc": "点击重试按钮",
+     "expected": "重新加载页面，若网络恢复则正常展示"
+    }
+   ],
+   "expected_result": "页面加载失败时给出明确提示，且可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "底层页面在摩态窗弹出时正确展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "触发摩态窗，验证底层页面显示和交互限制",
+   "preconditions": "已进入通用组件页面，存在可触发摩态窗的入口",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击触发摩态窗的按钮",
+     "expected": "摩态窗弹出，底层页面可见但被遮罩覆盖"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击底层页面上的元素",
+     "expected": "底层页面不可交互，点击无响应"
+    }
+   ],
+   "expected_result": "底层页面正确展示且不可操作，摩态窗正常显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "底层页面在摩态窗关闭后恢复交互",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "关闭摩态窗后，验证底层页面可交互",
+   "preconditions": "摩态窗已弹出",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击摩态窗的关闭按钮或取消按钮",
+     "expected": "摩态窗关闭"
+    },
+    {
+     "step": 2,
+     "desc": "点击底层页面上的元素",
+     "expected": "底层页面恢复可交互，点击正常响应"
+    }
+   ],
+   "expected_result": "摩态窗关闭后底层页面恢复可操作",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "取消按钮关闭弹窗",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在弹窗中点击取消按钮，验证弹窗关闭",
+   "preconditions": "弹窗已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开任意弹窗（如摩态窗）",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击“取消”按钮",
+     "expected": "弹窗关闭，底层页面恢复交互"
+    }
+   ],
+   "expected_result": "点击取消后弹窗关闭，无其他副作用",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "取消按钮在弹窗中不可用",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟弹窗无取消按钮或按钮置灰场景",
+   "preconditions": "弹窗配置为无取消按钮或取消按钮置灰",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开配置为无取消按钮的弹窗",
+     "expected": "弹窗中不显示取消按钮"
+    },
+    {
+     "step": 2,
+     "desc": "尝试通过其他方式关闭弹窗",
+     "expected": "弹窗可通过关闭按钮或遮罩关闭"
+    }
+   ],
+   "expected_result": "无取消按钮时不影响弹窗正常关闭",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "确定按钮执行确认操作并关闭弹窗",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在弹窗中点击确定按钮，验证确认操作执行",
+   "preconditions": "弹窗已打开，且确定按钮可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开弹窗（如更新弹窗）",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击“确定”按钮",
+     "expected": "执行确认操作（如触发更新），弹窗关闭"
+    }
+   ],
+   "expected_result": "确定按钮触发对应操作并关闭弹窗",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "确定按钮在无操作时不可用",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟确定按钮置灰或不可点击场景",
+   "preconditions": "弹窗中确定按钮置灰",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开确定按钮置灰的弹窗",
+     "expected": "确定按钮不可点击"
+    },
+    {
+     "step": 2,
+     "desc": "点击确定按钮",
+     "expected": "无响应，弹窗不关闭"
+    }
+   ],
+   "expected_result": "确定按钮不可用时点击无效果",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "摩态窗正常弹出并展示内容",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "触发摩态窗，验证内容展示和交互",
+   "preconditions": "存在触发摩态窗的入口",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击触发摩态窗的按钮",
+     "expected": "摩态窗弹出，显示内容（如展示内容文本）"
+    },
+    {
+     "step": 2,
+     "desc": "检查摩态窗中的确定、取消、关闭按钮",
+     "expected": "按钮均可见且可用"
+    }
+   ],
+   "expected_result": "摩态窗正确弹出并展示内容，按钮可用",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "摩态窗点击遮罩关闭",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "点击摩态窗遮罩区域，验证关闭行为",
+   "preconditions": "摩态窗已弹出，且支持点击遮罩关闭",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击摩态窗遮罩区域（非弹窗内容区域）",
+     "expected": "摩态窗关闭"
+    }
+   ],
+   "expected_result": "点击遮罩可关闭摩态窗",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "摩态窗点击遮罩不关闭（不支持时）",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟摩态窗不支持点击遮罩关闭的场景",
+   "preconditions": "摩态窗已弹出，且不支持点击遮罩关闭",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击摩态窗遮罩区域",
+     "expected": "摩态窗不关闭，仍保持显示"
+    }
+   ],
+   "expected_result": "不支持点击遮罩关闭时，点击遮罩无效果",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "页面加载动画显示并消失",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟页面加载过程，验证动画显示与消失",
+   "preconditions": "页面加载需要时间",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开需要加载的页面",
+     "expected": "页面加载动画显示"
+    },
+    {
+     "step": 2,
+     "desc": "等待页面加载完成",
+     "expected": "加载动画消失，页面内容正常显示"
+    }
+   ],
+   "expected_result": "加载动画在加载期间显示，加载完成后消失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "页面加载动画超时处理",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟页面加载超时，验证动画和错误提示",
+   "preconditions": "网络慢或服务端无响应",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在弱网环境下打开页面",
+     "expected": "加载动画显示"
+    },
+    {
+     "step": 2,
+     "desc": "等待超过加载超时时间",
+     "expected": "加载动画消失，显示超时提示或错误页面"
+    }
+   ],
+   "expected_result": "加载超时后给出明确提示，不一直显示动画",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "Loading组件在异步操作时显示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "触发异步操作，验证Loading显示与消失",
+   "preconditions": "存在异步操作（如提交表单）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发异步操作（如点击提交按钮）",
+     "expected": "Loading组件显示"
+    },
+    {
+     "step": 2,
+     "desc": "等待异步操作完成",
+     "expected": "Loading组件消失，显示操作结果"
+    }
+   ],
+   "expected_result": "Loading在异步操作期间显示，完成后消失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "Loading组件在异步操作失败时消失",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟异步操作失败，验证Loading消失和错误提示",
+   "preconditions": "异步操作会失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发会失败的异步操作",
+     "expected": "Loading显示"
+    },
+    {
+     "step": 2,
+     "desc": "等待操作失败返回",
+     "expected": "Loading消失，显示错误提示"
+    }
+   ],
+   "expected_result": "异步操作失败后Loading消失并提示错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "关闭按钮关闭弹窗",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击弹窗右上角关闭按钮，验证关闭",
+   "preconditions": "弹窗已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开弹窗",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击右上角关闭按钮",
+     "expected": "弹窗关闭"
+    }
+   ],
+   "expected_result": "点击关闭按钮后弹窗关闭",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "关闭按钮在弹窗中不存在",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟弹窗无关闭按钮场景",
+   "preconditions": "弹窗配置为无关闭按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开无关闭按钮的弹窗",
+     "expected": "弹窗中不显示关闭按钮"
+    },
+    {
+     "step": 2,
+     "desc": "尝试通过其他方式关闭弹窗",
+     "expected": "弹窗可通过取消或遮罩关闭"
+    }
+   ],
+   "expected_result": "无关闭按钮时不影响弹窗关闭",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "稍后再说按钮关闭更新弹窗",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在非强制更新弹窗中点击稍后再说，验证关闭",
+   "preconditions": "非强制更新弹窗已弹出",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发非强制更新弹窗",
+     "expected": "弹窗显示，包含更新内容"
+    },
+    {
+     "step": 2,
+     "desc": "点击“稍后再说”按钮",
+     "expected": "弹窗关闭，本次不再提示"
+    }
+   ],
+   "expected_result": "点击稍后再说后弹窗关闭，且本次会话不再弹出",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "稍后再说按钮在强制更新中不可用",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "强制更新弹窗中不应显示稍后再说按钮",
+   "preconditions": "强制更新弹窗已弹出",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发强制更新弹窗",
+     "expected": "弹窗显示，且无“稍后再说”按钮"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击稍后再说（若存在）",
+     "expected": "无响应或按钮不存在"
+    }
+   ],
+   "expected_result": "强制更新弹窗中无稍后再说按钮，用户必须立即更新",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "立即更新按钮触发更新流程",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击立即更新，验证跳转或下载",
+   "preconditions": "更新弹窗已弹出",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发更新弹窗",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击“立即更新”按钮",
+     "expected": "触发更新流程（如跳转应用商店或下载更新包）"
+    }
+   ],
+   "expected_result": "点击立即更新后正确触发更新流程",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "立即更新按钮在无网络时提示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "无网络环境下点击立即更新，验证提示",
+   "preconditions": "无网络连接",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发更新弹窗",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击“立即更新”按钮",
+     "expected": "提示“网络异常，请检查网络”或类似提示，不触发更新"
+    }
+   ],
+   "expected_result": "无网络时点击立即更新给出明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "发现新版本弹窗展示更新内容",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "检测到新版本，验证弹窗内容和按钮",
+   "preconditions": "存在新版本，且已触发检测",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或触发版本检测",
+     "expected": "弹出“发现新版本”弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "检查弹窗内容",
+     "expected": "显示版本号、更新内容列表（如“更新内容xxxxxxxxxxxxx”）"
+    },
+    {
+     "step": 3,
+     "desc": "检查按钮",
+     "expected": "根据更新类型显示“立即更新”和/或“稍后再说”"
+    }
+   ],
+   "expected_result": "发现新版本弹窗正确展示更新信息和操作按钮",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "无新版本时不弹窗",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前版本为最新，验证不弹窗",
+   "preconditions": "当前版本已是最新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或触发版本检测",
+     "expected": "不弹出更新弹窗"
+    }
+   ],
+   "expected_result": "无新版本时不显示更新弹窗",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "非强制更新弹窗可选择稍后再说",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "非强制更新弹窗中点击稍后再说，验证关闭",
+   "preconditions": "非强制更新弹窗已弹出",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发非强制更新弹窗",
+     "expected": "弹窗显示，包含“稍后再说”和“立即更新”按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击“稍后再说”",
+     "expected": "弹窗关闭，本次不再提示"
+    }
+   ],
+   "expected_result": "非强制更新弹窗允许用户稍后再说",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "非强制更新弹窗点击立即更新",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "非强制更新弹窗中点击立即更新，验证触发更新",
+   "preconditions": "非强制更新弹窗已弹出",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发非强制更新弹窗",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击“立即更新”",
+     "expected": "触发更新流程"
+    }
+   ],
+   "expected_result": "非强制更新弹窗点击立即更新后触发更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "非强制更新弹窗在无网络时点击立即更新",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "无网络环境下点击立即更新，验证提示",
+   "preconditions": "非强制更新弹窗已弹出，且无网络",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发非强制更新弹窗",
+     "expected": "弹窗显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击“立即更新”",
+     "expected": "提示网络异常，不触发更新"
+    }
+   ],
+   "expected_result": "无网络时点击立即更新给出提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "强制更新弹窗正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟服务端返回强制更新标志 force=true，新版本号 3.3.0，更新内容为需求中的示例列表。",
+   "preconditions": "用户已登录，客户端版本低于最新版本，服务端配置强制更新。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或进入首页，触发版本检查接口",
+     "expected": "接口返回强制更新标志和最新版本信息"
+    },
+    {
+     "step": 2,
+     "desc": "观察弹窗展示",
+     "expected": "弹出强制更新弹窗，标题显示「发现新版本」，展示版本号 3.3.0，更新内容列表显示需求中的6条内容，按钮仅「立即更新」"
+    }
+   ],
+   "expected_result": "强制更新弹窗正确展示，包含版本号、更新内容列表和立即更新按钮，无取消或稍后再说按钮。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "强制更新弹窗不可关闭",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "强制更新标志 force=true，尝试点击关闭按钮、遮罩层、返回键等。",
+   "preconditions": "强制更新弹窗已弹出。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试点击弹窗右上角关闭按钮（若有）",
+     "expected": "无关闭按钮或点击无效，弹窗不关闭"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击弹窗遮罩层",
+     "expected": "弹窗不关闭，底层页面不可操作"
+    },
+    {
+     "step": 3,
+     "desc": "尝试按返回键（移动端）或浏览器返回",
+     "expected": "无法返回，弹窗保持显示"
+    }
+   ],
+   "expected_result": "强制更新弹窗无法通过任何方式关闭，用户只能点击立即更新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "强制更新-点击立即更新跳转下载",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击立即更新按钮，预期跳转至应用商店或下载页面。",
+   "preconditions": "强制更新弹窗已弹出，网络正常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「立即更新」按钮",
+     "expected": "跳转至应用商店（App Store/Google Play）或下载页面，弹窗关闭"
+    }
+   ],
+   "expected_result": "点击立即更新后，正确跳转至下载渠道，开始更新流程。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "强制更新-更新内容为空时展示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "服务端返回更新内容列表为空，强制更新标志为 true。",
+   "preconditions": "服务端配置强制更新，但更新内容为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发版本检查，弹出强制更新弹窗",
+     "expected": "弹窗展示版本号，更新内容区域显示空态或占位文案，立即更新按钮仍可用"
+    }
+   ],
+   "expected_result": "弹窗正常展示，更新内容为空时不报错，立即更新按钮可点击。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "强制更新-版本号缺失时处理",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "服务端返回强制更新标志 true，但版本号字段为空。",
+   "preconditions": "服务端配置强制更新，但版本号缺失。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发版本检查，观察弹窗",
+     "expected": "弹窗正常弹出，版本号位置显示默认文案或留空，不崩溃"
+    }
+   ],
+   "expected_result": "弹窗正常展示，版本号缺失时不影响弹窗功能，立即更新仍可用。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "强制更新-网络异常时提示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络断开或服务器无响应，强制更新标志无法获取。",
+   "preconditions": "网络不可用或服务端异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用，触发版本检查",
+     "expected": "网络异常时，不弹出强制更新弹窗，显示网络错误提示或重试机制"
+    }
+   ],
+   "expected_result": "网络异常时，应用不崩溃，给出友好提示，并允许重试。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "首页(Mobile)正常加载并展示所有元素",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "首页(Mobile)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常网络环境，首页数据存在",
+   "preconditions": "用户已打开APP或Web端，网络正常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)",
+     "expected": "页面加载成功，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "检查页面元素",
+     "expected": "显示H5、比赛、联赛、icon、Camel Live、APP、LIVE、周一、12-01、App Store等元素"
+    }
+   ],
+   "expected_result": "首页正常展示所有预期元素，布局正确，无遮挡或错位",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "首页(Mobile)在无网络时展示错误提示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "首页(Mobile)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "断网环境",
+   "preconditions": "用户已打开APP或Web端，网络断开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)",
+     "expected": "页面显示网络错误提示，如'网络连接失败'"
+    },
+    {
+     "step": 2,
+     "desc": "点击重试",
+     "expected": "重新加载页面，网络恢复后正常展示"
+    }
+   ],
+   "expected_result": "页面给出明确错误提示，且重试后能恢复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "页面内容正常展示热门比赛和进行中的比赛",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "页面内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在热门比赛和进行中的比赛数据",
+   "preconditions": "首页已加载，存在比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "滚动到页面内容区域",
+     "expected": "显示'热门比赛'和'进行中的比赛'区块"
+    },
+    {
+     "step": 2,
+     "desc": "检查比赛列表",
+     "expected": "每个比赛显示'主队名称 VS 客队名称'"
+    }
+   ],
+   "expected_result": "页面内容正确展示，比赛信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "页面内容无数据时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "页面内容",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无比赛数据",
+   "preconditions": "后台无比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页",
+     "expected": "页面内容区域显示'暂无比赛'或类似空态提示"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "H5页面正常加载",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "H5",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "H5页面地址有效",
+   "preconditions": "网络正常，H5页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击H5入口",
+     "expected": "H5页面加载成功，显示内容"
+    }
+   ],
+   "expected_result": "H5页面正常展示，无白屏或报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "H5页面加载失败时提示错误",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "H5",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "H5地址无效或网络异常",
+   "preconditions": "H5页面不可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击H5入口",
+     "expected": "页面显示加载失败提示，如'页面加载失败'"
+    }
+   ],
+   "expected_result": "给出明确错误提示，不白屏",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "比赛模块正常展示比赛列表",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "比赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在比赛数据",
+   "preconditions": "首页已加载，存在比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'比赛'标签",
+     "expected": "展示比赛列表，每个比赛显示'主队名称 VS 客队名称'"
+    }
+   ],
+   "expected_result": "比赛列表正确展示，数据完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "比赛模块无数据时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "比赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无比赛数据",
+   "preconditions": "后台无比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'比赛'标签",
+     "expected": "显示'暂无比赛'或类似空态提示"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "联赛模块正常展示热门联赛",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在热门联赛数据",
+   "preconditions": "首页已加载，存在联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'联赛'标签",
+     "expected": "展示热门联赛列表"
+    }
+   ],
+   "expected_result": "联赛列表正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "联赛模块无数据时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "联赛",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无联赛数据",
+   "preconditions": "后台无联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'联赛'标签",
+     "expected": "显示'暂无联赛'或类似空态提示"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "icon正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "icon",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "icon资源存在",
+   "preconditions": "首页已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看首页icon",
+     "expected": "icon正常显示，无裂图"
+    }
+   ],
+   "expected_result": "icon展示正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "icon加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "icon",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "icon资源缺失",
+   "preconditions": "icon资源不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看首页icon",
+     "expected": "显示默认占位图或隐藏，不显示裂图"
+    }
+   ],
+   "expected_result": "icon加载失败时不影响页面布局",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "Camel Live品牌信息正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "Camel Live",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "品牌信息配置正确",
+   "preconditions": "首页已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看Camel Live区域",
+     "expected": "显示'关于Camel Live'、App Store、Google Play等品牌信息"
+    }
+   ],
+   "expected_result": "品牌信息展示完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "Camel Live品牌信息缺失时显示默认内容",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "Camel Live",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "品牌信息未配置",
+   "preconditions": "后台未配置品牌信息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看Camel Live区域",
+     "expected": "显示默认文案或隐藏该区域，不报错"
+    }
+   ],
+   "expected_result": "品牌信息缺失时页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "APP下载入口正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "APP",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "iOS和Android平台",
+   "preconditions": "用户设备为iOS或Android",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看APP下载区域",
+     "expected": "iOS设备显示App Store图标，Android设备显示Google Play图标"
+    }
+   ],
+   "expected_result": "下载入口根据平台正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "APP下载入口在未知平台时不显示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "APP",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "未知平台（如桌面浏览器）",
+   "preconditions": "用户设备为PC",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看APP下载区域",
+     "expected": "不显示App Store或Google Play图标，或显示二维码等替代方式"
+    }
+   ],
+   "expected_result": "未知平台不显示不合适的下载入口",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "LIVE标签正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "LIVE",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "有直播数据",
+   "preconditions": "存在直播中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看LIVE标签",
+     "expected": "LIVE标签正常显示，可能有红点或直播标识"
+    }
+   ],
+   "expected_result": "LIVE标签展示正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "LIVE标签无直播时置灰或隐藏",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "LIVE",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无直播数据",
+   "preconditions": "无直播中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看LIVE标签",
+     "expected": "LIVE标签置灰或隐藏，点击无响应或提示无直播"
+    }
+   ],
+   "expected_result": "无直播时LIVE标签状态正确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "日期显示（周一、12-01）正确",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "日期显示",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前日期为2024-12-01，星期一",
+   "preconditions": "系统时间正确",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看首页日期区域",
+     "expected": "显示'周一'和'12-01'"
+    }
+   ],
+   "expected_result": "日期显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "日期显示跨月时正确更新",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "日期显示",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "当前日期为2024-12-31，星期二",
+   "preconditions": "系统时间设置为2024-12-31",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看首页日期区域",
+     "expected": "显示'周二'和'12-31'"
+    }
+   ],
+   "expected_result": "日期正确显示月末",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "App Store链接跳转正常",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "App Store",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "有效的App Store链接",
+   "preconditions": "iOS设备，网络正常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击App Store图标",
+     "expected": "跳转到App Store应用页面"
+    }
+   ],
+   "expected_result": "跳转成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "App Store链接无效时提示错误",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "App Store",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "无效的App Store链接",
+   "preconditions": "iOS设备，链接失效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击App Store图标",
+     "expected": "提示'无法打开链接'或跳转到App Store首页"
+    }
+   ],
+   "expected_result": "给出明确提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "版本更新-发现新版本弹窗正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "服务器存在新版本，更新内容为'更新内容xxxxxxxxxxxxx'",
+   "preconditions": "用户打开APP，检测到新版本",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP",
+     "expected": "弹出'发现新版本'弹窗，显示更新内容"
+    }
+   ],
+   "expected_result": "弹窗正常展示，包含更新内容",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "版本更新-非强制更新可稍后再说",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "非强制更新",
+   "preconditions": "检测到非强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'稍后再说'",
+     "expected": "弹窗关闭，可继续使用APP"
+    }
+   ],
+   "expected_result": "弹窗关闭，不强制更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "版本更新-强制更新不可关闭",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "强制更新",
+   "preconditions": "检测到强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试点击'关闭'或'稍后再说'",
+     "expected": "无关闭按钮或点击无效，必须点击'立即更新'"
+    }
+   ],
+   "expected_result": "强制更新弹窗不可关闭，只能更新",
+   "remark": "负面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "版本更新-立即更新跳转下载",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击立即更新",
+   "preconditions": "检测到新版本",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'立即更新'",
+     "expected": "跳转到应用商店或下载页面"
+    }
+   ],
+   "expected_result": "跳转成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "版本更新-更新内容为空时展示默认文案",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "更新内容为空",
+   "preconditions": "服务器返回更新内容为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP",
+     "expected": "弹窗显示'暂无更新内容'或类似默认文案"
+    }
+   ],
+   "expected_result": "弹窗正常展示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "热门比赛列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端返回热门比赛列表数据，包含至少1场比赛，如比赛ID=1001，主队=曼联，客队=利物浦",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端有热门比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门比赛区域",
+     "expected": "热门比赛列表展示，包含比赛信息（如主队名称 VS 客队名称）"
+    }
+   ],
+   "expected_result": "热门比赛列表正常展示，数据与后端返回一致，无缺失或乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "热门比赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后端返回热门比赛列表为空数组[]",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端无热门比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门比赛区域",
+     "expected": "显示空态提示，如“暂无热门比赛”，不展示任何比赛条目"
+    }
+   ],
+   "expected_result": "热门比赛区域显示空态提示，无异常报错",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "热门比赛列表加载失败提示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或后端接口返回500错误",
+   "preconditions": "已进入首页(Mobile)页面，网络异常或后端服务不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载中，出现Loading动画"
+    },
+    {
+     "step": 2,
+     "desc": "等待接口响应",
+     "expected": "接口请求失败，页面显示错误提示，如“加载失败，请稍后重试”，并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面显示加载失败提示，不崩溃，可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "进行中的比赛正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端返回进行中的比赛列表，包含至少1场比赛，如比赛ID=2001，状态=进行中",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端有进行中的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看进行中的比赛区域",
+     "expected": "进行中的比赛列表展示，包含比赛信息（如主队名称 VS 客队名称）"
+    }
+   ],
+   "expected_result": "进行中的比赛列表正常展示，数据与后端返回一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "进行中的比赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后端返回进行中的比赛列表为空数组[]",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端无进行中的比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看进行中的比赛区域",
+     "expected": "显示空态提示，如“暂无进行中的比赛”"
+    }
+   ],
+   "expected_result": "进行中的比赛区域显示空态提示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "进行中的比赛状态异常处理",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回的比赛状态字段为非法值，如状态=null或未知状态码",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回异常状态数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看进行中的比赛区域",
+     "expected": "异常状态的比赛不展示或展示为“未知状态”，页面不崩溃"
+    }
+   ],
+   "expected_result": "页面正常展示，异常状态被过滤或友好提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "全部热门比赛列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端返回全部热门比赛列表，包含多场比赛，如比赛ID=3001,3002",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端有全部热门比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看全部热门比赛区域",
+     "expected": "全部热门比赛列表展示，包含所有比赛信息"
+    }
+   ],
+   "expected_result": "全部热门比赛列表正常展示，数据与后端返回一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "全部热门比赛列表为空时展示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后端返回全部热门比赛列表为空数组[]",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端无全部热门比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看全部热门比赛区域",
+     "expected": "显示空态提示，如“暂无全部热门比赛”"
+    }
+   ],
+   "expected_result": "全部热门比赛区域显示空态提示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "全部热门比赛列表加载失败提示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或后端接口返回500错误",
+   "preconditions": "已进入首页(Mobile)页面，网络异常或后端服务不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载中，出现Loading动画"
+    },
+    {
+     "step": 2,
+     "desc": "等待接口响应",
+     "expected": "接口请求失败，页面显示错误提示，如“加载失败，请稍后重试”"
+    }
+   ],
+   "expected_result": "页面显示加载失败提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "主队名称 VS 客队名称正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端返回比赛数据，主队名称=曼联，客队名称=利物浦",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端有比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看任意比赛条目",
+     "expected": "显示“曼联 VS 利物浦”格式的主客队名称"
+    }
+   ],
+   "expected_result": "主队名称 VS 客队名称正确展示，格式为“主队 VS 客队”",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "主队或客队名称为空时展示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后端返回比赛数据，主队名称为空字符串，客队名称=利物浦",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回异常数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该比赛条目",
+     "expected": "主队名称位置显示占位符或“未知”，不显示“VS”或显示“未知 VS 利物浦”"
+    }
+   ],
+   "expected_result": "页面不崩溃，主队名称为空时友好展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "主队名称与客队名称相同",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回比赛数据，主队名称=客队名称=曼联",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回异常数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看该比赛条目",
+     "expected": "显示“曼联 VS 曼联”，页面不崩溃，但需确认是否允许此类数据"
+    }
+   ],
+   "expected_result": "页面正常展示，不崩溃，但应提示数据异常或按正常展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "Email 联系方式正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端配置Email地址为support@camel.com",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回Email配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看Email区域",
+     "expected": "显示Email地址support@camel.com"
+    }
+   ],
+   "expected_result": "Email地址正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "Email 地址为空时展示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后端返回Email地址为空字符串",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回空Email配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看Email区域",
+     "expected": "不显示Email或显示占位符，如“暂无Email”"
+    }
+   ],
+   "expected_result": "页面不崩溃，Email为空时友好展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "点击Email跳转邮件客户端",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "Email地址为support@camel.com",
+   "preconditions": "已进入首页(Mobile)页面，Email已展示",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Email地址",
+     "expected": "系统调用邮件客户端，收件人自动填入support@camel.com"
+    }
+   ],
+   "expected_result": "邮件客户端打开，收件人正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "Email 格式非法时展示",
+   "priority": "P2",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回Email地址为非法格式，如“abc”",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回非法Email",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看Email区域",
+     "expected": "显示非法Email或提示“Email格式错误”，不崩溃"
+    }
+   ],
+   "expected_result": "页面不崩溃，非法Email被友好处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "Whats 联系方式正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端配置Whats为+1234567890",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回Whats配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看Whats区域",
+     "expected": "显示Whats号码+1234567890"
+    }
+   ],
+   "expected_result": "Whats号码正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "Whats 为空时展示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后端返回Whats为空字符串",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回空Whats配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看Whats区域",
+     "expected": "不显示Whats或显示占位符，如“暂无Whats”"
+    }
+   ],
+   "expected_result": "页面不崩溃，Whats为空时友好展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "点击Whats跳转WhatsApp",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "Whats号码为+1234567890",
+   "preconditions": "已进入首页(Mobile)页面，Whats已展示",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击Whats号码",
+     "expected": "系统调用WhatsApp应用或网页版，并填入号码+1234567890"
+    }
+   ],
+   "expected_result": "WhatsApp打开，号码正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "Whats 号码非法时展示",
+   "priority": "P2",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回Whats为非法号码，如“abc”",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端返回非法Whats",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看Whats区域",
+     "expected": "显示非法号码或提示“Whats号码错误”，不崩溃"
+    }
+   ],
+   "expected_result": "页面不崩溃，非法Whats被友好处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "资讯列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后端返回资讯列表，包含至少1条资讯，如资讯ID=4001，标题=体育新闻",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端有资讯数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看资讯区域",
+     "expected": "资讯列表展示，包含资讯标题等信息"
+    }
+   ],
+   "expected_result": "资讯列表正常展示，数据与后端返回一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "资讯列表为空时展示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后端返回资讯列表为空数组[]",
+   "preconditions": "已进入首页(Mobile)页面，网络正常，后端无资讯数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看资讯区域",
+     "expected": "显示空态提示，如“暂无资讯”"
+    }
+   ],
+   "expected_result": "资讯区域显示空态提示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "资讯列表加载失败提示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或后端接口返回500错误",
+   "preconditions": "已进入首页(Mobile)页面，网络异常或后端服务不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载中，出现Loading动画"
+    },
+    {
+     "step": 2,
+     "desc": "等待接口响应",
+     "expected": "接口请求失败，页面显示错误提示，如“加载失败，请稍后重试”"
+    }
+   ],
+   "expected_result": "页面显示加载失败提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "“我的”入口正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "页面底部导航包含“我的”入口",
+   "preconditions": "已进入首页(Mobile)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开首页(Mobile)页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看底部导航",
+     "expected": "显示“我的”入口图标和文字"
+    }
+   ],
+   "expected_result": "“我的”入口正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "点击“我的”跳转个人中心",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录",
+   "preconditions": "已进入首页(Mobile)页面，用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“我的”入口",
+     "expected": "跳转到个人中心页面，显示用户信息"
+    }
+   ],
+   "expected_result": "成功跳转个人中心页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "未登录点击“我的”跳转登录页",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "___mobile_",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录",
+   "preconditions": "已进入首页(Mobile)页面，用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“我的”入口",
+     "expected": "跳转到登录页面，提示用户登录"
+    }
+   ],
+   "expected_result": "跳转登录页，未登录用户无法访问个人中心",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "更新日志页面正常展示版本记录列表",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的版本记录，如1.0.0、1.1.0、1.2.0等，验证列表完整展示",
+   "preconditions": "用户已登录，且后台存在多条更新日志记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功，显示更新日志列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的版本号、更新时间、操作人员、审核人员、审核时间、更新内容字段",
+     "expected": "每个字段均正确显示，且与后台数据一致；版本号如1.0.0、1.1.0等，更新时间如2024-05-07等"
+    }
+   ],
+   "expected_result": "更新日志列表完整展示所有版本记录，字段值正确，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "更新日志列表为空时展示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何更新日志记录，模拟空数据场景",
+   "preconditions": "用户已登录，后台无更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面显示空态提示，如'暂无更新日志'，且无异常报错"
+    }
+   ],
+   "expected_result": "页面展示空态提示，不出现空白或崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "更新日志列表按版本号降序排列",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台存在版本号1.0.0、1.1.0、1.2.0、2.0.0等，验证排序",
+   "preconditions": "用户已登录，后台存在多个版本记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表按版本号从高到低排列，如2.0.0、1.2.0、1.1.0、1.0.0"
+    }
+   ],
+   "expected_result": "列表按版本号降序排列，最新版本在最上方",
+   "remark": "边界用例，验证排序规则",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "更新日志中操作人员/审核人员为'-'时正常显示",
+   "priority": "P2",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用版本1.0.0，其操作人员、审核人员字段值为'-'，验证显示",
+   "preconditions": "用户已登录，后台存在操作人员/审核人员为'-'的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "操作人员、审核人员列显示'-'，不显示为空或异常字符"
+    }
+   ],
+   "expected_result": "'-'正常显示，页面无异常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "更新日志更新时间格式正确显示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用日期2024-05-07，验证格式为YYYY-MM-DD",
+   "preconditions": "用户已登录，后台存在更新时间记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "更新时间显示为'2024-05-07'格式，无时分秒"
+    }
+   ],
+   "expected_result": "更新时间格式正确，符合需求",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "更新日志更新时间格式异常时处理",
+   "priority": "P2",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台更新时间字段为非法值，如'2024-13-45'，模拟异常数据",
+   "preconditions": "用户已登录，后台存在非法时间数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面不崩溃，非法时间显示为原始值或提示，但无系统错误"
+    }
+   ],
+   "expected_result": "页面正常加载，无崩溃或异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "非强制更新弹窗展示更新内容及按钮",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟非强制更新，更新内容为'更新内容xxxxxxxxxxxxx'，按钮为'立即更新'和'稍后再说'",
+   "preconditions": "用户已登录，检测到新版本且为非强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或进入首页，触发版本检测",
+     "expected": "弹出更新弹窗，显示'发现新版本'、更新内容列表、'立即更新'和'稍后再说'按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击'稍后再说'",
+     "expected": "弹窗关闭，用户可继续使用应用"
+    }
+   ],
+   "expected_result": "非强制更新弹窗正常展示，'稍后再说'可关闭弹窗",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "非强制更新弹窗点击立即更新跳转下载",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟非强制更新，点击'立即更新'",
+   "preconditions": "用户已登录，检测到新版本且为非强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "弹出更新弹窗",
+     "expected": "弹窗正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'立即更新'",
+     "expected": "跳转至应用商店或下载页面，开始下载新版本"
+    }
+   ],
+   "expected_result": "点击立即更新后正确跳转下载",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "强制更新弹窗无'稍后再说'按钮",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "模拟强制更新，验证弹窗按钮",
+   "preconditions": "用户已登录，检测到新版本且为强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发版本检测",
+     "expected": "弹出更新弹窗，显示'发现新版本'、更新内容、'立即更新'按钮，无'稍后再说'按钮"
+    }
+   ],
+   "expected_result": "强制更新弹窗不显示'稍后再说'，用户只能选择立即更新",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "强制更新弹窗点击立即更新跳转下载",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟强制更新，点击'立即更新'",
+   "preconditions": "用户已登录，检测到新版本且为强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "弹出强制更新弹窗",
+     "expected": "弹窗正常显示，无'稍后再说'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'立即更新'",
+     "expected": "跳转至应用商店或下载页面，开始下载新版本"
+    }
+   ],
+   "expected_result": "点击立即更新后正确跳转下载",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "强制更新弹窗关闭按钮不可用",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟强制更新，尝试关闭弹窗",
+   "preconditions": "用户已登录，检测到新版本且为强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "弹出强制更新弹窗",
+     "expected": "弹窗显示，无关闭按钮或关闭按钮置灰"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击关闭按钮或点击弹窗外部",
+     "expected": "弹窗不关闭，无法取消更新"
+    }
+   ],
+   "expected_result": "强制更新弹窗无法关闭，用户必须更新",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "更新弹窗展示更新内容列表",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "更新内容为多条，如'更新内容xxxxxxxxxxxxx'重复6次，验证列表展示",
+   "preconditions": "用户已登录，检测到新版本",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发版本检测",
+     "expected": "弹窗中更新内容以列表形式展示，每条内容独立一行，无截断"
+    }
+   ],
+   "expected_result": "更新内容完整展示，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "更新弹窗更新内容为空时展示",
+   "priority": "P2",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "更新内容为空字符串或null，模拟异常",
+   "preconditions": "用户已登录，检测到新版本但更新内容为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发版本检测",
+     "expected": "弹窗正常显示，更新内容区域显示空或提示'暂无更新内容'，无崩溃"
+    }
+   ],
+   "expected_result": "弹窗正常展示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "更新弹窗版本号显示正确",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "新版本号为1.2.0，验证弹窗显示",
+   "preconditions": "用户已登录，检测到新版本1.2.0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发版本检测",
+     "expected": "弹窗显示'发现新版本'，并展示版本号1.2.0"
+    }
+   ],
+   "expected_result": "版本号正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "更新弹窗版本号格式异常时处理",
+   "priority": "P2",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "版本号字段为非法值，如'abc'，模拟异常",
+   "preconditions": "用户已登录，检测到新版本但版本号异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发版本检测",
+     "expected": "弹窗正常显示，版本号显示原始值或提示，无崩溃"
+    }
+   ],
+   "expected_result": "弹窗正常展示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "更新日志列表展示所有版本记录",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统预置的版本记录数据，包括 1.0.0、1.1.0、1.2.0、1.2.1、1.2.2、2.0.0、2.1.0、2.2.0、3.0.0 等版本，验证列表完整展示。",
+   "preconditions": "已进入更新日志页面，系统存在多条版本记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开更新日志页面",
+     "expected": "页面加载成功，显示更新日志列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的版本记录",
+     "expected": "列表展示所有版本记录，每条记录包含版本号、更新时间、操作人员、审核人员、审核时间、更新内容字段"
+    }
+   ],
+   "expected_result": "更新日志列表完整展示所有版本记录，字段齐全，无缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "更新日志列表按版本号倒序排列",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "更新日志",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用预置版本记录，验证最新版本（如 3.0.0）显示在最上方，最旧版本（1.0.0）在最下方。",
+   "preconditions": "已进入更新日志页面，系统存在多个版本记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "检查列表第一条和最后一条记录",
+     "expected": "第一条记录为最新版本（如 3.0.0），最后一条为最旧版本（如 1.0.0）"
+    }
+   ],
+   "expected_result": "列表按版本号倒序排列，最新版本在最上方。",
+   "remark": "边界用例，验证排序规则",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "更新日志列表空数据展示",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟系统无任何版本记录的场景，验证空态展示。",
+   "preconditions": "系统无版本记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开更新日志页面",
+     "expected": "页面加载成功，显示空态提示（如「暂无更新日志」）"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现异常或空白页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "非强制更新弹窗展示更新内容",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "模拟存在新版本（如 3.1.0），更新内容包含多条说明，验证弹窗展示。",
+   "preconditions": "应用检测到新版本，且为非强制更新。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或进入首页",
+     "expected": "弹出「发现新版本」弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗内容",
+     "expected": "弹窗展示版本号、更新内容列表，并提供「稍后再说」和「立即更新」按钮"
+    }
+   ],
+   "expected_result": "弹窗正确展示更新内容，按钮可用。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "非强制更新点击「稍后再说」关闭弹窗",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟非强制更新弹窗出现，用户选择稍后更新。",
+   "preconditions": "应用检测到新版本，且为非强制更新，弹窗已显示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「稍后再说」按钮",
+     "expected": "弹窗关闭，用户可继续使用应用"
+    }
+   ],
+   "expected_result": "弹窗关闭，应用正常使用，不强制更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "非强制更新点击「立即更新」跳转下载",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟非强制更新弹窗出现，用户选择立即更新。",
+   "preconditions": "应用检测到新版本，且为非强制更新，弹窗已显示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「立即更新」按钮",
+     "expected": "跳转至应用商店或下载页面，开始下载新版本"
+    }
+   ],
+   "expected_result": "正确跳转下载，下载流程正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "强制更新弹窗无「稍后再说」按钮",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "模拟存在新版本，且为强制更新，验证弹窗按钮。",
+   "preconditions": "应用检测到新版本，且为强制更新。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或进入首页",
+     "expected": "弹出「发现新版本」弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "检查弹窗按钮",
+     "expected": "弹窗仅提供「立即更新」按钮，无「稍后再说」或关闭按钮"
+    }
+   ],
+   "expected_result": "强制更新弹窗不提供关闭或稍后再说选项，用户只能点击立即更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "强制更新点击「立即更新」跳转下载",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟强制更新弹窗出现，用户点击立即更新。",
+   "preconditions": "应用检测到新版本，且为强制更新，弹窗已显示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「立即更新」按钮",
+     "expected": "跳转至应用商店或下载页面，开始下载新版本"
+    }
+   ],
+   "expected_result": "正确跳转下载，下载流程正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "通用弹窗组件显示与关闭",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "通用组件",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用通用弹窗组件，展示内容并点击确定关闭。",
+   "preconditions": "页面存在触发弹窗的入口。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "触发弹窗显示",
+     "expected": "弹窗正确显示，包含标题、内容、取消和确定按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」按钮",
+     "expected": "弹窗关闭，执行确定操作"
+    }
+   ],
+   "expected_result": "弹窗正常显示和关闭，按钮功能正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "通用弹窗点击取消不执行操作",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "通用组件",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用通用弹窗组件，点击取消按钮。",
+   "preconditions": "页面存在触发弹窗的入口，弹窗已显示。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，不执行任何操作"
+    }
+   ],
+   "expected_result": "弹窗关闭，无副作用。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "页面加载动画显示与消失",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "通用组件",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "模拟页面加载过程，验证 Loading 动画。",
+   "preconditions": "页面需要加载数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入需要加载数据的页面",
+     "expected": "页面显示 Loading 动画"
+    },
+    {
+     "step": 2,
+     "desc": "等待数据加载完成",
+     "expected": "Loading 动画消失，页面展示数据"
+    }
+   ],
+   "expected_result": "Loading 动画在加载期间显示，加载完成后消失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "Loading 动画超时处理",
+   "priority": "P2",
+   "domain": "用户端/通用",
+   "module": "通用组件",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常导致加载超时，验证 Loading 状态。",
+   "preconditions": "网络异常或接口无响应。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入需要加载数据的页面，且网络异常",
+     "expected": "Loading 动画持续显示，超过一定时间后出现超时提示或可取消"
+    }
+   ],
+   "expected_result": "Loading 动画有超时机制，避免用户无限等待。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "更新日志列表展示-正常展示所有版本记录",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的版本记录，如 3.3.0、3.2.0、3.1.0 等，验证列表完整展示。",
+   "preconditions": "用户已登录，进入更新日志页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开更新日志页面",
+     "expected": "页面加载成功，显示更新日志列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表内容",
+     "expected": "列表展示所有版本记录，包含版本号、更新时间、操作人员、审核人员、审核时间、更新内容字段，且数据完整"
+    }
+   ],
+   "expected_result": "列表展示所有版本记录，字段完整，无缺失或乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "更新日志列表-空数据展示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无任何更新日志数据（如新环境）",
+   "preconditions": "后台无更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开更新日志页面",
+     "expected": "页面显示空状态提示，如「暂无更新日志」，不出现空白页或报错"
+    }
+   ],
+   "expected_result": "页面显示空状态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "更新日志列表-版本号字段正确性",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用版本号 3.3.0，验证格式正确",
+   "preconditions": "已进入更新日志页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看版本号字段",
+     "expected": "版本号显示为「3.3.0」，格式为 x.y.z，无多余字符"
+    }
+   ],
+   "expected_result": "版本号格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "更新日志列表-更新时间格式校验",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用边界日期如 2024-08-14 和 2024-09-03，验证格式",
+   "preconditions": "已进入更新日志页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看更新时间字段",
+     "expected": "时间格式为 YYYY-MM-DD，如 2024-08-14，无时分秒"
+    }
+   ],
+   "expected_result": "时间格式正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "更新日志列表-点击查看详情",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击版本 3.3.0 的记录，查看详情",
+   "preconditions": "已进入更新日志页面，存在版本 3.3.0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击版本 3.3.0 的记录",
+     "expected": "弹出详情或展开显示该版本的完整更新内容"
+    },
+    {
+     "step": 2,
+     "desc": "查看更新内容",
+     "expected": "更新内容完整展示，无截断或乱码"
+    }
+   ],
+   "expected_result": "详情展示正确，更新内容完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "更新日志-点击无响应区域",
+   "priority": "P2",
+   "domain": "通用",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击列表空白区域或非链接区域",
+   "preconditions": "已进入更新日志页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击列表空白区域",
+     "expected": "无任何反应，不跳转、不报错"
+    }
+   ],
+   "expected_result": "无异常反应",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "非强制更新弹窗-展示新版本信息",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟检测到新版本 3.3.0，更新内容为「-更新内容xxxxxxxxxxxxx」",
+   "preconditions": "当前版本低于 3.3.0，且为非强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或进入首页",
+     "expected": "弹出更新提示弹窗，显示新版本号 3.3.0 和更新内容"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗内容",
+     "expected": "弹窗包含「发现新版本」标题、版本号、更新内容列表、按钮「稍后再说」和「立即更新」"
+    }
+   ],
+   "expected_result": "弹窗展示正确，按钮齐全",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "非强制更新弹窗-点击稍后再说",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「稍后再说」按钮",
+   "preconditions": "已弹出非强制更新弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「稍后再说」按钮",
+     "expected": "弹窗关闭，用户可继续使用应用，不跳转更新"
+    }
+   ],
+   "expected_result": "弹窗关闭，应用正常使用",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "非强制更新弹窗-点击立即更新",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「立即更新」按钮",
+   "preconditions": "已弹出非强制更新弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「立即更新」按钮",
+     "expected": "跳转至应用商店或下载页面，开始更新流程"
+    }
+   ],
+   "expected_result": "跳转更新页面，开始下载更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "非强制更新弹窗-关闭按钮",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击弹窗右上角关闭按钮（X）",
+   "preconditions": "已弹出非强制更新弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮",
+     "expected": "弹窗关闭，行为与「稍后再说」一致，不触发更新"
+    }
+   ],
+   "expected_result": "弹窗关闭，无更新",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "强制更新弹窗-展示新版本信息",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟检测到强制更新版本 3.3.0",
+   "preconditions": "当前版本低于 3.3.0，且为强制更新",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或进入首页",
+     "expected": "弹出强制更新弹窗，显示新版本号 3.3.0 和更新内容"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗内容",
+     "expected": "弹窗包含「发现新版本」标题、版本号、更新内容列表、按钮「立即更新」，无「稍后再说」和关闭按钮"
+    }
+   ],
+   "expected_result": "弹窗展示正确，仅提供立即更新按钮",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "强制更新弹窗-无法关闭",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "尝试点击关闭按钮或返回键",
+   "preconditions": "已弹出强制更新弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮或返回键",
+     "expected": "弹窗无法关闭，仍停留在弹窗，必须点击「立即更新」"
+    }
+   ],
+   "expected_result": "弹窗不可关闭，强制用户更新",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "强制更新弹窗-点击立即更新",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「立即更新」按钮",
+   "preconditions": "已弹出强制更新弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「立即更新」按钮",
+     "expected": "跳转至应用商店或下载页面，开始更新流程"
+    }
+   ],
+   "expected_result": "跳转更新页面，开始下载更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "版本更新-无新版本时不弹窗",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "当前版本为最新版本 3.3.0",
+   "preconditions": "当前版本为最新版本",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "启动应用或进入首页",
+     "expected": "不弹出任何更新提示弹窗，正常进入应用"
+    }
+   ],
+   "expected_result": "无更新弹窗，应用正常使用",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "版本更新-更新内容展示完整",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "版本更新",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "更新内容包含多行文本，如 6 行「-更新内容xxxxxxxxxxxxx」",
+   "preconditions": "已弹出更新弹窗（强制或非强制）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看更新内容区域",
+     "expected": "所有更新内容完整展示，无截断，可滚动查看"
+    }
+   ],
+   "expected_result": "更新内容完整展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "广告位系统列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，系统返回已配置的广告位列表，包含开屏广告、横幅广告等。",
+   "preconditions": "用户已登录，广告位系统页面可访问，后台已配置至少一个广告位。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位系统标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看广告位列表",
+     "expected": "列表展示所有已配置的广告位，每条记录包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段"
+    }
+   ],
+   "expected_result": "广告位列表完整展示，字段信息正确，无缺失或错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "广告位系统列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何广告位，进入广告位系统页面。",
+   "preconditions": "用户已登录，后台无任何广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位系统标题"
+    },
+    {
+     "step": 2,
+     "desc": "查看广告位列表",
+     "expected": "列表区域显示空态提示，如「暂无广告位数据」，且无报错"
+    }
+   ],
+   "expected_result": "页面无异常，空态提示清晰，不出现空白或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "广告位类型字段展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "广告位类型包括开屏广告、横幅广告、居中弹窗广告、侧边栏上方广告、侧边栏下方广告、页底悬浮广告、贴片广告、中场广告、品牌商广告。",
+   "preconditions": "后台已配置包含上述类型的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「类型」列",
+     "expected": "类型列显示正确的类型名称，如「开屏广告」「横幅广告」等，与后台配置一致"
+    }
+   ],
+   "expected_result": "所有广告位类型均正确展示，无错别字或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "广告位类型字段为空时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台某广告位未配置类型，类型字段为空。",
+   "preconditions": "后台存在类型为空的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该广告位的类型列",
+     "expected": "类型列显示占位符或「-」，不显示空白，且无报错"
+    }
+   ],
+   "expected_result": "空类型字段有合理展示，不导致页面布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "展示平台字段展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "展示平台包括APP、H5、PC，分别对应客户端、移动端web、PC端。",
+   "preconditions": "后台已配置包含APP、H5、PC平台的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「展示平台」列",
+     "expected": "展示平台列显示正确的平台名称，如「APP」「H5」「PC」，与后台配置一致"
+    }
+   ],
+   "expected_result": "所有展示平台均正确展示，无遗漏或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "展示平台字段为空时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台某广告位未配置展示平台，展示平台字段为空。",
+   "preconditions": "后台存在展示平台为空的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该广告位的展示平台列",
+     "expected": "展示平台列显示占位符或「-」，不显示空白，且无报错"
+    }
+   ],
+   "expected_result": "空展示平台字段有合理展示，不导致页面布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "展示页面字段展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "展示页面包括首页、赛事详情、文章详情等。",
+   "preconditions": "后台已配置包含首页、赛事详情、文章详情等页面的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「展示页面」列",
+     "expected": "展示页面列显示正确的页面名称，如「首页」「赛事详情」，与后台配置一致"
+    }
+   ],
+   "expected_result": "所有展示页面均正确展示，无遗漏或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "展示页面字段为空时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台某广告位未配置展示页面，展示页面字段为空。",
+   "preconditions": "后台存在展示页面为空的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该广告位的展示页面列",
+     "expected": "展示页面列显示占位符或「-」，不显示空白，且无报错"
+    }
+   ],
+   "expected_result": "空展示页面字段有合理展示，不导致页面布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "支持资源格式字段展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "支持资源格式包括PNG、WEBP、MP4、文本等。",
+   "preconditions": "后台已配置包含PNG、WEBP、MP4、文本等格式的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「支持资源格式」列",
+     "expected": "支持资源格式列显示正确的格式名称，如「PNG」「WEBP」，与后台配置一致"
+    }
+   ],
+   "expected_result": "所有支持资源格式均正确展示，无遗漏或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "支持资源格式字段为空时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台某广告位未配置支持资源格式，支持资源格式字段为空。",
+   "preconditions": "后台存在支持资源格式为空的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该广告位的支持资源格式列",
+     "expected": "支持资源格式列显示占位符或「-」，不显示空白，且无报错"
+    }
+   ],
+   "expected_result": "空支持资源格式字段有合理展示，不导致页面布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "移动端示意图正常展示",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台为广告位配置了移动端示意图，图片格式为PNG。",
+   "preconditions": "后台已配置移动端示意图，图片URL有效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「移动端示意图」列",
+     "expected": "示意图正常加载显示，图片清晰，无裂图"
+    }
+   ],
+   "expected_result": "移动端示意图正常展示，无加载失败或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "移动端示意图缺失时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台某广告位未配置移动端示意图，或图片URL无效。",
+   "preconditions": "后台存在移动端示意图缺失或URL无效的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该广告位的移动端示意图列",
+     "expected": "显示占位图或「-」，不显示裂图，且无报错"
+    }
+   ],
+   "expected_result": "缺失示意图有合理占位，不导致页面布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "PC端示意图正常展示",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台为广告位配置了PC端示意图，图片格式为PNG。",
+   "preconditions": "后台已配置PC端示意图，图片URL有效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「PC端示意图」列",
+     "expected": "示意图正常加载显示，图片清晰，无裂图"
+    }
+   ],
+   "expected_result": "PC端示意图正常展示，无加载失败或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "PC端示意图缺失时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台某广告位未配置PC端示意图，或图片URL无效。",
+   "preconditions": "后台存在PC端示意图缺失或URL无效的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该广告位的PC端示意图列",
+     "expected": "显示占位图或「-」，不显示裂图，且无报错"
+    }
+   ],
+   "expected_result": "缺失示意图有合理占位，不导致页面布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "开屏广告信息展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "开屏广告的展示平台为APP，展示页面为开屏，支持资源格式为PNG和WEBP。",
+   "preconditions": "后台已配置开屏广告，包含APP平台、开屏页面、PNG和WEBP格式。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "找到开屏广告记录",
+     "expected": "记录存在，类型为「开屏广告」"
+    },
+    {
+     "step": 3,
+     "desc": "查看该记录的展示平台、展示页面、支持资源格式",
+     "expected": "展示平台为「APP」，展示页面为「开屏」，支持资源格式包含「PNG」「WEBP」"
+    }
+   ],
+   "expected_result": "开屏广告信息完整且正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "开屏广告信息缺失时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台开屏广告未配置展示平台或支持资源格式，字段为空。",
+   "preconditions": "后台存在开屏广告但展示平台或支持资源格式为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "找到开屏广告记录",
+     "expected": "记录存在，类型为「开屏广告」"
+    },
+    {
+     "step": 3,
+     "desc": "查看缺失字段",
+     "expected": "缺失字段显示占位符或「-」，不显示空白，且无报错"
+    }
+   ],
+   "expected_result": "缺失字段有合理展示，不导致页面布局错乱。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "APP平台广告位展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "APP平台广告位包括开屏广告、横幅广告等，展示页面为首页、赛事详情等。",
+   "preconditions": "后台已配置APP平台的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "筛选或查找展示平台为「APP」的广告位",
+     "expected": "列表展示所有APP平台的广告位，展示平台列显示「APP」"
+    }
+   ],
+   "expected_result": "APP平台广告位正确展示，无遗漏或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "APP平台广告位为空时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无APP平台的广告位数据。",
+   "preconditions": "后台无APP平台广告位。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表不显示APP平台广告位，但其他平台广告位正常显示，无报错"
+    }
+   ],
+   "expected_result": "无APP平台广告位时列表正常，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "开屏页面广告位展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "开屏页面广告位包括开屏广告，展示平台为APP，支持资源格式为PNG、WEBP。",
+   "preconditions": "后台已配置展示页面为「开屏」的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找展示页面为「开屏」的广告位",
+     "expected": "列表展示所有开屏页面广告位，展示页面列显示「开屏」"
+    }
+   ],
+   "expected_result": "开屏页面广告位正确展示，无遗漏或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "开屏页面广告位为空时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无展示页面为「开屏」的广告位数据。",
+   "preconditions": "后台无开屏页面广告位。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表不显示开屏页面广告位，但其他页面广告位正常显示，无报错"
+    }
+   ],
+   "expected_result": "无开屏页面广告位时列表正常，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "PNG格式广告位展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "支持PNG格式的广告位包括开屏广告、横幅广告等。",
+   "preconditions": "后台已配置支持PNG格式的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找支持资源格式包含「PNG」的广告位",
+     "expected": "列表展示所有支持PNG格式的广告位，支持资源格式列包含「PNG」"
+    }
+   ],
+   "expected_result": "PNG格式广告位正确展示，无遗漏或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "PNG格式广告位为空时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无支持PNG格式的广告位数据。",
+   "preconditions": "后台无PNG格式广告位。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表不显示PNG格式广告位，但其他格式广告位正常显示，无报错"
+    }
+   ],
+   "expected_result": "无PNG格式广告位时列表正常，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "WEBP格式广告位展示正确",
+   "priority": "P0",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "支持WEBP格式的广告位包括开屏广告、横幅广告等。",
+   "preconditions": "后台已配置支持WEBP格式的广告位数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找支持资源格式包含「WEBP」的广告位",
+     "expected": "列表展示所有支持WEBP格式的广告位，支持资源格式列包含「WEBP」"
+    }
+   ],
+   "expected_result": "WEBP格式广告位正确展示，无遗漏或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "WEBP格式广告位为空时处理",
+   "priority": "P1",
+   "domain": "用户端/通用",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无支持WEBP格式的广告位数据。",
+   "preconditions": "后台无WEBP格式广告位。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表不显示WEBP格式广告位，但其他格式广告位正常显示，无报错"
+    }
+   ],
+   "expected_result": "无WEBP格式广告位时列表正常，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "横幅广告列表展示-正面-默认展示所有横幅广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有横幅广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看横幅广告行",
+     "expected": "横幅广告行存在，类型为「横幅广告」，展示平台包含APP/H5/PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "横幅广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "横幅广告列表展示-负面-横幅广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无横幅广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台横幅广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，横幅广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "H5广告列表展示-正面-默认展示所有H5广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有H5广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看H5广告行",
+     "expected": "H5广告行存在，类型为「H5」，展示平台包含APP/H5/PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "H5广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "H5广告列表展示-负面-H5广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无H5广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台H5广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，H5广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "PC广告列表展示-正面-默认展示所有PC广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有PC广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看PC广告行",
+     "expected": "PC广告行存在，类型为「PC」，展示平台包含PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "PC广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "PC广告列表展示-负面-PC广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无PC广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台PC广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，PC广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "赛事详情广告列表展示-正面-默认展示所有赛事详情广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有赛事详情广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事详情广告行",
+     "expected": "赛事详情广告行存在，类型为「赛事详情」，展示平台包含APP/H5/PC，展示页面包含赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "赛事详情广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "赛事详情广告列表展示-负面-赛事详情广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无赛事详情广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台赛事详情广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，赛事详情广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "居中弹窗广告列表展示-正面-默认展示所有居中弹窗广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有居中弹窗广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看居中弹窗广告行",
+     "expected": "居中弹窗广告行存在，类型为「居中弹窗广告」，展示平台包含APP/H5/PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "居中弹窗广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "居中弹窗广告列表展示-负面-居中弹窗广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无居中弹窗广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台居中弹窗广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，居中弹窗广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "侧边栏上方广告列表展示-正面-默认展示所有侧边栏上方广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有侧边栏上方广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看侧边栏上方广告行",
+     "expected": "侧边栏上方广告行存在，类型为「侧边栏上方广告」，展示平台包含PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "侧边栏上方广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "侧边栏上方广告列表展示-负面-侧边栏上方广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无侧边栏上方广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台侧边栏上方广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，侧边栏上方广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "侧边栏下方广告列表展示-正面-默认展示所有侧边栏下方广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有侧边栏下方广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看侧边栏下方广告行",
+     "expected": "侧边栏下方广告行存在，类型为「侧边栏下方广告」，展示平台包含PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "侧边栏下方广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "侧边栏下方广告列表展示-负面-侧边栏下方广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无侧边栏下方广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台侧边栏下方广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，侧边栏下方广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "页底悬浮广告列表展示-正面-默认展示所有页底悬浮广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有页底悬浮广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看页底悬浮广告行",
+     "expected": "页底悬浮广告行存在，类型为「页底悬浮广告」，展示平台包含APP/H5/PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "页底悬浮广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "页底悬浮广告列表展示-负面-页底悬浮广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无页底悬浮广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台页底悬浮广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，页底悬浮广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "贴片广告列表展示-正面-默认展示所有贴片广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有贴片广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看贴片广告行",
+     "expected": "贴片广告行存在，类型为「贴片广告」，展示平台包含APP/H5/PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "贴片广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "贴片广告列表展示-负面-贴片广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无贴片广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台贴片广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，贴片广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "MP4广告列表展示-正面-默认展示所有MP4广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有MP4广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看MP4广告行",
+     "expected": "MP4广告行存在，类型为「MP4」，展示平台包含APP/H5/PC，展示页面包含首页/赛事详情，支持资源格式为MP4，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "MP4广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "MP4广告列表展示-负面-MP4广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无MP4广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台MP4广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，MP4广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "中场广告列表展示-正面-默认展示所有中场广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有中场广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看中场广告行",
+     "expected": "中场广告行存在，类型为「中场广告」，展示平台包含APP/H5/PC，展示页面包含首页/赛事详情，支持资源格式为MP4，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "中场广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "中场广告列表展示-负面-中场广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无中场广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台中场广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，中场广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "品牌商广告列表展示-正面-默认展示所有品牌商广告位",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入广告位系统页面，默认展示所有品牌商广告位，包含类型、展示平台、展示页面、支持资源格式、移动端示意图、PC端示意图等字段。",
+   "preconditions": "用户已登录，且广告位系统页面可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，显示广告位列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看品牌商广告行",
+     "expected": "品牌商广告行存在，类型为「品牌商广告」，展示平台包含APP/H5/PC，展示页面包含首页/赛事详情，支持资源格式为PNG/WEBP，移动端示意图和PC端示意图有对应图片"
+    }
+   ],
+   "expected_result": "品牌商广告位信息完整展示，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "品牌商广告列表展示-负面-品牌商广告位数据为空时显示空态",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台无品牌商广告配置数据，页面应显示空态提示。",
+   "preconditions": "后台品牌商广告数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面正常加载，品牌商广告行显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "文章详情页展示PNG格式广告",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "配置文章详情页广告位，资源格式为PNG，图片尺寸符合规范（如750x300），展示平台为APP。",
+   "preconditions": "运营后台已配置文章详情页广告位，资源为PNG图片，状态为启用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP，进入任意一篇文章详情页",
+     "expected": "页面正常加载，广告位区域显示PNG广告图片，无变形、无遮挡正文内容。"
+    }
+   ],
+   "expected_result": "文章详情页广告位正常展示PNG广告，图片清晰，可点击跳转至广告链接。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "文章详情页广告位无内容时隐藏",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台未配置文章详情页广告位，或广告位状态为停用。",
+   "preconditions": "文章详情页广告位未配置或已停用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP，进入任意一篇文章详情页",
+     "expected": "页面正常加载，广告位区域不显示任何广告内容，页面布局无空白占位，正文完整展示。"
+    }
+   ],
+   "expected_result": "广告位隐藏，不影响文章阅读体验。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "文章详情页广告位加载失败显示占位图",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或图片资源损坏，广告图片无法加载。",
+   "preconditions": "文章详情页广告位已配置，但网络不稳定或图片资源不可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP，进入文章详情页，同时断网或使图片资源不可达",
+     "expected": "广告位区域显示默认占位图或加载失败提示，不出现空白或破图，页面其他内容正常。"
+    }
+   ],
+   "expected_result": "广告位加载失败时优雅降级，不影响页面整体功能。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "视频左下浮窗广告展示并可关闭",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "配置视频左下浮窗广告，资源为PNG图片，展示平台为APP。",
+   "preconditions": "视频播放页已配置左下浮窗广告，资源有效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP，进入任意视频播放页",
+     "expected": "视频左下角显示浮窗广告，不遮挡视频主要内容，广告上有关闭按钮。"
+    },
+    {
+     "step": 2,
+     "desc": "点击广告的关闭按钮",
+     "expected": "浮窗广告关闭，视频继续播放，页面无残留。"
+    }
+   ],
+   "expected_result": "浮窗广告正常展示且可关闭，关闭后不影响视频播放。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "视频左下浮窗广告遮挡视频内容",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "配置左下浮窗广告尺寸过大，覆盖视频关键区域（如字幕、比分）。",
+   "preconditions": "视频播放页已配置左下浮窗广告，但广告尺寸设置过大。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP，进入视频播放页",
+     "expected": "浮窗广告遮挡视频字幕或关键信息，影响观看。"
+    }
+   ],
+   "expected_result": "广告不应遮挡视频关键内容，若遮挡则视为缺陷。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-180"
+  },
+  {
+   "title": "视频右下浮窗广告展示并可点击跳转",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "配置视频右下浮窗广告，资源为WEBP图片，链接指向活动页。",
+   "preconditions": "视频播放页已配置右下浮窗广告，资源有效且链接正确。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP，进入视频播放页",
+     "expected": "视频右下角显示浮窗广告，广告可点击。"
+    },
+    {
+     "step": 2,
+     "desc": "点击广告",
+     "expected": "跳转至广告链接对应的活动页，跳转正确。"
+    }
+   ],
+   "expected_result": "浮窗广告正常展示且点击跳转正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-181"
+  },
+  {
+   "title": "视频右下浮窗广告与左下浮窗广告同时展示",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "组合覆盖",
+   "positive_negative": "boundary",
+   "test_data_note": "同时配置左下和右下浮窗广告，资源均为PNG。",
+   "preconditions": "视频播放页同时配置了左下和右下浮窗广告。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开APP，进入视频播放页",
+     "expected": "左下和右下浮窗广告同时显示，两者不重叠，均不遮挡视频关键内容。"
+    }
+   ],
+   "expected_result": "多个浮窗广告可共存，布局合理。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-182"
+  },
+  {
+   "title": "视频文本浮窗广告展示文本内容",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "配置视频文本浮窗广告，文本内容为“限时优惠，点击领取”，展示平台为H5。",
+   "preconditions": "视频播放页已配置文本浮窗广告，文本内容有效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开H5视频播放页",
+     "expected": "视频浮窗位置显示文本广告，文本清晰可读，样式与页面风格一致。"
+    }
+   ],
+   "expected_result": "文本浮窗广告正常展示，无乱码、无截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "web"
+   ],
+   "id": "TC-183"
+  },
+  {
+   "title": "视频文本浮窗广告内容超长截断",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "配置文本广告内容超过50个字符（如“这是一段超长的广告文案，用于测试文本广告在浮窗中的显示效果，确保不出现溢出”）。",
+   "preconditions": "视频播放页已配置文本浮窗广告，文本内容超长。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开H5视频播放页",
+     "expected": "文本广告内容被截断或省略号显示，不溢出浮窗边界，不影响视频观看。"
+    }
+   ],
+   "expected_result": "超长文本被合理截断或省略，浮窗布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "web"
+   ],
+   "id": "TC-184"
+  },
+  {
+   "title": "文本广告在资讯页展示",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "配置文本广告，内容为“了解更多赛事资讯”，展示平台为PC。",
+   "preconditions": "资讯列表页已配置文本广告位，文本内容有效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开PC端资讯列表页",
+     "expected": "页面指定位置显示文本广告，文字清晰，可点击跳转。"
+    }
+   ],
+   "expected_result": "文本广告正常展示，点击跳转正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-185"
+  },
+  {
+   "title": "文本广告内容为空时不展示",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "运营后台配置文本广告时未填写内容，或内容为空白字符串。",
+   "preconditions": "文本广告位已配置但内容为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开PC端资讯列表页",
+     "expected": "广告位不显示任何内容，页面布局无异常。"
+    }
+   ],
+   "expected_result": "空文本广告不展示，避免出现空白区域。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-186"
+  },
+  {
+   "title": "广告位类型说明页面展示完整信息",
+   "priority": "P0",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "打开广告位系统页面，查看广告位类型说明区域。",
+   "preconditions": "广告位系统页面可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "页面展示广告位类型说明，包含所有广告位类型（开屏、横幅、居中弹窗、侧边栏上方、侧边栏下方、页底悬浮、贴片、中场、品牌商、文章详情、视频浮窗等），每个类型展示平台、展示页面、支持资源格式。"
+    }
+   ],
+   "expected_result": "广告位类型说明完整、准确，与配置一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc",
+    "web"
+   ],
+   "id": "TC-187"
+  },
+  {
+   "title": "广告位类型说明中类型缺失",
+   "priority": "P1",
+   "domain": "用户端/通用/广告位系统",
+   "module": "广告位系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟运营后台未配置某一广告位类型（如“贴片广告”），或配置数据异常。",
+   "preconditions": "广告位系统页面可访问，但部分类型未配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开广告位系统页面",
+     "expected": "广告位类型说明中缺少未配置的类型，或显示“暂无数据”提示，页面不报错。"
+    }
+   ],
+   "expected_result": "缺失类型有合理提示，不影响其他类型展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web"
+   ],
+   "id": "TC-188"
+  },
+  {
+   "title": "银钻系统页面正常展示所有区块",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，进入银钻系统页面",
+   "preconditions": "用户已登录，且有银钻系统入口权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "检查页面各区块",
+     "expected": "银钻功能说明、银钻获取方式、功能点、说明、新用户任务、每日任务、邀请好友等区块均正确展示"
+    }
+   ],
+   "expected_result": "页面完整展示所有功能区块，内容无缺失、无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-189"
+  },
+  {
+   "title": "银钻系统页面在未登录时访问被拦截",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户，尝试访问银钻系统页面",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "未登录状态下访问银钻系统页面",
+     "expected": "跳转至登录页或提示需要登录"
+    }
+   ],
+   "expected_result": "未登录用户无法访问银钻系统，被引导至登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-190"
+  },
+  {
+   "title": "银钻功能说明内容完整展示",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，查看银钻功能说明",
+   "preconditions": "已登录，进入银钻系统页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻功能说明区块",
+     "expected": "展示银钻的用途、价值等说明文字，内容完整、无截断"
+    }
+   ],
+   "expected_result": "银钻功能说明内容完整展示，无缺失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-191"
+  },
+  {
+   "title": "银钻功能说明为空时展示空态",
+   "priority": "P2",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置银钻功能说明为空",
+   "preconditions": "后台将银钻功能说明内容置空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻功能说明区块",
+     "expected": "显示空态提示，如“暂无说明”"
+    }
+   ],
+   "expected_result": "银钻功能说明为空时，页面显示空态提示，不出现空白或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-192"
+  },
+  {
+   "title": "银钻获取方式列表完整展示",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，查看银钻获取方式",
+   "preconditions": "已登录，进入银钻系统页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻获取方式区块",
+     "expected": "展示新用户任务、每日任务、邀请好友、活动获得等获取方式"
+    }
+   ],
+   "expected_result": "银钻获取方式列表完整展示，包含所有预期方式",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-193"
+  },
+  {
+   "title": "银钻获取方式列表缺少某项时展示异常",
+   "priority": "P2",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置银钻获取方式缺少“活动获得”",
+   "preconditions": "后台配置银钻获取方式列表缺少“活动获得”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻获取方式区块",
+     "expected": "列表缺少“活动获得”，但页面无报错"
+    }
+   ],
+   "expected_result": "银钻获取方式列表缺少某项时，页面正常展示其余项，但缺少项不显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-194"
+  },
+  {
+   "title": "功能点与说明正确展示",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，查看功能点与说明",
+   "preconditions": "已登录，进入银钻系统页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看功能点与说明区块",
+     "expected": "每个功能点对应有说明文字，且内容正确"
+    }
+   ],
+   "expected_result": "功能点与说明一一对应，内容完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-195"
+  },
+  {
+   "title": "功能点说明缺失时展示占位提示",
+   "priority": "P2",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置某个功能点的说明为空",
+   "preconditions": "后台将某个功能点的说明置空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看功能点与说明区块",
+     "expected": "该功能点显示“暂无说明”或类似提示"
+    }
+   ],
+   "expected_result": "功能点说明缺失时，页面显示占位提示，不出现空白",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-196"
+  },
+  {
+   "title": "新用户任务列表展示及奖励说明",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，查看新用户任务",
+   "preconditions": "已登录，进入银钻系统页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看新用户任务区块",
+     "expected": "展示新用户任务列表及对应奖励说明"
+    }
+   ],
+   "expected_result": "新用户任务列表完整展示，包含任务内容和奖励数值说明",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-197"
+  },
+  {
+   "title": "新用户任务未完成时状态展示",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "状态机",
+   "positive_negative": "negative",
+   "test_data_note": "新用户未完成任何新用户任务",
+   "preconditions": "新注册用户，未完成任何新用户任务",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看新用户任务区块",
+     "expected": "任务状态显示为“未完成”，且不可领取奖励"
+    }
+   ],
+   "expected_result": "新用户任务未完成时，状态正确展示，不可领取奖励",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-198"
+  },
+  {
+   "title": "每日任务列表展示及奖励说明",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，查看每日任务",
+   "preconditions": "已登录，进入银钻系统页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看每日任务区块",
+     "expected": "展示每日任务列表及对应奖励说明"
+    }
+   ],
+   "expected_result": "每日任务列表完整展示，包含任务内容和奖励数值说明",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-199"
+  },
+  {
+   "title": "每日任务完成状态与奖励领取",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "状态机",
+   "positive_negative": "positive",
+   "test_data_note": "用户已完成今日每日任务，如“首次登录”",
+   "preconditions": "用户已完成今日每日任务中的“首次登录”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看每日任务区块",
+     "expected": "已完成的任务显示“已完成”状态，且有领取奖励按钮"
+    },
+    {
+     "step": 3,
+     "desc": "点击领取奖励",
+     "expected": "银钻到账，任务状态变为“已领取”"
+    }
+   ],
+   "expected_result": "每日任务完成后可领取奖励，银钻正确到账，状态更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-200"
+  },
+  {
+   "title": "每日任务未完成时不可领取奖励",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未完成每日任务，如“浏览资讯”",
+   "preconditions": "用户未完成今日每日任务中的“浏览资讯”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看每日任务区块",
+     "expected": "未完成的任务显示“未完成”状态，领取按钮置灰或不可点击"
+    }
+   ],
+   "expected_result": "每日任务未完成时，无法领取奖励",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-201"
+  },
+  {
+   "title": "邀请好友功能展示及奖励说明",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，查看邀请好友区块",
+   "preconditions": "已登录，进入银钻系统页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看邀请好友区块",
+     "expected": "展示邀请好友的说明及奖励规则"
+    }
+   ],
+   "expected_result": "邀请好友区块正确展示，包含邀请方奖励说明",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-202"
+  },
+  {
+   "title": "邀请好友未成功注册时无奖励",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户邀请的好友未注册成功",
+   "preconditions": "用户已发起邀请，但好友未注册成功",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看邀请好友区块",
+     "expected": "无奖励记录，或显示“暂无奖励”"
+    }
+   ],
+   "expected_result": "邀请好友未成功注册时，邀请方无银钻奖励",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-203"
+  },
+  {
+   "title": "邀请好友成功注册后，邀请方获得银钻",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "邀请方账号A（已登录），被邀请人新注册账号B（手机号13800138000），邀请奖励规则配置为每成功邀请1人奖励100银钻。",
+   "preconditions": "邀请方A已登录，银钻余额为0；被邀请人B未注册过。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "邀请方A在银钻系统页面点击“邀请好友”按钮，生成邀请链接/邀请码。",
+     "expected": "系统生成邀请链接/邀请码，并展示分享入口。"
+    },
+    {
+     "step": 2,
+     "desc": "被邀请人B通过邀请链接注册成功（填写手机号13800138000并完成注册）。",
+     "expected": "B注册成功，进入首页。"
+    },
+    {
+     "step": 3,
+     "desc": "邀请方A刷新银钻系统页面或进入“银钻明细”。",
+     "expected": "银钻余额增加100，银钻明细新增一条“邀请好友奖励”记录，数值为100。"
+    }
+   ],
+   "expected_result": "邀请方A银钻余额增加100，银钻明细可查“邀请好友奖励”入账记录。",
+   "remark": "正面用例，验证邀请好友奖励发放。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-204"
+  },
+  {
+   "title": "被邀请人未成功注册，邀请方不获得银钻",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "邀请方账号A（已登录），被邀请人B使用已注册手机号13900139000尝试注册，注册失败。",
+   "preconditions": "邀请方A已登录，银钻余额为0；被邀请人B手机号13900139000已注册。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "邀请方A生成邀请链接。",
+     "expected": "生成成功。"
+    },
+    {
+     "step": 2,
+     "desc": "被邀请人B点击邀请链接，使用已注册手机号13900139000注册。",
+     "expected": "系统提示“该手机号已注册”，注册失败。"
+    },
+    {
+     "step": 3,
+     "desc": "邀请方A刷新银钻系统页面。",
+     "expected": "银钻余额仍为0，无新增明细。"
+    }
+   ],
+   "expected_result": "邀请方A银钻余额不变，无奖励记录。",
+   "remark": "负面用例，验证未成功注册不发放奖励。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-205"
+  },
+  {
+   "title": "活动获得银钻-参与限时活动获得奖励",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户A已登录，参与“每日签到”活动，活动规则为签到第1天奖励10银钻。",
+   "preconditions": "用户A已登录，银钻余额为0；存在进行中的限时活动“每日签到”。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A进入银钻系统页面，查看“活动获得”区域。",
+     "expected": "展示当前可参与的活动列表，包含“每日签到”。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A点击“每日签到”活动并完成签到。",
+     "expected": "系统提示签到成功，银钻余额增加10。"
+    },
+    {
+     "step": 3,
+     "desc": "用户A进入“银钻明细”查看记录。",
+     "expected": "银钻明细新增一条“活动奖励-每日签到”记录，数值为10。"
+    }
+   ],
+   "expected_result": "用户A银钻余额增加10，明细可查活动奖励记录。",
+   "remark": "正面用例，验证活动获得银钻。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-206"
+  },
+  {
+   "title": "活动获得银钻-活动未开始或已结束，无法获得奖励",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户A已登录，活动“限时任务”状态为未开始（开始时间在未来）。",
+   "preconditions": "用户A已登录；存在活动“限时任务”，状态为未开始。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A进入银钻系统页面，查看“活动获得”区域。",
+     "expected": "活动列表展示“限时任务”，但状态为“未开始”，不可参与。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A尝试点击“限时任务”活动。",
+     "expected": "系统提示“活动未开始”，无法参与，银钻余额不变。"
+    }
+   ],
+   "expected_result": "用户A无法参与未开始活动，银钻余额不变。",
+   "remark": "负面用例，验证活动状态限制。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-207"
+  },
+  {
+   "title": "每日任务说明-展示任务类型列表",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户A已登录，进入银钻系统页面，点击“每日任务说明”查看任务类型列表。",
+   "preconditions": "用户A已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A进入银钻系统页面。",
+     "expected": "页面展示“银钻获取方式”区域，包含“每日任务说明”入口。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A点击“每日任务说明”。",
+     "expected": "弹出或展开“每日任务说明”内容，展示任务类型列表，包括“登录”、“浏览资讯”、“点赞资讯”等。"
+    }
+   ],
+   "expected_result": "任务类型列表完整展示，包含登录、浏览资讯、点赞资讯等。",
+   "remark": "正面用例，验证任务类型列表展示。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-208"
+  },
+  {
+   "title": "每日任务说明-任务类型列表为空或加载失败",
+   "priority": "P2",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常，导致任务类型列表加载失败。",
+   "preconditions": "用户A已登录，网络断开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A进入银钻系统页面，点击“每日任务说明”。",
+     "expected": "页面显示加载失败提示，如“网络异常，请稍后重试”，不展示任务类型列表。"
+    }
+   ],
+   "expected_result": "系统给出加载失败提示，不展示任务列表。",
+   "remark": "负面用例，验证加载失败处理。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-209"
+  },
+  {
+   "title": "每日任务-首次登录（任意渠道）完成获得银钻",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户A在APP端首次登录（当日首次），任务奖励配置为10银钻。",
+   "preconditions": "用户A已注册，当日未登录过；银钻余额为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A在APP端登录。",
+     "expected": "登录成功，进入首页。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A进入银钻系统页面，查看“每日任务”进度。",
+     "expected": "“首次登录”任务显示已完成，银钻余额增加10。"
+    },
+    {
+     "step": 3,
+     "desc": "用户A查看银钻明细。",
+     "expected": "明细新增“每日任务-首次登录”记录，数值为10。"
+    }
+   ],
+   "expected_result": "用户A完成首次登录任务，获得10银钻。",
+   "remark": "正面用例，验证首次登录任务。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-210"
+  },
+  {
+   "title": "每日任务-非首次登录不重复获得银钻",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户A当日已在PC-web端登录过，再次在APP端登录。",
+   "preconditions": "用户A当日已在PC-web端登录过，银钻余额为10（已获得首次登录奖励）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A在APP端再次登录。",
+     "expected": "登录成功，但“首次登录”任务不重复完成。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A进入银钻系统页面，查看银钻余额。",
+     "expected": "银钻余额仍为10，无新增奖励。"
+    }
+   ],
+   "expected_result": "非首次登录不重复发放银钻。",
+   "remark": "负面用例，验证首次登录的判定。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-211"
+  },
+  {
+   "title": "每日任务-浏览指定数量资讯详情页获得银钻",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "任务要求浏览3篇不同的资讯详情页，每篇停留超过5秒，奖励20银钻。",
+   "preconditions": "用户A已登录，银钻余额为0；存在3篇不同的资讯文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A进入资讯列表，点击第一篇资讯进入详情页，停留超过5秒。",
+     "expected": "详情页正常展示，浏览计时开始。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A返回列表，依次点击第二、第三篇资讯，每篇停留超过5秒。",
+     "expected": "三篇资讯均被浏览。"
+    },
+    {
+     "step": 3,
+     "desc": "用户A进入银钻系统页面，查看“每日任务”进度。",
+     "expected": "“浏览资讯”任务显示已完成，银钻余额增加20。"
+    }
+   ],
+   "expected_result": "用户A完成浏览任务，获得20银钻。",
+   "remark": "正面用例，验证浏览资讯任务。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-212"
+  },
+  {
+   "title": "每日任务-浏览同一资讯多次仅计1次",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "任务要求浏览3篇资讯，用户A反复浏览同一篇资讯3次。",
+   "preconditions": "用户A已登录，银钻余额为0；存在1篇资讯文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A进入同一篇资讯详情页3次，每次停留超过5秒。",
+     "expected": "每次浏览均正常。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A进入银钻系统页面，查看“浏览资讯”任务进度。",
+     "expected": "任务进度显示为1/3，未完成，银钻余额不变。"
+    }
+   ],
+   "expected_result": "同一资讯多次浏览仅计1次，任务未完成。",
+   "remark": "负面用例，验证计数规则。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-213"
+  },
+  {
+   "title": "每日任务-点赞指定数量资讯详情页获得银钻",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "任务要求点赞3篇不同的资讯详情页，奖励20银钻。",
+   "preconditions": "用户A已登录，银钻余额为0；存在3篇不同的资讯文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A进入资讯列表，点击第一篇资讯详情页，点击“点赞”按钮。",
+     "expected": "点赞成功，按钮变为已点赞状态。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A依次进入第二、第三篇资讯详情页并点赞。",
+     "expected": "三篇资讯均点赞成功。"
+    },
+    {
+     "step": 3,
+     "desc": "用户A进入银钻系统页面，查看“每日任务”进度。",
+     "expected": "“点赞资讯”任务显示已完成，银钻余额增加20。"
+    }
+   ],
+   "expected_result": "用户A完成点赞任务，获得20银钻。",
+   "remark": "正面用例，验证点赞资讯任务。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-214"
+  },
+  {
+   "title": "每日任务-点赞同一资讯多次仅计1次",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "银钻系统",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "任务要求点赞3篇资讯，用户A对同一篇资讯点赞、取消、再点赞共3次。",
+   "preconditions": "用户A已登录，银钻余额为0；存在1篇资讯文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A进入同一篇资讯详情页，点赞。",
+     "expected": "点赞成功。"
+    },
+    {
+     "step": 2,
+     "desc": "用户A取消点赞，再次点赞。",
+     "expected": "取消成功，再次点赞成功。"
+    },
+    {
+     "step": 3,
+     "desc": "用户A进入银钻系统页面，查看“点赞资讯”任务进度。",
+     "expected": "任务进度显示为1/3，未完成，银钻余额不变。"
+    }
+   ],
+   "expected_result": "同一资讯多次点赞仅计1次，任务未完成。",
+   "remark": "负面用例，验证计数规则。",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-215"
+  },
+  {
+   "title": "点赞不同资讯详情页达到指定数量，任务完成并发放银钻",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-点赞资讯",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "假设指定数量为5篇资讯；用户已登录，银钻初始为0；准备5篇不同的资讯详情页。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面，查看每日任务-点赞资讯任务",
+     "expected": "显示任务内容：点赞指定数量的资讯详情页，当前进度0/5"
+    },
+    {
+     "step": 2,
+     "desc": "打开第1篇资讯详情页并点赞",
+     "expected": "点赞成功，任务进度变为1/5"
+    },
+    {
+     "step": 3,
+     "desc": "打开第2篇资讯详情页并点赞",
+     "expected": "点赞成功，任务进度变为2/5"
+    },
+    {
+     "step": 4,
+     "desc": "打开第3篇资讯详情页并点赞",
+     "expected": "点赞成功，任务进度变为3/5"
+    },
+    {
+     "step": 5,
+     "desc": "打开第4篇资讯详情页并点赞",
+     "expected": "点赞成功，任务进度变为4/5"
+    },
+    {
+     "step": 6,
+     "desc": "打开第5篇资讯详情页并点赞",
+     "expected": "点赞成功，任务进度变为5/5，任务完成，银钻增加相应数值（如10银钻）"
+    }
+   ],
+   "expected_result": "任务进度正确更新，完成后银钻到账，银钻明细可查。",
+   "remark": "正面用例，验证正常完成点赞任务",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-216"
+  },
+  {
+   "title": "多次点赞同一资讯详情页，仅计为1次",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-点赞资讯",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "指定数量为5篇；用户已登录；准备1篇资讯详情页。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开同一篇资讯详情页并点赞",
+     "expected": "点赞成功，任务进度变为1/5"
+    },
+    {
+     "step": 2,
+     "desc": "再次打开同一篇资讯详情页并点赞",
+     "expected": "点赞成功，但任务进度仍为1/5，不重复计数"
+    },
+    {
+     "step": 3,
+     "desc": "重复点赞该资讯多次（如再点赞3次）",
+     "expected": "任务进度始终为1/5，不增加"
+    }
+   ],
+   "expected_result": "同一资讯多次点赞仅计1次，任务进度不虚增。",
+   "remark": "边界用例，验证去重逻辑",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-217"
+  },
+  {
+   "title": "点赞数量未达到指定数量，任务不完成",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-点赞资讯",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "指定数量为5篇；用户已登录；只点赞4篇不同的资讯。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "依次点赞4篇不同的资讯详情页",
+     "expected": "任务进度变为4/5，任务未完成"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻余额",
+     "expected": "银钻未增加，任务奖励未发放"
+    }
+   ],
+   "expected_result": "任务进度未达指定数量，不发放银钻。",
+   "remark": "负面用例，验证未完成不奖励",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-218"
+  },
+  {
+   "title": "观看赛事直播视频流累计达指定时长，任务完成并发放银钻",
+   "priority": "P0",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-观看赛事",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "假设指定时长为10分钟；用户已登录，银钻初始为0；准备一场正在直播的赛事。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成，赛事直播中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入银钻系统页面，查看每日任务-观看赛事任务",
+     "expected": "显示任务内容：累计观看赛事的直播视频流/动画达指定时长，当前进度0/10分钟"
+    },
+    {
+     "step": 2,
+     "desc": "打开赛事直播页面，观看直播视频流",
+     "expected": "观看计时开始，任务进度随时间增加"
+    },
+    {
+     "step": 3,
+     "desc": "持续观看10分钟",
+     "expected": "任务进度达到10/10分钟，任务完成，银钻增加相应数值（如20银钻）"
+    }
+   ],
+   "expected_result": "观看时长累计正确，完成后银钻到账，银钻明细可查。",
+   "remark": "正面用例，验证正常完成观看任务",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-219"
+  },
+  {
+   "title": "观看赛事累计时长未达指定时长，任务不完成",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-观看赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "指定时长为10分钟；用户已登录；观看9分钟。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成，赛事直播中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事直播页面，观看9分钟",
+     "expected": "任务进度变为9/10分钟，任务未完成"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻余额",
+     "expected": "银钻未增加，任务奖励未发放"
+    }
+   ],
+   "expected_result": "观看时长未达指定时长，不发放银钻。",
+   "remark": "负面用例，验证未完成不奖励",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-220"
+  },
+  {
+   "title": "观看赛事动画累计时长达指定时长，任务完成",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-观看赛事",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "指定时长为10分钟；用户已登录；观看赛事动画（非直播视频流）。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成，赛事动画可观看。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事动画播放页面",
+     "expected": "动画播放，观看计时开始"
+    },
+    {
+     "step": 2,
+     "desc": "持续观看10分钟",
+     "expected": "任务进度达到10/10分钟，任务完成，银钻增加相应数值"
+    }
+   ],
+   "expected_result": "观看动画时长累计正确，任务完成并发放银钻。",
+   "remark": "正面用例，验证动画观看也计入任务",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-221"
+  },
+  {
+   "title": "观看赛事时切换页面或退出，观看时长暂停累计",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-观看赛事",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "指定时长为10分钟；用户已登录；观看5分钟后退出直播页面。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成，赛事直播中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事直播页面，观看5分钟",
+     "expected": "任务进度变为5/10分钟"
+    },
+    {
+     "step": 2,
+     "desc": "退出直播页面，返回首页",
+     "expected": "观看计时停止，任务进度保持5/10分钟"
+    },
+    {
+     "step": 3,
+     "desc": "重新进入直播页面，继续观看5分钟",
+     "expected": "任务进度从5/10分钟继续累计，达到10/10分钟，任务完成"
+    }
+   ],
+   "expected_result": "观看时长在退出时暂停，重新进入后继续累计，最终完成任务。",
+   "remark": "负面用例，验证中断后计时逻辑",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-222"
+  },
+  {
+   "title": "观看赛事时长达到指定时长边界值（恰好10分钟）",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-观看赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "指定时长为10分钟；用户已登录；观看恰好10分钟。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成，赛事直播中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事直播页面，观看10分钟整",
+     "expected": "任务进度达到10/10分钟，任务完成，银钻增加相应数值"
+    }
+   ],
+   "expected_result": "恰好达到指定时长，任务完成并发放银钻。",
+   "remark": "边界用例，验证临界值",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-223"
+  },
+  {
+   "title": "观看赛事时长超过指定时长（如11分钟）",
+   "priority": "P1",
+   "domain": "用户端/通用/银钻系统",
+   "module": "每日任务-观看赛事",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "指定时长为10分钟；用户已登录；观看11分钟。",
+   "preconditions": "用户已登录，银钻系统页面可访问，每日任务状态为未完成，赛事直播中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开赛事直播页面，观看11分钟",
+     "expected": "任务进度达到10/10分钟，任务完成，银钻增加相应数值；超过部分不计入额外奖励"
+    }
+   ],
+   "expected_result": "超过指定时长仍只按任务要求发放奖励，不重复发放。",
+   "remark": "边界用例，验证超额观看不重复奖励",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-224"
+  },
+  {
+   "title": "Game(移动)列表正常展示所有比赛",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后端返回3场比赛数据：比赛1（主队A vs 客队B，比分0-1，75分钟，半场0-0，联赛英超）、比赛2（主队C vs 客队D，比分2-2，60分钟，半场1-1，联赛西甲）、比赛3（主队E vs 客队F，比分0-0，30分钟，半场0-0，联赛德甲）",
+   "preconditions": "已进入 game_移动_ 页面，网络正常，后端返回上述3场比赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功，显示比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表内容",
+     "expected": "列表展示3场比赛，每场包含主队名称、客队名称、比分、比赛时间、半场比分、联赛名称"
+    }
+   ],
+   "expected_result": "列表完整展示3场比赛，字段与后端数据一致，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-225"
+  },
+  {
+   "title": "Game(移动)列表为空时展示空态",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回空列表（无比赛数据）",
+   "preconditions": "已进入 game_移动_ 页面，后端返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功，显示空态提示（如“暂无比赛”）"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现空白或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-226"
+  },
+  {
+   "title": "主队名称正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "主队名称为“曼城”，长度在正常范围内",
+   "preconditions": "已进入 game_移动_ 页面，存在主队名称为“曼城”的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看主队名称字段",
+     "expected": "主队名称显示为“曼城”，无截断或乱码"
+    }
+   ],
+   "expected_result": "主队名称完整显示，与后端数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-227"
+  },
+  {
+   "title": "主队名称为空时显示占位符",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "主队名称为空字符串（后端返回空值）",
+   "preconditions": "已进入 game_移动_ 页面，存在主队名称为空的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看主队名称字段",
+     "expected": "显示占位符（如“-”）或默认文本，不显示空白或报错"
+    }
+   ],
+   "expected_result": "主队名称位置显示占位符，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-228"
+  },
+  {
+   "title": "主队icon正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "主队icon为有效的图片URL（如https://example.com/teamA.png）",
+   "preconditions": "已进入 game_移动_ 页面，主队icon URL有效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看主队icon",
+     "expected": "icon正常显示，无裂图"
+    }
+   ],
+   "expected_result": "主队icon正常加载显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-229"
+  },
+  {
+   "title": "主队icon加载失败时显示默认占位图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "主队icon URL无效（如https://example.com/notexist.png）",
+   "preconditions": "已进入 game_移动_ 页面，主队icon URL无效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看主队icon",
+     "expected": "显示默认占位图，不显示裂图或空白"
+    }
+   ],
+   "expected_result": "主队icon位置显示默认占位图，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-230"
+  },
+  {
+   "title": "客队名称正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "客队名称为“利物浦”，长度在正常范围内",
+   "preconditions": "已进入 game_移动_ 页面，存在客队名称为“利物浦”的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看客队名称字段",
+     "expected": "客队名称显示为“利物浦”，无截断或乱码"
+    }
+   ],
+   "expected_result": "客队名称完整显示，与后端数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-231"
+  },
+  {
+   "title": "客队名称为空时显示占位符",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "客队名称为空字符串（后端返回空值）",
+   "preconditions": "已进入 game_移动_ 页面，存在客队名称为空的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看客队名称字段",
+     "expected": "显示占位符（如“-”）或默认文本，不显示空白或报错"
+    }
+   ],
+   "expected_result": "客队名称位置显示占位符，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-232"
+  },
+  {
+   "title": "客队icon正常显示",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "客队icon为有效的图片URL（如https://example.com/teamB.png）",
+   "preconditions": "已进入 game_移动_ 页面，客队icon URL有效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看客队icon",
+     "expected": "icon正常显示，无裂图"
+    }
+   ],
+   "expected_result": "客队icon正常加载显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-233"
+  },
+  {
+   "title": "客队icon加载失败时显示默认占位图",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "客队icon URL无效（如https://example.com/notexist.png）",
+   "preconditions": "已进入 game_移动_ 页面，客队icon URL无效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看客队icon",
+     "expected": "显示默认占位图，不显示裂图或空白"
+    }
+   ],
+   "expected_result": "客队icon位置显示默认占位图，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-234"
+  },
+  {
+   "title": "比分正常显示（如0-1）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行中，比分为0-1（主队0，客队1）",
+   "preconditions": "已进入 game_移动_ 页面，存在比分为0-1的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看比分字段",
+     "expected": "比分显示为“0 - 1”，格式正确"
+    }
+   ],
+   "expected_result": "比分正确显示，与后端数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-235"
+  },
+  {
+   "title": "比分数据异常时显示占位符",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比分为负数（如-1）或非数字（如“abc”）",
+   "preconditions": "已进入 game_移动_ 页面，存在比分异常的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看比分字段",
+     "expected": "显示占位符（如“-”）或默认文本，不显示异常值或报错"
+    }
+   ],
+   "expected_result": "比分位置显示占位符，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-236"
+  },
+  {
+   "title": "比赛时间正常显示（如75′）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛进行到75分钟，显示“75′”",
+   "preconditions": "已进入 game_移动_ 页面，存在比赛时间为75分钟的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛时间字段",
+     "expected": "显示“75′”，格式正确"
+    }
+   ],
+   "expected_result": "比赛时间正确显示，与后端数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-237"
+  },
+  {
+   "title": "比赛时间异常时显示占位符",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛时间为负数（如-5）或超过正常范围（如200）",
+   "preconditions": "已进入 game_移动_ 页面，存在比赛时间异常的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛时间字段",
+     "expected": "显示占位符（如“-”）或默认文本，不显示异常值或报错"
+    }
+   ],
+   "expected_result": "比赛时间位置显示占位符，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-238"
+  },
+  {
+   "title": "半场比分正常显示（如半场0-0）",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "半场比分为0-0，显示“半场 0-0”",
+   "preconditions": "已进入 game_移动_ 页面，存在半场比分为0-0的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看半场比分字段",
+     "expected": "显示“半场 0-0”，格式正确"
+    }
+   ],
+   "expected_result": "半场比分正确显示，与后端数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-239"
+  },
+  {
+   "title": "半场比分数据缺失时显示占位符",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "半场比分为空（后端未返回该字段）",
+   "preconditions": "已进入 game_移动_ 页面，存在半场比分为空的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看半场比分字段",
+     "expected": "显示占位符（如“-”）或隐藏该字段，不显示空白或报错"
+    }
+   ],
+   "expected_result": "半场比分位置显示占位符或隐藏，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-240"
+  },
+  {
+   "title": "联赛名称正常显示并可点击跳转",
+   "priority": "P0",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为“英超”，点击后跳转到英超联赛详情页",
+   "preconditions": "已进入 game_移动_ 页面，存在联赛名称为“英超”的比赛，且联赛详情页可访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛名称字段",
+     "expected": "显示“英超”，并带有“>”图标"
+    },
+    {
+     "step": 3,
+     "desc": "点击联赛名称",
+     "expected": "跳转到英超联赛详情页"
+    }
+   ],
+   "expected_result": "联赛名称正确显示，点击后成功跳转到对应联赛详情页",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-241"
+  },
+  {
+   "title": "联赛名称为空时显示占位符且不可点击",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称为空字符串（后端返回空值）",
+   "preconditions": "已进入 game_移动_ 页面，存在联赛名称为空的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛名称字段",
+     "expected": "显示占位符（如“-”），且“>”图标不显示或不可点击"
+    }
+   ],
+   "expected_result": "联赛名称位置显示占位符，不可点击，页面布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-242"
+  },
+  {
+   "title": "联赛名称过长时截断显示",
+   "priority": "P1",
+   "domain": "体育-用户端",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称为超长字符串（如“英格兰足球超级联赛2024-2025赛季”）",
+   "preconditions": "已进入 game_移动_ 页面，存在联赛名称超长的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛名称字段",
+     "expected": "联赛名称截断显示（如省略号），不换行或撑破布局"
+    }
+   ],
+   "expected_result": "联赛名称截断显示，页面布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-243"
+  },
+  {
+   "title": "验证 field 字段正常显示日期时间",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用需求中给定的日期时间值 2025/03/27 08:30，代表比赛开始时间。",
+   "preconditions": "已进入 game_移动_ 页面，且存在一条包含该字段的比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看 field 字段的显示内容",
+     "expected": "字段显示为 '2025/03/27 08:30'，格式正确，无乱码"
+    }
+   ],
+   "expected_result": "field 字段正确显示日期时间 2025/03/27 08:30。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-244"
+  },
+  {
+   "title": "验证 field 字段在数据缺失时显示占位符",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条 field 字段为 null 的比赛数据，模拟数据缺失场景。",
+   "preconditions": "已进入 game_移动_ 页面，且存在一条 field 字段为 null 的比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看 field 字段的显示内容",
+     "expected": "字段显示为占位符（如 '-' 或 '--'），不显示空白或报错"
+    }
+   ],
+   "expected_result": "field 字段在数据缺失时显示占位符，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-245"
+  },
+  {
+   "title": "验证视频直播列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含多条视频直播记录的数据，每条记录包含直播标题、状态等。",
+   "preconditions": "已进入 game_移动_ 页面，且存在至少一条视频直播记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看视频直播列表",
+     "expected": "列表展示所有视频直播记录，每条记录显示标题、状态等信息，无重复、无缺失"
+    }
+   ],
+   "expected_result": "视频直播列表正确展示所有记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-246"
+  },
+  {
+   "title": "验证视频直播列表为空时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造无视频直播记录的数据，模拟空列表场景。",
+   "preconditions": "已进入 game_移动_ 页面，且无任何视频直播记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看视频直播列表",
+     "expected": "列表区域显示空态提示（如 '暂无直播'），无报错"
+    }
+   ],
+   "expected_result": "视频直播列表为空时显示空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-247"
+  },
+  {
+   "title": "验证动画直播列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含多条动画直播记录的数据，每条记录包含直播标题、状态等。",
+   "preconditions": "已进入 game_移动_ 页面，且存在至少一条动画直播记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看动画直播列表",
+     "expected": "列表展示所有动画直播记录，每条记录显示标题、状态等信息，无重复、无缺失"
+    }
+   ],
+   "expected_result": "动画直播列表正确展示所有记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-248"
+  },
+  {
+   "title": "验证动画直播列表为空时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造无动画直播记录的数据，模拟空列表场景。",
+   "preconditions": "已进入 game_移动_ 页面，且无任何动画直播记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看动画直播列表",
+     "expected": "列表区域显示空态提示（如 '暂无动画直播'），无报错"
+    }
+   ],
+   "expected_result": "动画直播列表为空时显示空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-249"
+  },
+  {
+   "title": "验证分享功能正常唤起分享面板",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用当前比赛页面作为分享内容，分享渠道选择微信。",
+   "preconditions": "已进入 game_移动_ 页面，且存在比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分享按钮",
+     "expected": "弹出分享面板，显示可用的分享渠道（如微信、WhatsApp等）"
+    },
+    {
+     "step": 2,
+     "desc": "选择微信渠道",
+     "expected": "系统调用微信分享，分享内容包含比赛信息，分享成功"
+    }
+   ],
+   "expected_result": "分享功能正常，用户可选择渠道并成功分享。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-250"
+  },
+  {
+   "title": "验证分享功能在未登录时提示登录",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户点击分享，模拟未登录场景。",
+   "preconditions": "未登录，已进入 game_移动_ 页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击分享按钮",
+     "expected": "弹出登录提示，引导用户登录"
+    },
+    {
+     "step": 2,
+     "desc": "点击取消",
+     "expected": "分享面板关闭，停留在当前页面"
+    }
+   ],
+   "expected_result": "未登录用户点击分享时提示登录，不执行分享。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-251"
+  },
+  {
+   "title": "验证 Game 列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含多个 Game 项目的数据，每个项目包含名称、图标等。",
+   "preconditions": "已进入 game_移动_ 页面，且存在至少一个 Game 项目。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看 Game 列表",
+     "expected": "列表展示所有 Game 项目，每个项目显示名称、图标，无重复、无缺失"
+    }
+   ],
+   "expected_result": "Game 列表正确展示所有项目。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-252"
+  },
+  {
+   "title": "验证 Game 列表为空时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造无 Game 项目的数据，模拟空列表场景。",
+   "preconditions": "已进入 game_移动_ 页面，且无任何 Game 项目。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看 Game 列表",
+     "expected": "列表区域显示空态提示（如 '暂无游戏'），无报错"
+    }
+   ],
+   "expected_result": "Game 列表为空时显示空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-253"
+  },
+  {
+   "title": "验证聊天功能正常发送消息",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入正常聊天内容 '大家好'，发送到聊天室。",
+   "preconditions": "已登录，已进入 game_移动_ 页面，且聊天室可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在聊天输入框输入 '大家好'",
+     "expected": "输入内容正常显示在输入框"
+    },
+    {
+     "step": 2,
+     "desc": "点击发送按钮",
+     "expected": "消息发送成功，在聊天区域显示，无报错"
+    }
+   ],
+   "expected_result": "聊天功能正常，消息发送成功并显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-254"
+  },
+  {
+   "title": "验证聊天功能对敏感词进行过滤",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入包含敏感词的内容，如 '赌博'，模拟违规内容。",
+   "preconditions": "已登录，已进入 game_移动_ 页面，且聊天室可用。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在聊天输入框输入 '赌博'",
+     "expected": "输入内容正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击发送按钮",
+     "expected": "消息发送失败，提示 '内容包含敏感词'，消息不显示"
+    }
+   ],
+   "expected_result": "聊天功能对敏感词进行过滤，违规消息被拦截。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-255"
+  },
+  {
+   "title": "验证指数列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含多个指数记录的数据，如亚盘、欧赔等。",
+   "preconditions": "已进入 game_移动_ 页面，且存在至少一条指数记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看指数列表",
+     "expected": "列表展示所有指数记录，每条记录显示指数类型、数值等，无重复、无缺失"
+    }
+   ],
+   "expected_result": "指数列表正确展示所有记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-256"
+  },
+  {
+   "title": "验证指数列表为空时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造无指数记录的数据，模拟空列表场景。",
+   "preconditions": "已进入 game_移动_ 页面，且无任何指数记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看指数列表",
+     "expected": "列表区域显示空态提示（如 '暂无指数'），无报错"
+    }
+   ],
+   "expected_result": "指数列表为空时显示空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-257"
+  },
+  {
+   "title": "验证赛程列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含多条赛程记录的数据，每条记录包含比赛时间、对阵双方等。",
+   "preconditions": "已进入 game_移动_ 页面，且存在至少一条赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛程列表",
+     "expected": "列表展示所有赛程记录，每条记录显示比赛时间、对阵双方等，无重复、无缺失"
+    }
+   ],
+   "expected_result": "赛程列表正确展示所有记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-258"
+  },
+  {
+   "title": "验证赛程列表为空时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造无赛程记录的数据，模拟空列表场景。",
+   "preconditions": "已进入 game_移动_ 页面，且无任何赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛程列表",
+     "expected": "列表区域显示空态提示（如 '暂无赛程'），无报错"
+    }
+   ],
+   "expected_result": "赛程列表为空时显示空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-259"
+  },
+  {
+   "title": "验证赛况信息正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场进行中的比赛，包含实时比分、事件等赛况数据。",
+   "preconditions": "已进入 game_移动_ 页面，且存在一场进行中的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛况区域",
+     "expected": "显示实时比分、比赛事件（如进球、红牌等），数据与后台一致"
+    }
+   ],
+   "expected_result": "赛况信息正确展示，数据实时更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-260"
+  },
+  {
+   "title": "验证赛况在比赛未开始时显示未开始状态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场未开始的比赛，模拟赛前状态。",
+   "preconditions": "已进入 game_移动_ 页面，且存在一场未开始的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛况区域",
+     "expected": "显示 '未开始' 状态，无比分和事件"
+    }
+   ],
+   "expected_result": "赛况在比赛未开始时显示未开始状态。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-261"
+  },
+  {
+   "title": "验证数据列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含多条统计数据的数据，如射门、控球率等。",
+   "preconditions": "已进入 game_移动_ 页面，且存在至少一条统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看数据列表",
+     "expected": "列表展示所有统计数据，每条记录显示数据项、数值等，无重复、无缺失"
+    }
+   ],
+   "expected_result": "数据列表正确展示所有记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-262"
+  },
+  {
+   "title": "验证数据列表为空时显示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造无统计数据的数据，模拟空列表场景。",
+   "preconditions": "已进入 game_移动_ 页面，且无任何统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看数据列表",
+     "expected": "列表区域显示空态提示（如 '暂无数据'），无报错"
+    }
+   ],
+   "expected_result": "数据列表为空时显示空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-263"
+  },
+  {
+   "title": "验证阵容列表正常展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一场比赛的首发阵容数据，包含球员姓名、位置等。",
+   "preconditions": "已进入 game_移动_ 页面，且存在一场已公布阵容的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看阵容区域",
+     "expected": "显示主客队首发阵容，包含球员姓名、位置等，无重复、无缺失"
+    }
+   ],
+   "expected_result": "阵容列表正确展示首发名单。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-264"
+  },
+  {
+   "title": "验证阵容在未公布时显示未公布状态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一场未公布阵容的比赛，模拟赛前未公布场景。",
+   "preconditions": "已进入 game_移动_ 页面，且存在一场未公布阵容的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开 game_移动_ 页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看阵容区域",
+     "expected": "显示 '阵容未公布' 提示，无球员列表"
+    }
+   ],
+   "expected_result": "阵容在未公布时显示未公布状态。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-265"
+  },
+  {
+   "title": "验证预测功能正常参与预测",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，银钻余额充足，选择主胜预测，投入 100 银钻。",
+   "preconditions": "已登录，银钻余额≥100，比赛处于预测中状态。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测区域，选择主胜",
+     "expected": "预测选项可点击，显示赔率"
+    },
+    {
+     "step": 2,
+     "desc": "输入投入银钻 100",
+     "expected": "输入框显示 100，可赢金额正确计算"
+    },
+    {
+     "step": 3,
+     "desc": "点击确认预测",
+     "expected": "预测成功，银钻扣减 100，预测记录新增一条"
+    }
+   ],
+   "expected_result": "预测功能正常，银钻扣减，预测记录生成。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-266"
+  },
+  {
+   "title": "验证预测功能在银钻不足时提示余额不足",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "已登录用户，银钻余额为 50，投入 100 银钻，模拟余额不足场景。",
+   "preconditions": "已登录，银钻余额为 50，比赛处于预测中状态。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测区域，选择主胜",
+     "expected": "预测选项可点击，显示赔率"
+    },
+    {
+     "step": 2,
+     "desc": "输入投入银钻 100",
+     "expected": "输入框显示 100，可赢金额正确计算"
+    },
+    {
+     "step": 3,
+     "desc": "点击确认预测",
+     "expected": "预测失败，提示 '银钻余额不足'，银钻不扣减，无预测记录"
+    }
+   ],
+   "expected_result": "预测功能在余额不足时拦截并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-267"
+  },
+  {
+   "title": "Picks列表正常加载并展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "模拟后台配置了5条Picks数据，包含标题、赔率、状态等信息",
+   "preconditions": "用户已登录，网络正常，后台已配置Picks数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入game_移动_页面",
+     "expected": "页面加载，显示Loading动画后展示Picks列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看Picks列表",
+     "expected": "列表展示5条Picks数据，每条包含标题、赔率、状态等字段，数据完整"
+    }
+   ],
+   "expected_result": "Picks列表正常展示，数据与后台配置一致，无加载失败或空白",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-268"
+  },
+  {
+   "title": "Picks列表为空时展示空态",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何Picks数据",
+   "preconditions": "用户已登录，网络正常，后台无Picks数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入game_移动_页面",
+     "expected": "页面加载完成，Picks区域显示空态提示，如'暂无Picks'"
+    }
+   ],
+   "expected_result": "页面正常显示空态提示，无报错或崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-269"
+  },
+  {
+   "title": "Picks列表加载失败时显示错误提示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或接口返回500错误",
+   "preconditions": "用户已登录，网络断开或接口异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入game_移动_页面",
+     "expected": "页面显示加载失败提示，如'加载失败，请重试'，并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面显示错误提示，点击重试可重新加载",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-270"
+  },
+  {
+   "title": "横幅广告正常展示并可点击跳转",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了1个横幅广告，图片URL有效，跳转链接为活动页",
+   "preconditions": "用户已登录，网络正常，后台已配置横幅广告",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入game_移动_页面",
+     "expected": "横幅广告区域展示广告图片"
+    },
+    {
+     "step": 2,
+     "desc": "点击横幅广告",
+     "expected": "跳转到对应的活动页面或链接"
+    }
+   ],
+   "expected_result": "广告展示正常，点击可正确跳转",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-271"
+  },
+  {
+   "title": "横幅广告图片加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "广告图片URL无效或网络异常导致图片加载失败",
+   "preconditions": "用户已登录，网络正常，后台配置的广告图片URL无效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入game_移动_页面",
+     "expected": "横幅广告区域显示默认占位图，不显示破图图标"
+    }
+   ],
+   "expected_result": "页面正常显示占位图，无布局错乱",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-272"
+  },
+  {
+   "title": "游戏页面内容正常加载展示",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了赛事、联赛、图标等数据",
+   "preconditions": "用户已登录，网络正常，后台已配置游戏内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入game_移动_页面",
+     "expected": "页面展示赛事列表、联赛信息、图标等，数据完整"
+    }
+   ],
+   "expected_result": "游戏页面内容正常展示，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-273"
+  },
+  {
+   "title": "游戏页面内容加载失败时显示错误提示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟接口超时或返回错误",
+   "preconditions": "用户已登录，网络异常或接口故障",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入game_移动_页面",
+     "expected": "页面显示加载失败提示，如'内容加载失败'，并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面显示错误提示，点击重试可重新加载",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-274"
+  },
+  {
+   "title": "关闭提示弹窗正常显示",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户点击关闭按钮时触发关闭提示",
+   "preconditions": "用户已进入game_移动_页面，页面有可关闭的弹窗或浮层",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮",
+     "expected": "弹出确认提示框，显示'确定要关闭吗？'，并提供'确定'和'取消'按钮"
+    }
+   ],
+   "expected_result": "关闭提示弹窗正常显示，文案正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-275"
+  },
+  {
+   "title": "关闭提示弹窗点击取消不关闭",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户点击关闭按钮后，在提示弹窗中点击取消",
+   "preconditions": "关闭提示弹窗已显示",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮，弹出提示框",
+     "expected": "提示框显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'按钮",
+     "expected": "提示框关闭，原页面或弹窗保持打开状态"
+    }
+   ],
+   "expected_result": "点击取消后不执行关闭操作，页面状态不变",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-276"
+  },
+  {
+   "title": "取消按钮点击后关闭弹窗",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在任意弹窗中点击取消按钮",
+   "preconditions": "页面存在弹窗，且弹窗有取消按钮",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开一个弹窗",
+     "expected": "弹窗正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'按钮",
+     "expected": "弹窗关闭，不执行任何操作，页面状态不变"
+    }
+   ],
+   "expected_result": "取消按钮功能正常，弹窗关闭且无副作用",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-277"
+  },
+  {
+   "title": "取消按钮点击后无响应",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟取消按钮事件未绑定或JS错误",
+   "preconditions": "页面存在弹窗，取消按钮功能异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开一个弹窗",
+     "expected": "弹窗正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'按钮",
+     "expected": "弹窗无响应，或控制台报错，但页面不崩溃"
+    }
+   ],
+   "expected_result": "取消按钮无响应时，页面应保持稳定，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-278"
+  },
+  {
+   "title": "确定按钮点击后执行确认操作",
+   "priority": "P0",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在关闭确认弹窗中点击确定按钮",
+   "preconditions": "关闭提示弹窗已显示",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮，弹出提示框",
+     "expected": "提示框显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'按钮",
+     "expected": "弹窗关闭，原页面或弹窗关闭，执行关闭操作"
+    }
+   ],
+   "expected_result": "确定按钮功能正常，执行确认操作",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-279"
+  },
+  {
+   "title": "确定按钮点击后无响应",
+   "priority": "P1",
+   "domain": "通用",
+   "module": "game_移动_",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟确定按钮事件未绑定或JS错误",
+   "preconditions": "关闭提示弹窗已显示，确定按钮功能异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击关闭按钮，弹出提示框",
+     "expected": "提示框显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'按钮",
+     "expected": "弹窗无响应，或控制台报错，但页面不崩溃"
+    }
+   ],
+   "expected_result": "确定按钮无响应时，页面应保持稳定，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-280"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-5 生成被截断，已重试"
+ ]
+}

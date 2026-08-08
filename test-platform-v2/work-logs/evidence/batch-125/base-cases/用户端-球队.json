@@ -1,0 +1,1543 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "球队详情页-资讯列表",
+    "description": "球队详情页展示资讯列表，包含封面图片、发布时间（如45分钟前）、标题（球队名称 vs 球队名称）等元素。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "资讯列表的排序规则未明确（按时间倒序？）",
+      "suggestion": "建议明确资讯列表的排序规则（如按发布时间倒序）"
+     },
+     {
+      "severity": "low",
+      "description": "资讯列表的分页或加载更多机制未说明",
+      "suggestion": "建议补充分页或加载更多的交互说明"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "球队详情页-积分列表",
+    "description": "球队详情页展示积分榜数据，包含联赛名称、排名、联赛战绩（如7/4/5）、近5场等信息。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "积分榜数据为空时的展示未明确",
+      "suggestion": "建议定义空态展示（如'No data available'）"
+     },
+     {
+      "severity": "low",
+      "description": "积分榜的排序规则（按积分？净胜球？）未明确",
+      "suggestion": "建议明确积分榜排序规则"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "球队详情页-阵容列表",
+    "description": "球队详情页展示球队阵容信息，包括球员名单、位置、号码等。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "阵容的展示形式（首发/替补/教练）未明确",
+      "suggestion": "建议明确阵容的展示维度（如首发、替补、教练）"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "球队详情页-数据列表",
+    "description": "球队详情页展示球队统计数据，如进球、助攻、射门等。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "数据统计的维度未明确（球队整体还是球员个人）",
+      "suggestion": "建议明确数据统计的维度（球队整体或球员个人）"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "球队详情页-赛程列表",
+    "description": "球队详情页展示赛程列表，包含比赛时间、对阵双方、比分、联赛名称、轮次、直播状态（LIVE）等。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "赛程列表的排序规则未明确（按时间升序？）",
+      "suggestion": "建议明确赛程列表的排序规则（如按比赛时间升序）"
+     },
+     {
+      "severity": "medium",
+      "description": "赛程列表是否区分已结束/未开始/进行中状态未明确",
+      "suggestion": "建议明确赛程状态标识（如LIVE、完场、未开始）"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "球队详情页-最佳列表",
+    "description": "球队详情页展示最佳球员或最佳数据，如最佳射手、最佳助攻等。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "最佳列表的具体内容（最佳射手？最佳球员？）未明确",
+      "suggestion": "建议明确最佳列表的展示内容（如最佳射手、最佳助攻）"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求覆盖了球队详情页的六个核心列表模块（资讯、积分、阵容、数据、赛程、最佳），功能点清晰但细节不足。主要问题包括：各列表的排序规则、空态展示、数据维度、状态标识等未明确，可能导致用例设计时预期结果不精确。建议在后续迭代中补充详细规则。"
+ },
+ "functional_cases": [
+  {
+   "title": "球队详情页正常加载并展示球队基本信息",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "球队详情页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一支有完整数据的球队，如球队ID=1001，球队名称为“皇家马德里”，联赛为“西甲”，确保有赛程、资讯等数据。",
+   "preconditions": "已登录用户，网络正常，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页（如通过球队列表点击进入）",
+     "expected": "页面加载成功，无白屏或报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面顶部球队名称和LOGO",
+     "expected": "球队名称显示为“皇家马德里”，LOGO正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "查看赛程、资讯、阵容、数据等模块",
+     "expected": "各模块均正常展示，数据与球队匹配"
+    }
+   ],
+   "expected_result": "球队详情页完整展示球队基本信息、赛程、资讯等模块，无异常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "球队详情页无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "球队详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择一支新成立球队，无赛程、无资讯、无战绩数据，如球队ID=9999。",
+   "preconditions": "已登录用户，网络正常，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开无数据球队的详情页",
+     "expected": "页面正常加载，各模块显示空态提示（如“暂无赛程”“暂无资讯”）"
+    }
+   ],
+   "expected_result": "页面不崩溃，空态提示清晰。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "球队详情-赛程列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "球队详情-赛程",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队有已结束和未开始的比赛，如球队ID=1001，赛程包含“西甲 第10轮 皇家马德里 vs 巴塞罗那 17:00”等。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队详情页，点击“赛程”Tab",
+     "expected": "赛程列表展示，包含联赛名称、轮次、主客场球队、时间、比分等"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛程列表排序",
+     "expected": "按比赛时间倒序排列（最近的在前）"
+    }
+   ],
+   "expected_result": "赛程列表完整展示，排序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "球队详情-赛程列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "球队详情-赛程",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无任何赛程记录，如球队ID=9999。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入无赛程球队的详情页，点击“赛程”Tab",
+     "expected": "显示“暂无赛程”空态提示，无异常"
+    }
+   ],
+   "expected_result": "空态提示清晰，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "球队名称正确显示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "球队名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队名称为“皇家马德里”，长度适中。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页",
+     "expected": "球队名称显示为“皇家马德里”，无乱码"
+    }
+   ],
+   "expected_result": "球队名称正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "球队名称超长时截断显示",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "球队名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队名称为超长字符串，如“这是一个非常非常非常非常非常非常非常非常非常非常非常非常长的球队名称”，长度超过30个字符。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开超长名称球队的详情页",
+     "expected": "球队名称截断显示，末尾显示省略号，悬浮可查看完整名称"
+    }
+   ],
+   "expected_result": "超长名称截断显示，无布局错乱。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "球队LOGO正常显示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "LOGO",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队LOGO图片地址有效，如“https://cdn.example.com/logo/1001.png”。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页",
+     "expected": "LOGO正常加载，清晰可辨"
+    }
+   ],
+   "expected_result": "LOGO正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "球队LOGO加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "LOGO",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队LOGO图片地址无效或网络异常，如“https://cdn.example.com/logo/404.png”。",
+   "preconditions": "已登录用户，球队详情页可访问，网络正常但图片资源缺失。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开LOGO加载失败的球队详情页",
+     "expected": "显示默认占位图，无破图图标"
+    }
+   ],
+   "expected_result": "占位图显示，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "联赛名称和轮次正常显示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "联赛名称轮次",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为“西甲”，轮次为“第10轮”，组合显示为“西甲 第10轮”。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中的联赛名称和轮次",
+     "expected": "显示“西甲 第10轮”，无错别字"
+    }
+   ],
+   "expected_result": "联赛名称和轮次正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "联赛名称超长时截断显示",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "联赛名称轮次",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称为超长字符串，如“这是一个非常非常非常非常非常非常非常非常非常非常非常非常长的联赛名称”，长度超过20个字符。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看超长联赛名称的赛程条目",
+     "expected": "联赛名称截断显示，末尾显示省略号"
+    }
+   ],
+   "expected_result": "超长联赛名称截断显示，无布局错乱。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "主场球队名称正常显示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "主场球队名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "主场球队名称为“皇家马德里”。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中的主场球队名称",
+     "expected": "显示“皇家马德里”，无乱码"
+    }
+   ],
+   "expected_result": "主场球队名称正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "主场球队名称超长时截断显示",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "主场球队名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "主场球队名称为超长字符串，如“这是一个非常非常非常非常非常非常非常非常非常非常非常非常长的球队名称”，长度超过30个字符。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看超长主场球队名称的赛程条目",
+     "expected": "球队名称截断显示，末尾显示省略号"
+    }
+   ],
+   "expected_result": "超长主场球队名称截断显示，无布局错乱。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "视频/动画正常播放",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "视频/动画",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛有视频/动画资源，如直播流或集锦视频。",
+   "preconditions": "已登录用户，网络正常，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在赛程列表中找到有视频的比赛，点击播放按钮",
+     "expected": "视频正常加载并播放，有声音和画面"
+    }
+   ],
+   "expected_result": "视频/动画正常播放，无卡顿。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "视频/动画加载失败时提示错误",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "视频/动画",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "视频资源不存在或网络异常，如视频URL返回404。",
+   "preconditions": "已登录用户，网络正常但视频资源缺失。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击播放无资源的视频",
+     "expected": "显示“视频加载失败”提示，不崩溃"
+    }
+   ],
+   "expected_result": "错误提示清晰，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "LIVE标签正常显示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "LIVE",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛状态为直播中，观看人数为1289。",
+   "preconditions": "已登录用户，球队详情页可访问，存在直播中的比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中直播中的比赛",
+     "expected": "显示“LIVE”标签和观看人数“1289”"
+    }
+   ],
+   "expected_result": "LIVE标签和观看人数正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "非直播比赛不显示LIVE标签",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "LIVE",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "比赛状态为未开始或已结束，如“已结束”。",
+   "preconditions": "已登录用户，球队详情页可访问，存在非直播比赛。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看非直播比赛的赛程条目",
+     "expected": "不显示LIVE标签，可能显示“已结束”或“未开始”"
+    }
+   ],
+   "expected_result": "非直播比赛不显示LIVE标签。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "客场球队名称正常显示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "客场球队名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "客场球队名称为“巴塞罗那”。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中的客场球队名称",
+     "expected": "显示“巴塞罗那”，无乱码"
+    }
+   ],
+   "expected_result": "客场球队名称正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "客场球队名称超长时截断显示",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "客场球队名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "客场球队名称为超长字符串，如“这是一个非常非常非常非常非常非常非常非常非常非常非常非常长的球队名称”，长度超过30个字符。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看超长客场球队名称的赛程条目",
+     "expected": "球队名称截断显示，末尾显示省略号"
+    }
+   ],
+   "expected_result": "超长客场球队名称截断显示，无布局错乱。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "比赛时间正常显示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "比赛时间",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "比赛时间为“17:00”，格式为HH:mm。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中的比赛时间",
+     "expected": "显示“17:00”，格式正确"
+    }
+   ],
+   "expected_result": "比赛时间正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "比赛时间格式异常时处理",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "比赛时间",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛时间数据异常，如“25:00”或“abc”。",
+   "preconditions": "已登录用户，球队详情页可访问，存在异常时间数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看异常时间的赛程条目",
+     "expected": "显示默认时间或“--:--”，不崩溃"
+    }
+   ],
+   "expected_result": "异常时间被合理处理，无崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "联赛信息正常显示",
+   "priority": "P0",
+   "domain": "用户端/球队",
+   "module": "联赛",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队所属联赛为“西甲”，联赛LOGO正常。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球队详情页中的联赛信息",
+     "expected": "显示联赛名称“西甲”和联赛LOGO"
+    }
+   ],
+   "expected_result": "联赛信息正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "联赛信息缺失时显示占位",
+   "priority": "P1",
+   "domain": "用户端/球队",
+   "module": "联赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无联赛信息，如球队ID=9999。",
+   "preconditions": "已登录用户，球队详情页可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看无联赛信息的球队详情页",
+     "expected": "联赛区域显示“暂无联赛”或占位图"
+    }
+   ],
+   "expected_result": "联赛信息缺失时展示占位，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "主播头像正常展示",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯列表中存在一条资讯，其主播头像URL有效，如https://cdn.example.com/avatar/1.png",
+   "preconditions": "已进入球队详情页，资讯列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，滚动至资讯列表",
+     "expected": "资讯列表正常加载，每条资讯显示主播头像"
+    },
+    {
+     "step": 2,
+     "desc": "查看主播头像区域",
+     "expected": "头像图片正常显示，无裂图，尺寸符合设计稿"
+    }
+   ],
+   "expected_result": "主播头像正常显示，图片加载成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "主播头像为空时展示默认头像",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯数据中主播头像字段为空字符串或null",
+   "preconditions": "已进入球队详情页，资讯列表存在主播头像为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，滚动至资讯列表",
+     "expected": "资讯列表正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看主播头像为空的资讯",
+     "expected": "显示默认头像占位图，不显示裂图，页面布局不塌陷"
+    }
+   ],
+   "expected_result": "头像为空时显示默认占位图，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "资讯列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队详情页资讯列表返回多条资讯，每条包含标题、封面、时间、主播头像",
+   "preconditions": "已进入球队详情页，资讯接口返回正常数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，定位到资讯区域",
+     "expected": "资讯列表展示，每条资讯包含封面图片、标题、发布时间、主播头像"
+    },
+    {
+     "step": 2,
+     "desc": "向下滑动列表",
+     "expected": "列表可滚动，加载更多资讯（如有分页）"
+    }
+   ],
+   "expected_result": "资讯列表完整展示，数据与接口返回一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "资讯列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球队无任何资讯，接口返回空数组",
+   "preconditions": "已进入球队详情页，资讯接口返回空数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，定位到资讯区域",
+     "expected": "显示空态提示，如'暂无资讯'，不显示列表"
+    }
+   ],
+   "expected_result": "资讯区域显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "封面图片正常展示",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯封面图片URL有效，如https://cdn.example.com/cover/1.jpg",
+   "preconditions": "已进入球队详情页，资讯列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看资讯列表",
+     "expected": "每条资讯显示封面图片"
+    },
+    {
+     "step": 2,
+     "desc": "检查封面图片显示",
+     "expected": "图片清晰，比例正确，无拉伸变形"
+    }
+   ],
+   "expected_result": "封面图片正常显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "封面图片加载失败时显示默认图",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "封面图片URL无效或网络异常，导致图片加载失败",
+   "preconditions": "已进入球队详情页，资讯列表存在封面图片加载失败的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看资讯列表",
+     "expected": "加载失败的封面图片位置显示默认占位图，不显示裂图"
+    }
+   ],
+   "expected_result": "封面图片加载失败时显示默认图，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "发布时间显示为相对时间（45分钟前）",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "资讯发布时间为当前时间前45分钟，如当前时间14:00，发布时间13:15",
+   "preconditions": "已进入球队详情页，资讯列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看资讯列表",
+     "expected": "发布时间显示为'45分钟前'"
+    }
+   ],
+   "expected_result": "相对时间显示正确，格式为'X分钟前'",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "发布时间超过24小时显示具体日期",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "资讯发布时间为当前时间前25小时，如当前时间14:00，发布时间为昨天13:00",
+   "preconditions": "已进入球队详情页，资讯列表存在发布时间超过24小时的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看资讯列表",
+     "expected": "发布时间显示为具体日期，如'2024-01-01'或'昨天'"
+    }
+   ],
+   "expected_result": "超过24小时显示具体日期，符合需求规则",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "赛程列表展示'球队A vs 球队B'格式",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛程数据中主队名称为'皇家马德里'，客队名称为'巴塞罗那'",
+   "preconditions": "已进入球队详情页，赛程列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看赛程列表",
+     "expected": "对阵双方显示为'皇家马德里 vs 巴塞罗那'"
+    }
+   ],
+   "expected_result": "球队名称以'vs'分隔正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "球队名称过长时省略显示",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "球队名称超长，如'皇家马德里足球俱乐部（Real Madrid Club de Fútbol）'",
+   "preconditions": "已进入球队详情页，赛程列表存在超长球队名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看赛程列表",
+     "expected": "超长名称以省略号截断，如'皇家马德里足球俱乐部（Real Madrid Club de Fútbol）...'，不换行撑破布局"
+    }
+   ],
+   "expected_result": "超长名称被截断，布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "赛程列表展示球队名称（两行显示）",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛程数据中主队名称为'曼城'，客队名称为'利物浦'",
+   "preconditions": "已进入球队详情页，赛程列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看赛程列表",
+     "expected": "对阵双方名称分别显示，如第一行'曼城'，第二行'利物浦'"
+    }
+   ],
+   "expected_result": "球队名称按预期显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "球队名称为空时显示占位",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "赛程数据中球队名称为空字符串",
+   "preconditions": "已进入球队详情页，赛程列表存在名称为空的球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看赛程列表",
+     "expected": "名称为空时显示'未知球队'或占位符，不显示空白"
+    }
+   ],
+   "expected_result": "空名称有兜底显示，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "联赛名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛程数据中联赛名称为'英超'",
+   "preconditions": "已进入球队详情页，赛程列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看赛程列表",
+     "expected": "联赛名称显示为'英超'"
+    }
+   ],
+   "expected_result": "联赛名称正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "联赛名称过长时省略显示",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称超长，如'英格兰足球超级联赛（Premier League）'",
+   "preconditions": "已进入球队详情页，赛程列表存在超长联赛名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看赛程列表",
+     "expected": "超长联赛名称以省略号截断，布局正常"
+    }
+   ],
+   "expected_result": "超长联赛名称被截断，布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "联赛战绩区域icon正常展示",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛战绩区域存在联赛图标，URL有效，如https://cdn.example.com/league/1.png",
+   "preconditions": "已进入球队详情页，联赛战绩区域有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，定位到联赛战绩区域",
+     "expected": "联赛图标正常显示"
+    }
+   ],
+   "expected_result": "icon正常显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "联赛图标加载失败时显示默认图标",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛图标URL无效，导致加载失败",
+   "preconditions": "已进入球队详情页，联赛战绩区域存在加载失败的图标",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看联赛战绩区域",
+     "expected": "显示默认图标，不显示裂图"
+    }
+   ],
+   "expected_result": "加载失败时显示默认图标",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "点击'联赛名称排名 >'跳转至联赛详情页",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为'西甲'，排名为'第3名'",
+   "preconditions": "已进入球队详情页，联赛战绩区域有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，定位到联赛战绩区域",
+     "expected": "显示'西甲 第3名 >'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'西甲 第3名 >'",
+     "expected": "跳转至西甲联赛详情页或积分榜页面"
+    }
+   ],
+   "expected_result": "点击后正确跳转",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "联赛排名数据缺失时显示占位",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛排名数据为空，如排名为null",
+   "preconditions": "已进入球队详情页，联赛战绩区域存在排名缺失的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看联赛战绩区域",
+     "expected": "排名位置显示'--'或'暂无排名'，点击跳转仍可用"
+    }
+   ],
+   "expected_result": "排名缺失时有占位显示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "联赛战绩正常展示（胜/平/负）",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队战绩为7胜4平5负",
+   "preconditions": "已进入球队详情页，联赛战绩区域有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看联赛战绩区域",
+     "expected": "显示'7/4/5'，分别代表胜/平/负"
+    }
+   ],
+   "expected_result": "战绩数据正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "联赛战绩数据为0时显示0",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队战绩为0胜0平0负",
+   "preconditions": "已进入球队详情页，联赛战绩区域存在全0数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看联赛战绩区域",
+     "expected": "显示'0/0/0'"
+    }
+   ],
+   "expected_result": "0值正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "近5场战绩正常展示",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队近5场比赛结果为胜、胜、平、负、胜",
+   "preconditions": "已进入球队详情页，近5场区域有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看近5场区域",
+     "expected": "显示5个结果标识，如'W W D L W'或对应图标"
+    }
+   ],
+   "expected_result": "近5场结果正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "近5场不足5场时按实际场次展示",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "球队详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队仅进行了2场比赛，结果为胜、负",
+   "preconditions": "已进入球队详情页，近5场区域只有2场数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，查看近5场区域",
+     "expected": "显示2个结果标识，如'W L'，不显示空位"
+    }
+   ],
+   "expected_result": "不足5场时按实际场次显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "球队详情页-资讯列表-正常展示资讯列表",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "资讯",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队详情页存在至少一条资讯数据，资讯包含封面图片、发布时间（如45分钟前）、标题（如'球队A vs 球队B'）",
+   "preconditions": "已登录或未登录均可，进入球队详情页，球队有资讯数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「资讯」Tab",
+     "expected": "资讯列表正常展示，包含封面图片、发布时间、标题等元素"
+    }
+   ],
+   "expected_result": "资讯列表展示完整，每条资讯包含封面图片、发布时间（如45分钟前）、标题（球队名称 vs 球队名称），列表可滚动，无布局错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "球队详情页-资讯列表-无资讯数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "资讯",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无任何资讯数据",
+   "preconditions": "进入球队详情页，该球队无资讯数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「资讯」Tab",
+     "expected": "展示空态提示，如'暂无资讯'，且无报错"
+    }
+   ],
+   "expected_result": "页面展示空态提示（如'暂无资讯'），无异常报错，页面无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "球队详情页-积分列表-正常展示积分榜",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "积分",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队所在联赛有积分榜数据，包含排名、球队名称、联赛战绩（如7/4/5）、近5场等",
+   "preconditions": "进入球队详情页，球队所在联赛有积分数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「积分」Tab",
+     "expected": "积分榜正常展示，包含联赛名称、排名、联赛战绩、近5场等信息"
+    }
+   ],
+   "expected_result": "积分榜列表展示完整，包含联赛名称、排名、联赛战绩（如7/4/5）、近5场等，数据与联赛积分榜一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "球队详情页-积分列表-无积分数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "积分",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队所在联赛无积分榜数据",
+   "preconditions": "进入球队详情页，球队所在联赛无积分数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「积分」Tab",
+     "expected": "展示空态提示，如'No data available'，且无报错"
+    }
+   ],
+   "expected_result": "页面展示空态提示（如'No data available'），无异常报错，页面无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "球队详情页-阵容列表-正常展示阵容",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "阵容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队有阵容数据，包含球员名单、位置、号码等",
+   "preconditions": "进入球队详情页，球队有阵容数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「阵容」Tab",
+     "expected": "阵容列表正常展示，包含球员名单、位置、号码等信息"
+    }
+   ],
+   "expected_result": "阵容列表展示完整，包含球员名单、位置、号码等信息，数据与球队实际阵容一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "球队详情页-阵容列表-无阵容数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "阵容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无阵容数据",
+   "preconditions": "进入球队详情页，球队无阵容数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「阵容」Tab",
+     "expected": "展示空态提示，如'暂无阵容'，且无报错"
+    }
+   ],
+   "expected_result": "页面展示空态提示（如'暂无阵容'），无异常报错，页面无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "球队详情页-数据列表-正常展示球队数据",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "数据",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队有统计数据，如进球、助攻、射门等",
+   "preconditions": "进入球队详情页，球队有统计数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「数据」Tab",
+     "expected": "数据列表正常展示，包含进球、助攻、射门等统计项"
+    }
+   ],
+   "expected_result": "数据列表展示完整，包含进球、助攻、射门等统计项，数据与球队实际统计一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "球队详情页-数据列表-无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "数据",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无统计数据",
+   "preconditions": "进入球队详情页，球队无统计数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「数据」Tab",
+     "expected": "展示空态提示，如'暂无数据'，且无报错"
+    }
+   ],
+   "expected_result": "页面展示空态提示（如'暂无数据'），无异常报错，页面无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "球队详情页-赛程列表-正常展示赛程",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "赛程",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队有赛程数据，包含比赛时间、对阵双方、比分、联赛名称、轮次、直播状态（如LIVE）等",
+   "preconditions": "进入球队详情页，球队有赛程数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「赛程」Tab",
+     "expected": "赛程列表正常展示，包含比赛时间、对阵双方、比分、联赛名称、轮次、直播状态（如LIVE）等"
+    }
+   ],
+   "expected_result": "赛程列表展示完整，包含比赛时间、对阵双方、比分、联赛名称、轮次、直播状态（如LIVE）等，数据与球队实际赛程一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "球队详情页-赛程列表-无赛程数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "赛程",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无赛程数据",
+   "preconditions": "进入球队详情页，球队无赛程数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「赛程」Tab",
+     "expected": "展示空态提示，如'暂无赛程'，且无报错"
+    }
+   ],
+   "expected_result": "页面展示空态提示（如'暂无赛程'），无异常报错，页面无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "球队详情页-最佳列表-正常展示最佳数据",
+   "priority": "P0",
+   "domain": "用户端/球队/球队详情页",
+   "module": "最佳",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队有最佳数据，如最佳射手、最佳助攻等",
+   "preconditions": "进入球队详情页，球队有最佳数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「最佳」Tab",
+     "expected": "最佳列表正常展示，包含最佳射手、最佳助攻等信息"
+    }
+   ],
+   "expected_result": "最佳列表展示完整，包含最佳射手、最佳助攻等信息，数据与球队实际最佳数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "球队详情页-最佳列表-无最佳数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/球队/球队详情页",
+   "module": "最佳",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无最佳数据",
+   "preconditions": "进入球队详情页，球队无最佳数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队详情页，点击「最佳」Tab",
+     "expected": "展示空态提示，如'暂无最佳'，且无报错"
+    }
+   ],
+   "expected_result": "页面展示空态提示（如'暂无最佳'），无异常报错，页面无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  }
+ ],
+ "api_cases": []
+}

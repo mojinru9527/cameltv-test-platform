@@ -1,0 +1,786 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-faq-01",
+    "title": "FAQ列表展示",
+    "description": "页面faq（faq.html）展示FAQ列表，包含多个问题标题（问题标题1、2、3、4、6等），每个标题可点击查看详情。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "功能点描述过于简略，仅写'list：FAQ'，未明确列表的数据来源、排序规则、分页方式、空态处理等。",
+      "suggestion": "补充需求细节：FAQ列表数据来源（静态/动态）、排序规则、是否分页、空数据展示等。"
+     },
+     {
+      "severity": "low",
+      "description": "问题标题编号不连续（缺少问题标题5），可能是有意为之或遗漏，需确认。",
+      "suggestion": "确认问题标题5是否存在，若存在需补充功能点。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-faq-02",
+    "title": "帮助及反馈入口",
+    "description": "页面faq（faq.html）提供'帮助及反馈'入口，用户可点击进入帮助与反馈页面。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确'帮助及反馈'入口的跳转目标页面和交互方式。",
+      "suggestion": "明确点击'帮助及反馈'后的跳转页面（如faq内容页或独立反馈页）。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-faq-03",
+    "title": "问题标题2展示",
+    "description": "页面faq（faq.html）展示问题标题2，用户可点击查看详情。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "问题标题2的具体内容未提供，无法验证详情页展示。",
+      "suggestion": "补充问题标题2的详细内容或说明其来自FAQ数据。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-faq-04",
+    "title": "问题标题3展示",
+    "description": "页面faq（faq.html）展示问题标题3，用户可点击查看详情。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "问题标题3的具体内容未提供，无法验证详情页展示。",
+      "suggestion": "补充问题标题3的详细内容或说明其来自FAQ数据。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-faq-05",
+    "title": "问题标题4展示",
+    "description": "页面faq（faq.html）展示问题标题4，用户可点击查看详情。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "问题标题4的具体内容未提供，无法验证详情页展示。",
+      "suggestion": "补充问题标题4的详细内容或说明其来自FAQ数据。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-faq-06",
+    "title": "问题标题6展示",
+    "description": "页面faq（faq.html）展示问题标题6，用户可点击查看详情。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "问题标题6的具体内容未提供，无法验证详情页展示。",
+      "suggestion": "补充问题标题6的详细内容或说明其来自FAQ数据。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-faq内-01",
+    "title": "FAQ内容展示",
+    "description": "页面faq内容（faq内容.html）展示FAQ详细内容，包括问题标题和文案内容。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "未明确FAQ内容页的数据来源、展示格式（如标题+正文）、是否支持滚动等。",
+      "suggestion": "补充内容页的布局、数据加载方式（静态/动态）等细节。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-faq内-02",
+    "title": "帮助及反馈入口（内容页）",
+    "description": "页面faq内容（faq内容.html）提供'帮助及反馈'入口，用户可点击进入帮助与反馈页面。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确该入口与faq页入口的差异，以及跳转目标。",
+      "suggestion": "确认两个页面的'帮助及反馈'入口是否一致，跳转目标是否相同。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体较为简单，但描述过于简略，仅列出功能点名称，缺乏具体交互细节、数据来源、边界条件等。FAQ列表和内容页的展示逻辑、空态、异常处理等均未明确，需要补充详细需求。建议完善功能点描述，明确数据来源、排序、分页、点击跳转等行为，以便设计完整测试用例。"
+ },
+ "functional_cases": [
+  {
+   "title": "FAQ列表正常展示所有问题标题",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用生产环境或测试环境已配置的FAQ数据，包含问题标题1、2、3、4、6等至少5个问题。",
+   "preconditions": "用户已登录或未登录均可访问FAQ页面；后台已配置至少5条FAQ数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看FAQ列表区域",
+     "expected": "列表展示所有已配置的问题标题，包括问题标题1、2、3、4、6，且顺序与后台配置一致"
+    }
+   ],
+   "expected_result": "FAQ列表完整展示所有问题标题，无缺失、无重复，标题文字正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "FAQ列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台FAQ数据为空（无任何问题标题）。",
+   "preconditions": "后台FAQ数据为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看FAQ列表区域",
+     "expected": "显示空态提示，如'暂无FAQ数据'或类似文案，且无异常报错"
+    }
+   ],
+   "expected_result": "FAQ列表无数据时展示友好空态提示，不出现空白或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "点击问题标题跳转至FAQ内容页",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已配置的问题标题1作为点击对象。",
+   "preconditions": "FAQ列表已加载，至少包含问题标题1。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题1",
+     "expected": "跳转至faq内容页（faq内容.html），并展示该问题的详细内容"
+    }
+   ],
+   "expected_result": "点击问题标题后成功跳转至对应内容页，内容页展示该问题的标题和正文。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "点击问题标题时网络异常处理",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络断开或服务器无响应。",
+   "preconditions": "网络连接正常，但可模拟断网或服务器故障。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题1，同时断网或使服务器无响应",
+     "expected": "页面提示网络错误或加载失败，不崩溃，可返回列表"
+    }
+   ],
+   "expected_result": "网络异常时给出错误提示，用户可返回或重试，不影响页面稳定性。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "帮助及反馈入口正常跳转",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'帮助及反馈'入口。",
+   "preconditions": "faq.html页面已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'帮助及反馈'入口",
+     "expected": "跳转至帮助及反馈页面（如faq内容页或独立反馈页），页面正常展示"
+    }
+   ],
+   "expected_result": "点击'帮助及反馈'后成功跳转至目标页面，无报错。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "帮助及反馈入口在无网络时提示",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟无网络环境。",
+   "preconditions": "faq.html页面已加载，但网络断开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'帮助及反馈'入口",
+     "expected": "提示网络错误或加载失败，不崩溃"
+    }
+   ],
+   "expected_result": "无网络时点击入口给出错误提示，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题2展示正确",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台配置的问题标题2数据。",
+   "preconditions": "FAQ列表已加载，包含问题标题2。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找问题标题2",
+     "expected": "问题标题2显示正确，文字无错别字"
+    }
+   ],
+   "expected_result": "问题标题2在列表中正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题2点击后内容页展示",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击问题标题2。",
+   "preconditions": "FAQ列表已加载，包含问题标题2。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题2",
+     "expected": "跳转至faq内容页，展示问题标题2的详细内容"
+    }
+   ],
+   "expected_result": "点击问题标题2后成功跳转并展示对应内容。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题2内容为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台问题标题2对应的内容为空。",
+   "preconditions": "后台问题标题2无内容。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题2",
+     "expected": "跳转至faq内容页，内容区域显示空态提示，如'暂无内容'"
+    }
+   ],
+   "expected_result": "内容为空时展示友好空态提示，不出现空白页或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题3展示正确",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台配置的问题标题3数据。",
+   "preconditions": "FAQ列表已加载，包含问题标题3。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找问题标题3",
+     "expected": "问题标题3显示正确，文字无错别字"
+    }
+   ],
+   "expected_result": "问题标题3在列表中正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题3点击后内容页展示",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击问题标题3。",
+   "preconditions": "FAQ列表已加载，包含问题标题3。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题3",
+     "expected": "跳转至faq内容页，展示问题标题3的详细内容"
+    }
+   ],
+   "expected_result": "点击问题标题3后成功跳转并展示对应内容。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题3内容为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台问题标题3对应的内容为空。",
+   "preconditions": "后台问题标题3无内容。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题3",
+     "expected": "跳转至faq内容页，内容区域显示空态提示，如'暂无内容'"
+    }
+   ],
+   "expected_result": "内容为空时展示友好空态提示，不出现空白页或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题4展示正确",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台配置的问题标题4数据。",
+   "preconditions": "FAQ列表已加载，包含问题标题4。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找问题标题4",
+     "expected": "问题标题4显示正确，文字无错别字"
+    }
+   ],
+   "expected_result": "问题标题4在列表中正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题4点击后内容页展示",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击问题标题4。",
+   "preconditions": "FAQ列表已加载，包含问题标题4。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题4",
+     "expected": "跳转至faq内容页，展示问题标题4的详细内容"
+    }
+   ],
+   "expected_result": "点击问题标题4后成功跳转并展示对应内容。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题4内容为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台问题标题4对应的内容为空。",
+   "preconditions": "后台问题标题4无内容。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题4",
+     "expected": "跳转至faq内容页，内容区域显示空态提示，如'暂无内容'"
+    }
+   ],
+   "expected_result": "内容为空时展示友好空态提示，不出现空白页或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题6展示正确",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台配置的问题标题6数据。",
+   "preconditions": "FAQ列表已加载，包含问题标题6。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找问题标题6",
+     "expected": "问题标题6显示正确，文字无错别字"
+    }
+   ],
+   "expected_result": "问题标题6在列表中正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题6点击后内容页展示",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击问题标题6。",
+   "preconditions": "FAQ列表已加载，包含问题标题6。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题6",
+     "expected": "跳转至faq内容页，展示问题标题6的详细内容"
+    }
+   ],
+   "expected_result": "点击问题标题6后成功跳转并展示对应内容。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "问题标题6内容为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台问题标题6对应的内容为空。",
+   "preconditions": "后台问题标题6无内容。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击问题标题6",
+     "expected": "跳转至faq内容页，内容区域显示空态提示，如'暂无内容'"
+    }
+   ],
+   "expected_result": "内容为空时展示友好空态提示，不出现空白页或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "FAQ内容页正常展示标题和正文",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq内容",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已配置的FAQ内容数据，包含问题标题和文案内容。",
+   "preconditions": "后台已配置FAQ内容，包括标题和正文。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq内容.html页面（或从faq页点击问题进入）",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面内容",
+     "expected": "页面展示问题标题和对应的文案内容，文字完整、无乱码"
+    }
+   ],
+   "expected_result": "FAQ内容页正确展示标题和正文，内容完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "FAQ内容页无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq内容",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台FAQ内容为空。",
+   "preconditions": "后台FAQ内容为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq内容.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面内容",
+     "expected": "显示空态提示，如'暂无内容'，不出现空白或崩溃"
+    }
+   ],
+   "expected_result": "FAQ内容为空时展示友好空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "FAQ内容页长文本滚动展示",
+   "priority": "P2",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq内容",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "使用超长文案内容（超过一屏）。",
+   "preconditions": "后台FAQ内容为超长文本。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq内容.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "滚动查看内容",
+     "expected": "内容可正常滚动，无卡顿、无截断"
+    }
+   ],
+   "expected_result": "长文本内容可正常滚动查看，无显示问题。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "帮助及反馈入口在内容页正常跳转",
+   "priority": "P0",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'帮助及反馈'入口。",
+   "preconditions": "faq内容.html页面已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq内容.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'帮助及反馈'入口",
+     "expected": "跳转至帮助及反馈页面，页面正常展示"
+    }
+   ],
+   "expected_result": "点击'帮助及反馈'后成功跳转至目标页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  },
+  {
+   "title": "帮助及反馈入口在内容页无网络时提示",
+   "priority": "P1",
+   "domain": "用户端/FAQ帮助",
+   "module": "faq内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟无网络环境。",
+   "preconditions": "faq内容.html页面已加载，但网络断开。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开faq内容.html页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'帮助及反馈'入口",
+     "expected": "提示网络错误或加载失败，不崩溃"
+    }
+   ],
+   "expected_result": "无网络时点击入口给出错误提示，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ]
+  }
+ ],
+ "api_cases": []
+}

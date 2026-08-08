@@ -1,0 +1,520 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "FP-推流主播-01",
+    "title": "新增",
+    "description": "在推流主播页面，点击新增按钮，弹出新增对话框，可输入用户编号，进行保存或取消操作。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确新增时用户编号的格式、长度、唯一性等校验规则。",
+      "suggestion": "建议补充用户编号的输入校验规则（如长度、字符类型、是否必填、唯一性）。"
+     },
+     {
+      "severity": "medium",
+      "description": "需求未明确新增成功后列表是否刷新、提示信息等。",
+      "suggestion": "建议明确新增成功后的行为（如刷新列表、提示成功）。"
+     }
+    ]
+   },
+   {
+    "id": "FP-推流主播-02",
+    "title": "Banner展位管理",
+    "description": "在推流主播页面，提供Banner展位管理入口，可跳转或管理Banner展位。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确Banner展位管理的具体操作和权限。",
+      "suggestion": "建议补充Banner展位管理的详细功能说明。"
+     }
+    ]
+   },
+   {
+    "id": "FP-推流主播-03",
+    "title": "资讯管理",
+    "description": "在推流主播页面，提供资讯管理入口，可跳转或管理资讯。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确资讯管理的具体操作和权限。",
+      "suggestion": "建议补充资讯管理的详细功能说明。"
+     }
+    ]
+   },
+   {
+    "id": "FP-推流主播-04",
+    "title": "用户编号",
+    "description": "列表展示用户编号字段，用于标识推流主播。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确用户编号的展示格式和排序规则。",
+      "suggestion": "建议明确用户编号的展示格式（如是否脱敏）和排序规则。"
+     }
+    ]
+   },
+   {
+    "id": "FP-推流主播-05",
+    "title": "删除",
+    "description": "在推流主播列表，对某条记录执行删除操作，需确认。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确删除后是否可恢复、是否级联删除关联数据。",
+      "suggestion": "建议明确删除的级联规则和可恢复性。"
+     }
+    ]
+   },
+   {
+    "id": "FP-推流主播-06",
+    "title": "取 消",
+    "description": "在新增或编辑对话框中，点击取消按钮，关闭对话框，不保存。",
+    "type": "functional",
+    "issues": []
+   },
+   {
+    "id": "FP-推流主播-07",
+    "title": "保存",
+    "description": "在新增对话框中，点击保存按钮，保存新增的推流主播。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确保存时是否校验用户编号的必填性和唯一性。",
+      "suggestion": "建议明确保存时的校验规则。"
+     }
+    ]
+   },
+   {
+    "id": "FP-推流主播-08",
+    "title": "用户编号：",
+    "description": "新增对话框中的标签，用于输入用户编号。",
+    "type": "functional",
+    "issues": []
+   },
+   {
+    "id": "FP-推流主播-09",
+    "title": "确定",
+    "description": "在删除确认对话框中，点击确定按钮，确认删除。",
+    "type": "functional",
+    "issues": []
+   },
+   {
+    "id": "FP-推流主播-10",
+    "title": "取消",
+    "description": "在删除确认对话框中，点击取消按钮，取消删除。",
+    "type": "functional",
+    "issues": []
+   },
+   {
+    "id": "FP-推流主播-11",
+    "title": "确认删除",
+    "description": "删除操作时的确认对话框标题或按钮。",
+    "type": "functional",
+    "issues": []
+   },
+   {
+    "id": "FP-推流主播-12",
+    "title": "确认要移除该用户",
+    "description": "删除确认对话框中的提示文案，确认要移除该用户。",
+    "type": "functional",
+    "issues": []
+   }
+  ],
+  "overall_assessment": "需求描述较为简略，仅列出功能点名称，缺乏具体交互细节、输入校验规则、权限控制和异常处理说明。整体清晰度不足，需要补充详细的需求规格说明书。建议在用例设计中覆盖常见边界和异常场景。"
+ },
+ "functional_cases": [
+  {
+   "title": "新增推流主播-输入有效用户编号保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号：vl7oqdehj3r510j（符合系统编号格式，字母数字组合，长度15位）",
+   "preconditions": "已登录运营后台，具有推流主播管理权限，推流主播列表页已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框，显示标签「用户编号：」和输入框，以及「保存」「取 消」按钮"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框中输入 vl7oqdehj3r510j",
+     "expected": "输入框显示该编号，无错误提示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "对话框关闭，列表新增一条记录，用户编号为 vl7oqdehj3r510j，并出现成功提示（如「保存成功」）"
+    }
+   ],
+   "expected_result": "新增成功，列表刷新并显示新记录，数据库中新增对应记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增推流主播-用户编号为空保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号为空（不输入任何字符）",
+   "preconditions": "已登录运营后台，具有推流主播管理权限，推流主播列表页已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "不输入用户编号，直接点击「保存」按钮",
+     "expected": "保存失败，提示「用户编号不能为空」，对话框不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示用户编号不能为空，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增推流主播-用户编号重复保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：gx7lm7ph88wm2wd（已存在于列表中）",
+   "preconditions": "已登录运营后台，推流主播列表中已存在用户编号 gx7lm7ph88wm2wd",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入已存在的用户编号 gx7lm7ph88wm2wd",
+     "expected": "输入框显示该编号"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「用户编号已存在」，对话框不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示用户编号已存在，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增推流主播-用户编号超长保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户编号：12345678901234567890（20位，超过系统允许的最大长度，假设最大长度15位）",
+   "preconditions": "已登录运营后台，推流主播列表页已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入20位用户编号 12345678901234567890",
+     "expected": "输入框可能限制输入长度，或允许输入但保存时提示超长"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「用户编号长度不能超过15位」，对话框不关闭，列表无新增"
+    }
+   ],
+   "expected_result": "保存被拦截，提示用户编号超长，数据库无新增记录",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增推流主播-点击取消不保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：test123（任意有效格式）",
+   "preconditions": "已登录运营后台，推流主播列表页已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号 test123",
+     "expected": "输入框显示该编号"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取 消」按钮",
+     "expected": "对话框关闭，列表无新增，无任何保存操作"
+    }
+   ],
+   "expected_result": "取消后不保存，列表无新增记录，数据库无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "Banner展位管理-点击入口跳转管理页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "无特殊数据，仅验证入口跳转",
+   "preconditions": "已登录运营后台，推流主播列表页已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「Banner展位管理」按钮或链接",
+     "expected": "跳转到Banner展位管理页面，页面标题为「Banner展位管理」"
+    }
+   ],
+   "expected_result": "成功跳转到Banner展位管理页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "Banner展位管理-无权限访问被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无Banner展位管理权限的账号",
+   "preconditions": "已登录运营后台，但当前账号无Banner展位管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「Banner展位管理」按钮或链接",
+     "expected": "提示「无权限访问」或按钮置灰不可点击，无法跳转"
+    }
+   ],
+   "expected_result": "无权限时无法访问Banner展位管理",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "资讯管理-点击入口跳转管理页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "无特殊数据，仅验证入口跳转",
+   "preconditions": "已登录运营后台，推流主播列表页已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「资讯管理」按钮或链接",
+     "expected": "跳转到资讯管理页面，页面标题为「资讯管理」"
+    }
+   ],
+   "expected_result": "成功跳转到资讯管理页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "资讯管理-无权限访问被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无资讯管理权限的账号",
+   "preconditions": "已登录运营后台，但当前账号无资讯管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「资讯管理」按钮或链接",
+     "expected": "提示「无权限访问」或按钮置灰不可点击，无法跳转"
+    }
+   ],
+   "expected_result": "无权限时无法访问资讯管理",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "列表展示用户编号字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "列表中已有记录，用户编号如 vl7oqdehj3r510j",
+   "preconditions": "推流主播列表中存在至少一条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开推流主播列表页",
+     "expected": "列表显示「用户编号」列，每条记录显示对应的用户编号，如 vl7oqdehj3r510j"
+    }
+   ],
+   "expected_result": "用户编号字段正常展示，无乱码或截断",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "列表用户编号为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某条记录的用户编号为空（异常数据）",
+   "preconditions": "数据库中某条推流主播记录的用户编号为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开推流主播列表页",
+     "expected": "该记录的用户编号列显示为空或占位符（如'-'），不显示null或报错"
+    }
+   ],
+   "expected_result": "空值友好展示，不出现异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "删除推流主播-确认删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条已存在的推流主播记录，用户编号：vl7oqdehj3r510j",
+   "preconditions": "推流主播列表中存在用户编号 vl7oqdehj3r510j 的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在列表中找到用户编号为 vl7oqdehj3r510j 的记录，点击该行的「删除」按钮",
+     "expected": "弹出确认删除对话框，标题为「确认删除」，提示「确认要移除该用户」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」按钮",
+     "expected": "对话框关闭，列表刷新，该记录消失，出现成功提示（如「删除成功」）"
+    }
+   ],
+   "expected_result": "删除成功，数据库中该记录被删除",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "删除推流主播-点击取消不删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条已存在的推流主播记录，用户编号：gx7lm7ph88wm2wd",
+   "preconditions": "推流主播列表中存在用户编号 gx7lm7ph88wm2wd 的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击该行的「删除」按钮",
+     "expected": "弹出确认删除对话框"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "对话框关闭，列表无变化，该记录仍存在"
+    }
+   ],
+   "expected_result": "取消删除，记录未被删除，数据库无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "删除推流主播-确认对话框文案校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "任意一条推流主播记录",
+   "preconditions": "推流主播列表中存在至少一条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的「删除」按钮",
+     "expected": "弹出确认删除对话框，标题为「确认删除」，正文提示「确认要移除该用户」，按钮为「确定」和「取消」"
+    }
+   ],
+   "expected_result": "确认对话框文案与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "删除推流主播-删除不存在的记录（异常）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "推流主播",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟用户编号已被其他操作删除，或通过接口直接删除",
+   "preconditions": "推流主播列表中存在一条记录，但该记录在数据库中已被删除（通过其他途径）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在列表中找到该记录（可能已不在列表，但通过缓存或刷新延迟），点击「删除」按钮",
+     "expected": "若记录已不存在，点击删除后提示「记录不存在或已被删除」，不执行删除操作"
+    }
+   ],
+   "expected_result": "删除操作被拦截，提示记录不存在，不产生错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  }
+ ],
+ "api_cases": []
+}

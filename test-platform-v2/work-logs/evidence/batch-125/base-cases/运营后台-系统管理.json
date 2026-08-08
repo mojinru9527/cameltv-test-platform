@@ -1,0 +1,729 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "版本更新页面展示",
+    "description": "运营后台/系统管理/版本更新页面（版本更新.html）应正常展示，包含版本更新相关功能点，与参考系统（小象）保持一致。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求描述过于简略，仅提及'和小象一摸一样即可'，未明确版本更新页面的具体功能点（如版本列表、新增、编辑、删除、发布等）。",
+      "suggestion": "补充版本更新页面的详细功能点清单，包括字段、操作、状态流转等。"
+     },
+     {
+      "severity": "high",
+      "description": "多语言支持要求不明确：'中文(给自己人内部看)、英文、阿语'，但未说明语言切换机制、默认语言、各语言字段的必填性。",
+      "suggestion": "明确多语言字段的配置方式、默认语言、切换入口及校验规则。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "多语言支持",
+    "description": "版本更新页面需支持中文、英文、阿语三种语言，中文仅供内部人员查看。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "未明确语言切换入口及权限控制，'中文仅供内部人员查看'需要权限校验。",
+      "suggestion": "定义语言切换的UI位置、权限角色，以及中文可见性的权限控制。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求描述非常简略，仅以'和小象一摸一样即可'作为功能基准，缺乏对版本更新页面具体功能点、字段、操作流程、状态流转的明确说明。多语言支持要求虽提及，但未定义语言切换机制、默认语言、各语言字段的必填性及中文的权限控制。整体需求清晰度低，存在较多模糊点，需要补充详细需求文档或参考系统截图。"
+ },
+ "functional_cases": [
+  {
+   "title": "版本更新页面正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入版本更新页面，无特殊数据，验证页面基本展示。",
+   "preconditions": "已登录运营后台，具有系统管理-版本更新菜单权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击左侧菜单'系统管理'下的'版本更新'",
+     "expected": "页面正常加载，无报错，URL 指向版本更新.html"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面整体布局",
+     "expected": "页面包含版本列表、搜索区域、新增按钮等基本元素，与参考系统（小象）一致"
+    }
+   ],
+   "expected_result": "版本更新页面正常展示，无空白、无报错，布局与参考系统一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "无权限用户访问版本更新页面被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无版本更新菜单权限的运营账号登录。",
+   "preconditions": "已登录运营后台，账号无系统管理-版本更新菜单权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试通过URL直接访问版本更新页面",
+     "expected": "提示无权限或跳转到无权限页面，无法访问页面内容"
+    }
+   ],
+   "expected_result": "无权限用户无法访问版本更新页面，系统给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "版本列表展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在多条版本记录，包含不同版本号、更新内容、发布时间等。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统已存在版本数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "页面展示版本列表，包含版本号、更新内容、发布时间、状态等字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表数据",
+     "expected": "列表数据与数据库一致，分页正常，排序合理"
+    }
+   ],
+   "expected_result": "版本列表正确展示，字段完整，数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "版本列表为空时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中无任何版本记录。",
+   "preconditions": "已登录运营后台，有版本更新权限，数据库无版本数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "列表显示'暂无数据'或空态提示，页面无异常"
+    }
+   ],
+   "expected_result": "空列表时展示友好空态提示，无报错。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增版本-填写完整信息成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "版本号：V2.0.1，更新内容：修复已知问题，发布时间：2024-01-01，状态：已发布，多语言内容：中文'修复已知问题'，英文'Fix known issues'，阿语'إصلاح المشكلات المعروفة'。",
+   "preconditions": "已登录运营后台，有版本更新新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增版本对话框"
+    },
+    {
+     "step": 2,
+     "desc": "填写版本号'V2.0.1'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "填写更新内容（中文）'修复已知问题'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "填写英文更新内容'Fix known issues'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "填写阿语更新内容'إصلاح المشكلات المعروفة'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 6,
+     "desc": "选择发布时间'2024-01-01'",
+     "expected": "选择成功"
+    },
+    {
+     "step": 7,
+     "desc": "选择状态'已发布'",
+     "expected": "选择成功"
+    },
+    {
+     "step": 8,
+     "desc": "点击'保存'",
+     "expected": "保存成功，提示'保存成功'，列表刷新并显示新记录"
+    }
+   ],
+   "expected_result": "新增版本成功，数据库新增对应记录，列表展示新版本。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增版本-版本号必填校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "版本号留空，其他字段正常填写。",
+   "preconditions": "已登录运营后台，有版本更新新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增版本对话框"
+    },
+    {
+     "step": 2,
+     "desc": "版本号留空，填写其他必填字段",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'版本号不能为空'，保存失败，数据库无新增记录"
+    }
+   ],
+   "expected_result": "版本号必填校验生效，无法保存。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增版本-更新内容必填校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "更新内容（中文）留空，其他字段正常填写。",
+   "preconditions": "已登录运营后台，有版本更新新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增版本对话框"
+    },
+    {
+     "step": 2,
+     "desc": "更新内容（中文）留空，填写其他必填字段",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'更新内容不能为空'，保存失败，数据库无新增记录"
+    }
+   ],
+   "expected_result": "更新内容必填校验生效，无法保存。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增版本-多语言内容完整性校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "英文更新内容留空，中文和阿语填写。",
+   "preconditions": "已登录运营后台，有版本更新新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增版本对话框"
+    },
+    {
+     "step": 2,
+     "desc": "填写版本号、中文更新内容、阿语更新内容，英文更新内容留空",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'英文更新内容不能为空'，保存失败，数据库无新增记录"
+    }
+   ],
+   "expected_result": "多语言字段必填校验生效，确保各语言内容完整。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "新增版本-版本号重复校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已存在版本号'V2.0.1'，再次新增相同版本号。",
+   "preconditions": "已登录运营后台，有版本更新新增权限，系统中已存在版本号V2.0.1",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增版本对话框"
+    },
+    {
+     "step": 2,
+     "desc": "填写版本号'V2.0.1'，其他字段正常填写",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'版本号已存在'，保存失败，数据库无新增记录"
+    }
+   ],
+   "expected_result": "版本号唯一性校验生效，重复版本号无法保存。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "编辑版本-修改信息成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条已有版本记录，修改更新内容为'优化性能'，其他字段不变。",
+   "preconditions": "已登录运营后台，有版本更新编辑权限，存在一条版本记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在版本列表中选择一条记录，点击'编辑'按钮",
+     "expected": "弹出编辑对话框，回显当前记录信息"
+    },
+    {
+     "step": 2,
+     "desc": "修改更新内容（中文）为'优化性能'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "保存成功，提示'保存成功'，列表刷新显示修改后的内容"
+    }
+   ],
+   "expected_result": "编辑版本成功，数据库记录更新，列表展示新内容。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "编辑版本-修改版本号为已存在版本号被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "将版本A的版本号修改为版本B的版本号（已存在）。",
+   "preconditions": "已登录运营后台，有版本更新编辑权限，存在两条版本记录，版本号分别为V1.0和V2.0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "编辑版本V1.0，将版本号改为'V2.0'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'",
+     "expected": "提示'版本号已存在'，保存失败，数据库记录未修改"
+    }
+   ],
+   "expected_result": "编辑时版本号唯一性校验生效，重复版本号无法保存。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "删除版本-确认后删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条版本记录，执行删除操作。",
+   "preconditions": "已登录运营后台，有版本更新删除权限，存在一条版本记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在版本列表中选择一条记录，点击'删除'按钮",
+     "expected": "弹出确认删除对话框，提示'确定删除该版本吗？'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'",
+     "expected": "删除成功，提示'删除成功'，列表刷新，该记录消失"
+    }
+   ],
+   "expected_result": "删除版本成功，数据库记录被删除，列表不再显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "删除版本-取消删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条版本记录，执行删除操作但取消。",
+   "preconditions": "已登录运营后台，有版本更新删除权限，存在一条版本记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在版本列表中选择一条记录，点击'删除'按钮",
+     "expected": "弹出确认删除对话框"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'",
+     "expected": "对话框关闭，记录未被删除，列表不变"
+    }
+   ],
+   "expected_result": "取消删除后，记录保留，无数据变化。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "搜索版本-按版本号精确搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词'V2.0.1'，系统中存在该版本号。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统中存在版本号V2.0.1",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'V2.0.1'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表只显示版本号为V2.0.1的记录"
+    }
+   ],
+   "expected_result": "按版本号精确搜索成功，列表过滤正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "搜索版本-无匹配结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词'V9.9.9'，系统中不存在该版本号。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统中无版本号V9.9.9",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在搜索框输入'V9.9.9'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示'暂无数据'，无报错"
+    }
+   ],
+   "expected_result": "无匹配结果时展示空态，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "多语言切换-切换为英文",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "页面语言切换为英文，验证页面文案和版本内容显示英文。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统支持多语言切换",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "页面显示默认语言（中文）"
+    },
+    {
+     "step": 2,
+     "desc": "点击语言切换按钮，选择'English'",
+     "expected": "页面文案切换为英文，版本列表中的更新内容显示英文"
+    }
+   ],
+   "expected_result": "语言切换为英文后，页面所有文案和版本内容均显示英文。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "多语言切换-切换为阿语",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "页面语言切换为阿语，验证页面文案和版本内容显示阿语。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统支持多语言切换",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "页面显示默认语言（中文）"
+    },
+    {
+     "step": 2,
+     "desc": "点击语言切换按钮，选择'العربية'",
+     "expected": "页面文案切换为阿语，版本列表中的更新内容显示阿语"
+    }
+   ],
+   "expected_result": "语言切换为阿语后，页面所有文案和版本内容均显示阿语。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "多语言切换-中文仅内部人员可见",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用外部运营账号（非内部人员）登录，尝试切换中文。",
+   "preconditions": "已登录运营后台，账号非内部人员角色，系统支持多语言切换",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "页面语言切换下拉框中不显示'中文'选项，或显示但不可选"
+    },
+    {
+     "step": 2,
+     "desc": "尝试通过URL参数强制切换为中文",
+     "expected": "无法切换，页面仍显示英文或阿语，或提示无权限"
+    }
+   ],
+   "expected_result": "非内部人员无法使用中文语言，中文仅内部人员可见。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "版本更新-发布状态变更",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "状态机",
+   "positive_negative": "positive",
+   "test_data_note": "将版本状态从'未发布'改为'已发布'。",
+   "preconditions": "已登录运营后台，有版本更新编辑权限，存在一条状态为'未发布'的版本记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "编辑该版本，将状态改为'已发布'",
+     "expected": "状态修改成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击'保存'",
+     "expected": "保存成功，列表显示状态为'已发布'"
+    }
+   ],
+   "expected_result": "版本状态从'未发布'变更为'已发布'，数据库状态更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "版本更新-已发布版本不允许删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条状态为'已发布'的版本记录，尝试删除。",
+   "preconditions": "已登录运营后台，有版本更新删除权限，存在一条状态为'已发布'的版本记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在版本列表中选择一条已发布记录，点击'删除'按钮",
+     "expected": "弹出提示'已发布的版本不允许删除'，删除操作被拦截"
+    }
+   ],
+   "expected_result": "已发布版本无法删除，系统给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "版本更新-分页功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在超过一页的版本数据（如每页10条，共15条）。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统存在超过一页的版本数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "列表显示第一页数据，分页控件显示总页数"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "列表显示第二页数据，分页正确"
+    }
+   ],
+   "expected_result": "分页功能正常，数据正确切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "版本更新-每页显示条数切换",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "切换每页显示条数为20条。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统存在版本数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "列表默认显示每页10条"
+    },
+    {
+     "step": 2,
+     "desc": "选择每页显示20条",
+     "expected": "列表刷新，每页显示20条数据"
+    }
+   ],
+   "expected_result": "每页显示条数切换功能正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "版本更新-导出功能",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击导出按钮，验证导出文件内容。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统存在版本数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "页面正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'导出'按钮",
+     "expected": "下载导出文件，文件内容与列表数据一致，无乱码"
+    }
+   ],
+   "expected_result": "导出功能正常，文件内容准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ]
+  },
+  {
+   "title": "版本更新-导出时无数据",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "系统管理/版本更新",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "系统中无版本数据，点击导出。",
+   "preconditions": "已登录运营后台，有版本更新权限，系统无版本数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入版本更新页面",
+     "expected": "列表显示空态"
+    },
+    {
+     "step": 2,
+     "desc": "点击'导出'按钮",
+     "expected": "提示'暂无数据可导出'，不生成文件"
+    }
+   ],
+   "expected_result": "无数据时导出被拦截，提示明确。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ]
+  }
+ ],
+ "api_cases": []
+}

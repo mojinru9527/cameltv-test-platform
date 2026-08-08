@@ -1,0 +1,3942 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "登录 奖励银钻",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「登录 奖励银钻」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求仅描述为「list：登录 奖励银钻」，未明确该任务的具体奖励银钻数额、任务编号规则、创建时间格式等字段的展示要求。",
+      "suggestion": "补充任务内容列表的字段定义（任务编号、任务类型、创建时间、奖励银钻数额）及展示格式要求。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "累计观看",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「累计观看」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "「累计观看」任务可能包含观看时长（如10min/30min）等子条件，需求未明确是否在列表中展示这些子条件。",
+      "suggestion": "明确「累计观看」任务在列表中的展示字段，是否包含时长信息。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "10min",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「10min」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "「10min」作为任务类型名称，语义不清晰，可能指观看时长10分钟的任务，需明确其业务含义。",
+      "suggestion": "明确「10min」任务的具体业务定义（如累计观看10分钟）。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "30min",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「30min」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "「30min」作为任务类型名称，语义不清晰，可能指观看时长30分钟的任务，需明确其业务含义。",
+      "suggestion": "明确「30min」任务的具体业务定义（如累计观看30分钟）。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "浏览",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「浏览」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "「浏览」任务可能包含浏览资讯篇数等条件，需求未明确是否在列表中展示。",
+      "suggestion": "明确「浏览」任务在列表中的展示字段，是否包含篇数信息。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "篇资讯 奖励银钻",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「篇资讯 奖励银钻」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "「篇资讯 奖励银钻」任务名称包含奖励信息，但需求未明确具体奖励银钻数额及任务条件（如浏览几篇资讯）。",
+      "suggestion": "补充该任务的奖励数额和任务条件定义。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-7",
+    "title": "点赞",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「点赞」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "「点赞」任务可能包含点赞次数等条件，需求未明确是否在列表中展示。",
+      "suggestion": "明确「点赞」任务在列表中的展示字段，是否包含次数信息。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-8",
+    "title": "累计邀请",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「累计邀请」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "「累计邀请」任务可能包含邀请人数等条件，需求未明确是否在列表中展示。",
+      "suggestion": "明确「累计邀请」任务在列表中的展示字段，是否包含人数信息。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-9",
+    "title": "人 奖励银钻",
+    "description": "运营后台银钻任务-任务内容页面中，任务类型为「人 奖励银钻」的任务列表展示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "「人 奖励银钻」任务名称包含奖励信息，但需求未明确具体奖励银钻数额及任务条件（如邀请几人）。",
+      "suggestion": "补充该任务的奖励数额和任务条件定义。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求仅列出了任务内容页面的任务类型清单，但未提供任务内容列表的字段定义、展示规则、操作（如查看/关闭）的具体行为、数据来源及权限控制等关键细节。需求清晰度不足，存在较多语义模糊点，需补充详细的功能规格说明后才能设计出完整且可执行的测试用例。"
+ },
+ "functional_cases": [
+  {
+   "title": "验证任务完成记录页面正常加载并展示列表",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的任务完成记录数据，如记录编号 1、任务编号 1、创建时间 2019-03-21 16:12:40、用户编号 1001 等。",
+   "preconditions": "已登录运营后台，具有银钻任务模块的查看权限，存在至少一条任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单'银钻任务'下的'任务完成记录'。",
+     "expected": "页面成功加载，显示任务完成记录列表。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表表头。",
+     "expected": "列表包含'记录编号'、'任务编号'、'创建时间'、'用户编号'等列。"
+    },
+    {
+     "step": 3,
+     "desc": "查看列表数据行。",
+     "expected": "每条记录显示对应的记录编号、任务编号、创建时间、用户编号，数据与数据库一致。"
+    }
+   ],
+   "expected_result": "页面正常加载，列表展示完整，数据准确。",
+   "remark": "正面用例，验证基本列表展示功能。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "验证无数据时列表显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无任务完成记录的环境，或通过搜索条件筛选出无结果。",
+   "preconditions": "已登录运营后台，数据库中无任务完成记录，或通过搜索条件筛选出无结果。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载，列表显示空态提示，如'暂无数据'。"
+    }
+   ],
+   "expected_result": "列表显示空态提示，无报错。",
+   "remark": "负面用例，验证空数据场景。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "验证按记录编号精确搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用存在的记录编号，如'1'，该编号对应一条已知记录。",
+   "preconditions": "已登录运营后台，存在记录编号为1的任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'记录编号'输入框中输入'1'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮。",
+     "expected": "列表刷新，仅显示记录编号为1的记录。"
+    }
+   ],
+   "expected_result": "列表正确筛选出记录编号为1的记录。",
+   "remark": "正面用例，验证精确搜索。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "验证按不存在的记录编号搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用不存在的记录编号，如'999999'。",
+   "preconditions": "已登录运营后台，数据库中不存在记录编号为999999的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'记录编号'输入框中输入'999999'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮。",
+     "expected": "列表显示空态提示，如'暂无数据'。"
+    }
+   ],
+   "expected_result": "列表无数据，提示无结果。",
+   "remark": "负面用例，验证搜索无结果场景。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "验证按用户编号模糊搜索成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用存在的用户编号前缀，如'100'，该前缀匹配多个用户编号（如1001、1002等）。",
+   "preconditions": "已登录运营后台，存在用户编号以100开头的任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'用户编号'输入框中输入'100'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮。",
+     "expected": "列表显示所有用户编号以100开头的记录。"
+    }
+   ],
+   "expected_result": "列表正确筛选出符合条件的记录。",
+   "remark": "正面用例，验证模糊搜索。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "验证按用户编号搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用不存在的用户编号，如'999999'。",
+   "preconditions": "已登录运营后台，数据库中不存在用户编号为999999的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'用户编号'输入框中输入'999999'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮。",
+     "expected": "列表显示空态提示，如'暂无数据'。"
+    }
+   ],
+   "expected_result": "列表无数据，提示无结果。",
+   "remark": "负面用例，验证搜索无结果场景。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "验证按创建时间范围搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "使用时间范围 2019-03-21 00:00:00 至 2019-03-21 23:59:59，该范围内存在多条记录。",
+   "preconditions": "已登录运营后台，存在创建时间在2019-03-21的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'创建时间'开始时间输入框中输入'2019-03-21 00:00:00'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "在'创建时间'结束时间输入框中输入'2019-03-21 23:59:59'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 4,
+     "desc": "点击'搜索'按钮。",
+     "expected": "列表显示创建时间在该范围内的记录。"
+    }
+   ],
+   "expected_result": "列表正确筛选出时间范围内的记录。",
+   "remark": "正面用例，验证时间范围搜索。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "验证创建时间开始时间晚于结束时间时提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "开始时间 2019-03-22 00:00:00，结束时间 2019-03-21 00:00:00，开始时间晚于结束时间。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'创建时间'开始时间输入框中输入'2019-03-22 00:00:00'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "在'创建时间'结束时间输入框中输入'2019-03-21 00:00:00'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 4,
+     "desc": "点击'搜索'按钮。",
+     "expected": "页面提示'开始时间不能晚于结束时间'，不执行搜索。"
+    }
+   ],
+   "expected_result": "搜索被拦截，并给出明确错误提示。",
+   "remark": "负面用例，验证时间范围校验。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "验证搜索条件为空时点击搜索显示全部记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "所有搜索条件留空。",
+   "preconditions": "已登录运营后台，存在多条任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "不输入任何搜索条件，直接点击'搜索'按钮。",
+     "expected": "列表显示所有任务完成记录。"
+    }
+   ],
+   "expected_result": "列表显示全部记录，无报错。",
+   "remark": "正面用例，验证空条件搜索。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "验证重置按钮清空搜索条件并刷新列表",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先输入搜索条件，如记录编号'1'，然后点击重置。",
+   "preconditions": "已登录运营后台，存在记录编号为1的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'记录编号'输入框中输入'1'。",
+     "expected": "输入成功。"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮。",
+     "expected": "列表显示记录编号为1的记录。"
+    },
+    {
+     "step": 4,
+     "desc": "点击'重置'按钮。",
+     "expected": "所有搜索条件被清空，列表显示全部记录。"
+    }
+   ],
+   "expected_result": "搜索条件清空，列表恢复为全部记录。",
+   "remark": "正面用例，验证重置功能。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "验证记录编号输入框输入超长字符被限制",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入超过输入框最大长度（假设为20位）的字符串，如'123456789012345678901'。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'记录编号'输入框中输入'123456789012345678901'。",
+     "expected": "输入被截断或提示超出长度限制。"
+    }
+   ],
+   "expected_result": "输入框限制输入长度，不产生异常。",
+   "remark": "负面用例，验证输入长度限制。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "验证记录编号输入框输入特殊字符被拒绝",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符，如'@#$%'。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在'记录编号'输入框中输入'@#$%'。",
+     "expected": "输入被拒绝或提示格式错误。"
+    }
+   ],
+   "expected_result": "输入框校验特殊字符，不产生异常。",
+   "remark": "负面用例，验证输入格式校验。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "验证列表分页功能正常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在超过一页的数据（如每页10条，共15条记录）。",
+   "preconditions": "已登录运营后台，存在超过一页的任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载，显示第一页数据。"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页按钮。",
+     "expected": "显示第二页数据。"
+    }
+   ],
+   "expected_result": "分页功能正常，数据正确切换。",
+   "remark": "正面用例，验证分页。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "验证列表排序功能正常",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'创建时间'列头进行排序。",
+   "preconditions": "已登录运营后台，存在多条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面。",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击'创建时间'列头。",
+     "expected": "列表按创建时间升序或降序排列。"
+    }
+   ],
+   "expected_result": "列表按创建时间正确排序。",
+   "remark": "正面用例，验证排序功能。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "验证无权限访问任务完成记录页面被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无银钻任务模块权限的运营账号登录。",
+   "preconditions": "已登录运营后台，但当前账号无银钻任务模块的查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台。",
+     "expected": "登录成功。"
+    },
+    {
+     "step": 2,
+     "desc": "尝试访问任务完成记录页面（如通过URL直接访问）。",
+     "expected": "页面提示无权限访问，或菜单中不显示该入口。"
+    }
+   ],
+   "expected_result": "无权限用户无法访问该页面，并得到明确提示。",
+   "remark": "负面用例，验证权限控制。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "验证点击'联赛及球队管理'菜单跳转正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击左侧菜单'联赛及球队管理'。",
+   "preconditions": "已登录运营后台，具有联赛及球队管理模块的访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单'联赛及球队管理'。",
+     "expected": "跳转到联赛及球队管理页面。"
+    }
+   ],
+   "expected_result": "正确跳转到联赛及球队管理页面。",
+   "remark": "正面用例，验证导航功能。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "验证点击'联赛及球队管理'菜单无权限时被拦截",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的账号点击该菜单。",
+   "preconditions": "已登录运营后台，但当前账号无联赛及球队管理模块的访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台。",
+     "expected": "登录成功。"
+    },
+    {
+     "step": 2,
+     "desc": "点击左侧菜单'联赛及球队管理'。",
+     "expected": "页面提示无权限访问，或菜单不可点击。"
+    }
+   ],
+   "expected_result": "无权限用户无法访问该页面，并得到明确提示。",
+   "remark": "负面用例，验证权限控制。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "任务完成记录列表默认展示全部记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中预置多条任务完成记录，包含不同任务类型（每日任务、新用户任务）、不同银钻数额（如 1,300、2,000）、不同创建时间（如 2019-03-21 16:12:40）。",
+   "preconditions": "已登录运营后台，具有银钻任务-任务完成记录页面的查看权限；数据库中存在至少 10 条任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」下的「任务完成记录」",
+     "expected": "页面加载成功，展示任务完成记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "不输入任何搜索条件，直接点击「搜索」按钮",
+     "expected": "列表展示全部任务完成记录，每条记录包含记录编号、任务编号、创建时间、用户编号、任务类型、银钻数额字段"
+    }
+   ],
+   "expected_result": "列表展示全部任务完成记录，字段完整，数据与数据库一致，默认按创建时间倒序排列。",
+   "remark": "正面用例，验证列表默认展示",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "任务完成记录列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何任务完成记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中任务完成记录表为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表展示空态提示，如「暂无数据」或「没有找到相关记录」"
+    }
+   ],
+   "expected_result": "列表显示空态提示，无异常报错。",
+   "remark": "负面用例，验证空数据场景",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "按记录编号精确搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录编号为 'REC001'，数据库中存在该记录，对应任务类型为每日任务，银钻数额为 1,300。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在记录编号为 'REC001' 的任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号」输入框中输入 'REC001'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅展示记录编号为 'REC001' 的记录，且字段正确"
+    }
+   ],
+   "expected_result": "列表展示匹配的记录，记录编号为 'REC001'，其他字段与数据库一致。",
+   "remark": "正面用例，验证精确搜索",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "按不存在的记录编号搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "记录编号为 'NOT_EXIST'，数据库中不存在该记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中不存在记录编号为 'NOT_EXIST' 的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号」输入框中输入 'NOT_EXIST'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表展示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "列表显示空态提示，无异常报错。",
+   "remark": "负面用例，验证无匹配数据",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "按创建时间范围搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "创建时间范围：开始时间 2019-03-21 00:00:00，结束时间 2019-03-21 23:59:59；数据库中存在创建时间在该范围内的记录（如 2019-03-21 16:12:40）。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在创建时间在 2019-03-21 00:00:00 至 2019-03-21 23:59:59 之间的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「创建时间」开始时间输入框输入 '2019-03-21 00:00:00'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "在「创建时间」结束时间输入框输入 '2019-03-21 23:59:59'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 4,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅展示创建时间在该范围内的记录"
+    }
+   ],
+   "expected_result": "列表展示创建时间在指定范围内的记录，且记录时间均满足条件。",
+   "remark": "正面用例，验证时间范围搜索",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "创建时间开始时间晚于结束时间时提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "开始时间 2019-03-21 16:00:00，结束时间 2019-03-21 15:00:00，开始时间晚于结束时间。",
+   "preconditions": "已登录运营后台，具有查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「创建时间」开始时间输入框输入 '2019-03-21 16:00:00'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "在「创建时间」结束时间输入框输入 '2019-03-21 15:00:00'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 4,
+     "desc": "点击「搜索」按钮",
+     "expected": "页面提示「开始时间不能晚于结束时间」或类似错误提示，不发起搜索请求"
+    }
+   ],
+   "expected_result": "搜索被拦截，提示错误信息，列表保持原状。",
+   "remark": "负面用例，验证时间范围边界",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "按用户编号模糊搜索成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号为 'USER001'，数据库中存在用户编号以 'USER' 开头的记录，如 'USER001'、'USER002'。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在用户编号以 'USER' 开头的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「用户编号」输入框中输入 'USER'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表展示所有用户编号以 'USER' 开头的记录"
+    }
+   ],
+   "expected_result": "列表展示用户编号以 'USER' 开头的记录，且字段正确。",
+   "remark": "正面用例，验证模糊搜索",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "按不存在的用户编号搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号为 'NO_SUCH_USER'，数据库中不存在该用户编号。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中不存在用户编号为 'NO_SUCH_USER' 的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「用户编号」输入框中输入 'NO_SUCH_USER'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表展示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "列表显示空态提示，无异常报错。",
+   "remark": "负面用例，验证无匹配数据",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "组合条件搜索（记录编号+创建时间+用户编号）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "记录编号 'REC001'，创建时间范围 2019-03-21 00:00:00 至 2019-03-21 23:59:59，用户编号 'USER001'；数据库中存在同时满足这三个条件的记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在同时满足记录编号 'REC001'、创建时间在 2019-03-21 内、用户编号 'USER001' 的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号」输入框中输入 'REC001'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "在「创建时间」开始时间输入框输入 '2019-03-21 00:00:00'，结束时间输入框输入 '2019-03-21 23:59:59'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 4,
+     "desc": "在「用户编号」输入框中输入 'USER001'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 5,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅展示同时满足三个条件的记录"
+    }
+   ],
+   "expected_result": "列表展示同时满足记录编号、创建时间范围、用户编号的记录，且字段正确。",
+   "remark": "正面用例，验证组合搜索",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "任务类型字段展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中存在任务类型为「每日任务」和「新用户任务」的记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在任务类型为「每日任务」和「新用户任务」的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「任务类型」列",
+     "expected": "任务类型列展示对应的类型名称，如「每日任务」「新用户任务」，与数据库一致"
+    }
+   ],
+   "expected_result": "任务类型字段展示正确，无乱码或错值。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "银钻数额字段展示格式正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中银钻数额为 1300，预期展示为 '1,300'；银钻数额为 2000，预期展示为 '2,000'。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在银钻数额为 1300 和 2000 的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「银钻数额」列",
+     "expected": "银钻数额以千分位格式展示，如 '1,300'、'2,000'"
+    }
+   ],
+   "expected_result": "银钻数额字段以千分位格式展示，与需求示例一致。",
+   "remark": "正面用例，验证字段格式",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "银钻数额为 0 时展示正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中银钻数额为 0 的记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在银钻数额为 0 的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻数额为 0 的记录",
+     "expected": "银钻数额列展示 '0'，无异常格式"
+    }
+   ],
+   "expected_result": "银钻数额为 0 时正常展示 '0'。",
+   "remark": "边界用例，验证最小数值",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "创建时间字段格式正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中创建时间为 2019-03-21 16:12:40。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在创建时间为 2019-03-21 16:12:40 的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「创建时间」列",
+     "expected": "创建时间以 'yyyy-MM-dd HH:mm:ss' 格式展示，如 '2019-03-21 16:12:40'"
+    }
+   ],
+   "expected_result": "创建时间字段格式正确，与需求示例一致。",
+   "remark": "正面用例，验证字段格式",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "重置按钮清空搜索条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已输入记录编号 'REC001'、创建时间范围、用户编号 'USER001'。",
+   "preconditions": "已登录运营后台，具有查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号」输入框中输入 'REC001'，在「创建时间」输入开始和结束时间，在「用户编号」输入框中输入 'USER001'",
+     "expected": "输入框正常显示输入值"
+    },
+    {
+     "step": 3,
+     "desc": "点击「重置」按钮",
+     "expected": "所有搜索条件被清空，输入框恢复为空，列表恢复为默认展示全部记录"
+    }
+   ],
+   "expected_result": "搜索条件被清空，列表展示全部记录。",
+   "remark": "正面用例，验证重置功能",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "搜索条件输入特殊字符时系统容错",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "记录编号输入框输入 'abc!@#'，用户编号输入框输入 'user; DROP TABLE'。",
+   "preconditions": "已登录运营后台，具有查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号」输入框中输入 'abc!@#'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "在「用户编号」输入框中输入 'user; DROP TABLE'",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 4,
+     "desc": "点击「搜索」按钮",
+     "expected": "系统不报错，列表展示空态提示，无 SQL 注入等安全问题"
+    }
+   ],
+   "expected_result": "系统安全处理特殊字符，无异常报错，无数据泄露。",
+   "remark": "负面用例，验证特殊字符容错",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "无权限用户访问任务完成记录页面被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无银钻任务模块权限的运营账号登录。",
+   "preconditions": "存在一个无银钻任务模块权限的运营账号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台",
+     "expected": "登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "尝试访问任务完成记录页面（如通过 URL 直接访问）",
+     "expected": "页面提示无权限或跳转到无权限提示页，无法查看列表数据"
+    }
+   ],
+   "expected_result": "无权限用户被拦截，无法访问任务完成记录页面。",
+   "remark": "负面用例，验证权限控制",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "任务完成记录列表正确展示「篇资讯」任务类型",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在一条任务类型为「篇资讯」的任务完成记录，银钻数额为2000，创建时间为2019-03-21 16:07:39。",
+   "preconditions": "已登录运营后台，具有银钻任务-任务完成记录页面的查看权限；数据库中存在任务类型为「篇资讯」的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」下的「任务完成记录」",
+     "expected": "页面正常加载，显示任务完成记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找任务类型为「篇资讯」的记录",
+     "expected": "列表中存在一条记录，任务类型列显示为「篇资讯」"
+    }
+   ],
+   "expected_result": "任务完成记录列表中正确显示任务类型为「篇资讯」的记录，且其他字段（银钻数额、创建时间等）与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "任务完成记录列表不显示任务类型为「篇资讯」的记录（无数据）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任务类型为「篇资讯」的任务完成记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中无「篇资讯」类型的任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载，列表显示空数据或提示无数据"
+    },
+    {
+     "step": 2,
+     "desc": "检查列表中是否出现「篇资讯」任务类型",
+     "expected": "列表中没有「篇资讯」任务类型的记录"
+    }
+   ],
+   "expected_result": "列表不显示「篇资讯」任务类型的记录，页面无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "任务完成记录列表正确展示银钻数额2,000",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中银钻数额字段值为2000，预期显示为带千分位格式的「2,000」。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在银钻数额为2000的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻数额列中数值为2000的记录",
+     "expected": "银钻数额列显示为「2,000」"
+    }
+   ],
+   "expected_result": "银钻数额正确显示为「2,000」，格式符合千分位要求。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "银钻数额为0时显示为0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中银钻数额字段值为0，预期显示为「0」。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在银钻数额为0的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻数额为0的记录",
+     "expected": "银钻数额列显示为「0」"
+    }
+   ],
+   "expected_result": "银钻数额为0时正确显示为「0」，无格式错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "任务完成记录列表正确展示创建时间2019-03-21 16:07:39",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中创建时间字段值为2019-03-21 16:07:39，预期显示为「2019-03-21 16:07:39」。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在创建时间为2019-03-21 16:07:39的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列中值为2019-03-21 16:07:39的记录",
+     "expected": "创建时间列显示为「2019-03-21 16:07:39」"
+    }
+   ],
+   "expected_result": "创建时间正确显示为「2019-03-21 16:07:39」，格式为年-月-日 时:分:秒。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "创建时间为空时显示为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中创建时间字段值为NULL，预期显示为空。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在创建时间为NULL的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间为空的记录",
+     "expected": "创建时间列显示为空，无异常报错"
+    }
+   ],
+   "expected_result": "创建时间为空时列表显示为空，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "任务完成记录列表正确展示「点赞」任务类型",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在一条任务类型为「点赞」的任务完成记录，创建时间为2019-03-21 16:06:48。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在任务类型为「点赞」的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找任务类型为「点赞」的记录",
+     "expected": "列表中存在一条记录，任务类型列显示为「点赞」"
+    }
+   ],
+   "expected_result": "任务完成记录列表中正确显示任务类型为「点赞」的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "任务类型为「点赞」的记录不存在时列表不显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任务类型为「点赞」的任务完成记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中无「点赞」类型的任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "检查列表中是否出现「点赞」任务类型",
+     "expected": "列表中没有「点赞」任务类型的记录"
+    }
+   ],
+   "expected_result": "列表不显示「点赞」任务类型的记录，页面无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "任务完成记录列表正确展示创建时间2019-03-21 16:06:48",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中创建时间字段值为2019-03-21 16:06:48，预期显示为「2019-03-21 16:06:48」。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在创建时间为2019-03-21 16:06:48的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列中值为2019-03-21 16:06:48的记录",
+     "expected": "创建时间列显示为「2019-03-21 16:06:48」"
+    }
+   ],
+   "expected_result": "创建时间正确显示为「2019-03-21 16:06:48」。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "创建时间格式错误时显示异常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中创建时间字段值为非法格式（如'2019/03/21'），预期页面应显示原始值或提示错误。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在创建时间格式非法的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间格式非法的记录",
+     "expected": "创建时间列显示原始值或显示为'--'，页面无崩溃"
+    }
+   ],
+   "expected_result": "创建时间格式异常时页面不崩溃，显示合理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "任务完成记录列表正确展示「新用户任务」任务类型",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在一条任务类型为「新用户任务」的任务完成记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在任务类型为「新用户任务」的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找任务类型为「新用户任务」的记录",
+     "expected": "列表中存在一条记录，任务类型列显示为「新用户任务」"
+    }
+   ],
+   "expected_result": "任务完成记录列表中正确显示任务类型为「新用户任务」的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "任务类型为「新用户任务」的记录不存在时列表不显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务-任务完成记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任务类型为「新用户任务」的任务完成记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中无「新用户任务」类型的任务完成记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务完成记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "检查列表中是否出现「新用户任务」任务类型",
+     "expected": "列表中没有「新用户任务」任务类型的记录"
+    }
+   ],
+   "expected_result": "列表不显示「新用户任务」任务类型的记录，页面无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "验证邀请好友记录列表默认展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中预置多条邀请记录，包含不同注册方式（手机号、邮箱、Google）和状态（邀请成功、绑定成功），用于验证列表展示。",
+   "preconditions": "运营后台已登录，存在至少3条邀请记录数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击菜单「银钻任务」下的「邀请好友记录」",
+     "expected": "页面正确加载，显示邀请好友记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表表头字段",
+     "expected": "表头包含：记录编号、创建时间、邀请用户编号、被邀请用户编号、注册方式、状态"
+    },
+    {
+     "step": 3,
+     "desc": "查看列表底部",
+     "expected": "显示「共X条」，X为实际记录总数，且与数据库记录数一致"
+    }
+   ],
+   "expected_result": "列表正确展示所有邀请记录，字段完整，共X条数量正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "验证列表无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何邀请记录，用于验证空态展示。",
+   "preconditions": "运营后台已登录，数据库中无邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载，列表区域显示空态提示（如「暂无数据」），表头仍显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表底部",
+     "expected": "显示「共0条」"
+    }
+   ],
+   "expected_result": "列表显示空态提示，共0条，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "验证按邀请用户编号精确搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用数据库中存在的邀请用户编号（如0989801）进行搜索，该编号对应多条记录。",
+   "preconditions": "运营后台已登录，存在邀请用户编号为0989801的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请用户编号」输入框中输入0989801",
+     "expected": "输入框正确显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示邀请用户编号为0989801的记录，共X条数量正确"
+    }
+   ],
+   "expected_result": "搜索结果准确，仅显示匹配的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "验证按不存在的邀请用户编号搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用数据库中不存在的邀请用户编号（如99999999）进行搜索，验证无结果处理。",
+   "preconditions": "运营后台已登录，数据库中不存在该编号",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请用户编号」输入框中输入99999999",
+     "expected": "输入框正确显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示空态提示，共0条，无异常报错"
+    }
+   ],
+   "expected_result": "搜索无结果时显示空态，共0条。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "验证按被邀请用户编号搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用数据库中存在的被邀请用户编号（如10001）进行搜索，该编号对应多条记录。",
+   "preconditions": "运营后台已登录，存在被邀请用户编号为10001的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在「被邀请用户编号」输入框中输入10001",
+     "expected": "输入框正确显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示被邀请用户编号为10001的记录，共X条数量正确"
+    }
+   ],
+   "expected_result": "搜索结果准确，仅显示匹配的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "验证被邀请用户编号为空时搜索提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "被邀请用户编号输入框留空，验证空值处理。",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "不输入被邀请用户编号，直接点击「搜索」按钮",
+     "expected": "系统提示「请输入被邀请用户编号」或忽略该条件，但不应报错"
+    }
+   ],
+   "expected_result": "空值处理合理，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "验证同时输入邀请用户编号和被邀请用户编号组合搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用数据库中存在的邀请用户编号0989801和被邀请用户编号10001，且两者存在关联记录，验证组合查询。",
+   "preconditions": "运营后台已登录，存在同时满足两个条件的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请用户编号」输入框中输入0989801，在「被邀请用户编号」输入框中输入10001",
+     "expected": "两个输入框正确显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅显示同时满足两个条件的记录，共X条数量正确"
+    }
+   ],
+   "expected_result": "组合查询结果准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "验证重置按钮清空搜索条件",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先输入搜索条件并执行搜索，再点击重置，验证条件清空和列表恢复。",
+   "preconditions": "运营后台已登录，存在多条邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请用户编号」输入框中输入0989801，点击「搜索」",
+     "expected": "列表显示筛选结果"
+    },
+    {
+     "step": 3,
+     "desc": "点击「重置」按钮",
+     "expected": "两个输入框被清空，列表恢复为全部记录，共X条为总记录数"
+    }
+   ],
+   "expected_result": "重置后搜索条件清空，列表恢复默认展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "验证重置按钮在无搜索条件时点击",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未输入任何搜索条件直接点击重置，验证无异常。",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "直接点击「重置」按钮",
+     "expected": "无异常提示，列表保持当前状态（全部记录）"
+    }
+   ],
+   "expected_result": "无搜索条件时重置不报错，列表不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "验证列表字段展示正确性",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中预置一条记录，包含所有字段：记录编号、创建时间、邀请用户编号、被邀请用户编号、注册方式（手机号）、状态（邀请成功）。",
+   "preconditions": "运营后台已登录，存在一条完整字段的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表第一条记录的各字段值",
+     "expected": "记录编号、创建时间（格式为YYYY-MM-DD HH:mm:ss）、邀请用户编号、被邀请用户编号、注册方式（手机号）、状态（邀请成功）均与数据库一致"
+    }
+   ],
+   "expected_result": "列表字段值与数据库一致，格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "验证创建时间字段格式",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中预置一条创建时间为2015-10-02 12:34:34的记录，验证时间格式。",
+   "preconditions": "运营后台已登录，存在该记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的创建时间字段",
+     "expected": "显示为2015-10-02 12:34:34，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "创建时间格式正确。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "验证搜索输入框长度限制",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过系统限制长度的用户编号（如20位数字），验证输入框限制。",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请用户编号」输入框中输入20位数字12345678901234567890",
+     "expected": "输入框最多允许输入系统限制长度（如15位），超出部分被截断或无法输入"
+    }
+   ],
+   "expected_result": "输入框正确限制长度，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "验证搜索输入框输入特殊字符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符如@#￥%等，验证系统处理。",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请用户编号」输入框中输入@#￥%",
+     "expected": "系统提示输入格式不正确，或禁止输入，或搜索无结果，但不报错"
+    }
+   ],
+   "expected_result": "特殊字符处理合理，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "验证搜索按钮连续点击",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "连续快速点击搜索按钮，验证系统稳定性。",
+   "preconditions": "运营后台已登录，存在多条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请用户编号」输入框中输入0989801",
+     "expected": "输入框正确显示"
+    },
+    {
+     "step": 3,
+     "desc": "连续快速点击「搜索」按钮5次",
+     "expected": "系统只发起一次搜索请求，列表正常显示结果，无重复请求或页面卡死"
+    }
+   ],
+   "expected_result": "连续点击不产生异常，系统稳定。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "验证列表分页功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中预置超过一页（如25条）的邀请记录，验证分页展示。",
+   "preconditions": "运营后台已登录，存在25条邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表底部",
+     "expected": "显示共25条，分页控件显示总页数（如3页），当前页为第1页"
+    },
+    {
+     "step": 3,
+     "desc": "点击下一页",
+     "expected": "列表刷新显示第2页数据，共25条不变"
+    }
+   ],
+   "expected_result": "分页功能正常，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "验证列表排序（创建时间倒序）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中预置两条记录，创建时间分别为2019-03-21 16:00:41和2019-03-21 16:00:31，验证默认排序。",
+   "preconditions": "运营后台已登录，存在上述两条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表第一条记录",
+     "expected": "第一条记录的创建时间为2019-03-21 16:00:41（较新），第二条为16:00:31，按创建时间倒序排列"
+    }
+   ],
+   "expected_result": "列表默认按创建时间倒序排列。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "验证邀请好友记录列表默认展示所有字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有数据，包含创建时间、邮箱、手机号、注册方式、状态等字段的记录",
+   "preconditions": "已登录运营后台，具有银钻任务-邀请好友记录的查看权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击银钻任务-邀请好友记录菜单",
+     "expected": "页面正常加载，显示邀请好友记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表表头",
+     "expected": "表头包含：记录编号、创建时间、邀请用户编号、被邀请用户编号、注册方式、状态"
+    },
+    {
+     "step": 3,
+     "desc": "观察列表数据行",
+     "expected": "每行数据完整展示各字段，如创建时间格式为YYYY-MM-DD HH:mm:ss，注册方式显示为邮箱/手机号/Google等，状态显示为绑定成功/邀请成功等"
+    },
+    {
+     "step": 4,
+     "desc": "查看列表底部",
+     "expected": "显示'共X条'，X为记录总数"
+    }
+   ],
+   "expected_result": "列表正常展示所有字段，数据完整，格式正确，底部显示记录总数",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "验证创建时间字段格式正确性",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有记录，创建时间如2019-03-21 16:00:41",
+   "preconditions": "已登录运营后台，存在创建时间记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的创建时间列",
+     "expected": "创建时间显示为'YYYY-MM-DD HH:mm:ss'格式，如'2019-03-21 16:00:41'"
+    }
+   ],
+   "expected_result": "创建时间字段格式统一为YYYY-MM-DD HH:mm:ss，无乱码或截断",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "验证创建时间字段为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条创建时间为空的记录（如数据库直接插入或通过接口）",
+   "preconditions": "存在创建时间为空的邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间字段为空的记录",
+     "expected": "创建时间列显示为空或显示'--'，不出现异常报错或乱码"
+    }
+   ],
+   "expected_result": "创建时间为空时页面正常展示，无崩溃或异常提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "验证邮箱字段正常展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用注册方式为邮箱的记录，如邮箱地址user@example.com",
+   "preconditions": "存在注册方式为邮箱的邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看注册方式为邮箱的记录",
+     "expected": "注册方式列显示'邮箱'，且被邀请用户编号或相关字段显示邮箱地址（如user@example.com）"
+    }
+   ],
+   "expected_result": "邮箱字段正常展示，无截断或乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "验证邮箱字段为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条邮箱为空的记录",
+   "preconditions": "存在邮箱为空的邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看邮箱字段为空的记录",
+     "expected": "邮箱相关列显示为空或'--'，页面无异常"
+    }
+   ],
+   "expected_result": "邮箱为空时页面正常展示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "验证绑定成功状态正常展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用状态为'绑定成功'的记录",
+   "preconditions": "存在状态为'绑定成功'的邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看状态列",
+     "expected": "状态列显示'绑定成功'，文字清晰无错别字"
+    }
+   ],
+   "expected_result": "绑定成功状态正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "验证未知状态值的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造状态为'未知状态'的记录",
+   "preconditions": "存在状态值不在预期枚举内的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看状态列",
+     "expected": "状态列显示原始值或'--'，页面无异常报错"
+    }
+   ],
+   "expected_result": "未知状态值正常展示，不导致页面崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "验证手机号字段正常展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用注册方式为手机号的记录，手机号如138****1234",
+   "preconditions": "存在注册方式为手机号的邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看注册方式为手机号的记录",
+     "expected": "注册方式列显示'手机号'，且被邀请用户编号或相关字段显示手机号（如138****1234）"
+    }
+   ],
+   "expected_result": "手机号字段正常展示，无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "验证手机号字段为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条手机号为空的记录",
+   "preconditions": "存在手机号为空的邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看手机号字段为空的记录",
+     "expected": "手机号相关列显示为空或'--'，页面无异常"
+    }
+   ],
+   "expected_result": "手机号为空时页面正常展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "验证邀请成功状态正常展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用状态为'邀请成功'的记录",
+   "preconditions": "存在状态为'邀请成功'的邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看状态列",
+     "expected": "状态列显示'邀请成功'，文字清晰"
+    }
+   ],
+   "expected_result": "邀请成功状态正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "验证注册方式为Google的记录展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用注册方式为Google的记录，如'oogle'（需求示例）",
+   "preconditions": "存在注册方式为Google的邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看注册方式列",
+     "expected": "注册方式列显示'Google'或'oogle'（按实际数据），无乱码"
+    }
+   ],
+   "expected_result": "Google注册方式正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "验证注册方式为未知值时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造注册方式为'未知'的记录",
+   "preconditions": "存在注册方式不在预期枚举内的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看注册方式列",
+     "expected": "注册方式列显示原始值或'--'，页面无异常"
+    }
+   ],
+   "expected_result": "未知注册方式正常展示，不导致页面崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "验证创建时间筛选功能-有效范围查询",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "使用创建时间范围：2015-10-02 12:34:34 至 2015-10-10 12:34:34，预期查询出该时间段内的记录",
+   "preconditions": "已登录运营后台，存在创建时间在2015-10-02至2015-10-10之间的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在创建时间筛选区域输入开始时间：2015-10-02 12:34:34",
+     "expected": "开始时间输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入结束时间：2015-10-10 12:34:34",
+     "expected": "结束时间输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击搜索按钮",
+     "expected": "列表刷新，仅显示创建时间在2015-10-02 12:34:34至2015-10-10 12:34:34之间的记录"
+    }
+   ],
+   "expected_result": "查询结果正确，包含边界时间记录，列表底部显示'共X条'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "验证创建时间筛选-开始时间大于结束时间",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "开始时间：2015-10-10 12:34:34，结束时间：2015-10-02 12:34:34（开始大于结束）",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "输入开始时间：2015-10-10 12:34:34",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入结束时间：2015-10-02 12:34:34",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示'开始时间不能大于结束时间'，或自动交换时间范围，不执行查询"
+    }
+   ],
+   "expected_result": "系统正确处理非法时间范围，给出明确提示，不产生错误数据",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "验证创建时间筛选-仅输入开始时间",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "仅输入开始时间：2015-10-02 12:34:34，不输入结束时间",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "输入开始时间：2015-10-02 12:34:34",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "不输入结束时间，点击搜索按钮",
+     "expected": "系统按开始时间之后的所有记录进行查询，或提示'请输入结束时间'，按需求定义执行"
+    }
+   ],
+   "expected_result": "系统正确处理单边时间输入，不出现异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "验证邀请用户编号筛选-有效编号查询",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统中存在的邀请用户编号，如'0989801'",
+   "preconditions": "已登录运营后台，存在邀请用户编号为0989801的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在邀请用户编号输入框输入：0989801",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表仅显示邀请用户编号为0989801的记录"
+    }
+   ],
+   "expected_result": "查询结果正确，仅显示匹配记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "验证邀请用户编号筛选-不存在的编号",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的邀请用户编号：99999999",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在邀请用户编号输入框输入：99999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示'共0条'，无数据，页面无异常"
+    }
+   ],
+   "expected_result": "查询无结果时显示空列表和'共0条'，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "验证被邀请用户编号筛选-有效编号查询",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统中存在的被邀请用户编号，如'10001'",
+   "preconditions": "已登录运营后台，存在被邀请用户编号为10001的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在被邀请用户编号输入框输入：10001",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表仅显示被邀请用户编号为10001的记录"
+    }
+   ],
+   "expected_result": "查询结果正确，仅显示匹配记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "验证被邀请用户编号筛选-输入非法字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入非法字符：abc@#",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在被邀请用户编号输入框输入：abc@#",
+     "expected": "输入成功或输入框限制输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示'请输入有效的用户编号'，或自动过滤非法字符，不执行查询"
+    }
+   ],
+   "expected_result": "系统对非法输入进行校验，给出明确提示，不产生错误查询",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "验证重置按钮功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已设置筛选条件：邀请用户编号0989801，创建时间范围2015-10-02至2015-10-10",
+   "preconditions": "已登录运营后台，已设置筛选条件",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "设置筛选条件：邀请用户编号0989801，创建时间范围2015-10-02至2015-10-10",
+     "expected": "筛选条件设置成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击重置按钮",
+     "expected": "所有筛选条件清空，列表恢复默认展示全部记录"
+    }
+   ],
+   "expected_result": "重置后筛选条件清空，列表显示全部记录，'共X条'更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "验证列表排序功能-按创建时间倒序",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在多条创建时间不同的记录",
+   "preconditions": "已登录运营后台，存在多条记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表默认排序",
+     "expected": "记录按创建时间倒序排列，最新创建的记录在最上方"
+    }
+   ],
+   "expected_result": "默认排序为创建时间倒序",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "验证无数据时的空态展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用不存在的筛选条件，如邀请用户编号99999999",
+   "preconditions": "已登录运营后台，无匹配记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在邀请用户编号输入框输入：99999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示空态，提示'暂无数据'或'共0条'，页面无异常"
+    }
+   ],
+   "expected_result": "无数据时展示空态提示，不出现空白页或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "验证无权限访问邀请好友记录页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无银钻任务权限的运营账号",
+   "preconditions": "已登录无银钻任务权限的运营账号",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "登录无银钻任务权限的运营账号",
+     "expected": "登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "尝试访问银钻任务-邀请好友记录页面",
+     "expected": "系统提示'无权限访问'或菜单不可见，无法进入页面"
+    }
+   ],
+   "expected_result": "无权限用户无法访问页面，系统给出明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "输入存在的邀请记录编号查询成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统中真实存在的邀请记录编号，如 '0989801'，该编号对应一条已存在的邀请记录。",
+   "preconditions": "已登录运营后台，存在至少一条邀请记录，且记录编号为 '0989801'。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台-银钻任务-邀请好友记录页面",
+     "expected": "页面正常加载，显示查询条件区域和记录列表。"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请记录编号」输入框中输入 '0989801'",
+     "expected": "输入框正确显示输入内容。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示邀请记录编号为 '0989801' 的记录。"
+    }
+   ],
+   "expected_result": "列表仅显示编号为 '0989801' 的记录，且记录字段（创建时间、邀请用户编号、被邀请用户编号、注册方式、状态）显示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "输入不存在的邀请记录编号查询无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用系统中不存在的邀请记录编号，如 '9999999'，该编号无对应记录。",
+   "preconditions": "已登录运营后台，系统中不存在编号为 '9999999' 的邀请记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台-银钻任务-邀请好友记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请记录编号」输入框中输入 '9999999'",
+     "expected": "输入框正确显示输入内容。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示无数据，并提示「未找到相关记录」或显示空列表。"
+    }
+   ],
+   "expected_result": "列表无数据，且有明确的空结果提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "邀请记录编号为空时查询",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "邀请记录编号输入框留空，不输入任何内容。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台-银钻任务-邀请好友记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "不输入邀请记录编号，保持为空",
+     "expected": "输入框为空。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "系统应提示「请输入邀请记录编号」或执行默认查询（显示全部记录）。具体行为需按需求确认。"
+    }
+   ],
+   "expected_result": "系统给出明确提示或按默认逻辑查询，不会报错或崩溃。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "邀请记录编号输入超长字符",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过系统允许长度的编号，如 20 位数字 '12345678901234567890'，假设系统限制长度为 10 位。",
+   "preconditions": "已登录运营后台，系统对邀请记录编号长度有限制（如 10 位）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台-银钻任务-邀请好友记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请记录编号」输入框中输入 '12345678901234567890'",
+     "expected": "输入框可能限制输入长度，或允许输入但查询时校验。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "系统提示「邀请记录编号长度不能超过10位」或自动截断，不执行查询。"
+    }
+   ],
+   "expected_result": "系统对超长输入有校验，不会执行无效查询。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "邀请记录编号输入特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符如 'abc@#$'，该编号不符合编号格式（应为数字）。",
+   "preconditions": "已登录运营后台，邀请记录编号应为数字。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台-银钻任务-邀请好友记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请记录编号」输入框中输入 'abc@#$'",
+     "expected": "输入框可能限制输入，或允许输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "系统提示「邀请记录编号格式不正确」或不允许查询。"
+    }
+   ],
+   "expected_result": "系统对非法字符有校验，不会执行无效查询。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "重置查询条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/邀请好友记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先输入邀请记录编号 '0989801' 进行查询，再点击重置按钮。",
+   "preconditions": "已登录运营后台，已执行过查询操作。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台-银钻任务-邀请好友记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「邀请记录编号」输入框中输入 '0989801'，点击「搜索」",
+     "expected": "列表显示查询结果。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「重置」按钮",
+     "expected": "输入框清空，列表恢复为默认显示（全部记录）。"
+    }
+   ],
+   "expected_result": "重置后查询条件清空，列表显示全部记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "联赛及球队管理入口可正常访问",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用具有运营后台管理权限的账号登录，进入任务内容页面",
+   "preconditions": "已登录运营后台，且账号具有银钻任务模块的访问权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "登录运营后台，进入银钻任务-任务内容页面",
+     "expected": "页面正常加载，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击左侧菜单「联赛及球队管理」",
+     "expected": "跳转到联赛及球队管理页面，页面正常显示"
+    }
+   ],
+   "expected_result": "联赛及球队管理页面正常打开，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "无权限访问联赛及球队管理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无银钻任务模块权限的运营账号登录",
+   "preconditions": "已登录运营后台，但账号无银钻任务模块权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "登录运营后台，尝试直接访问联赛及球队管理页面URL",
+     "expected": "页面提示无权限访问，或跳转到无权限提示页"
+    }
+   ],
+   "expected_result": "系统拦截无权限访问，提示无权限或跳转至403页面",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "任务编号正常显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "任务内容列表中存在任务编号为1、2、3的记录",
+   "preconditions": "任务内容列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示任务编号列，每行显示对应编号（如1、2、3）"
+    }
+   ],
+   "expected_result": "任务编号列正确显示，无乱码或缺失",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "任务编号为空时的显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条任务编号为空字符串的记录",
+   "preconditions": "数据库中有一条任务编号为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "任务编号列显示为空或显示占位符，页面不报错"
+    }
+   ],
+   "expected_result": "页面正常显示，任务编号为空时不报错",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "任务类型正常显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "任务内容列表中存在任务类型为新用户任务、每日任务、邀请好友的记录",
+   "preconditions": "任务内容列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "任务类型列正确显示对应的类型名称"
+    }
+   ],
+   "expected_result": "任务类型列显示正确，无错别字或乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "任务类型为未知值时的显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条任务类型为'未知类型'的记录",
+   "preconditions": "数据库中有一条任务类型为未知值的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "任务类型列显示该未知值，页面不报错"
+    }
+   ],
+   "expected_result": "页面正常显示未知任务类型，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "创建时间正常显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "任务内容列表中存在创建时间为2019-03-21 16:12:40的记录",
+   "preconditions": "任务内容列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "创建时间列显示格式为yyyy-MM-dd HH:mm:ss，如2019-03-21 16:12:40"
+    }
+   ],
+   "expected_result": "创建时间格式正确，无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "创建时间为非法格式时的显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条创建时间为'2019/03/21'的记录",
+   "preconditions": "数据库中有一条创建时间为非法格式的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "创建时间列显示原始值或提示格式错误，页面不崩溃"
+    }
+   ],
+   "expected_result": "页面正常显示，不因非法时间格式而报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "新用户任务类型正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "任务内容列表中存在任务类型为'新用户任务'的记录",
+   "preconditions": "任务内容列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "任务类型列显示'新用户任务'"
+    }
+   ],
+   "expected_result": "新用户任务类型正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "新用户任务详情查看",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击任务类型为'新用户任务'的行的查看按钮",
+   "preconditions": "任务内容列表中存在新用户任务记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示新用户任务记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行的「查看」按钮",
+     "expected": "弹出任务详情或跳转到详情页，显示任务详情信息"
+    }
+   ],
+   "expected_result": "能够查看新用户任务的详细信息",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "每日任务类型正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "任务内容列表中存在任务类型为'每日任务'的记录",
+   "preconditions": "任务内容列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "任务类型列显示'每日任务'"
+    }
+   ],
+   "expected_result": "每日任务类型正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "每日任务详情查看",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击任务类型为'每日任务'的行的查看按钮",
+   "preconditions": "任务内容列表中存在每日任务记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示每日任务记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行的「查看」按钮",
+     "expected": "弹出任务详情或跳转到详情页，显示任务详情信息"
+    }
+   ],
+   "expected_result": "能够查看每日任务的详细信息",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "邀请好友任务类型正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "任务内容列表中存在任务类型为'邀请好友'的记录",
+   "preconditions": "任务内容列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "任务类型列显示'邀请好友'"
+    }
+   ],
+   "expected_result": "邀请好友任务类型正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "邀请好友任务详情查看",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击任务类型为'邀请好友'的行的查看按钮",
+   "preconditions": "任务内容列表中存在邀请好友任务记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示邀请好友任务记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行的「查看」按钮",
+     "expected": "弹出任务详情或跳转到详情页，显示任务详情信息"
+    }
+   ],
+   "expected_result": "能够查看邀请好友任务的详细信息",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "查看按钮功能正常",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "任务内容列表中存在任意任务记录，点击查看按钮",
+   "preconditions": "任务内容列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示任务记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击任意一行的「查看」按钮",
+     "expected": "弹出任务详情或跳转到详情页，显示该任务的详细信息"
+    }
+   ],
+   "expected_result": "查看操作正常，能正确展示任务详情",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "查看按钮在无数据时不可用",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "任务内容列表为空，无任何任务记录",
+   "preconditions": "任务内容列表无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示空态提示，无查看按钮可点击"
+    }
+   ],
+   "expected_result": "空态下无查看按钮，或按钮置灰不可点击",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "关闭任务成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条状态为开启的任务记录，点击关闭按钮",
+   "preconditions": "任务内容列表中存在一条状态为开启的任务",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示任务记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行的「关闭」按钮",
+     "expected": "弹出确认提示框，询问是否确认关闭"
+    },
+    {
+     "step": 3,
+     "desc": "点击确认",
+     "expected": "任务状态变为关闭，列表刷新，该任务不再展示或标记为关闭"
+    }
+   ],
+   "expected_result": "任务成功关闭，状态更新，数据库记录更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "关闭任务时取消操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条状态为开启的任务记录，点击关闭按钮后取消",
+   "preconditions": "任务内容列表中存在一条状态为开启的任务",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示任务记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行的「关闭」按钮",
+     "expected": "弹出确认提示框"
+    },
+    {
+     "step": 3,
+     "desc": "点击取消",
+     "expected": "关闭操作取消，任务状态不变，列表不刷新"
+    }
+   ],
+   "expected_result": "取消关闭后任务状态保持开启，无任何变更",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "关闭已关闭的任务",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条状态为已关闭的任务记录，点击关闭按钮",
+   "preconditions": "任务内容列表中存在一条状态为已关闭的任务",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示该任务记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行的「关闭」按钮",
+     "expected": "系统提示该任务已关闭，或按钮置灰不可点击"
+    }
+   ],
+   "expected_result": "系统拦截重复关闭操作，提示任务已关闭",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "注册奖励银钻任务内容展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "任务内容列表中存在任务名称为'注册 奖励银钻'的记录",
+   "preconditions": "任务内容列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "任务名称列显示'注册 奖励银钻'"
+    }
+   ],
+   "expected_result": "注册奖励银钻任务正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "注册奖励银钻任务详情查看",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击任务名称为'注册 奖励银钻'的行的查看按钮",
+   "preconditions": "任务内容列表中存在注册奖励银钻任务记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入任务内容页面",
+     "expected": "列表显示注册奖励银钻任务记录"
+    },
+    {
+     "step": 2,
+     "desc": "点击该行的「查看」按钮",
+     "expected": "弹出任务详情或跳转到详情页，显示奖励银钻数额等详情"
+    }
+   ],
+   "expected_result": "能够查看注册奖励银钻任务的详细信息",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "任务内容列表展示「登录 奖励银钻」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「登录 奖励银钻」的任务记录，任务编号为TASK001，创建时间为2023-01-01 10:00:00，奖励银钻数额为100。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「登录 奖励银钻」的记录，其任务编号为TASK001，创建时间为2023-01-01 10:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「登录 奖励银钻」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "任务内容列表无「登录 奖励银钻」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「登录 奖励银钻」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「登录 奖励银钻」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "任务内容列表展示「累计观看」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「累计观看」的任务记录，任务编号为TASK002，创建时间为2023-01-02 11:00:00。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「累计观看」的记录，其任务编号为TASK002，创建时间为2023-01-02 11:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「累计观看」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "任务内容列表无「累计观看」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「累计观看」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「累计观看」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "任务内容列表展示「10min」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「10min」的任务记录，任务编号为TASK003，创建时间为2023-01-03 12:00:00。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「10min」的记录，其任务编号为TASK003，创建时间为2023-01-03 12:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「10min」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "任务内容列表无「10min」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「10min」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「10min」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "任务内容列表展示「30min」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「30min」的任务记录，任务编号为TASK004，创建时间为2023-01-04 13:00:00。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「30min」的记录，其任务编号为TASK004，创建时间为2023-01-04 13:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「30min」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "任务内容列表无「30min」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「30min」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「30min」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "任务内容列表展示「浏览」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「浏览」的任务记录，任务编号为TASK005，创建时间为2023-01-05 14:00:00。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「浏览」的记录，其任务编号为TASK005，创建时间为2023-01-05 14:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「浏览」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "任务内容列表无「浏览」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「浏览」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「浏览」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "任务内容列表展示「篇资讯 奖励银钻」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「篇资讯 奖励银钻」的任务记录，任务编号为TASK006，创建时间为2023-01-06 15:00:00，奖励银钻数额为200。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「篇资讯 奖励银钻」的记录，其任务编号为TASK006，创建时间为2023-01-06 15:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「篇资讯 奖励银钻」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "任务内容列表无「篇资讯 奖励银钻」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「篇资讯 奖励银钻」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「篇资讯 奖励银钻」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "任务内容列表展示「点赞」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「点赞」的任务记录，任务编号为TASK007，创建时间为2023-01-07 16:00:00。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「点赞」的记录，其任务编号为TASK007，创建时间为2023-01-07 16:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「点赞」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "任务内容列表无「点赞」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「点赞」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「点赞」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "任务内容列表展示「累计邀请」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「累计邀请」的任务记录，任务编号为TASK008，创建时间为2023-01-08 17:00:00。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「累计邀请」的记录，其任务编号为TASK008，创建时间为2023-01-08 17:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「累计邀请」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "任务内容列表无「累计邀请」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「累计邀请」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「累计邀请」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "任务内容列表展示「人 奖励银钻」任务",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在任务类型为「人 奖励银钻」的任务记录，任务编号为TASK009，创建时间为2023-01-09 18:00:00，奖励银钻数额为300。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中已存在该任务记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表中展示任务编号、任务类型、创建时间等字段，且存在任务类型为「人 奖励银钻」的记录，其任务编号为TASK009，创建时间为2023-01-09 18:00:00"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示「人 奖励银钻」任务，字段完整、数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "任务内容列表无「人 奖励银钻」任务时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "银钻任务/任务内容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中不存在任何任务类型为「人 奖励银钻」的任务记录。",
+   "preconditions": "运营后台已登录，具有银钻任务-任务内容页面的查看权限；数据库中无该任务类型记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击左侧菜单「银钻任务」-「任务内容」",
+     "expected": "页面加载成功，显示任务内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看任务列表",
+     "expected": "列表为空，显示「暂无数据」或类似空态提示，不出现异常报错"
+    }
+   ],
+   "expected_result": "任务内容列表正确展示空态，无「人 奖励银钻」任务记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-1 生成被截断，已重试"
+ ]
+}
