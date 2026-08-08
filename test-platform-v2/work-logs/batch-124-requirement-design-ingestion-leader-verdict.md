@@ -46,3 +46,35 @@
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
 |----------|-------------------|----------|----------|----------|
 | 计划 1d / 实际 0.5d | 0/0/2/1 | 1 | 模块级导入遗漏 | 新端点先核对顶部导入；测试覆盖图片服务与逃逸 |
+
+---
+
+## 补充判决（2026-08-08 v2：用例基座接入 + 模块树全量修复）
+
+### 评审摘要（补充）
+
+| 维度 | 评分 | 备注 |
+|------|------|------|
+| 实现质量 | 4.5/5 | 功能用例基座接入 7 份文档权威要求；两 skill 深度用例补充层；后端生成链路真正加载权威文件；模块树 192→218 全量 |
+| 风险 | 低 | 纯文档/skill 变更 + ai_service 只读加载逻辑 + 模块树证据文件；无 schema 变更 |
+| 覆盖 | 4.5/5 | 功能/接口两基座统一「基础用例→深度用例」；运营后台 74 页全量入库准备（原 65 节点丢 23 子页已修） |
+
+### 抽检通过（补充）
+
+- ✅ `test_ai_skill_context.py` 3/3（functional/api 均加载权威输出要求；skill 目录优先）
+- ✅ `test_requirement_module_tree_import.py` 1/1；`test_ai_extraction_fallback` + `test_ai_generate_chunked` 7/7
+- ✅ ruff F821（ai_service.py / build_lanhu_hierarchy.py）
+- ✅ 模块树完整性：218 节点（35 模块/183 页/4781 设计稿）、无重复 path、lanhu_page_id 全部可解析、depth≥3 父节点 0 缺失
+
+### 判决
+
+维持**有条件通过**。新增 C124-3 就绪度提升：运营后台需求（axure_extract_61930a83）**74 页全量 hierarchy（88 节点）已生成**，部署后按 C124-3 导入即可。
+
+### 流程回写（补充）
+
+| 发现 | 处理 | 落点 |
+|------|------|------|
+| 用户端导出 document.js 实为运营后台 sitemap 快照 | 用户端走 enrich 模式保留功能地图归级；脚本双模式 | build_lanhu_hierarchy.py |
+| 运营后台 hierarchy 只走 2 层丢 23 子页 | 全量解析（Folder/Wireframe url 字段）→ 88 节点 | build_lanhu_hierarchy.py / requirement-module-tree.json |
+| 用户端 3 页在 tree 中缺失（意见反馈/主播菜单/更新日志） | 恢复 → 130 节点 | requirement-module-tree.json |
+| 接口 skill 曾未接入用户重新整理的输出用例要求 | 接口测试输出用例要求.md 已入加载链（v1 修复）+ 本次补功能侧对等 | ai_service.py |

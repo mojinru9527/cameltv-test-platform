@@ -1,6 +1,6 @@
-# Batch 124 — 用例生成链路补充（基座先行）
+# Batch 124 — 用例生成链路补充（基座先行 + 深度用例补充）
 
-> **PM (🟨) 补充** | 2026-08-08
+> **PM (🟨) 补充** | 2026-08-08（v2：功能用例 skill 接入 7 份功能用例文档 + 两 skill 统一「基座基础用例 → 深度用例补充」）
 
 ## 1. 用户确认的用例生成基座（强制）
 
@@ -8,20 +8,26 @@
 
 | 基座 | 位置 | 内容 |
 |------|------|------|
-| 功能用例规范 skill | `.agents/skills/test-case-design/SKILL.md` + `functional-checklist.md` + `case-template.md`；源规范 `tests/test-case-standards/功能测试用例规范.md` | 功能点分析 → 检查点 → 模板 → 覆盖率（每功能点 ≥1 正 +1 负） |
-| 接口用例 skill | `.agents/skills/test-case-design/api-checklist.md`；源规范 `tests/test-case-standards/接口测试规范.md`、`API接口测试方案.md`、`接口测试考虑点【辅助作用】.md` | 入参/业务逻辑/返回值三类校验齐全 |
+| 功能用例规范 skill | `.claude/skills/test-case-design/SKILL.md` + `functional-checklist.md`(v2) + `case-template.md`；**权威输出要求** `tests/test-case-standards/功能测试输出用例要求.md`（7 份功能用例文档整理）；源规范 `功能测试用例规范.md`、`测试的具体体现.md`、`功能测试检查点【辅助】.md`、`测试用例具体用法.md`、`界面测试的方法要点.md`、`测试用例标准.md`、`功能测试用例用途.md` | 设计前置 → 输出结构（正/负成对）→ 覆盖维度（功能/界面/易用/兼容/性能…）→ **深度用例补充层** |
+| 接口用例 skill | `.claude/skills/test-case-design/SKILL.md` + `api-checklist.md`(v2)；**权威输出要求** `tests/test-case-standards/接口测试输出用例要求.md`（接口测试.xmind 整理）；源规范 `API接口测试方案.md`、`接口测试考虑点【辅助作用】.md` | 业务功能[冒烟/场景] / 健壮性[合法/非法入参] / 安全 / 性能 / 数据 五类 + **深度用例补充层** |
 
-平台 `ai_service._build_system_prompt` 已加载 `test-case-design` skill（SKILL.md/case-template.md/functional-checklist.md）——即基座已在生成链路内。
+平台 `ai_service._load_skill_context_for` 已接入两份**权威输出要求**：
+- `functional` 加载：SKILL.md + case-template.md + functional-checklist.md + 功能测试输出用例要求.md
+- `api` 加载：api-checklist.md + 接口测试输出用例要求.md + 接口测试考虑点【辅助作用】.md（兜底）+ SKILL.md
 
-## 2. 正确生成链路（全部体育模块）
+## 2. 两层生成链路（全部体育模块，强制）
 
 ```
 蓝湖需求导出（用户端/运营后台 两目录，含层级+截图）
   → 需求文本+设计稿入库（knowledge design-assets）
-  → 基座生成基础用例（功能用例规范 skill + 接口用例 skill，每功能点正/负用例）
-  → 叠加深度用例（状态机/异常/闭环/关联/权限，Batch 122 模式）
-  → 全部体育模块（用户端全模块 + 运营后台 14 模块 + konfi + 接口）
+  → ① 基座生成基础用例（功能用例规范 skill + 接口用例 skill，每功能点正/负/边界）
+  → ② 叠加深度用例补充层（状态机/用户视角/闭环/关联功能/异常边界/UI细节/权限与端差异，Batch 122 模式）
+  → 全部体育模块（用户端 4 入口 + 运营后台 14 模块 + konfi + 接口）
 ```
+
+- **功能深度层**（functional-checklist.md 第四章）：状态机 × 用户视角 × 闭环 × 关联功能 × 异常边界 × UI 细节 × 权限/端差异。
+- **接口深度层**（api-checklist.md 末章）：业务状态机 × 跨接口闭环串联 × 数据一致性 × 权限与端差异 × 异常边界。
+- 深度用例带完整字段并打 `闭环`/`状态机`/`关联` 标签便于追踪。
 
 ## 3. Batch A 差距说明（诚实）
 
@@ -37,4 +43,5 @@ Batch 122 深度用例是**手工编写**（依据原型功能点表），**未�
 
 - 每个体育模块：基础用例（基座生成，正/负/边界）+ 深度用例（叠加）双覆盖
 - 用例可溯源到需求页（source_doc=lanhu_page_id）
-- 功能用例走功能用例规范，接口用例走接口用例规范
+- 功能用例走功能用例规范（7 份文档权威要求），接口用例走接口用例规范（xmind 五分类权威要求）
+- 两 skill 均以深度用例作为最后补充层（SKILL.md 第 6 步强制）
