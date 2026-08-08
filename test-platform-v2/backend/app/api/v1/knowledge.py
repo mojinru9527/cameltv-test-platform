@@ -764,6 +764,18 @@ def graph_view(
         edge.source = id_to_node_id.get(from_id, edge.source)
         edge.target = id_to_node_id.get(to_id, edge.target)
 
+    # 去重：重复 entity_key 会生成相同 node id（历史重复实体），vis-network add 会抛错导致整页崩溃
+    seen: set[str] = set()
+    unique_nodes = []
+    for n in nodes:
+        if n.id in seen:
+            continue
+        seen.add(n.id)
+        unique_nodes.append(n)
+    nodes = unique_nodes
+    valid_ids = seen
+    edges = [e for e in edges if e.source in valid_ids and e.target in valid_ids]
+
     return R.ok(GraphViewOut(
         nodes=nodes,
         edges=edges,
