@@ -1,0 +1,169 @@
+{
+ "batch": "batch-125",
+ "slice": "slice-2",
+ "title": "体育平台生产深度体验与逻辑补充（camel1.tv 走查）",
+ "date": "2026-08-09",
+ "production_url": "https://www.camel1.tv",
+ "scope": "未登录视角走查（登录态需账号，登记 C125-后续）",
+ "pages": [
+  {
+   "page": "首页",
+   "url": "/",
+   "modules": [
+    "APP 下载(QR)",
+    "REGISTER/登录",
+    "Live Matches/Favorites/Competitions",
+    "今日比赛列表(时间/联赛/球队)",
+    "LIVE 实时比赛(比分/观看数)",
+    "Match Replays",
+    "World Cup 2026",
+    "本地化版本切换(EN/AR/HI/BN/ID/ES/PT)"
+   ],
+   "states": [
+    "NS",
+    "LIVE",
+    "HT",
+    "FT",
+    "比赛进行中(分钟数/比分)"
+   ],
+   "notes": "生产为英文站；需求原型为中文站（差异标注 C102-4 已建）"
+  },
+  {
+   "page": "赛事详情",
+   "url": "/football/{home}-vs-{away}/{id}",
+   "modules": [
+    "Prediction 预测模块(三选项+赔率)",
+    "Prediction History",
+    "Predict More Matches",
+    "About 赛事信息",
+    "Stats/Odds/Schedule tabs",
+    "H2H 历史交锋",
+    "Recent Results"
+   ],
+   "states": [
+    "NS",
+    "Kick Off 倒计时",
+    "Predicting(预测中)"
+   ],
+   "findings": [
+    "预测模块：Predict Home Win/Odds 1.66、Predict Away Win/Odds 4.20、Draw/Odds 3.90（三选项+实时赔率）",
+    "未登录点击 Predict → 弹出 'Log in to Camel to watch the game for free' + Login/Register",
+    "未登录点击 Prediction History → 同样登录提示（URL 不变）",
+    "生产验证 SP-PICK-001/002/005（三选项/未登录拦截/玩法说明）"
+   ]
+  },
+  {
+   "page": "Predict More Matches",
+   "url": "/prediction/more",
+   "modules": [
+    "日期选择器(7/25-8/24)",
+    "比赛列表(Home VS Away)",
+    "状态：Upcoming / Predicting"
+   ],
+   "notes": "用户反馈的 [Predict More Matches] 入口生产可达"
+  },
+  {
+   "page": "联赛页",
+   "url": "/league/{name}",
+   "modules": [
+    "Tabs: Matches/Info/News/About/Standings/Team Stats/Player Statistics",
+    "赛季日期范围 + 月份选择器"
+   ],
+   "findings": [
+    "Standings: 'No data available' 空态（联赛无积分榜数据）",
+    "Team Stats 维度: Goals/Assists/Shots/Passes/Key passes/Interceptions/Clearances/Cards/Dribble/Offsides/Corner/Crosses/Long balls 等",
+    "Player Statistics 维度: Shooter/Assists/Shots/Passes/Tackles/Cards/Minutes/Dribble/Crosses/Fouls/Save 等",
+    "Info/About: 联赛介绍 + upcoming/most recent fixture"
+   ]
+  },
+  {
+   "page": "球队页",
+   "url": "/team/{name}/{id}",
+   "modules": [
+    "Tabs: Matches/Info/Standings/News/About/Home And Away/Player Statistics",
+    "赛事筛选(All/各联赛)",
+    "球队头: Pos/联赛/W-D-L/Last 5 Matches",
+    "比赛列表(NS/FT+比分)"
+   ],
+   "findings": [
+    "生产缺陷痕迹：页面底部出现 'test test' 文本（疑似测试残留）"
+   ]
+  },
+  {
+   "page": "球员页",
+   "url": "/player/{name}/{id}",
+   "modules": [
+    "Tabs: Details/Seasons/Matches/News",
+    "球员信息(国籍/年龄/身价/号码/位置/惯用脚/身高/体重)",
+    "Transfer History 转会历史(日期/类型: Loan/Transfer/Free)",
+    "About 介绍"
+   ],
+   "findings": [
+    "生产缺陷痕迹：页面底部再次出现 'test test' 文本"
+   ]
+  },
+  {
+   "page": "直播页",
+   "url": "/football/{home}-vs-{away}/live/{id}",
+   "modules": [
+    "Tabs: Video/Animation/Match Status/Chat/Stats/Lineup/Odds/Schedule/About/Prediction",
+    "实时聊天(Chat)",
+    "直播视频/动画"
+   ],
+   "notes": "弹幕/聊天模块生产真实存在（多语言用户实时发言）"
+  },
+  {
+   "page": "资讯页",
+   "url": "/q/news",
+   "modules": [
+    "分类: All News/FIFA World Cup/Match Preview/Transfer Market/Premier League/Champions League/In-depth Article/Prediction/Other Match News/Today In History/Winter Transfer",
+    "文章列表(标题/时间/浏览量/TOP)"
+   ],
+   "notes": "资讯分类与中文原型对应"
+  },
+  {
+   "page": "个人中心",
+   "url": "/my",
+   "modules": [
+    "登录/注册",
+    "Silver Diamond(银钻)/Free Silver Diamond",
+    "Camel Mall(商城)",
+    "My Favorites(关注)",
+    "My Outfits(装扮)",
+    "FAQ & Feedback",
+    "Business Cooperation",
+    "Settings",
+    "Free picks(预测推荐)"
+   ],
+   "notes": "未登录可看菜单，功能需登录；对应中文原型个人中心"
+  }
+ ],
+ "module_diff_production_vs_requirement": [
+  "生产为英文国际站（camel1.tv），原型为中文站（camel.tv）——C102-4 差异标注已建",
+  "生产新增原型外模块：World Cup 2026 专题(/worldcup-2026)、Match Replays 回放(/match-replay)、Head-to-head 页、本地化多语言版本",
+  "联赛/球队/球员页生产为多 tab 结构（联赛 7 tab、球队 7 tab、球员 4 tab），需求用例需按 tab 梳理",
+  "预测模块生产状态：Upcoming/Predicting（对应原型 预测中/待开奖/已开奖/已关闭 状态机）",
+  "生产未登录行为：预测/预测历史均拦截到登录"
+ ],
+ "defects_found": [
+  {
+   "severity": "P2",
+   "page": "球队页/球员页",
+   "desc": "页面底部出现 'test test' 测试残留文本",
+   "ref": "camel1.tv/team/Dynamo Kyiv、/player/Vitaliy Buyalskyi"
+  },
+  {
+   "severity": "P3",
+   "page": "联赛页 Standings",
+   "desc": "International Club Friendly 积分榜空态 'No data available'（数据缺失，需确认是否正常）"
+  }
+ ],
+ "deep_experience_supplements": [
+  "预测模块生产验证：三选项+实时赔率、未登录拦截（登录弹窗）、Prediction History/Predict More 入口可达——补充 SP-PICK 系列生产实测",
+  "联赛页按 7 tab 分别梳理（Standings 空态/Team Stats 维度/Player Statistics 维度/Info/News/About）",
+  "球队页 7 tab + 赛事筛选（多联赛球队需按赛事过滤验证）",
+  "球员页 4 tab + 转会历史（Loan/Transfer/Free 类型）",
+  "直播页 10 tab + 实时聊天（弹幕）",
+  "个人中心未登录菜单 vs 登录后功能（银钻/商城/装扮/关注）——登录态用例登记 C125 后续"
+ ]
+}
