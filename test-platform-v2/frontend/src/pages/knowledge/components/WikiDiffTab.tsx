@@ -145,9 +145,12 @@ export default function WikiDiffTab() {
           <SelectTrigger className="h-9 w-[170px] text-xs"><SelectValue /></SelectTrigger>
           <SelectContent>{KB_OPTIONS.map((o) => <SelectItem key={o.v} value={o.v}>{o.l}</SelectItem>)}</SelectContent>
         </Select>
-        <Button size="sm" className="h-9" disabled={running || !query.trim() || !hasPerm('wiki:diff')} onClick={run}>
+        <Button size="sm" className="h-9" disabled={running || !query.trim() || !hasPerm('wiki:diff')} onClick={run} title={!query.trim() ? '请先在上方输入需求关键词' : undefined}>
           {running ? <Loader2 className="size-4 animate-spin mr-1" /> : null} 发起对比
         </Button>
+        {!query.trim() && (
+          <span className="text-xs text-muted-foreground ml-1">请先输入需求关键词（如：比赛推送）</span>
+        )}
         {tasks.length > 0 && (
           <Select
             value={selectedTaskId ? String(selectedTaskId) : ''}
