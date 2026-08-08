@@ -73,16 +73,21 @@ export default function WikiDiffTab() {
     if (dimFilter !== 'all') filters.dimension = dimFilter
 
     const pollTask = async () => {
-      for (let attempt = 0; attempt < 8 && !controller.signal.aborted; attempt += 1) {
+      for (let attempt = 0; attempt < 150 && !controller.signal.aborted; attempt += 1) {
         const current = await fetchWikiDiffTask(
           selectedTaskId,
           filters,
           controller.signal,
         ).catch(() => null)
-        if (!current || controller.signal.aborted) return
+        if (controller.signal.aborted) return
+        if (!current) {
+          // 瞬时失败：短暂等待后继续轮询，不终止
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+          continue
+        }
         setTask(current)
         if (current.status === 'success' || current.status === 'failed') return
-        await new Promise((resolve) => setTimeout(resolve, 1200))
+        await new Promise((resolve) => setTimeout(resolve, 2000))
       }
     }
 
@@ -107,7 +112,9 @@ export default function WikiDiffTab() {
     }
   }
 
-  const summary = task?.summary_json ? JSON.parse(task.summary_json) : null
+  const summary = task?.summary_json
+    ? (() => { try { return JSON.parse(task.summary_json) } catch { return null } })()
+    : null
   const items = task?.items || []
 
   const onItemChanged = (updated: WikiDiffItem) => {
@@ -158,9 +165,20 @@ export default function WikiDiffTab() {
         <div className="h-40 flex items-center justify-center text-sm text-muted-foreground">
           输入需求关键词并选择左右知识库，发起 RAG vs Wiki 差异对比
         </div>
+      ) : task.status === 'failed' ? (
+        <div className="rounded-md border border-status-danger-border bg-status-danger-muted p-4 text-sm text-status-danger space-y-2">
+          <div className="font-medium">对比任务 #{task.id} 失败</div>
+          {task.error_message && <div className="text-xs">{task.error_message}</div>}
+          <div className="text-xs">可调整关键词/知识库后重新发起对比。</div>
+        </div>
       ) : task.status !== 'success' ? (
-        <div className="h-40 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> 任务 {task.status}…
+        <div className="space-y-2">
+          <div className="h-40 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" /> 任务 {task.status}…（后台对比中，自动刷新结果）
+          </div>
+          {task.title && (
+            <div className="text-center text-xs text-muted-foreground">#{task.id} {task.title}</div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr_1fr] gap-3">
