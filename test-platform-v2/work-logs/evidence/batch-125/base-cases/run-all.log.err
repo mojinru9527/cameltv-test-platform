@@ -1,0 +1,85 @@
+[ai_service] WARNING: functional-chunk-4 response truncated (finish_reason=length, raw_length=22731 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-4 response
+[ai_service] WARNING: functional-chunk-4-retry response truncated (finish_reason=length, raw_length=23585 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-4-retry response
+[ai_service] WARNING: functional-chunk-5 response truncated (finish_reason=length, raw_length=22232 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-9 response truncated (finish_reason=length, raw_length=23552 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-9 response
+[ai_service] WARNING: functional-chunk-16 response truncated (finish_reason=length, raw_length=24029 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-6 response truncated (finish_reason=length, raw_length=22246 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-8 response truncated (finish_reason=length, raw_length=23205 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-3 response truncated (finish_reason=length, raw_length=22617 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-6 response truncated (finish_reason=length, raw_length=23101 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-6 response
+[ai_service] WARNING: functional-chunk-3 response truncated (finish_reason=length, raw_length=23836 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-1 response truncated (finish_reason=length, raw_length=23851 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-8 response truncated (finish_reason=length, raw_length=23844 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-8 response
+[ai_service] WARNING: functional-chunk-4 response truncated (finish_reason=length, raw_length=23175 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-4 response
+[ai_service] WARNING: functional-chunk-6 response truncated (finish_reason=length, raw_length=24497 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-10 response truncated (finish_reason=length, raw_length=23023 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-10-retry response truncated (finish_reason=length, raw_length=22908 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-1 response truncated (finish_reason=length, raw_length=23915 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-1 response truncated (finish_reason=length, raw_length=23862 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-1 response
+[ai_service] WARNING: functional-chunk-4 response truncated (finish_reason=length, raw_length=22272 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-4 response
+[ai_service] WARNING: functional-chunk-1-retry response truncated (finish_reason=length, raw_length=23464 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-1 response truncated (finish_reason=length, raw_length=23815 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-8 response truncated (finish_reason=length, raw_length=23780 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-12 response truncated (finish_reason=length, raw_length=23495 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-2 response truncated (finish_reason=length, raw_length=22846 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-2 response
+[ai_service] WARNING: functional-chunk-9 response truncated (finish_reason=length, raw_length=23215 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-3 response truncated (finish_reason=length, raw_length=24064 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-3 response
+[ai_service] WARNING: functional-chunk-1 response truncated (finish_reason=length, raw_length=22835 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-3-retry response truncated (finish_reason=length, raw_length=24710 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-3-retry response
+[ai_service] WARNING: functional-chunk-14 response truncated (finish_reason=length, raw_length=23815 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-14 response
+[ai_service] WARNING: functional-chunk-9 response truncated (finish_reason=length, raw_length=23266 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-9 response
+[ai_service] WARNING: functional-chunk-1 response truncated (finish_reason=length, raw_length=24594 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-1-retry response truncated (finish_reason=length, raw_length=23947 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] WARNING: functional-chunk-5 response truncated (finish_reason=length, raw_length=20427 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-5 response
+[ai_service] WARNING: functional-chunk-17 response truncated (finish_reason=length, raw_length=23473 chars)
+requirement_analysis JSON 解析失败，跳过该字段
+[ai_service] Salvaged partial data from truncated functional-chunk-17 response
+[ai_service] WARNING: functional-chunk-13 response truncated (finish_reason=length, raw_length=23109 chars)
+requirement_analysis JSON 解析失败，跳过该字段

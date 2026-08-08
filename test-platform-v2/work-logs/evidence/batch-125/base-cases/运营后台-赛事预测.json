@@ -1,0 +1,8005 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "用户统计仅统计已开奖场次",
+    "description": "运营后台/赛事预测/数据统计/用户统计页面，统计范围限定为状态为“已开奖”的场次，其他状态（预测中、待开奖、已关闭、已取消等）的场次不纳入统计。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确“已开奖”状态的具体定义，例如是否包含“已开奖但未发放奖励”的场次，以及“已取消”或“已退款”的场次是否排除。",
+      "suggestion": "明确“已开奖”状态的范围，建议与预测赛事列表中的状态枚举保持一致，并说明是否包含已退款或已取消的场次。"
+     },
+     {
+      "severity": "medium",
+      "description": "需求未说明统计的时间维度，例如是按创建时间、开奖时间还是其他时间字段进行统计，以及是否支持自定义时间范围。",
+      "suggestion": "明确统计的时间基准字段（如创建时间）和可选的时间筛选条件。"
+     },
+     {
+      "severity": "medium",
+      "description": "需求未说明统计指标的具体计算规则，例如参与用户数、参与总数额、奖励总数额、退回总数额、平台利润的计算口径。",
+      "suggestion": "补充各统计指标的计算公式，特别是平台利润的计算方式（如参与总数额-奖励总数额-退回总数额）。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求描述较为简洁，核心功能点明确，但存在若干关键细节缺失：状态定义、统计时间维度、指标计算规则均未明确，可能导致测试用例设计时产生歧义。建议在测试前与产品确认这些细节，以确保用例的准确性。整体需求质量中等，需补充细节后方可进行完整测试。"
+ },
+ "functional_cases": [
+  {
+   "title": "搜索-输入有效赛事编号查询",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已存在的赛事编号'10070490'，该编号对应一条预测中赛事记录。",
+   "preconditions": "已登录运营后台，预测赛事列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载，显示列表数据。"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索输入框中输入赛事编号'10070490'",
+     "expected": "输入框显示'10070490'。"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表刷新，仅显示赛事编号为10070490的记录。"
+    }
+   ],
+   "expected_result": "列表仅显示赛事编号为10070490的赛事记录，其他记录不显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "搜索-输入不存在的赛事编号",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的赛事编号'99999999'，该编号无对应记录。",
+   "preconditions": "已登录运营后台，预测赛事列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索输入框中输入'99999999'",
+     "expected": "输入框显示'99999999'。"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示'暂无数据'，并提示无匹配记录。"
+    }
+   ],
+   "expected_result": "列表显示空数据，提示无匹配记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "搜索-输入为空点击搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索输入框为空，点击搜索应展示全部数据。",
+   "preconditions": "已登录运营后台，预测赛事列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "不输入任何内容，直接点击'搜索'按钮",
+     "expected": "列表展示全部赛事记录。"
+    }
+   ],
+   "expected_result": "列表展示全部赛事记录，无过滤。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "赛事编号列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的赛事编号列，应显示如'10070490'等编号。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'赛事编号'列",
+     "expected": "每行显示对应的赛事编号，如10070490。"
+    }
+   ],
+   "expected_result": "赛事编号列正确显示，无乱码或截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "赛事编号列-超长编号显示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个超长赛事编号（如20位数字），验证显示是否完整。",
+   "preconditions": "已登录运营后台，存在超长编号的测试数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长编号所在行",
+     "expected": "编号完整显示或提供悬浮提示，不出现截断或错位。"
+    }
+   ],
+   "expected_result": "超长编号显示完整或悬浮提示，不影响布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "赛事名称列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的赛事名称列，应显示如'主队名称 vs 客队名称'。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'赛事名称'列",
+     "expected": "每行显示对应的赛事名称，如'主队名称 vs 客队名称'。"
+    }
+   ],
+   "expected_result": "赛事名称列正确显示，格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "赛事名称列-超长名称显示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造超长赛事名称（如100个字符），验证显示是否完整。",
+   "preconditions": "已登录运营后台，存在超长名称的测试数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长名称所在行",
+     "expected": "名称完整显示或提供悬浮提示，不出现截断或错位。"
+    }
+   ],
+   "expected_result": "超长名称显示完整或悬浮提示，不影响布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "赛事开始时间列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的赛事开始时间列，应显示如'2025-07-25 13:00:00'。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'赛事开始时间'列",
+     "expected": "每行显示对应的时间，格式为'YYYY-MM-DD HH:mm:ss'。"
+    }
+   ],
+   "expected_result": "赛事开始时间列正确显示，格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "赛事开始时间列-时间格式校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造异常时间数据（如'2025-13-01 25:00:00'），验证显示是否异常。",
+   "preconditions": "已登录运营后台，存在异常时间数据的测试数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看异常时间所在行",
+     "expected": "时间显示为'--'或提示数据异常，不导致页面崩溃。"
+    }
+   ],
+   "expected_result": "异常时间被友好处理，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "状态列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的状态列，应显示'预测中'、'待开奖'、'已开奖'等状态。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'状态'列",
+     "expected": "每行显示对应的状态，如'预测中'。"
+    }
+   ],
+   "expected_result": "状态列正确显示，状态值符合预期。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "状态列-未知状态显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造未知状态（如'已取消'），验证显示是否正常。",
+   "preconditions": "已登录运营后台，存在未知状态的测试数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看未知状态所在行",
+     "expected": "状态显示为'--'或提示未知状态，不崩溃。"
+    }
+   ],
+   "expected_result": "未知状态被友好处理，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "参与人数列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的参与人数列，应显示如'10000'。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'参与人数'列",
+     "expected": "每行显示对应的参与人数，如10000。"
+    }
+   ],
+   "expected_result": "参与人数列正确显示，数值格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "参与人数列-零值显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造参与人数为0的记录，验证显示。",
+   "preconditions": "已登录运营后台，存在参与人数为0的测试数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与人数为0的行",
+     "expected": "显示'0'，不显示负数或空。"
+    }
+   ],
+   "expected_result": "参与人数为0时正常显示'0'。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "参与银钻数额列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的参与银钻数额列，应显示如'50000000'。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'参与银钻数额'列",
+     "expected": "每行显示对应的参与银钻数额，如50000000。"
+    }
+   ],
+   "expected_result": "参与银钻数额列正确显示，数值格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "参与银钻数额列-大数值显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造极大数值（如999999999999），验证显示是否溢出。",
+   "preconditions": "已登录运营后台，存在极大数值的测试数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看极大数值所在行",
+     "expected": "数值完整显示，不出现科学计数法或溢出。"
+    }
+   ],
+   "expected_result": "大数值正常显示，不溢出。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "奖励银钻数额列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的奖励银钻数额列，应显示如'-'或具体数值。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'奖励银钻数额'列",
+     "expected": "每行显示对应的奖励银钻数额，如'-'表示未开奖。"
+    }
+   ],
+   "expected_result": "奖励银钻数额列正确显示，未开奖显示'-'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "奖励银钻数额列-未开奖显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造未开奖的赛事，验证奖励银钻数额显示为'-'。",
+   "preconditions": "已登录运营后台，存在未开奖的测试数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看未开奖赛事的奖励银钻数额",
+     "expected": "显示'-'，不显示0或空。"
+    }
+   ],
+   "expected_result": "未开奖赛事奖励银钻数额显示'-'。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "主队名称列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的主队名称列，应显示如'主队名称'。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'主队名称'列",
+     "expected": "每行显示对应的主队名称，如'主队名称'。"
+    }
+   ],
+   "expected_result": "主队名称列正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "主队名称列-空值显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造主队名称为空的记录，验证显示。",
+   "preconditions": "已登录运营后台，存在主队名称为空的测试数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看主队名称为空的行",
+     "expected": "显示'--'或空，不显示null。"
+    }
+   ],
+   "expected_result": "主队名称为空时显示'--'或空。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "vs列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的vs列，应显示'vs'。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载，列表显示多条记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看'vs'列",
+     "expected": "每行显示'vs'，用于分隔主客队。"
+    }
+   ],
+   "expected_result": "vs列正确显示'vs'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "vs列-主客队名称组合显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "查看赛事名称列，应显示'主队名称 vs 客队名称'。",
+   "preconditions": "已登录运营后台，列表有数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事名称列",
+     "expected": "显示'主队名称 vs 客队名称'，vs前后有空格。"
+    }
+   ],
+   "expected_result": "赛事名称列正确显示主客队组合。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "预测赛事列表-客队名称正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号10070490，主队名称『主队名称』，客队名称『客队名称』，预期展示『主队名称 vs 客队名称』",
+   "preconditions": "运营后台已登录，存在赛事编号10070490且客队名称非空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功，显示赛事列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070490所在行的客队名称列",
+     "expected": "显示『主队名称 vs 客队名称』，格式正确"
+    }
+   ],
+   "expected_result": "客队名称列显示『主队名称 vs 客队名称』，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "预测赛事列表-客队名称为空时展示占位符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造赛事编号10070491，客队名称为空字符串，预期显示『-』",
+   "preconditions": "运营后台已登录，存在赛事编号10070491且客队名称为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070491所在行的客队名称列",
+     "expected": "显示占位符『-』，不显示空白"
+    }
+   ],
+   "expected_result": "客队名称为空时显示『-』，页面无空白异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "预测赛事列表-赛事开始时间正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号10070490，赛事开始时间为2025-07-25 13:00:00",
+   "preconditions": "运营后台已登录，存在赛事编号10070490",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070490所在行的赛事开始时间列",
+     "expected": "显示『2025-07-25 13:00:00』，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "赛事开始时间显示正确，格式符合需求",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "预测赛事列表-赛事开始时间为空时展示占位符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造赛事编号10070492，赛事开始时间为空，预期显示『-』",
+   "preconditions": "运营后台已登录，存在赛事编号10070492且开始时间为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070492所在行的赛事开始时间列",
+     "expected": "显示占位符『-』"
+    }
+   ],
+   "expected_result": "赛事开始时间为空时显示『-』，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "预测赛事列表-状态为『预测中』展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号10070490，状态为『预测中』",
+   "preconditions": "运营后台已登录，存在赛事编号10070490且状态为预测中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070490所在行的状态列",
+     "expected": "显示『预测中』"
+    }
+   ],
+   "expected_result": "状态列显示『预测中』，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "预测赛事列表-状态为『待开奖』展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号10070489，状态为『待开奖』",
+   "preconditions": "运营后台已登录，存在赛事编号10070489且状态为待开奖",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070489所在行的状态列",
+     "expected": "显示『待开奖』"
+    }
+   ],
+   "expected_result": "状态列显示『待开奖』，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "预测赛事列表-状态为『已开奖』展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号10070488，状态为『已开奖』",
+   "preconditions": "运营后台已登录，存在赛事编号10070488且状态为已开奖",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070488所在行的状态列",
+     "expected": "显示『已开奖』"
+    }
+   ],
+   "expected_result": "状态列显示『已开奖』，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "预测赛事列表-状态筛选功能正常",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择状态『预测中』，预期列表仅显示预测中状态的赛事",
+   "preconditions": "运营后台已登录，存在多种状态的赛事数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在状态筛选下拉框选择『预测中』",
+     "expected": "下拉框显示『预测中』"
+    },
+    {
+     "step": 3,
+     "desc": "点击『搜索』按钮",
+     "expected": "列表刷新，仅显示状态为『预测中』的赛事"
+    }
+   ],
+   "expected_result": "筛选结果正确，仅显示预测中状态的赛事",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "预测赛事列表-状态筛选选择『全部』显示所有",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "选择状态『全部』，预期显示所有状态的赛事",
+   "preconditions": "运营后台已登录，存在多种状态的赛事数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在状态筛选下拉框选择『全部』",
+     "expected": "下拉框显示『全部』"
+    },
+    {
+     "step": 3,
+     "desc": "点击『搜索』按钮",
+     "expected": "列表显示所有状态的赛事"
+    }
+   ],
+   "expected_result": "选择『全部』时显示所有赛事，无过滤",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "预测赛事列表-状态筛选选择无效值被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "通过接口篡改状态参数为『无效状态』，预期返回错误提示",
+   "preconditions": "运营后台已登录，可拦截请求",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "使用开发者工具修改状态筛选参数为『无效状态』",
+     "expected": "请求参数被修改"
+    },
+    {
+     "step": 3,
+     "desc": "点击『搜索』按钮",
+     "expected": "页面提示『状态参数无效』，列表不刷新"
+    }
+   ],
+   "expected_result": "无效状态值被拒绝，提示错误，无异常数据展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "预测赛事列表-联赛及球队管理入口跳转",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击『联赛及球队管理』链接，预期跳转至联赛及球队管理页面",
+   "preconditions": "运营后台已登录，具有联赛及球队管理页面访问权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击『联赛及球队管理』入口",
+     "expected": "跳转至联赛及球队管理页面，URL正确"
+    }
+   ],
+   "expected_result": "成功跳转至联赛及球队管理页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "预测赛事列表-联赛及球队管理入口权限不足拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无权限账号点击『联赛及球队管理』，预期提示无权限",
+   "preconditions": "运营后台已登录，账号无联赛及球队管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击『联赛及球队管理』入口",
+     "expected": "提示『无权限访问』，不跳转"
+    }
+   ],
+   "expected_result": "提示无权限，不跳转",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "预测赛事列表-参与记录入口跳转",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击『参与记录』入口，预期跳转至用户参与记录页面",
+   "preconditions": "运营后台已登录，具有用户参与记录页面访问权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击『参与记录』入口",
+     "expected": "跳转至用户参与记录页面，URL正确"
+    }
+   ],
+   "expected_result": "成功跳转至用户参与记录页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "预测赛事列表-参与记录入口权限不足拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无权限账号点击『参与记录』，预期提示无权限",
+   "preconditions": "运营后台已登录，账号无用户参与记录权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击『参与记录』入口",
+     "expected": "提示『无权限访问』，不跳转"
+    }
+   ],
+   "expected_result": "提示无权限，不跳转",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "预测赛事列表-历史赛事开始时间展示（2015-10-02 00:00:00）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号10070487，赛事开始时间为2015-10-02 00:00:00",
+   "preconditions": "运营后台已登录，存在赛事编号10070487",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070487所在行的赛事开始时间列",
+     "expected": "显示『2015-10-02 00:00:00』"
+    }
+   ],
+   "expected_result": "历史时间正确显示，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "预测赛事列表-历史赛事开始时间展示（2015-10-02 10:20:28）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号10070486，赛事开始时间为2015-10-02 10:20:28",
+   "preconditions": "运营后台已登录，存在赛事编号10070486",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070486所在行的赛事开始时间列",
+     "expected": "显示『2015-10-02 10:20:28』"
+    }
+   ],
+   "expected_result": "历史时间正确显示，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "预测赛事列表-赛事开始时间格式非法时展示异常",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造赛事编号10070485，赛事开始时间为『2025/07/25』，预期显示原始值或占位符",
+   "preconditions": "运营后台已登录，存在赛事编号10070485且时间格式非法",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号10070485所在行的赛事开始时间列",
+     "expected": "显示占位符『-』或原始值，页面无崩溃"
+    }
+   ],
+   "expected_result": "非法时间格式被容错处理，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "预测赛事列表-赛事开始时间为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "赛事开始时间为空，代表赛事信息不完整",
+   "preconditions": "运营后台已登录，存在赛事开始时间为空的赛事记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事开始时间为空的记录",
+     "expected": "赛事开始时间列显示为空或占位符，不报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "预测赛事列表-奖励记录入口可点击并展示记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择赛事编号 10070490，该赛事已有奖励发放记录",
+   "preconditions": "运营后台已登录，存在赛事编号 10070490 且已有奖励记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击赛事编号 10070490 操作列的「奖励记录」",
+     "expected": "弹出奖励记录列表或跳转至奖励发放记录页面，展示该赛事的奖励记录"
+    }
+   ],
+   "expected_result": "奖励记录入口可正常打开，展示对应赛事的奖励记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "预测赛事列表-无奖励记录时奖励记录入口展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择赛事编号 10070488，该赛事无奖励记录",
+   "preconditions": "运营后台已登录，存在赛事编号 10070488 且无奖励记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击赛事编号 10070488 操作列的「奖励记录」",
+     "expected": "弹出空列表提示，如「暂无奖励记录」"
+    }
+   ],
+   "expected_result": "无数据时展示空态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "预测赛事列表-指数记录入口可点击并展示记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择赛事编号 10070490，该赛事已有指数记录",
+   "preconditions": "运营后台已登录，存在赛事编号 10070490 且已有指数记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击赛事编号 10070490 操作列的「指数记录」",
+     "expected": "弹出指数记录列表或跳转至指数记录页面，展示该赛事的指数变化记录"
+    }
+   ],
+   "expected_result": "指数记录入口可正常打开，展示对应赛事的指数记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "预测赛事列表-无指数记录时指数记录入口展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择赛事编号 10070488，该赛事无指数记录",
+   "preconditions": "运营后台已登录，存在赛事编号 10070488 且无指数记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击赛事编号 10070488 操作列的「指数记录」",
+     "expected": "弹出空列表提示，如「暂无指数记录」"
+    }
+   ],
+   "expected_result": "无数据时展示空态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "预测赛事列表-关闭预测中赛事成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择赛事编号 10070490，状态为预测中，关闭后应变为已关闭",
+   "preconditions": "运营后台已登录，存在赛事编号 10070490 且状态为预测中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击赛事编号 10070490 操作列的「关闭」",
+     "expected": "弹出确认提示框，如「确认关闭该预测赛事？」"
+    },
+    {
+     "step": 3,
+     "desc": "点击确认",
+     "expected": "关闭成功，该赛事状态变为已关闭，操作列关闭按钮置灰或消失"
+    }
+   ],
+   "expected_result": "预测中赛事可正常关闭，状态更新为已关闭",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "预测赛事列表-关闭非预测中赛事被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择赛事编号 10070489，状态为待开奖，不可关闭",
+   "preconditions": "运营后台已登录，存在赛事编号 10070489 且状态为待开奖",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击赛事编号 10070489 操作列的「关闭」",
+     "expected": "按钮不可点击或点击后提示「仅预测中赛事可关闭」"
+    }
+   ],
+   "expected_result": "非预测中状态无法关闭，给出明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "预测赛事列表-关闭操作取消不生效",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择赛事编号 10070490，点击关闭后取消",
+   "preconditions": "运营后台已登录，存在赛事编号 10070490 且状态为预测中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击赛事编号 10070490 操作列的「关闭」",
+     "expected": "弹出确认提示框"
+    },
+    {
+     "step": 3,
+     "desc": "点击取消",
+     "expected": "关闭操作取消，赛事状态仍为预测中"
+    }
+   ],
+   "expected_result": "取消关闭后赛事状态不变",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "预测赛事列表-变更时间正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "变更时间为 2025-07-24 10:20:28，代表赛事信息最近修改时间",
+   "preconditions": "运营后台已登录，存在赛事编号 10070490 且变更时间为 2025-07-24 10:20:28",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号 10070490 所在行的变更时间列",
+     "expected": "变更时间显示为 2025-07-24 10:20:28，格式为 yyyy-MM-dd HH:mm:ss"
+    }
+   ],
+   "expected_result": "变更时间字段正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "预测赛事列表-变更时间为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "变更时间为空，代表赛事从未被修改",
+   "preconditions": "运营后台已登录，存在变更时间为空的赛事记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看变更时间为空的记录",
+     "expected": "变更时间列显示为空或占位符，不报错"
+    }
+   ],
+   "expected_result": "空值处理合理，页面不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "预测赛事列表-主胜赔率正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "主胜赔率为 2.01，代表主队获胜的赔率",
+   "preconditions": "运营后台已登录，存在赛事编号 10070490 且主胜赔率为 2.01",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号 10070490 所在行的主胜列",
+     "expected": "主胜显示为 2.01，保留两位小数"
+    }
+   ],
+   "expected_result": "主胜赔率正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "预测赛事列表-主胜赔率为0或负数的异常展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "预测赛事列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "主胜赔率为 0 或 -1，代表异常数据",
+   "preconditions": "运营后台已登录，存在主胜赔率为 0 或负数的赛事记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入预测赛事列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看主胜赔率为 0 或负数的记录",
+     "expected": "主胜列显示为 0 或负数，或显示为占位符，不报错"
+    }
+   ],
+   "expected_result": "异常赔率数据不导致页面崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "搜索-输入有效用户编号查询成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号：10091928（已存在参与记录的用户编号）",
+   "preconditions": "已登录运营后台，存在用户编号为10091928的参与记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载，显示列表和搜索区域"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入“10091928”",
+     "expected": "输入框显示“10091928”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表刷新，仅显示用户编号为10091928的记录"
+    }
+   ],
+   "expected_result": "列表仅显示用户编号为10091928的记录，其他记录不显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "搜索-输入不存在的用户编号无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：99999999（不存在的用户编号）",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入“99999999”",
+     "expected": "输入框显示“99999999”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示无数据，提示“暂无数据”或空列表"
+    }
+   ],
+   "expected_result": "列表为空，提示无数据",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "搜索-用户编号为空点击搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号输入框留空",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不输入用户编号，直接点击“搜索”按钮",
+     "expected": "列表显示全部记录，或提示请输入搜索条件"
+    }
+   ],
+   "expected_result": "系统按无过滤条件处理，展示全部记录或给出提示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "搜索-用户编号输入特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号：abc@#（特殊字符）",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入“abc@#”",
+     "expected": "输入框显示“abc@#”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "系统提示“用户编号格式不正确”或列表为空"
+    }
+   ],
+   "expected_result": "系统拦截非法输入或返回空结果",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "用户编号输入框-输入超长字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户编号：1009192810091928（超过20位）",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入“1009192810091928”",
+     "expected": "输入框可能限制长度或显示完整内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "系统提示“用户编号长度超出限制”或按输入值查询"
+    }
+   ],
+   "expected_result": "系统正确处理超长输入，不崩溃",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "记录编号列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录编号：18100919（示例数据）",
+   "preconditions": "已登录运营后台，存在记录编号为18100919的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载，显示记录编号列"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录编号列",
+     "expected": "记录编号显示为“18100919”，与数据库一致"
+    }
+   ],
+   "expected_result": "记录编号列正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "记录编号列-为空或缺失",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条记录编号为空的记录",
+   "preconditions": "已登录运营后台，存在记录编号为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录编号列",
+     "expected": "空记录显示为“-”或空白，不报错"
+    }
+   ],
+   "expected_result": "空记录编号以占位符显示，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "创建时间列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "创建时间：2025-07-25 13:00:00（示例数据）",
+   "preconditions": "已登录运营后台，存在创建时间为2025-07-25 13:00:00的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载，显示创建时间列"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间显示为“2025-07-25 13:00:00”，格式正确"
+    }
+   ],
+   "expected_result": "创建时间列正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "创建时间列-格式异常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造创建时间为“2025/07/25”的记录",
+   "preconditions": "已登录运营后台，存在创建时间格式为“2025/07/25”的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "系统按统一格式显示，或显示原始值，不报错"
+    }
+   ],
+   "expected_result": "创建时间列正常显示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "用户编号列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号：10091928（示例数据）",
+   "preconditions": "已登录运营后台，存在用户编号为10091928的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载，显示用户编号列"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "用户编号显示为“10091928”，与数据库一致"
+    }
+   ],
+   "expected_result": "用户编号列正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "用户编号列-超长编号显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户编号：100291982111（11位数字）",
+   "preconditions": "已登录运营后台，存在用户编号为100291982111的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "编号完整显示，不换行或截断，或提供悬浮提示"
+    }
+   ],
+   "expected_result": "超长编号正常显示，不影响布局",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "赛事编号列-为空或缺失",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造赛事编号为空的记录",
+   "preconditions": "已登录运营后台，存在赛事编号为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号列",
+     "expected": "空值显示为“-”或空白，不报错"
+    }
+   ],
+   "expected_result": "空赛事编号以占位符显示，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "预测项列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预测项：主胜（示例数据）",
+   "preconditions": "已登录运营后台，存在预测项为主胜的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载，显示预测项列"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项列",
+     "expected": "预测项显示为“主胜”，与数据库一致"
+    }
+   ],
+   "expected_result": "预测项列正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "预测项列-非法值显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "预测项：其他（非主胜/客胜/平局）",
+   "preconditions": "已登录运营后台，存在预测项为“其他”的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项列",
+     "expected": "显示“其他”，不报错"
+    }
+   ],
+   "expected_result": "预测项列正常显示非法值",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "赔率列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赔率：2.01（示例数据）",
+   "preconditions": "已登录运营后台，存在赔率为2.01的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载，显示赔率列"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率列",
+     "expected": "赔率显示为“2.01”，保留两位小数"
+    }
+   ],
+   "expected_result": "赔率列正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "赔率列-零值显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "赔率：0.00（边界值）",
+   "preconditions": "已登录运营后台，存在赔率为0的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率列",
+     "expected": "显示“0.00”，不报错"
+    }
+   ],
+   "expected_result": "赔率列正常显示零值",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "参与数额列-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "参与数额：1000（示例数据）",
+   "preconditions": "已登录运营后台，存在参与数额为1000的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载，显示参与数额列"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与数额列",
+     "expected": "参与数额显示为“1000”，与数据库一致"
+    }
+   ],
+   "expected_result": "参与数额列正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "参与数额列-负数显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "参与数额：-100（异常数据）",
+   "preconditions": "已登录运营后台，存在参与数额为负数的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与数额列",
+     "expected": "显示“-100”，不报错"
+    }
+   ],
+   "expected_result": "参与数额列正常显示负数",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "创建时间示例数据-展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "创建时间：2025-07-25 13:00:00（示例数据）",
+   "preconditions": "已登录运营后台，存在创建时间为2025-07-25 13:00:00的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载，显示创建时间列"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间显示为“2025-07-25 13:00:00”，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "创建时间列正确显示示例数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "创建时间示例数据-时间边界",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "创建时间：2025-07-25 00:00:00（当天最早时间）",
+   "preconditions": "已登录运营后台，存在创建时间为2025-07-25 00:00:00的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "显示“2025-07-25 00:00:00”，格式正确"
+    }
+   ],
+   "expected_result": "边界时间正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "验证用户参与记录列表正确显示主队名称 vs 客队名称",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的赛事记录，其主队名称为“主队名称”，客队名称为“客队名称”，预期显示为“主队名称 vs 客队名称”。",
+   "preconditions": "已登录运营后台，存在至少一条用户参与记录，且该记录关联的赛事主队名称为“主队名称”、客队名称为“客队名称”。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击“赛事预测”菜单，选择“用户参与记录”页面",
+     "expected": "页面正常加载，显示用户参与记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的“赛事名称”列",
+     "expected": "赛事名称列显示为“主队名称 vs 客队名称”，格式正确，无乱码"
+    }
+   ],
+   "expected_result": "赛事名称列正确显示“主队名称 vs 客队名称”，格式与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "验证主队名称为空时赛事名称显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条主队名称为空、客队名称为“客队名称”的参与记录，验证显示是否异常。",
+   "preconditions": "已登录运营后台，存在一条主队名称为空的参与记录（可通过测试数据构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的赛事名称列",
+     "expected": "赛事名称列显示“ vs 客队名称”或空，但不应出现系统错误"
+    }
+   ],
+   "expected_result": "页面不崩溃，赛事名称列显示合理（如“ vs 客队名称”），无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "验证预测项为“主胜”时列表显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预测项为“主胜”的参与记录，验证列表显示“主胜”。",
+   "preconditions": "已登录运营后台，存在预测项为“主胜”的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项列",
+     "expected": "预测项列显示“主胜”"
+    }
+   ],
+   "expected_result": "预测项列正确显示“主胜”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "验证预测项为“客胜”时列表显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预测项为“客胜”的参与记录，验证列表显示“客胜”。",
+   "preconditions": "已登录运营后台，存在预测项为“客胜”的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项列",
+     "expected": "预测项列显示“客胜”"
+    }
+   ],
+   "expected_result": "预测项列正确显示“客胜”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "验证预测项为“平局”时列表显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预测项为“平局”的参与记录，验证列表显示“平局”。",
+   "preconditions": "已登录运营后台，存在预测项为“平局”的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项列",
+     "expected": "预测项列显示“平局”"
+    }
+   ],
+   "expected_result": "预测项列正确显示“平局”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "验证预测项为未知值时列表显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造预测项为“让球主胜”的参与记录，验证系统如何处理非标准预测项。",
+   "preconditions": "已登录运营后台，存在预测项为“让球主胜”的参与记录（测试数据）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项列",
+     "expected": "预测项列显示“让球主胜”或友好提示，不出现系统错误"
+    }
+   ],
+   "expected_result": "预测项列显示该未知值，或显示“未知预测项”，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "验证赔率显示为2.01时正确显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用赔率为2.01的参与记录，验证列表显示“2.01”。",
+   "preconditions": "已登录运营后台，存在赔率为2.01的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率列",
+     "expected": "赔率列显示“2.01”"
+    }
+   ],
+   "expected_result": "赔率列正确显示“2.01”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "验证赔率显示为15.01时正确显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用赔率为15.01的参与记录，验证列表显示“15.01”。",
+   "preconditions": "已登录运营后台，存在赔率为15.01的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率列",
+     "expected": "赔率列显示“15.01”"
+    }
+   ],
+   "expected_result": "赔率列正确显示“15.01”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "验证赔率显示为1.20时正确显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用赔率为1.20的参与记录，验证列表显示“1.20”。",
+   "preconditions": "已登录运营后台，存在赔率为1.20的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率列",
+     "expected": "赔率列显示“1.20”"
+    }
+   ],
+   "expected_result": "赔率列正确显示“1.20”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "验证赔率为0时列表显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造赔率为0的参与记录，验证列表显示是否异常。",
+   "preconditions": "已登录运营后台，存在赔率为0的参与记录（测试数据）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率列",
+     "expected": "赔率列显示“0”或“0.00”，不出现系统错误"
+    }
+   ],
+   "expected_result": "赔率列显示“0”或“0.00”，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "验证创建时间为2025-07-24 13:00:00时正确显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用创建时间为2025-07-24 13:00:00的参与记录，验证列表显示该时间。",
+   "preconditions": "已登录运营后台，存在创建时间为2025-07-24 13:00:00的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间列显示“2025-07-24 13:00:00”"
+    }
+   ],
+   "expected_result": "创建时间列正确显示“2025-07-24 13:00:00”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "验证创建时间为2025-07-23 13:00:00时正确显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用创建时间为2025-07-23 13:00:00的参与记录，验证列表显示该时间。",
+   "preconditions": "已登录运营后台，存在创建时间为2025-07-23 13:00:00的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间列显示“2025-07-23 13:00:00”"
+    }
+   ],
+   "expected_result": "创建时间列正确显示“2025-07-23 13:00:00”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "验证创建时间为2015-10-02 00:00:00时正确显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用创建时间为2015-10-02 00:00:00的参与记录，验证列表显示该时间。",
+   "preconditions": "已登录运营后台，存在创建时间为2015-10-02 00:00:00的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间列显示“2015-10-02 00:00:00”"
+    }
+   ],
+   "expected_result": "创建时间列正确显示“2015-10-02 00:00:00”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "验证创建时间为空时列表显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造创建时间为空的参与记录，验证列表显示是否异常。",
+   "preconditions": "已登录运营后台，存在创建时间为空的参与记录（测试数据）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "创建时间列显示为空或“-”，不出现系统错误"
+    }
+   ],
+   "expected_result": "创建时间列显示为空或“-”，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "验证“联赛及球队管理”入口可点击跳转",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击“联赛及球队管理”入口，验证跳转至联赛及球队管理页面。",
+   "preconditions": "已登录运营后台，且当前用户有联赛及球队管理页面的访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“联赛及球队管理”入口",
+     "expected": "跳转至联赛及球队管理页面，URL正确"
+    }
+   ],
+   "expected_result": "成功跳转至联赛及球队管理页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "验证无权限用户点击“联赛及球队管理”入口被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的运营账号，点击入口验证权限拦截。",
+   "preconditions": "已登录运营后台，但当前用户无联赛及球队管理页面的访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“联赛及球队管理”入口",
+     "expected": "提示无权限或入口置灰不可点击，不跳转"
+    }
+   ],
+   "expected_result": "提示无权限或入口不可点击，不跳转至联赛及球队管理页面。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "验证赛事编号搜索框输入有效编号可查询到记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入赛事编号“100291982111”，该编号存在于参与记录中，验证查询结果。",
+   "preconditions": "已登录运营后台，存在赛事编号为100291982111的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在“赛事编号：”输入框中输入“100291982111”",
+     "expected": "输入框正常接收输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表刷新，仅显示赛事编号为100291982111的记录"
+    }
+   ],
+   "expected_result": "查询结果仅包含赛事编号为100291982111的记录，且记录信息正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "验证赛事编号搜索框输入不存在的编号时无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入赛事编号“999999999999”，该编号不存在，验证查询结果为空。",
+   "preconditions": "已登录运营后台，不存在赛事编号为999999999999的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在“赛事编号：”输入框中输入“999999999999”",
+     "expected": "输入框正常接收输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示“暂无数据”或空列表，无报错"
+    }
+   ],
+   "expected_result": "列表显示“暂无数据”或空列表，无系统错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "验证赛事编号搜索框输入非数字字符时提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入“abc123”，验证系统对非数字输入的校验。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在“赛事编号：”输入框中输入“abc123”",
+     "expected": "输入框可能限制输入或允许输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "提示“赛事编号格式错误”或查询无结果，不出现系统错误"
+    }
+   ],
+   "expected_result": "系统提示格式错误或查询无结果，无系统异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "验证赛事编号搜索框为空时点击搜索显示全部记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测-用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "赛事编号输入框留空，点击搜索，验证是否显示全部记录。",
+   "preconditions": "已登录运营后台，存在多条参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不输入赛事编号，直接点击“搜索”按钮",
+     "expected": "列表显示全部参与记录，或提示“请输入赛事编号”"
+    }
+   ],
+   "expected_result": "列表显示全部记录，或提示“请输入赛事编号”，无系统错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "用户参与记录-创建时间字段正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在一条参与记录，其创建时间为 2025-07-25 13:00:00，用于验证创建时间字段展示。",
+   "preconditions": "已登录运营后台，具有赛事预测-用户参与记录页面的查看权限；数据库中存在创建时间为 2025-07-25 13:00:00 的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「赛事预测」-「用户参与记录」菜单",
+     "expected": "成功进入用户参与记录页面，页面加载正常"
+    },
+    {
+     "step": 2,
+     "desc": "在记录列表中查看「创建时间」列",
+     "expected": "创建时间列显示为「2025-07-25 13:00:00」，格式为 yyyy-MM-dd HH:mm:ss，与数据库记录一致"
+    }
+   ],
+   "expected_result": "创建时间字段正确显示记录的创建时间，格式为 yyyy-MM-dd HH:mm:ss，无乱码或截断。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "用户参与记录-创建时间为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中有一条参与记录的创建时间为 NULL，用于验证空值展示。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在创建时间为 NULL 的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的「创建时间」列",
+     "expected": "创建时间列显示为空或显示占位符「-」，不出现异常报错"
+    }
+   ],
+   "expected_result": "创建时间为空时，页面显示空或「-」，不崩溃，无错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "用户参与记录-预测项字段正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中有一条参与记录的预测项为「主胜」，用于验证预测项字段展示。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在预测项为「主胜」的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看「预测项」列",
+     "expected": "预测项列显示「主胜」，与数据库记录一致"
+    }
+   ],
+   "expected_result": "预测项字段正确显示用户预测的选项（主胜/客胜/平局），无乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "用户参与记录-预测项为非法值时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中有一条参与记录的预测项为非法值「胜负」，用于验证异常数据展示。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在预测项为非法值「胜负」的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的「预测项」列",
+     "expected": "预测项列显示「胜负」或显示为「-」，不出现系统错误提示"
+    }
+   ],
+   "expected_result": "预测项为非法值时，页面不崩溃，显示原始值或占位符，无错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "用户参与记录-记录编号字段正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中有一条参与记录的记录编号为「18100919」，用于验证记录编号字段展示。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在记录编号为「18100919」的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看「记录编号」列",
+     "expected": "记录编号列显示「18100919」，与数据库记录一致"
+    }
+   ],
+   "expected_result": "记录编号字段正确显示唯一编号，无截断或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "用户参与记录-记录编号超长时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中有一条参与记录的记录编号为 30 位数字（如 123456789012345678901234567890），用于验证超长编号展示。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在记录编号为 30 位数字的参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的「记录编号」列",
+     "expected": "记录编号列显示完整编号或进行省略显示（如加省略号），不出现横向滚动条或布局错乱"
+    }
+   ],
+   "expected_result": "超长记录编号展示不破坏页面布局，可完整查看或通过悬浮提示查看完整编号。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "用户参与记录-按创建时间范围筛选成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中存在创建时间分别为 2025-07-24 10:00:00、2025-07-25 10:00:00、2025-07-26 10:00:00 的记录；筛选条件为 2025-07-24 00:00:00 至 2025-07-25 23:59:59，预期返回前两条记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在上述三条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「创建时间：」筛选条件中选择开始时间 2025-07-24 00:00:00，结束时间 2025-07-25 23:59:59",
+     "expected": "时间选择器正确设置"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示创建时间在 2025-07-24 00:00:00 至 2025-07-25 23:59:59 之间的记录（即两条）"
+    }
+   ],
+   "expected_result": "列表正确筛选出时间范围内的记录，记录数与预期一致，无遗漏或多余。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "用户参与记录-创建时间开始时间大于结束时间",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "筛选条件：开始时间 2025-07-25 00:00:00，结束时间 2025-07-24 00:00:00，用于验证非法时间范围。",
+   "preconditions": "已登录运营后台，具有查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「创建时间：」筛选条件中选择开始时间 2025-07-25 00:00:00，结束时间 2025-07-24 00:00:00",
+     "expected": "时间选择器允许选择"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "页面提示「开始时间不能大于结束时间」，不发起查询请求，列表保持原状"
+    }
+   ],
+   "expected_result": "系统拦截非法时间范围，给出明确错误提示，不执行查询。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "用户参与记录-仅填写开始时间进行筛选",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "筛选条件：仅设置开始时间 2025-07-25 00:00:00，不设置结束时间，用于验证单边时间筛选。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在创建时间在 2025-07-25 00:00:00 之后的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「创建时间：」筛选条件中仅设置开始时间 2025-07-25 00:00:00，结束时间留空",
+     "expected": "时间选择器允许设置"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示创建时间大于等于 2025-07-25 00:00:00 的记录，或系统提示需完整填写时间范围（按需求定义）"
+    }
+   ],
+   "expected_result": "系统按需求定义的规则处理单边时间筛选，结果正确且无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "用户参与记录-按预测项筛选成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中存在预测项分别为「主胜」「客胜」「平局」的记录；筛选条件选择「主胜」，预期只返回预测项为主胜的记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在上述三条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「预测项：」筛选条件中选择「主胜」",
+     "expected": "下拉框正确选中「主胜」"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅显示预测项为「主胜」的记录，其他预测项记录不显示"
+    }
+   ],
+   "expected_result": "列表正确按预测项筛选，结果准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "用户参与记录-预测项筛选选择空值",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "筛选条件：预测项选择「全部」或留空，用于验证空值筛选。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在多条不同预测项的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「预测项：」筛选条件中选择「全部」或留空",
+     "expected": "筛选条件正确设置"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示所有预测项的记录，不进行预测项过滤"
+    }
+   ],
+   "expected_result": "预测项为空或选择全部时，查询结果不受预测项条件限制。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "用户参与记录-按记录编号精确查询成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中有一条记录编号为「18100919」的记录；输入记录编号「18100919」进行查询，预期返回该记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在记录编号为「18100919」的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号：」输入框中输入「18100919」",
+     "expected": "输入框正确显示输入值"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅显示记录编号为「18100919」的记录"
+    }
+   ],
+   "expected_result": "列表正确返回与输入编号完全匹配的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "用户参与记录-记录编号输入不存在编号",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的记录编号「99999999」，用于验证无匹配记录时的处理。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中不存在记录编号为「99999999」的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号：」输入框中输入「99999999」",
+     "expected": "输入框正确显示输入值"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示「暂无数据」或空列表，不出现错误提示"
+    }
+   ],
+   "expected_result": "无匹配记录时，列表显示空态，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "用户参与记录-记录编号输入超长字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入记录编号为 30 位数字（如 123456789012345678901234567890），用于验证长度限制。",
+   "preconditions": "已登录运营后台，具有查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号：」输入框中输入 30 位数字",
+     "expected": "输入框可能限制最大长度或允许输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "若输入框限制长度，则无法输入超过限制；若允许输入，则系统提示「记录编号长度不能超过20位」或按规则处理，不崩溃"
+    }
+   ],
+   "expected_result": "超长记录编号输入被合理处理（限制输入或给出提示），不产生异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "用户参与记录-记录编号输入特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入记录编号为「abc@#$」，用于验证非法字符校验。",
+   "preconditions": "已登录运营后台，具有查看权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在「记录编号：」输入框中输入「abc@#$」",
+     "expected": "输入框允许输入或限制输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "系统提示「记录编号仅支持数字和字母」或自动过滤非法字符，不发起查询，不崩溃"
+    }
+   ],
+   "expected_result": "非法字符输入被拦截或提示，不产生异常查询。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "用户参与记录-组合筛选（创建时间+预测项+记录编号）",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中存在多条记录，其中一条记录编号为「18100919」、创建时间为 2025-07-25 13:00:00、预测项为「主胜」；筛选条件组合：创建时间 2025-07-25 00:00:00 至 2025-07-25 23:59:59、预测项「主胜」、记录编号「18100919」，预期返回该条记录。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在上述记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "设置创建时间范围 2025-07-25 00:00:00 至 2025-07-25 23:59:59",
+     "expected": "时间条件设置成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择预测项「主胜」",
+     "expected": "预测项条件设置成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入记录编号「18100919」",
+     "expected": "记录编号条件设置成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表仅显示同时满足三个条件的记录（即该条记录）"
+    }
+   ],
+   "expected_result": "组合筛选条件生效，结果准确，无遗漏或多余。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "用户参与记录-无筛选条件点击搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "boundary",
+   "test_data_note": "不设置任何筛选条件，直接点击搜索，用于验证默认查询行为。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库中存在多条参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不设置任何筛选条件，直接点击「搜索」按钮",
+     "expected": "列表显示所有参与记录（默认分页），不报错"
+    }
+   ],
+   "expected_result": "无筛选条件时，查询所有记录，分页正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "用户参与记录-点击重置按钮清空筛选条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已设置创建时间、预测项、记录编号等筛选条件，点击重置后验证条件清空。",
+   "preconditions": "已登录运营后台，具有查看权限；已设置若干筛选条件。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "设置创建时间、预测项、记录编号等筛选条件",
+     "expected": "筛选条件已设置"
+    },
+    {
+     "step": 3,
+     "desc": "点击「重置」按钮",
+     "expected": "所有筛选条件被清空，恢复默认值，列表刷新为全部记录"
+    }
+   ],
+   "expected_result": "重置功能正确清空所有筛选条件，列表恢复默认展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "用户参与记录-无数据时页面展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/用户参与记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何参与记录，或筛选条件导致无匹配记录，用于验证空态展示。",
+   "preconditions": "已登录运营后台，具有查看权限；数据库无参与记录或筛选条件无匹配。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户参与记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表区域",
+     "expected": "列表显示「暂无数据」或空表格，分页组件显示总数为0，不出现错误提示"
+    }
+   ],
+   "expected_result": "无数据时页面显示空态，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "搜索-按用户编号精确查询成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已存在的用户编号'10091928'，该用户在奖励发放记录中存在记录。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据，用户编号10091928存在记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，显示列表和搜索条件"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入'10091928'",
+     "expected": "输入框显示'10091928'，占位提示消失"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表刷新，仅显示用户编号为10091928的记录"
+    }
+   ],
+   "expected_result": "列表仅显示用户编号为10091928的奖励发放记录，其他记录不显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "搜索-按不存在的用户编号查询无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的用户编号'99999999'，该编号在系统中无任何记录。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入'99999999'",
+     "expected": "输入框显示'99999999'"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示'暂无数据'或空列表，提示无匹配记录"
+    }
+   ],
+   "expected_result": "列表为空，显示无数据提示，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "搜索-用户编号为空时查询全部记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户编号输入框留空，表示不限制用户编号，查询所有记录。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不输入用户编号，保持为空",
+     "expected": "输入框为空，显示占位提示'请输入'"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示所有奖励发放记录"
+    }
+   ],
+   "expected_result": "列表显示全部奖励发放记录，分页正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "搜索-用户编号输入特殊字符提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符'@#$%'，不符合用户编号格式。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入'@#$%'",
+     "expected": "输入框显示'@#$%'"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "提示'用户编号格式不正确'，不发起搜索请求"
+    }
+   ],
+   "expected_result": "系统提示用户编号格式错误，列表不刷新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "用户编号输入框-输入合法编号显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入合法用户编号'10091928'，该编号为数字格式。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击用户编号输入框",
+     "expected": "输入框获得焦点，占位提示'请输入'显示"
+    },
+    {
+     "step": 3,
+     "desc": "输入'10091928'",
+     "expected": "输入框显示'10091928'，占位提示消失"
+    }
+   ],
+   "expected_result": "输入框正确显示输入内容，无异常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "用户编号输入框-输入超长编号被限制",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过最大长度（假设20位）的用户编号'123456789012345678901'，验证长度限制。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入'123456789012345678901'",
+     "expected": "输入框最多允许输入20位，超出部分被截断或无法输入"
+    }
+   ],
+   "expected_result": "输入框限制输入长度，不报错。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "请输入占位提示-输入前显示占位文字",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号输入框为空时，应显示占位提示'请输入'。",
+   "preconditions": "已登录运营后台，进入奖励发放记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号输入框",
+     "expected": "输入框内显示灰色占位文字'请输入'"
+    }
+   ],
+   "expected_result": "输入框显示占位提示'请输入'，文字颜色为灰色。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "请输入占位提示-输入后占位消失",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "在用户编号输入框输入内容后，占位提示应消失。",
+   "preconditions": "已登录运营后台，进入奖励发放记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入'10091928'",
+     "expected": "输入框显示'10091928'，占位提示'请输入'消失"
+    }
+   ],
+   "expected_result": "占位提示消失，输入框显示输入内容。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "记录编号字段-列表正确显示记录编号",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中记录编号列，应显示如'18100919'等真实记录编号。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录编号列",
+     "expected": "每条记录显示对应的记录编号，如'18100919'"
+    }
+   ],
+   "expected_result": "记录编号列正确显示，无空值或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "记录编号字段-记录编号为空时显示占位符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条记录编号为空的数据，验证列表显示。",
+   "preconditions": "已登录运营后台，存在记录编号为空的数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录编号列",
+     "expected": "空记录编号显示为'-'或'--'，不显示空白"
+    }
+   ],
+   "expected_result": "空记录编号以占位符显示，不引起页面异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "创建时间字段-列表正确显示创建时间",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中创建时间列，应显示如'2025-07-25 13:00:00'格式的时间。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "每条记录显示创建时间，格式为'YYYY-MM-DD HH:mm:ss'"
+    }
+   ],
+   "expected_result": "创建时间列正确显示，格式统一。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "创建时间字段-时间格式非法时显示异常",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造创建时间为'2025/07/25'的数据，验证格式处理。",
+   "preconditions": "已登录运营后台，存在创建时间格式异常的数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "异常时间显示为原始值或'--'，不导致页面崩溃"
+    }
+   ],
+   "expected_result": "异常时间被合理处理，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "用户编号字段-列表正确显示用户编号",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中用户编号列，应显示如'10091928'等真实用户编号。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "每条记录显示对应的用户编号，如'10091928'"
+    }
+   ],
+   "expected_result": "用户编号列正确显示，无空值或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "用户编号字段-用户编号为空时显示占位符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条用户编号为空的数据，验证列表显示。",
+   "preconditions": "已登录运营后台，存在用户编号为空的数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "空用户编号显示为'-'或'--'，不显示空白"
+    }
+   ],
+   "expected_result": "空用户编号以占位符显示，不引起页面异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "赛事编号字段-列表正确显示赛事编号",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中赛事编号列，应显示如'100291982111'等真实赛事编号。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号列",
+     "expected": "每条记录显示对应的赛事编号，如'100291982111'"
+    }
+   ],
+   "expected_result": "赛事编号列正确显示，无空值或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "赛事编号字段-赛事编号为空时显示占位符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条赛事编号为空的数据，验证列表显示。",
+   "preconditions": "已登录运营后台，存在赛事编号为空的数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事编号列",
+     "expected": "空赛事编号显示为'-'或'--'，不显示空白"
+    }
+   ],
+   "expected_result": "空赛事编号以占位符显示，不引起页面异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "赛事名称字段-列表正确显示赛事名称",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中赛事名称列，应显示如'主队名称 vs 客队名称'格式的名称。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事名称列",
+     "expected": "每条记录显示赛事名称，格式为'主队名称 vs 客队名称'"
+    }
+   ],
+   "expected_result": "赛事名称列正确显示，格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "赛事名称字段-超长名称显示完整或省略",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造超长赛事名称（如超过50字符），验证显示处理。",
+   "preconditions": "已登录运营后台，存在超长赛事名称的数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事名称列",
+     "expected": "超长名称显示省略号或完整显示，不撑破布局"
+    }
+   ],
+   "expected_result": "超长名称被合理处理，页面布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "参与总数额字段-列表正确显示参与总数额",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中参与总数额列，应显示如'3000'等真实数额。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与总数额列",
+     "expected": "每条记录显示参与总数额，如'3000'"
+    }
+   ],
+   "expected_result": "参与总数额列正确显示，无空值或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "参与总数额字段-数额为0时显示0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造参与总数额为0的记录，验证显示。",
+   "preconditions": "已登录运营后台，存在参与总数额为0的数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与总数额列",
+     "expected": "显示'0'，不显示为空或'-'"
+    }
+   ],
+   "expected_result": "参与总数额为0时显示'0'，符合预期。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "奖励总数额字段-列表正确显示奖励总数额",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中奖励总数额列，应显示如'5000'等真实数额。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看奖励总数额列",
+     "expected": "每条记录显示奖励总数额，如'5000'"
+    }
+   ],
+   "expected_result": "奖励总数额列正确显示，无空值或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "奖励总数额字段-数额为0时显示0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造奖励总数额为0的记录，验证显示。",
+   "preconditions": "已登录运营后台，存在奖励总数额为0的数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看奖励总数额列",
+     "expected": "显示'0'，不显示为空或'-'"
+    }
+   ],
+   "expected_result": "奖励总数额为0时显示'0'，符合预期。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "创建时间示例值-列表显示示例时间",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中创建时间列，应显示如'2025-07-25 13:00:00'的示例时间。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "显示时间格式为'YYYY-MM-DD HH:mm:ss'，如'2025-07-25 13:00:00'"
+    }
+   ],
+   "expected_result": "创建时间列显示格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "赛事名称显示格式-主队名称 vs 客队名称正确显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中赛事名称列，应显示为'主队名称 vs 客队名称'格式。",
+   "preconditions": "已登录运营后台，有奖励发放记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载，列表显示记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事名称列",
+     "expected": "显示格式为'主队名称 vs 客队名称'，如'主队名称 vs 客队名称'"
+    }
+   ],
+   "expected_result": "赛事名称列显示格式正确，包含' vs '分隔符。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "赛事名称显示格式-主队或客队名称为空时处理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造主队名称为空的数据，验证显示。",
+   "preconditions": "已登录运营后台，存在主队名称为空的数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事名称列",
+     "expected": "显示为' vs 客队名称'或'--'，不显示空白"
+    }
+   ],
+   "expected_result": "空名称被合理处理，不引起页面异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "奖励发放记录列表默认展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在至少一条奖励发放记录，记录编号18100919，创建时间2025-07-25 13:00:00，用户编号10091928，赛事编号100291982111，赛事名称“主队名称 vs 客队名称”，参与总数额3000，奖励总数额5000。",
+   "preconditions": "运营后台已登录，存在至少一条奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击“赛事预测”菜单，选择“奖励发放记录”页面。",
+     "expected": "页面加载成功，显示奖励发放记录列表。"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表表头。",
+     "expected": "表头包含：记录编号、创建时间、用户编号、赛事编号、赛事名称、参与总数额、奖励总数额、操作。"
+    },
+    {
+     "step": 3,
+     "desc": "查看列表数据行。",
+     "expected": "列表展示记录编号18100919，创建时间2025-07-25 13:00:00，用户编号10091928，赛事编号100291982111，赛事名称“主队名称 vs 客队名称”，参与总数额3000，奖励总数额5000，操作列有“详细”和“关闭”按钮。"
+    }
+   ],
+   "expected_result": "列表正确展示所有字段，数据与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "奖励发放记录列表空数据展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "系统中无任何奖励发放记录。",
+   "preconditions": "运营后台已登录，数据库中无奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面显示空列表，提示“暂无数据”或类似文案。"
+    }
+   ],
+   "expected_result": "页面不报错，显示空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "按用户编号精确搜索",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号输入“10091928”，该用户存在奖励发放记录。",
+   "preconditions": "运营后台已登录，存在用户编号为10091928的奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "在“用户编号”输入框输入“10091928”。",
+     "expected": "输入框显示“10091928”。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "列表刷新，仅显示用户编号为10091928的记录。"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配用户编号的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "按不存在的用户编号搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号输入“99999999”，该用户不存在。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "在“用户编号”输入框输入“99999999”。",
+     "expected": "输入框显示“99999999”。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "列表显示空数据，提示“暂无数据”。"
+    }
+   ],
+   "expected_result": "搜索无结果，页面显示空态。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "按创建时间范围搜索",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "创建时间范围选择“2025-07-24 00:00:00”至“2025-07-25 23:59:59”，该范围内存在记录。",
+   "preconditions": "运营后台已登录，存在创建时间在2025-07-24至2025-07-25之间的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“创建时间”输入框，选择开始时间“2025-07-24 00:00:00”，结束时间“2025-07-25 23:59:59”。",
+     "expected": "时间输入框显示所选时间。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "列表仅显示创建时间在所选范围内的记录。"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示时间范围内的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "创建时间范围倒置搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "创建时间范围选择开始时间“2025-07-25 00:00:00”，结束时间“2025-07-24 00:00:00”，即开始时间大于结束时间。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“创建时间”输入框，选择开始时间“2025-07-25 00:00:00”，结束时间“2025-07-24 00:00:00”。",
+     "expected": "时间输入框显示所选时间。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "系统提示“开始时间不能大于结束时间”，不执行搜索。"
+    }
+   ],
+   "expected_result": "系统拦截非法时间范围，提示错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "按赛事编号搜索",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号输入“100291982111”，该赛事存在奖励发放记录。",
+   "preconditions": "运营后台已登录，存在赛事编号为100291982111的奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "在“赛事编号”输入框输入“100291982111”。",
+     "expected": "输入框显示“100291982111”。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "列表仅显示赛事编号为100291982111的记录。"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配赛事编号的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "按记录编号搜索",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "记录编号输入“18100919”，该记录存在。",
+   "preconditions": "运营后台已登录，存在记录编号为18100919的奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "在“记录编号”输入框输入“18100919”。",
+     "expected": "输入框显示“18100919”。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "列表仅显示记录编号为18100919的记录。"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配记录编号的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "多条件组合搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "同时输入用户编号“10091928”和赛事编号“100291982111”，该组合存在记录。",
+   "preconditions": "运营后台已登录，存在用户编号10091928且赛事编号100291982111的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "在“用户编号”输入框输入“10091928”，在“赛事编号”输入框输入“100291982111”。",
+     "expected": "输入框显示对应值。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "列表仅显示同时满足两个条件的记录。"
+    }
+   ],
+   "expected_result": "组合搜索正确，结果同时满足所有条件。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "重置搜索条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已输入搜索条件：用户编号“10091928”，创建时间范围“2025-07-24 00:00:00”至“2025-07-25 23:59:59”。",
+   "preconditions": "运营后台已登录，已输入搜索条件。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "输入搜索条件：用户编号“10091928”，创建时间范围“2025-07-24 00:00:00”至“2025-07-25 23:59:59”。",
+     "expected": "输入框显示对应值。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“重置”按钮。",
+     "expected": "所有搜索条件清空，列表恢复为全部记录。"
+    }
+   ],
+   "expected_result": "重置成功，搜索条件清空，列表恢复默认。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "查看奖励发放记录详情",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击记录编号18100919的“详细”按钮，该记录存在。",
+   "preconditions": "运营后台已登录，存在记录编号18100919的奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "点击记录编号18100919所在行的“详细”按钮。",
+     "expected": "弹出详情弹窗，显示字段：记录编号、创建时间、用户编号、赛事编号、赛事名称、参与时间、参与数额、预测项、赔率、奖励数额。"
+    },
+    {
+     "step": 3,
+     "desc": "核对弹窗字段值。",
+     "expected": "字段值与数据库一致，例如参与时间、参与数额、预测项（主胜）、赔率（1.01）、奖励数额（1.50）。"
+    }
+   ],
+   "expected_result": "详情弹窗正确展示所有字段，数据准确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "关闭详情弹窗",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已打开详情弹窗。",
+   "preconditions": "运营后台已登录，已打开详情弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击详情弹窗右上角“关闭”按钮。",
+     "expected": "弹窗关闭，返回列表页。"
+    }
+   ],
+   "expected_result": "弹窗正常关闭，页面无异常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "点击列表行关闭按钮",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "列表操作列有“关闭”按钮，点击后行为未明确。",
+   "preconditions": "运营后台已登录，存在奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条记录的“关闭”按钮。",
+     "expected": "系统提示“该操作不可用”或按钮置灰，不执行任何操作。"
+    }
+   ],
+   "expected_result": "关闭按钮不产生破坏性操作，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "分页切换",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "系统存在超过10条奖励发放记录，当前第1页。",
+   "preconditions": "运营后台已登录，存在超过10条奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功，显示第1页，每页10条。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“下一页”或页码“2”。",
+     "expected": "列表刷新，显示第2页数据。"
+    }
+   ],
+   "expected_result": "分页正常，数据正确切换。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "跳转页码超出范围",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "总页数为5，跳转页码输入“99”。",
+   "preconditions": "运营后台已登录，总页数为5。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "在“跳至”输入框输入“99”，点击“页”按钮。",
+     "expected": "系统提示“页码超出范围”，停留在当前页。"
+    }
+   ],
+   "expected_result": "系统拦截非法页码，不跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "切换每页条数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "每页条数选择“20条/页”。",
+   "preconditions": "运营后台已登录，存在超过10条奖励发放记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功，默认每页10条。"
+    },
+    {
+     "step": 2,
+     "desc": "点击每页条数下拉框，选择“20条/页”。",
+     "expected": "列表刷新，每页显示20条记录。"
+    }
+   ],
+   "expected_result": "每页条数切换成功，列表正确刷新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "点击联赛及球队管理入口",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "页面顶部或侧边有“联赛及球队管理”链接。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“联赛及球队管理”入口。",
+     "expected": "跳转至联赛及球队管理页面。"
+    }
+   ],
+   "expected_result": "跳转成功，目标页面正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "搜索时输入特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号输入“abc@#$%”。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "在“用户编号”输入框输入“abc@#$%”。",
+     "expected": "输入框可能限制输入，或允许输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "系统提示“请输入有效的用户编号”或返回空结果，不报错。"
+    }
+   ],
+   "expected_result": "系统对非法输入进行校验，不产生异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "搜索时输入超长字符串",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号输入超过字段最大长度（如100位数字）。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面。",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "在“用户编号”输入框输入100位数字。",
+     "expected": "输入框限制长度，或允许输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮。",
+     "expected": "系统提示“输入内容过长”或返回空结果，不报错。"
+    }
+   ],
+   "expected_result": "系统对超长输入进行校验，不产生异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "奖励发放记录列表正确展示预测项",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条已开奖的奖励发放记录，预测项为“主胜”，对应赛事编号100291982111",
+   "preconditions": "运营后台已登录，存在至少一条奖励发放记录，且该记录预测项为主胜",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击“赛事预测”->“奖励发放记录”",
+     "expected": "页面加载成功，显示奖励发放记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中找到记录编号为18100919的记录",
+     "expected": "该记录的“预测项”列显示“主胜”"
+    }
+   ],
+   "expected_result": "列表中的预测项列正确显示“主胜”，与数据库中的记录一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "奖励发放记录列表预测项为空时显示占位符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条预测项为空的奖励发放记录（异常数据）",
+   "preconditions": "运营后台已登录，存在一条预测项为空的奖励发放记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项为空的记录",
+     "expected": "预测项列显示“-”或空占位符，不显示空白或报错"
+    }
+   ],
+   "expected_result": "预测项为空时显示占位符，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "奖励发放记录列表正确展示赔率",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条已开奖的奖励发放记录，赔率为1.50",
+   "preconditions": "运营后台已登录，存在至少一条奖励发放记录，且该记录赔率为1.50",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录编号为18100919的记录的赔率列",
+     "expected": "赔率列显示“1.50”"
+    }
+   ],
+   "expected_result": "赔率列正确显示1.50，格式为两位小数",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "奖励发放记录列表赔率为0时显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条赔率为0的奖励发放记录（边界值）",
+   "preconditions": "运营后台已登录，存在一条赔率为0的奖励发放记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率为0的记录",
+     "expected": "赔率列显示“0.00”或“0”，不显示异常"
+    }
+   ],
+   "expected_result": "赔率为0时正常显示，无报错",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "奖励发放记录列表正确展示奖励数额",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条已开奖的奖励发放记录，奖励数额为5000银钻",
+   "preconditions": "运营后台已登录，存在至少一条奖励发放记录，且该记录奖励数额为5000",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录编号为18100919的记录的奖励数额列",
+     "expected": "奖励数额列显示“5000”"
+    }
+   ],
+   "expected_result": "奖励数额列正确显示5000，单位为银钻",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "奖励发放记录列表奖励数额为0时显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条奖励数额为0的奖励发放记录（边界值）",
+   "preconditions": "运营后台已登录，存在一条奖励数额为0的奖励发放记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看奖励数额为0的记录",
+     "expected": "奖励数额列显示“0”，不显示异常"
+    }
+   ],
+   "expected_result": "奖励数额为0时正常显示，无报错",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "奖励发放记录详细弹窗正确展示主胜预测项",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条包含预测项“主胜”的奖励发放记录，记录编号18100919",
+   "preconditions": "运营后台已登录，存在至少一条奖励发放记录，且该记录预测项为主胜",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击记录编号为18100919的“详细”按钮",
+     "expected": "弹出详细弹窗，显示参与时间、参与数额、预测项、赔率、奖励数额等字段"
+    },
+    {
+     "step": 3,
+     "desc": "查看弹窗中的预测项字段",
+     "expected": "预测项显示“主胜”"
+    }
+   ],
+   "expected_result": "详细弹窗中预测项正确显示“主胜”",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "奖励发放记录详细弹窗预测项为空时显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条预测项为空的奖励发放记录",
+   "preconditions": "运营后台已登录，存在一条预测项为空的奖励发放记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录的“详细”按钮",
+     "expected": "弹出详细弹窗"
+    },
+    {
+     "step": 3,
+     "desc": "查看弹窗中的预测项字段",
+     "expected": "预测项显示“-”或空占位符，不报错"
+    }
+   ],
+   "expected_result": "预测项为空时显示占位符，弹窗正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "奖励发放记录详细弹窗正确展示赔率1.01",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条赔率为1.01的奖励发放记录",
+   "preconditions": "运营后台已登录，存在至少一条奖励发放记录，且该记录赔率为1.01",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录的“详细”按钮",
+     "expected": "弹出详细弹窗"
+    },
+    {
+     "step": 3,
+     "desc": "查看弹窗中的赔率字段",
+     "expected": "赔率显示“1.01”"
+    }
+   ],
+   "expected_result": "详细弹窗中赔率正确显示1.01",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "奖励发放记录详细弹窗赔率为0时显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条赔率为0的奖励发放记录",
+   "preconditions": "运营后台已登录，存在一条赔率为0的奖励发放记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录的“详细”按钮",
+     "expected": "弹出详细弹窗"
+    },
+    {
+     "step": 3,
+     "desc": "查看弹窗中的赔率字段",
+     "expected": "赔率显示“0.00”或“0”，不报错"
+    }
+   ],
+   "expected_result": "赔率为0时正常显示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "奖励发放记录详细弹窗正确展示赔率1.50",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一条赔率为1.50的奖励发放记录",
+   "preconditions": "运营后台已登录，存在至少一条奖励发放记录，且该记录赔率为1.50",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录的“详细”按钮",
+     "expected": "弹出详细弹窗"
+    },
+    {
+     "step": 3,
+     "desc": "查看弹窗中的赔率字段",
+     "expected": "赔率显示“1.50”"
+    }
+   ],
+   "expected_result": "详细弹窗中赔率正确显示1.50",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "奖励发放记录详细弹窗赔率为负数时显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/奖励发放记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条赔率为-1.50的奖励发放记录（异常数据）",
+   "preconditions": "运营后台已登录，存在一条赔率为负数的奖励发放记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入奖励发放记录页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击该记录的“详细”按钮",
+     "expected": "弹出详细弹窗"
+    },
+    {
+     "step": 3,
+     "desc": "查看弹窗中的赔率字段",
+     "expected": "赔率显示“-1.50”或提示数据异常，不崩溃"
+    }
+   ],
+   "expected_result": "负数赔率正常显示或给出提示，系统无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "按用户编号精确搜索退回记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已存在的用户编号10091928，该用户存在退回记录，用于验证搜索功能能正确过滤出该用户的记录。",
+   "preconditions": "已登录运营后台，存在用户编号为10091928的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载，显示列表和搜索区域"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入10091928",
+     "expected": "输入框显示10091928"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表刷新，仅显示用户编号为10091928的退回记录"
+    }
+   ],
+   "expected_result": "列表仅显示用户编号为10091928的退回记录，其他记录不显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "按不存在的用户编号搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的用户编号99999999，该编号无任何退回记录，用于验证搜索无结果时的提示。",
+   "preconditions": "已登录运营后台，系统中不存在用户编号99999999。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入99999999",
+     "expected": "输入框显示99999999"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示无数据，提示“暂无数据”"
+    }
+   ],
+   "expected_result": "列表显示无数据，并给出“暂无数据”的提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "用户编号输入框为空时搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户编号输入框留空，点击搜索，验证系统是否提示必填或默认加载全部记录。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不输入用户编号，直接点击搜索按钮",
+     "expected": "系统提示“请输入用户编号”或加载全部记录"
+    }
+   ],
+   "expected_result": "系统给出明确提示或加载全部记录，不出现异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "用户编号输入框显示占位提示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "验证输入框未输入时显示“请输入”占位提示。",
+   "preconditions": "已登录运营后台，进入退回记录页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号输入框",
+     "expected": "输入框内显示灰色占位提示“请输入”"
+    }
+   ],
+   "expected_result": "输入框显示“请输入”占位提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "列表展示记录编号字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的记录编号列，验证显示正确的记录编号，如18100919。",
+   "preconditions": "已登录运营后台，存在退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的“记录编号”列",
+     "expected": "每行显示对应的记录编号，如18100919"
+    }
+   ],
+   "expected_result": "记录编号列正确显示每条记录的编号。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "列表展示创建时间字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的创建时间列，验证显示格式为“YYYY-MM-DD HH:mm:ss”，如2025-07-25 13:00:00。",
+   "preconditions": "已登录运营后台，存在退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的“创建时间”列",
+     "expected": "每行显示创建时间，格式为“YYYY-MM-DD HH:mm:ss”"
+    }
+   ],
+   "expected_result": "创建时间列正确显示，格式符合要求。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "列表展示用户编号字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的用户编号列，验证显示正确的用户编号，如10091928。",
+   "preconditions": "已登录运营后台，存在退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的“用户编号”列",
+     "expected": "每行显示对应的用户编号，如10091928"
+    }
+   ],
+   "expected_result": "用户编号列正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "列表展示赛事编号字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的赛事编号列，验证显示正确的赛事编号，如100291982111。",
+   "preconditions": "已登录运营后台，存在退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的“赛事编号”列",
+     "expected": "每行显示对应的赛事编号，如100291982111"
+    }
+   ],
+   "expected_result": "赛事编号列正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "列表展示赛事名称字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的赛事名称列，验证显示格式为“主队名称 vs 客队名称”。",
+   "preconditions": "已登录运营后台，存在退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的“赛事名称”列",
+     "expected": "每行显示“主队名称 vs 客队名称”格式的赛事名称"
+    }
+   ],
+   "expected_result": "赛事名称列正确显示，格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "列表展示退回原因字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的退回原因列，验证显示退回原因文本。",
+   "preconditions": "已登录运营后台，存在退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的“退回原因”列",
+     "expected": "每行显示对应的退回原因"
+    }
+   ],
+   "expected_result": "退回原因列正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "列表展示退回总数额字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的退回总数额列，验证显示正确的数额，如3000。",
+   "preconditions": "已登录运营后台，存在退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的“退回总数额”列",
+     "expected": "每行显示对应的退回总数额，如3000"
+    }
+   ],
+   "expected_result": "退回总数额列正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "创建时间显示格式校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "验证创建时间字段显示为“2025-07-25 13:00:00”格式，符合需求示例。",
+   "preconditions": "已登录运营后台，存在创建时间为2025-07-25 13:00:00的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "显示“2025-07-25 13:00:00”格式的时间"
+    }
+   ],
+   "expected_result": "创建时间显示为“YYYY-MM-DD HH:mm:ss”格式。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "赛事名称格式校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "验证赛事名称显示为“主队名称 vs 客队名称”格式。",
+   "preconditions": "已登录运营后台，存在赛事名称为“主队名称 vs 客队名称”的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛事名称列",
+     "expected": "显示“主队名称 vs 客队名称”格式"
+    }
+   ],
+   "expected_result": "赛事名称以“主队名称 vs 客队名称”格式显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "搜索时用户编号输入非法字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入包含字母和特殊字符的用户编号如“abc@123”，验证系统是否进行格式校验。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入“abc@123”",
+     "expected": "输入框显示abc@123"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示“用户编号格式不正确”或搜索无结果"
+    }
+   ],
+   "expected_result": "系统给出格式错误提示或搜索无结果，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "搜索时用户编号超长输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过系统限制长度的用户编号（如20位数字），验证是否截断或提示。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入20位数字“12345678901234567890”",
+     "expected": "输入框可能限制长度或显示完整"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示“用户编号过长”或按输入值搜索"
+    }
+   ],
+   "expected_result": "系统正确处理超长输入，不出现异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-180"
+  },
+  {
+   "title": "退回记录列表默认展示所有字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已有退回记录，包含记录编号18100919、用户编号10091928、赛事编号100291982111、赛事名称主队名称 vs 客队名称、退回原因（如赛事取消）、退回总数额3000",
+   "preconditions": "运营后台已登录，存在至少一条退回记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击菜单“赛事预测-退回记录”",
+     "expected": "页面加载成功，显示退回记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表表头",
+     "expected": "表头包含：记录编号、创建时间、用户编号、赛事编号、赛事名称、退回原因、退回总数额、操作"
+    },
+    {
+     "step": 3,
+     "desc": "查看第一条记录数据",
+     "expected": "记录编号18100919、创建时间2025-07-25 13:00:00、用户编号10091928、赛事编号100291982111、赛事名称主队名称 vs 客队名称、退回原因显示具体原因、退回总数额3000"
+    }
+   ],
+   "expected_result": "列表正确展示所有字段，数据与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-181"
+  },
+  {
+   "title": "退回记录列表无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何退回记录",
+   "preconditions": "运营后台已登录，数据库中无退回记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面显示空列表，提示“暂无数据”或类似文案，分页显示0条"
+    }
+   ],
+   "expected_result": "页面正常显示空态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-182"
+  },
+  {
+   "title": "按用户编号精确搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户编号10091928在数据库中存在退回记录",
+   "preconditions": "运营后台已登录，存在用户编号为10091928的退回记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在“用户编号”输入框输入10091928",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表刷新，仅显示用户编号为10091928的记录"
+    }
+   ],
+   "expected_result": "搜索结果正确，只显示匹配用户编号的记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-183"
+  },
+  {
+   "title": "按不存在的用户编号搜索显示空列表",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户编号99999999在数据库中不存在",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在“用户编号”输入框输入99999999",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示空，提示“暂无数据”"
+    }
+   ],
+   "expected_result": "搜索无结果，页面显示空态",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-184"
+  },
+  {
+   "title": "用户编号输入为空时搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户编号输入框为空",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "不输入用户编号，直接点击“搜索”",
+     "expected": "列表显示全部记录，或提示“请输入用户编号”"
+    }
+   ],
+   "expected_result": "系统正确处理空搜索条件，不报错",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-185"
+  },
+  {
+   "title": "重置搜索条件恢复默认列表",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已输入用户编号10091928进行搜索",
+   "preconditions": "运营后台已登录，已执行过搜索",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在用户编号输入框输入10091928并搜索",
+     "expected": "列表显示筛选结果"
+    },
+    {
+     "step": 2,
+     "desc": "点击“重置”按钮",
+     "expected": "用户编号输入框清空，列表恢复显示全部记录"
+    }
+   ],
+   "expected_result": "重置后搜索条件清空，列表恢复默认",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-186"
+  },
+  {
+   "title": "点击详细查看退回详情",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "记录编号18100919，包含参与时间2025-07-25 13:00:00、参与数额1000、预测项主胜、赔率1.01",
+   "preconditions": "运营后台已登录，存在退回记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条记录的“详细”按钮",
+     "expected": "弹出详情弹窗，显示参与时间、参与数额、预测项、赔率等字段"
+    }
+   ],
+   "expected_result": "详情弹窗正确展示所有字段，数据与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-187"
+  },
+  {
+   "title": "详情弹窗关闭功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已打开详情弹窗",
+   "preconditions": "运营后台已登录，已打开详情弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击详情弹窗中的“关闭”按钮",
+     "expected": "弹窗关闭，返回列表页面"
+    }
+   ],
+   "expected_result": "弹窗正常关闭",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-188"
+  },
+  {
+   "title": "分页显示每页10条",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中有超过10条退回记录",
+   "preconditions": "运营后台已登录，存在至少11条退回记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "列表显示第一页10条记录，分页控件显示总页数"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "显示第二页记录，每页10条"
+    }
+   ],
+   "expected_result": "分页正确，每页10条，可翻页",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-189"
+  },
+  {
+   "title": "跳页输入超出范围页码",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "总页数为5，输入页码99",
+   "preconditions": "运营后台已登录，存在至少5页数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "列表显示第一页"
+    },
+    {
+     "step": 2,
+     "desc": "在跳页输入框输入99",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“跳至”按钮",
+     "expected": "提示“页码超出范围”或自动跳转到最后一页"
+    }
+   ],
+   "expected_result": "系统正确处理非法页码，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-190"
+  },
+  {
+   "title": "创建时间字段显示格式正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库记录创建时间为2025-07-24 13:00:00",
+   "preconditions": "运营后台已登录，存在创建时间为2025-07-24 13:00:00的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "列表显示创建时间字段，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "创建时间显示为2025-07-24 13:00:00，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-191"
+  },
+  {
+   "title": "赛事编号字段显示正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛事编号100291982111",
+   "preconditions": "运营后台已登录，存在赛事编号为100291982111的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "列表显示赛事编号字段，值为100291982111"
+    }
+   ],
+   "expected_result": "赛事编号正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-192"
+  },
+  {
+   "title": "退回总数额显示正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "退回总数额3000",
+   "preconditions": "运营后台已登录，存在退回总数额为3000的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "列表显示退回总数额字段，值为3000"
+    }
+   ],
+   "expected_result": "退回总数额正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-193"
+  },
+  {
+   "title": "退回原因字段为空时显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "某条记录的退回原因为空",
+   "preconditions": "运营后台已登录，存在退回原因为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "列表显示该记录的退回原因字段，为空或显示“-”"
+    }
+   ],
+   "expected_result": "退回原因为空时页面不报错，显示合理占位符",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-194"
+  },
+  {
+   "title": "退回记录列表展示预测项为“主胜”的记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条退回记录，预测项为“主胜”，对应赛事编号100291982111，退回总数额3000。",
+   "preconditions": "运营后台已登录，存在预测项为“主胜”的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台赛事预测模块，点击“退回记录”页面",
+     "expected": "页面正常加载，显示退回记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找预测项为“主胜”的记录",
+     "expected": "列表中存在预测项为“主胜”的记录，且显示正确"
+    }
+   ],
+   "expected_result": "退回记录列表中，预测项列正确显示“主胜”，与数据库记录一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-195"
+  },
+  {
+   "title": "退回记录列表预测项为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条退回记录，预测项字段为空（NULL），其余字段正常。",
+   "preconditions": "运营后台已登录，存在预测项为空的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项为空的记录",
+     "expected": "预测项列显示为空或“-”，不出现异常报错"
+    }
+   ],
+   "expected_result": "预测项为空时，列表正常展示，不崩溃，显示占位符“-”或空白。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-196"
+  },
+  {
+   "title": "退回记录列表展示赔率为1.01的记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条退回记录，赔率为1.01，预测项为“主胜”。",
+   "preconditions": "运营后台已登录，存在赔率为1.01的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率为1.01的记录",
+     "expected": "赔率列显示“1.01”，格式正确"
+    }
+   ],
+   "expected_result": "退回记录列表中，赔率列正确显示“1.01”，保留两位小数。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-197"
+  },
+  {
+   "title": "退回记录列表赔率显示精度校验（1.50）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条退回记录，赔率为1.50，验证是否显示为1.50而非1.5。",
+   "preconditions": "运营后台已登录，存在赔率为1.50的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率为1.50的记录",
+     "expected": "赔率列显示“1.50”，保留两位小数"
+    }
+   ],
+   "expected_result": "赔率1.50显示为“1.50”，不显示为“1.5”。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-198"
+  },
+  {
+   "title": "退回记录列表赔率显示精度校验（2.00）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条退回记录，赔率为2.00，验证是否显示为2.00而非2。",
+   "preconditions": "运营后台已登录，存在赔率为2.00的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率为2.00的记录",
+     "expected": "赔率列显示“2.00”，保留两位小数"
+    }
+   ],
+   "expected_result": "赔率2.00显示为“2.00”，不显示为“2”。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-199"
+  },
+  {
+   "title": "退回记录列表赔率非法值（负数）的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条退回记录，赔率为-1.00（非法值），验证系统处理。",
+   "preconditions": "运营后台已登录，存在赔率为负数的异常数据（通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看赔率为负数的记录",
+     "expected": "赔率列显示“-1.00”或提示异常，但页面不崩溃"
+    }
+   ],
+   "expected_result": "赔率为负数时，列表正常展示，不崩溃，显示原始值或错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-200"
+  },
+  {
+   "title": "退回记录列表预测项与赔率联动展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条退回记录，预测项为“主胜”，赔率为1.50，验证两者同时正确展示。",
+   "preconditions": "运营后台已登录，存在预测项为“主胜”且赔率为1.50的退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的预测项和赔率列",
+     "expected": "预测项显示“主胜”，赔率显示“1.50”"
+    }
+   ],
+   "expected_result": "预测项和赔率同时正确展示，且与数据库记录一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-201"
+  },
+  {
+   "title": "退回记录列表无数据时的空态展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/退回记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "清空退回记录数据，验证空态展示。",
+   "preconditions": "运营后台已登录，退回记录表为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入退回记录页面",
+     "expected": "页面正常加载，列表显示“暂无数据”或空表格"
+    },
+    {
+     "step": 2,
+     "desc": "查看预测项和赔率列",
+     "expected": "无异常报错，显示空态提示"
+    }
+   ],
+   "expected_result": "无退回记录时，页面显示空态提示，不出现错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-202"
+  },
+  {
+   "title": "搜索-按创建时间范围搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "创建时间范围：2025-07-23 00:00:00 至 2025-07-25 23:59:59，覆盖页面已有数据日期。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在2025-07-23至2025-07-25的统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载，显示统计列表"
+    },
+    {
+     "step": 2,
+     "desc": "在创建时间范围选择2025-07-23至2025-07-25",
+     "expected": "时间选择器正确显示所选范围"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表刷新，显示该时间范围内的统计数据"
+    }
+   ],
+   "expected_result": "列表显示2025-07-23、2025-07-24、2025-07-25三天的统计数据，每条记录创建时间在所选范围内。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-203"
+  },
+  {
+   "title": "搜索-创建时间范围为空时搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "创建时间范围不填，即搜索全部数据。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不填写创建时间范围",
+     "expected": "时间选择器为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示全部统计数据"
+    }
+   ],
+   "expected_result": "列表显示所有统计数据，无时间过滤。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-204"
+  },
+  {
+   "title": "搜索-创建时间范围起止颠倒",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "创建时间范围：开始时间2025-07-25，结束时间2025-07-23，即开始晚于结束。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "设置创建时间开始为2025-07-25，结束为2025-07-23",
+     "expected": "时间选择器允许设置"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示“开始时间不能晚于结束时间”或自动交换，列表不刷新"
+    }
+   ],
+   "expected_result": "搜索被拦截或给出错误提示，列表保持原状。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-205"
+  },
+  {
+   "title": "创建时间-列表展示格式正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中创建时间字段，预期格式为YYYY-MM-DD，如2025-07-25。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的创建时间列",
+     "expected": "创建时间以YYYY-MM-DD格式显示，如2025-07-25"
+    }
+   ],
+   "expected_result": "所有行的创建时间均符合YYYY-MM-DD格式。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-206"
+  },
+  {
+   "title": "创建时间-列表数据为空时展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "无统计数据时，创建时间列应为空或显示占位符。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，但无统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表显示“暂无数据”或空状态"
+    }
+   ],
+   "expected_result": "列表为空，创建时间列无异常显示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-207"
+  },
+  {
+   "title": "参与用户数-展示正确数值",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看某日统计数据，参与用户数应为正整数，如10000。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与用户数列",
+     "expected": "显示正整数，如10000"
+    }
+   ],
+   "expected_result": "参与用户数为非负整数，且与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-208"
+  },
+  {
+   "title": "参与用户数-数值为0时展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某日无用户参与，参与用户数应为0。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在某日无参与数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与用户数列",
+     "expected": "显示0"
+    }
+   ],
+   "expected_result": "参与用户数显示为0，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-209"
+  },
+  {
+   "title": "参与总数额-展示正确数值",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看某日统计数据，参与总数额应为正数，如50000000（银钻）。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与总数额列",
+     "expected": "显示正数，如50000000"
+    }
+   ],
+   "expected_result": "参与总数额为非负数，且与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-210"
+  },
+  {
+   "title": "参与总数额-数值为0时展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某日无参与，参与总数额应为0。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在某日无参与数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看参与总数额列",
+     "expected": "显示0"
+    }
+   ],
+   "expected_result": "参与总数额显示为0，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-211"
+  },
+  {
+   "title": "奖励总数额-展示正确数值",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看某日统计数据，奖励总数额应为非负数，如5000。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在已开奖场次数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看奖励总数额列",
+     "expected": "显示非负数，如5000"
+    }
+   ],
+   "expected_result": "奖励总数额为非负数，且与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-212"
+  },
+  {
+   "title": "奖励总数额-无已开奖场次时展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某日无已开奖场次，奖励总数额应为0。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在某日无已开奖场次数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看奖励总数额列",
+     "expected": "显示0"
+    }
+   ],
+   "expected_result": "奖励总数额显示为0，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-213"
+  },
+  {
+   "title": "退回总数额-展示正确数值",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看某日统计数据，退回总数额应为非负数，如3000。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在退回记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看退回总数额列",
+     "expected": "显示非负数，如3000"
+    }
+   ],
+   "expected_result": "退回总数额为非负数，且与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-214"
+  },
+  {
+   "title": "退回总数额-无退回记录时展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某日无退回记录，退回总数额应为0。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在某日无退回记录数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看退回总数额列",
+     "expected": "显示0"
+    }
+   ],
+   "expected_result": "退回总数额显示为0，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-215"
+  },
+  {
+   "title": "平台利润-计算正确（正利润）",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "某日参与总数额=50000000，奖励总数额=40000000，退回总数额=0，平台利润应为10000000。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在该日统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看平台利润列",
+     "expected": "显示10000000"
+    }
+   ],
+   "expected_result": "平台利润=参与总数额-奖励总数额-退回总数额，显示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-216"
+  },
+  {
+   "title": "平台利润-计算正确（负利润）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "某日参与总数额=50000000，奖励总数额=51000000，退回总数额=2726，平台利润应为-102726。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在该日统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看平台利润列",
+     "expected": "显示-102726"
+    }
+   ],
+   "expected_result": "平台利润为负值，显示正确，且无格式异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-217"
+  },
+  {
+   "title": "平台利润-数值为0时展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某日参与总数额=奖励总数额+退回总数额，平台利润应为0。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在该日统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看平台利润列",
+     "expected": "显示0"
+    }
+   ],
+   "expected_result": "平台利润显示为0，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-218"
+  },
+  {
+   "title": "2025-07-25-数据行展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看日期为2025-07-25的统计行，各字段数值应与后台一致。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在2025-07-25的统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找创建时间为2025-07-25的行",
+     "expected": "该行存在，且各字段显示正确"
+    }
+   ],
+   "expected_result": "2025-07-25行数据完整，参与用户数、参与总数额、奖励总数额、退回总数额、平台利润均正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-219"
+  },
+  {
+   "title": "2025-07-25-数据行不存在时",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索2025-07-25，但无该日数据。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，但无2025-07-25数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "设置创建时间为2025-07-25并搜索",
+     "expected": "列表显示“暂无数据”"
+    }
+   ],
+   "expected_result": "列表为空，提示无数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-220"
+  },
+  {
+   "title": "2025-07-24-数据行展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看日期为2025-07-24的统计行，各字段数值应与后台一致。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在2025-07-24的统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找创建时间为2025-07-24的行",
+     "expected": "该行存在，且各字段显示正确"
+    }
+   ],
+   "expected_result": "2025-07-24行数据完整，各字段正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-221"
+  },
+  {
+   "title": "2025-07-24-数据行不存在时",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索2025-07-24，但无该日数据。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，但无2025-07-24数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "设置创建时间为2025-07-24并搜索",
+     "expected": "列表显示“暂无数据”"
+    }
+   ],
+   "expected_result": "列表为空，提示无数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-222"
+  },
+  {
+   "title": "-102726-负值展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "平台利润字段显示-102726，验证负值展示。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在平台利润为-102726的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找平台利润为-102726的行",
+     "expected": "该行存在，且显示-102726"
+    }
+   ],
+   "expected_result": "平台利润显示-102726，无格式异常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-223"
+  },
+  {
+   "title": "-102726-负值格式异常",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "平台利润为负值时，检查是否出现乱码或显示错误。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在负利润数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看负利润行",
+     "expected": "负值显示清晰，无乱码"
+    }
+   ],
+   "expected_result": "负值显示正常，无乱码或截断。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-224"
+  },
+  {
+   "title": "2025-07-23-数据行展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看日期为2025-07-23的统计行，各字段数值应与后台一致。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在2025-07-23的统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找创建时间为2025-07-23的行",
+     "expected": "该行存在，且各字段显示正确"
+    }
+   ],
+   "expected_result": "2025-07-23行数据完整，各字段正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-225"
+  },
+  {
+   "title": "2025-07-23-数据行不存在时",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索2025-07-23，但无该日数据。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，但无2025-07-23数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "设置创建时间为2025-07-23并搜索",
+     "expected": "列表显示“暂无数据”"
+    }
+   ],
+   "expected_result": "列表为空，提示无数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-226"
+  },
+  {
+   "title": "联赛及球队管理-入口跳转成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击“联赛及球队管理”链接，应跳转到联赛及球队管理页面。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“联赛及球队管理”链接",
+     "expected": "跳转到联赛及球队管理页面"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面，URL正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-227"
+  },
+  {
+   "title": "联赛及球队管理-无权限访问",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的账号访问。",
+   "preconditions": "已登录运营后台，但账号无联赛及球队管理权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“联赛及球队管理”链接",
+     "expected": "提示无权限或跳转后无数据"
+    }
+   ],
+   "expected_result": "系统拦截或提示无权限，无法访问。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-228"
+  },
+  {
+   "title": "创建时间字段显示格式正确（精确到秒）",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用示例时间'2015-10-02 00:00:00'和'2015-10-02 10:20:28'，验证创建时间字段的显示格式。",
+   "preconditions": "已登录运营后台，有数据统计页面访问权限，存在创建时间分别为2015-10-02 00:00:00和2015-10-02 10:20:28的统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载，显示数据统计列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中'创建时间'列的数据",
+     "expected": "创建时间显示为'YYYY-MM-DD HH:mm:ss'格式，如'2015-10-02 00:00:00'和'2015-10-02 10:20:28'，精确到秒"
+    }
+   ],
+   "expected_result": "创建时间字段以'YYYY-MM-DD HH:mm:ss'格式完整显示，无截断或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-229"
+  },
+  {
+   "title": "创建时间字段为空时的显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "构造创建时间为空的统计数据，验证页面显示。",
+   "preconditions": "已登录运营后台，存在创建时间为空的统计数据（如数据异常或未设置）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间为空的记录",
+     "expected": "创建时间列显示为空或显示'--'，不出现异常报错"
+    }
+   ],
+   "expected_result": "创建时间为空时，页面显示友好占位符（如'--'），不影响其他列展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-230"
+  },
+  {
+   "title": "创建时间筛选-输入有效时间范围查询成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入开始时间'2015-10-02 00:00:00'，结束时间'2015-10-02 10:20:28'，验证筛选结果。",
+   "preconditions": "已登录运营后台，存在创建时间在2015-10-02 00:00:00至2015-10-02 10:20:28之间的统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'创建时间'筛选条件中，输入开始时间'2015-10-02 00:00:00'",
+     "expected": "开始时间输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入结束时间'2015-10-02 10:20:28'",
+     "expected": "结束时间输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表刷新，仅显示创建时间在该范围内的记录"
+    }
+   ],
+   "expected_result": "筛选结果正确，仅显示创建时间在2015-10-02 00:00:00至2015-10-02 10:20:28之间的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-231"
+  },
+  {
+   "title": "创建时间筛选-开始时间晚于结束时间提示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入开始时间'2015-10-02 10:20:28'，结束时间'2015-10-02 00:00:00'，验证校验。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'创建时间'筛选条件中，输入开始时间'2015-10-02 10:20:28'",
+     "expected": "开始时间输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入结束时间'2015-10-02 00:00:00'",
+     "expected": "结束时间输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击'搜索'按钮",
+     "expected": "提示'开始时间不能晚于结束时间'，不执行查询"
+    }
+   ],
+   "expected_result": "系统提示错误信息，不进行查询，列表保持原状。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-232"
+  },
+  {
+   "title": "用户统计列表展示参与用户数等数据",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有统计数据，验证用户统计列表展示参与用户数等字段。",
+   "preconditions": "已登录运营后台，存在统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'用户统计'列表",
+     "expected": "列表展示参与用户数等字段，数据与数据库一致"
+    }
+   ],
+   "expected_result": "用户统计列表正确展示参与用户数等统计信息，无缺失或错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-233"
+  },
+  {
+   "title": "用户统计列表无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无统计数据的环境，验证空态展示。",
+   "preconditions": "已登录运营后台，且当前无任何统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'用户统计'列表",
+     "expected": "列表显示'暂无数据'或空状态提示，无异常报错"
+    }
+   ],
+   "expected_result": "用户统计列表显示空态提示，页面无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-234"
+  },
+  {
+   "title": "每日统计列表展示各日期统计数据",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有统计数据，验证每日统计列表展示参与用户数、参与总数额、奖励总数额、退回总数额、平台利润等字段。",
+   "preconditions": "已登录运营后台，存在每日统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'每日统计'列表",
+     "expected": "列表按日期展示参与用户数、参与总数额、奖励总数额、退回总数额、平台利润等字段，数据与数据库一致"
+    }
+   ],
+   "expected_result": "每日统计列表正确展示各日期统计数据，字段完整，数值正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-235"
+  },
+  {
+   "title": "每日统计列表无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无每日统计数据的环境，验证空态展示。",
+   "preconditions": "已登录运营后台，且当前无任何每日统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'每日统计'列表",
+     "expected": "列表显示'暂无数据'或空状态提示，无异常报错"
+    }
+   ],
+   "expected_result": "每日统计列表显示空态提示，页面无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-236"
+  },
+  {
+   "title": "开启'仅统计已开奖场次'后统计范围正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在已开奖、预测中、待开奖等不同状态的场次，开启'仅统计已开奖场次'后验证统计结果。",
+   "preconditions": "已登录运营后台，存在不同状态的场次数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "勾选或开启'仅统计已开奖场次'选项",
+     "expected": "选项状态变为开启"
+    },
+    {
+     "step": 3,
+     "desc": "查看'用户统计'和'每日统计'列表",
+     "expected": "统计结果仅包含状态为'已开奖'的场次数据，其他状态场次不计入"
+    }
+   ],
+   "expected_result": "开启后，用户统计和每日统计仅展示已开奖场次的数据，数值与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-237"
+  },
+  {
+   "title": "关闭'仅统计已开奖场次'后统计范围包含所有场次",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在已开奖、预测中、待开奖等不同状态的场次，关闭'仅统计已开奖场次'后验证统计结果。",
+   "preconditions": "已登录运营后台，存在不同状态的场次数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "取消勾选或关闭'仅统计已开奖场次'选项",
+     "expected": "选项状态变为关闭"
+    },
+    {
+     "step": 3,
+     "desc": "查看'用户统计'和'每日统计'列表",
+     "expected": "统计结果包含所有状态的场次数据"
+    }
+   ],
+   "expected_result": "关闭后，用户统计和每日统计展示所有场次的数据，数值与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-238"
+  },
+  {
+   "title": "'仅统计已开奖场次'选项默认状态验证",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "数据统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "boundary",
+   "test_data_note": "首次进入数据统计页面，验证'仅统计已开奖场次'选项的默认状态。",
+   "preconditions": "已登录运营后台，首次进入数据统计页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看'仅统计已开奖场次'选项",
+     "expected": "选项有明确的默认状态（开启或关闭），且与需求定义一致"
+    }
+   ],
+   "expected_result": "选项默认状态明确，且统计结果与默认状态一致。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-239"
+  },
+  {
+   "title": "用户统计列表默认展示所有用户统计数据",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "预置多个用户（如用户编号1001、1002）的参与记录，确保有统计数据",
+   "preconditions": "已登录运营后台，具有赛事预测-数据统计-用户统计页面的查看权限；存在至少2个用户且有参与记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击赛事预测-数据统计-用户统计",
+     "expected": "页面正常加载，显示用户统计列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表默认展示",
+     "expected": "列表展示所有用户的统计数据，包含用户编号、参与总场数、参与总次数、参与总数额、奖励总数额、平台利润等字段，数据与数据库统计结果一致"
+    }
+   ],
+   "expected_result": "用户统计列表默认展示所有用户统计数据，字段完整，数据准确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-240"
+  },
+  {
+   "title": "用户统计列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何用户参与记录",
+   "preconditions": "已登录运营后台，且数据库中无用户参与记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面显示空态提示，如'暂无数据'，列表无记录"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-241"
+  },
+  {
+   "title": "搜索不存在的用户编号显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的用户编号'999999'",
+   "preconditions": "已登录运营后台，数据库中不存在用户编号999999",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在'用户编号：'输入框输入'999999'",
+     "expected": "输入框显示'999999'"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示空态提示，如'暂无数据'"
+    }
+   ],
+   "expected_result": "搜索无结果，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-242"
+  },
+  {
+   "title": "搜索框输入非法字符被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入包含字母和特殊字符的'abc@123'",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在'用户编号：'输入框输入'abc@123'",
+     "expected": "输入框可能限制输入或提示格式错误"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "若输入被允许，则提示'用户编号格式不正确'，不发起搜索请求；若输入被限制，则无法输入非法字符"
+    }
+   ],
+   "expected_result": "非法输入被拦截或提示错误，不执行搜索",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-243"
+  },
+  {
+   "title": "重置按钮清空搜索条件并恢复列表",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先搜索用户编号1001，再点击重置",
+   "preconditions": "已登录运营后台，存在多个用户统计数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "输入用户编号'1001'并点击搜索",
+     "expected": "列表仅显示用户1001的记录"
+    },
+    {
+     "step": 3,
+     "desc": "点击'重置'按钮",
+     "expected": "搜索框被清空，列表恢复显示所有用户统计数据"
+    }
+   ],
+   "expected_result": "重置后搜索条件清空，列表恢复默认展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-244"
+  },
+  {
+   "title": "用户编号字段展示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置用户编号为1001的用户",
+   "preconditions": "已登录运营后台，存在用户编号1001的统计数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "列表展示用户编号字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "用户编号显示为'1001'，与数据库一致，无脱敏或格式错误"
+    }
+   ],
+   "expected_result": "用户编号字段展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-245"
+  },
+  {
+   "title": "用户编号为空时列表不展示该记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中有一条用户编号为空的记录",
+   "preconditions": "已登录运营后台，数据库中存在用户编号为空的异常记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "列表不展示用户编号为空的记录，或该记录被过滤"
+    }
+   ],
+   "expected_result": "用户编号为空的记录不展示或展示异常，需确保数据完整性",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-246"
+  },
+  {
+   "title": "参与总场数统计正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户1001参与了3场不同赛事，每场1次下注",
+   "preconditions": "已登录运营后台，用户1001有3场不同赛事的参与记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的参与总场数",
+     "expected": "参与总场数显示为3，与数据库统计一致"
+    }
+   ],
+   "expected_result": "参与总场数统计正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-247"
+  },
+  {
+   "title": "参与总场数统计口径验证（同一场多次下注只计1场）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户1001在同一场赛事下注2次，参与总场数应为1",
+   "preconditions": "已登录运营后台，用户1001在同一场赛事有2条参与记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的参与总场数",
+     "expected": "参与总场数显示为1，而非2，验证按赛事去重"
+    }
+   ],
+   "expected_result": "参与总场数按赛事去重统计",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-248"
+  },
+  {
+   "title": "参与总次数统计正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户1001有3条参与记录，其中2条在同一场赛事",
+   "preconditions": "已登录运营后台，用户1001有3条参与记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的参与总次数",
+     "expected": "参与总次数显示为3，与参与记录数一致"
+    }
+   ],
+   "expected_result": "参与总次数统计正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-249"
+  },
+  {
+   "title": "参与总次数不包含已退回记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户1001有2条有效参与记录和1条已退回记录",
+   "preconditions": "已登录运营后台，用户1001有2条有效记录和1条退回记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的参与总次数",
+     "expected": "参与总次数显示为2，不包含已退回记录"
+    }
+   ],
+   "expected_result": "参与总次数不包含已退回记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-250"
+  },
+  {
+   "title": "参与总数额统计正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户1001有2条参与记录，数额分别为1000和2000银钻",
+   "preconditions": "已登录运营后台，用户1001有2条参与记录，数额1000和2000",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的参与总数额",
+     "expected": "参与总数额显示为3000，与数据库汇总一致"
+    }
+   ],
+   "expected_result": "参与总数额统计正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-251"
+  },
+  {
+   "title": "参与总数额不包含已退回数额",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户1001有1条有效参与记录数额1000，1条已退回记录数额500",
+   "preconditions": "已登录运营后台，用户1001有有效记录1000和退回记录500",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的参与总数额",
+     "expected": "参与总数额显示为1000，不包含退回的500"
+    }
+   ],
+   "expected_result": "参与总数额不包含已退回数额",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-252"
+  },
+  {
+   "title": "奖励总数额统计正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户1001有2条已开奖记录，奖励数额分别为500和1500银钻",
+   "preconditions": "已登录运营后台，用户1001有2条已开奖记录，奖励500和1500",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的奖励总数额",
+     "expected": "奖励总数额显示为2000，与数据库汇总一致"
+    }
+   ],
+   "expected_result": "奖励总数额统计正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-253"
+  },
+  {
+   "title": "奖励总数额不包含未开奖记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户1001有1条已开奖记录奖励1000，1条预测中记录未开奖",
+   "preconditions": "已登录运营后台，用户1001有已开奖记录1000和未开奖记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的奖励总数额",
+     "expected": "奖励总数额显示为1000，不包含未开奖记录"
+    }
+   ],
+   "expected_result": "奖励总数额仅统计已开奖记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-254"
+  },
+  {
+   "title": "平台利润计算正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户1001参与总数额3000，奖励总数额2000，平台利润应为1000",
+   "preconditions": "已登录运营后台，用户1001参与总数额3000，奖励总数额2000",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的平台利润",
+     "expected": "平台利润显示为1000，等于参与总数额-奖励总数额"
+    }
+   ],
+   "expected_result": "平台利润计算正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-255"
+  },
+  {
+   "title": "平台利润为负值展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户1001参与总数额1000，奖励总数额2000，平台利润应为-1000",
+   "preconditions": "已登录运营后台，用户1001参与总数额1000，奖励总数额2000",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的平台利润",
+     "expected": "平台利润显示为-1000，负号正确展示，无格式错误"
+    }
+   ],
+   "expected_result": "平台利润负值正确展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-256"
+  },
+  {
+   "title": "平台利润为零值展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户1001参与总数额等于奖励总数额，平台利润为0",
+   "preconditions": "已登录运营后台，用户1001参与总数额等于奖励总数额",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户1001的平台利润",
+     "expected": "平台利润显示为0，无异常"
+    }
+   ],
+   "expected_result": "平台利润零值正确展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-257"
+  },
+  {
+   "title": "点击'联赛及球队管理'跳转正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击页面上的'联赛及球队管理'链接",
+   "preconditions": "已登录运营后台，用户统计页面存在'联赛及球队管理'入口",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击'联赛及球队管理'",
+     "expected": "跳转到联赛及球队管理页面，URL正确"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-258"
+  },
+  {
+   "title": "无权限访问用户统计页面被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无权限的运营账号登录",
+   "preconditions": "已登录运营后台，但当前账号无赛事预测-数据统计-用户统计的查看权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试访问用户统计页面URL",
+     "expected": "页面提示无权限或跳转到无权限提示页，不展示数据"
+    }
+   ],
+   "expected_result": "无权限访问被拦截",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-259"
+  },
+  {
+   "title": "每日统计Tab切换正常",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'每日统计'Tab",
+   "preconditions": "已登录运营后台，数据统计页面存在'每日统计'Tab",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面",
+     "expected": "默认显示'用户统计'Tab内容"
+    },
+    {
+     "step": 2,
+     "desc": "点击'每日统计'Tab",
+     "expected": "切换到每日统计视图，展示每日统计数据列表，字段如创建时间、参与用户数、参与总数额、奖励总数额、退回总数额、平台利润"
+    }
+   ],
+   "expected_result": "每日统计Tab切换成功，展示对应数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-260"
+  },
+  {
+   "title": "每日统计Tab切换后搜索条件清空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "在用户统计Tab输入搜索条件后切换到每日统计Tab",
+   "preconditions": "已登录运营后台，数据统计页面存在两个Tab",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入数据统计页面，在用户统计Tab输入用户编号'1001'并搜索",
+     "expected": "用户统计列表过滤"
+    },
+    {
+     "step": 2,
+     "desc": "点击'每日统计'Tab",
+     "expected": "每日统计视图展示，搜索条件被清空，不保留用户统计的搜索条件"
+    }
+   ],
+   "expected_result": "Tab切换后搜索条件被清空",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-261"
+  },
+  {
+   "title": "用户统计仅展示已开奖场次的统计数据",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造包含多种状态的场次数据：已开奖场次（如赛事编号10070488，状态已开奖）、预测中场次（10070490）、待开奖场次（10070489），确保统计结果仅包含已开奖场次。",
+   "preconditions": "运营后台已登录，存在已开奖、预测中、待开奖等不同状态的场次数据，且已开奖场次有用户参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「赛事预测」-「数据统计」-「用户统计」页面",
+     "expected": "页面正常加载，显示统计列表，包含创建时间、参与用户数、参与总数额、奖励总数额、退回总数额、平台利润等列。"
+    },
+    {
+     "step": 2,
+     "desc": "查看统计列表中的数据",
+     "expected": "列表仅展示状态为“已开奖”的场次的统计数据，预测中、待开奖等状态的场次不出现。"
+    },
+    {
+     "step": 3,
+     "desc": "核对已开奖场次的统计数值",
+     "expected": "参与用户数、参与总数额、奖励总数额、退回总数额、平台利润等数值与数据库中对应该场次的实际数据一致。"
+    }
+   ],
+   "expected_result": "用户统计页面仅展示已开奖场次的统计数据，且各统计指标数值准确。",
+   "remark": "正面用例，验证核心统计范围。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-262"
+  },
+  {
+   "title": "用户统计排除预测中状态场次",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造预测中场次（赛事编号10070490，状态预测中）且有用户参与记录，预期该场次不应出现在用户统计列表中。",
+   "preconditions": "运营后台已登录，存在预测中状态的场次且有用户参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常。"
+    },
+    {
+     "step": 2,
+     "desc": "在统计列表中查找预测中场次（赛事编号10070490）",
+     "expected": "列表中不显示该预测中场次的数据。"
+    }
+   ],
+   "expected_result": "预测中状态的场次不出现在用户统计列表中。",
+   "remark": "负面用例，验证非已开奖状态被排除。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-263"
+  },
+  {
+   "title": "用户统计排除待开奖状态场次",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造待开奖场次（赛事编号10070489，状态待开奖）且有用户参与记录，预期该场次不应出现在用户统计列表中。",
+   "preconditions": "运营后台已登录，存在待开奖状态的场次且有用户参与记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常。"
+    },
+    {
+     "step": 2,
+     "desc": "在统计列表中查找待开奖场次（赛事编号10070489）",
+     "expected": "列表中不显示该待开奖场次的数据。"
+    }
+   ],
+   "expected_result": "待开奖状态的场次不出现在用户统计列表中。",
+   "remark": "负面用例，验证非已开奖状态被排除。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-264"
+  },
+  {
+   "title": "用户统计无已开奖场次时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造无任何已开奖场次的数据环境（所有场次均为预测中或待开奖），预期统计列表为空。",
+   "preconditions": "运营后台已登录，系统中不存在已开奖状态的场次。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常，统计列表显示无数据，可能显示“暂无数据”提示。"
+    }
+   ],
+   "expected_result": "用户统计列表为空，无任何统计记录。",
+   "remark": "边界用例，验证空态展示。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-265"
+  },
+  {
+   "title": "用户统计列表分页展示已开奖场次",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造超过10条已开奖场次记录，验证分页功能，每页显示10条。",
+   "preconditions": "运营后台已登录，存在超过10条已开奖场次的统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "列表显示第一页数据，每页10条，底部显示分页控件。"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页或输入页码跳转",
+     "expected": "正确跳转到对应页，数据刷新，分页状态正确。"
+    }
+   ],
+   "expected_result": "用户统计列表支持分页，每页显示10条已开奖场次数据，翻页正常。",
+   "remark": "正面用例，验证分页功能。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-266"
+  },
+  {
+   "title": "用户统计列表按创建时间排序",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造不同创建时间的已开奖场次，验证列表默认按创建时间倒序或正序排列。",
+   "preconditions": "运营后台已登录，存在多个已开奖场次且创建时间不同。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "列表按创建时间排序，最新创建的场次显示在最前（或按需求规定的顺序）。"
+    }
+   ],
+   "expected_result": "用户统计列表按创建时间正确排序。",
+   "remark": "正面用例，验证排序逻辑。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-267"
+  },
+  {
+   "title": "用户统计列表搜索功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已开奖场次的创建时间（如2025-07-25），验证搜索结果仅包含该日期的已开奖场次。",
+   "preconditions": "运营后台已登录，存在已开奖场次且创建时间为2025-07-25。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常。"
+    },
+    {
+     "step": 2,
+     "desc": "在创建时间输入框输入“2025-07-25”，点击搜索",
+     "expected": "列表仅显示创建时间为2025-07-25的已开奖场次。"
+    }
+   ],
+   "expected_result": "搜索功能正常，仅展示符合条件的已开奖场次。",
+   "remark": "正面用例，验证搜索功能。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-268"
+  },
+  {
+   "title": "用户统计搜索无结果时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的创建时间（如2025-01-01），预期无搜索结果。",
+   "preconditions": "运营后台已登录，系统中不存在创建时间为2025-01-01的已开奖场次。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常。"
+    },
+    {
+     "step": 2,
+     "desc": "在创建时间输入框输入“2025-01-01”，点击搜索",
+     "expected": "列表显示无数据，提示“暂无数据”。"
+    }
+   ],
+   "expected_result": "搜索无结果时显示空态提示。",
+   "remark": "负面用例，验证无结果场景。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-269"
+  },
+  {
+   "title": "用户统计重置搜索条件",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "设置搜索条件后点击重置，验证条件清空且列表恢复默认。",
+   "preconditions": "运营后台已登录，存在已开奖场次数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常。"
+    },
+    {
+     "step": 2,
+     "desc": "输入创建时间条件并搜索",
+     "expected": "列表按条件过滤。"
+    },
+    {
+     "step": 3,
+     "desc": "点击重置按钮",
+     "expected": "搜索条件清空，列表恢复显示全部已开奖场次。"
+    }
+   ],
+   "expected_result": "重置功能正常，条件清空，列表恢复默认。",
+   "remark": "正面用例，验证重置功能。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-270"
+  },
+  {
+   "title": "用户统计列表字段完整性校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "检查列表列：创建时间、参与用户数、参与总数额、奖励总数额、退回总数额、平台利润，验证各列数据正确显示。",
+   "preconditions": "运营后台已登录，存在已开奖场次且有完整的统计数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "列表显示所有列：创建时间、参与用户数、参与总数额、奖励总数额、退回总数额、平台利润。"
+    },
+    {
+     "step": 2,
+     "desc": "核对各列数值",
+     "expected": "各列数值与数据库统计结果一致，无缺失或错误。"
+    }
+   ],
+   "expected_result": "用户统计列表字段完整，数值准确。",
+   "remark": "正面用例，验证字段展示。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-271"
+  },
+  {
+   "title": "用户统计平台利润计算正确性",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造已开奖场次，参与总数额10000，奖励总数额8000，退回总数额1000，预期平台利润=10000-8000-1000=1000。",
+   "preconditions": "运营后台已登录，存在已开奖场次，其参与总数额、奖励总数额、退回总数额已知。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常。"
+    },
+    {
+     "step": 2,
+     "desc": "找到该已开奖场次，查看平台利润列",
+     "expected": "平台利润显示为1000，计算正确。"
+    }
+   ],
+   "expected_result": "平台利润计算正确，等于参与总数额-奖励总数额-退回总数额。",
+   "remark": "正面用例，验证计算逻辑。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-272"
+  },
+  {
+   "title": "用户统计平台利润为负数场景",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造已开奖场次，参与总数额5000，奖励总数额6000，退回总数额1000，预期平台利润=-2000，验证负数显示。",
+   "preconditions": "运营后台已登录，存在已开奖场次，其奖励总数额大于参与总数额。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常。"
+    },
+    {
+     "step": 2,
+     "desc": "找到该已开奖场次，查看平台利润列",
+     "expected": "平台利润显示为-2000，负数正确显示。"
+    }
+   ],
+   "expected_result": "平台利润为负数时正确显示。",
+   "remark": "边界用例，验证负数场景。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-273"
+  },
+  {
+   "title": "用户统计参与用户数为0的场次",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "赛事预测/数据统计/用户统计",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造已开奖但无用户参与的场次，预期参与用户数为0，其他数额为0。",
+   "preconditions": "运营后台已登录，存在已开奖但无用户参与的场次。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入用户统计页面",
+     "expected": "页面加载正常。"
+    },
+    {
+     "step": 2,
+     "desc": "找到该场次，查看参与用户数",
+     "expected": "参与用户数显示为0，参与总数额、奖励总数额等均为0。"
+    }
+   ],
+   "expected_result": "无用户参与的已开奖场次统计数值为0。",
+   "remark": "边界用例，验证0值场景。",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-274"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-10 生成被截断，已重试",
+  "functional-chunk-17 生成被截断，已重试",
+  "functional-chunk-17 生成失败：AI 返回的 JSON 格式异常，无法解析。\n原始错误: Expecting ',' delimiter (行 811, 列 10)\n修复后错误: Expecting property name enclosed in double quotes (行 13, 列 135)\n错误位置附近内容 (chars 22252-22452):\n  \"preconditions\": \"已登录运营后台，具有赛事预测风控设置的权限；已成功保存过配置\",\\n      \"steps\": [\\n        {\\n          \"step\": 1,\\n          \"desc\": \"重新打开风控设置页面\",\\n          \"expected\": \"页面显示已保存的单场上限5000、每日上限20000、活动状态启用\"\\n        }（该块未产出用例）"
+ ]
+}

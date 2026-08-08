@@ -1,0 +1,5483 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "异常处理-新增套餐时消耗数字货币区间重叠校验",
+    "description": "在活动内容(数字货币)页面，新增套餐时，若配置的消耗数字货币区间与本次活动中其他区间存在重叠，系统应进行异常处理（提示并阻止保存）。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求仅描述场景与处理方式，但未明确重叠的具体判断规则（如边界值是否算重叠、区间开闭区间等），也未说明提示文案和保存是否被阻止。",
+      "suggestion": "明确区间重叠的判定标准（如包含边界值即视为重叠），并规定提示信息与保存行为（应阻止保存并给出具体错误提示）。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "该功能点描述较为简略，仅列出异常场景和处理方式，缺乏具体规则细节。需要补充区间重叠的边界定义、提示文案、保存行为等，以确保测试用例可执行。整体需求清晰度一般，需进一步细化。"
+ },
+ "functional_cases": [
+  {
+   "title": "联赛及球队管理-列表展示正常",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/联赛及球队管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入联赛及球队管理页面，查看列表数据",
+   "preconditions": "已登录运营后台，具有活动管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「活动管理」-「充值赠币活动」",
+     "expected": "页面正常加载，显示活动列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击「联赛及球队管理」入口",
+     "expected": "进入联赛及球队管理页面，展示联赛和球队列表，包含联赛名称、球队名称等字段"
+    }
+   ],
+   "expected_result": "联赛及球队管理页面正常展示，列表数据完整，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "联赛及球队管理-无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/联赛及球队管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟联赛及球队数据为空的情况",
+   "preconditions": "已登录运营后台，联赛及球队数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛及球队管理页面",
+     "expected": "页面显示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "充值赠币活动管理-新增活动成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/充值赠币活动管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "新增一个充值赠币活动，活动编号自动生成，开始时间2026-04-23 12:30:44，结束时间2026-04-26 12:30:44，充值方式为法币，单笔最多赠送骆驼币3000",
+   "preconditions": "已登录运营后台，具有活动管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动管理页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗，包含活动编号、活动时间、充值方式、单笔最多赠送骆驼币等字段"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动开始时间2026-04-23 12:30:44，结束时间2026-04-26 12:30:44",
+     "expected": "时间字段正常输入"
+    },
+    {
+     "step": 3,
+     "desc": "选择充值方式为「法币」",
+     "expected": "充值方式下拉框选择成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单笔最多赠送骆驼币为3000",
+     "expected": "数值输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，活动列表新增一条记录，状态为「待审核」"
+    }
+   ],
+   "expected_result": "活动新增成功，列表出现新活动，状态为待审核，数据库新增对应记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "充值赠币活动管理-新增活动时开始时间晚于结束时间",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/充值赠币活动管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增活动，开始时间2026-04-26 12:30:44，结束时间2026-04-23 12:30:44，开始时间晚于结束时间",
+   "preconditions": "已登录运营后台，具有活动管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增活动弹窗",
+     "expected": "弹窗正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "输入开始时间2026-04-26 12:30:44，结束时间2026-04-23 12:30:44",
+     "expected": "时间输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「开始时间不能晚于结束时间」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示开始时间不能晚于结束时间，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "活动编号-自动生成且唯一",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动编号",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "新增活动时，活动编号自动生成，如20260423001",
+   "preconditions": "已登录运营后台，具有活动管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增活动弹窗",
+     "expected": "活动编号字段自动生成，不可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "保存活动",
+     "expected": "活动编号唯一，保存成功"
+    }
+   ],
+   "expected_result": "活动编号自动生成且唯一，保存成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "活动编号-手动输入被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动编号",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "尝试手动输入活动编号",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在活动编号输入框中尝试输入任意值",
+     "expected": "输入框不可编辑或输入无效"
+    }
+   ],
+   "expected_result": "活动编号字段不可编辑，无法手动输入",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "开始时间-必填校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/开始时间",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增活动时，不填写开始时间",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不填写开始时间，填写其他必填字段",
+     "expected": "开始时间字段为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「开始时间不能为空」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示开始时间不能为空",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "开始时间-格式校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/开始时间",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入非法格式的开始时间，如2026/04/23",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入开始时间为2026/04/23 12:30:44",
+     "expected": "输入框可能拒绝或提示格式错误"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「开始时间格式不正确」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示开始时间格式不正确",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "结束时间-必填校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/结束时间",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增活动时，不填写结束时间",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不填写结束时间，填写其他必填字段",
+     "expected": "结束时间字段为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「结束时间不能为空」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示结束时间不能为空",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "结束时间-格式校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/结束时间",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入非法格式的结束时间，如2026-04-26",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入结束时间为2026-04-26（缺少时分秒）",
+     "expected": "输入框可能拒绝或提示格式错误"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「结束时间格式不正确」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示结束时间格式不正确",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "活动状态-列表展示各状态",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动状态",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看活动列表，确认状态字段展示未开始、进行中、已结束、待审核、审核通过等状态",
+   "preconditions": "已登录运营后台，存在不同状态的活动数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动管理页面",
+     "expected": "活动列表展示，状态列显示各活动的状态"
+    },
+    {
+     "step": 2,
+     "desc": "检查状态列",
+     "expected": "状态列显示未开始、进行中、已结束、待审核、审核通过等状态，且显示正确"
+    }
+   ],
+   "expected_result": "活动状态列表展示正确，无异常",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "活动状态-状态筛选",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动状态",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "筛选状态为「未开始」的活动",
+   "preconditions": "已登录运营后台，存在多个状态的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在活动状态筛选下拉框中选择「未开始」",
+     "expected": "列表仅显示状态为「未开始」的活动"
+    }
+   ],
+   "expected_result": "列表正确筛选出未开始的活动",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "活动状态-筛选无结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动状态",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "筛选状态为「已结束」，但当前无已结束的活动",
+   "preconditions": "已登录运营后台，无已结束的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在活动状态筛选下拉框中选择「已结束」",
+     "expected": "列表显示空态，提示「暂无数据」"
+    }
+   ],
+   "expected_result": "列表显示空态，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "充值方式-列表展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/充值方式",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看充值方式下拉框，包含法币、数字货币等选项",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开新增活动弹窗",
+     "expected": "充值方式下拉框显示，包含「法币」「数字货币」等选项"
+    }
+   ],
+   "expected_result": "充值方式下拉框选项正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "充值方式-必选校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/充值方式",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增活动时，不选择充值方式",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不选择充值方式，填写其他必填字段",
+     "expected": "充值方式字段为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「请选择充值方式」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示请选择充值方式",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "单笔最多赠送骆驼币-正常输入",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/单笔最多赠送骆驼币",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入单笔最多赠送骆驼币为3000",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入单笔最多赠送骆驼币为3000",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "保存活动",
+     "expected": "保存成功"
+    }
+   ],
+   "expected_result": "保存成功，单笔最多赠送骆驼币字段正确保存",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "单笔最多赠送骆驼币-输入0或负数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/单笔最多赠送骆驼币",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入单笔最多赠送骆驼币为0或-100",
+   "preconditions": "已登录运营后台，进入新增活动弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入单笔最多赠送骆驼币为0",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「单笔最多赠送骆驼币必须大于0」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示单笔最多赠送骆驼币必须大于0",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "编辑-编辑活动成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "编辑一个待审核状态的活动，修改结束时间为2026-04-27 12:30:44",
+   "preconditions": "已登录运营后台，存在待审核状态的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在活动列表中找到待审核的活动，点击「编辑」按钮",
+     "expected": "弹出编辑活动弹窗，显示活动当前信息"
+    },
+    {
+     "step": 2,
+     "desc": "修改结束时间为2026-04-27 12:30:44",
+     "expected": "时间修改成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，列表更新结束时间"
+    }
+   ],
+   "expected_result": "活动编辑成功，列表更新，数据库记录更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "编辑-编辑已结束活动被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/编辑",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "尝试编辑一个已结束状态的活动",
+   "preconditions": "已登录运营后台，存在已结束状态的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在活动列表中找到已结束的活动，点击「编辑」按钮",
+     "expected": "系统提示「已结束的活动不可编辑」或编辑按钮置灰不可点击"
+    }
+   ],
+   "expected_result": "无法编辑已结束的活动，有相应提示或按钮置灰",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "活动时间-展示开始结束时间",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动时间",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看活动列表，确认开始时间2026-04-23 12:30:44和结束时间2026-04-26 12:30:44正确展示",
+   "preconditions": "已登录运营后台，存在活动数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动管理页面",
+     "expected": "活动列表展示，包含开始时间和结束时间列"
+    },
+    {
+     "step": 2,
+     "desc": "查看某活动的开始时间和结束时间",
+     "expected": "开始时间显示2026-04-23 12:30:44，结束时间显示2026-04-26 12:30:44，格式正确"
+    }
+   ],
+   "expected_result": "活动时间展示正确，格式统一",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "活动时间-开始时间晚于结束时间",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动时间",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "编辑活动时，将开始时间修改为2026-04-27 12:30:44，结束时间仍为2026-04-26 12:30:44",
+   "preconditions": "已登录运营后台，存在待审核状态的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "编辑活动，将开始时间改为2026-04-27 12:30:44",
+     "expected": "时间修改成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「开始时间不能晚于结束时间」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示开始时间不能晚于结束时间",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "活动状态-未开始状态展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动状态/未开始",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看状态为「未开始」的活动，确认状态显示正确",
+   "preconditions": "已登录运营后台，存在未开始状态的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动管理页面",
+     "expected": "活动列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "查找状态为「未开始」的活动",
+     "expected": "状态列显示「未开始」，且活动开始时间晚于当前时间"
+    }
+   ],
+   "expected_result": "未开始状态显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "活动状态-未开始活动不可编辑",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动状态/未开始",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "尝试编辑一个未开始状态的活动",
+   "preconditions": "已登录运营后台，存在未开始状态的活动",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在活动列表中找到未开始的活动，点击「编辑」按钮",
+     "expected": "系统提示「未开始的活动不可编辑」或编辑按钮置灰"
+    }
+   ],
+   "expected_result": "无法编辑未开始的活动，有相应提示或按钮置灰",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "法币充值方式在列表中正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在一条充值方式为'法币'的活动记录，用于验证列表展示。",
+   "preconditions": "已登录运营后台，存在一条充值方式为'法币'的充值赠币活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台-活动管理-充值赠币活动页面",
+     "expected": "页面正常加载，展示活动列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找充值方式为'法币'的活动",
+     "expected": "该活动的'充值方式'列显示'法币'，且无乱码或截断"
+    }
+   ],
+   "expected_result": "列表正确展示'法币'充值方式，无显示异常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "法币充值方式在列表中不显示错误",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造充值方式为'法币'但数据异常（如空值）的记录，验证容错。",
+   "preconditions": "已登录运营后台，存在一条充值方式字段为空的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看充值方式为空的记录",
+     "expected": "页面不崩溃，充值方式列显示为空或占位符，不出现错误提示"
+    }
+   ],
+   "expected_result": "系统对异常数据有容错处理，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "活动状态为'进行中'时列表正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在一条活动状态为'进行中'的活动记录，用于验证状态展示。",
+   "preconditions": "已登录运营后台，存在一条状态为'进行中'的充值赠币活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找状态为'进行中'的活动",
+     "expected": "该活动的'活动状态'列显示'进行中'，且样式正确（如高亮或标签）"
+    }
+   ],
+   "expected_result": "状态正确展示为'进行中'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "活动状态为'进行中'时编辑按钮不可用",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "假设业务规则：进行中的活动不允许编辑，验证编辑按钮置灰或点击提示。",
+   "preconditions": "已登录运营后台，存在一条状态为'进行中'的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "找到状态为'进行中'的活动，点击其'编辑'按钮",
+     "expected": "编辑按钮置灰不可点击，或点击后提示'进行中的活动不可编辑'"
+    }
+   ],
+   "expected_result": "系统阻止对进行中活动的编辑操作。",
+   "remark": "负面用例，基于业务规则推测",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "活动状态为'已结束'时列表正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在一条活动状态为'已结束'的活动记录，用于验证状态展示。",
+   "preconditions": "已登录运营后台，存在一条状态为'已结束'的充值赠币活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找状态为'已结束'的活动",
+     "expected": "该活动的'活动状态'列显示'已结束'，且样式正确"
+    }
+   ],
+   "expected_result": "状态正确展示为'已结束'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "活动状态为'已结束'时删除操作被阻止",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "假设业务规则：已结束的活动不允许删除，验证删除按钮置灰或提示。",
+   "preconditions": "已登录运营后台，存在一条状态为'已结束'的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "找到状态为'已结束'的活动，点击其'删除'按钮",
+     "expected": "删除按钮置灰不可点击，或点击后提示'已结束的活动不可删除'"
+    }
+   ],
+   "expected_result": "系统阻止对已结束活动的删除操作。",
+   "remark": "负面用例，基于业务规则推测",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "赠送骆驼币数值以千分位格式展示（3,000）",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "构造赠送骆驼币为3000的活动记录，验证千分位格式展示。",
+   "preconditions": "已登录运营后台，存在一条赠送骆驼币为3000的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该活动的'单笔最多赠送骆驼币'列",
+     "expected": "显示为'3,000'，带千分位分隔符，无小数"
+    }
+   ],
+   "expected_result": "数值正确格式化为'3,000'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "赠送骆驼币数值为0时展示为'0'",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造赠送骆驼币为0的活动记录，验证边界值展示。",
+   "preconditions": "已登录运营后台，存在一条赠送骆驼币为0的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该活动的'单笔最多赠送骆驼币'列",
+     "expected": "显示为'0'，无千分位分隔符，无异常"
+    }
+   ],
+   "expected_result": "数值正确展示为'0'。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "点击'新增活动'按钮弹出新增对话框",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击新增活动按钮，验证弹出新增/编辑活动对话框。",
+   "preconditions": "已登录运营后台，具有新增活动权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'新增活动'按钮",
+     "expected": "弹出'新增/编辑活动'对话框，包含活动编号、活动时间、充值方式等字段"
+    }
+   ],
+   "expected_result": "成功弹出新增活动对话框。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "新增活动时必填字段为空校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "新增活动时，不填写活动时间、充值方式等必填字段，直接保存，验证校验提示。",
+   "preconditions": "已登录运营后台，具有新增活动权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面，点击'新增活动'",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "不填写任何必填字段，直接点击'保存'",
+     "expected": "系统提示'活动时间不能为空'、'充值方式不能为空'等，且不关闭对话框"
+    }
+   ],
+   "expected_result": "系统阻止保存并给出明确错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "新增活动时活动开始时间晚于结束时间校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "设置活动开始时间为2026-04-26 12:30:44，结束时间为2026-04-23 12:30:44，验证时间逻辑校验。",
+   "preconditions": "已登录运营后台，具有新增活动权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增活动'，在活动时间中设置开始时间晚于结束时间",
+     "expected": "系统提示'开始时间不能晚于结束时间'，且无法保存"
+    }
+   ],
+   "expected_result": "系统拦截非法时间范围。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "'请选择'下拉框可正常展开并选择选项",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "在活动状态筛选或新增对话框中的'请选择'下拉框，选择'进行中'选项。",
+   "preconditions": "已登录运营后台，页面存在'请选择'下拉框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'请选择'下拉框",
+     "expected": "下拉框展开，显示可选选项（如未开始、进行中、已结束等）"
+    },
+    {
+     "step": 3,
+     "desc": "选择'进行中'",
+     "expected": "下拉框显示'进行中'，列表按所选状态筛选"
+    }
+   ],
+   "expected_result": "下拉框正常展开、选择并触发筛选。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "'请选择'下拉框无选项时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟下拉框数据源为空，验证空态展示。",
+   "preconditions": "已登录运营后台，且下拉框选项数据为空（如无任何活动状态）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'请选择'下拉框",
+     "expected": "下拉框展开但无任何选项，或显示'暂无数据'"
+    }
+   ],
+   "expected_result": "下拉框空态展示合理，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "活动开始时间字段正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在一条活动开始时间为2026-04-23 12:30:44的记录，验证展示。",
+   "preconditions": "已登录运营后台，存在一条活动开始时间为2026-04-23 12:30:44的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该活动的'开始时间'列",
+     "expected": "显示'2026-04-23 12:30:44'，格式正确"
+    }
+   ],
+   "expected_result": "时间正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "活动开始时间格式非法时展示容错",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造活动开始时间为'2026/04/23'（非标准格式）的记录，验证容错。",
+   "preconditions": "已登录运营后台，存在一条活动开始时间格式异常的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该活动的'开始时间'列",
+     "expected": "页面不崩溃，时间显示为原始值或空，不出现错误堆栈"
+    }
+   ],
+   "expected_result": "系统对异常时间格式有容错处理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "活动内容列表正确展示套餐信息",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在一条活动内容记录：套餐编号12991982，售价19.99USDT，基础骆驼币220，赠送骆驼币50，总计骆驼币270。",
+   "preconditions": "已登录运营后台，存在一条包含活动内容的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条活动的'活动内容'或进入活动内容页面",
+     "expected": "展示活动内容列表，包含套餐编号、售价、基础骆驼币、赠送骆驼币、总计骆驼币等列"
+    },
+    {
+     "step": 3,
+     "desc": "核对套餐编号12991982的记录",
+     "expected": "售价显示'19.99USDT'，基础骆驼币220，赠送骆驼币50，总计骆驼币270"
+    }
+   ],
+   "expected_result": "活动内容列表正确展示各字段。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "活动内容列表为空时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一个没有活动内容的活动记录，验证空态展示。",
+   "preconditions": "已登录运营后台，存在一条无活动内容的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击该活动的'活动内容'",
+     "expected": "活动内容列表显示'暂无数据'或空表格，不报错"
+    }
+   ],
+   "expected_result": "空态展示合理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "删除活动时弹出确认提示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除一条状态为'未开始'的活动，验证确认提示。",
+   "preconditions": "已登录运营后台，存在一条状态为'未开始'的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击该活动的'删除'按钮",
+     "expected": "弹出确认对话框，提示'确定要删除？'，包含'确定'和'取消'按钮"
+    }
+   ],
+   "expected_result": "删除操作有确认提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "删除活动时点击取消不删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "在删除确认对话框中点击'取消'，验证活动未被删除。",
+   "preconditions": "已登录运营后台，存在一条活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'删除'按钮，在确认对话框中点击'取消'",
+     "expected": "对话框关闭，活动仍存在，列表无变化"
+    }
+   ],
+   "expected_result": "取消删除后活动未被删除。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "活动状态字段用于筛选",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "在活动状态筛选下拉框中选择'待审核'，验证列表筛选结果。",
+   "preconditions": "已登录运营后台，存在多条不同状态的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'活动状态：'筛选框中选择'待审核'",
+     "expected": "列表仅显示状态为'待审核'的活动"
+    }
+   ],
+   "expected_result": "筛选功能正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "活动状态筛选无结果时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择不存在的状态组合（如'待审核'但无该状态数据），验证空态。",
+   "preconditions": "已登录运营后台，且不存在状态为'待审核'的活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'活动状态：'筛选框中选择'待审核'",
+     "expected": "列表显示'暂无数据'，不报错"
+    }
+   ],
+   "expected_result": "筛选无结果时展示空态。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "活动状态为'待审核'时列表正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在一条活动状态为'待审核'的活动记录，用于验证状态展示。",
+   "preconditions": "已登录运营后台，存在一条状态为'待审核'的充值赠币活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找状态为'待审核'的活动",
+     "expected": "该活动的'活动状态'列显示'待审核'，且样式正确"
+    }
+   ],
+   "expected_result": "状态正确展示为'待审核'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "活动状态为'待审核'时编辑操作被阻止",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "假设业务规则：待审核的活动不允许编辑，验证编辑按钮置灰或提示。",
+   "preconditions": "已登录运营后台，存在一条状态为'待审核'的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "找到状态为'待审核'的活动，点击其'编辑'按钮",
+     "expected": "编辑按钮置灰不可点击，或点击后提示'待审核的活动不可编辑'"
+    }
+   ],
+   "expected_result": "系统阻止对待审核活动的编辑操作。",
+   "remark": "负面用例，基于业务规则推测",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "活动状态为'审核通过'时列表正确展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在一条活动状态为'审核通过'的活动记录，用于验证状态展示。",
+   "preconditions": "已登录运营后台，存在一条状态为'审核通过'的充值赠币活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查找状态为'审核通过'的活动",
+     "expected": "该活动的'活动状态'列显示'审核通过'，且样式正确"
+    }
+   ],
+   "expected_result": "状态正确展示为'审核通过'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "活动状态为'审核通过'时删除操作被阻止",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "假设业务规则：审核通过的活动不允许删除，验证删除按钮置灰或提示。",
+   "preconditions": "已登录运营后台，存在一条状态为'审核通过'的活动记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值赠币活动页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "找到状态为'审核通过'的活动，点击其'删除'按钮",
+     "expected": "删除按钮置灰不可点击，或点击后提示'审核通过的活动不可删除'"
+    }
+   ],
+   "expected_result": "系统阻止对审核通过活动的删除操作。",
+   "remark": "负面用例，基于业务规则推测",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "活动编号字段展示正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看活动列表，活动编号为系统生成的唯一编号，如 'ACT20260423001'",
+   "preconditions": "已登录运营后台，存在至少一条充值赠币活动记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面",
+     "expected": "页面正常加载，显示活动列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看活动列表中的活动编号列",
+     "expected": "活动编号列显示每个活动的唯一编号，格式正确，无乱码"
+    }
+   ],
+   "expected_result": "活动编号字段正确显示，与数据库记录一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "活动编号为空时列表展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条活动编号为空的数据（异常数据）",
+   "preconditions": "已登录运营后台，数据库中有一条活动编号为空的活动记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面",
+     "expected": "页面正常加载，活动列表显示该记录"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的活动编号列",
+     "expected": "活动编号列显示为空或占位符，不出现系统错误"
+    }
+   ],
+   "expected_result": "活动编号为空时列表展示不崩溃，有合理展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "新增活动-填写完整合法信息保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "活动名称：五一充值赠币；活动时间：2026-05-01 00:00:00 至 2026-05-05 23:59:59；充值方式：法币；活动内容：配置套餐（套餐编号：PKG001，售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50）",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗，包含活动时间、充值方式、活动内容等字段"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动时间：开始时间 2026-05-01 00:00:00，结束时间 2026-05-05 23:59:59",
+     "expected": "时间字段正确显示"
+    },
+    {
+     "step": 3,
+     "desc": "选择充值方式：法币",
+     "expected": "充值方式选中，活动内容区域显示法币套餐配置"
+    },
+    {
+     "step": 4,
+     "desc": "点击「新增」添加套餐，填写套餐编号：PKG001，售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50",
+     "expected": "套餐信息正确录入，总计骆驼币自动计算为270"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹窗关闭，列表刷新显示新活动，活动状态为「未开始」"
+    }
+   ],
+   "expected_result": "新增活动成功，数据库新增对应活动记录，列表展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "新增活动-活动时间结束时间早于开始时间保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "活动时间：开始时间 2026-05-05 00:00:00，结束时间 2026-05-01 00:00:00（结束早于开始）",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动时间：开始时间 2026-05-05 00:00:00，结束时间 2026-05-01 00:00:00",
+     "expected": "时间字段可输入"
+    },
+    {
+     "step": 3,
+     "desc": "选择充值方式：法币",
+     "expected": "充值方式选中"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「结束时间必须晚于开始时间」，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拦截，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "新增活动-活动时间开始等于结束时间保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "活动时间：开始时间 2026-05-01 00:00:00，结束时间 2026-05-01 00:00:00（开始等于结束）",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动时间：开始时间 2026-05-01 00:00:00，结束时间 2026-05-01 00:00:00",
+     "expected": "时间字段可输入"
+    },
+    {
+     "step": 3,
+     "desc": "选择充值方式：法币",
+     "expected": "充值方式选中"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，活动状态为「未开始」"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增记录，活动时间开始等于结束",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "编辑活动-修改活动时间保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已有活动：活动编号 ACT20260423001，活动时间 2026-04-23 12:30:44 至 2026-04-26 12:30:44，修改结束时间为 2026-04-30 12:30:44",
+   "preconditions": "已登录运营后台，存在活动编号 ACT20260423001 且状态为「未开始」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，找到活动编号 ACT20260423001，点击「编辑」",
+     "expected": "弹出编辑活动弹窗，回显当前活动信息"
+    },
+    {
+     "step": 2,
+     "desc": "修改结束时间为 2026-04-30 12:30:44",
+     "expected": "结束时间字段更新"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹窗关闭，列表刷新显示新的结束时间"
+    }
+   ],
+   "expected_result": "编辑成功，数据库活动记录更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "编辑活动-修改活动编号保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已有活动：活动编号 ACT20260423001，尝试修改活动编号为 ACT20260423002",
+   "preconditions": "已登录运营后台，存在活动编号 ACT20260423001 且状态为「未开始」",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，找到活动编号 ACT20260423001，点击「编辑」",
+     "expected": "弹出编辑活动弹窗，活动编号字段显示 ACT20260423001"
+    },
+    {
+     "step": 2,
+     "desc": "尝试修改活动编号为 ACT20260423002",
+     "expected": "活动编号字段不可编辑（置灰或只读）"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，活动编号仍为 ACT20260423001"
+    }
+   ],
+   "expected_result": "活动编号不可修改，保存后编号不变",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "取消操作-不保存修改关闭弹窗",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增活动弹窗中填写部分信息后点击取消",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动时间、充值方式等信息",
+     "expected": "信息可正常填写"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，不保存任何数据，列表无变化"
+    }
+   ],
+   "expected_result": "弹窗关闭，数据库无新增记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "取消操作-编辑时取消不保存修改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "编辑活动 ACT20260423001，修改结束时间后点击取消",
+   "preconditions": "已登录运营后台，存在活动 ACT20260423001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，找到活动 ACT20260423001，点击「编辑」",
+     "expected": "弹出编辑弹窗，回显原信息"
+    },
+    {
+     "step": 2,
+     "desc": "修改结束时间为 2026-05-01 00:00:00",
+     "expected": "结束时间字段更新"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "弹窗关闭，活动信息保持不变，列表仍显示原结束时间"
+    }
+   ],
+   "expected_result": "取消后不保存修改，数据库记录不变",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "保存操作-必填字段为空保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "新增活动时，活动时间、充值方式均不填写，直接保存",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "不填写活动时间，不选择充值方式",
+     "expected": "字段为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「活动时间不能为空」「充值方式不能为空」，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拦截，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "保存操作-活动内容未配置保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "新增活动时，填写活动时间和充值方式，但不添加任何活动内容（套餐）",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动时间：2026-05-01 00:00:00 至 2026-05-05 23:59:59",
+     "expected": "时间字段正确"
+    },
+    {
+     "step": 3,
+     "desc": "选择充值方式：法币",
+     "expected": "充值方式选中"
+    },
+    {
+     "step": 4,
+     "desc": "不添加任何套餐，直接点击「保存」",
+     "expected": "保存失败，提示「请至少配置一个活动内容」"
+    }
+   ],
+   "expected_result": "保存被拦截，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "活动时间-开始时间早于当前时间保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "活动时间：开始时间 2026-04-20 00:00:00（早于当前时间），结束时间 2026-05-01 00:00:00",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动时间：开始时间 2026-04-20 00:00:00，结束时间 2026-05-01 00:00:00",
+     "expected": "时间字段可输入"
+    },
+    {
+     "step": 3,
+     "desc": "选择充值方式：法币",
+     "expected": "充值方式选中"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，活动状态为「进行中」"
+    }
+   ],
+   "expected_result": "保存成功，活动状态正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "活动时间-结束时间早于当前时间保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "活动时间：开始时间 2026-04-01 00:00:00，结束时间 2026-04-10 00:00:00（已结束）",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动时间：开始时间 2026-04-01 00:00:00，结束时间 2026-04-10 00:00:00",
+     "expected": "时间字段可输入"
+    },
+    {
+     "step": 3,
+     "desc": "选择充值方式：法币",
+     "expected": "充值方式选中"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，活动状态为「已结束」"
+    }
+   ],
+   "expected_result": "保存成功，活动状态正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "充值方式-选择法币时活动内容展示法币套餐配置",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择充值方式为「法币」，活动内容区域应显示套餐编号、售价、基础骆驼币、赠送骆驼币、总计骆驼币等字段",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "选择充值方式：法币",
+     "expected": "活动内容区域显示法币套餐配置（套餐编号、售价、基础骆驼币、赠送骆驼币、总计骆驼币）"
+    }
+   ],
+   "expected_result": "活动内容区域正确展示法币套餐配置",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "充值方式-选择数字货币时活动内容展示数字货币配置",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择充值方式为「数字货币」，活动内容区域应显示货币类型、消耗数字货币区间、单个数字货币赠送骆驼币等字段",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "选择充值方式：数字货币",
+     "expected": "活动内容区域显示数字货币配置（货币类型、消耗数字货币区间、单个数字货币赠送骆驼币）"
+    }
+   ],
+   "expected_result": "活动内容区域正确展示数字货币配置",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "充值方式-不选择充值方式保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "新增活动时，不选择充值方式，直接保存",
+   "preconditions": "已登录运营后台，有新增活动权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动管理-充值赠币活动页面，点击「新增活动」按钮",
+     "expected": "弹出新增活动弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "填写活动时间：2026-05-01 00:00:00 至 2026-05-05 23:59:59",
+     "expected": "时间字段正确"
+    },
+    {
+     "step": 3,
+     "desc": "不选择充值方式",
+     "expected": "充值方式为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「请选择充值方式」"
+    }
+   ],
+   "expected_result": "保存被拦截，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "活动内容列表正常展示所有套餐信息",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已配置两个套餐：套餐编号12991982，售价19.99USDT，基础骆驼币220，赠送骆驼币50，总计骆驼币270；另一套餐售价19.99USD，其余相同。",
+   "preconditions": "运营后台已登录，存在至少一个已配置的充值赠币活动，且活动内容(法币)下已有套餐数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「活动管理」->「充值赠币活动」",
+     "expected": "进入充值赠币活动列表页"
+    },
+    {
+     "step": 2,
+     "desc": "点击活动对应的「活动内容」按钮",
+     "expected": "进入活动内容(法币)页面，展示列表"
+    },
+    {
+     "step": 3,
+     "desc": "查看列表",
+     "expected": "列表展示所有套餐，每行包含套餐编号、售价、基础骆驼币、赠送骆驼币、总计骆驼币、编辑、删除按钮，数据与配置一致"
+    }
+   ],
+   "expected_result": "列表正确展示所有套餐信息，字段显示正确，无缺失或错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "套餐编号字段正确显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "套餐编号为12991982，为数字字符串。",
+   "preconditions": "活动内容(法币)列表中存在套餐编号为12991982的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示套餐编号列"
+    },
+    {
+     "step": 2,
+     "desc": "查看套餐编号列",
+     "expected": "套餐编号显示为12991982，无格式错误"
+    }
+   ],
+   "expected_result": "套餐编号正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "套餐编号为空时列表展示异常",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号为空字符串，模拟数据异常。",
+   "preconditions": "数据库中套餐编号字段为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示该套餐，套餐编号列显示为空或占位符，但不影响其他字段展示"
+    }
+   ],
+   "expected_result": "页面不崩溃，套餐编号列显示为空，其他字段正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "售价字段正确显示货币单位",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "售价为19.99USDT和19.99USD，验证货币单位显示。",
+   "preconditions": "活动内容(法币)列表中存在售价为19.99USDT和19.99USD的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示售价列"
+    },
+    {
+     "step": 2,
+     "desc": "查看售价列",
+     "expected": "售价显示为19.99USDT和19.99USD，货币单位正确"
+    }
+   ],
+   "expected_result": "售价字段正确显示，包含货币单位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "售价为0时展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "售价为0，模拟免费套餐。",
+   "preconditions": "存在售价为0的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "售价列显示0，无格式错误"
+    }
+   ],
+   "expected_result": "售价为0时正常展示。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "基础骆驼币字段正确显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "基础骆驼币为220，为整数。",
+   "preconditions": "活动内容(法币)列表中存在基础骆驼币为220的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示基础骆驼币列"
+    },
+    {
+     "step": 2,
+     "desc": "查看基础骆驼币列",
+     "expected": "基础骆驼币显示为220，无格式错误"
+    }
+   ],
+   "expected_result": "基础骆驼币正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "基础骆驼币为负数时展示异常",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "基础骆驼币为-10，模拟异常数据。",
+   "preconditions": "数据库中基础骆驼币字段为-10。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示该套餐，基础骆驼币列显示-10，但页面不崩溃"
+    }
+   ],
+   "expected_result": "页面正常展示，基础骆驼币显示负数，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "赠送骆驼币字段正确显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赠送骆驼币为50，为整数。",
+   "preconditions": "活动内容(法币)列表中存在赠送骆驼币为50的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示赠送骆驼币列"
+    },
+    {
+     "step": 2,
+     "desc": "查看赠送骆驼币列",
+     "expected": "赠送骆驼币显示为50，无格式错误"
+    }
+   ],
+   "expected_result": "赠送骆驼币正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "赠送骆驼币大于基础骆驼币时列表展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "赠送骆驼币为300，基础骆驼币为220，赠送大于基础。",
+   "preconditions": "存在赠送骆驼币大于基础骆驼币的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表正常展示该套餐，赠送骆驼币显示300，基础骆驼币显示220，无异常提示"
+    }
+   ],
+   "expected_result": "列表正常展示，不因赠送大于基础而报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "总计骆驼币字段正确计算并显示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "基础骆驼币220，赠送骆驼币50，总计应为270。",
+   "preconditions": "活动内容(法币)列表中存在基础骆驼币220、赠送骆驼币50的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示总计骆驼币列"
+    },
+    {
+     "step": 2,
+     "desc": "查看总计骆驼币列",
+     "expected": "总计骆驼币显示为270，等于基础+赠送"
+    }
+   ],
+   "expected_result": "总计骆驼币正确计算并显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "总计骆驼币与基础赠送之和不一致时展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "基础骆驼币220，赠送骆驼币50，但总计骆驼币字段存储为300（不一致）。",
+   "preconditions": "数据库中总计骆驼币字段与计算值不一致。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示总计骆驼币为300，与基础+赠送不一致，但页面不报错"
+    }
+   ],
+   "expected_result": "页面正常展示，但总计值可能不准确，需关注数据一致性。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "点击编辑按钮进入编辑页面",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择套餐编号为12991982的套餐进行编辑。",
+   "preconditions": "活动内容(法币)列表中存在套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示编辑按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击某套餐的「编辑」按钮",
+     "expected": "弹出编辑对话框或跳转编辑页，展示该套餐的当前配置（套餐编号、售价、基础骆驼币、赠送骆驼币等）"
+    }
+   ],
+   "expected_result": "成功进入编辑界面，字段预填正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "编辑时修改赠送骆驼币为非法值保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "将赠送骆驼币修改为-1，非法值。",
+   "preconditions": "已进入编辑界面，套餐编号12991982。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击编辑按钮",
+     "expected": "进入编辑界面"
+    },
+    {
+     "step": 2,
+     "desc": "将赠送骆驼币修改为-1",
+     "expected": "输入框允许输入，但保存时校验失败"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "提示「赠送骆驼币必须大于等于0」，保存失败，不更新数据"
+    }
+   ],
+   "expected_result": "保存被拦截，提示错误，数据未变更。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "编辑时修改售价为0保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "将售价修改为0，边界值。",
+   "preconditions": "已进入编辑界面，套餐编号12991982。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击编辑按钮",
+     "expected": "进入编辑界面"
+    },
+    {
+     "step": 2,
+     "desc": "将售价修改为0",
+     "expected": "输入框允许输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存成功，列表售价显示为0"
+    }
+   ],
+   "expected_result": "售价为0时保存成功，列表更新。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "删除套餐时弹出确认提示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择套餐编号12991982进行删除。",
+   "preconditions": "活动内容(法币)列表中存在套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "列表展示删除按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击某套餐的「删除」按钮",
+     "expected": "弹出确认对话框，提示「确定要删除？」"
+    }
+   ],
+   "expected_result": "弹出确认提示，未直接删除。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "删除确认后套餐被删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除套餐编号12991982。",
+   "preconditions": "活动内容(法币)列表中存在套餐，且已弹出删除确认框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击删除按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」",
+     "expected": "套餐被删除，列表刷新，该套餐不再显示"
+    }
+   ],
+   "expected_result": "套餐成功删除，列表更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "删除确认时点击取消不删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "删除套餐编号12991982，但点击取消。",
+   "preconditions": "活动内容(法币)列表中存在套餐，且已弹出删除确认框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击删除按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」",
+     "expected": "确认框关闭，套餐未被删除，列表不变"
+    }
+   ],
+   "expected_result": "取消删除，数据不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "删除不存在的套餐时提示错误",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "尝试删除一个已被其他操作删除的套餐编号。",
+   "preconditions": "套餐已被删除，但页面未刷新。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在列表中找到已删除的套餐（页面未刷新）",
+     "expected": "点击删除按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击确定",
+     "expected": "提示「删除失败，套餐不存在」或类似错误，列表刷新后该套餐消失"
+    }
+   ],
+   "expected_result": "系统给出错误提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "点击联赛及球队管理入口跳转正确页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击页面左侧菜单「联赛及球队管理」。",
+   "preconditions": "运营后台已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "页面左侧菜单包含「联赛及球队管理」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「联赛及球队管理」",
+     "expected": "跳转到联赛及球队管理页面"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "点击联赛及球队管理入口无权限时拦截",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前账号无联赛及球队管理权限。",
+   "preconditions": "运营后台已登录，但账号无联赛及球队管理权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "页面左侧菜单「联赛及球队管理」可能置灰或不可点击"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击「联赛及球队管理」",
+     "expected": "提示「无权限访问」或按钮不可点击"
+    }
+   ],
+   "expected_result": "无权限时被拦截，不跳转。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "活动开始结束时间正确展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "活动开始时间为2026-04-23 12:30:44，结束时间为2026-04-26 12:30:44。",
+   "preconditions": "活动内容(法币)页面所属活动已设置开始结束时间。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "页面顶部或相关位置展示活动开始结束时间"
+    },
+    {
+     "step": 2,
+     "desc": "查看时间展示",
+     "expected": "显示开始时间2026-04-23 12:30:44，结束时间2026-04-26 12:30:44，格式正确"
+    }
+   ],
+   "expected_result": "活动开始结束时间正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "活动开始时间晚于结束时间时展示异常",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "活动开始时间为2026-04-26 12:30:44，结束时间为2026-04-23 12:30:44（开始晚于结束）。",
+   "preconditions": "数据库中活动开始时间晚于结束时间。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(法币)页面",
+     "expected": "页面展示开始结束时间，但逻辑上不合理，页面不崩溃"
+    }
+   ],
+   "expected_result": "页面正常展示，但时间逻辑异常，需关注数据校验。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "新增套餐时赠送骆驼币大于基础骆驼币的异常处理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "新增套餐，基础骆驼币220，赠送骆驼币300（大于基础）。",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，点击「新增」按钮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增套餐对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号、售价、基础骆驼币220、赠送骆驼币300",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "提示「赠送骆驼币不能大于基础骆驼币」或类似错误，保存失败"
+    }
+   ],
+   "expected_result": "保存被拦截，提示错误，不新增数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "新增套餐时套餐编号不存在的异常处理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的套餐编号99999999。",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，点击「新增」按钮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增套餐对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号99999999（不存在）",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "提示「套餐编号不存在」或类似错误，保存失败"
+    }
+   ],
+   "expected_result": "保存被拦截，提示错误，不新增数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "新增套餐时套餐编号已配置在该活动中的异常处理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "输入已存在的套餐编号12991982。",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，点击「新增」按钮，且该活动已配置套餐编号12991982。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增套餐对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991982（已存在）",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "提示「套餐编号已配置在该活动中」或类似错误，保存失败"
+    }
+   ],
+   "expected_result": "保存被拦截，提示错误，不新增数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "新增套餐时赠送骆驼币等于基础骆驼币的边界处理",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "基础骆驼币220，赠送骆驼币220（相等）。",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，点击「新增」按钮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增套餐对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号、售价、基础骆驼币220、赠送骆驼币220",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存成功，列表新增该套餐"
+    }
+   ],
+   "expected_result": "赠送等于基础时允许保存。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "新增套餐时赠送骆驼币为0的边界处理",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "赠送骆驼币为0。",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，点击「新增」按钮。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增套餐对话框"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号、售价、基础骆驼币220、赠送骆驼币0",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存成功，列表新增该套餐，赠送骆驼币显示0"
+    }
+   ],
+   "expected_result": "赠送为0时允许保存。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "新增套餐-合法数据保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "套餐编号选择已存在的套餐（如12991982），赠送骆驼币填写50，该套餐充值骆驼币为220，50<220，符合业务规则。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在套餐编号12991982且未配置在该活动中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单，包含套餐编号、赠送骆驼币、场景、处理方式等字段"
+    },
+    {
+     "step": 2,
+     "desc": "在套餐编号下拉框选择“12991982”",
+     "expected": "下拉框显示“12991982”，且该套餐不在当前活动已配置列表中"
+    },
+    {
+     "step": 3,
+     "desc": "在赠送骆驼币输入框输入“50”",
+     "expected": "输入框显示“50”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "保存成功，列表新增一条记录，套餐编号12991982，赠送骆驼币50，总计骆驼币=基础+赠送=270"
+    }
+   ],
+   "expected_result": "保存成功，列表刷新并新增套餐记录，数据与输入一致，无错误提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "新增套餐-赠送骆驼币为空校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "赠送骆驼币留空，套餐编号选择有效套餐，验证必填校验。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐",
+     "expected": "套餐编号已选择"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入框留空",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“赠送骆驼币不能为空”，保存被阻止，列表无新增"
+    }
+   ],
+   "expected_result": "保存被阻止，提示赠送骆驼币必填，列表无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "新增套餐-赠送骆驼币为0边界校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "赠送骆驼币填写0，套餐编号有效，验证0是否允许。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐",
+     "expected": "套餐编号已选择"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入“0”",
+     "expected": "输入框显示“0”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "若允许0则保存成功；若不允许则提示“赠送骆驼币必须大于0”，保存被阻止"
+    }
+   ],
+   "expected_result": "根据业务规则，若允许0则保存成功，否则提示并阻止。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "取消新增-表单关闭且不保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增表单中填写部分数据后点击取消，验证数据不保存。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐，输入赠送骆驼币50",
+     "expected": "表单已填写数据"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”按钮",
+     "expected": "表单关闭，列表无新增记录"
+    }
+   ],
+   "expected_result": "表单关闭，不保存任何数据，列表无新增。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "保存套餐-套餐编号未选择校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号保持默认“请选择”，赠送骆驼币填写50，验证必填校验。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "套餐编号保持“请选择”",
+     "expected": "下拉框显示“请选择”"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入“50”",
+     "expected": "输入框显示“50”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“请选择套餐编号”，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示请选择套餐编号，列表无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "请选择套餐编号-下拉列表展示可选套餐",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "验证下拉列表展示所有可选套餐，且已配置在该活动中的套餐应被过滤或置灰。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在多个套餐，其中部分已配置在当前活动中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "点击套餐编号下拉框",
+     "expected": "下拉列表展示所有可选套餐，已配置的套餐不可选或置灰"
+    }
+   ],
+   "expected_result": "下拉列表正确展示可选套餐，已配置套餐被过滤或置灰。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "套餐编号-选择不存在套餐校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "通过接口或特殊方式输入一个不存在的套餐编号（如99999999），验证存在性校验。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，套餐编号99999999不存在。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "在套餐编号输入框输入“99999999”（若可手动输入）",
+     "expected": "输入框显示“99999999”"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入“50”",
+     "expected": "输入框显示“50”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“套餐编号不存在”，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示套餐编号不存在，列表无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "赠送骆驼币-大于充值骆驼币校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择套餐编号12991982（充值骆驼币220），赠送骆驼币填写221，验证业务规则。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在套餐编号12991982且充值骆驼币为220。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号“12991982”",
+     "expected": "下拉框显示“12991982”"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入“221”",
+     "expected": "输入框显示“221”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“赠送骆驼币不能大于充值骆驼币”，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示赠送骆驼币不能大于充值骆驼币，列表无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "赠送骆驼币-等于充值骆驼币边界",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "选择套餐编号12991982（充值骆驼币220），赠送骆驼币填写220，验证等于边界是否允许。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在套餐编号12991982且充值骆驼币为220。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号“12991982”",
+     "expected": "下拉框显示“12991982”"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入“220”",
+     "expected": "输入框显示“220”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "若允许等于则保存成功；若不允许则提示“赠送骆驼币必须小于充值骆驼币”，保存被阻止"
+    }
+   ],
+   "expected_result": "根据业务规则，若允许等于则保存成功，否则提示并阻止。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "确定删除-确认后删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除一条已存在的套餐记录，验证删除流程。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在至少一条套餐记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条套餐记录的“删除”按钮",
+     "expected": "弹出确认框，显示“确定要删除？”"
+    },
+    {
+     "step": 2,
+     "desc": "点击“确定”按钮",
+     "expected": "删除成功，列表刷新，该记录消失"
+    }
+   ],
+   "expected_result": "删除成功，列表不再显示该记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "确定删除-取消删除不生效",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "点击删除后，在确认框点击取消，验证记录不被删除。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在至少一条套餐记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条套餐记录的“删除”按钮",
+     "expected": "弹出确认框，显示“确定要删除？”"
+    },
+    {
+     "step": 2,
+     "desc": "点击“取消”按钮",
+     "expected": "确认框关闭，列表记录保持不变"
+    }
+   ],
+   "expected_result": "记录未被删除，列表不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "场景字段-必填校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "场景字段留空，其他字段合法，验证是否必填。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐，赠送骆驼币输入50",
+     "expected": "字段已填写"
+    },
+    {
+     "step": 3,
+     "desc": "场景字段保持默认（空）",
+     "expected": "场景字段为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "若场景必填则提示“请选择场景”，保存被阻止；否则保存成功"
+    }
+   ],
+   "expected_result": "根据需求，若场景必填则提示并阻止，否则保存成功。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "处理方式字段-必填校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "处理方式字段留空，其他字段合法，验证是否必填。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐，赠送骆驼币输入50",
+     "expected": "字段已填写"
+    },
+    {
+     "step": 3,
+     "desc": "处理方式字段保持默认（空）",
+     "expected": "处理方式字段为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "若处理方式必填则提示“请选择处理方式”，保存被阻止；否则保存成功"
+    }
+   ],
+   "expected_result": "根据需求，若处理方式必填则提示并阻止，否则保存成功。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "新增套餐-套餐编号已配置在该活动中校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择已配置在当前活动中的套餐编号（如12991982已存在），验证重复配置校验。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，套餐编号12991982已配置在当前活动中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号“12991982”（该套餐已配置在当前活动中）",
+     "expected": "下拉框可能置灰或提示不可选"
+    },
+    {
+     "step": 3,
+     "desc": "若可选择，赠送骆驼币输入50，点击保存",
+     "expected": "提示“该套餐已配置在该活动中”，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示套餐编号已配置，列表无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "新增套餐-赠送骆驼币为负数校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "赠送骆驼币输入-1，验证负数校验。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐",
+     "expected": "套餐编号已选择"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入“-1”",
+     "expected": "输入框显示“-1”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“赠送骆驼币必须为正整数”，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示赠送骆驼币必须为正整数，列表无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "新增套餐-赠送骆驼币为小数校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "赠送骆驼币输入1.5，验证小数校验。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐",
+     "expected": "套餐编号已选择"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入“1.5”",
+     "expected": "输入框显示“1.5”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“赠送骆驼币必须为整数”，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示赠送骆驼币必须为整数，列表无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "新增套餐-赠送骆驼币为特殊字符校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "赠送骆驼币输入“abc”或“@#”等特殊字符，验证输入校验。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐",
+     "expected": "套餐编号已选择"
+    },
+    {
+     "step": 3,
+     "desc": "赠送骆驼币输入“abc”",
+     "expected": "输入框可能无法输入或显示“abc”"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "提示“赠送骆驼币必须为数字”，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示赠送骆驼币必须为数字，列表无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "新增套餐-重复点击保存按钮防重",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "连续快速点击保存按钮，验证是否产生重复数据。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐，赠送骆驼币输入50",
+     "expected": "字段已填写"
+    },
+    {
+     "step": 3,
+     "desc": "连续快速点击“保存”按钮两次",
+     "expected": "只提交一次，列表只新增一条记录，无重复数据"
+    }
+   ],
+   "expected_result": "只新增一条记录，无重复数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "新增套餐-保存成功后列表刷新",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "保存成功后验证列表是否自动刷新并显示新记录。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在有效套餐编号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号为有效套餐，赠送骆驼币输入50",
+     "expected": "字段已填写"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存成功，列表自动刷新，新记录出现在列表中"
+    }
+   ],
+   "expected_result": "列表自动刷新，新记录可见。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "删除套餐-删除后列表刷新",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除一条记录后验证列表刷新。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，存在至少一条套餐记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的“删除”按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 2,
+     "desc": "点击“确定”",
+     "expected": "删除成功，列表自动刷新，该记录消失"
+    }
+   ],
+   "expected_result": "列表自动刷新，记录消失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "新增套餐-套餐编号为重复配置校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择已配置在当前活动中的套餐编号，验证重复配置拦截。",
+   "preconditions": "已登录运营后台，进入活动内容(法币)页面，套餐编号12991982已配置在当前活动中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮",
+     "expected": "弹出新增套餐表单"
+    },
+    {
+     "step": 2,
+     "desc": "选择套餐编号“12991982”（已配置）",
+     "expected": "下拉框可能置灰或提示不可选"
+    },
+    {
+     "step": 3,
+     "desc": "若可选择，赠送骆驼币输入50，点击保存",
+     "expected": "提示“该套餐已配置在该活动中”，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示套餐编号已配置，列表无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "新增套餐-套餐编号唯一性校验-重复编号被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：12991982（已存在于当前活动列表中，见页面示例数据），售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，当前活动存在套餐编号为12991982的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开，字段可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "在“套餐编号”输入框输入已存在的编号12991982",
+     "expected": "输入成功，无即时校验提示"
+    },
+    {
+     "step": 3,
+     "desc": "填写售价19.99USDT、基础骆驼币220、赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "系统拦截保存，提示“套餐编号已存在”，不新增记录，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拦截，页面提示“套餐编号已存在”，数据库中不新增重复套餐记录，弹窗保持打开且已填数据保留",
+   "remark": "负面用例-重复编号",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "新增套餐-套餐编号唯一性校验-新编号保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "套餐编号：12991983（不存在于当前活动），售价：29.99USDT，基础骆驼币：300，赠送骆驼币：80",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，当前活动无套餐编号12991983",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "在“套餐编号”输入框输入12991983",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "填写售价29.99USDT、基础骆驼币300、赠送骆驼币80",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击“保存”按钮",
+     "expected": "保存成功，弹窗关闭，列表新增该套餐记录，总计骆驼币=300+80=380"
+    }
+   ],
+   "expected_result": "保存成功，列表出现新套餐记录（编号12991983，售价29.99USDT，基础骆驼币300，赠送骆驼币80，总计380），数据库新增对应记录",
+   "remark": "正面用例-新编号",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "新增套餐-套餐编号为空-保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号留空，其余字段填写有效值：售价19.99USDT，基础骆驼币220，赠送骆驼币50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "不填写套餐编号，填写售价19.99USDT、基础骆驼币220、赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“套餐编号不能为空”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“套餐编号不能为空”，数据库无新增记录",
+   "remark": "负面用例-必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "新增套餐-赠送骆驼币大于基础骆驼币-保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：12991984（新编号），售价：19.99USDT，基础骆驼币：100，赠送骆驼币：150（赠送大于基础）",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991984，售价19.99USDT，基础骆驼币100，赠送骆驼币150",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“赠送骆驼币不能大于基础骆驼币”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“赠送骆驼币不能大于基础骆驼币”，数据库无新增记录",
+   "remark": "负面用例-数值规则",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "新增套餐-赠送骆驼币等于基础骆驼币-保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "套餐编号：12991985（新编号），售价：19.99USDT，基础骆驼币：100，赠送骆驼币：100（等于基础）",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991985，售价19.99USDT，基础骆驼币100，赠送骆驼币100",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存成功，弹窗关闭，列表新增记录，总计骆驼币=200"
+    }
+   ],
+   "expected_result": "保存成功，列表新增套餐记录（编号12991985，总计骆驼币200），数据库新增对应记录",
+   "remark": "边界用例-赠送等于基础",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "新增套餐-套餐编号不存在于系统-保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：99999999（系统中不存在的编号），售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，系统中不存在套餐编号99999999",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号99999999，售价19.99USDT，基础骆驼币220，赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“套餐编号不存在”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“套餐编号不存在”，数据库无新增记录",
+   "remark": "负面用例-编号不存在",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "新增套餐-所有字段合法-保存成功并正确计算总计骆驼币",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "套餐编号：12991986（新编号），售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50，总计应为270",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991986，售价19.99USDT，基础骆驼币220，赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存成功，弹窗关闭，列表新增记录，总计骆驼币显示270"
+    }
+   ],
+   "expected_result": "保存成功，列表新增套餐记录（编号12991986，售价19.99USDT，基础骆驼币220，赠送骆驼币50，总计270），数据库新增对应记录",
+   "remark": "正面用例-正常新增",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "新增套餐-售价为0-保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：12991987（新编号），售价：0，基础骆驼币：220，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991987，售价0，基础骆驼币220，赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“售价必须大于0”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“售价必须大于0”，数据库无新增记录",
+   "remark": "负面用例-售价边界",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "新增套餐-基础骆驼币为负数-保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：12991988（新编号），售价：19.99USDT，基础骆驼币：-1，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991988，售价19.99USDT，基础骆驼币-1，赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“基础骆驼币必须大于等于0”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“基础骆驼币必须大于等于0”，数据库无新增记录",
+   "remark": "负面用例-负数校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "新增套餐-赠送骆驼币为负数-保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：12991989（新编号），售价：19.99USDT，基础骆驼币：220，赠送骆驼币：-1",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991989，售价19.99USDT，基础骆驼币220，赠送骆驼币-1",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“赠送骆驼币必须大于等于0”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“赠送骆驼币必须大于等于0”，数据库无新增记录",
+   "remark": "负面用例-负数校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "新增套餐-套餐编号含特殊字符-保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：'abc@123'（含特殊字符），售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号'abc@123'，售价19.99USDT，基础骆驼币220，赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“套餐编号格式不正确”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“套餐编号格式不正确”，数据库无新增记录",
+   "remark": "负面用例-特殊字符",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "新增套餐-售价为负数-保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：12991990（新编号），售价：-1，基础骆驼币：220，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991990，售价-1，基础骆驼币220，赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“售价必须大于0”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“售价必须大于0”，数据库无新增记录",
+   "remark": "负面用例-售价负数",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "新增套餐-套餐编号超长-保存被拦截",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：'12345678901234567890'（20位数字，超过系统限制长度），售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入超长套餐编号，填写其他字段",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，提示“套餐编号长度不能超过X位”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“套餐编号长度不能超过X位”，数据库无新增记录",
+   "remark": "负面用例-长度边界",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "新增套餐-重复点击保存按钮-只提交一次",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：12991991（新编号），售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991991，售价19.99USDT，基础骆驼币220，赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "快速连续点击“保存”按钮两次",
+     "expected": "仅提交一次，列表只新增一条记录，无重复数据"
+    }
+   ],
+   "expected_result": "仅提交一次，列表新增一条套餐记录，数据库无重复记录",
+   "remark": "负面用例-重复提交",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "新增套餐-取消操作-不保存数据",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "套餐编号：12991992（新编号），售价：19.99USDT，基础骆驼币：220，赠送骆驼币：50",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991992，售价19.99USDT，基础骆驼币220，赠送骆驼币50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”按钮",
+     "expected": "弹窗关闭，不保存任何数据，列表无新增记录"
+    }
+   ],
+   "expected_result": "弹窗关闭，列表无新增记录，数据库无变化",
+   "remark": "正面用例-取消操作",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "新增套餐-套餐编号重复且赠送骆驼币大于基础-优先提示重复",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(法币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "套餐编号：12991982（已存在），售价：19.99USDT，基础骆驼币：100，赠送骆驼币：150（同时触发两个异常）",
+   "preconditions": "运营后台已登录，进入活动内容(法币)页面，当前活动存在套餐编号12991982",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“新增”按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "输入套餐编号12991982，售价19.99USDT，基础骆驼币100，赠送骆驼币150",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击“保存”按钮",
+     "expected": "保存被拦截，优先提示“套餐编号已存在”，不新增记录"
+    }
+   ],
+   "expected_result": "保存被拦截，提示“套餐编号已存在”，数据库无新增记录",
+   "remark": "负面用例-多异常优先级",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "列表展示活动内容记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中预置多条活动内容记录，包含不同货币类型（USDT、USDC）和消耗区间（3至10、11至50、50以上）",
+   "preconditions": "运营后台已登录，且存在活动内容(数字货币)数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击活动管理-充值赠币活动-活动内容(数字货币)",
+     "expected": "页面正确加载，展示活动内容列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表字段",
+     "expected": "列表展示活动内容、货币类型、消耗数字货币、单个数字货币赠送骆驼币等字段，数据与数据库一致"
+    }
+   ],
+   "expected_result": "列表正确展示所有活动内容记录，字段完整，数据准确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "列表为空时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何活动内容记录",
+   "preconditions": "运营后台已登录，且活动内容(数字货币)无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "页面展示空态提示，如'暂无数据'，且列表区域无异常"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "列表展示货币类型字段",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置记录包含USDT和USDC两种货币类型",
+   "preconditions": "存在包含USDT和USDC的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "列表正确显示每条记录的货币类型，如USDT、USDC"
+    }
+   ],
+   "expected_result": "货币类型字段正确展示，与数据库一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "货币类型字段为空时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中某条记录的货币类型字段为空",
+   "preconditions": "存在货币类型为空的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "列表该记录的货币类型显示为空或占位符，页面无异常"
+    }
+   ],
+   "expected_result": "页面正常展示，货币类型为空时不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "列表展示消耗数字货币区间",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置记录包含区间'3至10'、'11至50'、'50以上'",
+   "preconditions": "存在上述区间的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "列表正确显示消耗数字货币区间，如'3至10'、'11至50'、'50以上'"
+    }
+   ],
+   "expected_result": "消耗区间字段正确展示，格式与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "消耗区间边界值展示（50以上）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "预置记录消耗区间为'50以上'，验证边界值50的归属",
+   "preconditions": "存在'50以上'区间的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "列表显示'50以上'，且该区间包含消耗值50（若业务规则为>=50）"
+    }
+   ],
+   "expected_result": "区间展示正确，边界值处理符合业务规则",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "编辑活动内容成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条记录，修改其赠送骆驼币数值为20（原为10）",
+   "preconditions": "存在一条活动内容记录，且当前用户有编辑权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的'编辑'按钮",
+     "expected": "弹出编辑弹窗，回显当前记录数据"
+    },
+    {
+     "step": 2,
+     "desc": "修改赠送骆驼币为20",
+     "expected": "输入框可编辑，显示20"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "保存成功，弹窗关闭，列表刷新，该记录赠送骆驼币显示20"
+    }
+   ],
+   "expected_result": "编辑成功，数据更新到数据库，列表刷新显示新值",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "编辑时赠送骆驼币为空校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "编辑时将赠送骆驼币清空",
+   "preconditions": "存在一条活动内容记录，且当前用户有编辑权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'编辑'按钮",
+     "expected": "弹出编辑弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "清空赠送骆驼币输入框",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'赠送骆驼币不能为空'，保存失败，弹窗不关闭"
+    }
+   ],
+   "expected_result": "校验拦截，提示错误，数据未修改",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "编辑时消耗区间与其他区间重叠校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "将某条记录的消耗区间改为'5至15'，与已有区间'3至10'重叠",
+   "preconditions": "存在区间'3至10'的记录，且当前用户有编辑权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'编辑'按钮",
+     "expected": "弹出编辑弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "修改消耗区间为'5至15'",
+     "expected": "输入框可编辑"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'消耗区间与其他区间重叠'，保存失败"
+    }
+   ],
+   "expected_result": "校验拦截，提示重叠错误，数据未修改",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "列表展示USDT货币类型记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置一条USDT货币类型的记录",
+   "preconditions": "存在USDT类型的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "列表正确显示该记录的货币类型为USDT"
+    }
+   ],
+   "expected_result": "USDT记录正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "列表展示'至50'区间记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置一条消耗区间为'11至50'的记录",
+   "preconditions": "存在'11至50'区间的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "列表正确显示该记录的消耗区间为'11至50'"
+    }
+   ],
+   "expected_result": "'至50'区间记录正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "列表展示USDC货币类型记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置一条USDC货币类型的记录",
+   "preconditions": "存在USDC类型的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "列表正确显示该记录的货币类型为USDC"
+    }
+   ],
+   "expected_result": "USDC记录正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "列表展示'以上'区间记录",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "预置一条消耗区间为'50以上'的记录",
+   "preconditions": "存在'50以上'区间的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "列表正确显示该记录的消耗区间为'50以上'"
+    }
+   ],
+   "expected_result": "'以上'区间记录正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "删除活动内容成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条无关联数据的活动内容记录进行删除",
+   "preconditions": "存在一条活动内容记录，且当前用户有删除权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的'删除'按钮",
+     "expected": "弹出确认对话框，提示'确定要删除？'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'",
+     "expected": "删除成功，列表刷新，该记录消失"
+    }
+   ],
+   "expected_result": "删除成功，数据库记录被删除，列表刷新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "删除时取消操作",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击删除后，在确认对话框中选择取消",
+   "preconditions": "存在一条活动内容记录，且当前用户有删除权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'删除'按钮",
+     "expected": "弹出确认对话框"
+    },
+    {
+     "step": 2,
+     "desc": "点击'取消'",
+     "expected": "对话框关闭，记录未被删除，列表不变"
+    }
+   ],
+   "expected_result": "取消删除，数据保持不变",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "删除时记录被关联数据引用",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择一条已被其他活动引用的记录进行删除",
+   "preconditions": "存在一条被引用的活动内容记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'删除'按钮",
+     "expected": "弹出确认对话框"
+    },
+    {
+     "step": 2,
+     "desc": "点击'确定'",
+     "expected": "提示'该记录已被引用，无法删除'，删除失败"
+    }
+   ],
+   "expected_result": "删除被拦截，提示引用错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "联赛及球队管理入口跳转",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击页面上的'联赛及球队管理'入口",
+   "preconditions": "运营后台已登录，且有联赛及球队管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'联赛及球队管理'链接",
+     "expected": "跳转至联赛及球队管理页面"
+    }
+   ],
+   "expected_result": "成功跳转至目标页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "无权限访问联赛及球队管理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的账号操作",
+   "preconditions": "当前用户无联赛及球队管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'联赛及球队管理'链接",
+     "expected": "提示'无权限访问'或跳转至无权限页面"
+    }
+   ],
+   "expected_result": "访问被拦截，提示无权限",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "页面展示活动开始结束时间",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "活动开始时间为2026-04-23 12:30:44，结束时间为2026-04-26 12:30:44",
+   "preconditions": "存在活动时间配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "页面展示活动开始和结束时间，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "时间正确展示，格式符合要求",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "活动时间格式异常处理",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中活动时间为非法格式（如2026/04/23）",
+   "preconditions": "存在时间格式异常的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动内容(数字货币)页面",
+     "expected": "页面正常展示，时间字段显示原值或格式化处理，无报错"
+    }
+   ],
+   "expected_result": "页面不崩溃，时间展示可接受",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "新增活动内容成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "新增一条记录：货币类型USDT，消耗区间'1至2'，赠送骆驼币5",
+   "preconditions": "运营后台已登录，且当前用户有新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型下拉框选择USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗区间最小1，最大2",
+     "expected": "输入框可输入1和2"
+    },
+    {
+     "step": 4,
+     "desc": "输入赠送骆驼币5",
+     "expected": "输入框可输入5"
+    },
+    {
+     "step": 5,
+     "desc": "点击'保存'",
+     "expected": "保存成功，弹窗关闭，列表刷新，新增记录显示"
+    }
+   ],
+   "expected_result": "新增成功，数据入库，列表刷新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "新增时货币类型为空校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增时不选择货币类型",
+   "preconditions": "运营后台已登录，且当前用户有新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "不选择货币类型",
+     "expected": "货币类型为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'请选择货币类型'，保存失败"
+    }
+   ],
+   "expected_result": "校验拦截，提示错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "新增时消耗区间重叠校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "新增区间'3至10'，与已有区间'3至10'重叠",
+   "preconditions": "已存在区间'3至10'的记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型USDT，输入最小3，最大10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'消耗区间与其他区间重叠'，保存失败"
+    }
+   ],
+   "expected_result": "校验拦截，提示重叠错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "新增时消耗区间最小大于最大校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增时输入最小10，最大5",
+   "preconditions": "运营后台已登录，且当前用户有新增权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'新增'按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "输入最小10，最大5",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'",
+     "expected": "提示'最小不能大于最大'，保存失败"
+    }
+   ],
+   "expected_result": "校验拦截，提示错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "取消新增套餐时关闭弹窗且不保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增套餐弹窗中填写部分字段（货币类型=USDT，消耗数字货币=3至10，赠送骆驼币=10），点击取消。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开，字段可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "填写货币类型为USDT，消耗数字货币最小值为3，最大值为10，单个数字货币赠送骆驼币为10",
+     "expected": "字段正常输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取 消」按钮",
+     "expected": "弹窗关闭，不保存任何数据，列表无新增记录"
+    }
+   ],
+   "expected_result": "弹窗关闭，列表无新增套餐记录，数据库无新增数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "取消编辑套餐时丢弃修改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "编辑已有套餐（如USDT 3至10），修改消耗数字货币最大值为20，点击取消。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在至少一个套餐记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的「编辑」按钮",
+     "expected": "编辑弹窗打开，显示当前套餐数据"
+    },
+    {
+     "step": 2,
+     "desc": "将消耗数字货币最大值从10修改为20",
+     "expected": "字段可修改"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取 消」按钮",
+     "expected": "弹窗关闭，修改不生效，列表仍显示原数据"
+    }
+   ],
+   "expected_result": "弹窗关闭，列表数据不变，数据库记录未被更新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "保存新增套餐成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "新增套餐：货币类型=USDT，消耗数字货币=3至10，单个数字货币赠送骆驼币=10。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为3，最大值为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹窗关闭，列表新增一条记录，显示USDT 3至10，赠送骆驼币10"
+    }
+   ],
+   "expected_result": "保存成功，列表新增记录，数据库新增对应套餐数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "保存时货币类型未选择被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "新增套餐时，货币类型保持默认「请选择」，其他字段填写合法（消耗数字货币3至10，赠送骆驼币10），点击保存。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "不选择货币类型，保持「请选择」",
+     "expected": "货币类型为空"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为3，最大值为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「请选择货币类型」，保存被拦截，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拦截，提示选择货币类型，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "保存时消耗数字货币区间为空被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增套餐时，货币类型选择USDT，消耗数字货币最小值和最大值均不填写，赠送骆驼币填10，点击保存。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "不填写消耗数字货币最小值和最大值",
+     "expected": "字段为空"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「请输入消耗数字货币区间」，保存被拦截"
+    }
+   ],
+   "expected_result": "保存被拦截，提示输入消耗数字货币区间，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "保存时消耗数字货币最小值大于最大值被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增套餐时，货币类型选择USDT，消耗数字货币最小值为50，最大值为10，赠送骆驼币填10，点击保存。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为50，最大值为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「最小值不能大于最大值」，保存被拦截"
+    }
+   ],
+   "expected_result": "保存被拦截，提示最小值不能大于最大值，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "保存时消耗数字货币区间与其他区间重叠被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "已有套餐区间为USDT 3至10，新增套餐配置USDT 8至15，与已有区间重叠。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，已存在USDT 3至10的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为8，最大值为15",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为20",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「新增套餐时，发现配置“消耗数值货币区间”，在本次活动中与其他区间存在重叠」，保存被拦截"
+    }
+   ],
+   "expected_result": "保存被拦截，提示区间重叠，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "最小输入框接受边界值0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "新增套餐时，货币类型选择USDT，消耗数字货币最小值为0，最大值为10，赠送骆驼币为10。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为0，最大值为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，列表新增记录"
+    }
+   ],
+   "expected_result": "保存成功，最小值为0被接受。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "最小输入框拒绝负数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增套餐时，货币类型选择USDT，消耗数字货币最小值为-1，最大值为10，赠送骆驼币为10。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为-1，最大值为10",
+     "expected": "输入被拒绝或提示非法"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」按钮",
+     "expected": "若输入被拒绝则无法保存；若输入成功则提示「最小值不能为负数」"
+    }
+   ],
+   "expected_result": "负数被拒绝或保存被拦截，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "最大输入框为空表示无上限",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "新增套餐时，货币类型选择USDC，消耗数字货币最小值为50，最大值为空（表示50以上），赠送骆驼币为100。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDC",
+     "expected": "货币类型显示USDC"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为50，最大值为空",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为100",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，列表新增记录显示「50以上」"
+    }
+   ],
+   "expected_result": "保存成功，最大值为空表示无上限。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "最大输入框拒绝小于最小值",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增套餐时，货币类型选择USDT，消耗数字货币最小值为10，最大值为5，赠送骆驼币为10。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为10，最大值为5",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「最大值不能小于最小值」，保存被拦截"
+    }
+   ],
+   "expected_result": "保存被拦截，提示最大值不能小于最小值，数据库无新增。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "货币类型下拉框默认显示「请选择」",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "打开新增套餐弹窗，观察货币类型下拉框的默认值。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看货币类型下拉框",
+     "expected": "默认显示「请选择」"
+    }
+   ],
+   "expected_result": "货币类型下拉框默认显示「请选择」。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "货币类型下拉框选项包含USDT和USDC",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "打开货币类型下拉框，检查选项列表。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，点击「新增」打开新增套餐弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击货币类型下拉框",
+     "expected": "下拉列表显示USDT、USDC等选项"
+    }
+   ],
+   "expected_result": "下拉框包含USDT和USDC选项。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "删除套餐时弹出确认框",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击某条套餐记录的「删除」按钮，观察是否弹出确认框。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在至少一个套餐记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的「删除」按钮",
+     "expected": "弹出确认框，显示「确定要删除？」"
+    }
+   ],
+   "expected_result": "弹出确认框，包含「确定」和「取消」按钮。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "删除确认框点击确定后删除成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击删除按钮，在确认框中点击「确定」。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在至少一个套餐记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的「删除」按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确定」按钮",
+     "expected": "删除成功，列表移除该记录，数据库记录被删除"
+    }
+   ],
+   "expected_result": "删除成功，列表和数据库均无该记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "删除确认框点击取消不删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "点击删除按钮，在确认框中点击「取消」。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在至少一个套餐记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条记录的「删除」按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」按钮",
+     "expected": "确认框关闭，记录未被删除，列表不变"
+    }
+   ],
+   "expected_result": "取消删除，记录保留。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "场景字段展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看页面中的「场景」字段，确认其展示。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面中的「场景」字段",
+     "expected": "字段存在且展示正常"
+    }
+   ],
+   "expected_result": "场景字段正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "处理方式字段展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看页面中的「处理方式」字段，确认其展示。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面中的「处理方式」字段",
+     "expected": "字段存在且展示正常"
+    }
+   ],
+   "expected_result": "处理方式字段正常展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "区间重叠校验-边界值（端点相等）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "已有套餐区间为USDT 3至10，新增套餐配置USDT 10至15，即新区间最小值等于已有区间最大值。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，已存在USDT 3至10的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为10，最大值为15",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为20",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "根据业务规则，若端点重叠视为重叠则提示；若不视为重叠则保存成功。需明确规则。"
+    }
+   ],
+   "expected_result": "根据需求明确端点重叠是否算重叠，若算则拦截，否则保存成功。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "区间重叠校验-不重叠保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "已有套餐区间为USDT 3至10，新增套餐配置USDT 11至50，不重叠。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，已存在USDT 3至10的套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT",
+     "expected": "货币类型显示USDT"
+    },
+    {
+     "step": 3,
+     "desc": "输入消耗数字货币最小值为11，最大值为50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "输入单个数字货币赠送骆驼币为50",
+     "expected": "输入成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，列表新增记录"
+    }
+   ],
+   "expected_result": "保存成功，无重叠提示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "新增套餐-消耗数字货币区间与其他区间重叠时提示并阻止保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "活动已有区间：USDT 3-10、USDT 11-50、USDC 50以上；新增套餐选择USDT，消耗数字货币区间设为5-8，与已有区间3-10重叠。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在一个进行中的充值赠币活动，且该活动已配置至少一个套餐（如USDT 3-10）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开，显示货币类型、消耗数字货币（最小/最大）、单个数字货币赠送骆驼币等字段"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT，消耗数字货币最小填5，最大填8，单个数字货币赠送骆驼币填10",
+     "expected": "输入正常，无报错"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「消耗数字货币区间与其他区间重叠」，保存被阻止，套餐未新增"
+    }
+   ],
+   "expected_result": "保存被阻止，页面出现明确错误提示，数据库无新增套餐记录",
+   "remark": "负面用例，验证区间重叠校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "新增套餐-消耗数字货币区间与其他区间不重叠时保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "活动已有区间：USDT 3-10、USDT 11-50、USDC 50以上；新增套餐选择USDT，消耗数字货币区间设为51-100，与已有区间不重叠。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在一个进行中的充值赠币活动，且该活动已配置至少一个套餐（如USDT 3-10）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开，显示货币类型、消耗数字货币（最小/最大）、单个数字货币赠送骆驼币等字段"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT，消耗数字货币最小填51，最大填100，单个数字货币赠送骆驼币填20",
+     "expected": "输入正常，无报错"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，弹窗关闭，列表新增一条套餐记录，显示USDT 51-100，赠送骆驼币20"
+    }
+   ],
+   "expected_result": "保存成功，列表刷新显示新套餐，数据库新增对应记录",
+   "remark": "正面用例，验证正常新增",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "新增套餐-消耗数字货币区间边界值重叠校验（边界值等于已有区间端点）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "活动已有区间：USDT 3-10；新增套餐选择USDT，消耗数字货币区间设为10-15，其中10与已有区间最大值10重叠（边界值）。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在一个进行中的充值赠币活动，且该活动已配置至少一个套餐（如USDT 3-10）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT，消耗数字货币最小填10，最大填15，单个数字货币赠送骆驼币填5",
+     "expected": "输入正常"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "若边界值视为重叠，则提示重叠并阻止保存；若视为不重叠，则保存成功。需根据需求明确规则。"
+    }
+   ],
+   "expected_result": "根据需求定义的边界规则，给出相应提示或保存成功",
+   "remark": "边界用例，验证边界值重叠判定",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "新增套餐-消耗数字货币区间完全包含已有区间时提示重叠",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "活动已有区间：USDT 3-10；新增套餐选择USDT，消耗数字货币区间设为1-20，完全包含已有区间3-10。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在一个进行中的充值赠币活动，且该活动已配置至少一个套餐（如USDT 3-10）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDT，消耗数字货币最小填1，最大填20，单个数字货币赠送骆驼币填10",
+     "expected": "输入正常"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "系统提示「消耗数字货币区间与其他区间重叠」，保存被阻止"
+    }
+   ],
+   "expected_result": "保存被阻止，提示重叠，数据库无新增",
+   "remark": "负面用例，验证包含重叠",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "新增套餐-不同货币类型的区间重叠不校验（USDT与USDC区间重叠）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "活动管理/充值赠币活动/活动内容(数字货币)",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "活动已有区间：USDT 3-10；新增套餐选择USDC，消耗数字货币区间设为5-8，与USDT区间重叠但货币类型不同。",
+   "preconditions": "已登录运营后台，进入活动内容(数字货币)页面，存在一个进行中的充值赠币活动，且该活动已配置至少一个套餐（如USDT 3-10）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增套餐弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择货币类型为USDC，消耗数字货币最小填5，最大填8，单个数字货币赠送骆驼币填10",
+     "expected": "输入正常"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，因为不同货币类型区间不参与重叠校验"
+    }
+   ],
+   "expected_result": "保存成功，列表新增USDC 5-8套餐",
+   "remark": "正面用例，验证不同货币类型不校验重叠",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-177"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-6 生成被截断，已重试",
+  "functional-chunk-8 生成被截断，已重试"
+ ]
+}

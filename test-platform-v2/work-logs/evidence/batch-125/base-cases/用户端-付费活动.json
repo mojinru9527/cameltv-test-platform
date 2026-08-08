@@ -1,0 +1,8212 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "礼物面板-成长礼物列表展示",
+    "description": "在礼物面板中展示成长礼物列表，包含成长标签的礼物，用户可查看并赠送。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确成长礼物的具体展示规则（如排序、分页、是否区分等级）",
+      "suggestion": "建议明确成长礼物列表的排序规则、是否分页、以及不同等级礼物的展示方式"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "礼物面板-涂鸦礼物列表展示",
+    "description": "在礼物面板中展示涂鸦类礼物列表，用户可查看并赠送。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确涂鸦礼物的具体分类标准",
+      "suggestion": "建议明确涂鸦礼物的定义和分类依据"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "礼物面板-自定义礼物列表展示",
+    "description": "在礼物面板中展示自定义礼物列表，用户可查看并赠送。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确自定义礼物的来源和展示规则",
+      "suggestion": "建议明确自定义礼物的定义和展示规则"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "礼物面板-赠送礼物功能",
+    "description": "用户可在礼物面板中选择礼物并赠送，赠送后扣除相应货币（象币/骆驼币等）。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求未明确赠送礼物的完整流程（如确认弹窗、余额不足处理、赠送成功提示）",
+      "suggestion": "建议补充赠送流程的详细说明，包括余额校验、成功/失败提示"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "礼物面板-象币余额展示",
+    "description": "在礼物面板中展示用户当前象币余额，供用户赠送礼物时参考。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确象币余额的展示位置和刷新时机",
+      "suggestion": "建议明确余额展示位置及赠送后是否实时刷新"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "礼物面板-充值入口",
+    "description": "在礼物面板中提供充值入口，用户点击后跳转至充值页面。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确充值入口的跳转目标页面",
+      "suggestion": "建议明确充值入口跳转的具体页面"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求仅列出礼物面板的六个功能点名称，缺乏详细的功能描述和交互细节，如列表展示规则、赠送流程、余额校验、充值跳转等。整体需求清晰度不足，存在较多模糊点，需要进一步补充详细需求说明才能设计出完整的测试用例。"
+ },
+ "functional_cases": [
+  {
+   "title": "付费活动列表展示两个活动",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "付费活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台已配置两个活动：首单不中退币活动和充值额外赠送骆驼币活动，均处于进行中状态。",
+   "preconditions": "用户已登录，后台已配置两个活动且状态为进行中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面加载成功，展示付费活动列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表内容",
+     "expected": "列表展示两个活动卡片，分别显示“首单不中退币活动”和“充值额外赠送骆驼币活动”"
+    }
+   ],
+   "expected_result": "付费活动列表正确展示两个活动，活动名称与后台配置一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "付费活动列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "付费活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何付费活动。",
+   "preconditions": "用户已登录，后台未配置任何付费活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示空态提示，如“暂无活动”"
+    }
+   ],
+   "expected_result": "页面展示空态提示，无活动列表。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "首单不中退币活动-活动时间显示暂不限时",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置该活动活动时间为“暂不限时”。",
+   "preconditions": "后台已配置首单不中退币活动，活动时间设为“暂不限时”。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示首单不中退币活动卡片"
+    },
+    {
+     "step": 2,
+     "desc": "查看活动时间字段",
+     "expected": "活动时间显示为“暂不限时”"
+    }
+   ],
+   "expected_result": "活动时间正确显示“暂不限时”。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "首单不中退币活动-活动时间显示具体时间范围",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置活动时间为2024-01-01 00:00:00至2024-12-31 23:59:59。",
+   "preconditions": "后台已配置首单不中退币活动，活动时间设为具体时间范围。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示首单不中退币活动卡片"
+    },
+    {
+     "step": 2,
+     "desc": "查看活动时间字段",
+     "expected": "活动时间显示为“2024-01-01 00:00:00 至 2024-12-31 23:59:59”"
+    }
+   ],
+   "expected_result": "活动时间正确显示具体时间范围。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "首单不中退币活动-活动时间已结束",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置活动时间为2023-01-01至2023-12-31，当前时间已超过结束时间。",
+   "preconditions": "后台已配置首单不中退币活动，活动时间已结束。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示首单不中退币活动卡片，但活动状态可能标记为已结束或不可参与"
+    }
+   ],
+   "expected_result": "活动时间已结束，页面应展示活动已结束状态，且用户无法参与。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "首单不中退币活动-可参与活动对象为从未购买过单篇付费文章的用户",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户A从未购买过任何单篇付费文章，但订阅过作者。",
+   "preconditions": "用户A已登录，且从未购买过单篇付费文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示首单不中退币活动"
+    },
+    {
+     "step": 2,
+     "desc": "查看可参与活动对象说明",
+     "expected": "说明中显示“从未购买过单篇付费类型文章的用户，包含订阅过作者但未购买过单篇付费文章的用户”"
+    }
+   ],
+   "expected_result": "用户A符合活动参与条件，活动可正常参与。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "首单不中退币活动-可参与活动对象为已购买过单篇付费文章的用户",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户B已购买过至少一篇单篇付费文章。",
+   "preconditions": "用户B已登录，且已购买过单篇付费文章。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示首单不中退币活动"
+    },
+    {
+     "step": 2,
+     "desc": "尝试参与活动（如购买文章）",
+     "expected": "系统提示用户不符合活动参与条件，无法享受退币权益"
+    }
+   ],
+   "expected_result": "用户B不符合活动参与条件，无法参与首单不中退币活动。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "首单不中退币活动-活动内容展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台已配置活动内容文案。",
+   "preconditions": "后台已配置首单不中退币活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示首单不中退币活动卡片"
+    },
+    {
+     "step": 2,
+     "desc": "查看活动内容字段",
+     "expected": "活动内容显示为“用户首次消耗骆驼币购买某篇单篇付费类型文章，若该文章最终的预测结果为Loss，则退还该用户购买该篇文章时，所花费的所有骆驼币”"
+    }
+   ],
+   "expected_result": "活动内容文案正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "首单不中退币活动-活动内容未配置时展示默认文案",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置活动内容文案。",
+   "preconditions": "后台已配置首单不中退币活动，但活动内容为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示首单不中退币活动卡片"
+    },
+    {
+     "step": 2,
+     "desc": "查看活动内容字段",
+     "expected": "活动内容显示默认文案或留空，但不应出现乱码或报错"
+    }
+   ],
+   "expected_result": "活动内容为空时，页面正常展示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "首单不中退币活动-首次购买且预测结果为Loss时退还骆驼币",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户A首次购买单篇付费文章，消耗骆驼币100，文章最终预测结果为Loss。",
+   "preconditions": "用户A符合活动参与条件，骆驼币余额充足，文章预测结果为Loss。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A购买一篇单篇付费文章，消耗骆驼币100",
+     "expected": "购买成功，骆驼币扣除100"
+    },
+    {
+     "step": 2,
+     "desc": "等待文章预测结果公布为Loss",
+     "expected": "系统自动退还用户A购买该文章所花费的100骆驼币"
+    },
+    {
+     "step": 3,
+     "desc": "查看骆驼币余额",
+     "expected": "骆驼币余额增加100，且明细中有退款记录"
+    }
+   ],
+   "expected_result": "用户A获得全额退款，骆驼币余额恢复。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "首单不中退币活动-首次购买但预测结果为Win时不退还",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户A首次购买单篇付费文章，消耗骆驼币100，文章最终预测结果为Win。",
+   "preconditions": "用户A符合活动参与条件，骆驼币余额充足，文章预测结果为Win。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A购买一篇单篇付费文章，消耗骆驼币100",
+     "expected": "购买成功，骆驼币扣除100"
+    },
+    {
+     "step": 2,
+     "desc": "等待文章预测结果公布为Win",
+     "expected": "系统不退还骆驼币"
+    },
+    {
+     "step": 3,
+     "desc": "查看骆驼币余额",
+     "expected": "骆驼币余额保持扣除后的状态，无退款记录"
+    }
+   ],
+   "expected_result": "预测结果为Win时不退还骆驼币。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "首单不中退币活动-非首次购买不享受退币",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "首单不中退币活动",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户A已购买过一篇单篇付费文章（首次），再次购买另一篇文章，预测结果为Loss。",
+   "preconditions": "用户A已参与过首次购买，且已获得退款或未退款。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户A再次购买一篇单篇付费文章，消耗骆驼币100",
+     "expected": "购买成功，骆驼币扣除100"
+    },
+    {
+     "step": 2,
+     "desc": "等待文章预测结果公布为Loss",
+     "expected": "系统不退还骆驼币，因为非首次购买"
+    }
+   ],
+   "expected_result": "非首次购买不享受退币权益。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "充值额外赠送骆驼币活动-活动内容展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台已配置活动内容文案。",
+   "preconditions": "后台已配置充值额外赠送骆驼币活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示充值额外赠送骆驼币活动卡片"
+    },
+    {
+     "step": 2,
+     "desc": "查看活动内容字段",
+     "expected": "活动内容显示为“用户购买某个骆驼币套餐后，除了可获得套餐配置数额的骆驼币外，还可额外获得活动配置的骆驼币数额”"
+    }
+   ],
+   "expected_result": "活动内容文案正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "充值额外赠送骆驼币活动-购买套餐获得额外赠送",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置：购买100骆驼币套餐，额外赠送20骆驼币。用户购买该套餐。",
+   "preconditions": "用户已登录，后台已配置充值额外赠送骆驼币活动，且用户未购买过该套餐。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户购买100骆驼币套餐",
+     "expected": "支付成功，骆驼币账户到账100骆驼币"
+    },
+    {
+     "step": 2,
+     "desc": "查看骆驼币余额",
+     "expected": "骆驼币余额增加120（100+20），且明细中有额外赠送记录"
+    }
+   ],
+   "expected_result": "用户获得套餐骆驼币和额外赠送骆驼币。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "充值额外赠送骆驼币活动-购买未参与活动的套餐不赠送",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币活动",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "后台仅对100骆驼币套餐配置赠送，用户购买50骆驼币套餐。",
+   "preconditions": "用户已登录，后台仅对100骆驼币套餐配置赠送。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户购买50骆驼币套餐",
+     "expected": "支付成功，骆驼币账户到账50骆驼币"
+    },
+    {
+     "step": 2,
+     "desc": "查看骆驼币余额",
+     "expected": "骆驼币余额增加50，无额外赠送"
+    }
+   ],
+   "expected_result": "未参与活动的套餐不赠送额外骆驼币。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "后台配置-活动时间配置为暂不限时",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "后台配置",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台将首单不中退币活动时间配置为“暂不限时”。",
+   "preconditions": "运营人员登录后台，具有活动配置权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动配置页面",
+     "expected": "页面加载成功，显示活动配置项"
+    },
+    {
+     "step": 2,
+     "desc": "将活动时间设置为“暂不限时”",
+     "expected": "保存成功，前端展示“暂不限时”"
+    }
+   ],
+   "expected_result": "后台配置成功，前端正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "后台配置-活动时间配置为具体时间范围",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "后台配置",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台将首单不中退币活动时间配置为2024-01-01至2024-12-31。",
+   "preconditions": "运营人员登录后台，具有活动配置权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动配置页面",
+     "expected": "页面加载成功，显示活动配置项"
+    },
+    {
+     "step": 2,
+     "desc": "设置活动开始时间为2024-01-01，结束时间为2024-12-31",
+     "expected": "保存成功，前端展示具体时间范围"
+    }
+   ],
+   "expected_result": "后台配置成功，前端正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "后台配置-活动时间开始时间晚于结束时间",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "后台配置",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置活动开始时间为2024-12-31，结束时间为2024-01-01。",
+   "preconditions": "运营人员登录后台，具有活动配置权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动配置页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "设置活动开始时间为2024-12-31，结束时间为2024-01-01",
+     "expected": "系统提示“开始时间不能晚于结束时间”，保存失败"
+    }
+   ],
+   "expected_result": "后台校验失败，无法保存。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "后台配置-可参与活动对象配置为全体用户",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "后台配置",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台将充值额外赠送骆驼币活动的可参与活动对象配置为“全体用户”。",
+   "preconditions": "运营人员登录后台，具有活动配置权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动配置页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "将可参与活动对象设置为“全体用户”",
+     "expected": "保存成功，前端展示“全体用户”"
+    }
+   ],
+   "expected_result": "后台配置成功，前端正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "后台配置-活动内容为空时前端展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "后台配置",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台将活动内容配置为空字符串。",
+   "preconditions": "运营人员登录后台，具有活动配置权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入活动配置页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "将活动内容清空并保存",
+     "expected": "保存成功，前端活动内容区域显示为空或默认文案，不出现异常"
+    }
+   ],
+   "expected_result": "活动内容为空时前端正常展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "付费活动列表展示-正常展示活动列表",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "付费活动",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台已配置两个活动：「首单不中退币活动」和「充值额外赠送骆驼币」，活动状态均为进行中。",
+   "preconditions": "用户已登录，后台已配置至少两个进行中的活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面加载成功，展示活动列表，包含「首单不中退币活动」和「充值额外赠送骆驼币」两个活动卡片。"
+    },
+    {
+     "step": 2,
+     "desc": "查看活动卡片内容",
+     "expected": "每个活动卡片展示活动名称、活动时间（暂不限时）、活动内容摘要等关键信息。"
+    }
+   ],
+   "expected_result": "活动列表正常展示，所有进行中的活动均可见，信息完整。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "付费活动列表展示-无活动时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "付费活动",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何活动，或所有活动均已下架。",
+   "preconditions": "用户已登录，后台无进行中的活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入付费活动页面",
+     "expected": "页面展示空态提示，如「暂无活动」，且无异常报错。"
+    }
+   ],
+   "expected_result": "页面正常展示空态，无崩溃或报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "充值额外赠送骆驼币-购买套餐获得额外赠送",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置：套餐A（100骆驼币）参与活动，额外赠送20骆驼币。用户当前骆驼币余额为0。",
+   "preconditions": "用户已登录，后台已配置套餐A参与活动，额外赠送20骆驼币。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值页面，选择套餐A（100骆驼币）",
+     "expected": "充值页面展示套餐A价格及活动提示「购买后额外赠送20骆驼币」。"
+    },
+    {
+     "step": 2,
+     "desc": "完成支付购买套餐A",
+     "expected": "支付成功，提示购买成功。"
+    },
+    {
+     "step": 3,
+     "desc": "查看骆驼币余额",
+     "expected": "骆驼币余额增加120（100+20），即套餐配置的100骆驼币和活动额外赠送的20骆驼币均已到账。"
+    }
+   ],
+   "expected_result": "用户获得套餐配置的骆驼币和活动额外赠送的骆驼币，余额正确增加。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "充值额外赠送骆驼币-购买未参与活动的套餐不赠送",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置：套餐B（50骆驼币）不参与活动，无额外赠送。用户当前骆驼币余额为0。",
+   "preconditions": "用户已登录，后台已配置套餐B不参与活动。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值页面，选择套餐B（50骆驼币）",
+     "expected": "充值页面展示套餐B价格，无活动赠送提示。"
+    },
+    {
+     "step": 2,
+     "desc": "完成支付购买套餐B",
+     "expected": "支付成功，提示购买成功。"
+    },
+    {
+     "step": 3,
+     "desc": "查看骆驼币余额",
+     "expected": "骆驼币余额增加50，无额外赠送。"
+    }
+   ],
+   "expected_result": "用户仅获得套餐配置的骆驼币，无额外赠送。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "充值额外赠送骆驼币-后台配置额外赠送数额为0",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台配置：套餐C（100骆驼币）参与活动，但额外赠送数额配置为0。",
+   "preconditions": "用户已登录，后台已配置套餐C参与活动，额外赠送数额为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值页面，选择套餐C（100骆驼币）",
+     "expected": "充值页面展示套餐C价格，活动提示可能显示「购买后额外赠送0骆驼币」或不显示。"
+    },
+    {
+     "step": 2,
+     "desc": "完成支付购买套餐C",
+     "expected": "支付成功，提示购买成功。"
+    },
+    {
+     "step": 3,
+     "desc": "查看骆驼币余额",
+     "expected": "骆驼币余额增加100，无额外赠送。"
+    }
+   ],
+   "expected_result": "用户仅获得套餐配置的骆驼币，额外赠送为0，不影响购买流程。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "充值额外赠送骆驼币-后台配置额外赠送数额为负数时系统拦截",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置：套餐D（100骆驼币）参与活动，但额外赠送数额配置为-10（非法值）。",
+   "preconditions": "后台管理员登录运营后台，尝试配置套餐D的额外赠送数额为-10。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在运营后台编辑套餐D的活动配置，将额外赠送数额设置为-10",
+     "expected": "系统提示「额外赠送数额必须为非负整数」，保存失败。"
+    }
+   ],
+   "expected_result": "后台配置被拦截，无法保存非法值。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "充值额外赠送骆驼币-购买套餐后额外赠送骆驼币立即到账",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置：套餐A（100骆驼币）参与活动，额外赠送20骆驼币。用户当前骆驼币余额为0。",
+   "preconditions": "用户已登录，后台已配置套餐A参与活动，额外赠送20骆驼币。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值页面，选择套餐A（100骆驼币）并完成支付",
+     "expected": "支付成功，提示购买成功。"
+    },
+    {
+     "step": 2,
+     "desc": "立即查看骆驼币余额",
+     "expected": "骆驼币余额立即增加120（100+20），无需等待。"
+    }
+   ],
+   "expected_result": "额外赠送的骆驼币在购买成功后立即到账。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "充值额外赠送骆驼币-购买套餐后额外赠送骆驼币延迟到账（异常场景）",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "充值额外赠送骆驼币",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置：套餐A（100骆驼币）参与活动，额外赠送20骆驼币。模拟支付成功但赠送发放延迟。",
+   "preconditions": "用户已登录，后台已配置套餐A参与活动，额外赠送20骆驼币。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入充值页面，选择套餐A（100骆驼币）并完成支付",
+     "expected": "支付成功，提示购买成功。"
+    },
+    {
+     "step": 2,
+     "desc": "立即查看骆驼币余额",
+     "expected": "若系统设计为延迟到账，则余额可能仅增加100，需在后续某个时间点（如5分钟后）再查看，余额增加至120。若需求要求立即到账，则此场景为缺陷。"
+    }
+   ],
+   "expected_result": "额外赠送的骆驼币最终到账，但到账时机需符合需求定义。若需求要求立即到账，则延迟到账为缺陷。",
+   "remark": "负面用例（异常场景）",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "介绍页正常加载并展示所有模块",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常进入介绍页，后台已配置完整的成长礼物系列数据（如系列名称「缤纷春色」、等级1-5、特效图片等）",
+   "preconditions": "用户已登录，网络正常，后台已配置成长礼物系列数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页（介绍页.html）",
+     "expected": "页面加载成功，无白屏或报错"
+    },
+    {
+     "step": 2,
+     "desc": "检查页面是否展示「惊喜奖励」「奇妙新惊喜」「成长礼物来袭」等模块",
+     "expected": "所有模块均正常展示，无缺失"
+    },
+    {
+     "step": 3,
+     "desc": "检查页面是否展示系列名称、玩法介绍、关于成长礼物、成长、不同等级、不同的礼物特效及价格、解锁、后才可赠送等元素",
+     "expected": "所有元素均正常展示，内容完整"
+    }
+   ],
+   "expected_result": "介绍页正常加载，所有模块和元素均展示完整，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "介绍页加载失败时展示错误提示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或服务器错误，导致介绍页数据加载失败",
+   "preconditions": "用户已登录，网络异常或服务器返回错误",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页（介绍页.html）",
+     "expected": "页面显示加载失败提示，如「加载失败，请重试」"
+    },
+    {
+     "step": 2,
+     "desc": "点击重试按钮",
+     "expected": "重新加载页面，若网络恢复则正常展示，否则继续提示失败"
+    }
+   ],
+   "expected_result": "页面给出明确的错误提示，并提供重试机制，不出现白屏或崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "惊喜奖励模块展示完整数据",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "惊喜奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了等级1-3的惊喜奖励数据，包括礼物名称、彩蛋特效图片、基础概率、最大概率、保底次数等",
+   "preconditions": "用户已登录，后台已配置惊喜奖励数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「惊喜奖励」模块",
+     "expected": "模块正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查模块内是否展示等级、礼物、彩蛋特效、概率等信息",
+     "expected": "每个等级的数据均完整展示，包括等级编号、礼物名称、彩蛋特效图片、基础概率、最大概率、保底次数等"
+    }
+   ],
+   "expected_result": "惊喜奖励模块展示所有配置的等级数据，信息完整无缺失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "惊喜奖励模块无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "惊喜奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何惊喜奖励数据",
+   "preconditions": "用户已登录，后台未配置惊喜奖励数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「惊喜奖励」模块",
+     "expected": "模块正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查模块内容",
+     "expected": "显示空态提示，如「暂无惊喜奖励数据」"
+    }
+   ],
+   "expected_result": "模块显示空态提示，不出现空白或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "奇妙新惊喜模块展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "奇妙新惊喜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了「奇妙新惊喜」模块的内容（如活动文案或图片）",
+   "preconditions": "用户已登录，后台已配置该模块内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「奇妙新惊喜」模块",
+     "expected": "模块正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查模块内容是否展示",
+     "expected": "展示配置的文案或图片，无乱码或缺失"
+    }
+   ],
+   "expected_result": "奇妙新惊喜模块正常展示配置内容",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "奇妙新惊喜模块无内容时隐藏或占位",
+   "priority": "P2",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "奇妙新惊喜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置「奇妙新惊喜」模块内容",
+   "preconditions": "用户已登录，后台未配置该模块内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「奇妙新惊喜」模块",
+     "expected": "模块可能隐藏或显示占位提示"
+    }
+   ],
+   "expected_result": "模块不显示空白区域，可隐藏或显示「暂无内容」提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "成长礼物来袭模块展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "成长礼物来袭",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了「成长礼物来袭」模块的内容（如活动宣传文案）",
+   "preconditions": "用户已登录，后台已配置该模块内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「成长礼物来袭」模块",
+     "expected": "模块正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查模块内容是否展示",
+     "expected": "展示配置的文案或图片，无乱码或缺失"
+    }
+   ],
+   "expected_result": "成长礼物来袭模块正常展示配置内容",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "成长礼物来袭模块无内容时隐藏或占位",
+   "priority": "P2",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "成长礼物来袭",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置「成长礼物来袭」模块内容",
+   "preconditions": "用户已登录，后台未配置该模块内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「成长礼物来袭」模块",
+     "expected": "模块可能隐藏或显示占位提示"
+    }
+   ],
+   "expected_result": "模块不显示空白区域，可隐藏或显示「暂无内容」提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "系列名称字段正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "系列名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置系列名称为「缤纷春色」",
+   "preconditions": "用户已登录，后台已配置系列名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到系列名称字段",
+     "expected": "字段正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查系列名称内容",
+     "expected": "显示「缤纷春色」，无乱码或截断"
+    }
+   ],
+   "expected_result": "系列名称字段正确展示配置的名称",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "系列名称为空时展示默认或占位",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "系列名称",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置系列名称",
+   "preconditions": "用户已登录，后台未配置系列名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到系列名称字段",
+     "expected": "字段可能显示默认名称或占位提示，如「未命名系列」"
+    }
+   ],
+   "expected_result": "系列名称字段不显示空白，有默认或占位提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "玩法介绍模块展示完整说明",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "玩法介绍",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了玩法介绍内容，包括解锁规则、概率计算等",
+   "preconditions": "用户已登录，后台已配置玩法介绍内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「玩法介绍」模块",
+     "expected": "模块正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查模块内容",
+     "expected": "展示完整的玩法说明，包括解锁规则、概率计算方式等，无缺失"
+    }
+   ],
+   "expected_result": "玩法介绍模块展示完整内容，信息准确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "玩法介绍模块无内容时隐藏或占位",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "玩法介绍",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置玩法介绍内容",
+   "preconditions": "用户已登录，后台未配置玩法介绍内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「玩法介绍」模块",
+     "expected": "模块可能隐藏或显示占位提示"
+    }
+   ],
+   "expected_result": "模块不显示空白区域，可隐藏或显示「暂无玩法介绍」提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "关于成长礼物模块展示说明",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "关于成长礼物",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了关于成长礼物的说明文案",
+   "preconditions": "用户已登录，后台已配置该模块内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「关于成长礼物」模块",
+     "expected": "模块正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查模块内容",
+     "expected": "展示成长礼物的定义和特点，如「成长礼物是小象新推出的全新类型礼物」"
+    }
+   ],
+   "expected_result": "关于成长礼物模块展示完整说明",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "关于成长礼物模块无内容时隐藏或占位",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "关于成长礼物",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置关于成长礼物内容",
+   "preconditions": "用户已登录，后台未配置该模块内容",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「关于成长礼物」模块",
+     "expected": "模块可能隐藏或显示占位提示"
+    }
+   ],
+   "expected_result": "模块不显示空白区域，可隐藏或显示「暂无说明」提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "成长标签展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "成长",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "介绍页中展示「成长」标签，用于标识成长礼物",
+   "preconditions": "用户已登录，介绍页正常加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「成长」标签",
+     "expected": "标签正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查标签样式和位置",
+     "expected": "标签清晰可见，位置合理，无遮挡"
+    }
+   ],
+   "expected_result": "成长标签正常展示，样式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "成长标签缺失或样式错误",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "成长",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟前端样式加载异常或数据缺失导致标签不显示",
+   "preconditions": "用户已登录，前端样式或数据异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，检查「成长」标签",
+     "expected": "标签可能不显示或样式错乱"
+    }
+   ],
+   "expected_result": "标签不显示或样式错乱时，页面不应崩溃，且应能通过刷新恢复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "不同等级展示完整",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "不同等级",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了等级1-5的成长礼物",
+   "preconditions": "用户已登录，后台已配置等级数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「不同等级」展示区域",
+     "expected": "区域正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查是否展示所有等级（如Lv1-Lv5）",
+     "expected": "所有等级均展示，无缺失"
+    }
+   ],
+   "expected_result": "不同等级展示完整，等级编号正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "未解锁等级展示为锁定状态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "不同等级",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户未解锁Lv2及以上等级，后台配置了等级1-5",
+   "preconditions": "用户已登录，且未解锁高等级礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「不同等级」展示区域",
+     "expected": "区域正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查Lv2-Lv5的展示状态",
+     "expected": "未解锁的等级显示为锁定状态（如置灰或带锁图标），并提示需解锁"
+    }
+   ],
+   "expected_result": "未解锁等级明确标识为锁定状态，不误导用户",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "不同的礼物特效及价格展示完整",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "不同的礼物特效及价格",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置了各等级礼物的特效图片和价格（如Lv1价格100象币）",
+   "preconditions": "用户已登录，后台已配置特效和价格数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「不同的礼物特效及价格」展示区域",
+     "expected": "区域正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查各等级礼物的特效和价格是否展示",
+     "expected": "每个等级均展示对应的特效图片和价格，无缺失"
+    }
+   ],
+   "expected_result": "不同等级礼物的特效和价格展示完整，信息准确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "特效图片加载失败时展示占位图",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "不同的礼物特效及价格",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟特效图片URL失效或网络异常导致图片加载失败",
+   "preconditions": "用户已登录，图片资源不可用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「不同的礼物特效及价格」展示区域",
+     "expected": "区域正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查特效图片",
+     "expected": "图片加载失败时显示占位图或默认图，不显示裂图"
+    }
+   ],
+   "expected_result": "图片加载失败时页面不出现裂图，有占位图替代",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "解锁提示展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "解锁",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "介绍页中展示「解锁」提示，说明高等级礼物需解锁",
+   "preconditions": "用户已登录，介绍页正常加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「解锁」提示",
+     "expected": "提示正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查提示内容",
+     "expected": "提示文案清晰，如「更高等级的礼物需要用户解锁后才可赠送」"
+    }
+   ],
+   "expected_result": "解锁提示正常展示，文案清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "解锁提示缺失或文案错误",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "解锁",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟前端文案配置错误或缺失导致提示不显示",
+   "preconditions": "用户已登录，前端文案配置异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，检查「解锁」提示",
+     "expected": "提示可能不显示或显示错误文案"
+    }
+   ],
+   "expected_result": "提示缺失或错误时，页面不应崩溃，且应能通过刷新恢复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "后才可赠送提示展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "后才可赠送。",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "介绍页中展示「后才可赠送。」提示，说明解锁后才能赠送",
+   "preconditions": "用户已登录，介绍页正常加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，找到「后才可赠送。」提示",
+     "expected": "提示正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "检查提示内容",
+     "expected": "提示文案清晰，如「解锁后才可赠送。」"
+    }
+   ],
+   "expected_result": "后才可赠送提示正常展示，文案清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "后才可赠送提示缺失或文案错误",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "后才可赠送。",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟前端文案配置错误或缺失导致提示不显示",
+   "preconditions": "用户已登录，前端文案配置异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，检查「后才可赠送。」提示",
+     "expected": "提示可能不显示或显示错误文案"
+    }
+   ],
+   "expected_result": "提示缺失或错误时，页面不应崩溃，且应能通过刷新恢复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "解锁更高等级礼物-达到累计数量自动解锁下一等级",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "假设后台配置Lv4解锁Lv5所需累计赠送数量为10个Lv4礼物；用户已累计赠送10个Lv4礼物。",
+   "preconditions": "用户已登录；后台已配置成长礼物系列，Lv4解锁Lv5所需数量为10；用户已赠送9个Lv4礼物。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，查看Lv5状态",
+     "expected": "Lv5显示为“未解锁”或“解锁中”状态（若进度>0）"
+    },
+    {
+     "step": 2,
+     "desc": "在任意直播间赠送1个Lv4成长礼物",
+     "expected": "赠送成功，Lv4累计数量达到10"
+    },
+    {
+     "step": 3,
+     "desc": "返回介绍页，查看Lv5状态",
+     "expected": "Lv5状态变为“已解锁”，可正常赠送Lv5礼物"
+    }
+   ],
+   "expected_result": "Lv5礼物自动解锁，介绍页状态更新为“已解锁”，用户可在任意直播间赠送Lv5礼物。",
+   "remark": "正面用例，验证自动解锁逻辑",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "解锁更高等级礼物-累计数量不足不解锁",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置Lv4解锁Lv5需10个，用户仅赠送9个Lv4礼物。",
+   "preconditions": "用户已登录；后台配置Lv4解锁Lv5所需数量为10；用户已赠送9个Lv4礼物。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，查看Lv5状态",
+     "expected": "Lv5显示为“未解锁”或“解锁中”（进度90%）"
+    },
+    {
+     "step": 2,
+     "desc": "尝试赠送Lv5礼物",
+     "expected": "赠送失败，提示“该等级礼物未解锁”"
+    }
+   ],
+   "expected_result": "Lv5未解锁，无法赠送，提示未解锁。",
+   "remark": "负面用例，验证未达条件不解锁",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "解锁更高等级礼物-赠送其他等级不计入解锁进度",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户赠送Lv1-Lv3礼物，不应增加Lv4的解锁进度。",
+   "preconditions": "用户已登录；后台配置Lv4解锁Lv5需10个Lv4礼物；用户当前Lv4累计赠送0个。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在直播间赠送5个Lv1礼物",
+     "expected": "赠送成功，Lv4解锁进度仍为0"
+    },
+    {
+     "step": 2,
+     "desc": "进入介绍页查看Lv5状态",
+     "expected": "Lv5仍为“未解锁”，进度无变化"
+    }
+   ],
+   "expected_result": "赠送Lv1-Lv3礼物不影响Lv4解锁进度，Lv5保持未解锁。",
+   "remark": "负面用例，验证只统计同等级礼物",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "解锁更高等级礼物-解锁进度实时更新",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置Lv4解锁Lv5需10个，用户已赠送5个Lv4礼物。",
+   "preconditions": "用户已登录；后台配置Lv4解锁Lv5所需数量为10；用户已赠送5个Lv4礼物。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，查看Lv5状态",
+     "expected": "Lv5显示“解锁中”，进度50%"
+    },
+    {
+     "step": 2,
+     "desc": "赠送1个Lv4礼物",
+     "expected": "赠送成功"
+    },
+    {
+     "step": 3,
+     "desc": "返回介绍页，查看Lv5状态",
+     "expected": "Lv5进度更新为60%"
+    }
+   ],
+   "expected_result": "解锁进度实时更新，介绍页显示最新进度。",
+   "remark": "正面用例，验证进度实时性",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "解锁更高等级礼物-解锁后永久有效",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已解锁Lv5，跨直播间赠送Lv5礼物。",
+   "preconditions": "用户已登录且已解锁Lv5礼物；存在两个不同主播的直播间。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在主播A的直播间赠送Lv5礼物",
+     "expected": "赠送成功"
+    },
+    {
+     "step": 2,
+     "desc": "进入主播B的直播间，尝试赠送Lv5礼物",
+     "expected": "赠送成功，无需再次解锁"
+    }
+   ],
+   "expected_result": "Lv5礼物在所有直播间均可赠送，解锁状态永久有效。",
+   "remark": "正面用例，验证永久有效",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "解锁更高等级礼物-默认开启Lv1",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "新用户无任何成长礼物赠送记录。",
+   "preconditions": "新注册用户，未赠送过任何成长礼物。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，查看Lv1状态",
+     "expected": "Lv1显示“已解锁”"
+    },
+    {
+     "step": 2,
+     "desc": "在直播间尝试赠送Lv1礼物",
+     "expected": "赠送成功"
+    }
+   ],
+   "expected_result": "Lv1默认解锁，所有用户可赠送。",
+   "remark": "正面用例，验证默认开启Lv1",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "解锁更高等级礼物-未登录用户查看介绍页",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户访问介绍页，应能查看但无法赠送。",
+   "preconditions": "用户未登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常展示，图例显示各等级状态（可能全部未解锁）"
+    },
+    {
+     "step": 2,
+     "desc": "尝试赠送成长礼物",
+     "expected": "跳转登录页或提示“请先登录”"
+    }
+   ],
+   "expected_result": "未登录用户可查看介绍页，但无法赠送礼物。",
+   "remark": "负面用例，验证未登录拦截",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "图例-已解锁状态展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已解锁Lv1和Lv2，Lv3未解锁。",
+   "preconditions": "用户已登录，且已解锁Lv1和Lv2。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，查看图例",
+     "expected": "Lv1和Lv2显示“已解锁”标识，Lv3显示“未解锁”"
+    }
+   ],
+   "expected_result": "图例正确区分已解锁和未解锁状态。",
+   "remark": "正面用例，验证已解锁状态展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "图例-解锁中状态展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置Lv2解锁Lv3需10个Lv2礼物，用户已赠送5个Lv2礼物。",
+   "preconditions": "用户已登录，且Lv2解锁Lv3进度为50%。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，查看Lv3状态",
+     "expected": "Lv3显示“解锁中”标识，并展示进度（如50%）"
+    }
+   ],
+   "expected_result": "图例正确展示解锁中状态及进度。",
+   "remark": "正面用例，验证解锁中状态展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "图例-未解锁状态展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户未赠送任何Lv4礼物，Lv5未解锁。",
+   "preconditions": "用户已登录，但未赠送过Lv4礼物。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，查看Lv5状态",
+     "expected": "Lv5显示“未解锁”标识，无进度"
+    }
+   ],
+   "expected_result": "图例正确展示未解锁状态。",
+   "remark": "正面用例，验证未解锁状态展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "其他说明-所有系列默认开启Lv1",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "存在多个成长礼物系列，新用户查看所有系列。",
+   "preconditions": "后台配置了多个成长礼物系列；新用户未赠送过任何成长礼物。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，查看所有系列的Lv1状态",
+     "expected": "所有系列的Lv1均显示“已解锁”"
+    }
+   ],
+   "expected_result": "所有系列Lv1默认解锁。",
+   "remark": "正面用例，验证默认开启Lv1",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "其他说明-高等级解锁后永久有效",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已解锁Lv5，隔天再次登录。",
+   "preconditions": "用户已解锁Lv5，且已退出登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户重新登录",
+     "expected": "登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "进入介绍页，查看Lv5状态",
+     "expected": "Lv5仍显示“已解锁”"
+    }
+   ],
+   "expected_result": "解锁状态跨会话保持，永久有效。",
+   "remark": "正面用例，验证永久有效",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "其他说明-介绍页展示其他说明文案",
+   "priority": "P2",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "介绍页应展示“其他说明”部分，包含默认开启Lv1和永久有效说明。",
+   "preconditions": "用户已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入介绍页，滚动到“其他说明”区域",
+     "expected": "展示说明文字：1.所有系列默认开启Lv1；2.高等级解锁后永久有效"
+    }
+   ],
+   "expected_result": "其他说明文案正确展示。",
+   "remark": "正面用例，验证文案展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "其他说明-介绍页在移动端web的适配",
+   "priority": "P2",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "组合覆盖",
+   "positive_negative": "positive",
+   "test_data_note": "在移动端web浏览器访问介绍页，验证布局。",
+   "preconditions": "使用移动端web浏览器（如手机Chrome）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载，无横向滚动条，图例和说明文字完整显示"
+    }
+   ],
+   "expected_result": "介绍页在移动端web正常展示。",
+   "remark": "正面用例，验证端差异",
+   "client_scope": [
+    "web"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "介绍页-等级列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置成长礼物系列包含等级1、等级2、等级3，等级1为默认解锁，等级2、3为未解锁。",
+   "preconditions": "用户已登录，进入介绍页，后台已配置成长礼物系列数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载，显示成长礼物系列信息。"
+    },
+    {
+     "step": 2,
+     "desc": "查看等级列表区域",
+     "expected": "等级列表展示所有等级（如1、2、3），按等级升序排列，每个等级显示等级数字。"
+    }
+   ],
+   "expected_result": "等级列表完整展示所有等级，排序正确，无缺失或重复。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "介绍页-等级列表为空时展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何成长礼物系列，或系列下无等级数据。",
+   "preconditions": "用户已登录，进入介绍页，后台无成长礼物系列数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载，等级列表区域显示空态提示，如「暂无等级数据」。"
+    }
+   ],
+   "expected_result": "等级列表为空时，页面显示空态提示，不出现异常或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "介绍页-礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置等级1的礼物为「小星星」，价格100象币；等级2的礼物为「大火箭」，价格500象币。",
+   "preconditions": "用户已登录，进入介绍页，后台已配置成长礼物系列及礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看礼物列表区域",
+     "expected": "每个等级下展示对应的礼物名称、价格、特效预览（如动画或图片），未解锁的礼物显示锁定图标或置灰。"
+    }
+   ],
+   "expected_result": "礼物列表展示正确，包含名称、价格、特效，未解锁状态标识清晰。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "介绍页-礼物列表未配置时展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置了等级但未配置对应礼物，或礼物数据为空。",
+   "preconditions": "用户已登录，进入介绍页，后台某等级下无礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看该等级对应的礼物区域",
+     "expected": "显示空态提示，如「暂无礼物」，不出现异常。"
+    }
+   ],
+   "expected_result": "礼物列表为空时，页面显示空态提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "介绍页-彩蛋特效正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置等级1的礼物彩蛋特效图片为「egg_1.png」，动画为「egg_1.swf」；等级2的礼物彩蛋特效图片为「egg_2.png」，动画为「egg_2.swf」。",
+   "preconditions": "用户已登录，进入介绍页，后台已配置彩蛋特效资源。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看彩蛋特效区域",
+     "expected": "每个等级下展示对应的彩蛋特效图片和动画预览，图片和动画资源加载正常。"
+    }
+   ],
+   "expected_result": "彩蛋特效图片和动画正常展示，资源加载无错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "介绍页-彩蛋特效未配置时展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台某等级礼物未配置彩蛋特效图片或动画。",
+   "preconditions": "用户已登录，进入介绍页，后台某等级礼物未配置彩蛋特效。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看该等级彩蛋特效区域",
+     "expected": "显示默认占位图或提示「暂无彩蛋特效」，不出现空白或异常。"
+    }
+   ],
+   "expected_result": "未配置彩蛋特效时，页面显示占位提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "介绍页-概率信息正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置等级1：基础概率0.5%，每次连击增加概率0.5%，最大概率5.0%，保底次数100次；等级2：基础概率1.0%，每次连击增加概率1.0%，最大概率8.0%，保底次数50次。",
+   "preconditions": "用户已登录，进入介绍页，后台已配置各等级的概率参数。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看概率信息区域",
+     "expected": "每个等级下展示基础概率、每次连击增加概率、最大概率、保底次数，数值与后台配置一致，格式正确（如0.5%）。"
+    }
+   ],
+   "expected_result": "概率信息展示完整、准确，格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "介绍页-概率信息为0或负数时展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置等级1的基础概率为0%，最大概率为0%，保底次数为0；等级2的基础概率为-1%（非法配置）。",
+   "preconditions": "用户已登录，进入介绍页，后台配置了非法概率值。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看概率信息区域",
+     "expected": "对于0%或负数等异常值，页面应显示为0%或提示配置错误，不出现负数或异常显示，且不崩溃。"
+    }
+   ],
+   "expected_result": "异常概率值被合理处理，页面不崩溃，显示合理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "介绍页-基础概率0.5%正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置等级1的基础概率为0.5%。",
+   "preconditions": "用户已登录，进入介绍页，后台已配置等级1的基础概率为0.5%。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看等级1的基础概率",
+     "expected": "显示「0.5%」，格式正确，无多余小数位。"
+    }
+   ],
+   "expected_result": "基础概率0.5%正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "介绍页-基础概率展示为0.50%时格式验证",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台配置基础概率为0.50%，需验证展示格式是否统一为0.5%。",
+   "preconditions": "用户已登录，进入介绍页，后台配置基础概率为0.50%。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开介绍页",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看基础概率显示",
+     "expected": "显示为「0.5%」或「0.50%」，但需与后台配置一致，且格式统一。"
+    }
+   ],
+   "expected_result": "基础概率展示格式统一，无歧义。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "介绍页-多端展示一致性",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "组合覆盖",
+   "positive_negative": "positive",
+   "test_data_note": "同一套后台配置，在安卓/iOS客户端、PC-web、移动端-web上展示。",
+   "preconditions": "用户已登录，分别使用安卓/iOS客户端、PC-web、移动端-web访问介绍页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在安卓客户端打开介绍页",
+     "expected": "页面正常展示等级、礼物、彩蛋特效、概率信息。"
+    },
+    {
+     "step": 2,
+     "desc": "在iOS客户端打开介绍页",
+     "expected": "与安卓客户端展示一致。"
+    },
+    {
+     "step": 3,
+     "desc": "在PC-web打开介绍页",
+     "expected": "与客户端展示一致，布局可能不同但信息完整。"
+    },
+    {
+     "step": 4,
+     "desc": "在移动端-web打开介绍页",
+     "expected": "与客户端展示一致，布局可能不同但信息完整。"
+    }
+   ],
+   "expected_result": "各端展示的等级、礼物、彩蛋特效、概率信息一致，无缺失或错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "介绍页-未登录用户访问",
+   "priority": "P1",
+   "domain": "用户端/付费活动/介绍页",
+   "module": "介绍页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户访问介绍页。",
+   "preconditions": "用户未登录，直接访问介绍页URL。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "未登录状态下打开介绍页",
+     "expected": "页面正常展示介绍信息，但可能不显示用户相关状态（如已解锁等级），或提示登录后查看完整信息。"
+    }
+   ],
+   "expected_result": "未登录用户可正常浏览介绍页，不出现错误或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "功能说明页面正常展示所有列表项",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入功能说明页面，页面应展示功能说明、功能点、说明、玩法概述等所有列表项。",
+   "preconditions": "用户已登录，且功能说明页面已配置好数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面内容",
+     "expected": "页面展示「功能说明」「功能点」「说明」「玩法概述」等列表项，且内容完整"
+    }
+   ],
+   "expected_result": "功能说明页面展示所有配置的列表项，内容与后台配置一致，无缺失或错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "功能说明页面无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何功能说明数据，进入页面应展示空态提示。",
+   "preconditions": "后台功能说明相关配置为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面内容",
+     "expected": "页面展示空态提示，如「暂无功能说明」"
+    }
+   ],
+   "expected_result": "页面展示空态提示，不出现空白或异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "玩法概述内容正确展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "玩法概述配置为：用户送出配置了彩蛋特效的成长礼物，将有概率触发彩蛋特效；成功触发时，将不展示原有礼物配置的特效，而展示配置的“彩蛋特效”；用户每次送礼触发彩蛋的概率计算方式为：基础概率+连击次数*每次连击增加概率。",
+   "preconditions": "后台已配置玩法概述内容。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看玩法概述部分",
+     "expected": "玩法概述内容与后台配置一致，包含彩蛋触发条件、特效替换规则及概率计算公式"
+    }
+   ],
+   "expected_result": "玩法概述内容完整、准确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "玩法概述内容为空时展示默认提示",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置玩法概述，页面应展示默认提示或空态。",
+   "preconditions": "后台玩法概述配置为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看玩法概述部分",
+     "expected": "页面展示默认提示，如「暂无玩法概述」"
+    }
+   ],
+   "expected_result": "玩法概述区域展示空态提示，不出现空白或异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "彩蛋特效图片和动画配置正确展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台为某成长礼物配置了彩蛋特效图片和动画，进入功能说明页面应展示对应图片和动画说明。",
+   "preconditions": "后台已配置彩蛋特效的图片和动画。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看彩蛋特效部分",
+     "expected": "展示图片和动画的说明文字，且图片能正常显示"
+    }
+   ],
+   "expected_result": "彩蛋特效部分展示图片和动画的配置说明，图片加载成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "彩蛋特效图片加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置的彩蛋特效图片URL无效或网络异常，页面应显示占位图或错误提示。",
+   "preconditions": "后台配置的图片URL不可访问。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看彩蛋特效部分",
+     "expected": "图片区域显示占位图或加载失败提示，不影响页面其他内容"
+    }
+   ],
+   "expected_result": "图片加载失败时展示占位图，页面无崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "基础概率、每次连击增加概率、最大概率展示正确",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置基础概率为0.5%，每次连击增加概率为0.5%，最大概率为5.0%，页面应展示对应数值。",
+   "preconditions": "后台已配置基础概率、每次连击增加概率、最大概率。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看概率相关列表项",
+     "expected": "基础概率显示0.5%，每次连击增加概率显示0.5%，最大概率显示5.0%"
+    }
+   ],
+   "expected_result": "概率值展示与后台配置一致，格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "概率值为0时展示0%",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台配置基础概率为0%，每次连击增加概率为0%，最大概率为0%，页面应展示0%。",
+   "preconditions": "后台概率配置为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看概率相关列表项",
+     "expected": "基础概率显示0%，每次连击增加概率显示0%，最大概率显示0%"
+    }
+   ],
+   "expected_result": "概率值为0时正常展示0%，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "连击送礼时概率计算规则说明正确展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "功能说明页面应展示连击送礼时概率计算规则：若基础概率+连击次数*每次连击增加概率 > 最大概率，则以最大概率计算。",
+   "preconditions": "后台已配置连击概率计算规则。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看连击送礼说明部分",
+     "expected": "展示规则文字，内容与需求一致"
+    }
+   ],
+   "expected_result": "连击送礼概率计算规则说明完整展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "连击概率计算规则说明缺失时展示默认提示",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置连击概率计算规则说明，页面应展示默认提示。",
+   "preconditions": "后台未配置连击概率计算规则说明。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看连击送礼说明部分",
+     "expected": "展示默认提示，如「暂无说明」"
+    }
+   ],
+   "expected_result": "连击概率计算规则说明区域展示空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "功能说明页面在PC-web端展示正常",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在PC-web浏览器中访问功能说明页面，验证布局和内容展示。",
+   "preconditions": "PC-web端可正常访问，后台已配置功能说明数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开PC浏览器，进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面布局和内容",
+     "expected": "页面布局正常，内容完整，无错位或遮挡"
+    }
+   ],
+   "expected_result": "PC-web端功能说明页面展示正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "功能说明页面在移动端-web展示正常",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在移动端浏览器中访问功能说明页面，验证响应式布局。",
+   "preconditions": "移动端-web可正常访问，后台已配置功能说明数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开移动端浏览器，进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面布局和内容",
+     "expected": "页面自适应屏幕，内容完整，无横向滚动"
+    }
+   ],
+   "expected_result": "移动端-web功能说明页面展示正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "web"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "功能说明页面在安卓/iOS客户端展示正常",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在安卓/iOS客户端中打开功能说明页面，验证原生展示。",
+   "preconditions": "安卓/iOS客户端已安装，后台已配置功能说明数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开客户端，进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面布局和内容",
+     "expected": "页面展示正常，无异常"
+    }
+   ],
+   "expected_result": "安卓/iOS客户端功能说明页面展示正常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "功能说明页面展示保底次数信息",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入功能说明页面，查看保底次数相关说明文本。",
+   "preconditions": "用户已登录，且处于功能说明页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开功能说明页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看保底次数相关说明",
+     "expected": "页面展示保底次数的说明，包括定义和重置规则，文字清晰无乱码"
+    }
+   ],
+   "expected_result": "功能说明页面正确展示保底次数的说明信息，内容与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "功能说明页面保底次数信息缺失",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台未配置保底次数或配置为空，进入功能说明页面。",
+   "preconditions": "后台将某成长礼物的保底次数配置为空或未配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "后台配置保底次数为空",
+     "expected": "配置保存成功"
+    },
+    {
+     "step": 2,
+     "desc": "打开功能说明页面",
+     "expected": "页面正常加载，保底次数相关说明不显示或显示默认值，不出现空白或报错"
+    }
+   ],
+   "expected_result": "页面不因保底次数缺失而异常，展示合理提示或默认值。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "保底次数初始值为1",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "新用户首次进入功能说明页面，查看保底次数初始值。",
+   "preconditions": "用户从未赠送过该成长礼物，且后台配置保底次数为100。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看保底次数说明",
+     "expected": "说明中明确保底次数初始值为1"
+    }
+   ],
+   "expected_result": "页面展示保底次数初始值为1，与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "保底次数初始值不为1",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台配置保底次数初始值为0或负数，进入功能说明页面。",
+   "preconditions": "后台将保底次数初始值配置为0或负数（异常配置）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "后台配置保底次数初始值为0",
+     "expected": "配置保存成功"
+    },
+    {
+     "step": 2,
+     "desc": "进入功能说明页面",
+     "expected": "页面展示的初始值仍为1，或系统自动纠正为1，不展示异常值"
+    }
+   ],
+   "expected_result": "系统强制初始值为1，不受异常配置影响。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "触发彩蛋特效后保底次数重置为1",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户累计保底次数达到5次（未达保底阈值），第6次送礼触发彩蛋特效（概率触发），验证重置。",
+   "preconditions": "用户已登录，某成长礼物保底次数配置为100，用户当前保底次数为5。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户赠送该礼物，触发彩蛋特效（概率触发）",
+     "expected": "彩蛋特效展示，保底次数重置为1"
+    },
+    {
+     "step": 2,
+     "desc": "查看后台或日志中的保底次数",
+     "expected": "该用户针对该礼物的保底次数为1"
+    }
+   ],
+   "expected_result": "触发彩蛋特效后，保底次数重置为1，与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "因保底触发彩蛋特效后保底次数重置为1",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户保底次数达到配置值（如100），下次送礼必定触发彩蛋，验证重置。",
+   "preconditions": "用户已登录，某成长礼物保底次数配置为100，用户当前保底次数为100。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户赠送该礼物，触发彩蛋特效（因保底触发）",
+     "expected": "彩蛋特效展示，保底次数重置为1"
+    },
+    {
+     "step": 2,
+     "desc": "查看后台或日志中的保底次数",
+     "expected": "该用户针对该礼物的保底次数为1"
+    }
+   ],
+   "expected_result": "因保底触发彩蛋后，保底次数重置为1，与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "未触发彩蛋特效时保底次数不重置",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户保底次数为1，送礼未触发彩蛋，验证保底次数加1。",
+   "preconditions": "用户已登录，某成长礼物保底次数配置为100，用户当前保底次数为1。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户赠送该礼物，未触发彩蛋特效",
+     "expected": "无彩蛋特效，保底次数加1变为2"
+    },
+    {
+     "step": 2,
+     "desc": "查看后台或日志中的保底次数",
+     "expected": "该用户针对该礼物的保底次数为2"
+    }
+   ],
+   "expected_result": "未触发彩蛋时保底次数累加，不重置。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "功能说明页面展示解锁奖励装扮信息",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入功能说明页面，查看解锁奖励装扮相关说明。",
+   "preconditions": "用户已登录，且处于功能说明页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看解锁奖励装扮说明",
+     "expected": "页面展示解锁奖励装扮的说明，包括自动获得装扮的规则，文字清晰"
+    }
+   ],
+   "expected_result": "功能说明页面正确展示解锁奖励装扮的说明信息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "功能说明页面解锁奖励装扮信息缺失",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台未配置解锁奖励装扮，进入功能说明页面。",
+   "preconditions": "后台将某成长礼物的解锁奖励装扮配置为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "后台配置解锁奖励装扮为空",
+     "expected": "配置保存成功"
+    },
+    {
+     "step": 2,
+     "desc": "打开功能说明页面",
+     "expected": "页面正常加载，解锁奖励装扮相关说明不显示或显示默认值，不出现空白或报错"
+    }
+   ],
+   "expected_result": "页面不因解锁奖励装扮缺失而异常，展示合理提示或默认值。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "功能说明页面展示有效期信息",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入功能说明页面，查看有效期相关说明。",
+   "preconditions": "用户已登录，且处于功能说明页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开功能说明页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看有效期说明",
+     "expected": "页面展示有效期的说明，包括有效期单位（小时），文字清晰"
+    }
+   ],
+   "expected_result": "功能说明页面正确展示有效期的说明信息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "功能说明页面有效期信息缺失",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "功能说明",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后台未配置有效期，进入功能说明页面。",
+   "preconditions": "后台将某成长礼物的有效期配置为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "后台配置有效期为0或空",
+     "expected": "配置保存成功"
+    },
+    {
+     "step": 2,
+     "desc": "打开功能说明页面",
+     "expected": "页面正常加载，有效期相关说明不显示或显示默认值，不出现空白或报错"
+    }
+   ],
+   "expected_result": "页面不因有效期缺失而异常，展示合理提示或默认值。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "成长礼物奖励列表正常展示所有字段",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台已配置至少一条成长礼物记录，包含等级1、礼物名称'小象直播'、彩蛋特效'特效A'、基础概率1.0%、最大概率5.0%、保底次数100、解锁奖励装扮'装扮A'、有效期12h。",
+   "preconditions": "用户已登录，后台已配置成长礼物数据，网络正常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面加载成功，显示列表区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表表头",
+     "expected": "表头包含：等级、礼物、彩蛋特效、基础概率(%)、最大概率(%)、保底次数、解锁奖励装扮、有效期(h)"
+    },
+    {
+     "step": 3,
+     "desc": "查看第一条数据",
+     "expected": "第一条数据显示等级1、礼物'小象直播'、彩蛋特效'特效A'、基础概率1.0%、最大概率5.0%、保底次数100、解锁奖励装扮'装扮A'、有效期12h"
+    }
+   ],
+   "expected_result": "列表完整展示所有字段，数据与后台配置一致，无缺失或错乱。",
+   "remark": "正面用例，覆盖列表基本展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "成长礼物奖励列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何成长礼物数据。",
+   "preconditions": "用户已登录，后台无成长礼物配置数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面加载成功，显示空态提示，如'暂无数据'"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现报错或空白页面。",
+   "remark": "负面用例，覆盖空数据场景",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "等级字段展示为正整数",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置等级为1、2、3的成长礼物记录。",
+   "preconditions": "用户已登录，后台存在等级1、2、3的成长礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "列表显示等级1、2、3"
+    },
+    {
+     "step": 2,
+     "desc": "检查等级字段格式",
+     "expected": "等级显示为整数，无小数或特殊字符"
+    }
+   ],
+   "expected_result": "等级字段正确展示为正整数。",
+   "remark": "正面用例，验证等级正常展示",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "等级字段为0或负数时展示异常",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置等级为0或-1的异常数据（模拟脏数据）。",
+   "preconditions": "用户已登录，后台存在等级为0或-1的异常数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面正常加载，等级字段显示0或-1，或系统进行数据校验提示"
+    }
+   ],
+   "expected_result": "系统应能容忍异常数据，不崩溃，可显示或提示数据异常。",
+   "remark": "负面用例，验证异常等级数据",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "礼物字段展示礼物名称",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置礼物名称为'小象直播'的成长礼物。",
+   "preconditions": "用户已登录，后台存在礼物名称为'小象直播'的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "列表礼物列显示'小象直播'"
+    }
+   ],
+   "expected_result": "礼物字段正确显示礼物名称。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "礼物名称为空时展示占位符",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置礼物名称为空的成长礼物记录。",
+   "preconditions": "用户已登录，后台存在礼物名称为空的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "礼物列显示'-'或'未命名'等占位符，页面不报错"
+    }
+   ],
+   "expected_result": "系统对空礼物名称有兜底展示，不出现空白或异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "彩蛋特效字段展示特效信息",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置彩蛋特效为'特效A'的成长礼物。",
+   "preconditions": "用户已登录，后台存在彩蛋特效为'特效A'的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "彩蛋特效列显示'特效A'"
+    }
+   ],
+   "expected_result": "彩蛋特效字段正确显示特效名称或标识。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "彩蛋特效未配置时展示占位符",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置彩蛋特效为空的成长礼物记录。",
+   "preconditions": "用户已登录，后台存在彩蛋特效为空的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "彩蛋特效列显示'-'，页面不报错"
+    }
+   ],
+   "expected_result": "系统对空彩蛋特效有兜底展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "基础概率(%)字段正常展示百分比值",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置基础概率为1.0（表示1.0%）的成长礼物。",
+   "preconditions": "用户已登录，后台存在基础概率为1.0的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "基础概率列显示'1.0%'或'1.0'"
+    }
+   ],
+   "expected_result": "基础概率字段正确显示，格式统一。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "基础概率为0时展示0%",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台配置基础概率为0（表示0%）的成长礼物。",
+   "preconditions": "用户已登录，后台存在基础概率为0的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "基础概率列显示'0%'或'0.0'"
+    }
+   ],
+   "expected_result": "基础概率为0时正常展示，不报错。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "基础概率为负数时展示异常",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置基础概率为-1.0（非法值）的成长礼物。",
+   "preconditions": "用户已登录，后台存在基础概率为-1.0的异常数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面正常加载，基础概率列显示-1.0%，或系统提示数据异常"
+    }
+   ],
+   "expected_result": "系统对负数概率有容错处理，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "最大概率(%)字段正常展示百分比值",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置最大概率为5.0（表示5.0%）的成长礼物。",
+   "preconditions": "用户已登录，后台存在最大概率为5.0的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "最大概率列显示'5.0%'或'5.0'"
+    }
+   ],
+   "expected_result": "最大概率字段正确显示，格式统一。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "最大概率小于基础概率时展示异常",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置基础概率为5.0，最大概率为1.0（逻辑矛盾）的成长礼物。",
+   "preconditions": "用户已登录，后台存在最大概率小于基础概率的异常数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面正常加载，最大概率列显示1.0%，但逻辑上应提示数据异常"
+    }
+   ],
+   "expected_result": "系统应能容忍该数据，但建议后台校验时提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "保底次数字段正常展示正整数",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置保底次数为100的成长礼物。",
+   "preconditions": "用户已登录，后台存在保底次数为100的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "保底次数列显示'100'"
+    }
+   ],
+   "expected_result": "保底次数字段正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "保底次数为0时展示异常",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台配置保底次数为0的成长礼物。",
+   "preconditions": "用户已登录，后台存在保底次数为0的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "保底次数列显示'0'，页面不报错"
+    }
+   ],
+   "expected_result": "系统对0值有容错，但逻辑上保底次数应为正整数，建议后台校验。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "解锁奖励装扮字段正常展示装扮名称",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置解锁奖励装扮为'装扮A'的成长礼物。",
+   "preconditions": "用户已登录，后台存在解锁奖励装扮为'装扮A'的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "解锁奖励装扮列显示'装扮A'"
+    }
+   ],
+   "expected_result": "解锁奖励装扮字段正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "解锁奖励装扮未配置时展示占位符",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置解锁奖励装扮为空的成长礼物记录。",
+   "preconditions": "用户已登录，后台存在解锁奖励装扮为空的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "解锁奖励装扮列显示'-'"
+    }
+   ],
+   "expected_result": "未配置时显示'-'，页面不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "有效期(h)字段正常展示小时数",
+   "priority": "P0",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置有效期为12（小时）的成长礼物。",
+   "preconditions": "用户已登录，后台存在有效期为12的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "有效期列显示'12'"
+    }
+   ],
+   "expected_result": "有效期字段正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "有效期未配置时展示占位符",
+   "priority": "P1",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置有效期为空的成长礼物记录。",
+   "preconditions": "用户已登录，后台存在有效期为空的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "有效期列显示'-'"
+    }
+   ],
+   "expected_result": "未配置时显示'-'，页面不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "数值字段1.0正常展示",
+   "priority": "P2",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置基础概率为1.0的成长礼物，页面应展示1.0。",
+   "preconditions": "用户已登录，后台存在基础概率为1.0的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "对应字段显示'1.0'"
+    }
+   ],
+   "expected_result": "数值1.0正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "数值字段0.5正常展示",
+   "priority": "P2",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置基础概率为0.5的成长礼物，页面应展示0.5。",
+   "preconditions": "用户已登录，后台存在基础概率为0.5的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "对应字段显示'0.5'"
+    }
+   ],
+   "expected_result": "数值0.5正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "数值字段5.0正常展示",
+   "priority": "P2",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置最大概率为5.0的成长礼物，页面应展示5.0。",
+   "preconditions": "用户已登录，后台存在最大概率为5.0的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "对应字段显示'5.0'"
+    }
+   ],
+   "expected_result": "数值5.0正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "数值字段展示精度校验（1.00显示为1.0）",
+   "priority": "P2",
+   "domain": "用户端/付费活动",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台配置基础概率为1.00（两位小数），页面应统一显示为1.0。",
+   "preconditions": "用户已登录，后台存在基础概率为1.00的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "对应字段显示'1.0'，而非'1.00'"
+    }
+   ],
+   "expected_result": "数值精度统一为一位小数。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "成长礼物奖励列表默认展示全部等级配置",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台已配置等级1~4的成长礼物奖励数据，各等级基础概率、最大概率、保底次数等字段均有值",
+   "preconditions": "已登录运营后台账号，且具备查看成长礼物奖励页面的权限；后台已配置至少4个等级的成长礼物奖励数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表数据",
+     "expected": "列表展示所有已配置的等级数据，按等级升序排列，每行显示等级、礼物、彩蛋特效、基础概率(%)、每次连击增加概率(%)、最大概率(%)、保底次数、解锁奖励装扮、有效期(h)、操作列"
+    }
+   ],
+   "expected_result": "列表完整展示所有等级配置，字段值与后台配置一致，操作列显示'编辑'按钮",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "成长礼物奖励列表空数据展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何成长礼物奖励数据",
+   "preconditions": "已登录运营后台账号；后台无任何成长礼物奖励配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表显示空态提示，如'暂无数据'，且无任何行记录"
+    }
+   ],
+   "expected_result": "页面展示空态提示，不出现空白表格或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "编辑成长礼物奖励-修改基础概率为合法值",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "等级1的基础概率由1.0%修改为2.0%，该值在0~100范围内且不大于最大概率5.0%",
+   "preconditions": "已登录运营后台账号，具备编辑权限；存在等级1的成长礼物奖励配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面，点击等级1行的'编辑'按钮",
+     "expected": "弹出编辑弹窗，各字段回显当前配置值"
+    },
+    {
+     "step": 2,
+     "desc": "修改'基础概率(%)'为2.0",
+     "expected": "输入框允许输入，无报错"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'保存成功'，弹窗关闭，列表刷新后等级1的基础概率显示为2.0%"
+    }
+   ],
+   "expected_result": "保存成功，数据库更新对应记录，列表展示更新后的值",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "编辑成长礼物奖励-基础概率超过最大概率被拒绝",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "等级1的基础概率修改为6.0%，而最大概率为5.0%，基础概率超过最大概率",
+   "preconditions": "已登录运营后台账号，具备编辑权限；存在等级1的成长礼物奖励配置，最大概率为5.0%",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面，点击等级1行的'编辑'按钮",
+     "expected": "弹出编辑弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "修改'基础概率(%)'为6.0",
+     "expected": "输入框允许输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'基础概率不能大于最大概率'，保存失败，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拒绝，数据库无更新，列表仍显示原值1.0%",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "编辑成长礼物奖励-保底次数输入0被拒绝",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "等级1的保底次数修改为0，保底次数必须为正整数",
+   "preconditions": "已登录运营后台账号，具备编辑权限；存在等级1的成长礼物奖励配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面，点击等级1行的'编辑'按钮",
+     "expected": "弹出编辑弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "修改'保底次数'为0",
+     "expected": "输入框允许输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'保底次数必须大于0'，保存失败，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拒绝，数据库无更新",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "编辑成长礼物奖励-未登录用户点击编辑被拦截",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户直接访问成长礼物奖励页面",
+   "preconditions": "未登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "直接访问成长礼物奖励页面URL",
+     "expected": "跳转至登录页，提示需要登录"
+    },
+    {
+     "step": 2,
+     "desc": "登录后尝试点击编辑按钮",
+     "expected": "若账号无编辑权限，提示'无权限操作'"
+    }
+   ],
+   "expected_result": "未登录无法访问页面，无权限账号无法编辑",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "礼物管理入口跳转至礼物列表",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'礼物管理'链接，应跳转至礼物列表页面",
+   "preconditions": "已登录运营后台账号，具备查看权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'礼物管理'入口",
+     "expected": "跳转至礼物列表页面，URL变化，页面展示礼物列表"
+    }
+   ],
+   "expected_result": "成功跳转至礼物列表页面，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "礼物管理入口在无权限时点击被拦截",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "普通运营账号无礼物管理权限",
+   "preconditions": "已登录运营后台账号，但无礼物管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入成长礼物奖励页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'礼物管理'入口",
+     "expected": "提示'无权限访问'，不跳转"
+    }
+   ],
+   "expected_result": "拦截跳转，提示无权限",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "礼物列表默认展示全部系列",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台已配置多个礼物系列，如缤纷春色、新人礼包、女神挚爱、车队等",
+   "preconditions": "已登录运营后台账号，具备查看礼物列表权限；后台存在至少4个礼物系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示所有系列，每行显示系列编号、系列名称、缩略图、所属类别、启用状态、礼物数量、操作列"
+    }
+   ],
+   "expected_result": "列表完整展示所有系列，字段与后台配置一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "礼物列表按系列名称模糊搜索",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词'春色'，应匹配系列名称'缤纷春色'",
+   "preconditions": "已登录运营后台账号；存在系列'缤纷春色'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'系列名称'输入框输入'春色'",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表刷新，仅显示系列名称包含'春色'的系列"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配的系列",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "礼物列表搜索无结果时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "礼物列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词'不存在的系列'，应无匹配结果",
+   "preconditions": "已登录运营后台账号；后台无名称包含'不存在的系列'的系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'系列名称'输入框输入'不存在的系列'",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示空态提示'暂无数据'，无任何行"
+    }
+   ],
+   "expected_result": "搜索无结果时展示空态提示，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "礼物列表按启用状态筛选-启用",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "筛选启用状态为'启用'，应只显示启用状态的系列",
+   "preconditions": "已登录运营后台账号；后台存在启用和停用的系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'启用状态'下拉框选择'启用'",
+     "expected": "下拉框可选择"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表仅显示启用状态的系列"
+    }
+   ],
+   "expected_result": "筛选结果正确，仅显示启用状态的系列",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "礼物列表组合搜索-系列名称+启用状态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "礼物列表",
+   "case_design_method": "组合覆盖",
+   "positive_negative": "positive",
+   "test_data_note": "系列名称输入'春色'，启用状态选择'启用'，应匹配'缤纷春色'（启用）",
+   "preconditions": "已登录运营后台账号；存在系列'缤纷春色'且状态为启用",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'系列名称'输入'春色'，在'启用状态'选择'启用'",
+     "expected": "输入和选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表仅显示名称包含'春色'且状态为启用的系列"
+    }
+   ],
+   "expected_result": "组合条件生效，结果正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "礼物列表搜索条件为空时点击搜索",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "礼物列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "所有搜索条件留空，点击搜索应展示全部系列",
+   "preconditions": "已登录运营后台账号",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不输入任何条件，直接点击'搜索'按钮",
+     "expected": "列表展示全部系列，与初始加载一致"
+    }
+   ],
+   "expected_result": "空条件搜索返回全部数据，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "新增系列入口打开新增弹窗",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'新增系列'按钮，应弹出新增系列弹窗",
+   "preconditions": "已登录运营后台账号，具备新增系列权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'新增系列'按钮",
+     "expected": "弹出新增系列弹窗，包含系列名称、缩略图、所属类别、启用状态等字段"
+    }
+   ],
+   "expected_result": "新增弹窗正常打开，字段完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "新增系列时系列名称为空被拒绝",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "新增系列时，系列名称留空，其他字段填写合法",
+   "preconditions": "已登录运营后台账号，具备新增系列权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面，点击'新增系列'按钮",
+     "expected": "弹出新增弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "不填写系列名称，其他字段填写合法值",
+     "expected": "系列名称输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击'保存'按钮",
+     "expected": "提示'系列名称不能为空'，保存失败，弹窗不关闭"
+    }
+   ],
+   "expected_result": "保存被拒绝，数据库无新增记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "保存-修改基础概率后保存成功",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "将等级1的基础概率从1.0%修改为1.5%，业务含义为调整该等级礼物的彩蛋触发基础概率。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，存在等级1的礼物配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击等级1对应的「编辑奖励」按钮",
+     "expected": "弹出编辑弹窗，显示当前配置（基础概率1.0%）"
+    },
+    {
+     "step": 2,
+     "desc": "将基础概率修改为1.5%",
+     "expected": "输入框显示1.5%"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "提示保存成功，列表刷新，等级1的基础概率显示为1.5%"
+    }
+   ],
+   "expected_result": "保存成功，数据库更新等级1的基础概率为1.5%，列表刷新显示新值。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "保存-基础概率为空时保存失败",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "将基础概率清空，业务含义为未填写必填项。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，存在等级1的礼物配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击等级1对应的「编辑奖励」按钮",
+     "expected": "弹出编辑弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "清空基础概率输入框",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「基础概率不能为空」，保存失败，不关闭弹窗"
+    }
+   ],
+   "expected_result": "保存失败，提示基础概率不能为空，数据库无更新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "关闭-编辑后未保存直接关闭弹窗",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "修改基础概率后不保存直接关闭，业务含义为放弃本次修改。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，点击编辑奖励打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在编辑弹窗中修改基础概率为2.0%",
+     "expected": "输入框显示2.0%"
+    },
+    {
+     "step": 2,
+     "desc": "点击「关闭」按钮",
+     "expected": "弹出确认提示「有未保存的修改，确定关闭吗？」"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确定」",
+     "expected": "弹窗关闭，列表数据不变，仍为1.0%"
+    }
+   ],
+   "expected_result": "弹窗关闭，修改未保存，列表数据不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "关闭-无修改直接关闭弹窗",
+   "priority": "P2",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "未做任何修改直接关闭，业务含义为正常关闭。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，点击编辑奖励打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「关闭」按钮",
+     "expected": "弹窗直接关闭，无确认提示"
+    }
+   ],
+   "expected_result": "弹窗关闭，无数据变化。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "编辑奖励-打开编辑弹窗显示当前配置",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击等级1的编辑奖励，业务含义为查看并修改等级1的配置。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，存在等级1的礼物配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击等级1对应的「编辑奖励」按钮",
+     "expected": "弹出编辑弹窗，显示等级1的当前配置（基础概率1.0%、最大概率5.0%、保底次数100等）"
+    }
+   ],
+   "expected_result": "编辑弹窗正确显示当前配置。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "编辑奖励-点击其他等级编辑奖励",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击等级2的编辑奖励，业务含义为编辑等级2的配置。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，存在等级2的礼物配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击等级2对应的「编辑奖励」按钮",
+     "expected": "弹出编辑弹窗，显示等级2的当前配置（基础概率1.0%、最大概率5.0%、保底次数80等）"
+    }
+   ],
+   "expected_result": "编辑弹窗正确显示等级2的配置。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "等级1-展示等级1的礼物配置",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看等级1的配置，业务含义为确认等级1的默认配置。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看列表中等级1对应的行",
+     "expected": "显示等级1的礼物名称、彩蛋特效、基础概率1.0%、最大概率5.0%、保底次数100等"
+    }
+   ],
+   "expected_result": "等级1的配置正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "等级1-等级1的礼物未配置彩蛋特效",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "等级1的彩蛋特效字段为空，业务含义为未配置彩蛋特效。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，等级1的彩蛋特效未配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看等级1的彩蛋特效列",
+     "expected": "显示为空或「-」"
+    }
+   ],
+   "expected_result": "等级1的彩蛋特效显示为空，不影响其他字段展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "基础概率-输入合法值1.5%保存成功",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入基础概率1.5%，业务含义为设置该等级礼物的彩蛋触发基础概率为1.5%。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，点击编辑奖励打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在基础概率输入框输入1.5",
+     "expected": "输入框显示1.5"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "提示保存成功，列表刷新显示1.5%"
+    }
+   ],
+   "expected_result": "保存成功，数据库更新基础概率为1.5%。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "基础概率-输入负数被拒绝",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入基础概率-1，业务含义为非法负数。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，点击编辑奖励打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在基础概率输入框输入-1",
+     "expected": "输入框显示-1"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「基础概率必须大于等于0」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示基础概率必须大于等于0。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "基础概率-输入超过最大概率被拒绝",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入基础概率6.0%，而最大概率为5.0%，业务含义为基础概率不能超过最大概率。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，点击编辑奖励打开弹窗，最大概率为5.0%。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在基础概率输入框输入6.0",
+     "expected": "输入框显示6.0"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "提示「基础概率不能大于最大概率」，保存失败"
+    }
+   ],
+   "expected_result": "保存失败，提示基础概率不能大于最大概率。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "上传-上传合法图片成功",
+   "priority": "P0",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "上传一张PNG格式的图片（大小1MB），业务含义为配置彩蛋特效图片。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，点击编辑奖励打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮",
+     "expected": "弹出文件选择框"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张PNG图片并确认",
+     "expected": "图片上传成功，显示预览缩略图"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "提示保存成功，列表刷新显示该图片"
+    }
+   ],
+   "expected_result": "上传成功，保存后列表显示该图片。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "上传-上传非图片格式文件被拒绝",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "上传一个TXT文本文件，业务含义为非法文件类型。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，点击编辑奖励打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮",
+     "expected": "弹出文件选择框"
+    },
+    {
+     "step": 2,
+     "desc": "选择一个TXT文件并确认",
+     "expected": "提示「文件格式不支持，请上传图片或动画文件」，上传失败"
+    }
+   ],
+   "expected_result": "上传失败，提示文件格式不支持。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "上传-上传超过大小限制的文件被拒绝",
+   "priority": "P1",
+   "domain": "用户端/付费活动/成长礼物奖励",
+   "module": "成长礼物奖励",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上传一个10MB的图片，业务含义为超过大小限制。",
+   "preconditions": "已登录运营后台，进入成长礼物奖励页面，点击编辑奖励打开弹窗，限制大小为5MB。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「上传」按钮",
+     "expected": "弹出文件选择框"
+    },
+    {
+     "step": 2,
+     "desc": "选择一个10MB的图片并确认",
+     "expected": "提示「文件大小不能超过5MB」，上传失败"
+    }
+   ],
+   "expected_result": "上传失败，提示文件大小超限。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "礼物列表默认加载展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台已配置至少3个礼物系列，包含不同状态（启用/停用）、不同类别（浪漫、热门）、不同礼物数量",
+   "preconditions": "用户已登录，后台已配置至少3个礼物系列，包含启用和停用状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表展示",
+     "expected": "列表展示系列编号、系列名称、缩略图、所属类别、启用状态、礼物数量等字段，数据与后台配置一致"
+    }
+   ],
+   "expected_result": "列表正确展示所有配置的礼物系列，字段完整，数据准确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "礼物列表空数据展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何礼物系列数据",
+   "preconditions": "后台无任何礼物系列数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示空列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察空列表展示",
+     "expected": "显示“暂无数据”或类似提示，列表无内容"
+    }
+   ],
+   "expected_result": "页面显示空状态提示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "小象直播入口跳转",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击“小象直播”入口",
+   "preconditions": "用户已登录，进入礼物列表页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“小象直播”入口",
+     "expected": "跳转到小象直播相关页面，跳转正确"
+    }
+   ],
+   "expected_result": "成功跳转到小象直播页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "小象直播入口跳转失败处理",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或目标页面不存在",
+   "preconditions": "网络异常或目标页面不存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“小象直播”入口",
+     "expected": "页面无响应或提示加载失败，不崩溃"
+    }
+   ],
+   "expected_result": "给出错误提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "礼物管理入口跳转",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击“礼物管理”入口",
+   "preconditions": "用户已登录，进入礼物列表页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“礼物管理”入口",
+     "expected": "跳转到礼物管理相关页面，跳转正确"
+    }
+   ],
+   "expected_result": "成功跳转到礼物管理页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "礼物管理入口跳转失败处理",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或目标页面不存在",
+   "preconditions": "网络异常或目标页面不存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“礼物管理”入口",
+     "expected": "页面无响应或提示加载失败，不崩溃"
+    }
+   ],
+   "expected_result": "给出错误提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "系列编号字段展示正确",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置系列编号为51、50、49等",
+   "preconditions": "后台已配置系列编号为51、50、49的系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "列表展示系列编号，与后台配置一致"
+    }
+   ],
+   "expected_result": "系列编号正确显示，无乱码或截断",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "系列编号超长显示处理",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "系列编号设置为超长字符串（如100位数字）",
+   "preconditions": "后台配置一个系列编号为超长字符串",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "系列编号显示完整或截断并显示省略号，不破坏布局"
+    }
+   ],
+   "expected_result": "超长编号不破坏布局，显示正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "系列名称展示正确",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置系列名称为“缤纷春色”、“新人礼包”等",
+   "preconditions": "后台已配置系列名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "列表展示系列名称，与后台配置一致"
+    }
+   ],
+   "expected_result": "系列名称正确显示，无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "系列名称为空显示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置系列名称为空字符串",
+   "preconditions": "后台配置一个系列名称为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "系列名称列显示为空或占位符，不报错"
+    }
+   ],
+   "expected_result": "空名称显示正常，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "缩略图正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置系列缩略图URL有效",
+   "preconditions": "后台已配置有效缩略图URL",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "缩略图正常加载显示"
+    }
+   ],
+   "expected_result": "缩略图显示正常，无裂图",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "缩略图加载失败处理",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置缩略图URL无效或网络异常",
+   "preconditions": "缩略图URL无效或网络异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "缩略图位置显示占位图或裂图图标，不阻塞页面"
+    }
+   ],
+   "expected_result": "显示占位图，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "所属类别展示正确",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置类别为“浪漫”、“热门”等",
+   "preconditions": "后台已配置类别",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "列表展示所属类别，与后台配置一致"
+    }
+   ],
+   "expected_result": "类别正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "所属类别为空显示",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置类别为空",
+   "preconditions": "后台配置一个系列类别为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "类别列显示为空或占位符，不报错"
+    }
+   ],
+   "expected_result": "空类别显示正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "启用状态展示正确",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置系列状态为启用和停用",
+   "preconditions": "后台已配置启用和停用的系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "启用状态列显示“启用”或“停用”，与后台配置一致"
+    }
+   ],
+   "expected_result": "状态显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "启用状态未知值显示",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置状态为未知值（如“禁用”）",
+   "preconditions": "后台配置一个系列状态为未知值",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "状态列显示未知状态或默认处理，不报错"
+    }
+   ],
+   "expected_result": "未知状态显示正常，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "礼物数量展示正确",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置系列礼物数量为10、8、5等",
+   "preconditions": "后台已配置礼物数量",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "列表展示礼物数量，与后台配置一致"
+    }
+   ],
+   "expected_result": "礼物数量正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "礼物数量为0显示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台配置系列礼物数量为0",
+   "preconditions": "后台配置一个系列礼物数量为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "礼物数量显示0，不报错"
+    }
+   ],
+   "expected_result": "显示0，正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "缤纷春色系列展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置系列名称为“缤纷春色”",
+   "preconditions": "后台已配置“缤纷春色”系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "列表中存在“缤纷春色”系列，信息完整"
+    }
+   ],
+   "expected_result": "“缤纷春色”系列正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "热门标签展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台配置系列为热门",
+   "preconditions": "后台已配置热门系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "热门系列显示“热门”标签"
+    }
+   ],
+   "expected_result": "热门标签正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "非热门系列不显示热门标签",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置系列为非热门",
+   "preconditions": "后台已配置非热门系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "非热门系列不显示“热门”标签"
+    }
+   ],
+   "expected_result": "无热门标签",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "启用操作成功",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一个停用的系列（如“新人礼包”）",
+   "preconditions": "存在停用状态的系列，用户有操作权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击停用系列的“启用”按钮",
+     "expected": "弹出确认提示（如“确定启用该系列？”）"
+    },
+    {
+     "step": 3,
+     "desc": "点击确认",
+     "expected": "操作成功，状态变为“启用”，提示“启用成功”"
+    }
+   ],
+   "expected_result": "系列状态变为启用，提示成功，列表刷新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "启用操作取消",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "选择一个停用的系列",
+   "preconditions": "存在停用状态的系列",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击停用系列的“启用”按钮",
+     "expected": "弹出确认提示"
+    },
+    {
+     "step": 3,
+     "desc": "点击取消",
+     "expected": "操作取消，状态不变，无提示"
+    }
+   ],
+   "expected_result": "状态保持停用，无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "启用操作无权限",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无操作权限的账号",
+   "preconditions": "用户无启用操作权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击“启用”按钮",
+     "expected": "按钮置灰或点击提示无权限"
+    }
+   ],
+   "expected_result": "无法执行启用操作，提示无权限",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "礼物列表-新人礼包系列正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台已配置的「新人礼包」系列，数据如系列编号=50、系列名称=新人礼包、所属类别=浪漫、启用状态=启用、礼物数量=8。",
+   "preconditions": "后台已配置「新人礼包」系列，且启用状态为启用；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找「新人礼包」系列",
+     "expected": "列表中存在「新人礼包」系列，显示系列编号、系列名称、缩略图、所属类别、启用状态、礼物数量等信息"
+    }
+   ],
+   "expected_result": "「新人礼包」系列正常展示，所有字段值正确，缩略图正常加载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-180"
+  },
+  {
+   "title": "礼物列表-新人礼包系列不存在时列表为空",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何名为「新人礼包」的系列，或该系列已被删除。",
+   "preconditions": "后台无「新人礼包」系列；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，列表为空或显示无数据提示"
+    },
+    {
+     "step": 2,
+     "desc": "检查列表中是否包含「新人礼包」",
+     "expected": "列表中不包含「新人礼包」系列，页面显示空态提示（如暂无数据）"
+    }
+   ],
+   "expected_result": "列表不显示「新人礼包」系列，页面无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-181"
+  },
+  {
+   "title": "礼物列表-浪漫系列正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台已配置的「浪漫」系列，数据如系列编号=50、系列名称=浪漫、所属类别=浪漫、启用状态=启用、礼物数量=8。",
+   "preconditions": "后台已配置「浪漫」系列，且启用状态为启用；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找「浪漫」系列",
+     "expected": "列表中存在「浪漫」系列，显示系列编号、系列名称、缩略图、所属类别、启用状态、礼物数量等信息"
+    }
+   ],
+   "expected_result": "「浪漫」系列正常展示，所有字段值正确，缩略图正常加载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-182"
+  },
+  {
+   "title": "礼物列表-浪漫系列已停用时不展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台将「浪漫」系列启用状态设为停用。",
+   "preconditions": "后台「浪漫」系列状态为停用；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "检查列表中是否包含「浪漫」系列",
+     "expected": "列表中不显示「浪漫」系列，或显示但状态为停用（根据需求是否展示停用系列）"
+    }
+   ],
+   "expected_result": "「浪漫」系列不展示或明确标识为停用状态，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-183"
+  },
+  {
+   "title": "礼物列表-停用系列筛选",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "后台存在多个系列，其中部分系列启用状态为「停用」，如「浪漫」系列为停用。",
+   "preconditions": "后台存在启用状态为「停用」的系列；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在启用状态下拉框选择「停用」",
+     "expected": "列表仅显示启用状态为「停用」的系列"
+    }
+   ],
+   "expected_result": "列表只展示停用状态的系列，其他状态系列不显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-184"
+  },
+  {
+   "title": "礼物列表-停用系列筛选无结果",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台所有系列均为启用状态，无停用系列。",
+   "preconditions": "后台无停用状态的系列；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在启用状态下拉框选择「停用」",
+     "expected": "列表为空，显示无数据提示"
+    }
+   ],
+   "expected_result": "列表为空，提示无符合条件的系列。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-185"
+  },
+  {
+   "title": "礼物列表-女神挚爱系列正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台已配置的「女神挚爱」系列，数据如系列编号=49、系列名称=女神挚爱、所属类别=热门、启用状态=启用、礼物数量=5。",
+   "preconditions": "后台已配置「女神挚爱」系列，且启用状态为启用；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找「女神挚爱」系列",
+     "expected": "列表中存在「女神挚爱」系列，显示系列编号、系列名称、缩略图、所属类别、启用状态、礼物数量等信息"
+    }
+   ],
+   "expected_result": "「女神挚爱」系列正常展示，所有字段值正确，缩略图正常加载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-186"
+  },
+  {
+   "title": "礼物列表-女神挚爱系列缩略图加载失败",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台配置的「女神挚爱」系列缩略图URL无效或图片文件损坏。",
+   "preconditions": "后台「女神挚爱」系列缩略图异常；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看「女神挚爱」系列的缩略图",
+     "expected": "缩略图显示为默认占位图或加载失败图标，但系列信息仍正常展示"
+    }
+   ],
+   "expected_result": "缩略图异常不影响其他字段展示，页面无崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-187"
+  },
+  {
+   "title": "礼物列表-车队系列正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用后台已配置的「车队」系列，数据如系列编号=48、系列名称=车队、所属类别=热门、启用状态=启用、礼物数量=10。",
+   "preconditions": "后台已配置「车队」系列，且启用状态为启用；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在列表中查找「车队」系列",
+     "expected": "列表中存在「车队」系列，显示系列编号、系列名称、缩略图、所属类别、启用状态、礼物数量等信息"
+    }
+   ],
+   "expected_result": "「车队」系列正常展示，所有字段值正确，缩略图正常加载。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-188"
+  },
+  {
+   "title": "礼物列表-车队系列礼物数量为0",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "后台「车队」系列下无任何礼物，礼物数量为0。",
+   "preconditions": "后台「车队」系列礼物数量为0；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看「车队」系列的礼物数量",
+     "expected": "礼物数量显示为0，系列仍正常展示"
+    }
+   ],
+   "expected_result": "礼物数量显示0，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-189"
+  },
+  {
+   "title": "礼物列表-新增系列按钮可用",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户具有新增系列的权限。",
+   "preconditions": "用户已登录且具有新增系列权限；进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示「新增系列」按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击「新增系列」按钮",
+     "expected": "弹出新增系列的表单或跳转到新增页面"
+    }
+   ],
+   "expected_result": "点击按钮后正常打开新增系列界面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-190"
+  },
+  {
+   "title": "礼物列表-无权限用户点击新增系列被拦截",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前登录用户无新增系列权限。",
+   "preconditions": "用户已登录但无新增系列权限；进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示「新增系列」按钮（可能置灰）"
+    },
+    {
+     "step": 2,
+     "desc": "点击「新增系列」按钮",
+     "expected": "按钮不可点击或提示无权限，不打开新增界面"
+    }
+   ],
+   "expected_result": "无权限用户无法进入新增系列界面，并给出相应提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-191"
+  },
+  {
+   "title": "礼物列表-按系列名称搜索",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词为「新人礼包」，后台存在该系列。",
+   "preconditions": "后台存在「新人礼包」系列；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在系列名称输入框输入「新人礼包」",
+     "expected": "输入框正常输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表仅显示系列名称包含「新人礼包」的系列"
+    }
+   ],
+   "expected_result": "搜索结果正确，只显示匹配的系列。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-192"
+  },
+  {
+   "title": "礼物列表-搜索无匹配结果",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词为「不存在的系列」，后台无此系列。",
+   "preconditions": "后台无「不存在的系列」；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在系列名称输入框输入「不存在的系列」",
+     "expected": "输入框正常输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表为空，显示无数据提示"
+    }
+   ],
+   "expected_result": "搜索无结果时列表为空，并给出友好提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-193"
+  },
+  {
+   "title": "礼物列表-系列名称字段显示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台存在系列名称如「缤纷春色」的系列。",
+   "preconditions": "后台存在系列；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的系列名称列",
+     "expected": "每个系列的名称正确显示，无乱码、截断"
+    }
+   ],
+   "expected_result": "系列名称字段正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-194"
+  },
+  {
+   "title": "礼物列表-系列名称为空时的处理",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台某个系列名称为空字符串。",
+   "preconditions": "后台存在系列名称为空的系列；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看名称为空的系列",
+     "expected": "系列名称列显示为空或占位符，页面无异常"
+    }
+   ],
+   "expected_result": "空名称系列正常展示，不导致页面崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-195"
+  },
+  {
+   "title": "礼物列表-搜索输入框输入合法关键词",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入关键词「浪漫」，后台存在该系列。",
+   "preconditions": "后台存在「浪漫」系列；用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索输入框输入「浪漫」",
+     "expected": "输入框正常输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索",
+     "expected": "列表显示匹配的系列"
+    }
+   ],
+   "expected_result": "搜索正常执行，结果正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-196"
+  },
+  {
+   "title": "礼物列表-搜索输入框输入超长字符",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过输入框最大长度（如1000个字符）的字符串。",
+   "preconditions": "用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索输入框输入1000个字符",
+     "expected": "输入框限制输入长度，或允许输入但搜索时截断"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索",
+     "expected": "搜索正常执行，无异常报错"
+    }
+   ],
+   "expected_result": "超长输入被正确处理，不导致页面崩溃。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-197"
+  },
+  {
+   "title": "礼物列表-启用状态下拉选择",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "下拉选项包含「启用」「停用」「全部」等。",
+   "preconditions": "用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击启用状态下拉框",
+     "expected": "下拉选项正常展开，包含启用、停用等选项"
+    },
+    {
+     "step": 3,
+     "desc": "选择「启用」",
+     "expected": "列表仅显示启用状态的系列"
+    }
+   ],
+   "expected_result": "下拉选择正常，筛选结果正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-198"
+  },
+  {
+   "title": "礼物列表-启用状态选择「全部」",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "下拉选项包含「全部」，选择后显示所有系列。",
+   "preconditions": "用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在启用状态下拉框选择「全部」",
+     "expected": "列表显示所有状态的系列"
+    }
+   ],
+   "expected_result": "选择「全部」后显示所有系列，无筛选。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-199"
+  },
+  {
+   "title": "礼物列表-启用状态选择无效值",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "通过接口篡改请求参数，将启用状态设为不存在的值如「未知」。",
+   "preconditions": "用户已登录并进入礼物列表页面；使用抓包工具修改请求。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "使用抓包工具修改启用状态参数为「未知」",
+     "expected": "请求被拒绝或返回错误提示，列表不刷新"
+    }
+   ],
+   "expected_result": "系统对非法状态值进行校验，不返回异常数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-200"
+  },
+  {
+   "title": "礼物列表-类别下拉选择",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "下拉选项包含「热门」「浪漫」等类别。",
+   "preconditions": "用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击类别下拉框",
+     "expected": "下拉选项正常展开，包含热门、浪漫等类别"
+    },
+    {
+     "step": 3,
+     "desc": "选择「热门」",
+     "expected": "列表仅显示类别为「热门」的系列"
+    }
+   ],
+   "expected_result": "类别筛选正常，结果正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-201"
+  },
+  {
+   "title": "礼物列表-类别选择「全部」",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "下拉选项包含「全部」，选择后显示所有类别。",
+   "preconditions": "用户已登录并进入礼物列表页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功，显示礼物系列列表"
+    },
+    {
+     "step": 2,
+     "desc": "在类别下拉框选择「全部」",
+     "expected": "列表显示所有类别的系列"
+    }
+   ],
+   "expected_result": "选择「全部」后显示所有系列，无筛选。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-202"
+  },
+  {
+   "title": "礼物列表-类别选择无效值",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "通过接口篡改请求参数，将类别设为不存在的值如「未知类别」。",
+   "preconditions": "用户已登录并进入礼物列表页面；使用抓包工具修改请求。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入礼物列表页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "使用抓包工具修改类别参数为「未知类别」",
+     "expected": "请求被拒绝或返回错误提示，列表不刷新"
+    }
+   ],
+   "expected_result": "系统对非法类别值进行校验，不返回异常数据。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-203"
+  },
+  {
+   "title": "关联直播间-输入有效直播间ID筛选成功",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已存在的直播间ID（如1001），该直播间下存在礼物数据，验证筛选结果正确。",
+   "preconditions": "已登录后台账号，礼物列表页面存在关联直播间字段，且存在直播间ID为1001的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载，显示礼物列表及筛选区域。"
+    },
+    {
+     "step": 2,
+     "desc": "在「关联直播间」输入框输入直播间ID：1001",
+     "expected": "输入框可正常输入，无报错。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示关联直播间为1001的礼物记录。"
+    }
+   ],
+   "expected_result": "列表仅展示关联直播间为1001的礼物，且记录数与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-204"
+  },
+  {
+   "title": "关联直播间-输入不存在的直播间ID无结果",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的直播间ID（如999999），验证无匹配数据时的提示。",
+   "preconditions": "已登录后台账号，礼物列表页面存在关联直播间字段。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「关联直播间」输入框输入不存在的直播间ID：999999",
+     "expected": "输入框可输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示空数据，并提示「暂无数据」或类似提示。"
+    }
+   ],
+   "expected_result": "列表无数据，页面给出明确空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-205"
+  },
+  {
+   "title": "关联直播间-输入特殊字符被拦截",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符（如@#￥%）验证输入校验。",
+   "preconditions": "已登录后台账号，礼物列表页面存在关联直播间字段。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「关联直播间」输入框输入特殊字符：@#￥%",
+     "expected": "输入框拒绝输入或提示格式错误。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "若输入被拒绝，搜索不触发；若输入被接受，提示格式错误。"
+    }
+   ],
+   "expected_result": "系统拦截非法输入，不发起查询请求，并给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-206"
+  },
+  {
+   "title": "系列编号-输入有效系列编号查询成功",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已存在的系列编号（如51），该系列下存在礼物数据，验证查询结果。",
+   "preconditions": "已登录后台账号，礼物列表页面存在系列编号字段，且存在系列编号为51的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「系列编号」输入框输入系列编号：51",
+     "expected": "输入框可正常输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示系列编号为51的礼物记录。"
+    }
+   ],
+   "expected_result": "列表仅展示系列编号为51的礼物，且记录数与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-207"
+  },
+  {
+   "title": "系列编号-输入不存在的系列编号无结果",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的系列编号（如999），验证无匹配数据时的提示。",
+   "preconditions": "已登录后台账号，礼物列表页面存在系列编号字段。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「系列编号」输入框输入不存在的系列编号：999",
+     "expected": "输入框可输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示空数据，并提示「暂无数据」或类似提示。"
+    }
+   ],
+   "expected_result": "列表无数据，页面给出明确空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-208"
+  },
+  {
+   "title": "系列编号-输入超长编号被限制",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过系统限制长度的系列编号（如20位数字），验证长度校验。",
+   "preconditions": "已登录后台账号，礼物列表页面存在系列编号字段，且系统限制长度为10位。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「系列编号」输入框输入20位数字：12345678901234567890",
+     "expected": "输入框限制最多输入10位，或提示超长。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "若输入被截断，按截断后的值查询；若提示超长，则不触发查询。"
+    }
+   ],
+   "expected_result": "系统对超长输入进行限制或提示，不产生异常查询。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-209"
+  },
+  {
+   "title": "新马区-点击新马区Tab展示对应礼物列表",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「新马区」Tab，验证列表展示属于新马区的礼物数据。",
+   "preconditions": "已登录后台账号，礼物列表页面存在「新马区」列表，且存在属于新马区的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载，默认显示全部礼物或默认区域。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「新马区」Tab",
+     "expected": "列表刷新，仅展示所属区域为新马区的礼物记录。"
+    }
+   ],
+   "expected_result": "列表仅展示新马区的礼物，且记录数与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-210"
+  },
+  {
+   "title": "新马区-新马区无数据时显示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无新马区礼物数据，验证空态展示。",
+   "preconditions": "已登录后台账号，后台无任何所属区域为新马区的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「新马区」Tab",
+     "expected": "列表显示空数据，并提示「暂无数据」或类似提示。"
+    }
+   ],
+   "expected_result": "列表无数据，页面给出明确空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-211"
+  },
+  {
+   "title": "台湾区-点击台湾区Tab展示对应礼物列表",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击「台湾区」Tab，验证列表展示属于台湾区的礼物数据。",
+   "preconditions": "已登录后台账号，礼物列表页面存在「台湾区」列表，且存在属于台湾区的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载，默认显示全部礼物或默认区域。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「台湾区」Tab",
+     "expected": "列表刷新，仅展示所属区域为台湾区的礼物记录。"
+    }
+   ],
+   "expected_result": "列表仅展示台湾区的礼物，且记录数与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-212"
+  },
+  {
+   "title": "台湾区-台湾区无数据时显示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无台湾区礼物数据，验证空态展示。",
+   "preconditions": "已登录后台账号，后台无任何所属区域为台湾区的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「台湾区」Tab",
+     "expected": "列表显示空数据，并提示「暂无数据」或类似提示。"
+    }
+   ],
+   "expected_result": "列表无数据，页面给出明确空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-213"
+  },
+  {
+   "title": "所属区域-选择有效区域筛选成功",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择所属区域为「新马区」，验证筛选结果。",
+   "preconditions": "已登录后台账号，礼物列表页面存在所属区域字段，且存在新马区的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「所属区域」下拉框选择「新马区」",
+     "expected": "下拉框可正常选择。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示所属区域为新马区的礼物记录。"
+    }
+   ],
+   "expected_result": "列表仅展示新马区的礼物，且记录数与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-214"
+  },
+  {
+   "title": "所属区域-选择无效区域值被拒绝",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "尝试通过接口或特殊操作传入不存在的区域值（如「港澳区」），验证系统拦截。",
+   "preconditions": "已登录后台账号，礼物列表页面存在所属区域字段，且系统仅支持新马区、台湾区。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "通过开发者工具修改下拉框选项值，提交不存在的区域值「港澳区」",
+     "expected": "系统提示「区域值无效」或拒绝查询。"
+    }
+   ],
+   "expected_result": "系统拦截非法区域值，不执行查询，并给出错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-215"
+  },
+  {
+   "title": "礼物编号-输入有效礼物编号查询成功",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已存在的礼物编号（如1001），该礼物存在，验证查询结果。",
+   "preconditions": "已登录后台账号，礼物列表页面存在礼物编号字段，且存在礼物编号为1001的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「礼物编号」输入框输入礼物编号：1001",
+     "expected": "输入框可正常输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示礼物编号为1001的礼物记录。"
+    }
+   ],
+   "expected_result": "列表仅展示礼物编号为1001的礼物，且记录数与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-216"
+  },
+  {
+   "title": "礼物编号-输入不存在的礼物编号无结果",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的礼物编号（如999999），验证无匹配数据时的提示。",
+   "preconditions": "已登录后台账号，礼物列表页面存在礼物编号字段。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「礼物编号」输入框输入不存在的礼物编号：999999",
+     "expected": "输入框可输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示空数据，并提示「暂无数据」或类似提示。"
+    }
+   ],
+   "expected_result": "列表无数据，页面给出明确空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-217"
+  },
+  {
+   "title": "礼物编号-输入非数字字符被拦截",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入字母（如abc），验证输入校验。",
+   "preconditions": "已登录后台账号，礼物列表页面存在礼物编号字段，且系统要求编号为数字。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「礼物编号」输入框输入字母：abc",
+     "expected": "输入框拒绝输入或提示格式错误。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "若输入被拒绝，搜索不触发；若输入被接受，提示格式错误。"
+    }
+   ],
+   "expected_result": "系统拦截非法输入，不发起查询请求，并给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-218"
+  },
+  {
+   "title": "组合筛选-关联直播间+所属区域组合查询",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "同时输入关联直播间ID（1001）和选择所属区域（新马区），验证组合筛选结果。",
+   "preconditions": "已登录后台账号，存在同时满足直播间ID=1001且所属区域=新马区的礼物数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「关联直播间」输入1001，在「所属区域」选择「新马区」",
+     "expected": "输入和选择均正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示同时满足两个条件的礼物记录。"
+    }
+   ],
+   "expected_result": "列表仅展示同时满足关联直播间=1001且所属区域=新马区的礼物，记录数与后台一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-219"
+  },
+  {
+   "title": "组合筛选-条件无交集时显示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物列表",
+   "module": "礼物列表",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "输入关联直播间ID（1001）和选择所属区域（台湾区），但该直播间下无台湾区礼物，验证空态。",
+   "preconditions": "已登录后台账号，存在直播间ID=1001的礼物，但均不属于台湾区。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物列表页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在「关联直播间」输入1001，在「所属区域」选择「台湾区」",
+     "expected": "输入和选择均正常。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示空数据，并提示「暂无数据」或类似提示。"
+    }
+   ],
+   "expected_result": "列表无数据，页面给出明确空态提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-220"
+  },
+  {
+   "title": "礼物面板正常打开并展示全部元素",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常登录用户，进入直播间，点击礼物按钮打开面板",
+   "preconditions": "用户已登录，进入任意直播间",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击直播间底部礼物图标",
+     "expected": "礼物面板弹出，显示完整元素：成长礼物、关闭、Jeremy、头像、礼物、道具、图片、x1314、蓝亦邦_PUNG、送出了荧光棒、陳奕讯所长等"
+    }
+   ],
+   "expected_result": "礼物面板正常展示，所有元素可见且布局正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-221"
+  },
+  {
+   "title": "未登录用户打开礼物面板被拦截",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户尝试打开礼物面板",
+   "preconditions": "用户未登录，进入直播间",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击直播间底部礼物图标",
+     "expected": "弹出登录提示，不展示礼物面板"
+    }
+   ],
+   "expected_result": "未登录用户无法打开礼物面板，提示先登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-222"
+  },
+  {
+   "title": "成长礼物标签正确展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "成长礼物在面板中应显示'成长'标签",
+   "preconditions": "用户已登录，进入直播间，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看礼物列表中的成长礼物",
+     "expected": "成长礼物项带有'成长'标签，且样式突出"
+    }
+   ],
+   "expected_result": "成长礼物正确标识，用户可识别",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-223"
+  },
+  {
+   "title": "未解锁成长礼物不可赠送",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户未解锁Lv2成长礼物，尝试赠送",
+   "preconditions": "用户已登录，打开礼物面板，存在未解锁的成长礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击未解锁的成长礼物",
+     "expected": "提示'未解锁'，无法赠送，或显示解锁条件"
+    }
+   ],
+   "expected_result": "未解锁礼物不可赠送，给出明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-224"
+  },
+  {
+   "title": "点击关闭按钮关闭礼物面板",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常打开面板后点击关闭",
+   "preconditions": "礼物面板已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击面板右上角关闭按钮",
+     "expected": "面板关闭，回到直播间界面"
+    }
+   ],
+   "expected_result": "面板成功关闭",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-225"
+  },
+  {
+   "title": "关闭按钮在面板加载中不可用",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "网络慢，面板加载中点击关闭",
+   "preconditions": "网络延迟，面板加载中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在面板加载过程中点击关闭按钮",
+     "expected": "按钮置灰或点击无效，加载完成后可关闭"
+    }
+   ],
+   "expected_result": "加载中关闭按钮不可用，避免误操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-226"
+  },
+  {
+   "title": "用户信息正确展示当前用户昵称和头像",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "当前登录用户昵称为'Jeremy'，头像为默认头像",
+   "preconditions": "用户已登录，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看面板左上角用户信息区域",
+     "expected": "显示当前用户昵称'Jeremy'和头像图片"
+    }
+   ],
+   "expected_result": "用户信息正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-227"
+  },
+  {
+   "title": "用户头像加载失败显示默认占位图",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户头像URL无效或网络异常",
+   "preconditions": "用户头像加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "头像位置显示默认占位图，不显示破图"
+    }
+   ],
+   "expected_result": "头像加载失败有兜底展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-228"
+  },
+  {
+   "title": "礼物分类Tab切换正常",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'道具'Tab",
+   "preconditions": "礼物面板已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'道具'Tab",
+     "expected": "礼物列表切换为道具类礼物，当前Tab高亮"
+    }
+   ],
+   "expected_result": "分类切换成功，列表正确更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-229"
+  },
+  {
+   "title": "分类Tab无数据时显示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "'图片'分类下无礼物数据",
+   "preconditions": "后台配置'图片'分类无礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'图片'Tab",
+     "expected": "显示空态提示'暂无礼物'，不崩溃"
+    }
+   ],
+   "expected_result": "空分类有友好提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-230"
+  },
+  {
+   "title": "点击礼物项弹出赠送确认",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择'荧光棒'礼物，单价10象豆",
+   "preconditions": "用户已登录，象豆余额充足，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'荧光棒'礼物",
+     "expected": "弹出赠送确认框，显示礼物名称、价格、数量选择"
+    }
+   ],
+   "expected_result": "赠送确认框正常弹出",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-231"
+  },
+  {
+   "title": "象豆余额不足时赠送被拦截",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户象豆余额为0，选择'x1314'礼物（价格1314象豆）",
+   "preconditions": "用户已登录，象豆余额为0，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'x1314'礼物并确认赠送",
+     "expected": "提示'象豆不足'，赠送失败，余额不变"
+    }
+   ],
+   "expected_result": "余额不足时赠送被拦截，给出明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-232"
+  },
+  {
+   "title": "赠送成功后象豆扣减并展示动画",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "赠送'荧光棒'1个，单价10象豆，余额100",
+   "preconditions": "用户已登录，象豆余额100，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'荧光棒'，数量1，确认赠送",
+     "expected": "赠送成功，象豆余额变为90，直播间展示送礼动画"
+    }
+   ],
+   "expected_result": "赠送成功，余额正确扣减，动画正常播放",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-233"
+  },
+  {
+   "title": "赠送过程中网络中断处理",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "确认赠送后断网",
+   "preconditions": "用户已登录，网络不稳定",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击赠送并确认，在请求发出前断网",
+     "expected": "提示'网络异常，请重试'，不扣费，可重试"
+    }
+   ],
+   "expected_result": "网络异常有提示，不产生扣费",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-234"
+  },
+  {
+   "title": "关注按钮点击后关注主播",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前未关注主播",
+   "preconditions": "用户已登录，打开礼物面板，未关注当前主播",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'关注'按钮",
+     "expected": "按钮变为'已关注'，关注列表新增该主播"
+    }
+   ],
+   "expected_result": "关注成功，按钮状态更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-235"
+  },
+  {
+   "title": "重复点击关注按钮不重复关注",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "已关注主播，再次点击关注",
+   "preconditions": "用户已关注当前主播",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'关注'按钮",
+     "expected": "无变化或提示'已关注'，不重复关注"
+    }
+   ],
+   "expected_result": "重复关注被拦截",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-236"
+  },
+  {
+   "title": "粉丝团入口跳转粉丝团页面",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'粉丝团 >'",
+   "preconditions": "用户已登录，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'粉丝团 >'",
+     "expected": "跳转到粉丝团页面，展示粉丝团列表"
+    }
+   ],
+   "expected_result": "跳转成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-237"
+  },
+  {
+   "title": "贡献榜入口跳转贡献榜页面",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'贡献榜 >'",
+   "preconditions": "用户已登录，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'贡献榜 >'",
+     "expected": "跳转到贡献榜页面，展示贡献排行"
+    }
+   ],
+   "expected_result": "跳转成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-238"
+  },
+  {
+   "title": "背包入口跳转背包页面",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击'背包'",
+   "preconditions": "用户已登录，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'背包'",
+     "expected": "跳转到背包页面，展示用户道具"
+    }
+   ],
+   "expected_result": "跳转成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-239"
+  },
+  {
+   "title": "未登录点击互动入口被拦截",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户点击'互动'",
+   "preconditions": "用户未登录，打开礼物面板（若可打开）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'互动'",
+     "expected": "提示'请先登录'，不跳转"
+    }
+   ],
+   "expected_result": "未登录用户被拦截",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-240"
+  },
+  {
+   "title": "礼物面板在PC-web端完全功能版展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "PC-web端打开礼物面板",
+   "preconditions": "用户已登录，使用PC-web端进入直播间",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击礼物按钮",
+     "expected": "面板展示所有功能，包括完整礼物列表、分类、用户信息等"
+    }
+   ],
+   "expected_result": "PC-web端功能完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-241"
+  },
+  {
+   "title": "移动端-web与安卓/iOS功能差异校验",
+   "priority": "P2",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "移动端-web打开礼物面板",
+   "preconditions": "用户已登录，使用移动端-web进入直播间",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "面板样式与安卓/iOS一致，功能略有差异（如部分入口隐藏）"
+    }
+   ],
+   "expected_result": "移动端-web功能符合设计",
+   "remark": "正面用例",
+   "client_scope": [
+    "web"
+   ],
+   "id": "TC-242"
+  },
+  {
+   "title": "关注列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已关注3个主播（主播A、主播B、主播C），关注列表应有3条记录",
+   "preconditions": "用户已登录，且已关注至少3个主播",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开，显示各功能区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看关注列表区域",
+     "expected": "关注列表展示已关注的3个主播，每个主播显示头像和昵称"
+    }
+   ],
+   "expected_result": "关注列表展示所有已关注主播，数量与关注数一致，信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-243"
+  },
+  {
+   "title": "关注列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户未关注任何主播，关注列表应为空",
+   "preconditions": "用户已登录，且未关注任何主播",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看关注列表区域",
+     "expected": "关注列表显示空态提示，如「暂无关注」"
+    }
+   ],
+   "expected_result": "关注列表显示空态提示，不显示任何主播信息",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-244"
+  },
+  {
+   "title": "icon正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "礼物面板中存在多个icon，如礼物分类图标、用户等级图标",
+   "preconditions": "用户已登录，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看面板中的icon图标",
+     "expected": "所有icon正常显示，无裂图、无错位"
+    }
+   ],
+   "expected_result": "所有icon正常显示，清晰可辨",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-245"
+  },
+  {
+   "title": "icon加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或资源缺失，icon无法加载",
+   "preconditions": "用户已登录，网络异常或icon资源缺失",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板（网络异常）",
+     "expected": "礼物面板打开，但icon显示为占位图或默认图标"
+    }
+   ],
+   "expected_result": "icon显示占位图，不影响其他功能使用",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-246"
+  },
+  {
+   "title": "粉丝团入口正常展示并可点击",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已加入主播的粉丝团，粉丝团入口应显示",
+   "preconditions": "用户已登录，且已加入当前主播的粉丝团",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看粉丝团入口",
+     "expected": "粉丝团入口显示，且带「>」图标"
+    },
+    {
+     "step": 3,
+     "desc": "点击粉丝团入口",
+     "expected": "跳转到粉丝团页面"
+    }
+   ],
+   "expected_result": "粉丝团入口正常展示，点击后跳转到粉丝团页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-247"
+  },
+  {
+   "title": "未加入粉丝团时入口隐藏或置灰",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户未加入任何粉丝团",
+   "preconditions": "用户已登录，但未加入当前主播的粉丝团",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看粉丝团入口",
+     "expected": "粉丝团入口不显示或置灰不可点击"
+    }
+   ],
+   "expected_result": "粉丝团入口隐藏或置灰，不可点击",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-248"
+  },
+  {
+   "title": "贡献榜入口正常展示并可点击",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前直播间存在贡献榜数据",
+   "preconditions": "用户已登录，当前直播间有贡献榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看贡献榜入口",
+     "expected": "贡献榜入口显示，且带「>」图标"
+    },
+    {
+     "step": 3,
+     "desc": "点击贡献榜入口",
+     "expected": "跳转到贡献榜页面"
+    }
+   ],
+   "expected_result": "贡献榜入口正常展示，点击后跳转到贡献榜页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-249"
+  },
+  {
+   "title": "贡献榜无数据时入口仍可点击但页面显示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "当前直播间暂无贡献榜数据",
+   "preconditions": "用户已登录，当前直播间无贡献榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击贡献榜入口",
+     "expected": "跳转到贡献榜页面，页面显示空态提示「暂无贡献榜数据」"
+    }
+   ],
+   "expected_result": "贡献榜页面正常打开，显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-250"
+  },
+  {
+   "title": "贵宾列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "当前直播间有3位贵宾用户",
+   "preconditions": "用户已登录，当前直播间存在贵宾用户",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看贵宾列表区域",
+     "expected": "贵宾列表展示3位贵宾用户，显示头像和昵称"
+    }
+   ],
+   "expected_result": "贵宾列表展示所有贵宾用户，信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-251"
+  },
+  {
+   "title": "贵宾列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "当前直播间无贵宾用户",
+   "preconditions": "用户已登录，当前直播间无贵宾用户",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看贵宾列表区域",
+     "expected": "贵宾列表显示空态提示「暂无贵宾」"
+    }
+   ],
+   "expected_result": "贵宾列表显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-252"
+  },
+  {
+   "title": "热门礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "热门礼物列表包含5个礼物，如「火箭」「跑车」等",
+   "preconditions": "用户已登录，存在热门礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门礼物列表",
+     "expected": "热门礼物列表展示5个礼物，每个礼物显示图标和名称"
+    }
+   ],
+   "expected_result": "热门礼物列表展示所有热门礼物，信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-253"
+  },
+  {
+   "title": "热门礼物列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无热门礼物数据",
+   "preconditions": "用户已登录，无热门礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看热门礼物列表",
+     "expected": "热门礼物列表显示空态提示「暂无热门礼物」"
+    }
+   ],
+   "expected_result": "热门礼物列表显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-254"
+  },
+  {
+   "title": "互动礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "互动礼物列表包含3个礼物，如「点赞」「比心」等",
+   "preconditions": "用户已登录，存在互动礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看互动礼物列表",
+     "expected": "互动礼物列表展示3个礼物，每个礼物显示图标和名称"
+    }
+   ],
+   "expected_result": "互动礼物列表展示所有互动礼物，信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-255"
+  },
+  {
+   "title": "互动礼物列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无互动礼物数据",
+   "preconditions": "用户已登录，无互动礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看互动礼物列表",
+     "expected": "互动礼物列表显示空态提示「暂无互动礼物」"
+    }
+   ],
+   "expected_result": "互动礼物列表显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-256"
+  },
+  {
+   "title": "特权礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "特权礼物列表包含2个礼物，如「守护」「皇冠」等",
+   "preconditions": "用户已登录，存在特权礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看特权礼物列表",
+     "expected": "特权礼物列表展示2个礼物，每个礼物显示图标和名称"
+    }
+   ],
+   "expected_result": "特权礼物列表展示所有特权礼物，信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-257"
+  },
+  {
+   "title": "特权礼物列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "无特权礼物数据",
+   "preconditions": "用户已登录，无特权礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看特权礼物列表",
+     "expected": "特权礼物列表显示空态提示「暂无特权礼物」"
+    }
+   ],
+   "expected_result": "特权礼物列表显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-258"
+  },
+  {
+   "title": "象豆礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "象豆礼物列表包含4个礼物，如「咖啡」「鲜花」等，用户象豆余额充足",
+   "preconditions": "用户已登录，象豆余额充足（如1000象豆），存在象豆礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看象豆礼物列表",
+     "expected": "象豆礼物列表展示4个礼物，每个礼物显示图标、名称和象豆价格"
+    }
+   ],
+   "expected_result": "象豆礼物列表展示所有象豆礼物，信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-259"
+  },
+  {
+   "title": "象豆余额不足时礼物置灰不可赠送",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户象豆余额为10，象豆礼物价格最低为50",
+   "preconditions": "用户已登录，象豆余额为10，存在象豆礼物价格高于余额",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看象豆礼物列表",
+     "expected": "价格高于余额的礼物置灰，不可点击赠送"
+    }
+   ],
+   "expected_result": "余额不足的象豆礼物置灰，点击无响应或提示余额不足",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-260"
+  },
+  {
+   "title": "背包礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户背包中有3个礼物，如「荧光棒」「玫瑰花」等",
+   "preconditions": "用户已登录，背包中有至少3个礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看背包礼物列表",
+     "expected": "背包礼物列表展示3个礼物，每个礼物显示图标、名称和数量"
+    }
+   ],
+   "expected_result": "背包礼物列表展示所有背包礼物，信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-261"
+  },
+  {
+   "title": "背包为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户背包中没有礼物",
+   "preconditions": "用户已登录，背包为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看背包礼物列表",
+     "expected": "背包礼物列表显示空态提示「背包空空如也」"
+    }
+   ],
+   "expected_result": "背包礼物列表显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-262"
+  },
+  {
+   "title": "礼物名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "礼物名称为「荧光棒」，长度适中",
+   "preconditions": "用户已登录，打开礼物面板",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看任意礼物的名称",
+     "expected": "礼物名称完整显示，无截断、无乱码"
+    }
+   ],
+   "expected_result": "礼物名称完整显示，清晰可读",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-263"
+  },
+  {
+   "title": "超长礼物名称截断显示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "礼物名称为「超级无敌豪华限量版荧光棒」，长度超过显示区域",
+   "preconditions": "用户已登录，存在超长名称的礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长名称的礼物",
+     "expected": "礼物名称截断显示，末尾显示省略号，悬浮可查看全称"
+    }
+   ],
+   "expected_result": "超长名称截断显示，不影响布局，悬浮提示完整名称",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-264"
+  },
+  {
+   "title": "标签正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "礼物带有「成长」「热门」等标签",
+   "preconditions": "用户已登录，存在带标签的礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看带标签的礼物",
+     "expected": "标签正常显示在礼物图标上，如「成长」「热门」"
+    }
+   ],
+   "expected_result": "标签正常显示，清晰可辨",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-265"
+  },
+  {
+   "title": "标签为空时不显示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "礼物无任何标签",
+   "preconditions": "用户已登录，存在无标签的礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看无标签的礼物",
+     "expected": "礼物图标上不显示任何标签"
+    }
+   ],
+   "expected_result": "无标签礼物不显示标签，布局正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-266"
+  },
+  {
+   "title": "成长礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，礼物面板中存在已配置的成长礼物（如Lv1-荧光棒）",
+   "preconditions": "用户已登录，后台已配置成长礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开，显示礼物列表"
+    },
+    {
+     "step": 2,
+     "desc": "切换到成长礼物分类",
+     "expected": "成长礼物列表展示，包含礼物名称、图标、价格等信息"
+    }
+   ],
+   "expected_result": "成长礼物列表正确展示，包含所有已配置的成长礼物，礼物信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-267"
+  },
+  {
+   "title": "成长礼物列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何成长礼物",
+   "preconditions": "用户已登录，后台未配置成长礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "切换到成长礼物分类",
+     "expected": "显示空态提示，如『暂无成长礼物』"
+    }
+   ],
+   "expected_result": "成长礼物列表为空时，显示友好的空态提示，不出现异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-268"
+  },
+  {
+   "title": "涂鸦礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，礼物面板中存在已配置的涂鸦礼物（如涂鸦-爱心）",
+   "preconditions": "用户已登录，后台已配置涂鸦礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "切换到涂鸦分类",
+     "expected": "涂鸦礼物列表展示，包含礼物名称、图标、价格等信息"
+    }
+   ],
+   "expected_result": "涂鸦礼物列表正确展示，包含所有已配置的涂鸦礼物",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-269"
+  },
+  {
+   "title": "涂鸦礼物列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何涂鸦礼物",
+   "preconditions": "用户已登录，后台未配置涂鸦礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "切换到涂鸦分类",
+     "expected": "显示空态提示，如『暂无涂鸦礼物』"
+    }
+   ],
+   "expected_result": "涂鸦礼物列表为空时，显示友好的空态提示，不出现异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-270"
+  },
+  {
+   "title": "自定义礼物列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，礼物面板中存在已配置的自定义礼物（如自定-专属礼物）",
+   "preconditions": "用户已登录，后台已配置自定义礼物数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "切换到自定分类",
+     "expected": "自定义礼物列表展示，包含礼物名称、图标、价格等信息"
+    }
+   ],
+   "expected_result": "自定义礼物列表正确展示，包含所有已配置的自定义礼物",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-271"
+  },
+  {
+   "title": "自定义礼物列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何自定义礼物",
+   "preconditions": "用户已登录，后台未配置自定义礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "切换到自定分类",
+     "expected": "显示空态提示，如『暂无自定义礼物』"
+    }
+   ],
+   "expected_result": "自定义礼物列表为空时，显示友好的空态提示，不出现异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-272"
+  },
+  {
+   "title": "赠送礼物成功（余额充足）",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户象币余额为1000，选择价格为100象币的荧光棒礼物，赠送1个",
+   "preconditions": "用户已登录，象币余额充足（1000象币），礼物面板中有可赠送的礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择荧光棒礼物（价格100象币）",
+     "expected": "礼物被选中，显示赠送按钮"
+    },
+    {
+     "step": 3,
+     "desc": "点击赠送按钮",
+     "expected": "弹出确认弹窗，显示礼物名称、价格、赠送对象"
+    },
+    {
+     "step": 4,
+     "desc": "点击确认赠送",
+     "expected": "赠送成功，显示成功提示，象币余额变为900"
+    }
+   ],
+   "expected_result": "赠送成功，象币余额扣减100，赠送记录生成，主播收到礼物",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-273"
+  },
+  {
+   "title": "赠送礼物失败（余额不足）",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "用户象币余额为50，选择价格为100象币的荧光棒礼物，赠送1个",
+   "preconditions": "用户已登录，象币余额不足（50象币），礼物面板中有可赠送的礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择荧光棒礼物（价格100象币）",
+     "expected": "礼物被选中，显示赠送按钮"
+    },
+    {
+     "step": 3,
+     "desc": "点击赠送按钮",
+     "expected": "弹出确认弹窗，显示礼物名称、价格、赠送对象"
+    },
+    {
+     "step": 4,
+     "desc": "点击确认赠送",
+     "expected": "提示『象币不足，请充值』，赠送失败，余额不变"
+    }
+   ],
+   "expected_result": "赠送失败，提示余额不足，不扣减余额，不生成赠送记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-274"
+  },
+  {
+   "title": "赠送礼物时取消操作",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户象币余额为1000，选择价格为100象币的荧光棒礼物，在确认弹窗中点击取消",
+   "preconditions": "用户已登录，象币余额充足，礼物面板中有可赠送的礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择荧光棒礼物（价格100象币）",
+     "expected": "礼物被选中，显示赠送按钮"
+    },
+    {
+     "step": 3,
+     "desc": "点击赠送按钮",
+     "expected": "弹出确认弹窗"
+    },
+    {
+     "step": 4,
+     "desc": "点击取消按钮",
+     "expected": "弹窗关闭，不扣减余额，不生成赠送记录"
+    }
+   ],
+   "expected_result": "取消赠送后，余额不变，无赠送记录生成",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-275"
+  },
+  {
+   "title": "象币余额正常展示",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户象币余额为1000，打开礼物面板",
+   "preconditions": "用户已登录，象币余额为1000",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开，右上角显示象币余额1000"
+    }
+   ],
+   "expected_result": "象币余额正确显示为1000",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-276"
+  },
+  {
+   "title": "赠送后象币余额实时刷新",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户象币余额为1000，赠送100象币的礼物后，余额应变为900",
+   "preconditions": "用户已登录，象币余额为1000，礼物面板中有可赠送的礼物",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开，显示余额1000"
+    },
+    {
+     "step": 2,
+     "desc": "赠送一个100象币的礼物",
+     "expected": "赠送成功，余额显示变为900"
+    }
+   ],
+   "expected_result": "赠送成功后，余额实时刷新为900",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-277"
+  },
+  {
+   "title": "象币余额为0时展示",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户象币余额为0，打开礼物面板",
+   "preconditions": "用户已登录，象币余额为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开，余额显示为0"
+    }
+   ],
+   "expected_result": "余额显示为0，且赠送按钮置灰或点击后提示余额不足",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-278"
+  },
+  {
+   "title": "充值入口正常跳转",
+   "priority": "P0",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，点击礼物面板中的充值按钮",
+   "preconditions": "用户已登录，礼物面板正常打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板",
+     "expected": "礼物面板正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击充值按钮",
+     "expected": "跳转至充值页面，显示充值套餐列表"
+    }
+   ],
+   "expected_result": "成功跳转至充值页面，充值页面正常加载",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-279"
+  },
+  {
+   "title": "充值入口在未登录时点击",
+   "priority": "P1",
+   "domain": "用户端/付费活动/礼物面板",
+   "module": "礼物面板",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录，点击礼物面板中的充值按钮",
+   "preconditions": "用户未登录，礼物面板可打开（或需先登录）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开礼物面板（未登录状态）",
+     "expected": "若未登录无法打开，则提示登录；若可打开，则继续"
+    },
+    {
+     "step": 2,
+     "desc": "点击充值按钮",
+     "expected": "提示『请先登录』或跳转至登录页"
+    }
+   ],
+   "expected_result": "未登录用户点击充值，被引导至登录或提示登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-280"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-12 生成被截断，已重试"
+ ]
+}

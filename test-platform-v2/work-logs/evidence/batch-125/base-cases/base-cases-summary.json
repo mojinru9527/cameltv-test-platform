@@ -1,0 +1,356 @@
+{
+ "total_modules": 38,
+ "ok": 38,
+ "failed": 0,
+ "total_cases": 7559,
+ "modules": [
+  {
+   "module": "运营后台/UGC",
+   "status": "skipped",
+   "cases": 424
+  },
+  {
+   "module": "运营后台/内容管理",
+   "status": "ok",
+   "pages": 7,
+   "fps": 172,
+   "cases": 318,
+   "warnings": []
+  },
+  {
+   "module": "运营后台/商城",
+   "status": "ok",
+   "pages": 3,
+   "fps": 60,
+   "cases": 142,
+   "warnings": [
+    "functional-chunk-4 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "运营后台/广告管理",
+   "status": "ok",
+   "pages": 7,
+   "fps": 158,
+   "cases": 294,
+   "warnings": [
+    "functional-chunk-5 生成被截断，已重试",
+    "functional-chunk-9 生成被截断，已重试",
+    "functional-chunk-16 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "运营后台/推流主播",
+   "status": "ok",
+   "pages": 1,
+   "fps": 12,
+   "cases": 15,
+   "warnings": []
+  },
+  {
+   "module": "运营后台/更新日志",
+   "status": "ok",
+   "pages": 1,
+   "fps": 30,
+   "cases": 39,
+   "warnings": []
+  },
+  {
+   "module": "运营后台/活动管理",
+   "status": "ok",
+   "pages": 3,
+   "fps": 81,
+   "cases": 177,
+   "warnings": [
+    "functional-chunk-6 生成被截断，已重试",
+    "functional-chunk-8 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "运营后台/消息管理",
+   "status": "ok",
+   "pages": 4,
+   "fps": 93,
+   "cases": 180,
+   "warnings": []
+  },
+  {
+   "module": "运营后台/球队及联赛",
+   "status": "ok",
+   "pages": 4,
+   "fps": 90,
+   "cases": 163,
+   "warnings": [
+    "functional-chunk-3 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "运营后台/用户管理",
+   "status": "ok",
+   "pages": 5,
+   "fps": 84,
+   "cases": 178,
+   "warnings": [
+    "functional-chunk-6 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "运营后台/系统管理",
+   "status": "ok",
+   "pages": 1,
+   "fps": 0,
+   "cases": 24,
+   "warnings": []
+  },
+  {
+   "module": "运营后台/装扮管理",
+   "status": "ok",
+   "pages": 5,
+   "fps": 106,
+   "cases": 200,
+   "warnings": [
+    "functional-chunk-1 生成被截断，已重试",
+    "functional-chunk-3 生成被截断，已重试",
+    "functional-chunk-8 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "运营后台/财务管理",
+   "status": "ok",
+   "pages": 11,
+   "fps": 310,
+   "cases": 570,
+   "warnings": [
+    "functional-chunk-4 生成被截断，已重试",
+    "functional-chunk-6 生成被截断，已重试",
+    "functional-chunk-10 生成被截断，已重试",
+    "functional-chunk-10 生成失败：AI 返回的 JSON 格式异常，无法解析。\n原始错误: Expecting ',' delimiter (行 838, 列 10)\n修复后错误: Expecting property name enclosed in double quotes (行 13, 列 127)\n错误位置附近内容 (chars 22658-22858):\n          \"step\": 1,\\n          \"desc\": \"进入骆驼币流水页面\",\\n          \"expected\": \"页面正常加载\"\\n        },\\n        {\\n          \"step\": 2,\\n          \"desc\": \"查看流水类型下拉框\",\\n          \"expected\": \"下拉框显示「请选择」\"\\n        }（该块未产出用例）"
+   ]
+  },
+  {
+   "module": "运营后台/赛事视频流",
+   "status": "ok",
+   "pages": 1,
+   "fps": 10,
+   "cases": 20,
+   "warnings": []
+  },
+  {
+   "module": "运营后台/赛事预测",
+   "status": "skipped",
+   "cases": 274
+  },
+  {
+   "module": "运营后台/银钻任务",
+   "status": "ok",
+   "pages": 3,
+   "fps": 76,
+   "cases": 129,
+   "warnings": [
+    "functional-chunk-1 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "运营后台/风控管理",
+   "status": "ok",
+   "pages": 2,
+   "fps": 37,
+   "cases": 47,
+   "warnings": [
+    "functional-chunk-1 生成被截断，已重试",
+    "functional-chunk-1 生成失败：AI 返回的 JSON 格式异常，无法解析。\n原始错误: Expecting ',' delimiter (行 883, 列 10)\n修复后错误: Expecting property name enclosed in double quotes (行 13, 列 121)\n错误位置附近内容 (chars 23166-23366):\n   \"step\": 2,\\n          \"desc\": \"输入'你好，世界！'\",\\n          \"expected\": \"输入正常显示\"\\n        },\\n        {\\n          \"step\": 3,\\n          \"desc\": \"点击'保存'按钮\",\\n          \"expected\": \"保存成功，列表展示'你好，世界！'\"\\n        }（该块未产出用例）",
+    "functional-chunk-4 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/FAQ帮助",
+   "status": "ok",
+   "pages": 2,
+   "fps": 8,
+   "cases": 23,
+   "warnings": []
+  },
+  {
+   "module": "用户端/UGC",
+   "status": "ok",
+   "pages": 7,
+   "fps": 181,
+   "cases": 338,
+   "warnings": [
+    "functional-chunk-1 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/个人中心",
+   "status": "ok",
+   "pages": 9,
+   "fps": 161,
+   "cases": 330,
+   "warnings": [
+    "functional-chunk-8 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/付费活动",
+   "status": "ok",
+   "pages": 6,
+   "fps": 151,
+   "cases": 280,
+   "warnings": [
+    "functional-chunk-12 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/启动登录",
+   "status": "ok",
+   "pages": 5,
+   "fps": 48,
+   "cases": 82,
+   "warnings": []
+  },
+  {
+   "module": "用户端/商城",
+   "status": "ok",
+   "pages": 1,
+   "fps": 30,
+   "cases": 65,
+   "warnings": []
+  },
+  {
+   "module": "用户端/回放",
+   "status": "ok",
+   "pages": 5,
+   "fps": 115,
+   "cases": 217,
+   "warnings": [
+    "functional-chunk-2 生成被截断，已重试",
+    "functional-chunk-9 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/搜索",
+   "status": "ok",
+   "pages": 3,
+   "fps": 71,
+   "cases": 154,
+   "warnings": [
+    "functional-chunk-1 生成被截断，已重试",
+    "functional-chunk-3 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/球员",
+   "status": "ok",
+   "pages": 2,
+   "fps": 60,
+   "cases": 113,
+   "warnings": []
+  },
+  {
+   "module": "用户端/球队",
+   "status": "ok",
+   "pages": 1,
+   "fps": 30,
+   "cases": 56,
+   "warnings": []
+  },
+  {
+   "module": "用户端/直播",
+   "status": "ok",
+   "pages": 9,
+   "fps": 177,
+   "cases": 337,
+   "warnings": [
+    "functional-chunk-14 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/聊天弹幕",
+   "status": "ok",
+   "pages": 4,
+   "fps": 113,
+   "cases": 240,
+   "warnings": []
+  },
+  {
+   "module": "用户端/联赛",
+   "status": "ok",
+   "pages": 5,
+   "fps": 141,
+   "cases": 275,
+   "warnings": [
+    "functional-chunk-9 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/装扮",
+   "status": "ok",
+   "pages": 2,
+   "fps": 57,
+   "cases": 110,
+   "warnings": []
+  },
+  {
+   "module": "用户端/资讯",
+   "status": "ok",
+   "pages": 3,
+   "fps": 60,
+   "cases": 103,
+   "warnings": [
+    "functional-chunk-1 生成被截断，已重试",
+    "functional-chunk-1 生成失败：AI 返回的 JSON 格式异常，无法解析。\n原始错误: Expecting ',' delimiter (行 886, 列 10)\n修复后错误: Expecting property name enclosed in double quotes (行 13, 列 144)\n错误位置附近内容 (chars 23661-23861):\nest_data_note\": \"联赛无赛程数据。\",\\n      \"preconditions\": \"用户已登录，联赛详情页已打开，赛程无数据。\",\\n      \"steps\": [\\n        {\\n          \"step\": 1,\\n          \"desc\": \"进入联赛详情页，查看赛程\",\\n          \"expected\": \"显示'暂无赛程'\"\\n        }（该块未产出用例）"
+   ]
+  },
+  {
+   "module": "用户端/赛事详情",
+   "status": "skipped",
+   "cases": 382
+  },
+  {
+   "module": "用户端/通用",
+   "status": "ok",
+   "pages": 6,
+   "fps": 153,
+   "cases": 280,
+   "warnings": [
+    "functional-chunk-5 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/钱包财务",
+   "status": "ok",
+   "pages": 9,
+   "fps": 202,
+   "cases": 363,
+   "warnings": [
+    "functional-chunk-17 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/银钻任务",
+   "status": "ok",
+   "pages": 1,
+   "fps": 30,
+   "cases": 59,
+   "warnings": []
+  },
+  {
+   "module": "用户端/预测Pick",
+   "status": "ok",
+   "pages": 5,
+   "fps": 141,
+   "cases": 283,
+   "warnings": [
+    "functional-chunk-13 生成被截断，已重试"
+   ]
+  },
+  {
+   "module": "用户端/首页",
+   "status": "ok",
+   "pages": 5,
+   "fps": 140,
+   "cases": 275,
+   "warnings": []
+  }
+ ]
+}
