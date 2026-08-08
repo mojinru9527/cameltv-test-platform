@@ -37,7 +37,7 @@ description: Use when asked to write, output, design, or supplement test cases o
 | 被测类型 | 必读检查清单 |
 | --- | --- |
 | 功能用例 | [functional-checklist.md](functional-checklist.md) + 源文档 `测试的具体体现.md`、`功能测试检查点【辅助】.md` |
-| 接口/API 用例 | [api-checklist.md](api-checklist.md) + 源文档 `API接口测试方案.md` |
+| 接口/API 用例 | [api-checklist.md](api-checklist.md) + **权威输出要求 `tests/test-case-standards/接口测试输出用例要求.md`**（用户重新整理，接口测试.xmind）+ 源文档 `API接口测试方案.md`、`接口测试考虑点【辅助作用】.md` |
 | 界面用例 | 源文档 `界面测试的方法要点.md`、`测试用例标准.md` 第 4.2 节 |
 
 设计方法综合运用:**等价类划分、边界值分析、场景法、因果图、正交表、错误推测**(详见 `功能测试用例规范.md`「用例设计方法」)。
