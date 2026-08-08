@@ -1,0 +1,28 @@
+{
+ "evidence": "Batch 124 需求/设计稿入库脚本 dry-run 证据（C124-1/C124-3 前置）",
+ "date": "2026-08-08",
+ "exports": [
+  {
+   "export": "运营后台原型",
+   "pages": 74,
+   "images": 2776,
+   "nodes": 88,
+   "modules": 14
+  },
+  {
+   "export": "用户端原型",
+   "pages": 109,
+   "images": 2005,
+   "nodes": 130,
+   "modules": 21
+  }
+ ],
+ "total_pages": 183,
+ "total_images": 4781,
+ "module_tree": {
+  "nodes": 218,
+  "modules": 35,
+  "pages": 183,
+  "screenshots": 4781
+ }
+}

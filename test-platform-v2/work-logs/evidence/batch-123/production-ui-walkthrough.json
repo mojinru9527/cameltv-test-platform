@@ -1,0 +1,16 @@
+{
+  "batch": "batch-123",
+  "condition": "C123-2",
+  "status": "closed",
+  "date": "2026-08-08",
+  "method": "Playwright 登录生产（sportsadmin）→ 知识中心各 Tab 截图",
+  "screenshots": [
+    {"file": "screens/graph.png", "result": "FAIL", "detail": "React Unexpected Application Error — Cannot add item: item with id test_case:test_case:p1:首页热门赛事-真实分页参数 already exists（图谱节点 id 重复）"},
+    {"file": "screens/entities.png", "result": "PASS", "detail": "实体表格含 模块/用例 徽标、名称、来源列、置信度 100%；来源待补标注正确"},
+    {"file": "screens/sources-list.png", "result": "PASS", "detail": "知识源列表正常"},
+    {"file": "screens/sources-detail-sheet.png", "result": "PASS", "detail": "Sheet 弹窗布局完整可读，溯源/原始内容/切片清晰（Batch 123 Slice 1 生效）"},
+    {"file": "screens/wiki.png", "result": "PASS", "detail": "Wiki 页正常展示（来源/页面树/预览）"},
+    {"file": "screens/wikidiff-result.png", "result": "PASS", "detail": "发起对比任务#12 显示'后台对比中,自动刷新结果'（轮询修复生效；结果需更长时间）"}
+  ],
+  "new_defect": "P0：知识图谱页在生产崩溃 — graph_view 返回重复节点 id（旧提取重复实体 entity_key=test_case:p1:首页热门赛事-真实分页参数），vis-network add 抛错 → 整页 React error。需在下一批次修复：graph_view 节点/边去重 + 生产重复实体清理。"
+}

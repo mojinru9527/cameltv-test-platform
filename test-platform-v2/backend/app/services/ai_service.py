@@ -44,28 +44,26 @@ def _load_skill_context() -> str:
     Only loads functional-testing files — API test case generation is handled
     separately via dedicated tooling.
     """
-    parts: list[str] = []
-    for fname in ["SKILL.md", "case-template.md", "functional-checklist.md"]:
-        fpath = _skill_dir() / fname
-        if fpath.exists():
-            parts.append(fpath.read_text(encoding="utf-8"))
-    return "\n\n---\n\n".join(parts)
+    return _load_skill_context_for("functional")
 
 
 def _load_skill_context_for(kind: str) -> str:
     """Load skill files for a specific case type.
 
     kind = "functional": SKILL.md + case-template.md + functional-checklist.md
-    kind = "api":        api-checklist.md + 接口测试考虑点【辅助作用】.md + SKILL.md
+                         + 功能测试输出用例要求.md（权威输出要求，7 份功能用例文档）
+    kind = "api":        api-checklist.md + 接口测试输出用例要求.md（权威输出要求，接口测试.xmind）
+                         + 接口测试考虑点【辅助作用】.md（兜底）+ SKILL.md
     """
+    standards_dir = _resolve_workspace_root() / "tests" / "test-case-standards"
+    parts: list[str] = []
+
     if kind == "api":
-        parts: list[str] = []
-        api_files = ["api-checklist.md", "接口测试考虑点【辅助作用】.md"]
-        for fname in api_files:
+        # 1) 权威输出要求：接口测试输出用例要求.md（skill 目录或规范中心）
+        for fname in ["api-checklist.md", "接口测试输出用例要求.md", "接口测试考虑点【辅助作用】.md"]:
             fpath = _skill_dir() / fname
-            if fname == "接口测试考虑点【辅助作用】.md" and not fpath.exists():
-                # 仓库规范中心兜底（tests/test-case-standards/）
-                alt = _resolve_workspace_root() / "tests" / "test-case-standards" / fname
+            if not fpath.exists():
+                alt = standards_dir / fname
                 if alt.exists():
                     fpath = alt
             if fpath.exists():
@@ -75,11 +73,18 @@ def _load_skill_context_for(kind: str) -> str:
             parts.append(skill_fpath.read_text(encoding="utf-8"))
         return "\n\n---\n\n".join(parts)
 
-    # functional 原逻辑（API 用例由专门生成器/AI 提示词覆盖，此处保持功能清单）
-    files = ["SKILL.md", "case-template.md", "functional-checklist.md"]
-    parts: list[str] = []
-    for fname in files:
+    # functional：SKILL.md + case-template.md + functional-checklist.md + 功能测试输出用例要求.md
+    for fname in [
+        "SKILL.md",
+        "case-template.md",
+        "functional-checklist.md",
+        "功能测试输出用例要求.md",
+    ]:
         fpath = _skill_dir() / fname
+        if not fpath.exists():
+            alt = standards_dir / fname
+            if alt.exists():
+                fpath = alt
         if fpath.exists():
             parts.append(fpath.read_text(encoding="utf-8"))
     return "\n\n---\n\n".join(parts)

@@ -1,0 +1,11 @@
+{
+  "batch": "batch-123",
+  "condition": "C123-1",
+  "status": "closed",
+  "date": "2026-08-08",
+  "production_url": "https://test-platform.up.railway.app/api/v1",
+  "import_result": {"created_entities": 925, "created_relations": 888, "total_entities": 970, "total_relations": 968},
+  "fix_applied": "links_to_admin/konfi configures 解析缺 module: 前缀 → 修复后新增 57 条关系",
+  "graph_verified": {"edges": 968, "contains": 805, "tested_by": 34, "navigates_to": 51, "links_to_admin": 54, "configures": 16, "managed_by": 8},
+  "script": "scripts/knowledge/import-module-associations.py"
+}

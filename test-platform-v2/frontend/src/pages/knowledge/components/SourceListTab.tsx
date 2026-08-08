@@ -23,7 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import { fetchKnowledgeSources, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
+import { fetchKnowledgeSources, fetchKnowledgeSource, fetchSourceChunks, verifyKnowledgeSource } from '@/api/knowledge'
 import { fetchReleaseBundles } from '@/api/releaseBundles'
 import { fetchSyncCoverage } from '@/api/wiki'
 import { useAbortableEffect } from '@/hooks/useAbortableEffect'
@@ -132,6 +132,9 @@ export default function SourceListTab() {
     setSelected(src)
     setChunksLoading(true)
     setChunks([])
+    fetchKnowledgeSource(src.id)
+      .then((detail) => setSelected(detail))
+      .catch(() => { /* 保留列表行数据 */ })
     fetchSourceChunks(src.id)
       .then(setChunks)
       .catch(() => setChunks([]))
@@ -373,6 +376,32 @@ export default function SourceListTab() {
               </pre>
             </div>
           )}
+
+          {/* 设计稿图片（需求原型页截图） */}
+          {(() => {
+            try {
+              const meta = selected?.metadata_json ? JSON.parse(selected.metadata_json) : {}
+              const images: string[] = meta?.images || []
+              if (images.length === 0) return null
+              return (
+                <div className="space-y-3">
+                  <div className="text-sm font-medium text-foreground flex items-center gap-2">
+                    <span className="inline-block w-1 h-4 bg-primary rounded-full" />
+                    设计稿图片（{images.length}）
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {images.map((url: string, i: number) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer"
+                        className="rounded-lg border overflow-hidden block hover:border-primary/30">
+                        <img src={url} alt={`设计稿 ${i + 1}`} loading="lazy"
+                          className="w-full max-h-[360px] object-contain bg-muted/20" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )
+            } catch { return null }
+          })()}
 
           {/* 切片列表 */}
           <div className="space-y-3">
