@@ -208,6 +208,8 @@ class KnowledgeEntityOut(BaseModel):
     name: str
     description: str
     source_id: int | None = None
+    source_title: str = ""
+    source_type: str = "" 
     business_ref_type: str
     business_ref_id: int | None = None
     confidence: float
@@ -227,6 +229,9 @@ class KnowledgeEntityBrief(BaseModel):
     name: str
     description: str
     confidence: float
+    source_id: int | None = None
+    source_title: str = ""
+    source_type: str = ""
 
     model_config = {"from_attributes": True}
 

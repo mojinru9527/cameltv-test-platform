@@ -645,7 +645,22 @@ def list_entities(
     if keyword:
         stmt = stmt.where(KnowledgeEntity.name.contains(keyword) | KnowledgeEntity.description.contains(keyword))
     rows = db.scalars(stmt.order_by(KnowledgeEntity.id.desc()).limit(limit)).all()
-    return R.ok([KnowledgeEntityBrief.model_validate(r) for r in rows])
+    source_ids = {r.source_id for r in rows if r.source_id}
+    source_map: dict[int, tuple[str, str]] = {}
+    if source_ids:
+        src_rows = db.execute(
+            select(KnowledgeSource.id, KnowledgeSource.title, KnowledgeSource.source_type).where(
+                KnowledgeSource.id.in_(source_ids)
+            )
+        ).all()
+        source_map = {sid: (title or "", stype or "") for sid, title, stype in src_rows}
+    out = []
+    for r in rows:
+        item = KnowledgeEntityBrief.model_validate(r)
+        if r.source_id and r.source_id in source_map:
+            item.source_title, item.source_type = source_map[r.source_id]
+        out.append(item)
+    return R.ok(out)
 
 
 @router.get("/graph/entities/{entity_id}", response_model=R[KnowledgeEntityOut], summary="实体详情")
@@ -657,7 +672,13 @@ def get_entity(
     entity = db.get(KnowledgeEntity, entity_id)
     if not entity or entity.project_id != (current.project_id or 0):
         return R(code=404, msg="实体不存在")
-    return R.ok(KnowledgeEntityOut.model_validate(entity))
+    out = KnowledgeEntityOut.model_validate(entity)
+    if entity.source_id:
+        src = db.get(KnowledgeSource, entity.source_id)
+        if src:
+            out.source_title = src.title or ""
+            out.source_type = src.source_type or ""
+    return R.ok(out)
 
 
 @router.get("/graph/relations", response_model=R[list[KnowledgeRelationOut]], summary="关系列表")

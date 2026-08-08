@@ -33,6 +33,7 @@ import { Search, CheckCircle2, XCircle, Loader2 } from '@/lib/icons'
 
 const ENTITY_TYPES = [
   { v: '_all', l: '全部类型' },
+  { v: 'module', l: '模块' },
   { v: 'api', l: 'API' },
   { v: 'field', l: '字段' },
   { v: 'requirement', l: '需求' },
@@ -41,6 +42,7 @@ const ENTITY_TYPES = [
 ]
 const TYPE_LABEL: Record<string, string> = Object.fromEntries(ENTITY_TYPES.map((t) => [t.v, t.l]))
 const TYPE_COLORS: Record<string, string> = {
+  module: 'bg-status-accent-muted text-status-accent',
   api: 'bg-status-info-muted text-status-info',
   field: 'bg-status-success-muted text-status-success',
   requirement: 'bg-status-accent-muted text-status-accent',
@@ -182,6 +184,7 @@ export default function EntityTab() {
               <TableRow>
                 <TableHead className="w-24">类型</TableHead>
                 <TableHead>名称</TableHead>
+                <TableHead className="w-56 hidden lg:table-cell">来源</TableHead>
                 <TableHead className="w-32 hidden md:table-cell">置信度</TableHead>
                 <TableHead className="w-24 hidden sm:table-cell">审核</TableHead>
               </TableRow>
@@ -198,7 +201,7 @@ export default function EntityTab() {
                 ))
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                     暂无实体数据。请先在「图谱」Tab 中执行实体提取。
                   </TableCell>
                 </TableRow>
@@ -217,6 +220,16 @@ export default function EntityTab() {
                     <TableCell>
                       <div className="font-medium text-sm">{r.name}</div>
                       <div className="text-xs text-muted-foreground truncate max-w-64">{r.description}</div>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      {r.source_title ? (
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="text-xs text-muted-foreground truncate max-w-48" title={r.source_title}>{r.source_title}</span>
+                          {r.source_type && <Badge tone="neutral" className="text-xs w-fit">{r.source_type}</Badge>}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">来源待补</span>
+                      )}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       <div className="flex items-center gap-2">
@@ -268,6 +281,15 @@ export default function EntityTab() {
                 <span className="text-lg font-semibold">{detail.name}</span>
               </div>
               <p className="text-sm text-muted-foreground">{detail.description}</p>
+              {detail.source_title && (
+                <div className="rounded-md border p-3 text-sm space-y-1">
+                  <div className="font-medium text-xs text-muted-foreground">来源溯源</div>
+                  <div className="flex items-center gap-2">
+                    {detail.source_type && <Badge tone="neutral" className="text-xs">{detail.source_type}</Badge>}
+                    <span className="text-sm">{detail.source_title}</span>
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <span className="text-muted-foreground">实体键: </span>
