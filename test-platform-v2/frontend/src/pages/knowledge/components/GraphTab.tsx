@@ -13,6 +13,7 @@ import type { GraphView } from '@/types'
 
 // ── 实体类型着色 ──
 const GROUP_COLORS: Record<string, string> = {
+  module: '#8b5cf6',
   api: '#3b82f6',
   field: '#10b981',
   requirement: '#8b5cf6',
@@ -29,9 +30,32 @@ const EDGE_DASHES: Record<string, boolean> = {
   affects: true,
   covers: true,
   generated_from: true,
+  tested_by: false,
+  navigates_to: false,
+  configures: true,
+  links_to_admin: true,
+  evolves_from: true,
+  described_by: true,
+}
+
+// ── 关系类型中文标签（图例） ──
+const RELATION_LABELS: Record<string, string> = {
+  contains: '包含（层级）',
+  tested_by: '被用例覆盖',
+  navigates_to: '跳转关联',
+  configures: '配置影响',
+  links_to_admin: '对应后台管理',
+  evolves_from: '版本演化',
+  executed_by: '执行来源',
+  depends_on: '依赖',
+  affects: '影响',
+  covers: '覆盖',
+  generated_from: '生成自',
+  described_by: '描述',
 }
 
 const TYPE_LABELS: Record<string, string> = {
+  module: '模块',
   api: 'API',
   field: '字段',
   requirement: '需求',
@@ -439,6 +463,26 @@ export default function GraphTab() {
                     </button>
                   )
                 })}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">关系类型</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                {Object.entries(RELATION_LABELS).map(([key, label]) => (
+                  <div key={key} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span
+                      className="inline-block h-0.5 w-4 shrink-0 rounded"
+                      style={{ backgroundColor: EDGE_DASHES[key] === false ? '#94a3b8' : '#64748b' }}
+                    />
+                    <span>{label}</span>
+                    <span className="text-xs text-muted-foreground/60 ml-auto">
+                      {graphData.edges.filter((e) => e.relation_type === key).length}
+                    </span>
+                  </div>
+                ))}
               </CardContent>
             </Card>
 

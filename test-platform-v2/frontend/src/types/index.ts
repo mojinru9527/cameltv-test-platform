@@ -1035,6 +1035,8 @@ export interface KnowledgeEntity {
   name: string
   description: string
   source_id: number | null
+  source_title: string
+  source_type: string
   business_ref_type: string
   business_ref_id: number | null
   confidence: number
@@ -1089,6 +1091,9 @@ export interface KnowledgeEntityBrief {
   name: string
   description: string
   confidence: number
+  source_id: number | null
+  source_title: string
+  source_type: string
 }
 
 // M3 实体提取结果

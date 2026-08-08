@@ -6,11 +6,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   fetchWikiConfig, fetchWikiRawSources, fetchWikiPages, fetchWikiPage,
-  fetchWikiPageLinks, fetchWikiRawSource, createWikiIngestJob, approveWikiPage, rejectWikiPage,
+  fetchWikiPageLinks, fetchWikiRawSource, createWikiIngestJob, fetchWikiIngestJob, approveWikiPage, rejectWikiPage,
   fetchWikiSyncAvailability, syncBundleToWiki,
 } from '@/api/wiki'
 import type {
   WikiConfig,
+  WikiIngestJob,
   WikiLink,
   WikiPage,
   WikiPageBrief,
@@ -40,6 +41,8 @@ export default function WikiTab() {
   const [syncing, setSyncing] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [compiling, setCompiling] = useState<number | null>(null)
+  const [activeJob, setActiveJob] = useState<WikiIngestJob | null>(null)
+  const [jobOpen, setJobOpen] = useState(false)
   const [selected, setSelected] = useState<WikiPage | null>(null)
   const [links, setLinks] = useState<WikiLink[]>([])
   const [detailLoading, setDetailLoading] = useState(false)
@@ -86,8 +89,26 @@ export default function WikiTab() {
     setCompiling(rawId)
     try {
       const job = await createWikiIngestJob(rawId)
-      toast.success(`已提交 Wiki 编译任务 #${job.id}，稍后刷新查看页面`)
-      setTimeout(() => load(), 1500)
+      setActiveJob(job)
+      setJobOpen(true)
+      toast.success(`已提交 Wiki 编译任务 #${job.id}，完成后自动刷新页面`)
+      let current = job
+      for (let i = 0; i < 60 && current.status !== 'success' && current.status !== 'failed'; i += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        current = await fetchWikiIngestJob(job.id).catch(() => current)
+        setActiveJob(current)
+      }
+      if (current.status === 'success') {
+        await load()
+        toast.success('Wiki 编译完成，已生成页面（可在左侧打开查看内容）')
+        try {
+          const paged = await fetchWikiPages({ page_size: 50 })
+          const first = (paged.items || [])[0]
+          if (first) await openPage(first.id)
+        } catch { /* 自动打开失败可忽略 */ }
+      } else if (current.status === 'failed') {
+        toast.error(current.error_message || `Wiki 编译任务 #${job.id} 失败`)
+      }
     } catch (e: any) {
       toast.error(e?.message || '触发编译失败')
     } finally {
@@ -174,6 +195,38 @@ export default function WikiTab() {
           )}
         </div>
       </div>
+
+      {activeJob && jobOpen && (
+        <div role="status" className="rounded-md border p-3 space-y-2 text-sm">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium">Wiki 编译任务 #{activeJob.id}</span>
+            {(activeJob.status === 'running' || activeJob.status === 'pending' || activeJob.status === 'queued') ? (
+              <Badge tone="neutral" className="gap-1">
+                <Loader2 className="size-3 animate-spin" aria-hidden="true" /> 进行中（{activeJob.stage}）
+              </Badge>
+            ) : activeJob.status === 'success' ? (
+              <Badge tone="success">成功</Badge>
+            ) : activeJob.status === 'failed' ? (
+              <Badge tone="danger">失败</Badge>
+            ) : (
+              <Badge tone="neutral">{activeJob.status}</Badge>
+            )}
+            {activeJob.finished_at && (
+              <span className="text-xs text-muted-foreground">完成于 {activeJob.finished_at.slice(0, 19).replace('T', ' ')}</span>
+            )}
+            <Button variant="ghost" size="sm" className="h-6 ml-auto" onClick={() => setJobOpen(false)}>关闭</Button>
+          </div>
+          {activeJob.stage && activeJob.status !== 'success' && activeJob.status !== 'failed' && (
+            <div className="text-xs text-muted-foreground">阶段：{activeJob.stage}（编译进行中，完成后自动刷新并展示页面）</div>
+          )}
+          {activeJob.error_message && (
+            <div className="text-xs text-status-danger">{activeJob.error_message}</div>
+          )}
+          {activeJob.status === 'failed' && (
+            <div className="text-xs text-muted-foreground">可在左侧来源列表重新点击「编译」重试。</div>
+          )}
+        </div>
+      )}
 
       {syncUnavailableReason && (
         <div

@@ -1,0 +1,12 @@
+{
+  "batch": "batch-122",
+  "condition": "C122-3",
+  "status": "closed",
+  "date": "2026-08-08",
+  "production_url": "https://test-platform.up.railway.app/api/v1",
+  "imported": {"体育-用户端-功能": 393, "体育-运营后台-功能": 80, "体育-接口测试": 34, "total": 507},
+  "failed": 0,
+  "sample_verified": {"case_id": "SP-AND-PICK-001", "module": "安卓iOS/赛事详情/预测Pick", "priority": "P0", "source": "batch-122"},
+  "script": "scripts/sports/import-case-batch-api.py",
+  "verification": "生产 API 按域统计 393/80/34=507，与本地库一致；抽样 SP-AND-PICK-001 字段正确"
+}

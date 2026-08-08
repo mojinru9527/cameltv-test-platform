@@ -645,7 +645,22 @@ def list_entities(
     if keyword:
         stmt = stmt.where(KnowledgeEntity.name.contains(keyword) | KnowledgeEntity.description.contains(keyword))
     rows = db.scalars(stmt.order_by(KnowledgeEntity.id.desc()).limit(limit)).all()
-    return R.ok([KnowledgeEntityBrief.model_validate(r) for r in rows])
+    source_ids = {r.source_id for r in rows if r.source_id}
+    source_map: dict[int, tuple[str, str]] = {}
+    if source_ids:
+        src_rows = db.execute(
+            select(KnowledgeSource.id, KnowledgeSource.title, KnowledgeSource.source_type).where(
+                KnowledgeSource.id.in_(source_ids)
+            )
+        ).all()
+        source_map = {sid: (title or "", stype or "") for sid, title, stype in src_rows}
+    out = []
+    for r in rows:
+        item = KnowledgeEntityBrief.model_validate(r)
+        if r.source_id and r.source_id in source_map:
+            item.source_title, item.source_type = source_map[r.source_id]
+        out.append(item)
+    return R.ok(out)
 
 
 @router.get("/graph/entities/{entity_id}", response_model=R[KnowledgeEntityOut], summary="实体详情")
@@ -657,7 +672,13 @@ def get_entity(
     entity = db.get(KnowledgeEntity, entity_id)
     if not entity or entity.project_id != (current.project_id or 0):
         return R(code=404, msg="实体不存在")
-    return R.ok(KnowledgeEntityOut.model_validate(entity))
+    out = KnowledgeEntityOut.model_validate(entity)
+    if entity.source_id:
+        src = db.get(KnowledgeSource, entity.source_id)
+        if src:
+            out.source_title = src.title or ""
+            out.source_type = src.source_type or ""
+    return R.ok(out)
 
 
 @router.get("/graph/relations", response_model=R[list[KnowledgeRelationOut]], summary="关系列表")
@@ -852,6 +873,128 @@ def auto_build_graph(
         skipped_entities=result.skipped_entities,
         skipped_relations=result.skipped_relations,
         message=result.message,
+    ))
+
+
+class ModuleAssociationEntity(BaseModel):
+    entity_type: str
+    entity_key: str
+    name: str
+    description: str = ""
+    confidence: float = 1.0
+    metadata: dict | None = None
+
+
+class ModuleAssociationRelation(BaseModel):
+    from_key: str
+    relation_type: str
+    to_key: str
+    confidence: float = 1.0
+    evidence: str = ""
+
+
+class ModuleAssociationRequest(BaseModel):
+    entities: list[ModuleAssociationEntity]
+    relations: list[ModuleAssociationRelation]
+
+
+class ModuleAssociationResult(BaseModel):
+    created_entities: int = 0
+    created_relations: int = 0
+    skipped_entities: int = 0
+    skipped_relations: int = 0
+    total_entities: int = 0
+    total_relations: int = 0
+
+
+@router.post("/graph/module-associations", response_model=R[ModuleAssociationResult], summary="体育模块关联入库（Batch 122 用例结构）")
+def import_module_associations(
+    body: ModuleAssociationRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """从用例结构批量入库模块/用例/接口实体与业务关系（幂等）。
+
+    实体：module / test_case / api；关系：contains / tested_by / navigates_to / links_to_admin / configures。
+    幂等：按 entity_key 与 from+relation_type+to 去重，重复调用不重复创建。
+    """
+    if not settings.knowledge_graph_enabled:
+        raise APIException(code=503, msg="知识图谱未启用（knowledge_graph_enabled=False）", http_status=503)
+
+    pid = current.project_id or 0
+    created_e = created_r = skipped_e = skipped_r = 0
+    key_to_id: dict[str, int] = {}
+
+    def _ensure_entity(ent: ModuleAssociationEntity) -> int:
+        nonlocal created_e, skipped_e
+        eid = key_to_id.get(ent.entity_key)
+        if eid:
+            return eid
+        row = db.scalar(select(KnowledgeEntity.id).where(
+            KnowledgeEntity.project_id == pid,
+            KnowledgeEntity.entity_key == ent.entity_key,
+        ))
+        if row:
+            skipped_e += 1
+            key_to_id[ent.entity_key] = row
+            return row
+        row = KnowledgeEntity(
+            project_id=pid,
+            entity_type=ent.entity_type,
+            entity_key=ent.entity_key,
+            name=ent.name,
+            description=ent.description,
+            confidence=ent.confidence,
+            review_status="approved",
+            metadata_json=json.dumps(ent.metadata or {}, ensure_ascii=False),
+        )
+        db.add(row)
+        db.flush()
+        created_e += 1
+        key_to_id[ent.entity_key] = row.id
+        return row.id
+
+    for ent in body.entities:
+        _ensure_entity(ent)
+
+    for rel in body.relations:
+        from_id = key_to_id.get(rel.from_key)
+        to_id = key_to_id.get(rel.to_key)
+        if not from_id or not to_id:
+            continue
+        exists = db.scalar(select(KnowledgeRelation.id).where(
+            KnowledgeRelation.project_id == pid,
+            KnowledgeRelation.from_entity_id == from_id,
+            KnowledgeRelation.to_entity_id == to_id,
+            KnowledgeRelation.relation_type == rel.relation_type,
+        ))
+        if exists:
+            skipped_r += 1
+            continue
+        db.add(KnowledgeRelation(
+            project_id=pid,
+            from_entity_id=from_id,
+            relation_type=rel.relation_type,
+            to_entity_id=to_id,
+            confidence=rel.confidence,
+            review_status="approved",
+            metadata_json=json.dumps({"evidence": rel.evidence}, ensure_ascii=False),
+        ))
+        created_r += 1
+
+    db.commit()
+    total_e = db.scalar(select(func.count()).select_from(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)) or 0
+    total_r = db.scalar(select(func.count()).select_from(KnowledgeRelation).where(KnowledgeRelation.project_id == pid)) or 0
+    _audit(req, current, db, "knowledge:graph_module_associations", f"project#{pid}",
+           f"entities +{created_e} relations +{created_r}")
+    return R.ok(ModuleAssociationResult(
+        created_entities=created_e,
+        created_relations=created_r,
+        skipped_entities=skipped_e,
+        skipped_relations=skipped_r,
+        total_entities=total_e,
+        total_relations=total_r,
     ))
 
 
