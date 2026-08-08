@@ -58,16 +58,24 @@ def main() -> int:
             modules.append(f"{label}/{m['name']}")
 
     deep_map = load_deep()
+    all_deep_flat = [c for cs in deep_map.values() for c in cs]
+    # 深度用例按模块名模糊匹配（如 用户端/赛事详情 ↔ 赛事详情/预测Pick、运营后台/赛事预测 ↔ 运营后台/赛事预测/奖励发放记录）
+    matched_ids: set[str] = set()
     result_modules = []
     total_base = total_deep = 0
     for mod in modules:
         base = load_base(mod)
-        # 深度用例按模块名模糊匹配（如 用户端/赛事详情 ↔ 赛事详情/预测Pick、运营后台/赛事预测 ↔ 运营后台/赛事预测/奖励发放记录）
         key = norm_module_key(mod)
-        deep = [c for c in deep_map.values() for c in c]  # flat
-        matched = [c for c in deep if key.split()[-1] in norm_module_key(c.get("module", "")) or norm_module_key(c.get("module", "")) in key]
-        dedup = {c.get("case_id"): c for c in matched}
-        deep_list = list(dedup.values())
+        tail = key.split()[-1]
+        matched = []
+        for c in all_deep_flat:
+            ck = norm_module_key(c.get("module", ""))
+            if c.get("case_id") in matched_ids:
+                continue
+            if tail in ck or ck in key:
+                matched.append(c)
+                matched_ids.add(c.get("case_id"))
+        deep_list = list({c.get("case_id"): c for c in matched}.values())
         result_modules.append({
             "module": mod,
             "base_count": len(base),
@@ -77,6 +85,21 @@ def main() -> int:
             "deep": deep_list,
         })
         total_base += len(base)
+        total_deep += len(deep_list)
+    # 未匹配的深度用例（如 接口/konfi/跨模块）按自身模块追加，确保全部包含
+    unmatched = [c for c in all_deep_flat if c.get("case_id") not in matched_ids]
+    by_mod: dict[str, list[dict]] = {}
+    for c in unmatched:
+        by_mod.setdefault(c.get("module") or "体育-其他", []).append(c)
+    for mod_name, deep_list in sorted(by_mod.items()):
+        result_modules.append({
+            "module": mod_name,
+            "base_count": 0,
+            "deep_count": len(deep_list),
+            "total_count": len(deep_list),
+            "base": [],
+            "deep": deep_list,
+        })
         total_deep += len(deep_list)
 
     summary = {"module_count": len(modules), "total_base": total_base, "total_deep": total_deep, "total": total_base + total_deep}

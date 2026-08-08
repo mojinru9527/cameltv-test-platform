@@ -1,0 +1,1985 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "兑换记录弹窗展示",
+    "description": "点击“兑换记录”后展示“兑换记录”弹窗；弹窗包含“我的兑换记录”列表，列表字段：物品图片、物品名称、消耗银钻、兑换时间（如12.08 12:20:46）。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确弹窗的关闭方式、空数据展示、分页或加载更多机制。",
+      "suggestion": "补充弹窗关闭按钮、空态提示、分页/滚动加载规则。"
+     },
+     {
+      "severity": "medium",
+      "description": "需求未明确兑换记录的时间格式和排序规则（如倒序）。",
+      "suggestion": "明确时间格式（如MM.DD HH:mm:ss）和排序（按时间倒序）。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "账户信息模块展示",
+    "description": "页面展示账户信息模块，包含银钻余额（如1,425）和“兑换记录”入口。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确银钻余额的刷新时机和数据来源。",
+      "suggestion": "明确余额实时刷新或进入页面时加载。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "兑换记录列表字段展示",
+    "description": "兑换记录弹窗中的列表展示物品图片、物品名称、消耗银钻、兑换时间（如12.08 12:20:46）。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确物品图片加载失败时的占位图、物品名称超长截断规则。",
+      "suggestion": "补充图片加载失败占位、名称超长省略号处理。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "兑换记录弹窗交互",
+    "description": "点击“兑换记录”后展示弹窗；弹窗应可关闭，且不影响页面其他操作。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确点击弹窗外部或按ESC是否关闭。",
+      "suggestion": "明确关闭方式（如点击遮罩关闭、关闭按钮）。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "兑换记录空态展示",
+    "description": "当无兑换记录时，弹窗展示“暂无相关数据”提示。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求已提及“暂无相关数据”，但未明确具体样式。",
+      "suggestion": "补充空态文案和图标样式。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述了商城页面中兑换记录弹窗和账户信息模块的基本功能，但细节不足，如弹窗交互、列表加载、空态样式、数据排序等未明确。建议补充交互细节和边界条件，以提高用例设计的准确性。"
+ },
+ "functional_cases": [
+  {
+   "title": "Camel商城列表正常展示",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "Camel商城",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，银钻余额1425，商城存在多个可兑换物品（含图片、名称、icon、兑换按钮、倒计时）",
+   "preconditions": "用户已登录，银钻余额1425，商城接口返回至少3个物品数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面加载成功，展示商城列表，包含物品图片、名称、icon、兑换按钮、倒计时等元素"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表顶部银钻余额",
+     "expected": "显示当前余额1,425，格式正确"
+    }
+   ],
+   "expected_result": "商城列表正常展示，所有物品项元素完整，银钻余额显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "Camel商城列表空数据展示",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "Camel商城",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "商城无任何可兑换物品，接口返回空列表",
+   "preconditions": "用户已登录，商城接口返回空数组",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面展示空态提示「暂无相关数据」，无物品列表"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不报错，无异常崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "物品图片正常加载",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "物品图片",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "物品图片URL有效，返回正常图片资源",
+   "preconditions": "商城列表包含至少一个物品，图片URL有效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "物品图片正常显示，无裂图"
+    }
+   ],
+   "expected_result": "图片加载成功，显示清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "物品图片加载失败占位图",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "物品图片",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "物品图片URL无效或网络异常，图片加载失败",
+   "preconditions": "商城列表包含至少一个物品，图片URL无效（如返回404）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "图片加载失败，显示默认占位图，不显示裂图，页面其他元素正常"
+    }
+   ],
+   "expected_result": "图片区域显示占位图，不影响列表其他功能",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "物品名称正常展示",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "物品名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "物品名称为正常长度（如「金币」）",
+   "preconditions": "商城列表包含物品，名称为正常长度",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "物品名称完整显示，无截断"
+    }
+   ],
+   "expected_result": "名称显示正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "物品名称超长展示",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "物品名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "物品名称为超长文本（如「物品名称物品名称物品名称物」），验证展示规则",
+   "preconditions": "商城列表包含物品，名称为超长文本",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "超长名称按设计规则展示（如单行省略、两行截断），不撑破布局，可悬浮查看完整名称"
+    }
+   ],
+   "expected_result": "超长名称展示合理，不影响页面布局",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "icon正常展示",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "icon",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "物品icon URL有效，返回正常图标资源",
+   "preconditions": "商城列表包含至少一个物品，icon URL有效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "icon正常显示，无裂图"
+    }
+   ],
+   "expected_result": "icon显示正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "icon加载失败处理",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "icon",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "物品icon URL无效或网络异常，icon加载失败",
+   "preconditions": "商城列表包含至少一个物品，icon URL无效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "icon加载失败，显示默认占位或隐藏，不影响其他元素"
+    }
+   ],
+   "expected_result": "icon区域处理合理，不显示裂图",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "兑换按钮正常可用",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "兑换",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "物品库存充足，活动进行中，用户银钻余额1425足够兑换（物品消耗1200银钻）",
+   "preconditions": "用户已登录，银钻余额1425，物品库存>0，活动状态为进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "兑换按钮可点击，样式正常"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换按钮",
+     "expected": "弹出确认兑换弹窗"
+    }
+   ],
+   "expected_result": "兑换按钮可用，点击后弹出确认兑换弹窗",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "兑换按钮在库存不足时置灰",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "物品库存为0，活动进行中，用户余额充足",
+   "preconditions": "用户已登录，物品库存为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "该物品的兑换按钮置灰或不可点击，点击无响应或提示「库存不足」"
+    }
+   ],
+   "expected_result": "兑换按钮不可用，防止无效操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "兑换按钮在活动结束后置灰",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "物品兑换活动已结束（倒计时归零），用户余额充足",
+   "preconditions": "用户已登录，物品活动状态为已结束",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "该物品的兑换按钮置灰或不可点击，点击提示「活动已结束」"
+    }
+   ],
+   "expected_result": "兑换按钮不可用，提示明确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "倒计时正常显示",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "倒计时",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "物品活动剩余时间15:23:00，倒计时正常",
+   "preconditions": "商城列表包含物品，倒计时未归零",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "倒计时显示为15:23:00，格式正确，每秒递减"
+    }
+   ],
+   "expected_result": "倒计时正常显示并递减",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "倒计时归零后行为",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "倒计时",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "物品倒计时归零，验证页面行为",
+   "preconditions": "商城列表包含物品，倒计时即将归零",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面，等待倒计时归零",
+     "expected": "倒计时显示00:00:00，兑换按钮置灰或物品自动下架，页面提示「已下架」或「活动结束」"
+    }
+   ],
+   "expected_result": "倒计时归零后，兑换操作被阻止，页面状态正确",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "银钻余额正常展示",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "银钻余额",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户银钻余额为1425，展示格式为千分位",
+   "preconditions": "用户已登录，银钻余额1425",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面顶部显示银钻余额1,425，格式正确"
+    }
+   ],
+   "expected_result": "余额展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "银钻余额为0时展示",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "银钻余额",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户银钻余额为0，验证展示与兑换限制",
+   "preconditions": "用户已登录，银钻余额为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "余额显示0，兑换按钮可点击但兑换时提示余额不足"
+    }
+   ],
+   "expected_result": "余额为0时展示正常，兑换流程有余额校验",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "兑换记录入口正常展示",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "兑换记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户有兑换记录，入口正常显示",
+   "preconditions": "用户已登录，存在至少一条兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面展示兑换记录入口（icon+文字），可点击"
+    }
+   ],
+   "expected_result": "兑换记录入口正常显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "兑换记录入口点击弹出弹窗",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "兑换记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户有兑换记录，点击入口查看",
+   "preconditions": "用户已登录，存在至少一条兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面展示兑换记录入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换记录入口",
+     "expected": "弹出兑换记录弹窗，展示兑换记录列表"
+    }
+   ],
+   "expected_result": "兑换记录弹窗正常弹出，列表展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "兑换记录弹窗空态展示",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "用户无任何兑换记录，点击兑换记录入口",
+   "preconditions": "用户已登录，无兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面展示兑换记录入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换记录入口",
+     "expected": "弹出兑换记录弹窗，显示「暂无相关数据」空态"
+    }
+   ],
+   "expected_result": "弹窗显示空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "确认兑换弹窗正常弹出",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "确认兑换弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "物品库存充足，活动进行中，用户余额1425足够兑换1200银钻物品",
+   "preconditions": "用户已登录，银钻余额1425，物品库存>0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "商城列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击某物品的兑换按钮",
+     "expected": "弹出确认兑换弹窗，展示物品名称、类型名称、有效期、倒计时、消耗银钻等信息"
+    }
+   ],
+   "expected_result": "确认兑换弹窗正常弹出，信息完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "确认兑换弹窗中确认兑换成功",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "确认兑换弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "物品消耗1200银钻，用户余额1425，确认兑换后余额扣减1200，剩余225",
+   "preconditions": "用户已登录，银钻余额1425，物品库存>0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "商城列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换按钮，弹出确认兑换弹窗",
+     "expected": "弹窗展示物品信息"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确认兑换」按钮",
+     "expected": "兑换成功，弹窗关闭，页面提示兑换成功，银钻余额更新为225，兑换记录新增一条"
+    }
+   ],
+   "expected_result": "兑换成功，余额扣减正确，记录生成",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "确认兑换时余额不足",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "确认兑换弹窗",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "物品消耗1200银钻，用户余额1000，不足",
+   "preconditions": "用户已登录，银钻余额1000，物品库存>0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "商城列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换按钮，弹出确认兑换弹窗",
+     "expected": "弹窗展示物品信息"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确认兑换」按钮",
+     "expected": "提示「银钻余额不足」，兑换失败，余额不变，无记录生成"
+    }
+   ],
+   "expected_result": "兑换被拦截，提示明确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "确认兑换时库存不足",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "确认兑换弹窗",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "物品库存为0，但兑换按钮未置灰（模拟并发或状态延迟），用户余额充足",
+   "preconditions": "用户已登录，银钻余额1425，物品库存为0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "商城列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换按钮，弹出确认兑换弹窗",
+     "expected": "弹窗展示物品信息"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确认兑换」按钮",
+     "expected": "提示「库存不足」，兑换失败，余额不变，无记录生成"
+    }
+   ],
+   "expected_result": "兑换被拦截，提示明确",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "确认兑换弹窗取消操作",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "确认兑换弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户点击取消按钮，放弃兑换",
+   "preconditions": "用户已登录，银钻余额1425，物品库存>0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "商城列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换按钮，弹出确认兑换弹窗",
+     "expected": "弹窗展示物品信息"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」或关闭弹窗",
+     "expected": "弹窗关闭，不产生兑换，余额不变，无记录生成"
+    }
+   ],
+   "expected_result": "取消兑换成功，无副作用",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "确认兑换弹窗中物品信息展示完整",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "确认兑换弹窗",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "物品包含名称、类型、有效期（6天5小时）、倒计时（12:20:00）、消耗银钻1200",
+   "preconditions": "用户已登录，银钻余额1425，物品库存>0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "商城列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换按钮，弹出确认兑换弹窗",
+     "expected": "弹窗展示物品名称、类型名称、有效期、倒计时、消耗银钻等信息，信息准确"
+    }
+   ],
+   "expected_result": "弹窗信息完整准确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "兑换记录弹窗列表展示",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户有兑换记录，包含物品图片、名称、消耗银钻、兑换时间（如12.08 12:20:46）",
+   "preconditions": "用户已登录，存在至少一条兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面展示兑换记录入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换记录入口",
+     "expected": "弹出兑换记录弹窗，列表展示兑换记录，包含物品图片、物品名称、消耗银钻、兑换时间等字段"
+    }
+   ],
+   "expected_result": "兑换记录列表展示完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "兑换记录弹窗关闭",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户查看兑换记录后关闭弹窗",
+   "preconditions": "用户已登录，存在至少一条兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面展示兑换记录入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换记录入口，弹出弹窗",
+     "expected": "弹窗展示兑换记录"
+    },
+    {
+     "step": 3,
+     "desc": "点击关闭按钮或弹窗外区域",
+     "expected": "弹窗关闭，返回商城页面，页面状态正常"
+    }
+   ],
+   "expected_result": "弹窗正常关闭",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "未登录访问商城",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "Camel商城",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录，尝试访问商城页面",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开Camel商城页面",
+     "expected": "提示登录或跳转登录页，无法查看商城内容"
+    }
+   ],
+   "expected_result": "未登录用户被拦截，提示登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "兑换成功后余额实时刷新",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "银钻余额",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户余额1425，兑换消耗1200，兑换成功后余额应变为225",
+   "preconditions": "用户已登录，银钻余额1425，物品库存>0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "余额显示1,425"
+    },
+    {
+     "step": 2,
+     "desc": "兑换一个消耗1200银钻的物品",
+     "expected": "兑换成功，页面顶部余额立即更新为225"
+    }
+   ],
+   "expected_result": "余额实时刷新，与后端一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "兑换记录弹窗分页加载",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户有超过一页的兑换记录（如20条以上），验证分页或滚动加载",
+   "preconditions": "用户已登录，兑换记录超过一页（如25条）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "页面展示兑换记录入口"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换记录入口，弹出弹窗",
+     "expected": "弹窗展示第一页记录，滚动到底部加载更多，直至全部加载"
+    }
+   ],
+   "expected_result": "分页加载正常，无重复无遗漏",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "兑换按钮重复点击防抖",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户快速连续点击兑换按钮多次，验证是否重复弹出弹窗或重复提交",
+   "preconditions": "用户已登录，银钻余额1425，物品库存>0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "商城列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "快速连续点击同一物品的兑换按钮5次",
+     "expected": "只弹出一次确认兑换弹窗，无重复弹窗"
+    }
+   ],
+   "expected_result": "按钮防抖，避免重复弹窗",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "确认兑换按钮重复点击防重",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "确认兑换弹窗",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户快速连续点击确认兑换按钮多次，验证是否重复扣款",
+   "preconditions": "用户已登录，银钻余额1425，物品库存>0，活动进行中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入Camel商城页面",
+     "expected": "商城列表展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击兑换按钮，弹出确认兑换弹窗",
+     "expected": "弹窗展示"
+    },
+    {
+     "step": 3,
+     "desc": "快速连续点击「确认兑换」按钮5次",
+     "expected": "只产生一次兑换，余额只扣减一次，记录只生成一条"
+    }
+   ],
+   "expected_result": "防止重复提交，数据一致",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "物品列表展示有效期信息（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一个有效期剩余6天5小时的物品，验证有效期字段显示为“6天5小时”",
+   "preconditions": "用户已登录，商城有至少一个物品，物品有效期为6天5小时",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功，显示物品列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品列表中的有效期字段",
+     "expected": "有效期字段显示“6天5小时”"
+    }
+   ],
+   "expected_result": "物品列表中的有效期字段正确显示“6天5小时”",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "有效期显示为0天0小时（边界）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个有效期剩余0天0小时的物品，验证显示为“0天0小时”或“已过期”",
+   "preconditions": "用户已登录，商城有至少一个物品，物品有效期为0天0小时",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看有效期字段",
+     "expected": "有效期字段显示“0天0小时”或“已过期”"
+    }
+   ],
+   "expected_result": "有效期字段正确显示边界值，不出现负数或异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "有效期倒计时实时更新（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造一个有效期剩余6天5小时1秒的物品，等待1秒后验证倒计时更新为6天5小时0秒",
+   "preconditions": "用户已登录，商城有至少一个物品，物品有效期剩余6天5小时1秒",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，记录有效期显示",
+     "expected": "有效期显示“6天5小时1秒”"
+    },
+    {
+     "step": 2,
+     "desc": "等待1秒后再次查看有效期",
+     "expected": "有效期更新为“6天5小时0秒”"
+    }
+   ],
+   "expected_result": "有效期倒计时每秒更新，显示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "有效期倒计时跨天更新（边界）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个有效期剩余0天0小时1秒的物品，等待1秒后验证显示为0天0小时0秒",
+   "preconditions": "用户已登录，商城有至少一个物品，物品有效期剩余0天0小时1秒",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，记录有效期显示",
+     "expected": "有效期显示“0天0小时1秒”"
+    },
+    {
+     "step": 2,
+     "desc": "等待1秒后再次查看有效期",
+     "expected": "有效期更新为“0天0小时0秒”"
+    }
+   ],
+   "expected_result": "倒计时跨天更新正确，不出现负数",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "点击确认兑换按钮成功兑换（正向）",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户银钻余额充足（如1425），兑换物品消耗1200银钻，点击确认兑换",
+   "preconditions": "用户已登录，银钻余额≥1200，商城有可兑换物品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击物品的“兑换”按钮",
+     "expected": "弹出确认兑换弹窗，显示物品名称、类型、有效期、消耗银钻等信息"
+    },
+    {
+     "step": 2,
+     "desc": "点击“确认兑换”按钮",
+     "expected": "兑换成功，弹窗关闭，银钻余额扣减1200，兑换记录新增一条记录"
+    }
+   ],
+   "expected_result": "兑换成功，银钻余额正确扣减，兑换记录生成",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "银钻余额不足时确认兑换失败（负向）",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户银钻余额为100，物品消耗1200银钻，点击确认兑换",
+   "preconditions": "用户已登录，银钻余额为100，商城有物品消耗1200银钻",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击物品的“兑换”按钮",
+     "expected": "弹出确认兑换弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击“确认兑换”按钮",
+     "expected": "兑换失败，提示“银钻余额不足”，弹窗不关闭，银钻余额不变"
+    }
+   ],
+   "expected_result": "兑换被拦截，提示余额不足，无扣减",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "兑换记录中时间字段显示正确（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条兑换记录，时间为12:20:00，验证显示为“12:20:00”",
+   "preconditions": "用户已登录，存在一条兑换记录，时间为12:20:00",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“兑换记录”按钮",
+     "expected": "弹出兑换记录弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录中的时间字段",
+     "expected": "时间字段显示“12:20:00”"
+    }
+   ],
+   "expected_result": "时间字段正确显示时分秒",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "时间字段为00:00:00的边界显示（边界）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一条兑换记录，时间为00:00:00，验证显示为“00:00:00”",
+   "preconditions": "用户已登录，存在一条兑换记录，时间为00:00:00",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“兑换记录”按钮",
+     "expected": "弹出兑换记录弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录中的时间字段",
+     "expected": "时间字段显示“00:00:00”"
+    }
+   ],
+   "expected_result": "时间字段正确显示边界值",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "物品状态为“后下架”时展示正确（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一个状态为“后下架”的物品，验证列表展示该状态",
+   "preconditions": "用户已登录，商城有至少一个物品状态为“后下架”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品列表中的状态标识",
+     "expected": "物品显示“后下架”状态标识"
+    }
+   ],
+   "expected_result": "物品状态正确展示为“后下架”",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "物品状态为“后下架”时兑换按钮不可用（负向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一个状态为“后下架”的物品，验证兑换按钮置灰或点击无响应",
+   "preconditions": "用户已登录，商城有至少一个物品状态为“后下架”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击“后下架”物品的兑换按钮",
+     "expected": "兑换按钮不可点击或点击后提示“物品已下架”"
+    }
+   ],
+   "expected_result": "无法对已下架物品进行兑换操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "商城物品列表为空时展示“暂无相关数据”（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造商城无任何物品的场景，验证显示“暂无相关数据”",
+   "preconditions": "用户已登录，商城无任何物品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品列表区域",
+     "expected": "显示“暂无相关数据”提示"
+    }
+   ],
+   "expected_result": "空列表正确显示“暂无相关数据”",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "兑换记录为空时展示“暂无相关数据”（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造用户无任何兑换记录的场景，验证兑换记录弹窗显示“暂无相关数据”",
+   "preconditions": "用户已登录，无任何兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“兑换记录”按钮",
+     "expected": "弹出兑换记录弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗内容",
+     "expected": "显示“暂无相关数据”"
+    }
+   ],
+   "expected_result": "空兑换记录正确显示“暂无相关数据”",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "点击“我的兑换记录”入口跳转正确（正向）",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，点击“我的兑换记录”入口",
+   "preconditions": "用户已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击“我的兑换记录”入口",
+     "expected": "跳转到兑换记录页面或弹出兑换记录弹窗"
+    }
+   ],
+   "expected_result": "正确跳转到兑换记录页面或弹窗",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "未登录点击“我的兑换记录”被拦截（负向）",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录，点击“我的兑换记录”入口",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击“我的兑换记录”入口",
+     "expected": "提示“请先登录”或跳转到登录页"
+    }
+   ],
+   "expected_result": "未登录用户无法查看兑换记录，被正确拦截",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "物品列表展示物品图片（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一个带有有效图片URL的物品，验证图片正常加载",
+   "preconditions": "用户已登录，商城有至少一个物品，图片URL有效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品列表中的图片",
+     "expected": "图片正常显示，无裂图"
+    }
+   ],
+   "expected_result": "物品图片正常加载显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "物品图片加载失败时显示占位图（负向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一个图片URL无效的物品，验证显示占位图",
+   "preconditions": "用户已登录，商城有至少一个物品，图片URL无效",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品列表中的图片",
+     "expected": "显示占位图或默认图片，不显示裂图"
+    }
+   ],
+   "expected_result": "图片加载失败时正确显示占位图",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "物品名称正常展示（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一个物品名称为“物品名称物品名称物品名称物”的物品，验证显示完整",
+   "preconditions": "用户已登录，商城有至少一个物品，名称为“物品名称物品名称物品名称物”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品名称",
+     "expected": "物品名称完整显示，无截断"
+    }
+   ],
+   "expected_result": "物品名称正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "物品名称过长时截断显示（边界）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个超长物品名称（如100个字符），验证显示截断或换行",
+   "preconditions": "用户已登录，商城有至少一个物品，名称为超长字符串",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品名称",
+     "expected": "名称截断显示或换行，不撑破布局"
+    }
+   ],
+   "expected_result": "超长名称正确截断或换行，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "物品列表展示消耗银钻数量（正向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造一个消耗1200银钻的物品，验证显示“1200”",
+   "preconditions": "用户已登录，商城有至少一个物品，消耗银钻为1200",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品的消耗银钻字段",
+     "expected": "显示“1200”"
+    }
+   ],
+   "expected_result": "消耗银钻数量正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "消耗银钻为0时展示（边界）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个消耗0银钻的物品，验证显示“0”",
+   "preconditions": "用户已登录，商城有至少一个物品，消耗银钻为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "商城页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品的消耗银钻字段",
+     "expected": "显示“0”"
+    }
+   ],
+   "expected_result": "消耗银钻为0时正确显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "兑换记录弹窗展示物品、图片、名称、消耗银钻、时间（正向）",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造一条兑换记录，物品名称“物品名称”，消耗银钻1200，时间12:20:46，验证弹窗展示",
+   "preconditions": "用户已登录，存在至少一条兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“兑换记录”按钮",
+     "expected": "弹出兑换记录弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗中的记录字段",
+     "expected": "显示物品图片、物品名称、消耗银钻、时间等信息"
+    }
+   ],
+   "expected_result": "兑换记录弹窗正确展示所有字段",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "兑换记录弹窗中消耗银钻显示为负数（负向）",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "camel__",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条消耗银钻为-100的异常记录，验证显示处理",
+   "preconditions": "用户已登录，存在一条消耗银钻为-100的兑换记录（模拟异常数据）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“兑换记录”按钮",
+     "expected": "弹出兑换记录弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看消耗银钻字段",
+     "expected": "显示为0或提示异常，不显示负数"
+    }
+   ],
+   "expected_result": "异常数据被正确处理，不显示负数",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "点击兑换记录按钮展示弹窗",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在至少一条兑换记录（物品名称：Camel球衣，消耗银钻1200，兑换时间12.08 12:20:46）",
+   "preconditions": "用户已登录，且存在兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击“兑换记录”按钮",
+     "expected": "弹出“兑换记录”弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗内容",
+     "expected": "弹窗标题为“兑换记录”，列表展示“我的兑换记录”，包含物品图片、物品名称、消耗银钻、兑换时间字段"
+    }
+   ],
+   "expected_result": "弹窗正常展示，列表数据正确显示，字段完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "无兑换记录时展示空态",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户无任何兑换记录",
+   "preconditions": "用户已登录，且无兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击“兑换记录”按钮",
+     "expected": "弹出“兑换记录”弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗列表",
+     "expected": "列表显示“暂无相关数据”提示，无任何记录行"
+    }
+   ],
+   "expected_result": "空态提示正确显示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "兑换记录列表字段完整性校验",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户存在多条兑换记录，其中一条物品名称为“Camel球衣”，消耗银钻1200，兑换时间12.08 12:20:46",
+   "preconditions": "用户已登录，且存在至少一条兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击“兑换记录”按钮",
+     "expected": "弹出“兑换记录”弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的每条记录",
+     "expected": "每条记录均展示物品图片、物品名称、消耗银钻、兑换时间，且数据与后台一致"
+    }
+   ],
+   "expected_result": "所有记录字段完整，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "兑换记录时间格式校验",
+   "priority": "P2",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "兑换时间为12.08 12:20:46，格式为MM.DD HH:mm:ss",
+   "preconditions": "用户已登录，且存在兑换记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击“兑换记录”按钮",
+     "expected": "弹出“兑换记录”弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看兑换时间字段",
+     "expected": "时间格式为“12.08 12:20:46”，符合MM.DD HH:mm:ss格式"
+    }
+   ],
+   "expected_result": "时间格式正确，无乱码或错误",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "兑换记录弹窗关闭功能",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在兑换记录",
+   "preconditions": "用户已登录，且兑换记录弹窗已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开兑换记录弹窗",
+     "expected": "弹窗正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击弹窗右上角关闭按钮或点击遮罩区域",
+     "expected": "弹窗关闭，页面回到商城页面，无残留"
+    }
+   ],
+   "expected_result": "弹窗可正常关闭，页面状态正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "兑换记录弹窗关闭后再次打开",
+   "priority": "P2",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在兑换记录",
+   "preconditions": "用户已登录，且兑换记录弹窗可正常打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开兑换记录弹窗，然后关闭",
+     "expected": "弹窗关闭"
+    },
+    {
+     "step": 2,
+     "desc": "再次点击“兑换记录”按钮",
+     "expected": "弹窗再次打开，数据正常加载"
+    }
+   ],
+   "expected_result": "弹窗可重复打开，数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "账户信息模块展示银钻余额",
+   "priority": "P0",
+   "domain": "商城",
+   "module": "账户信息模块",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户银钻余额为1425",
+   "preconditions": "用户已登录，银钻余额为1425",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "页面展示账户信息模块"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻余额",
+     "expected": "银钻余额显示为“1,425”，带千分位分隔符"
+    }
+   ],
+   "expected_result": "银钻余额正确显示，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "银钻余额为负数时展示",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "账户信息模块",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户银钻余额为-100（异常数据，模拟系统异常）",
+   "preconditions": "用户已登录，银钻余额为-100（模拟异常）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面",
+     "expected": "页面展示账户信息模块"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻余额",
+     "expected": "余额显示为“-100”，或系统提示异常，不应崩溃"
+    }
+   ],
+   "expected_result": "负数余额不导致页面崩溃，显示或提示合理",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "兑换记录弹窗中物品图片加载失败占位",
+   "priority": "P2",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "兑换记录中物品图片URL无效或网络异常",
+   "preconditions": "用户已登录，存在兑换记录，但图片加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击“兑换记录”按钮",
+     "expected": "弹出“兑换记录”弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品图片",
+     "expected": "图片区域显示占位图或默认图标，不显示裂图"
+    }
+   ],
+   "expected_result": "图片加载失败时显示占位图，不影响其他字段",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "兑换记录物品名称超长截断",
+   "priority": "P2",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "物品名称为超长字符串（如50个字符）",
+   "preconditions": "用户已登录，存在兑换记录，物品名称超长",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击“兑换记录”按钮",
+     "expected": "弹出“兑换记录”弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看物品名称",
+     "expected": "名称超长部分以省略号显示，不换行或出框"
+    }
+   ],
+   "expected_result": "超长名称截断显示，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "兑换记录弹窗在未登录时点击",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面（未登录）",
+     "expected": "页面正常展示"
+    },
+    {
+     "step": 2,
+     "desc": "点击“兑换记录”按钮",
+     "expected": "提示用户登录，或跳转登录页，不展示弹窗"
+    }
+   ],
+   "expected_result": "未登录时点击兑换记录被拦截，提示登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "兑换记录弹窗数据加载失败提示",
+   "priority": "P1",
+   "domain": "商城",
+   "module": "兑换记录弹窗",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "网络异常或服务器错误，导致兑换记录加载失败",
+   "preconditions": "用户已登录，但网络异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商城页面，点击“兑换记录”按钮",
+     "expected": "弹出“兑换记录”弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗内容",
+     "expected": "显示加载失败提示，如“加载失败，请重试”，并提供重试按钮"
+    }
+   ],
+   "expected_result": "加载失败有明确提示，可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  }
+ ],
+ "api_cases": []
+}

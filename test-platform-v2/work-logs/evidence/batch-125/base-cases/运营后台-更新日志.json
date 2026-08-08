@@ -1,0 +1,1088 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "更新日志列表展示",
+    "description": "运营后台更新日志页面展示版本号、更新时间、操作人员、审核人员、审核时间、更新内容等字段，并列出多个版本记录（如1.0.0至6.1.0）。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确列表的排序规则（如按更新时间倒序）和分页方式。",
+      "suggestion": "建议明确列表默认排序（如按更新时间倒序）及分页/加载更多机制。"
+     },
+     {
+      "severity": "low",
+      "description": "需求未说明操作人员、审核人员字段在部分记录中显示为'-'的含义。",
+      "suggestion": "建议明确'-'表示无操作/审核人员或历史数据缺失。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "更新日志版本记录",
+    "description": "列表包含多个版本记录，如2025-06-24对应5.0.0、2025-07-01对应6.0.0、2025-07-20对应6.1.0等，每条记录包含版本号、更新时间、操作人员、审核人员、审核时间、更新内容。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确更新内容的具体格式（如纯文本、富文本、多行）。",
+      "suggestion": "建议明确更新内容的展示格式及长度限制。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体清晰，明确了更新日志页面的核心字段和版本记录，但缺少排序、分页、字段格式等细节，建议补充以完善测试基线。"
+ },
+ "functional_cases": [
+  {
+   "title": "验证更新日志列表默认展示所有版本记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有的更新日志数据，包含多个版本记录（如1.0.0、2.0.0、2.1.0等）",
+   "preconditions": "已登录运营后台，具有更新日志查看权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击更新日志菜单",
+     "expected": "页面加载成功，显示更新日志列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表数据",
+     "expected": "列表展示所有版本记录，每条记录包含版本号、更新时间、操作人员、审核人员、审核时间、更新内容字段"
+    }
+   ],
+   "expected_result": "列表完整展示所有版本记录，字段显示正确，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "验证更新日志列表为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回空列表（无任何更新日志记录）",
+   "preconditions": "已登录运营后台，且系统中无任何更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面显示空态提示，如'暂无更新日志'，且不出现异常报错"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据时界面友好，不出现空白或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "验证版本号字段显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有版本记录，如1.0.0、2.0.0、2.1.0等",
+   "preconditions": "已登录运营后台，存在更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看版本号列",
+     "expected": "版本号显示为'1.0.0'、'2.0.0'、'2.1.0'等，格式正确，无乱码或截断"
+    }
+   ],
+   "expected_result": "版本号字段正确显示，与数据库记录一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "验证版本号字段为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某条记录版本号为空（如数据库字段为NULL）",
+   "preconditions": "已登录运营后台，存在版本号为空的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看版本号列",
+     "expected": "空值显示为'-'或'--'，不显示'null'或空白，且不影响其他字段展示"
+    }
+   ],
+   "expected_result": "版本号为空时显示占位符，页面不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "验证更新时间字段显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有记录，如2024-06-14、2024-08-11等",
+   "preconditions": "已登录运营后台，存在更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看更新时间列",
+     "expected": "更新时间显示为'2024-06-14'、'2024-08-11'等，格式为YYYY-MM-DD，无时分秒"
+    }
+   ],
+   "expected_result": "更新时间字段正确显示，格式统一",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "验证更新时间字段格式异常时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某条记录更新时间格式错误（如2024/06/14或2024-6-14）",
+   "preconditions": "已登录运营后台，存在更新时间格式异常的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看更新时间列",
+     "expected": "页面不报错，但显示格式可能不一致，需确认是否统一为YYYY-MM-DD"
+    }
+   ],
+   "expected_result": "页面不崩溃，但建议系统对异常格式进行容错处理或提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "验证操作人员字段显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有记录，操作人员可能为具体用户名或'-'",
+   "preconditions": "已登录运营后台，存在更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看操作人员列",
+     "expected": "操作人员显示为具体用户名或'-'，与数据库记录一致"
+    }
+   ],
+   "expected_result": "操作人员字段正确显示，空值显示'-'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "验证操作人员字段为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某条记录操作人员为空（NULL）",
+   "preconditions": "已登录运营后台，存在操作人员为空的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看操作人员列",
+     "expected": "空值显示为'-'，不显示'null'或空白"
+    }
+   ],
+   "expected_result": "操作人员为空时显示'-'，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "验证审核人员字段显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有记录，审核人员可能为具体用户名或'-'",
+   "preconditions": "已登录运营后台，存在更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看审核人员列",
+     "expected": "审核人员显示为具体用户名或'-'，与数据库记录一致"
+    }
+   ],
+   "expected_result": "审核人员字段正确显示，空值显示'-'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "验证审核人员字段为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某条记录审核人员为空（NULL）",
+   "preconditions": "已登录运营后台，存在审核人员为空的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看审核人员列",
+     "expected": "空值显示为'-'，不显示'null'或空白"
+    }
+   ],
+   "expected_result": "审核人员为空时显示'-'，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "验证审核时间字段显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有记录，如2024-06-14",
+   "preconditions": "已登录运营后台，存在更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看审核时间列",
+     "expected": "审核时间显示为'2024-06-14'，格式为YYYY-MM-DD"
+    }
+   ],
+   "expected_result": "审核时间字段正确显示，格式统一",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "验证审核时间字段为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某条记录审核时间为空（NULL）",
+   "preconditions": "已登录运营后台，存在审核时间为空的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看审核时间列",
+     "expected": "空值显示为'-'，不显示'null'或空白"
+    }
+   ],
+   "expected_result": "审核时间为空时显示'-'，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "验证更新内容字段显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有记录，如'新建'",
+   "preconditions": "已登录运营后台，存在更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看更新内容列",
+     "expected": "更新内容显示为'新建'等，内容完整，无截断或乱码"
+    }
+   ],
+   "expected_result": "更新内容字段正确显示，与数据库记录一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "验证更新内容字段超长时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "模拟更新内容为超长文本（如超过1000字符）",
+   "preconditions": "已登录运营后台，存在更新内容超长的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看更新内容列",
+     "expected": "超长内容显示完整或提供展开/悬浮提示，页面布局不破坏"
+    }
+   ],
+   "expected_result": "超长内容展示合理，不影响其他列显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "验证列表按版本号降序排列",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已有版本记录，如1.0.0、2.0.0、2.1.0等",
+   "preconditions": "已登录运营后台，存在多个版本记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "列表加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表顺序",
+     "expected": "列表按版本号降序排列（如6.1.0、6.0.0、5.0.0...1.0.0）或按更新时间降序，具体以需求为准"
+    }
+   ],
+   "expected_result": "列表排序符合预期，最新版本在前",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "验证无权限用户访问更新日志页面被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无更新日志查看权限的运营账号",
+   "preconditions": "已登录运营后台，但当前账号无更新日志查看权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试访问更新日志页面",
+     "expected": "页面提示无权限或跳转到无权限提示页，不展示任何更新日志数据"
+    }
+   ],
+   "expected_result": "无权限用户被拦截，不泄露数据",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "验证更新日志页面加载性能",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用包含大量版本记录（如100条）的数据",
+   "preconditions": "已登录运营后台，存在大量更新日志数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面在合理时间内（如3秒内）加载完成，无卡顿"
+    }
+   ],
+   "expected_result": "页面加载流畅，用户体验良好",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "验证更新日志列表正常展示所有版本记录",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统预置的更新日志数据，包含版本号1.0.0、2.0.0、2.1.0、2.2.0、3.0.0、4.0.0、4.1.0、4.2.0、4.3.0等，对应日期如2024-06-14、2024-08-11、2024-09-23等。",
+   "preconditions": "运营后台已登录，更新日志页面存在多条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击'更新日志'菜单",
+     "expected": "页面加载成功，显示更新日志列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的版本号、更新时间、操作人员、审核人员、审核时间、更新内容字段",
+     "expected": "列表展示所有预置记录，字段完整，版本号如1.0.0、2.0.0等，更新时间如2024-06-14等，操作人员、审核人员为空时显示'-'，更新内容显示对应描述"
+    }
+   ],
+   "expected_result": "更新日志列表完整展示所有版本记录，字段正确，无缺失或错乱。",
+   "remark": "正面用例，覆盖基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "验证更新日志列表按更新时间倒序排列",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用预置数据，最新版本为4.3.0（2025-06-24），最旧为1.0.0（2024-06-14）。",
+   "preconditions": "运营后台已登录，更新日志页面存在多条记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表第一条记录的版本号和更新时间",
+     "expected": "第一条记录为最新版本（如4.3.0，2025-06-24），后续按时间倒序排列"
+    }
+   ],
+   "expected_result": "列表按更新时间倒序排列，最新版本在最上方。",
+   "remark": "正面用例，验证排序规则",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "验证更新日志列表字段为空时显示'-'",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用版本1.0.0的记录，其操作人员、审核人员字段为空。",
+   "preconditions": "运营后台已登录，更新日志页面存在操作人员、审核人员为空的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看版本1.0.0记录的操作人员、审核人员字段",
+     "expected": "操作人员、审核人员显示为'-'，而非空白或null"
+    }
+   ],
+   "expected_result": "空字段以'-'展示，页面显示正常。",
+   "remark": "正面用例，验证空值展示",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "验证更新日志列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "模拟数据库无更新日志记录的场景。",
+   "preconditions": "运营后台已登录，更新日志表无数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功，显示空态提示，如'暂无更新日志'"
+    }
+   ],
+   "expected_result": "页面展示空态提示，无报错。",
+   "remark": "负面用例，覆盖空态",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "验证更新日志列表字段缺失时页面不报错",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某条记录缺少更新内容字段。",
+   "preconditions": "运营后台已登录，数据库中某条记录更新内容字段为NULL。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面正常加载，该记录更新内容显示为空或'-'，不报错"
+    }
+   ],
+   "expected_result": "页面正常展示，无异常报错。",
+   "remark": "负面用例，验证异常数据容错",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "验证更新日志列表版本号重复时展示正常",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟存在两条版本号均为2.1.0但更新时间不同的记录。",
+   "preconditions": "运营后台已登录，数据库存在版本号重复的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面正常展示两条记录，不合并、不报错"
+    }
+   ],
+   "expected_result": "重复版本号记录均正常展示。",
+   "remark": "负面用例，验证重复数据处理",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "验证更新日志列表更新时间格式正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预置数据，如2024-06-14、2025-06-24等，格式为YYYY-MM-DD。",
+   "preconditions": "运营后台已登录，更新日志页面存在记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看各记录的更新时间字段",
+     "expected": "所有更新时间格式统一为YYYY-MM-DD，如2024-06-14"
+    }
+   ],
+   "expected_result": "更新时间格式正确，无乱码或异常。",
+   "remark": "正面用例，验证格式",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "验证更新日志列表版本号格式正确",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预置数据，版本号如1.0.0、2.2.0、4.3.0等，格式为X.Y.Z。",
+   "preconditions": "运营后台已登录，更新日志页面存在记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看各记录的版本号字段",
+     "expected": "所有版本号格式为X.Y.Z，如1.0.0、4.3.0"
+    }
+   ],
+   "expected_result": "版本号格式正确，无异常。",
+   "remark": "正面用例，验证格式",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "验证更新日志列表操作人员字段显示正确",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预置数据，部分记录操作人员为'-'，部分为具体用户名（如'admin'）。",
+   "preconditions": "运营后台已登录，更新日志页面存在操作人员有值和为空的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看各记录的操作人员字段",
+     "expected": "有值的显示用户名，无值的显示'-'"
+    }
+   ],
+   "expected_result": "操作人员字段展示正确。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "验证更新日志列表审核人员字段显示正确",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预置数据，部分记录审核人员为'-'，部分为具体用户名（如'auditor'）。",
+   "preconditions": "运营后台已登录，更新日志页面存在审核人员有值和为空的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看各记录的审核人员字段",
+     "expected": "有值的显示用户名，无值的显示'-'"
+    }
+   ],
+   "expected_result": "审核人员字段展示正确。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "验证更新日志列表审核时间字段显示正确",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预置数据，审核时间如2024-06-14、2024-08-11等。",
+   "preconditions": "运营后台已登录，更新日志页面存在记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看各记录的审核时间字段",
+     "expected": "审核时间格式为YYYY-MM-DD，且与更新时间一致或合理"
+    }
+   ],
+   "expected_result": "审核时间字段展示正确。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "验证更新日志列表更新内容字段显示正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用预置数据，更新内容如'新建'、'功能优化'等。",
+   "preconditions": "运营后台已登录，更新日志页面存在记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看各记录的更新内容字段",
+     "expected": "更新内容显示对应的描述，如'新建'，无乱码"
+    }
+   ],
+   "expected_result": "更新内容字段展示正确。",
+   "remark": "正面用例，验证字段展示",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "验证更新日志列表分页功能（如适用）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "模拟超过一页的记录数（如20条），验证分页显示。",
+   "preconditions": "运营后台已登录，更新日志记录数超过单页显示数量。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功，显示分页控件"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "显示第二页记录，分页正常"
+    }
+   ],
+   "expected_result": "分页功能正常，无数据丢失。",
+   "remark": "边界用例，验证分页",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "验证更新日志列表在异常数据（如超长文本）下展示正常",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟更新内容字段为超长文本（如1000字符）。",
+   "preconditions": "运营后台已登录，数据库中存在更新内容超长的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面正常加载，超长文本截断或换行显示，不撑破布局"
+    }
+   ],
+   "expected_result": "页面布局正常，无错乱。",
+   "remark": "负面用例，验证异常数据容错",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "验证更新日志列表字段展示正确性",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选取版本5.0.0（2025-07-01）和6.1.0（2025-07-20）等记录，核对各字段值。",
+   "preconditions": "已登录运营后台，存在版本5.0.0和6.1.0的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看版本5.0.0的记录",
+     "expected": "版本号显示5.0.0，更新时间显示2025-07-01，操作人员、审核人员、审核时间、更新内容字段正确显示"
+    },
+    {
+     "step": 3,
+     "desc": "查看版本6.1.0的记录",
+     "expected": "版本号显示6.1.0，更新时间显示2025-07-20，各字段正确"
+    }
+   ],
+   "expected_result": "各版本记录的字段值正确，与后台数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "验证无权限用户访问更新日志页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无更新日志查看权限的运营账号登录。",
+   "preconditions": "存在一个无更新日志查看权限的运营账号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台",
+     "expected": "登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "尝试访问更新日志页面",
+     "expected": "页面提示无权限访问，或菜单不可见，无法查看更新日志"
+    }
+   ],
+   "expected_result": "无权限用户无法访问更新日志页面，系统给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "验证更新日志列表分页功能（超过一页数据）",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造超过一页（如每页10条，共11条）的更新日志记录，验证分页。",
+   "preconditions": "已登录运营后台，系统中存在超过一页的更新日志记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面显示第一页数据，分页控件显示总页数"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "显示第二页数据，数据不重复不遗漏"
+    }
+   ],
+   "expected_result": "分页功能正常，数据正确加载。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "验证更新日志列表无分页时的数据完整性",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "假设系统未启用分页，验证所有记录一次性展示。",
+   "preconditions": "已登录运营后台，系统更新日志记录数量较少（如6条）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面展示所有更新日志记录，无分页控件"
+    }
+   ],
+   "expected_result": "所有记录完整展示，无遗漏。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "验证更新日志列表字段缺失时的展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一条操作人员、审核人员为空的记录（如历史版本1.0.0），验证显示为'-'。",
+   "preconditions": "已登录运营后台，存在操作人员、审核人员为空的更新日志记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看操作人员、审核人员为空的记录",
+     "expected": "对应字段显示为'-'，无报错"
+    }
+   ],
+   "expected_result": "空字段以'-'展示，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "验证更新日志页面标题正确性",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "检查页面标题是否为「更新日志」。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面标题显示「更新日志」"
+    }
+   ],
+   "expected_result": "页面标题正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "验证更新日志列表加载性能",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用包含大量更新日志记录（如100条）的数据，验证加载时间。",
+   "preconditions": "已登录运营后台，系统存在大量更新日志记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入更新日志页面",
+     "expected": "页面在合理时间（如3秒内）加载完成，无卡顿"
+    }
+   ],
+   "expected_result": "页面加载性能良好。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "验证更新日志列表在低分辨率下的显示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "更新日志",
+   "case_design_method": "界面测试",
+   "positive_negative": "negative",
+   "test_data_note": "使用1366x768分辨率访问页面。",
+   "preconditions": "已登录运营后台，浏览器窗口设置为1366x768。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "设置浏览器分辨率为1366x768",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "进入更新日志页面",
+     "expected": "列表无横向滚动条，字段显示完整，无遮挡"
+    }
+   ],
+   "expected_result": "页面在低分辨率下显示正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  }
+ ],
+ "api_cases": []
+}

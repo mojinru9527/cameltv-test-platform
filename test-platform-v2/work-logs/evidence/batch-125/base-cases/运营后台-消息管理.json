@@ -1,0 +1,5374 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "点击跳转链接",
+    "description": "list：点击跳转链接（页面 编辑_查看消息）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确点击跳转链接的具体行为，如是否新开页面、链接格式校验、空链接处理等。",
+      "suggestion": "建议明确链接的校验规则（必填、URL格式）、点击后的跳转行为（新窗口/当前页）、以及无链接时的展示。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "发送时间",
+    "description": "field：发送时间（页面 编辑_查看消息）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求仅描述为字段，未说明是否必填、格式、时区、与当前时间的关系等。",
+      "suggestion": "建议明确发送时间的格式（如YYYY-MM-DD HH:mm:ss）、是否必填、是否允许为空、时区处理。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "发送时间不可设置过去时间",
+    "description": "action：用于配置推送该条消息的时间，不可设置过去时间；（页面 编辑_查看消息）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "high",
+      "description": "需求明确不可设置过去时间，但未定义边界：等于当前时间是否允许？时区差异如何处理？",
+      "suggestion": "建议明确边界：发送时间必须晚于当前时间（至少当前时间+1分钟），并考虑服务器时区。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求描述较为简略，仅列出功能点名称，缺乏详细业务规则和边界条件。对于发送时间的校验规则、点击跳转链接的具体行为等关键细节未明确，可能导致测试用例设计时存在歧义。建议补充详细需求说明，明确输入限制、异常处理等。"
+ },
+ "functional_cases": [
+  {
+   "title": "联赛及球队管理-正常加载列表",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入聊天室消息页面，系统默认加载联赛及球队管理列表，数据来源于后台配置。",
+   "preconditions": "运营后台已登录，具有消息管理权限，存在已配置的联赛及球队数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击消息管理-聊天室消息",
+     "expected": "页面正常打开，显示聊天室消息列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛及球队管理区域",
+     "expected": "联赛及球队管理列表正常展示，包含联赛名称、球队名称等信息，无报错"
+    }
+   ],
+   "expected_result": "联赛及球队管理列表正常展示，数据与后台配置一致，无异常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "联赛及球队管理-无数据空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置任何联赛及球队数据，模拟空数据场景。",
+   "preconditions": "运营后台已登录，具有消息管理权限，后台无联赛及球队数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看联赛及球队管理区域",
+     "expected": "显示空态提示，如“暂无数据”，无报错"
+    }
+   ],
+   "expected_result": "联赛及球队管理区域显示空态提示，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "直播间消息-列表正常展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "后台存在多条直播间消息，包含消息内容、发送条件、显示顺序、进入直播间链接、定时发送设置等。",
+   "preconditions": "运营后台已登录，具有消息管理权限，存在已配置的直播间消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看直播间消息列表",
+     "expected": "列表展示所有消息，每条消息包含内容、发送条件、显示顺序、进入直播间链接、定时发送信息，且数据正确"
+    }
+   ],
+   "expected_result": "直播间消息列表正常展示，字段完整，数据与后台一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "直播间消息-列表为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台无任何直播间消息，模拟空数据场景。",
+   "preconditions": "运营后台已登录，具有消息管理权限，后台无直播间消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看直播间消息列表",
+     "expected": "显示空态提示，如“暂无数据”，无报错"
+    }
+   ],
+   "expected_result": "直播间消息列表显示空态提示，页面无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "英语内容-正常填写保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "在新增/编辑消息时，填写英语内容为“Welcome to our live room”，长度在允许范围内。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增/编辑消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增/编辑消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "在英语内容输入框中输入“Welcome to our live room”",
+     "expected": "输入成功，无报错"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存成功，提示“保存成功”，列表刷新，英语内容正确显示"
+    }
+   ],
+   "expected_result": "英语内容保存成功，列表展示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "英语内容-超长输入校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入超过最大长度限制的英语内容，例如500个字符（假设最大长度为200）。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增/编辑消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增/编辑消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "在英语内容输入框中输入500个字符",
+     "expected": "输入被限制或提示“内容过长”，无法提交"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存失败，提示“英语内容长度不能超过200个字符”"
+    }
+   ],
+   "expected_result": "英语内容超长时被拦截，保存失败并给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "发送条件-选择进入直播间",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增/编辑消息时，发送条件选择“进入直播间”，表示用户进入直播间时触发消息。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增/编辑消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增/编辑消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "在发送条件区域选择“进入直播间”",
+     "expected": "选项被选中，无报错"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存成功，提示“保存成功”，列表刷新，发送条件显示为“进入直播间”"
+    }
+   ],
+   "expected_result": "发送条件设置为“进入直播间”保存成功，列表展示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "发送条件-未选择任何条件",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在新增/编辑消息时，不选择任何发送条件，直接保存。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增/编辑消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增/编辑消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "不选择发送条件",
+     "expected": "发送条件区域为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存失败，提示“请选择发送条件”"
+    }
+   ],
+   "expected_result": "未选择发送条件时保存被拦截，并给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "显示顺序-正常填写保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "在新增/编辑消息时，显示顺序填写为5，表示该消息在直播间中的展示顺序为5。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增/编辑消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增/编辑消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "在显示顺序输入框中输入5",
+     "expected": "输入成功，无报错"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存成功，提示“保存成功”，列表刷新，显示顺序为5"
+    }
+   ],
+   "expected_result": "显示顺序保存成功，列表展示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "显示顺序-输入负数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "在新增/编辑消息时，显示顺序输入-1，预期被拒绝。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增/编辑消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增/编辑消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "在显示顺序输入框中输入-1",
+     "expected": "输入被限制或提示“显示顺序必须为正整数”"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存失败，提示“显示顺序必须大于0”"
+    }
+   ],
+   "expected_result": "显示顺序为负数时保存被拦截，并给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "温馨提示-固定文案展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入聊天室消息页面，查看固定温馨提示文案“官方没有代充合作方。第三方代充有可能出现被骗钱、账号被盗、账号违规被…”是否正常展示。",
+   "preconditions": "运营后台已登录，具有消息管理权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面中的温馨提示区域",
+     "expected": "温馨提示文案完整显示，无乱码、无截断"
+    }
+   ],
+   "expected_result": "固定温馨提示文案正常展示，内容与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "进入直播间-点击跳转",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在直播间消息列表中，点击某条消息的“进入直播间”链接，该消息关联的直播间ID为1001。",
+   "preconditions": "运营后台已登录，具有消息管理权限，存在一条关联直播间ID=1001的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "找到一条消息，点击“进入直播间”链接",
+     "expected": "跳转到对应直播间页面（直播间ID=1001），新窗口打开"
+    }
+   ],
+   "expected_result": "点击“进入直播间”后正确跳转到对应直播间。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "进入直播间-直播间不存在",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "消息关联的直播间ID不存在（如9999），点击“进入直播间”链接。",
+   "preconditions": "运营后台已登录，具有消息管理权限，存在一条关联直播间ID=9999（不存在）的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击该消息的“进入直播间”链接",
+     "expected": "跳转失败，提示“直播间不存在或已关闭”，停留在当前页面"
+    }
+   ],
+   "expected_result": "直播间不存在时给出明确提示，不产生错误页面。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "编辑-正常编辑消息",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "对一条已存在的消息进行编辑，修改消息内容为“欢迎来到直播间”，其他字段保持不变。",
+   "preconditions": "运营后台已登录，具有消息管理权限，存在一条消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条消息的“编辑”按钮",
+     "expected": "进入编辑页面，回显原消息数据"
+    },
+    {
+     "step": 3,
+     "desc": "修改消息内容为“欢迎来到直播间”",
+     "expected": "修改成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存",
+     "expected": "保存成功，提示“保存成功”，列表刷新，消息内容更新为“欢迎来到直播间”"
+    }
+   ],
+   "expected_result": "编辑消息成功，数据更新正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "删除-确认删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除一条消息，确认删除后该消息从列表中移除。",
+   "preconditions": "运营后台已登录，具有消息管理权限，存在一条消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条消息的“删除”按钮",
+     "expected": "弹出确认框，提示“是否删除，删除后无法撤销”"
+    },
+    {
+     "step": 3,
+     "desc": "点击“确认”",
+     "expected": "删除成功，提示“删除成功”，列表刷新，该消息不再显示"
+    }
+   ],
+   "expected_result": "确认删除后消息被移除，列表更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "删除-取消删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "删除一条消息时，点击“取消”按钮，消息应保留。",
+   "preconditions": "运营后台已登录，具有消息管理权限，存在一条消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击某条消息的“删除”按钮",
+     "expected": "弹出确认框"
+    },
+    {
+     "step": 3,
+     "desc": "点击“取消”",
+     "expected": "确认框关闭，消息未被删除，列表不变"
+    }
+   ],
+   "expected_result": "取消删除后消息保留，列表无变化。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "小象直播声明-固定文案展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入聊天室消息页面，查看固定声明文案“小象直播为绿色直播社交平台，直播过程中若出现色情、暴力等内容都会被封停账号哦！……”是否正常展示。",
+   "preconditions": "运营后台已登录，具有消息管理权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面中的声明区域",
+     "expected": "声明文案完整显示，无乱码、无截断"
+    }
+   ],
+   "expected_result": "固定声明文案正常展示，内容与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "官网温馨提示-固定文案展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入聊天室消息页面，查看固定温馨提示文案“官网 www.elelive.net 充值优惠多，快来看看吧”是否正常展示。",
+   "preconditions": "运营后台已登录，具有消息管理权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面中的温馨提示区域",
+     "expected": "温馨提示文案完整显示，无乱码、无截断"
+    }
+   ],
+   "expected_result": "固定温馨提示文案正常展示，内容与需求一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "定时发送-正常配置保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "在新增/编辑消息时，启用定时发送，发送间隔设置为5分钟，总次数设置为10次。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增/编辑消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增/编辑消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "勾选“定时发送”",
+     "expected": "定时发送相关字段变为可编辑"
+    },
+    {
+     "step": 3,
+     "desc": "输入发送间隔为5，总次数为10",
+     "expected": "输入成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存",
+     "expected": "保存成功，提示“保存成功”，列表刷新，定时发送信息正确"
+    }
+   ],
+   "expected_result": "定时发送配置保存成功，列表展示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "定时发送-发送间隔为0",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "在新增/编辑消息时，启用定时发送，发送间隔设置为0分钟，总次数设置为1次。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增/编辑消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增/编辑消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "勾选“定时发送”",
+     "expected": "定时发送相关字段变为可编辑"
+    },
+    {
+     "step": 3,
+     "desc": "输入发送间隔为0",
+     "expected": "输入被限制或提示“发送间隔必须大于0”"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存",
+     "expected": "保存失败，提示“发送间隔必须大于0”"
+    }
+   ],
+   "expected_result": "发送间隔为0时保存被拦截，并给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "新增-正常新增消息",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "新增一条聊天室消息，填写消息内容为“欢迎来到直播间”，发送条件选择“进入直播间”，显示顺序为1，其他字段默认。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入聊天室消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入聊天室消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击“新增”按钮",
+     "expected": "进入新增消息页面"
+    },
+    {
+     "step": 3,
+     "desc": "填写消息内容为“欢迎来到直播间”，发送条件选择“进入直播间”，显示顺序为1",
+     "expected": "填写成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存",
+     "expected": "保存成功，提示“保存成功”，列表刷新，新增消息出现在列表中"
+    }
+   ],
+   "expected_result": "新增消息成功，列表展示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "新增-消息内容为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "新增消息时，消息内容留空，其他字段正常填写。",
+   "preconditions": "运营后台已登录，具有消息管理权限，进入新增消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增消息页面",
+     "expected": "页面正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "消息内容留空，其他字段正常填写",
+     "expected": "消息内容为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "保存失败，提示“消息内容不能为空”"
+    }
+   ],
+   "expected_result": "消息内容为空时保存被拦截，并给出明确提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "取消新增/编辑弹窗操作",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增/编辑弹窗中填写部分数据（如消息内容'测试消息'），点击取消，验证弹窗关闭且数据不保存。",
+   "preconditions": "已登录运营后台，进入聊天室消息页面，点击「新增」或「编辑」打开弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增消息弹窗",
+     "expected": "弹窗正常打开，显示各字段"
+    },
+    {
+     "step": 2,
+     "desc": "在消息内容输入框输入'测试消息'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取 消」按钮",
+     "expected": "弹窗关闭，列表无新增记录，数据库无新增数据"
+    }
+   ],
+   "expected_result": "弹窗关闭，未保存任何数据，列表数据不变。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "取消删除确认框操作",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条聊天室消息，点击删除，在确认框点击取消，验证消息未被删除。",
+   "preconditions": "已登录运营后台，聊天室消息列表存在至少一条消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在聊天室消息列表选择一条消息，点击「删除」按钮",
+     "expected": "弹出确认框，提示「是否删除，删除后无法撤销」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取 消」按钮",
+     "expected": "确认框关闭，消息仍存在，数据库记录未删除"
+    }
+   ],
+   "expected_result": "消息未被删除，列表数据不变。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "取消操作无响应或报错",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在新增/编辑弹窗中，点击取消后，验证页面无异常报错，且不产生任何副作用。",
+   "preconditions": "已登录运营后台，打开新增/编辑弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开新增/编辑弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取 消」按钮",
+     "expected": "弹窗关闭，无报错提示，页面无异常"
+    }
+   ],
+   "expected_result": "取消操作正常，无报错，无数据变更。",
+   "remark": "负面用例（异常场景）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "确认删除操作",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择一条聊天室消息，点击删除，在确认框点击确认，验证消息被删除且列表刷新。",
+   "preconditions": "已登录运营后台，聊天室消息列表存在至少一条消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在聊天室消息列表选择一条消息，点击「删除」按钮",
+     "expected": "弹出确认框，提示「是否删除，删除后无法撤销」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「确认」按钮",
+     "expected": "确认框关闭，列表刷新，该消息不再显示，数据库记录被删除（或标记删除）"
+    }
+   ],
+   "expected_result": "消息被成功删除，列表不再显示该消息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "确认新增/编辑保存操作",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增/编辑弹窗填写合法数据（如消息内容'欢迎来到直播间'，显示顺序1），点击确认，验证保存成功。",
+   "preconditions": "已登录运营后台，打开新增/编辑弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮，打开新增消息弹窗",
+     "expected": "弹窗正常打开"
+    },
+    {
+     "step": 2,
+     "desc": "填写消息内容'欢迎来到直播间'，显示顺序'1'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确认」按钮",
+     "expected": "弹窗关闭，列表新增该消息，数据库新增记录"
+    }
+   ],
+   "expected_result": "消息保存成功，列表显示新消息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "确认操作时未选择任何数据",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在列表未选中任何消息的情况下，尝试点击删除或确认，验证系统提示或拦截。",
+   "preconditions": "已登录运营后台，聊天室消息列表无选中项。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在聊天室消息列表不选中任何消息，直接点击「删除」按钮",
+     "expected": "系统提示「请先选择要删除的消息」或按钮置灰不可点击"
+    },
+    {
+     "step": 2,
+     "desc": "在新增/编辑弹窗中，不填写必填字段（如消息内容为空），点击「确认」",
+     "expected": "系统提示「消息内容不能为空」，不关闭弹窗"
+    }
+   ],
+   "expected_result": "操作被拦截，给出明确提示，无数据变更。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "删除确认提示文案显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "点击删除任意一条消息，验证确认框文案为「是否删除，删除后无法撤销」。",
+   "preconditions": "已登录运营后台，聊天室消息列表存在至少一条消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条消息的「删除」按钮",
+     "expected": "弹出确认框，文案显示「是否删除，删除后无法撤销」"
+    }
+   ],
+   "expected_result": "确认框文案正确，包含「是否删除，删除后无法撤销」。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "删除确认框取消后再次删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先取消删除，再重新删除同一消息，验证可再次弹出确认框并成功删除。",
+   "preconditions": "已登录运营后台，聊天室消息列表存在至少一条消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某条消息的「删除」按钮，在确认框点击「取 消」",
+     "expected": "确认框关闭，消息未删除"
+    },
+    {
+     "step": 2,
+     "desc": "再次点击该消息的「删除」按钮，点击「确认」",
+     "expected": "消息被删除，列表刷新"
+    }
+   ],
+   "expected_result": "取消后再次删除可成功，消息最终被删除。",
+   "remark": "正面用例（场景串联）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "删除确认框点击遮罩层或按ESC键",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在删除确认框弹出时，点击遮罩层或按ESC键，验证是否关闭确认框且不删除。",
+   "preconditions": "已登录运营后台，聊天室消息列表存在至少一条消息，已弹出删除确认框。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击删除按钮，弹出确认框",
+     "expected": "确认框显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击确认框外的遮罩层（或按ESC键）",
+     "expected": "确认框关闭，消息未被删除"
+    }
+   ],
+   "expected_result": "确认框关闭，无删除操作。",
+   "remark": "负面用例（异常操作）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "删除后无法撤销验证",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "删除一条消息后，尝试在列表中查找该消息，验证已不存在且无法恢复。",
+   "preconditions": "已登录运营后台，聊天室消息列表存在至少一条消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "删除一条消息（点击删除，确认）",
+     "expected": "消息从列表消失"
+    },
+    {
+     "step": 2,
+     "desc": "刷新页面或搜索该消息",
+     "expected": "列表不再显示该消息，数据库记录已删除（或标记删除）"
+    }
+   ],
+   "expected_result": "消息被彻底删除，无法撤销。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "删除不存在或已删除的消息",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "尝试删除一条已被其他管理员删除的消息（通过并发或直接操作数据库构造），验证系统提示。",
+   "preconditions": "已登录运营后台，存在一条已被删除的消息ID（可通过数据库构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "通过接口或数据库构造一条已删除的消息ID，在页面尝试删除",
+     "expected": "系统提示「消息不存在或已被删除」，不执行删除操作"
+    }
+   ],
+   "expected_result": "系统给出明确提示，无异常。",
+   "remark": "负面用例（异常数据）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "删除操作权限校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无删除权限的账号（如只读账号）尝试删除消息，验证系统拦截。",
+   "preconditions": "存在一个无删除权限的运营后台账号，已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无删除权限的账号登录，进入聊天室消息页面",
+     "expected": "页面正常显示，但删除按钮可能置灰或不可见"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击删除按钮（若可见）",
+     "expected": "系统提示「无权限执行此操作」或按钮不可点击"
+    }
+   ],
+   "expected_result": "无权限用户无法删除消息，系统拦截。",
+   "remark": "负面用例（权限）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "新增消息-填写合法信息保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "显示顺序=1（正整数，最小有效值），发送条件=进入直播间，发送间隔=5（分钟），总次数=10（次），消息内容='欢迎来到直播间'（正常文本）",
+   "preconditions": "已登录运营后台，具有消息管理权限，进入新增_编辑页面（新增模式）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮进入新增页面",
+     "expected": "页面显示新增_编辑表单，所有字段为空或默认值"
+    },
+    {
+     "step": 2,
+     "desc": "输入显示顺序为1",
+     "expected": "输入框显示1"
+    },
+    {
+     "step": 3,
+     "desc": "选择发送条件为「进入直播间」",
+     "expected": "发送条件下拉框显示「进入直播间」，相关字段（发送间隔、总次数）可能隐藏或置灰"
+    },
+    {
+     "step": 4,
+     "desc": "输入消息内容为'欢迎来到直播间'",
+     "expected": "消息内容文本域显示该内容"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，返回列表页，列表新增一条记录，显示顺序为1，发送条件为进入直播间，消息内容正确"
+    }
+   ],
+   "expected_result": "保存成功，数据库新增一条聊天室消息记录，字段与输入一致，列表页可见新记录",
+   "remark": "正面用例，覆盖新增基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "新增消息-显示顺序为空校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "显示顺序留空，其他字段合法（发送条件=进入直播间，消息内容='测试'）",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增页面，显示顺序留空",
+     "expected": "显示顺序输入框为空"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段（发送条件、消息内容）",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「显示顺序不能为空」，不提交请求"
+    }
+   ],
+   "expected_result": "保存被拦截，显示顺序必填校验生效，数据库无新增记录",
+   "remark": "负面用例，必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "新增消息-显示顺序为0边界校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "显示顺序=0（边界值，预期不允许），其他字段合法",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入显示顺序为0",
+     "expected": "输入框显示0"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「显示顺序必须大于0」"
+    }
+   ],
+   "expected_result": "保存被拦截，显示顺序最小值校验生效",
+   "remark": "边界用例，最小值下界",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "新增消息-显示顺序为负数校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "显示顺序=-1（非法负数），其他字段合法",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入显示顺序为-1",
+     "expected": "输入框显示-1"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「显示顺序必须为正整数」"
+    }
+   ],
+   "expected_result": "保存被拦截，负数校验生效",
+   "remark": "负面用例，非法输入",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "新增消息-发送条件为定时发送时填写发送间隔和总次数保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "显示顺序=2，发送条件=定时发送，发送间隔=5（分钟），总次数=10（次），消息内容='定时消息'",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入显示顺序为2",
+     "expected": "输入框显示2"
+    },
+    {
+     "step": 2,
+     "desc": "选择发送条件为「定时发送」",
+     "expected": "发送间隔和总次数字段变为可编辑"
+    },
+    {
+     "step": 3,
+     "desc": "输入发送间隔为5",
+     "expected": "输入框显示5"
+    },
+    {
+     "step": 4,
+     "desc": "输入总次数为10",
+     "expected": "输入框显示10"
+    },
+    {
+     "step": 5,
+     "desc": "输入消息内容为'定时消息'",
+     "expected": "消息内容正确"
+    },
+    {
+     "step": 6,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示成功，返回列表，记录显示发送条件为定时发送，发送间隔5，总次数10"
+    }
+   ],
+   "expected_result": "保存成功，数据库记录包含发送间隔和总次数",
+   "remark": "正面用例，覆盖定时发送场景",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "新增消息-发送条件为定时发送但发送间隔为空校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "发送条件=定时发送，发送间隔留空，总次数=10，其他字段合法",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择发送条件为「定时发送」",
+     "expected": "发送间隔和总次数字段可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "发送间隔留空",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "输入总次数为10",
+     "expected": "输入框显示10"
+    },
+    {
+     "step": 4,
+     "desc": "填写其他必填字段",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「发送间隔不能为空」"
+    }
+   ],
+   "expected_result": "保存被拦截，发送间隔必填校验生效",
+   "remark": "负面用例，条件必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "新增消息-发送间隔为0边界校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "发送条件=定时发送，发送间隔=0（边界值，预期不允许），总次数=10",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择发送条件为「定时发送」",
+     "expected": "发送间隔和总次数字段可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "输入发送间隔为0",
+     "expected": "输入框显示0"
+    },
+    {
+     "step": 3,
+     "desc": "输入总次数为10",
+     "expected": "输入框显示10"
+    },
+    {
+     "step": 4,
+     "desc": "填写其他必填字段",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「发送间隔必须大于0」"
+    }
+   ],
+   "expected_result": "保存被拦截，发送间隔最小值校验生效",
+   "remark": "边界用例，最小值下界",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "新增消息-总次数为空校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "发送条件=定时发送，发送间隔=5，总次数留空",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择发送条件为「定时发送」",
+     "expected": "发送间隔和总次数字段可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "输入发送间隔为5",
+     "expected": "输入框显示5"
+    },
+    {
+     "step": 3,
+     "desc": "总次数留空",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 4,
+     "desc": "填写其他必填字段",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「总次数不能为空」"
+    }
+   ],
+   "expected_result": "保存被拦截，总次数必填校验生效",
+   "remark": "负面用例，必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "新增消息-总次数为0边界校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "发送条件=定时发送，发送间隔=5，总次数=0（边界值，预期不允许）",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择发送条件为「定时发送」",
+     "expected": "发送间隔和总次数字段可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "输入发送间隔为5",
+     "expected": "输入框显示5"
+    },
+    {
+     "step": 3,
+     "desc": "输入总次数为0",
+     "expected": "输入框显示0"
+    },
+    {
+     "step": 4,
+     "desc": "填写其他必填字段",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 5,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「总次数必须大于0」"
+    }
+   ],
+   "expected_result": "保存被拦截，总次数最小值校验生效",
+   "remark": "边界用例，最小值下界",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "新增消息-消息内容为空校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "消息内容留空，其他字段合法（显示顺序=1，发送条件=进入直播间）",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入显示顺序为1",
+     "expected": "输入框显示1"
+    },
+    {
+     "step": 2,
+     "desc": "选择发送条件为「进入直播间」",
+     "expected": "发送条件选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "消息内容留空",
+     "expected": "消息内容文本域为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「消息内容不能为空」"
+    }
+   ],
+   "expected_result": "保存被拦截，消息内容必填校验生效",
+   "remark": "负面用例，必填校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "编辑消息-回显原数据并修改保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "编辑已有消息，原显示顺序=1，发送条件=进入直播间，消息内容='原内容'；修改显示顺序为3，消息内容='新内容'",
+   "preconditions": "已登录运营后台，列表页存在一条消息记录（显示顺序=1，发送条件=进入直播间，消息内容='原内容'）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在列表页点击该记录的「编辑」按钮",
+     "expected": "进入编辑页面，表单回显原数据（显示顺序=1，发送条件=进入直播间，消息内容='原内容'）"
+    },
+    {
+     "step": 2,
+     "desc": "修改显示顺序为3",
+     "expected": "输入框显示3"
+    },
+    {
+     "step": 3,
+     "desc": "修改消息内容为'新内容'",
+     "expected": "消息内容文本域显示'新内容'"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示「保存成功」，返回列表，该记录显示顺序变为3，消息内容变为'新内容'"
+    }
+   ],
+   "expected_result": "编辑保存成功，数据库记录更新为修改后的值",
+   "remark": "正面用例，覆盖编辑基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "编辑消息-修改显示顺序为已存在的值校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "列表已有两条消息，显示顺序分别为1和2；编辑显示顺序=1的记录，将其改为2（与另一条冲突）",
+   "preconditions": "已登录运营后台，列表存在两条消息，显示顺序分别为1和2",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击显示顺序为1的记录的「编辑」按钮",
+     "expected": "进入编辑页面，显示顺序回显为1"
+    },
+    {
+     "step": 2,
+     "desc": "修改显示顺序为2",
+     "expected": "输入框显示2"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「显示顺序已存在，请重新输入」"
+    }
+   ],
+   "expected_result": "保存被拦截，唯一性校验生效",
+   "remark": "负面用例，唯一性校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "取消操作-未修改时取消返回列表",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "新增页面，未填写任何字段",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不填写任何字段，直接点击「取消」按钮",
+     "expected": "返回列表页，无任何提示，不新增记录"
+    }
+   ],
+   "expected_result": "取消成功，返回列表，无数据变化",
+   "remark": "正面用例，取消基本流",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "取消操作-已修改时取消提示确认",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "boundary",
+   "test_data_note": "新增页面，已输入显示顺序=1，消息内容='测试'",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入显示顺序为1",
+     "expected": "输入框显示1"
+    },
+    {
+     "step": 2,
+     "desc": "输入消息内容为'测试'",
+     "expected": "消息内容文本域显示'测试'"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」按钮",
+     "expected": "弹出确认提示「是否放弃未保存的修改？」"
+    },
+    {
+     "step": 4,
+     "desc": "点击「确认」",
+     "expected": "返回列表页，不保存修改"
+    }
+   ],
+   "expected_result": "取消成功，未保存修改，返回列表",
+   "remark": "边界用例，未保存修改的取消",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "保存按钮-重复点击防重复提交",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "新增页面，填写合法数据（显示顺序=1，发送条件=进入直播间，消息内容='测试'）",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写所有必填字段",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 2,
+     "desc": "快速连续点击「保存」按钮两次",
+     "expected": "第一次点击后按钮置灰或加载中，第二次点击无效；最终只提交一次，数据库仅新增一条记录"
+    }
+   ],
+   "expected_result": "只保存一次，无重复记录",
+   "remark": "负面用例，防重复提交",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "新增消息-发送条件为进入直播间时发送间隔和总次数不可编辑",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "发送条件=进入直播间，发送间隔和总次数字段应置灰或隐藏",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择发送条件为「进入直播间」",
+     "expected": "发送间隔和总次数字段置灰或隐藏，不可编辑"
+    }
+   ],
+   "expected_result": "字段状态正确，不可编辑",
+   "remark": "正面用例，条件联动",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "新增消息-发送条件为定时发送时显示发送间隔和总次数",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "发送条件=定时发送，发送间隔和总次数字段应显示且可编辑",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择发送条件为「定时发送」",
+     "expected": "发送间隔和总次数字段显示且可编辑"
+    }
+   ],
+   "expected_result": "字段状态正确，可编辑",
+   "remark": "正面用例，条件联动",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "新增消息-显示顺序为超长整数校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "显示顺序=999999999999（超出整数范围）",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入显示顺序为999999999999",
+     "expected": "输入框可能限制长度或提示格式错误"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他必填字段",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「显示顺序超出范围」"
+    }
+   ],
+   "expected_result": "保存被拦截，长度/范围校验生效",
+   "remark": "边界用例，超长输入",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "新增消息-消息内容超长校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "消息内容输入超过最大长度（假设最大500字符，输入501个字符）",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入显示顺序为1",
+     "expected": "输入框显示1"
+    },
+    {
+     "step": 2,
+     "desc": "选择发送条件为「进入直播间」",
+     "expected": "发送条件选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "在消息内容输入501个字符（如重复字母'a'）",
+     "expected": "输入框可能限制输入或提示超长"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「消息内容长度不能超过500」"
+    }
+   ],
+   "expected_result": "保存被拦截，长度校验生效",
+   "remark": "边界用例，超长输入",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "新增消息-特殊字符输入校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/聊天室消息/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "消息内容包含特殊字符如'<script>alert(1)</script>'（XSS尝试）",
+   "preconditions": "已登录运营后台，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入显示顺序为1",
+     "expected": "输入框显示1"
+    },
+    {
+     "step": 2,
+     "desc": "选择发送条件为「进入直播间」",
+     "expected": "发送条件选择成功"
+    },
+    {
+     "step": 3,
+     "desc": "输入消息内容为'<script>alert(1)</script>'",
+     "expected": "输入框显示该内容"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "保存成功或提示非法字符；若保存成功，页面展示时脚本不应执行，应转义显示"
+    }
+   ],
+   "expected_result": "系统对特殊字符进行转义或拦截，无XSS风险",
+   "remark": "负面用例，安全校验",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "消息内容必填校验-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入有效的消息内容，如'欢迎来到直播间'，代表正常业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在消息内容输入框中输入'欢迎来到直播间'",
+     "expected": "输入成功，无错误提示"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，提示'保存成功'，消息内容正确显示在列表中"
+    }
+   ],
+   "expected_result": "消息内容字段可正常输入并保存，保存后数据正确入库。",
+   "remark": "正向用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "消息内容为空校验-负向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "消息内容留空，代表未填写必填项的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不输入消息内容，保持为空",
+     "expected": "无输入"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "提示'消息内容不能为空'，保存被拦截，不提交数据"
+    }
+   ],
+   "expected_result": "消息内容为空时无法保存，系统给出明确错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "消息内容长度边界校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入长度为最大限制（假设为200字符）的消息内容，代表边界场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入200个字符的消息内容（如重复的'A'）",
+     "expected": "输入成功，无错误提示"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，提示'保存成功'"
+    }
+   ],
+   "expected_result": "消息内容长度达到上限时可正常保存。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "消息内容超长校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入201个字符的消息内容，代表超出长度限制的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入201个字符的消息内容（如重复的'A'）",
+     "expected": "输入被截断或提示'消息内容不能超过200字符'"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "保存被拦截，提示长度超限"
+    }
+   ],
+   "expected_result": "消息内容超过最大长度时无法保存，系统给出明确错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "联赛及球队管理列表加载",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入页面后联赛及球队管理列表应加载出所有联赛和球队数据，代表正常业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开新增_编辑页面",
+     "expected": "联赛及球队管理列表正常加载，显示所有联赛和球队"
+    }
+   ],
+   "expected_result": "联赛及球队管理列表正确展示，数据完整。",
+   "remark": "正向用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "联赛及球队管理列表为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟系统中无联赛和球队数据，代表空数据场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面，且系统中无联赛和球队数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开新增_编辑页面",
+     "expected": "联赛及球队管理列表显示'暂无数据'或空状态提示"
+    }
+   ],
+   "expected_result": "列表为空时给出友好提示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "联赛及球队管理多选功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择多个联赛和球队，代表需要关联多个对象的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面，联赛及球队管理列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在联赛及球队管理列表中勾选多个选项（如'英超'和'曼联'）",
+     "expected": "选项被选中，可多选"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，所选联赛和球队被正确关联"
+    }
+   ],
+   "expected_result": "支持多选并正确保存关联关系。",
+   "remark": "正向用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "联赛及球队管理未选择保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "不选择任何联赛和球队，代表未关联对象的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不选择任何联赛和球队",
+     "expected": "无选择"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "若该字段必填，则提示'请选择联赛及球队'；若不必填，则保存成功"
+    }
+   ],
+   "expected_result": "根据字段是否必填给出相应处理，若必填则拦截并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "发送渠道选择-正向",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择发送渠道为'APP'，代表通过APP发送消息的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在发送渠道字段选择'APP'",
+     "expected": "选项被选中"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，发送渠道被正确保存"
+    }
+   ],
+   "expected_result": "发送渠道可正常选择并保存。",
+   "remark": "正向用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "发送渠道未选择保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "不选择发送渠道，代表未指定渠道的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不选择发送渠道",
+     "expected": "无选择"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "若必填则提示'请选择发送渠道'；若不必填则保存成功"
+    }
+   ],
+   "expected_result": "根据字段是否必填给出相应处理，若必填则拦截并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "网站地址1输入合法URL",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入合法的URL，如'https://www.example.com'，代表正常业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在网站地址1输入框中输入'https://www.example.com'",
+     "expected": "输入成功，无错误提示"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，地址被正确保存"
+    }
+   ],
+   "expected_result": "合法的网站地址可正常输入并保存。",
+   "remark": "正向用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "网站地址1输入非法URL",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入非法的URL，如'abc'，代表格式错误的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在网站地址1输入框中输入'abc'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "提示'请输入正确的网址'，保存被拦截"
+    }
+   ],
+   "expected_result": "非法的URL无法保存，系统给出明确错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "网站地址2-5输入合法URL",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "在网站地址2至5中输入合法的URL，代表配置多个跳转地址的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在网站地址2输入'https://www.example2.com'，网站地址3输入'https://www.example3.com'，网站地址4输入'https://www.example4.com'，网站地址5输入'https://www.example5.com'",
+     "expected": "所有输入成功，无错误提示"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，所有地址被正确保存"
+    }
+   ],
+   "expected_result": "多个网站地址可正常输入并保存。",
+   "remark": "正向用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "网站地址2-5输入非法URL",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "在网站地址2中输入非法URL，代表格式错误的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在网站地址2输入框中输入'not a url'",
+     "expected": "输入成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "提示'请输入正确的网址'，保存被拦截"
+    }
+   ],
+   "expected_result": "非法的URL无法保存，系统给出明确错误提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "APP列表加载",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入页面后APP列表应加载出所有APP选项，代表正常业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开新增_编辑页面",
+     "expected": "APP列表正常加载，显示所有APP选项"
+    }
+   ],
+   "expected_result": "APP列表正确展示，数据完整。",
+   "remark": "正向用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "APP列表为空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟系统中无APP数据，代表空数据场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面，且系统中无APP数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开新增_编辑页面",
+     "expected": "APP列表显示'暂无数据'或空状态提示"
+    }
+   ],
+   "expected_result": "列表为空时给出友好提示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "APP多选功能",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择多个APP，代表消息发送到多个APP的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面，APP列表有数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在APP列表中勾选多个选项（如'小象直播'和'体育直播'）",
+     "expected": "选项被选中，可多选"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "保存成功，所选APP被正确关联"
+    }
+   ],
+   "expected_result": "支持多选并正确保存关联关系。",
+   "remark": "正向用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "APP未选择保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/新增_编辑",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "不选择任何APP，代表未指定目标APP的业务场景。",
+   "preconditions": "已登录运营后台，进入新增_编辑页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不选择任何APP",
+     "expected": "无选择"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存按钮",
+     "expected": "若必填则提示'请选择APP'；若不必填则保存成功"
+    }
+   ],
+   "expected_result": "根据字段是否必填给出相应处理，若必填则拦截并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "验证推送消息列表默认展示所有消息",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中预置多条推送消息，包含不同状态（待审核、待发送、已完成）和不同创建时间。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在至少3条推送消息记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击「消息管理」-「推送消息」菜单",
+     "expected": "页面成功加载，显示推送消息列表"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表展示",
+     "expected": "列表展示所有推送消息，每行包含创建时间、消息名称、展示图片、创建者、状态、审核者、发送时间、关联比赛等字段"
+    }
+   ],
+   "expected_result": "列表正确展示所有推送消息，字段完整，无缺失或错乱。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "验证推送消息列表为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中无任何推送消息记录。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库无推送消息数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面加载，列表区域显示空态提示（如「暂无数据」）"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "验证新增推送消息成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入消息名称「测试推送消息」，发送时间选择未来时间（如2025-12-31 10:00:00），关联比赛选择一场未开始比赛，展示图片上传符合规格的PNG图片。",
+   "preconditions": "运营后台已登录，且有新增权限；存在可关联的比赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增消息对话框或跳转新增页面"
+    },
+    {
+     "step": 2,
+     "desc": "填写消息名称「测试推送消息」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择发送时间（未来时间）",
+     "expected": "时间选择成功"
+    },
+    {
+     "step": 4,
+     "desc": "选择关联比赛",
+     "expected": "关联比赛成功"
+    },
+    {
+     "step": 5,
+     "desc": "上传展示图片（PNG格式，尺寸180*500）",
+     "expected": "图片上传成功，预览显示"
+    },
+    {
+     "step": 6,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示「保存成功」，列表刷新并显示新消息"
+    }
+   ],
+   "expected_result": "新增消息成功，列表出现新记录，状态为「待审核」，数据库新增对应记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "验证新增推送消息时消息名称为空被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "消息名称留空，其他字段填写有效值。",
+   "preconditions": "运营后台已登录，且有新增权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "不填写消息名称，直接点击「保存」",
+     "expected": "保存被拦截，提示「消息名称不能为空」"
+    }
+   ],
+   "expected_result": "无法保存，提示消息名称必填，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "验证新增推送消息时发送时间为过去时间被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "发送时间选择当前时间之前的时间（如2020-01-01 00:00:00）。",
+   "preconditions": "运营后台已登录，且有新增权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」按钮",
+     "expected": "弹出新增对话框"
+    },
+    {
+     "step": 2,
+     "desc": "填写消息名称「测试」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "选择发送时间为过去时间",
+     "expected": "时间选择成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「保存」",
+     "expected": "保存被拦截，提示「发送时间不能早于当前时间」"
+    }
+   ],
+   "expected_result": "无法保存，提示发送时间不可为过去时间，数据库无新增记录。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "验证按消息名称搜索成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "搜索关键词「送礼物」，数据库中存在消息名称为「送礼物全站飘横幅咯」的记录。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在消息名称包含「送礼物」的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称搜索框输入「送礼物」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示消息名称包含「送礼物」的记录"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "验证按消息名称搜索无结果时的提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索关键词「不存在的消息」，数据库中无匹配记录。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称搜索框输入「不存在的消息」",
+     "expected": "输入成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示空态提示「暂无数据」"
+    }
+   ],
+   "expected_result": "搜索无结果时显示空态提示，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "验证按发送时间范围搜索成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "设置发送时间范围为2019-03-01 00:00:00 至 2019-03-31 23:59:59，数据库中存在发送时间在该范围内的记录（如2019-03-12 21:00:00）。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在发送时间在指定范围内的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "在发送时间搜索框选择开始时间2019-03-01 00:00:00",
+     "expected": "开始时间设置成功"
+    },
+    {
+     "step": 3,
+     "desc": "在发送时间搜索框选择结束时间2019-03-31 23:59:59",
+     "expected": "结束时间设置成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示发送时间在范围内的记录"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示发送时间在指定范围内的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "验证发送时间搜索时开始时间晚于结束时间被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "开始时间设置为2019-03-31，结束时间设置为2019-03-01。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "设置开始时间2019-03-31 00:00:00",
+     "expected": "开始时间设置成功"
+    },
+    {
+     "step": 3,
+     "desc": "设置结束时间2019-03-01 00:00:00",
+     "expected": "结束时间设置成功"
+    },
+    {
+     "step": 4,
+     "desc": "点击「搜索」按钮",
+     "expected": "提示「开始时间不能晚于结束时间」，不执行搜索"
+    }
+   ],
+   "expected_result": "搜索被拦截，提示时间范围错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "验证列表展示展示图片",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中某条消息的展示图片字段有有效图片URL。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在带展示图片的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的展示图片列",
+     "expected": "每条消息的展示图片正常显示，无裂图"
+    }
+   ],
+   "expected_result": "展示图片正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "验证展示图片加载失败时的占位图",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中某条消息的展示图片URL无效（如返回404）。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在图片URL无效的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看展示图片列",
+     "expected": "图片加载失败，显示默认占位图或破图图标，不影响其他字段展示"
+    }
+   ],
+   "expected_result": "图片加载失败时显示占位图，无页面报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "验证列表展示创建者、审核者字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中消息记录包含创建者「JM」和审核者「Dante」。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在创建者和审核者非空的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建者和审核者列",
+     "expected": "正确显示创建者用户名和审核者用户名"
+    }
+   ],
+   "expected_result": "创建者和审核者字段正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "验证列表展示状态字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中消息状态包含「待审核」「待发送」「已完成」。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在不同状态的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看状态列",
+     "expected": "状态正确显示，如「待审核」「待发送」「已完成」"
+    }
+   ],
+   "expected_result": "状态字段正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "验证列表展示关联比赛信息",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中某条消息关联比赛，比赛信息为主场球队名称 VS 客场球队名称。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在关联比赛的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联比赛列",
+     "expected": "正确显示关联比赛信息，如「主场球队名称 VS 客场球队名称」"
+    }
+   ],
+   "expected_result": "关联比赛信息正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "验证列表展示创建时间字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中消息创建时间为2019-03-14 14:22:56。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在创建时间的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "正确显示创建时间，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "创建时间字段正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "验证列表展示发送时间字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中消息发送时间为2019-03-12 21:00:00。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在发送时间的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看发送时间列",
+     "expected": "正确显示发送时间，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "发送时间字段正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "验证列表展示消息名称字段",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中消息名称为「送礼物全站飘横幅咯」。",
+   "preconditions": "运营后台已登录，且有推送消息列表访问权限；数据库中存在消息名称的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "列表加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看消息名称列",
+     "expected": "正确显示消息名称"
+    }
+   ],
+   "expected_result": "消息名称字段正确展示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "验证无权限用户无法访问推送消息页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无推送消息访问权限的运营账号登录。",
+   "preconditions": "存在无推送消息权限的运营账号。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台",
+     "expected": "登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "尝试访问推送消息页面",
+     "expected": "页面提示无权限或菜单不可见，无法访问"
+    }
+   ],
+   "expected_result": "无权限用户无法访问推送消息页面。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "推送消息列表默认展示所有字段且数据正确",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用系统已有推送消息数据，如消息名称'送礼物全站飘横幅咯'、创建者'JM'、状态'待审核'、发送时间'2019-03-12 21:00:00'等，验证列表字段展示。",
+   "preconditions": "运营后台已登录，存在至少一条推送消息记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击消息管理-推送消息",
+     "expected": "进入推送消息列表页，页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表字段",
+     "expected": "列表展示创建时间、消息名称、展示图片、创建者、状态、审核者、发送时间、关联比赛、操作列，字段值与数据库一致"
+    }
+   ],
+   "expected_result": "列表正确展示所有推送消息记录，各字段值与数据库记录一致，无乱码、无缺失。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "推送消息列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "清空推送消息表或使用无数据环境，验证空态展示。",
+   "preconditions": "推送消息表无任何记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面显示'暂无数据'或类似空态提示，列表无记录"
+    }
+   ],
+   "expected_result": "页面展示空态提示，不报错，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "推送消息列表分页展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "构造超过一页的推送消息数据（如20条），验证分页功能。",
+   "preconditions": "推送消息记录超过每页显示条数（假设每页10条）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "列表显示第一页数据，分页控件显示总页数"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "显示第二页数据，页码更新"
+    }
+   ],
+   "expected_result": "分页功能正常，数据不重复不遗漏。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "推送消息列表分页边界-最后一页数据不足一页",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造总记录数为11条（每页10条），验证最后一页只有1条。",
+   "preconditions": "推送消息记录共11条。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "第一页显示10条"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页",
+     "expected": "第二页显示1条，无空白行"
+    }
+   ],
+   "expected_result": "最后一页正确显示剩余记录，无异常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "推送消息列表状态字段展示-待审核",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用状态为'待审核'的推送消息，如消息名称'送礼物全站飘横幅咯'，验证状态展示。",
+   "preconditions": "存在状态为'待审核'的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "列表中存在状态为'待审核'的记录，状态文字正确显示"
+    }
+   ],
+   "expected_result": "状态字段正确显示'待审核'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "推送消息列表状态字段展示-待发送",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用状态为'待发送'的推送消息，如消息名称'谨防诈骗'，验证状态展示。",
+   "preconditions": "存在状态为'待发送'的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "列表中存在状态为'待发送'的记录，状态文字正确显示"
+    }
+   ],
+   "expected_result": "状态字段正确显示'待发送'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "推送消息列表状态字段展示-已完成",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用状态为'已完成'的推送消息，如消息名称'官方通知'，验证状态展示。",
+   "preconditions": "存在状态为'已完成'的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "列表中存在状态为'已完成'的记录，状态文字正确显示"
+    }
+   ],
+   "expected_result": "状态字段正确显示'已完成'。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "推送消息列表状态字段-未知状态处理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中状态字段异常值（如'已删除'），验证列表展示。",
+   "preconditions": "存在状态字段为异常值的推送消息记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "状态字段显示原始值或友好提示，不报错"
+    }
+   ],
+   "expected_result": "页面不崩溃，状态字段有合理展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "推送消息列表发送时间字段展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用发送时间'2019-03-12 21:00:00'、'2019-03-12 18:30:00'、'2019-03-11 21:00:00'、'2019-02-24 19:28:00'、'2019-02-23 10:19:08'等，验证时间格式展示。",
+   "preconditions": "存在多条不同发送时间的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "每条记录的发送时间字段以'YYYY-MM-DD HH:mm:ss'格式正确显示"
+    }
+   ],
+   "expected_result": "发送时间格式正确，与数据库一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "推送消息列表发送时间字段-空值处理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造发送时间为空的推送消息记录，验证展示。",
+   "preconditions": "存在发送时间为空的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "发送时间字段显示为空或'--'，不报错"
+    }
+   ],
+   "expected_result": "空值有合理展示，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "推送消息列表创建者字段展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用创建者'JM'、'Dante'等，验证创建者字段展示。",
+   "preconditions": "存在不同创建者的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "创建者字段正确显示创建者用户名"
+    }
+   ],
+   "expected_result": "创建者字段正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "推送消息列表创建者字段-超长用户名展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造创建者用户名为超长字符串（如50个字符），验证展示。",
+   "preconditions": "存在创建者用户名为超长字符串的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "创建者字段显示完整或截断并带悬浮提示，不撑破布局"
+    }
+   ],
+   "expected_result": "超长用户名合理展示，不影响页面布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "推送消息列表消息名称字段展示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用消息名称'送礼物全站飘横幅咯'、'谨防诈骗'、'官方通知'等，验证展示。",
+   "preconditions": "存在多条不同消息名称的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "消息名称字段正确显示消息名称"
+    }
+   ],
+   "expected_result": "消息名称字段正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "推送消息列表消息名称字段-超长名称展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造消息名称为超长字符串（如100个字符），验证展示。",
+   "preconditions": "存在消息名称为超长字符串的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "消息名称字段显示完整或截断并带悬浮提示，不撑破布局"
+    }
+   ],
+   "expected_result": "超长名称合理展示，不影响页面布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "推送消息列表展示图片字段展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用有展示图片的推送消息，验证图片显示。",
+   "preconditions": "存在展示图片的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "展示图片字段显示图片缩略图，图片加载正常"
+    }
+   ],
+   "expected_result": "图片正常显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "推送消息列表展示图片字段-无图片时展示占位图",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无展示图片的推送消息，验证展示。",
+   "preconditions": "存在无展示图片的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "展示图片字段显示默认占位图或空白，不报错"
+    }
+   ],
+   "expected_result": "无图片时合理展示，页面正常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "推送消息列表关联比赛字段展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用关联比赛字段有值的推送消息，如'主场球队名称 VS 客场球队名称'，验证展示。",
+   "preconditions": "存在关联比赛的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "关联比赛字段正确显示比赛信息"
+    }
+   ],
+   "expected_result": "关联比赛字段正确显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "推送消息列表关联比赛字段-无关联比赛时展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造无关联比赛的推送消息，验证展示。",
+   "preconditions": "存在无关联比赛的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "关联比赛字段显示为空或'--'，不报错"
+    }
+   ],
+   "expected_result": "无关联比赛时合理展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "推送消息列表按消息名称搜索-精确匹配",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入消息名称'谨防诈骗'，验证搜索结果。",
+   "preconditions": "存在消息名称为'谨防诈骗'的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称输入框输入'谨防诈骗'",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表仅显示消息名称为'谨防诈骗'的记录"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "推送消息列表按消息名称搜索-模糊匹配",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入部分名称'通知'，验证模糊搜索。",
+   "preconditions": "存在消息名称包含'通知'的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称输入框输入'通知'",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示所有消息名称包含'通知'的记录"
+    }
+   ],
+   "expected_result": "模糊搜索正确，显示所有包含关键字的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "推送消息列表按消息名称搜索-无匹配结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的消息名称'不存在的消息'，验证搜索无结果。",
+   "preconditions": "无消息名称为'不存在的消息'的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称输入框输入'不存在的消息'",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示'暂无数据'，无记录"
+    }
+   ],
+   "expected_result": "搜索无结果时展示空态，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "推送消息列表按发送时间搜索-精确日期",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择发送时间'2019-03-12'，验证搜索结果。",
+   "preconditions": "存在发送时间为2019-03-12的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在发送时间选择器选择'2019-03-12'",
+     "expected": "时间选择器显示所选日期"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示发送时间为2019-03-12的记录"
+    }
+   ],
+   "expected_result": "按发送时间搜索正确，显示匹配记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "推送消息列表按发送时间搜索-无匹配结果",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择发送时间'2020-01-01'（无记录），验证搜索无结果。",
+   "preconditions": "无发送时间为2020-01-01的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在发送时间选择器选择'2020-01-01'",
+     "expected": "时间选择器显示所选日期"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示'暂无数据'，无记录"
+    }
+   ],
+   "expected_result": "搜索无结果时展示空态，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "推送消息列表搜索-消息名称和发送时间组合搜索",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入消息名称'官方通知'并选择发送时间'2019-02-24'，验证组合搜索。",
+   "preconditions": "存在消息名称为'官方通知'且发送时间为2019-02-24的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称输入框输入'官方通知'",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "在发送时间选择器选择'2019-02-24'",
+     "expected": "时间选择器显示所选日期"
+    },
+    {
+     "step": 4,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示同时满足两个条件的记录"
+    }
+   ],
+   "expected_result": "组合搜索正确，显示同时满足条件的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "推送消息列表搜索-清空搜索条件恢复全部数据",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先搜索'谨防诈骗'，然后清空条件，验证恢复全部。",
+   "preconditions": "存在多条推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称输入框输入'谨防诈骗'并点击搜索",
+     "expected": "列表仅显示'谨防诈骗'记录"
+    },
+    {
+     "step": 3,
+     "desc": "清空消息名称输入框",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 4,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示全部推送消息"
+    }
+   ],
+   "expected_result": "清空条件后恢复全部数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "推送消息列表搜索-消息名称输入特殊字符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符'@#￥%'，验证搜索处理。",
+   "preconditions": "无消息名称包含'@#￥%'的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称输入框输入'@#￥%'",
+     "expected": "输入框显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示'暂无数据'，不报错"
+    }
+   ],
+   "expected_result": "特殊字符搜索不报错，无结果时展示空态。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "推送消息列表搜索-消息名称输入超长字符串",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超长字符串（如200个字符），验证搜索处理。",
+   "preconditions": "无消息名称包含该超长字符串的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "在消息名称输入框输入200个字符",
+     "expected": "输入框可能限制长度或显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示'暂无数据'，不报错"
+    }
+   ],
+   "expected_result": "超长输入不报错，无结果时展示空态。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "推送消息列表新增按钮入口",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击新增按钮，验证跳转到新增页面。",
+   "preconditions": "运营后台已登录，有新增权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "点击新增按钮",
+     "expected": "跳转到新增推送消息页面，页面标题为'新增'或类似"
+    }
+   ],
+   "expected_result": "点击新增按钮成功跳转到新增页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "推送消息列表新增按钮-无权限时不可见或不可点击",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无新增权限的账号登录，验证新增按钮状态。",
+   "preconditions": "当前登录账号无新增推送消息权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号进入推送消息列表页",
+     "expected": "页面加载成功"
+    },
+    {
+     "step": 2,
+     "desc": "查看新增按钮",
+     "expected": "新增按钮不可见或置灰不可点击"
+    }
+   ],
+   "expected_result": "无权限时新增按钮不可操作。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "验证推送消息列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "清空推送消息表或使用无数据环境，验证空态展示。",
+   "preconditions": "已登录运营后台，推送消息列表无任何数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载，列表区域显示“暂无数据”或类似空态提示"
+    }
+   ],
+   "expected_result": "列表显示空态提示，无报错，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "验证按消息名称精确搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入已存在的消息名称“元宵佳节到”，验证搜索结果。",
+   "preconditions": "已登录运营后台，推送消息列表中存在“元宵佳节到”记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在“消息名称”输入框输入“元宵佳节到”",
+     "expected": "输入框正常显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表刷新，仅显示“元宵佳节到”相关记录"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示匹配“元宵佳节到”的消息，其他记录不显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "验证按消息名称搜索无结果时提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的消息名称“不存在的消息”，验证无结果提示。",
+   "preconditions": "已登录运营后台，推送消息列表无“不存在的消息”记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在“消息名称”输入框输入“不存在的消息”",
+     "expected": "输入框正常显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表显示“暂无数据”或类似提示，无报错"
+    }
+   ],
+   "expected_result": "搜索无结果时列表显示空态提示，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "验证按发送时间搜索成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择发送时间范围包含“2019-02-26 21:00:00”的日期，验证搜索结果。",
+   "preconditions": "已登录运营后台，推送消息列表中存在发送时间为“2019-02-26 21:00:00”的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在“发送时间”选择器选择起始时间2019-02-26 00:00:00，结束时间2019-02-26 23:59:59",
+     "expected": "时间选择器正确显示所选范围"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "列表刷新，仅显示发送时间在所选范围内的消息"
+    }
+   ],
+   "expected_result": "搜索结果正确，仅显示发送时间在2019-02-26当天的消息。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "验证发送时间搜索范围无效时提示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择开始时间晚于结束时间，如开始2019-03-01，结束2019-02-01，验证提示。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在“发送时间”选择器选择开始时间2019-03-01，结束时间2019-02-01",
+     "expected": "时间选择器允许选择，但可能提示错误"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "系统提示“开始时间不能晚于结束时间”或类似提示，不执行搜索"
+    }
+   ],
+   "expected_result": "系统拦截无效时间范围，提示错误，列表不刷新。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "验证搜索框占位提示显示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "界面测试",
+   "positive_negative": "positive",
+   "test_data_note": "检查消息名称输入框的占位提示是否为“请输入”。",
+   "preconditions": "已登录运营后台，进入推送消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看“消息名称”输入框",
+     "expected": "输入框内显示灰色占位提示“请输入”"
+    }
+   ],
+   "expected_result": "占位提示正确显示“请输入”，无错别字。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "验证搜索框输入特殊字符时处理",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符如“%”或“_”，验证系统处理。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在“消息名称”输入框输入“%”",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击“搜索”按钮",
+     "expected": "系统正常处理，不报错，可能返回空结果或按转义字符搜索"
+    }
+   ],
+   "expected_result": "系统对特殊字符进行转义或安全处理，无SQL注入风险，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "验证新增按钮可用",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击“新增”按钮，验证跳转到新增页面。",
+   "preconditions": "已登录运营后台，具有消息管理权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“新增”按钮",
+     "expected": "跳转到新增推送消息页面，页面标题为“新增/编辑消息”"
+    }
+   ],
+   "expected_result": "点击新增按钮后正确跳转至新增页面，无报错。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "验证无权限用户新增按钮置灰",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无新增权限的账号登录，验证新增按钮状态。",
+   "preconditions": "已登录运营后台，账号无新增推送消息权限。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "使用无权限账号登录运营后台",
+     "expected": "登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "进入推送消息页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 3,
+     "desc": "查看“新增”按钮",
+     "expected": "按钮置灰或不可点击，或隐藏"
+    }
+   ],
+   "expected_result": "无权限用户无法点击新增按钮，按钮置灰或隐藏，符合权限控制。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "查看消息-正常查看已存在消息",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已存在的消息记录，如消息名称为“官方通知”，发送时间为2018-06-07 09:12:21，关联比赛为“主场球队名称 VS 客场球队名称”",
+   "preconditions": "运营后台已登录，存在一条已创建的消息记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入推送消息列表，点击某条消息的“编辑/查看”操作",
+     "expected": "页面跳转到编辑_查看消息页面，显示该消息的详细信息"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面各字段是否显示正确",
+     "expected": "发送时间显示为2018-06-07 09:12:21，消息名称显示为“官方通知”，关联比赛显示为“主场球队名称 VS 客场球队名称”，展示图片显示为符合规格的图片"
+    }
+   ],
+   "expected_result": "页面正确展示消息的所有字段，无乱码或缺失",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "查看消息-消息不存在时查看",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "构造一个不存在的消息ID，如消息ID=999999",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "直接访问编辑_查看消息页面，URL中携带不存在的消息ID",
+     "expected": "页面提示“消息不存在”或跳转到列表页"
+    }
+   ],
+   "expected_result": "系统给出明确提示，不出现空白页或异常错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "发送时间-正常显示已配置时间",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已配置的发送时间2018-06-07 09:12:21",
+   "preconditions": "已存在一条消息，发送时间已配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "发送时间字段显示为2018-06-07 09:12:21，格式正确"
+    }
+   ],
+   "expected_result": "发送时间正确显示，格式为YYYY-MM-DD HH:mm:ss",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "发送时间-编辑时设置过去时间被拒绝",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "设置发送时间为当前时间之前1分钟，如当前时间2023-10-01 12:00:00，设置发送时间为2023-10-01 11:59:00",
+   "preconditions": "运营后台已登录，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，修改发送时间为过去时间",
+     "expected": "系统提示“发送时间不可设置过去时间”"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存",
+     "expected": "保存失败，发送时间字段标红提示"
+    }
+   ],
+   "expected_result": "系统拒绝保存过去时间，并给出明确错误提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "发送时间-设置当前时间边界",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "设置发送时间为当前时间，如当前时间2023-10-01 12:00:00，设置发送时间为2023-10-01 12:00:00",
+   "preconditions": "运营后台已登录，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，设置发送时间为当前时间",
+     "expected": "系统允许设置当前时间（若需求允许）或提示不可设置过去时间（若当前时间视为过去）"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存",
+     "expected": "根据需求规则，保存成功或提示错误"
+    }
+   ],
+   "expected_result": "系统按需求规则处理当前时间边界，无歧义",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "保存-正常保存修改",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "修改消息名称为“测试消息”，其他字段保持有效",
+   "preconditions": "运营后台已登录，存在一条消息，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，修改消息名称为“测试消息”",
+     "expected": "消息名称字段显示修改后的值"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存",
+     "expected": "系统提示“保存成功”，并返回列表页或刷新页面显示更新后的数据"
+    }
+   ],
+   "expected_result": "保存成功，数据库中的消息名称更新为“测试消息”",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "保存-必填项为空时保存失败",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "清空消息名称字段，其他字段保持有效",
+   "preconditions": "运营后台已登录，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，清空消息名称",
+     "expected": "消息名称字段为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存",
+     "expected": "系统提示“消息名称不能为空”，保存失败"
+    }
+   ],
+   "expected_result": "保存被阻止，必填项有明确提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "联赛及球队管理-点击入口打开管理页面",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击“联赛及球队管理”链接",
+   "preconditions": "运营后台已登录，处于编辑_查看消息页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“联赛及球队管理”链接",
+     "expected": "打开联赛及球队管理页面或弹窗，展示联赛和球队列表"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面，无报错",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "联赛及球队管理-无权限访问",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的账号",
+   "preconditions": "运营后台已登录，账号无联赛及球队管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“联赛及球队管理”链接",
+     "expected": "系统提示“无权限访问”或该链接不可点击"
+    }
+   ],
+   "expected_result": "系统拦截无权限访问，给出提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "关联比赛-正常显示关联比赛",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用已关联比赛的消息，关联比赛显示为“主场球队名称 VS 客场球队名称”",
+   "preconditions": "存在一条已关联比赛的消息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "关联比赛字段显示“主场球队名称 VS 客场球队名称”"
+    }
+   ],
+   "expected_result": "关联比赛正确显示，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "关联比赛-未关联比赛时显示空",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用未关联比赛的消息",
+   "preconditions": "存在一条未关联比赛的消息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "关联比赛字段为空或显示“未关联”"
+    }
+   ],
+   "expected_result": "关联比赛字段显示为空，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "消息名称-正常显示",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用消息名称为“官方通知”",
+   "preconditions": "存在一条消息，消息名称为“官方通知”",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "消息名称字段显示“官方通知”"
+    }
+   ],
+   "expected_result": "消息名称正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "消息名称-超长字符输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过系统允许长度的消息名称，如200个字符",
+   "preconditions": "运营后台已登录，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，在消息名称输入200个字符",
+     "expected": "系统限制输入长度，或提示“消息名称长度不能超过XX”"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存",
+     "expected": "保存失败或截断处理"
+    }
+   ],
+   "expected_result": "系统对超长输入进行限制或提示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "点击跳转链接-正常显示链接",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用链接https://www.example.com",
+   "preconditions": "存在一条消息，点击跳转链接已配置",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "点击跳转链接字段显示https://www.example.com"
+    }
+   ],
+   "expected_result": "链接正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "点击跳转链接-非法URL格式",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入非法链接如“abc”",
+   "preconditions": "运营后台已登录，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，在点击跳转链接输入“abc”",
+     "expected": "系统提示“链接格式不正确”"
+    },
+    {
+     "step": 2,
+     "desc": "点击保存",
+     "expected": "保存失败，链接字段标红"
+    }
+   ],
+   "expected_result": "系统校验URL格式，拒绝非法输入",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "展示图片-正常显示图片",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用符合规格的图片，尺寸180*500，大小100KB，格式PNG",
+   "preconditions": "存在一条消息，展示图片已上传",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "展示图片区域显示该图片，并显示规格提示“尺寸：180*500，大小：200KB以下，格式：PNG、WEBP”"
+    }
+   ],
+   "expected_result": "图片正常显示，规格提示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "展示图片-上传不符合格式的图片",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "上传JPG格式图片，尺寸180*500，大小100KB",
+   "preconditions": "运营后台已登录，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，点击上传图片，选择JPG格式图片",
+     "expected": "系统提示“图片格式仅支持PNG、WEBP”"
+    },
+    {
+     "step": 2,
+     "desc": "确认上传",
+     "expected": "上传失败，图片未更新"
+    }
+   ],
+   "expected_result": "系统拒绝不符合格式的图片，并给出提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "展示图片-上传超过大小限制的图片",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "上传PNG格式图片，尺寸180*500，大小201KB",
+   "preconditions": "运营后台已登录，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，点击上传图片，选择大小201KB的PNG图片",
+     "expected": "系统提示“图片大小不能超过200KB”"
+    },
+    {
+     "step": 2,
+     "desc": "确认上传",
+     "expected": "上传失败，图片未更新"
+    }
+   ],
+   "expected_result": "系统拒绝超过大小限制的图片，并给出提示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "展示图片-上传尺寸不符的图片",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "上传PNG格式图片，尺寸200*500，大小100KB",
+   "preconditions": "运营后台已登录，处于编辑状态",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面，点击上传图片，选择尺寸200*500的PNG图片",
+     "expected": "系统提示“图片尺寸必须为180*500”"
+    },
+    {
+     "step": 2,
+     "desc": "确认上传",
+     "expected": "上传失败，图片未更新"
+    }
+   ],
+   "expected_result": "系统拒绝尺寸不符的图片，并给出提示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "删除消息-成功删除",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在一条已保存的消息，消息名称为「测试消息」，用于验证删除操作。",
+   "preconditions": "已登录运营后台，具有消息管理权限；存在一条消息记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "页面正常显示消息详情"
+    },
+    {
+     "step": 2,
+     "desc": "点击「删除」按钮",
+     "expected": "弹出确认对话框，提示「是否删除，删除后无法撤销」"
+    },
+    {
+     "step": 3,
+     "desc": "点击「确认」",
+     "expected": "删除成功，页面跳转回列表页，该消息不再显示"
+    }
+   ],
+   "expected_result": "消息被删除，列表不再显示该记录，数据库记录被删除。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "删除消息-取消删除",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "存在一条消息，用于验证取消删除操作。",
+   "preconditions": "已登录运营后台，存在一条消息记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "页面正常显示消息详情"
+    },
+    {
+     "step": 2,
+     "desc": "点击「删除」按钮",
+     "expected": "弹出确认对话框"
+    },
+    {
+     "step": 3,
+     "desc": "点击「取消」",
+     "expected": "对话框关闭，消息未被删除，仍停留在编辑页面"
+    }
+   ],
+   "expected_result": "消息未被删除，页面状态不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "英文-正常输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入英文内容「Hello, this is a test message.」用于验证英文内容可正常保存。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「英文：」输入框中输入「Hello, this is a test message.」",
+     "expected": "输入正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示保存成功，英文内容被保存"
+    }
+   ],
+   "expected_result": "英文内容保存成功，数据库对应字段更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "英文-超长输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过最大长度限制的英文内容（假设最大长度500字符），用于验证长度校验。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「英文：」输入框中输入500个字符的英文内容",
+     "expected": "输入被限制或提示超出长度"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「英文内容不能超过500字符」"
+    }
+   ],
+   "expected_result": "保存被阻止，提示长度超限。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "阿拉伯语-正常输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入阿拉伯语内容「مرحبا بالعالم」用于验证阿拉伯语可正常保存。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「阿拉伯语：」输入框中输入「مرحبا بالعالم」",
+     "expected": "输入正常显示（从右到左）"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，阿拉伯语内容被保存"
+    }
+   ],
+   "expected_result": "阿拉伯语内容保存成功，数据库对应字段更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "阿拉伯语-特殊字符校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入包含HTML标签的阿拉伯语内容，用于验证是否过滤特殊字符。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「阿拉伯语：」输入框中输入「<script>alert('x')</script>」",
+     "expected": "输入框可能显示或过滤"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败或保存后内容被转义，不执行脚本"
+    }
+   ],
+   "expected_result": "系统对特殊字符进行过滤或转义，防止XSS。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "印地语-正常输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入印地语内容「नमस्ते दुनिया」用于验证印地语可正常保存。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「印地语：」输入框中输入「नमस्ते दुनिया」",
+     "expected": "输入正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，印地语内容被保存"
+    }
+   ],
+   "expected_result": "印地语内容保存成功，数据库对应字段更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "印地语-必填校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "印地语字段留空，用于验证是否必填。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "清空「印地语：」输入框",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "若必填则提示「印地语不能为空」，保存失败；若非必填则保存成功"
+    }
+   ],
+   "expected_result": "根据需求定义，若必填则阻止保存并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "孟加拉语-正常输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入孟加拉语内容「ওহে বিশ্ব」用于验证孟加拉语可正常保存。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「孟加拉语：」输入框中输入「ওহে বিশ্ব」",
+     "expected": "输入正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，孟加拉语内容被保存"
+    }
+   ],
+   "expected_result": "孟加拉语内容保存成功，数据库对应字段更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "孟加拉语-空值保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "孟加拉语字段留空，用于验证空值处理。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "清空「孟加拉语：」输入框",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "若允许为空则保存成功，否则提示必填"
+    }
+   ],
+   "expected_result": "根据需求定义，若必填则阻止保存并提示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "印尼语-正常输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入印尼语内容「Halo dunia」用于验证印尼语可正常保存。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「印尼语：」输入框中输入「Halo dunia」",
+     "expected": "输入正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，印尼语内容被保存"
+    }
+   ],
+   "expected_result": "印尼语内容保存成功，数据库对应字段更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "印尼语-长度限制",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过最大长度限制的印尼语内容（假设最大长度200字符），用于验证长度校验。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「印尼语：」输入框中输入200个字符的印尼语内容",
+     "expected": "输入被限制或提示超出长度"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「印尼语内容不能超过200字符」"
+    }
+   ],
+   "expected_result": "保存被阻止，提示长度超限。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "展示图片-上传合法图片",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "上传一张尺寸180*500、大小100KB、格式PNG的图片，用于验证合法图片可上传。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片：」上传按钮",
+     "expected": "弹出文件选择框"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张符合要求的PNG图片（180*500，100KB）",
+     "expected": "图片上传成功，显示预览"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存成功，图片被保存"
+    }
+   ],
+   "expected_result": "图片上传成功并保存，数据库记录图片路径。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "展示图片-上传格式不符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "上传一张JPG格式的图片，用于验证格式校验。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片：」上传按钮",
+     "expected": "弹出文件选择框"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张JPG格式的图片",
+     "expected": "上传失败，提示「图片格式仅支持PNG、WEBP」"
+    }
+   ],
+   "expected_result": "上传被拒绝，提示格式错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "展示图片-上传尺寸不符",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上传一张尺寸200*500的PNG图片，用于验证尺寸校验。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片：」上传按钮",
+     "expected": "弹出文件选择框"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张尺寸200*500的PNG图片",
+     "expected": "上传失败，提示「图片尺寸必须为180*500」"
+    }
+   ],
+   "expected_result": "上传被拒绝，提示尺寸错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "展示图片-上传大小超限",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上传一张大小300KB的PNG图片，用于验证大小校验。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「展示图片：」上传按钮",
+     "expected": "弹出文件选择框"
+    },
+    {
+     "step": 2,
+     "desc": "选择一张大小300KB的PNG图片",
+     "expected": "上传失败，提示「图片大小不能超过200KB」"
+    }
+   ],
+   "expected_result": "上传被拒绝，提示大小超限。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "功能列表-正常展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "查看一条已有消息的功能列表，用于验证功能列表正常展示。",
+   "preconditions": "已登录运营后台，存在一条消息记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "页面显示功能列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看功能列表内容",
+     "expected": "功能列表展示正确，与消息关联的功能一致"
+    }
+   ],
+   "expected_result": "功能列表正常展示，无异常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "功能列表-空数据展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "查看一条没有关联功能的消息，用于验证空数据展示。",
+   "preconditions": "已登录运营后台，存在一条无功能关联的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "页面显示功能列表为空"
+    },
+    {
+     "step": 2,
+     "desc": "查看功能列表",
+     "expected": "显示「暂无数据」或空列表，无异常报错"
+    }
+   ],
+   "expected_result": "功能列表为空时正常展示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "描述-正常输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入描述内容「这是一条测试消息的描述」用于验证描述可正常保存。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「描述」输入框中输入「这是一条测试消息的描述」",
+     "expected": "输入正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，描述被保存"
+    }
+   ],
+   "expected_result": "描述保存成功，数据库对应字段更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "描述-超长输入",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过最大长度限制的描述内容（假设最大长度1000字符），用于验证长度校验。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「描述」输入框中输入1000个字符的描述内容",
+     "expected": "输入被限制或提示超出长度"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「描述不能超过1000字符」"
+    }
+   ],
+   "expected_result": "保存被阻止，提示长度超限。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "消息名称-正常输入",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入消息名称「测试消息」用于验证消息名称可正常保存。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在「消息名称：」输入框中输入「测试消息」",
+     "expected": "输入正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，消息名称被保存"
+    }
+   ],
+   "expected_result": "消息名称保存成功，数据库对应字段更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "消息名称-必填校验",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "消息名称留空，用于验证必填校验。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "清空「消息名称：」输入框",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「消息名称不能为空」"
+    }
+   ],
+   "expected_result": "保存被阻止，提示必填。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "展示图片列表-正常展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "查看一条已有消息的展示图片列表，用于验证列表正常展示。",
+   "preconditions": "已登录运营后台，存在一条消息记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "页面显示展示图片列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看展示图片列表",
+     "expected": "展示图片列表正常显示，图片缩略图正确"
+    }
+   ],
+   "expected_result": "展示图片列表正常展示，无异常。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "展示图片列表-空数据展示",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "查看一条没有展示图片的消息，用于验证空数据展示。",
+   "preconditions": "已登录运营后台，存在一条无展示图片的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "页面显示展示图片列表为空"
+    },
+    {
+     "step": 2,
+     "desc": "查看展示图片列表",
+     "expected": "显示「暂无数据」或空列表，无异常报错"
+    }
+   ],
+   "expected_result": "展示图片列表为空时正常展示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "关联比赛-正常展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "查看一条关联了比赛的消息，关联比赛为「主场球队名称 VS 客场球队名称」，用于验证关联比赛列表正常展示。",
+   "preconditions": "已登录运营后台，存在一条关联比赛的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "页面显示关联比赛列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联比赛列表",
+     "expected": "关联比赛列表正常显示，格式为「主场球队名称 VS 客场球队名称」"
+    }
+   ],
+   "expected_result": "关联比赛列表正常展示，格式正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "关联比赛-空数据展示",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/推送消息/编辑_查看消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "查看一条没有关联比赛的消息，用于验证空数据展示。",
+   "preconditions": "已登录运营后台，存在一条无关联比赛的消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入编辑_查看消息页面",
+     "expected": "页面显示关联比赛列表为空"
+    },
+    {
+     "step": 2,
+     "desc": "查看关联比赛列表",
+     "expected": "显示「暂无数据」或空列表，无异常报错"
+    }
+   ],
+   "expected_result": "关联比赛列表为空时正常展示，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "点击跳转链接-有效链接跳转成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入有效链接：https://www.example.com/promo，代表一个合法的推广活动页面链接。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面，存在一条待编辑的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开编辑_查看消息页面，定位到「点击跳转链接」输入框",
+     "expected": "输入框可编辑，当前显示原有链接或为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入有效链接 https://www.example.com/promo",
+     "expected": "输入框显示该链接，无格式错误提示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，数据库该消息记录的跳转链接字段更新为 https://www.example.com/promo"
+    }
+   ],
+   "expected_result": "保存成功，链接正确保存，无报错。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "点击跳转链接-非法URL格式校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入非法链接：not-a-url，代表不符合URL格式的字符串。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面，存在一条待编辑的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开编辑_查看消息页面，定位到「点击跳转链接」输入框",
+     "expected": "输入框可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "输入非法链接 not-a-url",
+     "expected": "输入框显示该内容，无即时提示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「请输入正确的URL格式」，数据库该记录链接字段未变更"
+    }
+   ],
+   "expected_result": "保存被拦截，提示URL格式错误。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "点击跳转链接-超长链接边界校验",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "消息管理/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入长度为255字符的合法URL（如https://example.com/后跟245个字符），代表链接最大长度边界。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开编辑_查看消息页面，定位到「点击跳转链接」输入框",
+     "expected": "输入框可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "输入255字符的合法URL",
+     "expected": "输入框可完整显示，无截断"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，数据库链接字段完整保存255字符"
+    }
+   ],
+   "expected_result": "保存成功，链接未截断。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "发送时间-正常设置未来时间保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/编辑_查看消息",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "设置发送时间为当前时间后1小时（如当前2024-01-01 10:00:00，则设置2024-01-01 11:00:00），代表合法的未来推送时间。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面，存在一条待编辑的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开编辑_查看消息页面，定位到「发送时间」输入框",
+     "expected": "输入框可编辑，显示当前值或为空"
+    },
+    {
+     "step": 2,
+     "desc": "输入未来时间 2024-01-01 11:00:00",
+     "expected": "输入框显示该时间，无错误提示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」，数据库该消息记录的发送时间字段更新为2024-01-01 11:00:00"
+    }
+   ],
+   "expected_result": "保存成功，发送时间正确保存。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "发送时间-设置过去时间被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "消息管理/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "设置发送时间为当前时间前1小时（如当前2024-01-01 10:00:00，则设置2024-01-01 09:00:00），代表过去的推送时间。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面，存在一条待编辑的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开编辑_查看消息页面，定位到「发送时间」输入框",
+     "expected": "输入框可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "输入过去时间 2024-01-01 09:00:00",
+     "expected": "输入框显示该时间，无即时提示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「发送时间不能早于当前时间」，数据库该记录发送时间字段未变更"
+    }
+   ],
+   "expected_result": "保存被拦截，提示发送时间不能为过去时间。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "发送时间-等于当前时间边界校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/编辑_查看消息",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "设置发送时间为当前时间（精确到秒），代表边界情况。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开编辑_查看消息页面，定位到「发送时间」输入框",
+     "expected": "输入框可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "输入当前时间（如2024-01-01 10:00:00）",
+     "expected": "输入框显示该时间"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "根据需求规则，若允许等于当前时间则保存成功；若不允许则提示「发送时间必须晚于当前时间」。实际以需求确认为准。"
+    }
+   ],
+   "expected_result": "按需求边界规则处理，需明确是否允许等于当前时间。",
+   "remark": "边界用例，需需求确认",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "发送时间-为空校验",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "消息管理/编辑_查看消息",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "清空发送时间输入框，代表未设置发送时间。",
+   "preconditions": "已登录运营后台，进入编辑_查看消息页面，存在一条待编辑的推送消息。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开编辑_查看消息页面，定位到「发送时间」输入框",
+     "expected": "输入框可编辑"
+    },
+    {
+     "step": 2,
+     "desc": "清空输入框内容",
+     "expected": "输入框为空"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "若发送时间必填，则提示「发送时间不能为空」，保存失败；若选填，则保存成功。需按需求确认。"
+    }
+   ],
+   "expected_result": "根据需求判断是否必填，若必填则拦截。",
+   "remark": "负面用例，需需求确认是否必填",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-180"
+  }
+ ],
+ "api_cases": []
+}

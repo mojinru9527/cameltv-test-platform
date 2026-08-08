@@ -1,0 +1,1782 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "邀请好友达指定人数后，你可获得银钻",
+    "description": "页面 邀请好友 中展示邀请好友达指定人数后可获得银钻的规则说明",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确指定人数与银钻数量的对应关系，以及达到人数后银钻发放的具体规则（如自动发放还是手动领取）",
+      "suggestion": "建议补充人数与银钻奖励的映射表，以及发放时机和领取方式"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "银钻",
+    "description": "list：银钻，展示邀请好友可获得的银钻数量",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确银钻数值的展示格式（如是否带单位、千分位）",
+      "suggestion": "建议明确展示格式"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "邀请3人",
+    "description": "list：邀请3人，展示邀请3人可获得的银钻奖励",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确邀请3人对应的银钻数量，需与需求中的40银钻对应",
+      "suggestion": "建议明确奖励数值"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "还差",
+    "description": "list：还差，展示还差多少人可达到下一档奖励",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "未明确还差人数的计算逻辑（基于当前成功邀请人数）以及达到目标后的状态变化",
+      "suggestion": "建议明确计算规则和状态切换"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "邀请6人",
+    "description": "list：邀请6人，展示邀请6人可获得的银钻奖励",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确邀请6人对应的银钻数量，需与需求中的80银钻对应",
+      "suggestion": "建议明确奖励数值"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "邀请2人",
+    "description": "list：邀请2人，展示邀请2人可获得的银钻奖励",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "未明确邀请2人对应的银钻数量，需与需求中的20银钻对应",
+      "suggestion": "建议明确奖励数值"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求整体描述了邀请好友页面的核心展示元素，但存在多处细节缺失：奖励规则（人数与银钻的映射）未明确、还差人数的计算逻辑未说明、状态切换（已获得/还差）的边界条件未定义。建议补充完整的奖励规则和状态流转说明，以便测试用例设计。"
+ },
+ "functional_cases": [
+  {
+   "title": "邀请好友页面正常展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，进入银钻任务-邀请好友页面",
+   "preconditions": "用户已登录，且已进入银钻任务模块",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击进入“邀请好友”页面",
+     "expected": "页面正常加载，展示活动标题“喊好友免费看赛事直播”、邀请进度、邀请步骤、奖励规则等信息"
+    }
+   ],
+   "expected_result": "页面展示完整，无报错，各模块（邀请进度、邀请步骤、奖励规则）均可见",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "未登录访问邀请好友页面",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户尝试访问邀请好友页面",
+   "preconditions": "用户未登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "尝试直接访问邀请好友页面URL或通过入口进入",
+     "expected": "系统拦截，跳转至登录页或提示“请先登录”"
+    }
+   ],
+   "expected_result": "未登录用户无法查看邀请好友页面，被引导至登录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "邀请者活动页面展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，从邀请好友页面点击进入邀请者活动页面",
+   "preconditions": "用户已登录，且已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“邀请者活动页面”入口（如活动规则链接）",
+     "expected": "跳转至邀请者活动页面，展示活动规则、奖励说明（如邀请3人得40银钻、邀请6人得80银钻等）"
+    }
+   ],
+   "expected_result": "页面展示完整的邀请者活动规则，数据与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "邀请者活动页面加载失败",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "网络异常或服务端错误时访问邀请者活动页面",
+   "preconditions": "用户已登录，网络断开或服务端返回500",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击进入邀请者活动页面",
+     "expected": "页面显示加载失败提示，如“网络异常，请稍后重试”，并提供重试按钮"
+    }
+   ],
+   "expected_result": "页面不崩溃，给出错误提示，可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "点击去邀请按钮复制链接",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，点击“去邀请”按钮，预期复制当前页面链接",
+   "preconditions": "用户已登录，已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“去邀请”按钮",
+     "expected": "系统复制当前页面链接到剪贴板，并弹出提示“已复制页面链接”"
+    }
+   ],
+   "expected_result": "剪贴板内容为当前页面URL，提示“已复制页面链接”",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "复制链接失败处理",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "浏览器不支持剪贴板API或权限被拒绝时点击去邀请",
+   "preconditions": "用户已登录，浏览器禁用剪贴板权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“去邀请”按钮",
+     "expected": "提示“复制失败，请手动复制链接”，并提供手动复制方式（如显示链接文本）"
+    }
+   ],
+   "expected_result": "用户可手动复制链接，不出现无响应",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "邀请好友活动规则展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已登录用户，查看邀请好友活动规则",
+   "preconditions": "用户已登录，已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看邀请好友活动区域",
+     "expected": "展示活动规则：好友完成注册、绑定邮箱、登录后，邀请者可获得银钻；邀请达指定人数可获得额外银钻（如邀请3人得40银钻、邀请6人得80银钻）"
+    }
+   ],
+   "expected_result": "活动规则展示完整，与需求一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "邀请好友活动规则数据异常",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "服务端返回的活动规则数据为空或格式错误",
+   "preconditions": "用户已登录，服务端返回异常数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面，查看活动规则",
+     "expected": "页面显示默认文案或错误提示，不展示错误数据，不崩溃"
+    }
+   ],
+   "expected_result": "页面容错处理，无异常展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "被邀请者活动页面展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "被邀请者（新用户）通过邀请链接进入活动页面",
+   "preconditions": "用户未注册，通过邀请链接访问",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请链接",
+     "expected": "展示被邀请者活动页面，包含“注册Camel”和“使用Google账号”按钮，以及活动说明"
+    }
+   ],
+   "expected_result": "页面展示注册引导，可进行注册",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "被邀请者活动页面无注册入口",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "被邀请者页面加载时注册按钮缺失或不可点击",
+   "preconditions": "用户未注册，通过邀请链接访问，但页面渲染异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请链接，检查注册按钮",
+     "expected": "若注册按钮不可用，应提示“注册功能暂不可用”或提供其他注册方式"
+    }
+   ],
+   "expected_result": "用户无法注册时给出明确提示，不出现无响应",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "注册Camel成功",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "被邀请者使用邮箱注册，邮箱格式合法，密码符合要求",
+   "preconditions": "被邀请者未注册，进入注册页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“注册Camel”",
+     "expected": "进入注册页面，展示邮箱、密码等输入框"
+    },
+    {
+     "step": 2,
+     "desc": "输入合法邮箱（如friend@example.com）和密码（如Abc12345）",
+     "expected": "输入框正常接收"
+    },
+    {
+     "step": 3,
+     "desc": "点击注册按钮",
+     "expected": "注册成功，跳转至登录页或自动登录，并提示“注册成功”"
+    }
+   ],
+   "expected_result": "注册成功，用户可登录，且邀请关系被记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "注册Camel邮箱格式错误",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入非法邮箱格式，如“friend@”",
+   "preconditions": "被邀请者未注册，进入注册页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“注册Camel”",
+     "expected": "进入注册页面"
+    },
+    {
+     "step": 2,
+     "desc": "输入邮箱“friend@”，密码“Abc12345”",
+     "expected": "邮箱输入框提示格式错误"
+    },
+    {
+     "step": 3,
+     "desc": "点击注册按钮",
+     "expected": "注册失败，提示“邮箱格式不正确”，不提交请求"
+    }
+   ],
+   "expected_result": "注册被拦截，提示明确错误",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "使用Google账号注册成功",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "被邀请者选择Google账号授权，授权成功",
+   "preconditions": "被邀请者未注册，进入被邀请者活动页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“使用Google账号”按钮",
+     "expected": "弹出Google授权页面"
+    },
+    {
+     "step": 2,
+     "desc": "选择Google账号并授权",
+     "expected": "授权成功，自动注册并登录，跳转至活动页面或首页"
+    }
+   ],
+   "expected_result": "注册成功，用户已登录，邀请关系记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "使用Google账号授权失败",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户取消Google授权或授权失败",
+   "preconditions": "被邀请者未注册，进入被邀请者活动页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“使用Google账号”按钮",
+     "expected": "弹出Google授权页面"
+    },
+    {
+     "step": 2,
+     "desc": "点击取消授权",
+     "expected": "返回活动页面，提示“授权失败，请重试”或“已取消授权”，不产生注册"
+    }
+   ],
+   "expected_result": "授权失败时给出提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "点击我知道了关闭提示弹窗",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "首次进入邀请好友页面，弹出提示分享弹窗",
+   "preconditions": "用户已登录，首次进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "弹出提示分享弹窗，包含文案“快去邀请你的好友加入Camel，一起看免费直播吧！”和“我知道了”按钮"
+    },
+    {
+     "step": 2,
+     "desc": "点击“我知道了”按钮",
+     "expected": "弹窗关闭，页面正常展示"
+    }
+   ],
+   "expected_result": "弹窗关闭，用户可继续操作",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "提示分享弹窗无关闭按钮",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "弹窗渲染异常，缺少“我知道了”按钮",
+   "preconditions": "用户已登录，进入邀请好友页面，弹窗渲染异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面，观察弹窗",
+     "expected": "若弹窗无关闭按钮，应支持点击遮罩关闭或提供其他关闭方式，否则视为缺陷"
+    }
+   ],
+   "expected_result": "弹窗可关闭，不阻塞页面操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "复制链接后提示已复制",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击去邀请后，系统复制链接并提示",
+   "preconditions": "用户已登录，已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“去邀请”按钮",
+     "expected": "复制链接成功，弹出提示“已复制页面链接”"
+    }
+   ],
+   "expected_result": "提示“已复制页面链接”出现",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "复制链接提示未出现",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "点击去邀请后，剪贴板有内容但提示未弹出",
+   "preconditions": "用户已登录，已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“去邀请”按钮",
+     "expected": "若提示未出现，应检查是否复制成功，若复制成功但无提示，视为缺陷"
+    }
+   ],
+   "expected_result": "提示正常出现，或至少给出复制成功反馈",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "引导文案展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "邀请好友页面展示引导文案",
+   "preconditions": "用户已登录，已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面顶部或活动区域",
+     "expected": "展示文案“快去邀请你的好友加入Camel，一起看免费直播吧！”"
+    }
+   ],
+   "expected_result": "文案正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "引导文案缺失",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "页面加载时文案未显示",
+   "preconditions": "用户已登录，已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面顶部或活动区域",
+     "expected": "若文案缺失，应视为缺陷，需检查数据加载"
+    }
+   ],
+   "expected_result": "文案正常展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "提示分享弹窗内容完整",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "首次进入邀请好友页面，弹窗内容",
+   "preconditions": "用户已登录，首次进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "弹出提示分享弹窗，包含文案“快去邀请你的好友加入Camel，一起看免费直播吧！”和“我知道了”按钮"
+    }
+   ],
+   "expected_result": "弹窗内容完整，按钮可点击",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "提示分享弹窗内容缺失",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "弹窗文案或按钮缺失",
+   "preconditions": "用户已登录，进入邀请好友页面，弹窗渲染异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面，检查弹窗",
+     "expected": "若文案或按钮缺失，应视为缺陷，需修复"
+    }
+   ],
+   "expected_result": "弹窗内容完整",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "活动标题展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "邀请好友页面标题",
+   "preconditions": "用户已登录，已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面标题",
+     "expected": "展示“喊好友免费看赛事直播”"
+    }
+   ],
+   "expected_result": "标题正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "活动标题错误",
+   "priority": "P1",
+   "domain": "用户端/银钻任务",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "页面标题显示错误文案",
+   "preconditions": "用户已登录，已进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面标题",
+     "expected": "若标题与需求不符，视为缺陷"
+    }
+   ],
+   "expected_result": "标题与需求一致",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "薅银钻福利列表展示",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，存在邀请奖励数据（如邀请3人得40银钻、邀请6人得80银钻、邀请2人得20银钻）",
+   "preconditions": "用户已登录，且邀请好友页面有可展示的奖励数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载，显示“薅银钻福利”区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看“薅银钻福利”列表",
+     "expected": "列表展示所有奖励梯度（如邀请3人得40银钻、邀请6人得80银钻、邀请2人得20银钻），且每个梯度显示奖励数额和邀请人数要求"
+    }
+   ],
+   "expected_result": "薅银钻福利列表正确展示所有奖励梯度，数据与后台配置一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "薅银钻福利列表为空时展示空态",
+   "priority": "P2",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户已登录，但后台未配置任何奖励梯度",
+   "preconditions": "用户已登录，且后台无奖励数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载，显示“薅银钻福利”区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看“薅银钻福利”列表",
+     "expected": "列表显示空态提示（如“暂无奖励活动”），不出现空白或报错"
+    }
+   ],
+   "expected_result": "列表为空时展示友好空态提示，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "邀请进度列表展示",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已邀请2人，目标邀请3人，进度显示“还差1人”",
+   "preconditions": "用户已登录，且存在邀请进度数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载，显示“邀请进度”区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看“邀请进度”列表",
+     "expected": "列表展示当前邀请人数（如2人）、目标人数（如3人）及进度状态（如“还差1人”）"
+    }
+   ],
+   "expected_result": "邀请进度列表正确展示当前进度，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "邀请进度达到目标时显示已获得",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户已邀请2人，目标邀请2人，进度显示“已获得”",
+   "preconditions": "用户已登录，且邀请人数达到目标",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载，显示“邀请进度”区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看“邀请进度”列表",
+     "expected": "列表显示“已获得”状态，不再显示“还差X人”"
+    }
+   ],
+   "expected_result": "达到目标后进度状态正确显示“已获得”",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "邀请步骤列表展示",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "邀请步骤包括：分享链接、好友注册、绑定邮箱、好友登录、获得银钻",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载，显示“邀请步骤”区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看“邀请步骤”列表",
+     "expected": "列表按顺序展示所有步骤（如分享链接、好友注册、绑定邮箱、好友登录、获得银钻）"
+    }
+   ],
+   "expected_result": "邀请步骤列表完整展示所有步骤，顺序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "邀请步骤列表为空时展示空态",
+   "priority": "P2",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台未配置邀请步骤内容",
+   "preconditions": "用户已登录，且后台无步骤数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载，显示“邀请步骤”区域"
+    },
+    {
+     "step": 2,
+     "desc": "查看“邀请步骤”列表",
+     "expected": "列表显示空态提示（如“暂无步骤说明”），不出现空白或报错"
+    }
+   ],
+   "expected_result": "步骤列表为空时展示友好空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "分享活动页面成功",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，点击“分享活动页面”按钮，选择系统分享面板分享给好友",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“分享活动页面”按钮",
+     "expected": "弹出系统分享面板或分享方式选择（如复制链接、分享到社交平台）"
+    },
+    {
+     "step": 3,
+     "desc": "选择一种分享方式并完成分享",
+     "expected": "分享成功，出现“已复制页面链接”或分享成功提示"
+    }
+   ],
+   "expected_result": "分享活动页面成功，用户收到成功反馈",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "分享活动页面取消分享",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户已登录，点击“分享活动页面”按钮后取消分享",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“分享活动页面”按钮",
+     "expected": "弹出分享面板"
+    },
+    {
+     "step": 3,
+     "desc": "关闭分享面板（如点击取消或返回）",
+     "expected": "分享面板关闭，无分享成功提示，页面状态不变"
+    }
+   ],
+   "expected_result": "取消分享后无异常，不产生分享记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "点击去邀请按钮分享链接",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，点击“去邀请”按钮，分享当前页面链接",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“去邀请”按钮",
+     "expected": "弹出分享面板或复制链接提示"
+    },
+    {
+     "step": 3,
+     "desc": "完成分享（如复制链接或选择分享渠道）",
+     "expected": "出现“已复制页面链接”或分享成功提示"
+    }
+   ],
+   "expected_result": "点击去邀请后成功分享链接，链接有效",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "点击去邀请按钮后取消分享",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "用户已登录，点击“去邀请”按钮后取消分享",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击“去邀请”按钮",
+     "expected": "弹出分享面板"
+    },
+    {
+     "step": 3,
+     "desc": "关闭分享面板",
+     "expected": "分享面板关闭，无分享成功提示"
+    }
+   ],
+   "expected_result": "取消分享后无异常，不产生分享记录",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "好友完成注册后邀请进度更新",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已分享链接，好友通过链接完成注册（新用户注册）",
+   "preconditions": "用户已登录，已分享邀请链接，好友通过链接访问并完成注册",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友通过邀请链接打开页面并完成注册",
+     "expected": "好友注册成功"
+    },
+    {
+     "step": 2,
+     "desc": "邀请者刷新邀请好友页面",
+     "expected": "邀请进度列表更新，已邀请人数增加1"
+    }
+   ],
+   "expected_result": "好友完成注册后，邀请者进度正确更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "好友重复注册不增加进度",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "好友已通过邀请链接注册过，再次使用相同手机号或邮箱注册",
+   "preconditions": "用户已登录，好友已通过链接注册过",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友再次通过邀请链接尝试注册",
+     "expected": "注册失败或提示已注册"
+    },
+    {
+     "step": 2,
+     "desc": "邀请者刷新邀请好友页面",
+     "expected": "邀请进度不变，不重复增加"
+    }
+   ],
+   "expected_result": "重复注册不增加邀请进度",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "好友在分享页面内绑定邮箱成功",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "好友通过邀请链接进入分享页面，输入有效邮箱（如 friend@example.com）并绑定",
+   "preconditions": "好友通过邀请链接进入分享页面，未绑定邮箱",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友在分享页面内输入有效邮箱",
+     "expected": "邮箱格式校验通过"
+    },
+    {
+     "step": 2,
+     "desc": "点击绑定邮箱按钮",
+     "expected": "绑定成功，出现成功提示"
+    }
+   ],
+   "expected_result": "好友成功绑定邮箱，绑定状态更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "好友绑定邮箱格式错误",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "好友在分享页面输入无效邮箱（如 friend@）",
+   "preconditions": "好友通过邀请链接进入分享页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友输入无效邮箱格式",
+     "expected": "提示邮箱格式错误"
+    },
+    {
+     "step": 2,
+     "desc": "点击绑定邮箱按钮",
+     "expected": "绑定失败，提示邮箱格式不正确"
+    }
+   ],
+   "expected_result": "邮箱格式错误时绑定失败并提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "好友登录Camel后邀请者获得银钻",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "好友已注册并绑定邮箱，使用该邮箱登录Camel",
+   "preconditions": "用户已登录，好友已通过邀请链接注册并绑定邮箱",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友使用绑定的邮箱登录Camel",
+     "expected": "好友登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "邀请者查看银钻余额或邀请进度",
+     "expected": "银钻余额增加（如获得20银钻），邀请进度更新为“已获得”"
+    }
+   ],
+   "expected_result": "好友登录后，邀请者获得对应银钻奖励",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "好友未使用绑定邮箱登录不发放奖励",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "好友已注册并绑定邮箱，但使用其他方式登录（如Google账号）",
+   "preconditions": "用户已登录，好友已注册并绑定邮箱",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友使用非绑定邮箱方式登录Camel",
+     "expected": "好友登录成功"
+    },
+    {
+     "step": 2,
+     "desc": "邀请者查看银钻余额",
+     "expected": "银钻余额不变，未获得奖励"
+    }
+   ],
+   "expected_result": "未使用绑定邮箱登录不触发奖励发放",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "好友列表展示",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "用户已邀请好友，存在好友数据（如好友昵称、头像）",
+   "preconditions": "用户已登录，存在已邀请的好友",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看“好友”列表",
+     "expected": "列表展示已邀请好友的信息（如昵称、头像、状态）"
+    }
+   ],
+   "expected_result": "好友列表正确展示已邀请好友信息",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "好友列表为空时展示空态",
+   "priority": "P2",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户尚未邀请任何好友",
+   "preconditions": "用户已登录，且无邀请记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看“好友”列表",
+     "expected": "显示空态提示（如“暂无邀请的好友”），不出现空白或报错"
+    }
+   ],
+   "expected_result": "好友列表为空时展示友好空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "使用绑定邮箱登录Camel成功",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "好友已绑定邮箱（如 friend@example.com），使用该邮箱和正确密码登录",
+   "preconditions": "好友已绑定邮箱，且账号存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友打开Camel登录页面",
+     "expected": "登录页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "输入绑定的邮箱和正确密码",
+     "expected": "登录成功，进入首页"
+    }
+   ],
+   "expected_result": "使用绑定邮箱登录成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "使用绑定邮箱登录密码错误",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "好友已绑定邮箱，但输入错误密码",
+   "preconditions": "好友已绑定邮箱",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友打开Camel登录页面",
+     "expected": "登录页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "输入绑定的邮箱和错误密码",
+     "expected": "登录失败，提示“邮箱或密码错误”"
+    }
+   ],
+   "expected_result": "密码错误时登录失败并提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "好友完成全部条件后邀请者获得银钻",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "好友完成注册、绑定邮箱、使用绑定邮箱登录Camel，邀请者应获得银钻奖励（如20银钻）",
+   "preconditions": "用户已登录，好友已通过邀请链接注册并绑定邮箱",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友完成注册",
+     "expected": "注册成功"
+    },
+    {
+     "step": 2,
+     "desc": "好友在分享页面内绑定邮箱",
+     "expected": "绑定成功"
+    },
+    {
+     "step": 3,
+     "desc": "好友使用绑定的邮箱登录Camel",
+     "expected": "登录成功"
+    },
+    {
+     "step": 4,
+     "desc": "邀请者查看银钻余额",
+     "expected": "银钻余额增加（如20银钻），邀请进度更新为“已获得”"
+    }
+   ],
+   "expected_result": "好友完成全部条件后，邀请者获得银钻奖励",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "好友未完成全部条件不发放银钻",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "好友仅完成注册，未绑定邮箱或未登录",
+   "preconditions": "用户已登录，好友已注册但未绑定邮箱",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "好友完成注册但未绑定邮箱",
+     "expected": "注册成功"
+    },
+    {
+     "step": 2,
+     "desc": "邀请者查看银钻余额",
+     "expected": "银钻余额不变，未获得奖励"
+    }
+   ],
+   "expected_result": "未完成全部条件不发放银钻",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "邀请好友页面展示邀请规则文案",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常进入邀请好友页面，无需特殊数据",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请好友页面",
+     "expected": "页面正常加载，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面顶部文案",
+     "expected": "显示文案「邀请好友达指定人数后，你可获得银钻」"
+    }
+   ],
+   "expected_result": "页面展示邀请好友达指定人数后可获得银钻的规则文案，文案清晰无错别字",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "邀请好友页面在未登录状态下访问",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户访问邀请好友页面",
+   "preconditions": "用户未登录，尝试访问邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "未登录状态下打开邀请好友页面",
+     "expected": "页面提示需要登录，或跳转至登录页"
+    }
+   ],
+   "expected_result": "未登录用户无法查看邀请好友页面，被引导至登录流程",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "邀请好友页面展示银钻奖励列表",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常进入邀请好友页面，查看银钻奖励列表",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看银钻奖励列表",
+     "expected": "列表展示「银钻」字段，包含奖励数值（如40、80、20）"
+    }
+   ],
+   "expected_result": "银钻奖励列表正确展示，数值与需求一致（40、80、20）",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "银钻奖励数值显示格式校验",
+   "priority": "P2",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造银钻数值为0、负数、极大值等边界情况（通过后端数据模拟）",
+   "preconditions": "用户已登录，后端返回银钻数值为边界值",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "模拟后端返回银钻数值为0",
+     "expected": "页面显示0，不显示负数或异常"
+    },
+    {
+     "step": 2,
+     "desc": "模拟后端返回银钻数值为负数",
+     "expected": "页面不显示负数，或显示为0"
+    },
+    {
+     "step": 3,
+     "desc": "模拟后端返回银钻数值为极大值（如999999）",
+     "expected": "页面正常显示，无溢出或格式错乱"
+    }
+   ],
+   "expected_result": "银钻数值在各种边界情况下均能正确显示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "邀请3人奖励展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常进入邀请好友页面，查看邀请3人奖励",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看「邀请3人」条目",
+     "expected": "显示「邀请3人」及对应的银钻奖励40"
+    }
+   ],
+   "expected_result": "邀请3人条目正确展示，奖励数值为40银钻",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "邀请3人奖励数值错误校验",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回邀请3人的奖励数值错误（如30）",
+   "preconditions": "用户已登录，后端数据异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "模拟后端返回邀请3人奖励为30",
+     "expected": "页面显示30，但需求要求40，应记录缺陷"
+    }
+   ],
+   "expected_result": "发现数据不一致，提示开发修复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "还差人数展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已成功邀请2人，查看还差人数",
+   "preconditions": "用户已登录，已成功邀请2人",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看「邀请3人」条目下的「还差」",
+     "expected": "显示「还差1人」"
+    }
+   ],
+   "expected_result": "还差人数正确计算为1人",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "还差人数为0时状态展示",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "用户已成功邀请3人，达到目标",
+   "preconditions": "用户已登录，已成功邀请3人",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看「邀请3人」条目下的「还差」",
+     "expected": "显示「已获得」或不再显示「还差」"
+    }
+   ],
+   "expected_result": "达到目标后，还差人数不再显示，改为已获得状态",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "还差人数计算错误校验",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回的已邀请人数与前端计算不一致",
+   "preconditions": "用户已登录，后端数据异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "模拟后端返回已邀请人数为5，但实际应为2",
+     "expected": "页面显示还差-2人，应记录缺陷"
+    }
+   ],
+   "expected_result": "发现计算逻辑错误，提示开发修复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "邀请6人奖励展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常进入邀请好友页面，查看邀请6人奖励",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看「邀请6人」条目",
+     "expected": "显示「邀请6人」及对应的银钻奖励80"
+    }
+   ],
+   "expected_result": "邀请6人条目正确展示，奖励数值为80银钻",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "邀请6人奖励数值错误校验",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回邀请6人的奖励数值错误（如70）",
+   "preconditions": "用户已登录，后端数据异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "模拟后端返回邀请6人奖励为70",
+     "expected": "页面显示70，但需求要求80，应记录缺陷"
+    }
+   ],
+   "expected_result": "发现数据不一致，提示开发修复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "邀请2人奖励展示",
+   "priority": "P0",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "正常进入邀请好友页面，查看邀请2人奖励",
+   "preconditions": "用户已登录，进入邀请好友页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开邀请好友页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看「邀请2人」条目",
+     "expected": "显示「邀请2人」及对应的银钻奖励20"
+    }
+   ],
+   "expected_result": "邀请2人条目正确展示，奖励数值为20银钻",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "邀请2人奖励数值错误校验",
+   "priority": "P1",
+   "domain": "用户端/银钻任务/邀请好友",
+   "module": "邀请好友",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端返回邀请2人的奖励数值错误（如10）",
+   "preconditions": "用户已登录，后端数据异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "模拟后端返回邀请2人奖励为10",
+     "expected": "页面显示10，但需求要求20，应记录缺陷"
+    }
+   ],
+   "expected_result": "发现数据不一致，提示开发修复",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  }
+ ],
+ "api_cases": []
+}

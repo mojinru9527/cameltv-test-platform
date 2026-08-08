@@ -1,0 +1,4383 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "商品内容列表展示",
+    "description": "购买记录页面列表中展示商品内容字段，如头像框、勋章等",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确商品内容的具体展示格式（如文本、图片、组合展示）及超长内容处理方式",
+      "suggestion": "建议明确商品内容的展示形式及超长文本的截断或换行规则"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "消耗货币列表展示",
+    "description": "购买记录页面列表中展示消耗货币数值，如2000、3000、1000",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确消耗货币的货币单位（如银钻）及数值格式化规则（千分位）",
+      "suggestion": "建议明确货币单位及显示格式"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "创建时间字段展示",
+    "description": "购买记录页面列表中展示创建时间，如2019-03-21 16:12:40",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确时间格式是否固定为YYYY-MM-DD HH:mm:ss，以及时区处理",
+      "suggestion": "建议明确时间格式和时区规则"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "装扮名称字段展示",
+    "description": "购买记录页面列表中展示装扮名称字段",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确装扮名称的展示规则（如是否支持超长省略）",
+      "suggestion": "建议明确超长名称的处理方式"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "装扮编号字段展示",
+    "description": "购买记录页面列表中展示装扮编号字段",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确装扮编号的格式（如纯数字、长度限制）",
+      "suggestion": "建议明确编号格式"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "商品类型筛选字段",
+    "description": "购买记录页面提供商品类型筛选字段，如头像框、勋章",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确商品类型的可选值范围及是否支持多选",
+      "suggestion": "建议明确筛选方式（单选/多选）及选项来源"
+     }
+    ]
+   },
+   {
+    "id": "REQ-7",
+    "title": "商品编号筛选字段",
+    "description": "购买记录页面提供商品编号筛选字段，支持输入查询",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确商品编号的输入校验规则（如长度、格式、是否支持模糊查询）",
+      "suggestion": "建议明确输入规则和查询方式"
+     }
+    ]
+   },
+   {
+    "id": "REQ-8",
+    "title": "联赛及球队管理入口",
+    "description": "购买记录页面提供联赛及球队管理入口（可能为导航链接）",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "low",
+      "description": "需求未明确该入口的具体行为（跳转页面、弹窗等）",
+      "suggestion": "建议明确入口的交互行为"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求描述较为简略，仅列出了页面字段名称，未明确字段的具体展示规则、筛选交互细节、数据来源及边界条件。整体清晰度一般，存在多处模糊点，需在用例设计中通过合理假设和边界覆盖来弥补。建议后续补充详细字段说明和交互规则。"
+ },
+ "functional_cases": [
+  {
+   "title": "联赛及球队管理入口正常显示",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入商品管理页面，无需特殊数据",
+   "preconditions": "已登录运营后台，具有商品管理菜单权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "登录运营后台，进入商城-商品管理页面",
+     "expected": "页面正常加载，显示商品管理列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面顶部或侧边栏是否存在「联赛及球队管理」入口",
+     "expected": "存在「联赛及球队管理」入口，点击可跳转至联赛及球队管理页面"
+    }
+   ],
+   "expected_result": "联赛及球队管理入口正常显示且可点击跳转",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "联赛及球队管理入口权限校验",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的账号",
+   "preconditions": "已登录运营后台，账号无联赛及球队管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "登录无权限账号，进入商品管理页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "尝试点击「联赛及球队管理」入口",
+     "expected": "入口不可见或点击后提示无权限，无法跳转"
+    }
+   ],
+   "expected_result": "无权限账号无法访问联赛及球队管理功能",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "搜索-按商品编号精确搜索",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品编号：10029981824（真实存在的商品编号）",
+   "preconditions": "已登录运营后台，商品管理列表存在商品编号为10029981824的商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索输入框中输入商品编号10029981824",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表刷新，仅显示商品编号为10029981824的商品"
+    }
+   ],
+   "expected_result": "搜索结果准确，仅显示匹配的商品",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "搜索-不存在的商品编号",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "商品编号：999999999999（不存在的编号）",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索输入框中输入不存在的商品编号999999999999",
+     "expected": "输入框正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示空数据，提示「暂无数据」"
+    }
+   ],
+   "expected_result": "搜索无结果时显示空态提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "搜索-商品编号为空",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "搜索输入框留空",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "不输入任何内容，直接点击「搜索」按钮",
+     "expected": "列表显示全部商品，或提示请输入搜索条件"
+    }
+   ],
+   "expected_result": "空搜索条件时行为明确（显示全部或提示）",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "商品编号字段展示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "商品编号：10029981824（真实数据）",
+   "preconditions": "已登录运营后台，列表中存在商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「商品编号」列",
+     "expected": "每个商品行显示正确的商品编号，格式正确，无乱码"
+    }
+   ],
+   "expected_result": "商品编号列展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "商品编号超长显示",
+   "priority": "P2",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造超长商品编号（如20位数字）",
+   "preconditions": "已登录运营后台，存在超长商品编号的商品（可通过数据库构造）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长商品编号的展示",
+     "expected": "商品编号完整显示或省略号+悬浮提示，不出现换行或错位"
+    }
+   ],
+   "expected_result": "超长商品编号展示友好",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "请输入输入框正常输入",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入合法关键字：头像框",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索输入框中输入「头像框」",
+     "expected": "输入框正常显示输入内容"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "列表显示商品类型为头像框的商品"
+    }
+   ],
+   "expected_result": "输入框可正常输入并执行搜索",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "请输入输入框特殊字符校验",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入特殊字符：@#￥%",
+   "preconditions": "已登录运营后台",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "页面正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在搜索输入框中输入特殊字符@#￥%",
+     "expected": "输入框可能限制输入或允许输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击「搜索」按钮",
+     "expected": "系统提示输入无效或搜索结果为空，不出现异常"
+    }
+   ],
+   "expected_result": "特殊字符输入得到合理处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "商品图片正常展示",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "商品图片为有效图片URL",
+   "preconditions": "已登录运营后台，列表中存在有图片的商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的「图片」列",
+     "expected": "每个商品显示对应的图片，图片清晰，无裂图"
+    }
+   ],
+   "expected_result": "商品图片正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "商品图片加载失败处理",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "商品图片URL无效或网络异常",
+   "preconditions": "已登录运营后台，存在图片URL无效的商品（可通过修改数据库模拟）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看图片加载失败的商品的展示",
+     "expected": "显示默认占位图或裂图图标，不影响页面整体布局"
+    }
+   ],
+   "expected_result": "图片加载失败时展示友好占位",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "商品编号列排序",
+   "priority": "P2",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "列表中存在多个商品编号",
+   "preconditions": "已登录运营后台，列表中存在多个商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击「商品编号」列头",
+     "expected": "列表按商品编号升序或降序排列，排序图标变化"
+    }
+   ],
+   "expected_result": "商品编号列支持排序",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "商品类型展示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品类型：头像框、发言勋章",
+   "preconditions": "已登录运营后台，列表中存在不同商品类型的商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看「商品类型」列",
+     "expected": "每个商品显示正确的类型名称，如头像框、发言勋章"
+    }
+   ],
+   "expected_result": "商品类型列展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "商品类型未知值展示",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "商品类型为未定义的值（如'未知类型'）",
+   "preconditions": "已登录运营后台，存在商品类型为未知值的商品（可通过数据库构造）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看未知商品类型的展示",
+     "expected": "显示原始值或提示未知类型，不出现空白或乱码"
+    }
+   ],
+   "expected_result": "未知商品类型有兜底展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "商品内容展示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "商品内容包含装扮名称和装扮编号",
+   "preconditions": "已登录运营后台，列表中存在商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看「商品内容」列",
+     "expected": "显示商品的装扮名称和装扮编号，格式清晰"
+    }
+   ],
+   "expected_result": "商品内容列展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "商品内容为空",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "商品内容为空（无装扮名称和编号）",
+   "preconditions": "已登录运营后台，存在商品内容为空的商品（可通过数据库构造）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看商品内容为空的展示",
+     "expected": "显示占位符如'-'或'暂无'，不出现空白"
+    }
+   ],
+   "expected_result": "空商品内容有占位展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "所需货币展示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "所需货币：2000银钻",
+   "preconditions": "已登录运营后台，列表中存在商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看「所需货币」列",
+     "expected": "显示正确的货币数值和单位（如2000银钻）"
+    }
+   ],
+   "expected_result": "所需货币列展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "所需货币为0或负数",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "所需货币：0 或 -100",
+   "preconditions": "已登录运营后台，存在所需货币为0或负数的商品（可通过数据库构造）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看所需货币为0或负数的展示",
+     "expected": "显示0或负数，或系统提示数据异常，不出现崩溃"
+    }
+   ],
+   "expected_result": "异常货币值有合理展示或提示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "上架时间展示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "上架时间：2023-11-12 00:00:00",
+   "preconditions": "已登录运营后台，列表中存在商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看「上架时间」列",
+     "expected": "显示正确的上架时间，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "上架时间列展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "上架时间为空",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "上架时间为空（未设置）",
+   "preconditions": "已登录运营后台，存在上架时间为空的商品（可通过数据库构造）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看上架时间为空的展示",
+     "expected": "显示占位符如'-'或'暂无'，不出现空白"
+    }
+   ],
+   "expected_result": "空上架时间有占位展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "下架时间展示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "下架时间：2023-11-30 00:00:00",
+   "preconditions": "已登录运营后台，列表中存在商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看「下架时间」列",
+     "expected": "显示正确的下架时间，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "下架时间列展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "下架时间早于上架时间",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上架时间：2023-11-30 00:00:00，下架时间：2023-11-12 00:00:00（下架早于上架）",
+   "preconditions": "已登录运营后台，存在下架时间早于上架时间的商品（可通过数据库构造）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的展示",
+     "expected": "系统可能提示数据异常，或正常展示但状态逻辑需明确"
+    }
+   ],
+   "expected_result": "异常时间关系有合理处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "状态展示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "状态：未上架、上架中、下架中",
+   "preconditions": "已登录运营后台，列表中存在不同状态的商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看「状态」列",
+     "expected": "每个商品显示正确的状态名称，如未上架、上架中、下架中"
+    }
+   ],
+   "expected_result": "状态列展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "状态与时间联动",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "商品A：上架时间已过，下架时间未到，状态应为上架中；商品B：上架时间未到，状态应为未上架；商品C：下架时间已过，状态应为下架中",
+   "preconditions": "已登录运营后台，存在上述时间配置的商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看各商品的状态",
+     "expected": "状态与时间逻辑一致：上架中、未上架、下架中"
+    }
+   ],
+   "expected_result": "状态与上架/下架时间联动正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "状态筛选",
+   "priority": "P1",
+   "domain": "运营后台/商城/商品管理",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择状态：上架中",
+   "preconditions": "已登录运营后台，列表中存在不同状态的商品",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "列表正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "在状态筛选下拉框选择「上架中」",
+     "expected": "列表仅显示状态为上架中的商品"
+    }
+   ],
+   "expected_result": "状态筛选功能正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "商品列表按展示顺序升序展示",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造3个商品，展示顺序分别为1、2、3，验证列表按升序排列。",
+   "preconditions": "运营后台已登录，存在3个商品且展示顺序分别为1、2、3。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载，展示商品列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表展示顺序",
+     "expected": "商品按展示顺序1、2、3升序排列"
+    }
+   ],
+   "expected_result": "商品列表按展示顺序字段升序展示，顺序正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "商品列表展示顺序相同时按创建时间倒序",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造2个商品展示顺序均为5，但创建时间不同，验证次级排序。",
+   "preconditions": "运营后台已登录，存在2个商品展示顺序均为5，创建时间分别为2023-11-01和2023-11-02。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看展示顺序相同的商品排列",
+     "expected": "创建时间较新的商品排在前面"
+    }
+   ],
+   "expected_result": "展示顺序相同时，按创建时间倒序排列。",
+   "remark": "边界用例，验证相同展示顺序的次级排序",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "商品列表展示顺序为空时默认排最后",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造1个商品展示顺序为空，其他商品展示顺序为1、2，验证空值处理。",
+   "preconditions": "运营后台已登录，存在3个商品，其中1个展示顺序为空，其余为1和2。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看展示顺序为空的商品位置",
+     "expected": "展示顺序为空的商品排在最后"
+    }
+   ],
+   "expected_result": "展示顺序为空的商品排在列表最后。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "商品列表展示装扮名称字段",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造1个商品，装扮名称为'夏日头像框'，验证列表展示。",
+   "preconditions": "运营后台已登录，存在1个商品，装扮名称为'夏日头像框'。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的装扮名称列",
+     "expected": "显示'夏日头像框'"
+    }
+   ],
+   "expected_result": "列表正确展示装扮名称。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "商品列表装扮名称为空时显示占位符",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造1个商品装扮名称为空，验证显示。",
+   "preconditions": "运营后台已登录，存在1个商品，装扮名称为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的装扮名称列",
+     "expected": "显示'--'或'暂无'"
+    }
+   ],
+   "expected_result": "装扮名称为空时显示占位符。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "商品列表展示装扮编号字段",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造1个商品，装扮编号为'OUTFIT001'，验证列表展示。",
+   "preconditions": "运营后台已登录，存在1个商品，装扮编号为'OUTFIT001'。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的装扮编号列",
+     "expected": "显示'OUTFIT001'"
+    }
+   ],
+   "expected_result": "列表正确展示装扮编号。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "商品列表装扮编号超长时截断显示",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造1个商品，装扮编号为50个字符，验证显示。",
+   "preconditions": "运营后台已登录，存在1个商品，装扮编号为50个字符。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的装扮编号列",
+     "expected": "显示截断文本，鼠标悬停显示完整编号"
+    }
+   ],
+   "expected_result": "超长装扮编号截断显示，悬停可查看完整。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "商品列表展示上架时间字段",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造1个商品，上架时间为2023-11-12 00:00:00，验证列表展示。",
+   "preconditions": "运营后台已登录，存在1个商品，上架时间为2023-11-12 00:00:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的上架时间列",
+     "expected": "显示'2023-11-12 00:00:00'"
+    }
+   ],
+   "expected_result": "列表正确展示上架时间。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "商品列表上架时间为空时显示占位符",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造1个商品上架时间为空，验证显示。",
+   "preconditions": "运营后台已登录，存在1个商品，上架时间为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的上架时间列",
+     "expected": "显示'--'或'暂无'"
+    }
+   ],
+   "expected_result": "上架时间为空时显示占位符。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "商品列表展示下架时间字段",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造1个商品，下架时间为2023-11-30 00:00:00，验证列表展示。",
+   "preconditions": "运营后台已登录，存在1个商品，下架时间为2023-11-30 00:00:00。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的下架时间列",
+     "expected": "显示'2023-11-30 00:00:00'"
+    }
+   ],
+   "expected_result": "列表正确展示下架时间。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "商品列表下架时间为空时显示占位符",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造1个商品下架时间为空，验证显示。",
+   "preconditions": "运营后台已登录，存在1个商品，下架时间为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的下架时间列",
+     "expected": "显示'--'或'暂无'"
+    }
+   ],
+   "expected_result": "下架时间为空时显示占位符。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "商品状态为未上架时列表正确展示",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造1个商品状态为未上架，验证列表展示。",
+   "preconditions": "运营后台已登录，存在1个商品，状态为未上架。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的状态列",
+     "expected": "显示'未上架'"
+    }
+   ],
+   "expected_result": "列表正确展示未上架状态。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "商品状态为未上架时不可购买",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "构造1个未上架商品，模拟用户端购买。",
+   "preconditions": "存在1个未上架商品，用户已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户端进入商城，查找该商品",
+     "expected": "商品不可见或不可购买"
+    },
+    {
+     "step": 2,
+     "desc": "尝试购买",
+     "expected": "提示'商品未上架'或无法操作"
+    }
+   ],
+   "expected_result": "未上架商品不可购买。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "商品状态为上架中时列表正确展示",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造1个商品状态为上架中，验证列表展示。",
+   "preconditions": "运营后台已登录，存在1个商品，状态为上架中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的状态列",
+     "expected": "显示'上架中'"
+    }
+   ],
+   "expected_result": "列表正确展示上架中状态。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "商品状态为上架中时用户可购买",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "构造1个上架中商品，模拟用户购买。",
+   "preconditions": "存在1个上架中商品，用户已登录且有足够货币。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户端进入商城，找到该商品",
+     "expected": "商品可见且可购买"
+    },
+    {
+     "step": 2,
+     "desc": "点击购买并确认",
+     "expected": "购买成功，生成购买记录"
+    }
+   ],
+   "expected_result": "上架中商品可正常购买。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "商品状态为下架中时列表正确展示",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "构造1个商品状态为下架中，验证列表展示。",
+   "preconditions": "运营后台已登录，存在1个商品，状态为下架中。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该商品的状态列",
+     "expected": "显示'下架中'"
+    }
+   ],
+   "expected_result": "列表正确展示下架中状态。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "商品状态为下架中时用户不可购买",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "构造1个下架中商品，模拟用户购买。",
+   "preconditions": "存在1个下架中商品，用户已登录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "用户端进入商城，查找该商品",
+     "expected": "商品不可见或不可购买"
+    },
+    {
+     "step": 2,
+     "desc": "尝试购买",
+     "expected": "提示'商品已下架'或无法操作"
+    }
+   ],
+   "expected_result": "下架中商品不可购买。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "点击新增按钮进入新增商品页面",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "运营后台已登录，点击新增按钮。",
+   "preconditions": "运营后台已登录，处于商品管理列表页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表页",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'新增'按钮",
+     "expected": "跳转至新增商品页面，表单为空"
+    }
+   ],
+   "expected_result": "成功进入新增商品页面。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "新增商品页面装扮编号必填校验",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "新增/编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "新增商品时装扮编号留空，其他字段填写合法。",
+   "preconditions": "运营后台已登录，进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不填写装扮编号，填写其他必填字段",
+     "expected": "保存按钮可点击"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "提示'装扮编号不能为空'，不提交"
+    }
+   ],
+   "expected_result": "装扮编号必填校验生效，无法保存。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "新增商品时装扮编号不存在时校验失败",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "新增/编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入不存在的装扮编号'NOT_EXIST'，其他字段合法。",
+   "preconditions": "运营后台已登录，进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "输入装扮编号'NOT_EXIST'",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "填写其他必填字段并点击保存",
+     "expected": "提示'装扮编号不存在'，不提交"
+    }
+   ],
+   "expected_result": "校验装扮编号存在性，不存在时保存失败。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "新增商品时上架时间必填校验",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "新增/编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "新增商品时上架时间留空，其他字段合法。",
+   "preconditions": "运营后台已登录，进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "不填写上架时间，填写其他必填字段",
+     "expected": "保存按钮可点击"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存",
+     "expected": "提示'上架时间不能为空'，不提交"
+    }
+   ],
+   "expected_result": "上架时间必填校验生效。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "新增商品时上架时间早于当前时间校验失败",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "新增/编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "输入上架时间为2015-10-02 12:34:34（早于当前时间），其他字段合法。",
+   "preconditions": "运营后台已登录，进入新增商品页面，当前时间晚于2015年。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "输入上架时间'2015-10-02 12:34:34'",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "填写其他必填字段并点击保存",
+     "expected": "提示'上架时间不能早于当前时间'，不提交"
+    }
+   ],
+   "expected_result": "上架时间不能早于当前时间。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "新增商品时下架时间晚于上架时间校验成功",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "新增/编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "上架时间2023-11-12 00:00:00，下架时间2023-11-30 00:00:00，其他字段合法。",
+   "preconditions": "运营后台已登录，进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "输入上架时间'2023-11-12 00:00:00'，下架时间'2023-11-30 00:00:00'",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "填写其他必填字段并点击保存",
+     "expected": "保存成功，提示'保存成功'"
+    }
+   ],
+   "expected_result": "下架时间晚于上架时间时保存成功。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "新增商品时下架时间早于上架时间校验失败",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "新增/编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "上架时间2023-11-30 00:00:00，下架时间2023-11-12 00:00:00，其他字段合法。",
+   "preconditions": "运营后台已登录，进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "输入上架时间'2023-11-30 00:00:00'，下架时间'2023-11-12 00:00:00'",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "填写其他必填字段并点击保存",
+     "expected": "提示'下架时间必须晚于上架时间'，不提交"
+    }
+   ],
+   "expected_result": "下架时间早于上架时间时保存失败。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "新增商品时下架时间等于上架时间校验失败",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "新增/编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "上架时间2023-11-12 00:00:00，下架时间2023-11-12 00:00:00，其他字段合法。",
+   "preconditions": "运营后台已登录，进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "输入上架时间'2023-11-12 00:00:00'，下架时间'2023-11-12 00:00:00'",
+     "expected": "输入框可输入"
+    },
+    {
+     "step": 3,
+     "desc": "填写其他必填字段并点击保存",
+     "expected": "提示'下架时间必须晚于上架时间'，不提交"
+    }
+   ],
+   "expected_result": "下架时间等于上架时间时保存失败。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "商品管理列表正确展示上架时间",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品A的上架时间为2023-11-12 00:00:00，该时间在有效范围内，用于验证列表展示格式。",
+   "preconditions": "已登录运营后台，存在商品A且上架时间为2023-11-12 00:00:00",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "页面正常加载，显示商品列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看商品A所在行的上架时间列",
+     "expected": "上架时间显示为'2023-11-12 00:00:00'，格式正确"
+    }
+   ],
+   "expected_result": "商品列表上架时间列正确显示商品A的上架时间，格式为'YYYY-MM-DD HH:mm:ss'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "上架时间为空时列表展示处理",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "商品B未设置上架时间（为空），用于验证空值展示。",
+   "preconditions": "已登录运营后台，存在商品B且上架时间为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "页面正常加载，显示商品列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看商品B所在行的上架时间列",
+     "expected": "上架时间列显示为空或'--'，不显示异常字符"
+    }
+   ],
+   "expected_result": "上架时间为空的商品在列表中显示为空或'--'，页面无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "新增商品时上架时间格式校验",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "上架时间输入'2023/11/12'，不符合'YYYY-MM-DD HH:mm:ss'格式，用于验证格式校验。",
+   "preconditions": "已登录运营后台，进入新增商品页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮，进入新增商品页面",
+     "expected": "显示新增商品表单"
+    },
+    {
+     "step": 2,
+     "desc": "在上架时间输入框输入'2023/11/12'",
+     "expected": "输入框接受输入，但格式不正确"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "系统提示'上架时间格式不正确'，保存失败"
+    }
+   ],
+   "expected_result": "上架时间格式校验生效，非法格式被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "商品类型下拉选择正确展示",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品类型下拉框选项包含'头像框'和'发言勋章'，选择'头像框'验证正常选择。",
+   "preconditions": "已登录运营后台，进入新增商品页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮，进入新增商品页面",
+     "expected": "显示新增商品表单"
+    },
+    {
+     "step": 2,
+     "desc": "点击商品类型下拉框",
+     "expected": "下拉列表显示'请选择'、'头像框'、'发言勋章'三个选项"
+    },
+    {
+     "step": 3,
+     "desc": "选择'头像框'",
+     "expected": "下拉框显示'头像框'，选择成功"
+    }
+   ],
+   "expected_result": "商品类型下拉框选项完整，可选择'头像框'",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "商品类型必填校验",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "新增商品时商品类型未选择（保持'请选择'），用于验证必填校验。",
+   "preconditions": "已登录运营后台，进入新增商品页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击新增按钮，进入新增商品页面",
+     "expected": "显示新增商品表单"
+    },
+    {
+     "step": 2,
+     "desc": "商品类型保持默认'请选择'，填写其他必填字段",
+     "expected": "商品类型未选择"
+    },
+    {
+     "step": 3,
+     "desc": "点击保存按钮",
+     "expected": "系统提示'请选择商品类型'，保存失败"
+    }
+   ],
+   "expected_result": "商品类型必填校验生效，未选择时无法保存",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "编辑商品修改商品类型成功",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "商品C原类型为'头像框'，修改为'发言勋章'，验证编辑保存成功。",
+   "preconditions": "已登录运营后台，存在商品C且类型为'头像框'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "显示商品列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击商品C所在行的'编辑'按钮",
+     "expected": "进入编辑商品页面，表单回显商品C的当前信息"
+    },
+    {
+     "step": 3,
+     "desc": "将商品类型从'头像框'改为'发言勋章'",
+     "expected": "下拉框显示'发言勋章'"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存按钮",
+     "expected": "系统提示'保存成功'，返回商品列表，商品C的类型显示为'发言勋章'"
+    }
+   ],
+   "expected_result": "编辑商品类型成功，列表数据更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "编辑商品时上架时间早于下架时间校验",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "商品D原上架时间为2023-11-12 00:00:00，下架时间为2023-11-30 00:00:00，编辑时将上架时间改为2023-12-01 00:00:00（晚于下架时间），用于验证时间逻辑校验。",
+   "preconditions": "已登录运营后台，存在商品D且上架时间早于下架时间",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "显示商品列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击商品D的'编辑'按钮",
+     "expected": "进入编辑页面，上架时间显示原值"
+    },
+    {
+     "step": 3,
+     "desc": "将上架时间修改为2023-12-01 00:00:00（晚于下架时间）",
+     "expected": "上架时间输入框显示新值"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存按钮",
+     "expected": "系统提示'上架时间不能晚于下架时间'，保存失败"
+    }
+   ],
+   "expected_result": "上架时间与下架时间的逻辑校验生效，非法时间组合被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "编辑商品时修改装扮编号为已存在值校验",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "商品E的装扮编号为'1001'，商品F的装扮编号为'1002'，编辑商品E时将装扮编号改为'1002'，用于验证唯一性校验。",
+   "preconditions": "已登录运营后台，存在商品E（装扮编号1001）和商品F（装扮编号1002）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "显示商品列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击商品E的'编辑'按钮",
+     "expected": "进入编辑页面，装扮编号显示'1001'"
+    },
+    {
+     "step": 3,
+     "desc": "将装扮编号修改为'1002'",
+     "expected": "输入框显示'1002'"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存按钮",
+     "expected": "系统提示'装扮编号已存在'，保存失败"
+    }
+   ],
+   "expected_result": "装扮编号唯一性校验生效，重复编号被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "编辑商品时取消操作不保存修改",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "编辑商品G时修改商品类型，然后点击取消，验证修改不生效。",
+   "preconditions": "已登录运营后台，存在商品G",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "显示商品列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击商品G的'编辑'按钮",
+     "expected": "进入编辑页面"
+    },
+    {
+     "step": 3,
+     "desc": "修改商品类型为'发言勋章'",
+     "expected": "下拉框显示'发言勋章'"
+    },
+    {
+     "step": 4,
+     "desc": "点击'取消'按钮",
+     "expected": "返回商品列表，商品G的类型仍为原值，修改未保存"
+    }
+   ],
+   "expected_result": "取消编辑不保存任何修改，列表数据不变",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "编辑商品保存成功后列表刷新",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "商品管理",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "编辑商品H的展示顺序从5改为10，保存后验证列表展示顺序更新。",
+   "preconditions": "已登录运营后台，存在商品H且展示顺序为5",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理页面",
+     "expected": "显示商品列表，商品H展示顺序为5"
+    },
+    {
+     "step": 2,
+     "desc": "点击商品H的'编辑'按钮",
+     "expected": "进入编辑页面"
+    },
+    {
+     "step": 3,
+     "desc": "将展示顺序修改为10",
+     "expected": "输入框显示10"
+    },
+    {
+     "step": 4,
+     "desc": "点击保存按钮",
+     "expected": "提示保存成功，返回列表，商品H的展示顺序显示为10"
+    }
+   ],
+   "expected_result": "编辑保存后列表数据刷新，展示顺序更新",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "新增商品-填写完整合法信息保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品类型=头像框，装扮编号=1001（有效编号），上架时间=2023-12-01 00:00:00，有效期=30天，所需货币=500银钻，下架时间=2023-12-31 23:59:59，展示顺序=1",
+   "preconditions": "运营人员已登录运营后台，有商品管理权限；进入新增_编辑商品页面（新增模式）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「新增」进入新增_编辑商品页面",
+     "expected": "页面正常打开，所有字段为空或默认值"
+    },
+    {
+     "step": 2,
+     "desc": "选择商品类型为「头像框」",
+     "expected": "商品类型下拉框显示「头像框」"
+    },
+    {
+     "step": 3,
+     "desc": "输入装扮编号为 1001",
+     "expected": "装扮编号输入框显示 1001"
+    },
+    {
+     "step": 4,
+     "desc": "设置上架时间为 2023-12-01 00:00:00",
+     "expected": "上架时间显示正确"
+    },
+    {
+     "step": 5,
+     "desc": "输入有效期(天)为 30",
+     "expected": "有效期输入框显示 30"
+    },
+    {
+     "step": 6,
+     "desc": "输入所需货币为 500",
+     "expected": "所需货币输入框显示 500"
+    },
+    {
+     "step": 7,
+     "desc": "设置下架时间为 2023-12-31 23:59:59",
+     "expected": "下架时间显示正确"
+    },
+    {
+     "step": 8,
+     "desc": "输入展示顺序为 1",
+     "expected": "展示顺序输入框显示 1"
+    },
+    {
+     "step": 9,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示「保存成功」，返回商品管理列表页，列表新增该商品记录"
+    }
+   ],
+   "expected_result": "商品保存成功，数据库新增对应商品记录，列表页可查询到该商品",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "新增商品-必填项为空保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "所有字段均不填写，直接点击保存",
+   "preconditions": "运营人员已登录，进入新增_编辑商品页面（新增模式）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不填写任何字段，直接点击「保存」",
+     "expected": "保存被拦截，页面提示必填项错误（如「请选择商品类型」「请输入装扮编号」「请选择上架时间」「请输入有效期」「请输入所需货币」「请选择下架时间」），焦点定位到第一个错误字段"
+    }
+   ],
+   "expected_result": "保存失败，所有必填项均被校验并提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "编辑商品-修改有效信息保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "编辑已有商品（装扮编号=1001），将所需货币从500改为800，其他字段不变",
+   "preconditions": "运营人员已登录，商品管理列表存在一条商品（装扮编号=1001）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在商品管理列表找到装扮编号=1001的商品，点击「编辑」",
+     "expected": "进入新增_编辑商品页面，所有字段回显该商品原有数据"
+    },
+    {
+     "step": 2,
+     "desc": "修改所需货币为 800",
+     "expected": "所需货币输入框显示 800"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示「保存成功」，返回列表页，该商品所需货币更新为800"
+    }
+   ],
+   "expected_result": "商品信息更新成功，数据库记录相应变更",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "编辑商品-修改装扮编号为已存在编号保存失败",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "编辑商品A（装扮编号=1001），将装扮编号改为已存在的商品B的编号（如2002）",
+   "preconditions": "运营人员已登录，存在两个商品，装扮编号分别为1001和2002",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "编辑装扮编号=1001的商品，将装扮编号改为2002",
+     "expected": "装扮编号输入框显示2002"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「装扮编号已存在」，不返回列表页"
+    }
+   ],
+   "expected_result": "保存被拦截，提示装扮编号重复",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "取消-新增页面点击取消返回列表",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "在新增页面填写部分信息后点击取消",
+   "preconditions": "运营人员已登录，进入新增_编辑商品页面（新增模式）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写部分字段（如商品类型=头像框）",
+     "expected": "字段已填写"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」",
+     "expected": "返回商品管理列表页，不保存任何数据，列表无新增记录"
+    }
+   ],
+   "expected_result": "取消操作生效，未保存数据",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "取消-编辑页面点击取消不保存修改",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "编辑商品（装扮编号=1001），修改所需货币为999后点击取消",
+   "preconditions": "运营人员已登录，存在商品装扮编号=1001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "编辑商品1001，将所需货币改为999",
+     "expected": "所需货币显示999"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」",
+     "expected": "返回列表页，该商品所需货币仍为原值（如500），修改未生效"
+    }
+   ],
+   "expected_result": "取消后修改不生效，数据保持原状",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "保存-商品类型未选择保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "商品类型保持默认「请选择」，其他字段填写合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不选择商品类型（保持「请选择」），填写其他必填字段",
+     "expected": "商品类型仍为「请选择」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「请选择商品类型」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示选择商品类型",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "保存-商品类型选择发言勋章保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品类型=发言勋章，装扮编号=2001，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择商品类型为「发言勋章」",
+     "expected": "下拉框显示「发言勋章」"
+    },
+    {
+     "step": 2,
+     "desc": "填写装扮编号=2001，上架时间=2023-12-01，有效期=30，所需货币=300，下架时间=2023-12-31",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示「保存成功」，返回列表页"
+    }
+   ],
+   "expected_result": "发言勋章类型商品保存成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "保存-商品类型选择头像框保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品类型=头像框，装扮编号=1001，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择商品类型为「头像框」",
+     "expected": "下拉框显示「头像框」"
+    },
+    {
+     "step": 2,
+     "desc": "填写装扮编号=1001，上架时间=2023-12-01，有效期=30，所需货币=500，下架时间=2023-12-31",
+     "expected": "字段填写成功"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示「保存成功」，返回列表页"
+    }
+   ],
+   "expected_result": "头像框类型商品保存成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "保存-上架时间为空保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "上架时间不设置，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写其他必填字段，上架时间留空",
+     "expected": "上架时间为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「请选择上架时间」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示选择上架时间",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "保存-上架时间早于当前时间保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "positive",
+   "test_data_note": "上架时间设置为过去时间（如2020-01-01 00:00:00），其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "设置上架时间为2020-01-01 00:00:00",
+     "expected": "上架时间显示正确"
+    },
+    {
+     "step": 2,
+     "desc": "填写其他字段并保存",
+     "expected": "保存成功，提示「保存成功」"
+    }
+   ],
+   "expected_result": "允许设置过去的上架时间",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "保存-有效期天数为0保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "有效期(天)输入0，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入有效期(天)为0",
+     "expected": "输入框显示0"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「有效期必须大于0」"
+    }
+   ],
+   "expected_result": "有效期0被拒绝",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "保存-有效期天数为负数保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "有效期(天)输入-1，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入有效期(天)为-1",
+     "expected": "输入框显示-1"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「有效期必须为正整数」"
+    }
+   ],
+   "expected_result": "负数有效期被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "保存-所需货币为0保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "所需货币输入0，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入所需货币为0",
+     "expected": "输入框显示0"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「所需货币必须大于0」"
+    }
+   ],
+   "expected_result": "所需货币0被拒绝",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "保存-所需货币为负数保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "所需货币输入-100，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入所需货币为-100",
+     "expected": "输入框显示-100"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「所需货币必须为正数」"
+    }
+   ],
+   "expected_result": "负数货币被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "保存-下架时间早于上架时间保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "上架时间=2023-12-01，下架时间=2023-11-30，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "设置上架时间为2023-12-01 00:00:00",
+     "expected": "上架时间显示正确"
+    },
+    {
+     "step": 2,
+     "desc": "设置下架时间为2023-11-30 00:00:00",
+     "expected": "下架时间显示正确"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「下架时间必须晚于上架时间」"
+    }
+   ],
+   "expected_result": "时间逻辑校验生效",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "保存-下架时间等于上架时间保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "上架时间=下架时间=2023-12-01 00:00:00，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "设置上架时间和下架时间均为2023-12-01 00:00:00",
+     "expected": "两个时间显示相同"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「下架时间必须晚于上架时间」"
+    }
+   ],
+   "expected_result": "时间相等被拒绝",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "保存-下架时间为空保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "下架时间不设置，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写其他必填字段，下架时间留空",
+     "expected": "下架时间为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「请选择下架时间」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示选择下架时间",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "保存-装扮编号为空保存被拦截",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "装扮编号留空，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "不填写装扮编号，填写其他必填字段",
+     "expected": "装扮编号为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「请输入装扮编号」"
+    }
+   ],
+   "expected_result": "保存被拦截，提示输入装扮编号",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "保存-装扮编号超长保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "装扮编号输入超过最大长度（假设20位）的字符串，如123456789012345678901",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入装扮编号为123456789012345678901（21位）",
+     "expected": "输入框可能限制输入长度，或显示超长"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「装扮编号长度不能超过20位」"
+    }
+   ],
+   "expected_result": "超长编号被拒绝",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "保存-展示顺序为空保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "展示顺序不填写，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "填写其他必填字段，展示顺序留空",
+     "expected": "展示顺序为空"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示「保存成功」，列表页展示顺序可能为默认值或空"
+    }
+   ],
+   "expected_result": "展示顺序非必填，保存成功",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "保存-展示顺序为负数保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序输入-1，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入展示顺序为-1",
+     "expected": "输入框显示-1"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「展示顺序必须为非负整数」"
+    }
+   ],
+   "expected_result": "负数展示顺序被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "保存-展示顺序为0保存成功",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "展示顺序输入0，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入展示顺序为0",
+     "expected": "输入框显示0"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存成功，提示「保存成功」"
+    }
+   ],
+   "expected_result": "展示顺序0被接受",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "保存-所需货币为小数保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "所需货币输入500.5，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入所需货币为500.5",
+     "expected": "输入框显示500.5"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「所需货币必须为整数」"
+    }
+   ],
+   "expected_result": "小数货币被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "保存-有效期天数为小数保存被拦截",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "有效期(天)输入30.5，其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "输入有效期(天)为30.5",
+     "expected": "输入框显示30.5"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「有效期必须为整数」"
+    }
+   ],
+   "expected_result": "小数有效期被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "保存-商品类型为头像框时装扮编号必须为头像框编号",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "商品类型=头像框，装扮编号=2001（该编号属于发言勋章），其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面，存在发言勋章编号2001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择商品类型为「头像框」",
+     "expected": "下拉框显示「头像框」"
+    },
+    {
+     "step": 2,
+     "desc": "输入装扮编号为2001（该编号属于发言勋章）",
+     "expected": "输入框显示2001"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」",
+     "expected": "保存失败，提示「装扮编号与商品类型不匹配」"
+    }
+   ],
+   "expected_result": "类型与编号不匹配被拒绝",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "保存-商品类型为发言勋章时装扮编号必须为勋章编号",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "商品类型=发言勋章，装扮编号=1001（该编号属于头像框），其他字段合法",
+   "preconditions": "运营人员已登录，进入新增页面，存在头像框编号1001",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择商品类型为「发言勋章」",
+     "expected": "下拉框显示「发言勋章」"
+    },
+    {
+     "step": 2,
+     "desc": "输入装扮编号为1001（该编号属于头像框）",
+     "expected": ""
+    }
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "展示顺序填写合法正整数保存成功",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "展示顺序填写 1，代表该商品在商城展示列表中排在最前（数值越小越靠前，常见业务规则）。",
+   "preconditions": "已登录运营后台，拥有商品管理新增/编辑权限；进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写必填项（装扮编号、商品类型、上架时间、有效期、所需货币等），展示顺序输入 1",
+     "expected": "展示顺序输入框可正常输入数字 1，无报错。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」；数据库中新增商品记录，展示顺序字段值为 1。"
+    }
+   ],
+   "expected_result": "商品保存成功，展示顺序字段正确保存为 1，列表页可按展示顺序排序。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "展示顺序填写负数被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序填写 -1，代表负数，不符合常规排序字段的取值规则（排序值应为非负整数）。",
+   "preconditions": "已登录运营后台，拥有商品管理新增/编辑权限；进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写必填项，展示顺序输入 -1",
+     "expected": "输入框可能允许输入，但保存时应被拦截。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「展示顺序必须为非负整数」或类似错误；数据库无新增记录。"
+    }
+   ],
+   "expected_result": "负数被拒绝，无法保存，提示明确错误信息。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "展示顺序填写0保存成功",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "展示顺序填写 0，代表边界值，0 通常表示默认或最优先，需确认业务是否允许。",
+   "preconditions": "已登录运营后台，拥有商品管理新增/编辑权限；进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写必填项，展示顺序输入 0",
+     "expected": "输入框可输入 0。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功（若业务允许0），提示「保存成功」；数据库展示顺序字段值为 0。若业务不允许0，则提示错误。"
+    }
+   ],
+   "expected_result": "根据业务规则，0 被接受或拒绝，但必须给出明确提示。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "展示顺序填写超长数字被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序填写 999999999999999999999（超过 int 范围），代表超长数字，测试输入框长度限制和数值范围校验。",
+   "preconditions": "已登录运营后台，拥有商品管理新增/编辑权限；进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写必填项，展示顺序输入 999999999999999999999",
+     "expected": "输入框可能限制最大长度，或允许输入但保存时校验失败。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「展示顺序超出允许范围」；数据库无新增记录。"
+    }
+   ],
+   "expected_result": "超长数字被拒绝，提示明确错误信息。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "展示顺序填写小数被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序填写 1.5，代表小数，排序字段通常要求整数。",
+   "preconditions": "已登录运营后台，拥有商品管理新增/编辑权限；进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写必填项，展示顺序输入 1.5",
+     "expected": "输入框可能允许输入，但保存时应被拦截。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「展示顺序必须为整数」；数据库无新增记录。"
+    }
+   ],
+   "expected_result": "小数被拒绝，提示明确错误信息。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "展示顺序填写非数字字符被拒绝",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序输入 'abc'，代表非数字字符，测试输入校验。",
+   "preconditions": "已登录运营后台，拥有商品管理新增/编辑权限；进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写必填项，展示顺序输入 'abc'",
+     "expected": "输入框应阻止非数字输入，或允许输入但保存时校验失败。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「展示顺序必须为数字」；数据库无新增记录。"
+    }
+   ],
+   "expected_result": "非数字字符被拒绝，提示明确错误信息。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "展示顺序留空保存",
+   "priority": "P1",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序留空，测试字段是否必填。",
+   "preconditions": "已登录运营后台，拥有商品管理新增/编辑权限；进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写其他必填项，展示顺序留空",
+     "expected": "输入框为空。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "若必填，则保存失败，提示「展示顺序不能为空」；若选填，则保存成功，数据库该字段为 NULL 或默认值。"
+    }
+   ],
+   "expected_result": "根据必填性给出相应提示或保存成功。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "展示顺序重复保存成功（若允许重复）",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "positive",
+   "test_data_note": "已存在一个商品展示顺序为 5，新增另一个商品也填写 5，测试是否允许重复。",
+   "preconditions": "已登录运营后台；已存在一个商品展示顺序为 5。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写必填项，展示顺序输入 5",
+     "expected": "输入框可输入 5。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "若允许重复，则保存成功；若不允许，则提示「展示顺序已存在」。"
+    }
+   ],
+   "expected_result": "根据业务规则，重复值被接受或拒绝。",
+   "remark": "正面用例（假设允许重复）",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "编辑商品时修改展示顺序并保存",
+   "priority": "P0",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "编辑已有商品，将展示顺序从 3 改为 1，代表调整商品展示优先级。",
+   "preconditions": "已登录运营后台；存在一个商品，展示顺序为 3。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入商品管理列表，找到该商品，点击「编辑」",
+     "expected": "进入编辑商品页面，展示顺序字段显示当前值 3。"
+    },
+    {
+     "step": 2,
+     "desc": "将展示顺序修改为 1",
+     "expected": "输入框可修改为 1。"
+    },
+    {
+     "step": 3,
+     "desc": "点击「保存」按钮",
+     "expected": "保存成功，提示「保存成功」；数据库中该商品展示顺序更新为 1。"
+    }
+   ],
+   "expected_result": "编辑保存成功，展示顺序更新为 1。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "展示顺序输入空格被拒绝",
+   "priority": "P2",
+   "domain": "运营后台",
+   "module": "商城/商品管理/新增_编辑商品",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "展示顺序输入 ' '（空格），测试输入校验。",
+   "preconditions": "已登录运营后台，拥有商品管理新增/编辑权限；进入新增商品页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入新增商品页面，填写必填项，展示顺序输入空格",
+     "expected": "输入框可能允许输入空格。"
+    },
+    {
+     "step": 2,
+     "desc": "点击「保存」按钮",
+     "expected": "保存失败，提示「展示顺序不能为空格」；数据库无新增记录。"
+    }
+   ],
+   "expected_result": "空格被拒绝，提示明确错误信息。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "搜索-按记录编号精确搜索成功",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用存在的记录编号10029981824（来自示例数据），验证精确搜索能返回对应记录。",
+   "preconditions": "已登录运营后台，存在记录编号为10029981824的购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，显示搜索区域和记录列表。"
+    },
+    {
+     "step": 2,
+     "desc": "在记录编号输入框输入10029981824",
+     "expected": "输入框显示10029981824。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表刷新，仅显示记录编号为10029981824的记录。"
+    }
+   ],
+   "expected_result": "列表仅显示记录编号为10029981824的购买记录，其他记录不显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "搜索-按不存在的记录编号搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用不存在的记录编号9999999999，验证搜索无结果时的提示。",
+   "preconditions": "已登录运营后台，系统中不存在记录编号9999999999。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在记录编号输入框输入9999999999",
+     "expected": "输入框显示9999999999。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示无数据，提示「暂无数据」或类似空态提示。"
+    }
+   ],
+   "expected_result": "列表无数据，显示空态提示，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "搜索-记录编号为空时搜索",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "记录编号输入框留空，验证搜索行为（应视为不按编号筛选）。",
+   "preconditions": "已登录运营后台，存在多条购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "不输入记录编号，直接点击搜索按钮",
+     "expected": "列表显示所有符合条件的记录（若其他条件为空则显示全部记录）。"
+    }
+   ],
+   "expected_result": "列表显示全部购买记录（或按其他条件筛选后的结果），不报错。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "搜索-按用户编号精确搜索成功",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用存在的用户编号10070490（来自示例数据），验证按用户编号筛选。",
+   "preconditions": "已登录运营后台，存在用户编号为10070490的购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入10070490",
+     "expected": "输入框显示10070490。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表仅显示用户编号为10070490的购买记录。"
+    }
+   ],
+   "expected_result": "列表仅显示用户编号为10070490的购买记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "搜索-按不存在的用户编号搜索无结果",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "使用不存在的用户编号99999999，验证搜索无结果。",
+   "preconditions": "已登录运营后台，系统中不存在用户编号99999999。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在用户编号输入框输入99999999",
+     "expected": "输入框显示99999999。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表无数据，显示空态提示。"
+    }
+   ],
+   "expected_result": "列表无数据，显示空态提示，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "搜索-按创建时间范围筛选成功",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "设置创建时间范围为2015-10-02 00:00:00至2015-10-02 10:20:28，验证筛选出该时间段的记录。",
+   "preconditions": "已登录运营后台，存在创建时间在该范围内的购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在创建时间开始时间选择2015-10-02 00:00:00",
+     "expected": "开始时间显示2015-10-02 00:00:00。"
+    },
+    {
+     "step": 3,
+     "desc": "在创建时间结束时间选择2015-10-02 10:20:28",
+     "expected": "结束时间显示2015-10-02 10:20:28。"
+    },
+    {
+     "step": 4,
+     "desc": "点击搜索按钮",
+     "expected": "列表仅显示创建时间在该范围内的购买记录。"
+    }
+   ],
+   "expected_result": "列表仅显示创建时间在2015-10-02 00:00:00至2015-10-02 10:20:28之间的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "搜索-创建时间结束时间早于开始时间",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "设置开始时间为2015-10-02 10:20:28，结束时间为2015-10-02 00:00:00，验证系统提示错误。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "设置开始时间为2015-10-02 10:20:28",
+     "expected": "开始时间显示2015-10-02 10:20:28。"
+    },
+    {
+     "step": 3,
+     "desc": "设置结束时间为2015-10-02 00:00:00",
+     "expected": "结束时间显示2015-10-02 00:00:00。"
+    },
+    {
+     "step": 4,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示「结束时间不能早于开始时间」或类似错误提示，不执行搜索。"
+    }
+   ],
+   "expected_result": "系统提示错误，不执行搜索。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "搜索-创建时间范围为空时搜索",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "不设置创建时间范围，验证搜索行为（应视为不按时间筛选）。",
+   "preconditions": "已登录运营后台，存在多条购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "清空创建时间开始和结束时间",
+     "expected": "时间输入框为空。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示所有符合条件的记录（若其他条件为空则显示全部记录）。"
+    }
+   ],
+   "expected_result": "列表显示全部购买记录（或按其他条件筛选后的结果），不报错。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "搜索-组合条件搜索（记录编号+用户编号+创建时间）",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用记录编号10029981824、用户编号10070490、创建时间范围2015-10-02 00:00:00至2015-10-02 10:20:28，验证组合筛选。",
+   "preconditions": "已登录运营后台，存在满足所有条件的购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "输入记录编号10029981824",
+     "expected": "输入框显示10029981824。"
+    },
+    {
+     "step": 3,
+     "desc": "输入用户编号10070490",
+     "expected": "输入框显示10070490。"
+    },
+    {
+     "step": 4,
+     "desc": "设置创建时间范围为2015-10-02 00:00:00至2015-10-02 10:20:28",
+     "expected": "时间范围正确显示。"
+    },
+    {
+     "step": 5,
+     "desc": "点击搜索按钮",
+     "expected": "列表仅显示同时满足三个条件的记录。"
+    }
+   ],
+   "expected_result": "列表仅显示同时满足记录编号、用户编号和创建时间范围的记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "搜索-重置按钮清空搜索条件",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "输入搜索条件后点击重置，验证条件被清空并恢复默认列表。",
+   "preconditions": "已登录运营后台，已输入搜索条件。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "输入记录编号10029981824",
+     "expected": "输入框显示10029981824。"
+    },
+    {
+     "step": 3,
+     "desc": "点击重置按钮",
+     "expected": "所有搜索条件被清空，列表恢复为默认显示（如全部记录）。"
+    }
+   ],
+   "expected_result": "搜索条件被清空，列表恢复默认。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "列表-记录编号列显示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的记录编号列，验证显示与数据一致。",
+   "preconditions": "已登录运营后台，存在购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，列表显示记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录编号列",
+     "expected": "每条记录显示对应的记录编号，如10029981824。"
+    }
+   ],
+   "expected_result": "记录编号列正确显示每条记录的编号。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "列表-用户编号列显示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的用户编号列，验证显示与数据一致。",
+   "preconditions": "已登录运营后台，存在购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，列表显示记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看用户编号列",
+     "expected": "每条记录显示对应的用户编号，如10070490。"
+    }
+   ],
+   "expected_result": "用户编号列正确显示每条记录的用户编号。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "列表-商品编号列显示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的商品编号列，验证显示与数据一致。",
+   "preconditions": "已登录运营后台，存在购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，列表显示记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看商品编号列",
+     "expected": "每条记录显示对应的商品编号，如928198309127。"
+    }
+   ],
+   "expected_result": "商品编号列正确显示每条记录的商品编号。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "列表-商品类型列显示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的商品类型列，验证显示与数据一致（如头像框、勋章）。",
+   "preconditions": "已登录运营后台，存在购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，列表显示记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看商品类型列",
+     "expected": "每条记录显示对应的商品类型，如头像框、勋章。"
+    }
+   ],
+   "expected_result": "商品类型列正确显示每条记录的商品类型。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "列表-创建时间列显示正确",
+   "priority": "P0",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "查看列表中的创建时间列，验证显示格式与数据一致（如2019-03-21 16:12:40）。",
+   "preconditions": "已登录运营后台，存在购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，列表显示记录。"
+    },
+    {
+     "step": 2,
+     "desc": "查看创建时间列",
+     "expected": "每条记录显示对应的创建时间，格式为YYYY-MM-DD HH:mm:ss。"
+    }
+   ],
+   "expected_result": "创建时间列正确显示每条记录的创建时间，格式统一。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "列表-无数据时显示空态",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "搜索一个不存在的条件，验证列表显示空态提示。",
+   "preconditions": "已登录运营后台，系统中无满足条件的记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "输入不存在的记录编号9999999999",
+     "expected": "输入框显示9999999999。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "列表显示「暂无数据」或类似空态提示。"
+    }
+   ],
+   "expected_result": "列表显示空态提示，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "列表-分页功能正常",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "存在多条记录，验证分页显示和翻页功能。",
+   "preconditions": "已登录运营后台，存在超过一页的购买记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，显示第一页记录。"
+    },
+    {
+     "step": 2,
+     "desc": "点击下一页按钮",
+     "expected": "显示第二页记录，页码更新。"
+    },
+    {
+     "step": 3,
+     "desc": "点击上一页按钮",
+     "expected": "返回第一页记录。"
+    }
+   ],
+   "expected_result": "分页功能正常，能正确翻页并显示对应记录。",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "列表-记录编号超长显示",
+   "priority": "P2",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造超长记录编号（如20位数字），验证列表显示是否正常。",
+   "preconditions": "已登录运营后台，存在记录编号超长的记录（或通过接口构造）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "查看记录编号列",
+     "expected": "超长编号显示完整或截断并显示省略号，不出现错位。"
+    }
+   ],
+   "expected_result": "超长编号显示正常，不破坏布局。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "搜索-输入特殊字符",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "在记录编号输入框输入特殊字符如'@#$%'，验证系统处理。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在记录编号输入框输入'@#$%'",
+     "expected": "输入框可能限制输入或允许输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示输入格式错误或返回无结果，不崩溃。"
+    }
+   ],
+   "expected_result": "系统正确处理特殊字符，不崩溃，给出合理提示或无结果。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "搜索-输入超长记录编号",
+   "priority": "P1",
+   "domain": "运营后台/商城/购买记录",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入超过字段长度限制的记录编号（如20位数字），验证系统处理。",
+   "preconditions": "已登录运营后台。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载。"
+    },
+    {
+     "step": 2,
+     "desc": "在记录编号输入框输入20位数字12345678901234567890",
+     "expected": "输入框可能限制最大长度或允许输入。"
+    },
+    {
+     "step": 3,
+     "desc": "点击搜索按钮",
+     "expected": "系统提示输入超长或按输入内容搜索，不崩溃。"
+    }
+   ],
+   "expected_result": "系统正确处理超长输入，不崩溃，给出合理提示或按输入搜索。",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "购买记录列表展示商品内容字段（头像框）",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在一条购买记录，商品内容为'头像框'，商品类型为'头像框'，消耗货币为2000银钻",
+   "preconditions": "运营后台已登录，存在至少一条购买记录，商品内容为'头像框'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击'商城'->'购买记录'",
+     "expected": "页面正常加载，显示购买记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的'商品内容'列",
+     "expected": "商品内容列显示'头像框'，与数据库记录一致"
+    }
+   ],
+   "expected_result": "列表正确展示商品内容'头像框'，无乱码、截断或错位",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "购买记录列表展示商品内容字段（勋章）",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中已存在一条购买记录，商品内容为'勋章'，商品类型为'勋章'，消耗货币为3000银钻",
+   "preconditions": "运营后台已登录，存在至少一条购买记录，商品内容为'勋章'",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入运营后台，点击'商城'->'购买记录'",
+     "expected": "页面正常加载，显示购买记录列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的'商品内容'列",
+     "expected": "商品内容列显示'勋章'，与数据库记录一致"
+    }
+   ],
+   "expected_result": "列表正确展示商品内容'勋章'，无乱码、截断或错位",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "商品内容为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中有一条购买记录，其商品内容字段为空字符串''",
+   "preconditions": "运营后台已登录，存在一条商品内容为空的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'商品内容'列",
+     "expected": "显示为空（不显示任何内容），不出现异常或占位符"
+    }
+   ],
+   "expected_result": "空商品内容正常展示，无报错或乱码",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "商品内容超长文本的展示",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中有一条购买记录，商品内容为超过100个字符的文本（模拟超长内容）",
+   "preconditions": "运营后台已登录，存在一条商品内容超长的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'商品内容'列",
+     "expected": "超长内容被截断或换行显示，不撑破表格布局，无横向滚动条"
+    }
+   ],
+   "expected_result": "超长内容合理展示，页面布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "消耗货币字段展示（2000银钻）",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中有一条购买记录，消耗货币为2000（银钻）",
+   "preconditions": "运营后台已登录，存在一条消耗货币为2000的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'消耗货币'列",
+     "expected": "显示'2000'，与数据库一致，无货币单位或格式错误"
+    }
+   ],
+   "expected_result": "消耗货币正确显示为2000",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "消耗货币为0的展示",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中有一条购买记录，消耗货币为0（如免费商品）",
+   "preconditions": "运营后台已登录，存在一条消耗货币为0的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'消耗货币'列",
+     "expected": "显示'0'，不显示负数或异常"
+    }
+   ],
+   "expected_result": "消耗货币0正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "消耗货币为负数的异常处理",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中有一条购买记录，消耗货币为-100（异常数据，模拟脏数据）",
+   "preconditions": "运营后台已登录，存在一条消耗货币为负数的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，不崩溃"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'消耗货币'列",
+     "expected": "显示'-100'或按系统规则处理（如显示0），但页面不报错"
+    }
+   ],
+   "expected_result": "负数消耗货币不导致页面异常，展示合理",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "创建时间字段展示（2019-03-21 16:12:40）",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中有一条购买记录，创建时间为2019-03-21 16:12:40",
+   "preconditions": "运营后台已登录，存在一条创建时间为2019-03-21 16:12:40的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'创建时间'列",
+     "expected": "显示'2019-03-21 16:12:40'，格式为YYYY-MM-DD HH:mm:ss"
+    }
+   ],
+   "expected_result": "创建时间正确显示，格式正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "创建时间为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中有一条购买记录，创建时间为NULL",
+   "preconditions": "运营后台已登录，存在一条创建时间为空的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'创建时间'列",
+     "expected": "显示为空或'--'，不显示异常时间如1970-01-01"
+    }
+   ],
+   "expected_result": "空创建时间合理展示，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "创建时间格式校验（非法时间格式）",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据库中有一条购买记录，创建时间为'2019/03/21 16:12:40'（非标准格式，模拟脏数据）",
+   "preconditions": "运营后台已登录，存在一条创建时间格式非法的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，不崩溃"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'创建时间'列",
+     "expected": "按系统规则显示（可能原样显示或格式化），但页面不报错"
+    }
+   ],
+   "expected_result": "非法时间格式不导致页面异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "装扮名称字段展示（正常名称）",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中有一条购买记录，装扮名称为'金色头像框'",
+   "preconditions": "运营后台已登录，存在一条装扮名称为'金色头像框'的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'装扮名称'列",
+     "expected": "显示'金色头像框'，与数据库一致"
+    }
+   ],
+   "expected_result": "装扮名称正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "装扮名称为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中有一条购买记录，装扮名称为空字符串''",
+   "preconditions": "运营后台已登录，存在一条装扮名称为空的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'装扮名称'列",
+     "expected": "显示为空，不显示'null'或异常"
+    }
+   ],
+   "expected_result": "空装扮名称正常展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "装扮名称超长文本的展示",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中有一条购买记录，装扮名称为超过50个字符的文本",
+   "preconditions": "运营后台已登录，存在一条装扮名称超长的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'装扮名称'列",
+     "expected": "超长名称被截断或换行显示，不撑破表格布局"
+    }
+   ],
+   "expected_result": "超长装扮名称合理展示，页面布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "装扮编号字段展示（正常编号）",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "数据库中有一条购买记录，装扮编号为'928198309127'",
+   "preconditions": "运营后台已登录，存在一条装扮编号为'928198309127'的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'装扮编号'列",
+     "expected": "显示'928198309127'，与数据库一致"
+    }
+   ],
+   "expected_result": "装扮编号正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "装扮编号为空时的展示",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "数据库中有一条购买记录，装扮编号为NULL",
+   "preconditions": "运营后台已登录，存在一条装扮编号为空的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该记录的'装扮编号'列",
+     "expected": "显示为空，不显示'null'或异常"
+    }
+   ],
+   "expected_result": "空装扮编号正常展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "商品类型筛选-选择头像框",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品类型下拉框选择'头像框'，数据库中存在头像框类型的购买记录",
+   "preconditions": "运营后台已登录，存在多种商品类型的购买记录（头像框、勋章）",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'商品类型'下拉框，选择'头像框'",
+     "expected": "下拉框显示'头像框'"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表仅显示商品类型为'头像框'的记录，其他类型记录不显示"
+    }
+   ],
+   "expected_result": "筛选结果正确，仅显示头像框记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "商品类型筛选-选择勋章",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品类型下拉框选择'勋章'，数据库中存在勋章类型的购买记录",
+   "preconditions": "运营后台已登录，存在多种商品类型的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'商品类型'下拉框，选择'勋章'",
+     "expected": "下拉框显示'勋章'"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表仅显示商品类型为'勋章'的记录"
+    }
+   ],
+   "expected_result": "筛选结果正确，仅显示勋章记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "商品类型筛选-选择全部（默认）",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "商品类型下拉框默认选择'全部'（或空），数据库中存在多种类型记录",
+   "preconditions": "运营后台已登录，存在多种商品类型的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载，商品类型下拉框默认显示'全部'或空"
+    },
+    {
+     "step": 2,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示所有商品类型的记录"
+    }
+   ],
+   "expected_result": "默认筛选显示全部记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "商品类型筛选-选择不存在的类型",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "通过接口或篡改请求，传入不存在的商品类型值'未知类型'",
+   "preconditions": "运营后台已登录，能够构造请求",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "通过开发者工具修改商品类型参数为'未知类型'，点击搜索",
+     "expected": "列表显示空数据，或提示'无数据'，不报错"
+    }
+   ],
+   "expected_result": "非法商品类型值被正确处理，不导致页面异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "商品编号筛选-输入存在的编号",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "输入商品编号'908981283911'，该编号在数据库中存在",
+   "preconditions": "运营后台已登录，存在商品编号为'908981283911'的购买记录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'商品编号'输入框输入'908981283911'",
+     "expected": "输入框显示该编号"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表仅显示商品编号为'908981283911'的记录"
+    }
+   ],
+   "expected_result": "筛选结果正确，仅显示匹配记录",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "商品编号筛选-输入不存在的编号",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "输入商品编号'000000000000'，该编号在数据库中不存在",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'商品编号'输入框输入'000000000000'",
+     "expected": "输入框显示该编号"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示空数据，并提示'暂无数据'"
+    }
+   ],
+   "expected_result": "无匹配记录时显示空态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "商品编号筛选-输入超长编号",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "输入商品编号'12345678901234567890'（20位数字，超过正常长度）",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'商品编号'输入框输入'12345678901234567890'",
+     "expected": "输入框可能限制长度或允许输入，但点击搜索后不报错"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "列表显示空数据或提示输入过长，不崩溃"
+    }
+   ],
+   "expected_result": "超长编号被合理处理，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "商品编号筛选-输入特殊字符",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "输入商品编号'abc@#$'（包含字母和特殊字符）",
+   "preconditions": "运营后台已登录",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "在'商品编号'输入框输入'abc@#$'",
+     "expected": "输入框可能限制输入或允许输入"
+    },
+    {
+     "step": 3,
+     "desc": "点击'搜索'按钮",
+     "expected": "系统提示'请输入正确的商品编号'或显示空数据，不报错"
+    }
+   ],
+   "expected_result": "特殊字符被校验拦截或安全处理",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "联赛及球队管理入口跳转",
+   "priority": "P0",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击页面上的'联赛及球队管理'入口（可能为导航链接）",
+   "preconditions": "运营后台已登录，当前在购买记录页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'联赛及球队管理'入口",
+     "expected": "跳转到联赛及球队管理页面，URL正确"
+    }
+   ],
+   "expected_result": "成功跳转到联赛及球队管理页面",
+   "remark": "正面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "联赛及球队管理入口在无权限时不可访问",
+   "priority": "P1",
+   "domain": "运营后台/商城",
+   "module": "购买记录",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无联赛及球队管理权限的运营账号登录",
+   "preconditions": "运营后台已登录，账号无联赛及球队管理权限",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入购买记录页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "点击'联赛及球队管理'入口",
+     "expected": "提示'无权限访问'或入口置灰不可点击，不跳转"
+    }
+   ],
+   "expected_result": "无权限时被拦截，不跳转",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
+   "id": "TC-142"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-4 生成被截断，已重试"
+ ]
+}

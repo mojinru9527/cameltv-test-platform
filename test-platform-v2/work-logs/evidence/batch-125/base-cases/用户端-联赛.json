@@ -1,0 +1,7551 @@
+{
+ "requirement_analysis": {
+  "extracted_requirements": [
+   {
+    "id": "REQ-1",
+    "title": "球员榜-关键传球列表展示",
+    "description": "在球员榜页面，选择关键传球指标后，展示球员的关键传球数据列表（场均/总计等）。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确关键传球列表的排序规则（如按场均降序还是总计降序）及是否分页。",
+      "suggestion": "建议明确排序字段和分页逻辑，并在用例中验证。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-2",
+    "title": "球员榜-拦截列表展示",
+    "description": "在球员榜页面，选择拦截指标后，展示球员的拦截数据列表。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确拦截数据的统计口径（场均/总计）及展示字段。",
+      "suggestion": "建议明确统计口径和展示字段。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-3",
+    "title": "球员榜-封堵列表展示",
+    "description": "在球员榜页面，选择封堵指标后，展示球员的封堵数据列表。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确封堵数据的统计口径及排序。",
+      "suggestion": "建议明确统计口径和排序。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-4",
+    "title": "球员榜-解围列表展示",
+    "description": "在球员榜页面，选择解围指标后，展示球员的解围数据列表。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确解围数据的统计口径及排序。",
+      "suggestion": "建议明确统计口径和排序。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-5",
+    "title": "球员榜-黄牌列表展示",
+    "description": "在球员榜页面，选择黄牌指标后，展示球员的黄牌数据列表。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确黄牌数据的统计口径及排序。",
+      "suggestion": "建议明确统计口径和排序。"
+     }
+    ]
+   },
+   {
+    "id": "REQ-6",
+    "title": "球员榜-红牌列表展示",
+    "description": "在球员榜页面，选择红牌指标后，展示球员的红牌数据列表。",
+    "type": "functional",
+    "issues": [
+     {
+      "severity": "medium",
+      "description": "需求未明确红牌数据的统计口径及排序。",
+      "suggestion": "建议明确统计口径和排序。"
+     }
+    ]
+   }
+  ],
+  "overall_assessment": "需求仅列出球员榜页面的六个统计指标（关键传球、拦截、封堵、解围、黄牌、红牌），但未提供具体的数据字段、排序规则、分页、空态等细节。整体需求描述过于简略，存在较多模糊点，需要补充详细规格。但功能点明确，可基于通用球员榜逻辑设计用例。"
+ },
+ "functional_cases": [
+  {
+   "title": "联赛详情页正常展示联赛名称、LOGO、轮次信息",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用已配置联赛数据，联赛名称为「英超」，LOGO为有效图片URL，轮次为「第10轮」",
+   "preconditions": "用户已登录，联赛详情页可访问，联赛数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页",
+     "expected": "页面加载成功，无报错"
+    },
+    {
+     "step": 2,
+     "desc": "查看页面顶部联赛名称和LOGO",
+     "expected": "联赛名称显示为「英超」，LOGO正常显示"
+    },
+    {
+     "step": 3,
+     "desc": "查看轮次信息",
+     "expected": "轮次显示为「英超 第10轮」"
+    }
+   ],
+   "expected_result": "联赛详情页顶部正确展示联赛名称、LOGO和轮次信息，无缺失或错乱",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-001"
+  },
+  {
+   "title": "联赛详情页在无联赛数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回空数据（联赛ID不存在或已删除）",
+   "preconditions": "用户已登录，联赛ID无效或数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "通过无效联赛ID进入联赛详情页",
+     "expected": "页面展示空态提示，如「暂无联赛信息」，不崩溃"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无异常报错，可正常返回",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-002"
+  },
+  {
+   "title": "赛程Tab默认展示赛程列表",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-赛程",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛「英超」下存在多场比赛，包含未开始、进行中、已结束状态",
+   "preconditions": "用户已登录，联赛详情页已加载，赛程数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，默认展示赛程Tab",
+     "expected": "赛程列表展示，包含轮次、时间、球队、比分、状态"
+    },
+    {
+     "step": 2,
+     "desc": "查看赛程列表中的比赛条目",
+     "expected": "每条比赛显示主客场球队名称、LOGO、比分、比赛状态"
+    }
+   ],
+   "expected_result": "赛程列表正确展示所有比赛信息，状态标识清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-003"
+  },
+  {
+   "title": "赛程列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-赛程",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛「西乙」当前无任何赛程数据",
+   "preconditions": "用户已登录，联赛详情页已加载，该联赛无赛程",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，切换到赛程Tab",
+     "expected": "展示空态提示「暂无赛程」，无异常"
+    }
+   ],
+   "expected_result": "赛程列表为空时显示空态提示，不崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-004"
+  },
+  {
+   "title": "收藏联赛成功",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-收藏",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "用户已登录，联赛「英超」未收藏",
+   "preconditions": "用户已登录，联赛详情页已加载，联赛未收藏",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击收藏按钮",
+     "expected": "收藏按钮变为已收藏状态，出现成功提示「收藏成功」"
+    },
+    {
+     "step": 2,
+     "desc": "进入我的收藏列表",
+     "expected": "该联赛出现在收藏列表中"
+    }
+   ],
+   "expected_result": "收藏成功，收藏状态持久化，收藏列表可见",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-005"
+  },
+  {
+   "title": "未登录用户点击收藏提示登录",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-收藏",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "用户未登录，访问联赛详情页",
+   "preconditions": "用户未登录，联赛详情页已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击收藏按钮",
+     "expected": "弹出登录引导提示「请先登录」，不执行收藏操作"
+    }
+   ],
+   "expected_result": "未登录用户点击收藏被拦截，提示登录，收藏状态不变",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-006"
+  },
+  {
+   "title": "联赛名称超长时省略显示",
+   "priority": "P2",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-联赛名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称为超长字符串「联赛名称联赛名称联赛名称联赛名称」",
+   "preconditions": "联赛详情页已加载，联赛名称超长",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，查看联赛名称",
+     "expected": "联赛名称单行显示，超出部分以省略号（…）截断，不换行、不出框"
+    }
+   ],
+   "expected_result": "超长联赛名称被正确省略，页面布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-007"
+  },
+  {
+   "title": "联赛LOGO加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-LOGO",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛LOGO的图片URL无效或网络异常",
+   "preconditions": "联赛详情页已加载，LOGO图片加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，查看LOGO区域",
+     "expected": "LOGO区域显示默认占位图，不显示裂图，页面不报错"
+    }
+   ],
+   "expected_result": "LOGO加载失败时展示占位图，不影响其他内容展示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-008"
+  },
+  {
+   "title": "轮次信息正确展示",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-轮次",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛「英超」当前轮次为第10轮",
+   "preconditions": "联赛详情页已加载，轮次数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，查看轮次信息",
+     "expected": "轮次显示为「英超 第10轮」，与后端数据一致"
+    }
+   ],
+   "expected_result": "轮次信息正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-009"
+  },
+  {
+   "title": "轮次信息缺失时显示默认值",
+   "priority": "P2",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-轮次",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后端未返回轮次字段",
+   "preconditions": "联赛详情页已加载，轮次数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，查看轮次区域",
+     "expected": "轮次区域显示默认文案如「暂无轮次」，不显示undefined或空白"
+    }
+   ],
+   "expected_result": "轮次缺失时显示默认值，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-010"
+  },
+  {
+   "title": "赛程中球队名称和LOGO正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛「曼城 vs 利物浦」，双方LOGO有效",
+   "preconditions": "联赛详情页已加载，赛程数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中的比赛条目",
+     "expected": "主客场球队名称显示为「曼城」「利物浦」，LOGO正常显示"
+    }
+   ],
+   "expected_result": "球队名称和LOGO正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-011"
+  },
+  {
+   "title": "球队名称超长时省略显示",
+   "priority": "P2",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-球队",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队名称为超长字符串「主场球队名称主场球队名称主场球队…」",
+   "preconditions": "联赛详情页已加载，球队名称超长",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中的球队名称",
+     "expected": "球队名称单行显示，超出部分省略，不换行、不出框"
+    }
+   ],
+   "expected_result": "超长球队名称被正确省略，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-012"
+  },
+  {
+   "title": "视频/动画入口正常展示并可点击",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-视频/动画",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛「曼城 vs 利物浦」有视频/动画资源",
+   "preconditions": "联赛详情页已加载，赛程数据存在，比赛有视频/动画",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中的视频/动画入口",
+     "expected": "入口图标正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击视频/动画入口",
+     "expected": "跳转到视频播放页或动画展示页，无报错"
+    }
+   ],
+   "expected_result": "视频/动画入口可点击并正确跳转",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-013"
+  },
+  {
+   "title": "无视频/动画资源时入口隐藏或置灰",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-视频/动画",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛「伯恩利 vs 谢菲联」无视频/动画资源",
+   "preconditions": "联赛详情页已加载，该比赛无视频/动画",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看赛程列表中该比赛的视频/动画入口",
+     "expected": "入口不显示或置灰不可点击，点击无响应"
+    }
+   ],
+   "expected_result": "无资源时入口隐藏或置灰，不误导用户",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-014"
+  },
+  {
+   "title": "LIVE标识在比赛进行中显示",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-LIVE",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛「曼城 vs 利物浦」正在进行中，观看人数1289",
+   "preconditions": "联赛详情页已加载，存在进行中的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看进行中比赛的LIVE标识",
+     "expected": "LIVE标识显示，并显示观看人数1289"
+    }
+   ],
+   "expected_result": "LIVE标识正确显示，观看人数正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-015"
+  },
+  {
+   "title": "未开始或已结束的比赛不显示LIVE标识",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-LIVE",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛「阿森纳 vs 切尔西」未开始，比赛「曼联 vs 热刺」已结束",
+   "preconditions": "联赛详情页已加载，存在未开始和已结束的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看未开始比赛的LIVE标识",
+     "expected": "不显示LIVE标识"
+    },
+    {
+     "step": 2,
+     "desc": "查看已结束比赛的LIVE标识",
+     "expected": "不显示LIVE标识"
+    }
+   ],
+   "expected_result": "非进行中比赛不显示LIVE标识",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-016"
+  },
+  {
+   "title": "比分正确展示",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-比分",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "比赛「曼城 vs 利物浦」当前比分1-0",
+   "preconditions": "联赛详情页已加载，赛程数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看比赛比分",
+     "expected": "比分显示为「1 - 0」，主队在前，客队在后"
+    }
+   ],
+   "expected_result": "比分正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-017"
+  },
+  {
+   "title": "比分数据缺失时显示默认值",
+   "priority": "P2",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页-比分",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "比赛「伯恩利 vs 谢菲联」未开始，无比分数据",
+   "preconditions": "联赛详情页已加载，比赛未开始",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看未开始比赛的比分区域",
+     "expected": "比分区域显示「-」或「VS」，不显示0-0或空白"
+    }
+   ],
+   "expected_result": "未开始比赛比分显示默认占位符",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-018"
+  },
+  {
+   "title": "赛程列表显示比赛时间（17:00）",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "赛程列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场已排定比赛，开球时间为17:00（业务场景：下午场次）",
+   "preconditions": "已进入联赛详情页，赛程Tab为默认展示，存在一场开球时间为17:00的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页，查看赛程列表",
+     "expected": "赛程列表正常加载，显示所有比赛"
+    },
+    {
+     "step": 2,
+     "desc": "定位开球时间为17:00的比赛",
+     "expected": "该比赛卡片上显示时间「17:00」"
+    }
+   ],
+   "expected_result": "赛程列表中每场比赛均显示正确的开球时间，格式为HH:mm，与后端数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-019"
+  },
+  {
+   "title": "赛程列表时间显示异常（非数字）",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "赛程列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟后端返回异常时间数据，如「abc」（业务场景：数据异常）",
+   "preconditions": "已进入联赛详情页，后端接口返回一场比赛的时间字段为非法字符串",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页，查看赛程列表",
+     "expected": "页面正常加载，不崩溃"
+    },
+    {
+     "step": 2,
+     "desc": "观察异常时间字段的展示",
+     "expected": "时间位置显示占位符或隐藏，不显示乱码"
+    }
+   ],
+   "expected_result": "页面不崩溃，异常时间不展示或展示为「--:--」，且不影响其他比赛展示。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-020"
+  },
+  {
+   "title": "赛程列表显示主播头像",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "赛程列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用一场有主播的比赛，主播头像URL有效（业务场景：正常直播）",
+   "preconditions": "已进入联赛详情页，存在一场有主播的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页，查看赛程列表",
+     "expected": "赛程列表正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "定位有主播的比赛",
+     "expected": "该比赛卡片上显示主播头像，头像清晰可辨"
+    }
+   ],
+   "expected_result": "有主播的比赛显示主播头像，头像加载成功，无裂图。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-021"
+  },
+  {
+   "title": "赛程列表无主播时显示默认头像",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "赛程列表",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用一场无主播的比赛（业务场景：比赛未安排主播）",
+   "preconditions": "已进入联赛详情页，存在一场无主播的比赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页，查看赛程列表",
+     "expected": "赛程列表正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "定位无主播的比赛",
+     "expected": "主播头像位置显示默认头像或占位图，不显示空白"
+    }
+   ],
+   "expected_result": "无主播的比赛显示默认头像或占位图，不出现空白或裂图。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-022"
+  },
+  {
+   "title": "点击资讯Tab切换到资讯列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛存在多条资讯（业务场景：正常资讯列表）",
+   "preconditions": "已进入联赛详情页，联赛存在资讯数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「资讯」",
+     "expected": "页面切换到资讯列表，展示资讯标题和发布时间"
+    }
+   ],
+   "expected_result": "点击资讯Tab后，页面展示资讯列表，Tab高亮为资讯，其他Tab取消高亮。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-023"
+  },
+  {
+   "title": "资讯列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛暂无资讯（业务场景：新赛季开始前）",
+   "preconditions": "已进入联赛详情页，联赛无资讯数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「资讯」",
+     "expected": "页面展示空态提示，如「暂无资讯」"
+    }
+   ],
+   "expected_result": "资讯列表为空时，显示空态提示，不出现空白页或加载失败。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-024"
+  },
+  {
+   "title": "点击积分Tab切换到积分榜",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛存在积分数据（业务场景：正常赛季）",
+   "preconditions": "已进入联赛详情页，联赛存在积分数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「积分」",
+     "expected": "页面切换到积分榜，展示球队排名、场数、胜平负、进失球、积分等"
+    }
+   ],
+   "expected_result": "点击积分Tab后，页面展示积分榜，Tab高亮为积分，其他Tab取消高亮。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-025"
+  },
+  {
+   "title": "积分榜加载失败时提示错误",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常或接口返回500（业务场景：服务不可用）",
+   "preconditions": "已进入联赛详情页，积分接口返回错误",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「积分」",
+     "expected": "页面展示错误提示，如「加载失败，请重试」，并提供重试按钮"
+    }
+   ],
+   "expected_result": "积分榜加载失败时，显示错误提示和重试按钮，点击重试可重新加载。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-026"
+  },
+  {
+   "title": "点击数据Tab切换到数据页",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛存在统计数据（业务场景：正常赛季）",
+   "preconditions": "已进入联赛详情页，联赛存在统计数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「数据」",
+     "expected": "页面切换到数据页，展示联赛相关统计数据"
+    }
+   ],
+   "expected_result": "点击数据Tab后，页面展示数据内容，Tab高亮为数据，其他Tab取消高亮。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-027"
+  },
+  {
+   "title": "数据页无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛暂无统计数据（业务场景：赛季未开始）",
+   "preconditions": "已进入联赛详情页，联赛无统计数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「数据」",
+     "expected": "页面展示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "数据页无数据时，显示空态提示，不出现空白页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-028"
+  },
+  {
+   "title": "点击球队榜Tab切换到球队榜",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛存在球队榜数据（业务场景：正常赛季）",
+   "preconditions": "已进入联赛详情页，联赛存在球队榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「球队榜」",
+     "expected": "页面切换到球队榜，展示球队排名、场均、总计等数据"
+    }
+   ],
+   "expected_result": "点击球队榜Tab后，页面展示球队榜，Tab高亮为球队榜，其他Tab取消高亮。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-029"
+  },
+  {
+   "title": "球队榜无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛暂无球队榜数据（业务场景：赛季未开始）",
+   "preconditions": "已进入联赛详情页，联赛无球队榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「球队榜」",
+     "expected": "页面展示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "球队榜无数据时，显示空态提示，不出现空白页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-030"
+  },
+  {
+   "title": "点击球员榜Tab切换到球员榜",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛存在球员榜数据（业务场景：正常赛季）",
+   "preconditions": "已进入联赛详情页，联赛存在球员榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「球员榜」",
+     "expected": "页面切换到球员榜，展示球员排名、球队、进球等数据"
+    }
+   ],
+   "expected_result": "点击球员榜Tab后，页面展示球员榜，Tab高亮为球员榜，其他Tab取消高亮。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-031"
+  },
+  {
+   "title": "球员榜无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "顶部Tab",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛暂无球员榜数据（业务场景：赛季未开始）",
+   "preconditions": "已进入联赛详情页，联赛无球员榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "默认显示赛程Tab"
+    },
+    {
+     "step": 2,
+     "desc": "点击顶部Tab「球员榜」",
+     "expected": "页面展示空态提示，如「暂无数据」"
+    }
+   ],
+   "expected_result": "球员榜无数据时，显示空态提示，不出现空白页。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-032"
+  },
+  {
+   "title": "积分榜日期筛选选择04/25",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择日期04/25（业务场景：4月25日的积分数据）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，积分榜有日期筛选功能",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击日期筛选，选择04/25",
+     "expected": "积分榜刷新，展示04/25当天的积分数据"
+    }
+   ],
+   "expected_result": "选择04/25后，积分榜数据更新为对应日期的数据，日期控件显示04/25。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-033"
+  },
+  {
+   "title": "积分榜日期筛选选择无效日期",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择不存在的日期，如02/30（业务场景：非法日期）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，积分榜有日期筛选功能",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击日期筛选，尝试选择02/30",
+     "expected": "日期控件不允许选择无效日期，或提示日期无效"
+    }
+   ],
+   "expected_result": "无效日期无法被选择，或选择后提示错误，积分榜数据不变。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-034"
+  },
+  {
+   "title": "积分榜日期筛选选择08/25",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择日期08/25（业务场景：8月25日的积分数据）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，积分榜有日期筛选功能",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击日期筛选，选择08/25",
+     "expected": "积分榜刷新，展示08/25当天的积分数据"
+    }
+   ],
+   "expected_result": "选择08/25后，积分榜数据更新为对应日期的数据，日期控件显示08/25。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-035"
+  },
+  {
+   "title": "积分榜日期筛选选择超出范围日期",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择超出联赛赛季范围的日期，如01/01（业务场景：非赛季日期）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，积分榜有日期筛选功能",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击日期筛选，选择01/01",
+     "expected": "积分榜显示空数据或提示无数据"
+    }
+   ],
+   "expected_result": "选择无数据的日期，积分榜显示空态或提示无数据，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-036"
+  },
+  {
+   "title": "积分榜显示胜率38%",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "某球队胜率为38%（业务场景：正常胜率数据）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，积分榜存在胜率数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看球队胜率列",
+     "expected": "该球队胜率显示为38%"
+    }
+   ],
+   "expected_result": "积分榜中胜率列正确显示38%，格式为百分比。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-037"
+  },
+  {
+   "title": "积分榜胜率显示异常值",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟胜率数据为负数或大于100%（业务场景：数据异常）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，积分榜存在异常胜率数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "查看异常胜率球队",
+     "expected": "胜率显示为0%或100%，或显示占位符，不显示负数或超100%"
+    }
+   ],
+   "expected_result": "异常胜率数据被合理处理，不显示非法值，页面不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-038"
+  },
+  {
+   "title": "积分榜月份选择2025/03",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "选择月份2025年3月（业务场景：2025年3月的积分数据）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，积分榜有月份选择功能",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击月份选择器，选择2025/03",
+     "expected": "积分榜刷新，展示2025年3月的积分数据"
+    }
+   ],
+   "expected_result": "选择2025/03后，积分榜数据更新为对应月份的数据，月份控件显示2025/03。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-039"
+  },
+  {
+   "title": "积分榜月份选择超出范围",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "选择早于联赛成立年份的月份，如2010/01（业务场景：非赛季月份）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，积分榜有月份选择功能",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜正常显示"
+    },
+    {
+     "step": 2,
+     "desc": "点击月份选择器，选择2010/01",
+     "expected": "月份选择器限制可选范围，或选择后显示空数据"
+    }
+   ],
+   "expected_result": "超出范围的月份无法选择，或选择后显示空态，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-040"
+  },
+  {
+   "title": "积分榜点击「< 上个月」切换到上个月",
+   "priority": "P0",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前月份为2025/04，点击上个月（业务场景：查看3月数据）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，当前月份为2025/04",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜显示当前月份数据"
+    },
+    {
+     "step": 2,
+     "desc": "点击「< 上个月」",
+     "expected": "月份切换为2025/03，积分榜刷新显示3月数据"
+    }
+   ],
+   "expected_result": "点击上个月后，月份变为上个月，积分榜数据更新，月份控件显示2025/03。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-041"
+  },
+  {
+   "title": "积分榜点击「< 上个月」在最早月份时无响应",
+   "priority": "P1",
+   "domain": "用户端/联赛/联赛详情页",
+   "module": "积分榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "当前月份为联赛最早月份2025/01，点击上个月（业务场景：边界月份）",
+   "preconditions": "已进入联赛详情页，点击积分Tab，当前月份为联赛最早月份2025/01",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分榜",
+     "expected": "积分榜显示2025/01数据"
+    },
+    {
+     "step": 2,
+     "desc": "点击「< 上个月」",
+     "expected": "按钮置灰或点击无响应，月份仍为2025/01"
+    }
+   ],
+   "expected_result": "在最早月份时，上个月按钮不可用或点击无效，月份不变。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-042"
+  },
+  {
+   "title": "点击「下个月 >」成功切换到下个月赛程",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前月份为2025年3月（2025/03），点击「下个月 >」后应切换到2025年4月，赛程列表展示4月数据。",
+   "preconditions": "已进入联赛详情页，当前月份为2025年3月，存在2025年4月的赛程数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，确认月份标签显示「2025/03」",
+     "expected": "月份标签显示「2025/03」，赛程列表展示3月数据"
+    },
+    {
+     "step": 2,
+     "desc": "点击「下个月 >」按钮",
+     "expected": "月份标签更新为「2025/04」，赛程列表刷新并展示4月赛程数据"
+    }
+   ],
+   "expected_result": "月份标签更新为「2025/04」，赛程列表展示4月赛程数据，无加载错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-043"
+  },
+  {
+   "title": "点击「下个月 >」时无下月数据展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "当前月份为2025年12月（2025/12），点击「下个月 >」后应切换到2026年1月，但该月无赛程数据。",
+   "preconditions": "已进入联赛详情页，当前月份为2025年12月，2026年1月无赛程数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，确认月份标签显示「2025/12」",
+     "expected": "月份标签显示「2025/12」"
+    },
+    {
+     "step": 2,
+     "desc": "点击「下个月 >」按钮",
+     "expected": "月份标签更新为「2026/01」，赛程列表显示空态提示（如「暂无赛程」）"
+    }
+   ],
+   "expected_result": "月份标签更新为「2026/01」，赛程列表显示空态提示，无异常报错。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-044"
+  },
+  {
+   "title": "赛程列表正确展示日期时间（欧洲杯 03.06 17:00）",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛程数据包含赛事名称「欧洲杯」、日期「03.06」、时间「17:00」，用于验证展示格式。",
+   "preconditions": "已进入联赛详情页，当前月份存在包含「欧洲杯 03.06 17:00」的赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到包含该赛程的列表项",
+     "expected": "列表项显示「欧洲杯 03.06 17:00」，格式与需求一致"
+    }
+   ],
+   "expected_result": "赛程列表项正确显示「欧洲杯 03.06 17:00」，无截断或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-045"
+  },
+  {
+   "title": "赛事名称过长时截断显示",
+   "priority": "P2",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个超长赛事名称（如超过20个字符），验证截断和提示。",
+   "preconditions": "已进入联赛详情页，存在赛事名称超长的赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到赛事名称超长的列表项",
+     "expected": "赛事名称截断显示，末尾显示省略号，且悬浮提示完整名称（如有）"
+    }
+   ],
+   "expected_result": "赛事名称截断显示，无溢出，悬浮提示完整名称。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-046"
+  },
+  {
+   "title": "赛程列表正确展示球队名称",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛程数据包含主客场球队名称「球队名称」，用于验证展示。",
+   "preconditions": "已进入联赛详情页，存在包含球队名称的赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到包含球队名称的列表项",
+     "expected": "列表项正确显示主客场球队名称，无错别字或乱码"
+    }
+   ],
+   "expected_result": "球队名称正确显示，与数据一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-047"
+  },
+  {
+   "title": "球队名称过长时截断显示",
+   "priority": "P2",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "构造一个超长球队名称（如超过15个字符），验证截断和提示。",
+   "preconditions": "已进入联赛详情页，存在球队名称超长的赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到球队名称超长的列表项",
+     "expected": "球队名称截断显示，末尾显示省略号，且悬浮提示完整名称（如有）"
+    }
+   ],
+   "expected_result": "球队名称截断显示，无溢出，悬浮提示完整名称。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-048"
+  },
+  {
+   "title": "已结束比赛正确展示比分（1 - 0）",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛程数据包含已结束比赛，比分为「1 - 0」，用于验证展示。",
+   "preconditions": "已进入联赛详情页，存在已结束且比分为1-0的赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到已结束的赛程列表项",
+     "expected": "列表项显示比分「1 - 0」，且状态标识为「已结束」"
+    }
+   ],
+   "expected_result": "已结束比赛正确显示比分「1 - 0」和状态「已结束」。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-049"
+  },
+  {
+   "title": "未开始比赛不显示比分",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "negative",
+   "test_data_note": "赛程数据包含未开始比赛，比分为空，用于验证不显示比分。",
+   "preconditions": "已进入联赛详情页，存在未开始的赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到未开始的赛程列表项",
+     "expected": "列表项不显示比分，仅显示状态「未开始」"
+    }
+   ],
+   "expected_result": "未开始比赛不显示比分，状态显示「未开始」。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-050"
+  },
+  {
+   "title": "未开始比赛正确展示状态",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛程数据包含未开始比赛，用于验证状态展示。",
+   "preconditions": "已进入联赛详情页，存在未开始的赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到未开始的赛程列表项",
+     "expected": "列表项显示状态「未开始」，且无比分显示"
+    }
+   ],
+   "expected_result": "未开始比赛正确显示状态「未开始」。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-051"
+  },
+  {
+   "title": "已结束比赛正确展示状态",
+   "priority": "P0",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛程数据包含已结束比赛，用于验证状态展示。",
+   "preconditions": "已进入联赛详情页，存在已结束的赛程记录。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到已结束的赛程列表项",
+     "expected": "列表项显示状态「已结束」，且显示比分"
+    }
+   ],
+   "expected_result": "已结束比赛正确显示状态「已结束」。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-052"
+  },
+  {
+   "title": "状态字段为空时显示默认状态",
+   "priority": "P1",
+   "domain": "用户端/联赛",
+   "module": "联赛详情页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "赛程数据中状态字段为空，用于验证异常处理。",
+   "preconditions": "已进入联赛详情页，存在状态字段为空的赛程记录（模拟异常数据）。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，定位到状态字段为空的赛程列表项",
+     "expected": "列表项显示默认状态（如「未开始」）或不显示状态，且无报错"
+    }
+   ],
+   "expected_result": "状态字段为空时，页面正常展示，无崩溃或报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-053"
+  },
+  {
+   "title": "积分页默认展示积分Tab列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入积分页，默认选中积分Tab，联赛为英超（2024/2025赛季）",
+   "preconditions": "已登录，存在英超联赛数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "页面加载成功，顶部显示联赛名称和LOGO"
+    },
+    {
+     "step": 2,
+     "desc": "观察默认选中的Tab",
+     "expected": "积分Tab处于选中状态，下方展示积分榜列表"
+    }
+   ],
+   "expected_result": "积分Tab默认选中，积分榜列表正确展示球队、场数、胜/平/负、进/失、积分等字段",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-054"
+  },
+  {
+   "title": "积分页Tab切换功能",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "依次点击资讯、数据、球队榜、赛程、球员榜、资料Tab",
+   "preconditions": "已登录，积分页已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击资讯Tab",
+     "expected": "展示资讯列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击数据Tab",
+     "expected": "展示数据列表"
+    },
+    {
+     "step": 3,
+     "desc": "点击球队榜Tab",
+     "expected": "展示球队榜列表"
+    },
+    {
+     "step": 4,
+     "desc": "点击赛程Tab",
+     "expected": "展示赛程列表"
+    },
+    {
+     "step": 5,
+     "desc": "点击球员榜Tab",
+     "expected": "展示球员榜列表"
+    },
+    {
+     "step": 6,
+     "desc": "点击资料Tab",
+     "expected": "展示资料列表"
+    }
+   ],
+   "expected_result": "所有Tab均可正常切换，对应内容正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-055"
+  },
+  {
+   "title": "积分页Tab切换后返回积分Tab",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "从积分Tab切换到资讯Tab，再切回积分Tab",
+   "preconditions": "已登录，积分页已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击资讯Tab",
+     "expected": "展示资讯列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击积分Tab",
+     "expected": "积分榜列表重新加载并展示"
+    }
+   ],
+   "expected_result": "积分Tab内容正确恢复，数据与之前一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-056"
+  },
+  {
+   "title": "积分页无数据时Tab展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无任何积分数据（如新赛季未开始）",
+   "preconditions": "存在无数据的联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "积分Tab展示空态提示，如暂无数据"
+    },
+    {
+     "step": 2,
+     "desc": "切换到资讯Tab",
+     "expected": "资讯列表为空时展示空态提示"
+    }
+   ],
+   "expected_result": "各Tab在无数据时均展示空态提示，不出现空白或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-057"
+  },
+  {
+   "title": "积分页联赛详情-积分入口跳转",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击联赛详情-积分入口",
+   "preconditions": "已登录，积分页已加载",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击联赛详情-积分入口",
+     "expected": "跳转至联赛详情页的积分Tab"
+    }
+   ],
+   "expected_result": "成功跳转至联赛详情页，并定位到积分Tab",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-058"
+  },
+  {
+   "title": "积分页联赛详情-积分入口在无数据时不可用",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无积分数据",
+   "preconditions": "存在无数据的联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "联赛详情-积分入口置灰或点击无响应"
+    }
+   ],
+   "expected_result": "入口不可点击或点击后提示暂无数据，不跳转",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-059"
+  },
+  {
+   "title": "积分页联赛名称正确展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称为英超",
+   "preconditions": "已登录，存在英超联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "顶部联赛名称显示为英超"
+    }
+   ],
+   "expected_result": "联赛名称正确显示，无乱码",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-060"
+  },
+  {
+   "title": "积分页联赛名称超长显示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称为超长字符串（如50个字符）",
+   "preconditions": "存在超长名称的联赛",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "联赛名称截断显示，不换行，无遮挡"
+    }
+   ],
+   "expected_result": "联赛名称截断或换行，不影响页面布局",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-061"
+  },
+  {
+   "title": "积分页联赛LOGO正确展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛LOGO图片正常",
+   "preconditions": "已登录，联赛LOGO存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "联赛LOGO正常显示，无裂图"
+    }
+   ],
+   "expected_result": "LOGO图片加载成功，显示清晰",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-062"
+  },
+  {
+   "title": "积分页联赛LOGO加载失败",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛LOGO图片URL无效",
+   "preconditions": "联赛LOGO图片地址错误",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "LOGO位置显示默认占位图或裂图图标"
+    }
+   ],
+   "expected_result": "页面不崩溃，显示占位图，不影响其他内容",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-063"
+  },
+  {
+   "title": "积分页日期范围展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛赛季日期为04/25至08/25",
+   "preconditions": "已登录，联赛赛季数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "显示日期范围04/25和08/25"
+    }
+   ],
+   "expected_result": "日期范围正确显示，格式为MM/DD",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-064"
+  },
+  {
+   "title": "积分页日期范围缺失",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无日期范围数据",
+   "preconditions": "联赛赛季日期为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "日期范围位置显示占位符或隐藏"
+    }
+   ],
+   "expected_result": "页面正常显示，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-065"
+  },
+  {
+   "title": "积分页进度百分比展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛进度为38%",
+   "preconditions": "已登录，联赛进度数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "显示进度38%"
+    }
+   ],
+   "expected_result": "进度百分比正确显示，格式为数字+%",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-066"
+  },
+  {
+   "title": "积分页进度百分比为0%",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛刚开始，进度为0%",
+   "preconditions": "联赛未开始",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "显示0%"
+    }
+   ],
+   "expected_result": "进度显示0%，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-067"
+  },
+  {
+   "title": "积分页进度百分比为100%",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛已结束，进度为100%",
+   "preconditions": "联赛已结束",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "显示100%"
+    }
+   ],
+   "expected_result": "进度显示100%，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-068"
+  },
+  {
+   "title": "积分页积分榜列表正确展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "英超积分榜，包含球队A、B、C等",
+   "preconditions": "已登录，英超积分数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "积分榜列表展示球队、场数、胜/平/负、进/失、积分"
+    }
+   ],
+   "expected_result": "列表数据正确，排序按积分降序，字段完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-069"
+  },
+  {
+   "title": "积分榜排序规则验证",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队A积分36，球队B积分35，球队C积分35",
+   "preconditions": "已登录，积分数据包含同分球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "球队A排第一，球队B和C按净胜球或进球数排序"
+    }
+   ],
+   "expected_result": "排序符合联赛规则，同分按净胜球或进球数排序",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-070"
+  },
+  {
+   "title": "积分榜无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无积分数据",
+   "preconditions": "联赛无积分数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "积分榜区域显示暂无数据"
+    }
+   ],
+   "expected_result": "展示空态提示，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-071"
+  },
+  {
+   "title": "积分榜总榜/主场/客场切换",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "切换总榜、主场、客场",
+   "preconditions": "已登录，积分数据包含主客场数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击主场",
+     "expected": "展示主场积分榜"
+    },
+    {
+     "step": 2,
+     "desc": "点击客场",
+     "expected": "展示客场积分榜"
+    },
+    {
+     "step": 3,
+     "desc": "点击总榜",
+     "expected": "展示总积分榜"
+    }
+   ],
+   "expected_result": "切换正常，数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-072"
+  },
+  {
+   "title": "积分榜主场/客场无数据时切换",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "主场或客场无数据",
+   "preconditions": "联赛无主场或客场数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "切换到主场",
+     "expected": "展示空态提示"
+    }
+   ],
+   "expected_result": "展示空态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-073"
+  },
+  {
+   "title": "积分榜晋级/附加赛/降级区域展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "英超积分榜，前4名晋级，第5名附加赛，后3名降级",
+   "preconditions": "已登录，积分数据包含晋级/附加赛/降级标记",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "积分榜中正确标识晋级、附加赛、降级区域"
+    }
+   ],
+   "expected_result": "区域标识正确，与联赛规则一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-074"
+  },
+  {
+   "title": "积分榜晋级/附加赛/降级区域边界验证",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "第4名和第5名积分相同，需按规则区分晋级和附加赛",
+   "preconditions": "积分榜存在同分球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页",
+     "expected": "第4名标记晋级，第5名标记附加赛，依据净胜球等规则"
+    }
+   ],
+   "expected_result": "边界情况处理正确，区域划分明确",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-075"
+  },
+  {
+   "title": "球队榜列表正确展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "球队榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "英超球队榜，包含球队A、B等",
+   "preconditions": "已登录，球队榜数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "切换到球队榜Tab",
+     "expected": "展示球队榜列表，包含球队、场均、总计等"
+    }
+   ],
+   "expected_result": "列表数据正确，字段完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-076"
+  },
+  {
+   "title": "球队榜筛选功能",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择筛选指标为进球",
+   "preconditions": "已登录，球队榜数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮",
+     "expected": "弹出筛选弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "选择进球指标",
+     "expected": "列表按进球数排序展示"
+    }
+   ],
+   "expected_result": "筛选生效，列表正确排序",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-077"
+  },
+  {
+   "title": "球队榜筛选弹窗关闭",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "打开筛选弹窗后点击关闭",
+   "preconditions": "已登录，球队榜数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮",
+     "expected": "弹出筛选弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击关闭按钮",
+     "expected": "弹窗关闭，列表不变"
+    }
+   ],
+   "expected_result": "弹窗正常关闭，无异常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-078"
+  },
+  {
+   "title": "球队榜筛选无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择筛选指标后无球队数据",
+   "preconditions": "联赛无该指标数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择筛选指标为红牌",
+     "expected": "列表展示空态提示"
+    }
+   ],
+   "expected_result": "展示空态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-079"
+  },
+  {
+   "title": "球员榜列表正确展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "球员榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "英超射手榜，包含球员A、B等",
+   "preconditions": "已登录，球员榜数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "切换到球员榜Tab",
+     "expected": "展示射手榜列表，包含球员名称、球队、数据等"
+    }
+   ],
+   "expected_result": "列表数据正确，字段完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-080"
+  },
+  {
+   "title": "球员榜射手榜/助攻榜切换",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "切换射手榜和助攻榜",
+   "preconditions": "已登录，球员榜数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击助攻榜",
+     "expected": "展示助攻榜列表"
+    },
+    {
+     "step": 2,
+     "desc": "点击射手榜",
+     "expected": "展示射手榜列表"
+    }
+   ],
+   "expected_result": "切换正常，数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-081"
+  },
+  {
+   "title": "球员榜筛选功能",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择筛选指标为射门",
+   "preconditions": "已登录，球员榜数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮",
+     "expected": "弹出筛选弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "选择射门指标",
+     "expected": "列表按射门数排序展示"
+    }
+   ],
+   "expected_result": "筛选生效，列表正确排序",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-082"
+  },
+  {
+   "title": "球员榜筛选弹窗关闭",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "打开筛选弹窗后点击关闭",
+   "preconditions": "已登录，球员榜数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮",
+     "expected": "弹出筛选弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击关闭按钮",
+     "expected": "弹窗关闭，列表不变"
+    }
+   ],
+   "expected_result": "弹窗正常关闭，无异常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-083"
+  },
+  {
+   "title": "球员榜筛选无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "球员榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择筛选指标后无球员数据",
+   "preconditions": "联赛无该指标数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "选择筛选指标为红牌",
+     "expected": "列表展示空态提示"
+    }
+   ],
+   "expected_result": "展示空态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-084"
+  },
+  {
+   "title": "资料Tab内容展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "资料Tab",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛资料包含球队详情、联赛战绩等",
+   "preconditions": "已登录，资料数据存在",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "切换到资料Tab",
+     "expected": "展示资料内容，如球队详情、联赛战绩"
+    }
+   ],
+   "expected_result": "资料内容正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-085"
+  },
+  {
+   "title": "资料Tab无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "资料Tab",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无资料数据",
+   "preconditions": "联赛无资料数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "切换到资料Tab",
+     "expected": "展示空态提示"
+    }
+   ],
+   "expected_result": "展示空态，不报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-086"
+  },
+  {
+   "title": "积分页列表-日期08/25正常显示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择日期08/25，该日期存在联赛积分数据。",
+   "preconditions": "已进入联赛详情页，点击积分Tab，选择日期08/25。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分页，点击日期选择器，选择08/25",
+     "expected": "日期选择器显示08/25，列表刷新并显示该日期的积分数据。"
+    }
+   ],
+   "expected_result": "积分列表显示08/25的球队积分数据，数据与后端返回一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-087"
+  },
+  {
+   "title": "积分页列表-日期08/25无数据时显示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择日期08/25，但该日期无任何比赛或积分数据。",
+   "preconditions": "已进入积分页，后端无08/25的数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分页，选择日期08/25",
+     "expected": "列表显示空态提示，如暂无数据，不崩溃。"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据展示，不出现异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-088"
+  },
+  {
+   "title": "积分页列表-进度38%显示正确",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛已进行38%的赛程，进度显示38%。",
+   "preconditions": "进入积分页，联赛进度为38%。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分页，查看进度显示",
+     "expected": "进度显示为38%，与后端数据一致。"
+    }
+   ],
+   "expected_result": "进度百分比显示正确，无格式错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-089"
+  },
+  {
+   "title": "积分页列表-进度显示异常值（如0%或100%）",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛进度为0%（未开始）或100%（已结束）。",
+   "preconditions": "进入积分页，联赛进度为0%或100%。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分页，查看进度显示",
+     "expected": "进度显示0%或100%，无异常。"
+    }
+   ],
+   "expected_result": "进度显示正确，无格式错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-090"
+  },
+  {
+   "title": "积分页列表-总榜切换正常",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "切换至总榜视图，显示所有球队的积分数据。",
+   "preconditions": "进入积分页，默认显示总榜。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分页，点击总榜Tab",
+     "expected": "列表显示所有球队的积分数据，按积分排名。"
+    }
+   ],
+   "expected_result": "总榜视图正常显示，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-091"
+  },
+  {
+   "title": "积分页列表-主场切换显示主场数据",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "切换至主场视图，显示各球队主场比赛的积分数据。",
+   "preconditions": "进入积分页，点击主场Tab。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分页，点击主场Tab",
+     "expected": "列表显示各球队主场比赛的积分数据，数据与后端一致。"
+    }
+   ],
+   "expected_result": "主场视图正常显示，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-092"
+  },
+  {
+   "title": "积分页列表-客场切换显示客场数据",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "切换至客场视图，显示各球队客场比赛的积分数据。",
+   "preconditions": "进入积分页，点击客场Tab。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分页，点击客场Tab",
+     "expected": "列表显示各球队客场比赛的积分数据，数据与后端一致。"
+    }
+   ],
+   "expected_result": "客场视图正常显示，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-093"
+  },
+  {
+   "title": "积分页列表-切换视图后数据刷新",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "从总榜切换到主场，再切换到客场，验证数据刷新。",
+   "preconditions": "进入积分页，有总榜、主场、客场数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击主场Tab，再点击客场Tab",
+     "expected": "每次切换后列表刷新，显示对应视图的数据。"
+    }
+   ],
+   "expected_result": "切换视图后数据正确刷新，无缓存旧数据。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-094"
+  },
+  {
+   "title": "积分页列表-球队信息展示完整",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队名称、LOGO、场数、胜/平/负、进/失、积分等字段均有数据。",
+   "preconditions": "进入积分页，有球队数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中的球队行",
+     "expected": "每行显示球队名称、LOGO、场数、胜/平/负、进/失、积分等字段，且数据正确。"
+    }
+   ],
+   "expected_result": "球队信息展示完整，无缺失或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-095"
+  },
+  {
+   "title": "积分页列表-球队信息字段缺失时显示占位",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "某球队缺少LOGO或部分数据（如场数为0）。",
+   "preconditions": "进入积分页，存在数据不完整的球队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中的该球队行",
+     "expected": "缺失字段显示占位符（如默认LOGO），不显示空白或乱码。"
+    }
+   ],
+   "expected_result": "字段缺失时显示占位，页面不异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-096"
+  },
+  {
+   "title": "积分页列表-收藏球队成功",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击球队行的收藏图标，收藏该球队。",
+   "preconditions": "已登录，进入积分页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某球队行的收藏图标",
+     "expected": "收藏图标变为已收藏状态，并提示收藏成功。"
+    }
+   ],
+   "expected_result": "收藏成功，图标状态更新，后端记录收藏。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-097"
+  },
+  {
+   "title": "积分页列表-取消收藏球队",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "已收藏的球队，点击收藏图标取消收藏。",
+   "preconditions": "已登录，已收藏某球队，进入积分页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击已收藏球队的收藏图标",
+     "expected": "收藏图标变为未收藏状态，并提示取消收藏成功。"
+    }
+   ],
+   "expected_result": "取消收藏成功，图标状态更新，后端移除收藏。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-098"
+  },
+  {
+   "title": "积分页列表-未登录点击收藏提示登录",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "未登录用户点击收藏图标。",
+   "preconditions": "未登录，进入积分页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击某球队行的收藏图标",
+     "expected": "弹出登录提示，不执行收藏操作。"
+    }
+   ],
+   "expected_result": "提示用户登录，收藏未生效。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-099"
+  },
+  {
+   "title": "积分页列表-晋级标识显示正确",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "排名靠前的球队显示晋级标识（如附加赛）。",
+   "preconditions": "进入积分页，联赛有晋级规则。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中排名靠前的球队",
+     "expected": "对应球队行显示晋级标识（如附加赛），标识正确。"
+    }
+   ],
+   "expected_result": "晋级标识显示正确，与规则一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-100"
+  },
+  {
+   "title": "积分页列表-降级标识显示正确",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "排名靠后的球队显示降级标识。",
+   "preconditions": "进入积分页，联赛有降级规则。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中排名靠后的球队",
+     "expected": "对应球队行显示降级标识，标识正确。"
+    }
+   ],
+   "expected_result": "降级标识显示正确，与规则一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-101"
+  },
+  {
+   "title": "积分页列表-晋级/降级标识缺失时无异常",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无晋级/降级规则，或数据未配置标识。",
+   "preconditions": "进入积分页，联赛无晋级/降级规则。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表",
+     "expected": "列表正常显示，无晋级/降级标识，不出现异常。"
+    }
+   ],
+   "expected_result": "无标识时页面正常，无报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-102"
+  },
+  {
+   "title": "积分页列表-胜/平/负数据（12/0/1）显示正确",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "某球队胜12场、平0场、负1场，显示为12/0/1。",
+   "preconditions": "进入积分页，球队数据包含胜/平/负。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中该球队的胜/平/负字段",
+     "expected": "显示为12/0/1，格式正确。"
+    }
+   ],
+   "expected_result": "胜/平/负数据正确显示，格式为胜/平/负。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-103"
+  },
+  {
+   "title": "积分页列表-胜/平/负数据为0时显示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分页",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某球队胜0场、平0场、负0场，显示为0/0/0。",
+   "preconditions": "进入积分页，球队数据胜/平/负均为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中该球队的胜/平/负字段",
+     "expected": "显示为0/0/0，无异常。"
+    }
+   ],
+   "expected_result": "胜/平/负数据正确显示为0/0/0。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-104"
+  },
+  {
+   "title": "积分列表正确展示进/失球数据32/9",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用联赛中某球队的进/失球数据为32/9，表示该队进球32个，失球9个，用于验证列表正确展示。",
+   "preconditions": "已进入积分页面，联赛数据已加载，存在进/失球为32/9的球队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载，显示积分列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中该球队的进/失球列",
+     "expected": "该球队的进/失球列显示为'32/9'，格式正确"
+    }
+   ],
+   "expected_result": "积分列表中该球队的进/失球列正确显示'32/9'，无格式错误或乱码。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-105"
+  },
+  {
+   "title": "积分列表进/失球数据为0/0时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用进/失球数据为0/0的球队，验证边界值展示。",
+   "preconditions": "已进入积分页面，存在进/失球为0/0的球队。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看进/失球为0/0的球队",
+     "expected": "该球队进/失球列显示'0/0'，无异常"
+    }
+   ],
+   "expected_result": "进/失球为0/0的球队正常显示'0/0'，无空白或错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-106"
+  },
+  {
+   "title": "积分列表进/失球数据缺失时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某球队进/失球数据缺失（null），验证页面容错。",
+   "preconditions": "已进入积分页面，某球队进/失球数据为null。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该球队的进/失球列",
+     "expected": "显示占位符或'--'，页面不崩溃"
+    }
+   ],
+   "expected_result": "进/失球数据缺失时，页面显示'--'或空，不出现异常或崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-107"
+  },
+  {
+   "title": "积分列表正确展示球队名称",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "使用正常球队名称如'皇家马德里'，验证名称正确展示。",
+   "preconditions": "已进入积分页面，联赛数据已加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表中的球队名称列",
+     "expected": "球队名称正确显示，无乱码或截断"
+    }
+   ],
+   "expected_result": "球队名称列正确显示各球队名称，与数据源一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-108"
+  },
+  {
+   "title": "超长球队名称展示处理",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "使用超长球队名称（如50个字符），验证展示不破版。",
+   "preconditions": "已进入积分页面，存在超长球队名称。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看超长球队名称的展示",
+     "expected": "名称以省略号截断或换行，不撑破布局"
+    }
+   ],
+   "expected_result": "超长球队名称被合理截断或换行，页面布局正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-109"
+  },
+  {
+   "title": "球队名称为空时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟某球队名称为空字符串，验证页面容错。",
+   "preconditions": "已进入积分页面，某球队名称为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看该球队名称列",
+     "expected": "显示'--'或空，不出现异常"
+    }
+   ],
+   "expected_result": "球队名称为空时，页面显示'--'或空，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-110"
+  },
+  {
+   "title": "附加赛区域正确标识球队",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛中排名第4-6名的球队应显示在附加赛区域，验证区域标识正确。",
+   "preconditions": "已进入积分页面，联赛数据包含附加赛区域配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看附加赛区域",
+     "expected": "附加赛区域正确显示，包含排名第4-6的球队"
+    }
+   ],
+   "expected_result": "附加赛区域正确标识出应参加附加赛的球队，区域样式明显。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-111"
+  },
+  {
+   "title": "附加赛区域无球队时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛无附加赛规则时，附加赛区域应不显示或为空。",
+   "preconditions": "已进入积分页面，联赛无附加赛规则。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看附加赛区域",
+     "expected": "附加赛区域不显示或显示为空，无异常"
+    }
+   ],
+   "expected_result": "无附加赛球队时，附加赛区域不显示或为空，页面正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-112"
+  },
+  {
+   "title": "附加赛区域排名边界验证",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛附加赛区域为第4-6名，验证第3名和第7名不在区域内。",
+   "preconditions": "已进入积分页面，联赛附加赛区域为第4-6名。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看第3名和第7名球队的位置",
+     "expected": "第3名不在附加赛区域，第7名不在附加赛区域"
+    }
+   ],
+   "expected_result": "附加赛区域仅包含第4-6名球队，边界正确。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-113"
+  },
+  {
+   "title": "降级区域正确标识球队",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛中排名最后3名的球队应显示在降级区域，验证区域标识正确。",
+   "preconditions": "已进入积分页面，联赛数据包含降级区域配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看降级区域",
+     "expected": "降级区域正确显示，包含排名最后的球队"
+    }
+   ],
+   "expected_result": "降级区域正确标识出应降级的球队，区域样式明显。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-114"
+  },
+  {
+   "title": "降级区域无球队时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛无降级规则时，降级区域应不显示或为空。",
+   "preconditions": "已进入积分页面，联赛无降级规则。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看降级区域",
+     "expected": "降级区域不显示或显示为空，无异常"
+    }
+   ],
+   "expected_result": "无降级球队时，降级区域不显示或为空，页面正常。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-115"
+  },
+  {
+   "title": "降级区域排名边界验证",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分",
+   "module": "积分",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛降级区域为最后3名，验证倒数第4名不在区域内。",
+   "preconditions": "已进入积分页面，联赛降级区域为最后3名。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分页面",
+     "expected": "页面正常加载"
+    },
+    {
+     "step": 2,
+     "desc": "查看倒数第4名球队的位置",
+     "expected": "倒数第4名不在降级区域"
+    }
+   ],
+   "expected_result": "降级区域仅包含最后3名球队，边界正确。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-116"
+  },
+  {
+   "title": "积分列表正常展示所有球队数据",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "积分列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛包含5支球队，数据完整：球队名称、LOGO、场数13、胜12平0负1、进32失9、积分36",
+   "preconditions": "已进入积分_1页面，联赛有积分数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分_1页面",
+     "expected": "页面加载成功，显示积分列表"
+    },
+    {
+     "step": 2,
+     "desc": "查看积分列表",
+     "expected": "列表展示所有球队，每行包含球队名称、LOGO、场数、胜/平/负、进/失、积分等字段，数据正确"
+    }
+   ],
+   "expected_result": "积分列表完整展示所有球队，字段数据与后台一致，排序正确（按积分降序）",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-117"
+  },
+  {
+   "title": "积分列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "积分列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无任何球队积分数据",
+   "preconditions": "联赛无积分数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开积分_1页面",
+     "expected": "页面加载成功，显示空态提示（如暂无数据）"
+    }
+   ],
+   "expected_result": "页面显示空态提示，不出现空白或报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-118"
+  },
+  {
+   "title": "点击球队名称进入球队详情-积分",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "球队详情-积分",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "点击积分列表中球队名称为'球队名称'的行",
+   "preconditions": "已进入积分_1页面，存在球队数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击球队名称'球队名称'",
+     "expected": "跳转到球队详情页，并定位到积分模块"
+    },
+    {
+     "step": 2,
+     "desc": "查看球队详情-积分内容",
+     "expected": "展示该球队的联赛战绩、近5场、积分排名等信息"
+    }
+   ],
+   "expected_result": "成功进入球队详情-积分，数据展示正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-119"
+  },
+  {
+   "title": "点击球队名称无响应（异常情况）",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "球队详情-积分",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队名称不可点击或数据异常",
+   "preconditions": "积分列表存在球队，但点击事件异常",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击球队名称",
+     "expected": "无跳转或提示错误，不崩溃"
+    }
+   ],
+   "expected_result": "系统不崩溃，给出相应提示或保持原页面",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-120"
+  },
+  {
+   "title": "球队名称过长时正确截断显示",
+   "priority": "P2",
+   "domain": "用户端/联赛/积分_1",
+   "module": "球队名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球队名称为超长字符串，如'球队名称球队名称球队名称球队名称球队名称球队名称'",
+   "preconditions": "积分列表存在超长球队名称",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中的超长球队名称",
+     "expected": "名称显示省略号，不换行、不出框"
+    }
+   ],
+   "expected_result": "球队名称截断显示，布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-121"
+  },
+  {
+   "title": "球队名称为空时显示占位",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "球队名称",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队名称为空字符串",
+   "preconditions": "积分列表存在名称为空的球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表",
+     "expected": "名称为空时显示占位符（如'未知球队'）"
+    }
+   ],
+   "expected_result": "显示占位符，不出现空白或乱码",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-122"
+  },
+  {
+   "title": "球队列表正确展示所有球队",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "球队列表",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛有5支球队，数据完整",
+   "preconditions": "已进入积分_1页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表",
+     "expected": "列表展示所有球队，每行包含LOGO、名称、场数、胜/平/负、进/失、积分"
+    }
+   ],
+   "expected_result": "球队列表完整，数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-123"
+  },
+  {
+   "title": "球队列表数据缺失时显示默认值",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "球队列表",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "某球队的场数、胜/平/负等字段为空",
+   "preconditions": "积分列表存在字段缺失的球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表",
+     "expected": "缺失字段显示为0或'-'，不显示null或undefined"
+    }
+   ],
+   "expected_result": "缺失字段有默认展示，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-124"
+  },
+  {
+   "title": "球队LOGO正常显示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "LOGO",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队LOGO图片有效",
+   "preconditions": "积分列表存在有LOGO的球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中的球队LOGO",
+     "expected": "LOGO正常显示，不破图"
+    }
+   ],
+   "expected_result": "LOGO显示正常",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-125"
+  },
+  {
+   "title": "球队LOGO加载失败时显示占位图",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "LOGO",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队LOGO图片地址无效或网络错误",
+   "preconditions": "积分列表存在LOGO加载失败的球队",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看积分列表中的球队LOGO",
+     "expected": "显示默认占位图，不显示破图图标"
+    }
+   ],
+   "expected_result": "显示占位图，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-126"
+  },
+  {
+   "title": "点击联赛名称排名>跳转回积分列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "联赛名称排名>",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队详情页顶部联赛名称为'联赛名称1'，排名为6",
+   "preconditions": "已进入球队详情-积分页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击联赛名称排名>",
+     "expected": "跳转回积分_1页面，并定位到该联赛的积分列表"
+    }
+   ],
+   "expected_result": "成功跳转回积分列表",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-127"
+  },
+  {
+   "title": "联赛名称排名>点击无响应",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "联赛名称排名>",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称或排名数据异常",
+   "preconditions": "球队详情页联赛名称数据缺失",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击联赛名称排名>",
+     "expected": "无跳转或提示错误，不崩溃"
+    }
+   ],
+   "expected_result": "系统不崩溃，给出相应提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-128"
+  },
+  {
+   "title": "联赛战绩正确展示胜/平/负场次",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "联赛战绩",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队战绩为12胜0平1负",
+   "preconditions": "已进入球队详情-积分页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看联赛战绩区域",
+     "expected": "显示胜12、平0、负1，数据正确"
+    }
+   ],
+   "expected_result": "联赛战绩数据正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-129"
+  },
+  {
+   "title": "联赛战绩数据为空时显示默认值",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "联赛战绩",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无战绩数据",
+   "preconditions": "球队战绩数据为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看联赛战绩区域",
+     "expected": "显示0或'-'，不显示null"
+    }
+   ],
+   "expected_result": "显示默认值，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-130"
+  },
+  {
+   "title": "7/4/5数据正确展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "7/4/5",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队近7场、4场、5场战绩数据存在",
+   "preconditions": "已进入球队详情-积分页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看7/4/5数据区域",
+     "expected": "显示近7场、4场、5场的战绩数据，如胜平负场次"
+    }
+   ],
+   "expected_result": "7/4/5数据正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-131"
+  },
+  {
+   "title": "7/4/5数据缺失时显示默认值",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "7/4/5",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无近7场、4场、5场数据",
+   "preconditions": "球队无相关数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看7/4/5数据区域",
+     "expected": "显示0或'-'，不显示null"
+    }
+   ],
+   "expected_result": "显示默认值，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-132"
+  },
+  {
+   "title": "近5场正确展示胜平负图标",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "近5场",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球队近5场结果为L、D、W、W、W",
+   "preconditions": "已进入球队详情-积分页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看近5场区域",
+     "expected": "显示L、D、W、W、W图标，顺序正确"
+    }
+   ],
+   "expected_result": "近5场图标正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-133"
+  },
+  {
+   "title": "近5场无数据时显示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "近5场",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队无近5场数据",
+   "preconditions": "球队无近5场数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看近5场区域",
+     "expected": "显示空态或占位符，不报错"
+    }
+   ],
+   "expected_result": "显示空态，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-134"
+  },
+  {
+   "title": "点击资讯Tab展示资讯列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "资讯",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛有相关资讯",
+   "preconditions": "已进入积分_1页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'资讯'Tab",
+     "expected": "切换到资讯列表，展示相关资讯"
+    }
+   ],
+   "expected_result": "资讯列表正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-135"
+  },
+  {
+   "title": "点击阵容Tab展示阵容信息",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "阵容",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛有阵容数据",
+   "preconditions": "已进入积分_1页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'阵容'Tab",
+     "expected": "切换到阵容页面，展示球队阵容"
+    }
+   ],
+   "expected_result": "阵容信息正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-136"
+  },
+  {
+   "title": "阵容数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "阵容",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无阵容数据",
+   "preconditions": "联赛无阵容数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'阵容'Tab",
+     "expected": "显示空态提示（如暂无阵容）"
+    }
+   ],
+   "expected_result": "显示空态提示，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-137"
+  },
+  {
+   "title": "点击数据Tab展示数据统计",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "数据",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛有数据统计",
+   "preconditions": "已进入积分_1页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'数据'Tab",
+     "expected": "切换到数据页面，展示相关统计"
+    }
+   ],
+   "expected_result": "数据统计正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-138"
+  },
+  {
+   "title": "数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "数据",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无数据统计",
+   "preconditions": "联赛无数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'数据'Tab",
+     "expected": "显示空态提示（如暂无数据）"
+    }
+   ],
+   "expected_result": "显示空态提示，页面正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-139"
+  },
+  {
+   "title": "赛程列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "赛程",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛存在赛程数据，例如某联赛有3场比赛记录",
+   "preconditions": "已进入积分_1页面，且该联赛存在赛程数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，点击“赛程”Tab",
+     "expected": "页面展示赛程列表，包含比赛时间、主客队、比分等信息"
+    }
+   ],
+   "expected_result": "赛程列表正常展示，数据与后台一致，无乱码或缺失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-140"
+  },
+  {
+   "title": "赛程列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "赛程",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无赛程数据，例如新赛季尚未开始",
+   "preconditions": "已进入积分_1页面，且该联赛无赛程数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，点击“赛程”Tab",
+     "expected": "页面展示空态提示，如“暂无赛程数据”，不出现崩溃或白屏"
+    }
+   ],
+   "expected_result": "空态提示正常展示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-141"
+  },
+  {
+   "title": "最佳列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "最佳",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛存在最佳数据，例如最佳射手或最佳球队",
+   "preconditions": "已进入积分_1页面，且该联赛存在最佳数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，点击“最佳”Tab",
+     "expected": "页面展示最佳列表，包含球员/球队名称、数据等"
+    }
+   ],
+   "expected_result": "最佳列表正常展示，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-142"
+  },
+  {
+   "title": "最佳列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "最佳",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无最佳数据，例如赛季未开始",
+   "preconditions": "已进入积分_1页面，且该联赛无最佳数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，点击“最佳”Tab",
+     "expected": "页面展示空态提示，如“暂无最佳数据”，不出现崩溃或白屏"
+    }
+   ],
+   "expected_result": "空态提示正常展示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-143"
+  },
+  {
+   "title": "资料列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "资料",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛存在资料数据，例如球队简介、历史战绩等",
+   "preconditions": "已进入积分_1页面，且该联赛存在资料数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，点击“资料”Tab",
+     "expected": "页面展示资料列表，包含球队名称、简介等信息"
+    }
+   ],
+   "expected_result": "资料列表正常展示，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-144"
+  },
+  {
+   "title": "资料列表无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "资料",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无资料数据，例如球队未完善资料",
+   "preconditions": "已进入积分_1页面，且该联赛无资料数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，点击“资料”Tab",
+     "expected": "页面展示空态提示，如“暂无资料”，不出现崩溃或白屏"
+    }
+   ],
+   "expected_result": "空态提示正常展示，无异常报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-145"
+  },
+  {
+   "title": "联赛名称1正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "联赛名称1",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称1为“英超”",
+   "preconditions": "已进入积分_1页面，且联赛名称1有值",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看联赛名称1字段",
+     "expected": "页面展示联赛名称1，如“英超”，无乱码"
+    }
+   ],
+   "expected_result": "联赛名称1正常展示，与后台数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-146"
+  },
+  {
+   "title": "联赛名称1为空时展示默认值",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "联赛名称1",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称1为空字符串",
+   "preconditions": "已进入积分_1页面，且联赛名称1为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看联赛名称1字段",
+     "expected": "页面展示默认占位符或隐藏该字段，不出现空白异常"
+    }
+   ],
+   "expected_result": "空值处理正常，无异常显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-147"
+  },
+  {
+   "title": "联赛名称2正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "联赛名称2",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称2为“英格兰超级联赛”",
+   "preconditions": "已进入积分_1页面，且联赛名称2有值",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看联赛名称2字段",
+     "expected": "页面展示联赛名称2，如“英格兰超级联赛”，无乱码"
+    }
+   ],
+   "expected_result": "联赛名称2正常展示，与后台数据一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-148"
+  },
+  {
+   "title": "联赛名称2为空时展示默认值",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "联赛名称2",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称2为空字符串",
+   "preconditions": "已进入积分_1页面，且联赛名称2为空",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看联赛名称2字段",
+     "expected": "页面展示默认占位符或隐藏该字段，不出现空白异常"
+    }
+   ],
+   "expected_result": "空值处理正常，无异常显示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-149"
+  },
+  {
+   "title": "12/0/1 列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "12/0/1",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "某球队战绩为12胜0平1负，展示为“12/0/1”",
+   "preconditions": "已进入积分_1页面，且存在球队战绩数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看12/0/1列表",
+     "expected": "列表展示各球队的胜/平/负数据，格式为“胜/平/负”，如“12/0/1”"
+    }
+   ],
+   "expected_result": "12/0/1列表正常展示，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-150"
+  },
+  {
+   "title": "12/0/1 列表数据格式错误时提示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "12/0/1",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台返回异常数据，如“12/0/1/5”",
+   "preconditions": "已进入积分_1页面，且后台返回异常格式数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看12/0/1列表",
+     "expected": "页面不崩溃，可能展示默认值或提示数据异常，不显示乱码"
+    }
+   ],
+   "expected_result": "异常数据处理正常，无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-151"
+  },
+  {
+   "title": "32/9 列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "32/9",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "某球队进球32失球9，展示为“32/9”",
+   "preconditions": "已进入积分_1页面，且存在球队进失球数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看32/9列表",
+     "expected": "列表展示各球队的进球/失球数据，格式为“进球/失球”，如“32/9”"
+    }
+   ],
+   "expected_result": "32/9列表正常展示，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-152"
+  },
+  {
+   "title": "32/9 列表数据格式错误时提示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "32/9",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台返回异常数据，如“32/9/5”",
+   "preconditions": "已进入积分_1页面，且后台返回异常格式数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看32/9列表",
+     "expected": "页面不崩溃，可能展示默认值或提示数据异常，不显示乱码"
+    }
+   ],
+   "expected_result": "异常数据处理正常，无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-153"
+  },
+  {
+   "title": "场数列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "场数",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "某球队已赛场数为13场",
+   "preconditions": "已进入积分_1页面，且存在球队场数数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看场数列表",
+     "expected": "列表展示各球队的已赛场数，如“13”"
+    }
+   ],
+   "expected_result": "场数列表正常展示，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-154"
+  },
+  {
+   "title": "场数列表数据为0时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "场数",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某球队已赛场数为0场",
+   "preconditions": "已进入积分_1页面，且存在球队场数为0的数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看场数列表",
+     "expected": "列表展示“0”，不出现异常"
+    }
+   ],
+   "expected_result": "场数为0正常展示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-155"
+  },
+  {
+   "title": "胜/平列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "胜/平",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "某球队胜12平0负1，展示为“12/0/1”",
+   "preconditions": "已进入积分_1页面，且存在球队胜平负数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看胜/平列表",
+     "expected": "列表展示各球队的胜/平/负数据，格式为“胜/平/负”，如“12/0/1”"
+    }
+   ],
+   "expected_result": "胜/平列表正常展示，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-156"
+  },
+  {
+   "title": "胜/平列表数据缺失时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "胜/平",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "某球队胜平负数据缺失，后台返回null",
+   "preconditions": "已进入积分_1页面，且某球队胜平负数据为null",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看胜/平列表",
+     "expected": "页面展示默认值如“-”或隐藏该数据，不出现崩溃"
+    }
+   ],
+   "expected_result": "缺失数据处理正常，无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-157"
+  },
+  {
+   "title": "进/失列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "进/失",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "某球队进球32失球9，展示为“32/9”",
+   "preconditions": "已进入积分_1页面，且存在球队进失球数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看进/失列表",
+     "expected": "列表展示各球队的进球/失球数据，格式为“进球/失球”，如“32/9”"
+    }
+   ],
+   "expected_result": "进/失列表正常展示，数据与后台一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-158"
+  },
+  {
+   "title": "进/失列表数据缺失时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "进/失",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "某球队进失球数据缺失，后台返回null",
+   "preconditions": "已进入积分_1页面，且某球队进失球数据为null",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看进/失列表",
+     "expected": "页面展示默认值如“-”或隐藏该数据，不出现崩溃"
+    }
+   ],
+   "expected_result": "缺失数据处理正常，无崩溃",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-159"
+  },
+  {
+   "title": "当前球队在列表中高亮展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/积分_1",
+   "module": "当前球队",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "当前球队为“曼城”，在积分榜中排名第1",
+   "preconditions": "已进入积分_1页面，且存在当前球队数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看球队列表",
+     "expected": "当前球队（如曼城）在列表中以特殊样式（如高亮、加粗）标识"
+    }
+   ],
+   "expected_result": "当前球队正确标识，样式明显",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-160"
+  },
+  {
+   "title": "当前球队不在列表中时无高亮",
+   "priority": "P1",
+   "domain": "用户端/联赛/积分_1",
+   "module": "当前球队",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "当前球队未进入该联赛积分榜（如降级）",
+   "preconditions": "已进入积分_1页面，且当前球队不在列表中",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入积分_1页面，查看球队列表",
+     "expected": "列表无任何高亮标识，正常展示其他球队"
+    }
+   ],
+   "expected_result": "无高亮标识，列表正常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-161"
+  },
+  {
+   "title": "球队榜列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛ID=1001，联赛名称='英超'，球队数据包含10支球队，每支球队有LOGO、日期（04/25、08/25）、百分比（38%）等字段",
+   "preconditions": "已登录用户，进入联赛详情页，点击球队榜Tab",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入联赛详情页，点击球队榜Tab",
+     "expected": "页面展示球队榜列表，包含联赛名称、联赛LOGO、日期、百分比等字段"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表数据",
+     "expected": "列表展示10支球队，每行包含球队名称、LOGO、日期（04/25、08/25）、百分比（38%）等，数据完整无缺失"
+    }
+   ],
+   "expected_result": "球队榜列表正常展示，所有字段显示正确，无乱码或缺失",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-162"
+  },
+  {
+   "title": "球队榜列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛ID=9999（无任何球队数据）",
+   "preconditions": "已登录用户，进入无数据的联赛详情页，点击球队榜Tab",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入无数据的联赛详情页，点击球队榜Tab",
+     "expected": "页面展示空态提示，如'暂无球队数据'，且不出现空白页面"
+    }
+   ],
+   "expected_result": "页面展示空态提示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-163"
+  },
+  {
+   "title": "联赛名称正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "联赛名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称='英超'（正常长度）",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看顶部联赛名称",
+     "expected": "顶部展示联赛名称'英超'，字体清晰，无截断"
+    }
+   ],
+   "expected_result": "联赛名称正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-164"
+  },
+  {
+   "title": "联赛名称超长时截断显示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "联赛名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "联赛名称='英格兰足球超级联赛2024-2025赛季'（超长文本）",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看顶部联赛名称",
+     "expected": "联赛名称超长时以省略号截断，或换行显示，不撑破布局"
+    }
+   ],
+   "expected_result": "超长联赛名称被合理截断或换行，页面布局正常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-165"
+  },
+  {
+   "title": "联赛LOGO正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "LOGO",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛LOGO图片URL有效（如https://cdn.example.com/logo.png）",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看联赛LOGO",
+     "expected": "LOGO正常加载显示，无裂图"
+    }
+   ],
+   "expected_result": "联赛LOGO正常展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-166"
+  },
+  {
+   "title": "日期字段正常展示（04/25、08/25）",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "日期",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "日期数据为04/25、08/25（月/日格式）",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看列表中的日期字段",
+     "expected": "日期字段显示为'04/25'、'08/25'，格式正确"
+    }
+   ],
+   "expected_result": "日期字段正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-167"
+  },
+  {
+   "title": "日期字段为空时显示默认值",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "日期",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "日期字段为空（null）",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看日期字段为空的记录",
+     "expected": "日期字段显示为'--'或'暂无'，不显示空白或报错"
+    }
+   ],
+   "expected_result": "空日期显示占位符，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-168"
+  },
+  {
+   "title": "百分比字段正常展示（38%）",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "百分比",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "百分比数据为38%（0-100之间的整数）",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看列表中的百分比字段",
+     "expected": "百分比字段显示为'38%'，带百分号，数值正确"
+    }
+   ],
+   "expected_result": "百分比字段正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-169"
+  },
+  {
+   "title": "百分比字段为0%时正常展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "百分比",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "百分比数据为0%",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看百分比为0%的记录",
+     "expected": "显示'0%'，无异常"
+    }
+   ],
+   "expected_result": "0%正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-170"
+  },
+  {
+   "title": "百分比字段为100%时正常展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "百分比",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "百分比数据为100%",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看百分比为100%的记录",
+     "expected": "显示'100%'，无异常"
+    }
+   ],
+   "expected_result": "100%正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-171"
+  },
+  {
+   "title": "百分比字段为负数时显示异常",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "百分比",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "百分比数据为-10%（异常数据）",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，查看百分比为-10%的记录",
+     "expected": "显示'--'或'0%'，不显示负数，且无报错"
+    }
+   ],
+   "expected_result": "负数百分比被处理为占位或0%，无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-172"
+  },
+  {
+   "title": "Tab导航正常切换（资讯、积分、数据、赛程、球员榜）",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "Tab导航",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "Tab列表：资讯、积分、数据、球队榜、赛程、球员榜",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'资讯'Tab",
+     "expected": "切换到资讯内容，Tab高亮为'资讯'"
+    },
+    {
+     "step": 2,
+     "desc": "点击'积分'Tab",
+     "expected": "切换到积分内容，Tab高亮为'积分'"
+    },
+    {
+     "step": 3,
+     "desc": "点击'数据'Tab",
+     "expected": "切换到数据内容，Tab高亮为'数据'"
+    },
+    {
+     "step": 4,
+     "desc": "点击'赛程'Tab",
+     "expected": "切换到赛程内容，Tab高亮为'赛程'"
+    },
+    {
+     "step": 5,
+     "desc": "点击'球员榜'Tab",
+     "expected": "切换到球员榜内容，Tab高亮为'球员榜'"
+    }
+   ],
+   "expected_result": "所有Tab均可正常切换，内容正确展示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-173"
+  },
+  {
+   "title": "Tab切换时内容加载失败提示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "Tab导航",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "模拟网络异常，点击'积分'Tab",
+   "preconditions": "已登录用户，进入球队榜页面，网络断开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "断网状态下点击'积分'Tab",
+     "expected": "页面提示'加载失败，请重试'，不崩溃"
+    }
+   ],
+   "expected_result": "显示加载失败提示，可重试",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-174"
+  },
+  {
+   "title": "筛选弹窗正常打开并展示指标",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "筛选",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "筛选指标：进球、失球、射门、射正、关键传球、拦截、封堵、解围、黄牌、红牌、比赛场次、传球、传球成功、助攻、击中门框、过人、过人成功、越位、角球、传中、传中成功、长传、长传成功、抢断、犯规、被犯规、丢失球权",
+   "preconditions": "已登录用户，进入球队榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'筛选'按钮",
+     "expected": "弹出筛选弹窗，展示所有指标选项，默认选中'进球'"
+    },
+    {
+     "step": 2,
+     "desc": "查看弹窗内容",
+     "expected": "弹窗包含所有指标，可滚动，有'关闭'按钮"
+    }
+   ],
+   "expected_result": "筛选弹窗正常打开，指标列表完整",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-175"
+  },
+  {
+   "title": "筛选弹窗关闭按钮正常关闭",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "筛选",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "无特殊数据",
+   "preconditions": "已登录用户，进入球队榜页面，打开筛选弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选弹窗中的'关闭'按钮",
+     "expected": "弹窗关闭，返回球队榜列表，筛选条件不变"
+    }
+   ],
+   "expected_result": "弹窗正常关闭",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-176"
+  },
+  {
+   "title": "筛选条件切换后列表刷新",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "筛选",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "默认筛选'进球'，切换为'失球'",
+   "preconditions": "已登录用户，进入球队榜页面，打开筛选弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在筛选弹窗中选择'失球'",
+     "expected": "弹窗关闭，列表按失球数重新排序，表头显示'失球'"
+    }
+   ],
+   "expected_result": "列表按新筛选条件刷新",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-177"
+  },
+  {
+   "title": "筛选弹窗中未选择任何指标时点击确定",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "筛选",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "取消所有指标选中",
+   "preconditions": "已登录用户，进入球队榜页面，打开筛选弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在筛选弹窗中取消所有指标选中",
+     "expected": "确定按钮置灰或点击后提示'请至少选择一个指标'"
+    }
+   ],
+   "expected_result": "无法提交空筛选，有提示",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-178"
+  },
+  {
+   "title": "球员榜正常展示球员数据",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球员数据：球员名称='张三'，球队='曼联'，进球数=37，助攻数=10",
+   "preconditions": "已登录用户，进入联赛详情页，点击球员榜Tab",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'球员榜'Tab",
+     "expected": "展示球员榜列表，默认显示射手榜，包含球员名称、头像、球队、数据"
+    },
+    {
+     "step": 2,
+     "desc": "查看球员数据",
+     "expected": "球员'张三'显示进球数37，数据正确"
+    }
+   ],
+   "expected_result": "球员榜正常展示，数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-179"
+  },
+  {
+   "title": "球员榜切换助攻榜",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球员数据：球员'李四'助攻数=15",
+   "preconditions": "已登录用户，进入球员榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'助攻榜'Tab",
+     "expected": "列表切换为助攻榜，按助攻数排序，表头显示'助攻'"
+    }
+   ],
+   "expected_result": "助攻榜正常切换",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-180"
+  },
+  {
+   "title": "进球列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "使用联赛A的球队榜数据，包含5支球队，进球数分别为37、32、28、25、20，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有5支球队的进球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，默认选中'进球'维度",
+     "expected": "页面显示球队列表，包含球队名称、场均进球、总进球列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总进球数从高到低排列：37、32、28、25、20"
+    }
+   ],
+   "expected_result": "球队列表按进球数降序排列，每行显示球队名称、场均进球、总进球数，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-181"
+  },
+  {
+   "title": "进球列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无任何进球数据的联赛B，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛B无进球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，选中'进球'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-182"
+  },
+  {
+   "title": "筛选弹窗打开并默认选中进球",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "进入球队榜页面，点击筛选按钮，验证弹窗默认选中'进球'。",
+   "preconditions": "已进入球队榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击页面右上角'筛选'按钮",
+     "expected": "弹出筛选弹窗，包含所有可筛选维度（比赛场次、传球、传球成功等）"
+    },
+    {
+     "step": 2,
+     "desc": "检查默认选中项",
+     "expected": "默认选中'进球'，其他项未选中"
+    }
+   ],
+   "expected_result": "筛选弹窗正常打开，默认选中'进球'维度。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-183"
+  },
+  {
+   "title": "筛选弹窗关闭按钮功能",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "打开筛选弹窗后点击关闭按钮，验证弹窗关闭且列表不变。",
+   "preconditions": "已进入球队榜页面，打开筛选弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选弹窗右上角'关闭'按钮",
+     "expected": "弹窗关闭，返回球队榜页面，列表仍显示原数据"
+    }
+   ],
+   "expected_result": "弹窗关闭，列表数据不变，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-184"
+  },
+  {
+   "title": "筛选切换为失球后列表更新",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队失球数据：球队1失球10，球队2失球15，球队3失球8，用于验证筛选后排序。",
+   "preconditions": "已进入球队榜页面，联赛A有失球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击'筛选'按钮打开弹窗",
+     "expected": "弹窗打开"
+    },
+    {
+     "step": 2,
+     "desc": "选择'失球'选项，点击确定",
+     "expected": "弹窗关闭，列表更新为失球数据，按失球数降序排列：15、10、8"
+    }
+   ],
+   "expected_result": "列表切换为失球维度，按失球数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-185"
+  },
+  {
+   "title": "筛选弹窗未选择任何维度时确定按钮不可用",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "打开筛选弹窗，取消所有选中项，验证确定按钮状态。",
+   "preconditions": "已进入球队榜页面，打开筛选弹窗。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在筛选弹窗中取消所有已选维度",
+     "expected": "确定按钮置灰不可点击"
+    }
+   ],
+   "expected_result": "确定按钮不可用，防止无维度筛选。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-186"
+  },
+  {
+   "title": "失球列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队失球数据：球队1失球10，球队2失球15，球队3失球8，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有失球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'失球'维度",
+     "expected": "列表显示失球数据，包含球队名称、场均失球、总失球列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总失球数从高到低排列：15、10、8"
+    }
+   ],
+   "expected_result": "球队列表按失球数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-187"
+  },
+  {
+   "title": "失球列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无失球数据的联赛C，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛C无失球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'失球'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-188"
+  },
+  {
+   "title": "获得点球列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队获得点球数据：球队1获得5，球队2获得3，球队3获得7，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有获得点球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'获得点球'维度",
+     "expected": "列表显示获得点球数据，包含球队名称、场均获得点球、总获得点球列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总获得点球数从高到低排列：7、5、3"
+    }
+   ],
+   "expected_result": "球队列表按获得点球数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-189"
+  },
+  {
+   "title": "获得点球列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无获得点球数据的联赛D，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛D无获得点球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'获得点球'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-190"
+  },
+  {
+   "title": "射门列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队射门数据：球队1射门100，球队2射门80，球队3射门120，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有射门数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'射门'维度",
+     "expected": "列表显示射门数据，包含球队名称、场均射门、总射门列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总射门数从高到低排列：120、100、80"
+    }
+   ],
+   "expected_result": "球队列表按射门数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-191"
+  },
+  {
+   "title": "射门列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无射门数据的联赛E，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛E无射门数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'射门'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-192"
+  },
+  {
+   "title": "射正列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队射正数据：球队1射正50，球队2射正40，球队3射正60，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有射正数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'射正'维度",
+     "expected": "列表显示射正数据，包含球队名称、场均射正、总射正列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总射正数从高到低排列：60、50、40"
+    }
+   ],
+   "expected_result": "球队列表按射正数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-193"
+  },
+  {
+   "title": "射正列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无射正数据的联赛F，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛F无射正数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'射正'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-194"
+  },
+  {
+   "title": "关键传球列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队关键传球数据：球队1关键传球30，球队2关键传球25，球队3关键传球35，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有关键传球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'关键传球'维度",
+     "expected": "列表显示关键传球数据，包含球队名称、场均关键传球、总关键传球列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总关键传球数从高到低排列：35、30、25"
+    }
+   ],
+   "expected_result": "球队列表按关键传球数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-195"
+  },
+  {
+   "title": "关键传球列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无关键传球数据的联赛G，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛G无关键传球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'关键传球'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-196"
+  },
+  {
+   "title": "拦截列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队拦截数据：球队1拦截20，球队2拦截15，球队3拦截25，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有拦截数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'拦截'维度",
+     "expected": "列表显示拦截数据，包含球队名称、场均拦截、总拦截列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总拦截数从高到低排列：25、20、15"
+    }
+   ],
+   "expected_result": "球队列表按拦截数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-197"
+  },
+  {
+   "title": "拦截列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无拦截数据的联赛H，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛H无拦截数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'拦截'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-198"
+  },
+  {
+   "title": "封堵列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队封堵数据：球队1封堵10，球队2封堵8，球队3封堵12，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有封堵数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'封堵'维度",
+     "expected": "列表显示封堵数据，包含球队名称、场均封堵、总封堵列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总封堵数从高到低排列：12、10、8"
+    }
+   ],
+   "expected_result": "球队列表按封堵数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-199"
+  },
+  {
+   "title": "封堵列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无封堵数据的联赛I，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛I无封堵数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'封堵'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-200"
+  },
+  {
+   "title": "解围列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队解围数据：球队1解围40，球队2解围35，球队3解围45，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有解围数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'解围'维度",
+     "expected": "列表显示解围数据，包含球队名称、场均解围、总解围列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总解围数从高到低排列：45、40、35"
+    }
+   ],
+   "expected_result": "球队列表按解围数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-201"
+  },
+  {
+   "title": "解围列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无解围数据的联赛J，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛J无解围数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'解围'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-202"
+  },
+  {
+   "title": "黄牌列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队黄牌数据：球队1黄牌5，球队2黄牌3，球队3黄牌7，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有黄牌数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'黄牌'维度",
+     "expected": "列表显示黄牌数据，包含球队名称、场均黄牌、总黄牌列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总黄牌数从高到低排列：7、5、3"
+    }
+   ],
+   "expected_result": "球队列表按黄牌数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-203"
+  },
+  {
+   "title": "黄牌列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无黄牌数据的联赛K，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛K无黄牌数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'黄牌'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-204"
+  },
+  {
+   "title": "红牌列表默认展示降序排列",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛A球队红牌数据：球队1红牌1，球队2红牌0，球队3红牌2，用于验证默认排序。",
+   "preconditions": "已进入球队榜页面，联赛A有红牌数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，通过筛选选择'红牌'维度",
+     "expected": "列表显示红牌数据，包含球队名称、场均红牌、总红牌列"
+    },
+    {
+     "step": 2,
+     "desc": "观察列表排序",
+     "expected": "列表按总红牌数从高到低排列：2、1、0"
+    }
+   ],
+   "expected_result": "球队列表按红牌数降序排列，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-205"
+  },
+  {
+   "title": "红牌列表数据为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "使用无红牌数据的联赛L，模拟空数据场景。",
+   "preconditions": "已进入球队榜页面，联赛L无红牌数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球队榜页面，筛选选择'红牌'维度",
+     "expected": "页面显示空态提示'暂无数据'，不显示任何球队行"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无数据行，不报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-206"
+  },
+  {
+   "title": "比赛场次-场均和总计正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛包含3支球队，比赛场次数据：球队A场均2.3总计37，球队B场均1.8总计29，球队C场均2.0总计32，用于验证列表展示。",
+   "preconditions": "已进入球队榜页面，联赛有比赛场次数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功，显示球队榜标题和联赛信息。"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛场次列",
+     "expected": "每支球队显示场均和总计两列数据，数值与后台数据一致。"
+    }
+   ],
+   "expected_result": "比赛场次列正确展示所有球队的场均和总计数据，无缺失或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-207"
+  },
+  {
+   "title": "比赛场次-无数据时显示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无任何比赛场次数据（如新赛季未开始）。",
+   "preconditions": "已进入球队榜页面，联赛无比赛场次数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看比赛场次列",
+     "expected": "显示空态提示（如'暂无数据'），不显示任何球队记录。"
+    }
+   ],
+   "expected_result": "比赛场次列显示空态提示，无异常报错。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-208"
+  },
+  {
+   "title": "传球-场均和总计正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛包含3支球队，传球数据：球队A场均456.7总计7307，球队B场均389.2总计6227，球队C场均412.5总计6600。",
+   "preconditions": "已进入球队榜页面，联赛有传球数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看传球列",
+     "expected": "每支球队显示场均和总计两列数据，数值与后台数据一致。"
+    }
+   ],
+   "expected_result": "传球列正确展示所有球队的场均和总计数据，无缺失或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-209"
+  },
+  {
+   "title": "传球-数据为0时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某球队传球数据为0（如新加入球队未参加比赛）。",
+   "preconditions": "已进入球队榜页面，某球队传球数据为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看传球列",
+     "expected": "该球队场均显示0.0，总计显示0，无异常。"
+    }
+   ],
+   "expected_result": "传球列正确显示0值，无格式错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-210"
+  },
+  {
+   "title": "传球成功-场均和总计正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛包含3支球队，传球成功数据：球队A场均356.2总计5699，球队B场均301.5总计4824，球队C场均330.8总计5293。",
+   "preconditions": "已进入球队榜页面，联赛有传球成功数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看传球成功列",
+     "expected": "每支球队显示场均和总计两列数据，数值与后台数据一致。"
+    }
+   ],
+   "expected_result": "传球成功列正确展示所有球队的场均和总计数据，无缺失或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-211"
+  },
+  {
+   "title": "传球成功-数据为0时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某球队传球成功数据为0（如未参加比赛）。",
+   "preconditions": "已进入球队榜页面，某球队传球成功数据为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看传球成功列",
+     "expected": "该球队场均显示0.0，总计显示0，无异常。"
+    }
+   ],
+   "expected_result": "传球成功列正确显示0值，无格式错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-212"
+  },
+  {
+   "title": "筛选弹窗-打开并选择指标后列表更新",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "筛选弹窗提供指标：进球、失球、射门、射正等，选择'进球'后列表按进球数据排序。",
+   "preconditions": "已进入球队榜页面，联赛有多个球队数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮",
+     "expected": "弹出筛选弹窗，显示所有可筛选指标。"
+    },
+    {
+     "step": 2,
+     "desc": "选择'进球'指标",
+     "expected": "弹窗关闭，列表更新为按进球数据展示，并默认按场均降序排列。"
+    }
+   ],
+   "expected_result": "筛选弹窗正常打开，选择指标后列表正确更新，数据与所选指标一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-213"
+  },
+  {
+   "title": "筛选弹窗-关闭弹窗不改变列表",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "negative",
+   "test_data_note": "当前列表显示'进球'指标，打开筛选弹窗后直接关闭。",
+   "preconditions": "已进入球队榜页面，当前列表显示'进球'指标。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮",
+     "expected": "弹出筛选弹窗。"
+    },
+    {
+     "step": 2,
+     "desc": "点击弹窗外的关闭按钮或遮罩",
+     "expected": "弹窗关闭，列表仍显示'进球'指标，数据不变。"
+    }
+   ],
+   "expected_result": "关闭筛选弹窗后列表数据保持不变，无异常。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-214"
+  },
+  {
+   "title": "助攻-场均和总计正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛包含3支球队，助攻数据：球队A场均1.5总计24，球队B场均1.2总计19，球队C场均1.8总计29。",
+   "preconditions": "已进入球队榜页面，联赛有助攻数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看助攻列",
+     "expected": "每支球队显示场均和总计两列数据，数值与后台数据一致。"
+    }
+   ],
+   "expected_result": "助攻列正确展示所有球队的场均和总计数据，无缺失或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-215"
+  },
+  {
+   "title": "助攻-数据为0时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某球队助攻数据为0（如未参加比赛）。",
+   "preconditions": "已进入球队榜页面，某球队助攻数据为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看助攻列",
+     "expected": "该球队场均显示0.0，总计显示0，无异常。"
+    }
+   ],
+   "expected_result": "助攻列正确显示0值，无格式错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-216"
+  },
+  {
+   "title": "击中门框-场均和总计正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛包含3支球队，击中门框数据：球队A场均0.8总计13，球队B场均0.6总计10，球队C场均1.0总计16。",
+   "preconditions": "已进入球队榜页面，联赛有击中门框数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看击中门框列",
+     "expected": "每支球队显示场均和总计两列数据，数值与后台数据一致。"
+    }
+   ],
+   "expected_result": "击中门框列正确展示所有球队的场均和总计数据，无缺失或错位。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-217"
+  },
+  {
+   "title": "击中门框-数据为0时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球队榜",
+   "module": "球队榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "某球队击中门框数据为0（如未参加比赛）。",
+   "preconditions": "已进入球队榜页面，某球队击中门框数据为0。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开球队榜页面",
+     "expected": "页面加载成功。"
+    },
+    {
+     "step": 2,
+     "desc": "查看击中门框列",
+     "expected": "该球队场均显示0.0，总计显示0，无异常。"
+    }
+   ],
+   "expected_result": "击中门框列正确显示0值，无格式错误。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-218"
+  },
+  {
+   "title": "球员榜列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛ID=1001，赛季2024/2025，球员数据包含进球数、助攻数等。",
+   "preconditions": "已登录，联赛1001存在且球员数据已配置。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面（直接访问球员榜.html或从联赛详情进入）",
+     "expected": "页面加载成功，显示联赛名称、LOGO、日期等头部信息。"
+    },
+    {
+     "step": 2,
+     "desc": "查看球员列表",
+     "expected": "列表展示球员名称、球队、头像、数据（如进球数），数据与后台一致。"
+    }
+   ],
+   "expected_result": "球员榜页面正常展示，列表数据完整，无报错。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-219"
+  },
+  {
+   "title": "球员榜列表为空时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛ID=9999，无任何球员数据。",
+   "preconditions": "已登录，联赛9999存在但无球员数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面（联赛9999）",
+     "expected": "页面显示空态提示，如“暂无球员数据”，不显示列表。"
+    }
+   ],
+   "expected_result": "页面友好提示无数据，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-220"
+  },
+  {
+   "title": "从联赛详情页进入球员榜",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "联赛详情-球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛详情页存在球员榜Tab，联赛ID=1001。",
+   "preconditions": "已登录，进入联赛详情页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛详情页",
+     "expected": "页面显示赛程、积分、数据、球队榜、球员榜等Tab。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“球员榜”Tab",
+     "expected": "跳转到球员榜页面，展示当前联赛的球员数据。"
+    }
+   ],
+   "expected_result": "成功从联赛详情进入球员榜，数据正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-221"
+  },
+  {
+   "title": "从联赛详情页进入球员榜时联赛无数据",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "联赛详情-球员榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛ID=9999，无球员数据。",
+   "preconditions": "已登录，进入联赛9999详情页。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "打开联赛9999详情页",
+     "expected": "页面正常显示。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“球员榜”Tab",
+     "expected": "球员榜页面显示空态提示，无数据。"
+    }
+   ],
+   "expected_result": "页面提示无数据，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-222"
+  },
+  {
+   "title": "联赛名称正确显示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "联赛名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛名称“英超”",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面顶部显示联赛名称“英超”。"
+    }
+   ],
+   "expected_result": "联赛名称显示正确，与后台配置一致。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-223"
+  },
+  {
+   "title": "联赛名称为空时显示占位符",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "联赛名称",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛名称为空字符串。",
+   "preconditions": "已登录，进入球员榜页面，后台联赛名称为空。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "联赛名称位置显示默认占位符（如“未知联赛”），不显示空白。"
+    }
+   ],
+   "expected_result": "页面不出现空白区域，有合理占位。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-224"
+  },
+  {
+   "title": "联赛列表展示并可切换",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "联赛",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛列表包含英超、西甲、德甲。",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示联赛列表（如下拉或横向滚动）。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“西甲”",
+     "expected": "页面刷新，显示西甲的球员数据。"
+    }
+   ],
+   "expected_result": "联赛切换成功，球员数据更新。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-225"
+  },
+  {
+   "title": "联赛列表为空时显示提示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "联赛",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "无任何联赛数据。",
+   "preconditions": "已登录，进入球员榜页面，后台无联赛数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "联赛列表区域显示“暂无联赛”提示。"
+    }
+   ],
+   "expected_result": "页面有友好提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-226"
+  },
+  {
+   "title": "LOGO正常显示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "LOGO",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛LOGO图片URL有效。",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示联赛LOGO，图片清晰，无裂图。"
+    }
+   ],
+   "expected_result": "LOGO正常加载显示。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-227"
+  },
+  {
+   "title": "LOGO加载失败时显示默认图",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "LOGO",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "LOGO图片URL无效或网络异常。",
+   "preconditions": "已登录，进入球员榜页面，LOGO图片无法加载。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "LOGO位置显示默认占位图，不显示裂图。"
+    }
+   ],
+   "expected_result": "页面显示默认图，不影响整体布局。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-228"
+  },
+  {
+   "title": "日期04/25和08/25正确显示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "日期展示",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛季开始日期04/25，结束日期08/25。",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示“04/25”和“08/25”，格式正确。"
+    }
+   ],
+   "expected_result": "日期显示正确，无格式错误。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-229"
+  },
+  {
+   "title": "日期格式错误时显示默认值",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "日期展示",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "后台返回日期格式错误（如2025-04-25）。",
+   "preconditions": "已登录，进入球员榜页面，后台日期格式异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示默认日期或隐藏该字段，不显示乱码。"
+    }
+   ],
+   "expected_result": "页面不显示异常格式，有容错处理。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-230"
+  },
+  {
+   "title": "进度38%正确显示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "进度展示",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "赛季进度38%。",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示“38%”，数值正确。"
+    }
+   ],
+   "expected_result": "进度百分比显示正确。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-231"
+  },
+  {
+   "title": "进度值超出范围时显示边界值",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "进度展示",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "进度值返回120%。",
+   "preconditions": "已登录，进入球员榜页面，后台进度值异常。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示100%或隐藏，不显示120%。"
+    }
+   ],
+   "expected_result": "页面有边界处理，不显示异常值。",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-232"
+  },
+  {
+   "title": "点击资讯Tab跳转资讯页",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "资讯",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "资讯Tab存在。",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示资讯Tab。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“资讯”Tab",
+     "expected": "跳转到资讯页面，展示相关资讯列表。"
+    }
+   ],
+   "expected_result": "成功跳转资讯页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-233"
+  },
+  {
+   "title": "点击资讯Tab时无资讯数据",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "资讯",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "资讯列表为空。",
+   "preconditions": "已登录，进入球员榜页面，后台无资讯数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“资讯”Tab",
+     "expected": "资讯页面显示空态提示“暂无资讯”。"
+    }
+   ],
+   "expected_result": "页面友好提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-234"
+  },
+  {
+   "title": "点击积分Tab跳转积分页",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "积分",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "积分Tab存在。",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示积分Tab。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“积分”Tab",
+     "expected": "跳转到积分页面，展示积分榜。"
+    }
+   ],
+   "expected_result": "成功跳转积分页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-235"
+  },
+  {
+   "title": "点击积分Tab时积分数据为空",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "积分",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "积分数据为空。",
+   "preconditions": "已登录，进入球员榜页面，后台无积分数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“积分”Tab",
+     "expected": "积分页面显示空态提示“暂无积分数据”。"
+    }
+   ],
+   "expected_result": "页面友好提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-236"
+  },
+  {
+   "title": "点击数据Tab跳转数据页",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "数据",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "数据Tab存在。",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示数据Tab。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“数据”Tab",
+     "expected": "跳转到数据页面，展示数据统计。"
+    }
+   ],
+   "expected_result": "成功跳转数据页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-237"
+  },
+  {
+   "title": "点击数据Tab时数据为空",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "数据",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "数据为空。",
+   "preconditions": "已登录，进入球员榜页面，后台无数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“数据”Tab",
+     "expected": "数据页面显示空态提示“暂无数据”。"
+    }
+   ],
+   "expected_result": "页面友好提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-238"
+  },
+  {
+   "title": "点击球队榜Tab跳转球队榜页",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球队榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "球队榜Tab存在。",
+   "preconditions": "已登录，进入球员榜页面。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面",
+     "expected": "页面显示球队榜Tab。"
+    },
+    {
+     "step": 2,
+     "desc": "点击“球队榜”Tab",
+     "expected": "跳转到球队榜页面，展示球队数据。"
+    }
+   ],
+   "expected_result": "成功跳转球队榜页。",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-239"
+  },
+  {
+   "title": "点击球队榜Tab时球队数据为空",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球队榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球队数据为空。",
+   "preconditions": "已登录，进入球员榜页面，后台无球队数据。",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击“球队榜”Tab",
+     "expected": "球队榜页面显示空态提示“暂无球队数据”。"
+    }
+   ],
+   "expected_result": "页面友好提示，不崩溃。",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-240"
+  },
+  {
+   "title": "赛程列表空态展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "赛程",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无任何赛程数据（空数据）",
+   "preconditions": "已登录，进入球员榜页面，联赛无赛程数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面，点击「赛程」Tab",
+     "expected": "页面展示空态提示，如「暂无赛程数据」"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无报错，无加载异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-241"
+  },
+  {
+   "title": "射手榜按进球数降序展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "射手榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛射手榜数据：球员A进球10，球员B进球8，球员C进球5",
+   "preconditions": "已登录，进入球员榜页面，联赛有射手榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面，点击「射手榜」Tab",
+     "expected": "射手榜列表展示，球员按进球数降序排列（A、B、C）"
+    }
+   ],
+   "expected_result": "射手榜按进球数降序排列，数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-242"
+  },
+  {
+   "title": "射手榜无数据空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "射手榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无射手榜数据",
+   "preconditions": "已登录，进入球员榜页面，联赛无射手榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面，点击「射手榜」Tab",
+     "expected": "页面展示空态提示，如「暂无射手榜数据」"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-243"
+  },
+  {
+   "title": "筛选功能按球队筛选球员",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "筛选",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛有球员数据，球队A有球员X、Y，球队B有球员Z",
+   "preconditions": "已登录，进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「筛选」按钮",
+     "expected": "弹出筛选弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "选择球队A，点击确定",
+     "expected": "球员列表刷新，仅显示球队A的球员X、Y"
+    }
+   ],
+   "expected_result": "筛选后列表正确显示球队A的球员，数据与选择一致",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-244"
+  },
+  {
+   "title": "筛选无结果提示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "筛选",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择不存在的球队（如球队C）",
+   "preconditions": "已登录，进入球员榜页面，联赛无球队C的球员",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「筛选」按钮",
+     "expected": "弹出筛选弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "选择不存在的球队C，点击确定",
+     "expected": "球员列表显示空态提示，如「暂无符合条件的球员」"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-245"
+  },
+  {
+   "title": "球员名称正常显示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员名称",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员名称为正常长度（如「梅西」）",
+   "preconditions": "已登录，进入球员榜页面，有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的球员名称",
+     "expected": "球员名称完整显示，无截断或乱码"
+    }
+   ],
+   "expected_result": "球员名称正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-246"
+  },
+  {
+   "title": "超长球员名称截断显示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员名称",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球员名称为超长字符串（如超过20个字符）",
+   "preconditions": "已登录，进入球员榜页面，存在超长名称球员",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的超长球员名称",
+     "expected": "名称显示截断，并显示省略号或悬浮提示完整名称"
+    }
+   ],
+   "expected_result": "超长名称合理截断，不影响布局",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-247"
+  },
+  {
+   "title": "球员列表正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "联赛有球员数据，包含名称、头像、球队、数据",
+   "preconditions": "已登录，进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面，查看球员列表",
+     "expected": "列表展示球员名称、头像、球队、数据（如进球数）"
+    }
+   ],
+   "expected_result": "球员列表字段完整，数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-248"
+  },
+  {
+   "title": "球员列表空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无球员数据",
+   "preconditions": "已登录，进入球员榜页面，联赛无球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面，查看球员列表",
+     "expected": "页面展示空态提示，如「暂无球员数据」"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-249"
+  },
+  {
+   "title": "球员头像正常显示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "头像",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员有头像图片",
+   "preconditions": "已登录，进入球员榜页面，球员有头像",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的头像",
+     "expected": "头像正常加载显示，无裂图"
+    }
+   ],
+   "expected_result": "头像正常显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-250"
+  },
+  {
+   "title": "球员头像加载失败显示默认图",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "头像",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球员头像图片加载失败（如网络错误）",
+   "preconditions": "已登录，进入球员榜页面，球员头像加载失败",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的头像",
+     "expected": "显示默认占位头像，无裂图"
+    }
+   ],
+   "expected_result": "显示默认头像，页面无异常",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-251"
+  },
+  {
+   "title": "球队信息正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球队",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员所属球队有名称和LOGO",
+   "preconditions": "已登录，进入球员榜页面，球员有球队信息",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的球队字段",
+     "expected": "显示球队名称和LOGO"
+    }
+   ],
+   "expected_result": "球队信息正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-252"
+  },
+  {
+   "title": "球队信息缺失处理",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球队",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "球员无球队信息（如自由球员）",
+   "preconditions": "已登录，进入球员榜页面，存在无球队的球员",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的球队字段",
+     "expected": "显示占位符或「-」"
+    }
+   ],
+   "expected_result": "无球队信息时合理展示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-253"
+  },
+  {
+   "title": "助攻榜按助攻数降序展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "助攻榜",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "联赛助攻榜数据：球员A助攻10，球员B助攻8，球员C助攻5",
+   "preconditions": "已登录，进入球员榜页面，联赛有助攻榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面，点击「助攻榜」Tab",
+     "expected": "助攻榜列表展示，球员按助攻数降序排列（A、B、C）"
+    }
+   ],
+   "expected_result": "助攻榜按助攻数降序排列，数据正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-254"
+  },
+  {
+   "title": "助攻榜无数据空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "助攻榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "联赛无助攻榜数据",
+   "preconditions": "已登录，进入球员榜页面，联赛无助攻榜数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "进入球员榜页面，点击「助攻榜」Tab",
+     "expected": "页面展示空态提示，如「暂无助攻榜数据」"
+    }
+   ],
+   "expected_result": "页面显示空态提示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-255"
+  },
+  {
+   "title": "筛选弹窗正常打开并选择条件",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "筛选弹窗",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "筛选弹窗包含球队、位置等选项",
+   "preconditions": "已登录，进入球员榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「筛选」按钮",
+     "expected": "弹出筛选弹窗，显示可选项"
+    },
+    {
+     "step": 2,
+     "desc": "选择球队A，点击确定",
+     "expected": "弹窗关闭，列表按条件刷新"
+    }
+   ],
+   "expected_result": "筛选弹窗正常打开、选择、确定后关闭并刷新列表",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-256"
+  },
+  {
+   "title": "筛选弹窗取消关闭",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "筛选弹窗",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "筛选弹窗打开后未选择任何条件",
+   "preconditions": "已登录，进入球员榜页面",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击「筛选」按钮",
+     "expected": "弹出筛选弹窗"
+    },
+    {
+     "step": 2,
+     "desc": "点击「取消」或关闭按钮",
+     "expected": "弹窗关闭，列表不刷新，保持原状"
+    }
+   ],
+   "expected_result": "弹窗关闭，列表无变化",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-257"
+  },
+  {
+   "title": "关闭按钮关闭筛选弹窗",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "关闭",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "筛选弹窗已打开",
+   "preconditions": "已登录，进入球员榜页面，筛选弹窗已打开",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选弹窗的关闭按钮",
+     "expected": "弹窗关闭，列表不刷新"
+    }
+   ],
+   "expected_result": "弹窗关闭，页面状态不变",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-258"
+  },
+  {
+   "title": "关闭按钮在无弹窗时不可用",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "关闭",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "页面无弹窗打开",
+   "preconditions": "已登录，进入球员榜页面，无弹窗",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看页面关闭按钮状态",
+     "expected": "关闭按钮不可见或置灰"
+    }
+   ],
+   "expected_result": "无弹窗时关闭按钮不可操作",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-259"
+  },
+  {
+   "title": "射门数据列正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "射门",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员射门数据为正常数值（如场均2.3）",
+   "preconditions": "已登录，进入球员榜页面，球员有射门数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的射门数据列",
+     "expected": "显示射门数据，数值正确"
+    }
+   ],
+   "expected_result": "射门数据正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-260"
+  },
+  {
+   "title": "射门数据为0显示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "射门",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球员射门数据为0",
+   "preconditions": "已登录，进入球员榜页面，存在射门为0的球员",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的射门数据列",
+     "expected": "显示0，无异常"
+    }
+   ],
+   "expected_result": "射门数据为0正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-261"
+  },
+  {
+   "title": "射正数据列正常展示",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "射正",
+   "case_design_method": "等价类划分",
+   "positive_negative": "positive",
+   "test_data_note": "球员射正数据为正常数值（如场均1.5）",
+   "preconditions": "已登录，进入球员榜页面，球员有射正数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的射正数据列",
+     "expected": "显示射正数据，数值正确"
+    }
+   ],
+   "expected_result": "射正数据正确显示",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-262"
+  },
+  {
+   "title": "射正数据为0显示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "射正",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "球员射正数据为0",
+   "preconditions": "已登录，进入球员榜页面，存在射正为0的球员",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "查看球员列表中的射正数据列",
+     "expected": "显示0，无异常"
+    }
+   ],
+   "expected_result": "射正数据为0正常显示",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-263"
+  },
+  {
+   "title": "关键传球-正常展示球员列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择关键传球指标，联赛有正常球员数据（如球员A场均2.3次，总计37次）",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「关键传球」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示球员名称、球队、场均关键传球、总计关键传球，按场均降序排列"
+    }
+   ],
+   "expected_result": "列表正确展示关键传球数据，数据与后台一致，排序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-264"
+  },
+  {
+   "title": "关键传球-无数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择关键传球指标，但联赛无任何关键传球数据",
+   "preconditions": "已进入球员榜页面，联赛无关键传球数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「关键传球」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表显示空态提示「暂无数据」"
+    }
+   ],
+   "expected_result": "显示空态提示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-265"
+  },
+  {
+   "title": "拦截-正常展示球员列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择拦截指标，联赛有正常球员数据（如球员B场均1.5次，总计20次）",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「拦截」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示球员名称、球队、场均拦截、总计拦截，按场均降序排列"
+    }
+   ],
+   "expected_result": "列表正确展示拦截数据，数据与后台一致，排序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-266"
+  },
+  {
+   "title": "拦截-数据为0时展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "选择拦截指标，所有球员拦截数据均为0",
+   "preconditions": "已进入球员榜页面，联赛球员拦截数据均为0",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「拦截」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示球员，场均拦截显示0.0，总计拦截显示0"
+    }
+   ],
+   "expected_result": "列表正常展示0值，无异常",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-267"
+  },
+  {
+   "title": "封堵-正常展示球员列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择封堵指标，联赛有正常球员数据（如球员C场均1.2次，总计15次）",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「封堵」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示球员名称、球队、场均封堵、总计封堵，按场均降序排列"
+    }
+   ],
+   "expected_result": "列表正确展示封堵数据，数据与后台一致，排序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-268"
+  },
+  {
+   "title": "封堵-切换指标后数据刷新",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "先选择关键传球，再切换为封堵",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「关键传球」",
+     "expected": "列表显示关键传球数据"
+    },
+    {
+     "step": 2,
+     "desc": "再次点击筛选，选择「封堵」",
+     "expected": "列表刷新为封堵数据"
+    }
+   ],
+   "expected_result": "列表数据从关键传球切换为封堵，无残留",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-269"
+  },
+  {
+   "title": "解围-正常展示球员列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择解围指标，联赛有正常球员数据（如球员D场均3.0次，总计40次）",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「解围」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示球员名称、球队、场均解围、总计解围，按场均降序排列"
+    }
+   ],
+   "expected_result": "列表正确展示解围数据，数据与后台一致，排序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-270"
+  },
+  {
+   "title": "解围-数据异常大值展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "选择解围指标，某球员解围总计为999（极大值）",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「解围」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "该球员显示总计999，场均正确计算，无溢出或显示异常"
+    }
+   ],
+   "expected_result": "大数值正常显示，无格式错误",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-271"
+  },
+  {
+   "title": "黄牌-正常展示球员列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择黄牌指标，联赛有正常球员数据（如球员E场均0.5次，总计7次）",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「黄牌」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示球员名称、球队、场均黄牌、总计黄牌，按场均降序排列"
+    }
+   ],
+   "expected_result": "列表正确展示黄牌数据，数据与后台一致，排序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-272"
+  },
+  {
+   "title": "黄牌-数据为小数展示",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "边界值分析",
+   "positive_negative": "boundary",
+   "test_data_note": "选择黄牌指标，某球员场均黄牌为0.33（小数）",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「黄牌」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "该球员场均黄牌显示0.33，保留两位小数"
+    }
+   ],
+   "expected_result": "小数正确显示，无四舍五入错误",
+   "remark": "边界用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-273"
+  },
+  {
+   "title": "红牌-正常展示球员列表",
+   "priority": "P0",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "场景法",
+   "positive_negative": "positive",
+   "test_data_note": "选择红牌指标，联赛有正常球员数据（如球员F场均0.1次，总计2次）",
+   "preconditions": "已进入球员榜页面，联赛有球员数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「红牌」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表展示球员名称、球队、场均红牌、总计红牌，按场均降序排列"
+    }
+   ],
+   "expected_result": "列表正确展示红牌数据，数据与后台一致，排序正确",
+   "remark": "正面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-274"
+  },
+  {
+   "title": "红牌-无红牌数据时展示空态",
+   "priority": "P1",
+   "domain": "用户端/联赛/球员榜",
+   "module": "球员榜",
+   "case_design_method": "错误推测",
+   "positive_negative": "negative",
+   "test_data_note": "选择红牌指标，但联赛无任何红牌数据",
+   "preconditions": "已进入球员榜页面，联赛无红牌数据",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "点击筛选按钮，选择「红牌」",
+     "expected": "筛选弹窗关闭，列表刷新"
+    },
+    {
+     "step": 2,
+     "desc": "查看列表",
+     "expected": "列表显示空态提示「暂无数据」"
+    }
+   ],
+   "expected_result": "显示空态提示，无报错",
+   "remark": "负面用例",
+   "client_scope": [
+    "app",
+    "pc",
+    "web"
+   ],
+   "id": "TC-275"
+  }
+ ],
+ "api_cases": [],
+ "_warnings": [
+  "functional-chunk-9 生成被截断，已重试"
+ ]
+}
