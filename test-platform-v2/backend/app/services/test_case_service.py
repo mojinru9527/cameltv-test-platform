@@ -7,6 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.models.test_case import TestCase
 from app.models.test_case_category import TestCaseDomain, TestCaseModule
+from app.services.test_case_taxonomy import (
+    canonical_case_location,
+    classify_case_surface,
+    taxonomy_location_matches,
+)
 
 # ── P1-2/S2b: HTML sanitization (defense-in-depth against stored XSS) ────
 
@@ -47,21 +52,6 @@ CASE_TYPE_ALIASES: dict[str, tuple[str, ...]] = {
 
 SURFACE_ORDER = {"用户端": 0, "运营后台": 1, "接口测试": 2, "其他": 3}
 
-# Batch 129：Batch 110 的存量功能用例早于统一 domain 命名，31 个旧域
-# 没有显式携带“用户端/运营后台”。映射来自仓库事实源：
-# docs/体育平台-用例结构规范.md + work-logs/evidence/batch-110/functional-case-audit.json。
-LEGACY_USER_DOMAINS = frozenset({
-    "个人中心", "赛事详情", "直播间", "app端数据与排行榜", "资讯", "首页",
-    "pc端", "搜索", "登录注册", "启动引导", "支付与账户", "ugc内容",
-    "web端", "骆驼币系统", "广告系统", "银钻系统", "ugc功能", "银钻预测",
-    "付费活动",
-})
-LEGACY_ADMIN_DOMAINS = frozenset({
-    "财务管理", "ugc管理", "商城管理", "消息管理", "赛事预测", "广告管理",
-    "活动管理", "银钻任务管理", "风控管理", "装扮管理", "系统管理",
-    "球队及联赛管理",
-})
-
 
 def canonical_case_type(value: str) -> str:
     """Map legacy persisted values to the product's canonical case types."""
@@ -71,24 +61,6 @@ def canonical_case_type(value: str) -> str:
 def case_type_values(value: str) -> tuple[str, ...]:
     """Return persisted values accepted by a canonical type filter."""
     return CASE_TYPE_ALIASES.get(canonical_case_type(value), (value,))
-
-
-def classify_case_surface(domain: str, case_type: str) -> str:
-    """从存量 domain/case_type 推导产品界面，不新增迁移字段。"""
-    normalized = domain.strip().lower()
-    if canonical_case_type(case_type) == "api" or "接口" in normalized:
-        return "接口测试"
-    if any(keyword in normalized for keyword in ("运营后台", "管理后台", "后台", "admin")):
-        return "运营后台"
-    if any(keyword in normalized for keyword in (
-        "用户端", "客户端", "前台", "pc端", "移动端", "app端", "web端",
-    )):
-        return "用户端"
-    if normalized in LEGACY_ADMIN_DOMAINS:
-        return "运营后台"
-    if normalized in LEGACY_USER_DOMAINS:
-        return "用户端"
-    return "其他"
 
 
 def _module_segments(module: str) -> list[str]:
@@ -145,9 +117,14 @@ def list_cases(
     db: Session,
     *,
     project_id: int = 0,
+    case_id: str = "",
     domain: str = "",
     module: str = "",
+    surface: str = "",
+    taxonomy_domain: str = "",
+    taxonomy_module: str = "",
     case_type: str = "",
+    positive_negative: str = "",
     priority: str = "",
     status: str = "",
     keyword: str = "",
@@ -162,6 +139,9 @@ def list_cases(
     stmt = stmt.where(TestCase.project_id == project_id)
     count_stmt = count_stmt.where(TestCase.project_id == project_id)
 
+    if case_id:
+        stmt = stmt.where(TestCase.case_id == case_id)
+        count_stmt = count_stmt.where(TestCase.case_id == case_id)
     if domain:
         stmt = stmt.where(TestCase.domain == domain)
         count_stmt = count_stmt.where(TestCase.domain == domain)
@@ -172,6 +152,9 @@ def list_cases(
         values = case_type_values(case_type)
         stmt = stmt.where(TestCase.case_type.in_(values))
         count_stmt = count_stmt.where(TestCase.case_type.in_(values))
+    if positive_negative:
+        stmt = stmt.where(TestCase.positive_negative == positive_negative)
+        count_stmt = count_stmt.where(TestCase.positive_negative == positive_negative)
     if priority:
         stmt = stmt.where(TestCase.priority == priority)
         count_stmt = count_stmt.where(TestCase.priority == priority)
@@ -200,6 +183,30 @@ def list_cases(
             | (TestCase.steps.ilike(like))
             | (TestCase.expected_result.ilike(like))
         )
+
+    if surface or taxonomy_domain or taxonomy_module:
+        candidates = db.execute(
+            stmt.with_only_columns(
+                TestCase.id,
+                TestCase.domain,
+                TestCase.module,
+                TestCase.case_type,
+            ).order_by(None)
+        ).all()
+        matching_ids = [
+            row.id
+            for row in candidates
+            if taxonomy_location_matches(
+                canonical_case_location(row.domain, row.module, row.case_type),
+                surface=surface,
+                domain=taxonomy_domain,
+                module_path=taxonomy_module,
+            )
+        ]
+        if not matching_ids:
+            return [], 0
+        stmt = stmt.where(TestCase.id.in_(matching_ids))
+        count_stmt = count_stmt.where(TestCase.id.in_(matching_ids))
 
     total = db.scalar(count_stmt) or 0
 
@@ -346,18 +353,20 @@ def get_taxonomy(
 
     grouped: dict[str, dict[str, dict]] = {}
     for row in rows:
-        row_surface = classify_case_surface(row.domain, row.case_type)
-        if surface and row_surface != surface:
+        location = canonical_case_location(row.domain, row.module, row.case_type)
+        if surface and location.surface != surface:
             continue
-        domain_name = row.domain.strip() or "未分类"
-        domain = grouped.setdefault(row_surface, {}).setdefault(
-            domain_name,
+        domain = grouped.setdefault(location.surface, {}).setdefault(
+            location.domain,
             {"count": 0, "modules": {}},
         )
         domain["count"] += 1
         children = domain["modules"]
         path_parts: list[str] = []
-        for segment in _module_segments(row.module):
+        for segment in (
+            _module_segments(location.module_path)
+            if location.module_path else []
+        ):
             path_parts.append(segment)
             node = children.setdefault(
                 segment,
@@ -404,6 +413,7 @@ def get_taxonomy(
 # ── helper ────────────────────────────────────────────
 
 def _row_to_dict(r: TestCase) -> dict:
+    location = canonical_case_location(r.domain, r.module, r.case_type)
     return {
         "id": r.id,
         "project_id": r.project_id,
@@ -412,11 +422,17 @@ def _row_to_dict(r: TestCase) -> dict:
         "domain": r.domain,
         "module": r.module,
         "case_type": r.case_type,
-        "surface": classify_case_surface(r.domain, r.case_type),
+        "surface": location.surface,
+        "taxonomy_domain": location.domain,
+        "taxonomy_module": location.module_path,
+        "terminal_scopes": list(location.terminal_scopes),
         "priority": r.priority,
         "status": r.status,
         "is_deleted": r.is_deleted,
         "tags": r.tags,
+        "case_design_method": r.case_design_method,
+        "positive_negative": r.positive_negative,
+        "test_data_note": r.test_data_note,
         "preconditions": r.preconditions,
         "steps": r.steps,
         "expected_result": r.expected_result,
@@ -426,7 +442,11 @@ def _row_to_dict(r: TestCase) -> dict:
         "api_headers": r.api_headers,
         "api_body": r.api_body,
         "api_assertions": r.api_assertions,
+        "depends_on_ids": r.depends_on_ids,
+        "last_response_json": r.last_response_json,
+        "last_run_status": r.last_run_status,
         "source": r.source,
+        "source_req_id": r.source_req_id,
         "source_doc_id": r.source_doc_id,
         "old_id": r.old_id,
         "review_status": r.review_status,

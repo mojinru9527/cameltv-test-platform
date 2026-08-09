@@ -4,6 +4,38 @@ from __future__ import annotations
 import pytest
 
 
+@pytest.mark.parametrize("export_format", ["excel", "xmind"])
+def test_export_uses_canonical_taxonomy_filters(
+    client, auth_headers, monkeypatch, export_format
+):
+    captured: dict[str, str] = {}
+
+    def fake_list_cases(_db, **kwargs):
+        captured.update(kwargs)
+        return [], 0
+
+    monkeypatch.setattr(
+        "app.api.v1.test_case.test_case_service.list_cases", fake_list_cases
+    )
+
+    response = client.get(
+        f"/api/v1/test-cases/export/{export_format}",
+        params={
+            "surface": "用户端",
+            "taxonomy_domain": "赛事详情",
+            "taxonomy_module": "预测Pick",
+            "positive_negative": "negative",
+        },
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert captured["surface"] == "用户端"
+    assert captured["taxonomy_domain"] == "赛事详情"
+    assert captured["taxonomy_module"] == "预测Pick"
+    assert captured["positive_negative"] == "negative"
+
+
 class TestCaseCRUD:
     def test_create_case(self, client, auth_headers):
         resp = client.post("/api/v1/test-cases", json={
@@ -207,7 +239,7 @@ class TestCaseTypeStatistics:
 
 
 class TestCaseTaxonomy:
-    """Batch 128 — 用例分类必须先区分用户端/运营后台，再展示子模块。"""
+    """Batch 128/130 — 先区分界面，再按真实业务模块聚合。"""
 
     def test_taxonomy_defaults_to_functional_cases_and_builds_module_paths(
         self, client, auth_headers, db_session,
@@ -256,21 +288,16 @@ class TestCaseTaxonomy:
         taxonomy = response.json()["data"]
         assert [surface["surface"] for surface in taxonomy] == ["用户端", "运营后台"]
         user_domain = taxonomy[0]["domains"][0]
-        assert user_domain["domain"] == "体育-用户端-功能"
+        assert user_domain["domain"] == "赛事详情"
         assert user_domain["modules"][0] == {
-            "name": "赛事详情",
-            "path": "赛事详情",
+            "name": "预测Pick",
+            "path": "预测Pick",
             "count": 1,
             "children": [{
-                "name": "预测Pick",
-                "path": "赛事详情/预测Pick",
+                "name": "入口",
+                "path": "预测Pick/入口",
                 "count": 1,
-                "children": [{
-                    "name": "入口",
-                    "path": "赛事详情/预测Pick/入口",
-                    "count": 1,
-                    "children": [],
-                }],
+                "children": [],
             }],
         }
         assert "预测接口" not in str(taxonomy)
@@ -396,3 +423,175 @@ class TestCaseTaxonomy:
         assert ("运营后台", "财务管理") in taxonomy_domains
         assert ("其他", "未来业务域") in taxonomy_domains
         assert ("接口测试", "财务管理") in taxonomy_domains
+
+    @pytest.mark.parametrize(("domain", "module", "expected"), [
+        (
+            "体育-用户端-功能",
+            "安卓iOS/赛事详情/预测Pick/入口",
+            ("用户端", "赛事详情", "预测Pick/入口"),
+        ),
+        (
+            "用户端/赛事详情/赛事详情页(PC)",
+            "赛事详情页(PC)/预测Pick",
+            ("用户端", "赛事详情", "预测Pick"),
+        ),
+        (
+            "体育-用户端",
+            "赛事回放列表(PC)/筛选",
+            ("用户端", "回放", "筛选"),
+        ),
+        (
+            "运营后台/财务管理/用户账户",
+            "用户账户/流水",
+            ("运营后台", "财务管理", "用户账户/流水"),
+        ),
+        (
+            "体育-运营后台-功能",
+            "运营后台/赛事预测/奖励发放记录",
+            ("运营后台", "赛事预测", "奖励发放记录"),
+        ),
+        (
+            "体育-接口测试",
+            "PC-WEB/世界杯专题/赛程",
+            ("接口测试", "世界杯专题", "赛程"),
+        ),
+        (
+            "体育平台-用户端",
+            "首页PC端",
+            ("用户端", "首页", ""),
+        ),
+    ])
+    def test_taxonomy_location_removes_terminal_wrappers(
+        self, domain, module, expected,
+    ):
+        from app.services.test_case_taxonomy import canonical_case_location
+
+        location = canonical_case_location(domain, module, "manual")
+
+        assert (location.surface, location.domain, location.module_path) == expected
+        rendered = f"{location.domain}/{location.module_path}".lower()
+        assert "pc-web" not in rendered
+        assert "安卓ios" not in rendered
+        assert "移动端-web" not in rendered
+
+    def test_taxonomy_aggregates_terminal_variants_and_parent_filter_matches_all(
+        self, client, auth_headers, db_session,
+    ):
+        from app.models.test_case import TestCase
+
+        db_session.add_all([
+            TestCase(
+                project_id=1,
+                case_id="CASE-PC",
+                title="PC 预测入口",
+                domain="体育-用户端-功能",
+                module="PC-web/赛事详情/预测Pick/入口",
+                case_type="manual",
+                positive_negative="positive",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                case_id="CASE-MOBILE",
+                title="移动端预测异常",
+                domain="用户端/赛事详情/赛事详情页_移动_",
+                module="赛事详情页_移动_/预测Pick/异常处理",
+                case_type="manual",
+                positive_negative="negative",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                case_id="CASE-OTHER",
+                title="联赛入口",
+                domain="用户端/联赛",
+                module="联赛详情页/入口",
+                case_type="manual",
+                positive_negative="negative",
+                is_deleted=False,
+            ),
+        ])
+        db_session.commit()
+
+        taxonomy_response = client.get(
+            "/api/v1/test-cases/taxonomy", headers=auth_headers,
+        )
+        list_response = client.get(
+            "/api/v1/test-cases",
+            params={
+                "surface": "用户端",
+                "taxonomy_domain": "赛事详情",
+                "taxonomy_module": "预测Pick",
+                "page_size": 100,
+            },
+            headers=auth_headers,
+        )
+
+        assert taxonomy_response.status_code == 200
+        user_surface = next(
+            item for item in taxonomy_response.json()["data"]
+            if item["surface"] == "用户端"
+        )
+        event_domain = next(
+            item for item in user_surface["domains"]
+            if item["domain"] == "赛事详情"
+        )
+        assert event_domain["count"] == 2
+        assert [node["name"] for node in event_domain["modules"]] == ["预测Pick"]
+        assert event_domain["modules"][0]["count"] == 2
+
+        assert list_response.status_code == 200
+        page = list_response.json()["data"]
+        assert page["total"] == 2
+        assert {item["case_id"] for item in page["items"]} == {
+            "CASE-PC", "CASE-MOBILE",
+        }
+
+    def test_exact_case_id_and_negative_filter_do_not_match_unrelated_cases(
+        self, client, auth_headers, db_session,
+    ):
+        from app.models.test_case import TestCase
+
+        db_session.add_all([
+            TestCase(
+                project_id=1,
+                case_id="SP-B125-EXACT",
+                title="目标异常",
+                domain="用户端/首页",
+                module="热门赛事",
+                case_type="manual",
+                positive_negative="negative",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                case_id="SP-B125-EXACT-SUFFIX",
+                title="相似编号正向",
+                domain="用户端/首页",
+                module="热门赛事",
+                case_type="manual",
+                positive_negative="positive",
+                is_deleted=False,
+            ),
+        ])
+        db_session.commit()
+
+        response = client.get(
+            "/api/v1/test-cases",
+            params={
+                "case_id": "SP-B125-EXACT",
+                "positive_negative": "negative",
+                "page_size": 100,
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        page = response.json()["data"]
+        assert page["total"] == 1
+        assert [item["case_id"] for item in page["items"]] == ["SP-B125-EXACT"]
+        item = page["items"][0]
+        assert item["positive_negative"] == "negative"
+        assert item["taxonomy_domain"] == "首页"
+        assert item["taxonomy_module"] == "热门赛事"
+        assert item["terminal_scopes"] == []
