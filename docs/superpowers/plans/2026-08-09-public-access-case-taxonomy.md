@@ -126,4 +126,3 @@
 - [ ] Capture console/network evidence proving zero protected business GETs before login and no duplicate GETs after login.
 - [ ] Run `scan-common-bugs.ps1` and `audit-cconditions.ps1 -RequireLatestBatch`; resolve HARD findings.
 - [ ] Complete QA and conditional Leader artifacts, then request the one total confirmation covering push, Draft PR, checks, and merge.
-

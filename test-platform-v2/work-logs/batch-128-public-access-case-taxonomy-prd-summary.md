@@ -1,6 +1,6 @@
 # Batch 128 — PRD Summary（公开访问、普通注册与用例分类体系）
 
-> **Product (🟦)** | Date: 2026-08-09 | Status: Approved for implementation  
+> **Product (🟦)** | Date: 2026-08-09 | Status: Approved for implementation
 > **mode**: full（引入公开访问状态机、注册策略与新分类接口）
 
 ## 1. 问题陈述
@@ -86,4 +86,3 @@
 - `cameltv-bug-guard`：静态路由、React cleanup、重复请求与测试契约检查。
 - `cameltv-ui-conventions` / `impeccable`：产品态 Dialog、四态、响应式与无障碍。
 - `karpathy-guidelines` / `writing-plans`：聚焦变更与可验证计划。
-

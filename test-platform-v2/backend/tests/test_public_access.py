@@ -56,4 +56,3 @@ def test_public_access_exposes_safe_module_catalog_without_auth(client, db_sessi
     assert "permissions" not in data
     assert "projects" not in data
     assert "user" not in data
-
