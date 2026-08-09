@@ -7,6 +7,7 @@ import { ArrowRight, Lock, TestTube2 } from '@/lib/icons'
 interface GuestPlatformHomeProps {
   modules: MenuItem[]
   registrationEnabled: boolean
+  onNavigate: (path: string) => void
   onRequireLogin: (path: string, label: string) => void
 }
 
@@ -17,6 +18,7 @@ function actionableItems(module: MenuItem): MenuItem[] {
 export default function GuestPlatformHome({
   modules,
   registrationEnabled,
+  onNavigate,
   onRequireLogin,
 }: GuestPlatformHomeProps) {
   return (
@@ -31,7 +33,7 @@ export default function GuestPlatformHome({
             先浏览平台，再登录开始工作
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            未登录也可以查看平台提供的模块。打开具体功能时，我们会先请你登录；新用户可以直接注册并创建自己的项目。
+            未登录也可以进入模块说明页了解平台能力。真正开始使用时，我们会请你登录；新用户可以直接注册并创建自己的项目。
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button type="button" onClick={() => onRequireLogin('/workbench', '工作台')}>
@@ -73,8 +75,8 @@ export default function GuestPlatformHome({
                     key={item.code}
                     type="button"
                     className="flex min-h-11 items-center justify-between rounded-lg px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={`打开${item.name}，需要登录`}
-                    onClick={() => onRequireLogin(item.path || '/', item.name)}
+                    aria-label={`查看${item.name}功能`}
+                    onClick={() => onNavigate(item.path || '/')}
                   >
                     <span>{item.name}</span>
                     <ArrowRight className="size-4" aria-hidden="true" />

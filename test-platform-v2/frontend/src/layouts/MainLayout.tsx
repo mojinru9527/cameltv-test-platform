@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
-import { ProjectScopeBoundary } from './ProjectScopeBoundary'
 import { toast } from 'sonner'
 import { fetchMenus, fetchPublicAccess, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -29,11 +28,13 @@ import {
 } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/ui'
+import { Badge, Button } from '@/ui'
 import CommandPalette from '@/components/CommandPalette'
 import LoginGateDialog from '@/components/auth/LoginGateDialog'
 import GuestPlatformHome from './GuestPlatformHome'
-import { Button } from '@/ui'
+import GuestModulePreview from './GuestModulePreview'
+import ProjectAccessBoundary from './ProjectAccessBoundary'
+import { resolveGuestModule } from './guestModuleCatalog'
 import {
   Select,
   SelectContent,
@@ -185,10 +186,17 @@ function NavigationMenuItems({
   })
 }
 
+function findMenuLabel(items: MenuItem[], target: string, pathname: string): string {
+  const flattened = items.flatMap((item) => [item, ...(item.children || [])])
+  return flattened.find((item) => item.path === target)?.name
+    || flattened.find((item) => item.path.split('?')[0] === pathname)?.name
+    || ''
+}
+
 export default function MainLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, projects, currentProjectId, setCurrentProject, projectThemeMap, setProjectTheme, logout } =
+  const { user, projects, currentProjectId, setCurrentProject, projectThemeMap, setProjectTheme, logout, hasPerm } =
     useAuthStore()
   const { mode, colorTheme, setMode, setColorTheme } = useTheme()
   const [menus, setMenus] = useState<MenuItem[]>([])
@@ -229,19 +237,11 @@ export default function MainLayout() {
     document.getElementById('main-content')?.focus()
   }, [location.pathname])
 
-  useEffect(() => {
-    if (!isAuthenticated && location.pathname !== '/' && menus.length > 0) {
-      const allItems = menus.flatMap((menu) => menu.children?.length ? menu.children : [menu])
-      const target = allItems.find((item) => item.path === location.pathname)
-      setLoginTarget({ path: location.pathname, label: target?.name || '该模块' })
-    }
-  }, [isAuthenticated, location.pathname, menus])
+  const navigateMenu = (path: string) => {
+    navigate(path || '/')
+  }
 
-  const navigateOrRequireLogin = (path: string, label = '该模块') => {
-    if (isAuthenticated) {
-      navigate(path)
-      return
-    }
+  const requireLogin = (path: string, label = '该模块') => {
     setLoginTarget({ path: path || '/', label })
   }
 
@@ -331,7 +331,7 @@ export default function MainLayout() {
                 <NavigationMenuItems
                   items={knowledgeMenus}
                   pathname={location.pathname}
-                  onNavigate={navigateOrRequireLogin}
+                  onNavigate={navigateMenu}
                 />
               </SidebarMenu>
             </SidebarGroup>
@@ -343,7 +343,7 @@ export default function MainLayout() {
               <NavigationMenuItems
                 items={mainMenus}
                 pathname={location.pathname}
-                onNavigate={navigateOrRequireLogin}
+                onNavigate={navigateMenu}
               />
             </SidebarMenu>
           </SidebarGroup>
@@ -355,7 +355,7 @@ export default function MainLayout() {
                 <NavigationMenuItems
                   items={systemMenus}
                   pathname={location.pathname}
-                  onNavigate={navigateOrRequireLogin}
+                  onNavigate={navigateMenu}
                 />
               </SidebarMenu>
             </SidebarGroup>
@@ -385,7 +385,7 @@ export default function MainLayout() {
               type="button"
               variant="secondary"
               className="w-full group-data-[collapsible=icon]:px-0"
-              onClick={() => navigateOrRequireLogin('/workbench', '工作台')}
+              onClick={() => requireLogin('/workbench', '工作台')}
             >
               <User className="size-4" aria-hidden="true" />
               <span className="group-data-[collapsible=icon]:hidden">登录平台</span>
@@ -568,7 +568,7 @@ export default function MainLayout() {
                 type="button"
                 size="sm"
                 className="!min-h-11"
-                onClick={() => navigateOrRequireLogin('/workbench', '工作台')}
+                onClick={() => requireLogin('/workbench', '工作台')}
               >
                 登录
               </Button>
@@ -579,14 +579,31 @@ export default function MainLayout() {
         {/* Page content */}
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-auto p-4 page-enter sm:p-6">
           {isAuthenticated ? (
-            <ProjectScopeBoundary projectId={currentProjectId}>
+            <ProjectAccessBoundary
+              projectId={currentProjectId}
+              pathname={location.pathname}
+              canCreateProject={hasPerm('project:self_create') || hasPerm('project:create') || hasPerm('*')}
+              onOpenProjects={() => navigate('/my-projects')}
+            >
               <Outlet />
-            </ProjectScopeBoundary>
-          ) : (
+            </ProjectAccessBoundary>
+          ) : location.pathname === '/' ? (
             <GuestPlatformHome
               modules={menus}
               registrationEnabled={registrationEnabled}
-              onRequireLogin={navigateOrRequireLogin}
+              onNavigate={navigateMenu}
+              onRequireLogin={requireLogin}
+            />
+          ) : (
+            <GuestModulePreview
+              module={resolveGuestModule(
+                location.pathname,
+                location.search,
+                findMenuLabel(menus, `${location.pathname}${location.search}`, location.pathname),
+              )}
+              path={`${location.pathname}${location.search}`}
+              registrationEnabled={registrationEnabled}
+              onRequireLogin={requireLogin}
             />
           )}
         </main>
