@@ -39,6 +39,22 @@ _SAFE_FIELDS = frozenset({
     "description", "remark", "tags", "api_endpoint", "review_comment",
 })
 
+CASE_TYPE_ALIASES: dict[str, tuple[str, ...]] = {
+    "manual": ("manual", "functional"),
+    "api": ("api",),
+    "ui": ("ui",),
+}
+
+
+def canonical_case_type(value: str) -> str:
+    """Map legacy persisted values to the product's canonical case types."""
+    return "manual" if value == "functional" else value
+
+
+def case_type_values(value: str) -> tuple[str, ...]:
+    """Return persisted values accepted by a canonical type filter."""
+    return CASE_TYPE_ALIASES.get(canonical_case_type(value), (value,))
+
 
 def _sanitize_html(value: str) -> str:
     """Strip dangerous HTML tags and event handlers, preserving markdown syntax.
@@ -67,6 +83,8 @@ def _sanitize_case_data(data: dict) -> dict:
     for field in _SAFE_FIELDS:
         if field in data and isinstance(data[field], str):
             data[field] = _sanitize_html(data[field])
+    if isinstance(data.get("case_type"), str):
+        data["case_type"] = canonical_case_type(data["case_type"])
     return data
 
 
@@ -112,8 +130,9 @@ def list_cases(
         stmt = stmt.where(TestCase.module == module)
         count_stmt = count_stmt.where(TestCase.module == module)
     if case_type:
-        stmt = stmt.where(TestCase.case_type == case_type)
-        count_stmt = count_stmt.where(TestCase.case_type == case_type)
+        values = case_type_values(case_type)
+        stmt = stmt.where(TestCase.case_type.in_(values))
+        count_stmt = count_stmt.where(TestCase.case_type.in_(values))
     if priority:
         stmt = stmt.where(TestCase.priority == priority)
         count_stmt = count_stmt.where(TestCase.priority == priority)
@@ -258,13 +277,16 @@ def get_domain_tree(db: Session, project_id: int = 0) -> list[dict]:
 
 def get_stats(db: Session, project_id: int = 0) -> dict:
     """用例总数 / 按类型分布。过滤已删除用例。"""
-    rows = db.scalars(
-        select(TestCase).where(TestCase.project_id == project_id, TestCase.is_deleted == False)
+    rows = db.execute(
+        select(TestCase.case_type, func.count(TestCase.id))
+        .where(TestCase.project_id == project_id, TestCase.is_deleted.is_(False))
+        .group_by(TestCase.case_type)
     ).all()
     types: dict[str, int] = {}
-    for r in rows:
-        types[r.case_type] = types.get(r.case_type, 0) + 1
-    return {"total": len(rows), "by_type": types}
+    for raw_type, count in rows:
+        case_type = canonical_case_type(raw_type)
+        types[case_type] = types.get(case_type, 0) + count
+    return {"total": sum(types.values()), "by_type": types}
 
 
 # ── helper ────────────────────────────────────────────

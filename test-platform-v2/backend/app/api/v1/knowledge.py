@@ -39,6 +39,7 @@ from app.schemas.knowledge import (
     KnowledgeChunkOut,
     KnowledgeEntityBrief,
     KnowledgeEntityOut,
+    KnowledgeEntityStats,
     KnowledgeHealth,
     KnowledgeIterationCreate,
     KnowledgeIterationOut,
@@ -628,6 +629,43 @@ def extract_graph(
     _audit(req, current, db, "knowledge:graph_extract", f"project#{current.project_id}", str(result))
     db.commit()
     return R.ok(EntityExtractResult(**result))
+
+
+@router.get("/graph/entities/stats", response_model=R[KnowledgeEntityStats], summary="实体统计")
+def entity_stats(
+    entity_type: str | None = Query(None),
+    keyword: str | None = Query(None),
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """Return project-wide totals without conflating them with the list limit."""
+    pid = current.project_id or 0
+    filters = [KnowledgeEntity.project_id == pid]
+    if entity_type:
+        filters.append(KnowledgeEntity.entity_type == entity_type)
+    if keyword:
+        filters.append(
+            KnowledgeEntity.name.contains(keyword)
+            | KnowledgeEntity.description.contains(keyword)
+        )
+
+    rows = db.execute(
+        select(KnowledgeEntity.entity_type, func.count(KnowledgeEntity.id))
+        .where(*filters)
+        .group_by(KnowledgeEntity.entity_type)
+    ).all()
+    by_type = {kind: count for kind, count in rows}
+    missing_source = db.scalar(
+        select(func.count(KnowledgeEntity.id)).where(
+            *filters,
+            KnowledgeEntity.source_id.is_(None),
+        )
+    ) or 0
+    return R.ok(KnowledgeEntityStats(
+        total=sum(by_type.values()),
+        by_type=by_type,
+        missing_source=missing_source,
+    ))
 
 
 @router.get("/graph/entities", response_model=R[list[KnowledgeEntityBrief]], summary="实体列表")

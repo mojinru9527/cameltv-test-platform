@@ -48,8 +48,12 @@ async def gen_module(module_path: str, force: bool) -> dict:
             n = len(exist.get("functional_cases") or [])
             if n > 0:
                 return {"module": module_path, "status": "skipped", "cases": n}
-        except Exception:
-            pass
+        except (OSError, json.JSONDecodeError, AttributeError) as exc:
+            print(
+                f"[run-all] 缓存 {out} 无效，将重新生成：{exc}",
+                file=sys.stderr,
+                flush=True,
+            )
     try:
         extraction, content = build_extraction(module_path)
         fp_count = sum(len(m["function_points"]) for m in extraction["modules"])

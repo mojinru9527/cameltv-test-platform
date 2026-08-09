@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const mockGaps = vi.fn()
@@ -11,7 +11,7 @@ const { default: InteractionGapPanel } = await import('../InteractionGapPanel')
 
 afterEach(() => {
   cleanup()
-  vi.clearAllMocks()
+  mockGaps.mockReset()
 })
 
 describe('InteractionGapPanel (C119-2)', () => {
@@ -27,7 +27,7 @@ describe('InteractionGapPanel (C119-2)', () => {
       ],
     })
     render(<InteractionGapPanel />)
-    await waitFor(() => expect(mockGaps).toHaveBeenCalledWith([]))
+    await waitFor(() => expect(mockGaps).toHaveBeenCalledWith([], expect.any(AbortSignal)))
     expect(screen.getByText('覆盖率 37.5%')).toBeTruthy()
     expect(screen.getByText('已覆盖 3/8 边 · 缺口 5')).toBeTruthy()
     expect(screen.getAllByText('缺口').length).toBeGreaterThan(0)
@@ -43,7 +43,7 @@ describe('InteractionGapPanel (C119-2)', () => {
       gaps: [],
     })
     render(<InteractionGapPanel />)
-    await waitFor(() => expect(mockGaps).toHaveBeenCalledWith([]))
+    await waitFor(() => expect(mockGaps).toHaveBeenCalledWith([], expect.any(AbortSignal)))
     expect(screen.getByText('暂无覆盖缺口')).toBeTruthy()
   })
 
@@ -57,5 +57,33 @@ describe('InteractionGapPanel (C119-2)', () => {
     })
     render(<InteractionGapPanel />)
     await waitFor(() => expect(screen.getByText('接口失败')).toBeTruthy())
+  })
+
+  it('supports filtering and paging through the complete gap set', async () => {
+    mockGaps.mockResolvedValue({
+      total_edges: 55,
+      covered_edges: 0,
+      gap_edges: 55,
+      coverage_rate: 0,
+      gaps: Array.from({ length: 55 }, (_, index) => ({
+        from_module: index === 54 ? '搜索模块' : '首页',
+        entry: `入口 ${index + 1}`,
+        to: `/target-${index + 1}`,
+      })),
+    })
+    render(<InteractionGapPanel />)
+
+    expect(await screen.findByText(/target-1$/)).toBeTruthy()
+    expect(screen.queryByText(/target-51$/)).toBeNull()
+    expect(screen.getByText('第 1 / 2 页')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: '下一页缺口' }))
+    expect(await screen.findByText(/target-51$/)).toBeTruthy()
+
+    fireEvent.change(screen.getByRole('searchbox', { name: '筛选交互缺口' }), {
+      target: { value: '搜索模块' },
+    })
+    expect(screen.getByText(/target-55$/)).toBeTruthy()
+    expect(screen.queryByText(/target-51$/)).toBeNull()
   })
 })

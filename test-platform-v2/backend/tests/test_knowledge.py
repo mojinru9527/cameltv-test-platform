@@ -951,6 +951,68 @@ class TestGraphApi:
         assert len(data) == 1
         assert data[0]["entity_type"] == "api"
 
+    def test_entity_stats_are_project_wide_and_report_missing_sources(self, kdb, kclient):
+        from app.models.knowledge import KnowledgeEntity
+
+        kdb.add_all([
+            KnowledgeEntity(
+                project_id=1, entity_type="api", entity_key="stats-api-1",
+                name="GET /one", source_id=1, confidence=0.9,
+            ),
+            KnowledgeEntity(
+                project_id=1, entity_type="api", entity_key="stats-api-2",
+                name="GET /two", source_id=None, confidence=0.8,
+            ),
+            KnowledgeEntity(
+                project_id=1, entity_type="module", entity_key="stats-module-1",
+                name="首页", source_id=None, confidence=0.7,
+            ),
+            KnowledgeEntity(
+                project_id=999, entity_type="defect", entity_key="stats-other-project",
+                name="不可见", source_id=None, confidence=0.5,
+            ),
+        ])
+        kdb.commit()
+
+        response = kclient.get("/api/v1/knowledge/graph/entities/stats")
+
+        assert response.status_code == 200
+        assert response.json()["data"] == {
+            "total": 3,
+            "by_type": {"api": 2, "module": 1},
+            "missing_source": 2,
+        }
+
+    def test_entity_stats_support_type_and_keyword_filters(self, kdb, kclient):
+        from app.models.knowledge import KnowledgeEntity
+
+        kdb.add_all([
+            KnowledgeEntity(
+                project_id=1, entity_type="api", entity_key="filter-api-1",
+                name="GET /search", description="搜索接口", confidence=0.9,
+            ),
+            KnowledgeEntity(
+                project_id=1, entity_type="api", entity_key="filter-api-2",
+                name="GET /user", description="用户接口", confidence=0.9,
+            ),
+            KnowledgeEntity(
+                project_id=1, entity_type="module", entity_key="filter-module-1",
+                name="搜索", description="搜索模块", confidence=0.8,
+            ),
+        ])
+        kdb.commit()
+
+        response = kclient.get(
+            "/api/v1/knowledge/graph/entities/stats?entity_type=api&keyword=搜索"
+        )
+
+        assert response.status_code == 200
+        assert response.json()["data"] == {
+            "total": 1,
+            "by_type": {"api": 1},
+            "missing_source": 1,
+        }
+
     def test_entity_detail_404(self, kclient):
         resp = kclient.get("/api/v1/knowledge/graph/entities/99999")
         assert resp.status_code == 200

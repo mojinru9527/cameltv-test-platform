@@ -13,6 +13,7 @@ import { fetchKnowledgeSources, fetchSourceChunks, verifyKnowledgeSource } from 
 import type { KnowledgeChunk, KnowledgeSource } from '@/types'
 import { Loader2, Sparkles, BookOpen, Inbox, CheckCircle2, ChevronDown, ChevronRight } from '@/lib/icons'
 import { toast } from 'sonner'
+import { sourceStatusLabel } from './knowledgeStatus'
 
 const PARA_LABELS: Record<string, { label: string; icon: typeof Sparkles }> = {
   area: { label: '问题模式 / 长期领域', icon: Sparkles },
@@ -222,7 +223,7 @@ export default function PlatformTab() {
                   <Badge tone="neutral">{selected.knowledge_domain === 'platform' ? '平台研发' : '项目知识'}</Badge>
                 )}
                 {selected?.status && (
-                  <Badge tone={selected.status === 'deprecated' ? 'danger' : 'success'}>{selected.status}</Badge>
+                  <Badge tone={selected.status === 'deprecated' ? 'danger' : 'success'}>{sourceStatusLabel(selected.status)}</Badge>
                 )}
                 {selected?.version && (
                   <Badge tone="neutral" className="text-xs">v{selected.version}</Badge>

@@ -64,6 +64,7 @@ import { autoExecutePlan, deletePlan, executeCase, executeAllCases, fetchExecuti
 import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
 import AddCasesModal from './AddCasesModal'
 import PlanDrawer from './PlanDrawer'
+import { executionStatusLabel } from './executionStatus'
 
 const STATUS_COLORS: Record<string, { tone: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; className?: string }> = {
   pass: { tone: 'success' },
@@ -393,7 +394,7 @@ export default function PlanDetail() {
                             <TableCell>
                               <Badge tone={sc.tone} className={sc.className}>
                                 {STATUS_ICONS[r.last_status]}
-                                <span className="ml-0.5">{r.last_status || '-'}</span>
+                                <span className="ml-0.5">{executionStatusLabel(r.last_status)}</span>
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -463,7 +464,7 @@ export default function PlanDetail() {
                           <TableRow key={r.id}>
                             <TableCell className="max-w-0 truncate">{r.case_title}</TableCell>
                             <TableCell>
-                              <Badge tone={sc.tone} className={sc.className}>{r.status}</Badge>
+                              <Badge tone={sc.tone} className={sc.className}>{executionStatusLabel(r.status)}</Badge>
                             </TableCell>
                             <TableCell className="max-w-[200px] truncate">{r.notes || '-'}</TableCell>
                             <TableCell className="text-muted-foreground">

@@ -24,6 +24,7 @@ const {
   searchKnowledge,
   reembedKnowledge,
   fetchGraphView,
+  fetchEntityStats,
   triggerEntityExtract,
 } = await import('@/api/knowledge')
 
@@ -136,6 +137,24 @@ describe('Knowledge API functions', () => {
       mockPost.mockResolvedValue({ extracted: 0, relations: 0, skipped: 0, message: 'nothing' })
       await triggerEntityExtract()
       expect(mockPost).toHaveBeenCalledWith('/knowledge/graph/extract', { source_id: null, max_chunks: 100 })
+    })
+  })
+
+  describe('fetchEntityStats', () => {
+    it('calls the project-wide entity stats endpoint with filters and signal', async () => {
+      const controller = new AbortController()
+      mockGet.mockResolvedValue({ total: 970, by_type: { module: 419 }, missing_source: 970 })
+
+      const result = await fetchEntityStats(
+        { entity_type: 'module', keyword: '首页' },
+        controller.signal,
+      )
+
+      expect(mockGet).toHaveBeenCalledWith('/knowledge/graph/entities/stats', {
+        params: { entity_type: 'module', keyword: '首页' },
+        signal: controller.signal,
+      })
+      expect(result.total).toBe(970)
     })
   })
 })

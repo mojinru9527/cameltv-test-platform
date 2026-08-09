@@ -22,6 +22,8 @@ import DataTable from '@/components/DataTable'
 import ChartFrame from '@/components/charts/ChartFrame'
 import { usePerfWebSocket } from '@/hooks/usePerfWebSocket'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { perfConnectionLabel } from './connectionStatus'
 import {
   fetchDevices, fetchSessions, fetchSession, createSession,
   deleteSession, startSession, stopSession,
@@ -55,6 +57,7 @@ function isCollectorUnavailable(error: unknown): boolean {
 // ── Page ──
 
 export default function PerfTestPage() {
+  useDocumentTitle('性能测试')
   const [searchParams, setSearchParams] = useSearchParams()
   const tabParam = searchParams.get('tab') || 'device'
   const [activeTab, setActiveTab] = useState(tabParam)
@@ -420,8 +423,8 @@ export default function PerfTestPage() {
               <Card>
                 <CardContent className="flex items-center gap-4 py-3">
                   <div className="flex items-center gap-2">
-                    {wsMode === 'websocket' ? <Wifi className="size-4 text-status-success" /> : wsMode === 'polling' ? <WifiOff className="size-4 text-status-warning" /> : <Loader2 className="size-4 animate-spin" />}
-                    <span className="text-sm">{wsMode === 'websocket' ? 'WebSocket 实时' : wsMode === 'polling' ? 'HTTP 轮询(降级)' : '连接中…'}</span>
+                    {!monitoring ? <WifiOff className="size-4 text-muted-foreground" /> : wsMode === 'websocket' ? <Wifi className="size-4 text-status-success" /> : wsMode === 'polling' ? <WifiOff className="size-4 text-status-warning" /> : <Loader2 className="size-4 animate-spin" />}
+                    <span className="text-sm">{perfConnectionLabel(monitoring, wsMode)}</span>
                     {reconnectCount > 0 && <Badge tone="neutral" className="text-xs">重连 {reconnectCount}/3</Badge>}
                   </div>
                   <div className="ml-auto flex items-center gap-2">

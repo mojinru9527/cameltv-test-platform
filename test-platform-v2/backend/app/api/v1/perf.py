@@ -1,10 +1,12 @@
 """Performance monitoring REST API — session CRUD + device listing + report + compare."""
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from typing import Any
 
+import anyio
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
@@ -28,6 +30,7 @@ from app.services import perf_service
 
 logger = logging.getLogger("perf")
 router = APIRouter(prefix="/perf-sessions", tags=["性能测试"])
+DEVICE_DISCOVERY_TIMEOUT_SECONDS = 4.0
 
 
 def _get_project_session(
@@ -45,7 +48,7 @@ def _get_project_session(
 # ── Device ──
 
 @router.get("/devices", response_model=R[DeviceListResponse])
-def list_devices(
+async def list_devices(
     db: Session = Depends(get_db),
     _current: CurrentUser = Depends(get_current_user),
 ) -> Any:
@@ -56,7 +59,21 @@ def list_devices(
             msg="SoloX 未安装，真实性能采集不可用",
             http_status=503,
         )
-    devices = perf_service.list_devices(db)
+    try:
+        discovered = await asyncio.wait_for(
+            anyio.to_thread.run_sync(
+                perf_service.discover_devices,
+                abandon_on_cancel=True,
+            ),
+            timeout=DEVICE_DISCOVERY_TIMEOUT_SECONDS,
+        )
+    except TimeoutError as exc:
+        raise APIException(
+            code=503,
+            msg="设备探测超时，真实性能采集暂不可用",
+            http_status=503,
+        ) from exc
+    devices = perf_service.persist_devices(db, discovered)
     device_outs = [PerfDeviceOut(**d) for d in devices]
     return R.ok(data=DeviceListResponse(devices=device_outs))
 

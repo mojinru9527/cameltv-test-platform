@@ -2,15 +2,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockDelete = vi.fn()
 const mockPost = vi.fn()
+const mockGet = vi.fn()
 
 vi.mock('@/api/client', () => ({
   default: {
     delete: (...args: any[]) => mockDelete(...args),
     post: (...args: any[]) => mockPost(...args),
+    get: (...args: any[]) => mockGet(...args),
   },
 }))
 
-const { createModule, deleteDomain, deleteModule } = await import('@/api/testcase')
+const { createModule, deleteDomain, deleteModule, fetchTestCaseStats } = await import('@/api/testcase')
 
 describe('test case category API calls', () => {
   beforeEach(() => {
@@ -33,5 +35,15 @@ describe('test case category API calls', () => {
     mockDelete.mockResolvedValue({ data: {} })
     await deleteModule(1, 2)
     expect(mockDelete).toHaveBeenCalledWith('/test-cases/domains/1/modules/2')
+  })
+
+  it('loads authoritative case type statistics with an abort signal', async () => {
+    const controller = new AbortController()
+    mockGet.mockResolvedValue({ total: 4, by_type: { manual: 2, api: 1, ui: 1 } })
+
+    const result = await fetchTestCaseStats(controller.signal)
+
+    expect(mockGet).toHaveBeenCalledWith('/test-cases/stats', { signal: controller.signal })
+    expect(result.by_type.manual).toBe(2)
   })
 })

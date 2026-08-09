@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Table,
   TableBody,
@@ -23,12 +23,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { toast } from 'sonner'
 import {
   fetchEntities,
+  fetchEntityStats,
   fetchEntityDetail,
   fetchRelations,
   approveRelation,
   rejectRelation,
 } from '@/api/knowledge'
-import type { KnowledgeEntityBrief, KnowledgeEntity, KnowledgeRelation } from '@/types'
+import type { KnowledgeEntityBrief, KnowledgeEntity, KnowledgeEntityStats, KnowledgeRelation } from '@/types'
 import { Search, CheckCircle2, XCircle, Loader2 } from '@/lib/icons'
 
 const ENTITY_TYPES = [
@@ -65,6 +66,7 @@ const REVIEW_LABELS: Record<string, string> = {
 
 export default function EntityTab() {
   const [rows, setRows] = useState<KnowledgeEntityBrief[]>([])
+  const [stats, setStats] = useState<KnowledgeEntityStats>({ total: 0, by_type: {}, missing_source: 0 })
   const [loading, setLoading] = useState(true)
   const [entityType, setEntityType] = useState('_all')
   const [keyword, setKeyword] = useState('')
@@ -76,21 +78,30 @@ export default function EntityTab() {
   const [relations, setRelations] = useState<KnowledgeRelation[]>([])
   const [relationsLoading, setRelationsLoading] = useState(false)
 
-  const load = useCallback(() => {
+  useEffect(() => {
+    const controller = new AbortController()
     setLoading(true)
-    fetchEntities({
+    const params = {
       entity_type: entityType === '_all' ? undefined : entityType,
       keyword: keyword || undefined,
-      limit: 200,
-    })
-      .then(setRows)
-      .catch(() => toast.error('加载实体列表失败'))
-      .finally(() => setLoading(false))
+    }
+    Promise.all([
+      fetchEntities({ ...params, limit: 200 }, controller.signal),
+      fetchEntityStats(params, controller.signal),
+    ])
+      .then(([nextRows, nextStats]) => {
+        if (controller.signal.aborted) return
+        setRows(nextRows)
+        setStats(nextStats)
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) toast.error('加载实体列表失败')
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false)
+      })
+    return () => controller.abort()
   }, [entityType, keyword])
-
-  useEffect(() => {
-    load()
-  }, [load])
 
   // Load detail + relations when a row is clicked
   useEffect(() => {
@@ -99,16 +110,18 @@ export default function EntityTab() {
       setRelations([])
       return
     }
+    const controller = new AbortController()
     setDetailLoading(true)
     setRelationsLoading(true)
-    fetchEntityDetail(selectedId)
-      .then(setDetail)
-      .catch(() => toast.error('加载实体详情失败'))
-      .finally(() => setDetailLoading(false))
-    fetchRelations({ entity_id: selectedId, limit: 100 })
-      .then(setRelations)
-      .catch(() => toast.error('加载关系列表失败'))
-      .finally(() => setRelationsLoading(false))
+    fetchEntityDetail(selectedId, controller.signal)
+      .then((value) => { if (!controller.signal.aborted) setDetail(value) })
+      .catch(() => { if (!controller.signal.aborted) toast.error('加载实体详情失败') })
+      .finally(() => { if (!controller.signal.aborted) setDetailLoading(false) })
+    fetchRelations({ entity_id: selectedId, limit: 100 }, controller.signal)
+      .then((value) => { if (!controller.signal.aborted) setRelations(value) })
+      .catch(() => { if (!controller.signal.aborted) toast.error('加载关系列表失败') })
+      .finally(() => { if (!controller.signal.aborted) setRelationsLoading(false) })
+    return () => controller.abort()
   }, [selectedId])
 
   const handleApprove = async (relId: number) => {
@@ -131,15 +144,6 @@ export default function EntityTab() {
     }
   }
 
-  // Stats
-  const stats = rows.reduce(
-    (acc, r) => {
-      acc[r.entity_type] = (acc[r.entity_type] ?? 0) + 1
-      return acc
-    },
-    {} as Record<string, number>,
-  )
-
   return (
     <div className="space-y-4">
       {/* Stats cards */}
@@ -147,7 +151,7 @@ export default function EntityTab() {
         {['api', 'field', 'requirement', 'test_case', 'defect'].map((t) => (
           <Card key={t} className="p-3">
             <div className="text-xs text-muted-foreground">{TYPE_LABEL[t]}</div>
-            <div className="text-2xl font-bold">{stats[t] ?? 0}</div>
+            <div className="text-2xl font-bold">{stats.by_type[t] ?? 0}</div>
           </Card>
         ))}
       </div>
@@ -173,8 +177,16 @@ export default function EntityTab() {
             className="pl-9"
           />
         </div>
-        <span className="text-sm text-muted-foreground">{rows.length} 个实体</span>
+        <span className="text-sm text-muted-foreground">
+          项目全量/筛选结果 {stats.total} 个 · 当前展示 {rows.length} 个
+        </span>
       </div>
+
+      {stats.missing_source > 0 && (
+        <div role="status" className="rounded-md border border-status-warning-border bg-status-warning-muted px-3 py-2 text-sm text-status-warning">
+          {stats.missing_source} 个实体缺少可追溯来源；当前仅做标记，不会伪造来源信息。
+        </div>
+      )}
 
       {/* Table */}
       <Card>

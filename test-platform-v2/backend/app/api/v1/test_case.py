@@ -54,6 +54,15 @@ def list_domains(
     return R.ok(tree)
 
 
+@router.get("/stats", response_model=R[dict], summary="用例类型统计")
+def get_test_case_stats(
+    current: CurrentUser = Depends(require_permission("testcase:list")),
+    db: Session = Depends(get_db),
+):
+    """Return authoritative project totals before the dynamic ``/{case_id}`` route."""
+    return R.ok(test_case_service.get_stats(db, project_id=current.project_id or 0))
+
+
 @router.post("/domains", response_model=R[dict], summary="新增域")
 def add_domain(
     body: DomainCreate,

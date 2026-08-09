@@ -35,6 +35,8 @@ const REVIEW_STATUS_MAP: Record<string, { tone: 'success' | 'warning' | 'danger'
   edited: { tone: 'info', label: '已编辑' },
 }
 
+const REVIEW_PAGE_SIZE = 50
+
 interface CaseItem {
   index: number
   title: string
@@ -68,6 +70,7 @@ export default function ReviewPage() {
   const [tab, setTab] = useState<'func' | 'api'>('func')
   const [generating, setGenerating] = useState(false)
   const [editDraft, setEditDraft] = useState<Partial<CaseItem> | null>(null)
+  const [page, setPage] = useState(1)
 
   const load = useCallback(async (signal?: AbortSignal) => {
     if (!Number.isInteger(docId) || docId <= 0) {
@@ -132,6 +135,20 @@ export default function ReviewPage() {
     }
     return result
   }, [cases, filter, search])
+
+  const pageCount = Math.max(1, Math.ceil(filteredCases.length / REVIEW_PAGE_SIZE))
+  const pagedCases = useMemo(
+    () => filteredCases.slice((page - 1) * REVIEW_PAGE_SIZE, page * REVIEW_PAGE_SIZE),
+    [filteredCases, page],
+  )
+
+  useEffect(() => {
+    setPage(1)
+  }, [filter, search, tab])
+
+  useEffect(() => {
+    setPage((current) => Math.min(current, pageCount))
+  }, [pageCount])
 
   const toggleSelect = (idx: number) => {
     setSelectedIds((prev) => {
@@ -301,7 +318,7 @@ export default function ReviewPage() {
               </Select>
             </div>
           </CardHeader>
-          <CardContent className="p-0 max-h-[60vh] overflow-y-auto">
+          <CardContent className="p-0">
             <div className="px-3 pb-1">
               <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                 <Checkbox checked={selectedIds.size === filteredCases.length && filteredCases.length > 0} onCheckedChange={toggleAll} />
@@ -311,8 +328,8 @@ export default function ReviewPage() {
             {filteredCases.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-8">暂无匹配用例</p>
             ) : (
-              <div className="divide-y">
-                {filteredCases.map((c) => {
+              <div className="max-h-[52vh] divide-y overflow-y-auto">
+                {pagedCases.map((c) => {
                   const isActive = activeCase?.index === c.index
                   const rv = REVIEW_STATUS_MAP[c.review_status] || REVIEW_STATUS_MAP.pending
                   return (
@@ -351,6 +368,29 @@ export default function ReviewPage() {
                     </div>
                   )
                 })}
+              </div>
+            )}
+            {filteredCases.length > REVIEW_PAGE_SIZE && (
+              <div className="flex items-center justify-between border-t px-3 py-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={page === 1}
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  aria-label="上一页"
+                >
+                  上一页
+                </Button>
+                <span className="text-xs tabular-nums text-muted-foreground">第 {page} / {pageCount} 页</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={page === pageCount}
+                  onClick={() => setPage((current) => Math.min(pageCount, current + 1))}
+                  aria-label="下一页"
+                >
+                  下一页
+                </Button>
               </div>
             )}
           </CardContent>

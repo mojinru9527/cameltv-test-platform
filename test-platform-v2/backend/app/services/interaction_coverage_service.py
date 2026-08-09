@@ -59,31 +59,44 @@ _MODULE_TYPE_HINTS = {
 
 
 def _edge_covered(edge: dict, cases: list[dict]) -> bool:
+    return _edge_covered_prepared(edge, _prepare_case_index(cases))
+
+
+def _prepare_case_index(cases: list[dict]) -> tuple[str, set[str]]:
+    """Prepare searchable case text and semantic module hints once per request."""
+    texts: list[str] = []
+    module_hints: set[str] = set()
+    for case in cases:
+        texts.extend(_case_texts(case))
+        module = str(case.get("module") or "").strip()
+        hint = _MODULE_TYPE_HINTS.get(module)
+        if hint:
+            module_hints.add(hint)
+    return "\n".join(texts).lower(), module_hints
+
+
+def _edge_covered_prepared(edge: dict, prepared: tuple[str, set[str]]) -> bool:
     to_url = str(edge.get("to") or "")
     to_path = _norm_path(to_url)
     to_type = _type_prefix(to_path)
     entry = str(edge.get("entry") or "").strip()
-    for case in cases:
-        joined = " ".join(_case_texts(case)).lower()
-        if to_path and to_path.lower() in joined:
-            return True
-        if to_type and to_type.lower() in joined:
-            return True
-        if entry and entry.lower() in joined:
-            return True
-        module = str(case.get("module") or "").strip()
-        if to_type and _MODULE_TYPE_HINTS.get(module) == to_type:
-            return True
-    return False
+    corpus, module_hints = prepared
+    return bool(
+        (to_path and to_path.lower() in corpus)
+        or (to_type and to_type.lower() in corpus)
+        or (entry and entry.lower() in corpus)
+        or (to_type and to_type in module_hints)
+    )
 
 
 def compute_interaction_gaps(edges: list[dict], cases: list[dict]) -> dict:
     covered_edges: list[dict] = []
     gaps: list[dict] = []
+    prepared = _prepare_case_index(cases)
     for edge in edges:
         if not isinstance(edge, dict):
             continue
-        covered = _edge_covered(edge, cases)
+        covered = _edge_covered_prepared(edge, prepared)
         item = {
             "from_module": str(edge.get("from_module") or ""),
             "entry": str(edge.get("entry") or "")[:120],

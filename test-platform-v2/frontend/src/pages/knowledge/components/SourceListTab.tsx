@@ -30,6 +30,7 @@ import { useAbortableEffect } from '@/hooks/useAbortableEffect'
 import type { KnowledgeChunk, KnowledgeSource, WikiSyncCoverage } from '@/types'
 import { Loader2, CheckCircle2, RefreshCw, AlertCircle, Circle, CheckCheck } from '@/lib/icons'
 import { toast } from 'sonner'
+import { sourceStatusLabel } from './knowledgeStatus'
 
 const TYPES = [
   { v: '_all', l: '全部类型' },
@@ -234,7 +235,7 @@ export default function SourceListTab() {
                   </TableCell>
                   <TableCell>
                     <Badge tone={s.status === 'deprecated' ? 'neutral' : 'success'}>
-                      {s.status}
+                      {sourceStatusLabel(s.status)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
@@ -305,7 +306,7 @@ export default function SourceListTab() {
                   <Badge tone="neutral">{selected.knowledge_domain === 'platform' ? '平台研发' : '项目知识'}</Badge>
                 )}
                 {selected?.status && (
-                  <Badge tone={selected.status === 'deprecated' ? 'danger' : 'success'}>{selected.status}</Badge>
+                  <Badge tone={selected.status === 'deprecated' ? 'danger' : 'success'}>{sourceStatusLabel(selected.status)}</Badge>
                 )}
                 {selected?.version && (
                   <Badge tone="neutral" className="text-xs">v{selected.version}</Badge>

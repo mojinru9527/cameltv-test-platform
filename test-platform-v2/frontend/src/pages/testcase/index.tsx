@@ -38,7 +38,7 @@ import { AsyncState } from '@/components/state'
 
 import { Search, RotateCcw, Plus, Edit, Trash2, History, FileCheck, CheckCircle2, XCircle, Send, Upload, Download } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { deleteTestCase, fetchDomains, fetchTestCases, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase, importExcel, importXmind, downloadExport } from '@/api/testcase'
+import { deleteTestCase, fetchDomains, fetchTestCases, fetchTestCaseStats, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase, importExcel, importXmind, downloadExport } from '@/api/testcase'
 import { countCasesByType, formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -126,7 +126,11 @@ export default function TestCasePage() {
     [],
   )
   const domains = useMemo(() => domainData || [], [domainData])
-  const caseTypeCounts = useMemo(() => countCasesByType(domains), [domains])
+  const { data: caseStats, refetch: refetchCaseStats } = useApi(
+    (signal) => fetchTestCaseStats(signal),
+    [],
+  )
+  const caseTypeCounts = useMemo(() => countCasesByType(caseStats), [caseStats])
 
   const items = useMemo(() => data?.items || [], [data?.items])
   // Sort newest first (created_at descending, fallback to id descending)
@@ -141,6 +145,8 @@ export default function TestCasePage() {
       toast.success(`导入完成：${res?.imported ?? 0}/${res?.total ?? 0} 条`)
       setPage(1)
       refetch()
+      refetchDomains()
+      refetchCaseStats()
     } catch (e: any) {
       toast.error(e?.message || '导入失败')
     } finally {
@@ -195,6 +201,8 @@ export default function TestCasePage() {
       setSelected(new Set())
       setBatchDeleteDialog(false)
       refetch()
+      refetchDomains()
+      refetchCaseStats()
     } catch {
       toast.error('批量删除失败')
     } finally {
@@ -259,6 +267,8 @@ export default function TestCasePage() {
     toast.success('已删除')
     setDeleteTarget(null)
     refetch()
+    refetchDomains()
+    refetchCaseStats()
   }
 
   const openEdit = (row?: any) => {
@@ -271,6 +281,7 @@ export default function TestCasePage() {
     setEditing(null)
     refetch()
     refetchDomains()
+    refetchCaseStats()
   }
 
   // ── Version history ──

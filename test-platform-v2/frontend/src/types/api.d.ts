@@ -1024,6 +1024,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/test-cases/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 用例类型统计
+         * @description Return authoritative project totals before the dynamic ``/{case_id}`` route.
+         */
+        get: operations["get_test_case_stats_api_v1_test_cases_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/test-cases/domains/{domain_id}": {
         parameters: {
             query?: never;
@@ -3791,6 +3811,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/knowledge/graph/entities/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 实体统计
+         * @description Return project-wide totals without conflating them with the list limit.
+         */
+        get: operations["entity_stats_api_v1_knowledge_graph_entities_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/knowledge/graph/entities": {
         parameters: {
             query?: never;
@@ -3943,6 +3983,69 @@ export interface paths {
          *     使用 force=true 强制重建。
          */
         post: operations["auto_build_graph_api_v1_knowledge_graph_auto_build_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/graph/module-associations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 体育模块关联入库（Batch 122 用例结构）
+         * @description 从用例结构批量入库模块/用例/接口实体与业务关系（幂等）。
+         *
+         *     实体：module / test_case / api；关系：contains / tested_by / navigates_to / links_to_admin / configures。
+         *     幂等：按 entity_key 与 from+relation_type+to 去重，重复调用不重复创建。
+         */
+        post: operations["import_module_associations_api_v1_knowledge_graph_module_associations_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/design-assets/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 需求/设计稿入库（文本+图片）
+         * @description 把需求原型页（文本+设计稿图片）入库为知识源，幂等（按 content_hash 去重）。
+         */
+        post: operations["import_design_assets_api_v1_knowledge_design_assets_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/knowledge/design-assets/{source_id}/{filename}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 需求设计稿图片
+         * @description 服务需求设计稿图片（路径逃逸防护）。
+         */
+        get: operations["get_design_asset_api_v1_knowledge_design_assets__source_id___filename__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5466,6 +5569,91 @@ export interface paths {
          * @description 对比发布包模块树与生产页面清单，输出 new / matched / missing 差异标注。
          */
         post: operations["production_diff_annotate_api_v1_requirement_modules_production_diff_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/requirement-modules/import-tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 导入需求模块树（蓝湖 sitemap 层级）
+         * @description 把蓝湖导出 sitemap 的层级树导入 requirement_module（幂等）。
+         *
+         *     按 path 层级建 parent_module_id（path 即 平台/模块/页）；node_type=module|page；
+         *     lanhu_page_id=html 文件；screenshot_urls=设计稿截图清单。
+         */
+        post: operations["import_module_tree_api_v1_requirement_modules_import_tree_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/interaction-coverage/topology": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 交互拓扑全量边（C120-1）
+         * @description 返回项目内全量交互拓扑边（batch-113 3172 边入库后）。
+         */
+        get: operations["topology_edges_api_v1_interaction_coverage_topology_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/interaction-coverage/gaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 交互拓扑覆盖缺口提示（C114-1/C120-1）
+         * @description 对比交互拓扑边与平台交互用例，输出未覆盖边清单与覆盖率。
+         *
+         *     请求体不带 edges 时使用库内全量拓扑（C120-1）。
+         */
+        post: operations["interaction_coverage_gaps_api_v1_interaction_coverage_gaps_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/interaction-coverage/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * 交互拓扑全量导入（C120-1，幂等）
+         * @description 批量导入拓扑边（edges: [{from_module, entry, to, evidence}]），按键幂等。
+         */
+        post: operations["import_topology_api_v1_interaction_coverage_import_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7955,6 +8143,65 @@ export interface components {
             /** Created At */
             created_at: string;
         };
+        /** DesignAssetImage */
+        DesignAssetImage: {
+            /** Filename */
+            filename: string;
+            /** Base64 */
+            base64: string;
+        };
+        /** DesignAssetImportRequest */
+        DesignAssetImportRequest: {
+            /** Sources */
+            sources: components["schemas"]["DesignAssetSource"][];
+        };
+        /** DesignAssetImportResult */
+        DesignAssetImportResult: {
+            /**
+             * Created Sources
+             * @default 0
+             */
+            created_sources: number;
+            /**
+             * Skipped Sources
+             * @default 0
+             */
+            skipped_sources: number;
+            /**
+             * Created Chunks
+             * @default 0
+             */
+            created_chunks: number;
+            /**
+             * Saved Images
+             * @default 0
+             */
+            saved_images: number;
+        };
+        /** DesignAssetSource */
+        DesignAssetSource: {
+            /** Title */
+            title: string;
+            /**
+             * Source Ref
+             * @default
+             */
+            source_ref: string;
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Images
+             * @default []
+             */
+            images: components["schemas"]["DesignAssetImage"][];
+        };
         /** DeviceListResponse */
         DeviceListResponse: {
             /** Devices */
@@ -8806,6 +9053,36 @@ export interface components {
             enabled?: boolean | null;
         };
         /**
+         * InteractionEdge
+         * @description 一条交互拓扑边。
+         */
+        InteractionEdge: {
+            /**
+             * From Module
+             * @description 来源模块
+             * @default
+             */
+            from_module: string;
+            /**
+             * Entry
+             * @description 入口/链接文本
+             * @default
+             */
+            entry: string;
+            /**
+             * To
+             * @description 目标 URL/路径
+             * @default
+             */
+            to: string;
+            /**
+             * From
+             * @description 来源 URL/路径
+             * @default
+             */
+            from: string;
+        };
+        /**
          * InteractionExtractRequest
          * @description 触发页面交互提取请求体。
          */
@@ -8815,6 +9092,17 @@ export interface components {
              * @description 自定义降级链顺序，如 ['dom', 'ai', 'cv']
              */
             preferred_layers?: string[] | null;
+        };
+        /**
+         * InteractionGapRequest
+         * @description 交互拓扑边清单请求体。
+         */
+        InteractionGapRequest: {
+            /**
+             * Edges
+             * @description 交互拓扑边
+             */
+            edges?: components["schemas"]["InteractionEdge"][];
         };
         /**
          * InteractionSaveRequest
@@ -8944,6 +9232,18 @@ export interface components {
             description: string;
             /** Confidence */
             confidence: number;
+            /** Source Id */
+            source_id?: number | null;
+            /**
+             * Source Title
+             * @default
+             */
+            source_title: string;
+            /**
+             * Source Type
+             * @default
+             */
+            source_type: string;
         };
         /** KnowledgeEntityOut */
         KnowledgeEntityOut: {
@@ -8961,6 +9261,16 @@ export interface components {
             description: string;
             /** Source Id */
             source_id?: number | null;
+            /**
+             * Source Title
+             * @default
+             */
+            source_title: string;
+            /**
+             * Source Type
+             * @default
+             */
+            source_type: string;
             /** Business Ref Type */
             business_ref_type: string;
             /** Business Ref Id */
@@ -8978,6 +9288,26 @@ export interface components {
             created_at?: string | null;
             /** Updated At */
             updated_at?: string | null;
+        };
+        /**
+         * KnowledgeEntityStats
+         * @description Project-wide entity totals, independent from list loading limits.
+         */
+        KnowledgeEntityStats: {
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+            /** By Type */
+            by_type?: {
+                [key: string]: number;
+            };
+            /**
+             * Missing Source
+             * @default 0
+             */
+            missing_source: number;
         };
         /** KnowledgeHealth */
         KnowledgeHealth: {
@@ -9749,6 +10079,88 @@ export interface components {
             /** Created At */
             created_at?: string | null;
         };
+        /** ModuleAssociationEntity */
+        ModuleAssociationEntity: {
+            /** Entity Type */
+            entity_type: string;
+            /** Entity Key */
+            entity_key: string;
+            /** Name */
+            name: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Confidence
+             * @default 1
+             */
+            confidence: number;
+            /** Metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** ModuleAssociationRelation */
+        ModuleAssociationRelation: {
+            /** From Key */
+            from_key: string;
+            /** Relation Type */
+            relation_type: string;
+            /** To Key */
+            to_key: string;
+            /**
+             * Confidence
+             * @default 1
+             */
+            confidence: number;
+            /**
+             * Evidence
+             * @default
+             */
+            evidence: string;
+        };
+        /** ModuleAssociationRequest */
+        ModuleAssociationRequest: {
+            /** Entities */
+            entities: components["schemas"]["ModuleAssociationEntity"][];
+            /** Relations */
+            relations: components["schemas"]["ModuleAssociationRelation"][];
+        };
+        /** ModuleAssociationResult */
+        ModuleAssociationResult: {
+            /**
+             * Created Entities
+             * @default 0
+             */
+            created_entities: number;
+            /**
+             * Created Relations
+             * @default 0
+             */
+            created_relations: number;
+            /**
+             * Skipped Entities
+             * @default 0
+             */
+            skipped_entities: number;
+            /**
+             * Skipped Relations
+             * @default 0
+             */
+            skipped_relations: number;
+            /**
+             * Total Entities
+             * @default 0
+             */
+            total_entities: number;
+            /**
+             * Total Relations
+             * @default 0
+             */
+            total_relations: number;
+        };
         /** ModuleCreate */
         ModuleCreate: {
             /** Name */
@@ -9859,6 +10271,61 @@ export interface components {
             last_run_status: string;
             /** Linked Case Ids */
             linked_case_ids?: number[];
+        };
+        /** ModuleTreeImportNode */
+        ModuleTreeImportNode: {
+            /** Path */
+            path: string;
+            /**
+             * Type
+             * @default page
+             */
+            type: string;
+            /**
+             * Lanhu Page Id
+             * @default
+             */
+            lanhu_page_id: string;
+            /**
+             * Screenshots
+             * @default []
+             */
+            screenshots: string[];
+        };
+        /** ModuleTreeImportRequest */
+        ModuleTreeImportRequest: {
+            /** Release Bundle Id */
+            release_bundle_id?: number | null;
+            /**
+             * Bundle Name
+             * @default 蓝湖需求模块树
+             */
+            bundle_name: string;
+            /**
+             * Source Version
+             * @default e6b5ce1e
+             */
+            source_version: string;
+            /** Tree */
+            tree: components["schemas"]["ModuleTreeImportNode"][];
+        };
+        /** ModuleTreeImportResult */
+        ModuleTreeImportResult: {
+            /**
+             * Created
+             * @default 0
+             */
+            created: number;
+            /**
+             * Skipped
+             * @default 0
+             */
+            skipped: number;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
         };
         /**
          * ModuleTreeNode
@@ -11566,6 +12033,20 @@ export interface components {
             msg: string;
             data?: components["schemas"]["DeploymentOut"] | null;
         };
+        /** R[DesignAssetImportResult] */
+        R_DesignAssetImportResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["DesignAssetImportResult"] | null;
+        };
         /** R[DeviceListResponse] */
         R_DeviceListResponse_: {
             /**
@@ -11790,6 +12271,20 @@ export interface components {
             msg: string;
             data?: components["schemas"]["KnowledgeEntityOut"] | null;
         };
+        /** R[KnowledgeEntityStats] */
+        R_KnowledgeEntityStats_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["KnowledgeEntityStats"] | null;
+        };
         /** R[KnowledgeIterationOut] */
         R_KnowledgeIterationOut_: {
             /**
@@ -11958,6 +12453,20 @@ export interface components {
             msg: string;
             data?: components["schemas"]["ModuleAdminLinkOut"] | null;
         };
+        /** R[ModuleAssociationResult] */
+        R_ModuleAssociationResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["ModuleAssociationResult"] | null;
+        };
         /** R[ModuleExtractResult] */
         R_ModuleExtractResult_: {
             /**
@@ -11985,6 +12494,20 @@ export interface components {
              */
             msg: string;
             data?: components["schemas"]["ModuleTestSummaryOut"] | null;
+        };
+        /** R[ModuleTreeImportResult] */
+        R_ModuleTreeImportResult_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["ModuleTreeImportResult"] | null;
         };
         /** R[ModuleTreeResponse] */
         R_ModuleTreeResponse_: {
@@ -19174,6 +19697,37 @@ export interface operations {
             };
         };
     };
+    get_test_case_stats_api_v1_test_cases_stats_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     remove_domain_api_v1_test_cases_domains__domain_id__delete: {
         parameters: {
             query?: never;
@@ -25675,6 +26229,40 @@ export interface operations {
             };
         };
     };
+    entity_stats_api_v1_knowledge_graph_entities_stats_get: {
+        parameters: {
+            query?: {
+                entity_type?: string | null;
+                keyword?: string | null;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_KnowledgeEntityStats_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_entities_api_v1_knowledge_graph_entities_get: {
         parameters: {
             query?: {
@@ -25941,6 +26529,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_AutoBuildResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_module_associations_api_v1_knowledge_graph_module_associations_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModuleAssociationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_ModuleAssociationResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_design_assets_api_v1_knowledge_design_assets_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DesignAssetImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_DesignAssetImportResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_design_asset_api_v1_knowledge_design_assets__source_id___filename__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path: {
+                source_id: number;
+                filename: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -28932,6 +29624,144 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ProductionDiffRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_module_tree_api_v1_requirement_modules_import_tree_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModuleTreeImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_ModuleTreeImportResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    topology_edges_api_v1_interaction_coverage_topology_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    interaction_coverage_gaps_api_v1_interaction_coverage_gaps_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InteractionGapRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import_topology_api_v1_interaction_coverage_import_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
             };
         };
         responses: {

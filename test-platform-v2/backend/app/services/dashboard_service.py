@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.defect import Defect
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
+from app.services.test_case_service import canonical_case_type, case_type_values
 
 # ── 用例类型 → 展示标签 + 卡片颜色 ──
 CASE_TYPE_META = {
@@ -68,7 +69,10 @@ def get_dashboard_stats(
 
     # ── 用例总数（全量） ──
     total_cases = db.scalar(
-        select(func.count(TestCase.id)).where(TestCase.project_id == project_id)
+        select(func.count(TestCase.id)).where(
+            TestCase.project_id == project_id,
+            TestCase.is_deleted.is_(False),
+        )
     ) or 0
 
     # ── 测试计划数（全量） ──
@@ -80,6 +84,7 @@ def get_dashboard_stats(
     api_cases = db.scalar(
         select(func.count(TestCase.id)).where(
             TestCase.project_id == project_id,
+            TestCase.is_deleted.is_(False),
             TestCase.case_type == "api",
         )
     ) or 0
@@ -93,16 +98,17 @@ def get_dashboard_stats(
     # ── P0-P3 优先级分布（按用例类型） ──
     priority_rows = db.execute(
         select(TestCase.case_type, TestCase.priority, func.count(TestCase.id))
-        .where(TestCase.project_id == project_id)
+        .where(TestCase.project_id == project_id, TestCase.is_deleted.is_(False))
         .group_by(TestCase.case_type, TestCase.priority)
     ).all()
 
     # 按 case_type 聚合
     priority_map: dict[str, dict[str, int]] = {}
     for ct, pri, cnt in priority_rows:
+        ct = canonical_case_type(ct)
         priority_map.setdefault(ct, {"P0": 0, "P1": 0, "P2": 0, "P3": 0})
         if pri in ("P0", "P1", "P2", "P3"):
-            priority_map[ct][pri] = cnt
+            priority_map[ct][pri] += cnt
 
     priority_distribution: list[dict] = []
     for ct, meta in CASE_TYPE_META.items():
@@ -126,7 +132,8 @@ def get_dashboard_stats(
         ct_count = db.scalar(
             select(func.count(TestCase.id)).where(
                 TestCase.project_id == project_id,
-                TestCase.case_type == ct,
+                TestCase.is_deleted.is_(False),
+                TestCase.case_type.in_(case_type_values(ct)),
             )
         ) or 0
 
@@ -140,7 +147,8 @@ def get_dashboard_stats(
                 TestPlanCase.case_id.in_(
                     select(TestCase.id).where(
                         TestCase.project_id == project_id,
-                        TestCase.case_type == ct,
+                        TestCase.is_deleted.is_(False),
+                        TestCase.case_type.in_(case_type_values(ct)),
                     ).scalar_subquery()
                 ),
             )

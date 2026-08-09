@@ -5,6 +5,7 @@ import type {
   GraphView,
   KnowledgeChunk,
   KnowledgeEntityBrief,
+  KnowledgeEntityStats,
   KnowledgeEntity,
   KnowledgeIteration,
   KnowledgeOverview,
@@ -106,20 +107,30 @@ export async function fetchEntities(params: {
   entity_type?: string
   keyword?: string
   limit?: number
-}): Promise<KnowledgeEntityBrief[]> {
-  return api.get('/knowledge/graph/entities', { params })
+}, signal?: AbortSignal): Promise<KnowledgeEntityBrief[]> {
+  return api.get('/knowledge/graph/entities', { params, ...(signal ? { signal } : {}) })
 }
 
-export async function fetchEntityDetail(id: number): Promise<KnowledgeEntity> {
-  return api.get(`/knowledge/graph/entities/${id}`)
+export async function fetchEntityStats(params: {
+  entity_type?: string
+  keyword?: string
+}, signal?: AbortSignal): Promise<KnowledgeEntityStats> {
+  return api.get('/knowledge/graph/entities/stats', {
+    params,
+    ...(signal ? { signal } : {}),
+  })
+}
+
+export async function fetchEntityDetail(id: number, signal?: AbortSignal): Promise<KnowledgeEntity> {
+  return api.get(`/knowledge/graph/entities/${id}`, signal ? { signal } : undefined)
 }
 
 export async function fetchRelations(params: {
   entity_id?: number
   relation_type?: string
   limit?: number
-}): Promise<KnowledgeRelation[]> {
-  return api.get('/knowledge/graph/relations', { params })
+}, signal?: AbortSignal): Promise<KnowledgeRelation[]> {
+  return api.get('/knowledge/graph/relations', { params, ...(signal ? { signal } : {}) })
 }
 
 export async function approveRelation(id: number, comment?: string): Promise<KnowledgeRelation> {

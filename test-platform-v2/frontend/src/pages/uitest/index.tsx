@@ -79,6 +79,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { parseUiRunResult } from './uiRunResult'
 
 const BROWSER_MAP: Record<string, { color: string }> = {
   chromium: { color: 'blue' },
@@ -119,6 +120,39 @@ function statusBadgeClass(c: string) {
     yellow: 'border-status-warning-border bg-status-warning-muted text-status-warning dark:border-status-warning-border dark:bg-status-warning-muted dark:text-status-warning',
   }
   return map[c] ?? ''
+}
+
+function UiRunResultSummary({ value }: { value: unknown }) {
+  const summary = parseUiRunResult(value)
+  if (!summary) {
+    return (
+      <pre className="m-0 whitespace-pre-wrap text-xs">
+        {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+      </pre>
+    )
+  }
+
+  const metrics = [
+    ['总计', summary.total],
+    ['通过', summary.passed],
+    ['失败', summary.failed],
+    ['跳过', summary.skipped],
+  ] as const
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {metrics.map(([label, value]) => (
+          <div key={label} className="rounded-md border bg-muted/30 p-3 text-center">
+            <div className="text-xs text-muted-foreground">{label}</div>
+            <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
+          </div>
+        ))}
+      </div>
+      {summary.duration !== null && (
+        <p className="text-xs text-muted-foreground">执行耗时：{summary.duration} 秒</p>
+      )}
+    </div>
+  )
 }
 
 const uiJobFormSchema = z.object({
@@ -339,7 +373,7 @@ export default function UiTestPage() {
         {hasPerm('uitest:delete') && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="xs" variant="secondary" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)}>
+              <Button size="xs" variant="secondary" className="text-destructive border-destructive/20 hover:bg-destructive/10" onClick={() => setDeleteTarget(r.id)} aria-label={`删除 UI 测试任务 ${r.name}`}>
                 <Trash2 className="size-3" />
               </Button>
             </AlertDialogTrigger>
@@ -709,7 +743,7 @@ export default function UiTestPage() {
                               <TableCell>{run.started_at ? new Date(run.started_at).toLocaleString() : '-'}</TableCell>
                               <TableCell>{run.finished_at ? new Date(run.finished_at).toLocaleString() : '-'}</TableCell>
                               <TableCell>
-                                {run.result ? `Total: ${run.result.total} Pass: ${run.result.pass_} Fail: ${run.result.fail}` : '-'}
+                                {run.result ? `总计 ${run.result.total} · 通过 ${run.result.pass_} · 失败 ${run.result.fail}` : '-'}
                               </TableCell>
                               <TableCell className="max-w-[120px] truncate">{run.trace_id || '-'}</TableCell>
                             </TableRow>
@@ -723,9 +757,7 @@ export default function UiTestPage() {
                   {detail.last_result ? (
                     <Card size="sm">
                       <CardContent>
-                        <pre className="whitespace-pre-wrap m-0 text-xs">
-                          {typeof detail.last_result === 'string' ? detail.last_result : JSON.stringify(detail.last_result, null, 2)}
-                        </pre>
+                        <UiRunResultSummary value={detail.last_result} />
                       </CardContent>
                     </Card>
                   ) : (

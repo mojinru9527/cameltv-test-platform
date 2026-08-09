@@ -236,12 +236,13 @@ export async function confirmApiMatches(
 
 // ── Batch 119 / C102-4 前端差异面板 ──
 
-export async function listReleaseBundles(): Promise<{ items: Array<{ id: number; name: string; client_version: string; status: string }>; total: number }> {
-  return api.get('/release-bundles', { params: { page: 1, page_size: 100 } })
+export async function listReleaseBundles(signal?: AbortSignal): Promise<{ items: Array<{ id: number; name: string; client_version: string; status: string }>; total: number }> {
+  return api.get('/release-bundles', { params: { page: 1, page_size: 100 }, signal })
 }
 
 export async function interactionCoverageGaps(
   edges: Array<{ from_module: string; entry?: string; to: string; from?: string }>,
+  signal?: AbortSignal,
 ): Promise<{
   total_edges: number
   covered_edges: number
@@ -249,7 +250,7 @@ export async function interactionCoverageGaps(
   coverage_rate: number
   gaps: Array<{ from_module: string; entry: string; to: string }>
 }> {
-  return api.post('/interaction-coverage/gaps', { edges })
+  return api.post('/interaction-coverage/gaps', { edges }, { signal })
 }
 
 export async function getCaptureTask(

@@ -1,7 +1,7 @@
 ---
 title: "测试平台 v2 现状功能 PRD"
 owner: "qa-team"
-last_reviewed: "2026-08-01"
+last_reviewed: "2026-08-09"
 status: "active"
 expires: "2026-12-26"
 tags: ["PRD", "现状", "功能清单", "基线"]
@@ -12,8 +12,8 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 
 > 文档性质：**现状反向 PRD**——逆向梳理平台「当前已实现」的功能，逐模块给出目标 / 用户故事 / 功能点 / 字段 / 状态机 / 业务规则 / 接口 / 成熟度标注。
 > 用途：作为后续功能增 / 删 / 改的**基线**。每节末尾「现状与局限」即改进入口。
-> 依据：当前 worktree 的锁文件、FastAPI 路由/认证实现、React 路由、Batch 60 QA/问题登记与自动化资产核对；历史截图、脚本存在或候选用例数均不单独构成通过证据。
-> 版本：后端应用版本 `2.1.0`；依赖基线 FastAPI `0.140.13`、React `19.2.8`　日期：2026-08-01
+> 依据：当前 worktree 的锁文件、FastAPI 路由/认证实现、React 路由、Batch 127 生产只读走查、本地真实后端矩阵与自动化资产核对；历史截图、脚本存在或候选用例数均不单独构成通过证据。
+> 版本：后端应用版本 `2.3.0`；依赖基线 FastAPI `0.140.13`、React `19.2.8`　日期：2026-08-09
 
 ---
 
@@ -43,7 +43,7 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 ### 1.4 模块全景与成熟度
 | # | 模块 | 路由 | 成熟度与证据边界 |
 |---|------|------|------------------|
-| 1 | 登录与鉴权 | `/login` | 🟡 Cookie 主会话已实现；强制改密、会话失效与直达绕过矩阵待完成 |
+| 1 | 登录与鉴权 | `/login` `/register` `/change-password` | ✅ Cookie 主会话、首次强制改密、旧会话失效与受保护路由门禁有自动化证据 |
 | 2 | 工作台看板 | `/workbench` | 🟡 本地真数据可见；跨项目/全角色/响应式矩阵不完整 |
 | 3 | 项目管理 | `/project` | ✅ 成员、主题、停用与顶部项目刷新有本地证据 |
 | 4 | 系统管理（用户/角色/权限/审计） | `/system` | 🟡 RBAC/审计存在；admin/tester/viewer 全能力矩阵待补 |
@@ -62,7 +62,9 @@ related: ["test-platform-v2/docs/CamelTv测试平台-完整PRD.md", "test-platfo
 | 17 | 性能监控 | `/perftest` | ⛔ 缺 SoloX、授权真机和采集窗口，页面存在不等于验收通过 |
 | 18 | 开放 API | API-only `/api/v1/open` | 🟡 独立 API Token Bearer 鉴权；前端入口和生产级契约证据不完整 |
 | 19 | 主题实验室 | `/theme-lab` | ✅ 本地设计/响应式验证工具，不是业务生产能力 |
-| 20 | 运维发布控制 | 独立项目，无产品路由 | ⛔ Batch 61 在 `deploy/release-control/` 建设 test-only CLI/领域库；production 拒绝，控制面 API/UI 延后 Batch 62 |
+| 20 | 运维发布控制 | `/operations-release` | 🟡 只读控制面已存在；store 未配置时为受控 503/未启用态，不提供发布、审批或回滚操作 |
+| 21 | 我的项目 / 组织 | `/my-projects` `/organizations` | 🟡 项目加入、邀请与组织层已实现；跨组织管理写路径继续由 RBAC/隔离测试约束 |
+| 22 | Playground / 蓝湖证据 | `/playground` `/lanhu-evidence` `/lanhu-evidence/:id` | 🟡 / ⛔ 页面、任务和详情存在；AI、蓝湖登录态、采集与 OCR 仍受真实 Provider 条件约束 |
 
 ---
 

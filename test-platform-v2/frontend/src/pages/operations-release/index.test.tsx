@@ -46,4 +46,20 @@ describe('operations release page', () => {
     expect(await screen.findByText('state transition to VALIDATED')).toBeTruthy()
     expect(api.fetchOpsDeploymentEvents).toHaveBeenCalledTimes(1)
   })
+
+  it('renders the expected unconfigured store as a controlled unavailable state', async () => {
+    const error = Object.assign(
+      new Error('release-control state store is not configured'),
+      { response: { status: 503 } },
+    )
+    api.fetchOpsDeployments.mockRejectedValue(error)
+
+    render(<MemoryRouter><OperationsReleasePage /></MemoryRouter>)
+
+    expect(await screen.findByText('当前环境未启用发布控制数据源')).toBeTruthy()
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toContain('当前环境未启用发布控制数据源')
+    expect(alert.textContent).toContain('未配置不代表服务异常')
+    expect(screen.queryByText('release-control state store is not configured')).toBeNull()
+  })
 })

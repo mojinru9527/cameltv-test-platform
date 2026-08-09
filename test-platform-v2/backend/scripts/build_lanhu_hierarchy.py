@@ -85,8 +85,11 @@ def build_from_sitemap(export_dir: Path) -> list[dict]:
     if cache.exists():
         try:
             root_name = json.loads(cache.read_text(encoding="utf-8")).get("document_name") or root_name
-        except Exception:
-            pass
+        except (OSError, json.JSONDecodeError, AttributeError) as exc:
+            print(
+                f"[build-hierarchy] 无法读取 {cache}，使用默认根名称：{exc}",
+                file=sys.stderr,
+            )
     tree = parse_sitemap(doc_js.read_text(encoding="utf-8", errors="ignore"))
     roots = tree.get("rootNodes", []) or []
     images_root = export_dir / "images"

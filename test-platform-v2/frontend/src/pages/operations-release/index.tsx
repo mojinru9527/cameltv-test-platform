@@ -7,6 +7,7 @@ import { fetchOpsDeploymentEvents, fetchOpsDeployments, type OpsDeployment } fro
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { AlertTriangle, Clock, RefreshCw, ShieldCheck } from '@/lib/icons'
+import { isReleaseControlUnavailable } from './releaseAvailability'
 
 const STATE_LABEL: Record<string, string> = {
   DRAFT: '草稿',
@@ -62,6 +63,7 @@ export default function OperationsReleasePage() {
     (signal) => selected ? fetchOpsDeploymentEvents(selected.id, signal) : Promise.resolve([]),
     { deps: [selected?.id], initialData: [], showErrorToast: false },
   )
+  const releaseControlUnavailable = isReleaseControlUnavailable(deployments.error)
 
   const choose = (deployment: OpsDeployment) => setSelected(deployment)
 
@@ -79,9 +81,13 @@ export default function OperationsReleasePage() {
       </PageHeader>
 
       <Card className="border-status-warning-border bg-status-warning-muted">
-        <CardContent className="flex gap-2 p-3 text-sm text-status-warning">
+        <CardContent className="flex gap-2 p-3 text-sm text-status-warning" role="alert">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <p>生产发布、生产数据库迁移和外部执行器均未配置。此页面没有发布、审批或回滚操作入口。</p>
+          <p>
+            {releaseControlUnavailable
+              ? '当前环境未启用发布控制数据源。未配置不代表服务异常；完成受控存储配置后刷新即可查看记录。此页面不会提供发布、审批或回滚操作。'
+              : '生产发布、生产数据库迁移和外部执行器均未配置。此页面没有发布、审批或回滚操作入口。'}
+          </p>
         </CardContent>
       </Card>
 
@@ -91,12 +97,14 @@ export default function OperationsReleasePage() {
           <CardContent>
             <AsyncState
               isLoading={deployments.isLoading}
-              isError={deployments.isError}
+              isError={deployments.isError && !releaseControlUnavailable}
               error={deployments.error}
-              data={deployments.data}
+              data={releaseControlUnavailable ? [] : deployments.data}
               onRetry={deployments.refetch}
-              emptyTitle="暂无已持久化发布记录"
-              emptyDescription="需由受控发布执行器登记测试环境发布后，才会在此显示。"
+              emptyTitle={releaseControlUnavailable ? '当前环境未启用发布控制数据源' : '暂无已持久化发布记录'}
+              emptyDescription={releaseControlUnavailable
+                ? '配置完成后使用“刷新记录”重新检测；未配置不代表服务异常。'
+                : '需由受控发布执行器登记测试环境发布后，才会在此显示。'}
             >
               {(items) => <div className="space-y-2">{items.map((item) => <DeploymentRow key={item.id} deployment={item} selected={item.id === selected?.id} onSelect={choose} />)}</div>}
             </AsyncState>

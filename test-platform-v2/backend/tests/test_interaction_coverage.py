@@ -47,6 +47,26 @@ def test_compute_gaps_empty():
     assert result["coverage_rate"] == 0.0
 
 
+def test_compute_gaps_prepares_each_case_text_once(monkeypatch):
+    """Batch 127 — 边数增长不能重复归一化同一批用例文本。"""
+    import app.services.interaction_coverage_service as service
+
+    original = service._case_texts
+    calls = 0
+
+    def counted(case):
+        nonlocal calls
+        calls += 1
+        return original(case)
+
+    monkeypatch.setattr(service, "_case_texts", counted)
+
+    result = service.compute_interaction_gaps(_edges(), _cases())
+
+    assert result["total_edges"] == len(_edges())
+    assert calls == len(_cases())
+
+
 def test_endpoint_gaps_with_db_cases(client, auth_headers, db_session):
     from app.models.test_case import TestCase
 

@@ -76,12 +76,11 @@ describe('用例列表内容格式化', () => {
     expect(sorted.map((item) => item.id)).toEqual([9, 8, 3])
   })
 
-  it('从当前项目的领域数据计算用例类型数量，不使用硬编码平台总数', () => {
-    expect(countCasesByType([])).toEqual({ all: 0, manual: 0 })
-    expect(countCasesByType([
-      { domain: '首页推荐', count: 290 },
-      { domain: '运营后台', count: 379 },
-      { domain: '接口测试', count: 1323 },
-    ])).toEqual({ all: 1992, manual: 669 })
+  it('从服务端类型统计读取全量和功能用例数量，不按业务域猜测', () => {
+    expect(countCasesByType(undefined)).toEqual({ all: 0, manual: 0 })
+    expect(countCasesByType({
+      total: 1579,
+      by_type: { manual: 977, api: 602, ui: 0 },
+    })).toEqual({ all: 1579, manual: 977 })
   })
 })

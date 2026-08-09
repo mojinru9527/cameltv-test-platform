@@ -195,7 +195,7 @@ describe('UiRunDetail component rendering', () => {
     render(<UiTestPage />)
 
     fireEvent.click(await screen.findByRole('button', { name: '详情' }))
-    const resultCell = await screen.findByText('Total: 1 Pass: 1 Fail: 0')
+    const resultCell = await screen.findByText('总计 1 · 通过 1 · 失败 0')
     fireEvent.click(resultCell.closest('tr')!)
     await screen.findByRole('dialog', { name: /运行详情 #1/ })
   }

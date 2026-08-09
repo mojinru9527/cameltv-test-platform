@@ -1096,6 +1096,12 @@ export interface KnowledgeEntityBrief {
   source_type: string
 }
 
+export interface KnowledgeEntityStats {
+  total: number
+  by_type: Record<string, number>
+  missing_source: number
+}
+
 // M3 实体提取结果
 export interface EntityExtractResult {
   extracted: number

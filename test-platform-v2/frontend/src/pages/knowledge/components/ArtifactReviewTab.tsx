@@ -40,6 +40,7 @@ import {
 } from '@/api/knowledge'
 import type { AiArtifact } from '@/types'
 import { Loader2, CheckCircle2, XCircle, Download, Eye } from '@/lib/icons'
+import { reviewStatusLabel } from './knowledgeStatus'
 
 const STATUSES = [
   { v: '_all', l: '全部状态' },
@@ -340,7 +341,7 @@ export default function ArtifactReviewTab() {
                     </TableCell>
                     <TableCell>
                       <Badge tone={STATUS_TONE[a.review_status] ?? 'neutral'}>
-                        {a.review_status}
+                        {reviewStatusLabel(a.review_status)}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -42,24 +42,26 @@ export default function ProductionDiffPanel() {
   const [result, setResult] = useState<ProductionDiffResult | null>(null)
   const [error, setError] = useState('')
 
-  const loadBundles = useCallback(async () => {
+  const loadBundles = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
     try {
-      const data = await listReleaseBundles()
+      const data = await listReleaseBundles(signal)
+      if (signal?.aborted) return
       const items = data.items || []
       setBundles(items)
-      if (items.length > 0 && !bundleId) setBundleId(String(items[0].id))
+      if (items.length > 0) setBundleId((current) => current || String(items[0].id))
     } catch (e) {
-      setError(e instanceof Error ? e.message : '发布包加载失败')
+      if (!signal?.aborted) setError(e instanceof Error ? e.message : '发布包加载失败')
     } finally {
-      setLoading(false)
+      if (!signal?.aborted) setLoading(false)
     }
-  }, [bundleId])
+  }, [])
 
   useEffect(() => {
-    void loadBundles()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    const controller = new AbortController()
+    void loadBundles(controller.signal)
+    return () => controller.abort()
+  }, [loadBundles])
 
   const pageToLabel = (url: string): string => {
     const clean = url.replace(/^https?:\/\//, '').split('?')[0].replace(/\/$/, '')
