@@ -10,9 +10,18 @@ from app.core.deps import CurrentUser, get_current_user
 from app.core.exceptions import APIException
 from app.core.security import hash_password, verify_password
 from app.models.user import User
-from app.schemas.auth import ChangePasswordIn, LoginIn, LoginOut, MeOut, ProjectBrief, RegisterIn, UserBrief
+from app.schemas.auth import (
+    ChangePasswordIn,
+    LoginIn,
+    LoginOut,
+    MeOut,
+    ProjectBrief,
+    PublicAccessOut,
+    RegisterIn,
+    UserBrief,
+)
 from app.schemas.common import R
-from app.services import auth_service, project_service
+from app.services import auth_service, menu_service, project_service
 
 router = APIRouter(prefix="/auth", tags=["鉴权"])
 
@@ -54,12 +63,23 @@ def login(body: LoginIn, response: Response, request: Request, db: Session = Dep
     return R.ok(result)
 
 
-@router.post("/register", response_model=R[LoginOut], summary="账号注册（邀请码）")
-def register(body: RegisterIn, response: Response, request: Request, db: Session = Depends(get_db)):
-    """外放轻量模式（Batch 104）：注册并自动登录，httpOnly cookie 同登录。
+@router.get("/public-access", response_model=R[PublicAccessOut], summary="公开平台访问配置")
+def public_access(db: Session = Depends(get_db)):
+    """返回访客可见的模块目录和注册策略，不包含用户、项目或权限数据。"""
+    data = PublicAccessOut(
+        registration_enabled=settings.effective_registration_enabled,
+        invite_code_required=settings.invite_code_required,
+        modules=menu_service.menu_tree(db, ["*"]),
+    )
+    return R.ok(data)
 
-    安全默认：生产环境 registration_enabled=false 时接口直接 403；
-    开启后默认要求有效邀请码（invite_code_required），并受独立注册限流。
+
+@router.post("/register", response_model=R[LoginOut], summary="普通用户注册")
+def register(body: RegisterIn, response: Response, request: Request, db: Session = Depends(get_db)):
+    """注册普通用户并自动登录，httpOnly cookie 同登录。
+
+    注册关闭时接口返回 403；受控环境可开启 invite_code_required，
+    其余环境允许普通用户直接注册，并统一受独立注册限流。
     """
     if not settings.effective_registration_enabled:
         raise APIException(code=403, msg="注册未开放，请联系管理员获取邀请码", http_status=403)
