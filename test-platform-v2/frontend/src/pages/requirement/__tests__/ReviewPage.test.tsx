@@ -10,7 +10,8 @@ vi.mock('@/api/requirement', () => ({
   fetchReviewState: (...args: unknown[]) => mockFetchReviewState(...args),
   reviewCase: (...args: unknown[]) => mockReviewCase(...args),
   reviewImportCases: (...args: unknown[]) => mockReviewImportCases(...args),
-  generateTestCases: vi.fn(),
+  generateTestCasesAsync: vi.fn(),
+  runAsyncAiTask: vi.fn(),
 }))
 
 vi.mock('sonner', () => ({
@@ -110,5 +111,30 @@ describe('ReviewPage durable review flow', () => {
         expected_result: '已持久化编辑预期',
       }),
     ))
+  })
+
+  it('paginates large review queues instead of mounting every case at once', async () => {
+    mockFetchReviewState.mockResolvedValue({
+      ...reviewState(),
+      functional_cases: Array.from({ length: 120 }, (_, index) => ({
+        ...reviewState().functional_cases[0],
+        index,
+        title: `批量用例 ${index + 1}`,
+        edited_data: null,
+        review_status: 'pending',
+      })),
+      summary: { total: 120, approved: 0, rejected: 0, pending: 120 },
+    })
+
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: '查看用例：批量用例 1' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '查看用例：批量用例 51' })).toBeNull()
+    expect(screen.getByText('第 1 / 3 页')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: '下一页' }))
+
+    expect(await screen.findByRole('button', { name: '查看用例：批量用例 51' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '查看用例：批量用例 1' })).toBeNull()
   })
 })

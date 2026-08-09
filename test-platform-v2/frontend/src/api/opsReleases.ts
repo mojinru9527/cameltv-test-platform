@@ -1,4 +1,5 @@
 import api from './client'
+import type { AxiosRequestConfig } from 'axios'
 
 export interface OpsDeployment {
   id: string
@@ -20,14 +21,19 @@ export interface OpsDeploymentEvent {
 }
 
 const BASE = '/ops/deployments'
+type ToastAwareRequestConfig = AxiosRequestConfig & { suppressErrorToast: boolean }
+
+function quietRequest(signal?: AbortSignal): ToastAwareRequestConfig {
+  return { signal, suppressErrorToast: true }
+}
 
 export async function fetchOpsDeployments(signal?: AbortSignal): Promise<OpsDeployment[]> {
-  return api.get(BASE, { signal })
+  return api.get(BASE, quietRequest(signal))
 }
 
 export async function fetchOpsDeploymentEvents(
   deploymentId: string,
   signal?: AbortSignal,
 ): Promise<OpsDeploymentEvent[]> {
-  return api.get(`${BASE}/${deploymentId}/events`, { signal })
+  return api.get(`${BASE}/${deploymentId}/events`, quietRequest(signal))
 }

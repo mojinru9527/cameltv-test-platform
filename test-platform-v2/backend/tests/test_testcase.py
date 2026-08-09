@@ -117,3 +117,88 @@ class TestCaseBatch:
         }, headers=auth_headers)
         assert resp.status_code == 200
         assert resp.json()["data"]["deleted"] == 2
+
+
+class TestCaseTypeStatistics:
+    """Batch 127 — 类型统计必须守恒并兼容历史 functional 枚举。"""
+
+    def test_stats_aliases_functional_and_excludes_soft_deleted(
+        self, client, auth_headers, db_session,
+    ):
+        from app.models.test_case import TestCase
+
+        db_session.add_all([
+            TestCase(project_id=1, title="manual", case_type="manual", is_deleted=False),
+            TestCase(project_id=1, title="legacy", case_type="functional", is_deleted=False),
+            TestCase(project_id=1, title="api", case_type="api", is_deleted=False),
+            TestCase(project_id=1, title="ui", case_type="ui", is_deleted=False),
+            TestCase(project_id=1, title="deleted", case_type="manual", is_deleted=True),
+        ])
+        db_session.commit()
+
+        response = client.get("/api/v1/test-cases/stats", headers=auth_headers)
+
+        assert response.status_code == 200
+        assert response.json()["data"] == {
+            "total": 4,
+            "by_type": {"manual": 2, "api": 1, "ui": 1},
+        }
+
+    def test_manual_filter_includes_legacy_functional(
+        self, client, auth_headers, db_session,
+    ):
+        from app.models.test_case import TestCase
+
+        db_session.add_all([
+            TestCase(project_id=1, title="manual", case_type="manual", is_deleted=False),
+            TestCase(project_id=1, title="legacy", case_type="functional", is_deleted=False),
+            TestCase(project_id=1, title="api", case_type="api", is_deleted=False),
+        ])
+        db_session.commit()
+
+        response = client.get(
+            "/api/v1/test-cases?case_type=manual&page_size=20",
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert data["total"] == 2
+        assert {item["title"] for item in data["items"]} == {"manual", "legacy"}
+
+    def test_create_normalizes_functional_to_manual(self, client, auth_headers):
+        response = client.post(
+            "/api/v1/test-cases",
+            json={"title": "legacy input", "case_type": "functional"},
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        assert response.json()["data"]["case_type"] == "manual"
+
+    def test_dashboard_type_counts_sum_to_total(
+        self, client, auth_headers, db_session,
+    ):
+        from app.models.test_case import TestCase
+
+        db_session.add_all([
+            TestCase(project_id=1, title="manual", case_type="manual", priority="P0", is_deleted=False),
+            TestCase(project_id=1, title="legacy", case_type="functional", priority="P1", is_deleted=False),
+            TestCase(project_id=1, title="api", case_type="api", priority="P2", is_deleted=False),
+            TestCase(project_id=1, title="deleted", case_type="ui", priority="P3", is_deleted=True),
+        ])
+        db_session.commit()
+
+        response = client.get("/api/v1/dashboard/stats", headers=auth_headers)
+
+        assert response.status_code == 200
+        data = response.json()["data"]
+        assert data["total_cases"] == 3
+        counts = {item["case_type"]: item["count"] for item in data["case_type_stats"]}
+        assert counts == {"manual": 2, "api": 1, "ui": 0}
+        assert sum(counts.values()) == data["total_cases"]
+        manual_priority = next(
+            item for item in data["priority_distribution"] if item["case_type"] == "manual"
+        )
+        assert manual_priority["p0"] == 1
+        assert manual_priority["p1"] == 1

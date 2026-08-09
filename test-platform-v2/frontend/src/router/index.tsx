@@ -4,6 +4,7 @@ import { Loader2 } from '@/lib/icons'
 import MainLayout from '@/layouts/MainLayout'
 import Placeholder from '@/pages/Placeholder'
 import RequireAuth from './guard'
+import { isThemeLabEnabled } from './themeLabAvailability'
 import client from '@/api/client'
 import { logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
@@ -44,6 +45,7 @@ const VersionPanoramaPage = lazy(() => import('@/pages/release-bundles/VersionPa
 const ThemeLabPage = lazy(() => import('@/theme-lab/ThemeLab').then(m => ({ default: m.ThemeLab })))
 const LanhuEvidencePage = lazy(() => import('@/pages/lanhu-evidence'))
 const LanhuEvidenceJobDetail = lazy(() => import('@/pages/lanhu-evidence/JobDetail'))
+const themeLabEnabled = isThemeLabEnabled(import.meta.env.DEV, import.meta.env.VITE_ENABLE_THEME_LAB)
 
 function PageLoader({ children }: { children: ReactNode }) {
   return (
@@ -222,7 +224,12 @@ export const router = createBrowserRouter([
       { path: 'lanhu-evidence', element: <PageLoader><LanhuEvidencePage /></PageLoader> },
       { path: 'lanhu-evidence/:id', element: <PageLoader><LanhuEvidenceJobDetail /></PageLoader> },
       { path: 'operations-release', element: <PageLoader><OperationsReleasePage /></PageLoader> },
-      { path: 'theme-lab', element: <PageLoader><ThemeLabPage /></PageLoader> },
+      {
+        path: 'theme-lab',
+        element: themeLabEnabled
+          ? <PageLoader><ThemeLabPage /></PageLoader>
+          : <Placeholder title="实验功能未开放" />,
+      },
       { path: '*', element: <Placeholder title="页面建设中" /> },
     ],
   },

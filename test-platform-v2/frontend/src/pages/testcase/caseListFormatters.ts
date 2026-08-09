@@ -116,15 +116,10 @@ export function sortCasesNewestFirst<T extends { id?: number; created_at?: strin
 }
 
 export function countCasesByType(
-  domains: Array<{ domain?: string; count?: number }>,
+  stats?: { total?: number; by_type?: Record<string, number> },
 ): { all: number; manual: number } {
-  return domains.reduce(
-    (totals, domain) => {
-      const count = Number.isFinite(domain.count) ? Number(domain.count) : 0
-      totals.all += count
-      if (domain.domain !== '接口测试') totals.manual += count
-      return totals
-    },
-    { all: 0, manual: 0 },
-  )
+  return {
+    all: Number.isFinite(stats?.total) ? Number(stats?.total) : 0,
+    manual: Number.isFinite(stats?.by_type?.manual) ? Number(stats?.by_type?.manual) : 0,
+  }
 }

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import re
+import subprocess
 from typing import Any
 
 logger = logging.getLogger("perf")
@@ -25,6 +26,28 @@ except ImportError:
 
 class CollectorUnavailableError(RuntimeError):
     """Raised when a real device collector is required but unavailable."""
+
+
+ADB_COMMAND_TIMEOUT_SECONDS = 3.0
+
+
+def _run_adb(
+    adb_path: str,
+    *args: str,
+    timeout: float = ADB_COMMAND_TIMEOUT_SECONDS,
+) -> str:
+    """Run the bundled ADB directly with a hard timeout and no shell wrapper."""
+    completed = subprocess.run(
+        [adb_path, *args],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=timeout,
+        check=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+    return completed.stdout
 
 
 # ── 指标定义（对标 PerfDog 取值口径）──
@@ -97,45 +120,61 @@ def get_connected_devices() -> list[dict[str, Any]]:
         devices = Devices()
         result: list[dict[str, Any]] = []
 
-        # Android 设备（SoloX getDevices 返回 ["serial(model)"] 或 dict）
+        # SoloX 的 getDevices() 内部使用无超时 os.popen；直接调用其内置 ADB，
+        # 防止无设备/ADB 异常时留下永久等待的 shell 子进程。
         try:
-            android_list = devices.getDevices() or []
-        except Exception:
-            android_list = []
+            adb_path = str(getattr(devices, "adb", "adb"))
+            android_output = _run_adb(
+                adb_path,
+                "devices",
+                "-l",
+                timeout=ADB_COMMAND_TIMEOUT_SECONDS,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            logger.warning("Android device discovery failed: %s", exc)
+            android_output = ""
 
-        for d in android_list:
-            if isinstance(d, dict):
-                device_id = d.get("serial") or str(d)
-                model = d.get("model", "")
-            else:
-                raw = str(d)
-                m = re.match(r"^([^()]+)\((.+)\)$", raw)
-                device_id = m.group(1) if m else raw
-                model = m.group(2) if m else ""
+        for line in android_output.splitlines()[1:]:
+            parts = line.strip().split()
+            if len(parts) < 2 or parts[1] != "device":
+                continue
+            device_id = parts[0]
+            attributes = {
+                key: value
+                for token in parts[2:]
+                if ":" in token
+                for key, value in [token.split(":", 1)]
+            }
+            model = attributes.get("model", "")
             result.append({
                 "device_id": device_id,
-                "device_name": _android_device_name(device_id),
+                "device_name": _android_device_name(device_id, adb_path),
                 "device_model": model,
                 "platform": "Android",
-                "os_version": _android_os_version(device_id),
+                "os_version": _android_os_version(device_id, adb_path),
                 "status": "online",
             })
 
         # iOS 设备
         try:
-            get_devices_ios = getattr(devices, "getDevicesIOS", None)
+            get_devices_ios = getattr(devices, "getDeviceInfoByiOS", None)
             ios_list = get_devices_ios() if get_devices_ios else []
-        except Exception:
+        except Exception as exc:
+            logger.warning("iOS device discovery failed: %s", exc)
             ios_list = []
 
         for d in ios_list:
-            device_id = d.get("udid", "") or d.get("serial", "") or str(d)
+            device_id = (
+                d.get("udid", "") or d.get("serial", "") or str(d)
+                if isinstance(d, dict)
+                else str(d)
+            )
             result.append({
                 "device_id": device_id,
-                "device_name": d.get("name", ""),
-                "device_model": d.get("model", ""),
+                "device_name": d.get("name", device_id) if isinstance(d, dict) else device_id,
+                "device_model": d.get("model", "") if isinstance(d, dict) else "",
                 "platform": "iOS",
-                "os_version": d.get("version", ""),
+                "os_version": d.get("version", "") if isinstance(d, dict) else "",
                 "status": "online",
             })
 
@@ -153,13 +192,27 @@ def get_device_apps(device_id: str, platform: str = "Android") -> list[str]:
     try:
         devices = Devices()
         if platform == "iOS":
-            raw = devices.getPid(deviceId=device_id, pkgName="")
+            raw = devices.getPkgnameByiOS(device_id) or []
         else:
-            raw = devices.getPid(deviceId=device_id, pkgName="")
-        # getPid returns {pid: pkgname} when pkgName is empty
-        if isinstance(raw, dict):
-            return sorted(set(raw.values()))
-        return []
+            adb_path = str(getattr(devices, "adb", "adb"))
+            output = _run_adb(
+                adb_path,
+                "-s",
+                device_id,
+                "shell",
+                "pm",
+                "list",
+                "packages",
+                "--user",
+                "0",
+                timeout=ADB_COMMAND_TIMEOUT_SECONDS,
+            )
+            raw = [
+                line.removeprefix("package:").strip()
+                for line in output.splitlines()
+                if line.startswith("package:")
+            ]
+        return sorted({str(package).strip() for package in raw if str(package).strip()})
     except Exception as exc:
         logger.error("Failed to list apps on %s: %s", device_id, exc)
         return []
@@ -447,25 +500,33 @@ def measure_startup_time(device_id: str, pkg_name: str, platform: str = "Android
 
 # ── 内部辅助 ──
 
-def _android_device_name(device_id: str) -> str:
-    import subprocess
+def _android_device_name(device_id: str, adb_path: str = "adb") -> str:
     try:
-        r = subprocess.run(
-            ["adb", "-s", device_id, "shell", "getprop", "ro.product.model"],
-            capture_output=True, text=True, timeout=5,
+        output = _run_adb(
+            adb_path,
+            "-s",
+            device_id,
+            "shell",
+            "getprop",
+            "ro.product.model",
+            timeout=ADB_COMMAND_TIMEOUT_SECONDS,
         )
-        return r.stdout.strip() or device_id
+        return output.strip() or device_id
     except Exception:
         return device_id
 
 
-def _android_os_version(device_id: str) -> str:
-    import subprocess
+def _android_os_version(device_id: str, adb_path: str = "adb") -> str:
     try:
-        r = subprocess.run(
-            ["adb", "-s", device_id, "shell", "getprop", "ro.build.version.release"],
-            capture_output=True, text=True, timeout=5,
+        output = _run_adb(
+            adb_path,
+            "-s",
+            device_id,
+            "shell",
+            "getprop",
+            "ro.build.version.release",
+            timeout=ADB_COMMAND_TIMEOUT_SECONDS,
         )
-        return f"Android {r.stdout.strip()}" if r.stdout.strip() else ""
+        return f"Android {output.strip()}" if output.strip() else ""
     except Exception:
         return ""

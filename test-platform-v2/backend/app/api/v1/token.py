@@ -1,6 +1,8 @@
 """API Token management (project-level)."""
 from __future__ import annotations
 
+import ast
+import json
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
@@ -12,6 +14,22 @@ from app.schemas.common import R
 from app.services.audit_service import write_audit
 
 router = APIRouter(prefix="/tokens", tags=["API Token"])
+
+
+def _scope_list(value: object) -> list[str]:
+    """Normalize JSON and pre-Batch-127 Python-repr scope storage."""
+    parsed = value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            try:
+                parsed = ast.literal_eval(value)
+            except (ValueError, SyntaxError):
+                parsed = []
+    if not isinstance(parsed, (list, tuple)):
+        return []
+    return [str(scope).strip() for scope in parsed if str(scope).strip()]
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
@@ -38,7 +56,7 @@ def list_tokens(
     ).all()
     return R.ok([{
         "id": t.id, "name": t.name, "token_prefix": t.token_prefix,
-        "scopes": t.scopes, "enabled": t.enabled,
+        "scopes": _scope_list(t.scopes), "enabled": t.enabled,
         "last_used_at": t.last_used_at.isoformat() if t.last_used_at else None,
         "created_at": t.created_at.isoformat() if t.created_at else None,
     } for t in rows])
@@ -57,7 +75,7 @@ def create_token(
         name=body.get("name", "CI Token"),
         token_hash=token_hash,
         token_prefix=plain[:12],
-        scopes=str(body.get("scopes", ["trigger"])),
+        scopes=json.dumps(_scope_list(body.get("scopes", ["trigger"])), ensure_ascii=False),
         enabled=True,
     )
     db.add(t)
@@ -69,7 +87,7 @@ def create_token(
         "name": t.name,
         "token": plain,   # ⚠️ save this now — we don't store the plain value
         "token_prefix": t.token_prefix,
-        "scopes": t.scopes,
+        "scopes": _scope_list(t.scopes),
         "created_at": t.created_at.isoformat() if t.created_at else None,
     })
 

@@ -21,6 +21,7 @@ import type {
 import { useAuthStore } from '@/stores/auth'
 import { Upload, RefreshCw, Loader2, BookOpen, CheckCircle2, FileText, ExternalLink, GitBranch, Layers } from '@/lib/icons'
 import WikiImportDialog from './WikiImportDialog'
+import { reviewStatusLabel, sourceStatusLabel } from './knowledgeStatus'
 
 const PAGE_TYPE_LABEL: Record<string, string> = {
   source: '来源', module: '模块', requirement: '需求', rule: '规则',
@@ -254,7 +255,7 @@ export default function WikiTab() {
                 <div key={r.id} className="space-y-1.5 text-sm py-1 border-b last:border-0 border-border/40">
                   <div className="flex items-center gap-2">
                     <span className="truncate flex-1 font-medium" title={r.title}>{r.title || '(无标题)'}</span>
-                    <Badge tone={r.status === 'active' ? 'success' : 'neutral'} className="shrink-0 text-xs">{r.status}</Badge>
+                    <Badge tone={r.status === 'active' ? 'success' : 'neutral'} className="shrink-0 text-xs">{sourceStatusLabel(r.status)}</Badge>
                     {canManage && (
                       <Button variant="ghost" size="sm" className="h-6 px-2 text-xs shrink-0"
                         disabled={compiling === r.id} onClick={() => compile(r.id)}>
@@ -305,7 +306,7 @@ export default function WikiTab() {
                       <FileText className="size-3.5 text-muted-foreground shrink-0" />
                       <span className="truncate flex-1">{p.title}</span>
                       <Badge tone={REVIEW_TONE[p.review_status] ?? 'neutral'} className="shrink-0 text-xs">
-                        {p.review_status}
+                        {reviewStatusLabel(p.review_status)}
                       </Badge>
                     </button>
                   ))}
@@ -331,7 +332,7 @@ export default function WikiTab() {
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{selected.title}</span>
                   <Badge tone="neutral">{PAGE_TYPE_LABEL[selected.page_type] || selected.page_type}</Badge>
-                  <Badge tone={REVIEW_TONE[selected.review_status] ?? 'neutral'}>{selected.review_status}</Badge>
+                  <Badge tone={REVIEW_TONE[selected.review_status] ?? 'neutral'}>{reviewStatusLabel(selected.review_status)}</Badge>
                   <span className="text-xs text-muted-foreground">v{selected.version}</span>
                   {canApprove && selected.review_status !== 'approved' && (
                     <div className="ml-auto flex gap-1.5">

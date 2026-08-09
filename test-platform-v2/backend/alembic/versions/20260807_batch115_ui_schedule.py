@@ -41,7 +41,10 @@ def upgrade() -> None:
         op.add_column("test_schedule", sa.Column("job_type", sa.String(length=10), nullable=False, server_default="plan"))
     if not _has_column(bind, "test_schedule", "job_id"):
         op.add_column("test_schedule", sa.Column("job_id", sa.Integer(), nullable=True))
-    op.alter_column("test_schedule", "plan_id", existing_type=sa.Integer(), nullable=True)
+    # SQLite does not implement ALTER COLUMN. Alembic's batch operation recreates
+    # the table there while still emitting a regular ALTER on PostgreSQL.
+    with op.batch_alter_table("test_schedule") as batch_op:
+        batch_op.alter_column("plan_id", existing_type=sa.Integer(), nullable=True)
     indexes = {i["name"] for i in sa.inspect(bind).get_indexes("test_schedule")}
     if "ix_test_schedule_job_id" not in indexes:
         op.create_index("ix_test_schedule_job_id", "test_schedule", ["job_id"])
@@ -58,4 +61,5 @@ def downgrade() -> None:
     op.drop_index("ix_test_schedule_job_id", table_name="test_schedule")
     op.drop_column("test_schedule", "job_id")
     op.drop_column("test_schedule", "job_type")
-    op.alter_column("test_schedule", "plan_id", existing_type=sa.Integer(), nullable=False)
+    with op.batch_alter_table("test_schedule") as batch_op:
+        batch_op.alter_column("plan_id", existing_type=sa.Integer(), nullable=False)

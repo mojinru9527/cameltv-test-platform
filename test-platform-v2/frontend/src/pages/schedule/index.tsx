@@ -268,6 +268,7 @@ export default function SchedulePage() {
                                 checked={row.enabled}
                                 disabled={!canUpdate}
                                 onCheckedChange={(checked) => doToggle(row.id, checked)}
+                                aria-label={`切换调度 ${row.name} 启用状态`}
                               />
                             </TableCell>
                             <TableCell>
@@ -457,6 +458,7 @@ export default function SchedulePage() {
                 checked={form.watch('enabled')}
                 disabled={editing?.id ? !canUpdate : !canCreate}
                 onCheckedChange={(v) => form.setValue('enabled', v)}
+                aria-label="设置调度启用状态"
               />
             </div>
 

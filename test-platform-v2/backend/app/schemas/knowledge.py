@@ -236,6 +236,13 @@ class KnowledgeEntityBrief(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class KnowledgeEntityStats(BaseModel):
+    """Project-wide entity totals, independent from list loading limits."""
+    total: int = 0
+    by_type: dict[str, int] = Field(default_factory=dict)
+    missing_source: int = 0
+
+
 class KnowledgeRelationOut(BaseModel):
     id: int
     project_id: int

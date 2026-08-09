@@ -29,6 +29,7 @@ import {
 import DataTable, { type DataTableColumn } from '@/components/DataTable'
 import { Plus, KeyRound, Copy, Check } from '@/lib/icons'
 import { useAuthStore } from '@/stores/auth'
+import { formatTokenScopes } from './tokenScopes'
 
 const tokenSchema = z.object({
   name: z.string().min(1, '名称必填'),
@@ -40,7 +41,7 @@ interface TokenRow {
   id: number
   name: string
   token_prefix: string
-  scopes: string
+  scopes: string[] | string
   enabled: boolean
   last_used_at: string | null
   created_at: string | null
@@ -91,7 +92,7 @@ export default function TokensTab() {
   const columns: DataTableColumn<TokenRow>[] = [
     { key: 'name', header: '名称' },
     { key: 'token_prefix', header: '前缀', render: (row) => <code className="text-xs">{row.token_prefix}</code> },
-    { key: 'scopes', header: '作用域', render: (row) => <Badge variant="outline">{String(row.scopes)}</Badge> },
+    { key: 'scopes', header: '作用域', render: (row) => <Badge variant="outline">{formatTokenScopes(row.scopes)}</Badge> },
     {
       key: 'enabled',
       header: '状态',

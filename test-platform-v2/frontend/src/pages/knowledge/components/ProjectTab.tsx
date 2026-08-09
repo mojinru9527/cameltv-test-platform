@@ -11,6 +11,7 @@ import {
 import { fetchKnowledgeSources, fetchSourceChunks } from '@/api/knowledge'
 import type { KnowledgeChunk, KnowledgeSource } from '@/types'
 import { Loader2, FolderOpen } from '@/lib/icons'
+import { sourceStatusLabel } from './knowledgeStatus'
 
 function freshnessBadge(score: number): { color: string; label: string } {
   if (score >= 0.8) return { color: 'bg-status-success-muted text-status-success', label: '新鲜' }
@@ -143,7 +144,7 @@ export default function ProjectTab() {
                   <Badge tone="neutral">{selected.knowledge_domain === 'platform' ? '平台研发' : '项目知识'}</Badge>
                 )}
                 {selected?.status && (
-                  <Badge tone={selected.status === 'deprecated' ? 'danger' : 'success'}>{selected.status}</Badge>
+                  <Badge tone={selected.status === 'deprecated' ? 'danger' : 'success'}>{sourceStatusLabel(selected.status)}</Badge>
                 )}
                 {selected?.version && (
                   <Badge tone="neutral" className="text-xs">v{selected.version}</Badge>

@@ -48,9 +48,19 @@ def _generate_session_id(db: Session, project_id: int) -> str:
 
 # ── Device ──
 
-def list_devices(db: Session) -> list[dict[str, Any]]:
-    """获取已连接设备 + 缓存的应用列表。"""
+def discover_devices() -> list[dict[str, Any]]:
+    """Discover devices and apps without holding a database session."""
     devices = collector.get_connected_devices()
+    for d in devices:
+        try:
+            d["installed_apps"] = collector.get_device_apps(d["device_id"], d["platform"])
+        except Exception:
+            d["installed_apps"] = []
+    return devices
+
+
+def persist_devices(db: Session, devices: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Persist a completed discovery result."""
     for d in devices:
         cached = db.scalar(
             select(PerfDevice).where(PerfDevice.device_id == d["device_id"])
@@ -67,13 +77,13 @@ def list_devices(db: Session) -> list[dict[str, Any]]:
                 os_version=d.get("os_version", ""),
                 status="online",
             ))
-        # 获取已安装应用
-        try:
-            d["installed_apps"] = collector.get_device_apps(d["device_id"], d["platform"])
-        except Exception:
-            d["installed_apps"] = []
     db.commit()
     return devices
+
+
+def list_devices(db: Session) -> list[dict[str, Any]]:
+    """获取已连接设备 + 缓存的应用列表。"""
+    return persist_devices(db, discover_devices())
 
 
 # ── Session ──
