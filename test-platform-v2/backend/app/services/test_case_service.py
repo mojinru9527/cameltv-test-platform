@@ -45,6 +45,8 @@ CASE_TYPE_ALIASES: dict[str, tuple[str, ...]] = {
     "ui": ("ui",),
 }
 
+SURFACE_ORDER = {"用户端": 0, "运营后台": 1, "接口测试": 2, "其他": 3}
+
 
 def canonical_case_type(value: str) -> str:
     """Map legacy persisted values to the product's canonical case types."""
@@ -54,6 +56,22 @@ def canonical_case_type(value: str) -> str:
 def case_type_values(value: str) -> tuple[str, ...]:
     """Return persisted values accepted by a canonical type filter."""
     return CASE_TYPE_ALIASES.get(canonical_case_type(value), (value,))
+
+
+def classify_case_surface(domain: str, case_type: str) -> str:
+    """从存量 domain/case_type 推导产品界面，不新增迁移字段。"""
+    normalized = domain.strip().lower()
+    if canonical_case_type(case_type) == "api" or "接口" in normalized:
+        return "接口测试"
+    if any(keyword in normalized for keyword in ("运营后台", "管理后台", "后台", "admin")):
+        return "运营后台"
+    if any(keyword in normalized for keyword in ("用户端", "客户端", "前台", "pc端", "移动端")):
+        return "用户端"
+    return "其他"
+
+
+def _module_segments(module: str) -> list[str]:
+    return [segment.strip() for segment in re.split(r"[/\\>＞]+", module) if segment.strip()] or ["未分类"]
 
 
 def _sanitize_html(value: str) -> str:
@@ -287,6 +305,79 @@ def get_stats(db: Session, project_id: int = 0) -> dict:
         case_type = canonical_case_type(raw_type)
         types[case_type] = types.get(case_type, 0) + count
     return {"total": sum(types.values()), "by_type": types}
+
+
+def get_taxonomy(
+    db: Session,
+    *,
+    project_id: int = 0,
+    case_type: str = "manual",
+    surface: str = "",
+) -> list[dict]:
+    """构建 界面→业务域→多级模块 的用例分类树。"""
+    stmt = select(TestCase).where(
+        TestCase.project_id == project_id,
+        TestCase.is_deleted.is_(False),
+    )
+    if case_type and case_type != "all":
+        stmt = stmt.where(TestCase.case_type.in_(case_type_values(case_type)))
+    rows = db.scalars(stmt.order_by(TestCase.domain, TestCase.module, TestCase.id)).all()
+
+    grouped: dict[str, dict[str, dict]] = {}
+    for row in rows:
+        row_surface = classify_case_surface(row.domain, row.case_type)
+        if surface and row_surface != surface:
+            continue
+        domain_name = row.domain.strip() or "未分类"
+        domain = grouped.setdefault(row_surface, {}).setdefault(
+            domain_name,
+            {"count": 0, "modules": {}},
+        )
+        domain["count"] += 1
+        children = domain["modules"]
+        path_parts: list[str] = []
+        for segment in _module_segments(row.module):
+            path_parts.append(segment)
+            node = children.setdefault(
+                segment,
+                {
+                    "name": segment,
+                    "path": "/".join(path_parts),
+                    "count": 0,
+                    "children": {},
+                },
+            )
+            node["count"] += 1
+            children = node["children"]
+
+    def serialize_modules(nodes: dict[str, dict]) -> list[dict]:
+        result = []
+        for key in sorted(nodes):
+            node = nodes[key]
+            result.append({
+                "name": node["name"],
+                "path": node["path"],
+                "count": node["count"],
+                "children": serialize_modules(node["children"]),
+            })
+        return result
+
+    result = []
+    for surface_name in sorted(grouped, key=lambda name: SURFACE_ORDER.get(name, 99)):
+        domains = []
+        for domain_name in sorted(grouped[surface_name]):
+            domain = grouped[surface_name][domain_name]
+            domains.append({
+                "domain": domain_name,
+                "count": domain["count"],
+                "modules": serialize_modules(domain["modules"]),
+            })
+        result.append({
+            "surface": surface_name,
+            "count": sum(domain["count"] for domain in grouped[surface_name].values()),
+            "domains": domains,
+        })
+    return result
 
 
 # ── helper ────────────────────────────────────────────

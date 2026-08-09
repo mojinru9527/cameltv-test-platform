@@ -117,9 +117,11 @@ export function sortCasesNewestFirst<T extends { id?: number; created_at?: strin
 
 export function countCasesByType(
   stats?: { total?: number; by_type?: Record<string, number> },
-): { all: number; manual: number } {
+): { all: number; manual: number; api: number; ui: number } {
   return {
     all: Number.isFinite(stats?.total) ? Number(stats?.total) : 0,
     manual: Number.isFinite(stats?.by_type?.manual) ? Number(stats?.by_type?.manual) : 0,
+    api: Number.isFinite(stats?.by_type?.api) ? Number(stats?.by_type?.api) : 0,
+    ui: Number.isFinite(stats?.by_type?.ui) ? Number(stats?.by_type?.ui) : 0,
   }
 }
