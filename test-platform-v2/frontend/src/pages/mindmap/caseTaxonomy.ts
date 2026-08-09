@@ -2,6 +2,7 @@ interface MindmapCase {
   domain?: string
   module?: string
   case_type?: string
+  surface?: string
   priority?: string
   title?: string
   preconditions?: string
@@ -14,21 +15,20 @@ interface ModuleBranch {
   cases: MindmapCase[]
 }
 
-const SURFACE_ORDER = ['用户端', '运营后台', '接口测试', '其他'] as const
+export const SURFACE_ORDER = ['用户端', '运营后台', '接口测试', '其他'] as const
 
 export type CaseSurface = typeof SURFACE_ORDER[number]
 
-export function classifyCaseSurface(domain = '', caseType = 'manual'): CaseSurface {
-  const normalized = domain.trim().toLowerCase()
-  const canonicalType = caseType === 'functional' ? 'manual' : caseType
-  if (canonicalType === 'api' || normalized.includes('接口')) return '接口测试'
-  if (['运营后台', '管理后台', '后台', 'admin'].some((keyword) => normalized.includes(keyword))) {
-    return '运营后台'
-  }
-  if (['用户端', '客户端', '前台', 'pc端', '移动端'].some((keyword) => normalized.includes(keyword))) {
-    return '用户端'
+export function caseSurfaceOf(testCase: Pick<MindmapCase, 'surface'>): CaseSurface {
+  if (SURFACE_ORDER.includes(testCase.surface as CaseSurface)) {
+    return testCase.surface as CaseSurface
   }
   return '其他'
+}
+
+export function availableCaseSurfaces(cases: readonly Pick<MindmapCase, 'surface'>[]): CaseSurface[] {
+  const present = new Set(cases.map(caseSurfaceOf))
+  return SURFACE_ORDER.filter((surface) => present.has(surface))
 }
 
 export function splitModulePath(module = ''): string[] {
@@ -42,7 +42,7 @@ export function buildCaseMindmapMarkdown(cases: MindmapCase[]): string {
 
   const surfaces = new Map<CaseSurface, Map<string, Map<string, ModuleBranch>>>()
   for (const testCase of cases) {
-    const surface = classifyCaseSurface(testCase.domain, testCase.case_type)
+    const surface = caseSurfaceOf(testCase)
     const domain = testCase.domain?.trim() || '未分类'
     const domains = surfaces.get(surface) || new Map()
     surfaces.set(surface, domains)

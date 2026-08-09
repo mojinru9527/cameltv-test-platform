@@ -47,6 +47,21 @@ CASE_TYPE_ALIASES: dict[str, tuple[str, ...]] = {
 
 SURFACE_ORDER = {"用户端": 0, "运营后台": 1, "接口测试": 2, "其他": 3}
 
+# Batch 129：Batch 110 的存量功能用例早于统一 domain 命名，31 个旧域
+# 没有显式携带“用户端/运营后台”。映射来自仓库事实源：
+# docs/体育平台-用例结构规范.md + work-logs/evidence/batch-110/functional-case-audit.json。
+LEGACY_USER_DOMAINS = frozenset({
+    "个人中心", "赛事详情", "直播间", "app端数据与排行榜", "资讯", "首页",
+    "pc端", "搜索", "登录注册", "启动引导", "支付与账户", "ugc内容",
+    "web端", "骆驼币系统", "广告系统", "银钻系统", "ugc功能", "银钻预测",
+    "付费活动",
+})
+LEGACY_ADMIN_DOMAINS = frozenset({
+    "财务管理", "ugc管理", "商城管理", "消息管理", "赛事预测", "广告管理",
+    "活动管理", "银钻任务管理", "风控管理", "装扮管理", "系统管理",
+    "球队及联赛管理",
+})
+
 
 def canonical_case_type(value: str) -> str:
     """Map legacy persisted values to the product's canonical case types."""
@@ -65,7 +80,13 @@ def classify_case_surface(domain: str, case_type: str) -> str:
         return "接口测试"
     if any(keyword in normalized for keyword in ("运营后台", "管理后台", "后台", "admin")):
         return "运营后台"
-    if any(keyword in normalized for keyword in ("用户端", "客户端", "前台", "pc端", "移动端")):
+    if any(keyword in normalized for keyword in (
+        "用户端", "客户端", "前台", "pc端", "移动端", "app端", "web端",
+    )):
+        return "用户端"
+    if normalized in LEGACY_ADMIN_DOMAINS:
+        return "运营后台"
+    if normalized in LEGACY_USER_DOMAINS:
         return "用户端"
     return "其他"
 
@@ -391,6 +412,7 @@ def _row_to_dict(r: TestCase) -> dict:
         "domain": r.domain,
         "module": r.module,
         "case_type": r.case_type,
+        "surface": classify_case_surface(r.domain, r.case_type),
         "priority": r.priority,
         "status": r.status,
         "is_deleted": r.is_deleted,

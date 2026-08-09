@@ -19,6 +19,7 @@ class TestCaseOut(BaseModel):
     domain: str = ""
     module: str = ""
     case_type: str = "manual"
+    surface: str = "其他"
     priority: str = "P2"
     status: str = "active"
     tags: str = "[]"
