@@ -1,4 +1,4 @@
-"""Batch 104 — 注册接口测试（邀请码 / 唯一性 / 限流 / 默认角色）。"""
+"""注册接口测试（普通注册 / 可选邀请码策略 / 唯一性 / 限流 / 默认角色）。"""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -24,6 +24,12 @@ def tester_role(db_session):
     db_session.add(RolePermission(role_id=role.id, permission_id=perm.id))
     db_session.commit()
     return role
+
+
+@pytest.fixture
+def platform_invite_required(monkeypatch):
+    """受控环境可切回强制平台邀请码策略。"""
+    monkeypatch.setattr(settings, "invite_code_required", True)
 
 
 def _add_invite(
@@ -60,6 +66,24 @@ def _register_payload(**overrides) -> dict:
 
 
 class TestRegister:
+    def test_production_defaults_allow_ordinary_registration(self):
+        registration_default = Settings.model_fields["registration_enabled"].default
+        invite_required_default = Settings.model_fields["invite_code_required"].default
+
+        assert registration_default is True
+        assert invite_required_default is False
+
+    def test_register_without_platform_invite(self, client, db_session, tester_role, monkeypatch):
+        monkeypatch.setattr(settings, "invite_code_required", False)
+
+        resp = client.post(
+            "/api/v1/auth/register",
+            json=_register_payload(invite_code=""),
+        )
+
+        assert resp.status_code == 200
+        assert resp.json()["data"]["user"]["username"] == "alice"
+
     def test_register_success_auto_login(self, client, db_session, tester_role):
         _add_invite(db_session)
         resp = client.post("/api/v1/auth/register", json=_register_payload())
@@ -75,19 +99,25 @@ class TestRegister:
         # 默认角色生效：tester 的 testcase:list 权限出现在 permissions
         assert "testcase:list" in me.json()["data"]["permissions"]
 
-    def test_register_missing_invite_code(self, client, db_session, tester_role):
+    def test_register_missing_invite_code(
+        self, client, db_session, tester_role, platform_invite_required
+    ):
         _add_invite(db_session)
         resp = client.post("/api/v1/auth/register", json=_register_payload(invite_code=""))
         assert resp.status_code == 400
         assert "邀请码" in resp.json()["msg"]
 
-    def test_register_invalid_invite_code(self, client, db_session, tester_role):
+    def test_register_invalid_invite_code(
+        self, client, db_session, tester_role, platform_invite_required
+    ):
         _add_invite(db_session)
         resp = client.post("/api/v1/auth/register", json=_register_payload(invite_code="NOPE99"))
         assert resp.status_code == 400
         assert "无效" in resp.json()["msg"]
 
-    def test_register_expired_invite(self, client, db_session, tester_role):
+    def test_register_expired_invite(
+        self, client, db_session, tester_role, platform_invite_required
+    ):
         _add_invite(
             db_session,
             expires_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=1),
@@ -96,7 +126,9 @@ class TestRegister:
         assert resp.status_code == 400
         assert "过期" in resp.json()["msg"]
 
-    def test_register_exhausted_invite(self, client, db_session, tester_role):
+    def test_register_exhausted_invite(
+        self, client, db_session, tester_role, platform_invite_required
+    ):
         _add_invite(db_session, usage_limit=1, used_count=1)
         resp = client.post("/api/v1/auth/register", json=_register_payload())
         assert resp.status_code == 400

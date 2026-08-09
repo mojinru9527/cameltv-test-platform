@@ -84,7 +84,9 @@ def register(
         project_invite = project_invite_service.consume_project_invite(
             db, project_invite_token
         )
-    elif settings.invite_code_required:
+    elif settings.invite_code_required or invite_code.strip():
+        # 普通注册不强制邀请码；但用户主动填写时必须校验，不能静默忽略
+        # 已停用、过期或错误的邀请码，否则会破坏邀请码撤销语义。
         consume_invite_code(db, invite_code)
 
     user = User(

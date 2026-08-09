@@ -3,12 +3,11 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { fetchTestCases } from '@/api/testcase'
-import { fetchDomains } from '@/api/testcase'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { RotateCcw, Download, Maximize2, Minimize2 } from '@/lib/icons'
-import { toast } from 'sonner'
+import { buildCaseMindmapMarkdown, classifyCaseSurface } from './caseTaxonomy'
 
 /**
  * MindmapView — interactive test case mindmap.
@@ -24,61 +23,41 @@ export default function MindmapPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mmRef = useRef<any>(null)
   const renderVersionRef = useRef(0)
+  const [caseType, setCaseType] = useState('manual')
+  const [surface, setSurface] = useState('')
   const [domain, setDomain] = useState('')
-  const [domains, setDomains] = useState<any[]>([])
   const [fullscreen, setFullscreen] = useState(false)
   const [renderError, setRenderError] = useState<string | null>(null)
-
-  // Load domains dynamically (not hardcoded)
-  useEffect(() => {
-    const controller = new AbortController()
-    fetchDomains(controller.signal)
-      .then((d: any) => setDomains(d || []))
-      .catch((fetchError: unknown) => {
-        if (controller.signal.aborted) return
-        toast.error(fetchError instanceof Error ? fetchError.message : '领域列表加载失败')
-      })
-    return () => controller.abort()
-  }, [])
 
   // Data fetching
   const { data: rawData, isLoading, isError, error, refetch } = useApi<any>(
     (signal) => {
       const params: any = { page_size: 10000 }
-      if (domain) params.domain = domain
+      if (caseType !== 'all') params.case_type = caseType
       return fetchTestCases(params, signal)
     },
-    [domain],
+    [caseType],
   )
 
-  // Build markdown from cases
-  const markdown = useMemo(() => {
-    const cases = (rawData as any)?.items || []
-    if (!cases.length) return '# 测试用例\n\n暂无用例数据'
-
-    const tree: Record<string, Record<string, any[]>> = {}
-    for (const c of cases) {
-      const d = c.domain || '未分类'
-      const m = c.module || '通用'
-      tree[d] = tree[d] || {}
-      tree[d][m] = tree[d][m] || []
-      tree[d][m].push(c)
+  const allCases = useMemo(() => (rawData as any)?.items || [], [rawData])
+  const surfaceCases = useMemo(
+    () => allCases.filter((testCase: any) => !surface
+      || classifyCaseSurface(testCase.domain, testCase.case_type) === surface),
+    [allCases, surface],
+  )
+  const domains = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const testCase of surfaceCases) {
+      const name = testCase.domain || '未分类'
+      counts.set(name, (counts.get(name) || 0) + 1)
     }
-
-    let md = '# 测试用例\n\n'
-    for (const [dom, modules] of Object.entries(tree)) {
-      md += `## ${dom}\n`
-      for (const [mod, casesInMod] of Object.entries(modules)) {
-        md += `### ${mod}\n`
-        for (const c of casesInMod) {
-          md += `#### [${c.priority}] ${c.title}\n`
-          if (c.preconditions) md += `- 前置: ${c.preconditions}\n`
-          if (c.expected_result) md += `- 预期: ${c.expected_result}\n`
-        }
-      }
-    }
-    return md
-  }, [rawData])
+    return [...counts.entries()].map(([name, count]) => ({ name, count }))
+  }, [surfaceCases])
+  const filteredCases = useMemo(
+    () => surfaceCases.filter((testCase: any) => !domain || (testCase.domain || '未分类') === domain),
+    [domain, surfaceCases],
+  )
+  const markdown = useMemo(() => buildCaseMindmapMarkdown(filteredCases), [filteredCases])
 
   const destroyMindmap = useCallback(() => {
     const markmap = mmRef.current
@@ -197,9 +176,33 @@ export default function MindmapPage() {
   }, [fullscreen])
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center gap-3">
+    <div className="space-y-4 p-4 sm:p-6">
+      <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold">脑图视图</h1>
+
+        <Select value={caseType} onValueChange={(value) => { setCaseType(value); setDomain('') }}>
+          <SelectTrigger className="w-[150px]" size="sm" aria-label="按用例类型筛选">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="manual">功能用例</SelectItem>
+            <SelectItem value="api">接口用例</SelectItem>
+            <SelectItem value="ui">UI 自动化</SelectItem>
+            <SelectItem value="all">全部类型</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={surface || undefined} onValueChange={(value) => { setSurface(value || ''); setDomain('') }}>
+          <SelectTrigger className="w-[150px]" size="sm" aria-label="按产品界面筛选">
+            <SelectValue placeholder="全部界面" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">全部界面</SelectItem>
+            {['用户端', '运营后台', '接口测试', '其他'].map((item) => (
+              <SelectItem key={item} value={item}>{item}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {/* Domain filter — dynamic from API */}
         <Select value={domain || undefined} onValueChange={(v) => setDomain(v || '')}>
@@ -208,9 +211,9 @@ export default function MindmapPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">全部</SelectItem>
-            {domains.map((d: any) => (
-              <SelectItem key={d.domain} value={d.domain}>
-                {d.domain} ({d.count})
+            {domains.map((item) => (
+              <SelectItem key={item.name} value={item.name}>
+                {item.name} ({item.count})
               </SelectItem>
             ))}
           </SelectContent>
@@ -246,8 +249,8 @@ export default function MindmapPage() {
       <Card className={fullscreen ? 'fixed inset-4 z-50' : ''}>
         <CardHeader className="border-b pb-2">
           <CardTitle className="text-sm">
-            用例脑图（域 → 模块 → 用例）
-            {rawData && <span className="ml-2 text-muted-foreground font-normal">({(rawData as any)?.items?.length || 0} 条)</span>}
+            用例脑图（产品界面 → 业务域 → 子模块 → 用例）
+            {rawData && <span className="ml-2 font-normal text-muted-foreground">({filteredCases.length} 条)</span>}
           </CardTitle>
           {fullscreen && (
             <CardAction>
@@ -268,7 +271,7 @@ export default function MindmapPage() {
             isLoading={isLoading}
             isError={isError}
             error={error}
-            data={rawData}
+            data={{ items: filteredCases }}
             onRetry={refetch}
             emptyTitle="暂无测试用例"
             emptyDescription="请先创建测试用例，系统将自动生成脑图"

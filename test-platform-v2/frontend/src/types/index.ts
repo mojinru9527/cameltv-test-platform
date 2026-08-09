@@ -59,6 +59,12 @@ export interface MenuItem {
   children?: MenuItem[]
 }
 
+export interface PublicAccessConfig {
+  registration_enabled: boolean
+  invite_code_required: boolean
+  modules: MenuItem[]
+}
+
 // ========== P4: Dashboard / Report / Schedule ==========
 
 export interface CaseTypeStat {

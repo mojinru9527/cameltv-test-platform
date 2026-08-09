@@ -17,6 +17,7 @@ from app.schemas.test_case import (
     DomainCreate,
     DomainNode,
     ModuleCreate,
+    TaxonomySurfaceNode,
     TestCaseCreate,
     TestCaseOut,
     TestCaseUpdate,
@@ -61,6 +62,22 @@ def get_test_case_stats(
 ):
     """Return authoritative project totals before the dynamic ``/{case_id}`` route."""
     return R.ok(test_case_service.get_stats(db, project_id=current.project_id or 0))
+
+
+@router.get("/taxonomy", response_model=R[list[TaxonomySurfaceNode]], summary="用例多级分类")
+def get_test_case_taxonomy(
+    case_type: str = "manual",
+    surface: str = "",
+    current: CurrentUser = Depends(require_permission("testcase:list")),
+    db: Session = Depends(get_db),
+):
+    """默认返回功能用例，并按用户端/运营后台/接口测试组织多级模块。"""
+    return R.ok(test_case_service.get_taxonomy(
+        db,
+        project_id=current.project_id or 0,
+        case_type=case_type,
+        surface=surface,
+    ))
 
 
 @router.post("/domains", response_model=R[dict], summary="新增域")

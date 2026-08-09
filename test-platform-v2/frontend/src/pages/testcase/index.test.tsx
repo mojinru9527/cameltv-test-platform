@@ -16,12 +16,14 @@ vi.mock('@/api/testcase', () => ({
   deleteTestCase: vi.fn(),
   fetchDomains: vi.fn(),
   fetchTestCases: vi.fn(),
+  fetchTaxonomy: vi.fn(),
+  fetchTestCaseStats: vi.fn(),
   fetchVersions: vi.fn(),
   reviewCase: vi.fn(),
 }))
 
 vi.mock('@/hooks/useApi', () => ({
-  useApi: (_fetcher: unknown, deps: unknown[]) => deps.length === 0
+  useApi: (_fetcher: unknown, deps: unknown[]) => deps.length <= 1
     ? { data: [], isLoading: false, isError: false, error: null, refetch: vi.fn() }
     : {
         data: {
@@ -71,6 +73,15 @@ describe('用例批量删除确认', () => {
     fireEvent.click(screen.getByRole('button', { name: '确认删除' }))
 
     await waitFor(() => expect(api.batchDeleteCases).toHaveBeenCalledWith([12, 11]))
+  })
+
+  it('默认展示功能用例，并提供全部规范用例类型入口', () => {
+    render(<TestCasePage />)
+
+    expect(screen.getByRole('button', { name: /功能用例/ }).getAttribute('aria-pressed')).toBe('true')
+    expect(screen.getByRole('button', { name: /^接口用例 \(/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^UI 自动化 \(/ })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^全部 \(/ })).toBeTruthy()
   })
 
   it('取消批量删除时产生零写请求', async () => {

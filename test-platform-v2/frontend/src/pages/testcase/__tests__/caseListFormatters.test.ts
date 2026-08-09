@@ -76,11 +76,11 @@ describe('用例列表内容格式化', () => {
     expect(sorted.map((item) => item.id)).toEqual([9, 8, 3])
   })
 
-  it('从服务端类型统计读取全量和功能用例数量，不按业务域猜测', () => {
-    expect(countCasesByType(undefined)).toEqual({ all: 0, manual: 0 })
+  it('从服务端类型统计读取全部规范类型，不按业务域猜测', () => {
+    expect(countCasesByType(undefined)).toEqual({ all: 0, manual: 0, api: 0, ui: 0 })
     expect(countCasesByType({
       total: 1579,
       by_type: { manual: 977, api: 602, ui: 0 },
-    })).toEqual({ all: 1579, manual: 977 })
+    })).toEqual({ all: 1579, manual: 977, api: 602, ui: 0 })
   })
 })

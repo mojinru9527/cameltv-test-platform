@@ -46,7 +46,7 @@
   },
   "src/layouts/MainLayout.tsx": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 6
+      "count": 4
     }
   },
   "src/pages/agent-workbench/index.tsx": {

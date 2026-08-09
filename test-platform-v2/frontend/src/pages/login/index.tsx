@@ -1,14 +1,6 @@
-import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { toast } from 'sonner'
-import { login } from '@/api/auth'
-import { useAuthStore } from '@/stores/auth'
-import { Button } from '@/ui'
-import { Input } from '@/ui'
+import LoginForm from '@/components/auth/LoginForm'
 import {
   Card,
   CardContent,
@@ -17,44 +9,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { User, Lock, Loader2 } from '@/lib/icons'
-
-const loginSchema = z.object({
-  username: z.string().min(1, '请输入用户名'),
-  password: z.string().min(1, '请输入密码'),
-})
-
-type LoginForm = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   useDocumentTitle('登录')
-  const setLogin = useAuthStore((s) => s.setLogin)
-  const [loading, setLoading] = useState(false)
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { username: '', password: '' },
-  })
-
-  const onFinish = async (values: LoginForm) => {
-    setLoading(true)
-    try {
-      const data = await login(values.username, values.password)
-      setLogin(data)
-      toast.success('登录成功')
-      const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
-      navigate(from, { replace: true })
-    } catch {
-      // 错误已由拦截器提示
-    } finally {
-      setLoading(false)
-    }
+  const onSuccess = () => {
+    const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/'
+    navigate(from, { replace: true })
   }
 
   return (
@@ -67,61 +29,19 @@ export default function LoginPage() {
           <CardDescription>前后端分离 · 多项目测试管理</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onFinish)} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="username" className="text-sm font-medium">用户名</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  id="username"
-                  className="pl-9"
-                  placeholder="用户名"
-                  {...register('username')}
-                  data-invalid={!!errors.username}
-                  aria-invalid={!!errors.username}
-                  aria-describedby={errors.username ? 'username-error' : undefined}
-                />
-              </div>
-              {errors.username && (
-                <span id="username-error" className="text-xs text-destructive">{errors.username.message}</span>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="password" className="text-sm font-medium">密码</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  className="pl-9"
-                  type="password"
-                  placeholder="密码"
-                  {...register('password')}
-                  data-invalid={!!errors.password}
-                  aria-invalid={!!errors.password}
-                  aria-describedby={errors.password ? 'password-error' : undefined}
-                />
-              </div>
-              {errors.password && (
-                <span id="password-error" className="text-xs text-destructive">{errors.password.message}</span>
-              )}
-            </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="size-4 animate-spin" data-icon="inline-start" />}
-              登录
-            </Button>
-          </form>
+          <LoginForm onSuccess={onSuccess} />
         </CardContent>
         <CardFooter className="justify-center">
           <div className="flex flex-col items-center gap-1">
-            <p className="text-xs text-muted-foreground">请使用管理员分配的账号登录</p>
             <p className="text-xs text-muted-foreground">
               还没有账号？
               <Link to="/register" className="ml-1 text-primary hover:underline">
-                使用邀请码注册
+                免费注册
               </Link>
             </p>
+            <Link to="/" className="text-xs text-muted-foreground hover:text-foreground">
+              先浏览平台模块
+            </Link>
           </div>
         </CardFooter>
       </Card>

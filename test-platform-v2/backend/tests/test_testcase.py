@@ -202,3 +202,95 @@ class TestCaseTypeStatistics:
         )
         assert manual_priority["p0"] == 1
         assert manual_priority["p1"] == 1
+
+
+class TestCaseTaxonomy:
+    """Batch 128 — 用例分类必须先区分用户端/运营后台，再展示子模块。"""
+
+    def test_taxonomy_defaults_to_functional_cases_and_builds_module_paths(
+        self, client, auth_headers, db_session,
+    ):
+        from app.models.test_case import TestCase
+
+        db_session.add_all([
+            TestCase(
+                project_id=1,
+                title="用户端预测入口",
+                domain="体育-用户端-功能",
+                module="赛事详情/预测Pick/入口",
+                case_type="manual",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                title="后台预测配置",
+                domain="体育-运营后台-功能",
+                module="预测管理/玩法配置",
+                case_type="functional",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                title="预测接口",
+                domain="体育-接口测试",
+                module="预测/提交",
+                case_type="api",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                title="已删除用例",
+                domain="体育-用户端-功能",
+                module="不应出现",
+                case_type="manual",
+                is_deleted=True,
+            ),
+        ])
+        db_session.commit()
+
+        response = client.get("/api/v1/test-cases/taxonomy", headers=auth_headers)
+
+        assert response.status_code == 200
+        taxonomy = response.json()["data"]
+        assert [surface["surface"] for surface in taxonomy] == ["用户端", "运营后台"]
+        user_domain = taxonomy[0]["domains"][0]
+        assert user_domain["domain"] == "体育-用户端-功能"
+        assert user_domain["modules"][0] == {
+            "name": "赛事详情",
+            "path": "赛事详情",
+            "count": 1,
+            "children": [{
+                "name": "预测Pick",
+                "path": "赛事详情/预测Pick",
+                "count": 1,
+                "children": [{
+                    "name": "入口",
+                    "path": "赛事详情/预测Pick/入口",
+                    "count": 1,
+                    "children": [],
+                }],
+            }],
+        }
+        assert "预测接口" not in str(taxonomy)
+        assert "已删除用例" not in str(taxonomy)
+
+    def test_taxonomy_all_includes_api_surface(self, client, auth_headers, db_session):
+        from app.models.test_case import TestCase
+
+        db_session.add(TestCase(
+            project_id=1,
+            title="健康检查接口",
+            domain="体育-接口测试",
+            module="系统/健康检查",
+            case_type="api",
+            is_deleted=False,
+        ))
+        db_session.commit()
+
+        response = client.get(
+            "/api/v1/test-cases/taxonomy?case_type=all",
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        assert [item["surface"] for item in response.json()["data"]] == ["接口测试"]

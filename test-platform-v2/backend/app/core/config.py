@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     login_rate_limit_window_seconds: int = 900
 
     # ── 外放轻量模式（Batch 104）：注册 / 邀请码 / 自助项目 ──
-    # 生产默认关闭注册，须由运维显式开启（灰度阶段靠邀请码管控）。
-    registration_enabled: bool = False
-    invite_code_required: bool = True          # 注册必须凭邀请码
+    # 默认开放普通用户注册；受控环境可显式关闭注册或强制平台邀请码。
+    registration_enabled: bool = True
+    invite_code_required: bool = False         # 可选：开启后注册必须凭平台邀请码
     default_registration_role: str = "tester"  # 注册用户的默认全局角色
     max_projects_per_user: int = 5             # 普通用户可拥有的启用项目上限
     max_team_organizations_per_user: int = 5   # Batch 105：团队组织上限（个人组织不计入）
@@ -61,7 +61,7 @@ class Settings(BaseSettings):
 
     @property
     def effective_registration_enabled(self) -> bool:
-        """注册总开关：development/test 默认开放（自动化验收）；生产必须显式开启。"""
+        """注册总开关：development/test 始终开放，其他环境服从显式配置。"""
         if self.environment in ("development", "test"):
             return True
         return self.registration_enabled

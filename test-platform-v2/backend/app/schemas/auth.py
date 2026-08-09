@@ -4,6 +4,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.organization import OrganizationBrief
+from app.schemas.system import MenuOut
 
 
 class LoginIn(BaseModel):
@@ -18,6 +19,14 @@ class RegisterIn(BaseModel):
     password: str = Field(..., min_length=6, max_length=128)
     invite_code: str = ""
     project_invite_token: str = ""
+
+
+class PublicAccessOut(BaseModel):
+    """未登录访客可安全读取的平台入口配置。"""
+
+    registration_enabled: bool
+    invite_code_required: bool
+    modules: list[MenuOut] = Field(default_factory=list)
 
 
 class UserBrief(BaseModel):

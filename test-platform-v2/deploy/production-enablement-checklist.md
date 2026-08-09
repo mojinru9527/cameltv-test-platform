@@ -17,8 +17,8 @@
 在 Railway 服务变量中新增/确认：
 
 ```dotenv
-REGISTRATION_ENABLED=true        # 放开注册（未确认前保持 false）
-INVITE_CODE_REQUIRED=true        # 强制平台邀请码
+REGISTRATION_ENABLED=true        # 开放普通用户注册
+INVITE_CODE_REQUIRED=false       # 不强制平台邀请码；受控环境可改为 true
 DEFAULT_REGISTRATION_ROLE=tester
 MAX_PROJECTS_PER_USER=5
 MAX_TEAM_ORGANIZATIONS_PER_USER=5
