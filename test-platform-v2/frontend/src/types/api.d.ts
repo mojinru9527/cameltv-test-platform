@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/public-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 公开平台访问配置
+         * @description 返回访客可见的模块目录和注册策略，不包含用户、项目或权限数据。
+         */
+        get: operations["public_access_api_v1_auth_public_access_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/register": {
         parameters: {
             query?: never;
@@ -31,11 +51,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * 账号注册（邀请码）
-         * @description 外放轻量模式（Batch 104）：注册并自动登录，httpOnly cookie 同登录。
+         * 普通用户注册
+         * @description 注册普通用户并自动登录，httpOnly cookie 同登录。
          *
-         *     安全默认：生产环境 registration_enabled=false 时接口直接 403；
-         *     开启后默认要求有效邀请码（invite_code_required），并受独立注册限流。
+         *     注册关闭时接口返回 403；受控环境可开启 invite_code_required，
+         *     其余环境允许普通用户直接注册，并统一受独立注册限流。
          */
         post: operations["register_api_v1_auth_register_post"];
         delete?: never;
@@ -1036,6 +1056,26 @@ export interface paths {
          * @description Return authoritative project totals before the dynamic ``/{case_id}`` route.
          */
         get: operations["get_test_case_stats_api_v1_test_cases_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/test-cases/taxonomy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * 用例多级分类
+         * @description 默认返回功能用例，并按用户端/运营后台/接口测试组织多级模块。
+         */
+        get: operations["get_test_case_taxonomy_api_v1_test_cases_taxonomy_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -9972,6 +10012,33 @@ export interface components {
              */
             organizations: components["schemas"]["OrganizationBrief"][];
         };
+        /** MenuOut */
+        MenuOut: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
+            /**
+             * Path
+             * @default
+             */
+            path: string;
+            /**
+             * Icon
+             * @default
+             */
+            icon: string;
+            /**
+             * Sort
+             * @default 0
+             */
+            sort: number;
+            /**
+             * Children
+             * @default []
+             */
+            children: components["schemas"]["MenuOut"][];
+        };
         /** MetricDataPoint */
         MetricDataPoint: {
             /** Timestamp */
@@ -11640,6 +11707,18 @@ export interface components {
             /** Status */
             status?: number | null;
         };
+        /**
+         * PublicAccessOut
+         * @description 未登录访客可安全读取的平台入口配置。
+         */
+        PublicAccessOut: {
+            /** Registration Enabled */
+            registration_enabled: boolean;
+            /** Invite Code Required */
+            invite_code_required: boolean;
+            /** Modules */
+            modules?: components["schemas"]["MenuOut"][];
+        };
         /** QualityGateOut */
         QualityGateOut: {
             /** Mission Id */
@@ -12944,6 +13023,20 @@ export interface components {
             msg: string;
             data?: components["schemas"]["ProjectSphereView"] | null;
         };
+        /** R[PublicAccessOut] */
+        R_PublicAccessOut_: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            data?: components["schemas"]["PublicAccessOut"] | null;
+        };
         /** R[QualityGateOut] */
         R_QualityGateOut_: {
             /**
@@ -13825,6 +13918,21 @@ export interface components {
             msg: string;
             /** Data */
             data?: components["schemas"]["SearchResultOut"][] | null;
+        };
+        /** R[list[TaxonomySurfaceNode]] */
+        R_list_TaxonomySurfaceNode__: {
+            /**
+             * Code
+             * @default 0
+             */
+            code: number;
+            /**
+             * Msg
+             * @default ok
+             */
+            msg: string;
+            /** Data */
+            data?: components["schemas"]["TaxonomySurfaceNode"][] | null;
         };
         /** R[list[UserOut]] */
         R_list_UserOut__: {
@@ -15016,6 +15124,44 @@ export interface components {
          * @enum {string}
          */
         SourceType: "gherkin" | "markdown" | "plain";
+        /** TaxonomyDomainNode */
+        TaxonomyDomainNode: {
+            /** Domain */
+            domain: string;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /** Modules */
+            modules?: components["schemas"]["TaxonomyModuleNode"][];
+        };
+        /** TaxonomyModuleNode */
+        TaxonomyModuleNode: {
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /** Children */
+            children?: components["schemas"]["TaxonomyModuleNode"][];
+        };
+        /** TaxonomySurfaceNode */
+        TaxonomySurfaceNode: {
+            /** Surface */
+            surface: string;
+            /**
+             * Count
+             * @default 0
+             */
+            count: number;
+            /** Domains */
+            domains?: components["schemas"]["TaxonomyDomainNode"][];
+        };
         /** TemplateCreate */
         TemplateCreate: {
             /** Name */
@@ -16993,6 +17139,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_access_api_v1_auth_public_access_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_PublicAccessOut_"];
                 };
             };
         };
@@ -19715,6 +19881,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["R_dict_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_test_case_taxonomy_api_v1_test_cases_taxonomy_get: {
+        parameters: {
+            query?: {
+                case_type?: string;
+                surface?: string;
+            };
+            header?: {
+                "X-Project-Id"?: number | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["R_list_TaxonomySurfaceNode__"];
                 };
             };
             /** @description Validation Error */
