@@ -1,6 +1,6 @@
 # Batch 128 — QA 报告（公开访问、普通注册与用例分类体系）
 
-> **QA (🔍)** | Date: 2026-08-09 | Verdict: PASS（远端 required checks 待 Draft PR）
+> **QA (🔍)** | Date: 2026-08-09 | Verdict: PASS（首轮 Draft PR lint 基线失败已本地闭环，待重新确认推送）
 
 ## 1. 验收结论
 
@@ -18,6 +18,7 @@
 | 后端全量 | `python -m pytest -q` | exit 0，`1238 passed, 3 skipped, 21 warnings`，289.41s |
 | 注册/公开访问定向 | `pytest tests/test_register.py tests/test_public_access.py -q` | exit 0，13 passed |
 | 用例分类定向 | `pytest tests/test_testcase.py -q` | exit 0，15 passed |
+| 前端 lint | `npm run lint` | exit 0；`MainLayout.tsx` 历史 unused-vars 抑制计数已由 6 收敛为 4，无实际 lint 违规 |
 | 前端全量 | `npm test` | exit 0，103 files / 397 tests |
 | 前端类型 | `npm run typecheck` | exit 0 |
 | 前端构建 | `npm run build` | exit 0，3442 modules transformed |
@@ -58,6 +59,7 @@ Playwright 使用本批隔离服务 `frontend:5191 / backend:8021`，可见 Chro
 | 前端验收测试缺少访客首页/邀请码仍必填 | 根路由整体 `RequireAuth`，注册 schema 强制邀请码 | 访客壳阻止 Outlet；共享 LoginForm/Dialog；注册策略从公开入口读取 |
 | 后端首轮全量 3 个蓝湖失败 | 独立 worktree 未初始化 `lanhu-mcp` 子模块 | `git submodule update --init --recursive lanhu-mcp`；失败集和全量均通过 |
 | 后端首轮全量 1 个邀请码管理失败 | 普通注册模式静默忽略用户主动填写的已停用邀请码 | 可选但“填写即校验”，保留邀请码撤销语义；相关 17/17 通过 |
+| Draft PR #179 前端 required check 在 Lint 步骤失败 | 本批移除 `MainLayout.tsx` 两个未使用变量后，`eslint-suppressions.json` 仍保留旧计数 6；ESLint 将未使用抑制视为 exit 2 | 用 `--prune-suppressions` 将计数最小更新为 4；`npm run lint`、397 项测试、typecheck、build 全部 exit 0；没有通过放宽 lint 参数绕过门禁 |
 
 ## 5. 安全与兼容性抽检
 
@@ -75,6 +77,6 @@ Playwright 使用本批隔离服务 `frontend:5191 / backend:8021`，可见 Chro
 
 ## 7. 发布建议
 
-状态：**READY FOR TOTAL CONFIRMATION**。本地必修复为 0；用户确认当前范围后，可推送 `feature/batch-128-public-access-case-taxonomy`、创建 Draft PR，并由 required checks 与最终 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 决定是否转 Ready 和 squash merge。
+状态：**READY FOR RECONFIRMATION**。首轮 Draft PR 已创建；CI lint 基线修复会新增提交，因此原总确认按门禁失效。用户重新确认新增范围后，可再次推送 `feature/batch-128-public-access-case-taxonomy`，由新一轮 required checks 与最终 `audit-ai-pr.ps1 -RequireSuccessfulChecks` 决定是否转 Ready 和 squash merge。
 
 **技能使用**：`cameltv-agent-team`、`cameltv-bug-guard`、`cameltv-ui-conventions`、`impeccable`、`karpathy-guidelines`、`writing-plans`、`playwright-skill`；技能判断均由上述命令和浏览器证据独立验证。
