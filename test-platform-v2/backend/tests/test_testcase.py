@@ -1,6 +1,8 @@
 """Test case CRUD tests — create, read, update, delete, domain tree."""
 from __future__ import annotations
 
+import pytest
+
 
 class TestCaseCRUD:
     def test_create_case(self, client, auth_headers):
@@ -294,3 +296,103 @@ class TestCaseTaxonomy:
 
         assert response.status_code == 200
         assert [item["surface"] for item in response.json()["data"]] == ["接口测试"]
+
+    @pytest.mark.parametrize("domain", [
+        "个人中心", "赛事详情", "直播间", "APP端数据与排行榜", "资讯", "首页",
+        "PC端", "搜索", "登录注册", "启动引导", "支付与账户", "UGC内容",
+        "WEB端", "骆驼币系统", "广告系统", "银钻系统", "UGC功能", "银钻预测",
+        "付费活动",
+    ])
+    def test_legacy_user_domains_are_reclassified(self, domain):
+        from app.services.test_case_service import classify_case_surface
+
+        assert classify_case_surface(domain, "manual") == "用户端"
+
+    @pytest.mark.parametrize("domain", [
+        "财务管理", "UGC管理", "商城管理", "消息管理", "赛事预测", "广告管理",
+        "活动管理", "银钻任务管理", "风控管理", "装扮管理", "系统管理",
+        "球队及联赛管理",
+    ])
+    def test_legacy_admin_domains_are_reclassified(self, domain):
+        from app.services.test_case_service import classify_case_surface
+
+        assert classify_case_surface(domain, "functional") == "运营后台"
+
+    def test_list_surface_and_taxonomy_use_the_same_classifier(
+        self, client, auth_headers, db_session,
+    ):
+        from app.models.test_case import TestCase
+
+        db_session.add_all([
+            TestCase(
+                project_id=1,
+                case_id="LEGACY-USER",
+                title="用户资产",
+                domain="个人中心",
+                module="我的资产/余额",
+                case_type="manual",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                case_id="LEGACY-ADMIN",
+                title="用户账户配置",
+                domain="财务管理",
+                module="用户账户/配置",
+                case_type="functional",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                case_id="UNKNOWN-MANUAL",
+                title="未来模块",
+                domain="未来业务域",
+                module="实验",
+                case_type="manual",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1,
+                case_id="API-WINS",
+                title="后台接口",
+                domain="财务管理",
+                module="账户/查询",
+                case_type="api",
+                is_deleted=False,
+            ),
+        ])
+        db_session.commit()
+
+        list_response = client.get(
+            "/api/v1/test-cases?page_size=100",
+            headers=auth_headers,
+        )
+        taxonomy_response = client.get(
+            "/api/v1/test-cases/taxonomy?case_type=all",
+            headers=auth_headers,
+        )
+
+        assert list_response.status_code == 200
+        by_case_id = {
+            item["case_id"]: item["surface"]
+            for item in list_response.json()["data"]["items"]
+            if item["case_id"]
+        }
+        assert by_case_id == {
+            "LEGACY-USER": "用户端",
+            "LEGACY-ADMIN": "运营后台",
+            "UNKNOWN-MANUAL": "其他",
+            "API-WINS": "接口测试",
+        }
+
+        assert taxonomy_response.status_code == 200
+        taxonomy = taxonomy_response.json()["data"]
+        taxonomy_domains = {
+            (surface["surface"], domain["domain"])
+            for surface in taxonomy
+            for domain in surface["domains"]
+        }
+        assert ("用户端", "个人中心") in taxonomy_domains
+        assert ("运营后台", "财务管理") in taxonomy_domains
+        assert ("其他", "未来业务域") in taxonomy_domains
+        assert ("接口测试", "财务管理") in taxonomy_domains

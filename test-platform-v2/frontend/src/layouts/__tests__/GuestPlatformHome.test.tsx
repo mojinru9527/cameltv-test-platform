@@ -5,7 +5,8 @@ import { describe, expect, it, vi } from 'vitest'
 import GuestPlatformHome from '../GuestPlatformHome'
 
 describe('访客平台首页', () => {
-  it('公开展示模块目录，点击模块时请求登录而不渲染业务内容', () => {
+  it('公开展示模块目录，浏览模块与开始使用采用不同动作', () => {
+    const navigate = vi.fn()
     const requireLogin = vi.fn()
     render(
       <MemoryRouter>
@@ -24,6 +25,7 @@ describe('访客平台首页', () => {
             },
           ]}
           registrationEnabled
+          onNavigate={navigate}
           onRequireLogin={requireLogin}
         />
       </MemoryRouter>,
@@ -34,7 +36,11 @@ describe('访客平台首页', () => {
     expect(screen.getByText('用例脑图')).toBeTruthy()
     expect(screen.getByRole('link', { name: '免费注册' }).getAttribute('href')).toBe('/register')
 
-    fireEvent.click(screen.getByRole('button', { name: /打开用例脑图/ }))
-    expect(requireLogin).toHaveBeenCalledWith('/mindmap', '用例脑图')
+    fireEvent.click(screen.getByRole('button', { name: /查看用例脑图功能/ }))
+    expect(navigate).toHaveBeenCalledWith('/mindmap')
+    expect(requireLogin).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: /登录并开始使用/ }))
+    expect(requireLogin).toHaveBeenCalledWith('/workbench', '工作台')
   })
 })

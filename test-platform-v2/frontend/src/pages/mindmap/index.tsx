@@ -7,7 +7,7 @@ import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { RotateCcw, Download, Maximize2, Minimize2 } from '@/lib/icons'
-import { buildCaseMindmapMarkdown, classifyCaseSurface } from './caseTaxonomy'
+import { availableCaseSurfaces, buildCaseMindmapMarkdown, caseSurfaceOf } from './caseTaxonomy'
 
 /**
  * MindmapView — interactive test case mindmap.
@@ -40,9 +40,10 @@ export default function MindmapPage() {
   )
 
   const allCases = useMemo(() => (rawData as any)?.items || [], [rawData])
+  const availableSurfaces = useMemo(() => availableCaseSurfaces(allCases), [allCases])
   const surfaceCases = useMemo(
     () => allCases.filter((testCase: any) => !surface
-      || classifyCaseSurface(testCase.domain, testCase.case_type) === surface),
+      || caseSurfaceOf(testCase) === surface),
     [allCases, surface],
   )
   const domains = useMemo(() => {
@@ -180,7 +181,11 @@ export default function MindmapPage() {
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold">脑图视图</h1>
 
-        <Select value={caseType} onValueChange={(value) => { setCaseType(value); setDomain('') }}>
+        <Select value={caseType} onValueChange={(value) => {
+          setCaseType(value)
+          setSurface('')
+          setDomain('')
+        }}>
           <SelectTrigger className="w-[150px]" size="sm" aria-label="按用例类型筛选">
             <SelectValue />
           </SelectTrigger>
@@ -198,7 +203,7 @@ export default function MindmapPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="">全部界面</SelectItem>
-            {['用户端', '运营后台', '接口测试', '其他'].map((item) => (
+            {availableSurfaces.map((item) => (
               <SelectItem key={item} value={item}>{item}</SelectItem>
             ))}
           </SelectContent>
