@@ -15386,6 +15386,18 @@ export interface components {
              */
             surface: string;
             /**
+             * Taxonomy Domain
+             * @default 未分类
+             */
+            taxonomy_domain: string;
+            /**
+             * Taxonomy Module
+             * @default
+             */
+            taxonomy_module: string;
+            /** Terminal Scopes */
+            terminal_scopes?: string[];
+            /**
              * Priority
              * @default P2
              */
@@ -20040,9 +20052,14 @@ export interface operations {
     list_test_cases_api_v1_test_cases_get: {
         parameters: {
             query?: {
+                case_id?: string;
                 domain?: string;
                 module?: string;
+                surface?: string;
+                taxonomy_domain?: string;
+                taxonomy_module?: string;
                 case_type?: string;
+                positive_negative?: string;
                 priority?: string;
                 status?: string;
                 keyword?: string;
@@ -20432,6 +20449,10 @@ export interface operations {
             query?: {
                 domain?: string;
                 module?: string;
+                surface?: string;
+                taxonomy_domain?: string;
+                taxonomy_module?: string;
+                positive_negative?: string;
             };
             header?: {
                 "X-Project-Id"?: number | null;
@@ -20501,6 +20522,10 @@ export interface operations {
             query?: {
                 domain?: string;
                 module?: string;
+                surface?: string;
+                taxonomy_domain?: string;
+                taxonomy_module?: string;
+                positive_negative?: string;
             };
             header?: {
                 "X-Project-Id"?: number | null;

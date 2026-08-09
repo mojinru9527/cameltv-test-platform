@@ -23,23 +23,48 @@ vi.mock('@/api/testcase', () => ({
 }))
 
 vi.mock('@/hooks/useApi', () => ({
-  useApi: (_fetcher: unknown, deps: unknown[]) => deps.length <= 1
-    ? { data: [], isLoading: false, isError: false, error: null, refetch: vi.fn() }
-    : {
+  useApi: (_fetcher: unknown, deps: unknown[]) => {
+    if (deps.length === 1) {
+      return {
+        data: [{
+          surface: '用户端',
+          count: 2,
+          domains: [{
+            domain: '赛事详情',
+            count: 2,
+            modules: [{
+              name: '预测Pick',
+              path: '预测Pick',
+              count: 2,
+              children: [],
+            }],
+          }],
+        }],
+        isLoading: false,
+        isError: false,
+        error: null,
+        refetch: vi.fn(),
+      }
+    }
+    if (deps.length === 0) {
+      return { data: [], isLoading: false, isError: false, error: null, refetch: vi.fn() }
+    }
+    return {
         data: {
           total: 2,
           page: 1,
           page_size: 20,
           items: [
-            { id: 11, title: '体育接口用例 A', domain: '赛事', module: '直播', priority: 'P0', review_status: 'draft' },
-            { id: 12, title: '体育接口用例 B', domain: '赛事', module: '直播', priority: 'P1', review_status: 'draft' },
+            { id: 11, title: '体育接口用例 A', domain: '赛事', module: '直播', priority: 'P0', positive_negative: 'positive', review_status: 'draft' },
+            { id: 12, title: '体育接口用例 B', domain: '赛事', module: '直播', priority: 'P1', positive_negative: 'negative', review_status: 'draft' },
           ],
         },
         isLoading: false,
         isError: false,
         error: null,
         refetch: vi.fn(),
-      },
+      }
+  },
 }))
 
 vi.mock('@/components/DomainTree', () => ({ default: () => <div /> }))
@@ -82,6 +107,15 @@ describe('用例批量删除确认', () => {
     expect(screen.getByRole('button', { name: /^接口用例 \(/ })).toBeTruthy()
     expect(screen.getByRole('button', { name: /^UI 自动化 \(/ })).toBeTruthy()
     expect(screen.getByRole('button', { name: /^全部 \(/ })).toBeTruthy()
+  })
+
+  it('按界面和异常性质提供规范化筛选，并显示场景标签', () => {
+    render(<TestCasePage />)
+
+    expect(screen.getByRole('combobox', { name: '按产品界面筛选' })).toBeTruthy()
+    expect(screen.getByRole('combobox', { name: '按用例场景筛选' })).toBeTruthy()
+    expect(screen.getByText('正向')).toBeTruthy()
+    expect(screen.getByText('负向')).toBeTruthy()
   })
 
   it('取消批量删除时产生零写请求', async () => {

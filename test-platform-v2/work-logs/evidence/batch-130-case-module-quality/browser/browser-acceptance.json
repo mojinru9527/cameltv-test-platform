@@ -1,0 +1,29 @@
+{
+  "status": "pass",
+  "target": "http://127.0.0.1:5219",
+  "assertions": {
+    "surfacesSeparated": true,
+    "terminalWrappersAbsentFromTree": true,
+    "eventDetailCount": 3,
+    "parentModuleIncludesDescendants": 3,
+    "negativeFilterCount": 2,
+    "negativeEffectiveGetCount": 1,
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "responsive": [
+      {
+        "name": "tablet",
+        "width": 768,
+        "height": 1024,
+        "horizontalOverflow": 0
+      },
+      {
+        "name": "mobile",
+        "width": 390,
+        "height": 844,
+        "horizontalOverflow": -6
+      }
+    ]
+  },
+  "screenshot": "F:/CamelTv-worktrees/codex-batch-130-case-module-quality/test-platform-v2/work-logs/evidence/batch-130-case-module-quality/browser/case-service-aggregated-negative-filter.png"
+}

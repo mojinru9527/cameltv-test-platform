@@ -41,6 +41,7 @@ import { cn } from '@/lib/utils'
 import { deleteTestCase, fetchDomains, fetchTaxonomy, fetchTestCases, fetchTestCaseStats, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase, importExcel, importXmind, downloadExport } from '@/api/testcase'
 import type { TaxonomyModuleNode } from '@/api/testcase'
 import { countCasesByType, formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
+import { buildCaseListParams, flattenTaxonomyModules } from './caseTaxonomyFilters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'
@@ -52,6 +53,9 @@ import type { BadgeTone } from '@/ui'
 const PRIORITY_TONES: Record<string, BadgeTone> = { P0: 'danger', P1: 'warning', P2: 'info', P3: 'neutral' }
 const REVIEW_LABELS: Record<string, string> = { draft: '草稿', submitted: '已提交', approved: '已通过', rejected: '已驳回' }
 const REVIEW_TONES: Record<string, BadgeTone> = { draft: 'neutral', submitted: 'info', approved: 'success', rejected: 'danger' }
+const CASE_NATURE_LABELS: Record<string, string> = { positive: '正向', negative: '负向', boundary: '边界' }
+const CASE_NATURE_TONES: Record<string, BadgeTone> = { positive: 'success', negative: 'danger', boundary: 'warning' }
+const ALL_FILTER = '__all__'
 
 export default function TestCasePage() {
   useDocumentTitle('用例库')
@@ -68,8 +72,10 @@ export default function TestCasePage() {
   const canBatchSelect = canUpdate || canDelete
   // filter state (default to manual - api cases managed in apitest module)
   const [actTab, setActTab] = useState('manual')
+  const [selSurface, setSelSurface] = useState('')
   const [selDomain, setSelDomain] = useState('')
   const [selModule, setSelModule] = useState('')
+  const [caseNature, setCaseNature] = useState('')
   const [priority, setPriority] = useState('')
   const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -110,15 +116,17 @@ export default function TestCasePage() {
   // ── Main data fetching with useApi ──
   const { data, isLoading, isError, error, refetch } = useApi(
     (signal) => {
-      const params: any = { page, page_size: pageSize }
-      if (actTab) params.case_type = actTab
-      if (selDomain) params.domain = selDomain
-      if (selModule) params.module = selModule
+      const params = buildCaseListParams({
+        surface: selSurface,
+        domain: selDomain,
+        modulePath: selModule,
+        nature: caseNature,
+      }, { page, page_size: pageSize, ...(actTab ? { case_type: actTab } : {}) })
       if (priority) params.priority = priority
       if (keyword) params.keyword = keyword
       return fetchTestCases(params, signal) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
     },
-    [actTab, selDomain, selModule, priority, keyword, page, pageSize]
+    [actTab, selSurface, selDomain, selModule, caseNature, priority, keyword, page, pageSize]
   )
 
   // ── Domains (secondary data, loaded independently) ──
@@ -165,8 +173,10 @@ export default function TestCasePage() {
   async function handleExport(format: 'excel' | 'xmind') {
     try {
       const blob = await downloadExport(format, {
-        ...(selDomain ? { domain: selDomain } : {}),
-        ...(selModule ? { module: selModule } : {}),
+        ...(selSurface ? { surface: selSurface } : {}),
+        ...(selDomain ? { taxonomy_domain: selDomain } : {}),
+        ...(selModule ? { taxonomy_module: selModule } : {}),
+        ...(caseNature ? { positive_negative: caseNature } : {}),
       })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -233,30 +243,28 @@ export default function TestCasePage() {
     } finally { setBatchUpdating(false) }
   }
 
-  const visibleDomains = useMemo(() => {
-    const taxonomyDomains = new Set(
-      taxonomy.flatMap((surface) => surface.domains.map((domain) => domain.domain)),
-    )
-    return taxonomyDomains.size
-      ? domains.filter((domain) => taxonomyDomains.has(domain.domain))
-      : domains
-  }, [domains, taxonomy])
+  const selectedSurface = useMemo(
+    () => taxonomy.find((surface) => surface.surface === selSurface),
+    [selSurface, taxonomy],
+  )
+  const taxonomyDomains = selectedSurface?.domains || []
+  const selectedTaxonomyDomain = taxonomyDomains.find((domain) => domain.domain === selDomain)
 
   // ── Domain tree data ──
   const domainTree = useMemo(() => {
-    const moduleNode = (domain: string, node: TaxonomyModuleNode): any => ({
+    const moduleNode = (surface: string, domain: string, node: TaxonomyModuleNode): any => ({
       title: <span className="text-xs">{node.name} <span className="text-muted-foreground">({node.count})</span></span>,
-      key: JSON.stringify({ kind: 'module', domain, path: node.path, leaf: node.children.length === 0 }),
+      key: JSON.stringify({ kind: 'module', surface, domain, path: node.path }),
       isLeaf: node.children.length === 0,
-      children: node.children.map((child) => moduleNode(domain, child)),
+      children: node.children.map((child) => moduleNode(surface, domain, child)),
     })
     return taxonomy.map((surface) => ({
       title: <span className="text-[13px] font-medium">{surface.surface} <span className="text-muted-foreground">({surface.count})</span></span>,
       key: JSON.stringify({ kind: 'surface', surface: surface.surface }),
       children: surface.domains.map((domain) => ({
         title: <span className="text-xs font-medium">{domain.domain} <span className="text-muted-foreground">({domain.count})</span></span>,
-        key: JSON.stringify({ kind: 'domain', domain: domain.domain }),
-        children: domain.modules.map((node) => moduleNode(domain.domain, node)),
+        key: JSON.stringify({ kind: 'domain', surface: surface.surface, domain: domain.domain }),
+        children: domain.modules.map((node) => moduleNode(surface.surface, domain.domain, node)),
       })),
     }))
   }, [taxonomy])
@@ -264,22 +272,10 @@ export default function TestCasePage() {
   // derived modules list — returns all modules when no domain selected so the
   // "全部模块" Select always has enough options for Radix to open it.
   const selModules = useMemo(() => {
-    if (selDomain) {
-      const d = visibleDomains.find((x: any) => x.domain === selDomain)
-      return d?.modules?.map((m: any) => ({ value: m.module, label: `${m.module} (${m.count})` })) || []
-    }
-    // No domain selected → merge all modules from all domains (deduped by name)
-    const seen = new Set<string>()
-    const all: { value: string; label: string }[] = []
-    for (const d of visibleDomains) {
-      for (const m of (d.modules || [])) {
-        if (seen.has(m.module)) continue
-        seen.add(m.module)
-        all.push({ value: m.module, label: `${m.module} (${m.count})` })
-      }
-    }
-    return all
-  }, [selDomain, visibleDomains])
+    return selectedTaxonomyDomain
+      ? flattenTaxonomyModules(selectedTaxonomyDomain.modules)
+      : []
+  }, [selectedTaxonomyDomain])
 
   // ── Actions ──
   const doDelete = async (id: number) => {
@@ -384,15 +380,16 @@ export default function TestCasePage() {
             <DomainTree
               treeData={domainTree}
               onSelect={(keys) => {
-                if (!keys.length) { setSelDomain(''); setSelModule(''); setPage(1); return }
+                if (!keys.length) { setSelSurface(''); setSelDomain(''); setSelModule(''); setPage(1); return }
                 const selection = JSON.parse(keys[0]) as {
                   kind: 'surface' | 'domain' | 'module'
+                  surface?: string
                   domain?: string
                   path?: string
-                  leaf?: boolean
                 }
+                setSelSurface(selection.surface || '')
                 setSelDomain(selection.domain || '')
-                setSelModule(selection.kind === 'module' && selection.leaf ? selection.path || '' : '')
+                setSelModule(selection.kind === 'module' ? selection.path || '' : '')
                 setPage(1)
               }}
             />
@@ -403,36 +400,69 @@ export default function TestCasePage() {
         <div className="flex min-h-[540px] min-w-0 flex-1 flex-col lg:h-[calc(100vh-215px)]">
           {/* Filters */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <Select value={selDomain || undefined} onValueChange={(v) => { setSelDomain(v || ''); setSelModule(''); setPage(1) }}>
-              <SelectTrigger className="w-full sm:w-[130px]" size="sm" aria-label="按用例域筛选">
-                <SelectValue placeholder="全部域" />
+            <Select value={selSurface || ALL_FILTER} onValueChange={(v) => {
+              setSelSurface(v === ALL_FILTER ? '' : v)
+              setSelDomain('')
+              setSelModule('')
+              setPage(1)
+            }}>
+              <SelectTrigger className="w-full sm:w-[120px]" size="sm" aria-label="按产品界面筛选">
+                <SelectValue placeholder="全部界面" />
               </SelectTrigger>
               <SelectContent position="popper">
-                <SelectItem value="">全部域</SelectItem>
-                {visibleDomains.map((d: any) => (
+                <SelectItem value={ALL_FILTER}>全部界面</SelectItem>
+                {taxonomy.map((item) => (
+                  <SelectItem key={item.surface} value={item.surface}>{item.surface} ({item.count})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select disabled={!selSurface} value={selDomain || ALL_FILTER} onValueChange={(v) => {
+              setSelDomain(v === ALL_FILTER ? '' : v)
+              setSelModule('')
+              setPage(1)
+            }}>
+              <SelectTrigger className="w-full sm:w-[150px]" size="sm" aria-label="按业务模块筛选">
+                <SelectValue placeholder={selSurface ? '全部业务模块' : '先选界面'} />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value={ALL_FILTER}>全部业务模块</SelectItem>
+                {taxonomyDomains.map((d) => (
                   <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={selModule || undefined} onValueChange={(v) => { setSelModule(v || ''); setPage(1) }}>
-              <SelectTrigger className="w-full sm:w-[150px]" size="sm" aria-label="按用例模块筛选">
-                <SelectValue placeholder="全部模块" />
+            <Select disabled={!selDomain} value={selModule || ALL_FILTER} onValueChange={(v) => { setSelModule(v === ALL_FILTER ? '' : v); setPage(1) }}>
+              <SelectTrigger className="w-full sm:w-[170px]" size="sm" aria-label="按子模块筛选">
+                <SelectValue placeholder={selDomain ? '全部子模块' : '先选业务模块'} />
               </SelectTrigger>
               <SelectContent position="popper">
-                <SelectItem value="">全部模块</SelectItem>
+                <SelectItem value={ALL_FILTER}>全部子模块</SelectItem>
                 {selModules.map((m: any) => (
                   <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={priority || undefined} onValueChange={(v) => { setPriority(v || ''); setPage(1) }}>
+            <Select value={caseNature || ALL_FILTER} onValueChange={(v) => { setCaseNature(v === ALL_FILTER ? '' : v); setPage(1) }}>
+              <SelectTrigger className="w-full sm:w-[110px]" size="sm" aria-label="按用例场景筛选">
+                <SelectValue placeholder="全部场景" />
+              </SelectTrigger>
+              <SelectContent position="popper">
+                <SelectItem value={ALL_FILTER}>全部场景</SelectItem>
+                <SelectItem value="positive">正向</SelectItem>
+                <SelectItem value="negative">负向</SelectItem>
+                <SelectItem value="boundary">边界</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={priority || ALL_FILTER} onValueChange={(v) => { setPriority(v === ALL_FILTER ? '' : v); setPage(1) }}>
               <SelectTrigger className="w-full sm:w-[100px]" size="sm" aria-label="按用例优先级筛选">
                 <SelectValue placeholder="全部优先级" />
               </SelectTrigger>
               <SelectContent position="popper">
-                <SelectItem value="">全部优先级</SelectItem>
+                <SelectItem value={ALL_FILTER}>全部优先级</SelectItem>
                 {['P0', 'P1', 'P2', 'P3'].map((v) => (
                   <SelectItem key={v} value={v}>{v}</SelectItem>
                 ))}
@@ -468,7 +498,7 @@ export default function TestCasePage() {
               搜索
             </Button>
             <Button size="sm" variant="secondary" onClick={() => {
-              setSelDomain(''); setSelModule(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1)
+              setSelSurface(''); setSelDomain(''); setSelModule(''); setCaseNature(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1)
             }}>
               <RotateCcw className="size-3.5" data-icon="inline-start" />
               重置
@@ -549,10 +579,10 @@ export default function TestCasePage() {
             onRetry={refetch}
             emptyTitle="暂无测试用例"
             emptyDescription="点击「新建用例」开始创建"
-            emptyAction={keyword || selDomain || selModule || priority
+            emptyAction={keyword || selSurface || selDomain || selModule || caseNature || priority
               ? {
                   label: '清除筛选',
-                  onClick: () => { setSelDomain(''); setSelModule(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1) },
+                  onClick: () => { setSelSurface(''); setSelDomain(''); setSelModule(''); setCaseNature(''); setPriority(''); setKeywordInput(''); setKeyword(''); setPage(1) },
                 }
               : canCreate
                 ? { label: '新建用例', onClick: () => openEdit() }
@@ -575,6 +605,7 @@ export default function TestCasePage() {
                     <TableHead className="w-[100px]">模块名称</TableHead>
                     <TableHead className="w-[160px]">用例标题</TableHead>
                     <TableHead className="w-[70px]">用例等级</TableHead>
+                    <TableHead className="w-[64px]">场景</TableHead>
                     <TableHead className="w-[180px]">前置条件</TableHead>
                     <TableHead className="w-[200px]">操作步骤</TableHead>
                     <TableHead className="w-[200px]">预期结果</TableHead>
@@ -598,7 +629,12 @@ export default function TestCasePage() {
                         />}
                       </TableCell>
                       <TableCell className="max-w-[100px] truncate">
-                        <span className="line-clamp-1">{r.module || '......'}</span>
+                        <span
+                          className="line-clamp-1"
+                          title={[r.taxonomy_domain, r.taxonomy_module].filter(Boolean).join(' / ')}
+                        >
+                          {r.taxonomy_domain || r.module || '......'}
+                        </span>
                       </TableCell>
                       <TableCell className="max-w-[160px] truncate">
                         <span className="line-clamp-1" title={r.title}>{r.title || '......'}</span>
@@ -606,6 +642,11 @@ export default function TestCasePage() {
                       <TableCell>
                         <Badge tone={PRIORITY_TONES[r.priority] || 'neutral'}>
                           {r.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge tone={CASE_NATURE_TONES[r.positive_negative] || 'neutral'}>
+                          {CASE_NATURE_LABELS[r.positive_negative] || '未标注'}
                         </Badge>
                       </TableCell>
                       <TableCell className="max-w-[180px] truncate text-xs">
@@ -731,7 +772,7 @@ export default function TestCasePage() {
       <CaseDrawer
         open={drawer}
         editing={editing}
-        domains={visibleDomains}
+        domains={domains}
         onClose={() => { setDrawer(false); setEditing(null) }}
         onSaved={onSaved}
       />

@@ -1,9 +1,14 @@
 import api from './client'
 
 export interface TestCaseFilter {
+  case_id?: string
   domain?: string
   module?: string
+  surface?: string
+  taxonomy_domain?: string
+  taxonomy_module?: string
   case_type?: string
+  positive_negative?: string
   priority?: string
   status?: string
   keyword?: string

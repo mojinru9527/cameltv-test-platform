@@ -1,0 +1,33 @@
+{
+  "status": "pass",
+  "source": "test-platform-v2/work-logs/evidence/batch-125/module-cases-consolidated.json",
+  "totals": {
+    "cases": 7879,
+    "unique_case_ids": 7879,
+    "inventory_modules": 38,
+    "taxonomy_entries": 46
+  },
+  "coverage": {
+    "nature_counts": {
+      "positive": 3983,
+      "negative": 3216,
+      "boundary": 680
+    },
+    "non_happy_ratio": 0.4945,
+    "paired_inventory_modules": "38/38",
+    "adversarial_modules": "38/38",
+    "required_adversarial_categories": [
+      "recovery",
+      "repeat_concurrency"
+    ]
+  },
+  "quality_issues": {
+    "missing_title": 0,
+    "missing_preconditions": 0,
+    "invalid_steps": 0,
+    "missing_expected_result": 0,
+    "duplicate_case_ids": 0,
+    "terminal_channel_taxonomy_nodes": 0,
+    "source_module_mismatches": 0
+  }
+}

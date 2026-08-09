@@ -2301,7 +2301,24 @@
    "case_design_method": "错误推测",
    "positive_negative": "negative",
    "test_data_note": "输入'zzzz'，无匹配数据",
-   "preconditions": "PC端，运营后台无",
+   "preconditions": "用户已打开 PC 端搜索页；搜索索引中不存在关键词 zzzz 的赛事、球队、联赛或资讯",
+   "steps": [
+    {
+     "step": 1,
+     "desc": "在推荐搜索框输入 zzzz 并等待搜索完成",
+     "expected": "请求正常结束，不持续加载；下拉区域展示「暂无相关结果」且不残留上一关键词结果"
+    },
+    {
+     "step": 2,
+     "desc": "清空关键词后再次展开推荐搜索",
+     "expected": "空结果提示消失，恢复默认推荐内容；页面无报错且不发出重复请求"
+    }
+   ],
+   "expected_result": "无匹配数据时展示明确空态，不串用旧结果；清空后可恢复默认推荐。",
+   "remark": "负面用例",
+   "client_scope": [
+    "pc"
+   ],
    "id": "TC-077"
   },
   {

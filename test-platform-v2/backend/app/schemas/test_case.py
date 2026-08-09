@@ -20,6 +20,9 @@ class TestCaseOut(BaseModel):
     module: str = ""
     case_type: str = "manual"
     surface: str = "其他"
+    taxonomy_domain: str = "未分类"
+    taxonomy_module: str = ""
+    terminal_scopes: list[str] = Field(default_factory=list)
     priority: str = "P2"
     status: str = "active"
     tags: str = "[]"
@@ -122,9 +125,14 @@ class TestCaseUpdate(BaseModel):
 # ── 查询参数 ──────────────────────────────────────────
 
 class TestCaseFilter(BaseModel):
+    case_id: str = ""
     domain: str = ""
     module: str = ""
+    surface: str = ""
+    taxonomy_domain: str = ""
+    taxonomy_module: str = ""
     case_type: str = ""           # 空=全部
+    positive_negative: str = ""
     priority: str = ""
     status: str = ""
     keyword: str = ""

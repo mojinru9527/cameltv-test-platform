@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """体育模块用例合并（Batch 125 / Slice 3 收口）。
 
-每个模块 = 基座基础用例（新生成，两 skill 基座）+ 深度用例（Batch 122 SP- 手工深度层）。
+每个模块 = 基座基础用例 + Batch 122 深度用例 + Batch 130 对抗性覆盖层。
 
 输出：test-platform-v2/work-logs/evidence/batch-125/module-cases-consolidated.json
 结构：{ modules: [{ module, base_count, deep_count, total_count, base: [...], deep: [...] }], summary }
@@ -17,6 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 BASE_DIR = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / "batch-125" / "base-cases"
 DEEP_DIR = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / "batch-122" / "cases"
 OUT = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / "batch-125" / "module-cases-consolidated.json"
+ADVERSARIAL = REPO_ROOT / "test-platform-v2" / "work-logs" / "evidence" / "batch-130-case-module-quality" / "adversarial-case-overlay.json"
 
 
 def load_base(module_path: str) -> list[dict]:
@@ -42,6 +43,16 @@ def load_deep() -> dict[str, list[dict]]:
     return by_module
 
 
+def load_adversarial() -> dict[str, list[dict]]:
+    if not ADVERSARIAL.exists():
+        raise FileNotFoundError(
+            "缺少 Batch 130 对抗性覆盖层，请先运行 "
+            "scripts/generate_sports_adversarial_overlay.py"
+        )
+    payload = json.loads(ADVERSARIAL.read_text(encoding="utf-8"))
+    return {item["module"]: item["cases"] for item in payload["modules"]}
+
+
 def norm_module_key(s: str) -> str:
     return s.replace("/", " ").replace("-", " ").lower()
 
@@ -58,6 +69,7 @@ def main() -> int:
             modules.append(f"{label}/{m['name']}")
 
     deep_map = load_deep()
+    adversarial_map = load_adversarial()
     all_deep_flat = [c for cs in deep_map.values() for c in cs]
     # 深度用例按模块名模糊匹配（如 用户端/赛事详情 ↔ 赛事详情/预测Pick、运营后台/赛事预测 ↔ 运营后台/赛事预测/奖励发放记录）
     matched_ids: set[str] = set()
@@ -75,11 +87,16 @@ def main() -> int:
             if tail in ck or ck in key:
                 matched.append(c)
                 matched_ids.add(c.get("case_id"))
-        deep_list = list({c.get("case_id"): c for c in matched}.values())
+        adversarial = adversarial_map.get(mod, [])
+        deep_list = [
+            *list({c.get("case_id"): c for c in matched}.values()),
+            *adversarial,
+        ]
         result_modules.append({
             "module": mod,
             "base_count": len(base),
             "deep_count": len(deep_list),
+            "adversarial_count": len(adversarial),
             "total_count": len(base) + len(deep_list),
             "base": base,
             "deep": deep_list,
@@ -96,13 +113,22 @@ def main() -> int:
             "module": mod_name,
             "base_count": 0,
             "deep_count": len(deep_list),
+            "adversarial_count": 0,
             "total_count": len(deep_list),
             "base": [],
             "deep": deep_list,
         })
         total_deep += len(deep_list)
 
-    summary = {"module_count": len(modules), "total_base": total_base, "total_deep": total_deep, "total": total_base + total_deep}
+    total_adversarial = sum(len(cases) for cases in adversarial_map.values())
+    summary = {
+        "inventory_module_count": len(modules),
+        "module_count": len(result_modules),
+        "total_base": total_base,
+        "total_deep": total_deep,
+        "total_adversarial": total_adversarial,
+        "total": total_base + total_deep,
+    }
     out_data = {"summary": summary, "modules": result_modules}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(out_data, ensure_ascii=False, indent=1), encoding="utf-8")
