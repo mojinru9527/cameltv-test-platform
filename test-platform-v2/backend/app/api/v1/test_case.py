@@ -146,9 +146,14 @@ def remove_module(
 
 @router.get("", response_model=R[Page[TestCaseOut]])
 def list_test_cases(
+    case_id: str = "",
     domain: str = "",
     module: str = "",
+    surface: str = "",
+    taxonomy_domain: str = "",
+    taxonomy_module: str = "",
     case_type: str = "",
+    positive_negative: str = "",
     priority: str = "",
     status: str = "",
     keyword: str = "",
@@ -160,9 +165,14 @@ def list_test_cases(
     items, total = test_case_service.list_cases(
         db,
         project_id=current.project_id or 0,
+        case_id=case_id,
         domain=domain,
         module=module,
+        surface=surface,
+        taxonomy_domain=taxonomy_domain,
+        taxonomy_module=taxonomy_module,
         case_type=case_type,
+        positive_negative=positive_negative,
         priority=priority,
         status=status,
         keyword=keyword,
@@ -525,6 +535,10 @@ from fastapi.responses import StreamingResponse
 def export_xmind(
     domain: str = "",
     module: str = "",
+    surface: str = "",
+    taxonomy_domain: str = "",
+    taxonomy_module: str = "",
+    positive_negative: str = "",
     current: CurrentUser = Depends(require_permission("testcase:list")),
     db: Session = Depends(get_db),
 ):
@@ -533,7 +547,9 @@ def export_xmind(
 
     items, _ = test_case_service.list_cases(
         db, project_id=current.project_id or 0,
-        domain=domain, module=module, page=1, page_size=10000,
+        domain=domain, module=module, surface=surface,
+        taxonomy_domain=taxonomy_domain, taxonomy_module=taxonomy_module,
+        positive_negative=positive_negative, page=1, page_size=10000,
     )
     buf = cases_to_xmind_bytes(items, root_title=f"测试用例-项目{current.project_id}")
     return StreamingResponse(
@@ -603,6 +619,10 @@ def import_xmind(
 def export_excel(
     domain: str = "",
     module: str = "",
+    surface: str = "",
+    taxonomy_domain: str = "",
+    taxonomy_module: str = "",
+    positive_negative: str = "",
     current: CurrentUser = Depends(require_permission("testcase:list")),
     db: Session = Depends(get_db),
 ):
@@ -611,7 +631,9 @@ def export_excel(
 
     items, _ = test_case_service.list_cases(
         db, project_id=current.project_id or 0,
-        domain=domain, module=module, page=1, page_size=10000,
+        domain=domain, module=module, surface=surface,
+        taxonomy_domain=taxonomy_domain, taxonomy_module=taxonomy_module,
+        positive_negative=positive_negative, page=1, page_size=10000,
     )
     buf = cases_to_excel_bytes(items)
     return StreamingResponse(
