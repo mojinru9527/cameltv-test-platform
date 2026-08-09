@@ -1,13 +1,17 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockRegister = vi.fn()
+const mockFetchPublicAccess = vi.fn()
 const mockNavigate = vi.fn()
 const mockSetLogin = vi.fn()
 
 vi.mock('@/hooks/useDocumentTitle', () => ({ useDocumentTitle: vi.fn() }))
-vi.mock('@/api/auth', () => ({ register: (...args: unknown[]) => mockRegister(...args) }))
+vi.mock('@/api/auth', () => ({
+  fetchPublicAccess: (...args: unknown[]) => mockFetchPublicAccess(...args),
+  register: (...args: unknown[]) => mockRegister(...args),
+}))
 vi.mock('@/stores/auth', () => ({
   useAuthStore: (selector: any) => selector({ setLogin: mockSetLogin }),
 }))
@@ -23,12 +27,19 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+beforeEach(() => {
+  mockFetchPublicAccess.mockResolvedValue({
+    registration_enabled: true,
+    invite_code_required: false,
+    modules: [],
+  })
+})
+
 function fillForm(overrides: Partial<Record<string, string>> = {}) {
   const values: Record<string, string> = {
     用户名: 'alice',
     密码: 'secret123',
     确认密码: 'secret123',
-    邀请码: 'ABC123',
     ...overrides,
   }
   for (const [label, value] of Object.entries(values)) {
@@ -37,7 +48,7 @@ function fillForm(overrides: Partial<Record<string, string>> = {}) {
 }
 
 describe('注册页', () => {
-  it('渲染全部表单字段与登录入口', () => {
+  it('默认提供无需邀请码的普通注册入口', async () => {
     render(
       <MemoryRouter>
         <RegisterPage />
@@ -47,7 +58,8 @@ describe('注册页', () => {
     expect(screen.getByLabelText('用户名')).toBeTruthy()
     expect(screen.getByLabelText('密码')).toBeTruthy()
     expect(screen.getByLabelText('确认密码')).toBeTruthy()
-    expect(screen.getByLabelText('邀请码')).toBeTruthy()
+    expect(await screen.findByLabelText('平台邀请码（可选）')).toBeTruthy()
+    expect(screen.getByText('无需邀请码即可创建账号')).toBeTruthy()
     expect(screen.getByText('去登录')).toBeTruthy()
   })
 
@@ -95,11 +107,29 @@ describe('注册页', () => {
       nickname: '',
       email: '',
       password: 'secret123',
-      invite_code: 'ABC123',
+      invite_code: '',
       project_invite_token: '',
     })
     expect(mockSetLogin).toHaveBeenCalledTimes(1)
     expect(mockNavigate).toHaveBeenCalledWith('/my-projects', { replace: true })
+  })
+
+  it('受控环境启用平台邀请码时改为必填', async () => {
+    mockFetchPublicAccess.mockResolvedValue({
+      registration_enabled: true,
+      invite_code_required: true,
+      modules: [],
+    })
+    render(
+      <MemoryRouter>
+        <RegisterPage />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByLabelText('平台邀请码')).toBeTruthy()
+    fillForm()
+    fireEvent.click(screen.getByRole('button', { name: '注册并登录' }))
+    expect(await screen.findByText('请输入平台邀请码')).toBeTruthy()
+    expect(mockRegister).not.toHaveBeenCalled()
   })
 
   it('携带项目邀请参数时展示提示并随请求提交', async () => {

@@ -4,9 +4,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { register as registerApi } from '@/api/auth'
+import { fetchPublicAccess, register as registerApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { Button, Input } from '@/ui'
 import {
   Card,
@@ -25,7 +26,7 @@ const registerSchema = z
     email: z.string().email('邮箱格式不正确').or(z.literal('')).optional(),
     password: z.string().min(6, '密码至少 6 位'),
     confirmation: z.string().min(6, '请再次输入密码'),
-    invite_code: z.string().min(1, '请输入邀请码'),
+    invite_code: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmation, {
     message: '两次输入的密码不一致',
@@ -41,11 +42,13 @@ export default function RegisterPage() {
   const setLogin = useAuthStore((s) => s.setLogin)
   const [loading, setLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [inviteRequired, setInviteRequired] = useState(false)
   const inviteParam = new URLSearchParams(location.search).get('invite') || ''
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -59,7 +62,23 @@ export default function RegisterPage() {
     },
   })
 
+  useAbortableEffect((signal) => {
+    fetchPublicAccess(signal)
+      .then((config) => {
+        if (!signal.aborted) setInviteRequired(config.invite_code_required)
+      })
+      .catch(() => {
+        // 入口策略失败时保留普通注册默认值；提交仍由后端最终校验。
+      })
+  }, [])
+
+  const needsPlatformInvite = inviteRequired && !inviteParam
+
   const onFinish = async (values: RegisterForm) => {
+    if (needsPlatformInvite && !values.invite_code?.trim()) {
+      setError('invite_code', { message: '请输入平台邀请码' })
+      return
+    }
     setLoading(true)
     setSubmitError('')
     try {
@@ -68,7 +87,7 @@ export default function RegisterPage() {
         nickname: values.nickname || '',
         email: values.email || '',
         password: values.password,
-        invite_code: values.invite_code,
+        invite_code: values.invite_code?.trim() || '',
         project_invite_token: inviteParam,
       })
       setLogin(data)
@@ -88,7 +107,9 @@ export default function RegisterPage() {
           <CardTitle role="heading" aria-level={1} className="text-2xl">
             注册 CamelTv 测试平台
           </CardTitle>
-          <CardDescription>凭管理员发放的邀请码创建账号</CardDescription>
+          <CardDescription>
+            {needsPlatformInvite ? '当前环境需要平台邀请码' : '无需邀请码即可创建账号'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {inviteParam && (
@@ -198,13 +219,16 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="invite-code" className="text-sm font-medium">邀请码</label>
+              <label htmlFor="invite-code" className="text-sm font-medium">
+                {needsPlatformInvite ? '平台邀请码' : '平台邀请码（可选）'}
+              </label>
               <div className="relative">
                 <KeyRound className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="invite-code"
                   className="pl-9 uppercase"
-                  placeholder="管理员发放的邀请码"
+                  placeholder={needsPlatformInvite ? '请输入管理员发放的邀请码' : '受邀用户可填写'}
+                  aria-required={needsPlatformInvite}
                   {...register('invite_code')}
                   data-invalid={!!errors.invite_code}
                   aria-invalid={!!errors.invite_code}
