@@ -86,7 +86,7 @@ export default function GraphTab() {
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchGraphView(200, dom, controller.signal)
+      const data = await fetchGraphView(1000, dom, controller.signal)
       if (controller.signal.aborted) return
       setGraphData(data)
     } catch (e: any) {
@@ -492,6 +492,9 @@ export default function GraphTab() {
               </CardHeader>
               <CardContent className="space-y-1 text-sm text-muted-foreground">
                 <p>节点 {graphData.nodes.filter((n) => !hiddenTypes.has(n.entity_type)).length}/{graphData.nodes.length}</p>
+                {graphData.nodes.length > 400 && (
+                  <p className="text-xs text-status-warning">图谱数据量较大（{graphData.nodes.length} 节点），渲染可能较慢；建议按「项目知识/平台研发」域过滤查看。</p>
+                )}
                 <p>边 {graphData.edges.length}</p>
               </CardContent>
             </Card>
