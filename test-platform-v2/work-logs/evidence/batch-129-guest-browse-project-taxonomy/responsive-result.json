@@ -1,0 +1,31 @@
+[
+  {
+    "viewport": {
+      "name": "tablet",
+      "width": 768,
+      "height": 1024
+    },
+    "guest_overflow": false,
+    "business_requests": 0,
+    "console_errors": 0
+  },
+  {
+    "viewport": {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    "guest_overflow": false,
+    "business_requests": 0,
+    "console_errors": 0
+  },
+  {
+    "viewport": {
+      "name": "mobile-no-project",
+      "width": 390,
+      "height": 844
+    },
+    "overflow": false,
+    "business_requests": 0
+  }
+]

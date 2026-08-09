@@ -1,0 +1,11 @@
+{
+  "source": "../batch-110/functional-case-audit.json",
+  "source_total": 476,
+  "domain_count": 31,
+  "classified_counts": {
+    "用户端": 227,
+    "运营后台": 249
+  },
+  "other_domains": [],
+  "result": "PASS"
+}

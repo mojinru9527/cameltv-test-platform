@@ -15381,6 +15381,11 @@ export interface components {
              */
             case_type: string;
             /**
+             * Surface
+             * @default 其他
+             */
+            surface: string;
+            /**
              * Priority
              * @default P2
              */
