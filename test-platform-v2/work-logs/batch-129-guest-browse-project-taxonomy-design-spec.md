@@ -83,4 +83,3 @@ shadcn/ui + Radix + Tailwind + CVA；颜色只使用 `bg-background`、`bg-card`
 ## 8. 设计签核
 
 结论：**通过**。实现必须保持公开元数据与业务数据的安全边界，并用 Network 证据验证。
-

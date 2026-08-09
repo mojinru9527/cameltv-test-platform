@@ -31,7 +31,7 @@ Assert the page renders the selected module, does not call login on mount, opens
 
 - [ ] **Step 4: Run tests and verify RED**
 
-Run: `npm test -- --run src/layouts/__tests__/GuestPlatformHome.test.tsx src/layouts/__tests__/GuestModulePreview.test.tsx src/layouts/guestModuleCatalog.test.ts`  
+Run: `npm test -- --run src/layouts/__tests__/GuestPlatformHome.test.tsx src/layouts/__tests__/GuestModulePreview.test.tsx src/layouts/guestModuleCatalog.test.ts`
 Expected: FAIL because preview/catalog and the new navigation contract do not exist.
 
 ### Task 2: Implement guest module previews
@@ -68,7 +68,7 @@ Remove the effect that opens login for every direct guest route. Make sidebar/ho
 
 - [ ] **Step 4: Run focused tests and verify GREEN**
 
-Run: `npm test -- --run src/layouts/__tests__/GuestPlatformHome.test.tsx src/layouts/__tests__/GuestModulePreview.test.tsx src/layouts/guestModuleCatalog.test.ts`  
+Run: `npm test -- --run src/layouts/__tests__/GuestPlatformHome.test.tsx src/layouts/__tests__/GuestModulePreview.test.tsx src/layouts/guestModuleCatalog.test.ts`
 Expected: all focused tests PASS.
 
 ### Task 3: Lock the no-project boundary with failing tests
@@ -87,7 +87,7 @@ Render `MainLayout` on `/testcase` with authenticated state and `currentProjectI
 
 - [ ] **Step 3: Run tests and verify RED**
 
-Run: `npm test -- --run src/layouts/__tests__/ProjectRequiredState.test.tsx src/layouts/__tests__/MainLayout.test.tsx`  
+Run: `npm test -- --run src/layouts/__tests__/ProjectRequiredState.test.tsx src/layouts/__tests__/MainLayout.test.tsx`
 Expected: FAIL because authenticated no-project users still mount Outlet.
 
 ### Task 4: Implement the layout-level no-project state
@@ -134,7 +134,7 @@ Insert one legacy user case and one legacy admin case, request `/test-cases` and
 
 - [ ] **Step 3: Run tests and verify RED**
 
-Run: `pytest tests/test_testcase.py::TestCaseTaxonomy -q`  
+Run: `pytest tests/test_testcase.py::TestCaseTaxonomy -q`
 Expected: FAIL on legacy domain mappings and missing `surface` in list responses.
 
 ### Task 6: Implement one backend surface source and regenerate contract
@@ -186,7 +186,7 @@ Use the same value for filtering and Markdown grouping. Generate Select options 
 
 - [ ] **Step 3: Run mindmap tests and verify GREEN**
 
-Run: `npm test -- --run src/pages/mindmap/caseTaxonomy.test.ts`  
+Run: `npm test -- --run src/pages/mindmap/caseTaxonomy.test.ts`
 Expected: PASS.
 
 ### Task 8: Run quality gates and browser acceptance
@@ -216,5 +216,4 @@ Start isolated services on 5192/8022. At 1440×900, 768×1024, and 390×844 veri
 
 - [ ] **Step 5: Finish QA and Leader artifacts**
 
-QA begins NEEDS WORK and moves to PASS only with executable evidence. Leader remains non-approved until the user's one total confirmation, required checks, and final audit are complete.
-
+QA begins NEEDS WORK and moves to PASS only with executable evidence. Leader may approve the scope for total confirmation after local evidence is complete; merge remains conditioned on the user's confirmation, required checks, and final audit.

@@ -94,4 +94,3 @@
 - `cameltv-ui-conventions` → 访客说明页和无项目空状态的语义组件、四态、响应式与无障碍规范。
 - `writing-plans` → 将实现拆为测试先行的可验证切片。
 - `karpathy-guidelines` → 采用布局层最小修复和后端单一分类事实源，避免逐页补丁与重复规则。
-
