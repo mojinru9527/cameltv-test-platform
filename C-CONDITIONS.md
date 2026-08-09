@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-09 (Batch 126: C126-1~4 登记)
+**最后更新**: 2026-08-09 (Batch 127: 修复 Batch 120/122/123/124 追踪结构并推进 C120-3)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -224,6 +224,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | ~~C120-1~~ | ~~3172 边完整交互拓扑入库，缺口面板全量计算（当前仅 8 条代表边）~~ → **Closed**：3172 边全量拓扑入库（interaction_edge 表+导入脚本+topology/gaps DB 兜底），前端全量模式；单测 6/6 | P3 | 2026-08-07 |
 | ~~C120-2~~ | ~~多 worker 部署后验证（Railway 多副本时 AI 异步任务可跨实例认领，无重复执行）~~ → **Closed**：多会话认领竞态测试（同任务仅一个 worker 认领成功 + stale 锁重认领）；生产部署后链路验证待执行 | P3 | 2026-08-07 |
+| ~~C120-3~~ | ~~缺口面板分页/筛选（全量缺口可能上千条，当前截断 50）~~ → **Closed**：Batch 127 已实现状态/关键词筛选、50 条/页分页与筛选后自动回到首页；组件回归 8/8、前端全量 391/391 | P3 | 2026-08-08 |
 
 ---
 
@@ -231,9 +232,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| ~~C122-1~~ | ~~运营后台全量页面级深度用例（14 模块逐页补齐）~~ → **Closed**：batch-122 扩充 57 条（admin-live/message/ugc/content/league/mall/sportslive/dress/ad/task/finance/user/risk），运营后台库内 80 条 | P2 | 2026-08-08 |
+| C122-1 | ~~运营后台全量页面级深度用例（14 模块逐页补齐）~~ → **Closed**：batch-122 扩充 57 条（admin-live/message/ugc/content/league/mall/sportslive/dress/ad/task/finance/user/risk），运营后台库内 80 条 | P2 | 2026-08-08 |
 | C122-2 | 全量接口用例深补（核心端点已完成：首页/搜索/资讯/赛事/联赛/球队/回放/世界杯/广告/客户端/konfi 34 条；openapi 899 长尾待续） | P2 | 2026-08-08 |
-| ~~C122-3~~ | ~~生产环境导入 507 条 SP- 用例 + 生产侧验证~~ → **Closed**：import-case-batch-api.py 生产导入 507/507 成功（用户端393/运营后台80/接口34），抽样 SP-AND-PICK-001 字段正确，evidence/batch-122/production-import-verify.json | P1 | 2026-08-08 |
+| C122-3 | ~~生产环境导入 507 条 SP- 用例 + 生产侧验证~~ → **Closed**：import-case-batch-api.py 生产导入 507/507 成功（用户端393/运营后台80/接口34），抽样 SP-AND-PICK-001 字段正确，evidence/batch-122/production-import-verify.json | P1 | 2026-08-08 |
 | C122-4 | 用例结构规范/功能地图 v3 与平台用例展示（分类/脑图/详情）联动走查 | P2 | 2026-08-08 |
 
 ### Batch 121 — 全量拓扑 + 多 worker 验证（2026-08-08）
@@ -242,16 +243,24 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|---------|------|
 | C120-1 | 3172 边完整交互拓扑入库 + 缺口全量计算 | `interaction_edge` 表+迁移+`import-topology.py`+topology/gaps 端点+前端全量模式（单测 6/6） | 2026-08-08 |
 | C120-2 | 多 worker 部署后验证 | 双会话认领竞态测试 2 项（同任务单认领/stale 重认领）；生产链路验证部署后执行 | 2026-08-08 |
+| C120-3 | 缺口面板分页/筛选 | `InteractionGapPanel.tsx` + `InteractionGapPanel.test.tsx`；Batch 127 QA 前端全量 391/391 | 2026-08-09 |
 
 ### batch-123 — 知识中心可用性 + 体育模块关联图谱（Batch 123 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
-|---
+|----|------|--------|---------|
+| C123-1 | ~~生产部署后执行 import-module-associations.py 导入并图谱验证~~ → **Closed**：生产导入 925 实体/888 关系（修复 links_to_admin 前缀后 +57，总关系 968），图谱验证含 tested_by 34/navigates_to 51/links_to_admin 54/configures 16；`evidence/batch-123/production-module-associations-verify.json` | P1 | 2026-08-08 |
+| C123-2 | 知识中心生产走查（弹窗/编译/对比/图谱/实体截图证据） | P2 | 2026-08-08 |
+| C123-3 | Wiki 页面 Markdown 渲染（新增依赖评估后落地） | P3 | 2026-08-08 |
+| C123-4 | 图谱大数据量性能优化（分层/聚合） | P3 | 2026-08-08 |
 
 ### batch-124 — 需求/设计稿入库 + 图谱 P0 修复（Batch 124 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
-|---
+|----|------|--------|---------|
+| C124-1 | 生产部署后执行 import-requirement-design.py 导入 147 页/3526 图片，验证知识中心可查看文本+设计稿 | P1 | 2026-08-08 |
+| C124-2 | 生产图谱页复测（P0 修复后不再崩溃，截图证据） | P1 | 2026-08-08 |
+| C124-3 | 运营后台需求（axure_extract_61930a83，74 页/88 节点 hierarchy 已生成，部署后同链路入库） | P3 | 2026-08-08 |
 
 ## Closed (已完成)
 
@@ -681,21 +690,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C51-1、C51-2、C51-3、C51-4、C51-5、C51-6、C51-7、C51-8 | batch-50→51 | 见 batch-51 verdict：Badge tone 迁移 / 5 新基元 / PageShell 5 页 / tsc 零错误等（C51-1/C51-4 已 inline ✅） |
 | C55-5 | batch-55 | PC 1440×900 矩阵已关闭，见 batch-56 verdict（tablet/mobile P2 非阻断） |
 | G56-013 | batch-56 | CLOSED，见 batch-56 verdict |
-
-
--|------|--------|---------|
-| ~~C123-1~~ | ~~生产部署后执行 import-module-associations.py 导入并图谱验证~~ → **Closed**：生产导入 925 实体/888 关系（修复 links_to_admin 前缀后 +57，总关系 968），图谱验证 含 tested_by 34/navigates_to 51/links_to_admin 54/configures 16；evidence/batch-123/production-module-associations-verify.json | P1 | 2026-08-08 |
-| C123-2 | 知识中心生产走查（弹窗/编译/对比/图谱/实体 截图证据） | P2 | 2026-08-08 |
-| C123-3 | wiki 页面 markdown 渲染（新增依赖评估后落地） | P3 | 2026-08-08 |
-| C123-4 | 图谱大数据量性能优化（分层/聚合） | P3 | 2026-08-08 |
-
----
--|------|--------|---------|
-| C124-1 | 生产部署后执行 import-requirement-design.py 导入 147 页/3526 图片，验证知识中心可查看文本+设计稿 | P1 | 2026-08-08 |
-| C124-2 | 生产图谱页复测（P0 修复后不再崩溃，截图证据） | P1 | 2026-08-08 |
-| C124-3 | 运营后台需求（axure_extract_61930a83，74 页/88 节点 hierarchy 已生成，部署后同链路入库） | P3 | 2026-08-08 |
-
-
 ### batch-125 — 体育平台完整链路接入（Batch 125 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
@@ -727,8 +721,6 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 2. Product 开工前必须 `Read C-CONDITIONS.md`，在 PRD 的「非目标」段中明确哪些 Open 条件纳入本次、哪些豁免及理由
 3. PR 合入后，Dev 负责将本次满足的 C 条件从 Open → Closed
 4. 每月 1 日 Leader 审查所有 Open 条件，超过 60 天无进展的需升级优先级或明确废弃
-
-
 
 
 

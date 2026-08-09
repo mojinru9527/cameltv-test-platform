@@ -1,0 +1,42 @@
+{
+  "batch": 127,
+  "date": "2026-08-09",
+  "production_mode": "read-only",
+  "findings": {
+    "p0": 0,
+    "p1": 10,
+    "p2": 4,
+    "p3": 0
+  },
+  "backend": {
+    "pytest_passed": 1233,
+    "pytest_skipped": 3,
+    "pytest_warnings": 21,
+    "ruff_f821": "passed"
+  },
+  "frontend": {
+    "vitest_files": 101,
+    "vitest_tests": 391,
+    "typecheck": "passed",
+    "build": "passed",
+    "vite_modules": 3438
+  },
+  "browser": {
+    "playwright_tests": 1,
+    "routes": 35,
+    "routes_with_issues": 0,
+    "routes_with_duplicate_gets": 0,
+    "controlled_blockers": 1
+  },
+  "migration": {
+    "fresh_sqlite_upgrade": "passed",
+    "heads": ["20260808_batch121_topo_edges"]
+  },
+  "audits": {
+    "cconditions_hard": 0,
+    "cconditions_warn": 0,
+    "common_bug_hard": 0,
+    "common_bug_warn": 249
+  },
+  "remote_required_checks": "pending_draft_pr"
+}

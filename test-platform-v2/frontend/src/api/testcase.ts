@@ -26,8 +26,17 @@ export interface TestCaseDomainCategory {
   modules: TestCaseModuleCategory[]
 }
 
+export interface TestCaseStats {
+  total: number
+  by_type: Record<string, number>
+}
+
 export async function fetchDomains(signal?: AbortSignal): Promise<TestCaseDomainCategory[]> {
   return api.get('/test-cases/domains', { signal })
+}
+
+export async function fetchTestCaseStats(signal?: AbortSignal): Promise<TestCaseStats> {
+  return api.get('/test-cases/stats', { signal })
 }
 
 // ── Category CRUD ──

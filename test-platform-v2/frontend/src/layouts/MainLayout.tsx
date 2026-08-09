@@ -243,25 +243,16 @@ export default function MainLayout() {
 
   const userInitials = (user?.nickname || user?.username || 'U')[0].toUpperCase()
 
-  // 未完成模块：隐藏在导航菜单，路由仍可访问
-  const HIDDEN_MENU_CODES = new Set([
-    'menu:versionmission',
-    'menu:defect',
-    'menu:dataset',
-    'menu:integration',
-  ])
-
   // Split menus into three groups: knowledge, primary nav, system
   const knowledgeMenus = menus.filter((m) =>
-    m.code?.startsWith("menu:knowledge") && !HIDDEN_MENU_CODES.has(m.code ?? '')
+    m.code?.startsWith("menu:knowledge")
   )
   const systemMenus = menus.filter((m) =>
-    ['system', 'settings'].includes(m.code?.toLowerCase()) && !HIDDEN_MENU_CODES.has(m.code ?? '')
+    ['system', 'settings'].includes(m.code?.toLowerCase())
   )
   const mainMenus = menus.filter((m) =>
     !['system', 'settings'].includes(m.code?.toLowerCase()) &&
-    !m.code?.startsWith("menu:knowledge") &&
-    !HIDDEN_MENU_CODES.has(m.code ?? '')
+    !m.code?.startsWith("menu:knowledge")
   )
 
   return (

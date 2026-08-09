@@ -9,6 +9,7 @@ from starlette.websockets import WebSocketDisconnect
 from app.core.config import settings
 from app.models.perf import PerfSession
 from app.services import perf_service
+from app.api.v1 import perf as perf_api
 
 
 # ── Helpers ──
@@ -92,6 +93,25 @@ class TestDeviceList:
         assert body["code"] == 503
         assert "真实性能采集不可用" in body["msg"]
         assert body["data"] is None
+
+    def test_device_discovery_timeout_is_a_controlled_503(
+        self,
+        client,
+        auth_headers,
+        monkeypatch,
+    ):
+        monkeypatch.setattr(perf_api, "DEVICE_DISCOVERY_TIMEOUT_SECONDS", 0.01)
+        monkeypatch.setattr(
+            perf_service,
+            "discover_devices",
+            lambda: (time.sleep(0.05), [])[1],
+        )
+
+        response = client.get("/api/v1/perf-sessions/devices", headers=auth_headers)
+
+        assert response.status_code == 503
+        assert response.json()["code"] == 503
+        assert "设备探测超时" in response.json()["msg"]
 
 
 # ── Session CRUD ──

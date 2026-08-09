@@ -156,7 +156,7 @@ export default function AuditTab() {
                 <Search className="size-4" />
                 搜索
               </Button>
-              <Button size="sm" variant="secondary" onClick={handleRefresh}>
+              <Button size="sm" variant="secondary" onClick={handleRefresh} aria-label="刷新审计日志">
                 <RotateCcw className="size-4" />
               </Button>
               <Button size="sm" variant="secondary" onClick={handleExport}>

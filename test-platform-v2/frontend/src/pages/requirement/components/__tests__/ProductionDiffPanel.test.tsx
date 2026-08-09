@@ -45,7 +45,7 @@ describe('ProductionDiffPanel (C102-4)', () => {
       warnings: [],
     })
     render(<ProductionDiffPanel />)
-    await waitFor(() => expect(mockListBundles).toHaveBeenCalled())
+    await waitFor(() => expect(mockListBundles).toHaveBeenCalledWith(expect.any(AbortSignal)))
     fireEvent.change(screen.getByLabelText('生产页面清单（每行一个）'), {
       target: { value: 'match-replay\n首页' },
     })
