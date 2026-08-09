@@ -38,7 +38,8 @@ import { AsyncState } from '@/components/state'
 
 import { Search, RotateCcw, Plus, Edit, Trash2, History, FileCheck, CheckCircle2, XCircle, Send, Upload, Download } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { deleteTestCase, fetchDomains, fetchTestCases, fetchTestCaseStats, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase, importExcel, importXmind, downloadExport } from '@/api/testcase'
+import { deleteTestCase, fetchDomains, fetchTaxonomy, fetchTestCases, fetchTestCaseStats, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase, importExcel, importXmind, downloadExport } from '@/api/testcase'
+import type { TaxonomyModuleNode } from '@/api/testcase'
 import { countCasesByType, formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -130,6 +131,11 @@ export default function TestCasePage() {
     (signal) => fetchTestCaseStats(signal),
     [],
   )
+  const { data: taxonomyData, refetch: refetchTaxonomy } = useApi(
+    (signal) => fetchTaxonomy({ case_type: actTab || 'all' }, signal),
+    [actTab],
+  )
+  const taxonomy = useMemo(() => taxonomyData || [], [taxonomyData])
   const caseTypeCounts = useMemo(() => countCasesByType(caseStats), [caseStats])
 
   const items = useMemo(() => data?.items || [], [data?.items])
@@ -147,6 +153,7 @@ export default function TestCasePage() {
       refetch()
       refetchDomains()
       refetchCaseStats()
+      refetchTaxonomy()
     } catch (e: any) {
       toast.error(e?.message || '导入失败')
     } finally {
@@ -203,6 +210,7 @@ export default function TestCasePage() {
       refetch()
       refetchDomains()
       refetchCaseStats()
+      refetchTaxonomy()
     } catch {
       toast.error('批量删除失败')
     } finally {
@@ -225,21 +233,33 @@ export default function TestCasePage() {
     } finally { setBatchUpdating(false) }
   }
 
-  // Filter out "接口测试" domain (api cases managed in apitest module)
-  const visibleDomains = useMemo(() => domains.filter((d: any) => d.domain !== '接口测试'), [domains])
+  const visibleDomains = useMemo(() => {
+    const taxonomyDomains = new Set(
+      taxonomy.flatMap((surface) => surface.domains.map((domain) => domain.domain)),
+    )
+    return taxonomyDomains.size
+      ? domains.filter((domain) => taxonomyDomains.has(domain.domain))
+      : domains
+  }, [domains, taxonomy])
 
   // ── Domain tree data ──
   const domainTree = useMemo(() => {
-    return visibleDomains.map((d: any) => ({
-      title: <span className="text-[13px]">{d.domain} <span className="text-muted-foreground">({d.count})</span></span>,
-      key: d.domain,
-      children: d.modules?.map((m: any) => ({
-        title: <span className="text-xs">{m.module} <span className="text-muted-foreground">({m.count})</span></span>,
-        key: `${d.domain}::${m.module}`,
-        isLeaf: true,
-      })) || [],
+    const moduleNode = (domain: string, node: TaxonomyModuleNode): any => ({
+      title: <span className="text-xs">{node.name} <span className="text-muted-foreground">({node.count})</span></span>,
+      key: JSON.stringify({ kind: 'module', domain, path: node.path, leaf: node.children.length === 0 }),
+      isLeaf: node.children.length === 0,
+      children: node.children.map((child) => moduleNode(domain, child)),
+    })
+    return taxonomy.map((surface) => ({
+      title: <span className="text-[13px] font-medium">{surface.surface} <span className="text-muted-foreground">({surface.count})</span></span>,
+      key: JSON.stringify({ kind: 'surface', surface: surface.surface }),
+      children: surface.domains.map((domain) => ({
+        title: <span className="text-xs font-medium">{domain.domain} <span className="text-muted-foreground">({domain.count})</span></span>,
+        key: JSON.stringify({ kind: 'domain', domain: domain.domain }),
+        children: domain.modules.map((node) => moduleNode(domain.domain, node)),
+      })),
     }))
-  }, [visibleDomains])
+  }, [taxonomy])
 
   // derived modules list — returns all modules when no domain selected so the
   // "全部模块" Select always has enough options for Radix to open it.
@@ -269,6 +289,7 @@ export default function TestCasePage() {
     refetch()
     refetchDomains()
     refetchCaseStats()
+    refetchTaxonomy()
   }
 
   const openEdit = (row?: any) => {
@@ -282,6 +303,7 @@ export default function TestCasePage() {
     refetch()
     refetchDomains()
     refetchCaseStats()
+    refetchTaxonomy()
   }
 
   // ── Version history ──
@@ -329,12 +351,15 @@ export default function TestCasePage() {
       {/* Top Tabs */}
       <div className="flex items-center gap-2">
         {([
-          ['', `全部 (${caseTypeCounts.all})`],
           ['manual', `功能用例 (${caseTypeCounts.manual})`],
+          ['api', `接口用例 (${caseTypeCounts.api})`],
+          ['ui', `UI 自动化 (${caseTypeCounts.ui})`],
+          ['', `全部 (${caseTypeCounts.all})`],
         ]).map(([k, label]) => (
           <button
             key={k as string}
             type="button"
+            aria-pressed={actTab === k}
             className={cn(
               'rounded-md px-4 py-1 text-sm font-medium transition-colors',
               actTab === k
@@ -360,13 +385,15 @@ export default function TestCasePage() {
               treeData={domainTree}
               onSelect={(keys) => {
                 if (!keys.length) { setSelDomain(''); setSelModule(''); setPage(1); return }
-                const key = keys[0]
-                if (key.includes('::')) {
-                  const [d, m] = key.split('::')
-                  setSelDomain(d); setSelModule(m); setPage(1)
-                } else {
-                  setSelDomain(key); setSelModule(''); setPage(1)
+                const selection = JSON.parse(keys[0]) as {
+                  kind: 'surface' | 'domain' | 'module'
+                  domain?: string
+                  path?: string
+                  leaf?: boolean
                 }
+                setSelDomain(selection.domain || '')
+                setSelModule(selection.kind === 'module' && selection.leaf ? selection.path || '' : '')
+                setPage(1)
               }}
             />
           </CardContent>

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # ── 响应 ──────────────────────────────────────────────
@@ -144,6 +144,28 @@ class DomainNode(BaseModel):
     domain: str
     count: int = 0
     modules: list[ModuleNode] = []
+
+
+class TaxonomyModuleNode(BaseModel):
+    name: str
+    path: str
+    count: int = 0
+    children: list["TaxonomyModuleNode"] = Field(default_factory=list)
+
+
+class TaxonomyDomainNode(BaseModel):
+    domain: str
+    count: int = 0
+    modules: list[TaxonomyModuleNode] = Field(default_factory=list)
+
+
+class TaxonomySurfaceNode(BaseModel):
+    surface: str
+    count: int = 0
+    domains: list[TaxonomyDomainNode] = Field(default_factory=list)
+
+
+TaxonomyModuleNode.model_rebuild()
 
 
 # ── 域/模块分类请求 ───────────────────────────────────

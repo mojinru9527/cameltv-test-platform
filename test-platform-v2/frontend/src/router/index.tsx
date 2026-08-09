@@ -67,6 +67,11 @@ export function PasswordChangeBoundary({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
+function PlatformHomeEntry() {
+  const user = useAuthStore((state) => state.user)
+  return user ? <Navigate to="/workbench" replace /> : null
+}
+
 function ForcedPasswordChangePage() {
   const navigate = useNavigate()
   const mustChangePassword = useAuthStore((state) => state.mustChangePassword)
@@ -182,14 +187,12 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: (
-      <RequireAuth>
-        <PasswordChangeBoundary>
-          <MainLayout />
-        </PasswordChangeBoundary>
-      </RequireAuth>
+      <PasswordChangeBoundary>
+        <MainLayout />
+      </PasswordChangeBoundary>
     ),
     children: [
-      { index: true, element: <Navigate to="/workbench" replace /> },
+      { index: true, element: <PlatformHomeEntry /> },
       { path: 'my-projects', element: <PageLoader><MyProjectsPage /></PageLoader> },
       { path: 'organizations', element: <PageLoader><OrganizationPage /></PageLoader> },
       { path: 'workbench', element: <PageLoader><Workbench /></PageLoader> },

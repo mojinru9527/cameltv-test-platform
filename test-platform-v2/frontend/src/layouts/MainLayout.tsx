@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { ProjectScopeBoundary } from './ProjectScopeBoundary'
 import { toast } from 'sonner'
-import { fetchMenus, logoutApi } from '@/api/auth'
+import { fetchMenus, fetchPublicAccess, logoutApi } from '@/api/auth'
 import { useAuthStore } from '@/stores/auth'
 import type { ColorTheme } from '@/stores/auth'
 import { useTheme, type ThemeMode } from '@/components/theme-provider'
@@ -31,6 +31,8 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/ui'
 import CommandPalette from '@/components/CommandPalette'
+import LoginGateDialog from '@/components/auth/LoginGateDialog'
+import GuestPlatformHome from './GuestPlatformHome'
 import { Button } from '@/ui'
 import {
   Select,
@@ -116,12 +118,12 @@ function NavigationMenuItems({
 }: {
   items: MenuItem[]
   pathname: string
-  onNavigate: (path: string) => void
+  onNavigate: (path: string, label: string) => void
 }) {
   const { isMobile, setOpenMobile } = useSidebar()
 
-  const goTo = (path: string) => {
-    onNavigate(path)
+  const goTo = (path: string, label: string) => {
+    onNavigate(path, label)
     if (isMobile) setOpenMobile(false)
   }
 
@@ -134,7 +136,7 @@ function NavigationMenuItems({
       return (
         <SidebarMenuItem key={m.path || m.code}>
           <SidebarMenuButton
-            onClick={() => goTo(m.path)}
+            onClick={() => goTo(m.path, m.name)}
             isActive={isActive}
             aria-current={isActive ? 'page' : undefined}
             tooltip={m.name}
@@ -152,7 +154,7 @@ function NavigationMenuItems({
               return (
                 <SidebarMenuSubItem key={child.path || child.code}>
                   <SidebarMenuSubButton
-                    onClick={() => goTo(child.path)}
+                    onClick={() => goTo(child.path, child.name)}
                     isActive={childActive}
                     aria-current={childActive ? 'page' : undefined}
                   >
@@ -170,7 +172,7 @@ function NavigationMenuItems({
     return (
       <SidebarMenuItem key={m.path || m.code}>
         <SidebarMenuButton
-          onClick={() => goTo(m.path)}
+          onClick={() => goTo(m.path, m.name)}
           isActive={isActive}
           aria-current={isActive ? 'page' : undefined}
           tooltip={m.name}
@@ -192,6 +194,9 @@ export default function MainLayout() {
   const [menus, setMenus] = useState<MenuItem[]>([])
   const [menuError, setMenuError] = useState(false)
   const [menuRequest, setMenuRequest] = useState(0)
+  const [registrationEnabled, setRegistrationEnabled] = useState(true)
+  const [loginTarget, setLoginTarget] = useState<{ path: string; label: string } | null>(null)
+  const isAuthenticated = Boolean(user)
   const activeTheme = getTheme(colorTheme)
   const isObsidian = colorTheme === 'obsidian-flow'
   const modeOptions: ThemeMode[] = activeTheme.supportedModes.length === 1
@@ -200,10 +205,16 @@ export default function MainLayout() {
 
   useAbortableEffect((signal) => {
     setMenuError(false)
-    fetchMenus(signal)
+    const request = isAuthenticated ? fetchMenus(signal) : fetchPublicAccess(signal)
+    request
       .then((data) => {
         if (!signal.aborted) {
-          setMenus(data)
+          if (Array.isArray(data)) {
+            setMenus(data)
+          } else {
+            setMenus(data.modules)
+            setRegistrationEnabled(data.registration_enabled)
+          }
           setMenuError(false)
         }
       })
@@ -212,11 +223,27 @@ export default function MainLayout() {
           setMenuError(true)
         }
       })
-  }, [menuRequest])
+  }, [isAuthenticated, menuRequest])
 
   useEffect(() => {
     document.getElementById('main-content')?.focus()
   }, [location.pathname])
+
+  useEffect(() => {
+    if (!isAuthenticated && location.pathname !== '/' && menus.length > 0) {
+      const allItems = menus.flatMap((menu) => menu.children?.length ? menu.children : [menu])
+      const target = allItems.find((item) => item.path === location.pathname)
+      setLoginTarget({ path: location.pathname, label: target?.name || '该模块' })
+    }
+  }, [isAuthenticated, location.pathname, menus])
+
+  const navigateOrRequireLogin = (path: string, label = '该模块') => {
+    if (isAuthenticated) {
+      navigate(path)
+      return
+    }
+    setLoginTarget({ path: path || '/', label })
+  }
 
   const applyColorTheme = (theme: ColorTheme) => {
     const definition = getTheme(theme)
@@ -304,7 +331,7 @@ export default function MainLayout() {
                 <NavigationMenuItems
                   items={knowledgeMenus}
                   pathname={location.pathname}
-                  onNavigate={navigate}
+                  onNavigate={navigateOrRequireLogin}
                 />
               </SidebarMenu>
             </SidebarGroup>
@@ -316,7 +343,7 @@ export default function MainLayout() {
               <NavigationMenuItems
                 items={mainMenus}
                 pathname={location.pathname}
-                onNavigate={navigate}
+                onNavigate={navigateOrRequireLogin}
               />
             </SidebarMenu>
           </SidebarGroup>
@@ -328,7 +355,7 @@ export default function MainLayout() {
                 <NavigationMenuItems
                   items={systemMenus}
                   pathname={location.pathname}
-                  onNavigate={navigate}
+                  onNavigate={navigateOrRequireLogin}
                 />
               </SidebarMenu>
             </SidebarGroup>
@@ -337,21 +364,33 @@ export default function MainLayout() {
 
         {/* ── Sidebar footer: user info ── */}
         <SidebarFooter>
-          <div className="flex items-center gap-2.5 px-1 py-1 border-t border-sidebar-border">
-            <Avatar className="size-8 shrink-0 ring-2 ring-sidebar-border">
-              <AvatarFallback className="text-xs bg-sidebar-accent text-sidebar-accent-foreground font-medium">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
-              <span className="text-sm font-medium truncate text-sidebar-foreground">
-                {user?.nickname || user?.username || '用户'}
-              </span>
-              <span className="text-xs text-sidebar-foreground truncate">
-                {user?.email || ''}
-              </span>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2.5 border-t border-sidebar-border px-1 py-1">
+              <Avatar className="size-8 shrink-0 ring-2 ring-sidebar-border">
+                <AvatarFallback className="bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">
+                  {userInitials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
+                <span className="truncate text-sm font-medium text-sidebar-foreground">
+                  {user?.nickname || user?.username || '用户'}
+                </span>
+                <span className="truncate text-xs text-sidebar-foreground">
+                  {user?.email || ''}
+                </span>
+              </div>
             </div>
-          </div>
+          ) : (
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full group-data-[collapsible=icon]:px-0"
+              onClick={() => navigateOrRequireLogin('/workbench', '工作台')}
+            >
+              <User className="size-4" aria-hidden="true" />
+              <span className="group-data-[collapsible=icon]:hidden">登录平台</span>
+            </Button>
+          )}
         </SidebarFooter>
       </Sidebar>
 
@@ -366,25 +405,31 @@ export default function MainLayout() {
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             <SidebarTrigger className="!size-11" />
             <Separator orientation="vertical" className="mx-1 hidden h-6 sm:block" />
-            <span className="hidden text-sm text-muted-foreground lg:inline">当前项目</span>
-            <Select
-              value={currentProjectId ? String(currentProjectId) : undefined}
-              onValueChange={(v) => onSwitchProject(Number(v))}
-            >
-              <SelectTrigger
-                className="!h-11 w-[150px] min-w-0 text-sm sm:w-[200px]"
-                aria-label="当前项目"
-              >
-                <SelectValue placeholder="选择项目" />
-              </SelectTrigger>
-              <SelectContent>
-                {projects.map((p) => (
-                  <SelectItem key={p.id} value={String(p.id)}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isAuthenticated ? (
+              <>
+                <span className="hidden text-sm text-muted-foreground lg:inline">当前项目</span>
+                <Select
+                  value={currentProjectId ? String(currentProjectId) : undefined}
+                  onValueChange={(v) => onSwitchProject(Number(v))}
+                >
+                  <SelectTrigger
+                    className="!h-11 w-[150px] min-w-0 text-sm sm:w-[200px]"
+                    aria-label="当前项目"
+                  >
+                    <SelectValue placeholder="选择项目" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((p) => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </>
+            ) : (
+              <Badge variant="secondary">公开浏览</Badge>
+            )}
           </div>
 
           <div className="flex shrink-0 items-center gap-0 sm:gap-2">
@@ -478,56 +523,88 @@ export default function MainLayout() {
             </DropdownMenu>
 
             {/* User dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="!min-h-11 !min-w-11 gap-1.5"
-                  aria-label={`用户菜单：${user?.nickname || user?.username || '用户'}`}
-                >
-                  <Avatar className="size-6">
-                    <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
-                  </Avatar>
-                  <span className="hidden sm:inline text-sm">{user?.nickname || user?.username}</span>
-                  <ChevronDown className="hidden size-3 opacity-50 sm:block" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuLabel>
-                  <div className="flex flex-col gap-0.5">
-                    <span>{user?.nickname || user?.username}</span>
-                    {user?.email && (
-                      <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
-                    )}
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => {
-                    // P1-1: 先请求后端清除 httpOnly cookie，再清本地状态并跳转。
-                    logoutApi().catch(() => {}).finally(() => {
-                      logout()
-                      navigate('/login', { replace: true })
-                    })
-                  }}
-                >
-                  <LogOut className="mr-2 size-4" />
-                  <span>退出登录</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="!min-h-11 !min-w-11 gap-1.5"
+                    aria-label={`用户菜单：${user?.nickname || user?.username || '用户'}`}
+                  >
+                    <Avatar className="size-6">
+                      <AvatarFallback className="text-xs">{userInitials}</AvatarFallback>
+                    </Avatar>
+                    <span className="hidden text-sm sm:inline">{user?.nickname || user?.username}</span>
+                    <ChevronDown className="hidden size-3 opacity-50 sm:block" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col gap-0.5">
+                      <span>{user?.nickname || user?.username}</span>
+                      {user?.email && (
+                        <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => {
+                      // P1-1: 先请求后端清除 httpOnly cookie，再清本地状态并跳转。
+                      logoutApi().catch(() => {}).finally(() => {
+                        logout()
+                        navigate('/', { replace: true })
+                      })
+                    }}
+                  >
+                    <LogOut className="mr-2 size-4" />
+                    <span>退出登录</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                className="!min-h-11"
+                onClick={() => navigateOrRequireLogin('/workbench', '工作台')}
+              >
+                登录
+              </Button>
+            )}
           </div>
         </header>
 
         {/* Page content */}
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-auto p-4 page-enter sm:p-6">
-          <ProjectScopeBoundary projectId={currentProjectId}>
-            <Outlet />
-          </ProjectScopeBoundary>
+          {isAuthenticated ? (
+            <ProjectScopeBoundary projectId={currentProjectId}>
+              <Outlet />
+            </ProjectScopeBoundary>
+          ) : (
+            <GuestPlatformHome
+              modules={menus}
+              registrationEnabled={registrationEnabled}
+              onRequireLogin={navigateOrRequireLogin}
+            />
+          )}
         </main>
       </SidebarInset>
-      <CommandPalette />
+      {isAuthenticated && <CommandPalette />}
+      <LoginGateDialog
+        open={!isAuthenticated && Boolean(loginTarget)}
+        destinationLabel={loginTarget?.label || '该模块'}
+        registrationEnabled={registrationEnabled}
+        onOpenChange={(open) => {
+          if (!open) setLoginTarget(null)
+        }}
+        onLoginSuccess={() => {
+          const destination = loginTarget?.path || '/workbench'
+          setLoginTarget(null)
+          navigate(destination)
+        }}
+      />
     </SidebarProvider>
   )
 }

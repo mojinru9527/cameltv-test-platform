@@ -31,12 +31,38 @@ export interface TestCaseStats {
   by_type: Record<string, number>
 }
 
+export interface TaxonomyModuleNode {
+  name: string
+  path: string
+  count: number
+  children: TaxonomyModuleNode[]
+}
+
+export interface TaxonomyDomainNode {
+  domain: string
+  count: number
+  modules: TaxonomyModuleNode[]
+}
+
+export interface TaxonomySurfaceNode {
+  surface: '用户端' | '运营后台' | '接口测试' | '其他'
+  count: number
+  domains: TaxonomyDomainNode[]
+}
+
 export async function fetchDomains(signal?: AbortSignal): Promise<TestCaseDomainCategory[]> {
   return api.get('/test-cases/domains', { signal })
 }
 
 export async function fetchTestCaseStats(signal?: AbortSignal): Promise<TestCaseStats> {
   return api.get('/test-cases/stats', { signal })
+}
+
+export async function fetchTaxonomy(
+  params: { case_type?: string; surface?: string } = {},
+  signal?: AbortSignal,
+): Promise<TaxonomySurfaceNode[]> {
+  return api.get('/test-cases/taxonomy', { params, signal })
 }
 
 // ── Category CRUD ──

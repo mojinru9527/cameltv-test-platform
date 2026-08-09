@@ -12,7 +12,7 @@ vi.mock('@/api/client', () => ({
   },
 }))
 
-const { createModule, deleteDomain, deleteModule, fetchTestCaseStats } = await import('@/api/testcase')
+const { createModule, deleteDomain, deleteModule, fetchTaxonomy, fetchTestCaseStats } = await import('@/api/testcase')
 
 describe('test case category API calls', () => {
   beforeEach(() => {
@@ -45,5 +45,17 @@ describe('test case category API calls', () => {
 
     expect(mockGet).toHaveBeenCalledWith('/test-cases/stats', { signal: controller.signal })
     expect(result.by_type.manual).toBe(2)
+  })
+
+  it('loads the surface/domain/module taxonomy for the selected case type', async () => {
+    const controller = new AbortController()
+    mockGet.mockResolvedValue([])
+
+    await fetchTaxonomy({ case_type: 'manual', surface: '用户端' }, controller.signal)
+
+    expect(mockGet).toHaveBeenCalledWith('/test-cases/taxonomy', {
+      params: { case_type: 'manual', surface: '用户端' },
+      signal: controller.signal,
+    })
   })
 })
