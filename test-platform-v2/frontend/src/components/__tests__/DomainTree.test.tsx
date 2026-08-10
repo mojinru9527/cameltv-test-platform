@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import DomainTree from '../DomainTree'
 
 describe('DomainTree', () => {
-  it('renders accounting-only nodes without making them selectable', () => {
+  it('renders accounting rows as clickable but visually distinct', () => {
     const onSelect = vi.fn()
     render(
       <DomainTree
@@ -17,8 +17,8 @@ describe('DomainTree', () => {
                 key: 'faq-direct',
                 title: '直属用例 (18)',
                 isLeaf: true,
-                selectable: false,
-                ariaLabel: 'FAQ帮助直属用例 18 条，仅用于数量核算',
+                isAccounting: true,
+                ariaLabel: 'FAQ帮助直属用例 18 条，点击查看并编辑',
               },
               { key: 'faq-content', title: 'faq内容 (5)', isLeaf: true },
             ],
@@ -30,7 +30,10 @@ describe('DomainTree', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /FAQ帮助/ }))
     expect(screen.getByText('直属用例 (18)')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: /直属用例/ })).toBeNull()
+
+    // Batch 132: 直属核算行可点击进入直属用例列表（查看/编辑）
+    fireEvent.click(screen.getByRole('button', { name: /直属用例/ }))
+    expect(onSelect).toHaveBeenLastCalledWith(['faq-direct'])
 
     fireEvent.click(screen.getByRole('button', { name: /faq内容/ }))
     expect(onSelect).toHaveBeenLastCalledWith(['faq-content'])
