@@ -236,7 +236,7 @@ export default function LanhuEvidenceJobDrawer({ open, onOpenChange, jobId }: Pr
                 {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
               </Button>
             </SheetTitle>
-            <SheetDescription>{job?.source_url}</SheetDescription>
+            <SheetDescription className="break-all">{job?.source_url}</SheetDescription>
           </SheetHeader>
 
           {job && (

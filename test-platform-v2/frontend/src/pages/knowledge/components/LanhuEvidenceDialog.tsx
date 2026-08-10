@@ -112,7 +112,7 @@ export default function LanhuEvidenceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
+      <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>证据包 OCR 导入</DialogTitle>
           <DialogDescription>
