@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-10 (Batch 134: 关闭 C133-1，新增 C134-1 lanhu 自动登录/密码清理)
+**最后更新**: 2026-08-11 (Batch 145: 关闭 C138-1 生产 OCR 引擎；C140-1 置 Deferred Railway 加卷)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -201,6 +201,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 解除条件 |
 |----|------|--------|---------|
+| C140-1 | Railway 控制台为证据存储加卷（批次 140 提供方案，用户在 Railway 控制台执行） | P1 | 用户在 Railway 控制台执行加卷（需 Railway 账号） |
 | CP-C2 | iOS 真机采集端到端验证 | P0 | 设备已就绪（用户 2026-08-07 声明）；**探测：宿主无 Apple Mobile Device Service/usbmuxd，tidevice usbmux 拒绝连接（WinError 10061）**；解除条件：安装 Apple 驱动/服务（iTunes 或 usbmuxd）并连接已信任 iPhone 后重试 | P0 | 用户已连接 iPhone（Apple 驱动已装，tidevice 可识别）；**阻塞：solox 缺 iOS 26.5 DeviceSupport（GitHub 404），平台 iOS 采集不可用**；解除条件：solox 支持该版本或提供受支持 iOS 设备 |
 | C84-1 | iOS 真机采集验收（tidevice 链） | P1 | 同 CP-C2（宿主 usbmux 服务缺失，tidevice 无法枚举设备） | P1 | 同 CP-C2（solox 支持后执行） |
 | C74-2 | Test5 无契约服务契约补拉 | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供；**探测 2026-08-07：VPN 未连通（camel-admintest5/网关/elelive 全部超时 000），konfi 密码仍待提供** | P2 | 部分解锁：konfi 账号 test-cameltv + 登录地址已提供；admin-service 登录已提供（2026-08-05：运营后台测试环境 camel-admintest5.elelive.cn，账号 ll）；2026-08-05 VPN 实测网关服务未就绪（路由空/health 503），konfi 密码待提供 |
@@ -269,6 +270,12 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C134-1 | lanhu-mcp 提供可用 `lanhu_login` 自动登录（Playwright SSO）+ 清理子模块明文密码（extract_doc.py 本地硬编码）；后端 runtime.login 钩子接线 | P1 | 2026-08-10 |
 
 ## Closed (已完成)
+
+### Batch 145 — OCR 引擎接入（2026-08-11）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C138-1 | 生产配置真实 OCR 引擎（LANHU_OCR_COMMAND 容器内路径），并验证含图片页面的任务可导入 | batch-145 内置 rapidocr 默认生效（`LANHU_OCR_COMMAND` 默认 `{python} -m app.services.lanhu_evidence.rapidocr_cli --image "{image}"`）+ Linux 容器 OCR 冒烟通过（cv2 5.0.0 / 4 块中文识别） | 2026-08-11 |
 
 ### Batch 120 — 多 worker + 采集对接 + 缺口前端（2026-08-07）
 
