@@ -74,14 +74,28 @@ async def lifespan(_: FastAPI):
                 + "via environment or .env file.\n"
             )
 
-    # ── 蓝湖证据存储落点（Batch 140）：确保目录存在并打印，便于确认持久卷挂载 ──
+    # ── 蓝湖证据存储落点（Batch 140/141）：确保目录存在并打印，便于确认持久卷挂载 ──
     try:
         from app.api.v1.lanhu_evidence import _storage_base
+
         storage_base = _storage_base()
         storage_base.mkdir(parents=True, exist_ok=True)
+        # Batch 141: Railway 卷默认以 root 挂载；把目录权限放宽到 755，
+        # 避免后续降权/非 root 进程读取或写入证据文件时再次 Permission denied。
+        try:
+            storage_base.chmod(0o755)
+        except OSError:
+            pass
         logger.info(
             "[storage] Lanhu evidence storage base: %s （生产请用持久卷挂载，否则 Railway 重建会清空截图）",
             storage_base,
+        )
+    except PermissionError as exc:
+        logger.warning(
+            "[storage] Lanhu evidence storage init failed: %s — "
+            "Railway 卷以 root 挂载而容器以非 root 运行。请在 Railway 后端服务 Variables 设置 "
+            "RAILWAY_RUN_UID=0 并重新部署；或先以 root 执行 chown -R 10001:10001 /app/storage。",
+            exc,
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("[storage] Lanhu evidence storage init failed: %s", exc)

@@ -35,5 +35,11 @@ railway up                         # 重新部署
 
 ## 说明
 - **已丢失的旧截图无法找回**（部署前没有持久卷）；加卷后**新采集**会持久保留。
+- **权限报错**（`[storage] ... Permission denied: '/app/storage/lanhu-evidence'`）：Railway 卷以 root
+  挂载，而镜像以非 root 用户（cameltv，UID 10001）运行，非 root 进程无法在卷下建目录。
+  在服务 **Variables** 添加 `RAILWAY_RUN_UID=0` 并重新部署；或先以 root 执行
+  `chown -R 10001:10001 /app/storage`。
+- **重复提示 Permission denied 但服务仍启动**：该报错是 warning 不阻断启动，但证据落盘会失败；
+  务必按上条处理后再采集。
 - 后端启动日志会打印存储落点（`[storage] Lanhu evidence storage base: ...`），便于确认卷已挂到该路径。
 - 若后续截图量大，可评估迁移到对象存储（S3/Supabase Storage），本卷方案为当前最小改动。
