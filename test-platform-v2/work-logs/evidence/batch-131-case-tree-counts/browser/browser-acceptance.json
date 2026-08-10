@@ -1,0 +1,25 @@
+{
+  "status": "pass",
+  "target": "http://127.0.0.1:5181",
+  "assertions": {
+    "faqDomainDirectRowVisible": true,
+    "directCasesNotAButton": true,
+    "otherDomainDirectRowVisible": true,
+    "nestedModuleDirectRowVisible": true,
+    "conservationAllModules": true,
+    "realNodeClickTriggersFilterRefetch": true,
+    "noExtraCaseListRequestOnDirectNoteClick": true,
+    "caseListRequests": {
+      "afterLoad": 1,
+      "afterSurface": 2,
+      "afterFaq": 3,
+      "afterNoteClick": 3,
+      "afterDomain": 4,
+      "afterModule": 5
+    },
+    "consoleErrors": 0,
+    "pageErrors": 0,
+    "failedRequests": 0
+  },
+  "screenshot": "F:/CamelTv-worktrees/codex-batch-131-case-tree-counts/test-platform-v2/work-logs/evidence/batch-131-case-tree-counts/browser/case-tree-direct-cases-multi-module-1440x900.png"
+}

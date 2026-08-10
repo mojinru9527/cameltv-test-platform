@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildCaseListParams, flattenTaxonomyModules } from '../caseTaxonomyFilters'
+import { buildCaseListParams, countDirectCases, flattenTaxonomyModules } from '../caseTaxonomyFilters'
 
 describe('case taxonomy filters', () => {
+  it('accounts for direct cases that are included in a parent but not its child nodes', () => {
+    expect(countDirectCases(27, [5, 2, 1, 1])).toBe(18)
+    expect(countDirectCases(9, [5, 2, 1, 1])).toBe(0)
+    expect(countDirectCases(8, [9])).toBe(0)
+  })
+
   it('flattens canonical parent and child module paths without client wrappers', () => {
     const options = flattenTaxonomyModules([{
       name: '预测Pick',

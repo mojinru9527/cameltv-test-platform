@@ -28,14 +28,31 @@ vi.mock('@/hooks/useApi', () => ({
       return {
         data: [{
           surface: '用户端',
-          count: 2,
+          count: 47,
           domains: [{
+            domain: 'FAQ帮助',
+            count: 27,
+            modules: [
+              { name: 'faq内容', path: 'faq内容', count: 5, children: [] },
+              { name: '帮助中心', path: '帮助中心', count: 2, children: [] },
+              { name: '异常恢复', path: '异常恢复', count: 1, children: [] },
+              { name: '重复与并发', path: '重复与并发', count: 1, children: [] },
+            ],
+          }, {
             domain: '赛事详情',
-            count: 2,
+            count: 20,
             modules: [{
-              name: '预测Pick',
-              path: '预测Pick',
-              count: 2,
+              name: '订单列表',
+              path: '赛事详情/订单列表',
+              count: 12,
+              children: [
+                { name: '取消订单', path: '赛事详情/订单列表/取消订单', count: 4, children: [] },
+                { name: '退款', path: '赛事详情/订单列表/退款', count: 3, children: [] },
+              ],
+            }, {
+              name: '售后',
+              path: '赛事详情/售后',
+              count: 5,
               children: [],
             }],
           }],
@@ -67,7 +84,17 @@ vi.mock('@/hooks/useApi', () => ({
   },
 }))
 
-vi.mock('@/components/DomainTree', () => ({ default: () => <div /> }))
+vi.mock('@/components/DomainTree', () => ({
+  default: ({ treeData }: { treeData: any[] }) => {
+    const renderNodes = (nodes: any[]): any => nodes.map((node) => (
+      <div key={node.key}>
+        {node.title}
+        {node.children?.length ? renderNodes(node.children) : null}
+      </div>
+    ))
+    return <div>{renderNodes(treeData)}</div>
+  },
+}))
 vi.mock('@/components/Pagination', () => ({ default: () => <div /> }))
 vi.mock('./CaseDrawer', () => ({ default: () => null }))
 vi.mock('./VersionDialog', () => ({ default: () => null }))
@@ -116,6 +143,22 @@ describe('用例批量删除确认', () => {
     expect(screen.getByRole('combobox', { name: '按用例场景筛选' })).toBeTruthy()
     expect(screen.getByText('正向')).toBeTruthy()
     expect(screen.getByText('负向')).toBeTruthy()
+  })
+
+  it('显式展示父模块直属用例，使父子计数可以完整对账', () => {
+    render(<TestCasePage />)
+
+    const directRows = screen.getAllByText('直属用例')
+    const counts = directRows.map((el) => el.parentElement?.textContent || '')
+    // FAQ帮助 27 = 直属 18 + 子级 9；赛事详情 20 = 直属 3 + 子级 17；
+    // 订单列表（二级模块）12 = 直属 5 + 子级 7 —— 证明规则对任意业务域与任意层模块生效。
+    expect(counts).toEqual(expect.arrayContaining([
+      '直属用例 (18)',
+      '直属用例 (3)',
+      '直属用例 (5)',
+    ]))
+    // 叶子模块不出现 0 或重复核算行。
+    expect(directRows).toHaveLength(3)
   })
 
   it('取消批量删除时产生零写请求', async () => {
