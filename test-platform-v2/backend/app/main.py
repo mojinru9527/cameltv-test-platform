@@ -74,6 +74,18 @@ async def lifespan(_: FastAPI):
                 + "via environment or .env file.\n"
             )
 
+    # ── 蓝湖证据存储落点（Batch 140）：确保目录存在并打印，便于确认持久卷挂载 ──
+    try:
+        from app.api.v1.lanhu_evidence import _storage_base
+        storage_base = _storage_base()
+        storage_base.mkdir(parents=True, exist_ok=True)
+        logger.info(
+            "[storage] Lanhu evidence storage base: %s （生产请用持久卷挂载，否则 Railway 重建会清空截图）",
+            storage_base,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[storage] Lanhu evidence storage init failed: %s", exc)
+
     if settings.auto_create_tables:
         Base.metadata.create_all(bind=engine)
 
