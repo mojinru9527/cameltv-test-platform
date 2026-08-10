@@ -1,6 +1,7 @@
 """本地命令 OCR provider —— shell 调用可配置 OCR 命令。
 
-`lanhu_ocr_command` 为命令模板，用 {image} 占位图片路径，例如：
+`lanhu_ocr_command` 为命令模板：{image} 占位图片路径，{python} 占位当前解释器
+（默认模板即内置 rapidocr CLI），例如：
     paddleocr --image {image} --json
 命令须逐行输出 JSON：{"text":"...","confidence":0.96,"bbox":[x1,y1,x2,y2]}。
 未配置命令时返回 status="unavailable"（不视为失败，交由合并/质量步骤降级处理）。
@@ -9,6 +10,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 from app.core.config import settings
@@ -59,10 +61,15 @@ class LocalCommandOcrProvider(OcrProvider):
                 raw_json={},
                 error_message="lanhu_ocr_command 未配置",
             )
-        cmd = settings.lanhu_ocr_command.replace("{image}", str(image_path))
+        cmd = (
+            settings.lanhu_ocr_command
+            .replace("{python}", f'"{sys.executable}"')
+            .replace("{image}", str(image_path))
+        )
         try:
             result = subprocess.run(
-                cmd, shell=True, capture_output=True, text=True, timeout=120,
+                cmd, shell=True, capture_output=True, text=True,
+                encoding='utf-8', errors='replace', timeout=120,
             )
         except subprocess.TimeoutExpired:
             return OcrResult(status="failed", raw_json={}, error_message="OCR 命令超时")
@@ -73,11 +80,9 @@ class LocalCommandOcrProvider(OcrProvider):
                 error_message=(result.stderr or "OCR 命令非零退出")[:500],
             )
         blocks = parse_command_output(result.stdout)
-        # 按最小置信度过滤
-        min_conf = settings.lanhu_ocr_min_confidence
-        kept = [b for b in blocks if b.confidence >= min_conf] or blocks
+        # 保留全部识别块：置信度仅作参考展示，不再按阈值过滤（避免小字/模糊字缺失）。
         return OcrResult(
             status="success",
-            blocks=kept,
+            blocks=blocks,
             raw_json={"stdout": result.stdout[:2000]},
         )

@@ -34,6 +34,13 @@ RUN apt-get update \
         ffmpeg \
         nodejs \
         npm \
+        libgl1 \
+        libglib2.0-0 \
+        libxcb1 \
+        libx11-6 \
+        libxext6 \
+        libsm6 \
+        libice6 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd --gid "${APP_GID}" cameltv \

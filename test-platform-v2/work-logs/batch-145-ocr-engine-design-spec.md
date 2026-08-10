@@ -7,7 +7,7 @@
 ## 1. 内置 OCR CLI 设计
 | 项 | 规范 |
 |----|------|
-| 入口 | `python -m app.services.lanhu_evidence.rapidocr_cli --image <path>` |
+| 入口 | `{python} -m app.services.lanhu_evidence.rapidocr_cli --image <path>`（模板中 `{python}` 由 provider 替换为当前解释器，避免子进程解析到系统 python） |
 | 输入 | `--image` 截图路径（可选 `--min-side` 等预留参数，本批不加） |
 | 输出 | stdout 逐行 JSON：`{"text":"...","confidence":0.99,"bbox":[x1,y1,x2,y2]}` |
 | bbox | rapidocr 返回 4 点框 [[x1,y1],[x2,y2],[x3,y3],[x4,y4]] → `[min_x, min_y, max_x, max_y]`（整数） |
@@ -18,7 +18,7 @@
 ## 2. 配置项设计
 | 配置 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `lanhu_ocr_command` | str | `python -m app.services.lanhu_evidence.rapidocr_cli --image "{image}"` | 命令模板，`{image}` 为截图路径；可被外部引擎覆盖（paddleocr 等） |
+| `lanhu_ocr_command` | str | `{python} -m app.services.lanhu_evidence.rapidocr_cli --image "{image}"` | 命令模板，`{python}` 为当前解释器、`{image}` 为截图路径；可被外部引擎覆盖（paddleocr 等） |
 | `lanhu_capture_device_scale_factor` | float | `2.0` | Playwright `device_scale_factor`，截图 2x 输出 |
 | `lanhu_ocr_min_confidence` | float | 移除（不再过滤） | 置信度仅记录在块上作参考，不参与过滤 |
 

@@ -366,7 +366,7 @@ export default function PrototypePreview({
                     {current?.page_name || '未命名页面'}
                   </div>
                   <div className="text-[11px] text-muted-foreground">
-                    该页 OCR 提取文字 · {ocrText.length} 字
+                    该页提取文字（OCR+DOM 合并）· {ocrText.length} 字
                   </div>
                 </div>
                 <Button

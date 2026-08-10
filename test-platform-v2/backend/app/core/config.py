@@ -195,12 +195,12 @@ class Settings(BaseSettings):
     lanhu_evidence_storage_dir: str = ""         # 空 = backend/storage/lanhu-evidence
     lanhu_capture_viewport_width: int = 1440
     lanhu_capture_viewport_height: int = 1200
+    lanhu_capture_device_scale_factor: float = 2.0  # 截图 DPR，2x 小字更清晰（OCR 命中率）
     lanhu_capture_scroll_step_ratio: float = 0.85
     lanhu_capture_max_segments_per_page: int = 30
     lanhu_capture_wait_ms: int = 600
     lanhu_ocr_provider: str = "local"            # local/cloud/mock
-    lanhu_ocr_command: str = ""                  # 命令模板，如 paddleocr --image {image}
-    lanhu_ocr_min_confidence: float = 0.60
+    lanhu_ocr_command: str = '{python} -m app.services.lanhu_evidence.rapidocr_cli --image "{image}"'  # 命令模板，{python}/{image} 占位；默认内置 rapidocr CLI，可换外部引擎
     lanhu_evidence_word_embed_screenshots: bool = True
     lanhu_evidence_import_to_requirement: bool = True
     lanhu_evidence_import_to_knowledge: bool = True
