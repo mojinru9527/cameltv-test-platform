@@ -15,9 +15,9 @@
 | 0 | Product / 根因定位 | ✅ | ✅ | ✅ | ✅ | ⏳ | 三问题根因：直属无精确过滤/图谱用例仅子集+计数口径错/孤儿实体双域重复 |
 | 1 | 后端 taxonomy_direct 直属精确过滤 | ✅ | ✅ | ✅ | ⏳ | ⏳ | list/export + direct_only + 4 测试（62/62） |
 | 2 | 前端直属核算行可点击查看/编辑 | ✅ | ✅ | ✅ | ⏳ | ⏳ | isAccounting 可点击 + selDirect 过滤 + 12/12 测试 |
-| 3 | 后端全量用例入图 + source 回填 + 计数口径 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | C125-3/C126-1/C126-4 基础 |
-| 4 | 后端分域隔离（graph/view + entities/stats） | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | 孤儿实体不双域重复 + 平台域接线 |
-| 5 | 前端图谱计数展示 + 分域传参 | ✅ | ⏳ | ⏳ | ⏳ | ⏳ | 已入库/全量 + 不崩溃 |
+| 3 | 后端全量用例入图 + source 回填 + 计数口径 | ✅ | ✅ | ✅ | ⏳ | ⏳ | sync 服务/接口/脚本 + test_case_total + 4 测试 |
+| 4 | 后端分域隔离（graph/view + entities/stats） | ✅ | ✅ | ✅ | ⏳ | ⏳ | _knowledge_domain_filter 三端点 + 测试 |
+| 5 | 前端图谱计数展示 + 分域传参 | ✅ | ✅ | ✅ | ⏳ | ⏳ | GraphTab 已入库/全量 + EntityTab 分域 + 442/442 |
 | 6 | QA / 浏览器 / Leader | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 双端硬门禁 + UI 证据 |
 | 7 | 总确认 → Draft PR → checks → main | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 未获总确认不得 push |
 
