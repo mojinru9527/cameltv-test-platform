@@ -25,3 +25,6 @@ pytest-cov>=5.0
 # ── M2 RAG 向量化（本地嵌入，离线不外传）──
 fastembed>=0.3            # onnx TextEmbedding（bge-small-zh-v1.5），CPU 可跑，无 torch
 numpy>=1.26               # 向量存储（float32 blob）+ 暴力余弦
+
+# ── Lanhu 证据 OCR（CPU 中文识别，onnxruntime，模型随 wheel 打包离线可用）──
+rapidocr_onnxruntime>=1.4.4
