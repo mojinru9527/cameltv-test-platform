@@ -59,6 +59,59 @@ def _data_dir() -> Path:
     return _resolve_workspace_root() / "test-platform-v2" / "backend" / "data"
 
 
+def _is_lanhu_session_expired(exc: BaseException) -> bool:
+    """将蓝湖 401/403/418 视为会话失效（Cookie 过期/被拒/反爬），触发重登或明确报错。"""
+    import httpx
+
+    seen: BaseException | None = exc
+    while seen is not None:
+        if (
+            isinstance(seen, httpx.HTTPStatusError)
+            and seen.response is not None
+            and seen.response.status_code in (401, 403, 418)
+        ):
+            return True
+        seen = seen.__cause__
+    return False
+
+
+_LANHU_COOKIE_FILE = "lanhu_cookie.txt"
+
+
+def set_lanhu_cookie(cookie: str) -> None:
+    """保存用户更新后的蓝湖 Cookie（仅存 Cookie，不存密码）。"""
+    from pathlib import Path
+
+    value = (cookie or "").strip()
+    if not value or value == "your_lanhu_cookie_here":
+        raise ValueError("Cookie 不能为空，且不能使用默认占位值")
+    path = Path(_data_dir()) / _LANHU_COOKIE_FILE
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(value, encoding="utf-8")
+
+
+def get_lanhu_cookie() -> str:
+    """读取已保存的蓝湖 Cookie；无则返回空串（回退环境变量 LANHU_COOKIE）。"""
+    from pathlib import Path
+
+    path = Path(_data_dir()) / _LANHU_COOKIE_FILE
+    if not path.exists():
+        return ""
+    try:
+        return path.read_text(encoding="utf-8").strip()
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def clear_lanhu_cookie() -> None:
+    """清除已保存的蓝湖 Cookie（会话失效且用户选择退出时）。"""
+    from pathlib import Path
+
+    path = Path(_data_dir()) / _LANHU_COOKIE_FILE
+    if path.exists():
+        path.unlink()
+
+
 def _load_lanhu_runtime() -> SimpleNamespace:
     """Load the pinned lanhu-mcp API while tolerating optional login helpers."""
     import lanhu_mcp_server as module  # type: ignore
@@ -326,6 +379,8 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                 _page_id = m.group(1)
 
         async def _do_extract(cookie_override: str = "", page_id: str = "") -> dict:
+            if not cookie_override:
+                cookie_override = get_lanhu_cookie()
             extractor = _create_lanhu_extractor(runtime, cookie_override)
 
             params = extractor.parse_url(url)
@@ -654,11 +709,15 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
         # Try extraction with current cookie
         try:
             return await _do_extract(page_id=_page_id)
-        except runtime.auth_error_types as e:
+        except Exception as e:
+            is_auth = (isinstance(e, runtime.auth_error_types)
+                       or _is_lanhu_session_expired(e))
+            if not is_auth:
+                raise
             if not auto_login or runtime.login is None:
                 raise ValueError(
-                    f"蓝湖认证失败，Cookie 已过期。"
-                    f"请手动获取 Cookie 填入 LANHU_COOKIE。\n"
+                    f"蓝湖认证失败，Cookie 已过期或已被拒绝（HTTP 418 表示会话失效）。"
+                    f"请重新登录或手动获取 Cookie 填入 LANHU_COOKIE。\n"
                     f"错误详情: {str(e)[:200]}"
                 )
             logger.warning("[ai_service] Lanhu auth failed: %s. Attempting auto-login...", e)
@@ -975,6 +1034,8 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
         runtime = _load_lanhu_runtime()
 
         async def _do(cookie_override: str = "") -> dict:
+            if not cookie_override:
+                cookie_override = get_lanhu_cookie()
             extractor = _create_lanhu_extractor(runtime, cookie_override)
             params = extractor.parse_url(url)
             doc_id = params.get("doc_id", "")
@@ -1035,11 +1096,16 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
 
         try:
             return await _do()
-        except runtime.auth_error_types:
+        except Exception as exc:
+            is_auth = (isinstance(exc, runtime.auth_error_types)
+                       or _is_lanhu_session_expired(exc))
+            if not is_auth:
+                raise
             if runtime.login is None:
                 return {
                     "status": "failed",
-                    "error": "蓝湖认证失败，请更新 LANHU_COOKIE",
+                    "error": "蓝湖会话已失效（Cookie 过期或 HTTP 418 被拒），请重新登录或更新 LANHU_COOKIE",
+                    "manual_action_required": True,
                     "pages": [],
                 }
             new_cookie = await runtime.login()
@@ -1047,7 +1113,12 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
                 if runtime.save_cookie is not None:
                     runtime.save_cookie(new_cookie)
                 return await _do(cookie_override=new_cookie)
-            return {"status": "failed", "error": "蓝湖认证失败且自动登录未获取到 Cookie", "pages": []}
+            return {
+                "status": "failed",
+                "error": "蓝湖会话失效且自动登录未获取到 Cookie，请重新登录或更新 LANHU_COOKIE",
+                "manual_action_required": True,
+                "pages": [],
+            }
     except LanhuManualActionRequired as e:
         return {
             "status": "failed",

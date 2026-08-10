@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/auth'
+import LanhuReloginDialog from './components/LanhuReloginDialog'
 import {
   fetchLanhuEvidenceJob,
   fetchLanhuEvidencePages,
@@ -39,6 +40,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import {
   ArrowLeft,
   Eye,
+  KeyRound,
   CheckCircle2,
   XCircle,
   Download,
@@ -70,6 +72,7 @@ export default function LanhuEvidenceJobDetail() {
   const canReview = useAuthStore((state) => state.hasPerm)('lanhu_evidence:review')
   const canImport = useAuthStore((state) => state.hasPerm)('lanhu_evidence:import')
   const canRun = useAuthStore((state) => state.hasPerm)('lanhu_evidence:run')
+  const [reloginOpen, setReloginOpen] = useState(false)
 
   const { data: job, isLoading, isError, error, refetch } = useApi(
     (signal) => fetchLanhuEvidenceJob(jobId, signal),
@@ -232,6 +235,12 @@ export default function LanhuEvidenceJobDetail() {
                       重试
                     </Button>
                   )}
+                  {canRun && current.status === 'failed' && (
+                    <Button size="sm" variant="secondary" className="min-h-9" onClick={() => setReloginOpen(true)} data-icon="inline-start">
+                      <KeyRound />
+                      蓝湖登录/更新Cookie
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -239,8 +248,16 @@ export default function LanhuEvidenceJobDetail() {
             {current.error_message && (
               <div className="mt-3 rounded-lg border border-status-danger/40 bg-status-danger-muted p-3 text-sm text-status-danger">
                 错误：{current.error_message}
+                {canRun && /会话|Cookie|418|登录|认证/i.test(current.error_message) && (
+                  <Button size="sm" variant="secondary" className="ml-3 min-h-8" onClick={() => setReloginOpen(true)}>
+                    <KeyRound />
+                    蓝湖登录/更新Cookie
+                  </Button>
+                )}
               </div>
             )}
+
+            <LanhuReloginDialog open={reloginOpen} onOpenChange={setReloginOpen} onSaved={refetch} />
 
             {/* ── 页面表 ── */}
             <div className="mt-6">
