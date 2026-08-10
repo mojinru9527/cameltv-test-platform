@@ -11,16 +11,20 @@
 ## 解法：给后端服务挂 Railway 持久卷，挂载点 `/app/storage`
 
 ### 方式 A：Railway 控制台（推荐）
-1. 打开 Railway 项目 → 选择**后端服务**。
-2. 进入 **Settings → Volumes** → **Add Volume**。
-3. Mount path 填：`/app/storage`（其余默认）。
-4. **Deploy**（会重建一次；之后截图写入持久卷，不再随重建丢失）。
+> ⚠️ **Volumes 不在 Settings 里**（Settings 只有 Config-as-code 等）。Config-as-code
+> 文件（railway.json/toml）**不能声明卷**，卷只能通过控制台或 CLI 创建。
+
+1. 打开 Railway 项目 → 点击**后端服务**（服务卡片）。
+2. 服务详情页顶部标签 `Deployments / Variables / Volumes / Metrics / Logs / Settings` → 点 **Volumes**。
+   - 若找不到 Volumes 标签：在项目画布**右键后端服务 → Create Volume / Attach Volume**，或按 **⌘K** 命令面板输入 `volume` 创建。
+3. **Add Volume** → Mount path 填：`/app/storage`（容量默认即可）。
+4. 确认后 Railway 会自动重新部署（加卷会重启容器）；之后截图写入持久卷，不再随重建丢失。
 
 ### 方式 B：Railway CLI
 ```bash
-railway link          # 选择项目/服务
-railway volume add --mount /app/storage
-railway up            # 重新部署
+railway link                       # 选择项目/服务
+railway volume add --mount-path /app/storage
+railway up                         # 重新部署
 ```
 
 ## 验证
