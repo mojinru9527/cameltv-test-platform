@@ -151,7 +151,11 @@ export async function downloadLanhuEvidenceAsset(
   assetId: number,
   signal?: AbortSignal,
 ): Promise<Blob> {
-  return api.get(`/lanhu-evidence/assets/${assetId}`, { responseType: 'blob', signal })
+  return api.get(`/lanhu-evidence/assets/${assetId}`, {
+    responseType: 'blob',
+    signal,
+    suppressErrorToast: true,
+  } as any)
 }
 
 export async function reviewLanhuEvidencePage(

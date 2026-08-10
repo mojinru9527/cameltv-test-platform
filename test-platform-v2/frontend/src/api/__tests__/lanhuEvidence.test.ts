@@ -23,7 +23,7 @@ describe('Lanhu evidence API', () => {
 
     expect(mockGet).toHaveBeenCalledWith(
       '/lanhu-evidence/assets/17',
-      { responseType: 'blob', signal: undefined },
+      { responseType: 'blob', signal: undefined, suppressErrorToast: true },
     )
   })
 

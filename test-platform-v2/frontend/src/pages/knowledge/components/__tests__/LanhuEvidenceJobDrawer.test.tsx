@@ -155,7 +155,7 @@ describe('LanhuEvidenceJobDrawer', () => {
     const blob = new Blob(['evidence'])
     mockGet.mockImplementation((url: string, config?: unknown) => {
       if (url === '/lanhu-evidence/assets/501') {
-        expect(config).toEqual({ responseType: 'blob' })
+        expect(config).toEqual(expect.objectContaining({ responseType: 'blob', suppressErrorToast: true }))
         return Promise.resolve(blob)
       }
       if (url === '/lanhu-evidence/jobs/17') return Promise.resolve(job)
@@ -190,7 +190,7 @@ describe('LanhuEvidenceJobDrawer', () => {
 
     await waitFor(() => expect(mockGet).toHaveBeenCalledWith(
       '/lanhu-evidence/assets/501',
-      { responseType: 'blob' },
+      expect.objectContaining({ responseType: 'blob', suppressErrorToast: true }),
     ))
     expect(createObjectURL).toHaveBeenCalledWith(blob)
     click.mockRestore()

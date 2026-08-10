@@ -174,9 +174,9 @@ export default function PrototypePreview({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid max-h-[70vh] grid-cols-1 gap-4 overflow-y-auto md:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="grid max-h-[70vh] min-h-0 grid-cols-1 gap-4 overflow-y-auto md:h-[70vh] md:grid-cols-[minmax(0,1fr)_300px] md:overflow-hidden">
           {/* Left: screenshot area */}
-          <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-lg bg-muted md:h-[70vh]">
+          <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-lg bg-muted md:h-full">
             {/* Toolbar */}
             <div className="absolute top-2 right-2 z-10 flex gap-1">
               <Button
@@ -237,7 +237,7 @@ export default function PrototypePreview({
                   <Image className="size-16 mb-3 opacity-20" />
                   <p className="text-sm">截图不可用</p>
                   <p className="text-xs mt-1">
-                    {current?.asset_id == null ? '该页面没有截图资产' : '截图加载失败，请关闭后重试'}
+                    {current?.asset_id == null ? '该页面没有截图资产' : '截图文件已失效（部署重建存储后旧截图不可用，请重新采集）'}
                   </p>
                 </div>
               )}
@@ -274,7 +274,7 @@ export default function PrototypePreview({
           </div>
 
           {/* Right: OCR text panel */}
-          <div className="flex flex-col border rounded-lg overflow-hidden">
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border md:h-full">
             <div className="px-3 py-2 border-b bg-muted/30 text-sm font-medium">
               OCR 文字
             </div>
