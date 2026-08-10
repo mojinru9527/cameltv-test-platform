@@ -13,8 +13,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/ui'
 import { cn } from '@/lib/utils'
 import { downloadLanhuEvidenceAsset } from '@/api/lanhuEvidence'
+import { toast } from 'sonner'
 import {
   Image, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut, RotateCcw,
+  Maximize2, FileText, Copy, ExternalLink,
 } from 'lucide-react'
 
 // ── Types ──
@@ -52,6 +54,7 @@ export default function PrototypePreview({
   const [imageError, setImageError] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [imageLoading, setImageLoading] = useState(false)
+  const [showOcr, setShowOcr] = useState(true)
   const imageRef = useRef<HTMLDivElement>(null)
 
   const total = pages.length
@@ -135,11 +138,34 @@ export default function PrototypePreview({
     setPosition({ x: 0, y: 0 })
   }
 
+  const ocrText = current?.ocr_text || ''
+
+  /** 适应宽度：把截图放大到填满可视容器宽度（纵向超长可拖拽查看）。 */
+  const handleFitWidth = () => {
+    const img = imageRef.current?.querySelector('img')
+    if (!img || !img.naturalWidth) return
+    const baseW = img.getBoundingClientRect().width
+    const containerW = imageRef.current?.clientWidth || 0
+    if (baseW <= 0 || containerW <= 0) return
+    setPosition({ x: 0, y: 0 })
+    setScale((prev) => Math.min(3, Math.max(1, (containerW * prev) / baseW)))
+  }
+
+  const copyOcr = async () => {
+    if (!ocrText) return
+    try {
+      await navigator.clipboard.writeText(ocrText)
+      toast.success('OCR 全文已复制')
+    } catch {
+      toast.error('复制失败')
+    }
+  }
+
   // ── Empty state ──
   if (!pages.length) {
     return (
       <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Image className="size-5" />
@@ -158,7 +184,7 @@ export default function PrototypePreview({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[92vw] max-h-[92vh] w-full">
+      <DialogContent className="w-[min(1200px,96vw)] sm:max-w-[96vw] max-h-[92vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Image className="size-4" />
@@ -174,11 +200,24 @@ export default function PrototypePreview({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid max-h-[70vh] min-h-0 grid-cols-1 gap-4 overflow-y-auto md:h-[70vh] md:grid-cols-[minmax(0,1fr)_300px] md:overflow-hidden">
+        <div className={cn(
+        "grid max-h-[74vh] min-h-0 grid-cols-1 gap-4 overflow-y-auto md:h-[74vh] md:overflow-hidden",
+        showOcr ? "md:grid-cols-[minmax(0,1fr)_320px]" : "md:grid-cols-[minmax(0,1fr)]"
+      )}>
           {/* Left: screenshot area */}
           <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-lg bg-muted md:h-full">
             {/* Toolbar */}
-            <div className="absolute top-2 right-2 z-10 flex gap-1">
+            <div className="absolute top-2 right-2 z-10 flex flex-wrap items-center justify-end gap-1">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="min-h-11 min-w-11 sm:size-7 sm:min-h-0 sm:min-w-0"
+                onClick={handleFitWidth}
+                aria-label="适应宽度"
+                title="适应宽度"
+              >
+                <Maximize2 className="size-3.5" />
+              </Button>
               <Button
                 size="icon"
                 variant="ghost"
@@ -205,6 +244,28 @@ export default function PrototypePreview({
                 aria-label="重置截图缩放"
               >
                 <RotateCcw className="size-3.5" />
+              </Button>
+              {imageUrl && (
+                <a
+                  href={imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="新窗口查看原图"
+                  title="查看原图"
+                  className="ui-btn ui-btn-ghost ui-btn-icon inline-flex min-h-11 min-w-11 sm:size-7 sm:min-h-0 sm:min-w-0"
+                >
+                  <ExternalLink className="size-3.5" />
+                </a>
+              )}
+              <Button
+                size="icon"
+                variant="ghost"
+                className={cn("min-h-11 min-w-11 sm:size-7 sm:min-h-0 sm:min-w-0", showOcr && "bg-muted/60")}
+                onClick={() => setShowOcr((v) => !v)}
+                aria-label={showOcr ? '隐藏 OCR 面板' : '显示 OCR 面板'}
+                title={showOcr ? '隐藏 OCR' : '显示 OCR'}
+              >
+                <FileText className="size-3.5" />
               </Button>
               <span className="text-xs text-muted-foreground self-center px-1 tabular-nums">
                 {Math.round(scale * 100)}%
@@ -273,27 +334,69 @@ export default function PrototypePreview({
             </div>
           </div>
 
-          {/* Right: OCR text panel */}
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border md:h-full">
-            <div className="px-3 py-2 border-b bg-muted/30 text-sm font-medium">
-              OCR 文字
-            </div>
-            <ScrollArea className="min-h-0 flex-1">
-              <div className="p-3 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
-                {current?.ocr_text || '该页面无 OCR 文字'}
+          {/* Right: OCR text panel — 与截图共用 currentIndex，双向联动 */}
+          {showOcr && (
+            <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border md:h-full">
+              <div className="flex items-center gap-1 border-b bg-muted/30 px-2 py-1.5">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  disabled={currentIndex === 0}
+                  onClick={() => goTo(currentIndex - 1)}
+                  aria-label="上一页 OCR"
+                >
+                  <ChevronLeft className="size-3.5" />
+                </Button>
+                <span className="text-xs font-medium whitespace-nowrap">
+                  第 {currentIndex + 1}/{total} 页
+                </span>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  disabled={currentIndex === total - 1}
+                  onClick={() => goTo(currentIndex + 1)}
+                  aria-label="下一页 OCR"
+                >
+                  <ChevronRight className="size-3.5" />
+                </Button>
               </div>
-              {current?.interactions && (
-                <>
-                  <div className="px-3 py-2 border-t bg-muted/30 text-sm font-medium">
-                    交互说明
+              <div className="flex items-center justify-between gap-2 border-b bg-muted/30 px-2 py-1.5">
+                <div className="min-w-0">
+                  <div className="truncate text-xs font-medium" title={current?.page_name}>
+                    {current?.page_name || '未命名页面'}
                   </div>
-                  <div className="p-3 text-xs text-muted-foreground whitespace-pre-wrap">
-                    {current.interactions}
+                  <div className="text-[11px] text-muted-foreground">
+                    该页 OCR 提取文字 · {ocrText.length} 字
                   </div>
-                </>
-              )}
-            </ScrollArea>
-          </div>
+                </div>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  onClick={copyOcr}
+                  disabled={!ocrText}
+                  aria-label="复制 OCR 全文"
+                  title="复制全文"
+                >
+                  <Copy className="size-3.5" />
+                </Button>
+              </div>
+              <ScrollArea className="min-h-0 flex-1">
+                <div className="p-3 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                  {ocrText || '该页面无 OCR 文字'}
+                </div>
+                {current?.interactions && (
+                  <div className="border-t">
+                    <div className="flex items-center gap-1.5 bg-muted/30 px-3 py-2 text-sm font-medium text-status-info">
+                      交互说明
+                    </div>
+                    <div className="p-3 text-xs text-muted-foreground whitespace-pre-wrap">
+                      {current.interactions}
+                    </div>
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -307,10 +410,16 @@ export default function PrototypePreview({
             </Button>
           </div>
           {imageUrl && (
-            <a href={imageUrl} target="_blank" rel="noopener noreferrer" download={`${current?.page_name || 'screenshot'}.png`}
-               className="ui-btn ui-btn-ghost ui-btn-sm inline-flex">
-              <Download className="size-3.5 mr-1" />下载原图
-            </a>
+            <div className="flex flex-wrap items-center gap-2">
+              <a href={imageUrl} target="_blank" rel="noopener noreferrer"
+                 className="ui-btn ui-btn-ghost ui-btn-sm inline-flex">
+                <ExternalLink className="size-3.5 mr-1" />查看原图
+              </a>
+              <a href={imageUrl} target="_blank" rel="noopener noreferrer" download={`${current?.page_name || 'screenshot'}.png`}
+                 className="ui-btn ui-btn-ghost ui-btn-sm inline-flex">
+                <Download className="size-3.5 mr-1" />下载原图
+              </a>
+            </div>
           )}
         </div>
       </DialogContent>
