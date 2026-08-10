@@ -272,7 +272,7 @@ export default function LanhuEvidencePage() {
 
       {/* ── 新建任务 Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) setDialogOpen(false) }}>
-        <DialogContent className="sm:max-w-[560px]">
+        <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>新建采集任务</DialogTitle>
             <DialogDescription>
