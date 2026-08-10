@@ -44,7 +44,8 @@ class TestParseHelpers:
 
         assert lanhu_requirements <= backend_requirements
 
-    def test_pinned_runtime_without_optional_login_symbols_is_supported(self):
+    def test_pinned_runtime_provides_login_hooks(self):
+        """Batch 134：pinned lanhu-mcp 现提供 lanhu_login/_save_cached_cookie 钩子（C134-1）。"""
         module_path = str(lanhu_provider._lanhu_mcp_dir())
         sys.path.insert(0, module_path)
         try:
@@ -54,9 +55,8 @@ class TestParseHelpers:
 
         assert callable(runtime.LanhuExtractor)
         assert callable(runtime.fix_html_files)
-        assert runtime.auth_error_types == ()
-        assert runtime.login is None
-        assert runtime.save_cookie is None
+        assert callable(runtime.login)
+        assert callable(runtime.save_cookie)
 
     def test_pinned_extractor_without_cookie_constructor_is_supported(self):
         observed = {"created": 0}
