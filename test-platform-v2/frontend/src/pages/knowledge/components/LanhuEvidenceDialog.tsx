@@ -73,6 +73,10 @@ export default function LanhuEvidenceDialog({
       toast.warning('请输入蓝湖链接')
       return
     }
+    if (!u.includes('pid=') || !u.includes('docId=')) {
+      toast.error('链接缺少 pid 或 docId 参数，请从浏览器地址栏复制完整蓝湖链接（应包含 ?tid=...&pid=...&docId=...）')
+      return
+    }
     setLoading(true)
     createLanhuEvidenceJob({
       url: u,
