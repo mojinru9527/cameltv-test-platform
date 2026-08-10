@@ -18,8 +18,8 @@
 | 3 | 后端全量用例入图 + source 回填 + 计数口径 | ✅ | ✅ | ✅ | ⏳ | ⏳ | sync 服务/接口/脚本 + test_case_total + 4 测试 |
 | 4 | 后端分域隔离（graph/view + entities/stats） | ✅ | ✅ | ✅ | ⏳ | ⏳ | _knowledge_domain_filter 三端点 + 测试 |
 | 5 | 前端图谱计数展示 + 分域传参 | ✅ | ✅ | ✅ | ⏳ | ⏳ | GraphTab 已入库/全量 + EntityTab 分域 + 442/442 |
-| 6 | QA / 浏览器 / Leader | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 双端硬门禁 + UI 证据 |
-| 7 | 总确认 → Draft PR → checks → main | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 未获总确认不得 push |
+| 6 | QA / 浏览器 / Leader | ⏳ | ✅ | ✅ | ✅ | ⏳ | QA PASS：双端门禁 + 浏览器证据 + vision |
+| 7 | 总确认 → Draft PR → checks → main | ✅ | ✅ | ✅ | ✅ | 🔄 | 待用户一次总确认 |
 
 ## 当前结论
 - 直属用例是真实用例，需可点击进入列表查看/编辑（复用现有链路）。
