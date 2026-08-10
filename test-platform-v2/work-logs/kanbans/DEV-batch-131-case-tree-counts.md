@@ -15,8 +15,8 @@
 | 0 | Product / 根因定位 | ✅ | ✅ | ✅ | ✅ | ⏳ | FAQ帮助 27 = 直属 18 + 子级 9 |
 | 1 | TDD：直属计数纯函数与页面树测试 | ✅ | ✅ | ✅ | ⏳ | ⏳ | 红→绿：countDirectCases + DomainTree 只读项 + 页面树 |
 | 2 | DomainTree 非交互统计项 | ✅ | ✅ | ✅ | ⏳ | ⏳ | selectable=false 只读行，浏览器证据无筛选请求 |
-| 3 | QA / 浏览器 / Leader | ⏳ | ✅ | ✅ | 🔄 | ⏳ | typecheck/build/440 测试全绿 + 浏览器验收 pass |
-| 4 | 总确认 → Draft PR → checks → main | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 未获总确认不得 push |
+| 3 | QA / 浏览器 / Leader | ⏳ | ✅ | ✅ | ✅ | ⏳ | QA PASS + Leader APPROVED（证据齐备） |
+| 4 | 总确认 → Draft PR → checks → main | ✅ | ✅ | ✅ | ✅ | 🔄 | PR #182 checks 全绿，待 squash 合入 |
 
 ## 当前结论
 
