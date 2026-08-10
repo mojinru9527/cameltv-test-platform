@@ -100,7 +100,7 @@ export default function LanhuEvidenceDialog({
 
   const rows: Array<[string, string, boolean, (v: boolean) => void]> = [
     ['ev-all', '发现并采集全部页面', captureAll, setCaptureAll],
-    ['ev-latest', '仅最新版本（如 16.0.0）', latestVersionOnly, setLatestVersionOnly],
+    ['ev-latest', '仅最新版本（自动识别最高版本，如 16.0.0 / 17.0.0）', latestVersionOnly, setLatestVersionOnly],
     ['ev-word', '生成 Word 文档', includeWord, setIncludeWord],
     ['ev-json', '生成结构化 JSON', includeJson, setIncludeJson],
     ...(canImport ? [
