@@ -28,16 +28,16 @@ vi.mock('@/hooks/useApi', () => ({
       return {
         data: [{
           surface: '用户端',
-          count: 2,
+          count: 27,
           domains: [{
-            domain: '赛事详情',
-            count: 2,
-            modules: [{
-              name: '预测Pick',
-              path: '预测Pick',
-              count: 2,
-              children: [],
-            }],
+            domain: 'FAQ帮助',
+            count: 27,
+            modules: [
+              { name: 'faq内容', path: 'faq内容', count: 5, children: [] },
+              { name: '帮助中心', path: '帮助中心', count: 2, children: [] },
+              { name: '异常恢复', path: '异常恢复', count: 1, children: [] },
+              { name: '重复与并发', path: '重复与并发', count: 1, children: [] },
+            ],
           }],
         }],
         isLoading: false,
@@ -67,7 +67,17 @@ vi.mock('@/hooks/useApi', () => ({
   },
 }))
 
-vi.mock('@/components/DomainTree', () => ({ default: () => <div /> }))
+vi.mock('@/components/DomainTree', () => ({
+  default: ({ treeData }: { treeData: any[] }) => {
+    const renderNodes = (nodes: any[]): any => nodes.map((node) => (
+      <div key={node.key}>
+        {node.title}
+        {node.children?.length ? renderNodes(node.children) : null}
+      </div>
+    ))
+    return <div>{renderNodes(treeData)}</div>
+  },
+}))
 vi.mock('@/components/Pagination', () => ({ default: () => <div /> }))
 vi.mock('./CaseDrawer', () => ({ default: () => null }))
 vi.mock('./VersionDialog', () => ({ default: () => null }))
@@ -116,6 +126,13 @@ describe('用例批量删除确认', () => {
     expect(screen.getByRole('combobox', { name: '按用例场景筛选' })).toBeTruthy()
     expect(screen.getByText('正向')).toBeTruthy()
     expect(screen.getByText('负向')).toBeTruthy()
+  })
+
+  it('显式展示父模块直属用例，使父子计数可以完整对账', () => {
+    render(<TestCasePage />)
+
+    const directCases = screen.getByText('直属用例')
+    expect(directCases.parentElement?.textContent).toContain('(18)')
   })
 
   it('取消批量删除时产生零写请求', async () => {

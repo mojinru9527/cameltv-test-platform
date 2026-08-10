@@ -8,6 +8,10 @@ export interface DomainTreeNode {
   title: React.ReactNode
   children?: DomainTreeNode[]
   isLeaf?: boolean
+  /** 只读核算说明项（如"直属用例"）：不可点击、不触发筛选。 */
+  selectable?: boolean
+  /** 只读说明项的可访问标签。 */
+  ariaLabel?: string
 }
 
 interface Props {
@@ -20,6 +24,23 @@ interface Props {
 function TreeItem({ node, onSelect, depth = 0 }: { node: DomainTreeNode; onSelect: (keys: string[]) => void; depth?: number }) {
   const [open, setOpen] = useState(false)
   const hasChildren = node.children && node.children.length > 0
+
+  // 只读核算项：非交互展示，防止把统计说明误当成真实 taxonomy_module 触发筛选。
+  if (node.selectable === false) {
+    return (
+      <div
+        role="note"
+        aria-label={node.ariaLabel}
+        className={cn(
+          'flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-xs italic text-muted-foreground',
+          depth > 0 && 'pl-4'
+        )}
+      >
+        <FileText className="ml-3 size-3 shrink-0 text-muted-foreground/70" />
+        <span className="truncate">{node.title}</span>
+      </div>
+    )
+  }
 
   const handleClick = () => {
     onSelect([node.key])
