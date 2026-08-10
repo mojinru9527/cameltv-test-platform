@@ -278,23 +278,21 @@ export default function PrototypePreview({
             <div className="px-3 py-2 border-b bg-muted/30 text-sm font-medium">
               OCR 文字
             </div>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="min-h-0 flex-1">
               <div className="p-3 text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
                 {current?.ocr_text || '该页面无 OCR 文字'}
               </div>
+              {current?.interactions && (
+                <>
+                  <div className="px-3 py-2 border-t bg-muted/30 text-sm font-medium">
+                    交互说明
+                  </div>
+                  <div className="p-3 text-xs text-muted-foreground whitespace-pre-wrap">
+                    {current.interactions}
+                  </div>
+                </>
+              )}
             </ScrollArea>
-
-            {/* Interactions */}
-            {current?.interactions && (
-              <>
-                <div className="px-3 py-2 border-y bg-muted/30 text-sm font-medium">
-                  交互说明
-                </div>
-                <div className="p-3 text-xs text-muted-foreground whitespace-pre-wrap">
-                  {current.interactions}
-                </div>
-              </>
-            )}
           </div>
         </div>
 
