@@ -32,3 +32,9 @@ export function buildCaseListParams(
     ...(selection.nature ? { positive_negative: selection.nature } : {}),
   }
 }
+
+export function countDirectCases(parentCount: number, childCounts: number[]): number {
+  const childrenTotal = childCounts.reduce((total, count) => total + count, 0)
+  // 后端异常（子级合计 > 父级）时按 0 处理，不显示负数。
+  return Math.max(0, parentCount - childrenTotal)
+}

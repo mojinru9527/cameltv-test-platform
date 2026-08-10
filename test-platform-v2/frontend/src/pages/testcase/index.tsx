@@ -41,7 +41,7 @@ import { cn } from '@/lib/utils'
 import { deleteTestCase, fetchDomains, fetchTaxonomy, fetchTestCases, fetchTestCaseStats, batchUpdateCases, batchDeleteCases, fetchVersions, reviewCase, importExcel, importXmind, downloadExport } from '@/api/testcase'
 import type { TaxonomyModuleNode } from '@/api/testcase'
 import { countCasesByType, formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
-import { buildCaseListParams, flattenTaxonomyModules } from './caseTaxonomyFilters'
+import { buildCaseListParams, countDirectCases, flattenTaxonomyModules } from './caseTaxonomyFilters'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'
@@ -252,21 +252,54 @@ export default function TestCasePage() {
 
   // ── Domain tree data ──
   const domainTree = useMemo(() => {
-    const moduleNode = (surface: string, domain: string, node: TaxonomyModuleNode): any => ({
-      title: <span className="text-xs">{node.name} <span className="text-muted-foreground">({node.count})</span></span>,
-      key: JSON.stringify({ kind: 'module', surface, domain, path: node.path }),
-      isLeaf: node.children.length === 0,
-      children: node.children.map((child) => moduleNode(surface, domain, child)),
+    // 直属用例只读核算项：父级计数包含"直接归属本级、未下钻子节点"的用例，
+    // 但树只渲染有子模块路径的节点。这里用父级总数减去直接子级之和推导差值，
+    // 作为不可点击的统计说明行，不新增请求、不伪造 taxonomy_module 分类。
+    const directCaseNode = (surface: string, domain: string, path: string, count: number): any => ({
+      key: JSON.stringify({ kind: 'direct', surface, domain, path }),
+      title: <span className="text-xs">直属用例 <span className="text-muted-foreground">({count})</span></span>,
+      isLeaf: true,
+      selectable: false,
+      ariaLabel: `直属用例 ${count} 条，仅用于数量核算，不可筛选`,
     })
-    return taxonomy.map((surface) => ({
-      title: <span className="text-[13px] font-medium">{surface.surface} <span className="text-muted-foreground">({surface.count})</span></span>,
-      key: JSON.stringify({ kind: 'surface', surface: surface.surface }),
-      children: surface.domains.map((domain) => ({
-        title: <span className="text-xs font-medium">{domain.domain} <span className="text-muted-foreground">({domain.count})</span></span>,
-        key: JSON.stringify({ kind: 'domain', surface: surface.surface, domain: domain.domain }),
-        children: domain.modules.map((node) => moduleNode(surface.surface, domain.domain, node)),
-      })),
-    }))
+
+    const moduleNode = (surface: string, domain: string, node: TaxonomyModuleNode): any => {
+      const children = node.children.map((child) => moduleNode(surface, domain, child))
+      const direct = countDirectCases(node.count, node.children.map((child) => child.count))
+      return {
+        title: <span className="text-xs">{node.name} <span className="text-muted-foreground">({node.count})</span></span>,
+        key: JSON.stringify({ kind: 'module', surface, domain, path: node.path }),
+        isLeaf: node.children.length === 0,
+        children: [
+          ...(node.children.length > 0 && direct > 0 ? [directCaseNode(surface, domain, node.path, direct)] : []),
+          ...children,
+        ],
+      }
+    }
+
+    return taxonomy.map((surface) => {
+      const domains = surface.domains.map((domain) => {
+        const modules = domain.modules.map((node) => moduleNode(surface.surface, domain.domain, node))
+        const direct = countDirectCases(domain.count, domain.modules.map((node) => node.count))
+        return {
+          title: <span className="text-xs font-medium">{domain.domain} <span className="text-muted-foreground">({domain.count})</span></span>,
+          key: JSON.stringify({ kind: 'domain', surface: surface.surface, domain: domain.domain }),
+          children: [
+            ...(domain.modules.length > 0 && direct > 0 ? [directCaseNode(surface.surface, domain.domain, '', direct)] : []),
+            ...modules,
+          ],
+        }
+      })
+      const direct = countDirectCases(surface.count, surface.domains.map((domain) => domain.count))
+      return {
+        title: <span className="text-[13px] font-medium">{surface.surface} <span className="text-muted-foreground">({surface.count})</span></span>,
+        key: JSON.stringify({ kind: 'surface', surface: surface.surface }),
+        children: [
+          ...(surface.domains.length > 0 && direct > 0 ? [directCaseNode(surface.surface, '', '', direct)] : []),
+          ...domains,
+        ],
+      }
+    })
   }, [taxonomy])
 
   // derived modules list — returns all modules when no domain selected so the
