@@ -14,7 +14,8 @@ import { Switch } from '@/components/ui/switch'
 import { Button } from '@/ui'
 import { createLanhuEvidenceJob } from '@/api/lanhuEvidence'
 import type { LanhuEvidenceJob } from '@/api/lanhuEvidence'
-import { Loader2 } from '@/lib/icons'
+import { Loader2, KeyRound } from '@/lib/icons'
+import LanhuReloginDialog from '@/pages/lanhu-evidence/components/LanhuReloginDialog'
 import { useAuthStore } from '@/stores/auth'
 
 interface Props {
@@ -49,6 +50,7 @@ export default function LanhuEvidenceDialog({
   const [importKnowledge, setImportKnowledge] = useState(false)
   const [importWiki, setImportWiki] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [reloginOpen, setReloginOpen] = useState(false)
 
   useEffect(() => {
     if (open) {
@@ -120,6 +122,13 @@ export default function LanhuEvidenceDialog({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
+            <Button type="button" size="sm" variant="secondary" className="min-h-9" onClick={() => setReloginOpen(true)} data-icon="inline-start">
+              <KeyRound />
+              蓝湖登录/更新Cookie
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              会话过期（HTTP 418）时请先重新登录/更新 Cookie，再提交采集。
+            </p>
           </div>
           <div className="space-y-2">
             {rows.map(([id, label, checked, setter]) => (
@@ -130,6 +139,8 @@ export default function LanhuEvidenceDialog({
             ))}
           </div>
         </div>
+
+        <LanhuReloginDialog open={reloginOpen} onOpenChange={setReloginOpen} />
 
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>关闭</Button>
