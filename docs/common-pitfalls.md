@@ -1,7 +1,7 @@
 ---
 title: "CamelTv 常见陷阱与已知问题"
 owner: "qa-team"
-last_reviewed: "2026-06-26"
+last_reviewed: "2026-08-10"
 status: "active"
 expires: "2026-12-26"
 tags: ["pitfalls", "troubleshooting", "known-issues", "debugging", "onboarding"]
@@ -269,6 +269,20 @@ persist(
 3. 检查后端是否已启动：`curl http://localhost:8000/health`
 
 **相关文件**：`test-platform-v2/frontend/vite.config.ts`
+
+---
+
+### 2.6 用例分类树父节点计数不守恒（直属用例未显式核算）
+
+**现象**：用例服务的模块分类树中，父节点（业务域/模块）显示的总数与可见子级数量之和不一致，用户误以为统计错误或用例丢失。如 `FAQ帮助 (27)` 四个可见子级合计仅 `5+2+1+1=9`，剩余 18 条“消失”。
+
+**根因**：后端父节点计数包含“直接归属本级、未填写下一层子模块路径”的用例，而分类树只渲染有子模块路径的节点。当本级直属数量 > 0 时，父子计数不守恒。
+
+**解决方案**：前端守恒展示，不改后端/生产数据/API 契约——对任意非叶父节点（业务域/任意层级模块），用 `countDirectCases(parent.count, children.count[])` 推导直属数量（差值，子级合计>父级时按 0 兜底），在子树顶部插入只读核算行 `直属用例 (差值)`；核算行必须是非交互节点（`selectable=false` / `role="note"`），防止被误当成真实 `taxonomy_module` 触发筛选。
+
+**相关文件**：`test-platform-v2/frontend/src/pages/testcase/index.tsx`、`test-platform-v2/frontend/src/components/DomainTree.tsx`、`test-platform-v2/frontend/src/pages/testcase/caseTaxonomyFilters.ts`
+
+**修复**：2026-08-10 / Batch 131。
 
 ---
 
@@ -606,6 +620,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 | 并发构建互相干扰 | Jenkins 无并发限制 | 5.2 |
 | Vite 配置改了却不生效 | 过期 JS 配置覆盖 TS | 6.4 |
 | 已开发功能显示占位页或 API 404 | 菜单/路由未接线 | 6.5 |
+| 父模块计数与子级之和不符 | 父节点含直属用例，树未显式核算 | 2.6 |
 
 ---
 
