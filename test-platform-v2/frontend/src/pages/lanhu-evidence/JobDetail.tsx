@@ -195,7 +195,9 @@ export default function LanhuEvidenceJobDetail() {
                 <div className="text-xs text-muted-foreground">状态</div>
                 <div className="mt-1 flex items-center gap-2">
                   <Badge tone={jobStatusTone(current.status)}>{jobStatusLabel(current.status)}</Badge>
-                  <span className="text-sm text-muted-foreground">{stageLabel(current.stage)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {current.status === 'failed' ? '已结束（失败）' : stageLabel(current.stage)}
+                  </span>
                 </div>
               </div>
               <div className="rounded-xl border bg-card p-4">
