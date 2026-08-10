@@ -189,7 +189,7 @@ export default function LanhuEvidencePage() {
                         <div className="truncate font-medium" title={job.document_name || job.source_url}>
                           {job.document_name || '（未命名）'}
                         </div>
-                        <div className="truncate text-xs text-muted-foreground">{job.source_url}</div>
+                        <div className="truncate text-xs text-muted-foreground" title={job.source_url}>{job.source_url}</div>
                       </TableCell>
                       <TableCell>
                         <Badge tone={jobStatusTone(job.status)}>{jobStatusLabel(job.status)}</Badge>

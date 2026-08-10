@@ -114,7 +114,7 @@ export default function DefectTable({
               <TableBody>
                 {d.items.map((r: any) => (
                   <TableRow key={r.id}>
-                    <TableCell className="max-w-[160px] truncate">{r.defect_id}</TableCell>
+                    <TableCell className="max-w-[160px] truncate" title={r.defect_id}>{r.defect_id}</TableCell>
                     <TableCell className="max-w-0">
                       <div className="flex items-center gap-1.5">
                         <button
@@ -133,8 +133,8 @@ export default function DefectTable({
                         {STATUS_MAP[r.status]?.label || r.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="max-w-[100px] truncate">{r.assignee_name}</TableCell>
-                    <TableCell className="max-w-[150px] truncate">{r.case_title}</TableCell>
+                    <TableCell className="max-w-[100px] truncate" title={r.assignee_name}>{r.assignee_name}</TableCell>
+                    <TableCell className="max-w-[150px] truncate" title={r.case_title}>{r.case_title}</TableCell>
                     <TableCell>{r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '-'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">

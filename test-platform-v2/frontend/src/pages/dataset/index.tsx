@@ -221,7 +221,7 @@ export default function DatasetPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>{item.row_count}</TableCell>
-                      <TableCell className="text-muted-foreground text-xs truncate max-w-[160px]">
+                      <TableCell className="text-muted-foreground text-xs truncate max-w-[160px]" title={columns.join(', ') || '-'}>
                         {columns.join(', ') || '-'}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-xs">
@@ -356,7 +356,7 @@ export default function DatasetPage() {
                         <TableRow key={i}>
                           <TableCell className="text-center text-xs text-muted-foreground">{i + 1}</TableCell>
                           {preview.columns.map(c => (
-                            <TableCell key={c} className="text-xs font-mono max-w-[200px] truncate">
+                            <TableCell key={c} className="text-xs font-mono max-w-[200px] truncate" title={String(row[c] ?? '-')}>
                               {row[c] ?? '-'}
                             </TableCell>
                           ))}
@@ -429,7 +429,7 @@ export default function DatasetPage() {
                               <TableRow key={i}>
                                 <TableCell className="text-center text-xs text-muted-foreground">{i + 1}</TableCell>
                                 {cols.map(c => (
-                                  <TableCell key={c} className="text-xs font-mono max-w-[200px] truncate">
+                                  <TableCell key={c} className="text-xs font-mono max-w-[200px] truncate" title={String(row[c] ?? '-')}>
                                     {row[c] ?? '-'}
                                   </TableCell>
                                 ))}
