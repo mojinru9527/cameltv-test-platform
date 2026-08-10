@@ -29,6 +29,36 @@ describe('case taxonomy filters', () => {
     expect(JSON.stringify(options)).not.toMatch(/PC-web|安卓iOS|移动端-web/i)
   })
 
+  it('emits taxonomy_direct only when direct-only filter is active', () => {
+    expect(buildCaseListParams({
+      surface: '用户端',
+      domain: 'FAQ帮助',
+      modulePath: '',
+      nature: '',
+      directOnly: true,
+    }, { page: 1, page_size: 20, case_type: 'manual' })).toEqual({
+      page: 1,
+      page_size: 20,
+      case_type: 'manual',
+      surface: '用户端',
+      taxonomy_domain: 'FAQ帮助',
+      taxonomy_direct: 'true',
+    })
+    expect(buildCaseListParams({
+      surface: '用户端',
+      domain: '赛事详情',
+      modulePath: '订单列表',
+      nature: '',
+      directOnly: true,
+    }, { page: 1, page_size: 20, case_type: 'manual' })).toMatchObject({
+      taxonomy_module: '订单列表',
+      taxonomy_direct: 'true',
+    })
+    expect(buildCaseListParams({
+      surface: '用户端', domain: '赛事详情', modulePath: '订单列表', nature: '',
+    }, { page: 1, page_size: 20, case_type: 'manual' })).not.toHaveProperty('taxonomy_direct')
+  })
+
   it('uses normalized API filter names and keeps empty filters out', () => {
     expect(buildCaseListParams({
       surface: '用户端',

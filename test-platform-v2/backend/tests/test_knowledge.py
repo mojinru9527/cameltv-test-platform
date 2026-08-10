@@ -981,6 +981,7 @@ class TestGraphApi:
             "total": 3,
             "by_type": {"api": 2, "module": 1},
             "missing_source": 2,
+            "test_case_total": 0,
         }
 
     def test_entity_stats_support_type_and_keyword_filters(self, kdb, kclient):
@@ -1011,6 +1012,7 @@ class TestGraphApi:
             "total": 1,
             "by_type": {"api": 1},
             "missing_source": 1,
+            "test_case_total": 0,
         }
 
     def test_entity_detail_404(self, kclient):

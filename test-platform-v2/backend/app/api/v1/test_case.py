@@ -152,6 +152,7 @@ def list_test_cases(
     surface: str = "",
     taxonomy_domain: str = "",
     taxonomy_module: str = "",
+    taxonomy_direct: bool = False,
     case_type: str = "",
     positive_negative: str = "",
     priority: str = "",
@@ -171,6 +172,7 @@ def list_test_cases(
         surface=surface,
         taxonomy_domain=taxonomy_domain,
         taxonomy_module=taxonomy_module,
+        taxonomy_direct=taxonomy_direct,
         case_type=case_type,
         positive_negative=positive_negative,
         priority=priority,
@@ -538,6 +540,7 @@ def export_xmind(
     surface: str = "",
     taxonomy_domain: str = "",
     taxonomy_module: str = "",
+    taxonomy_direct: bool = False,
     positive_negative: str = "",
     current: CurrentUser = Depends(require_permission("testcase:list")),
     db: Session = Depends(get_db),
@@ -549,6 +552,7 @@ def export_xmind(
         db, project_id=current.project_id or 0,
         domain=domain, module=module, surface=surface,
         taxonomy_domain=taxonomy_domain, taxonomy_module=taxonomy_module,
+        taxonomy_direct=taxonomy_direct,
         positive_negative=positive_negative, page=1, page_size=10000,
     )
     buf = cases_to_xmind_bytes(items, root_title=f"测试用例-项目{current.project_id}")
@@ -622,6 +626,7 @@ def export_excel(
     surface: str = "",
     taxonomy_domain: str = "",
     taxonomy_module: str = "",
+    taxonomy_direct: bool = False,
     positive_negative: str = "",
     current: CurrentUser = Depends(require_permission("testcase:list")),
     db: Session = Depends(get_db),
@@ -633,6 +638,7 @@ def export_excel(
         db, project_id=current.project_id or 0,
         domain=domain, module=module, surface=surface,
         taxonomy_domain=taxonomy_domain, taxonomy_module=taxonomy_module,
+        taxonomy_direct=taxonomy_direct,
         positive_negative=positive_negative, page=1, page_size=10000,
     )
     buf = cases_to_excel_bytes(items)

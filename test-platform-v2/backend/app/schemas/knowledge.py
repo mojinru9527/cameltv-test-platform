@@ -241,6 +241,8 @@ class KnowledgeEntityStats(BaseModel):
     total: int = 0
     by_type: dict[str, int] = Field(default_factory=dict)
     missing_source: int = 0
+    # Batch 132: 用例库全量（权威口径，来自用例库统计），用于"已入库/全量"展示
+    test_case_total: int = 0
 
 
 class KnowledgeRelationOut(BaseModel):

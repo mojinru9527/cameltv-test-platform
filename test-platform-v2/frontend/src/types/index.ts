@@ -1106,6 +1106,8 @@ export interface KnowledgeEntityStats {
   total: number
   by_type: Record<string, number>
   missing_source: number
+  /** Batch 132: 用例库全量（权威口径），用于"已入库/全量"展示 */
+  test_case_total?: number
 }
 
 // M3 实体提取结果

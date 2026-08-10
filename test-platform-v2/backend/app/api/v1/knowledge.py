@@ -18,6 +18,8 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
 from app.core.exceptions import APIException
+from app.models.test_case import TestCase
+
 from app.models.knowledge import (
     AgentRun, AiArtifact, KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource,
 )
@@ -96,6 +98,23 @@ def _graph_extract_availability(
     if db.scalar(stmt.limit(1)) is not None:
         return True, ""
     return False, _NO_ACTIVE_SOURCE_CHUNKS if source_id is not None else _NO_ACTIVE_CHUNKS
+
+
+def _knowledge_domain_filter(pid: int, knowledge_domain: str | None):
+    """知识域过滤（Batch 132 分域隔离）。
+
+    platform 仅展示来源=platform 的实体；project 展示来源=project 与无来源孤儿实体
+    （孤儿默认归属项目域）；None 不限制。两域不再共用同一批孤儿数据。
+    """
+    if not knowledge_domain:
+        return None
+    source_ids = select(KnowledgeSource.id).where(
+        KnowledgeSource.project_id == pid,
+        KnowledgeSource.knowledge_domain == knowledge_domain,
+    )
+    if knowledge_domain == "platform":
+        return KnowledgeEntity.source_id.in_(source_ids)
+    return KnowledgeEntity.source_id.in_(source_ids) | KnowledgeEntity.source_id.is_(None)
 
 
 # ═══════════════════════════════════════════════════════
@@ -635,12 +654,16 @@ def extract_graph(
 def entity_stats(
     entity_type: str | None = Query(None),
     keyword: str | None = Query(None),
+    knowledge_domain: str | None = Query(None, description="知识域过滤: project | platform"),
     current: CurrentUser = Depends(require_permission("knowledge:view")),
     db: Session = Depends(get_db),
 ):
     """Return project-wide totals without conflating them with the list limit."""
     pid = current.project_id or 0
     filters = [KnowledgeEntity.project_id == pid]
+    domain_cond = _knowledge_domain_filter(pid, knowledge_domain)
+    if domain_cond is not None:
+        filters.append(domain_cond)
     if entity_type:
         filters.append(KnowledgeEntity.entity_type == entity_type)
     if keyword:
@@ -661,10 +684,18 @@ def entity_stats(
             KnowledgeEntity.source_id.is_(None),
         )
     ) or 0
+    # Batch 132: 用例库全量（权威口径），用于"已入库/全量"展示
+    test_case_total = db.scalar(
+        select(func.count(TestCase.id)).where(
+            TestCase.project_id == pid,
+            TestCase.is_deleted == False,  # noqa: E712
+        )
+    ) or 0
     return R.ok(KnowledgeEntityStats(
         total=sum(by_type.values()),
         by_type=by_type,
         missing_source=missing_source,
+        test_case_total=test_case_total,
     ))
 
 
@@ -672,13 +703,17 @@ def entity_stats(
 def list_entities(
     entity_type: str | None = Query(None),
     keyword: str | None = Query(None),
+    knowledge_domain: str | None = Query(None, description="知识域过滤: project | platform"),
     limit: int = Query(200, ge=1, le=1000),
     current: CurrentUser = Depends(require_permission("knowledge:view")),
     db: Session = Depends(get_db),
 ):
-    """列出项目内知识图谱实体（支持按类型和关键词过滤）。"""
+    """列出项目内知识图谱实体（支持按类型/关键词/知识域过滤）。"""
     pid = current.project_id or 0
     stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
+    domain_cond = _knowledge_domain_filter(pid, knowledge_domain)
+    if domain_cond is not None:
+        stmt = stmt.where(domain_cond)
     if entity_type:
         stmt = stmt.where(KnowledgeEntity.entity_type == entity_type)
     if keyword:
@@ -756,15 +791,11 @@ def graph_view(
 
     stmt = select(KnowledgeEntity).where(KnowledgeEntity.project_id == pid)
     if knowledge_domain:
-        # 知识域过滤：实体关联的 source 属于该 domain，或实体无关联 source（孤儿实体保留）
-        matching_sources = select(KnowledgeSource.id).where(
-            KnowledgeSource.project_id == pid,
-            KnowledgeSource.knowledge_domain == knowledge_domain,
-        )
-        stmt = stmt.where(
-            KnowledgeEntity.source_id.in_(matching_sources)
-            | KnowledgeEntity.source_id.is_(None)
-        )
+        # Batch 132 分域隔离：platform 仅来源=platform；project 含来源=project 与
+        # 无来源孤儿实体（孤儿默认归属项目域）。两域不再共用同一批数据。
+        domain_cond = _knowledge_domain_filter(pid, knowledge_domain)
+        if domain_cond is not None:
+            stmt = stmt.where(domain_cond)
     entities = list(db.scalars(stmt.limit(limit)).all())
 
     relations = list(
@@ -1047,6 +1078,27 @@ def import_module_associations(
         total_entities=total_e,
         total_relations=total_r,
     ))
+
+
+@router.post("/graph/sync-test-cases", response_model=R[dict], summary="全量用例入图（Batch 132）")
+def sync_test_cases_to_graph(
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """将项目全部 active 用例同步为图谱用例实体并回填来源（C125-3/C126-1），幂等。
+
+    用例实体统一挂到"用例库全量"知识源（project 域）；能关联模块的用例建立
+    tested_by 关联。返回 total_cases / test_case_entities / created /
+    source_backfilled / linked_cases。
+    """
+    if not settings.knowledge_graph_enabled:
+        raise APIException(code=503, msg="知识图谱未启用（knowledge_graph_enabled=False）", http_status=503)
+    from app.services.knowledge.test_case_graph_sync import sync_all_test_cases_to_graph
+    result = sync_all_test_cases_to_graph(db, current.project_id or 0)
+    _audit(req, current, db, "knowledge:graph_sync_test_cases", f"project#{current.project_id or 0}",
+           f"cases={result['total_cases']} entities={result['test_case_entities']}")
+    return R.ok(result)
 
 
 class DesignAssetImage(BaseModel):

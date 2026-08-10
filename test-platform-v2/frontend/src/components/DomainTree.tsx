@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { FolderOpen, ChevronRight, FileText } from '@/lib/icons'
+import { FolderOpen, ChevronRight, FileText, ArrowRight } from '@/lib/icons'
 import { cn } from '@/lib/utils'
 
 export interface DomainTreeNode {
@@ -10,7 +10,9 @@ export interface DomainTreeNode {
   isLeaf?: boolean
   /** 只读核算说明项（如"直属用例"）：不可点击、不触发筛选。 */
   selectable?: boolean
-  /** 只读说明项的可访问标签。 */
+  /** 核算项可点击化（Batch 132）：点击进入直属用例列表查看/编辑，仍保留视觉区分防误触。 */
+  isAccounting?: boolean
+  /** 说明项的可访问标签。 */
   ariaLabel?: string
 }
 
@@ -25,7 +27,31 @@ function TreeItem({ node, onSelect, depth = 0 }: { node: DomainTreeNode; onSelec
   const [open, setOpen] = useState(false)
   const hasChildren = node.children && node.children.length > 0
 
-  // 只读核算项：非交互展示，防止把统计说明误当成真实 taxonomy_module 触发筛选。
+  const handleClick = () => {
+    onSelect([node.key])
+    if (hasChildren) setOpen((prev) => !prev)
+  }
+
+  // 核算项可点击化（Batch 132）：点击进入直属用例列表查看/编辑；
+  // 保留 muted/斜体视觉区分，防止被误当成真实 taxonomy_module。
+  if (node.isAccounting === true) {
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        aria-label={node.ariaLabel}
+        className={cn(
+          'flex w-full items-center gap-1 rounded px-1.5 py-0.5 text-left text-xs italic text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground hover:not-italic',
+          depth > 0 && 'pl-4'
+        )}
+      >
+        <FileText className="ml-3 size-3 shrink-0 text-muted-foreground/70" />
+        <span className="truncate">{node.title}</span>
+        <ArrowRight className="ml-auto size-3 shrink-0 text-muted-foreground/60" aria-hidden="true" />
+      </button>
+    )
+  }
+
   if (node.selectable === false) {
     return (
       <div
@@ -40,11 +66,6 @@ function TreeItem({ node, onSelect, depth = 0 }: { node: DomainTreeNode; onSelec
         <span className="truncate">{node.title}</span>
       </div>
     )
-  }
-
-  const handleClick = () => {
-    onSelect([node.key])
-    if (hasChildren) setOpen((prev) => !prev)
   }
 
   return (

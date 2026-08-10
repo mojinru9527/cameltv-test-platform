@@ -5,6 +5,8 @@ export interface CaseTaxonomySelection {
   domain: string
   modulePath: string
   nature: string
+  /** 直属精确过滤：仅匹配直接归属父级、无下一层子模块路径的用例（Batch 132）。 */
+  directOnly?: boolean
 }
 export interface ModuleFilterOption {
   value: string
@@ -29,6 +31,7 @@ export function buildCaseListParams(
     ...(selection.surface ? { surface: selection.surface } : {}),
     ...(selection.domain ? { taxonomy_domain: selection.domain } : {}),
     ...(selection.modulePath ? { taxonomy_module: selection.modulePath } : {}),
+    ...(selection.directOnly ? { taxonomy_direct: 'true' } : {}),
     ...(selection.nature ? { positive_negative: selection.nature } : {}),
   }
 }
