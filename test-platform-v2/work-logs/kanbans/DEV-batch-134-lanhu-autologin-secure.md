@@ -15,10 +15,10 @@
 | 0 | Product / 根因定位 | ✅ | ✅ | ✅ | ✅ | ⏳ | runtime.login 缺失 → 自动登录不可用 |
 | 1 | lanhu-mcp lanhu_login + _save_cached_cookie | ✅ | ✅ | ✅ | ⏳ | ⏳ | Playwright SSO，失败返回空串 |
 | 2 | 子模块指针更新 + 推送 | ✅ | ✅ | ✅ | ⏳ | ⏳ | c9f4a43 → 3cfd2ef，main/分支已推送 |
-| 3 | 后端钩子测试 + extract_doc 明文清理 | ✅ | 🔄 | ⏳ | ⏳ | ⏳ | 导入优先/源码回退 |
-| 4 | C-CONDITIONS（关 C133-1，加 C134-1） | ✅ | ✅ | ⏳ | ⏳ | ⏳ | 已更新 |
-| 5 | QA / Leader | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 后端门禁 + 钩子证据 |
-| 6 | 总确认 → Draft PR → checks → main | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ | 未获总确认不得 push |
+| 3 | 后端钩子测试 + extract_doc 明文清理 | ✅ | ✅ | ✅ | ✅ | ⏳ | 28 测试 + 明文改 env |
+| 4 | C-CONDITIONS（关 C133-1，加 C134-1） | ✅ | ✅ | ✅ | ✅ | ⏳ | 已更新 |
+| 5 | QA / Leader | ⏳ | ✅ | ✅ | ✅ | ⏳ | QA PASS + Leader APPROVED |
+| 6 | 总确认 → Draft PR → checks → main | ✅ | ✅ | ✅ | ✅ | 🔄 | 待用户一次总确认 |
 
 ## 当前结论
 - lanhu-mcp 已提供 lanhu_login/_save_cached_cookie 并推送；父仓库指针待随批更新。
