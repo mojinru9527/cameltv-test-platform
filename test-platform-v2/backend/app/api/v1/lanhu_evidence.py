@@ -8,6 +8,8 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
+from pydantic import BaseModel
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
 from sqlalchemy import func, select
@@ -51,6 +53,72 @@ def _get_job(db: Session, job_id: int, project_id: int) -> LanhuEvidenceJob:
     if job is None or job.project_id != project_id:
         raise APIException(code=404, msg="证据包任务不存在", http_status=404)
     return job
+
+
+class LanhuCookieUpdateRequest(BaseModel):
+    cookie: str = ""
+    clear: bool = False
+
+
+class LanhuLoginRequest(BaseModel):
+    username: str = ""
+    password: str = ""
+
+
+@router.post("/cookie", response_model=R[dict], summary="保存/清除蓝湖 Cookie（Batch 133）")
+def update_lanhu_cookie(
+    body: LanhuCookieUpdateRequest,
+    current: CurrentUser = Depends(require_permission("lanhu_evidence:run")),
+):
+    """保存用户更新的蓝湖 Cookie（重新登录后粘贴），后续采集自动使用；仅存 Cookie，不存密码。"""
+    _require_enabled()
+    from app.services.external import lanhu_provider
+
+    if body.clear:
+        lanhu_provider.clear_lanhu_cookie()
+        return R.ok({"saved": False, "cleared": True})
+    try:
+        lanhu_provider.set_lanhu_cookie(body.cookie)
+    except ValueError as exc:
+        return R(code=400, msg=str(exc))
+    return R.ok({"saved": True, "cleared": False})
+
+
+@router.post("/login", response_model=R[dict], summary="蓝湖重新登录（Batch 133，尽力而为）")
+async def lanhu_relogin(
+    body: LanhuLoginRequest,
+    current: CurrentUser = Depends(require_permission("lanhu_evidence:run")),
+):
+    """用蓝湖账号密码尝试重新登录并保存新 Cookie。
+
+    依赖 lanhu-mcp 提供 lanhu_login 自动登录能力；当前 pinned 子模块未提供时，
+    明确返回"请粘贴 Cookie / 联系管理员更新 LANHU_COOKIE"的兜底指引。
+    """
+    _require_enabled()
+    from app.services.external import lanhu_provider
+
+    runtime = lanhu_provider._load_lanhu_runtime()
+    if runtime.login is None:
+        return R.ok({
+            "ok": False,
+            "message": "自动登录暂不可用（lanhu-mcp 未提供 lanhu_login）。请手动登录蓝湖后粘贴 Cookie，或联系管理员更新 LANHU_COOKIE。",
+        })
+    if not body.username or not body.password:
+        return R(code=400, msg="请填写蓝湖账号与密码")
+    try:
+        cookie = await runtime.login(username=body.username, password=body.password)
+    except Exception as exc:  # noqa: BLE001
+        return R.ok({
+            "ok": False,
+            "message": f"蓝湖自动登录失败（可能存在验证码/风控）：{str(exc)[:200]}。请手动登录后粘贴 Cookie。",
+        })
+    if not cookie:
+        return R.ok({
+            "ok": False,
+            "message": "蓝湖自动登录未获取到 Cookie。请手动登录后粘贴 Cookie。",
+        })
+    lanhu_provider.set_lanhu_cookie(cookie)
+    return R.ok({"ok": True, "message": "登录成功，Cookie 已保存，可重新提交蓝湖链接采集。"})
 
 
 @router.post("/jobs", response_model=R[LanhuEvidenceJobOut], summary="创建蓝湖证据包采集任务")
