@@ -58,6 +58,11 @@ describe('LanhuEvidenceDialog component', () => {
     expect(screen.getByText('发现并采集全部页面')).toBeTruthy()
   })
 
+  it('renders the lanhu login/cookie entry at the creation form (batch-135)', () => {
+    render(<LanhuEvidenceDialog open onOpenChange={() => {}} />)
+    expect(screen.getByRole('button', { name: '蓝湖登录/更新Cookie' })).toBeTruthy()
+  })
+
   it('submits and creates a job for a valid url', async () => {
     mockPost.mockResolvedValueOnce({ id: 9, status: 'pending' })
     const onCreated = vi.fn()

@@ -14,9 +14,10 @@ import {
 } from '@/api/lanhuEvidence'
 import type { LanhuEvidenceJob } from '@/api/lanhuEvidence'
 import {
-  Loader2, Plus, RefreshCw, XCircle, CheckCircle2, AlertTriangle, Clock, ExternalLink, Trash2, Image,
+  Loader2, Plus, RefreshCw, XCircle, CheckCircle2, AlertTriangle, Clock, ExternalLink, Trash2, Image, KeyRound,
 } from '@/lib/icons'
 import { cn } from '@/lib/utils'
+import LanhuReloginDialog from '@/pages/lanhu-evidence/components/LanhuReloginDialog'
 
 interface Props {
   /** Fired when user clicks "查看功能拆分" on a successful job */
@@ -92,6 +93,7 @@ export default function EvidenceTaskPanel({
   const [loading, setLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<number | null>(null)
   const [localRefreshKey, setLocalRefreshKey] = useState(0)
+  const [reloginOpen, setReloginOpen] = useState(false)
 
   // Initial load + non-overlapping polling. Polling stops when every known job
   // is terminal, and failures back off without producing a toast storm.
@@ -363,7 +365,7 @@ export default function EvidenceTaskPanel({
         )}
       </CardContent>
 
-      <CardFooter className="border-t pt-2 pb-2 shrink-0">
+      <CardFooter className="border-t pt-2 pb-2 shrink-0 flex flex-col gap-2">
         <Button
           size="sm"
           variant="secondary"
@@ -373,6 +375,17 @@ export default function EvidenceTaskPanel({
           <Plus className="size-3.5 mr-1" />
           新建采集
         </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="min-h-11 w-full text-xs text-muted-foreground sm:min-h-7"
+          onClick={() => setReloginOpen(true)}
+          data-icon="inline-start"
+        >
+          <KeyRound />
+          蓝湖登录/更新Cookie
+        </Button>
+        <LanhuReloginDialog open={reloginOpen} onOpenChange={setReloginOpen} />
       </CardFooter>
     </Card>
   )
