@@ -211,11 +211,13 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
     # Request flags are the effective job contract; defaults preserve legacy
     # jobs created before requested_options_json existed.
     capture_all_pages = bool(options.get("capture_all_pages", True))
+    latest_version_only = bool(options.get("latest_version_only", False))
     include_word = bool(options.get("include_word", True))
     include_json = bool(options.get("include_json", True))
 
     pages = page_discovery.discover_pages(
         source_url, capture_all_pages=capture_all_pages,
+        latest_version_only=latest_version_only,
     )
     base = page_discovery.parse_lanhu_url(source_url)
 
@@ -284,7 +286,10 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
         ocr_text = "\n".join(ocr_lines)
         dom_text = _dom_text_for(discovered.local_url)
         merged = merge_page_text(discovered.page_name, dom_text, ocr_text)
-        ocr_status = "success" if ocr_text else "unavailable"
+        # Batch 137：DOM 文本（Axure HTML）与 OCR 同属有效文本证据，OCR 引擎不可用时
+        # 页面只要有 DOM 文本即可达标，避免"部分完成/不可导入"。
+        has_text = bool(ocr_text or dom_text)
+        ocr_status = "success" if has_text else "unavailable"
         page_fact = {
             "capture_status": capture_status,
             "segment_count": len(capture.segments),
@@ -295,7 +300,7 @@ def _run_job(factory: SessionFactory, job_id: int, project_id: int) -> None:
         }
 
         next_captured = captured + int(capture_status == "success")
-        next_ocr_done = ocr_done + int(bool(ocr_text))
+        next_ocr_done = ocr_done + int(has_text)
         next_failed = failed + int(capture_status != "success")
         try:
             with _short_session(factory) as db:
@@ -432,6 +437,12 @@ def _finalize_after_capture(
     保证「已捕获页面不重跑截图/OCR」的恢复语义与主流程一致。
     """
     quality = evaluate_job_quality(page_dicts)
+    # Batch 137：OCR 不可用时把原因写进质量报告，便于诊断（如 lanhu_ocr_command 未配置）
+    if captured > 0 and ocr_done == 0:
+        quality["ocr_note"] = (
+            "OCR 未产生文本（LANHU_OCR_COMMAND 未配置或 OCR 引擎不可用）；"
+            "已使用 Axure HTML 的 DOM 文本作为文本证据。若页面为纯图片请配置 OCR。"
+        )
 
     include_word = bool(options.get("include_word", True))
     include_json = bool(options.get("include_json", True))

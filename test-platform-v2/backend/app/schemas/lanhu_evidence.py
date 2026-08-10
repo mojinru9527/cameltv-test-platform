@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class LanhuEvidenceCreateRequest(BaseModel):
     url: str = Field(..., min_length=1)
     capture_all_pages: bool = True
+    latest_version_only: bool = False
     include_word: bool = True
     include_json: bool = True
     import_to_requirement: bool = False

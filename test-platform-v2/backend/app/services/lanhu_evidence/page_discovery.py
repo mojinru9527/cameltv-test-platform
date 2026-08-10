@@ -99,7 +99,7 @@ def _build_page_url(base: LanhuUrlParts, page_id: str) -> str:
     return f"https://lanhuapp.com/web/#/item/project/product?{q}"
 
 
-def discover_pages(url: str, capture_all_pages: bool = True) -> list[DiscoveredLanhuPage]:
+def discover_pages(url: str, capture_all_pages: bool = True, latest_version_only: bool = False) -> list[DiscoveredLanhuPage]:
     """发现蓝湖页面树。
 
     1. 解析 ids。
@@ -112,7 +112,7 @@ def discover_pages(url: str, capture_all_pages: bool = True) -> list[DiscoveredL
     from app.services.external import lanhu_provider
 
     base = parse_lanhu_url(url)
-    result = asyncio.run(lanhu_provider.get_lanhu_pages_for_evidence(url))
+    result = asyncio.run(lanhu_provider.get_lanhu_pages_for_evidence(url, latest_version_only=latest_version_only))
     if result.get("status") != "success":
         raise ValueError(result.get("error") or "蓝湖页面发现失败")
 

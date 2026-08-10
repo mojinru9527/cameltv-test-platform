@@ -5,6 +5,7 @@ import api from './client'
 export interface LanhuEvidenceCreateRequest {
   url: string
   capture_all_pages: boolean
+  latest_version_only?: boolean
   include_word: boolean
   include_json: boolean
   import_to_requirement: boolean
