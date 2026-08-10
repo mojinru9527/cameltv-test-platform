@@ -595,3 +595,105 @@ class TestCaseTaxonomy:
         assert item["taxonomy_domain"] == "首页"
         assert item["taxonomy_module"] == "热门赛事"
         assert item["terminal_scopes"] == []
+
+class TestCaseDirectFilter:
+    """Batch 132 — taxonomy_direct 直属精确过滤：父级计数中的直属用例可精确查询。"""
+
+    def _seed(self, db_session):
+        from app.models.test_case import TestCase
+        db_session.add_all([
+            TestCase(
+                project_id=1, case_id="CASE-DIRECT",
+                title="赛事详情直属用例",
+                domain="用户端/赛事详情", module="",
+                case_type="manual", positive_negative="positive",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1, case_id="CASE-PICK",
+                title="预测Pick 直属用例",
+                domain="用户端/赛事详情", module="预测Pick",
+                case_type="manual", positive_negative="positive",
+                is_deleted=False,
+            ),
+            TestCase(
+                project_id=1, case_id="CASE-SUB",
+                title="预测Pick 子模块用例",
+                domain="用户端/赛事详情", module="预测Pick/入口",
+                case_type="manual", positive_negative="negative",
+                is_deleted=False,
+            ),
+        ])
+        db_session.commit()
+
+    def test_domain_direct_only_returns_cases_without_submodule_path(
+        self, client, auth_headers, db_session,
+    ):
+        self._seed(db_session)
+        response = client.get(
+            "/api/v1/test-cases",
+            params={
+                "taxonomy_domain": "赛事详情",
+                "taxonomy_direct": "true",
+                "page_size": 100,
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        page = response.json()["data"]
+        assert page["total"] == 1
+        assert [item["case_id"] for item in page["items"]] == ["CASE-DIRECT"]
+        assert page["items"][0]["taxonomy_module"] == ""
+
+    def test_module_direct_only_is_exact_path_not_descendants(
+        self, client, auth_headers, db_session,
+    ):
+        self._seed(db_session)
+        response = client.get(
+            "/api/v1/test-cases",
+            params={
+                "taxonomy_domain": "赛事详情",
+                "taxonomy_module": "预测Pick",
+                "taxonomy_direct": "true",
+                "page_size": 100,
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        page = response.json()["data"]
+        assert page["total"] == 1
+        assert [item["case_id"] for item in page["items"]] == ["CASE-PICK"]
+
+    def test_without_direct_parent_filter_still_includes_descendants(
+        self, client, auth_headers, db_session,
+    ):
+        self._seed(db_session)
+        response = client.get(
+            "/api/v1/test-cases",
+            params={
+                "taxonomy_domain": "赛事详情",
+                "taxonomy_module": "预测Pick",
+                "page_size": 100,
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        page = response.json()["data"]
+        assert page["total"] == 2
+        assert {item["case_id"] for item in page["items"]} == {"CASE-PICK", "CASE-SUB"}
+
+    def test_taxonomy_domain_parent_includes_direct_and_descendants(
+        self, client, auth_headers, db_session,
+    ):
+        self._seed(db_session)
+        response = client.get(
+            "/api/v1/test-cases",
+            params={
+                "taxonomy_domain": "赛事详情",
+                "page_size": 100,
+            },
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        page = response.json()["data"]
+        assert page["total"] == 3

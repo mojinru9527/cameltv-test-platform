@@ -194,15 +194,24 @@ def taxonomy_location_matches(
     surface: str = "",
     domain: str = "",
     module_path: str = "",
+    direct_only: bool = False,
 ) -> bool:
-    """Match a canonical node; module parents include every descendant."""
+    """Match a canonical node; module parents include every descendant.
+
+    direct_only=True 时只匹配"精确归属该节点、无下一层子模块路径"的直属用例：
+    模块级直属 = module_path 精确相等；域级直属 = module_path 为空。
+    """
     if surface and location.surface != surface:
         return False
     if domain and location.domain != domain:
         return False
     if module_path:
+        if direct_only:
+            return location.module_path == module_path
         return (
             location.module_path == module_path
             or location.module_path.startswith(f"{module_path}/")
         )
+    if direct_only:
+        return location.module_path == ""
     return True
