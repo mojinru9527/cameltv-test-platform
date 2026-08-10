@@ -14,6 +14,15 @@ import asyncio
 import logging
 import re
 
+_SESSION_ERROR_HINTS = ("认证", "Cookie", "会话", "登录", "418")
+
+
+def _is_lanhu_session_error(exc: Exception) -> bool:
+    """判定蓝湖会话失效类错误（Cookie 过期 / HTTP 418 被拒），避免被误当图片格式兜底。"""
+    text = str(exc)
+    return any(hint in text for hint in _SESSION_ERROR_HINTS)
+
+
 logger = logging.getLogger(__name__)
 from pathlib import Path
 
@@ -996,7 +1005,13 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
                     extraction_summary = extracted[:first_line_end].strip()
                 else:
                     extraction_summary = "蓝湖设计稿内容已提取"
-        except ValueError:
+        except ValueError as ve:
+            if _is_lanhu_session_error(ve):
+                # Batch 133：蓝湖会话失效是真实失败，不得伪装成"图片格式"兜底完成
+                raise ValueError(
+                    "蓝湖会话已失效（Cookie 过期或 HTTP 418 被拒）。"
+                    "请重新登录蓝湖后粘贴新 Cookie，或联系管理员更新 LANHU_COOKIE。"
+                ) from ve
             if content and content != source_ref and len(content) > len(source_ref) + 10:
                 effective_file_type = ""
                 extraction_summary = "蓝湖原型页面为图片格式，已使用补充说明文字作为需求内容"
@@ -1109,7 +1124,13 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
                     extraction_summary = extracted[:first_line_end].strip()
                 else:
                     extraction_summary = "蓝湖设计稿内容已提取"
-        except ValueError:
+        except ValueError as ve:
+            if _is_lanhu_session_error(ve):
+                # Batch 133：蓝湖会话失效是真实失败，不得伪装成"图片格式"兜底完成
+                raise ValueError(
+                    "蓝湖会话已失效（Cookie 过期或 HTTP 418 被拒）。"
+                    "请重新登录蓝湖后粘贴新 Cookie，或联系管理员更新 LANHU_COOKIE。"
+                ) from ve
             if content and content != source_ref and len(content) > len(source_ref) + 10:
                 effective_file_type = ""
                 extraction_summary = "蓝湖原型页面为图片格式，已使用补充说明文字作为需求内容"

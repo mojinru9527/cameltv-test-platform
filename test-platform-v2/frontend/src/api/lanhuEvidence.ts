@@ -179,3 +179,16 @@ export async function importLanhuEvidence(
 ): Promise<Record<string, unknown>> {
   return api.post(`/lanhu-evidence/jobs/${jobId}/import`, body)
 }
+
+// ── Batch 133: 蓝湖会话失效处理 ──
+export async function updateLanhuCookie(cookie: string): Promise<{ saved: boolean; cleared: boolean }> {
+  return api.post('/lanhu-evidence/cookie', { cookie, clear: false })
+}
+
+export async function clearLanhuCookie(): Promise<{ saved: boolean; cleared: boolean }> {
+  return api.post('/lanhu-evidence/cookie', { cookie: '', clear: true })
+}
+
+export async function lanhuRelogin(username: string, password: string): Promise<{ ok: boolean; message: string }> {
+  return api.post('/lanhu-evidence/login', { username, password })
+}

@@ -1,0 +1,19 @@
+{
+  "status": "pass",
+  "target": "http://127.0.0.1:5221",
+  "assertions": {
+    "failedStatusShown": true,
+    "sessionErrorShown": true,
+    "reloginEntryPresent": true,
+    "falseDoneHidden": true,
+    "dialogOpens": true,
+    "pasteAndLoginTabs": true,
+    "cookieSavedViaDialog": true,
+    "consoleErrors": 0,
+    "pageErrors": 0
+  },
+  "screenshots": [
+    "F:/CamelTv-worktrees/codex-batch-133-lanhu-evidence-auth-fix/test-platform-v2/work-logs/evidence/batch-133-lanhu-evidence-auth-fix/browser/lanhu-job-failed-status-1440x900.png",
+    "F:/CamelTv-worktrees/codex-batch-133-lanhu-evidence-auth-fix/test-platform-v2/work-logs/evidence/batch-133-lanhu-evidence-auth-fix/browser/lanhu-relogin-dialog-1440x900.png"
+  ]
+}
