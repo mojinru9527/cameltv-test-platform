@@ -128,11 +128,22 @@ def _load_lanhu_runtime() -> SimpleNamespace:
         auth_error_types=auth_error_types,
         login=getattr(module, "lanhu_login", None),
         save_cookie=getattr(module, "_save_cached_cookie", None),
+        module=module,
     )
 
 
 def _create_lanhu_extractor(runtime: SimpleNamespace, cookie_override: str = ""):
-    """Instantiate pinned or newer extractors without assuming cookie support."""
+    """Instantiate pinned or newer extractors without assuming cookie support.
+
+    lanhu-mcp 的 LanhuExtractor 从模块级 COOKIE（env LANHU_COOKIE）读取 Cookie，而
+    不是 __init__ 参数；因此传入已保存/新登录的 Cookie 时必须先注入模块全局再实例化，
+    否则保存的 Cookie 永远不生效，采集任务持续报"蓝湖会话已失效"（Batch 136）。
+    """
+    if cookie_override:
+        module = getattr(runtime, "module", None)
+        if module is not None:
+            module.COOKIE = cookie_override
+            module.DDS_COOKIE = cookie_override
     parameters = inspect.signature(runtime.LanhuExtractor).parameters
     if "cookie" in parameters:
         return runtime.LanhuExtractor(cookie=cookie_override)

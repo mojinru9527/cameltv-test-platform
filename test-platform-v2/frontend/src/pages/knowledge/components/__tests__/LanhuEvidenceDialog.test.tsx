@@ -33,7 +33,7 @@ describe('Lanhu evidence API', () => {
   it('createLanhuEvidenceJob posts /lanhu-evidence/jobs', async () => {
     mockPost.mockResolvedValueOnce({ id: 7, status: 'pending' })
     await createLanhuEvidenceJob({
-      url: 'https://lanhuapp.com/x?docId=d',
+      url: 'https://lanhuapp.com/x?pid=p1&docId=d',
       capture_all_pages: true,
       include_word: true,
       include_json: true,
@@ -42,7 +42,7 @@ describe('Lanhu evidence API', () => {
       import_to_wiki: false,
     })
     expect(mockPost).toHaveBeenCalledWith('/lanhu-evidence/jobs', expect.objectContaining({
-      url: 'https://lanhuapp.com/x?docId=d',
+      url: 'https://lanhuapp.com/x?pid=p1&docId=d',
       capture_all_pages: true,
     }))
   })
@@ -58,6 +58,12 @@ describe('LanhuEvidenceDialog component', () => {
     expect(screen.getByText('发现并采集全部页面')).toBeTruthy()
   })
 
+  it('rejects a lanhu link missing pid/docId before submitting (batch-136)', async () => {
+    render(<LanhuEvidenceDialog open initialUrl="https://lanhuapp.com/web/" onOpenChange={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: '开始采集' }))
+    await waitFor(() => expect(mockPost).not.toHaveBeenCalled())
+  })
+
   it('renders the lanhu login/cookie entry at the creation form (batch-135)', () => {
     render(<LanhuEvidenceDialog open onOpenChange={() => {}} />)
     expect(screen.getByRole('button', { name: '蓝湖登录/更新Cookie' })).toBeTruthy()
@@ -66,7 +72,7 @@ describe('LanhuEvidenceDialog component', () => {
   it('submits and creates a job for a valid url', async () => {
     mockPost.mockResolvedValueOnce({ id: 9, status: 'pending' })
     const onCreated = vi.fn()
-    render(<LanhuEvidenceDialog open initialUrl="https://lanhuapp.com/x?docId=d" onOpenChange={() => {}} onCreated={onCreated} />)
+    render(<LanhuEvidenceDialog open initialUrl="https://lanhuapp.com/x?pid=p1&docId=d" onOpenChange={() => {}} onCreated={onCreated} />)
 
     fireEvent.click(screen.getByRole('button', { name: '开始采集' }))
 
