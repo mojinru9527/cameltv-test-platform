@@ -186,7 +186,7 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
                 <>
                   <div className="flex items-center gap-2">
                     <Badge tone="neutral">{reqSnap.method || 'GET'}</Badge>
-                    <span className="font-mono text-xs truncate max-w-[300px]">{reqSnap.url || reqSnap.resolved_url || '-'}</span>
+                    <span className="font-mono text-xs truncate max-w-[300px]" title={reqSnap.url || reqSnap.resolved_url || '-'}>{reqSnap.url || reqSnap.resolved_url || '-'}</span>
                     <Button
                       size="icon-xs"
                       variant="ghost"

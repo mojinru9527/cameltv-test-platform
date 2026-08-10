@@ -143,8 +143,8 @@ export default function RequirementPage() {
     setLanhuSettingsOpen(false)
   }
 
-  const docPageSize = 10
-  const domainPageSize = 8
+  const docPageSize = 20
+  const domainPageSize = 20
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedKeyword(keyword.trim()), 300)

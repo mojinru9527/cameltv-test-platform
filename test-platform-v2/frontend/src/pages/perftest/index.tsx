@@ -525,8 +525,8 @@ export default function PerfTestPage() {
                           <tr key={s.id} className="border-b">
                             <td className="py-2 pr-4 font-mono text-xs">{s.session_id}</td>
                             <td className="py-2 pr-4">{s.platform}</td>
-                            <td className="py-2 pr-4 max-w-[120px] truncate">{s.device_name}</td>
-                            <td className="py-2 pr-4 font-mono text-xs max-w-[150px] truncate">{s.pkg_name}</td>
+                            <td className="py-2 pr-4 max-w-[120px] truncate" title={s.device_name}>{s.device_name}</td>
+                            <td className="py-2 pr-4 font-mono text-xs max-w-[150px] truncate" title={s.pkg_name}>{s.pkg_name}</td>
                             <td className="py-2 pr-4">{s.actual_duration_s || s.duration}s</td>
                             <td className="py-2 pr-4">
                               <Badge tone={STATUS_TONES[s.status] ?? 'neutral'} className="text-xs">

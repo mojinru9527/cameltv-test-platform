@@ -129,9 +129,9 @@ export default function ProjectPage() {
 
   // ── DataTable column definitions ──
   const projectColumns: DataTableColumn<ProjectDetail>[] = [
-    { key: 'code', header: '编码', headerClassName: 'w-[120px]', className: 'max-w-[120px] truncate', render: (r) => r.code },
-    { key: 'name', header: '名称', className: 'truncate', render: (r) => r.name },
-    { key: 'description', header: '描述', className: 'truncate', render: (r) => r.description || '-' },
+    { key: 'code', header: '编码', headerClassName: 'w-[120px]', className: 'max-w-[120px] truncate', render: (r) => <span title={r.code}>{r.code}</span> },
+    { key: 'name', header: '名称', className: 'truncate', render: (r) => <span title={r.name}>{r.name}</span> },
+    { key: 'description', header: '描述', className: 'truncate', render: (r) => <span title={r.description || '-'}>{r.description || '-'}</span> },
     { key: 'owner_name', header: '负责人', headerClassName: 'w-[100px]', render: (r) => (r as any).owner_name || '-' },
     { key: 'status', header: '状态', headerClassName: 'w-[80px]', render: (r) => (
       <Badge tone={r.status === 1 ? 'success' : 'neutral'}>

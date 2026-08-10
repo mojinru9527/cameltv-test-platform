@@ -247,7 +247,7 @@ export default function EntityTab() {
                     </TableCell>
                     <TableCell>
                       <div className="font-medium text-sm">{r.name}</div>
-                      <div className="text-xs text-muted-foreground truncate max-w-64">{r.description}</div>
+                      <div className="text-xs text-muted-foreground truncate max-w-64" title={r.description}>{r.description}</div>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
                       {r.source_title ? (

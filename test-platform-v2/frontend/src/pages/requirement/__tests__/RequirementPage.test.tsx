@@ -92,7 +92,7 @@ describe('RequirementPage acceptance behavior', () => {
     mockFetchRequirements.mockResolvedValue({
       total: 101,
       page: 1,
-      page_size: 10,
+      page_size: 20,
       items: [brief(1, '第一页需求')],
     })
     mockFetchRequirement.mockResolvedValue({
@@ -152,7 +152,7 @@ describe('RequirementPage acceptance behavior', () => {
     fireEvent.click(next!)
 
     await waitFor(() => expect(mockFetchRequirements).toHaveBeenCalledWith(
-      { page: 2, page_size: 10 },
+      { page: 2, page_size: 20 },
       expect.any(AbortSignal),
     ))
 
@@ -161,7 +161,7 @@ describe('RequirementPage acceptance behavior', () => {
     })
 
     await waitFor(() => expect(mockFetchRequirements).toHaveBeenCalledWith(
-      { page: 1, page_size: 10, keyword: '跨页命中' },
+      { page: 1, page_size: 20, keyword: '跨页命中' },
       expect.any(AbortSignal),
     ))
   })
@@ -170,7 +170,7 @@ describe('RequirementPage acceptance behavior', () => {
     mockFetchRequirements.mockResolvedValue({
       total: 1,
       page: 1,
-      page_size: 10,
+      page_size: 20,
       items: [{ ...brief(1, '已确认拆分'), extraction_status: 'confirmed' }],
     })
 
