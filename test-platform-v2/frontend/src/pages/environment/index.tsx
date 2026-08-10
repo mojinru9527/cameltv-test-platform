@@ -324,7 +324,7 @@ export default function EnvironmentPage() {
                         {variables.map((v) => (
                           <TableRow key={v.id}>
                             <TableCell className="font-mono text-sm">{v.key}</TableCell>
-                            <TableCell className="font-mono text-sm text-muted-foreground max-w-[200px] truncate">
+                            <TableCell className="font-mono text-sm text-muted-foreground max-w-[200px] truncate" title={v.encrypted ? undefined : v.value}>
                               {v.encrypted ? '••••••••' : v.value}
                             </TableCell>
                             <TableCell>

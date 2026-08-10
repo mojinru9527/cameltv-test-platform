@@ -182,9 +182,9 @@ export default function ReportPage() {
 
   // ── DataTable column definitions ──
   const reportColumns: DataTableColumn<any>[] = [
-    { key: 'report_id', header: '编号', headerClassName: 'w-[150px]', className: 'max-w-[150px] truncate', render: (r) => r.report_id },
-    { key: 'name', header: '名称', className: 'truncate', render: (r) => r.name },
-    { key: 'plan_name', header: '关联计划', headerClassName: 'w-[160px]', className: 'max-w-[160px] truncate', render: (r) => r.plan_name || <span className="text-muted-foreground">—</span> },
+    { key: 'report_id', header: '编号', headerClassName: 'w-[150px]', className: 'max-w-[150px] truncate', render: (r) => <span title={r.report_id}>{r.report_id}</span> },
+    { key: 'name', header: '名称', className: 'truncate', render: (r) => <span title={r.name}>{r.name}</span> },
+    { key: 'plan_name', header: '关联计划', headerClassName: 'w-[160px]', className: 'max-w-[160px] truncate', render: (r) => <span title={r.plan_name || ''}>{r.plan_name || <span className="text-muted-foreground">—</span>}</span> },
     { key: 'template_id', header: '模板', headerClassName: 'w-[60px]', render: (r) => r.template_id ? <Badge tone="neutral" className="text-xs">#{r.template_id}</Badge> : <span className="text-muted-foreground">—</span> },
     { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[120px]', render: (r) => (

@@ -229,8 +229,8 @@ export default function SourceListTab() {
                   <TableCell>
                     <Badge tone="neutral">{TYPE_LABEL[s.source_type] ?? s.source_type}</Badge>
                   </TableCell>
-                  <TableCell className="max-w-[320px] truncate">{s.title}</TableCell>
-                  <TableCell className="max-w-[160px] truncate text-xs text-muted-foreground">
+                  <TableCell className="max-w-[320px] truncate" title={s.title}>{s.title}</TableCell>
+                  <TableCell className="max-w-[160px] truncate text-xs text-muted-foreground" title={s.source_ref || '—'}>
                     {s.source_ref || '—'}
                   </TableCell>
                   <TableCell>
