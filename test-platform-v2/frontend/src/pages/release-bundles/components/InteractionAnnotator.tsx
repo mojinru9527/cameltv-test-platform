@@ -286,7 +286,7 @@ export default function InteractionAnnotator({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[94dvh] w-[min(1200px,96vw)] max-w-[96vw] overflow-hidden p-0">
+      <DialogContent className="max-h-[94dvh] w-[min(1200px,96vw)] sm:max-w-[96vw] overflow-hidden p-0">
         <DialogHeader className="p-4 pb-2 border-b">
           <DialogTitle className="text-base flex items-center gap-2">
             页面交互标注 — {page?.name ?? '未知页面'}

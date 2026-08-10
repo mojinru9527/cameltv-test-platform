@@ -142,7 +142,7 @@ export default function VersionCompare({ open, onClose, diffData }: VersionCompa
   if (!diffData) {
     return (
       <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose() }}>
-        <DialogContent className="max-w-[95vw] max-h-[90vh] w-full">
+        <DialogContent className="w-full sm:max-w-[95vw] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>版本对比</DialogTitle>
           </DialogHeader>
@@ -158,7 +158,7 @@ export default function VersionCompare({ open, onClose, diffData }: VersionCompa
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-[95vw] max-h-[90vh] w-full">
+      <DialogContent className="w-full sm:max-w-[95vw] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GitCompare className="size-5" />
