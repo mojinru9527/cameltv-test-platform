@@ -106,6 +106,7 @@ export async function triggerEntityExtract(sourceId?: number | null, maxChunks =
 export async function fetchEntities(params: {
   entity_type?: string
   keyword?: string
+  knowledge_domain?: string
   limit?: number
 }, signal?: AbortSignal): Promise<KnowledgeEntityBrief[]> {
   return api.get('/knowledge/graph/entities', { params, ...(signal ? { signal } : {}) })
@@ -114,6 +115,7 @@ export async function fetchEntities(params: {
 export async function fetchEntityStats(params: {
   entity_type?: string
   keyword?: string
+  knowledge_domain?: string
 }, signal?: AbortSignal): Promise<KnowledgeEntityStats> {
   return api.get('/knowledge/graph/entities/stats', {
     params,

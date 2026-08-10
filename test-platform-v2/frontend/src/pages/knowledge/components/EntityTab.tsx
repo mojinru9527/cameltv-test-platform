@@ -66,9 +66,10 @@ const REVIEW_LABELS: Record<string, string> = {
 
 export default function EntityTab() {
   const [rows, setRows] = useState<KnowledgeEntityBrief[]>([])
-  const [stats, setStats] = useState<KnowledgeEntityStats>({ total: 0, by_type: {}, missing_source: 0 })
+  const [stats, setStats] = useState<KnowledgeEntityStats>({ total: 0, by_type: {}, missing_source: 0, test_case_total: 0 })
   const [loading, setLoading] = useState(true)
   const [entityType, setEntityType] = useState('_all')
+  const [domain, setDomain] = useState('_all')
   const [keyword, setKeyword] = useState('')
 
   // Detail sheet
@@ -84,6 +85,7 @@ export default function EntityTab() {
     const params = {
       entity_type: entityType === '_all' ? undefined : entityType,
       keyword: keyword || undefined,
+      knowledge_domain: domain === '_all' ? undefined : domain,
     }
     Promise.all([
       fetchEntities({ ...params, limit: 200 }, controller.signal),
@@ -101,7 +103,7 @@ export default function EntityTab() {
         if (!controller.signal.aborted) setLoading(false)
       })
     return () => controller.abort()
-  }, [entityType, keyword])
+  }, [entityType, keyword, domain])
 
   // Load detail + relations when a row is clicked
   useEffect(() => {
@@ -151,7 +153,11 @@ export default function EntityTab() {
         {['api', 'field', 'requirement', 'test_case', 'defect'].map((t) => (
           <Card key={t} className="p-3">
             <div className="text-xs text-muted-foreground">{TYPE_LABEL[t]}</div>
-            <div className="text-2xl font-bold">{stats.by_type[t] ?? 0}</div>
+            <div className="text-2xl font-bold">
+              {t === 'test_case' && (stats.test_case_total ?? 0) > 0
+                ? `${stats.by_type.test_case ?? 0}/${stats.test_case_total}`
+                : (stats.by_type[t] ?? 0)}
+            </div>
           </Card>
         ))}
       </div>
@@ -168,6 +174,16 @@ export default function EntityTab() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={domain} onValueChange={(v) => setDomain(v)}>
+          <SelectTrigger className="w-28" aria-label="按知识域筛选">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">全部域</SelectItem>
+            <SelectItem value="project">项目知识</SelectItem>
+            <SelectItem value="platform">平台研发</SelectItem>
+          </SelectContent>
+        </Select>
         <div className="relative flex-1 max-w-sm">
           <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -178,7 +194,7 @@ export default function EntityTab() {
           />
         </div>
         <span className="text-sm text-muted-foreground">
-          项目全量/筛选结果 {stats.total} 个 · 当前展示 {rows.length} 个
+          {domain === '_all' ? '项目全量/筛选结果' : (domain === 'platform' ? '平台研发' : '项目知识')} {stats.total} 个 · 当前展示 {rows.length} 个
         </span>
       </div>
 

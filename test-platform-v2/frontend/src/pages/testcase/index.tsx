@@ -75,6 +75,7 @@ export default function TestCasePage() {
   const [selSurface, setSelSurface] = useState('')
   const [selDomain, setSelDomain] = useState('')
   const [selModule, setSelModule] = useState('')
+  const [selDirect, setSelDirect] = useState(false)
   const [caseNature, setCaseNature] = useState('')
   const [priority, setPriority] = useState('')
   const [keywordInput, setKeywordInput] = useState('')
@@ -121,12 +122,13 @@ export default function TestCasePage() {
         domain: selDomain,
         modulePath: selModule,
         nature: caseNature,
+        directOnly: selDirect,
       }, { page, page_size: pageSize, ...(actTab ? { case_type: actTab } : {}) })
       if (priority) params.priority = priority
       if (keyword) params.keyword = keyword
       return fetchTestCases(params, signal) as unknown as Promise<{ total: number; items: any[]; page: number; page_size: number }>
     },
-    [actTab, selSurface, selDomain, selModule, caseNature, priority, keyword, page, pageSize]
+    [actTab, selSurface, selDomain, selModule, selDirect, caseNature, priority, keyword, page, pageSize]
   )
 
   // ── Domains (secondary data, loaded independently) ──
@@ -176,6 +178,7 @@ export default function TestCasePage() {
         ...(selSurface ? { surface: selSurface } : {}),
         ...(selDomain ? { taxonomy_domain: selDomain } : {}),
         ...(selModule ? { taxonomy_module: selModule } : {}),
+        ...(selDirect ? { taxonomy_direct: 'true' } : {}),
         ...(caseNature ? { positive_negative: caseNature } : {}),
       })
       const url = URL.createObjectURL(blob)
@@ -259,8 +262,8 @@ export default function TestCasePage() {
       key: JSON.stringify({ kind: 'direct', surface, domain, path }),
       title: <span className="text-xs">直属用例 <span className="text-muted-foreground">({count})</span></span>,
       isLeaf: true,
-      selectable: false,
-      ariaLabel: `直属用例 ${count} 条，仅用于数量核算，不可筛选`,
+      isAccounting: true,
+      ariaLabel: `直属用例 ${count} 条，点击查看并编辑`,
     })
 
     const moduleNode = (surface: string, domain: string, node: TaxonomyModuleNode): any => {
@@ -413,16 +416,17 @@ export default function TestCasePage() {
             <DomainTree
               treeData={domainTree}
               onSelect={(keys) => {
-                if (!keys.length) { setSelSurface(''); setSelDomain(''); setSelModule(''); setPage(1); return }
+                if (!keys.length) { setSelSurface(''); setSelDomain(''); setSelModule(''); setSelDirect(false); setPage(1); return }
                 const selection = JSON.parse(keys[0]) as {
-                  kind: 'surface' | 'domain' | 'module'
+                  kind: 'surface' | 'domain' | 'module' | 'direct'
                   surface?: string
                   domain?: string
                   path?: string
                 }
                 setSelSurface(selection.surface || '')
                 setSelDomain(selection.domain || '')
-                setSelModule(selection.kind === 'module' ? selection.path || '' : '')
+                setSelModule(selection.kind === 'module' || selection.kind === 'direct' ? selection.path || '' : '')
+                setSelDirect(selection.kind === 'direct')
                 setPage(1)
               }}
             />
@@ -437,6 +441,7 @@ export default function TestCasePage() {
               setSelSurface(v === ALL_FILTER ? '' : v)
               setSelDomain('')
               setSelModule('')
+              setSelDirect(false)
               setPage(1)
             }}>
               <SelectTrigger className="w-full sm:w-[120px]" size="sm" aria-label="按产品界面筛选">
@@ -453,6 +458,7 @@ export default function TestCasePage() {
             <Select disabled={!selSurface} value={selDomain || ALL_FILTER} onValueChange={(v) => {
               setSelDomain(v === ALL_FILTER ? '' : v)
               setSelModule('')
+              setSelDirect(false)
               setPage(1)
             }}>
               <SelectTrigger className="w-full sm:w-[150px]" size="sm" aria-label="按业务模块筛选">
@@ -466,7 +472,7 @@ export default function TestCasePage() {
               </SelectContent>
             </Select>
 
-            <Select disabled={!selDomain} value={selModule || ALL_FILTER} onValueChange={(v) => { setSelModule(v === ALL_FILTER ? '' : v); setPage(1) }}>
+            <Select disabled={!selDomain} value={selModule || ALL_FILTER} onValueChange={(v) => { setSelModule(v === ALL_FILTER ? '' : v); setSelDirect(false); setPage(1) }}>
               <SelectTrigger className="w-full sm:w-[170px]" size="sm" aria-label="按子模块筛选">
                 <SelectValue placeholder={selDomain ? '全部子模块' : '先选业务模块'} />
               </SelectTrigger>

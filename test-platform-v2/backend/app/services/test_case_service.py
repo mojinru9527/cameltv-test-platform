@@ -123,6 +123,7 @@ def list_cases(
     surface: str = "",
     taxonomy_domain: str = "",
     taxonomy_module: str = "",
+    taxonomy_direct: bool = False,
     case_type: str = "",
     positive_negative: str = "",
     priority: str = "",
@@ -184,7 +185,7 @@ def list_cases(
             | (TestCase.expected_result.ilike(like))
         )
 
-    if surface or taxonomy_domain or taxonomy_module:
+    if surface or taxonomy_domain or taxonomy_module or taxonomy_direct:
         candidates = db.execute(
             stmt.with_only_columns(
                 TestCase.id,
@@ -201,6 +202,7 @@ def list_cases(
                 surface=surface,
                 domain=taxonomy_domain,
                 module_path=taxonomy_module,
+                direct_only=taxonomy_direct,
             )
         ]
         if not matching_ids:

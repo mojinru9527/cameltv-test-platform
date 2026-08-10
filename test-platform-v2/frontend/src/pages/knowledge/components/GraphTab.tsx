@@ -7,9 +7,9 @@ import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { SkeletonText } from '@/components/ui/skeleton'
-import { fetchGraphView, triggerEntityExtract, evolveGraph } from '@/api/knowledge'
+import { fetchEntityStats, fetchGraphView, triggerEntityExtract, evolveGraph } from '@/api/knowledge'
 import type { GraphEvolveResult } from '@/api/knowledge'
-import type { GraphView } from '@/types'
+import type { GraphView, KnowledgeEntityStats } from '@/types'
 
 // ── 实体类型着色 ──
 const GROUP_COLORS: Record<string, string> = {
@@ -76,6 +76,7 @@ export default function GraphTab() {
   const [evolving, setEvolving] = useState(false)
   const [evolveResult, setEvolveResult] = useState<GraphEvolveResult | null>(null)
   const [domain, setDomain] = useState<string>('project')
+  const [stats, setStats] = useState<KnowledgeEntityStats>({ total: 0, by_type: {}, missing_source: 0, test_case_total: 0 })
   const extractUnavailableReason = graphData?.unavailable_reason || '当前没有可提取的知识片段'
 
   const loadGraph = useCallback(async (d?: string) => {
@@ -89,6 +90,12 @@ export default function GraphTab() {
       const data = await fetchGraphView(1000, dom, controller.signal)
       if (controller.signal.aborted) return
       setGraphData(data)
+      try {
+        const s = await fetchEntityStats({ knowledge_domain: dom || undefined }, controller.signal)
+        if (!controller.signal.aborted) setStats(s)
+      } catch {
+        // 统计为辅助信息，失败不影响图谱渲染
+      }
     } catch (e: any) {
       if (controller.signal.aborted) return
       setError(e?.message || '加载图谱数据失败')
@@ -458,7 +465,9 @@ export default function GraphTab() {
                       />
                       <span className={`text-muted-foreground ${hidden ? 'line-through' : ''}`}>{label}</span>
                       <span className="text-xs text-muted-foreground/60 ml-auto">
-                        {graphData.nodes.filter((n) => n.entity_type === key).length}
+                        {key === 'test_case'
+                          ? `${stats.by_type.test_case ?? 0}/${stats.test_case_total ?? 0} 已入库`
+                          : graphData.nodes.filter((n) => n.entity_type === key).length}
                       </span>
                     </button>
                   )
