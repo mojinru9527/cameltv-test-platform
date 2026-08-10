@@ -98,6 +98,7 @@ def test_create_job_persists_every_requested_flag(client, auth_headers, db_sessi
     requested = {
         "url": "https://lanhuapp.com/x?docId=d",
         "capture_all_pages": False,
+        "latest_version_only": False,
         "include_word": False,
         "include_json": True,
         "import_to_requirement": False,
@@ -613,7 +614,7 @@ def test_runner_passes_capture_all_pages_flag_to_discovery(db_session, monkeypat
 
     received: list[bool] = []
 
-    def _discover(_url, *, capture_all_pages):
+    def _discover(_url, *, capture_all_pages, latest_version_only=False):
         received.append(capture_all_pages)
         return []
 

@@ -1028,7 +1028,35 @@ async def extract(url: str, auto_login: bool = True):
 
 # ── 证据包专用：下载资源 + 返回全页面树（供滚动截图与 OCR）──
 
-async def get_lanhu_pages_for_evidence(url: str) -> dict:
+_VERSION_FOLDER_RE = re.compile(r"^v?\d+(\.\d+){1,2}$", re.IGNORECASE)
+
+
+def _version_sort_key(name: str):
+    """语义版本排序键：提取数字段。"""
+    return tuple(int(x) for x in re.findall(r"\d+", name)[:3])
+
+
+def _filter_latest_version_pages(pages: list[dict]) -> list[dict]:
+    """仅保留"最新版本文件夹"下的页面（顶层路径段如 16.0.0）。
+
+    若没有版本样式文件夹（如设计图板/单文档），返回全部页面兜底。
+    """
+    if not pages:
+        return pages
+    groups: dict[str, list[dict]] = {}
+    for page in pages:
+        top = str(page.get("folder") or page.get("path") or "").split("/")[0]
+        groups.setdefault(top, []).append(page)
+    version_folders = [name for name in groups if _VERSION_FOLDER_RE.match(name)]
+    if not version_folders:
+        return pages
+    latest = max(version_folders, key=_version_sort_key)
+    logger.info("[lanhu_provider] latest_version_only: keep folder '%s' (%d/%d pages)",
+                latest, len(groups[latest]), len(pages))
+    return groups[latest]
+
+
+async def get_lanhu_pages_for_evidence(url: str, latest_version_only: bool = False) -> dict:
     """下载 Axure 资源并返回全页面列表，供证据包截图/OCR 使用。
 
     与 `_extract_lanhu_content` 共用下载与认证重试逻辑，但不做文本聚合：
@@ -1081,8 +1109,11 @@ async def get_lanhu_pages_for_evidence(url: str) -> dict:
             pages_info = await extractor.get_pages_list(effective_url)
             document_name = pages_info.get("document_name", "设计稿")
 
+            raw_pages = pages_info.get("pages", [])
+            if latest_version_only:
+                raw_pages = _filter_latest_version_pages(raw_pages)
             pages: list[dict] = []
-            for p in pages_info.get("pages", []):
+            for p in raw_pages:
                 name = p.get("name", "")
                 folder = p.get("folder", "")
                 filename = p.get("filename", f"{name}.html")
