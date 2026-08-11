@@ -66,6 +66,7 @@ client.interceptors.response.use(
       (err.config as { suppressErrorToast?: boolean } | undefined)?.suppressErrorToast,
     )
     if (status === 401) {
+      clearApiCache() // 会话失效，清空会话级缓存
       useAuthStore.getState().logout()
       if (location.pathname !== '/login') location.href = '/login'
     } else if (!suppressErrorToast) {
@@ -76,3 +77,63 @@ client.interceptors.response.use(
 )
 
 export default client
+
+// ── 会话级 GET 缓存 + 进行中请求去重（Batch 150 / C147-5） ──
+
+interface CacheEntry<T = unknown> {
+  expires: number
+  value: T
+}
+
+const getCache = new Map<string, CacheEntry>()
+const inflightGets = new Map<string, Promise<unknown>>()
+
+function cacheKey(url: string, params?: Record<string, unknown>): string {
+  return `${url}?${JSON.stringify(params ?? {})}`
+}
+
+/**
+ * 带会话级缓存与去重的 GET。
+ * - 命中未过期缓存直接返回；相同 key 的进行中请求共享同一 Promise。
+ * - 传 signal 时请直接使用 client.get，保持 abort 语义（本函数不接收 signal）。
+ */
+export function cachedGet<T>(
+  url: string,
+  params?: Record<string, unknown>,
+  options?: { ttl?: number; force?: boolean },
+): Promise<T> {
+  const key = cacheKey(url, params)
+  const now = Date.now()
+  const ttl = options?.ttl ?? 60_000
+
+  const hit = getCache.get(key)
+  if (!options?.force && hit && hit.expires > now) {
+    return Promise.resolve(hit.value as T)
+  }
+
+  const inflight = inflightGets.get(key)
+  if (inflight) return inflight as Promise<T>
+
+  const promise = client
+    .get(url, { params })
+    .then((data) => {
+      getCache.set(key, { expires: Date.now() + ttl, value: data })
+      return data
+    })
+    .finally(() => {
+      inflightGets.delete(key)
+    })
+  inflightGets.set(key, promise)
+  return promise as Promise<T>
+}
+
+/** 清空会话级缓存；传 prefix 只清理以该前缀开头的 key（如 '/environments'）。 */
+export function clearApiCache(prefix?: string): void {
+  if (!prefix) {
+    getCache.clear()
+    return
+  }
+  for (const key of [...getCache.keys()]) {
+    if (key.startsWith(prefix)) getCache.delete(key)
+  }
+}

@@ -12,21 +12,22 @@ const markmapMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('@/api/testcase', () => ({
-  fetchDomains: vi.fn().mockResolvedValue([]),
-  fetchTestCases: vi.fn(),
+  fetchTaxonomy: vi.fn().mockResolvedValue([
+    {
+      surface: '用户端',
+      count: 1,
+      domains: [{ domain: '接口', count: 1, modules: [{ name: '登录', path: '登录', count: 1, children: [] }] }],
+    },
+  ]),
 }))
 
 vi.mock('@/hooks/useApi', () => ({
   default: () => ({
-    data: {
-      items: [{
-        id: 1,
-        domain: '接口',
-        module: '登录',
-        priority: 'P1',
-        title: '登录成功',
-      }],
-    },
+    data: [{
+      surface: '用户端',
+      count: 1,
+      domains: [{ domain: '接口', count: 1, modules: [{ name: '登录', path: '登录', count: 1, children: [] }] }],
+    }],
     isLoading: false,
     isError: false,
     error: null,

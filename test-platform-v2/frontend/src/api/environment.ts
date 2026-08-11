@@ -1,4 +1,4 @@
-import api from './client'
+import api, { cachedGet, clearApiCache } from './client'
 import type { Environment, EnvironmentVariable } from '@/types'
 
 const BASE = '/environments'
@@ -6,22 +6,26 @@ const BASE = '/environments'
 // ── Environment CRUD ──
 
 export async function fetchEnvironments(signal?: AbortSignal): Promise<Environment[]> {
-  return api.get(BASE, { signal })
+  if (signal) return api.get(BASE, { signal })
+  return cachedGet<Environment[]>(BASE, undefined, { ttl: 60_000 })
 }
 
 export async function createEnvironment(body: {
   name: string; env_type?: string; base_url?: string; description?: string
 }): Promise<Environment> {
+  clearApiCache(BASE)
   return api.post(BASE, body)
 }
 
 export async function updateEnvironment(id: number, body: {
   name?: string; env_type?: string; base_url?: string; description?: string
 }): Promise<Environment> {
+  clearApiCache(BASE)
   return api.put(`${BASE}/${id}`, body)
 }
 
 export async function deleteEnvironment(id: number): Promise<{ deleted: boolean }> {
+  clearApiCache(BASE)
   return api.delete(`${BASE}/${id}`)
 }
 
