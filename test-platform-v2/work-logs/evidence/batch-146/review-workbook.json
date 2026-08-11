@@ -1,0 +1,8 @@
+{
+  "batch": "batch-146-quad-view-review",
+  "env": "https://cameltv-test-platform1.vercel.app/",
+  "project": "CamelTv 体育平台",
+  "account": "sportsadmin",
+  "method": "IAB browser (domSnapshot + locator reads) + Playwright CLI network capture + code review",
+  "pages": []
+}

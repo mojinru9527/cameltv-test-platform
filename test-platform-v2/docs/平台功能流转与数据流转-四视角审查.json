@@ -1,0 +1,366 @@
+[
+ {
+  "id": "e2263b9b-3b62-4897-ba66-68a97cef607a",
+  "class": "sheet",
+  "title": "平台功能流转与数据流转-四视角审查",
+  "rootTopic": {
+   "id": "c0299eb5-3a40-4f77-b9da-dda03cadde67",
+   "class": "topic",
+   "title": "平台功能流转与数据流转-四视角审查",
+   "children": {
+    "attached": [
+     {
+      "id": "033a09e0-442a-40ce-a898-ad2e95388da2",
+      "class": "topic",
+      "title": "0 审查总览与问题热力图",
+      "children": {
+       "attached": [
+        {
+         "id": "53d6b4d3-c6f3-4399-b2d5-57e9d693fe68",
+         "class": "topic",
+         "title": "审查方法：四视角对抗（UI/测试工程师/架构师/甲方）+ 24 页面域深度使用 + 网络捕获",
+         "notes": {
+          "plain": {
+           "content": "batch-146，生产 cameltv-test-platform1.vercel.app，体育平台项目"
+          }
+         }
+        },
+        {
+         "id": "590a2320-34be-4369-ba32-131be366ae11",
+         "class": "topic",
+         "title": "问题热力图：P0×1（计划执行325全失败根因不可见）P1×4（统计口径/执行链路0/覆盖率0%/数据可信）P2×16 P3×14",
+         "notes": {
+          "plain": {
+           "content": "详见四份视角报告"
+          }
+         }
+        },
+        {
+         "id": "298e82b7-e23b-467b-9226-adc3d62e707c",
+         "class": "topic",
+         "title": "主链路状态：需求✅→用例✅→计划⚠️(仅接口325)→执行❌(325失败)→缺陷❌(0)→报告❌(0)→统计❌(0%)"
+        },
+        {
+         "id": "64193b45-31fd-47c8-9cf7-d24fb237e7cd",
+         "class": "topic",
+         "title": "交付结论：有条件通过（CONDITIONAL），P0 两项修复后复验"
+        }
+       ]
+      }
+     },
+     {
+      "id": "54884233-18b6-4e24-bc5c-12b6c96bc7e8",
+      "class": "topic",
+      "title": "1 需求域（需求文档/评审/模块树/生产差异）",
+      "children": {
+       "attached": [
+        {
+         "id": "f8b175df-f701-4021-8b85-39232328b79f",
+         "class": "topic",
+         "title": "功能流转：蓝湖链接/文件上传 → 证据任务(采集/OCR/审核) → 需求文档(5) → AI 提取(476用例) → 模块树(54/660) → 生产差异(发布包) → 交互缺口"
+        },
+        {
+         "id": "7173facc-b7f6-4492-8832-5946e52cdfbf",
+         "class": "topic",
+         "title": "数据流转：LanhuEvidenceJob → LanhuEvidencePage/Asset → RequirementDocument → RequirementModule → InteractionEdge → TestCase(source_doc_id)"
+        },
+        {
+         "id": "1c84f5da-0aaf-4adc-bf23-a3db0d832a31",
+         "class": "topic",
+         "title": "API：/lanhu-evidence/jobs /requirements /requirement-modules /interaction-coverage/gaps /test-cases/domains"
+        },
+        {
+         "id": "8d0ad4a9-e85a-4b6b-8a37-22cd55ee2301",
+         "class": "topic",
+         "title": "问题：需求覆盖率 0%（54/660 已覆盖，C126-2）；交互缺口 2217 全量无 P0 优先；缺口文本截断；两处「覆盖率」术语混淆"
+        }
+       ]
+      }
+     },
+     {
+      "id": "c366b260-5947-44c9-9196-62b2c47d7ce1",
+      "class": "topic",
+      "title": "2 用例域（用例库/脑图/计划）",
+      "children": {
+       "attached": [
+        {
+         "id": "0f3e97d2-3356-4a90-8de3-f909ce90b802",
+         "class": "topic",
+         "title": "功能流转：用例库(7879: 功能7845/接口34/UI0) → 域/模块筛选 → 脑图(同源) → 计划编排(325=仅接口) → 评审/版本历史 → 导入导出(Excel/XMind)"
+        },
+        {
+         "id": "f09a7bc1-1721-494b-ae23-3ca76e1e83d1",
+         "class": "topic",
+         "title": "数据流转：TestCase(domain/module/P0-3) ↔ TestCaseVersion ↔ TestCaseReview ↔ TestPlanCase(325) ↔ 知识图谱(531/7879)"
+        },
+        {
+         "id": "5a0ddd86-fb68-4ead-9d6a-d917c60b0c12",
+         "class": "topic",
+         "title": "API：/test-cases /test-cases/stats /test-cases/taxonomy /test-cases/domains /test-plans"
+        },
+        {
+         "id": "9ec44000-7d51-413a-ac0b-aa049571c7e0",
+         "class": "topic",
+         "title": "问题：功能用例 7845 零入计划；UI 自动化用例 0；脑图 page_size=10000 全量拉取；工作台 7879 vs 追溯 9424 口径不一"
+        },
+        {
+         "id": "0f4e89e8-8050-465d-9437-1ca900a8bc74",
+         "class": "topic",
+         "title": "CRUD 实测：创建→搜索→编辑→删除 全闭环 PASS（临时数据已清理）"
+        }
+       ]
+      }
+     },
+     {
+      "id": "a6a20772-af7e-40f7-8b4b-cb3ae72b9f49",
+      "class": "topic",
+      "title": "3 执行域（接口测试/UI自动化/专项/调度/性能）",
+      "children": {
+       "attached": [
+        {
+         "id": "d8dc6523-d2df-40a6-b9dd-cbdb086e4118",
+         "class": "topic",
+         "title": "接口执行：计划一键执行(325/325 失败 P0) / 单条手动录入(默认通过⚠️) / 执行任务(5) / 快速调试(200 PASS) / 生产守卫确认"
+        },
+        {
+         "id": "5bf10081-62c0-4a96-a1ee-5fcbea3102b0",
+         "class": "topic",
+         "title": "UI 执行：job(2) 交互路径回归每日 02:00 10/10×11 天 ✅ + P0 只读回归；产物目录隔离"
+        },
+        {
+         "id": "66280669-b076-4c72-b93d-b76582b4bbc7",
+         "class": "topic",
+         "title": "调度：UI 0 2 * * *(启用) / API 0 3 * * *(停用无原因提示)；专项(0 任务, HLS 表单)；性能(SoloX 不可用降级✅)"
+        },
+        {
+         "id": "96ae1dd1-747e-4a82-95fc-b2d92ed9c13f",
+         "class": "topic",
+         "title": "数据流转：ApiExecutionTask(Item) ↔ TestExecution ↔ TestPlanCase；UiTestJob/Run/Script；AvCheckTask；PerfSession"
+        },
+        {
+         "id": "f31a8cae-c56b-4d32-a2e7-c76906db3dae",
+         "class": "topic",
+         "title": "问题(P0)：计划执行失败根因不可见（无 HTTP 状态/错误摘要）；执行双轨（test_execution vs api_execution_task）互不可见；双 Worker 竞态（task_worker vs api_task_worker）"
+        }
+       ]
+      }
+     },
+     {
+      "id": "525bf32e-cd84-438b-9f3c-df2e9175722c",
+      "class": "topic",
+      "title": "4 质量域（缺陷/报告/追溯/工作台）",
+      "children": {
+       "attached": [
+        {
+         "id": "6450a613-3b67-4fbc-9444-85f2fe5cccba",
+         "class": "topic",
+         "title": "功能流转：执行结果 → 失败分诊(手动AI) → 缺陷(0) → 报告(0) → 追溯(执行0/通过0) → 工作台(通过率0%)"
+        },
+        {
+         "id": "d14baba1-1cbb-4069-9bcf-564da4ba2e43",
+         "class": "topic",
+         "title": "数据流转：TestExecution → Defect(软链接 case_id/execution_id) → TestReport(plan_id FK) → TraceService 聚合 → Dashboard"
+        },
+        {
+         "id": "b8a1face-b755-46e8-b4dd-aa4d60eb8461",
+         "class": "topic",
+         "title": "API：/defects /defects/stats /reports /reports/trends /trace/coverage /dashboard/stats /dashboard/cross-project"
+        },
+        {
+         "id": "cb61e294-12dc-4dec-a9dc-52bf0b3762e6",
+         "class": "topic",
+         "title": "问题(P1)：执行失败无下游动作（缺陷/报告/通知全 0）；统计 5 套实现口径不一；缺陷表单完备但空置"
+        }
+       ]
+      }
+     },
+     {
+      "id": "624f9199-90a6-497c-8c84-8f990b0a844b",
+      "class": "topic",
+      "title": "5 资产域（蓝湖证据/知识中心/图谱/Agent）",
+      "children": {
+       "attached": [
+        {
+         "id": "425da857-15ad-4751-a74c-2eb43ddfe11e",
+         "class": "topic",
+         "title": "功能流转：蓝湖证据包(采集→审核→导入) → 知识中心(69源/285切片/970实体) → 图谱(965节点/968关系) → AI审核台 → Wiki/差异对比 → Agent 工作台(4 agent)"
+        },
+        {
+         "id": "51588b93-927b-4227-88cc-77ab6972e15a",
+         "class": "topic",
+         "title": "数据流转：LanhuEvidenceJob → KnowledgeSource/Chunk/Vector/Entity/Relation → WikiRawSource/Page → AiArtifact → AgentRun"
+        },
+        {
+         "id": "7b12354e-3d4d-4da3-91dd-252dccf19dbb",
+         "class": "topic",
+         "title": "API：/knowledge/overview /knowledge/sources /knowledge/graph/entities /agents /wiki"
+        },
+        {
+         "id": "636c27ae-3e2b-44e1-96e9-48135f438ccb",
+         "class": "topic",
+         "title": "问题：图谱用例仅 531/7879 入库、需求实体 0（C126-1）；AI 审核台置信度全 0%（C126-3）；知识 12 tab 切页全量重拉（B3）"
+        }
+       ]
+      }
+     },
+     {
+      "id": "7cb22a08-823e-4a72-99f6-2e6c32f9b9c8",
+      "class": "topic",
+      "title": "6 交付域（发布批次/全景/运维控制）",
+      "children": {
+       "attached": [
+        {
+         "id": "f5490959-416a-46b4-9928-b269ce3b2ac6",
+         "class": "topic",
+         "title": "功能流转：发布包(16.0.0 草稿 0模块0页) → 模块树构建(空) → 版本全景 → 运维发布控制(未配置只读占位)"
+        },
+        {
+         "id": "072521ae-5b6c-461a-8b24-3dff0b6e6093",
+         "class": "topic",
+         "title": "数据流转：ReleaseBundle → RequirementModule → VersionPanorama → ops 事件（知识图谱 ingestion 写入）"
+        },
+        {
+         "id": "3c58e5cc-cd2b-4b65-adfd-6fbf5f0ca385",
+         "class": "topic",
+         "title": "API：/release-bundles /requirement-modules /ops/deployments"
+        },
+        {
+         "id": "6958e622-3a34-4e67-8f90-9bce757e80e0",
+         "class": "topic",
+         "title": "问题：发布包空壳无构建引导；运维控制不可用但降级提示✅；导航「版本测试任务」重定向冗余入口"
+        }
+       ]
+      }
+     },
+     {
+      "id": "8eb8bb9a-10a2-4d6f-a83e-a7ab2c036ddd",
+      "class": "topic",
+      "title": "7 平台域（组织/项目/系统/环境/通知/集成/数据集）",
+      "children": {
+       "attached": [
+        {
+         "id": "05b3c0af-d5f1-4bf3-b660-3ffad10d6ea1",
+         "class": "topic",
+         "title": "功能流转：组织(1) → 项目(1 体育平台) → 环境(3: 生产/站点UI/Test5) → 系统(用户/角色/审计/Token/邀请码) → 通知(0渠道) → 集成(Test5不可达) → 数据集(0)"
+        },
+        {
+         "id": "2338c470-384c-42c0-8752-41bbb43732f9",
+         "class": "topic",
+         "title": "数据流转：sys_organization(_member) → sys_project(_member) → Environment/Variable → SysUser/Role/AuditLog/ApiToken/InviteCode"
+        },
+        {
+         "id": "d2aadf74-83fe-4bc7-8782-fcab4f0b88ca",
+         "class": "topic",
+         "title": "API：/organizations /projects /environments /system /notify /integrations /datasets"
+        },
+        {
+         "id": "1ec3ea25-2335-47fc-a67a-e19a805f5811",
+         "class": "topic",
+         "title": "问题：通知 0 渠道（回归失败无人通知）；集成指向不可达 Test5；数据集空置；菜单端点每页重拉 15 次（ARCH）"
+        }
+       ]
+      }
+     },
+     {
+      "id": "68106b00-e1e7-49cc-a7fd-768ccf83285b",
+      "class": "topic",
+      "title": "8 关联优化建议（四者联动 + 请求冗余 + 架构收敛 + 体育适配）",
+      "children": {
+       "attached": [
+        {
+         "id": "eb761081-bcf9-47ad-8b52-c49114a3162e",
+         "class": "topic",
+         "title": "四者关联方案：功能用例(P0锚点) ↔ 用例映射(绑定UI spec/接口用例ID) → 计划(功能+接口+UI混合) → 执行 → 结果回填功能用例 → 失败自动转缺陷+通知 → 报告自动生成 → 单一口径追溯"
+        },
+        {
+         "id": "80bde3a8-4111-4a9f-9cbf-a82b81c6009b",
+         "class": "topic",
+         "title": "请求冗余修复：menus/environments/domains 会话缓存；防抖/退避；Tab 状态保留；client 层统一缓存+去重（请求量降 50%+）"
+        },
+        {
+         "id": "3a5408d7-5199-4c80-b102-03adc766d9cc",
+         "class": "topic",
+         "title": "架构收敛：统计 5→1 套；双 Worker 统一；覆盖率统一服务；AI 生成 4 路径统一；本地搭建 7 步文档化"
+        },
+        {
+         "id": "d34027e4-9dfc-417a-8e46-711a6cac389d",
+         "class": "topic",
+         "title": "体育适配：接口用例 34→面级；音视频真实 URL(C101-2)；数据集驱动参数化；每日 API 回归启用前置"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ },
+ {
+  "id": "bbb00f8c-722a-4ca2-94ba-f3ee17997959",
+  "class": "sheet",
+  "title": "问题清单（P0-P3）",
+  "rootTopic": {
+   "id": "7b1fed7c-1c5e-4296-b503-b294356a5637",
+   "class": "topic",
+   "title": "问题清单（P0-P3）",
+   "children": {
+    "attached": [
+     {
+      "id": "273a9d29-2067-4191-b836-52ee8406e5a8",
+      "class": "topic",
+      "title": "P0-1 计划一键执行 325/325 失败根因不可见（TP-01，视角2/4）",
+      "notes": {
+       "plain": {
+        "content": "执行历史无 HTTP 状态/错误摘要；建议执行记录加失败原因列+环境前置检查"
+       }
+      }
+     },
+     {
+      "id": "8687cc2b-e5e0-4dd4-86df-c210cc7c31db",
+      "class": "topic",
+      "title": "P1-1 统计口径不一：工作台 7879 vs 追溯 9424（TR-01/WB-01，架构 B-1）",
+      "notes": {
+       "plain": {
+        "content": "5 套统计实现收敛为 1 套"
+       }
+      }
+     },
+     {
+      "id": "017cc2f5-94bf-4237-839a-0857f71971f9",
+      "class": "topic",
+      "title": "P1-2 执行链路全 0：执行/通过/缺陷/报告 统计失真（WB-01/TR-02/RP-01）",
+      "notes": {
+       "plain": {
+        "content": "执行结果不回流统计与下游"
+       }
+      }
+     },
+     {
+      "id": "b7850187-a5bb-44ae-87b1-8e788f4a4882",
+      "class": "topic",
+      "title": "P1-3 需求覆盖率 0%（REQ-01，C126-2 未闭环）"
+     },
+     {
+      "id": "02c1a7b2-aee0-4756-9ea1-b74804397ccf",
+      "class": "topic",
+      "title": "P1-4 图谱用例仅 531/7879 入库 + AI 置信度 0%（KN-01/KN-02，C126-1/C126-3）"
+     },
+     {
+      "id": "01527efb-c7a3-4c39-bee5-0111116228f5",
+      "class": "topic",
+      "title": "P2 组：Command Palette 泄漏/三执行按钮/手动默认通过/快速调试需先断言/术语混淆/缺口截断/通知0渠道/功能用例不入计划等 16 项",
+      "notes": {
+       "plain": {
+        "content": "详见四视角报告"
+       }
+      }
+     },
+     {
+      "id": "00e4e951-5b4a-4930-9f2b-2dadd228d769",
+      "class": "topic",
+      "title": "P3 组：Trace 列空/404 语义/表格密度/脑图键盘不可达/发布包空壳等 14 项"
+     }
+    ]
+   }
+  }
+ }
+]
