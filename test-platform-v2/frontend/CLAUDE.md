@@ -22,7 +22,7 @@ frontend/
 │   │   └── client.ts          Axios 实例 (JWT 拦截器 + envelope 拆包)
 │   ├── stores/                Zustand 状态管理
 │   │   └── auth.ts            鉴权状态 (localStorage 持久化)
-│   ├── router/                React Router 6 路由表 + 登录守卫
+│   ├── router/                React Router 8 路由表 + 登录守卫
 │   ├── layouts/               MainLayout (侧边菜单 + 项目切换 + 用户菜单)
 │   ├── pages/                 页面组件
 │   │   ├── login/             登录页
@@ -63,7 +63,7 @@ frontend/
 |------|------|------|
 | UI 组件库 | shadcn/ui (Radix + Tailwind) | 源码可控，无障碍优先 |
 | 状态管理 | Zustand | 轻量，支持 localStorage 持久化 |
-| 路由 | React Router 6 | 登录守卫 + 动态菜单 |
+| 路由 | React Router 8 | 登录守卫 + 动态菜单 |
 | HTTP 客户端 | Axios | JWT 拦截器 + 统一 envelope 拆包 |
 | 表单 | React Hook Form + Zod | 类型安全校验 |
 | 图表 | Recharts | 工作台看板 |
