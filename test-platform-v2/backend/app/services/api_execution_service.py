@@ -57,6 +57,10 @@ def execute_api_case(
     if case.case_type != "api":
         raise ValueError(f"用例 #{case_id} 不是 API 类型 (当前: {case.case_type})")
 
+    # C147-8: 未显式指定数据集时使用用例默认绑定
+    if dataset_id is None:
+        dataset_id = getattr(case, "dataset_id", None)
+
     # 解析数据
     headers = _safe_json(case.api_headers, {})
     body = case.api_body or ""

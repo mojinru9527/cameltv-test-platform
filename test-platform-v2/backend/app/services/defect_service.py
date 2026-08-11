@@ -234,11 +234,19 @@ def update_defect(db: Session, defect_id: int, data, project_id: int) -> dict | 
     return _defect_to_dict(r, creator_name, assignee_name, case_title)
 
 
+def _cascade_knowledge(db, project_id: int, source_id: int) -> None:
+    # C147-9: 业务删除级联同步知识切片（缺陷 -> knowledge_source deprecated）
+    from app.services.knowledge.knowledge_cleanup import mark_business_deleted
+
+    mark_business_deleted(db, project_id=project_id, source_type="defect", source_id=source_id)
+
+
 def delete_defect(db: Session, defect_id: int, project_id: int) -> bool:
     r = db.scalar(select(Defect).where(Defect.id == defect_id, Defect.project_id == project_id))
     if not r:
         return False
     db.delete(r)
+    _cascade_knowledge(db, project_id, defect_id)
     db.flush()
     return True
 

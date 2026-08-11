@@ -447,6 +447,7 @@ def _row_to_dict(r: TestCase) -> dict:
         "depends_on_ids": r.depends_on_ids,
         "last_response_json": r.last_response_json,
         "last_run_status": r.last_run_status,
+        "dataset_id": getattr(r, "dataset_id", None),
         "source": r.source,
         "source_req_id": r.source_req_id,
         "source_doc_id": r.source_doc_id,

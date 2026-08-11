@@ -20,6 +20,7 @@ class UiTestJob(Base):
     test_spec: Mapped[str] = mapped_column(String(500), default="")      # path to test file
     browser: Mapped[str] = mapped_column(String(20), default="chromium")  # chromium/firefox/webkit
     environment_id: Mapped[int | None] = mapped_column(default=None, index=True)  # 执行环境
+    case_id: Mapped[int | None] = mapped_column(default=None, index=True)  # C151-1 关联用例
     status: Mapped[str] = mapped_column(String(20), default="idle")       # idle/running/done/fail
     cron_expression: Mapped[str] = mapped_column(String(100), default="")  # B112-3 定时 cron（空=不定时）
     schedule_enabled: Mapped[bool] = mapped_column(Boolean, default=False)  # B112-3 定时开关

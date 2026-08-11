@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -87,6 +88,30 @@ def create_job(
     db.commit()
     _audit(req, current, db, "uitest:create", f"#{r['id']} {r['name']}")
     return R.ok(UiTestJobOut(**r))
+
+
+class FromCasesRequest(BaseModel):
+    case_ids: list[int] = []
+
+
+@router.post("/jobs/from-cases", response_model=R[dict], summary="从用例批量创建 UI 任务（C151-1）")
+def create_jobs_from_cases(
+    body: FromCasesRequest,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("uitest:create")),
+    db: Session = Depends(get_db),
+):
+    try:
+        result = ui_test_service.create_jobs_from_cases(
+            db,
+            project_id=current.project_id or 0,
+            case_ids=body.case_ids,
+            creator_id=current.user.id,
+        )
+    except ValueError as e:
+        return R(code=1, msg=str(e))
+    _audit(req, current, db, "uitest:jobs_from_cases", f"project#{current.project_id or 0}", f"created={result['created']}")
+    return R.ok(result)
 
 
 @router.get("/scripts", response_model=R[dict], summary="脚本资产列表")

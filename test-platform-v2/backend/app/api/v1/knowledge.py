@@ -899,6 +899,21 @@ class GraphEvolveResult(BaseModel):
     message: str = ""
 
 
+@router.post("/graph/backfill-source", response_model=R[dict], summary="回填缺失来源的图谱实体（C147-9）")
+def backfill_graph_source(
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """按名称匹配用例/需求，回填 source_id/source_ref；未匹配保持 None。"""
+    from app.services.knowledge.entity_service import backfill_missing_source
+
+    result = backfill_missing_source(db, current.project_id or 0)
+    _audit(req, current, db, "knowledge:graph_backfill_source", f"project#{current.project_id or 0}", str(result))
+    db.commit()
+    return R.ok(result)
+
+
 @router.post("/graph/evolve", response_model=R[GraphEvolveResult], summary="概念地图自演化")
 def evolve_graph(
     req: Request,
