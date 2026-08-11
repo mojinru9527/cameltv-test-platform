@@ -13,7 +13,6 @@ from app.models.requirement import RequirementDocument
 from app.models.requirement_review import RequirementReview
 from app.models.test_case import TestCase
 from app.models.user import User
-from app.services import test_case_service
 
 logger = logging.getLogger("requirement_service")
 
@@ -701,6 +700,7 @@ def import_cases(
         previous_func = _parse_indices(row.imported_func_indices)
         previous_api = _parse_indices(row.imported_api_indices)
         seen_in_request: set[tuple[str, int]] = set()
+        from app.services import test_case_service  # 懒加载：避免 requirement_service ↔ test_case_service 环依赖（Batch 155 / P2-12）
 
         for case in cases:
             case_type = "api" if case.get("case_type") == "api" else "manual"
