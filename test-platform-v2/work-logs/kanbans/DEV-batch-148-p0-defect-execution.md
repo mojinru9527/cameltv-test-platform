@@ -6,13 +6,13 @@
 | # | Slice | 状态 | 产出/证据 |
 |---|-------|------|----------|
 | S1 | 批次脚手架（PRD/PM/Design/看板） | ✅ 完成 | 本批工件 |
-| S2 | 后端缺陷契约修复 | ⏳ 待办 | schemas/defect.py + defect_service.py |
-| S3 | 前端错误提取链 + 缺陷弹窗失败态 | 待办 | client.ts + DefectFormDialog + 单测 |
-| S4 | 执行字段模型 + 迁移 | 待办 | model + alembic |
-| S5 | 执行记录回填 + 历史解析 | 待办 | test_plan_service + schema |
-| S6 | 环境/Token 预检 | 待办 | test_plan_service |
-| S7 | 前端执行历史列 + 环境选择器 | 待办 | PlanDetail + testplan.ts |
-| S8 | 测试 + 文档 | 待办 | pytest/vitest/common-pitfalls |
+| S2 | 后端缺陷契约修复 | ✅ 完成 | ca5e787 |
+| S3 | 前端错误提取链 + 缺陷弹窗失败态 | ✅ 完成 | ca5e787 |
+| S4 | 执行字段模型 + 迁移 | ✅ 完成 | 495794e |
+| S5 | 执行记录回填 + 历史解析 | ✅ 完成 | 495794e |
+| S6 | 环境/Token 预检 | ✅ 完成 | 495794e |
+| S7 | 前端执行历史列 + 环境选择器 | ✅ 完成 | 96e4c98 |
+| S8 | 测试 + 文档 | ✅ 完成 | 本批 QA 前 |
 
 ## 批次记录
 - 产出: 待 PR 合入后回填
