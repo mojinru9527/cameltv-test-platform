@@ -32,6 +32,12 @@ class TestPlan(Base):
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(default=datetime.now, onupdate=datetime.now)
 
+    # Batch 155 (C147-6): 失败自动转缺陷/报告/通知开关（列由迁移 20260811_batch151_auto_defect 创建）
+    auto_defect_on_fail: Mapped[bool] = mapped_column(
+        default=False, server_default="false",
+        comment="失败自动转缺陷/报告/通知开关（默认关闭）",
+    )
+
     # relations
     plan_cases: Mapped[list["TestPlanCase"]] = relationship(
         "TestPlanCase", back_populates="plan",
@@ -80,3 +86,4 @@ class TestExecution(Base):
 
     # relations
     plan_case: Mapped["TestPlanCase"] = relationship("TestPlanCase", back_populates="executions")
+
