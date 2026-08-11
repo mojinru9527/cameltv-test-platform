@@ -10,6 +10,8 @@ param(
 
     [switch]$InitializeLocal,
 
+    [switch]$InstallDeps,
+
     [switch]$LibraryOnly
 )
 
@@ -772,8 +774,33 @@ function Invoke-SharedCompose {
     }
 }
 
+function Install-Dependencies {
+    Write-Host "Installing backend dependencies (pip install -r requirements.txt)..."
+    & python -m pip install -r (Join-Path $backendRoot "requirements.txt")
+    if ($LASTEXITCODE -ne 0) {
+        throw "Backend dependency install failed (pip install -r requirements.txt)."
+    }
+
+    Write-Host "Installing frontend dependencies (npm ci)..."
+    Push-Location $frontendRoot
+    try {
+        & npm ci --no-audit --no-fund
+        if ($LASTEXITCODE -ne 0) {
+            throw "Frontend dependency install failed (npm ci)."
+        }
+    }
+    finally {
+        Pop-Location
+    }
+    Write-Host "Dependencies installed."
+}
+
 if ($LibraryOnly) {
     return
+}
+
+if ($InstallDeps) {
+    Install-Dependencies
 }
 
 if ($InitializeLocal) {
