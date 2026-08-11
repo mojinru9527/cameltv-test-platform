@@ -1,0 +1,81 @@
+{
+ "total_requests": 59,
+ "unique_urls": 40,
+ "cross_page_duplicates": [
+  {
+   "url": "https://cameltv-test-platform1.vercel.app/api/v1/system/menus",
+   "count": 15,
+   "pages": [
+    "login",
+    "workbench",
+    "trace",
+    "requirement",
+    "testcase",
+    "mindmap",
+    "testplan",
+    "apitest",
+    "uitest",
+    "schedule",
+    "report",
+    "defect",
+    "knowledge",
+    "integration",
+    "release-bundles"
+   ],
+   "methods": [
+    "GET"
+   ]
+  },
+  {
+   "url": "https://cameltv-test-platform1.vercel.app/api/v1/environments",
+   "count": 4,
+   "pages": [
+    "apitest",
+    "uitest",
+    "integration"
+   ],
+   "methods": [
+    "GET"
+   ]
+  },
+  {
+   "url": "https://cameltv-test-platform1.vercel.app/api/v1/dashboard/stats?date=range",
+   "count": 2,
+   "pages": [
+    "login",
+    "workbench"
+   ],
+   "methods": [
+    "GET"
+   ]
+  },
+  {
+   "url": "https://cameltv-test-platform1.vercel.app/api/v1/test-cases/domains",
+   "count": 2,
+   "pages": [
+    "requirement",
+    "testcase"
+   ],
+   "methods": [
+    "GET"
+   ]
+  }
+ ],
+ "per_page": {
+  "login": 3,
+  "workbench": 3,
+  "trace": 3,
+  "requirement": 6,
+  "testcase": 5,
+  "mindmap": 2,
+  "testplan": 2,
+  "apitest": 8,
+  "uitest": 3,
+  "schedule": 2,
+  "report": 3,
+  "defect": 3,
+  "knowledge": 9,
+  "integration": 5,
+  "release-bundles": 2
+ }
+}
