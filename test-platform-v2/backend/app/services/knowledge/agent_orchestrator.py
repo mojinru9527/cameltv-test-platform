@@ -20,6 +20,7 @@ import httpx
 from app.core.config import settings
 from app.core.db import SessionLocal
 from app.models.knowledge import AiArtifact
+from app.services.knowledge.artifact_confidence import artifact_confidence_from_output
 from app.services.knowledge.agent_prompts import AGENT_META, build_system_prompt
 from app.services.knowledge import agent_run_service, search_service
 
@@ -185,6 +186,7 @@ def run_agent_in_new_session(
             content_json=json.dumps(output_data, ensure_ascii=False),
             agent_run_id=run.id,
             review_status="pending",
+            confidence=artifact_confidence_from_output(output_data),
         )
         db.add(artifact)
         db.flush()
