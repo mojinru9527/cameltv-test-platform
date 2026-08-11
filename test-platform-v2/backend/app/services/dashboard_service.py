@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.models.defect import Defect
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
+from app.services import statistics_service
 from app.services.test_case_service import canonical_case_type, case_type_values
 
 # ── 用例类型 → 展示标签 + 卡片颜色 ──
@@ -67,32 +68,16 @@ def get_dashboard_stats(
     用例数量始终为全量（不受时间筛选），通过率/失败率限制在时间范围内。
     """
 
-    # ── 用例总数（全量） ──
-    total_cases = db.scalar(
-        select(func.count(TestCase.id)).where(
-            TestCase.project_id == project_id,
-            TestCase.is_deleted.is_(False),
-        )
-    ) or 0
-
-    # ── 测试计划数（全量） ──
-    total_plans = db.scalar(
-        select(func.count(TestPlan.id)).where(TestPlan.project_id == project_id)
-    ) or 0
-
-    # ── API 用例数（全量） ──
-    api_cases = db.scalar(
-        select(func.count(TestCase.id)).where(
-            TestCase.project_id == project_id,
-            TestCase.is_deleted.is_(False),
-            TestCase.case_type == "api",
-        )
-    ) or 0
-
-    # ── 整体通过率（受时间范围约束） ──
-    total_execs, pass_execs, fail_execs = _execution_filter_for_project(
-        db, project_id, start_date, end_date
+    # ── 统一口径统计（Batch 149 / C147-3：statistics_service 为唯一事实源） ──
+    st = statistics_service.get_project_statistics(
+        db, project_id, start_date=start_date, end_date=end_date,
     )
+    total_cases = st["total_cases"]
+    total_plans = st["total_plans"]
+    api_cases = st["api_cases"]
+    total_execs = st["execution_total"]
+    pass_execs = st["execution_pass"]
+    fail_execs = st["execution_fail"]
     pass_rate = round((pass_execs / total_execs) * 100, 1) if total_execs > 0 else 0.0
 
     # ── P0-P3 优先级分布（按用例类型） ──
@@ -125,56 +110,14 @@ def get_dashboard_stats(
             "total": total,
         })
 
-    # ── 按用例类型分组统计 ──
+    # ── 按用例类型分组统计（统一口径 statistics_service） ──
     case_type_stats: list[dict] = []
     for ct, meta in CASE_TYPE_META.items():
-        # 该类型用例总数
-        ct_count = db.scalar(
-            select(func.count(TestCase.id)).where(
-                TestCase.project_id == project_id,
-                TestCase.is_deleted.is_(False),
-                TestCase.case_type.in_(case_type_values(ct)),
-            )
-        ) or 0
-
-        # 该类型的执行统计（通过 plan_case → plan 关联）
-        pcase_for_type = (
-            select(TestPlanCase.id)
-            .where(
-                TestPlanCase.plan_id.in_(
-                    select(TestPlan.id).where(TestPlan.project_id == project_id).scalar_subquery()
-                ),
-                TestPlanCase.case_id.in_(
-                    select(TestCase.id).where(
-                        TestCase.project_id == project_id,
-                        TestCase.is_deleted.is_(False),
-                        TestCase.case_type.in_(case_type_values(ct)),
-                    ).scalar_subquery()
-                ),
-            )
-            .scalar_subquery()
-        )
-
-        ct_exec_base = select(func.count(TestExecution.id)).where(
-            TestExecution.plan_case_id.in_(pcase_for_type)
-        )
-        ct_pass_base = ct_exec_base.where(TestExecution.status == "pass")
-        ct_fail_base = ct_exec_base.where(TestExecution.status == "fail")
-
-        if start_date:
-            start_dt = datetime.combine(start_date, datetime.min.time())
-            ct_exec_base = ct_exec_base.where(TestExecution.executed_at >= start_dt)
-            ct_pass_base = ct_pass_base.where(TestExecution.executed_at >= start_dt)
-            ct_fail_base = ct_fail_base.where(TestExecution.executed_at >= start_dt)
-        if end_date:
-            end_dt = datetime.combine(end_date, datetime.max.time())
-            ct_exec_base = ct_exec_base.where(TestExecution.executed_at <= end_dt)
-            ct_pass_base = ct_pass_base.where(TestExecution.executed_at <= end_dt)
-            ct_fail_base = ct_fail_base.where(TestExecution.executed_at <= end_dt)
-
-        ct_exec_total = db.scalar(ct_exec_base) or 0
-        ct_exec_pass = db.scalar(ct_pass_base) or 0
-        ct_exec_fail = db.scalar(ct_fail_base) or 0
+        b = st["by_type"].get(ct, {"count": 0, "execution_total": 0, "execution_pass": 0, "execution_fail": 0})
+        ct_count = b["count"]
+        ct_exec_total = b["execution_total"]
+        ct_exec_pass = b["execution_pass"]
+        ct_exec_fail = b["execution_fail"]
 
         ct_pass_rate = round((ct_exec_pass / ct_exec_total) * 100, 1) if ct_exec_total > 0 else 0.0
         ct_fail_rate = round((ct_exec_fail / ct_exec_total) * 100, 1) if ct_exec_total > 0 else 0.0

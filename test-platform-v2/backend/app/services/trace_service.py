@@ -10,6 +10,8 @@ from app.models.defect import Defect
 from app.models.requirement import RequirementDocument
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
+from app.services import statistics_service
+from app.services.test_case_service import canonical_case_type
 
 
 def get_project_coverage(db: Session, project_id: int) -> dict:
@@ -19,50 +21,12 @@ def get_project_coverage(db: Session, project_id: int) -> dict:
       total_cases, cases_in_plans, cases_executed, cases_passed,
       cases_with_defects, and by-domain breakdown.
     """
-    # Total cases in project
-    total_cases = db.scalar(
-        select(func.count(TestCase.id)).where(TestCase.project_id == project_id)
-    ) or 0
-
-    # Cases that are linked to at least one plan
-    plan_case_sub = (
-        select(TestPlanCase.case_id)
-        .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
-        .where(TestPlan.project_id == project_id)
-        .distinct()
-    )
-    cases_in_plans = db.scalar(
-        select(func.count()).select_from(plan_case_sub.subquery())
-    ) or 0
-
-    # Cases that have been executed at least once
-    executed_case_sub = (
-        select(TestPlanCase.case_id)
-        .join(TestExecution, TestExecution.plan_case_id == TestPlanCase.id)
-        .where(TestPlanCase.plan_id.in_(
-            select(TestPlan.id).where(TestPlan.project_id == project_id)
-        ))
-        .distinct()
-    )
-    cases_executed = db.scalar(
-        select(func.count()).select_from(executed_case_sub.subquery())
-    ) or 0
-
-    # Cases that passed on their last execution
-    passed_case_sub = (
-        select(TestPlanCase.case_id)
-        .join(TestExecution, TestExecution.plan_case_id == TestPlanCase.id)
-        .where(
-            TestPlanCase.plan_id.in_(
-                select(TestPlan.id).where(TestPlan.project_id == project_id)
-            ),
-            TestExecution.status == "pass",
-        )
-        .distinct()
-    )
-    cases_passed = db.scalar(
-        select(func.count()).select_from(passed_case_sub.subquery())
-    ) or 0
+    # 统一口径（Batch 149 / C147-3）：statistics_service 为唯一事实源，is_deleted 过滤一致
+    st = statistics_service.get_project_statistics(db, project_id)
+    total_cases = st["total_cases"]
+    cases_in_plans = st["cases_in_plans"]
+    cases_executed = st["cases_executed"]
+    cases_passed = st["cases_passed"]
 
     # Cases with linked defects
     defected_case_sub = (
@@ -74,18 +38,21 @@ def get_project_coverage(db: Session, project_id: int) -> dict:
         select(func.count()).select_from(defected_case_sub.subquery())
     ) or 0
 
-    # By case_type breakdown
+    # By case_type breakdown（统一口径：is_deleted=False，canonical 归类）
     type_rows = db.execute(
         select(TestCase.case_type, func.count(TestCase.id))
-        .where(TestCase.project_id == project_id)
+        .where(TestCase.project_id == project_id, TestCase.is_deleted.is_(False))
         .group_by(TestCase.case_type)
     ).all()
-    by_type = {row[0]: row[1] for row in type_rows}
+    by_type: dict[str, int] = {}
+    for raw, cnt in type_rows:
+        key = canonical_case_type(raw)
+        by_type[key] = by_type.get(key, 0) + cnt
 
-    # By domain breakdown
+    # By domain breakdown（统一口径：is_deleted=False）
     domain_rows = db.execute(
         select(TestCase.domain, func.count(TestCase.id))
-        .where(TestCase.project_id == project_id)
+        .where(TestCase.project_id == project_id, TestCase.is_deleted.is_(False))
         .group_by(TestCase.domain)
     ).all()
     by_domain = {row[0]: row[1] for row in domain_rows}
@@ -113,9 +80,9 @@ def get_project_coverage(db: Session, project_id: int) -> dict:
         "cases_with_defects": cases_with_defects,
         "by_type": by_type,
         "by_domain": by_domain,
-        "coverage_rate": round(cases_in_plans / total_cases * 100, 1) if total_cases else 0,
-        "execution_rate": round(cases_executed / total_cases * 100, 1) if total_cases else 0,
-        "pass_rate": round(cases_passed / max(cases_executed, 1) * 100, 1),
+        "coverage_rate": st["coverage_rate"],
+        "execution_rate": st["execution_rate"],
+        "pass_rate": st["pass_rate"],
         "requirement_count": req_count,
         "requirements_with_cases": req_with_cases,
         "requirement_coverage_rate": round(req_with_cases / req_count * 100, 1) if req_count else 0,

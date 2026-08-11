@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-11 (Batch 148: 关闭 C146-1/C147-1/C147-2)
+**最后更新**: 2026-08-11 (Batch 149: 关闭 C146-2/C147-3/C147-4)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -726,7 +726,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C146-1~~ | ~~计划执行失败根因可见性修复：执行记录含 HTTP 状态/错误摘要/失败阶段；计划执行前置「环境/Token 就绪」检查（P0 TP-01，一键执行 325/325 失败）~~ → **Closed**：Batch 148 实现（test_execution 独立字段 + 执行历史三列 + 环境/Token 预检双保险），见 batch-148-qa-report，commit e601f96/e74e207 | P0 | 2026-08-11 |
-| C146-2 | 统计口径统一：5 套统计实现收敛 1 套，工作台/追溯用例总数与通过率口径一致（TR-01/WB-01：7879 vs 9424） | P1 | 2026-08-11 |
+| ~~C146-2~~ | ~~统计口径统一：5 套统计实现收敛 1 套，工作台/追溯用例总数与通过率口径一致（TR-01/WB-01：7879 vs 9424）~~ → **Closed**：Batch 149（statistics_service 收敛 + trace is_deleted + dashboard 执行计数），见 batch-149-qa-report，commit 21e2847 | P1 | 2026-08-11 |
 | C146-3 | 前端请求冗余修复：menus/environments/domains 会话级缓存 + 搜索防抖 + 轮询退避 + client 层去重（运行时 menus×15/environments×4） | P1 | 2026-08-11 |
 | C146-4 | 使用手册 v2.6 更新至生产现状（新增 8 模块 + launcher 路径 + 验收项修订） | P1 | 2026-08-11 |
 | C146-5 | 计划页三执行按钮合并 + 手动录入默认值改「请选择」（TP-02/TP-03） | P2 | 2026-08-11 |
@@ -738,8 +738,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 |----|------|--------|---------|
 | ~~C147-1~~ | ~~缺陷新建 422 契约修复 + 前端错误边界：`DefectCreate.assignee_id` 改 Optional 或前端 null→0，禁止把 API 错误对象渲染为 React child（新 P0，缺陷主写路径崩溃）~~ → **Closed**：Batch 148（assignee_id Optional + client.ts 422 detail 字符串化 + 弹窗失败态 + 单测/冒烟），见 batch-148-qa-report，commit ca5e787/e601f96 | P0 | 2026-08-11 |
 | ~~C147-2~~ | ~~执行失败根因可见性 + 环境/Token 就绪检查（承接 C146-1）：执行历史暴露 actual_result 的 error/error_type/status_code；计划执行前强制选择环境并预检 base_url/Token（325 失败 URL http:/// 无法解析）~~ → **Closed**：Batch 148（独立字段 + 迁移 + 读取期回填 + 前端三列 + 前后端预检），见 batch-148-qa-report，commit 495794e/96e4c98/e601f96 | P0 | 2026-08-11 |
-| C147-3 | 统计口径收敛 5→1 + trace 补 is_deleted 过滤 + 修复 dashboard 执行计数 0（承接 C146-2；7879/9429/325 三数字并存） | P1 | 2026-08-11 |
-| C147-4 | 计划列表进度恒 0/0 修复：`PlanOut` schema 补 stats 字段（新 P1） | P1 | 2026-08-11 |
+| ~~C147-3~~ | ~~统计口径收敛 5→1 + trace 补 is_deleted 过滤 + 修复 dashboard 执行计数 0（承接 C146-2；7879/9429/325 三数字并存）~~ → **Closed**：Batch 149（statistics_service 统一源 + trace is_deleted + dashboard 执行计数修复），见 batch-149-qa-report，commit 21e2847/2686c10 | P1 | 2026-08-11 |
+| ~~C147-4~~ | ~~计划列表进度恒 0/0 修复：`PlanOut` schema 补 stats 字段（新 P1）~~ → **Closed**：Batch 149（PlanOut.stats + UI 进度 1/2 冒烟），见 batch-149-qa-report，commit 21e2847/2686c10 | P1 | 2026-08-11 |
 | C147-5 | 请求冗余修复（承接 C146-3）：menus/environments/domains 会话缓存 + 搜索 300ms 防抖 + 轮询指数退避 + mindmap 服务端 taxonomy 聚合 + integration 去 page_size=1 探针（menus×53/10.1MB） | P1 | 2026-08-11 |
 | C147-6 | 四者关联闭环：功能用例入计划 + UI 自动化与用例映射回写 + 执行→缺陷→报告→通知自动链路（承接 C146-1 下游） | P1 | 2026-08-11 |
 | C147-7 | 使用手册 v2.6 更新至生产现状 + frontend README 技术栈修正（ant-design→shadcn、React Router 6→8）+ PostgreSQL 指南废弃分支引用修复（承接 C146-4） | P1 | 2026-08-11 |
@@ -753,6 +753,9 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C147-1 | batch-147→148 | Batch 148 关闭（assignee_id Optional + 422 detail 字符串化 + 弹窗失败态），见 batch-148-qa-report，commit ca5e787/e601f96 |
 | C147-2 | batch-147→148 | Batch 148 关闭（执行根因三列 + 环境/Token 预检），见 batch-148-qa-report，commit 495794e/96e4c98/e601f96 |
 | C146-1 | batch-146→148 | Batch 148 关闭（由 C147-2 承接实现），见 batch-148-qa-report，commit e601f96/e74e207 |
+| C147-3 | batch-147→149 | Batch 149 关闭（statistics_service 收敛 + trace is_deleted + dashboard 执行计数），见 batch-149-qa-report，commit 21e2847 |
+| C147-4 | batch-147→149 | Batch 149 关闭（PlanOut.stats + 计划进度展示），见 batch-149-qa-report，commit 21e2847 |
+| C146-2 | batch-146→149 | Batch 149 关闭（由 C147-3 承接实现），见 batch-149-qa-report，commit 21e2847 |
 | C138-1 | batch-137→138 | 生产配置真实 OCR 引擎（LANHU_OCR_COMMAND 容器内路径），见 batch-137 leader-verdict；未入追踪器补录 |
 | C140-1 | batch-139→140 | Railway 为 /app/storage 配置持久卷（蓝湖证据截图/导出），见 batch-139/140/141 verdict；未入追踪器补录 |
 
