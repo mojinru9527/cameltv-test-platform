@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-11 (Batch 153: 关闭 C126-2/C126-3)
+**最后更新**: 2026-08-11 (Batch 154: 关闭 C147-8/C147-9/C151-1/C152-1，全部 C 条件收口)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -743,21 +743,21 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ~~C147-5~~ | ~~请求冗余修复（承接 C146-3）：menus/environments/domains 会话缓存 + 搜索 300ms 防抖 + 轮询指数退避 + mindmap 服务端 taxonomy 聚合 + integration 去 page_size=1 探针（menus×53/10.1MB）~~ → **Closed**：Batch 150（cachedGet/clearApiCache + useDebouncedValue + 轮询退避 + taxonomy 聚合 + stats 探针），见 batch-150-qa-report，commit d8509f7/7152321 | P1 | 2026-08-11 |
 | ~~C147-6~~ | ~~四者关联闭环：功能用例入计划 + UI 自动化与用例映射回写 + 执行→缺陷→报告→通知自动链路（承接 C146-1 下游）~~ → **Closed（主链路）**：Batch 151 完成功能用例入计划 + 失败自动转缺陷/报告/通知（计划开关默认关）；UI 自动化↔用例映射回写登记 **C151-1**，见 batch-151-qa-report，commit bb1f00c/3d4967d | P1 | 2026-08-11 |
 | ~~C147-7~~ | ~~使用手册 v2.6 更新至生产现状 + frontend README 技术栈修正（ant-design→shadcn、React Router 6→8）+ PostgreSQL 指南废弃分支引用修复（承接 C146-4）~~ → **Closed**：Batch 152（手册 v2.7 + README/CLAUDE 技术栈 + PG 指南），见 batch-152-qa-report，commit c19b4a9/ec95961 | P1 | 2026-08-11 |
-| C147-8 | 数据集参数化注入 API 用例 UI 打通：接口用例创建/编辑与执行任务增加数据集选择 + ${变量} 绑定（新发现） | P2 | 2026-08-11 |
-| C147-9 | 知识图谱治理：missing_source 946 补全 + graph_evolve 报错修复 + 业务数据删除级联同步知识切片（承接 C126-1；新发现 graph_evolve 报错/已删缺陷残留） | P2 | 2026-08-11 |
+| ~~C147-8~~ | ~~数据集参数化注入 API 用例 UI 打通：接口用例创建/编辑与执行任务增加数据集选择 + ${变量} 绑定（新发现）~~ → **Closed**：Batch 154（TestCase.dataset_id + CaseDrawer/ApiCaseTab 数据集选择 + 执行兜底），见 batch-154-qa-report，commit a91125a | P2 | 2026-08-11 |
+| ~~C147-9~~ | ~~知识图谱治理：missing_source 946 补全 + graph_evolve 报错修复 + 业务数据删除级联同步知识切片（承接 C126-1；新发现 graph_evolve 报错/已删缺陷残留）~~ → **Closed**：Batch 154（backfill-source + evolve count.where 修复 + 删除级联 deprecated），见 batch-154-qa-report，commit a91125a | P2 | 2026-08-11 |
 | ~~C147-10~~ | ~~空白机搭建引导（承接 C146-6）：docs/local-setup.md + launcher -InstallDeps + 孤儿文件清理 + env 统一入口~~ → **Closed（部分）**：Batch 152 完成 docs/local-setup.md + launcher -InstallDeps；孤儿文件清理/env 统一入口登记 **C152-1**，见 batch-152-qa-report，commit c19b4a9 | P2 | 2026-08-11 |
 
 ### batch-151 — 失败自动链路（Batch 151 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C151-1 | UI 自动化↔用例映射回写 + 批量扩量（C147-6 子项，3 job 与 7845 用例体量不匹配） | P2 | 2026-08-11 |
+| ~~C151-1~~ | ~~UI 自动化↔用例映射回写 + 批量扩量（C147-6 子项，3 job 与 7845 用例体量不匹配）~~ → **Closed**：Batch 154（job.case_id + 运行回写 + from-cases 批量创建 + UI），见 batch-154-qa-report，commit a91125a | P2 | 2026-08-11 |
 
 ### batch-152 — 文档保鲜 + 空白机引导（Batch 152 Leader 条件）
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C152-1 | 孤儿文件清理 + env 统一入口（C147-10 剩余） | P2 | 2026-08-11 |
+| ~~C152-1~~ | ~~孤儿文件清理 + env 统一入口（C147-10 剩余）~~ → **Closed**：Batch 154（env-unified-guide + env-inventory 脚本；tracked 孤儿扫描无发现），见 batch-154-qa-report，commit a91125a | P2 | 2026-08-11 |
 
 
 | ID | 来源批次 | 补录说明 |
@@ -774,6 +774,10 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C147-7 | batch-147→152 | Batch 152 关闭（手册 v2.7 + README/CLAUDE 技术栈 + PG 指南），见 batch-152-qa-report，commit c19b4a9 |
 | C126-2 | batch-126→153 | Batch 153 关闭（需求覆盖率口径核对），见 batch-153-qa-report，commit 11efbe3 |
 | C126-3 | batch-126→153 | Batch 153 关闭（AI 产物置信度计算），见 batch-153-qa-report，commit 11efbe3 |
+| C147-8 | batch-147→154 | Batch 154 关闭（数据集参数化绑定），见 batch-154-qa-report，commit a91125a |
+| C147-9 | batch-147→154 | Batch 154 关闭（图谱治理：backfill/evolve 修复/级联），见 batch-154-qa-report，commit a91125a |
+| C151-1 | batch-147→154 | Batch 154 关闭（UI 映射回写 + 批量创建），见 batch-154-qa-report，commit a91125a |
+| C152-1 | batch-152→154 | Batch 154 关闭（env 统一入口 + inventory；孤儿扫描无发现），见 batch-154-qa-report，commit a91125a |
 | C146-4 | batch-146→152 | Batch 152 关闭（由 C147-7 承接实现），见 batch-152-qa-report，commit c19b4a9 |
 | C147-10 | batch-147→152 | Batch 152 关闭（部分：local-setup.md + launcher -InstallDeps；剩余登记 C152-1），见 batch-152-qa-report，commit c19b4a9 |
 | C138-1 | batch-137→138 | 生产配置真实 OCR 引擎（LANHU_OCR_COMMAND 容器内路径），见 batch-137 leader-verdict；未入追踪器补录 |
