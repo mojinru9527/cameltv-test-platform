@@ -229,11 +229,6 @@
       "count": 2
     }
   },
-  "src/pages/testcase/CaseDrawer.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/pages/testcase/VersionDialog.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1

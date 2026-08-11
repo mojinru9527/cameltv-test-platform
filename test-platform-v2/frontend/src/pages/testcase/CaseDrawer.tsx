@@ -123,7 +123,6 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
 
   useEffect(() => {
     if (open) {
-      const controller = new AbortController()
       fetchDatasets({ page_size: 100 }).then((d: any) => setDatasets(d?.items || [])).catch(() => {})
       if (editing) {
         const vals: Record<string, any> = {}
@@ -264,7 +263,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
 
             {editing?.case_type === 'api' && (
               <TabsContent value="api-data">
-                <ApiDataPanel editing={editing} datasets={datasets} />
+                <ApiDataPanel editing={editing} />
               </TabsContent>
             )}
           </Tabs>
@@ -296,7 +295,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
 
 // ── Sub-components ──
 
-function CaseForm({ register, control, errors, selDomain, selType, domains, selModules, watch, setValue, datasets }: any) {
+function CaseForm({ register, control, errors, selType, domains, selModules, watch, setValue, datasets }: any) {
   const stepsValue = watch('steps') || ''
   const [stepsViewMode, setStepsViewMode] = useState<'formatted' | 'json'>('formatted')
 
@@ -652,7 +651,7 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
   )
 }
 
-function ApiDataPanel({ editing, datasets }: { editing: any; datasets: any[] }) {
+function ApiDataPanel({ editing }: { editing: any }) {
   const pretty = (raw: string | undefined, fallback: string) => {
     if (!raw) return fallback
     try {
