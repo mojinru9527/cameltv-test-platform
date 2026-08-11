@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
 from app.models.knowledge import KnowledgeChunk, KnowledgeEntity, KnowledgeRelation, KnowledgeSource
@@ -460,13 +461,63 @@ def extract_and_build_graph_in_new_session(
 
 # ── 概念地图自演化 ──
 
-def evolve_graph_in_new_session(project_id: int) -> dict:
+def backfill_missing_source(db, project_id: int) -> dict:
+    """C147-9: 回填缺失 source_id 的实体（按名称匹配用例/需求）。"""
+    from app.models.requirement import RequirementDocument
+    from app.models.test_case import TestCase
+
+    rows = db.scalars(
+        select(KnowledgeEntity).where(
+            KnowledgeEntity.project_id == project_id,
+            KnowledgeEntity.source_id.is_(None),
+        )
+    ).all()
+    updated = 0
+    unmatched = 0
+    for ent in rows:
+        name = (ent.name or "").strip()
+        if not name:
+            unmatched += 1
+            continue
+        # 用例匹配：case_id 编码（TC-xxx）或标题
+        case = db.scalar(
+            select(TestCase).where(
+                TestCase.project_id == project_id,
+                TestCase.is_deleted.is_(False),
+                (TestCase.case_id == name) | (TestCase.title == name),
+            ).limit(1)
+        )
+        if case:
+            ent.source_id = case.id
+            ent.source_ref = f"test_case:{case.id}"
+            updated += 1
+            continue
+        # 需求匹配：标题
+        doc = db.scalar(
+            select(RequirementDocument).where(
+                RequirementDocument.project_id == project_id,
+                RequirementDocument.title == name,
+            ).limit(1)
+        )
+        if doc:
+            ent.source_id = doc.id
+            ent.source_ref = f"requirement:{doc.id}"
+            updated += 1
+            continue
+        unmatched += 1
+    db.commit()
+    return {"total": len(rows), "updated": updated, "unmatched": unmatched}
+
+
+def evolve_graph_in_new_session(project_id: int, db: Session | None = None) -> dict:
     """概念地图自演化：合并重复实体 + 更新置信度 + 发现隐含关系。
 
     独立 Session，供定时任务或手动触发调用。
     返回演化统计信息。
     """
-    db = SessionLocal()
+    own_session = db is None
+    if own_session:
+        db = SessionLocal()
     merged = 0
     confidence_updates = 0
     new_relations = 0
@@ -529,7 +580,7 @@ def evolve_graph_in_new_session(project_id: int) -> dict:
             if entity.confidence <= 0:
                 continue
             rel_count = db.scalar(
-                sa_func.count(KnowledgeRelation.id).where(
+                select(sa_func.count(KnowledgeRelation.id)).where(
                     KnowledgeRelation.project_id == project_id,
                     (KnowledgeRelation.from_entity_id == entity.id)
                     | (KnowledgeRelation.to_entity_id == entity.id),
@@ -627,4 +678,5 @@ def evolve_graph_in_new_session(project_id: int) -> dict:
         db.rollback()
         return {"merged": 0, "confidence_updates": 0, "new_relations": 0, "error": str(e)}
     finally:
-        db.close()
+        if own_session:
+            db.close()

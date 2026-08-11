@@ -441,6 +441,8 @@ export interface UiJobItem {
   test_spec: string
   browser: string
   environment_id: number | null
+  case_id: number | null
+  case_title: string
   cron_expression: string
   schedule_enabled: boolean
   status: string

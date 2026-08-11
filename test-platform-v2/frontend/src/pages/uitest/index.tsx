@@ -22,6 +22,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createUiJob, deleteUiJob, fetchUiJob, fetchUiJobs, fetchUiRuns, triggerUiJob, updateUiJob, fetchScripts, fetchRunDetail, cancelRun, fetchRunArtifacts, fetchRunArtifactBlob } from '@/api/uitest'
 import { fetchEnvironments } from '@/api/environment'
+import { fetchTestCases } from '@/api/testcase'
 import { useAuthStore } from '@/stores/auth'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import type { Environment, UiJobItem, UiRunItem, UiRunArtifact } from '@/types'
@@ -161,6 +162,7 @@ const uiJobFormSchema = z.object({
   test_spec: z.string().optional().default(''),
   browser: z.string().default('chromium'),
   environment_id: z.number().nullable().default(null),
+  case_id: z.number().nullable().default(null),
   cron_expression: z.string().optional().default(''),
   schedule_enabled: z.boolean().optional().default(false),
 })
@@ -239,11 +241,24 @@ export default function UiTestPage() {
   const [fStatus, setFStatus] = useState<string | undefined>()
   const [fKeyword, setFKeyword] = useState('')
   const [environments, setEnvironments] = useState<Environment[]>([])
+  const [uiCases, setUiCases] = useState<any[]>([])
+  const [caseMap, setCaseMap] = useState<Record<number, string>>({})
 
   useAbortableEffect((signal) => {
     fetchEnvironments(signal)
       .then((rows) => { if (!signal.aborted) setEnvironments(rows) })
       .catch(() => { if (!signal.aborted) setEnvironments([]) })
+  }, [])
+
+  useAbortableEffect((signal) => {
+    fetchTestCases({ case_type: 'ui', page_size: 200 }, signal)
+      .then((d: any) => {
+        if (signal.aborted) return
+        const items = d?.items || []
+        setUiCases(items)
+        setCaseMap(Object.fromEntries(items.map((c: any) => [c.id, c.title])))
+      })
+      .catch(() => { if (!signal.aborted) setUiCases([]) })
   }, [])
 
   const [drawer, setDrawer] = useState(false)
@@ -297,7 +312,7 @@ export default function UiTestPage() {
 
   const form = useForm<UiJobFormValues>({
     resolver: zodResolver(uiJobFormSchema),
-    defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, cron_expression: '', schedule_enabled: false },
+    defaultValues: { name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, case_id: null, cron_expression: '', schedule_enabled: false },
   })
 
   const getEnvironment = (job: UiJobItem) => (
@@ -318,6 +333,7 @@ export default function UiTestPage() {
         {r.name}
       </button>
     )},
+    { key: 'case_title', header: '关联用例', headerClassName: 'w-[180px]', className: 'max-w-[180px] truncate', render: (r) => r.case_title || (r.case_id != null ? caseMap[r.case_id] : undefined) || r.case_id || '-' },
     { key: 'test_spec', header: '测试文件', headerClassName: 'w-[200px]', className: 'max-w-[200px] truncate', render: (r) => r.test_spec || '-' },
     { key: 'browser', header: '浏览器', headerClassName: 'w-[100px]', render: (r) => (
       <Badge tone="neutral" className={browserBadgeClass(BROWSER_MAP[r.browser]?.color)}>
@@ -505,6 +521,7 @@ export default function UiTestPage() {
       test_spec: r.test_spec ?? '',
       browser: r.browser ?? 'chromium',
       environment_id: r.environment_id ?? null,
+      case_id: r.case_id ?? null,
       cron_expression: r.cron_expression ?? '',
       schedule_enabled: r.schedule_enabled ?? false,
     })
@@ -564,7 +581,7 @@ export default function UiTestPage() {
               刷新
             </Button>
             {hasPerm('uitest:create') && (
-              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}>
+              <Button onClick={() => { form.reset({ name: '', description: '', test_spec: '', browser: 'chromium', environment_id: null, case_id: null, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}>
                 <Plus className="size-4" />
                 新建任务
               </Button>
@@ -628,6 +645,24 @@ export default function UiTestPage() {
                 <SelectContent>
                   {Object.keys(BROWSER_MAP).map((k) => (
                     <SelectItem key={k} value={k}>{k}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">关联用例</label>
+              <Select
+                value={form.watch('case_id') == null ? '__none__' : String(form.watch('case_id'))}
+                onValueChange={(v) => form.setValue('case_id', v === '__none__' ? null : Number(v))}
+              >
+                <SelectTrigger aria-label="关联用例">
+                  <SelectValue placeholder="选择 UI 用例" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">不关联</SelectItem>
+                  {uiCases.map((c: any) => (
+                    <SelectItem key={c.id} value={String(c.id)}>{c.title}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

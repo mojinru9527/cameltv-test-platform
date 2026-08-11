@@ -44,6 +44,7 @@ class TestCaseOut(BaseModel):
     source: str = "migration"
     source_req_id: str = ""
     source_doc_id: Optional[int] = None
+    dataset_id: Optional[int] = None
     old_id: Optional[int] = None
     review_status: str = "draft"
     review_comment: str = ""
@@ -92,6 +93,7 @@ class TestCaseCreate(BaseModel):
     last_run_status: str = ""
     source: str = "manual"
     source_req_id: str = ""
+    dataset_id: Optional[int] = None
 
 
 class TestCaseUpdate(BaseModel):
@@ -120,6 +122,7 @@ class TestCaseUpdate(BaseModel):
     last_run_status: Optional[str] = None
     source_req_id: Optional[str] = None
     source_doc_id: Optional[int] = None
+    dataset_id: Optional[int] = None
 
 
 # ── 查询参数 ──────────────────────────────────────────
