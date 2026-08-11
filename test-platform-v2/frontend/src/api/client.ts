@@ -45,7 +45,20 @@ client.interceptors.response.use(
       return Promise.reject(err)
     }
     const status = err.response?.status
-    const msg = err.response?.data?.msg || err.response?.data?.detail || err.message || '网络错误'
+    const detail = err.response?.data?.detail
+    let msg = err.response?.data?.msg || ''
+    // FastAPI 422 的 detail 是对象数组，直接透传会被 toast 当作 React child 渲染而整页崩溃。
+    // 统一转成可读字符串，字段名 + 原因，如「请求参数校验失败：assignee_id: Input should be a valid integer」。
+    if (!msg && Array.isArray(detail)) {
+      const parts = detail
+        .map((d: any) => {
+          const field = Array.isArray(d?.loc) && d.loc.length > 0 ? String(d.loc[d.loc.length - 1]) : ''
+          return [field, d?.msg].filter(Boolean).join(': ')
+        })
+        .filter(Boolean)
+      if (parts.length > 0) msg = `请求参数校验失败：${parts.join('; ')}`
+    }
+    msg = msg || (typeof detail === 'string' ? detail : '') || err.message || '网络错误'
     // Keep inline error states as specific as the toast. Axios otherwise
     // exposes only "Request failed with status code …" to page-level recovery UI.
     err.message = msg

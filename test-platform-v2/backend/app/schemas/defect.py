@@ -15,7 +15,7 @@ class DefectCreate(BaseModel):
     severity: str = "P2"            # P0/P1/P2/P3
     case_id: Optional[int] = None
     execution_id: Optional[int] = None
-    assignee_id: int = 0
+    assignee_id: Optional[int] = None
     external_id: str = ""
     external_url: str = ""
 

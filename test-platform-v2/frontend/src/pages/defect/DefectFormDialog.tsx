@@ -48,6 +48,7 @@ interface DefectFormDialogProps {
 
 export default function DefectFormDialog({ open, editing, onClose, onSaved }: DefectFormDialogProps) {
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [users, setUsers] = useState<any[]>([])
   const [cases, setCases] = useState<any[]>([])
 
@@ -59,6 +60,7 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
   // Fetch options and reset form when dialog opens
   useEffect(() => {
     if (open) {
+      setSaveError('')
       fetchUsers().then((r: any) => setUsers(r || [])).catch(() => setUsers([]))
       fetchTestCases({ page_size: 200 }).then((r: any) => setCases(r?.items || [])).catch(() => setCases([]))
 
@@ -80,6 +82,7 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
 
   const doSave = async (vals: DefectFormValues) => {
     setSaving(true)
+    setSaveError('')
     try {
       if (editing?.id) {
         await updateDefect(editing.id, vals)
@@ -90,6 +93,9 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
       }
       onSaved()
       onClose()
+    } catch (e: any) {
+      // 错误信息已由 client 拦截器规范化为可读字符串；此处保证弹窗不关闭、页面不崩溃
+      setSaveError(e?.message || '保存失败，请稍后重试')
     } finally {
       setSaving(false)
     }
@@ -97,6 +103,7 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
 
   const handleClose = () => {
     onClose()
+    setSaveError('')
     form.reset()
   }
 
@@ -189,6 +196,9 @@ export default function DefectFormDialog({ open, editing, onClose, onSaved }: De
             </div>
           </div>
 
+          {saveError && (
+            <p role="alert" className="text-sm text-destructive">{saveError}</p>
+          )}
           <DialogFooter>
             <Button type="button" variant="secondary" onClick={handleClose}>
               取消
