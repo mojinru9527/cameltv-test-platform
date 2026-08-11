@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { createTestCase, updateTestCase, reviewCase, fetchReviewHistory } from '@/api/testcase'
+import { fetchDatasets } from '@/api/dataset'
 import { Code2, FileText } from '@/lib/icons'
 import type { TestCaseReviewTransition } from '@/types'
 
@@ -40,6 +41,7 @@ const formSchema = z.object({
   api_endpoint: z.string().optional().or(z.literal('')),
   api_body: z.string().optional().or(z.literal('')),
   api_assertions: z.string().optional().or(z.literal('')),
+  dataset_id: z.number().nullable().optional().default(null),
   case_design_method: z.string().optional().or(z.literal('')),
   positive_negative: z.string().optional().or(z.literal('')),
   test_data_note: z.string().optional().or(z.literal('')),
@@ -111,19 +113,22 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
       module: '',
       steps: '',
       expected_result: '',
+      dataset_id: null,
     },
   })
 
   const selDomain = watch('domain')
   const selType = watch('case_type')
+  const [datasets, setDatasets] = useState<any[]>([])
 
   useEffect(() => {
     if (open) {
+      fetchDatasets({ page_size: 100 }).then((d: any) => setDatasets(d?.items || [])).catch(() => {})
       if (editing) {
         const vals: Record<string, any> = {}
         for (const key of Object.keys(formSchema.shape)) {
           if (editing[key] !== undefined && editing[key] !== null) {
-            vals[key] = String(editing[key])
+            vals[key] = key === 'dataset_id' ? editing[key] : String(editing[key])
           }
         }
         reset(vals)
@@ -242,7 +247,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
                 selDomain={selDomain} selType={selType}
                 domains={domains} selModules={selModules}
                 watch={watch} setValue={setValue}
-              />
+              datasets={datasets} />
             </TabsContent>
 
             <TabsContent value="review">
@@ -290,7 +295,7 @@ export default function CaseDrawer({ open, editing, domains, onClose, onSaved }:
 
 // ── Sub-components ──
 
-function CaseForm({ register, control, errors, selDomain, selType, domains, selModules, watch, setValue }: any) {
+function CaseForm({ register, control, errors, selType, domains, selModules, watch, setValue, datasets }: any) {
   const stepsValue = watch('steps') || ''
   const [stepsViewMode, setStepsViewMode] = useState<'formatted' | 'json'>('formatted')
 
@@ -452,6 +457,34 @@ function CaseForm({ register, control, errors, selDomain, selType, domains, selM
             <div>
               <label htmlFor="case-api-endpoint" className="mb-1 block text-sm font-medium">接口路径</label>
               <Input id="case-api-endpoint" placeholder="/api/v1/xxx" {...register('api_endpoint')} />
+            </div>
+          </div>
+
+          {/* C147-8: 数据集参数化绑定 */}
+          <div className="grid grid-cols-[180px_1fr] gap-4">
+            <div>
+              <label htmlFor="case-dataset" className="mb-1 block text-sm font-medium">默认数据集</label>
+              <Controller
+                name="dataset_id"
+                control={control}
+                render={({ field }: any) => (
+                  <Select
+                    value={field.value == null ? '__none__' : String(field.value)}
+                    onValueChange={(v) => field.onChange(v === '__none__' ? null : Number(v))}
+                  >
+                    <SelectTrigger id="case-dataset" size="sm"><SelectValue placeholder="未绑定（${列名} 替换需选数据集）" /></SelectTrigger>
+                    <SelectContent position="popper">
+                      <SelectItem value="__none__">未绑定</SelectItem>
+                      {datasets.map((d: any) => (
+                        <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            <div className="flex items-end pb-1">
+              <p className="text-xs text-muted-foreground">执行时按数据集逐行替换请求中的 {'${列名}'} 变量</p>
             </div>
           </div>
 

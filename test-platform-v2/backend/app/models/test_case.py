@@ -63,6 +63,7 @@ class TestCase(Base, TimestampMixin):
     depends_on_ids: Mapped[str] = mapped_column(Text, default="[]")  # C107-2 前置接口用例 id 数组     # JSON: 断言规则数组
     last_response_json: Mapped[str] = mapped_column(Text, default="")  # JSON: 最近执行实际响应
     last_run_status: Mapped[str] = mapped_column(default="")       # success/fail/skipped/error
+    dataset_id: Mapped[int | None] = mapped_column(default=None)  # C147-8 默认数据集
 
     # API 追溯 (batch-34: FK 链路补齐)
     api_endpoint_id: Mapped[int | None] = mapped_column(default=None, index=True)  # FK → ApiEndpoint

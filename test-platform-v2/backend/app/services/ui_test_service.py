@@ -28,6 +28,8 @@ def _job_to_dict(r: UiTestJob, creator_name: str = "") -> dict:
         "name": r.name, "description": r.description,
         "test_spec": r.test_spec, "browser": r.browser,
         "environment_id": r.environment_id,
+        "case_id": getattr(r, "case_id", None),
+        "case_title": "",
         "status": r.status,
         "cron_expression": r.cron_expression,
         "schedule_enabled": r.schedule_enabled, "last_result": r.last_result,
@@ -119,9 +121,18 @@ def list_jobs(
         ).all()
         run_map = {r[0]: (r[1], r[2] or r[3]) for r in run_rows}
 
+    # C151-1: 批量加载关联用例标题
+    case_ids = {getattr(r, "case_id", None) for r in rows if getattr(r, "case_id", None)}
+    case_title_map: dict[int, str] = {}
+    if case_ids:
+        from app.models.test_case import TestCase
+        case_rows = db.scalars(select(TestCase).where(TestCase.id.in_(case_ids))).all()
+        case_title_map = {c.id: c.title for c in case_rows}
+
     items = []
     for r in rows:
         d = _job_to_dict(r, user_map.get(r.creator_id, ""))
+        d["case_title"] = case_title_map.get(getattr(r, "case_id", None), "")
         if r.id in run_map:
             d["last_run_status"] = run_map[r.id][0]
             d["last_run_time"] = run_map[r.id][1]
@@ -152,6 +163,7 @@ def create_job(db: Session, data, creator_id: int, project_id: int) -> dict:
         project_id=project_id, name=data.name,
         description=data.description, test_spec=data.test_spec,
         browser=data.browser, environment_id=data.environment_id,
+        case_id=getattr(data, "case_id", None),
         cron_expression=getattr(data, "cron_expression", ""),
         schedule_enabled=getattr(data, "schedule_enabled", False),
         creator_id=creator_id,
@@ -166,7 +178,7 @@ def update_job(db: Session, job_id: int, data, project_id: int) -> dict | None:
     r = db.scalar(select(UiTestJob).where(UiTestJob.id == job_id, UiTestJob.project_id == project_id))
     if not r:
         return None
-    update_fields = ["name", "description", "test_spec", "browser", "environment_id",
+    update_fields = ["name", "description", "test_spec", "browser", "environment_id", "case_id",
                      "cron_expression", "schedule_enabled"]
     update_data = data.model_dump(exclude_none=True)
     for k in update_fields:
@@ -337,6 +349,12 @@ def execute_playwright_async(run_id: int, job_id: int, project_id: int):
     db = SessionLocal()
     try:
         _run_pw(db, run_id, job_id, project_id)
+        # C151-1: 回写用例结果
+        run = db.get(UiTestRun, run_id)
+        job = db.get(UiTestJob, job_id)
+        if run and job:
+            writeback_case_result(db, job, run)
+            db.commit()
     except Exception:
         logger.exception("UI test async execution failed: run_id=%s, job_id=%s", run_id, job_id)
         try:
@@ -349,11 +367,70 @@ def execute_playwright_async(run_id: int, job_id: int, project_id: int):
             if job:
                 job.status = "fail"
                 job.last_result = json.dumps({"error": "执行器内部异常"}, ensure_ascii=False)
+                writeback_case_result(db, job, run) if run else None
             db.commit()
         except Exception:
             logger.exception("Failed to update run/job after crash: run_id=%s", run_id)
     finally:
         db.close()
+
+
+def writeback_case_result(db: Session, job: UiTestJob, run: UiTestRun) -> None:
+    """C151-1: UI 运行结果回写关联用例（last_run_status + last_response_json）。"""
+    case_id = getattr(job, "case_id", None)
+    if not case_id:
+        return
+    from app.models.test_case import TestCase
+
+    case = db.get(TestCase, case_id)
+    if not case:
+        return
+    status_map = {"done": "pass", "fail": "fail", "cancelled": "skipped", "pending": "pending", "running": "running"}
+    case.last_run_status = status_map.get(run.status, run.status)
+    try:
+        summary = json.loads(run.result or "{}")
+    except (json.JSONDecodeError, TypeError):
+        summary = {"error": (run.error_message or "")[:500]}
+    summary["ui_run_id"] = run.id
+    summary["ui_job_id"] = job.id
+    case.last_response_json = json.dumps(summary, ensure_ascii=False)[:4000]
+
+
+def create_jobs_from_cases(
+    db: Session,
+    *,
+    project_id: int,
+    case_ids: list[int],
+    creator_id: int,
+) -> dict:
+    """C151-1: 从用例批量创建 UI 任务（映射 case_id，spec 由用户后续补充）。"""
+    from app.models.test_case import TestCase
+
+    if not case_ids:
+        raise ValueError("请选择用例")
+    rows = db.scalars(
+        select(TestCase).where(
+            TestCase.project_id == project_id,
+            TestCase.is_deleted.is_(False),
+            TestCase.id.in_(case_ids),
+        )
+    ).all()
+    if not rows:
+        raise ValueError("用例不存在或不属于当前项目")
+    created = []
+    for case in rows:
+        job = UiTestJob(
+            project_id=project_id,
+            name=f"[用例] {case.title}"[:200],
+            case_id=case.id,
+            browser="chromium",
+            creator_id=creator_id,
+        )
+        db.add(job)
+        db.flush()
+        created.append({"job_id": job.id, "case_id": case.id, "case_title": case.title})
+    db.commit()
+    return {"created": len(created), "items": created}
 
 
 def list_available_specs() -> list[str]:
