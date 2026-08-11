@@ -14,7 +14,7 @@
 | 后端 F821 | `python -m ruff check app/ --select F821` | 0，All checks passed |
 | 后端受影响 pytest | `python -m pytest tests/test_testplan.py tests/test_batch148_p0_fixes.py tests/test_api_execution_target_policy.py -q` | 0，22 passed（19.16s） |
 | 后端导入 | `python -c "import app.main"` | 0（solox 警告为既有基线） |
-| Alembic | `alembic heads`；临时 SQLite `upgrade head` + `downgrade -1` | 单头 `20260811_batch148_execution_error_fields`；三列增减正确 |
+| Alembic | `alembic heads`；临时 SQLite `upgrade head` + `downgrade -1` | 单头 `20260811_batch148_exec_err`；三列增减正确 |
 | 前端 typecheck | `npm run typecheck` | 0 |
 | 前端 build | `npm run build` | 0，✓ built in 11.05s |
 | 前端全量 vitest | `npx vitest run` | 0，111 files / 450 tests passed |
@@ -34,7 +34,7 @@
 | 浏览器端到端 | ✅ | toast「缺陷已创建」，0 pageerror（evidence/batch-148/defect-create.png） |
 
 ### C147-2 执行失败根因可见性 + 环境/Token 预检
-**变更文件**: backend/app/models/test_plan.py、backend/alembic/versions/20260811_batch148_execution_error_fields.py、backend/app/services/test_plan_service.py、backend/app/schemas/test_plan.py、frontend/src/api/testplan.ts、frontend/src/pages/testplan/PlanDetail.tsx
+**变更文件**: backend/app/models/test_plan.py、backend/alembic/versions/20260811_batch148_exec_err.py、backend/app/services/test_plan_service.py、backend/app/schemas/test_plan.py、frontend/src/api/testplan.ts、frontend/src/pages/testplan/PlanDetail.tsx
 
 | 检查项 | 结果 | 说明 |
 |--------|------|------|

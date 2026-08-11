@@ -20,7 +20,7 @@
 - ✅ `client.ts` 422 detail 数组转可读字符串；`DefectFormDialog` 失败态不关闭
 - ✅ `test_plan_service.py::ensure_plan_execution_ready` 预检语义（环境归属/base_url/变量）
 - ✅ `_execution_to_dict` 历史回填；`ExecutionOut` 三字段同步
-- ✅ 迁移 `20260811_batch148_execution_error_fields` 单头 + 临时库升降级
+- ✅ 迁移 `20260811_batch148_exec_err` 单头 + 临时库升降级
 - ✅ 冒烟证据 `evidence/batch-148/`（缺陷创建/执行历史/无环境拦截三图 + smoke-results.md）
 
 ## 判决

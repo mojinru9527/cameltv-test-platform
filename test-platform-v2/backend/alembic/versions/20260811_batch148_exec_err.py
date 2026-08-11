@@ -1,6 +1,6 @@
 """batch148_test_execution_error_fields
 
-Revision ID: 20260811_batch148_execution_error_fields
+Revision ID: 20260811_batch148_exec_err
 Revises: 20260808_batch121_topo_edges
 Create Date: 2026-08-11
 
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "20260811_batch148_execution_error_fields"
+revision: str = "20260811_batch148_exec_err"
 down_revision: Union[str, None] = "20260808_batch121_topo_edges"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
