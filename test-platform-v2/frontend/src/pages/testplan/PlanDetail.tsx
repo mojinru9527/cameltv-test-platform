@@ -6,6 +6,7 @@ import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/ui'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -178,6 +179,12 @@ export default function PlanDetail() {
     load()
   }
 
+  const doToggleAutoDefect = async () => {
+    await updatePlan(planId, { auto_defect_on_fail: !plan.auto_defect_on_fail })
+    toast.success(plan.auto_defect_on_fail ? '已关闭失败自动链路' : '已开启失败自动链路')
+    load()
+  }
+
   const doRemoveCase = async (caseId: number) => {
     await removeCasesFromPlan(planId, [caseId])
     toast.success('已移除')
@@ -281,6 +288,17 @@ export default function PlanDetail() {
               </SelectContent>
             </Select>
           )}
+          <label
+            className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground"
+            title="执行失败时自动生成缺陷、报告并推送通知（需在计划编辑中确认开关语义）"
+          >
+            <Checkbox
+              checked={!!plan.auto_defect_on_fail}
+              onCheckedChange={() => void doToggleAutoDefect()}
+              aria-label="失败自动转缺陷/报告/通知"
+            />
+            失败自动链路
+          </label>
           <Button
             size="sm"
             variant="primary"
