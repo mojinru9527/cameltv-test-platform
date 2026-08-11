@@ -732,6 +732,26 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C146-5 | 计划页三执行按钮合并 + 手动录入默认值改「请选择」（TP-02/TP-03） | P2 | 2026-08-11 |
 | C146-6 | 空白机搭建引导：docs/local-setup.md + launcher -InstallDeps + 孤儿文件清理 | P2 | 2026-08-11 |
 
+### batch-147 — 全平台四视角深度对抗审查·双 AI 交叉验证（Batch 147 Leader 条件）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C147-1 | 缺陷新建 422 契约修复 + 前端错误边界：`DefectCreate.assignee_id` 改 Optional 或前端 null→0，禁止把 API 错误对象渲染为 React child（新 P0，缺陷主写路径崩溃） | P0 | 2026-08-11 |
+| C147-2 | 执行失败根因可见性 + 环境/Token 就绪检查（承接 C146-1）：执行历史暴露 actual_result 的 error/error_type/status_code；计划执行前强制选择环境并预检 base_url/Token（325 失败 URL http:/// 无法解析） | P0 | 2026-08-11 |
+| C147-3 | 统计口径收敛 5→1 + trace 补 is_deleted 过滤 + 修复 dashboard 执行计数 0（承接 C146-2；7879/9429/325 三数字并存） | P1 | 2026-08-11 |
+| C147-4 | 计划列表进度恒 0/0 修复：`PlanOut` schema 补 stats 字段（新 P1） | P1 | 2026-08-11 |
+| C147-5 | 请求冗余修复（承接 C146-3）：menus/environments/domains 会话缓存 + 搜索 300ms 防抖 + 轮询指数退避 + mindmap 服务端 taxonomy 聚合 + integration 去 page_size=1 探针（menus×53/10.1MB） | P1 | 2026-08-11 |
+| C147-6 | 四者关联闭环：功能用例入计划 + UI 自动化与用例映射回写 + 执行→缺陷→报告→通知自动链路（承接 C146-1 下游） | P1 | 2026-08-11 |
+| C147-7 | 使用手册 v2.6 更新至生产现状 + frontend README 技术栈修正（ant-design→shadcn、React Router 6→8）+ PostgreSQL 指南废弃分支引用修复（承接 C146-4） | P1 | 2026-08-11 |
+| C147-8 | 数据集参数化注入 API 用例 UI 打通：接口用例创建/编辑与执行任务增加数据集选择 + ${变量} 绑定（新发现） | P2 | 2026-08-11 |
+| C147-9 | 知识图谱治理：missing_source 946 补全 + graph_evolve 报错修复 + 业务数据删除级联同步知识切片（承接 C126-1；新发现 graph_evolve 报错/已删缺陷残留） | P2 | 2026-08-11 |
+| C147-10 | 空白机搭建引导（承接 C146-6）：docs/local-setup.md + launcher -InstallDeps + 孤儿文件清理 + env 统一入口 | P2 | 2026-08-11 |
+
+
+| ID | 来源批次 | 补录说明 |
+|----|---------|---------|
+| C138-1 | batch-137→138 | 生产配置真实 OCR 引擎（LANHU_OCR_COMMAND 容器内路径），见 batch-137 leader-verdict；未入追踪器补录 |
+| C140-1 | batch-139→140 | Railway 为 /app/storage 配置持久卷（蓝湖证据截图/导出），见 batch-139/140/141 verdict；未入追踪器补录 |
 
 ---## 统计
 
