@@ -20,16 +20,19 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-def _existing_columns() -> set[str]:
+def _existing_columns() -> set[str] | None:
+    """返回 test_execution 现有列；表不存在（stamp 到中间 revision 的空库）返回 None 表示跳过。"""
     conn = op.get_bind()
     inspector = sa.inspect(conn)
     if "test_execution" not in inspector.get_table_names():
-        return set()
+        return None
     return {c["name"] for c in inspector.get_columns("test_execution")}
 
 
 def upgrade() -> None:
     cols = _existing_columns()
+    if cols is None:
+        return
     if "status_code" not in cols:
         op.add_column(
             "test_execution",
@@ -49,6 +52,8 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     cols = _existing_columns()
+    if cols is None:
+        return
     for col in ("error_message", "error_type", "status_code"):
         if col in cols:
             op.drop_column("test_execution", col)
