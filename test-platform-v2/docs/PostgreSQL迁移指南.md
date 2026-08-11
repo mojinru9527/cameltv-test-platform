@@ -6,7 +6,7 @@
 ## 前置条件
 
 - Docker 20.10+ 或本地 PostgreSQL 14+
-- 已拉取最新 `feature/p1-batch-a-security` 分支（V2.6+）
+- 已从最新 `main` 拉取代码（PostgreSQL 支持已随主干合入，无需旧功能分支）
 
 ---
 
