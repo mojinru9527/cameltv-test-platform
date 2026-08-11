@@ -31,6 +31,15 @@ class PlanUpdate(BaseModel):
     due_date: Optional[datetime] = None
 
 
+class PlanStats(BaseModel):
+    total: int = 0
+    pending: int = 0
+    pass_: int = 0
+    fail: int = 0
+    skip: int = 0
+    block: int = 0
+
+
 class PlanOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -48,6 +57,8 @@ class PlanOut(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     assignee_name: str = ""
+    # Batch 149 (C147-4): 计划进度（前端列表直接展示），由 service 填充
+    stats: PlanStats = PlanStats()
 
 
 # ── PlanCase (计划内用例) ──────────────────────────────
@@ -115,15 +126,6 @@ class ExecutionOut(BaseModel):
 
 
 # ── PlanDetail (含用例列表 + 统计) ─────────────────────
-
-class PlanStats(BaseModel):
-    total: int = 0
-    pending: int = 0
-    pass_: int = 0
-    fail: int = 0
-    skip: int = 0
-    block: int = 0
-
 
 class PlanDetailOut(PlanOut):
     cases: list[PlanCaseOut] = []
