@@ -103,6 +103,11 @@ class ExecutionOut(BaseModel):
     executed_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
 
+    # Batch 148 (C147-2): 失败根因独立字段（历史行由 service 从 actual_result 回填）
+    status_code: int = 0
+    error_type: str = ""
+    error_message: str = ""
+
     # 内联
     case_id: int = 0
     case_title: str = ""
