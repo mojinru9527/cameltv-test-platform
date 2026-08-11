@@ -32,6 +32,8 @@ function isBatchResult(res: ApiExecutionResult | BatchExecutionResult): res is B
 
 export default function ApiCaseTab() {
   const projectId = useAuthStore(s => s.currentProjectId)
+  const projects = useAuthStore(s => s.projects)
+  const currentProject = (projects || []).find(p => p.id === projectId)
   const [apiCases, setApiCases] = useState<any[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [result, setResult] = useState<any>(null)
@@ -335,7 +337,7 @@ export default function ApiCaseTab() {
       <ProductionOperationDialog
         open={pendingExecution !== null}
         onOpenChange={(open) => { if (!open) setPendingExecution(null) }}
-        project={`项目 #${projectId ?? '-'}`}
+        project={currentProject?.name || `项目 #${projectId ?? '-'}`}
         environment={envs.find(environment => environment.id === envId)?.name ?? '未选择环境'}
         baseUrl={envs.find(environment => environment.id === envId)?.base_url ?? '未配置'}
         operation={pendingExecution?.name ?? '执行 API 用例'}
