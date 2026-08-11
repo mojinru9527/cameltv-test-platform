@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.db import SessionLocal
 from app.models.knowledge import AiArtifact
 from app.models.wiki import WikiDiffItem, WikiDiffTask
+from app.services.knowledge.artifact_confidence import severity_confidence
 from app.services.wiki import contract_extractor, diff_classifier
 
 logger = logging.getLogger("wiki.compare")
@@ -108,7 +109,7 @@ def create_artifact_from_item(
         title=f"[差异补齐] {item.title}"[:200],
         content_json=json.dumps(content, ensure_ascii=False),
         source_refs=item.evidence_json or "[]",
-        review_status="pending", confidence=0.0,
+        review_status="pending", confidence=severity_confidence(item.severity),
     )
     db.add(art)
     db.flush()

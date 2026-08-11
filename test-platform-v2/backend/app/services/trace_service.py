@@ -63,14 +63,17 @@ def get_project_coverage(db: Session, project_id: int) -> dict:
         .where(RequirementDocument.project_id == project_id)
     ) or 0
 
-    # Requirements that have had cases imported
+    # Requirements covered by actual cases（C126-2：以 source_doc_id 实际关联为锚，
+    # 不依赖 imported_count 计数器——AI 生成用例路径不更新该计数器导致覆盖率恒 0）
     req_with_cases = db.scalar(
-        select(func.count(RequirementDocument.id))
+        select(func.count(func.distinct(TestCase.source_doc_id)))
         .where(
-            RequirementDocument.project_id == project_id,
-            RequirementDocument.imported_count > 0,
+            TestCase.project_id == project_id,
+            TestCase.is_deleted.is_(False),
+            TestCase.source_doc_id.isnot(None),
         )
     ) or 0
+    req_with_cases = min(req_with_cases, req_count)
 
     return {
         "total_cases": total_cases,

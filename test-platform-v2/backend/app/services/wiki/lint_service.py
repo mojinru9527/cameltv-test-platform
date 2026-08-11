@@ -26,6 +26,7 @@ from app.models.wiki import (
     WikiPage,
     WikiRawSource,
 )
+from app.services.knowledge.artifact_confidence import severity_confidence
 
 
 def _issue(
@@ -441,6 +442,7 @@ def convert_issues_to_artifacts(
                 ensure_ascii=False,
             ),
             review_status="pending",
+            confidence=severity_confidence(issue.severity),
         )
         db.add(art)
         db.flush()

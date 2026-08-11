@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-11 (Batch 152: 关闭 C146-4/C147-7/C147-10 部分，登记 C152-1)
+**最后更新**: 2026-08-11 (Batch 153: 关闭 C126-2/C126-3)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -718,8 +718,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | C126-1 | 知识实体来源补全：实体提取/导入填充 source_id/source_ref + 存量实体回填脚本，消除「来源待补」 | P1 | 2026-08-09 |
-| C126-2 | 需求覆盖率口径核对（当前 4 文档/476 AI 用例但覆盖率 0%） | P2 | 2026-08-09 |
-| C126-3 | AI 审核台差异补齐产物置信度计算核对（85 条待审置信度 0%） | P2 | 2026-08-09 |
+| ~~C126-2~~ | ~~需求覆盖率口径核对（当前 4 文档/476 AI 用例但覆盖率 0%）~~ → **Closed**：Batch 153（覆盖率以 source_doc_id 实际关联为锚，不依赖 imported_count），见 batch-153-qa-report，commit 11efbe3 | P2 | 2026-08-09 |
+| ~~C126-3~~ | ~~AI 审核台差异补齐产物置信度计算核对（85 条待审置信度 0%）~~ → **Closed**：Batch 153（artifact_confidence 模块 + 三处创建接入），见 batch-153-qa-report，commit 11efbe3 | P2 | 2026-08-09 |
 | C126-4 | 图谱大数据量性能优化（970 实体渲染，承接 C123-4 分层/聚合） | P3 | 2026-08-09 |
 ### batch-146 — 四视角深度对抗审查（Batch 146 Leader 条件）
 
@@ -772,6 +772,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C146-3 | batch-146→150 | Batch 150 关闭（由 C147-5 承接实现），见 batch-150-qa-report，commit d8509f7 |
 | C147-6 | batch-147→151 | Batch 151 关闭（主链路：功能用例入计划 + 失败自动缺陷/报告/通知），见 batch-151-qa-report，commit bb1f00c |
 | C147-7 | batch-147→152 | Batch 152 关闭（手册 v2.7 + README/CLAUDE 技术栈 + PG 指南），见 batch-152-qa-report，commit c19b4a9 |
+| C126-2 | batch-126→153 | Batch 153 关闭（需求覆盖率口径核对），见 batch-153-qa-report，commit 11efbe3 |
+| C126-3 | batch-126→153 | Batch 153 关闭（AI 产物置信度计算），见 batch-153-qa-report，commit 11efbe3 |
 | C146-4 | batch-146→152 | Batch 152 关闭（由 C147-7 承接实现），见 batch-152-qa-report，commit c19b4a9 |
 | C147-10 | batch-147→152 | Batch 152 关闭（部分：local-setup.md + launcher -InstallDeps；剩余登记 C152-1），见 batch-152-qa-report，commit c19b4a9 |
 | C138-1 | batch-137→138 | 生产配置真实 OCR 引擎（LANHU_OCR_COMMAND 容器内路径），见 batch-137 leader-verdict；未入追踪器补录 |
