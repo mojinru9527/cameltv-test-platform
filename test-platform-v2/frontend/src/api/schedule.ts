@@ -15,9 +15,11 @@ export async function fetchSchedule(id: number) {
 export async function createSchedule(body: {
   name: string
   description?: string
+  job_type?: 'plan' | 'report'
   plan_id: number
   cron_expression: string
   enabled?: boolean
+  disabled_reason?: string
 }) {
   return api.post('/schedules', body)
 }
