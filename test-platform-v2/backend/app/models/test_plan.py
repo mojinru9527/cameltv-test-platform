@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -69,6 +69,12 @@ class TestExecution(Base):
     actual_result: Mapped[str] = mapped_column(default="")
     notes: Mapped[str] = mapped_column(default="")
     trace_id: Mapped[str] = mapped_column(default="")       # ELK traceId
+    # Batch 148 (C147-2): 失败根因独立字段，UI 直接展示；历史行由 actual_result JSON 回填解析
+    status_code: Mapped[int] = mapped_column(default=0, comment="最近一次执行的 HTTP 状态码，0=未发出请求")
+    error_type: Mapped[str] = mapped_column(
+        String(50), default="", comment="失败阶段/错误类型: TARGET_POLICY/TIMEOUT/NETWORK_ERROR/ASSERTION_FAILED/EXECUTION_ERROR"
+    )
+    error_message: Mapped[str] = mapped_column(Text, default="", comment="失败原因摘要")
     executed_at: Mapped[datetime] = mapped_column(default=datetime.now)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 

@@ -177,7 +177,7 @@ def create_defect(db: Session, data, creator_id: int, project_id: int) -> dict:
         status="open",
         case_id=data.case_id,
         execution_id=data.execution_id,
-        assignee_id=data.assignee_id,
+        assignee_id=data.assignee_id or 0,
         external_id=data.external_id,
         external_url=data.external_url,
         creator_id=creator_id,

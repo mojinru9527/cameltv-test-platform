@@ -286,6 +286,21 @@ persist(
 
 ---
 
+### 2.8 FastAPI 422 detail 是对象数组，必须字符串化后再展示（否则整页崩溃）
+
+**现象**：新建/编辑表单触发后端 422 时页面整页崩溃，控制台报「Objects are not valid as a React child」；新建缺陷默认不选处理人即复现（Batch 147 P0-01）。
+
+**根因**：FastAPI 校验失败返回 `{"detail": [{loc, msg, type}, ...]}`，是对象数组；前端 Axios 拦截器错误提取链 `msg || detail || message` 直接把数组交给 `toast.error`，sonner 把对象数组当 React child 渲染即崩溃。
+
+**解决方案**（Batch 148 已修复，2026-08-11）：
+- 拦截器把数组型 `detail` 转可读字符串：`请求参数校验失败：assignee_id: Input should be a valid integer; title: Field required`
+- 表单提交加 `catch`，失败在弹窗内展示并保持弹窗打开，不关闭不崩溃
+- 契约侧：可空字段用 `Optional[...] = None`，避免合法「未指定」被 422
+
+**相关文件**：`test-platform-v2/frontend/src/api/client.ts`、`test-platform-v2/frontend/src/pages/defect/DefectFormDialog.tsx`、`test-platform-v2/backend/app/schemas/defect.py`
+
+---
+
 ## 3. 蓝湖 MCP 陷阱
 
 ### 3.1 Cookie 过期

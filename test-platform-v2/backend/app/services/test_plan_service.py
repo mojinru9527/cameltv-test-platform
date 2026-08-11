@@ -327,6 +327,76 @@ def get_executions(
 
 
 # ═══════════════════════════════════════════════════════
+# 环境预检（Batch 148 / C147-2）
+# ═══════════════════════════════════════════════════════
+
+_VAR_TOKEN = re.compile(r"\$\{(\w+)\}")
+
+
+def ensure_plan_execution_ready(
+    db: Session,
+    plan_id: int,
+    *,
+    project_id: int,
+    environment_id: int | None,
+) -> None:
+    """执行前环境/Token 就绪检查（Batch 148 / C147-2）。
+
+    仅当计划包含 API 类型用例时强制检查：
+    - 必须提供环境且环境属于当前项目；
+    - 相对路径端点要求环境已配置 base_url；
+    - 用例引用但环境变量中不存在的 ${{var}}（如 ${{token}}）直接拦截。
+
+    未就绪抛 ValueError，由 router 转 R(code=1, msg=...) 明确提示，
+    不产生任何执行记录。
+    """
+    from app.models.environment import EnvironmentVariable
+    from app.services.environment_service import get_environment
+
+    pcs = db.scalars(
+        select(TestPlanCase).where(TestPlanCase.plan_id == plan_id)
+    ).all()
+    api_cases = []
+    for pc in pcs:
+        tc = db.get(TestCase, pc.case_id)
+        if tc and tc.case_type == "api":
+            api_cases.append((pc, tc))
+    if not api_cases:
+        return  # 纯人工/UI 计划不需要环境
+
+    if not environment_id:
+        raise ValueError("计划包含 API 用例，请先选择执行环境（含 base_url 与变量）后再执行")
+
+    env = get_environment(db, environment_id, project_id)
+    if not env:
+        raise ValueError("执行环境不存在或不属于当前项目，请重新选择")
+
+    var_rows = db.scalars(
+        select(EnvironmentVariable).where(EnvironmentVariable.environment_id == environment_id)
+    ).all()
+    var_keys = {v.key for v in var_rows}
+
+    need_base_url = False
+    missing_vars: set[str] = set()
+    for _pc, tc in api_cases:
+        endpoint = (tc.api_endpoint or "").strip()
+        if endpoint and not endpoint.startswith(("http://", "https://")):
+            need_base_url = True
+        for template in (tc.api_headers or "", tc.api_body or "", endpoint):
+            for m in _VAR_TOKEN.finditer(template):
+                key = m.group(1)
+                if key not in var_keys:
+                    missing_vars.add(f"{key}（用例「{tc.title}」）")
+
+    if need_base_url and not (env.get("base_url") or "").strip():
+        raise ValueError(f"执行环境「{env['name']}」未配置 base_url，无法拼接用例的相对路径")
+    if missing_vars:
+        raise ValueError(
+            "执行环境缺少以下变量（请先在环境变量中配置）: " + "、".join(sorted(missing_vars))
+        )
+
+
+# ═══════════════════════════════════════════════════════
 # 统计
 # ═══════════════════════════════════════════════════════
 
@@ -406,6 +476,10 @@ def auto_execute_api_cases(
     if not plan:
         raise ValueError("计划不存在")
 
+    ensure_plan_execution_ready(
+        db, plan_id, project_id=project_id, environment_id=environment_id,
+    )
+
     # 获取所有 API 类型用例的 plan_case
     pcs = db.scalars(
         select(TestPlanCase)
@@ -439,6 +513,7 @@ def auto_execute_api_cases(
             actual_result = json.dumps(exec_result, ensure_ascii=False, default=str)
 
             # 创建执行记录
+            exec_status_code, exec_error_type, exec_error_message = _execution_error_fields(actual_result)
             exec_row = TestExecution(
                 plan_case_id=pc.id,
                 executor_id=executor_id,
@@ -446,6 +521,9 @@ def auto_execute_api_cases(
                 actual_result=actual_result,
                 notes=f"API 自动执行: {tc.api_method or 'GET'} {tc.api_endpoint}",
                 trace_id="",
+                status_code=exec_status_code,
+                error_type=exec_error_type,
+                error_message=exec_error_message,
                 executed_at=now,
             )
             db.add(exec_row)
@@ -458,6 +536,7 @@ def auto_execute_api_cases(
         except Exception as e:
             status = "fail"
             actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
+            exec_status_code, exec_error_type, exec_error_message = _execution_error_fields(actual_result)
             exec_row = TestExecution(
                 plan_case_id=pc.id,
                 executor_id=executor_id,
@@ -465,6 +544,9 @@ def auto_execute_api_cases(
                 actual_result=actual_result,
                 notes=f"API 执行异常: {e}",
                 trace_id="",
+                status_code=exec_status_code,
+                error_type=exec_error_type,
+                error_message=exec_error_message,
                 executed_at=now,
             )
             db.add(exec_row)
@@ -636,6 +718,10 @@ def execute_all_cases(
     if not plan:
         raise ValueError("计划不存在")
 
+    ensure_plan_execution_ready(
+        db, plan_id, project_id=project_id, environment_id=environment_id,
+    )
+
     pcs = db.scalars(
         select(TestPlanCase).where(TestPlanCase.plan_id == plan_id)
     ).all()
@@ -695,7 +781,8 @@ def execute_all_cases(
             actual_result = ""
             notes = "需人工执行"
 
-        # 创建执行记录
+        # 创建执行记录（Batch 148: 失败根因独立字段）
+        exec_status_code, exec_error_type, exec_error_message = _execution_error_fields(actual_result)
         exec_row = TestExecution(
             plan_case_id=pc.id,
             executor_id=executor_id,
@@ -703,6 +790,9 @@ def execute_all_cases(
             actual_result=actual_result,
             notes=notes,
             trace_id="",
+            status_code=exec_status_code,
+            error_type=exec_error_type,
+            error_message=exec_error_message,
             executed_at=now,
         )
         db.add(exec_row)
@@ -750,6 +840,42 @@ def execute_all_cases(
 # helpers
 # ═══════════════════════════════════════════════════════
 
+def _execution_error_fields(actual_result: str) -> tuple[int, str, str]:
+    """从 actual_result JSON 提取 (status_code, error_type, error_message)。
+
+    兼容历史行：Batch 148 之前失败根因只存在 actual_result JSON 里，
+    DB 独立字段为空时由 _execution_to_dict 调用本函数回填展示。
+    """
+    try:
+        data = json.loads(actual_result) if actual_result else {}
+    except (json.JSONDecodeError, TypeError):
+        data = {}
+    if not isinstance(data, dict):
+        return 0, "", ""
+
+    status_code = data.get("status_code") or 0
+    try:
+        status_code = int(status_code)
+    except (TypeError, ValueError):
+        status_code = 0
+
+    error_type = data.get("error_type") or ""
+    error_message = data.get("error") or data.get("message") or ""
+
+    if error_message and not error_type:
+        error_type = "EXECUTION_ERROR"
+    if not error_message and data.get("all_pass") is False:
+        summary = data.get("assertion_summary") or {}
+        if isinstance(summary, dict):
+            failed = int(summary.get("failed") or 0)
+            total = int(summary.get("total") or 0)
+            error_message = f"断言失败 {failed}/{total} 条"
+        else:
+            error_message = f"断言失败（HTTP {status_code}）"
+        error_type = error_type or "ASSERTION_FAILED"
+    return status_code, error_type, error_message
+
+
 def _plan_to_dict(r: TestPlan) -> dict:
     return {
         "id": r.id,
@@ -790,6 +916,11 @@ def _plan_case_to_dict(pc: TestPlanCase, case: TestCase | None) -> dict:
 
 def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
     trace_id = getattr(r, "trace_id", "") or ""
+    # Batch 148: 独立字段优先，缺失时（历史行）从 actual_result JSON 回填
+    parsed_sc, parsed_et, parsed_em = _execution_error_fields(r.actual_result or "")
+    status_code = getattr(r, "status_code", 0) or parsed_sc
+    error_type = getattr(r, "error_type", "") or parsed_et
+    error_message = getattr(r, "error_message", "") or parsed_em
     return {
         "id": r.id,
         "plan_case_id": r.plan_case_id,
@@ -799,6 +930,9 @@ def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
         "notes": r.notes,
         "trace_id": trace_id,
         "kibana_link": build_kibana_link(trace_id) if trace_id else "",
+        "status_code": status_code,
+        "error_type": error_type,
+        "error_message": error_message,
         "executed_at": r.executed_at.isoformat() if r.executed_at else None,
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "case_id": case.id if case else 0,

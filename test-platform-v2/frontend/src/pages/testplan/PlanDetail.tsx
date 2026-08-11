@@ -61,6 +61,7 @@ import EmptyState from '@/components/EmptyState'
 import TriagePanel from '@/components/TriagePanel'
 import { SkeletonText, SkeletonPage } from '@/components/ui/skeleton'
 import { autoExecutePlan, deletePlan, executeCase, executeAllCases, fetchExecutions, fetchPlan, removeCasesFromPlan, updatePlan } from '@/api/testplan'
+import { fetchEnvironments } from '@/api/environment'
 import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
 import AddCasesModal from './AddCasesModal'
 import PlanDrawer from './PlanDrawer'
@@ -89,6 +90,19 @@ const PLAN_STATUS: Record<string, { tone: 'success' | 'warning' | 'danger' | 'in
   archived: { tone: 'neutral', label: '已归档' },
 }
 
+// Batch 148 (C147-2): 失败阶段中文映射（与后端 error_type 对齐）
+const ERROR_TYPE_LABELS: Record<string, string> = {
+  INVALID_CASE: '用例校验',
+  TARGET_POLICY: '目标策略/URL',
+  POLICY_DENIED: '策略拦截',
+  TIMEOUT: '请求超时',
+  NETWORK_ERROR: '网络连接',
+  ASSERTION_FAILED: '断言失败',
+  EXECUTION_ERROR: '执行异常',
+}
+
+const errorTypeLabel = (t?: string) => (t && ERROR_TYPE_LABELS[t]) || t || '-'
+
 export default function PlanDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -108,6 +122,8 @@ export default function PlanDetail() {
   const [deletePlanOpen, setDeletePlanOpen] = useState(false)
   const [execAllLoading, setExecAllLoading] = useState(false)
   const [autoExecuting, setAutoExecuting] = useState(false)
+  const [environments, setEnvironments] = useState<any[]>([])
+  const [selectedEnv, setSelectedEnv] = useState('__none__')
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
@@ -136,6 +152,20 @@ export default function PlanDetail() {
   useAbortableEffect((signal) => { void load(signal) }, [load])
   useAbortableEffect((signal) => { void loadExecutions(signal) }, [loadExecutions])
 
+  const loadEnvironments = useCallback(async (signal?: AbortSignal) => {
+    try {
+      const envs: any = await fetchEnvironments(signal)
+      if (signal?.aborted) return
+      setEnvironments(envs || [])
+      // 只有一个环境时自动选中，减少一步操作
+      if (envs?.length === 1) setSelectedEnv(String(envs[0].id))
+    } catch (error) {
+      rethrowUnlessAborted(error, signal)
+    }
+  }, [])
+
+  useAbortableEffect((signal) => { void loadEnvironments(signal) }, [loadEnvironments])
+
   const doDeletePlan = async () => {
     await deletePlan(planId)
     toast.success('计划已删除')
@@ -155,10 +185,22 @@ export default function PlanDetail() {
     load()
   }
 
+  const selectedEnvId = selectedEnv === '__none__' ? undefined : Number(selectedEnv)
+  const hasApiCases = (plan?.cases || []).some((c: any) => c.case_type === 'api')
+
+  const ensureEnvSelected = () => {
+    if (hasApiCases && selectedEnvId == null) {
+      toast.error('计划包含 API 用例，请先选择执行环境（含 base_url 与变量）')
+      return false
+    }
+    return true
+  }
+
   const doAutoExecute = async () => {
+    if (!ensureEnvSelected()) return
     setAutoExecuting(true)
     try {
-      const result: any = await autoExecutePlan(planId)
+      const result: any = await autoExecutePlan(planId, selectedEnvId)
       toast.success(`批量执行完成: ${result.executed} 条执行, ${result.passed} 通过, ${result.failed} 失败`)
       load()
       loadExecutions()
@@ -188,9 +230,10 @@ export default function PlanDetail() {
   }
 
   const doExecuteAll = async () => {
+    if (!ensureEnvSelected()) return
     setExecAllLoading(true)
     try {
-      const result: any = await executeAllCases(planId)
+      const result: any = await executeAllCases(planId, selectedEnvId)
       toast.success(`批量执行完成: ${result.passed} 通过, ${result.failed} 失败, ${result.skipped} 跳过`)
       load()
       loadExecutions()
@@ -225,6 +268,19 @@ export default function PlanDetail() {
         </Badge>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
+          {hasApiCases && (
+            <Select value={selectedEnv} onValueChange={setSelectedEnv}>
+              <SelectTrigger id="plan-exec-env" className="w-[180px]" aria-label="执行环境">
+                <SelectValue placeholder="请选择环境" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">请选择环境</SelectItem>
+                {environments.map((e: any) => (
+                  <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Button
             size="sm"
             variant="primary"
@@ -360,13 +416,13 @@ export default function PlanDetail() {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-8">
+                        <TableCell colSpan={8} className="py-8">
                           <SkeletonText lines={4} />
                         </TableCell>
                       </TableRow>
                     ) : (plan.cases || []).length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-8">
+                        <TableCell colSpan={8} className="py-8">
                           <EmptyState title="暂无用例" description="点击「添加用例」将用例纳入计划" className="py-0" />
                         </TableCell>
                       </TableRow>
@@ -440,6 +496,9 @@ export default function PlanDetail() {
                       <TableHead>用例</TableHead>
                       <TableHead className="w-[80px]">结果</TableHead>
                       <TableHead className="w-[200px]">备注</TableHead>
+                      <TableHead className="w-[220px]">失败原因</TableHead>
+                      <TableHead className="w-[90px]">HTTP 状态</TableHead>
+                      <TableHead className="w-[110px]">失败阶段</TableHead>
                       <TableHead className="w-[170px]">时间</TableHead>
                       <TableHead className="w-[80px]">链路</TableHead>
                     </TableRow>
@@ -447,13 +506,13 @@ export default function PlanDetail() {
                   <TableBody>
                     {execLoading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-8">
+                        <TableCell colSpan={8} className="py-8">
                           <SkeletonText lines={4} />
                         </TableCell>
                       </TableRow>
                     ) : executions.items?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="py-8">
+                        <TableCell colSpan={8} className="py-8">
                           <EmptyState title="暂无执行记录" description="对用例执行测试后将在此显示记录" className="py-0" />
                         </TableCell>
                       </TableRow>
@@ -467,6 +526,26 @@ export default function PlanDetail() {
                               <Badge tone={sc.tone} className={sc.className}>{executionStatusLabel(r.status)}</Badge>
                             </TableCell>
                             <TableCell className="max-w-[200px] truncate">{r.notes || '-'}</TableCell>
+                            <TableCell className="max-w-[220px]">
+                              {r.status === 'fail' ? (
+                                <span
+                                  className="block truncate text-destructive"
+                                  title={r.error_message || r.actual_result || '-'}
+                                >
+                                  {r.error_message || (r.error_type ? errorTypeLabel(r.error_type) : '-')}
+                                </span>
+                              ) : '-'}
+                            </TableCell>
+                            <TableCell>
+                              {r.status === 'fail' && r.status_code ? (
+                                <span className={r.status_code >= 400 ? 'text-destructive' : ''}>{r.status_code}</span>
+                              ) : '-'}
+                            </TableCell>
+                            <TableCell>
+                              {r.status === 'fail' && r.error_type ? (
+                                <Badge tone="warning">{errorTypeLabel(r.error_type)}</Badge>
+                              ) : '-'}
+                            </TableCell>
                             <TableCell className="text-muted-foreground">
                               {r.executed_at ? new Date(r.executed_at).toLocaleString() : '-'}
                             </TableCell>
