@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
-import { fetchApiServices, fetchApiEndpoints, generateApiCases } from '@/api/apitest'
+import { fetchApiServices, fetchApiEndpoints, generateApiCases, batchGenerateApiCases } from '@/api/apitest'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import EndpointDetailPanel from './EndpointDetailPanel'
 import type { ApiService, ApiEndpoint } from '@/types'
@@ -35,6 +35,7 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
   const [keyword, setKeyword] = useState('')
   const [methodFilter, setMethodFilter] = useState<string>('')
   const [generating, setGenerating] = useState<Set<number>>(new Set())
+  const [generatingService, setGeneratingService] = useState(false)
   const [selectedEndpoint, setSelectedEndpoint] = useState<ApiEndpoint | null>(null)
 
   // Tab state
@@ -212,6 +213,28 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
     ))
   }
 
+  const handleGenerateService = async (svcId: number, svcName: string) => {
+    const mods = hierarchy[svcName]
+    if (!mods) return
+    const ids = Object.values(mods).flatMap((pgs) =>
+      Object.values(pgs).flatMap((eps) => eps.map((ep) => ep.id)),
+    )
+    if (ids.length === 0) {
+      toast.warning('该服务暂无接口资产')
+      return
+    }
+    setGeneratingService(true)
+    try {
+      const result = await batchGenerateApiCases({ endpoint_ids: ids, import_to_case_library: true })
+      toast.success(`已为 "${svcName}" 生成 ${result.total_generated} 条用例`)
+      void loadEndpoints()
+    } catch (e: any) {
+      toast.error(e?.message || '批量生成失败')
+    } finally {
+      setGeneratingService(false)
+    }
+  }
+
   /** Render a list of modules (collapsed by default) with path groups and endpoints */
   function renderModules(modules: Record<string, Record<string, ApiEndpoint[]>>, serviceName: string = '') {
     return Object.entries(modules).map(([moduleName, pathGroups]) => (
@@ -285,6 +308,19 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
 
     return (
       <div className="mt-2 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">{svcName}</p>
+          <Button
+            size="sm"
+            variant="secondary"
+            disabled={generatingService}
+            onClick={() => handleGenerateService(svcId, svcName)}
+            aria-label={`为服务 ${svcName} 批量生成用例`}
+          >
+            <Zap className={`size-3.5 ${generatingService ? 'animate-pulse' : ''}`} data-icon="inline-start" />
+            {generatingService ? '生成中...' : '生成全部用例'}
+          </Button>
+        </div>
         {!modules || Object.keys(modules).length === 0 ? (
           <div className="border rounded-lg py-12 text-center text-muted-foreground">
             <p className="text-sm">该服务暂无接口资产</p>
