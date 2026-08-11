@@ -65,4 +65,23 @@ describe('PrototypePreview', () => {
     expect(screen.getByText('该页面没有截图资产')).toBeTruthy()
     expect(mockDownloadAsset).not.toHaveBeenCalled()
   })
+
+  it('clamps an obsolete initial page index to the available page range', async () => {
+    render(
+      <PrototypePreview
+        open
+        onClose={vi.fn()}
+        initialPageIndex={9}
+        pages={Array.from({ length: 7 }, (_, page_index) => ({
+          page_name: `页面 ${page_index + 1}`,
+          page_index,
+        }))}
+      />,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('第 7/7 页')).toBeTruthy()
+    })
+    expect(screen.getByText('页面 7')).toBeTruthy()
+  })
 })

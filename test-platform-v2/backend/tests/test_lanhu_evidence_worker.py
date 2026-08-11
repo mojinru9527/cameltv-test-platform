@@ -67,16 +67,14 @@ def test_task_worker_polls_evidence_worker_once(monkeypatch):
     assert calls == ["api", "ui", "lanhu"]
 
 
-def test_create_job_does_not_execute_in_request_background(
+def test_create_job_kicks_evidence_worker_after_persisting(
     client, auth_headers, monkeypatch,
 ):
     monkeypatch.setattr("app.core.config.settings.lanhu_evidence_enabled", True)
-
-    def _must_not_run(*_args, **_kwargs):
-        raise AssertionError("request handler must only persist a pending job")
-
+    kicked = []
     monkeypatch.setattr(
-        "app.services.lanhu_evidence.job_runner.run_job_in_new_session", _must_not_run,
+        "app.services.lanhu_evidence.worker.poll_and_execute_evidence_jobs",
+        lambda: kicked.append(True),
     )
 
     response = client.post(
@@ -87,6 +85,7 @@ def test_create_job_does_not_execute_in_request_background(
 
     assert response.status_code == 200
     assert response.json()["data"]["status"] == "pending"
+    assert kicked == [True]
 
 
 def test_retry_creates_immutable_attempt_and_preserves_original(
@@ -157,6 +156,35 @@ def test_retry_creates_immutable_attempt_and_preserves_original(
     assert retried.requested_options_json == old.requested_options_json
     assert Path(retried.storage_dir).parts[-2:] == (str(retried.id), "attempt-2")
     assert retried.storage_dir != old.storage_dir
+
+
+def test_retry_kicks_evidence_worker_after_persisting(
+    client, auth_headers, db_session, monkeypatch,
+):
+    from app.models.lanhu_evidence import LanhuEvidenceJob
+
+    monkeypatch.setattr("app.core.config.settings.lanhu_evidence_enabled", True)
+    kicked = []
+    monkeypatch.setattr(
+        "app.services.lanhu_evidence.worker.poll_and_execute_evidence_jobs",
+        lambda: kicked.append(True),
+    )
+    failed = LanhuEvidenceJob(
+        project_id=1,
+        source_url="https://lanhuapp.com/x?docId=d",
+        status="failed",
+        stage="done",
+    )
+    db_session.add(failed)
+    db_session.commit()
+
+    response = client.post(
+        f"/api/v1/lanhu-evidence/jobs/{failed.id}/retry", headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["data"]["status"] == "pending"
+    assert kicked == [True]
 
 
 def test_heartbeat_interval_stays_inside_stale_window():
