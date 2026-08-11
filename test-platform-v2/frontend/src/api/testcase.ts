@@ -1,4 +1,4 @@
-import api from './client'
+import api, { cachedGet, clearApiCache } from './client'
 
 export interface TestCaseFilter {
   case_id?: string
@@ -56,7 +56,8 @@ export interface TaxonomySurfaceNode {
 }
 
 export async function fetchDomains(signal?: AbortSignal): Promise<TestCaseDomainCategory[]> {
-  return api.get('/test-cases/domains', { signal })
+  if (signal) return api.get('/test-cases/domains', { signal })
+  return cachedGet<TestCaseDomainCategory[]>('/test-cases/domains', undefined, { ttl: 60_000 })
 }
 
 export async function fetchTestCaseStats(signal?: AbortSignal): Promise<TestCaseStats> {
@@ -73,18 +74,22 @@ export async function fetchTaxonomy(
 // ── Category CRUD ──
 
 export async function createDomain(name: string) {
+  clearApiCache('/test-cases/domains')
   return api.post('/test-cases/domains', { name })
 }
 
 export async function deleteDomain(domainId: number) {
+  clearApiCache('/test-cases/domains')
   return api.delete(`/test-cases/domains/${domainId}`)
 }
 
 export async function createModule(domainId: number, name: string) {
+  clearApiCache('/test-cases/domains')
   return api.post(`/test-cases/domains/${domainId}/modules`, { name })
 }
 
 export async function deleteModule(domainId: number, moduleId: number) {
+  clearApiCache('/test-cases/domains')
   return api.delete(`/test-cases/domains/${domainId}/modules/${moduleId}`)
 }
 

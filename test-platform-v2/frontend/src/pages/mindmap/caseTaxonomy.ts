@@ -37,6 +37,39 @@ export function splitModulePath(module = ''): string[] {
     : ['未分类']
 }
 
+import type { TaxonomyModuleNode, TaxonomySurfaceNode } from '@/api/testcase'
+
+/**
+ * 由服务端 taxonomy（界面→域→多级模块，带 count）构建 mindmap markdown。
+ * Batch 150 / C147-5：替代下载全量用例（page_size=10000）的客户端构建。
+ */
+export function buildTaxonomyMindmapMarkdown(
+  taxonomy: TaxonomySurfaceNode[],
+  surface?: string,
+  domain?: string,
+): string {
+  const surfaces = taxonomy.filter((n) => !surface || n.surface === surface)
+  if (!surfaces.length) return '# 测试用例\n\n暂无用例数据'
+
+  const lines = ['# 测试用例', '']
+  const renderModules = (nodes: TaxonomyModuleNode[], depth: number) => {
+    for (const m of nodes) {
+      lines.push(`${'#'.repeat(Math.min(depth, 6))} ${m.name} (${m.count})`)
+      if (m.children?.length) renderModules(m.children, depth + 1)
+    }
+  }
+
+  for (const s of surfaces) {
+    lines.push(`## ${s.surface} (${s.count})`)
+    const domains = s.domains.filter((d) => !domain || d.domain === domain)
+    for (const d of domains) {
+      lines.push(`### ${d.domain} (${d.count})`)
+      renderModules(d.modules || [], 4)
+    }
+  }
+  return lines.join('\n')
+}
+
 export function buildCaseMindmapMarkdown(cases: MindmapCase[]): string {
   if (!cases.length) return '# 测试用例\n\n暂无用例数据'
 
