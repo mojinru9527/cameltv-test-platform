@@ -10,6 +10,8 @@ vi.mock('@/api/client', () => ({
     post: (...args: any[]) => mockPost(...args),
     get: (...args: any[]) => mockGet(...args),
   },
+  cachedGet: (...args: any[]) => mockGet(...args),
+  clearApiCache: vi.fn(),
 }))
 
 const { createModule, deleteDomain, deleteModule, fetchTaxonomy, fetchTestCaseStats } = await import('@/api/testcase')

@@ -1,4 +1,4 @@
-import client from './client'
+import client, { cachedGet } from './client'
 import type { LoginResult, MeResult, MenuItem, Project, PublicAccessConfig } from '@/types'
 
 export function login(username: string, password: string) {
@@ -35,8 +35,9 @@ export function fetchMe() {
 }
 
 export function fetchMenus(signal?: AbortSignal) {
+  // Batch 150: 会话级缓存（TTL 60s）；传 signal 时保留 abort 语义走原路径
   if (signal) return client.get<unknown, MenuItem[]>('/system/menus', { signal })
-  return client.get<unknown, MenuItem[]>('/system/menus')
+  return cachedGet<MenuItem[]>('/system/menus', undefined, { ttl: 60_000 })
 }
 
 export function fetchProjects() {

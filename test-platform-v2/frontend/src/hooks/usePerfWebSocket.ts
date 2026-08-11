@@ -45,7 +45,7 @@ export function usePerfWebSocket({
   const modeRef = useRef(mode)
   const reconnectCountRef = useRef(reconnectCount)
   const wsRef = useRef<WebSocket | null>(null)
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastTsRef = useRef(0)
   const reconnectTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
@@ -61,7 +61,7 @@ export function usePerfWebSocket({
     }
     // 清理轮询
     if (pollTimerRef.current) {
-      clearInterval(pollTimerRef.current)
+      clearTimeout(pollTimerRef.current)
       pollTimerRef.current = null
     }
     // 清理重连定时器
@@ -75,20 +75,30 @@ export function usePerfWebSocket({
     setMode('polling')
     lastTsRef.current = 0
 
+    // Batch 150 / C147-5: 指数退避（500ms 起步，空/失败翻倍，上限 30s，有数据复位 500ms）
+    let delay = 500
+
     const poll = async () => {
       try {
         const data = await fetchMetrics(sessionId, lastTsRef.current)
-        for (const pt of data.metrics) {
-          lastTsRef.current = Math.max(lastTsRef.current, pt.timestamp)
-          onSnapshot?.(pt)
+        if (data.metrics.length > 0) {
+          delay = 500
+          for (const pt of data.metrics) {
+            lastTsRef.current = Math.max(lastTsRef.current, pt.timestamp)
+            onSnapshot?.(pt)
+          }
+        } else {
+          delay = Math.min(delay * 2, 30_000)
         }
       } catch {
-        // 静默失败，下次轮询继续
+        delay = Math.min(delay * 2, 30_000)
+      }
+      if (pollTimerRef.current) {
+        pollTimerRef.current = setTimeout(poll, delay)
       }
     }
 
-    poll() // 立即拉一次
-    pollTimerRef.current = setInterval(poll, 500)
+    pollTimerRef.current = setTimeout(poll, 500) // 立即拉一次（500ms 语义保持）
   }, [sessionId, onSnapshot])
 
   const connectWebSocket = useCallback(() => {

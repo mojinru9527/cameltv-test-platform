@@ -28,8 +28,8 @@ import {
   testConnection, syncNow, fetchSyncLogs,
 } from '@/api/integration'
 import { fetchEnvironments } from '@/api/environment'
+import { fetchTestCaseStats } from '@/api/testcase'
 import { fetchRequirements } from '@/api/requirement'
-import { fetchTestCases } from '@/api/testcase'
 import type { Environment, IntegrationConfig, SyncLog, RequirementDocument } from '@/types'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import ConfirmActionDialog from '@/components/ConfirmActionDialog'
@@ -153,10 +153,10 @@ export default function IntegrationPage() {
     setLoadingLinkage(true)
     Promise.all([
       fetchRequirements(undefined, controller.signal),
-      fetchTestCases({ page: 1, page_size: 1 }, controller.signal),
-    ]).then(([requirementsPage, casesResult]) => {
+      fetchTestCaseStats(controller.signal),
+    ]).then(([requirementsPage, caseStats]) => {
       if (controller.signal.aborted) return
-      const caseData = casesResult as unknown as { total: number }
+      const caseData = caseStats as unknown as { total: number }
       const requirements = requirementsPage.items || []
       setLinkageData({
         totalRequirements: requirementsPage.total,
@@ -374,9 +374,9 @@ export default function IntegrationPage() {
               setLoadingLinkage(true)
               Promise.all([
                 fetchRequirements().catch(() => [] as RequirementDocument[]),
-                fetchTestCases({ page: 1, page_size: 1 }).catch(() => ({ total: 0 })),
-              ]).then(([reqs, casesResult]) => {
-                const caseData = casesResult as { total: number }
+                fetchTestCaseStats().catch(() => ({ total: 0 })),
+              ]).then(([reqs, caseStats]) => {
+                const caseData = caseStats as { total: number }
                 setLinkageData({
                   totalRequirements: (reqs as RequirementDocument[]).length,
                   totalCases: caseData.total || 0,

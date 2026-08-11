@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth'
 import { fetchDefect, fetchDefectStats, fetchDefects } from '@/api/defect'
 import type { DefectItem } from '@/types'
 import useApi from '@/hooks/useApi'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { PageShell } from '@/ui'
 import DefectStatsCards from './DefectStatsCards'
@@ -23,6 +24,7 @@ export default function DefectPage() {
   const [fSeverity, setFSeverity] = useState<string | undefined>()
   const [fStatus, setFStatus] = useState<string | undefined>()
   const [fKeyword, setFKeyword] = useState('')
+  const debouncedKeyword = useDebouncedValue(fKeyword, 300)
   const [page, setPage] = useState(1)
 
   // ── List data ──
@@ -31,10 +33,10 @@ export default function DefectPage() {
       const params: any = { page, page_size: 20 }
       if (fSeverity) params.severity = fSeverity
       if (fStatus) params.status = fStatus
-      if (fKeyword) params.keyword = fKeyword
+      if (debouncedKeyword) params.keyword = debouncedKeyword
       return fetchDefects(params)
     },
-    [fSeverity, fStatus, fKeyword, page],
+    [fSeverity, fStatus, debouncedKeyword, page],
   )
 
   // ── Stats (non-critical, silent errors) ──

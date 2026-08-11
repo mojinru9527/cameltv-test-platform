@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/ui'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { fetchTestCases } from '@/api/testcase'
+import { fetchTaxonomy } from '@/api/testcase'
+import type { TaxonomyDomainNode, TaxonomySurfaceNode } from '@/api/testcase'
 import { AsyncState } from '@/components/state'
 import useApi from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { RotateCcw, Download, Maximize2, Minimize2 } from '@/lib/icons'
-import { availableCaseSurfaces, buildCaseMindmapMarkdown, caseSurfaceOf } from './caseTaxonomy'
+import { buildTaxonomyMindmapMarkdown } from './caseTaxonomy'
 
 /**
  * MindmapView — interactive test case mindmap.
@@ -29,36 +30,32 @@ export default function MindmapPage() {
   const [fullscreen, setFullscreen] = useState(false)
   const [renderError, setRenderError] = useState<string | null>(null)
 
-  // Data fetching
-  const { data: rawData, isLoading, isError, error, refetch } = useApi<any>(
-    (signal) => {
-      const params: any = { page_size: 10000 }
-      if (caseType !== 'all') params.case_type = caseType
-      return fetchTestCases(params, signal)
-    },
+  // Data fetching（Batch 150 / C147-5：服务端 taxonomy 聚合，替代 page_size=10000 全量拉取）
+  const { data: rawData, isLoading, isError, error, refetch } = useApi<TaxonomySurfaceNode[]>(
+    (signal) => fetchTaxonomy({ case_type: caseType }, signal),
     [caseType],
   )
 
-  const allCases = useMemo(() => (rawData as any)?.items || [], [rawData])
-  const availableSurfaces = useMemo(() => availableCaseSurfaces(allCases), [allCases])
-  const surfaceCases = useMemo(
-    () => allCases.filter((testCase: any) => !surface
-      || caseSurfaceOf(testCase) === surface),
-    [allCases, surface],
+  const taxonomy = useMemo(() => rawData || [], [rawData])
+  const availableSurfaces = useMemo(() => taxonomy.map((n) => n.surface), [taxonomy])
+  const surfaceNode = useMemo(
+    () => taxonomy.find((n) => n.surface === surface),
+    [taxonomy, surface],
   )
-  const domains = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const testCase of surfaceCases) {
-      const name = testCase.domain || '未分类'
-      counts.set(name, (counts.get(name) || 0) + 1)
-    }
-    return [...counts.entries()].map(([name, count]) => ({ name, count }))
-  }, [surfaceCases])
-  const filteredCases = useMemo(
-    () => surfaceCases.filter((testCase: any) => !domain || (testCase.domain || '未分类') === domain),
-    [domain, surfaceCases],
+  const domains = useMemo<TaxonomyDomainNode[]>(() => surfaceNode?.domains || [], [surfaceNode])
+  const domainNode = useMemo(
+    () => domains.find((d) => d.domain === domain),
+    [domains, domain],
   )
-  const markdown = useMemo(() => buildCaseMindmapMarkdown(filteredCases), [filteredCases])
+  const totalCount = useMemo(() => {
+    if (domainNode) return domainNode.count
+    if (surfaceNode) return surfaceNode.count
+    return taxonomy.reduce((sum, n) => sum + (n.count || 0), 0)
+  }, [domainNode, surfaceNode, taxonomy])
+  const markdown = useMemo(
+    () => buildTaxonomyMindmapMarkdown(taxonomy, surface || undefined, domain || undefined),
+    [taxonomy, surface, domain],
+  )
 
   const destroyMindmap = useCallback(() => {
     const markmap = mmRef.current
@@ -217,8 +214,8 @@ export default function MindmapPage() {
           <SelectContent>
             <SelectItem value="">全部</SelectItem>
             {domains.map((item) => (
-              <SelectItem key={item.name} value={item.name}>
-                {item.name} ({item.count})
+              <SelectItem key={item.domain} value={item.domain}>
+                {item.domain} ({item.count})
               </SelectItem>
             ))}
           </SelectContent>
@@ -255,7 +252,7 @@ export default function MindmapPage() {
         <CardHeader className="border-b pb-2">
           <CardTitle className="text-sm">
             用例脑图（产品界面 → 业务域 → 子模块 → 用例）
-            {rawData && <span className="ml-2 font-normal text-muted-foreground">({filteredCases.length} 条)</span>}
+            {rawData && <span className="ml-2 font-normal text-muted-foreground">({totalCount} 条)</span>}
           </CardTitle>
           {fullscreen && (
             <CardAction>
@@ -276,7 +273,7 @@ export default function MindmapPage() {
             isLoading={isLoading}
             isError={isError}
             error={error}
-            data={{ items: filteredCases }}
+            data={{ items: taxonomy }}
             onRetry={refetch}
             emptyTitle="暂无测试用例"
             emptyDescription="请先创建测试用例，系统将自动生成脑图"
