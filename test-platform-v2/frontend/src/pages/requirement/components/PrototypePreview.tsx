@@ -46,7 +46,11 @@ export default function PrototypePreview({
   initialPageIndex = 0,
   version,
 }: PrototypePreviewProps) {
-  const [currentIndex, setCurrentIndex] = useState(initialPageIndex)
+  const total = pages.length
+  const clampPageIndex = useCallback((index: number) => (
+    Math.min(Math.max(0, index), Math.max(0, total - 1))
+  ), [total])
+  const [currentIndex, setCurrentIndex] = useState(() => clampPageIndex(initialPageIndex))
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
@@ -57,12 +61,17 @@ export default function PrototypePreview({
   const [showOcr, setShowOcr] = useState(true)
   const imageRef = useRef<HTMLDivElement>(null)
 
-  const total = pages.length
   const current = pages[currentIndex] || null
 
   const goTo = useCallback((idx: number) => {
     if (idx >= 0 && idx < total) setCurrentIndex(idx)
   }, [total])
+
+  // The task/page list can refresh while this dialog is open. Never retain an
+  // index from an older list, otherwise users see impossible counters (10/7).
+  useEffect(() => {
+    setCurrentIndex(clampPageIndex(initialPageIndex))
+  }, [clampPageIndex, initialPageIndex, open])
 
   // Reset on page change
   useEffect(() => {

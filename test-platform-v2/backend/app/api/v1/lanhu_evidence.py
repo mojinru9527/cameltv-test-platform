@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from pathlib import Path
 
@@ -35,6 +36,7 @@ from app.schemas.lanhu_evidence import (
 )
 
 router = APIRouter(prefix="/lanhu-evidence", tags=["蓝湖证据包"])
+logger = logging.getLogger(__name__)
 
 
 def _require_enabled() -> None:
@@ -53,6 +55,18 @@ def _get_job(db: Session, job_id: int, project_id: int) -> LanhuEvidenceJob:
     if job is None or job.project_id != project_id:
         raise APIException(code=404, msg="证据包任务不存在", http_status=404)
     return job
+
+
+def _kick_evidence_worker() -> None:
+    """Attempt immediate pickup after durable enqueue; scheduler polling remains fallback."""
+    try:
+        from app.services.lanhu_evidence.worker import poll_and_execute_evidence_jobs
+
+        poll_and_execute_evidence_jobs()
+    except Exception:  # noqa: BLE001
+        # The job is already durable. A transient kick failure must not make the
+        # request look failed; the scheduled worker will retry the pickup.
+        logger.exception("Failed to kick Lanhu evidence worker after enqueue")
 
 
 class LanhuCookieUpdateRequest(BaseModel):
@@ -159,6 +173,7 @@ def create_job(
     job.storage_dir = str(_storage_base() / str(job.id) / "attempt-1")
     db.commit()
     db.refresh(job)
+    _kick_evidence_worker()
     return R.ok(LanhuEvidenceJobOut.model_validate(job))
 
 
@@ -455,6 +470,7 @@ def retry_job(
     )
     db.commit()
     db.refresh(job)
+    _kick_evidence_worker()
     return R.ok(LanhuEvidenceJobOut.model_validate(job))
 
 
