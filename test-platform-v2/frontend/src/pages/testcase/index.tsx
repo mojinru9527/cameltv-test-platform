@@ -676,7 +676,14 @@ export default function TestCasePage() {
                         </span>
                       </TableCell>
                       <TableCell className="max-w-[160px] truncate">
-                        <span className="line-clamp-1" title={r.title}>{r.title || '......'}</span>
+                        <button
+                          type="button"
+                          onClick={() => openEdit(r)}
+                          className="line-clamp-1 text-left hover:text-primary hover:underline"
+                          title={`查看/编辑用例：${r.title || r.id}`}
+                        >
+                          {r.title || '......'}
+                        </button>
                       </TableCell>
                       <TableCell>
                         <Badge tone={PRIORITY_TONES[r.priority] || 'neutral'}>

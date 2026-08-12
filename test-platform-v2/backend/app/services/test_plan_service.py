@@ -876,6 +876,87 @@ def _execution_error_fields(actual_result: str) -> tuple[int, str, str]:
     return status_code, error_type, error_message
 
 
+
+def run_failure_auto_chain(
+    db: Session,
+    plan_id: int,
+    project_id: int = 0,
+    creator_id: int = 0,
+) -> dict:
+    """C147-6（Batch 155 实现）：计划失败自动转缺陷/报告/通知。
+
+    开关（auto_defect_on_fail）关闭时直接跳过；开启时对失败执行做规则分诊
+    （use_llm=False，避免后台任务依赖 LLM 造成延迟），将 bug/case_defect 类
+    生成缺陷草稿并入库，再生成失败报告，最后推送 plan_failed 通知。
+
+    必须在独立 DB session 中调用（后台任务），不污染请求事务。
+    """
+    from app.schemas.defect import DefectCreate
+    from app.schemas.test_report import ReportCreate
+    from app.services.defect_service import create_defect
+    from app.services.notify_service import notify_sync
+    from app.services.report_service import create_report
+    from app.services.triage_service import generate_defect_draft, triage_failed_cases
+
+    plan = db.scalar(
+        select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == project_id)
+    )
+    if not plan:
+        return {"error": "计划不存在"}
+    if not plan.auto_defect_on_fail:
+        return {"skipped": "auto_defect_on_fail=false"}
+
+    triage = triage_failed_cases(db, plan_id, project_id=project_id, use_llm=False)
+    classified = triage.get("classified", []) or []
+    defects = []
+    for item in classified:
+        if item.get("category") not in ("bug", "case_defect"):
+            continue
+        draft = generate_defect_draft(item)
+        data = DefectCreate(
+            title=draft["title"],
+            description=draft["description"],
+            severity=draft.get("severity", "P2"),
+            case_id=draft.get("case_id") or None,
+            execution_id=draft.get("execution_id") or None,
+        )
+        defects.append(create_defect(db, data, creator_id=creator_id, project_id=project_id))
+
+    report = None
+    try:
+        report = create_report(
+            db,
+            ReportCreate(plan_id=plan_id, name=f"失败自动报告-{plan.name or plan_id}"),
+            creator_id=creator_id,
+            project_id=project_id,
+        )
+    except Exception as e:  # 报告生成失败不阻断缺陷与通知
+        logger.warning("失败自动报告生成失败: plan=%s err=%s", plan_id, e)
+
+    try:
+        notify_sync(
+            db,
+            project_id,
+            "plan_failed",
+            {
+                "plan_name": plan.name or "",
+                "failed": triage.get("total_failures", 0),
+                "defects": len(defects),
+                "report": (report or {}).get("report_id") or (report or {}).get("id") or "-",
+                "link": f"/testplan/{plan_id}",
+            },
+        )
+    except Exception as e:
+        logger.warning("plan_failed 通知失败: plan=%s err=%s", plan_id, e)
+
+    return {
+        "plan_id": plan_id,
+        "total_failures": triage.get("total_failures", 0),
+        "defects_created": len(defects),
+        "report_id": (report or {}).get("report_id") or (report or {}).get("id") or None,
+        "notified": True,
+    }
+
 def _plan_to_dict(r: TestPlan) -> dict:
     return {
         "id": r.id,
@@ -891,6 +972,7 @@ def _plan_to_dict(r: TestPlan) -> dict:
         "due_date": r.due_date.isoformat() if r.due_date else None,
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+        "auto_defect_on_fail": bool(getattr(r, "auto_defect_on_fail", False)),
     }
 
 
@@ -939,3 +1021,4 @@ def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
         "case_title": case.title if case else "",
         "executor_name": "",
     }
+

@@ -119,7 +119,7 @@ function statusBadgeClass(c: string) {
 
 const avTaskFormSchema = z.object({
   name: z.string().min(1, '请输入任务名称'),
-  stream_url: z.string().optional().default(''),
+  stream_url: z.string().optional().default('').refine((v) => !v || /^https?:\/\/.+/.test(v), '请输入有效的 http(s) 流地址'),
   protocol: z.string().default('HLS'),
 })
 
@@ -372,7 +372,7 @@ export default function SpecialPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="音视频检测" />
+      <PageHeader title="专项测试" description="音视频质量检测 + 专项测量（回放/指标判定）" />
 
       {/* Filter bar */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -519,7 +519,7 @@ export default function SpecialPage() {
       <Dialog open={drawer} onOpenChange={(open) => { if (!open) { setDrawer(false); form.reset() } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>新建音视频检测</DialogTitle>
+            <DialogTitle>新建专项检测</DialogTitle>
           </DialogHeader>
           <form onSubmit={form.handleSubmit(doCreate)} className="flex flex-col gap-4">
             <div data-invalid={!!form.formState.errors.name} aria-invalid={!!form.formState.errors.name}>
@@ -533,6 +533,9 @@ export default function SpecialPage() {
             <div>
               <label className="text-sm font-medium mb-1 block">流地址</label>
               <Input placeholder="https://example.com/live/stream.m3u8" {...form.register('stream_url')} />
+              {form.formState.errors.stream_url && (
+                <p className="text-xs text-destructive mt-1">{form.formState.errors.stream_url.message}</p>
+              )}
             </div>
 
             <div>

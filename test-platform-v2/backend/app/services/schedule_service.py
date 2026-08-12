@@ -68,6 +68,7 @@ def list_schedules(
             "job_id": s.job_id,
             "cron_expression": s.cron_expression,
             "enabled": s.enabled,
+            "disabled_reason": s.disabled_reason or "",
             "next_run": s.next_run,
             "last_run": s.last_run,
             "creator_id": s.creator_id,
@@ -101,6 +102,7 @@ def get_schedule(db: Session, schedule_id: int, project_id: int) -> dict | None:
         "job_id": s.job_id,
         "cron_expression": s.cron_expression,
         "enabled": s.enabled,
+        "disabled_reason": s.disabled_reason or "",
         "next_run": s.next_run,
         "last_run": s.last_run,
         "creator_id": s.creator_id,
@@ -133,7 +135,7 @@ def create_schedule(
         plan_name = job.name
     else:
         if not data.plan_id:
-            raise ValueError("job_type=plan 必须提供 plan_id")
+            raise ValueError("job_type=plan|report 必须提供 plan_id")
         plan = db.scalar(
             select(TestPlan).where(
                 TestPlan.id == data.plan_id,
@@ -156,6 +158,7 @@ def create_schedule(
         job_id=data.job_id if data.job_type == "ui" else None,
         cron_expression=data.cron_expression,
         enabled=data.enabled,
+        disabled_reason=data.disabled_reason or "",
         next_run=next_run,
         creator_id=creator_id,
     )
@@ -177,6 +180,7 @@ def create_schedule(
         "job_id": s.job_id,
         "cron_expression": s.cron_expression,
         "enabled": s.enabled,
+        "disabled_reason": s.disabled_reason or "",
         "next_run": s.next_run,
         "last_run": s.last_run,
         "creator_id": s.creator_id,
@@ -225,7 +229,7 @@ def update_schedule(
         else:
             plan_id = data.plan_id if data.plan_id is not None else s.plan_id
             if not plan_id:
-                raise ValueError("job_type=plan 必须提供 plan_id")
+                raise ValueError("job_type=plan|report 必须提供 plan_id")
             plan = db.scalar(select(TestPlan).where(TestPlan.id == plan_id, TestPlan.project_id == project_id))
             if not plan:
                 raise ValueError("计划不存在")
@@ -238,8 +242,15 @@ def update_schedule(
         cron_changed = True
         changed = True
     if data.enabled is not None:
-        # toggle
+        # toggle（Batch 155 / P2-18：停用必须填写原因；启用时清空）
         if data.enabled != s.enabled:
+            if not data.enabled:
+                reason = (data.disabled_reason or s.disabled_reason or "").strip()
+                if not reason:
+                    raise ValueError("停用调度必须填写停用原因")
+                s.disabled_reason = reason
+            else:
+                s.disabled_reason = ""
             toggle_schedule_job(s.id, data.enabled, s.cron_expression)
         s.enabled = data.enabled
         changed = True
@@ -269,6 +280,7 @@ def update_schedule(
         "job_id": s.job_id,
         "cron_expression": s.cron_expression,
         "enabled": s.enabled,
+        "disabled_reason": s.disabled_reason or "",
         "next_run": s.next_run,
         "last_run": s.last_run,
         "creator_id": s.creator_id,

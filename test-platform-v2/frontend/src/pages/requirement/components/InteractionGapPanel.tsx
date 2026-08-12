@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { interactionCoverageGaps } from '@/api/requirement'
 import { Button, Input } from '@/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -38,6 +39,7 @@ export default function InteractionGapPanel() {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [domainFilter, setDomainFilter] = useState('')
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
@@ -64,13 +66,24 @@ export default function InteractionGapPanel() {
 
   const rate = result?.coverage_rate ?? 0
   const rateLabel = `${(rate * 100).toFixed(1)}%`
+  const domains = useMemo(
+    () => Array.from(new Set((result?.gaps || []).map((g) => g.from_module))).sort((a, b) => a.localeCompare(b)),
+    [result?.gaps],
+  )
   const filteredGaps = useMemo(() => {
     const normalized = query.trim().toLowerCase()
-    if (!normalized) return result?.gaps || []
-    return (result?.gaps || []).filter((gap) =>
-      [gap.from_module, gap.entry, gap.to].some((value) => value.toLowerCase().includes(normalized)),
+    let list = result?.gaps || []
+    if (normalized) {
+      list = list.filter((gap) =>
+        [gap.from_module, gap.entry, gap.to].some((value) => value.toLowerCase().includes(normalized)),
+      )
+    }
+    if (domainFilter) list = list.filter((gap) => gap.from_module === domainFilter)
+    // P2-13：按业务域排序，同域内按入口排序
+    return [...list].sort(
+      (a, b) => a.from_module.localeCompare(b.from_module, undefined, { numeric: true }) || a.entry.localeCompare(b.entry, undefined, { numeric: true }),
     )
-  }, [query, result?.gaps])
+  }, [query, domainFilter, result?.gaps])
   const pageCount = Math.max(1, Math.ceil(filteredGaps.length / GAP_PAGE_SIZE))
   const pagedGaps = filteredGaps.slice((page - 1) * GAP_PAGE_SIZE, page * GAP_PAGE_SIZE)
 
@@ -122,14 +135,25 @@ export default function InteractionGapPanel() {
               <p className="text-xs text-muted-foreground py-4 text-center">暂无覆盖缺口</p>
             ) : (
               <div className="space-y-2">
-                <Input
-                  type="search"
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="按模块、入口或目标筛选"
-                  aria-label="筛选交互缺口"
-                  className="h-8 text-xs"
-                />
+                <div className="flex items-center gap-2">
+                  <Select value={domainFilter || '_all'} onValueChange={(v) => { setDomainFilter(v === '_all' ? '' : v); setPage(1) }}>
+                    <SelectTrigger className="w-[150px] h-8 text-xs" aria-label="按业务域筛选缺口">
+                      <SelectValue placeholder="全部业务域" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_all">全部业务域</SelectItem>
+                      {domains.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="按模块、入口或目标筛选"
+                    aria-label="筛选交互缺口"
+                    className="h-8 text-xs flex-1"
+                  />
+                </div>
                 {filteredGaps.length === 0 ? (
                   <p className="py-4 text-center text-xs text-muted-foreground">没有匹配的交互缺口</p>
                 ) : (

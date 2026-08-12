@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 
 import { Button } from '@/ui'
 import { Input } from '@/ui'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
@@ -35,6 +36,7 @@ const formSchema = z.object({
   start_date: z.string().optional().or(z.literal('')),
   end_date: z.string().optional().or(z.literal('')),
   due_date: z.string().optional().or(z.literal('')),
+  auto_defect_on_fail: z.boolean().optional().default(false),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -89,6 +91,8 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -109,11 +113,13 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
           start_date: isoToDatetimeLocal(editing.start_date),
           end_date: isoToDatetimeLocal(editing.end_date),
           due_date: isoToDatetimeLocal(editing.due_date),
+          auto_defect_on_fail: editing.auto_defect_on_fail ?? false,
         })
       } else {
         reset({
           status: 'draft',
           assignee_id: 0,
+          auto_defect_on_fail: false,
         })
       }
     }
@@ -124,6 +130,7 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
     try {
       const body: Record<string, any> = {
         ...data,
+        auto_defect_on_fail: data.auto_defect_on_fail === true,
         assignee_id: data.assignee_id || null,
         start_date: data.start_date ? new Date(data.start_date).toISOString() : undefined,
         end_date: data.end_date ? new Date(data.end_date).toISOString() : undefined,
@@ -243,6 +250,19 @@ export default function PlanDrawer({ open, editing, onClose, onSaved }: Props) {
               <label htmlFor="plan-end-date" className="mb-1 block text-sm font-medium">结束时间</label>
               <Input id="plan-end-date" type="datetime-local" {...register('end_date')} />
             </div>
+          </div>
+          {/* 失败自动链路开关 */}
+          <div className="flex items-center gap-2 rounded-md border p-3">
+            <Checkbox
+              id="plan-auto-defect"
+              checked={watch('auto_defect_on_fail') === true}
+              onCheckedChange={(v) => setValue('auto_defect_on_fail', v === true)}
+              aria-label="失败自动转缺陷/报告/通知"
+            />
+            <label htmlFor="plan-auto-defect" className="text-sm">
+              失败自动转缺陷/报告/通知
+              <span className="block text-xs text-muted-foreground">执行失败时自动生成缺陷、报告并推送通知（默认关闭）</span>
+            </label>
           </div>
         </form>
 

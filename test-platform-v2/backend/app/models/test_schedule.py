@@ -23,6 +23,7 @@ class TestSchedule(Base):
     job_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)  # job_type=ui 时指向 ui_test_job.id
     cron_expression: Mapped[str] = mapped_column(String(100), default="")
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    disabled_reason: Mapped[str] = mapped_column(Text, default="")  # Batch 155 (P2-18): 停用原因
     next_run: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None)
     last_run: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None)
     creator_id: Mapped[int] = mapped_column(default=0)

@@ -93,6 +93,9 @@ interface Props {
 
 export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
   const canExecute = useAuthStore((state) => state.hasPerm)('apitest:execute')
+  const currentProjectId = useAuthStore((state) => state.currentProjectId)
+  const projects = useAuthStore((state) => state.projects)
+  const currentProject = (projects || []).find((pr) => pr.id === currentProjectId)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiExecutionResult | null>(null)
   const [method, setMethod] = useState<string>('GET')
@@ -479,7 +482,7 @@ export default function DebugTab({ endpoint, serviceName: svcName }: Props) {
       <ProductionOperationDialog
         open={operationDialogOpen}
         onOpenChange={setOperationDialogOpen}
-        project={`项目 #${envs.find(environment => environment.id === envId)?.project_id ?? '-'}`}
+        project={currentProject?.name || `项目 #${envs.find(environment => environment.id === envId)?.project_id ?? '-'}`}
         environment={envs.find(environment => environment.id === envId)?.name ?? '未选择环境'}
         baseUrl={baseUrl || '未配置'}
         operation={`发送 ${method.toUpperCase()} ${buildUrl()} 请求`}

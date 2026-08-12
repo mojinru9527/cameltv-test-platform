@@ -44,6 +44,20 @@ def _run_notify_in_new_session(project_id: int, event: str, data: dict) -> None:
         db.close()
 
 
+def _run_failure_auto_chain_in_new_session(plan_id: int, project_id: int, creator_id: int) -> None:
+    """C147-6（Batch 155）：失败自动转缺陷/报告/通知，独立 session 后台执行。"""
+    from app.core.db import SessionLocal
+    from app.services.test_plan_service import run_failure_auto_chain
+
+    db = SessionLocal()
+    try:
+        run_failure_auto_chain(db, plan_id, project_id=project_id, creator_id=creator_id)
+    except Exception:
+        logger.exception("Failure auto chain failed: plan=%s", plan_id)
+    finally:
+        db.close()
+
+
 def _queue_plan_done_if_complete(
     db: Session,
     background_tasks: BackgroundTasks,
@@ -289,6 +303,13 @@ def execute_all_cases(
 
     _audit(req, current, db, "plan:execute_all", f"plan #{plan_id}",
            f"total={result['total']}, passed={result['passed']}, failed={result['failed']}, skipped={result['skipped']}")
+    if result.get("failed", 0) > 0:
+        background_tasks.add_task(
+            _run_failure_auto_chain_in_new_session,
+            plan_id,
+            current.project_id or 0,
+            current.user.id,
+        )
     _queue_plan_done_if_complete(
         db,
         background_tasks,
@@ -323,6 +344,13 @@ def auto_execute_api_cases(
 
     _audit(req, current, db, "plan:auto_execute", f"plan #{plan_id}",
            f"executed={result['executed']}, passed={result['passed']}, failed={result['failed']}")
+    if result.get("failed", 0) > 0:
+        background_tasks.add_task(
+            _run_failure_auto_chain_in_new_session,
+            plan_id,
+            current.project_id or 0,
+            current.user.id,
+        )
     _queue_plan_done_if_complete(
         db,
         background_tasks,

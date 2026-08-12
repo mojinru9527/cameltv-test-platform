@@ -87,6 +87,29 @@ def _execute_schedule(schedule_id: int):
                 "block": 0,
                 "pending": 1,
             }
+        elif sched.job_type == "report":
+            # Batch 155 / P2-15：计划维度定时生成报告
+            from app.schemas.test_report import ReportCreate
+            from app.services.report_service import create_report
+
+            if not sched.plan_id:
+                raise ValueError("job_type=report 必须提供 plan_id")
+            report = create_report(
+                db,
+                ReportCreate(plan_id=sched.plan_id, name=f"定时报告-{sched.name or sched.id}"),
+                creator_id=0,
+                project_id=sched.project_id,
+            )
+            result = {
+                "report_id": report.get("report_id") or report.get("id") or "",
+                "status": "completed",
+                "total": 0,
+                "pass_": 0,
+                "fail": 0,
+                "skip": 0,
+                "block": 0,
+                "pending": 0,
+            }
         else:
             execution_result = execute_all_cases(
                 db,
@@ -125,19 +148,31 @@ def _execute_schedule(schedule_id: int):
 
             _ndb = SessionLocal()
             try:
-                notify_sync(
-                    _ndb,
-                    sched.project_id,
-                    "plan_done",
-                    {
-                        "plan_name": sched.plan.name if sched.plan else sched.name,
-                        "result_summary": (
-                            f"通过 {result['pass_']} / 失败 {result['fail']} / "
-                            f"跳过 {result['skip']}"
-                        ),
-                        "link": "",
-                    },
-                )
+                if sched.job_type == "report":
+                    notify_sync(
+                        _ndb,
+                        sched.project_id,
+                        "report_generated",
+                        {
+                            "report_name": f"定时报告-{sched.name or sched.id}",
+                            "pass_rate": "-",
+                            "link": "/report",
+                        },
+                    )
+                else:
+                    notify_sync(
+                        _ndb,
+                        sched.project_id,
+                        "plan_done",
+                        {
+                            "plan_name": sched.plan.name if sched.plan else sched.name,
+                            "result_summary": (
+                                f"通过 {result['pass_']} / 失败 {result['fail']} / "
+                                f"跳过 {result['skip']}"
+                            ),
+                            "link": "",
+                        },
+                    )
             finally:
                 _ndb.close()
         except Exception as notify_err:

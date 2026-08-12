@@ -807,6 +807,25 @@ def get_task(
     return R.ok(detail)
 
 
+@router.delete("/tasks/{task_id}", response_model=R[dict], summary="删除执行任务")
+def delete_task(
+    task_id: int,
+    current: CurrentUser = Depends(require_permission("apitest:execute")),
+    db: Session = Depends(get_db),
+):
+    """删除执行任务及其明细（仅终态任务可删）。"""
+    pid = _current_project_id(current)
+    task = _get_project_task(db, task_id, pid)
+    if not task:
+        raise HTTPException(404, "任务不存在")
+    if task.status in ("pending", "running"):
+        raise HTTPException(400, "任务执行中，请先取消后再删除")
+    db.query(ApiExecutionTaskItem).filter(ApiExecutionTaskItem.task_id == task.id).delete()
+    db.delete(task)
+    db.commit()
+    return {"deleted": task_id}
+
+
 @router.post("/tasks/{task_id}/cancel", response_model=R[dict], summary="取消任务")
 def cancel_task(
     task_id: int,

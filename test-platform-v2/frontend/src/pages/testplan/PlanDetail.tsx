@@ -6,6 +6,7 @@ import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/ui'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -113,7 +114,7 @@ export default function PlanDetail() {
   const [addOpen, setAddOpen] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [execModal, setExecModal] = useState<{ open: boolean; pcase: any }>({ open: false, pcase: null })
-  const [execStatus, setExecStatus] = useState('pass')
+  const [execStatus, setExecStatus] = useState('')
   const [execNotes, setExecNotes] = useState('')
   const [execSaving, setExecSaving] = useState(false)
   const [executions, setExecutions] = useState<any>({ total: 0, items: [] })
@@ -121,6 +122,8 @@ export default function PlanDetail() {
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null)
   const [deletePlanOpen, setDeletePlanOpen] = useState(false)
   const [execAllLoading, setExecAllLoading] = useState(false)
+  const [execScopeOpen, setExecScopeOpen] = useState(false)
+  const [execScope, setExecScope] = useState<'all' | 'api'>('all')
   const [autoExecuting, setAutoExecuting] = useState(false)
   const [environments, setEnvironments] = useState<any[]>([])
   const [selectedEnv, setSelectedEnv] = useState('__none__')
@@ -178,6 +181,12 @@ export default function PlanDetail() {
     load()
   }
 
+  const doToggleAutoDefect = async () => {
+    await updatePlan(planId, { auto_defect_on_fail: !plan.auto_defect_on_fail })
+    toast.success(plan.auto_defect_on_fail ? '已关闭失败自动链路' : '已开启失败自动链路')
+    load()
+  }
+
   const doRemoveCase = async (caseId: number) => {
     await removeCasesFromPlan(planId, [caseId])
     toast.success('已移除')
@@ -211,6 +220,10 @@ export default function PlanDetail() {
 
   const doExecute = async () => {
     if (!execModal.pcase) return
+    if (!execStatus) {
+      toast.error('请选择执行结果')
+      return
+    }
     setExecSaving(true)
     try {
       await executeCase(planId, execModal.pcase.id, { status: execStatus, notes: execNotes })
@@ -225,7 +238,7 @@ export default function PlanDetail() {
 
   const openExec = (pcase: any) => {
     setExecModal({ open: true, pcase })
-    setExecStatus('pass')
+    setExecStatus('')
     setExecNotes('')
   }
 
@@ -281,14 +294,25 @@ export default function PlanDetail() {
               </SelectContent>
             </Select>
           )}
+          <label
+            className="flex cursor-pointer items-center gap-1.5 text-xs text-muted-foreground"
+            title="执行失败时自动生成缺陷、报告并推送通知（需在计划编辑中确认开关语义）"
+          >
+            <Checkbox
+              checked={!!plan.auto_defect_on_fail}
+              onCheckedChange={() => void doToggleAutoDefect()}
+              aria-label="失败自动转缺陷/报告/通知"
+            />
+            失败自动链路
+          </label>
           <Button
             size="sm"
             variant="primary"
-            onClick={doAutoExecute}
-            disabled={autoExecuting || !plan.cases?.length}
+            onClick={() => setExecScopeOpen(true)}
+            disabled={!plan.cases?.length}
           >
             <Play className="size-3.5" data-icon="inline-start" />
-            {autoExecuting ? '执行中...' : '批量执行'}
+            执行
           </Button>
           {plan.status === 'draft' && (
             <Button size="sm" onClick={() => doUpdateStatus('active')}>开始执行</Button>
@@ -299,10 +323,7 @@ export default function PlanDetail() {
           <Button size="sm" variant="secondary" onClick={() => void load()} aria-label="刷新测试计划详情">
             <RotateCcw className="size-3.5" data-icon="inline-start" />
           </Button>
-          <Button size="sm" variant="secondary" disabled={execAllLoading} onClick={doExecuteAll}>
-            <Play className="size-3.5" data-icon="inline-start" />
-            {execAllLoading ? '执行中...' : '一键执行'}
-          </Button>
+
           <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>编辑</Button>
           <AlertDialog open={deletePlanOpen} onOpenChange={setDeletePlanOpen}>
             <AlertDialogTrigger asChild>
@@ -593,7 +614,61 @@ export default function PlanDetail() {
         onSaved={() => { setEditOpen(false); load() }}
       />
 
+      {/* 执行范围选择弹窗（P2-01：合并批量执行/一键执行为单一执行入口） */}
+      <Dialog open={execScopeOpen} onOpenChange={setExecScopeOpen}>
+        <DialogContent className="sm:max-w-[420px]">
+          <DialogHeader>
+            <DialogTitle>执行计划</DialogTitle>
+            <DialogDescription>选择执行范围与目标环境</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">执行范围</label>
+              <Select value={execScope} onValueChange={(v) => setExecScope(v as 'all' | 'api')}>
+                <SelectTrigger className="w-full" aria-label="执行范围">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部用例（API/UI 自动，人工标记跳过）</SelectItem>
+                  <SelectItem value="api">仅 API 用例</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {hasApiCases && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">执行环境</label>
+                <Select value={selectedEnv} onValueChange={setSelectedEnv}>
+                  <SelectTrigger className="w-full" aria-label="执行环境">
+                    <SelectValue placeholder="请选择环境" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">请选择环境</SelectItem>
+                    {environments.map((e: any) => (
+                      <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setExecScopeOpen(false)}>取消</Button>
+            <Button
+              disabled={execAllLoading || autoExecuting}
+              onClick={() => {
+                setExecScopeOpen(false)
+                if (execScope === 'api') void doAutoExecute()
+                else void doExecuteAll()
+              }}
+            >
+              {execAllLoading || autoExecuting ? '执行中...' : '确认执行'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Execute Dialog */}
+
       <Dialog open={execModal.open} onOpenChange={(open) => { if (!open) setExecModal({ open: false, pcase: null }) }}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>

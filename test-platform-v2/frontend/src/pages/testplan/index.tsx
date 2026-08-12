@@ -190,11 +190,12 @@ export default function TestPlanPage() {
           }}
           toolbar={
           <div className="flex flex-wrap items-center gap-2">
-            <Select value={status || undefined} onValueChange={(v) => { setStatus(v || ''); setPage(1) }}>
+            <Select value={status || '__all__'} onValueChange={(v) => { setStatus(v === '__all__' ? '' : v); setPage(1) }}>
               <SelectTrigger className="w-[120px]" size="sm" aria-label="按测试计划状态筛选">
                 <SelectValue placeholder="状态" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="__all__">全部</SelectItem>
                 {STATUS_MAP && Object.keys(STATUS_MAP).length > 0
                   ? Object.entries(STATUS_MAP).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v.label}</SelectItem>

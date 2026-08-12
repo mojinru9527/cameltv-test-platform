@@ -16,12 +16,13 @@ class ScheduleCreate(BaseModel):
     job_id: Optional[int] = None
     cron_expression: str
     enabled: bool = True
+    disabled_reason: Optional[str] = None
 
     @field_validator("job_type")
     @classmethod
     def validate_job_type(cls, v: str) -> str:
-        if v not in ("plan", "ui"):
-            raise ValueError("job_type 仅支持 plan|ui")
+        if v not in ("plan", "ui", "report"):
+            raise ValueError("job_type 仅支持 plan|ui|report")
         return v
 
     @field_validator("cron_expression")
@@ -42,6 +43,14 @@ class ScheduleUpdate(BaseModel):
     job_id: Optional[int] = None
     cron_expression: Optional[str] = None
     enabled: Optional[bool] = None
+    disabled_reason: Optional[str] = None
+
+    @field_validator("job_type")
+    @classmethod
+    def validate_job_type_update(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in ("plan", "ui", "report"):
+            raise ValueError("job_type 仅支持 plan|ui|report")
+        return v
 
     @field_validator("cron_expression")
     @classmethod
@@ -67,6 +76,7 @@ class ScheduleOut(BaseModel):
     job_id: Optional[int] = None
     cron_expression: str = ""
     enabled: bool = True
+    disabled_reason: str = ""
     next_run: Optional[datetime] = None
     last_run: Optional[datetime] = None
     creator_id: int = 0
