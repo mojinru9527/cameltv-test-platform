@@ -107,10 +107,11 @@ def claim_next_task(db, now: datetime | None = None) -> AiTask | None:
     return row
 
 
-def _run_extract(db, document_id: int) -> dict:
+def _run_extract(db, document_id: int, project_id: int = 0) -> dict:
     from app.services.requirement_service import get_requirement
 
-    doc = get_requirement(db, document_id, project_id=0) or {}
+    # Batch 161 follow-up：必须按任务所属项目查询，否则跨项目文档内容为空 → AI 提取 0 模块
+    doc = get_requirement(db, document_id, project_id=project_id) or {}
     content = doc.get("content") or doc.get("requirement_text") or ""
     import asyncio
     from app.services.ai_service import extract_features as _ai_extract
@@ -122,13 +123,23 @@ def _run_extract(db, document_id: int) -> dict:
     ))
 
 
-def _run_generate(db, document_id: int) -> dict:
-    from app.services.requirement_service import get_requirement
+def _run_generate(db, document_id: int, project_id: int = 0) -> dict:
+    from app.services.requirement_service import get_extraction, get_requirement
 
-    doc = get_requirement(db, document_id, project_id=0) or {}
+    # Batch 161 follow-up：按任务所属项目查询（否则内容为空 → AI 返回 0 用例）
+    doc = get_requirement(db, document_id, project_id=project_id) or {}
     content = doc.get("content") or doc.get("requirement_text") or ""
     from app.services.ai_service import generate_test_cases as _ai_gen
-    from app.services.coverage_report import build_coverage_report, parse_extraction
+    from app.services.coverage_report import build_coverage_report
+
+    # 已确认的功能拆分作为引导上下文（与同步 /generate 路径对齐）
+    extraction = None
+    try:
+        if doc.get("extraction_status") == "confirmed":
+            extraction = get_extraction(db, document_id, project_id=project_id)
+    except Exception:  # noqa: BLE001 - 提取读取失败不影响内容生成
+        extraction = None
+    extraction_modules = (extraction or {}).get("modules") or []
 
     import asyncio
 
@@ -136,17 +147,17 @@ def _run_generate(db, document_id: int) -> dict:
         content,
         file_type=doc.get("file_type", ""),
         source_ref=str(doc.get("source_ref") or ""),
+        extraction={"modules": extraction_modules} if extraction_modules else None,
     ))
-    extraction = parse_extraction(str(doc.get("extraction_raw") or ""))
-    result["coverage_report"] = build_coverage_report(extraction, result)
+    result["coverage_report"] = build_coverage_report({"modules": extraction_modules}, result)
     return result
 
 
-def _dispatch(task_type: str, document_id: int, db) -> dict:
+def _dispatch(task_type: str, document_id: int, db, project_id: int = 0) -> dict:
     if task_type == "extract":
-        return _run_extract(db, document_id)
+        return _run_extract(db, document_id, project_id)
     if task_type == "generate":
-        return _run_generate(db, document_id)
+        return _run_generate(db, document_id, project_id)
     raise ValueError(f"未知任务类型: {task_type}")
 
 
@@ -154,7 +165,7 @@ def execute_task(db, task: AiTask, dispatch=None) -> None:
     """执行已认领任务并写回结果/错误。dispatch 可注入用于测试。"""
     dispatch = dispatch or _dispatch
     try:
-        result = dispatch(task.task_type, task.document_id, db)
+        result = dispatch(task.task_type, task.document_id, db, project_id=task.project_id)
         task.status = "done"
         task.progress = 100
         task.result_json = json.dumps(result, ensure_ascii=False, default=str)
