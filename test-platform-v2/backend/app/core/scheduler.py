@@ -75,6 +75,10 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
                 db.rollback()
                 return {"triggered": False, "reason": "run_not_found", "run_id": run_id}
 
+        # Batch 164 / C163-1：运行开始写入心跳，供 stale 回收判定
+        run.heartbeat_at = datetime.now(timezone.utc)
+        db.commit()
+
         if sched.job_type == "ui":
             # B112-3：UI job 定时 —— 触发 UI job（Playwright 异步执行，schedule run 记录 ui_run_id）
             from app.services.ui_test_service import trigger_job as trigger_ui_job
@@ -141,6 +145,7 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
             raise RuntimeError("调度运行记录在执行期间被删除")
         run.status = "completed"
         run.result = json.dumps(result, ensure_ascii=False)
+        run.heartbeat_at = datetime.now(timezone.utc)
         run.finished_at = datetime.now(timezone.utc)
         sched.last_run = datetime.now(timezone.utc)
         db.commit()
@@ -203,6 +208,7 @@ def _execute_schedule(schedule_id: int, run_id: int | None = None):
                     raise RuntimeError("调度失败后无法找到运行记录")
                 failed_run.status = "failed"
                 failed_run.error_message = str(e)[:500]
+                failed_run.heartbeat_at = datetime.now(timezone.utc)
                 failed_run.finished_at = datetime.now(timezone.utc)
                 db.commit()
         except Exception:
@@ -275,6 +281,61 @@ def toggle_schedule_job(schedule_id: int, enabled: bool, cron_expression: str):
         remove_schedule_job(schedule_id)
 
 
+def _naive_utc(dt):
+    if dt is None:
+        return None
+    if getattr(dt, "tzinfo", None) is not None:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
+def reap_stale_schedule_runs(db=None) -> int:
+    """Batch 164 / C163-1：回收失联的调度运行记录（heartbeat 超时）。
+
+    周期任务（默认每 5 分钟）+ 启动时执行一次。heartbeat_at 为 NULL 的旧数据按
+    started_at 兜底；回收后将 run 置 failed，解除 already_running 对新触发的阻塞。
+    db 为空时使用独立 SessionLocal（生产）；测试可注入会话。
+    """
+    from datetime import timedelta
+
+    from app.core.config import settings
+    from app.core.db import SessionLocal
+    from app.models.test_schedule import TestScheduleRun
+    from sqlalchemy import select
+
+    own_session = db is None
+    if own_session:
+        db = SessionLocal()
+    try:
+        stale_after = timedelta(seconds=max(int(getattr(settings, "schedule_stale_seconds", 1200)), 60))
+        now = datetime.utcnow()
+        rows = db.scalars(
+            select(TestScheduleRun).where(TestScheduleRun.status == "running")
+        ).all()
+        reaped = 0
+        for r in rows:
+            ref = _naive_utc(r.heartbeat_at or r.started_at)
+            if ref is None:
+                continue
+            if now - ref > stale_after:
+                r.status = "failed"
+                r.error_message = (
+                    f"stale: 执行失联超过 {int(stale_after.total_seconds())} 秒，已回收（Batch 164）"
+                )
+                r.heartbeat_at = datetime.now(timezone.utc)
+                r.finished_at = r.heartbeat_at
+                reaped += 1
+        if reaped:
+            db.commit()
+            logger.warning("[scheduler] Reaped %s stale schedule run(s)", reaped)
+        else:
+            db.rollback()
+        return reaped
+    finally:
+        if own_session:
+            db.close()
+
+
 def init_scheduler():
     """Called at app startup. Loads all enabled schedules from DB and registers jobs."""
     from app.core.db import SessionLocal
@@ -313,6 +374,19 @@ def init_scheduler():
         logger.info("[scheduler] Task worker poll registered (every 5s)")
     except Exception as e:
         logger.error(f"[scheduler] Failed to register task worker: {e}")
+
+    # ── Batch 164 / C163-1：调度运行 stale 回收（每 5 分钟 + 启动即跑）──
+    try:
+        scheduler.add_job(
+            func=reap_stale_schedule_runs,
+            trigger=IntervalTrigger(seconds=300),
+            id="schedule_stale_reap",
+            replace_existing=True,
+        )
+        reap_stale_schedule_runs()
+        logger.info("[scheduler] Schedule stale reaper registered (every 5min)")
+    except Exception as e:
+        logger.error(f"[scheduler] Failed to register stale reaper: {e}")
 
     # ── 知识保鲜退化 + 自动归档（每天凌晨 3:00）──
     try:

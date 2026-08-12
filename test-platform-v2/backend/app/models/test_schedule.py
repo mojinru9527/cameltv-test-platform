@@ -50,6 +50,7 @@ class TestScheduleRun(Base):
     result: Mapped[str] = mapped_column(Text, default="{}")
     error_message: Mapped[str] = mapped_column(Text, default="")
     started_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    heartbeat_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None)  # Batch 164/C163-1：运行心跳
     finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime, default=None)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 

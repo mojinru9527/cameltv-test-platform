@@ -198,6 +198,7 @@ class Settings(BaseSettings):
     lanhu_capture_scroll_step_ratio: float = 0.85
     lanhu_capture_max_segments_per_page: int = 30
     lanhu_capture_wait_ms: int = 600
+    schedule_stale_seconds: int = 1200  # Batch 164/C163-1：调度运行失联回收阈值（秒）
     lanhu_ocr_provider: str = "local"            # local/cloud/mock
     lanhu_ocr_command: str = ""                  # 命令模板，如 paddleocr --image {image}
     lanhu_ocr_min_confidence: float = 0.60
