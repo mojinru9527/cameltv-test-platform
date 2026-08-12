@@ -28,7 +28,7 @@ Batch 161 生产复验后遗留 3 个 Leader 条件：
 ## 5. 技术考量
 - C161-1：Dockerfile DATA_DIR /data/lanhu → /app/storage/lanhu-data（持久卷）；文档登记 Railway LANHU_USERNAME/PASSWORD 配置。
 - C161-2：test_schedule 加 environment_id（Alembic 迁移）；ScheduleCreate/Update/Out 扩展；create/update 校验 API 计划必选环境；scheduler._execute_schedule 传 environment_id；前端表单环境下拉 + 列表展示。
-- C161-3：classify_case_surface 扩展域名规则 + 单测；提供回填脚本（scripts/backfill-surface-c161.py）。
+- C161-3：surface 为派生值（无 DB 列），classify_case_surface 扩展域名规则 + 单测即修复展示/统计；不落库回填。
 
 ## 6. 上线计划
 合入 + Railway 部署 → 用户补 LANHU_USERNAME/PASSWORD（或粘贴 Cookie）→ 生产复验（调度触发、采集、surface）。
