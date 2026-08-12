@@ -26,7 +26,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C163-1 | 调度运行记录 stale 回收：run#9 卡 running 超 1h（execute_all 长计划异常/超时未更新 run）；应加 heartbeat/超时回收（参考 ai_tasks stale 锁）或长计划拆后台任务 | P2 | 2026-08-12 |
+| ~~C163-1~~ | ~~调度运行记录 stale 回收：run#9 卡 running 超 1h~~ → **Closed**：batch-164 heartbeat_at + 周期回收 watchdog（SCHEDULE_STALE_SECONDS=1200 可覆盖），回归测试 4 个 | P2 | 2026-08-12 |
 
 ### batch-162 — 复验新增（2026-08-12）
 
