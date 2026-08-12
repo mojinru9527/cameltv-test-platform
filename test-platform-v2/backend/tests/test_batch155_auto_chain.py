@@ -194,3 +194,44 @@ class TestBatch161AutoChainRobustness:
         assert resp.status_code == 200, resp.text
         assert resp.json()["data"]["failed"] == 0
         assert calls == []
+
+
+class TestBatch161Followup3Persist:
+    """Batch 161 follow-up3：失败自动链路必须在独立会话中 commit（否则缺陷/报告不落库）。"""
+
+    def test_auto_chain_persists_across_sessions(self, db_session, client, auth_headers, monkeypatch):
+        from sqlalchemy.orm import sessionmaker
+
+        from app.services.test_plan_service import run_failure_auto_chain
+
+        case = _create_case(client, auth_headers)
+        plan = _create_plan(client, auth_headers, auto=True)
+        _add_case_and_failed_execution(db_session, client, auth_headers, plan["id"], case["id"])
+
+        def fake_notify(db, project_id, event, data):
+            return None
+        monkeypatch.setattr("app.services.notify_service.notify_sync", fake_notify)
+
+        engine = db_session.get_bind()
+        Session = sessionmaker(bind=engine)
+
+        # 模拟后台独立会话执行链路
+        s2 = Session()
+        try:
+            result = run_failure_auto_chain(s2, plan["id"], project_id=1, creator_id=1)
+        finally:
+            s2.close()
+        assert result["defects_created"] >= 1
+
+        # 全新会话读取已提交数据（验证 commit 生效，而非仅 flush）
+        from app.models.defect import Defect as _Defect
+        from app.models.test_report import TestReport as _TestReport
+
+        s3 = Session()
+        try:
+            defects = s3.query(_Defect).filter(_Defect.project_id == 1).all()
+            reports = s3.query(_TestReport).filter(_TestReport.project_id == 1).all()
+        finally:
+            s3.close()
+        assert len(defects) >= 1, "缺陷未跨会话持久化（缺 commit）"
+        assert any("失败自动报告" in (r.name or "") for r in reports), "报告未跨会话持久化（缺 commit）"

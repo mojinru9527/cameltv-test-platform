@@ -64,3 +64,8 @@ mode: light
 - 现象：异步生成成功（15.0.0=338 条 / 16.0.0=391 条，新模型 deepseek-v4-flash），但文档无结果，UI 查看/导入为空。
 - 根因：ai_tasks 异步拆分/生成只写任务表，未调用 update_extraction/update_ai_result 持久化到需求文档。
 - 修复：_run_extract → update_extraction；_run_generate → update_ai_result（与同步路径对齐）；回归测试 2 个。
+
+## 10. Follow-up3（生产复验发现：自动转缺陷/报告未 commit）
+- 现象：batch-execute 触发自动链路后 30s，缺陷/报告仍为 0（Triage 正常、分类为 bug）。
+- 根因：create_defect/create_report 仅 flush；run_failure_auto_chain 在后台独立会话中未 commit，会话关闭即回滚。
+- 修复：链路末尾统一 db.commit()（失败 rollback+记录）；新增跨会话持久化回归测试 1 个。
