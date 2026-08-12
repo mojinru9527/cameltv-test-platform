@@ -66,7 +66,7 @@ RUN git clone --depth 1 --branch main \
     && rm -rf /tmp/lanhu-mcp
 
 RUN mkdir -p /app/storage /app/storage/lanhu-data /ms-playwright "${XDG_CACHE_HOME}" \
-    && chown -R cameltv:cameltv /app /data /ms-playwright /home/cameltv
+    && chown -R cameltv:cameltv /app /ms-playwright /home/cameltv
 
 USER cameltv:cameltv
 EXPOSE 8000
