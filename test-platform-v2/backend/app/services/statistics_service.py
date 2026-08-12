@@ -40,13 +40,19 @@ def _execution_filter(
     end_date: Optional[date] = None,
 ) -> tuple[int, int, int]:
     """统计 TestExecution 总数/通过/失败（可附加 plan_case 子查询与时间范围）。"""
+    if plan_case_ids_sub is not None:
+        plan_case_ids = plan_case_ids_sub
+    else:
+        plan_case_ids = (
+            select(TestPlanCase.id)
+            .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
+            .where(TestPlan.project_id == project_id)
+            .scalar_subquery()
+        )
+    # Batch 158 热修：必须用 IN (subquery) 包装，否则 PG 报
+    # "argument of WHERE must be type boolean, not type integer"（SQLite 宽松不报）
     base = select(func.count(TestExecution.id)).where(
-        TestExecution.plan_case_id.in_(plan_case_ids_sub)
-        if plan_case_ids_sub is not None
-        else select(TestPlanCase.id)
-        .join(TestPlan, TestPlan.id == TestPlanCase.plan_id)
-        .where(TestPlan.project_id == project_id)
-        .scalar_subquery()
+        TestExecution.plan_case_id.in_(plan_case_ids)
     )
     pass_base = base.where(TestExecution.status == "pass")
     fail_base = base.where(TestExecution.status == "fail")
