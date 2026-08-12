@@ -112,9 +112,11 @@ def discover_pages(url: str, capture_all_pages: bool = True, latest_version_only
     from app.services.external import lanhu_provider
 
     base = parse_lanhu_url(url)
-    result = asyncio.run(lanhu_provider.get_lanhu_pages_for_evidence(url, latest_version_only=latest_version_only))
+    result = asyncio.run(lanhu_provider.get_lanhu_pages_for_evidence(
+        url, latest_version_only=latest_version_only, capture_all_pages=capture_all_pages,
+    ))
     if result.get("status") != "success":
-        raise ValueError(result.get("error") or "蓝湖页面发现失败")
+        raise ValueError(result.get("error") or f"蓝湖页面发现失败（provider status={result.get('status')}）")
 
     raw_pages = list(result.get("pages") or [])
     if not capture_all_pages and base.page_id:

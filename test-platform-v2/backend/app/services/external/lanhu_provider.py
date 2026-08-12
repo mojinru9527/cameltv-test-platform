@@ -27,9 +27,11 @@ import httpx
 from app.core.config import settings
 
 
-_LANHU_DOWNLOAD_MAX_RESOURCES = 500
-_LANHU_DOWNLOAD_MAX_TOTAL_BYTES = 100 * 1024 * 1024
-_LANHU_DOWNLOAD_TIMEOUT_SECONDS = 120
+_LANHU_DOWNLOAD_MAX_RESOURCES = 1000
+_LANHU_DOWNLOAD_MAX_TOTAL_BYTES = 300 * 1024 * 1024
+_LANHU_DOWNLOAD_TIMEOUT_SECONDS = 300
+# Batch 159：证据提取整体超时（旧版 lanhu-mcp 无整体超时，单请求仅 30s）
+_LANHU_EVIDENCE_TIMEOUT_SECONDS = 600
 
 
 class LanhuManualActionRequired(ValueError):
@@ -176,6 +178,103 @@ async def _download_lanhu_resources(
         output_dir,
         **supported_arguments,
     )
+
+
+async def _download_lanhu_resources_scoped(
+    extractor,
+    url: str,
+    output_dir: str,
+    params: dict,
+    pages_info: dict,
+    *,
+    cdn_url: str,
+    target_page_id: str,
+    capture_all_pages: bool,
+) -> dict | None:
+    """Batch 159：按页/按文件夹有界下载，避免整版全量下载导致超时。
+
+    仅当 capture_all_pages=False 且目标 pageId 存在于最新版 sitemap 时启用；
+    文件名无法匹配或一页都没下到则返回 None（调用方回退全量下载，保留真实错误路径）。
+    """
+    if capture_all_pages or not target_page_id or not cdn_url:
+        return None
+    pages = pages_info.get("pages", []) or []
+    target = next((pg for pg in pages if str(pg.get("id")) == str(target_page_id)), None)
+    if target is None:
+        return None
+    folder = str(target.get("folder") or "")
+    needed = [pg for pg in pages if (str(pg.get("folder") or "") == folder)] if folder else [target]
+    needed_names = {str(pg.get("filename") or "") for pg in needed}
+    needed_names.discard("")
+    if not needed_names:
+        return None
+
+    doc_info = await extractor.get_document_info(
+        str(params.get("project_id") or ""),
+        str(params.get("doc_id") or ""),
+        team_id=params.get("team_id") or None,
+        page_id=target_page_id,
+    )
+    versions = doc_info.get("versions", []) or []
+    if not versions:
+        return None
+    version_info = versions[0]
+    version_id = str(version_info.get("id") or "")
+    json_url = version_info.get("json_url")
+    if not json_url:
+        return None
+    resp = await extractor.client.get(json_url)
+    resp.raise_for_status()
+    project_mapping = resp.json()
+    pages_map = project_mapping.get("pages", {}) or {}
+    if not isinstance(pages_map, dict) or not needed_names.issubset(set(pages_map.keys())):
+        return None
+
+    output_path = Path(output_dir)
+    output_path.mkdir(parents=True, exist_ok=True)
+    downloaded: list[str] = []
+    for index, name in enumerate(sorted(needed_names)):
+        entry = pages_map.get(name) or {}
+        html_md5 = (entry.get("html") or {}).get("sign_md5", "")
+        if html_md5:
+            html_url = html_md5 if html_md5.startswith("http") else f"{cdn_url}/{html_md5}"
+            try:
+                html_resp = await extractor.client.get(html_url)
+                html_resp.raise_for_status()
+                (output_path / name).write_text(html_resp.text, encoding="utf-8")
+                downloaded.append(name)
+            except Exception:
+                continue
+        mapping_md5 = entry.get("mapping_md5", "")
+        if mapping_md5:
+            mapping_url = mapping_md5 if mapping_md5.startswith("http") else f"{cdn_url}/{mapping_md5}"
+            try:
+                map_resp = await extractor.client.get(mapping_url)
+                map_resp.raise_for_status()
+                page_mapping = map_resp.json()
+                await extractor._download_page_resources(page_mapping, output_path, skip_document_js=(index > 0))
+            except Exception:
+                pass
+    if not downloaded:
+        return None
+    try:
+        extractor._save_cache_meta(output_path, {
+            "version_id": version_id,
+            "document_id": str(params.get("doc_id") or ""),
+            "document_name": doc_info.get("name", "Unknown"),
+            "download_time": asyncio.get_running_loop().time(),
+            "pages": sorted(needed_names),
+            "total_files": len(downloaded),
+            "scoped": True,
+        })
+    except Exception:
+        pass
+    return {
+        "status": "downloaded",
+        "version_id": version_id,
+        "reason": "scoped_pages",
+        "output_dir": output_dir,
+    }
 
 
 def _ensure_download_is_usable(download_result: dict) -> None:
@@ -1056,7 +1155,7 @@ def _filter_latest_version_pages(pages: list[dict]) -> list[dict]:
     return groups[latest]
 
 
-async def get_lanhu_pages_for_evidence(url: str, latest_version_only: bool = False) -> dict:
+async def get_lanhu_pages_for_evidence(url: str, latest_version_only: bool = False, capture_all_pages: bool = True) -> dict:
     """下载 Axure 资源并返回全页面列表，供证据包截图/OCR 使用。
 
     与 `_extract_lanhu_content` 共用下载与认证重试逻辑，但不做文本聚合：
@@ -1095,18 +1194,44 @@ async def get_lanhu_pages_for_evidence(url: str, latest_version_only: bool = Fal
                 url_version_id = params.get("version_id", "")
 
             resource_dir = str(_data_dir() / f"axure_extract_{doc_id[:8]}")
-            download_result = await _download_lanhu_resources(
-                extractor,
-                effective_url,
-                resource_dir,
-                url_version_id,
-                params.get("page_id", ""),
-            )
-            _ensure_download_is_usable(download_result)
-            if download_result.get("status") in ("downloaded", "updated"):
-                runtime.fix_html_files(resource_dir)
+            # Batch 159：capture_all_pages=False 且带 pageId 时走「页面列表优先 + 有界下载」，
+            # 只下载目标页/同文件夹资源；全量路径保持原有顺序（先下载，受限下载不继续生成页面证据）。
+            if capture_all_pages or not params.get("page_id"):
+                download_result = await _download_lanhu_resources(
+                    extractor,
+                    effective_url,
+                    resource_dir,
+                    url_version_id,
+                    params.get("page_id", ""),
+                )
+                _ensure_download_is_usable(download_result)
+                if download_result.get("status") in ("downloaded", "updated"):
+                    runtime.fix_html_files(resource_dir)
+                pages_info = await extractor.get_pages_list(effective_url)
+            else:
+                pages_info = await extractor.get_pages_list(effective_url)
+                download_result = await _download_lanhu_resources_scoped(
+                    extractor,
+                    effective_url,
+                    resource_dir,
+                    params,
+                    pages_info,
+                    cdn_url=str(getattr(runtime.module, "CDN_URL", "") or ""),
+                    target_page_id=params.get("page_id", ""),
+                    capture_all_pages=False,
+                )
+                if download_result is None:
+                    download_result = await _download_lanhu_resources(
+                        extractor,
+                        effective_url,
+                        resource_dir,
+                        url_version_id,
+                        params.get("page_id", ""),
+                    )
+                _ensure_download_is_usable(download_result)
+                if download_result.get("status") in ("downloaded", "updated"):
+                    runtime.fix_html_files(resource_dir)
 
-            pages_info = await extractor.get_pages_list(effective_url)
             document_name = pages_info.get("document_name", "设计稿")
 
             raw_pages = pages_info.get("pages", [])
@@ -1136,8 +1261,25 @@ async def get_lanhu_pages_for_evidence(url: str, latest_version_only: bool = Fal
                 "pages": pages,
             }
 
+        async def _do_with_retry() -> dict:
+            """Batch 159：整体超时兜底 + 瞬时失败重试一次（大版本下载易触发 30s 单请求超时）。"""
+            last: BaseException | None = None
+            for attempt in range(2):
+                try:
+                    return await asyncio.wait_for(
+                        _do(), timeout=_LANHU_EVIDENCE_TIMEOUT_SECONDS,
+                    )
+                except (asyncio.TimeoutError, httpx.TimeoutException, httpx.TransportError) as exc:
+                    last = exc
+                    logger.warning(
+                        "[lanhu_provider] evidence download attempt %s failed: %s",
+                        attempt + 1, str(exc) or type(exc).__name__,
+                    )
+                    continue
+            raise last  # type: ignore[misc]
+
         try:
-            return await _do()
+            return await _do_with_retry()
         except Exception as exc:
             is_auth = (isinstance(exc, runtime.auth_error_types)
                        or _is_lanhu_session_expired(exc))
@@ -1164,12 +1306,12 @@ async def get_lanhu_pages_for_evidence(url: str, latest_version_only: bool = Fal
     except LanhuManualActionRequired as e:
         return {
             "status": "failed",
-            "error": str(e),
+            "error": (str(e) or type(e).__name__),
             "manual_action_required": True,
             "pages": [],
         }
     except Exception as e:  # noqa: BLE001 — 统一以状态表达失败
-        return {"status": "failed", "error": str(e)[:300], "pages": []}
+        return {"status": "failed", "error": (str(e) or type(e).__name__)[:300], "pages": []}
     finally:
         if str(_lanhu_mcp_dir()) in sys.path:
             sys.path.remove(str(_lanhu_mcp_dir()))
