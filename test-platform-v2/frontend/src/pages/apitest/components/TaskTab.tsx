@@ -208,7 +208,7 @@ function safeFormatJson(raw: string): string {
   try { return JSON.stringify(JSON.parse(raw), null, 2) } catch { return raw }
 }
 
-function SnapshotCard({ item }: { item: { id: number; case_id: number; status: string; duration_ms: number; error_message: string; assertion_results: string; request_snapshot: string; response_snapshot: string } }) {
+function SnapshotCard({ item }: { item: { id: number; case_id: number; status: string; duration_ms: number; error_message: string; assertion_results: string; request_snapshot: string; response_snapshot: string; test_execution_id?: number | null } }) {
   const [expanded, setExpanded] = useState(false)
   const [tab, setTab] = useState<'request' | 'response' | 'assertions'>('request')
 
@@ -225,6 +225,7 @@ function SnapshotCard({ item }: { item: { id: number; case_id: number; status: s
         <span className="font-medium">用例 #{item.case_id}</span>
         <span className="text-muted-foreground">{item.duration_ms}ms</span>
         <Badge className={STATUS_MAP[item.status]?.className || ''}>{STATUS_MAP[item.status]?.label || item.status}</Badge>
+        {item.test_execution_id ? <span className="text-muted-foreground">关联计划执行 #{item.test_execution_id}</span> : null}
       </div>
       {item.error_message && <p className="text-status-danger mt-1">{item.error_message}</p>}
 

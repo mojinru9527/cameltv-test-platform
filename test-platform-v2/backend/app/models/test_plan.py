@@ -81,6 +81,8 @@ class TestExecution(Base):
         String(50), default="", comment="失败阶段/错误类型: TARGET_POLICY/TIMEOUT/NETWORK_ERROR/ASSERTION_FAILED/EXECUTION_ERROR"
     )
     error_message: Mapped[str] = mapped_column(Text, default="", comment="失败原因摘要")
+    # Batch 157：关联接口执行任务（trigger_type=plan 时由计划 API 执行登记）
+    api_task_id: Mapped[Optional[int]] = mapped_column(default=None, index=True)
     executed_at: Mapped[datetime] = mapped_column(default=datetime.now)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 

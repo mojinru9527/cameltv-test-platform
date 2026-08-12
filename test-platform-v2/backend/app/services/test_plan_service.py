@@ -6,6 +6,7 @@ import logging
 import re
 import shutil
 import subprocess
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -500,6 +501,7 @@ def auto_execute_api_cases(
     executed = 0
     passed = 0
     failed = 0
+    api_task = None  # Batch 157：计划 API 执行登记为 trigger_type=plan 任务
 
     for pc, tc in api_cases:
         try:
@@ -527,6 +529,17 @@ def auto_execute_api_cases(
                 executed_at=now,
             )
             db.add(exec_row)
+            # Batch 157：登记 API 任务快照并双向关联
+            db.flush()
+            if api_task is None:
+                api_task = _ensure_plan_api_task(
+                    db, plan,
+                    environment_id=environment_id,
+                    project_id=project_id,
+                    executor_id=executor_id,
+                    now=now,
+                )
+            _register_plan_api_snapshot(db, api_task, tc, exec_row, exec_result, status, now)
             executed += 1
             if api_pass:
                 passed += 1
@@ -535,7 +548,8 @@ def auto_execute_api_cases(
 
         except Exception as e:
             status = "fail"
-            actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
+            exec_result = {"error": str(e), "status_code": 0}
+            actual_result = json.dumps(exec_result, ensure_ascii=False)
             exec_status_code, exec_error_type, exec_error_message = _execution_error_fields(actual_result)
             exec_row = TestExecution(
                 plan_case_id=pc.id,
@@ -550,6 +564,17 @@ def auto_execute_api_cases(
                 executed_at=now,
             )
             db.add(exec_row)
+            # Batch 157：登记 API 任务快照并双向关联
+            db.flush()
+            if api_task is None:
+                api_task = _ensure_plan_api_task(
+                    db, plan,
+                    environment_id=environment_id,
+                    project_id=project_id,
+                    executor_id=executor_id,
+                    now=now,
+                )
+            _register_plan_api_snapshot(db, api_task, tc, exec_row, exec_result, status, now)
             executed += 1
             failed += 1
 
@@ -564,6 +589,13 @@ def auto_execute_api_cases(
             "case_title": tc.title,
             "status": status,
         })
+
+    # Batch 157：同步任务汇总
+    if api_task is not None:
+        api_task.total = len(api_cases)
+        api_task.passed = passed
+        api_task.failed = failed
+        api_task.skipped = 0
 
     db.commit()
 
@@ -698,6 +730,74 @@ def _parse_playwright_report(stdout_text: str) -> tuple[int, int, int, int] | No
 
 
 # ═══════════════════════════════════════════════════════
+# 执行模型双向关联（Batch 157）
+# ═══════════════════════════════════════════════════════
+
+def _ensure_plan_api_task(
+    db: Session,
+    plan: TestPlan,
+    *,
+    environment_id: int | None,
+    project_id: int,
+    executor_id: int,
+    now: datetime,
+):
+    """Batch 157：为计划 API 执行登记一个 trigger_type=plan 的 API 任务（同步已完成）。"""
+    from app.models.api_asset import ApiExecutionTask
+
+    task = ApiExecutionTask(
+        project_id=project_id,
+        task_id=f"PLAN-{uuid.uuid4().hex[:8].upper()}",
+        name=f"计划执行-{plan.name or plan.id}",
+        environment_id=environment_id,
+        service_id=None,
+        status="success",
+        trigger_type="plan",
+        creator_id=executor_id,
+        started_at=now,
+        finished_at=now,
+        confirm_prod=False,
+        total=0,
+        passed=0,
+        failed=0,
+        skipped=0,
+    )
+    db.add(task)
+    db.flush()
+    return task
+
+
+def _register_plan_api_snapshot(
+    db: Session,
+    task,
+    tc: TestCase,
+    exec_row: TestExecution,
+    exec_result: dict,
+    status: str,
+    now: datetime,
+) -> None:
+    """Batch 157：把计划 API 执行结果登记为任务明细并双向关联。"""
+    from app.models.api_asset import ApiExecutionTaskItem
+
+    item = ApiExecutionTaskItem(
+        task_id=task.id,
+        case_id=tc.id,
+        status="passed" if status == "pass" else "failed",
+        duration_ms=float(exec_result.get("duration_ms") or 0),
+        request_snapshot=json.dumps(exec_result.get("request_snapshot") or {}, ensure_ascii=False, default=str),
+        response_snapshot=json.dumps(exec_result.get("response_snapshot") or {}, ensure_ascii=False, default=str),
+        assertion_results=json.dumps(exec_result.get("assertions") or [], ensure_ascii=False, default=str),
+        error_message=exec_result.get("error") or "",
+        error_type="execution_error" if exec_result.get("error") else "",
+        started_at=now,
+        finished_at=now,
+        test_execution_id=exec_row.id,
+    )
+    db.add(item)
+    exec_row.api_task_id = task.id
+
+
+# ═══════════════════════════════════════════════════════
 # 批量一键执行 (所有类型)
 # ═══════════════════════════════════════════════════════
 
@@ -735,6 +835,9 @@ def execute_all_cases(
     passed = 0
     failed = 0
     skipped = 0
+    api_task = None  # Batch 157：计划 API 执行登记为 trigger_type=plan 任务
+    api_passed = 0
+    api_failed = 0
 
     for pc in pcs:
         tc = db.get(TestCase, pc.case_id)
@@ -756,7 +859,8 @@ def execute_all_cases(
                 notes = f"批量自动执行: {tc.api_method or 'GET'} {tc.api_endpoint}"
             except Exception as e:
                 status = "fail"
-                actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
+                exec_result = {"error": str(e), "status_code": 0}
+                actual_result = json.dumps(exec_result, ensure_ascii=False)
                 notes = f"批量执行异常: {e}"
         elif tc.case_type == "ui":
             # UI 用例：真实编译 + headless Chromium 执行（batch-74 统一编排）
@@ -797,6 +901,23 @@ def execute_all_cases(
         )
         db.add(exec_row)
 
+        # Batch 157：计划 API 执行登记 API 任务快照并双向关联
+        if tc.case_type == "api":
+            db.flush()  # 获取 exec_row.id
+            if api_task is None:
+                api_task = _ensure_plan_api_task(
+                    db, plan,
+                    environment_id=environment_id,
+                    project_id=project_id,
+                    executor_id=executor_id,
+                    now=now,
+                )
+            _register_plan_api_snapshot(db, api_task, tc, exec_row, exec_result, status, now)
+            if status == "pass":
+                api_passed += 1
+            else:
+                api_failed += 1
+
         # 更新 plan_case 状态
         pc.last_status = status
         pc.last_executed_at = now
@@ -823,6 +944,13 @@ def execute_all_cases(
     # 更新计划状态为 active
     if plan.status == "draft":
         plan.status = "active"
+
+    # Batch 157：同步任务汇总
+    if api_task is not None:
+        api_task.total = api_passed + api_failed
+        api_task.passed = api_passed
+        api_task.failed = api_failed
+        api_task.skipped = 0
 
     db.commit()
 
@@ -1015,6 +1143,7 @@ def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
         "status_code": status_code,
         "error_type": error_type,
         "error_message": error_message,
+        "api_task_id": getattr(r, "api_task_id", None),
         "executed_at": r.executed_at.isoformat() if r.executed_at else None,
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "case_id": case.id if case else 0,

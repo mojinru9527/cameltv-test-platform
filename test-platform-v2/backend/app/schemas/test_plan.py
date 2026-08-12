@@ -121,6 +121,8 @@ class ExecutionOut(BaseModel):
     status_code: int = 0
     error_type: str = ""
     error_message: str = ""
+    # Batch 157：关联接口执行任务（计划 API 执行时登记）
+    api_task_id: int | None = None
 
     # 内联
     case_id: int = 0
