@@ -81,8 +81,10 @@ describe('Requirement API functions', () => {
     )
   })
 
-  it('creates an extraction only when the lookup returns HTTP 404', async () => {
-    mockGet.mockRejectedValue({ response: { status: 404 } })
+  it('creates an extraction only when the lookup returns envelope code=404 (HTTP 200)', async () => {
+    const err404 = new Error('功能拆分结果') as Error & { code?: number }
+    err404.code = 404
+    mockGet.mockRejectedValue(err404)
     mockPost.mockResolvedValue({ document_id: 7, modules: [] })
 
     await getOrCreateExtraction(7)
@@ -185,5 +187,35 @@ describe('Requirement API functions', () => {
       '/requirements/5/match-api/confirm',
       { service_id: 3, endpoint_ids: [12] },
     )
+  })
+})
+
+describe('getOrCreateExtraction envelope-404 fallback (Batch 160)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('returns existing extraction without calling POST', async () => {
+    mockGet.mockResolvedValueOnce({ document_id: 42, modules: [{ name: 'm' }] })
+    const r = await getOrCreateExtraction(42)
+    expect(r).toEqual({ document_id: 42, modules: [{ name: 'm' }] })
+    expect(mockPost).not.toHaveBeenCalled()
+  })
+
+  it('falls back to POST /extract when GET rejects with envelope code=404 (HTTP 200)', async () => {
+    const err = new Error('功能拆分结果') as Error & { code?: number }
+    err.code = 404
+    mockGet.mockRejectedValueOnce(err)
+    mockPost.mockResolvedValueOnce({ document_id: 42, modules: [] })
+
+    const r = await getOrCreateExtraction(42)
+    expect(r).toEqual({ document_id: 42, modules: [] })
+    expect(mockPost).toHaveBeenCalledWith('/requirements/42/extract', undefined, { signal: undefined })
+  })
+
+  it('rethrows non-404 errors', async () => {
+    mockGet.mockRejectedValueOnce(new Error('服务器错误'))
+    await expect(getOrCreateExtraction(42)).rejects.toThrow('服务器错误')
+    expect(mockPost).not.toHaveBeenCalled()
   })
 })

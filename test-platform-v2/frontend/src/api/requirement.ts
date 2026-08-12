@@ -94,15 +94,18 @@ export async function getOrCreateExtraction(
     const existing = await getExtraction(documentId, signal)
     return existing === null ? extractFeatures(documentId, signal) : existing
   } catch (error) {
-    const status = (
-      typeof error === 'object'
-      && error !== null
-      && 'response' in error
+    // 本仓约定：查不到返回 HTTP 200 + envelope code=404（Batch 160：拦截器已把 code 附到 Error 上）
+    const code = (
+      typeof error === 'object' && error !== null
+        ? (error as { code?: number }).code
+        : undefined
+    ) ?? (
+      typeof error === 'object' && error !== null && 'response' in error
+        ? (error as { response?: { data?: { code?: number } } }).response?.data?.code
+        : undefined
     )
-      ? (error as { response?: { status?: number } }).response?.status
-      : undefined
 
-    if (status === 404) {
+    if (code === 404) {
       return extractFeatures(documentId, signal)
     }
     throw error
