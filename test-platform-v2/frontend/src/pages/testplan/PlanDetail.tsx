@@ -437,7 +437,7 @@ export default function PlanDetail() {
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="py-8">
+                        <TableCell colSpan={9} className="py-8">
                           <SkeletonText lines={4} />
                         </TableCell>
                       </TableRow>
@@ -521,6 +521,7 @@ export default function PlanDetail() {
                       <TableHead className="w-[90px]">HTTP 状态</TableHead>
                       <TableHead className="w-[110px]">失败阶段</TableHead>
                       <TableHead className="w-[170px]">时间</TableHead>
+                      <TableHead className="w-[110px]">API 任务</TableHead>
                       <TableHead className="w-[80px]">链路</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -533,7 +534,7 @@ export default function PlanDetail() {
                       </TableRow>
                     ) : executions.items?.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="py-8">
+                        <TableCell colSpan={9} className="py-8">
                           <EmptyState title="暂无执行记录" description="对用例执行测试后将在此显示记录" className="py-0" />
                         </TableCell>
                       </TableRow>
@@ -569,6 +570,11 @@ export default function PlanDetail() {
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {r.executed_at ? new Date(r.executed_at).toLocaleString() : '-'}
+                            </TableCell>
+                            <TableCell>
+                              {r.api_task_id ? (
+                                <Badge tone="neutral" title="已关联接口执行任务快照（可在接口测试-任务列表查看）">API 任务 #{r.api_task_id}</Badge>
+                              ) : '-'}
                             </TableCell>
                             <TableCell>
                               {r.kibana_link ? (
