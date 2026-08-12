@@ -280,9 +280,15 @@ export default function MindmapPage() {
           >
             <div
               ref={containerRef}
-              className="mindmap-canvas min-h-[55vh] overflow-auto"
+              tabIndex={0}
+              role="region"
+              aria-label="用例脑图，支持 Ctrl+滚轮 缩放与拖拽平移"
+              className="mindmap-canvas min-h-[55vh] overflow-auto rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
               style={{ width: '100%' }}
             />
+            <p className="mt-2 text-xs text-muted-foreground">
+              键盘：Tab 聚焦脑图后可滚动查看；Ctrl+滚轮 缩放，拖拽平移，Esc 退出全屏。
+            </p>
           </AsyncState>
         </CardContent>
       </Card>

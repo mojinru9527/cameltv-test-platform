@@ -139,7 +139,7 @@ def _build_content(db: Session, plan_id: int) -> str:
         "plan_info": plan_info,
         "stats": stats,
         "cases": cases,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now().isoformat(),  # Batch 156 (P3-04): 与 created_at 统一为本地 naive，避免 8h 时区差
     }
     return json.dumps(content, ensure_ascii=False)
 

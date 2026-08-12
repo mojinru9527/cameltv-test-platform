@@ -2,7 +2,8 @@ import { lazy, Suspense, useState, type FormEvent, type ReactNode } from 'react'
 import { createBrowserRouter, Navigate, useNavigate } from 'react-router'
 import { Loader2 } from '@/lib/icons'
 import MainLayout from '@/layouts/MainLayout'
-import Placeholder from '@/pages/Placeholder'
+import NotFound from '@/pages/NotFound'
+import Unavailable from '@/pages/Unavailable'
 import RequireAuth from './guard'
 import { isThemeLabEnabled } from './themeLabAvailability'
 import client from '@/api/client'
@@ -231,9 +232,9 @@ export const router = createBrowserRouter([
         path: 'theme-lab',
         element: themeLabEnabled
           ? <PageLoader><ThemeLabPage /></PageLoader>
-          : <Placeholder title="实验功能未开放" />,
+          : <Unavailable title="主题实验室未开放" description="全局主题切换不受影响；主题实验室需在开发模式或配置 VITE_ENABLE_THEME_LAB=true 后开放。" />,
       },
-      { path: '*', element: <Placeholder title="页面建设中" /> },
+      { path: '*', element: <NotFound /> },
     ],
   },
 ])
