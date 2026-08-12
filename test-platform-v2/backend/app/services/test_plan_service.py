@@ -1034,21 +1034,32 @@ def run_failure_auto_chain(
     if not plan.auto_defect_on_fail:
         return {"skipped": "auto_defect_on_fail=false"}
 
-    triage = triage_failed_cases(db, plan_id, project_id=project_id, use_llm=False)
+    # Batch 161：triage 失败不阻断链路（记日志并返回错误，后台任务不抛未捕获异常）
+    try:
+        triage = triage_failed_cases(db, plan_id, project_id=project_id, use_llm=False)
+    except Exception as e:  # noqa: BLE001 - 后台任务必须吞掉并记录
+        logger.warning("失败自动链路 triage 异常: plan=%s err=%s", plan_id, e)
+        return {"error": f"triage 失败: {e}"}
     classified = triage.get("classified", []) or []
     defects = []
+    defect_errors = []
     for item in classified:
         if item.get("category") not in ("bug", "case_defect"):
             continue
-        draft = generate_defect_draft(item)
-        data = DefectCreate(
-            title=draft["title"],
-            description=draft["description"],
-            severity=draft.get("severity", "P2"),
-            case_id=draft.get("case_id") or None,
-            execution_id=draft.get("execution_id") or None,
-        )
-        defects.append(create_defect(db, data, creator_id=creator_id, project_id=project_id))
+        # Batch 161：单条缺陷生成失败不中断整条链路（其余缺陷/报告/通知照常）
+        try:
+            draft = generate_defect_draft(item)
+            data = DefectCreate(
+                title=draft["title"],
+                description=draft["description"],
+                severity=draft.get("severity", "P2"),
+                case_id=draft.get("case_id") or None,
+                execution_id=draft.get("execution_id") or None,
+            )
+            defects.append(create_defect(db, data, creator_id=creator_id, project_id=project_id))
+        except Exception as e:  # noqa: BLE001 - 单条失败跳过
+            defect_errors.append(str(e)[:200])
+            logger.warning("失败自动转缺陷跳过: plan=%s exec=%s err=%s", plan_id, item.get("execution_id"), e)
 
     report = None
     try:
@@ -1081,6 +1092,7 @@ def run_failure_auto_chain(
         "plan_id": plan_id,
         "total_failures": triage.get("total_failures", 0),
         "defects_created": len(defects),
+        "defect_errors": defect_errors,
         "report_id": (report or {}).get("report_id") or (report or {}).get("id") or None,
         "notified": True,
     }

@@ -58,6 +58,31 @@ def _run_failure_auto_chain_in_new_session(plan_id: int, project_id: int, creato
         db.close()
 
 
+def _queue_failure_auto_chain_if_enabled(
+    background_tasks: BackgroundTasks,
+    db: Session,
+    *,
+    plan_id: int,
+    project_id: int,
+    creator_id: int,
+    failed_count: int,
+) -> None:
+    """Batch 161：计划失败且 auto_defect_on_fail 开启时，后台触发 失败→缺陷/报告/通知 链路。
+
+    execute-all / auto-execute / batch-execute 三个写路径统一走此入口，避免漏触发。
+    """
+    if failed_count <= 0:
+        return
+    _plan = test_plan_service.get_plan(db, plan_id, project_id)
+    if _plan and _plan.get("auto_defect_on_fail"):
+        background_tasks.add_task(
+            _run_failure_auto_chain_in_new_session,
+            plan_id,
+            project_id,
+            creator_id,
+        )
+
+
 def _queue_plan_done_if_complete(
     db: Session,
     background_tasks: BackgroundTasks,
@@ -303,15 +328,14 @@ def execute_all_cases(
 
     _audit(req, current, db, "plan:execute_all", f"plan #{plan_id}",
            f"total={result['total']}, passed={result['passed']}, failed={result['failed']}, skipped={result['skipped']}")
-    if result.get("failed", 0) > 0:
-        _plan = test_plan_service.get_plan(db, plan_id, current.project_id or 0)
-        if _plan and _plan.get("auto_defect_on_fail"):
-            background_tasks.add_task(
-                _run_failure_auto_chain_in_new_session,
-                plan_id,
-                current.project_id or 0,
-                current.user.id,
-            )
+    _queue_failure_auto_chain_if_enabled(
+        background_tasks,
+        db,
+        plan_id=plan_id,
+        project_id=current.project_id or 0,
+        creator_id=current.user.id,
+        failed_count=result.get("failed", 0),
+    )
     _queue_plan_done_if_complete(
         db,
         background_tasks,
@@ -346,15 +370,14 @@ def auto_execute_api_cases(
 
     _audit(req, current, db, "plan:auto_execute", f"plan #{plan_id}",
            f"executed={result['executed']}, passed={result['passed']}, failed={result['failed']}")
-    if result.get("failed", 0) > 0:
-        _plan = test_plan_service.get_plan(db, plan_id, current.project_id or 0)
-        if _plan and _plan.get("auto_defect_on_fail"):
-            background_tasks.add_task(
-                _run_failure_auto_chain_in_new_session,
-                plan_id,
-                current.project_id or 0,
-                current.user.id,
-            )
+    _queue_failure_auto_chain_if_enabled(
+        background_tasks,
+        db,
+        plan_id=plan_id,
+        project_id=current.project_id or 0,
+        creator_id=current.user.id,
+        failed_count=result.get("failed", 0),
+    )
     _queue_plan_done_if_complete(
         db,
         background_tasks,
@@ -469,14 +492,20 @@ class BatchExecuteBody(BaseModel):
 def batch_execute_cases(
     plan_id: int,
     body: BatchExecuteBody,
+    background_tasks: BackgroundTasks,
     req: Request,
     current: CurrentUser = Depends(require_permission("testplan:execute")),
     db: Session = Depends(get_db),
 ):
-    """批量执行（更新状态）计划中选中的用例，适用于手动测试场景。"""
+    """批量执行（更新状态）计划中选中的用例，适用于手动测试场景。
+
+    Batch 161：手动标记失败的用例同样进入 失败→缺陷/报告/通知 自动链路
+    （前提：计划开启 auto_defect_on_fail）。
+    """
     if not body.pcase_ids:
         return R(code=1, msg="pcase_ids 不能为空")
     executed = 0
+    failed = 0
     errors: list[str] = []
     for pcase_id in body.pcase_ids:
         try:
@@ -491,11 +520,21 @@ def batch_execute_cases(
                 project_id=current.project_id or 0,
             )
             executed += 1
+            if body.status == "fail":
+                failed += 1
         except Exception as e:
             errors.append(f"pcase #{pcase_id}: {e}")
+    _queue_failure_auto_chain_if_enabled(
+        background_tasks,
+        db,
+        plan_id=plan_id,
+        project_id=current.project_id or 0,
+        creator_id=current.user.id,
+        failed_count=failed,
+    )
     _audit(req, current, db, "plan:batch_execute", f"plan #{plan_id}",
-           f"executed={executed}, errors={len(errors)}")
-    return R.ok({"executed": executed, "errors": errors})
+           f"executed={executed}, failed={failed}, errors={len(errors)}")
+    return R.ok({"executed": executed, "failed": failed, "errors": errors})
 
 
 class BatchAssignBody(BaseModel):
