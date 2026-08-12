@@ -1106,6 +1106,14 @@ def run_failure_auto_chain(
     except Exception as e:
         logger.warning("plan_failed 通知失败: plan=%s err=%s", plan_id, e)
 
+    # Batch 161 follow-up3：create_defect/create_report 只 flush 不 commit，
+    # 后台独立会话关闭即回滚 → 生产缺陷/报告从未落库。这里统一提交持久化。
+    try:
+        db.commit()
+    except Exception as e:  # noqa: BLE001 - 提交失败也要记录
+        logger.warning("失败自动链路提交失败: plan=%s err=%s", plan_id, e)
+        db.rollback()
+
     return {
         "plan_id": plan_id,
         "total_failures": triage.get("total_failures", 0),
