@@ -256,3 +256,50 @@ class TestBatch161FollowupProjectScope:
         monkeypatch.setattr("app.services.ai_service.extract_features", fake_extract)
         ai_tasks._run_extract(db_session, 5, project_id=9)
         assert seen["pid"] == 9
+
+
+class TestBatch161Followup2Persist:
+    """Batch 161 follow-up2：异步拆分/生成结果必须持久化（否则 UI 查看/导入为空）。"""
+
+    def test_run_extract_persists_extraction(self, db_session, monkeypatch):
+        from app.models.requirement import RequirementDocument
+        from app.services import ai_tasks
+
+        doc = RequirementDocument(id=9001, project_id=1, title="t", content="需求内容")
+        db_session.add(doc)
+        db_session.commit()
+
+        async def fake_extract(content, file_type="", source_ref=""):
+            return {"modules": [{"id": "MOD-1", "name": "广告", "function_points": []}]}
+
+        monkeypatch.setattr("app.services.ai_service.extract_features", fake_extract)
+        result = ai_tasks._run_extract(db_session, 9001, project_id=1)
+        assert result["modules"][0]["id"] == "MOD-1"
+        db_session.refresh(doc)
+        assert doc.extraction_status == "pending_review"
+        assert '"MOD-1"' in doc.extraction_raw
+
+    def test_run_generate_persists_result(self, db_session, monkeypatch):
+        from app.models.requirement import RequirementDocument
+        from app.services import ai_tasks
+
+        doc = RequirementDocument(
+            id=9002, project_id=1, title="t", content="需求内容",
+            extraction_status="confirmed",
+            extraction_raw='{"modules":[{"id":"MOD-1","function_points":[{"id":"FP-1"}]}]}',
+        )
+        db_session.add(doc)
+        db_session.commit()
+
+        async def fake_gen(content, file_type="", source_ref="", extraction=None):
+            return {"functional_cases": [{"title": "persist-ok"}]}
+
+        monkeypatch.setattr("app.services.ai_service.generate_test_cases", fake_gen)
+        monkeypatch.setattr(
+            "app.services.requirement_service.get_extraction",
+            lambda db, doc_id, project_id=0: {"modules": [{"id": "MOD-1", "function_points": [{"id": "FP-1"}]}]},
+        )
+        result = ai_tasks._run_generate(db_session, 9002, project_id=1)
+        assert result["functional_cases"][0]["title"] == "persist-ok"
+        db_session.refresh(doc)
+        assert "persist-ok" in doc.ai_raw

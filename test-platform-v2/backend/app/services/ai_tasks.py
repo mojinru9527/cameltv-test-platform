@@ -116,11 +116,16 @@ def _run_extract(db, document_id: int, project_id: int = 0) -> dict:
     import asyncio
     from app.services.ai_service import extract_features as _ai_extract
 
-    return asyncio.run(_ai_extract(
+    result = asyncio.run(_ai_extract(
         content,
         file_type=doc.get("file_type", ""),
         source_ref=str(doc.get("source_ref") or ""),
     ))
+    # Batch 161 follow-up2：异步拆分结果必须持久化（否则 UI 看不到/无法确认拆分）
+    from app.services.requirement_service import update_extraction
+
+    update_extraction(db, document_id, result, commit=False)
+    return result
 
 
 def _run_generate(db, document_id: int, project_id: int = 0) -> dict:
@@ -150,6 +155,10 @@ def _run_generate(db, document_id: int, project_id: int = 0) -> dict:
         extraction={"modules": extraction_modules} if extraction_modules else None,
     ))
     result["coverage_report"] = build_coverage_report({"modules": extraction_modules}, result)
+    # Batch 161 follow-up2：异步生成结果必须持久化（否则 UI 查看/导入为空）
+    from app.services.requirement_service import update_ai_result
+
+    update_ai_result(db, document_id, result, commit=False)
     return result
 
 

@@ -59,3 +59,8 @@ mode: light
 - 现象：合入 + 部署后，doc#10/11 异步生成任务 done 但 0 用例；AI 回复「需求文档内容为空」。
 - 根因：ai_tasks._run_extract/_run_generate 用 project_id=0 查文档（跨项目过滤）→ 内容为空；且未把已确认 extraction 传给生成。
 - 修复：worker 按 task.project_id 查文档；_run_generate 传入已确认模块（与同步 /generate 对齐）；回归测试 3 个。
+
+## 9. Follow-up2（生产复验发现：异步结果未持久化）
+- 现象：异步生成成功（15.0.0=338 条 / 16.0.0=391 条，新模型 deepseek-v4-flash），但文档无结果，UI 查看/导入为空。
+- 根因：ai_tasks 异步拆分/生成只写任务表，未调用 update_extraction/update_ai_result 持久化到需求文档。
+- 修复：_run_extract → update_extraction；_run_generate → update_ai_result（与同步路径对齐）；回归测试 2 个。
