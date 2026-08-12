@@ -75,8 +75,27 @@ class CaseTaxonomyLocation:
     terminal_scopes: tuple[str, ...] = ()
 
 
-def classify_case_surface(domain: str, case_type: str) -> str:
-    """Classify the product surface without changing persisted values."""
+# Batch 161（G5）：模块级关键词推断，解决 16.0.0 顶层域（广告/UGC/银钻/付费活动等）端标识为「其他」。
+_ADMIN_MODULE_HINTS = (
+    "管理", "配置", "审核", "上下架", "素材", "广告位", "展示权重", "展示方式",
+    "展示区域", "启用时间", "关联比赛", "任务内容", "完成记录", "发放", "白名单",
+    "风控", "权限", "数据统计", "统计指标", "用户参与", "奖励",
+)
+_USER_MODULE_HINTS = (
+    "开屏", "横幅", "贴片", "中场", "弹窗", "浮窗", "侧边栏", "品牌", "pop", "页底",
+    "订阅", "购买", "支付", "兑换", "账户", "余额", "领取", "预测", "参与",
+    "首页", "直播", "详情", "搜索", "资讯", "回放", "球员", "球队", "联赛", "赛事",
+    "任务", "安装", "登录",
+)
+
+
+def classify_case_surface(domain: str, case_type: str, module: str = "") -> str:
+    """Classify the product surface without changing persisted values.
+
+    Batch 161（G5）：在原有域前缀/白名单基础上，增加「域 + 模块」关键词推断，
+    覆盖 16.0.0 导入的顶层域用例（广告/UGC/银钻系统/银钻预测/付费活动/经济系统/
+    篮球赛事/搜索/球员/球队/联赛详情/赛事详情/资讯等）。
+    """
     normalized = (domain or "").strip().lower()
     if case_type == "api" or "接口" in normalized:
         return "接口测试"
@@ -89,6 +108,41 @@ def classify_case_surface(domain: str, case_type: str) -> str:
     if normalized in LEGACY_ADMIN_DOMAINS:
         return "运营后台"
     if normalized in LEGACY_USER_DOMAINS:
+        return "用户端"
+
+    # Batch 161：顶层域默认归属（16.0.0 域）
+    _DOMAIN_DEFAULT = {
+        "广告后台": "运营后台",
+        "ugc": "运营后台",
+        "ugc内容管理": "运营后台",
+        "ugc文章管理": "运营后台",
+        "运营后台": "运营后台",
+        "银钻系统": "用户端",
+        "银钻预测": "用户端",
+        "付费活动": "用户端",
+        "经济系统": "用户端",
+        "篮球赛事": "用户端",
+        "搜索": "用户端",
+        "球员": "用户端",
+        "球队": "用户端",
+        "联赛详情": "用户端",
+        "赛事详情": "用户端",
+        "资讯": "用户端",
+    }
+    if normalized in _DOMAIN_DEFAULT:
+        # 广告域按模块细分：后台配置类 → 运营后台，前端展示类 → 用户端
+        mod_text = (module or "").strip().lower()
+        if normalized == "广告":
+            if any(k in mod_text for k in _ADMIN_MODULE_HINTS):
+                return "运营后台"
+            return "用户端"
+        return _DOMAIN_DEFAULT[normalized]
+
+    # 通用模块关键词兜底
+    mod_text = (module or "").strip().lower()
+    if any(k in mod_text for k in _ADMIN_MODULE_HINTS):
+        return "运营后台"
+    if any(k in mod_text for k in _USER_MODULE_HINTS):
         return "用户端"
     return "其他"
 
@@ -176,7 +230,7 @@ def canonical_case_location(
     case_type: str,
 ) -> CaseTaxonomyLocation:
     """Normalize a persisted case into the product-facing functional tree."""
-    surface = classify_case_surface(domain, case_type)
+    surface = classify_case_surface(domain, case_type, module)
     parts = _merge_paths(_domain_segments(domain), _module_segments(module))
     if not parts:
         parts = ["未分类"]

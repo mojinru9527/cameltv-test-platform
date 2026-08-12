@@ -109,3 +109,88 @@ class TestPlanAutoDefectSwitch:
         assert calls == []
 
 
+class TestBatch161AutoChainRobustness:
+    """Batch 161：自动链路补强回归（单条缺陷失败不阻断 + batch-execute 触发）。"""
+
+    def test_auto_chain_survives_single_defect_error(self, db_session, client, auth_headers, monkeypatch):
+        """单条缺陷创建失败时，报告与通知仍执行（G2 补强）。"""
+        from app.services.test_plan_service import run_failure_auto_chain
+
+        case = _create_case(client, auth_headers)
+        plan = _create_plan(client, auth_headers, auto=True)
+        _add_case_and_failed_execution(db_session, client, auth_headers, plan["id"], case["id"])
+
+        calls = []
+        def fake_notify(db, project_id, event, data):
+            calls.append((project_id, event, data))
+        monkeypatch.setattr("app.services.notify_service.notify_sync", fake_notify)
+
+        real_create = None
+        import app.services.defect_service as ds
+        real_create = ds.create_defect
+        def boom_create(db, data, creator_id, project_id):
+            raise ValueError("B161TMP-缺陷创建失败（模拟）")
+        monkeypatch.setattr("app.services.defect_service.create_defect", boom_create)
+
+        result = run_failure_auto_chain(db_session, plan["id"], project_id=1, creator_id=1)
+        assert result["total_failures"] >= 1
+        assert result["defects_created"] == 0
+        assert len(result.get("defect_errors", [])) >= 1
+        assert result["report_id"] is not None
+        assert any(event == "plan_failed" for _, event, _ in calls)
+
+    def test_batch_execute_fail_triggers_auto_chain(self, db_session, client, auth_headers, monkeypatch):
+        """手动批量标记失败也进入失败自动链路（G2：batch-execute 触发）。"""
+        from app.api.v1 import test_plan as api_module
+
+        case = _create_case(client, auth_headers)
+        plan = _create_plan(client, auth_headers, auto=True)
+        added = client.post(
+            f"/api/v1/test-plans/{plan['id']}/cases",
+            json={"case_ids": [case["id"]]},
+            headers=auth_headers,
+        )
+        assert added.status_code == 200
+        pc = db_session.query(_TestPlanCase).filter(_TestPlanCase.plan_id == plan["id"]).one()
+
+        calls = []
+        def fake_chain(plan_id, project_id, creator_id):
+            calls.append((plan_id, project_id, creator_id))
+        monkeypatch.setattr(api_module, "_run_failure_auto_chain_in_new_session", fake_chain)
+
+        resp = client.post(
+            f"/api/v1/test-plans/{plan['id']}/batch-execute",
+            json={"pcase_ids": [pc.id], "status": "fail", "actual_result": "B161TMP-失败", "notes": "触发链路"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["data"]["failed"] == 1
+        assert any(pid == plan["id"] for pid, _, _ in calls), f"auto chain not triggered: {calls}"
+
+    def test_batch_execute_pass_does_not_trigger_chain(self, db_session, client, auth_headers, monkeypatch):
+        """批量标记通过不触发失败链路。"""
+        from app.api.v1 import test_plan as api_module
+
+        case = _create_case(client, auth_headers)
+        plan = _create_plan(client, auth_headers, auto=True)
+        added = client.post(
+            f"/api/v1/test-plans/{plan['id']}/cases",
+            json={"case_ids": [case["id"]]},
+            headers=auth_headers,
+        )
+        assert added.status_code == 200
+        pc = db_session.query(_TestPlanCase).filter(_TestPlanCase.plan_id == plan["id"]).one()
+
+        calls = []
+        def fake_chain(plan_id, project_id, creator_id):
+            calls.append((plan_id, project_id, creator_id))
+        monkeypatch.setattr(api_module, "_run_failure_auto_chain_in_new_session", fake_chain)
+
+        resp = client.post(
+            f"/api/v1/test-plans/{plan['id']}/batch-execute",
+            json={"pcase_ids": [pc.id], "status": "pass", "actual_result": "B161TMP-通过", "notes": ""},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["data"]["failed"] == 0
+        assert calls == []
