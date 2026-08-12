@@ -54,3 +54,8 @@ mode: light
 ## 7. 技能使用
 - cameltv-bug-guard → 异步协程、envelope 码、批量落库避坑清单
 - cameltv-ui-conventions → 前端错误态/组件规范
+
+## 8. Follow-up（合入后生产复验发现，异步路径真实根因）
+- 现象：合入 + 部署后，doc#10/11 异步生成任务 done 但 0 用例；AI 回复「需求文档内容为空」。
+- 根因：ai_tasks._run_extract/_run_generate 用 project_id=0 查文档（跨项目过滤）→ 内容为空；且未把已确认 extraction 传给生成。
+- 修复：worker 按 task.project_id 查文档；_run_generate 传入已确认模块（与同步 /generate 对齐）；回归测试 3 个。
