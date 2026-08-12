@@ -115,6 +115,7 @@ def _execute_schedule(schedule_id: int):
                 db,
                 sched.plan_id,
                 executor_id=0,
+                environment_id=getattr(sched, "environment_id", None),
                 project_id=sched.project_id,
             )
             result = {

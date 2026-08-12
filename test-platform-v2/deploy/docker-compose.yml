@@ -55,7 +55,7 @@ services:
       - LANHU_PASSWORD=${LANHU_PASSWORD:-}
       - WORKSPACE_ROOT=/app
       - LANHU_MCP_DIR=/app/lanhu-mcp
-      - DATA_DIR=/data/lanhu
+      - DATA_DIR=/app/storage/lanhu-data
       # ── 知识库 / RAG / Wiki 功能开关 ──
       - KNOWLEDGE_INGEST_ENABLED=${KNOWLEDGE_INGEST_ENABLED:-true}
       - RAG_ENABLED=${RAG_ENABLED:-true}

@@ -28,6 +28,30 @@ def _compute_next_run(cron_expression: str) -> datetime | None:
         return None
 
 
+def _ensure_schedule_env(db: Session, plan_id: int | None, environment_id: int | None, project_id: int) -> None:
+    """Batch 162/C161-2：计划类调度若含 API 用例必须绑定执行环境；环境须属于当前项目。"""
+    from sqlalchemy import func as _func
+
+    from app.models.environment import Environment
+    from app.models.test_case import TestCase
+    from app.models.test_plan import TestPlanCase
+
+    if not plan_id:
+        return
+    has_api = db.scalar(
+        select(_func.count())
+        .select_from(TestPlanCase)
+        .join(TestCase, TestCase.id == TestPlanCase.case_id)
+        .where(TestPlanCase.plan_id == plan_id, TestCase.case_type == "api")
+    ) or 0
+    if has_api and not environment_id:
+        raise ValueError("目标计划包含 API 用例，请选择执行环境（含 base_url 与变量）后再保存")
+    if environment_id:
+        env = db.get(Environment, environment_id)
+        if not env or env.project_id != project_id:
+            raise ValueError("执行环境不存在或不属于当前项目")
+
+
 def list_schedules(
     db: Session,
     project_id: int,
@@ -62,7 +86,7 @@ def list_schedules(
             "description": s.description,
             "plan_id": s.plan_id,
             "plan_name": plan_name or "",
-
+            "environment_id": getattr(s, "environment_id", None),
             "job_type": s.job_type,
 
             "job_id": s.job_id,
@@ -96,7 +120,7 @@ def get_schedule(db: Session, schedule_id: int, project_id: int) -> dict | None:
         "description": s.description,
         "plan_id": s.plan_id,
         "plan_name": plan_name or "",
-
+        "environment_id": getattr(s, "environment_id", None),
         "job_type": s.job_type,
 
         "job_id": s.job_id,
@@ -147,6 +171,9 @@ def create_schedule(
         plan_id = data.plan_id
         plan_name = plan.name
 
+    # Batch 162/C161-2：API 计划必须绑定环境
+    _ensure_schedule_env(db, plan_id, data.environment_id, project_id)
+
     next_run = _compute_next_run(data.cron_expression)
 
     s = TestSchedule(
@@ -154,6 +181,7 @@ def create_schedule(
         name=data.name,
         description=data.description,
         plan_id=plan_id,
+        environment_id=data.environment_id if data.job_type == "plan" else None,
         job_type=data.job_type,
         job_id=data.job_id if data.job_type == "ui" else None,
         cron_expression=data.cron_expression,
@@ -176,6 +204,7 @@ def create_schedule(
         "description": s.description,
         "plan_id": s.plan_id,
         "plan_name": plan_name,
+        "environment_id": getattr(s, "environment_id", None),
         "job_type": s.job_type,
         "job_id": s.job_id,
         "cron_expression": s.cron_expression,
@@ -237,6 +266,23 @@ def update_schedule(
             s.plan_id = plan_id
             s.job_id = None
         changed = True
+    # Batch 162/C161-2：更新执行环境（plan 类）；显式传 null 表示清空
+    _fields_set = getattr(data, "model_fields_set", set()) or set()
+    if "environment_id" in _fields_set or data.job_type is not None:
+        target_type = data.job_type or s.job_type
+        if target_type == "plan":
+            target_plan = data.plan_id if data.plan_id is not None else s.plan_id
+            if "environment_id" in _fields_set:
+                new_env = data.environment_id  # 显式 null → 清空（API 计划会被预检拦截）
+            else:
+                new_env = s.environment_id
+            _ensure_schedule_env(db, target_plan, new_env, project_id)
+            if new_env != s.environment_id:
+                s.environment_id = new_env
+                changed = True
+        elif s.environment_id is not None:
+            s.environment_id = None
+            changed = True
     if data.cron_expression is not None:
         s.cron_expression = data.cron_expression
         cron_changed = True
@@ -276,6 +322,7 @@ def update_schedule(
         "description": s.description,
         "plan_id": s.plan_id,
         "plan_name": plan.name if plan else "",
+        "environment_id": getattr(s, "environment_id", None),
         "job_type": s.job_type,
         "job_id": s.job_id,
         "cron_expression": s.cron_expression,
