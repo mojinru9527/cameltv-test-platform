@@ -542,6 +542,9 @@ export default function TestCasePage() {
               <RotateCcw className="size-3.5" data-icon="inline-start" />
               重置
             </Button>
+            {(selSurface || selDomain || selModule || caseNature || priority) && (
+              <p className="w-full text-xs text-muted-foreground">当前搜索在已选筛选（界面/域/模块/性质/优先级）内生效</p>
+            )}
             <div className="hidden flex-1 sm:block" />
             {canCreate && (
               <>

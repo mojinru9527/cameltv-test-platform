@@ -121,8 +121,8 @@ def _gherkin_to_playwright(source: str) -> str:
 
         if not matched:
             # Unmatched line → comment + raw
-            steps.append(f"  // TODO: {stripped}")
-            steps.append(f"  // await page.???")
+            steps.append(f"  // ⚠️ 未识别步骤（需人工补充）: {stripped}")
+            steps.append(f"  // TODO: 请补充对应的 Playwright 操作")
 
     steps = [_rewrite_click_target(step) for step in steps]
     joined_steps = "\n".join(steps) if steps else "  // No steps parsed"
