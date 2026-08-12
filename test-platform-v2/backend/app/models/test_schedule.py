@@ -19,6 +19,7 @@ class TestSchedule(Base):
     name: Mapped[str] = mapped_column(String(200), default="")
     description: Mapped[str] = mapped_column(Text, default="")
     plan_id: Mapped[int | None] = mapped_column(ForeignKey("test_plan.id"), nullable=True, index=True)
+    environment_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)  # Batch 162/C161-2：计划类调度执行环境
     job_type: Mapped[str] = mapped_column(String(10), default="plan")  # plan | ui
     job_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)  # job_type=ui 时指向 ui_test_job.id
     cron_expression: Mapped[str] = mapped_column(String(100), default="")

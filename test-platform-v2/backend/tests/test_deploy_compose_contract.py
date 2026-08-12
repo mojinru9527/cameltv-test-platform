@@ -95,7 +95,7 @@ def test_backend_build_context_contains_runner_and_root_lanhu_submodule() -> Non
     }
     assert "WORKSPACE_ROOT=/app" in backend_environment
     assert "LANHU_MCP_DIR=/app/lanhu-mcp" in backend_environment
-    assert "DATA_DIR=/data/lanhu" in backend_environment
+    assert "DATA_DIR=/app/storage/lanhu-data" in backend_environment
     assert (PLAYWRIGHT_ROOT / "package-lock.json").is_file()
     assert LANHU_MODULE_PATH.is_file()
 
@@ -171,7 +171,7 @@ def test_backend_runtime_uses_non_root_user_and_writable_paths() -> None:
     assert "HOME=/home/cameltv" in dockerfile
     assert "XDG_CACHE_HOME=/home/cameltv/.cache" in dockerfile
 
-    mkdir = "mkdir -p /app/storage /data/lanhu /ms-playwright"
+    mkdir = "mkdir -p /app/storage /app/storage/lanhu-data /ms-playwright"
     chown = (
         "chown -R cameltv:cameltv "
         "/app /data /ms-playwright /home/cameltv"

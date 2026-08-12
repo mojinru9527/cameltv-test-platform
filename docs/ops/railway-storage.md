@@ -43,3 +43,8 @@ railway up                         # 重新部署
   务必按上条处理后再采集。
 - 后端启动日志会打印存储落点（`[storage] Lanhu evidence storage base: ...`），便于确认卷已挂到该路径。
 - 若后续截图量大，可评估迁移到对象存储（S3/Supabase Storage），本卷方案为当前最小改动。
+
+## Batch 162 / C161-1 — 蓝湖 Cookie 持久化
+
+- `DATA_DIR=/app/storage/lanhu-data`（持久卷内）：蓝湖 Cookie（`lanhu_cookie.txt`）与采集缓存跨部署保留。
+- 自动登录需在 Railway Variables 配置 `LANHU_USERNAME` / `LANHU_PASSWORD`（蓝湖账号）；或通过平台「蓝湖登录/更新Cookie」粘贴 Cookie（写入持久卷）。
