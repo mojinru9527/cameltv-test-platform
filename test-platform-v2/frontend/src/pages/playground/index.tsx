@@ -138,6 +138,9 @@ export default function PlaygroundPage() {
         <Card>
           <CardContent className="p-4 space-y-3">
             <h2 className="text-sm font-medium">生成 Spec（.spec.ts）</h2>
+            {compiled.spec_code.includes('未识别步骤') && (
+              <Badge tone="warning">存在未识别步骤（TODO），需人工补充后才能可靠执行</Badge>
+            )}
             <pre className="whitespace-pre-wrap font-mono text-xs bg-muted/40 rounded-md p-3 max-h-[320px] overflow-auto">
               {compiled.spec_code}
             </pre>
