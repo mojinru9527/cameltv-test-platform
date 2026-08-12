@@ -200,3 +200,64 @@ def test_scoped_download_falls_back_when_target_missing(tmp_path) -> None:
         capture_all_pages=False,
     ))
     assert result is None  # 目标页不在 sitemap → 回退全量下载
+
+
+
+class TestBatch161LanhuAutoLogin:
+    """Batch 161（G3）：蓝湖自动登录重试 + Cookie 持久化 + 错误区分。"""
+
+    def test_login_retry_succeeds_on_second_attempt(self, monkeypatch) -> None:
+        calls = {"n": 0}
+
+        async def fake_login():
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return ""
+            return "cookie-ok"
+
+        async def no_sleep(_):
+            return None
+
+        monkeypatch.setenv("LANHU_USERNAME", "u")
+        monkeypatch.setenv("LANHU_PASSWORD", "p")
+        monkeypatch.setattr(lanhu_provider.asyncio, "sleep", no_sleep)
+
+        runtime = SimpleNamespace(login=fake_login, save_cookie=None)
+        cookie = asyncio.run(lanhu_provider._login_lanhu_with_retry(runtime))
+        assert cookie == "cookie-ok"
+        assert calls["n"] == 2
+
+    def test_login_retry_all_fail_raises(self, monkeypatch) -> None:
+        async def fake_login():
+            return ""
+
+        async def no_sleep(_):
+            return None
+
+        monkeypatch.setenv("LANHU_USERNAME", "u")
+        monkeypatch.setenv("LANHU_PASSWORD", "p")
+        monkeypatch.setattr(lanhu_provider.asyncio, "sleep", no_sleep)
+
+        runtime = SimpleNamespace(login=fake_login, save_cookie=None)
+        with pytest.raises(ValueError) as ei:
+            asyncio.run(lanhu_provider._login_lanhu_with_retry(runtime))
+        assert "2 次尝试" in str(ei.value)
+
+    def test_login_retry_missing_credentials(self, monkeypatch) -> None:
+        monkeypatch.delenv("LANHU_USERNAME", raising=False)
+        monkeypatch.delenv("LANHU_PASSWORD", raising=False)
+
+        async def fake_login():
+            return "cookie"
+
+        runtime = SimpleNamespace(login=fake_login, save_cookie=None)
+        with pytest.raises(ValueError) as ei:
+            asyncio.run(lanhu_provider._login_lanhu_with_retry(runtime))
+        assert "未配置 LANHU_USERNAME/LANHU_PASSWORD" in str(ei.value)
+
+    def test_persist_cookie_both_channels(self, monkeypatch) -> None:
+        saved = []
+        monkeypatch.setattr(lanhu_provider, "set_lanhu_cookie", lambda c: saved.append(("file", c)))
+        runtime = SimpleNamespace(save_cookie=lambda c: saved.append(("runtime", c)))
+        lanhu_provider._persist_lanhu_cookie("cookie-x", runtime)
+        assert saved == [("file", "cookie-x"), ("runtime", "cookie-x")]
