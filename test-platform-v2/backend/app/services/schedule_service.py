@@ -353,7 +353,15 @@ def delete_schedule(db: Session, schedule_id: int, project_id: int) -> bool:
 
 
 def trigger_schedule(db: Session, schedule_id: int, project_id: int) -> dict:
-    """Manually trigger a schedule and return the actual run result."""
+    """Batch 163 / C162-1：手动触发调度 → 立即返回，长计划后台线程执行。
+
+    先建 running run 防止重复触发，再启动后台线程执行；接口不再阻塞到执行结束，
+    避免长计划（含 API 用例）触发时 HTTP 超网关返回 502。
+    """
+    from datetime import datetime, timezone
+
+    from app.core.scheduler import _execute_schedule
+
     s = db.scalar(
         select(TestSchedule).where(
             TestSchedule.id == schedule_id,
@@ -363,9 +371,48 @@ def trigger_schedule(db: Session, schedule_id: int, project_id: int) -> dict:
     if not s:
         raise ValueError("调度不存在")
 
-    db.commit()  # release session state before background execution
-    result = _execute_schedule(schedule_id)
-    return {"schedule_id": schedule_id, **(result or {"triggered": False})}
+    active = db.scalar(
+        select(TestScheduleRun)
+        .where(
+            TestScheduleRun.schedule_id == schedule_id,
+            TestScheduleRun.status == "running",
+        )
+        .order_by(TestScheduleRun.id.desc())
+    )
+    if active:
+        return {
+            "schedule_id": schedule_id,
+            "triggered": False,
+            "reason": "already_running",
+            "run_id": active.id,
+            "status": "running",
+        }
+
+    run = TestScheduleRun(
+        schedule_id=schedule_id,
+        status="running",
+        started_at=datetime.now(timezone.utc),
+    )
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+
+    import threading
+
+    t = threading.Thread(
+        target=_execute_schedule,
+        args=(schedule_id, run.id),
+        daemon=True,
+        name=f"schedule-trigger-{schedule_id}",
+    )
+    t.start()
+
+    return {
+        "schedule_id": schedule_id,
+        "triggered": True,
+        "run_id": run.id,
+        "status": "started",
+    }
 
 
 def get_runs(

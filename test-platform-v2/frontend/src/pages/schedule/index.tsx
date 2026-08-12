@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -100,6 +100,9 @@ export default function SchedulePage() {
     () => fetchSchedules({ page, page_size: 20 }),
     [page],
   )
+
+  // Batch 163 / C162-2：挂载即加载环境，列表「执行环境」列显示真实名称（不再回退「环境#N」）
+  useEffect(() => { loadEnvironments() }, [])
 
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleSchema),

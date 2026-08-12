@@ -13,9 +13,11 @@ logger = logging.getLogger(__name__)
 scheduler = BackgroundScheduler(timezone="Asia/Shanghai")
 
 
-def _execute_schedule(schedule_id: int):
+def _execute_schedule(schedule_id: int, run_id: int | None = None):
     """Callback fired by APScheduler when a cron trigger expires.
-    Opens a dedicated DB session to avoid interfering with the request session.
+
+    Batch 163 / C162-1：支持由「手动触发」预创建 run 后传入 run_id 后台执行；
+    未传 run_id 时保持原逻辑（自建 running run）。无论哪种路径都打开独立 DB session。
     """
     from app.core.db import SessionLocal
     from app.models.test_schedule import TestSchedule, TestScheduleRun
@@ -35,36 +37,43 @@ def _execute_schedule(schedule_id: int):
             logger.warning(f"[scheduler] Schedule #{schedule_id} not found, skipping")
             return {"triggered": False, "reason": "not_found"}
 
-        active_run = db.scalar(
-            select(TestScheduleRun)
-            .where(
-                TestScheduleRun.schedule_id == schedule_id,
-                TestScheduleRun.status == "running",
+        if run_id is None:
+            active_run = db.scalar(
+                select(TestScheduleRun)
+                .where(
+                    TestScheduleRun.schedule_id == schedule_id,
+                    TestScheduleRun.status == "running",
+                )
+                .order_by(TestScheduleRun.id.desc())
             )
-            .order_by(TestScheduleRun.id.desc())
-        )
-        if active_run:
-            db.rollback()
-            logger.info(
-                "[scheduler] Schedule #%s already running as run #%s; duplicate trigger ignored",
-                schedule_id,
-                active_run.id,
-            )
-            return {
-                "triggered": False,
-                "reason": "already_running",
-                "run_id": active_run.id,
-            }
+            if active_run:
+                db.rollback()
+                logger.info(
+                    "[scheduler] Schedule #%s already running as run #%s; duplicate trigger ignored",
+                    schedule_id,
+                    active_run.id,
+                )
+                return {
+                    "triggered": False,
+                    "reason": "already_running",
+                    "run_id": active_run.id,
+                }
 
-        run = TestScheduleRun(
-            schedule_id=schedule_id,
-            status="running",
-            started_at=datetime.now(timezone.utc),
-        )
-        db.add(run)
-        db.flush()
-        run_id = run.id
-        db.commit()
+            run = TestScheduleRun(
+                schedule_id=schedule_id,
+                status="running",
+                started_at=datetime.now(timezone.utc),
+            )
+            db.add(run)
+            db.flush()
+            run_id = run.id
+            db.commit()
+        else:
+            # Batch 163 / C162-1：手动触发已预建 run，这里校验并复用
+            run = db.get(TestScheduleRun, run_id)
+            if run is None or run.schedule_id != schedule_id:
+                db.rollback()
+                return {"triggered": False, "reason": "run_not_found", "run_id": run_id}
 
         if sched.job_type == "ui":
             # B112-3：UI job 定时 —— 触发 UI job（Playwright 异步执行，schedule run 记录 ui_run_id）
