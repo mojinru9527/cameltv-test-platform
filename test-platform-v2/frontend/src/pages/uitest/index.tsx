@@ -233,6 +233,18 @@ export function ProtectedArtifactMedia({
 }
 
 export default function UiTestPage() {
+  // (batch-165) 用例/脚本资产可见性
+  const [pageTab, setPageTab] = useState<'jobs' | 'assets'>('jobs')
+  const [uiScripts, setUiScripts] = useState<string[]>([])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetchScripts(controller.signal)
+      .then((rows: any) => { if (!controller.signal.aborted) setUiScripts(rows || []) })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
+
   useDocumentTitle('UI 测试')
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const [data, setData] = useState({ total: 0, items: [] as UiJobItem[], page: 1, page_size: 20 })
@@ -532,6 +544,13 @@ export default function UiTestPage() {
     <div className="space-y-4">
       <PageHeader title="UI 测试" />
 
+      <Tabs value={pageTab} onValueChange={(v) => setPageTab(v as 'jobs' | 'assets')}>
+        <TabsList>
+          <TabsTrigger value="jobs">任务 ({data.total})</TabsTrigger>
+          <TabsTrigger value="assets">用例 / 脚本</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="jobs" className="mt-3">
       {loadError ? (
         <ErrorState error={loadError} onRetry={() => { void load(data.page) }} />
       ) : (
@@ -1012,6 +1031,80 @@ export default function UiTestPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="assets" className="mt-3 space-y-4">
+          {/* UI 自动化用例 */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">UI 自动化用例</h3>
+                <Badge tone="neutral" className="text-xs">{uiCases.length}</Badge>
+              </div>
+              {uiCases.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  暂无 UI 自动化用例，可在「用例服务」中按 UI 自动化类型创建，再在任务表单里关联。
+                </p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>标题</TableHead>
+                      <TableHead>模块</TableHead>
+                      <TableHead>优先级</TableHead>
+                      <TableHead>状态</TableHead>
+                      <TableHead>操作</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {uiCases.map((c: any) => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium">{c.title}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{c.module || '-'}</TableCell>
+                        <TableCell><Badge tone="neutral" className="text-xs">{c.priority || '-'}</Badge></TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{c.review_status || '-'}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => { form.reset({ name: `${c.title}-任务`, description: '', test_spec: '', browser: 'chromium', environment_id: null, case_id: c.id, cron_expression: '', schedule_enabled: false }); setEditing(null); setDrawer(true) }}
+                          >
+                            以此用例新建任务
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 脚本资产 */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium">脚本资产（Playwright spec）</h3>
+                <Badge tone="neutral" className="text-xs">{uiScripts.length}</Badge>
+              </div>
+              {uiScripts.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  暂无脚本资产，可在「新建任务」中选择或填写 spec 文件路径。
+                </p>
+              ) : (
+                <ul className="divide-y rounded-md border">
+                  {uiScripts.map((s) => (
+                    <li key={s} className="flex items-center gap-2 px-3 py-2 text-sm">
+                      <FileText className="size-4 shrink-0 text-muted-foreground" />
+                      <code className="truncate font-mono text-xs">{s}</code>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

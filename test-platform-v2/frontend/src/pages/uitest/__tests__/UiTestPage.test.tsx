@@ -79,7 +79,8 @@ describe('UI 自动化页面请求状态', () => {
     expect(await screen.findByRole('dialog', { name: '新建UI测试任务' })).toBeTruthy()
     await waitFor(() => expect(api.fetchScripts.mock.calls.length).toBeGreaterThan(0))
     await new Promise((resolve) => setTimeout(resolve, 0))
-    expect(api.fetchScripts).toHaveBeenCalledTimes(1)
+    // (batch-165) 页面新增「用例 / 脚本」页签，挂载时预加载脚本资产 1 次 + 选择器 1 次 = 2
+    expect(api.fetchScripts).toHaveBeenCalledTimes(2)
   })
 
   it('截图通过受保护 API 加载为 Blob URL', async () => {

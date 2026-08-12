@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Play, ClipboardCheck, MinusCircle, Loader2, CheckCircle2, XCircle, RefreshCw, ChevronDown } from '@/lib/icons'
+import { Play, Edit, ClipboardCheck, MinusCircle, Loader2, CheckCircle2, XCircle, RefreshCw, ChevronDown } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Badge } from '@/ui'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -10,7 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import ProductionOperationDialog from '@/components/ProductionOperationDialog'
-import { fetchTestCases } from '@/api/testcase'
+import { fetchTestCases, fetchDomains } from '@/api/testcase'
+import CaseDrawer from '@/pages/testcase/CaseDrawer'
 import { executeApiCase, createApiExecutionTask } from '@/api/apitest'
 import { fetchEnvironments } from '@/api/environment'
 import { fetchDatasets } from '@/api/dataset'
@@ -49,6 +50,10 @@ export default function ApiCaseTab() {
     cases: any[]
     name: string
   } | null>(null)
+  // (batch-165) 接口用例编辑：复用用例服务 CaseDrawer（可改请求参数/断言）
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [editingCase, setEditingCase] = useState<any | null>(null)
+  const [domains, setDomains] = useState<any[]>([])
   const executionInFlightRef = useRef(false)
 
   function isProductionEnv(env: Environment): boolean {
@@ -74,6 +79,7 @@ export default function ApiCaseTab() {
 
   useEffect(() => {
     const controller = new AbortController()
+    fetchDomains(controller.signal).then((d: any) => setDomains(d || [])).catch(() => {})
     fetchEnvironments(controller.signal).then(setEnvs).catch((loadError: any) => {
       if (controller.signal.aborted) return
       toast.error(loadError?.message || '环境列表加载失败')
@@ -306,6 +312,15 @@ export default function ApiCaseTab() {
                             <Button
                               size="icon-sm"
                               variant="ghost"
+                              onClick={() => { setEditingCase(c); setDrawerOpen(true) }}
+                              aria-label={`编辑用例${c.title}`}
+                              title="编辑请求参数/断言"
+                            >
+                              <Edit className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon-sm"
+                              variant="ghost"
                               onClick={() => runSingle(c.id)}
                               disabled={executingCase === c.id}
                               aria-label={`执行用例${c.title}`}
@@ -333,6 +348,15 @@ export default function ApiCaseTab() {
           <ResponsePanel result={result} loading={false} />
         </DialogContent>
       </Dialog>
+
+      {/* (batch-165) 接口用例编辑：复用 CaseDrawer（请求参数/断言 JSON 编辑） */}
+      <CaseDrawer
+        open={drawerOpen}
+        editing={editingCase}
+        domains={domains}
+        onClose={() => { setDrawerOpen(false); setEditingCase(null) }}
+        onSaved={() => { setDrawerOpen(false); setEditingCase(null); loadCases() }}
+      />
 
       <ProductionOperationDialog
         open={pendingExecution !== null}
