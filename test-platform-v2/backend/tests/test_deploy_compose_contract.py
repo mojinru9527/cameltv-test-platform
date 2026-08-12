@@ -174,7 +174,7 @@ def test_backend_runtime_uses_non_root_user_and_writable_paths() -> None:
     mkdir = "mkdir -p /app/storage /app/storage/lanhu-data /ms-playwright"
     chown = (
         "chown -R cameltv:cameltv "
-        "/app /data /ms-playwright /home/cameltv"
+        "/app /ms-playwright /home/cameltv"
     )
     runtime_user = "USER cameltv:cameltv"
     assert mkdir in dockerfile
