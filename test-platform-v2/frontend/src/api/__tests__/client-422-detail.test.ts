@@ -45,3 +45,24 @@ describe('client 422 detail 规范化', () => {
     await expect(errorHandler!(fakeErr)).rejects.toMatchObject({ message: '网络错误' })
   })
 })
+
+
+const fulfilled = client.interceptors.response.handlers
+  .map((h) => (h as { fulfilled?: unknown })?.fulfilled)
+  .find((fn): fn is (resp: any) => Promise<any> => typeof fn === 'function') ?? null
+
+describe('client envelope 业务错误携带 code（Batch 160）', () => {
+  it('HTTP 200 + code=404 的 envelope 被转为带 code 的错误，供调用方按 code 分支', async () => {
+    expect(fulfilled).toBeTypeOf('function')
+    const fakeResp = { data: { code: 404, msg: '功能拆分结果', data: null } }
+    await expect(fulfilled!(fakeResp)).rejects.toMatchObject({
+      message: '功能拆分结果',
+      code: 404,
+    })
+  })
+
+  it('code=0 时正常返回 data', async () => {
+    const fakeResp = { data: { code: 0, msg: 'ok', data: { id: 1 } } }
+    expect(fulfilled!(fakeResp)).toEqual({ id: 1 })
+  })
+})
