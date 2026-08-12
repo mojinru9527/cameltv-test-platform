@@ -23,7 +23,7 @@ ENV VIRTUAL_ENV=/opt/venv \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     WORKSPACE_ROOT=/app \
     LANHU_MCP_DIR=/app/lanhu-mcp \
-    DATA_DIR=/data/lanhu \
+    DATA_DIR=/app/storage/lanhu-data \
     HOME=/home/cameltv \
     XDG_CACHE_HOME=/home/cameltv/.cache
 
@@ -65,7 +65,7 @@ RUN git clone --depth 1 --branch main \
     && cp /tmp/lanhu-mcp/lanhu_mcp_server.py /app/lanhu-mcp/lanhu_mcp_server.py \
     && rm -rf /tmp/lanhu-mcp
 
-RUN mkdir -p /app/storage /data/lanhu /ms-playwright "${XDG_CACHE_HOME}" \
+RUN mkdir -p /app/storage /app/storage/lanhu-data /ms-playwright "${XDG_CACHE_HOME}" \
     && chown -R cameltv:cameltv /app /data /ms-playwright /home/cameltv
 
 USER cameltv:cameltv

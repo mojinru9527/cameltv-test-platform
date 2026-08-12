@@ -12,6 +12,7 @@ class ScheduleCreate(BaseModel):
     name: str
     description: str = ""
     plan_id: Optional[int] = None
+    environment_id: Optional[int] = None  # Batch 162/C161-2：计划类调度执行环境
     job_type: str = "plan"   # plan | ui（B112-3：UI job 定时）
     job_id: Optional[int] = None
     cron_expression: str
@@ -39,6 +40,7 @@ class ScheduleUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     plan_id: Optional[int] = None
+    environment_id: Optional[int] = None  # Batch 162/C161-2
     job_type: Optional[str] = None
     job_id: Optional[int] = None
     cron_expression: Optional[str] = None
@@ -72,6 +74,7 @@ class ScheduleOut(BaseModel):
     name: str = ""
     description: str = ""
     plan_id: Optional[int] = 0
+    environment_id: Optional[int] = None  # Batch 162/C161-2
     job_type: str = "plan"
     job_id: Optional[int] = None
     cron_expression: str = ""

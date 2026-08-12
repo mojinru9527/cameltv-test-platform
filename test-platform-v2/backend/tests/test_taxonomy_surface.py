@@ -44,3 +44,25 @@ class TestClassifyCaseSurface:
         assert loc.surface == "运营后台"
         loc2 = canonical_case_location("广告", "开屏广告", "manual")
         assert loc2.surface == "用户端"
+
+
+class TestBatch162SurfaceC1613:
+    """Batch 162 / C161-3：剩余 79 条「其他」域分类回归。"""
+
+    def test_remaining_domains(self) -> None:
+        cases = {
+            "UGC统计指标": "运营后台",
+            "虚拟货币": "用户端",
+            "聊天室": "用户端",
+            "比赛列表": "用户端",
+            "体育数据-篮球": "用户端",
+            "通知-比分变更": "用户端",
+            "APP-版本更新": "用户端",
+            "赛事": "用户端",
+            "WEB-第三方社媒引导移除": "用户端",
+        }
+        for domain, expected in cases.items():
+            assert classify_case_surface(domain, "manual", "") == expected, domain
+
+    def test_ugc_stats_module_still_admin(self) -> None:
+        assert classify_case_surface("UGC统计指标", "manual", "MOD-7/FP-1 YeiId计算") == "运营后台"

@@ -52,6 +52,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { fetchPlans } from '@/api/testplan'
+import { fetchEnvironments } from '@/api/environment'
 import {
   createSchedule,
   deleteSchedule,
@@ -75,6 +76,7 @@ const scheduleSchema = z.object({
   enabled: z.boolean().default(true),
   description: z.string().optional(),
   disabled_reason: z.string().optional().or(z.literal('')),
+  environment_id: z.string().optional().or(z.literal('')),
 })
 
 type ScheduleFormValues = z.infer<typeof scheduleSchema>
@@ -91,6 +93,7 @@ export default function SchedulePage() {
   const [editing, setEditing] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
+  const [environments, setEnvironments] = useState<any[]>([])
   const [expandedRows, setExpandedRows] = useState<Record<number, { loading: boolean; runs: any[]; total: number }>>({})
 
   const { data, isLoading, isError, error, refetch } = useApi<any>(
@@ -112,10 +115,25 @@ export default function SchedulePage() {
     }
   }
 
+  const loadEnvironments = async () => {
+    try {
+      const r: any = await fetchEnvironments()
+      setEnvironments(r || [])
+    } catch {
+      setEnvironments([])
+    }
+  }
+
+  const envName = (id: any) => {
+    const e = environments.find((x: any) => String(x.id) === String(id))
+    return e?.name || (id ? `环境#${id}` : '')
+  }
+
   const openNew = () => {
     loadPlans()
+    loadEnvironments()
     setEditing(null)
-    form.reset({ job_type: 'plan', plan_id: '', enabled: true, description: '', disabled_reason: '' })
+    form.reset({ job_type: 'plan', plan_id: '', enabled: true, description: '', disabled_reason: '', environment_id: '' })
     setDrawerOpen(true)
   }
 
@@ -130,6 +148,7 @@ export default function SchedulePage() {
       enabled: row.enabled ?? true,
       description: row.description || '',
       disabled_reason: row.disabled_reason || '',
+      environment_id: row.environment_id != null ? String(row.environment_id) : '',
     })
     setDrawerOpen(true)
   }
@@ -141,6 +160,7 @@ export default function SchedulePage() {
         ...v,
         job_type: v.job_type,
         plan_id: Number(v.plan_id),
+        environment_id: v.environment_id ? Number(v.environment_id) : null,
       }
       if (editing?.id) {
         await updateSchedule(editing.id, payload)
@@ -262,6 +282,7 @@ export default function SchedulePage() {
                       <TableHead>名称</TableHead>
                       <TableHead className="w-[150px]">目标计划</TableHead>
                       <TableHead className="w-[160px]">Cron 表达式</TableHead>
+                      <TableHead className="w-[110px]">执行环境</TableHead>
                       <TableHead className="w-[60px] text-center">启用</TableHead>
                       <TableHead className="w-[160px]">上次执行</TableHead>
                       <TableHead className="w-[200px]">操作</TableHead>
@@ -292,6 +313,9 @@ export default function SchedulePage() {
                             </TableCell>
                             <TableCell>
                               <code className="rounded bg-muted px-1.5 py-0.5 text-xs">{row.cron_expression}</code>
+                            </TableCell>
+                            <TableCell>
+                              {envName(row.environment_id) || <span className="text-muted-foreground">—</span>}
                             </TableCell>
                             <TableCell className="text-center">
                               <Switch
@@ -483,6 +507,30 @@ export default function SchedulePage() {
                 <p className="text-xs text-destructive mt-1">{form.formState.errors.plan_id.message}</p>
               )}
             </div>
+
+            {/* 执行环境（Batch 162 / C161-2）：API 计划必选 */}
+            {form.watch('job_type') === 'plan' && (
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">
+                  执行环境 <span className="text-muted-foreground">（含 API 用例的计划必选）</span>
+                </label>
+                <Select
+                  value={form.watch('environment_id') || undefined}
+                  onValueChange={(v) => form.setValue('environment_id', v, { shouldValidate: true })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="选择执行环境" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {environments.map((e: any) => (
+                      <SelectItem key={e.id} value={String(e.id)}>
+                        {e.name}（{e.env_type || ''}）
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Cron expression */}
             <div>
