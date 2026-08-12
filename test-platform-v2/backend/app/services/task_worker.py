@@ -39,24 +39,26 @@ def poll_and_execute():
 # ═══════════════════════════════════════════════════════
 
 def _process_api_tasks():
-    """拉取 pending API 执行任务并提交执行。"""
+    """拉取 pending API 执行任务并提交执行（认领式，防双 Worker 竞态）。
+
+    Batch 155（P2-11）：与 api_task_worker 共用 claim_next_task 原子认领，
+    只有拿到锁（status pending→running 的事务提交）的 worker 才会执行该任务，
+    避免两个 worker 同时处理同一条 pending 任务。
+    """
     if not _semaphore_api.acquire(blocking=False):
         return  # 已达并发上限
 
     try:
         from app.core.db import SessionLocal
-        from app.models.api_asset import ApiExecutionTask
+        from app.services.api_task_worker import claim_next_task
 
         db = SessionLocal()
         try:
-            task = db.query(ApiExecutionTask).filter_by(status="pending").order_by(
-                ApiExecutionTask.created_at.asc()
-            ).first()
-
+            task = claim_next_task(db, worker_id="task_worker-poll")
             if not task:
                 return
 
-            logger.info(f"[task-worker] Picked up API task #{task.id} '{task.name}'")
+            logger.info(f"[task-worker] Claimed API task #{task.id} '{task.name}'")
             _run_api_task(task.id, task.project_id)
         finally:
             db.close()

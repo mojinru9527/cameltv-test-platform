@@ -69,10 +69,12 @@ const RUN_STATUS_BADGE: Record<string, string> = {
 
 const scheduleSchema = z.object({
   name: z.string().min(1, '请输入名称'),
+  job_type: z.enum(['plan', 'report']).default('plan'),
   plan_id: z.string({ required_error: '请选择计划' }).min(1, '请选择计划'),
   cron_expression: z.string().min(1, '请输入 Cron 表达式'),
   enabled: z.boolean().default(true),
   description: z.string().optional(),
+  disabled_reason: z.string().optional().or(z.literal('')),
 })
 
 type ScheduleFormValues = z.infer<typeof scheduleSchema>
@@ -98,7 +100,7 @@ export default function SchedulePage() {
 
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleSchema),
-    defaultValues: { plan_id: '', enabled: true, description: '' },
+    defaultValues: { job_type: 'plan', plan_id: '', enabled: true, description: '', disabled_reason: '' },
   })
 
   const loadPlans = async () => {
@@ -113,7 +115,7 @@ export default function SchedulePage() {
   const openNew = () => {
     loadPlans()
     setEditing(null)
-    form.reset({ plan_id: '', enabled: true, description: '' })
+    form.reset({ job_type: 'plan', plan_id: '', enabled: true, description: '', disabled_reason: '' })
     setDrawerOpen(true)
   }
 
@@ -122,10 +124,12 @@ export default function SchedulePage() {
     setEditing(row)
     form.reset({
       name: row.name || '',
+      job_type: row.job_type === 'report' ? 'report' : 'plan',
       plan_id: row.plan_id != null ? String(row.plan_id) : '',
       cron_expression: row.cron_expression || '',
       enabled: row.enabled ?? true,
       description: row.description || '',
+      disabled_reason: row.disabled_reason || '',
     })
     setDrawerOpen(true)
   }
@@ -135,6 +139,7 @@ export default function SchedulePage() {
     try {
       const payload = {
         ...v,
+        job_type: v.job_type,
         plan_id: Number(v.plan_id),
       }
       if (editing?.id) {
@@ -155,8 +160,29 @@ export default function SchedulePage() {
     refetch()
   }
 
+  const [disableTarget, setDisableTarget] = useState<any | null>(null)
+  const [disableReason, setDisableReason] = useState('')
+
   const doToggle = async (id: number, enabled: boolean) => {
-    await updateSchedule(id, { enabled })
+    if (!enabled) {
+      const row = (data?.items || []).find((r: any) => r.id === id)
+      setDisableTarget(row || { id })
+      setDisableReason('')
+      return
+    }
+    await updateSchedule(id, { enabled: true, disabled_reason: '' })
+    refetch()
+  }
+
+  const confirmDisable = async () => {
+    if (!disableTarget) return
+    if (!disableReason.trim()) {
+      toast.error('请填写停用原因')
+      return
+    }
+    await updateSchedule(disableTarget.id, { enabled: false, disabled_reason: disableReason.trim() })
+    setDisableTarget(null)
+    toast.success('已停用调度')
     refetch()
   }
 
@@ -255,6 +281,11 @@ export default function SchedulePage() {
                               >
                                 {row.name}
                               </button>
+                              {!row.enabled && row.disabled_reason && (
+                                <p className="text-xs text-muted-foreground mt-0.5" title={row.disabled_reason}>
+                                  停用原因：{row.disabled_reason}
+                                </p>
+                              )}
                             </TableCell>
                             <TableCell>
                               {row.plan_name || <span className="text-muted-foreground">—</span>}
@@ -408,6 +439,26 @@ export default function SchedulePage() {
               )}
             </div>
 
+            {/* Job type select（Batch 155 / P2-15） */}
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">调度类型</label>
+              <Select
+                value={form.watch('job_type')}
+                onValueChange={(v) => form.setValue('job_type', v as 'plan' | 'report', { shouldValidate: true })}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="plan">定时执行计划</SelectItem>
+                  <SelectItem value="report">定时生成报告</SelectItem>
+                </SelectContent>
+              </Select>
+              {form.watch('job_type') === 'report' && (
+                <p className="text-xs text-muted-foreground mt-1">按计划维度定时生成测试报告并推送通知</p>
+              )}
+            </div>
+
             {/* Plan select */}
             <div>
               <label className="text-sm font-medium mb-1.5 block">
@@ -483,6 +534,27 @@ export default function SchedulePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 停用原因弹窗（Batch 155 / P2-18） */}
+      <AlertDialog open={disableTarget !== null} onOpenChange={(open) => { if (!open) setDisableTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>停用调度</AlertDialogTitle>
+            <AlertDialogDescription>请填写停用原因（必填），用于后续追溯。</AlertDialogDescription>
+          </AlertDialogHeader>
+          <Textarea
+            rows={3}
+            value={disableReason}
+            onChange={(e) => setDisableReason(e.target.value)}
+            placeholder="例如：版本发布后该计划不再适用"
+            aria-label="停用原因"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void confirmDisable()}>确认停用</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -18,6 +18,7 @@ class PlanCreate(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     due_date: Optional[datetime] = None
+    auto_defect_on_fail: bool = False
 
 
 class PlanUpdate(BaseModel):
@@ -29,6 +30,7 @@ class PlanUpdate(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     due_date: Optional[datetime] = None
+    auto_defect_on_fail: Optional[bool] = None
 
 
 class PlanStats(BaseModel):
@@ -57,6 +59,7 @@ class PlanOut(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     assignee_name: str = ""
+    auto_defect_on_fail: bool = False
     # Batch 149 (C147-4): 计划进度（前端列表直接展示），由 service 填充
     stats: PlanStats = PlanStats()
 
@@ -130,3 +133,5 @@ class ExecutionOut(BaseModel):
 class PlanDetailOut(PlanOut):
     cases: list[PlanCaseOut] = []
     stats: PlanStats = PlanStats()
+
+

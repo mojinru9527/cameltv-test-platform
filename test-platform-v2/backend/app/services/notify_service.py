@@ -63,6 +63,15 @@ _TEMPLATES: dict[str, str] = {
         "**时间**: {time}\n"
         "[查看详情]({link})"
     ),
+    "plan_failed": (
+        "## 测试计划执行失败\n"
+        "**计划**: {plan_name}\n"
+        "**失败**: {failed} 条\n"
+        "**自动缺陷**: {defects} 个\n"
+        "**自动报告**: {report}\n"
+        "**时间**: {time}\n"
+        "[查看计划]({link})"
+    ),
     "defect_assigned": (
         "## 缺陷指派通知\n"
         "**缺陷**: [{severity}] {title}\n"

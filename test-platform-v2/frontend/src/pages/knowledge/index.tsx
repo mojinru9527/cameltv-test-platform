@@ -39,7 +39,10 @@ export default function KnowledgePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchMode, setSearchMode] = useState('hybrid')
 
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(new Set([tab]))
+
   const handleTabChange = (value: string) => {
+    setVisitedTabs((prev) => new Set(prev).add(value))
     setSearchParams({ tab: value })
   }
 
@@ -143,41 +146,41 @@ export default function KnowledgePage() {
         </TabsList>
         </div>
 
-        <TabsContent value="project" className="mt-4">
-          {tab === 'project' && <ProjectTab />}
+        <TabsContent value="project" className="mt-4" forceMount={visitedTabs.has('project') ? true : undefined}>
+          <ProjectTab />
         </TabsContent>
-        <TabsContent value="platform" className="mt-4">
-          {tab === 'platform' && <PlatformTab />}
+        <TabsContent value="platform" className="mt-4" forceMount={visitedTabs.has('platform') ? true : undefined}>
+          <PlatformTab />
         </TabsContent>
-        <TabsContent value="overview" className="mt-4">
-          {tab === 'overview' && <OverviewTab />}
+        <TabsContent value="overview" className="mt-4" forceMount={visitedTabs.has('overview') ? true : undefined}>
+          <OverviewTab />
         </TabsContent>
-        <TabsContent value="search" className="mt-4">
-          {tab === 'search' && <SearchTab />}
+        <TabsContent value="search" className="mt-4" forceMount={visitedTabs.has('search') ? true : undefined}>
+          <SearchTab />
         </TabsContent>
-        <TabsContent value="sources" className="mt-4">
-          {tab === 'sources' && <SourceListTab />}
+        <TabsContent value="sources" className="mt-4" forceMount={visitedTabs.has('sources') ? true : undefined}>
+          <SourceListTab />
         </TabsContent>
-        <TabsContent value="artifacts" className="mt-4">
-          {tab === 'artifacts' && <ArtifactReviewTab />}
+        <TabsContent value="artifacts" className="mt-4" forceMount={visitedTabs.has('artifacts') ? true : undefined}>
+          <ArtifactReviewTab />
         </TabsContent>
-        <TabsContent value="graph" className="mt-4">
-          {tab === 'graph' && <GraphTab />}
+        <TabsContent value="graph" className="mt-4" forceMount={visitedTabs.has('graph') ? true : undefined}>
+          <GraphTab />
         </TabsContent>
-        <TabsContent value="entities" className="mt-4">
-          {tab === 'entities' && <EntityTab />}
+        <TabsContent value="entities" className="mt-4" forceMount={visitedTabs.has('entities') ? true : undefined}>
+          <EntityTab />
         </TabsContent>
-        <TabsContent value="iterations" className="mt-4">
-          {tab === 'iterations' && <IterationTab />}
+        <TabsContent value="iterations" className="mt-4" forceMount={visitedTabs.has('iterations') ? true : undefined}>
+          <IterationTab />
         </TabsContent>
-        <TabsContent value="wiki" className="mt-4">
-          {tab === 'wiki' && <WikiTab />}
+        <TabsContent value="wiki" className="mt-4" forceMount={visitedTabs.has('wiki') ? true : undefined}>
+          <WikiTab />
         </TabsContent>
-        <TabsContent value="wikidiff" className="mt-4">
-          {tab === 'wikidiff' && <WikiDiffTab />}
+        <TabsContent value="wikidiff" className="mt-4" forceMount={visitedTabs.has('wikidiff') ? true : undefined}>
+          <WikiDiffTab />
         </TabsContent>
-        <TabsContent value="skills" className="mt-4">
-          {tab === 'skills' && <SkillsTab />}
+        <TabsContent value="skills" className="mt-4" forceMount={visitedTabs.has('skills') ? true : undefined}>
+          <SkillsTab />
         </TabsContent>
       </Tabs>
 
