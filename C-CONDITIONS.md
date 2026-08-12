@@ -22,6 +22,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-162 — C161-1/2/3 关闭（2026-08-12）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| ~~C161-1~~ | ~~蓝湖自动登录（子模块缺 lanhu_login 钩子）~~ → **Closed**：确认 pinned 子模块 3cfd2ef 已含 lanhu_login；平台侧修复 DATA_DIR 持久卷（/app/storage/lanhu-data）+ compose 契约测试；生产自动登录需 Railway Variables 配置 LANHU_USERNAME/LANHU_PASSWORD（外部配置项，见 docs/ops/railway-storage.md） | P1 | 2026-08-12 |
+| ~~C161-2~~ | ~~含 API 用例的定时调度需绑定执行环境~~ → **Closed**：test_schedule.environment_id（幂等迁移）+ 服务校验/透传 + scheduler 传环境 + 前端表单/列表，回归测试 3 个 | P2 | 2026-08-12 |
+| ~~C161-3~~ | ~~surface 残留 79 条「其他」回填~~ → **Closed**：classify_case_surface 新增 9 域 + 回填脚本 scripts/backfill-surface-c161.py，回归测试 2 个 | P3 | 2026-08-12 |
+
 ### batch-161 — P1-P3 修复 + 生产复验（2026-08-12）
 
 | ID | 内容 | 优先级 | 创建日期 |
