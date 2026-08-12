@@ -31,8 +31,11 @@ client.interceptors.response.use(
     const body = resp.data as ApiEnvelope<unknown>
     if (body && typeof body === 'object' && 'code' in body) {
       if (body.code !== 0) {
-        // 业务错误不在此 toast，由调用方组件按需提示
-        return Promise.reject(new Error(body.msg))
+        // 业务错误不在此 toast，由调用方组件按需提示；
+        // Batch 160：错误对象附带 envelope code，供调用方区分业务 404（HTTP 200 + code=404）等场景
+        const businessError = new Error(body.msg) as Error & { code?: number }
+        businessError.code = body.code
+        return Promise.reject(businessError)
       }
       return body.data
     }
