@@ -169,3 +169,21 @@ class TestMultiWorkerClaimRace:
         sA.close()
         sB.close()
         engine.dispose()
+
+
+def test_run_generate_awaits_async_ai(monkeypatch, db_session):
+    """C120-2 回归：_run_generate 必须 await async AI（否则 coroutine 对象报错）。"""
+    from app.services import ai_tasks
+
+    async def fake_gen(content, file_type="", source_ref=""):
+        return {"functional_cases": [{"title": "async-ok"}]}
+
+    monkeypatch.setattr(
+        "app.services.requirement_service.get_requirement",
+        lambda db, doc_id, project_id=0: {"content": "x", "file_type": "md", "source_ref": "r", "extraction_raw": ""},
+    )
+    monkeypatch.setattr("app.services.ai_service.generate_test_cases", fake_gen)
+
+    result = ai_tasks._run_generate(db_session, 999)
+    assert result["functional_cases"][0]["title"] == "async-ok"
+    assert "coverage_report" in result

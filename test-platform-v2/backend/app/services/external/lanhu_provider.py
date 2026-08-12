@@ -105,6 +105,37 @@ def get_lanhu_cookie() -> str:
         return ""
 
 
+async def _login_lanhu_with_retry(runtime, tries: int = 2, delay: float = 2.0) -> str:
+    """Batch 161：蓝湖自动登录带重试，成功返回新 Cookie。
+
+    未配置 LANHU_USERNAME/LANHU_PASSWORD 或多次失败时抛 ValueError，
+    由调用方转换为可操作的 manual_action_required 提示。
+    """
+    import os
+
+    if not os.environ.get("LANHU_USERNAME") or not os.environ.get("LANHU_PASSWORD"):
+        raise ValueError("未配置 LANHU_USERNAME/LANHU_PASSWORD，无法自动登录")
+    last_err: Exception | None = None
+    for attempt in range(tries):
+        try:
+            cookie = await runtime.login()
+            if cookie:
+                return cookie
+            last_err = ValueError(f"第 {attempt + 1} 次登录未返回 Cookie")
+        except Exception as exc:  # noqa: BLE001 - 登录失败需重试/透出
+            last_err = exc
+        if attempt < tries - 1:
+            await asyncio.sleep(delay)
+    raise ValueError(f"蓝湖自动登录失败（{tries} 次尝试）：{str(last_err or '')[:200]}")
+
+
+def _persist_lanhu_cookie(cookie: str, runtime) -> None:
+    """Batch 161：登录成功后同时持久化到平台数据目录与 lanhu-mcp 运行态。"""
+    set_lanhu_cookie(cookie)
+    if runtime is not None and runtime.save_cookie is not None:
+        runtime.save_cookie(cookie)
+
+
 def clear_lanhu_cookie() -> None:
     """清除已保存的蓝湖 Cookie（会话失效且用户选择退出时）。"""
     from pathlib import Path
@@ -832,22 +863,20 @@ async def _extract_lanhu_content(url: str, auto_login: bool = True) -> dict:
                 )
             logger.warning("[ai_service] Lanhu auth failed: %s. Attempting auto-login...", e)
             try:
-                new_cookie = await runtime.login()
-                if new_cookie:
-                    if runtime.save_cookie is not None:
-                        runtime.save_cookie(new_cookie)
-                    logger.info("[ai_service] Auto-login succeeded, retrying extraction with new cookie...")
-                    return await _do_extract(cookie_override=new_cookie, page_id=_page_id)
-                else:
-                    raise ValueError(
-                        f"蓝湖自动登录失败：未获取到有效的 Cookie。"
-                        f"请检查 .env 中的 LANHU_USERNAME 和 LANHU_PASSWORD 是否正确。"
-                    )
+                new_cookie = await _login_lanhu_with_retry(runtime)
+                _persist_lanhu_cookie(new_cookie, runtime)
+                logger.info("[ai_service] Auto-login succeeded, retrying extraction with new cookie...")
+                return await _do_extract(cookie_override=new_cookie, page_id=_page_id)
             except runtime.auth_error_types as login_err:
                 raise ValueError(
                     f"蓝湖自动登录失败: {str(login_err)[:200]}。"
                     f"请检查 .env 中的 LANHU_USERNAME 和 LANHU_PASSWORD 是否正确，"
                     f"或手动获取 Cookie 填入 LANHU_COOKIE。"
+                )
+            except ValueError as login_err:
+                raise ValueError(
+                    f"蓝湖自动登录失败：{str(login_err)[:200]}。"
+                    f"请配置 LANHU_USERNAME/LANHU_PASSWORD 或手动获取 Cookie 填入 LANHU_COOKIE。"
                 )
             except Exception as login_err:
                 raise ValueError(
@@ -1292,17 +1321,17 @@ async def get_lanhu_pages_for_evidence(url: str, latest_version_only: bool = Fal
                     "manual_action_required": True,
                     "pages": [],
                 }
-            new_cookie = await runtime.login()
-            if new_cookie:
-                if runtime.save_cookie is not None:
-                    runtime.save_cookie(new_cookie)
-                return await _do(cookie_override=new_cookie)
-            return {
-                "status": "failed",
-                "error": "蓝湖会话失效且自动登录未获取到 Cookie，请重新登录或更新 LANHU_COOKIE",
-                "manual_action_required": True,
-                "pages": [],
-            }
+            try:
+                new_cookie = await _login_lanhu_with_retry(runtime)
+            except ValueError as login_err:
+                return {
+                    "status": "failed",
+                    "error": f"蓝湖会话失效且自动登录失败：{str(login_err)[:200]}。请重新登录或更新 LANHU_COOKIE",
+                    "manual_action_required": True,
+                    "pages": [],
+                }
+            _persist_lanhu_cookie(new_cookie, runtime)
+            return await _do(cookie_override=new_cookie)
     except LanhuManualActionRequired as e:
         return {
             "status": "failed",

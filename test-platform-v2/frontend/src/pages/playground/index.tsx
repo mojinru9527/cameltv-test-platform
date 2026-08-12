@@ -27,6 +27,7 @@ export default function PlaygroundPage() {
   const [source, setSource] = useState('')
   const [sourceType, setSourceType] = useState('gherkin')
   const [compiling, setCompiling] = useState(false)
+  const [compileError, setCompileError] = useState('')
   const [compiled, setCompiled] = useState<PlaygroundCompileResult | null>(null)
   const [executing, setExecuting] = useState(false)
   const [execResult, setExecResult] = useState<PlaygroundExecuteResult | null>(null)
@@ -38,6 +39,7 @@ export default function PlaygroundPage() {
     }
     setCompiling(true)
     setExecResult(null)
+    setCompileError('')
     try {
       const result = await compilePlayground({
         source,
@@ -47,7 +49,9 @@ export default function PlaygroundPage() {
       setCompiled(result)
       toast.success('编译成功')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '编译失败，请重试')
+      const msg = error instanceof Error ? error.message : '编译失败，请重试'
+      setCompileError(msg)
+      toast.error(msg)
     } finally {
       setCompiling(false)
     }
@@ -117,6 +121,11 @@ export default function PlaygroundPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            {compileError && (
+              <p role="alert" className="text-sm text-destructive">
+                {compileError}
+              </p>
+            )}
             <Button onClick={handleCompile} disabled={compiling || executing}>
               {compiling ? <Loader2 className="size-4 mr-1 animate-spin" /> : <Terminal className="size-4 mr-1" />}
               编译

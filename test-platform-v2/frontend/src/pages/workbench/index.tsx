@@ -448,7 +448,7 @@ export default function Workbench() {
                                       <span className="font-semibold text-foreground">
                                         {val}
                                       </span>
-                                      <span className="text-muted-foreground ml-1 text-xs">{pct}%</span>
+                                      <span className="text-muted-foreground ml-1 text-xs">（{pct}%）</span>
                                     </span>
                                   </div>
                                 )
