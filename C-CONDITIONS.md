@@ -10,7 +10,7 @@
 - 新增条件统一使用 `C{批次}-{序号}`（如 `C75-1`）命名，禁止裸 `C1`；关闭时在 Closed 表中注明合入 PR/commit
 - 一致性校验：`pwsh scripts/git/audit-cconditions.ps1`（只读，孤儿条件/重复 ID/缺证据/日期漂移）
 
-**最后更新**: 2026-08-11 (Batch 155: C147-6 重开——Batch 151 仅合入 docs，自动链路代码未合入；由 Batch 155 承接实现)
+**最后更新**: 2026-08-12 (Batch 156: 关闭 C155-1（PR #213 / ac12026）)
 
 **Batch 63 复核（2026-08-02）**: Product/QA 对全部 Open 条件逐条复核。
 TPv2-B19-C1 与 TPv2-B21-C2 已确认实现并关闭（见 Closed 表 Batch 63 节）；
@@ -26,7 +26,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C155-1 | C147-6 重开：执行→缺陷→报告→通知自动链路代码实现（auto_defect_on_fail 模型/schema/服务/API/前端开关 + plan_failed 通知），Batch 151 仅合入 docs | P1 | 2026-08-11 |
+| ~~C155-1~~ | ~~C147-6 重开：执行→缺陷→报告→通知自动链路代码实现~~ → **Closed**：Batch 155 实现（模型/schema/服务/API/前端开关 + plan_failed 通知 + 单测 3 个），PR #213，merge commit ac12026 | P1 | 2026-08-11 |
 
 ### batch-103 — 用例质量与接口可视优化（Batch 103 Leader 条件）
 
@@ -803,6 +803,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 2. Product 开工前必须 `Read C-CONDITIONS.md`，在 PRD 的「非目标」段中明确哪些 Open 条件纳入本次、哪些豁免及理由
 3. PR 合入后，Dev 负责将本次满足的 C 条件从 Open → Closed
 4. 每月 1 日 Leader 审查所有 Open 条件，超过 60 天无进展的需升级优先级或明确废弃
+
 
 
 
