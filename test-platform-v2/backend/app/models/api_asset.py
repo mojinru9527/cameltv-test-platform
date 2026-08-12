@@ -106,6 +106,7 @@ class ApiExecutionTaskItem(Base, TimestampMixin):
     response_snapshot: Mapped[str] = mapped_column(Text, default="{}")
     assertion_results: Mapped[str] = mapped_column(Text, default="[]")
     error_message: Mapped[str] = mapped_column(Text, default="")
+    test_execution_id: Mapped[int | None] = mapped_column(default=None, index=True)  # Batch 157：关联计划执行记录
     error_type: Mapped[str] = mapped_column(default="")
     retry_count: Mapped[int] = mapped_column(default=0)
     started_at: Mapped[datetime | None] = mapped_column(default=None)

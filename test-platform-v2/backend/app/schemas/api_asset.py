@@ -232,6 +232,7 @@ class ApiTaskItemOut(BaseModel):
     assertion_results: str
     error_message: str
     error_type: str = ""
+    test_execution_id: int | None = None  # Batch 157：关联计划执行记录
     retry_count: int = 0
     started_at: datetime | None = None
     finished_at: datetime | None = None

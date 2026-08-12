@@ -304,12 +304,14 @@ def execute_all_cases(
     _audit(req, current, db, "plan:execute_all", f"plan #{plan_id}",
            f"total={result['total']}, passed={result['passed']}, failed={result['failed']}, skipped={result['skipped']}")
     if result.get("failed", 0) > 0:
-        background_tasks.add_task(
-            _run_failure_auto_chain_in_new_session,
-            plan_id,
-            current.project_id or 0,
-            current.user.id,
-        )
+        _plan = test_plan_service.get_plan(db, plan_id, current.project_id or 0)
+        if _plan and _plan.get("auto_defect_on_fail"):
+            background_tasks.add_task(
+                _run_failure_auto_chain_in_new_session,
+                plan_id,
+                current.project_id or 0,
+                current.user.id,
+            )
     _queue_plan_done_if_complete(
         db,
         background_tasks,
@@ -345,12 +347,14 @@ def auto_execute_api_cases(
     _audit(req, current, db, "plan:auto_execute", f"plan #{plan_id}",
            f"executed={result['executed']}, passed={result['passed']}, failed={result['failed']}")
     if result.get("failed", 0) > 0:
-        background_tasks.add_task(
-            _run_failure_auto_chain_in_new_session,
-            plan_id,
-            current.project_id or 0,
-            current.user.id,
-        )
+        _plan = test_plan_service.get_plan(db, plan_id, current.project_id or 0)
+        if _plan and _plan.get("auto_defect_on_fail"):
+            background_tasks.add_task(
+                _run_failure_auto_chain_in_new_session,
+                plan_id,
+                current.project_id or 0,
+                current.user.id,
+            )
     _queue_plan_done_if_complete(
         db,
         background_tasks,
