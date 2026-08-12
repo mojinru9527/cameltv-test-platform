@@ -28,7 +28,7 @@
 ### C161-3 surface 规则扩展 + 回填
 - `classify_case_surface` 新增 9 个域（UGC统计指标→运营后台；虚拟货币/聊天室/比赛列表/体育数据-篮球/通知-比分变更/APP-版本更新/赛事/WEB-第三方社媒引导移除→用户端）。
 - 测试：`test_taxonomy_surface` 新增 2 项 ✅（共 10 项）。
-- 回填脚本：`scripts/backfill-surface-c161.py`（dry-run 默认，支持 DATABASE_URL）。
+- 说明：surface 为派生值（无 DB 列），无需回填；脚本因模型无 surface 列已移除。
 
 ## 缺陷列表
 | # | 级别 | 描述 | 证据 | 状态 |
@@ -37,7 +37,7 @@
 | 2 | P3 | Dockerfile/compose DATA_DIR 不一致 → 部署契约测试失败 | test_deploy_compose_contract | 已修（统一 /app/storage/lanhu-data） |
 
 ## 发布建议
-状态: READY ✅（生产复验在合入+部署后执行：调度绑定环境触发、surface 展示、Cookie 持久化【待用户配置凭据】）
+状态: READY ✅（生产复验：调度绑定环境触发（进行中）、surface 其他=0 ✅、Cookie 持久化【待用户配置凭据】）
 
 ## 复盘卡
 | 计划耗时 | 缺陷(P0/P1/P2/P3) | 返工次数 | 根因分类 | 下次避免 |
