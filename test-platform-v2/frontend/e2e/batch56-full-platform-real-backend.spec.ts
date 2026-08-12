@@ -109,7 +109,7 @@ const desktopRoutes: RouteExpectation[] = [
   { path: '/mindmap', heading: '脑图视图', navLabel: '用例脑图' },
   { path: '/apitest', heading: '接口测试', navLabel: '接口测试' },
   { path: '/uitest', heading: 'UI 测试', navLabel: 'UI 自动化' },
-  { path: '/special', heading: '音视频检测', navLabel: '专项测试' },
+  // (batch-165) 专项测试已隐藏：不再进入路由验收矩阵
   { path: '/schedule', heading: '定时任务', navLabel: '定时任务' },
   { path: '/defect', heading: '缺陷管理', navLabel: '缺陷管理' },
   { path: '/report', heading: '报告中心', navLabel: '报告中心' },
@@ -128,18 +128,7 @@ const desktopRoutes: RouteExpectation[] = [
   },
   { path: '/release-bundles', heading: '版本发布包', navLabel: '版本测试任务' },
   { path: '/agent-workbench', heading: 'Agent 工作台', navLabel: 'Agent 工作台' },
-  {
-    path: '/perftest',
-    heading: '性能测试',
-    navLabel: '性能监控',
-    controlledUnavailable: {
-      method: 'GET',
-      pathname: '/api/v1/perf-sessions/devices',
-      status: 503,
-      uiHeading: '真实性能采集不可用',
-      uiDescription: '不会生成模拟数据',
-      blocker: 'J18 BLOCKED：SoloX 未部署，无法执行真实 Android/iOS 性能采集',
-    },
+  // (batch-165) 性能监控已隐藏：不再进入路由验收矩阵
   },
   { path: '/lanhu-evidence', heading: '蓝湖证据包' },
   {

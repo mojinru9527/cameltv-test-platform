@@ -28,12 +28,16 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
       '/system',
       '/apitest',
       '/uitest',
-      '/special',
       '/agent-workbench',
-      '/perftest',
     ]) {
       expect(paths).toContain(expected)
     }
+  })
+
+  it('batch-165：专项测试/性能监控入口已隐藏', () => {
+    const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
+    expect(paths).not.toContain('/special')
+    expect(paths).not.toContain('/perftest')
   })
 
   it('无 release:view 权限时隐藏运维发布入口', () => {
