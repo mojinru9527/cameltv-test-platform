@@ -129,7 +129,6 @@ const desktopRoutes: RouteExpectation[] = [
   { path: '/release-bundles', heading: '版本发布包', navLabel: '版本测试任务' },
   { path: '/agent-workbench', heading: 'Agent 工作台', navLabel: 'Agent 工作台' },
   // (batch-165) 性能监控已隐藏：不再进入路由验收矩阵
-  },
   { path: '/lanhu-evidence', heading: '蓝湖证据包' },
   {
     path: '/operations-release',
