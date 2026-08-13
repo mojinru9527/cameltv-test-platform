@@ -1,0 +1,373 @@
+{
+  "bundle": {
+    "id": 8,
+    "client_version": "16.0.0"
+  },
+  "api_generation_final": {
+    "matched": 14,
+    "generated": 37,
+    "upserted": 37,
+    "inserted": 0
+  },
+  "endpoints": [
+    {
+      "endpoint_id": 374,
+      "method": "GET",
+      "path": "/ee/forecast/realtime/odds",
+      "confidence": 0.8,
+      "module": "银钻预测玩法",
+      "source": "fp"
+    },
+    {
+      "endpoint_id": 345,
+      "method": "GET",
+      "path": "/ee/sports_live/football/match/trend/detail",
+      "confidence": 0.8,
+      "module": "篮球相关-赛事详情页调整",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 345,
+      "method": "GET",
+      "path": "/ee/sports_live/football/match/trend/detail",
+      "confidence": 0.8,
+      "module": "篮球相关-广告调整",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 347,
+      "method": "GET",
+      "path": "/ee/sports_live/football/match/team_stats/list",
+      "confidence": 0.8,
+      "module": "篮球相关-比赛回放调整",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 258,
+      "method": "POST",
+      "path": "/ee/news/aggregate_news_kind",
+      "confidence": 0.67,
+      "module": "UGC文章管理",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 430,
+      "method": "GET",
+      "path": "/config_refresh/list_config",
+      "confidence": 0.67,
+      "module": "篮球相关-联赛模块调整",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 430,
+      "method": "GET",
+      "path": "/config_refresh/list_config",
+      "confidence": 0.67,
+      "module": "篮球相关-球队模块调整",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 881,
+      "method": "POST",
+      "path": "/search/hotword/getHotwordList",
+      "confidence": 0.67,
+      "module": "篮球相关-球员模块调整",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 370,
+      "method": "GET",
+      "path": "/ee/news_kind/list",
+      "confidence": 0.67,
+      "module": "篮球相关-资讯调整",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 81,
+      "method": "POST",
+      "path": "/ee/diamond/withdraw/account/get",
+      "confidence": 0.6,
+      "module": "骆驼币及绿钻系统",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 1,
+      "method": "POST",
+      "path": "/admin/ads/activity/save",
+      "confidence": 0.53,
+      "module": "广告后台配置管理",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 83,
+      "method": "GET",
+      "path": "/ee/diamond/withdraw/autoApplyForUser",
+      "confidence": 0.53,
+      "module": "银钻获取与任务系统",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 460,
+      "method": "POST",
+      "path": "/admin/recharge/activity/delete",
+      "confidence": 0.53,
+      "module": "付费活动",
+      "source": "module"
+    },
+    {
+      "endpoint_id": 430,
+      "method": "GET",
+      "path": "/config_refresh/list_config",
+      "confidence": 0.47,
+      "module": "UGC创作者管理",
+      "source": "module"
+    }
+  ],
+  "coverage_summary": {
+    "total_modules": 18,
+    "covered_modules": 14,
+    "covered_rate_percent": 77.8,
+    "p0p1_modules": 16,
+    "p0p1_covered_modules": 14,
+    "executed_covered_modules": 1,
+    "executed_covered_rate_percent": 5.6,
+    "gate_passed": true,
+    "target_rate_percent": 60.0
+  },
+  "coverage_rows": [
+    {
+      "name": "广告前端展示与规则",
+      "functional": 40,
+      "api": 0,
+      "ui": 40,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": false,
+      "executed_covered": false,
+      "gaps": [
+        "api"
+      ]
+    },
+    {
+      "name": "广告后台配置管理",
+      "functional": 21,
+      "api": 14,
+      "ui": 21,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "银钻获取与任务系统",
+      "functional": 27,
+      "api": 2,
+      "ui": 27,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "银钻预测玩法",
+      "functional": 21,
+      "api": 7,
+      "ui": 20,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "UGC创作者管理",
+      "functional": 19,
+      "api": 1,
+      "ui": 14,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "UGC文章管理",
+      "functional": 45,
+      "api": 1,
+      "ui": 44,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "UGC统计指标",
+      "functional": 14,
+      "api": 0,
+      "ui": 14,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": false,
+      "executed_covered": false,
+      "gaps": [
+        "api"
+      ]
+    },
+    {
+      "name": "付费活动",
+      "functional": 8,
+      "api": 2,
+      "ui": 8,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "骆驼币及绿钻系统",
+      "functional": 34,
+      "api": 1,
+      "ui": 33,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "篮球相关-首页调整",
+      "functional": 0,
+      "api": 0,
+      "ui": 0,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": false,
+      "covered": false,
+      "executed_covered": false,
+      "gaps": [
+        "functional",
+        "api",
+        "ui"
+      ]
+    },
+    {
+      "name": "篮球相关-赛事详情页调整",
+      "functional": 25,
+      "api": 1,
+      "ui": 24,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "篮球相关-联赛模块调整",
+      "functional": 47,
+      "api": 1,
+      "ui": 46,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "篮球相关-球队模块调整",
+      "functional": 12,
+      "api": 1,
+      "ui": 11,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "篮球相关-球员模块调整",
+      "functional": 9,
+      "api": 2,
+      "ui": 8,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "篮球相关-搜索调整",
+      "functional": 0,
+      "api": 0,
+      "ui": 0,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": false,
+      "covered": false,
+      "executed_covered": false,
+      "gaps": [
+        "functional",
+        "api",
+        "ui"
+      ]
+    },
+    {
+      "name": "篮球相关-资讯调整",
+      "functional": 7,
+      "api": 1,
+      "ui": 6,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "篮球相关-广告调整",
+      "functional": 18,
+      "api": 1,
+      "ui": 14,
+      "api_executed": 0,
+      "ui_executed": 0,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": false,
+      "gaps": []
+    },
+    {
+      "name": "篮球相关-比赛回放调整",
+      "functional": 25,
+      "api": 2,
+      "ui": 24,
+      "api_executed": 2,
+      "ui_executed": 1,
+      "p0p1": true,
+      "covered": true,
+      "executed_covered": true,
+      "gaps": []
+    }
+  ],
+  "notes": {
+    "ui_backfill_created": 384,
+    "module_tree": "18 modules built from doc#11 via build-from-document → bundle 8",
+    "execute_sample": "plan C167-2 执行覆盖验证: 2/2 executed (API pass real prod gateway, UI executed headless)",
+    "local_ai_disabled": "本地 production.env AI_ENABLED=false → UI LLM 编译回退规则引擎，含 TODO 如实失败（生产 Railway 有 AI key）"
+  }
+}
