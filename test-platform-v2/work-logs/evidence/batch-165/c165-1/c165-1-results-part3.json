@@ -1,0 +1,22 @@
+{
+  "apitestAssets": {
+    "url": "https://cameltv-test-platform1.vercel.app/apitest",
+    "epRowCount": 20,
+    "firstRowText": "camel-service\nGET\n/ee/activity/stream/admin_get\nactivity-stream-controller",
+    "paginationHint": [
+      "第 1/25 页"
+    ]
+  },
+  "planAuto": {
+    "envBefore6": 1,
+    "hasExecEnvInDialog": true,
+    "hasManualHintInDialog": false,
+    "dlgSnippet": "执行计划\n\n选择执行范围与目标环境\n\n执行范围\n全部用例（API/UI 自动，人工标记跳过）\n执行环境\n请选择环境\n取消\n确认执行"
+  },
+  "planManual": {
+    "envBefore7": 0,
+    "hasExecEnvInDialog": false,
+    "hasManualHintInDialog": true,
+    "dlgSnippet": "执行计划\n\n选择执行范围与目标环境\n\n执行范围\n全部用例（API/UI 自动，人工标记跳过）\n\n本计划仅含人工用例：批量执行会按设计将人工用例标记为「跳过」。 请在下方用例列表中逐条点击「执行」记录结果；如需批量自动化执行，请把 API 或 UI 自动化用例加入本计划。\n\n取消\n确认执行"
+  }
+}

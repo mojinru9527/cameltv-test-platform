@@ -1,0 +1,158 @@
+{
+  "menuSidebar": {
+    "hasSpecial": false,
+    "hasPerf": false,
+    "url": "https://cameltv-test-platform1.vercel.app/workbench"
+  },
+  "commandPalette": {
+    "cmdDialogFound": true,
+    "cmdSpecial": false,
+    "cmdPerf": false
+  },
+  "guestCatalog": {
+    "hasSpecial": false,
+    "hasPerf": false,
+    "hasGuestHeading": true,
+    "url": "https://cameltv-test-platform1.vercel.app/"
+  },
+  "knowledgeTabs": {
+    "1024": {
+      "count": 12,
+      "names": [
+        "概览",
+        "项目知识",
+        "平台研发",
+        "检索",
+        "知识源",
+        "AI 审核台",
+        "图谱",
+        "实体",
+        "迭代",
+        "Wiki 知识库",
+        "知识差异对比",
+        "Skills"
+      ],
+      "tablistHeight": 67,
+      "clippedCount": 0,
+      "clickResults": [
+        {
+          "name": "概览",
+          "urlHasTab": false
+        },
+        {
+          "name": "项目知识",
+          "urlHasTab": true
+        },
+        {
+          "name": "平台研发",
+          "urlHasTab": true
+        },
+        {
+          "name": "检索",
+          "urlHasTab": true
+        },
+        {
+          "name": "知识源",
+          "urlHasTab": true
+        },
+        {
+          "name": "AI 审核台",
+          "urlHasTab": true
+        },
+        {
+          "name": "图谱",
+          "urlHasTab": true
+        },
+        {
+          "name": "实体",
+          "urlHasTab": true
+        },
+        {
+          "name": "迭代",
+          "urlHasTab": true
+        },
+        {
+          "name": "Wiki 知识库",
+          "urlHasTab": true
+        },
+        {
+          "name": "知识差异对比",
+          "urlHasTab": true
+        },
+        {
+          "name": "Skills",
+          "urlHasTab": true
+        }
+      ]
+    },
+    "1280": {
+      "count": 12,
+      "names": [
+        "概览",
+        "项目知识",
+        "平台研发",
+        "检索",
+        "知识源",
+        "AI 审核台",
+        "图谱",
+        "实体",
+        "迭代",
+        "Wiki 知识库",
+        "知识差异对比",
+        "Skills"
+      ],
+      "tablistHeight": 67,
+      "clippedCount": 0,
+      "clickResults": [
+        {
+          "name": "概览",
+          "urlHasTab": false
+        },
+        {
+          "name": "项目知识",
+          "urlHasTab": true
+        },
+        {
+          "name": "平台研发",
+          "urlHasTab": true
+        },
+        {
+          "name": "检索",
+          "urlHasTab": true
+        },
+        {
+          "name": "知识源",
+          "urlHasTab": true
+        },
+        {
+          "name": "AI 审核台",
+          "urlHasTab": true
+        },
+        {
+          "name": "图谱",
+          "urlHasTab": true
+        },
+        {
+          "name": "实体",
+          "urlHasTab": true
+        },
+        {
+          "name": "迭代",
+          "urlHasTab": true
+        },
+        {
+          "name": "Wiki 知识库",
+          "urlHasTab": true
+        },
+        {
+          "name": "知识差异对比",
+          "urlHasTab": true
+        },
+        {
+          "name": "Skills",
+          "urlHasTab": true
+        }
+      ]
+    }
+  }
+}
