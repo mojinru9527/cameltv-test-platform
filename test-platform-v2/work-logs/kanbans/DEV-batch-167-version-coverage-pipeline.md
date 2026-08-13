@@ -9,15 +9,16 @@
 | # | Slice | 状态 | 提交 |
 |---|-------|------|------|
 | 1 | 工件 PRD/PM/Design | done | — |
-| 2 | Task1 Schema 迁移 + 模型/schema | todo | — |
-| 3 | Task2 覆盖矩阵 API + 单测 | todo | — |
-| 4 | Task3 需求源适配 + 分块提取 + meta | todo | — |
-| 5 | Task4 接口端点绑定生成 + 单测 | todo | — |
-| 6 | Task5 UI 变体 + 计划三类关联 + 单测 | todo | — |
-| 7 | Task6 auto_ui 执行 + 单测 | todo | — |
-| 8 | Task7 前端接入 + vitest | todo | — |
-| 9 | QA 硬门禁 + QA/Leader 工件 | todo | — |
-| 10 | 总确认 → push → Draft PR → 合入 | todo | — |
+| 2 | Task1 Schema 迁移 + 模型/schema | done | b71b826 |
+| 3 | Task2 覆盖矩阵 API + 单测 | done | e7cdbf6 |
+| 4 | Task3 需求源适配 + 分块提取 + meta | done | 72054ee |
+| 5 | Task4 接口端点绑定生成 + 单测 | done | fb36d01 |
+| 6 | Task5 UI 变体 + 计划三类关联 + 单测 | done | 722a992 |
+| 7 | Task6 auto_ui 执行 + 单测 | done | cfb12df |
+| 8 | Task7 前端接入 + vitest | done | a470c60/6f22255 |
+| 9 | QA 硬门禁 + QA/Leader 工件 | done | 6b12eb1 |
+| 10 | 总确认 → push → Draft PR → 合入 | in-progress | — |
 
 ## 当前位置
-Slice 3（覆盖矩阵）。
+全部 Slice 完成；待用户一次总确认后推送/PR/合入。
+
