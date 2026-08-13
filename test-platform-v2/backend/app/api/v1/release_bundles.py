@@ -19,6 +19,7 @@ from app.core.deps import CurrentUser, require_permission
 
 logger = logging.getLogger("release_bundles")
 from app.models.release_bundle import ReleaseBundle
+from app.models.requirement import RequirementDocument
 from app.models.requirement_module import RequirementModule
 from app.schemas.common import Page, R
 from app.schemas.release_bundle import (
@@ -197,6 +198,57 @@ def get_bundle_coverage(
     """返回发布包模块 × 功能/接口/UI × 执行状态的覆盖矩阵与 60% 门禁。"""
     from app.services.version_coverage_service import compute_bundle_coverage
     return R.ok(VersionCoverageOut(**compute_bundle_coverage(db, bundle_id, current.project_id or 0)))
+
+@router.post("/{bundle_id}/import-requirement", response_model=R[dict], summary="从需求地址创建需求文档并关联发布包（Phase 1）")
+def import_bundle_requirement(
+    bundle_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("knowledge:manage")),
+    db: Session = Depends(get_db),
+):
+    """抓取 bundle.requirement_url 并创建关联该发布包的需求文档（同 URL 已存在则复用）。"""
+    from app.services.requirement_source_service import RequirementSourceError, fetch_url_content
+    from app.services import requirement_service
+
+    pid = current.project_id or 0
+    bundle = db.get(ReleaseBundle, bundle_id)
+    if not bundle or bundle.project_id != pid:
+        from app.core.exceptions import not_found
+        raise not_found("发布包")
+    url = (bundle.requirement_url or "").strip()
+    if not url:
+        return R(code=400, msg="发布包尚未配置需求地址")
+
+    existing = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.project_id == pid,
+            RequirementDocument.source_ref == url,
+        ).order_by(RequirementDocument.id.desc())
+    )
+    if existing:
+        existing.release_bundle_id = bundle_id
+        db.commit()
+        return R.ok({"document_id": existing.id, "reused": True, "title": existing.title})
+
+    try:
+        fetched = fetch_url_content(url)
+    except RequirementSourceError as exc:
+        return R(code=400, msg=str(exc))
+
+    doc = requirement_service.create_requirement(
+        db,
+        project_id=pid,
+        creator_id=current.user.id if current.user else 0,
+        title=(fetched.get("title") or "版本需求")[:200],
+        file_type=fetched.get("kind", "generic"),
+        source_ref=url,
+        source_url=url,
+        content=fetched.get("content", ""),
+        release_bundle_id=bundle_id,
+    )
+    _audit(req, current, db, "bundle:import_requirement", f"#{bundle_id}", f"doc#{doc['id']}")
+    db.commit()
+    return R.ok({"document_id": doc["id"], "reused": False, "title": doc["title"]})
 @router.delete("/{bundle_id}", response_model=R[dict], summary="删除发布包")
 def delete_bundle(
     bundle_id: int,
@@ -535,5 +587,6 @@ def trigger_regression_for_bundle(
         "triggered": len(triggered_jobs),
         "jobs": triggered_jobs,
     })
+
 
 

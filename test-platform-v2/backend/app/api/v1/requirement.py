@@ -29,6 +29,7 @@ from app.schemas.requirement import (
     CaseImportResult,
     ExtractionConfirmRequest,
     ExtractedRequirement,
+    ExtractionQualityOut,
     FeatureExtractionResult,
     GenerateRequest,
     Issue,
@@ -141,6 +142,7 @@ async def upload_requirement(
     file: UploadFile | None = File(None),
     lanhu_url: str = Form(""),
     lanhu_description: str = Form(""),
+    source_url: str = Form(""),
     current: CurrentUser = Depends(require_permission("requirement:upload")),
     db: Session = Depends(get_db),
 ):
@@ -207,8 +209,24 @@ async def upload_requirement(
             msg="蓝湖链接必须先通过证据包质量门禁，再导入需求/RAG/Wiki",
             http_status=409,
         )
+    elif source_url.strip():
+        from app.services.requirement_source_service import (
+            RequirementSourceError,
+            fetch_url_content,
+        )
+        try:
+            fetched = fetch_url_content(source_url.strip())
+        except RequirementSourceError as exc:
+            return R(code=400, msg=str(exc))
+        content = fetched.get("content", "")
+        if not content:
+            return R(code=400, msg="需求地址未提取到有效内容")
+        title = html.escape((fetched.get("title") or "在线需求")[:200])
+        file_type = fetched.get("kind", "generic")
+        source_ref = source_url.strip()
+        parsed_type = "requirement"
     else:
-        return R(code=400, msg="请上传文件或输入蓝湖链接")
+        return R(code=400, msg="请上传文件、输入需求 URL 或蓝湖链接")
 
     try:
         doc = requirement_service.create_requirement(
@@ -218,6 +236,7 @@ async def upload_requirement(
             title=title,
             file_type=file_type,
             source_ref=source_ref,
+            source_url=source_url,
             content=content,
             parsed_type=parsed_type,
             excel_cases=excel_cases,
@@ -353,7 +372,24 @@ async def extract_features(
         except Exception as e:
             logger.warning("Failed to parse diff_json for doc_id=%d: %s", document_id, e)
             doc_content = doc.get("content") or ""
+    elif source_url.strip():
+        from app.services.requirement_source_service import (
+            RequirementSourceError,
+            fetch_url_content,
+        )
+        try:
+            fetched = fetch_url_content(source_url.strip())
+        except RequirementSourceError as exc:
+            return R(code=400, msg=str(exc))
+        content = fetched.get("content", "")
+        if not content:
+            return R(code=400, msg="需求地址未提取到有效内容")
+        title = html.escape((fetched.get("title") or "在线需求")[:200])
+        file_type = fetched.get("kind", "generic")
+        source_ref = source_url.strip()
+        parsed_type = "requirement"
     else:
+        return R(code=400, msg="请上传文件、输入需求 URL 或蓝湖链接")
         doc_content = doc.get("content") or ""
 
     try:
@@ -387,6 +423,18 @@ async def extract_features(
         len(m.get("function_points", []))
         for m in extraction_result.get("modules", [])
     )
+
+    # batch-167: 提取完整度元数据（分块/截断/降级显式透出）
+    meta = extraction_result.get("extraction_meta") or {}
+    extraction_meta = {
+        "mode": str(meta.get("mode", "single")),
+        "chunks": int(meta.get("chunks", 1)),
+        "truncated": bool(meta.get("truncated", False)),
+        "fallback": bool(extraction_result.get("fallback_used", False)),
+        "module_count": module_count,
+        "function_point_count": fp_count,
+        "warnings": list(meta.get("warnings") or []),
+    }
 
     try:
         requirement_service.update_extraction(
@@ -455,6 +503,33 @@ def get_extraction(
     return R.ok(FeatureExtractionResult(**result))
 
 
+
+@router.get("/{document_id}/extraction-quality", response_model=R[ExtractionQualityOut], summary="提取完整度与降级状态（Phase 1）")
+def get_extraction_quality(
+    document_id: int,
+    current: CurrentUser = Depends(require_permission("requirement:upload")),
+    db: Session = Depends(get_db),
+):
+    """返回提取模式（single/chunked）、截断、降级与功能点计数。"""
+    doc = requirement_service.get_requirement(db, document_id, project_id=current.project_id or 0)
+    if doc is None:
+        raise not_found("需求文档")
+    raw = doc.get("extraction_meta") or "{}"
+    try:
+        meta = json.loads(raw) if isinstance(raw, str) else raw
+    except (json.JSONDecodeError, TypeError):
+        meta = {}
+    return R.ok(ExtractionQualityOut(
+        document_id=document_id,
+        mode=str(meta.get("mode", "single")),
+        chunks=int(meta.get("chunks", 1)),
+        truncated=bool(meta.get("truncated", False)),
+        fallback=bool(meta.get("fallback", False)),
+        module_count=int(meta.get("module_count", 0)),
+        function_point_count=int(meta.get("function_point_count", 0)),
+        warnings=list(meta.get("warnings") or []),
+        extraction_meta=json.dumps(meta, ensure_ascii=False),
+    ))
 @router.post("/{document_id}/extraction/confirm", response_model=R[dict])
 def confirm_extraction(
     document_id: int,
@@ -1061,3 +1136,9 @@ def get_ai_task_status(
     if not task:
         raise not_found("AI 任务不存在")
     return R.ok(task)
+
+
+
+
+
+

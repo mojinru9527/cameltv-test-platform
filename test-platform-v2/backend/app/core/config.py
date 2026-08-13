@@ -126,6 +126,12 @@ class Settings(BaseSettings):
     ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）
     ai_retry_attempts: int = 2                 # 瞬时失败（超时/网络）总尝试次数，最小 1
     ai_fallback_on_failure: bool = True        # 瞬时失败时降级到本地模块提取，返回可复核草稿而非硬失败
+    # ── batch-167: 需求 URL 适配器 ──
+    requirement_url_timeout_seconds: float = 30.0   # 需求 URL 抓取超时
+    pingcode_api_base_url: str = ""                 # PingCode 开放 API 根地址
+    pingcode_api_token: str = ""                    # PingCode 访问令牌（环境变量注入）
+    confluence_api_base_url: str = ""               # Confluence REST API 根地址
+    confluence_api_token: str = ""                  # Confluence 访问令牌（环境变量注入）
 
     # ── File paths (configurable for portability) ──
     workspace_root: str = ""      # empty = auto-detect from app/services/__file__
@@ -266,3 +272,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

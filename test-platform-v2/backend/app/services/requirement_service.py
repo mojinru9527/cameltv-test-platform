@@ -73,9 +73,11 @@ def create_requirement(
     title: str,
     file_type: str,
     source_ref: str,
+    source_url: str = "",
     content: str,
     parsed_type: str = "requirement",
     excel_cases: list[dict] | None = None,
+    release_bundle_id: int | None = None,
     commit: bool = True,
 ) -> dict:
     """Store a parsed requirement document."""
@@ -85,6 +87,8 @@ def create_requirement(
         title=title,
         file_type=file_type,
         source_ref=source_ref,
+        source_url=source_url,
+        release_bundle_id=release_bundle_id,
         content=content,
         status="parsed",
     )
@@ -587,6 +591,8 @@ def update_extraction(
     if not row:
         return None
     row.extraction_raw = json.dumps(extraction_result, ensure_ascii=False)
+    if extraction_meta is not None:
+        row.extraction_meta = json.dumps(extraction_meta, ensure_ascii=False)
     row.extraction_status = "pending_review"
     _finish_write(db, row, commit=commit)
     return _doc_to_dict(row)
@@ -976,4 +982,8 @@ def match_api_endpoints(
             results.append(best_match)
 
     return results
+
+
+
+
 
