@@ -1,0 +1,9 @@
+{
+  "authorized_by": "user 2026-08-13",
+  "limits_per_txn": {
+    "recharge_usdt": 10,
+    "withdraw_usdt": 10,
+    "bet_silver_diamond": 100
+  },
+  "notes": "T0 安全档 + T1 金融档；操作后立即撤销可撤销项；不超上限；证据落 work-logs/evidence/batch-167/"
+}

@@ -26,10 +26,13 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
-| C167-1 | 真实账号登录态与写操作数据准备补齐后复测 UI 自动化覆盖；未补齐前相关模块如实标「执行未覆盖」 | P1 | 2026-08-13 |
-| ~~C167-2~~ | ~~用用户真实版本输入跑端到端基线：提取完整性/三类型生成/计划关联/auto_ui/60% 门禁截图证据入 work-logs/evidence/batch-167/~~ → **Closed**：batch-168 修复后复测 14/18=77.8% 达标（retest-168.json + 截图），PR 待合入 | P1 | 2026-08-13 |
+| C167-1 | 真实账号登录态与写操作数据准备补齐后复测 UI 自动化覆盖；未补齐前相关模块如实标「执行未覆盖」→ 2026-08-13 Web 端复测：登录态 ✅；选择器稳定性 8/10 稳定（2 条为匿名态旧断言）；收藏/点赞/评论/Follow/充值/提现/下注在 Web 端无入口（APP 专属），如实标「执行未覆盖」。T1 金融档待 APP 真机或接口授权（C170-2），保持 Open | P1 | 2026-08-13 |
+| ~~C167-2~~ | ~~用用户真实版本输入跑端到端基线：提取完整性/三类型生成/计划关联/auto_ui/60% 门禁截图证据入 work-logs/evidence/batch-167/~~ → **Closed**：batch-168 修复后复测 14/18=77.8% 达标（retest-168.json + 截图），PR #240 / 5ea804f | P1 | 2026-08-13 |
 | C167-3 | `release_bundle.api_spec_url` 接入 import-api-spec（OpenAPI 绑定发布包），评估 VersionMission 与 ReleaseBundle 统一入口 | P2 | 2026-08-13 |
-| C168-1 | test 部署后在 www.camel1.tv 用真实登录态跑 UI 执行覆盖，观察 D7 分环境与 LLM 编译生产可用性 | P1 | 2026-08-13 |
+| ~~C168-1~~ | ~~test 部署后在 www.camel1.tv 用真实登录态跑 UI 执行覆盖，观察 D7 分环境与 LLM 编译生产可用性~~ → **Closed**：batch-170 登录态注入后 C170-1 生产复测通过（c170-1-production-ui-pass.json） | P1 | 2026-08-13 |
+| ~~C168-2~~ | ~~计划同步 execute-all 含多条 UI 用例超 Railway 网关 300s 被切断且无执行记录~~ → **Closed**：batch-169 async_mode 后台执行，生产 plan#15 2.2s 返回且后台完成留痕（c169-async-execution.json / c170-1-production-ui-pass.json） | P1 | 2026-08-13 |
+| C169-1 | 确认 www.camel1.tv 登录 URL/流程（当前 /login 404、REGISTER 不可交互）与生产账号，供 UI 登录态执行覆盖 → **Closed**：demo/login 直登可用（userId=11025728，无短信验证码），证据 c169-production-login-probe.json | P1 | 2026-08-13 |
+| ~~C170-1~~ | ~~生产部署后用 UI_STORAGE_STATE_JSON 跑 1 条登录后 UI 用例（如 /my）通过并留截图，确认登录态注入在生产链路生效~~ → **Closed**：plan#15 用例#11415 生产执行 pass（1/1，100% 通过率，截图 c170-1-prod-login-ui-pass.png） | P1 | 2026-08-13 |
 
 
 ### batch-163 — 复验新增（2026-08-12）

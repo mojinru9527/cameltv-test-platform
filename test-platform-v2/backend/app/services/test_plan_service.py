@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -14,6 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.base_service import batch_user_names
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
@@ -668,6 +670,37 @@ def _ui_error_summary(ui_result: dict) -> str:
     return " ".join(parts).strip() or "未知"
 
 
+def _resolve_ui_storage_state(db: Session, ui_environment_id: int | None, project_id: int) -> dict | None:
+    """batch-170：从 UI 执行环境读取 UI_STORAGE_STATE_JSON（Playwright storageState）。
+
+    环境变量可加密；解密失败保留原值。JSON 非法时返回 None，不阻断执行。
+    """
+    if not ui_environment_id:
+        return None
+    from app.models.environment import EnvironmentVariable
+    row = db.scalar(
+        select(EnvironmentVariable).where(
+            EnvironmentVariable.environment_id == ui_environment_id,
+            EnvironmentVariable.key == "UI_STORAGE_STATE_JSON",
+        )
+    )
+    if not row:
+        return None
+    value = row.value or ""
+    if row.encrypted and value:
+        try:
+            from app.core.cipher import decrypt_value
+            value = decrypt_value(value)
+        except Exception:
+            logger.exception("UI storageState 解密失败 environment=%d", ui_environment_id)
+            return None
+    try:
+        parsed = json.loads(value)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
 def _write_plan_ui_job(db: Session, case, spec_code: str, creator_id: int, project_id: int) -> None:
     """把计划执行生成的可执行 spec 回写为 UI 任务资产（失败不阻断执行）。"""
     if not spec_code:
@@ -679,7 +712,7 @@ def _write_plan_ui_job(db: Session, case, spec_code: str, creator_id: int, proje
         logger.exception("计划 UI 任务回写失败: case=%s", getattr(case, "id", None))
 
 
-def _execute_ui_case_sync(case, *, base_url: str = "") -> dict:
+def _execute_ui_case_sync(case, *, base_url: str = "", storage_state: dict | None = None) -> dict:
     """同步编译并执行一条 UI 用例（batch-167: LLM 优先 + 规则兜底 + 真实 Playwright 链路）。
 
     返回 pass/fail、产物与执行摘要；编译含 TODO 占位或执行失败都如实返回。
@@ -716,14 +749,22 @@ def _execute_ui_case_sync(case, *, base_url: str = "") -> dict:
         npx = shutil.which("npx") or shutil.which("npx.cmd")
         if not npx:
             return {"ok": False, "error": "npx/playwright 不可用", "spec_code": spec_code, "compiler": compiler}
+        storage_state_path = None
+        run_env = None
+        if storage_state:
+            import tempfile as _tempfile
+            _fd, storage_state_path = _tempfile.mkstemp(prefix="plan-ui-state-", suffix=".json")
+            with open(_fd, "w", encoding="utf-8") as _fh:
+                json.dump(storage_state, _fh, ensure_ascii=False)
+            run_env = {**os.environ, "PLAYWRIGHT_STORAGE_STATE": storage_state_path}
         result = subprocess.run(
             [
                 npx, "playwright", "test", rel_spec,
                 "--project", "chromium", "--reporter", "json",
                 "--output", str(artifact_dir),
             ],
-            capture_output=True, text=True, timeout=180,
-            cwd=str(playwright_dir), encoding="utf-8", errors="replace",
+            capture_output=True, text=True, timeout=float(getattr(settings, "ui_run_timeout_seconds", 90.0) or 90.0),
+            cwd=str(playwright_dir), encoding="utf-8", errors="replace", env=run_env,
         )
         stdout_text = result.stdout or ""
         stderr_text = (result.stderr or "")[:2000]
@@ -732,6 +773,7 @@ def _execute_ui_case_sync(case, *, base_url: str = "") -> dict:
             return {
                 "ok": False, "error": "Playwright 未输出有效 JSON 报告", "compiler": compiler, "spec_code": spec_code,
                 "exit_code": result.returncode, "stdout_tail": stdout_text[-1500:], "stderr_tail": stderr_text,
+                "storage_state": bool(storage_state),
             }
         passed, failed, skipped, total = report
         screenshots = [str(f.relative_to(artifact_dir)).replace("\\", "/") for f in sorted(artifact_dir.rglob("*.png"))]
@@ -751,9 +793,11 @@ def _execute_ui_case_sync(case, *, base_url: str = "") -> dict:
             "exit_code": result.returncode,
             "stdout_tail": stdout_text[-1500:], "stderr_tail": stderr_text,
             "spec_code": spec_code, "compiler": compiler,
+            "storage_state": bool(storage_state),
         }
     except subprocess.TimeoutExpired:
-        return {"ok": False, "error": "UI 执行超时（180s）", "spec_code": spec_code, "compiler": compiler}
+        seconds = int(float(getattr(settings, "ui_run_timeout_seconds", 90.0) or 90.0))
+        return {"ok": False, "error": f"UI 执行超时（{seconds}s）", "spec_code": spec_code, "compiler": compiler}
     except FileNotFoundError:
         return {"ok": False, "error": "npx/playwright 不可用", "spec_code": spec_code, "compiler": compiler}
     finally:
@@ -761,6 +805,11 @@ def _execute_ui_case_sync(case, *, base_url: str = "") -> dict:
             spec_file.unlink(missing_ok=True)
         except OSError:
             logger.warning("spec 文件清理失败")
+        if storage_state_path:
+            try:
+                Path(storage_state_path).unlink(missing_ok=True)
+            except OSError:
+                logger.warning("storageState 临时文件清理失败")
 def _parse_playwright_report(stdout_text: str) -> tuple[int, int, int, int] | None:
     """解析 Playwright --reporter=json 输出，返回 (passed, failed, skipped, total)。"""
     payload = None
@@ -892,6 +941,8 @@ def execute_all_cases(
         raise ValueError("计划不存在")
     # batch-168 D7：API 用执行环境、UI 用 UI 环境（缺省回退执行环境）
     base_url = _resolve_plan_base_url(db, ui_environment_id or environment_id, project_id)
+    # batch-170：登录态注入（来自 UI 环境变量 UI_STORAGE_STATE_JSON）
+    ui_storage_state = _resolve_ui_storage_state(db, ui_environment_id, project_id)
 
     ensure_plan_execution_ready(
         db, plan_id, project_id=project_id, environment_id=environment_id,
@@ -950,7 +1001,7 @@ def execute_all_cases(
         elif tc.case_type == "ui":
             # UI 用例：真实编译 + headless Chromium 执行（batch-74 统一编排）
             try:
-                ui_result = _execute_ui_case_sync(tc, base_url=base_url)
+                ui_result = _execute_ui_case_sync(tc, base_url=base_url, storage_state=ui_storage_state)
                 status = "pass" if ui_result.get("ok") else "fail"
                 actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                 if ui_result.get("ok"):
@@ -972,7 +1023,7 @@ def execute_all_cases(
                 and _case_has_actionable_steps(tc)
             ):
                 try:
-                    ui_result = _execute_ui_case_sync(tc, base_url=base_url)
+                    ui_result = _execute_ui_case_sync(tc, base_url=base_url, storage_state=ui_storage_state)
                     status = "pass" if ui_result.get("ok") else "fail"
                     actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                     notes = (
@@ -1283,4 +1334,32 @@ def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
         "case_title": case.title if case else "",
         "executor_name": "",
     }
+
+def run_async_execute_all(
+    *,
+    plan_id: int,
+    executor_id: int,
+    environment_id: int | None,
+    ui_environment_id: int | None,
+    auto_ui: bool,
+    project_id: int,
+) -> None:
+    """batch-169 C168-2：后台执行计划全部用例，避免同步请求被网关 300s 切断。"""
+    from app.core.db import SessionLocal
+    db = SessionLocal()
+    try:
+        execute_all_cases(
+            db,
+            plan_id,
+            executor_id=executor_id,
+            environment_id=environment_id,
+            ui_environment_id=ui_environment_id,
+            auto_ui=auto_ui,
+            project_id=project_id,
+        )
+    except Exception:
+        logger.exception("后台计划执行失败 plan_id=%d", plan_id)
+        db.rollback()
+    finally:
+        db.close()
 
