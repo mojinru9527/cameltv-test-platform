@@ -1,0 +1,14 @@
+{
+  "date": "2026-08-13",
+  "site": "https://www.camel1.tv/",
+  "account": "+86 18476944071（用户提供；密码不入库）",
+  "login_api": "POST https://api.cameltv.live/account-service/ee/client/demo/login (form: countryCode=86&mobile=18476944071&password=***)",
+  "result": "登录成功：nickname=sex 1235, userId=11025728, userSig+token 均返回，无需短信验证码",
+  "auth_injection": "auth cookie = {\"userId\":\"11025728\",\"userSig\":\"...\",\"token\":\"...\"} 写入 .camel1.tv 后，/my 页显示已登录（Silver Diamond）",
+  "storage_state": "已保存 gitignored 文件 config/runtime/sports-prod-storage-state.json，供平台 UI 执行注入",
+  "screenshots": [
+    "c169-my-logged-in.png",
+    "c169-login-modal.png"
+  ],
+  "conclusion": "生产登录态已可用。下一步（batch-170）：平台 UI 执行引擎读取 storageState（环境变量 UI_STORAGE_STATE_JSON）注入 Playwright，复测登录态 UI 执行覆盖并关闭 C167-1/C168-1。"
+}
