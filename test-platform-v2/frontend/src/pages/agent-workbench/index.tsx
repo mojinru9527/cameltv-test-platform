@@ -48,6 +48,7 @@ import {
   GitBranch,
   TestTube2,
   Bug,
+  Terminal,
   Play,
   Loader2,
   RefreshCw,
@@ -60,12 +61,14 @@ const AGENT_ICONS: Record<string, React.ComponentType<any>> = {
   impact_analysis: GitBranch,
   case_generation: TestTube2,
   failure_analysis: Bug,
+  dsh_execution: Terminal,
 }
 const AGENT_COLORS: Record<string, string> = {
   requirement_analysis: 'bg-status-accent-muted text-status-accent border-status-accent-border',
   impact_analysis: 'bg-status-warning-muted text-status-warning border-status-warning-border',
   case_generation: 'bg-status-info-muted text-status-info border-status-info-border',
   failure_analysis: 'bg-status-danger-muted text-status-danger border-status-danger-border',
+  dsh_execution: 'bg-status-info-muted text-status-info border-status-info-border',
 }
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
   pending: { label: '等待中', color: 'bg-muted text-muted-foreground' },
@@ -199,7 +202,7 @@ export default function AgentWorkbenchPage() {
     <div className="space-y-4">
       <PageHeader
         title="Agent 工作台"
-        description="触发 AI Agent 执行需求分析、影响评估、用例生成和失败分析。"
+        description="触发 AI Agent 执行需求分析、影响评估、用例生成、失败分析，以及 DSH 执行型真实任务。"
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
