@@ -90,9 +90,9 @@ export default function KnowledgePage() {
       </div>
 
       <Tabs value={tab} onValueChange={handleTabChange}>
-        <div className="max-w-full overflow-x-auto pb-1">
+        <div className="pb-1">
         <TabsList
-          className="w-max min-w-full flex-nowrap justify-start overflow-x-auto lg:w-full lg:flex-wrap lg:overflow-visible"
+          className="!h-auto w-full flex-wrap items-start justify-start gap-y-1"
           aria-label="知识中心功能页签"
         >
           <TabsTrigger value="overview">

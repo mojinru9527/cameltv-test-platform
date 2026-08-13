@@ -23,7 +23,8 @@ const ReportPage = lazy(() => import('@/pages/report'))
 const SchedulePage = lazy(() => import('@/pages/schedule'))
 const Workbench = lazy(() => import('@/pages/workbench'))
 const DefectPage = lazy(() => import('@/pages/defect'))
-const SpecialPage = lazy(() => import('@/pages/special'))
+// (batch-165) 专项测试已隐藏：注释路由与懒加载
+// const SpecialPage = lazy(() => import('@/pages/special'))
 const UiTestPage = lazy(() => import('@/pages/uitest'))
 const ProjectPage = lazy(() => import('@/pages/project'))
 const TracePage = lazy(() => import('@/pages/trace'))
@@ -37,7 +38,8 @@ const DatasetPage = lazy(() => import('@/pages/dataset'))
 const IntegrationPage = lazy(() => import('@/pages/integration'))
 const KnowledgePage = lazy(() => import('@/pages/knowledge'))
 const AgentWorkbenchPage = lazy(() => import('@/pages/agent-workbench'))
-const PerftestPage = lazy(() => import('@/pages/perftest'))
+// (batch-165) 性能监控已隐藏：注释路由与懒加载
+// const PerftestPage = lazy(() => import('@/pages/perftest'))
 const OperationsReleasePage = lazy(() => import('@/pages/operations-release'))
 const PlaygroundPage = lazy(() => import('@/pages/playground'))
 const ReleaseBundlesPage = lazy(() => import('@/pages/release-bundles'))
@@ -206,7 +208,8 @@ export const router = createBrowserRouter([
       { path: 'mindmap', element: <PageLoader><MindmapPage /></PageLoader> },
       { path: 'apitest', element: <PageLoader><ApiTestPage /></PageLoader> },
       { path: 'uitest', element: <PageLoader><UiTestPage /></PageLoader> },
-      { path: 'special', element: <PageLoader><SpecialPage /></PageLoader> },
+      // (batch-165) 专项测试已隐藏：注释路由
+      //       { path: 'special', element: <PageLoader><SpecialPage /></PageLoader> },
       { path: 'schedule', element: <PageLoader><SchedulePage /></PageLoader> },
       { path: 'defect', element: <PageLoader><DefectPage /></PageLoader> },
       { path: 'defect/:id', element: <PageLoader><DefectPage /></PageLoader> },
@@ -224,7 +227,8 @@ export const router = createBrowserRouter([
       { path: 'release-bundles/:id', element: <PageLoader><BundleDetailPage /></PageLoader> },
       { path: 'release-bundles/:id/panorama', element: <PageLoader><VersionPanoramaPage /></PageLoader> },
       { path: 'agent-workbench', element: <PageLoader><AgentWorkbenchPage /></PageLoader> },
-      { path: 'perftest', element: <PageLoader><PerftestPage /></PageLoader> },
+      // (batch-165) 性能监控已隐藏：注释路由
+      //       { path: 'perftest', element: <PageLoader><PerftestPage /></PageLoader> },
       { path: 'lanhu-evidence', element: <PageLoader><LanhuEvidencePage /></PageLoader> },
       { path: 'lanhu-evidence/:id', element: <PageLoader><LanhuEvidenceJobDetail /></PageLoader> },
       { path: 'operations-release', element: <PageLoader><OperationsReleasePage /></PageLoader> },

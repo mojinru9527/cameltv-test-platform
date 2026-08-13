@@ -7,13 +7,16 @@ from sqlalchemy.orm import Session
 from app.models.rbac import Permission
 from app.schemas.system import MenuOut
 
+# (batch-165) 按用户要求隐藏的菜单 code（存量库同样生效；seed.py 已注释新库生成）
+HIDDEN_MENU_CODES = {"menu:special", "menu:perftest"}
+
 
 def menu_tree(db: Session, codes: list[str]) -> list[MenuOut]:
     perms = db.scalars(
         select(Permission).where(Permission.type == "menu").order_by(Permission.sort)
     ).all()
     is_super = "*" in codes
-    visible = [p for p in perms if is_super or p.code in codes]
+    visible = [p for p in perms if (is_super or p.code in codes) and p.code not in HIDDEN_MENU_CODES]
 
     # Build flat list first
     nodes: dict[int, MenuOut] = {}

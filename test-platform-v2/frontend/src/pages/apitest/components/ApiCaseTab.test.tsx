@@ -2,11 +2,13 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const fetchTestCases = vi.fn()
+const fetchDomains = vi.fn()
 const executeApiCase = vi.fn()
 const createApiExecutionTask = vi.fn()
 
 vi.mock('@/api/testcase', () => ({
   fetchTestCases: (...args: any[]) => fetchTestCases(...args),
+  fetchDomains: (...args: any[]) => fetchDomains(...args),
 }))
 vi.mock('@/api/apitest', () => ({
   executeApiCase: (...args: any[]) => executeApiCase(...args),
@@ -24,6 +26,7 @@ import ApiCaseTab from './ApiCaseTab'
 
 describe('接口用例列表', () => {
   beforeEach(() => {
+    fetchDomains.mockReset().mockResolvedValue([])
     fetchTestCases.mockReset().mockResolvedValue({
       total: 2,
       items: [

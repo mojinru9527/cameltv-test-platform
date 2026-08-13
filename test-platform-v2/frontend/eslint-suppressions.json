@@ -14,11 +14,6 @@
       "count": 1
     }
   },
-  "src/components/CommandPalette.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/components/DomainTree.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1
@@ -66,7 +61,7 @@
   },
   "src/pages/apitest/components/AssetTab.tsx": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 5
+      "count": 1
     }
   },
   "src/pages/apitest/components/DebugTab.tsx": {
