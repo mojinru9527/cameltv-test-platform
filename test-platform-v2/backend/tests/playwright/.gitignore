@@ -5,3 +5,5 @@ playwright-report/
 report.json
 *.zip
 *.webm
+
+generated/

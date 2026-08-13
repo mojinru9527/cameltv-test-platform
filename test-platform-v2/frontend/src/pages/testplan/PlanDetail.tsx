@@ -128,6 +128,7 @@ export default function PlanDetail() {
   const [autoExecuting, setAutoExecuting] = useState(false)
   const [environments, setEnvironments] = useState<any[]>([])
   const [selectedEnv, setSelectedEnv] = useState('__none__')
+  const [uiEnv, setUiEnv] = useState('__none__')
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
@@ -196,6 +197,7 @@ export default function PlanDetail() {
   }
 
   const selectedEnvId = selectedEnv === '__none__' ? undefined : Number(selectedEnv)
+  const uiEnvId = uiEnv === '__none__' ? undefined : Number(uiEnv)
   // (batch-165) 环境选择入口覆盖 API/UI 自动化用例：纯人工用例计划也显示提示，避免"入口消失 + 批量执行全跳过"的困惑
   const hasAutomatedCases = (plan?.cases || []).some((c: any) => c.case_type === 'api' || c.case_type === 'ui')
 
@@ -248,7 +250,7 @@ export default function PlanDetail() {
     if (!ensureEnvSelected()) return
     setExecAllLoading(true)
     try {
-      const result: any = await executeAllCases(planId, selectedEnvId, autoUi)
+      const result: any = await executeAllCases(planId, selectedEnvId, autoUi, uiEnvId)
       toast.success(`批量执行完成: ${result.passed} 通过, ${result.failed} 失败, ${result.skipped} 跳过`)
       load()
       loadExecutions()
@@ -296,6 +298,19 @@ export default function PlanDetail() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">请选择环境</SelectItem>
+                {environments.map((e: any) => (
+                  <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {hasAutomatedCases && autoUi && (
+            <Select value={uiEnv} onValueChange={setUiEnv}>
+              <SelectTrigger id="plan-exec-ui-env" className="w-[180px]" aria-label="UI 执行环境">
+                <SelectValue placeholder="UI 环境（默认同执行环境）" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">UI 环境（默认同执行环境）</SelectItem>
                 {environments.map((e: any) => (
                   <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
                 ))}
@@ -656,13 +671,29 @@ export default function PlanDetail() {
             )}
             {hasAutomatedCases && (
               <div>
-                <label className="mb-1.5 block text-sm font-medium">执行环境</label>
+                <label className="mb-1.5 block text-sm font-medium">执行环境（API 用例）</label>
                 <Select value={selectedEnv} onValueChange={setSelectedEnv}>
                   <SelectTrigger className="w-full" aria-label="执行环境">
                     <SelectValue placeholder="请选择环境" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__none__">请选择环境</SelectItem>
+                    {environments.map((e: any) => (
+                      <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {execScope === "all" && autoUi && hasAutomatedCases && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">UI 执行环境（默认为 API 执行环境）</label>
+                <Select value={uiEnv} onValueChange={setUiEnv}>
+                  <SelectTrigger className="w-full" aria-label="UI 执行环境">
+                    <SelectValue placeholder="默认同执行环境" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">默认同执行环境</SelectItem>
                     {environments.map((e: any) => (
                       <SelectItem key={e.id} value={String(e.id)}>{e.name}</SelectItem>
                     ))}

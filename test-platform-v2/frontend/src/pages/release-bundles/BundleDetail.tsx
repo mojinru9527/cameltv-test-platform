@@ -579,12 +579,12 @@ export default function BundleDetailPage() {
             版本链 {versionChain ? `(${versionChain.length})` : ''}
           </TabsTrigger>
           <TabsTrigger value="diff">
+            <FileText className="size-4 mr-1" />
+            版本差异
+          </TabsTrigger>
           <TabsTrigger value="coverage">
             <Shield className="size-4 mr-1" />
             三类型覆盖
-          </TabsTrigger>
-            <FileText className="size-4 mr-1" />
-            版本差异
           </TabsTrigger>
         </TabsList>
 
