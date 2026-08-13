@@ -19,12 +19,14 @@ class RequirementDocumentBrief(BaseModel):
     title: str = ""
     file_type: str = ""
     source_ref: str = ""
+    source_url: str = ""
     status: str = "uploaded"
     imported_count: int = 0
     imported_func_count: int = 0
     imported_api_count: int = 0
     parsed_type: str = "requirement"
     extraction_status: str = "not_started"
+    extraction_meta: str = "{}"
     doc_id: str = ""
     version: str = ""
     parent_id: Optional[int] = None
@@ -42,6 +44,7 @@ class RequirementDocumentOut(BaseModel):
     title: str = ""
     file_type: str = ""
     source_ref: str = ""
+    source_url: str = ""
     content: str = ""
     status: str = "uploaded"
     imported_count: int = 0
@@ -158,12 +161,26 @@ class FeatureExtractionResult(BaseModel):
     raw_response: str = ""
     extraction_summary: str = ""
     extraction_status: str = "not_started"
+    extraction_meta: str = "{}"
     version_info: list[VersionInfo] = []   # parsed version info from changelog
     client_summary: str = ""               # e.g. "本需求涉及 App端、PC端"
     # Version diff (batch-26)
     diff_summary: dict | None = None       # { new_pages, modified_pages, unchanged_pages, deleted_pages }
     inherited_from_version: str = ""       # e.g. "14.1.0" — which version unchanged FPs came from
     inherited_fp_count: int = 0            # number of function points inherited from parent
+
+
+class ExtractionQualityOut(BaseModel):
+    """batch-167: 提取完整度与降级状态（提取质量门禁的展示口径）。"""
+    document_id: int
+    mode: str = "single"            # single | chunked
+    chunks: int = 1
+    truncated: bool = False
+    fallback: bool = False
+    module_count: int = 0
+    function_point_count: int = 0
+    warnings: list[str] = Field(default_factory=list)
+    extraction_meta: str = "{}"
 
 
 class ExtractionConfirmRequest(BaseModel):
@@ -208,3 +225,5 @@ class RequirementReviewState(BaseModel):
     functional_cases: list[RequirementReviewCase] = Field(default_factory=list)
     api_cases: list[RequirementReviewCase] = Field(default_factory=list)
     summary: dict[str, int] = Field(default_factory=dict)
+
+

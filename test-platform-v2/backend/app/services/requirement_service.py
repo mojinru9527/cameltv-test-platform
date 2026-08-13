@@ -36,11 +36,13 @@ def _doc_to_dict(r: RequirementDocument, creator_name: str = "") -> dict:
         "title": r.title,
         "file_type": r.file_type,
         "source_ref": r.source_ref,
+        "source_url": getattr(r, "source_url", ""),
         "content": r.content,
         "ai_raw": r.ai_raw,
         "extraction_raw": r.extraction_raw,
         "status": r.status,
         "extraction_status": getattr(r, "extraction_status", "not_started"),
+        "extraction_meta": getattr(r, "extraction_meta", "{}"),
         "imported_count": r.imported_count,
         "imported_func_count": r.imported_func_count,
         "imported_api_count": r.imported_api_count,
@@ -974,3 +976,4 @@ def match_api_endpoints(
             results.append(best_match)
 
     return results
+

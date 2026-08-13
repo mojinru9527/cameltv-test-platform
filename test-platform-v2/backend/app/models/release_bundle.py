@@ -69,3 +69,4 @@ class ReleaseBundle(Base, TimestampMixin):
     #   "interaction_type": "global_navigation",
     #   "coverage": 1.0  # fraction of pages containing this interaction
     # }]
+

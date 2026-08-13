@@ -131,6 +131,11 @@ def create_bundle(
         admin_version=body.admin_version,
         release_date=body.release_date,
         parent_bundle_id=body.parent_bundle_id,
+        requirement_url=body.requirement_url,
+        user_env_url=body.user_env_url,
+        api_spec_url=body.api_spec_url,
+        admin_env_url=body.admin_env_url,
+        environment_id=body.environment_id,
         status="draft",
     )
     db.add(bundle)
@@ -519,3 +524,4 @@ def trigger_regression_for_bundle(
         "triggered": len(triggered_jobs),
         "jobs": triggered_jobs,
     })
+
