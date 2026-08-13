@@ -1,0 +1,40 @@
+{
+  "apitestAssets": {
+    "url": "https://cameltv-test-platform1.vercel.app/apitest",
+    "epRowCount": 0,
+    "paginationHint": [
+      "第 1/25 页"
+    ],
+    "firstRowText": ""
+  },
+  "apitestCaseEdit": {
+    "expanded": true,
+    "editBtnCount": 2,
+    "drawerOpen": true,
+    "drawerHasMethod": true,
+    "drawerHasPath": true,
+    "drawerHasAssert": true,
+    "drawerText": "编辑用例\n\n修改用例信息\n\n基本信息\n接口数据\n评审\n标题\n用例类型\n接口用例\n优先级\nP0\n状态\n草稿\n所属域\n接口测试\n所属模块 *\nadmin-payment-controller\nHTTP 方法\nPOST\n接口路径\n默认数据集\n未绑定\n\n执行时按数据集逐行替换请求中的 ${列名} 变量\n\n设计方法\n选择设计方法\n正负向/边界\n选择类型\n请求参数（JSON，字段完整、值贴合真实业务）\n断言规则\n保存后执行时按规则校验响应\n断言规则 (3)\nstatus_code\n≥\nstatus_code\n<\nresponse_time\n<\n数据说明（业务含义/来源）\n前置条件\n测试步骤\n格式化\nJSON\n预期结果\n取消\n保存"
+  },
+  "uitestTabs": {
+    "url": "https://cameltv-test-platform1.vercel.app/uitest",
+    "jobsTabCount": 1,
+    "assetsTabCount": 1,
+    "hasUiCasesSection": true,
+    "hasScriptSection": true
+  },
+  "planAuto": {
+    "url": "https://cameltv-test-platform1.vercel.app/testplan/6",
+    "envSelectVisibleBeforeClick": 1,
+    "hasExecEnvInDialog": true,
+    "hasManualHintInDialog": false,
+    "dlgSnippet": "执行计划\n\n选择执行范围与目标环境\n\n执行范围\n全部用例（API/UI 自动，人工标记跳过）\n执行环境\n请选择环境\n取消\n确认执行"
+  },
+  "planManual": {
+    "url": "https://cameltv-test-platform1.vercel.app/testplan/7",
+    "envSelectVisibleBeforeClick": 0,
+    "hasExecEnvInDialog": false,
+    "hasManualHintInDialog": false,
+    "dlgSnippet": ""
+  }
+}
