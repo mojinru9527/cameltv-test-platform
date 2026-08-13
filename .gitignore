@@ -103,6 +103,3 @@ skills-lock.json
 # fix_chatgpt_loopback.bat re-adds the ChatGPT/Codex loopback exemption; it
 # hardcodes a per-machine UWP package name and must never be committed.
 fix_chatgpt_loopback.bat
-
-# batch-170: 生产登录态（含凭据 Cookie，不入库）
-test-platform-v2/config/runtime/sports-prod-storage-state.json
