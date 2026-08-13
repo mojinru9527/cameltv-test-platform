@@ -31,7 +31,8 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | C167-3 | `release_bundle.api_spec_url` 接入 import-api-spec（OpenAPI 绑定发布包），评估 VersionMission 与 ReleaseBundle 统一入口 | P2 | 2026-08-13 |
 | C168-1 | test 部署后在 www.camel1.tv 用真实登录态跑 UI 执行覆盖，观察 D7 分环境与 LLM 编译生产可用性 → 2026-08-13 复测：D7 UI 环境选择与 LLM 编译生产可用 ✅；真实登录态缺失导致 UI 执行覆盖未达成，保持 Open（证据 c168-1-production-ui-exec.json） | P1 | 2026-08-13 |
 | C168-2 | 计划同步 execute-all 含多条 UI 用例超 Railway 网关 300s 被切断且无执行记录：异步化/单条超时重试/分批执行 → batch-169 已实现 async_mode + 后台执行（本地真实数据 2.26s 返回），生产部署后复验再标 Closed | P1 | 2026-08-13 |
-| C169-1 | 确认 www.camel1.tv 登录 URL/流程（当前 /login 404、REGISTER 不可交互）与生产账号，供 UI 登录态执行覆盖 | P1 | 2026-08-13 |
+| C169-1 | 确认 www.camel1.tv 登录 URL/流程（当前 /login 404、REGISTER 不可交互）与生产账号，供 UI 登录态执行覆盖 → **Closed**：demo/login 直登可用（userId=11025728，无短信验证码），证据 c169-production-login-probe.json | P1 | 2026-08-13 |
+| C170-1 | 生产部署后用 UI_STORAGE_STATE_JSON 跑 1 条登录后 UI 用例（如 /my）通过并留截图，确认登录态注入在生产链路生效，再关闭 C167-1/C168-1 | P1 | 2026-08-13 |
 
 
 ### batch-163 — 复验新增（2026-08-12）

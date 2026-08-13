@@ -1,0 +1,14 @@
+{
+  "batch": 170,
+  "date": "2026-08-13",
+  "login_api": "POST /account-service/ee/client/demo/login (countryCode=86&mobile=18476944071&password=***)",
+  "login_result": {
+    "nickname": "sex 1235",
+    "userId": "11025728"
+  },
+  "storage_state": "config/runtime/sports-prod-storage-state.json (gitignored; auth cookie {\"userId\",\"userSig\",\"token\"})",
+  "env_injection": "生产环境#2 UI_STORAGE_STATE_JSON 已加密写入；本地新代码+生产库解密解析成功（userId=11025728，不含密码）",
+  "playwright": "playwright.config.ts use.storageState 读 PLAYWRIGHT_STORAGE_STATE；执行结果透出 storage_state",
+  "tests": "test_batch170_ui_auth.py 3 个回归用例 + 全量 pytest 1430 pass（lanhu 12 pass）",
+  "conclusion": "UI 登录态注入闭环；生产部署后复跑登录态 UI 用例即可关闭 C167-1/C168-1。"
+}
