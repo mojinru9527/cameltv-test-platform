@@ -140,11 +140,13 @@ export async function importCases(
   indices: number[],
   editedCases?: AIGeneratedCase[],
   createPlan: boolean = false,
+  createUiCases: boolean = false,
 ): Promise<ImportCasesResult> {
   return api.post(`/requirements/${documentId}/import`, {
     indices,
     ...(editedCases && editedCases.length > 0 ? { edited_cases: editedCases } : {}),
     create_plan: createPlan,
+    create_ui_cases: createUiCases,
   })
 }
 
@@ -296,3 +298,4 @@ export async function generateApiFromEndpoints(
     params: serviceId ? { service_id: serviceId } : {},
   })
 }
+

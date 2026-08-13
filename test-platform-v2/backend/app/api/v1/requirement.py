@@ -372,24 +372,7 @@ async def extract_features(
         except Exception as e:
             logger.warning("Failed to parse diff_json for doc_id=%d: %s", document_id, e)
             doc_content = doc.get("content") or ""
-    elif source_url.strip():
-        from app.services.requirement_source_service import (
-            RequirementSourceError,
-            fetch_url_content,
-        )
-        try:
-            fetched = fetch_url_content(source_url.strip())
-        except RequirementSourceError as exc:
-            return R(code=400, msg=str(exc))
-        content = fetched.get("content", "")
-        if not content:
-            return R(code=400, msg="需求地址未提取到有效内容")
-        title = html.escape((fetched.get("title") or "在线需求")[:200])
-        file_type = fetched.get("kind", "generic")
-        source_ref = source_url.strip()
-        parsed_type = "requirement"
     else:
-        return R(code=400, msg="请上传文件、输入需求 URL 或蓝湖链接")
         doc_content = doc.get("content") or ""
 
     try:
@@ -1156,6 +1139,7 @@ def get_ai_task_status(
     if not task:
         raise not_found("AI 任务不存在")
     return R.ok(task)
+
 
 
 

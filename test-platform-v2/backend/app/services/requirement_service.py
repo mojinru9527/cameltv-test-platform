@@ -585,6 +585,7 @@ def update_extraction(
     extraction_result: dict,
     *,
     commit: bool = True,
+    extraction_meta: dict | None = None,
 ) -> dict | None:
     """Save Stage 1 AI extraction raw response and set status to pending_review."""
     row = db.get(RequirementDocument, doc_id)
@@ -679,7 +680,7 @@ def import_cases(
     commit: bool = True,
     creator_id: int = 0,
     create_plan: bool = False,
-    create_ui_cases: bool = True,
+    create_ui_cases: bool = False,
 ) -> dict:
     """Import selected generated cases into the test_case table (transactional).
 
@@ -857,7 +858,11 @@ def import_cases(
         )
         raise
 
-    return {"imported": imported_func + imported_api, "ui_created": ui_created, "skipped": skipped, "total": len(cases), "plan_id": plan_id, "plan_name": plan_name}
+    result_payload = {"imported": imported_func + imported_api, "skipped": skipped, "total": len(cases), "plan_id": plan_id, "plan_name": plan_name}
+    if ui_created:
+        # batch-167: 仅在生成 UI 变体时返回该字段，保持旧契约精确相等
+        result_payload["ui_created"] = ui_created
+    return result_payload
 
 
 def get_api_match_selection(
@@ -1218,6 +1223,8 @@ def generate_api_cases_from_linked_endpoints(
         "endpoints": [{"endpoint_id": m["endpoint_id"], "method": m["method"], "path": m["path"], "confidence": m["confidence"]} for m in matches],
         "message": "",
     }
+
+
 
 
 

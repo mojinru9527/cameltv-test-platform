@@ -29,21 +29,23 @@ def upgrade() -> None:
     bind = op.get_bind()
 
     # requirement_document: fetched source URL + extraction quality metadata
-    if not _has_column(bind, "requirement_document", "source_url"):
-        op.add_column("requirement_document", sa.Column("source_url", sa.Text(), nullable=False, server_default=""))
-    if not _has_column(bind, "requirement_document", "extraction_meta"):
-        op.add_column("requirement_document", sa.Column("extraction_meta", sa.Text(), nullable=False, server_default="{}"))
+    if _has_table(bind, "requirement_document"):
+        if not _has_column(bind, "requirement_document", "source_url"):
+            op.add_column("requirement_document", sa.Column("source_url", sa.Text(), nullable=False, server_default=""))
+        if not _has_column(bind, "requirement_document", "extraction_meta"):
+            op.add_column("requirement_document", sa.Column("extraction_meta", sa.Text(), nullable=False, server_default="{}"))
 
     # release_bundle: version-level test access config
-    for col in ("requirement_url", "user_env_url", "api_spec_url", "admin_env_url"):
-        if not _has_column(bind, "release_bundle", col):
-            op.add_column("release_bundle", sa.Column(col, sa.Text(), nullable=False, server_default=""))
-    if not _has_column(bind, "release_bundle", "environment_id"):
-        op.add_column("release_bundle", sa.Column("environment_id", sa.Integer(), nullable=True))
-        op.create_index("ix_release_bundle_environment_id", "release_bundle", ["environment_id"])
+    if _has_table(bind, "release_bundle"):
+        for col in ("requirement_url", "user_env_url", "api_spec_url", "admin_env_url"):
+            if not _has_column(bind, "release_bundle", col):
+                op.add_column("release_bundle", sa.Column(col, sa.Text(), nullable=False, server_default=""))
+        if not _has_column(bind, "release_bundle", "environment_id"):
+            op.add_column("release_bundle", sa.Column("environment_id", sa.Integer(), nullable=True))
+            op.create_index("ix_release_bundle_environment_id", "release_bundle", ["environment_id"])
 
     # version_mission: API spec URL aligned with the other access fields
-    if not _has_column(bind, "version_mission", "api_spec_url"):
+    if _has_table(bind, "version_mission") and not _has_column(bind, "version_mission", "api_spec_url"):
         op.add_column("version_mission", sa.Column("api_spec_url", sa.Text(), nullable=False, server_default=""))
 
 
@@ -56,9 +58,10 @@ def downgrade() -> None:
     if _has_column(bind, "release_bundle", "environment_id"):
         op.drop_index("ix_release_bundle_environment_id", table_name="release_bundle")
         op.drop_column("release_bundle", "environment_id")
-    for col in ("admin_env_url", "api_spec_url", "user_env_url", "requirement_url"):
-        if _has_column(bind, "release_bundle", col):
-            op.drop_column("release_bundle", col)
+    if _has_table(bind, "release_bundle"):
+        for col in ("admin_env_url", "api_spec_url", "user_env_url", "requirement_url"):
+            if _has_column(bind, "release_bundle", col):
+                op.drop_column("release_bundle", col)
 
     if _has_column(bind, "requirement_document", "extraction_meta"):
         op.drop_column("requirement_document", "extraction_meta")

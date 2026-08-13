@@ -33,7 +33,7 @@ def test_import_creates_ui_variant_and_links_plan(db_session):
     doc = _make_doc(db_session)
     selected = prepare_cases_for_import(db_session, doc_id=doc.id, project_id=1, indices=[0])
     result = import_cases(
-        db_session, doc.id, selected, project_id=1, create_plan=True, creator_id=1,
+        db_session, doc.id, selected, project_id=1, create_plan=True, creator_id=1, create_ui_cases=True,
     )
     assert result["ui_created"] == 1
     assert result["plan_id"] is not None
@@ -53,7 +53,7 @@ def test_import_creates_ui_variant_and_links_plan(db_session):
 def test_ui_variant_idempotent(db_session):
     doc = _make_doc(db_session, title="B167-幂等")
     selected = prepare_cases_for_import(db_session, doc_id=doc.id, project_id=1, indices=[0])
-    first = import_cases(db_session, doc.id, selected, project_id=1, create_plan=False)
+    first = import_cases(db_session, doc.id, selected, project_id=1, create_plan=False, create_ui_cases=True)
     # 手动重复导入同索引会被 skip，但 UI 变体不应新增
     ui_count = db_session.query(TestCase).filter(TestCase.case_type == "ui", TestCase.source_doc_id == doc.id).count()
     assert first["ui_created"] == 1
@@ -71,6 +71,9 @@ def test_low_priority_does_not_create_ui_variant(db_session):
     db_session.add(doc)
     db_session.commit()
     selected = prepare_cases_for_import(db_session, doc_id=doc.id, project_id=1, indices=[0])
-    result = import_cases(db_session, doc.id, selected, project_id=1, create_plan=False)
-    assert result["ui_created"] == 0
+    result = import_cases(db_session, doc.id, selected, project_id=1, create_plan=False, create_ui_cases=True)
+    assert result.get("ui_created", 0) == 0
     assert db_session.query(TestCase).filter(TestCase.case_type == "ui", TestCase.source_doc_id == doc.id).count() == 0
+
+
+

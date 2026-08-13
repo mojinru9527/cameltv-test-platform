@@ -481,7 +481,7 @@ export default function AiResultModal({
       const finalEdits = indices
         .map((index) => editedCases.get(index))
         .filter((item): item is AIGeneratedCase => item != null)
-      const res = await importCases(documentId, indices, finalEdits, createPlan)
+      const res = await importCases(documentId, indices, finalEdits, createPlan, createPlan)
       let msg = `成功导入 ${res.imported} 条功能用例` + (res.skipped > 0 ? `，${res.skipped} 条跳过` : '')
       if (res.plan_id) {
         msg += ` → 已创建计划「${res.plan_name}」`
@@ -1504,5 +1504,6 @@ export default function AiResultModal({
     </Dialog>
   )
 }
+
 
 

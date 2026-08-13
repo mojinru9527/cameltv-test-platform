@@ -70,3 +70,10 @@ class ReleaseBundle(Base, TimestampMixin):
     #   "coverage": 1.0  # fraction of pages containing this interaction
     # }]
 
+    # ── batch-167 v1.4: version-level test access config ──
+    requirement_url: Mapped[str] = mapped_column(Text, default="")   # 需求地址（蓝湖/PingCode/Confluence/HTML）
+    user_env_url: Mapped[str] = mapped_column(Text, default="")      # 体育用户端地址（test/prod）
+    api_spec_url: Mapped[str] = mapped_column(Text, default="")      # 接口 OpenAPI/Swagger 地址
+    admin_env_url: Mapped[str] = mapped_column(Text, default="")     # 运营后台地址
+    environment_id: Mapped[int | None] = mapped_column(default=None, index=True)  # 账号/变量环境
+

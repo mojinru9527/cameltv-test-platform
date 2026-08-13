@@ -200,10 +200,10 @@ class CaseImportRequest(BaseModel):
     indices: list[int]
     edited_cases: list[AIGeneratedCase] = Field(default_factory=list)
     create_plan: bool = False
+    create_ui_cases: bool = False  # batch-167: 导入时生成 UI 变体（前端创建计划时显式开启）
 
 
 class CaseImportResult(BaseModel):
-    ui_created: int = 0
     imported: int
     skipped: int
     total: int
@@ -226,5 +226,6 @@ class RequirementReviewState(BaseModel):
     functional_cases: list[RequirementReviewCase] = Field(default_factory=list)
     api_cases: list[RequirementReviewCase] = Field(default_factory=list)
     summary: dict[str, int] = Field(default_factory=dict)
+
 
 

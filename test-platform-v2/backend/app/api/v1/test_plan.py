@@ -363,7 +363,6 @@ def auto_execute_api_cases(
             plan_id=plan_id,
             executor_id=current.user.id,
             environment_id=body.environment_id if body else None,
-            auto_ui=(body.auto_ui if body else True),
             project_id=current.project_id or 0,
         )
     except ValueError as e:
