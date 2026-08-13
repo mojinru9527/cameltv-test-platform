@@ -27,3 +27,49 @@ export async function executePlayground(
 ): Promise<PlaygroundExecuteResult> {
   return api.post('/playground/execute', body, { ...(signal ? { signal } : {}) })
 }
+
+export interface PlaygroundCaseCompileItem {
+  case_id: number
+  case_title: string
+  spec_code: string
+  has_todo: boolean
+}
+
+export interface PlaygroundBatchCompileResult {
+  total: number
+  items: PlaygroundCaseCompileItem[]
+}
+
+export interface PlaygroundCaseRunResult {
+  case_id: number
+  case_title: string
+  spec_code: string
+  passed: boolean
+  stdout: string
+  stderr: string
+  screenshot_base64?: string | null
+  duration_ms: number
+  ui_job_id?: number | null
+}
+
+export interface PlaygroundBatchRunResult {
+  total: number
+  passed: number
+  failed: number
+  results: PlaygroundCaseRunResult[]
+  report: Record<string, any>
+}
+
+export async function compilePlaygroundBatch(
+  body: { case_ids: number[] },
+  signal?: AbortSignal,
+): Promise<PlaygroundBatchCompileResult> {
+  return api.post('/playground/batch-compile', body, { ...(signal ? { signal } : {}) })
+}
+
+export async function runPlaygroundBatch(
+  body: { case_ids: number[]; write_back_to_ui?: boolean; timeout_ms?: number },
+  signal?: AbortSignal,
+): Promise<PlaygroundBatchRunResult> {
+  return api.post('/playground/batch-run', body, { ...(signal ? { signal } : {}) })
+}

@@ -4,7 +4,9 @@ from __future__ import annotations
 import json
 
 from app.schemas.playground import CompileRequest, ExecuteRequest, SourceType
-from app.services.playground_service import build_gherkin_from_case, compile_spec, execute_spec
+from app.services.playground_service import (
+    build_gherkin_from_case, compile_case_batch, compile_spec, execute_spec,
+)
 
 
 class TestCompileGherkin:
@@ -167,3 +169,38 @@ Given I am on "about:blank"
         assert hasattr(exec_result, "stdout")
         assert hasattr(exec_result, "stderr")
         assert exec_result.duration_ms > 0
+
+
+class _FakeScalars:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def all(self):
+        return self.rows
+
+
+class _FakeDb:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def scalars(self, stmt):
+        return _FakeScalars(self.rows)
+
+
+class TestBatch166CompileCaseBatch:
+    def test_batch_compile_returns_one_item(self):
+        class FakeCase:
+            id = 101
+            title = "登录成功"
+            preconditions = '[]'
+            steps = json.dumps([
+                {"step": 1, "desc": "打开「/login」", "expected": ""},
+                {"step": 2, "desc": "点击「#submit」", "expected": ""},
+            ])
+
+        result = compile_case_batch(_FakeDb([FakeCase()]), 1, [101])
+        assert result.total == 1
+        assert result.items[0].case_id == 101
+        assert "page.goto('/login')" in result.items[0].spec_code
+        assert "page.click('#submit')" in result.items[0].spec_code
+        assert result.items[0].has_todo is False
