@@ -6,6 +6,7 @@ from app.models.api_token import ApiToken
 from app.models.audit import AuditLog
 from app.models.av_check import AvCheckMeasurement, AvCheckMetric, AvCheckTask
 from app.models.dataset import Dataset
+from app.models.dsh_task import DshTask
 from app.models.defect import Defect
 from app.models.environment import Environment, EnvironmentVariable
 from app.models.integration import IntegrationConfig
@@ -101,6 +102,7 @@ __all__ = [
     "TestSchedule",
     "TestScheduleRun",
     "Dataset",
+    "DshTask",
     "Defect",
     "AvCheckTask",
     "AvCheckMetric",

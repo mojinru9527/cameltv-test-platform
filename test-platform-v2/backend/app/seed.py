@@ -47,6 +47,8 @@ _MENUS = [
     ("menu:notify", "通知配置", "", "/notify", "NotificationOutlined", 19),
     ("menu:environment", "目标环境", "", "/environment", "EnvironmentOutlined", 20),
     ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 21),
+    # (batch-172) DSH 任务执行模块
+    ("menu:dsh_tasks", "DSH 任务", "", "/dsh-tasks", "TerminalOutlined", 22),
     # (batch-165) 性能监控已按用户要求隐藏：注释菜单行，避免新库生成该入口。
     #     ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 22),
     ("menu:lanhu_evidence", "蓝湖证据包", "", "/lanhu-evidence", "FileTextOutlined", 23),
@@ -229,6 +231,7 @@ _TESTER_ACTIONS = {
     # 知识 / Wiki / Agent（只读视角；管理/审核留管理员）
     "knowledge:view",
     "agent:view", "agent:list",
+    "menu:dsh_tasks",
     "wiki:view", "wiki:diff",
     # 蓝湖证据包（采集可发起；导入/审核留管理员）
     "lanhu_evidence:view", "lanhu_evidence:run",

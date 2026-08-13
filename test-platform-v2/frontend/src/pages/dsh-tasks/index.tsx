@@ -1,0 +1,294 @@
+import { useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import PageHeader from '@/components/PageHeader'
+import { Button } from '@/ui'
+import { Badge } from '@/ui'
+import { Card, CardContent } from '@/components/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import useAbortableEffect from '@/hooks/useAbortableEffect'
+import { useAuthStore } from '@/stores/auth'
+import Placeholder from '@/pages/Placeholder'
+import { Terminal, Play, Loader2, RefreshCw, XCircle, AlertCircle, Eye } from '@/lib/icons'
+import {
+  createDshTask,
+  fetchDshTasks,
+  fetchDshTask,
+  fetchDshHealth,
+  cancelDshTask,
+  type DshTask,
+  type DshHealth,
+} from '@/api/dshTasks'
+
+const STATUS_BADGE: Record<string, { label: string; color: string }> = {
+  pending: { label: '等待中', color: 'bg-muted text-muted-foreground' },
+  running: { label: '执行中', color: 'bg-status-info-muted text-status-info' },
+  success: { label: '成功', color: 'bg-status-success-muted text-status-success' },
+  failed: { label: '失败', color: 'bg-status-danger-muted text-status-danger' },
+  cancelled: { label: '已取消', color: 'bg-muted text-muted-foreground' },
+}
+
+export default function DshTasksPage() {
+  useDocumentTitle('DSH 任务')
+  const hasPerm = useAuthStore((s) => s.hasPerm)
+  const canView = hasPerm('agent:view') || hasPerm('agent:list')
+  const canRun = hasPerm('agent:run')
+
+  const [tasks, setTasks] = useState<DshTask[]>([])
+  const [loading, setLoading] = useState(true)
+  const [health, setHealth] = useState<DshHealth | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
+  const [taskText, setTaskText] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [selected, setSelected] = useState<DshTask | null>(null)
+  const [detail, setDetail] = useState<DshTask | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+
+  const load = useCallback((signal?: AbortSignal) => {
+    setLoading(true)
+    fetchDshTasks({ page_size: 50 }, signal)
+      .then((res) => { if (!signal?.aborted) setTasks(res.items) })
+      .catch(() => { if (!signal?.aborted) toast.error('加载 DSH 任务失败') })
+      .finally(() => { if (!signal?.aborted) setLoading(false) })
+  }, [])
+
+  const loadHealth = useCallback((signal?: AbortSignal) => {
+    fetchDshHealth(signal)
+      .then((h) => { if (!signal?.aborted) setHealth(h) })
+      .catch(() => undefined)
+  }, [])
+
+  useAbortableEffect((signal) => {
+    load(signal)
+    loadHealth(signal)
+  }, [load, loadHealth])
+
+  useAbortableEffect((signal) => {
+    if (!selected?.id) return
+    setDetailLoading(true)
+    fetchDshTask(selected.id, signal)
+      .then((t) => { if (!signal.aborted) setDetail(t) })
+      .catch(() => { if (!signal.aborted) toast.error('加载详情失败') })
+      .finally(() => { if (!signal.aborted) setDetailLoading(false) })
+  }, [selected?.id])
+
+  const hasRunning = tasks.some((t) => t.status === 'running')
+  useEffect(() => {
+    if (!hasRunning) return
+    const timer = setInterval(() => load(), 3000)
+    return () => clearInterval(timer)
+  }, [hasRunning, load])
+
+  const handleCreate = async () => {
+    if (!taskText.trim()) return
+    setCreating(true)
+    try {
+      await createDshTask(taskText.trim())
+      toast.success('DSH 任务已提交')
+      setCreateOpen(false)
+      setTaskText('')
+      load()
+    } catch (e: any) {
+      toast.error(e?.message || '提交失败')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const handleCancel = async (id: number) => {
+    try {
+      await cancelDshTask(id)
+      toast.success('任务已取消')
+      load()
+    } catch (e: any) {
+      toast.error(e?.message || '取消失败')
+    }
+  }
+
+  if (!canView) {
+    return <Placeholder title="需要 agent:view 权限" />
+  }
+
+  const unavailable = Boolean(health && !health.available)
+
+  return (
+    <div className="space-y-4">
+      <PageHeader
+        title="DSH 任务"
+        description="提交自然语言任务，由 DeepSeek Harness 智能体真实执行并返回结果与日志。"
+      >
+        {unavailable ? (
+          <div className="flex items-center gap-2 text-xs text-status-warning bg-status-warning-muted border border-status-warning-border rounded-md px-3 py-1.5">
+            <AlertCircle className="size-4" />
+            {health?.reason || 'DSH 服务未启用'}
+          </div>
+        ) : (
+          <Badge className="bg-status-success-muted text-status-success">DSH 可用</Badge>
+        )}
+        <Button onClick={() => setCreateOpen(true)} disabled={!canRun || unavailable}>
+          <Play className="size-4 mr-1" />
+          新建任务
+        </Button>
+        <Button variant="secondary" onClick={() => load()} disabled={loading}>
+          <RefreshCw className={`size-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+          刷新
+        </Button>
+      </PageHeader>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">ID</TableHead>
+                <TableHead>任务</TableHead>
+                <TableHead className="w-20">状态</TableHead>
+                <TableHead className="w-28">创建时间</TableHead>
+                <TableHead className="w-24">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><Skeleton className="h-5 w-8" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-12" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                  </TableRow>
+                ))
+              ) : tasks.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground py-10">
+                    暂无 DSH 任务。点击「新建任务」提交第一个任务。
+                  </TableCell>
+                </TableRow>
+              ) : (
+                tasks.map((t) => {
+                  const status = STATUS_BADGE[t.status] ?? { label: t.status, color: '' }
+                  return (
+                    <TableRow key={t.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelected(t)}>
+                      <TableCell className="text-xs text-muted-foreground">#{t.id}</TableCell>
+                      <TableCell className="text-sm truncate max-w-[26rem]" title={t.task}>
+                        {t.task || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={status.color}>
+                          {status.label}
+                          {t.status === 'running' && <Loader2 className="size-3 animate-spin ml-1" />}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {t.created_at?.slice(0, 19)?.replace('T', ' ') || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={() => setSelected(t)}>
+                            <Eye className="size-4" />
+                          </Button>
+                          {canRun && t.status === 'pending' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-status-danger hover:text-status-danger hover:bg-status-danger-muted"
+                              onClick={() => handleCancel(t.id)}
+                            >
+                              <XCircle className="size-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Sheet open={!!selected} onOpenChange={(open) => { if (!open) { setSelected(null); setDetail(null) } }}>
+        <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>DSH 任务详情</SheetTitle>
+          </SheetHeader>
+          {detailLoading ? (
+            <div className="space-y-3 mt-6">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
+          ) : detail ? (
+            <div className="mt-6 space-y-4 text-sm">
+              <div className="flex items-center gap-2">
+                <Badge className={STATUS_BADGE[detail.status]?.color}>
+                  {STATUS_BADGE[detail.status]?.label}
+                </Badge>
+                <span className="text-xs text-muted-foreground">#{detail.id}</span>
+              </div>
+              {detail.error && (
+                <div className="rounded-md bg-status-danger-muted border border-status-danger-border p-3">
+                  <p className="text-status-danger text-xs font-mono whitespace-pre-wrap">{detail.error}</p>
+                </div>
+              )}
+              <div>
+                <h4 className="font-medium mb-1">任务</h4>
+                <pre className="text-xs bg-muted p-3 rounded-md whitespace-pre-wrap">{detail.task}</pre>
+              </div>
+              {detail.output_text && (
+                <div>
+                  <h4 className="font-medium mb-1">执行输出</h4>
+                  <pre className="text-xs bg-muted p-3 rounded-md whitespace-pre-wrap font-mono max-h-96 overflow-y-auto">
+                    {detail.output_text}
+                  </pre>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                <div>创建: {detail.created_at?.slice(0, 19)?.replace('T', ' ') || '-'}</div>
+                <div>开始: {detail.started_at?.slice(0, 19)?.replace('T', ' ') || '-'}</div>
+                <div>完成: {detail.finished_at?.slice(0, 19)?.replace('T', ' ') || '-'}</div>
+                {detail.session_dir && <div className="col-span-2 truncate" title={detail.session_dir}>会话: {detail.session_dir}</div>}
+              </div>
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>新建 DSH 任务</DialogTitle>
+            <DialogDescription>
+              输入自然语言任务描述，DeepSeek Harness 智能体将在受控工作区执行并返回结果。
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <Label htmlFor="dsh-task-text">任务描述</Label>
+            <Textarea
+              id="dsh-task-text"
+              value={taskText}
+              onChange={(e) => setTaskText(e.target.value)}
+              placeholder="例如：检查 test-platform-v2 后端结构并总结；或：跑一遍接口回归并输出结果"
+              rows={5}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setCreateOpen(false)} disabled={creating}>
+              取消
+            </Button>
+            <Button onClick={handleCreate} disabled={creating || !taskText.trim()}>
+              {creating && <Loader2 className="size-4 animate-spin mr-1" />}
+              提交
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
