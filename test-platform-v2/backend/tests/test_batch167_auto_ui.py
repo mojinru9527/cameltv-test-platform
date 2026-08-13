@@ -32,7 +32,7 @@ def test_manual_p0_converts_to_ui(plan_with_case, db_session, monkeypatch):
     plan, case, pc = plan_with_case
     monkeypatch.setattr(
         test_plan_service, "_execute_ui_case_sync",
-        lambda tc, base_url="": {"ok": True, "total": 1, "screenshots": [], "spec_code": "//spec", "compiler": "llm"},
+        lambda tc, base_url="", storage_state=None: {"ok": True, "total": 1, "screenshots": [], "spec_code": "//spec", "compiler": "llm"},
     )
     monkeypatch.setattr(test_plan_service, "_write_plan_ui_job", lambda *a, **k: None)
     result = test_plan_service.execute_all_cases(db_session, plan.id, project_id=1, auto_ui=True)
@@ -76,7 +76,7 @@ def test_ui_case_uses_environment_base_url(plan_with_case, db_session, monkeypat
     db_session.add(env)
     db_session.commit()
     seen = {}
-    def fake_exec(tc, base_url=""):
+    def fake_exec(tc, base_url="", storage_state=None):
         seen["base_url"] = base_url
         return {"ok": True, "total": 1, "screenshots": [], "spec_code": "//spec", "compiler": "rules"}
     monkeypatch.setattr(test_plan_service, "_execute_ui_case_sync", fake_exec)
