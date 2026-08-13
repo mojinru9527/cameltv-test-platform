@@ -12,6 +12,8 @@ export default defineConfig({
   outputDir: './artifacts',
   use: {
     baseURL: process.env.BASE_URL || 'https://cameltv.com',
+    // batch-170: UI 执行登录态注入（由后端 PLAYWRIGHT_STORAGE_STATE 环境变量传入）
+    storageState: process.env.PLAYWRIGHT_STORAGE_STATE || undefined,
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     trace: 'retain-on-failure',
