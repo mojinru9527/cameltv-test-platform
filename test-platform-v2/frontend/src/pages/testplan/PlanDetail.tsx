@@ -195,10 +195,11 @@ export default function PlanDetail() {
   }
 
   const selectedEnvId = selectedEnv === '__none__' ? undefined : Number(selectedEnv)
-  const hasApiCases = (plan?.cases || []).some((c: any) => c.case_type === 'api')
+  // (batch-165) 环境选择入口覆盖 API/UI 自动化用例：纯人工用例计划也显示提示，避免"入口消失 + 批量执行全跳过"的困惑
+  const hasAutomatedCases = (plan?.cases || []).some((c: any) => c.case_type === 'api' || c.case_type === 'ui')
 
   const ensureEnvSelected = () => {
-    if (hasApiCases && selectedEnvId == null) {
+    if (hasAutomatedCases && selectedEnvId == null) {
       toast.error('计划包含 API 用例，请先选择执行环境（含 base_url 与变量）')
       return false
     }
@@ -281,7 +282,7 @@ export default function PlanDetail() {
         </Badge>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
-          {hasApiCases && (
+          {hasAutomatedCases && (
             <Select value={selectedEnv} onValueChange={setSelectedEnv}>
               <SelectTrigger id="plan-exec-env" className="w-[180px]" aria-label="执行环境">
                 <SelectValue placeholder="请选择环境" />
@@ -640,7 +641,7 @@ export default function PlanDetail() {
                 </SelectContent>
               </Select>
             </div>
-            {hasApiCases && (
+            {hasAutomatedCases && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium">执行环境</label>
                 <Select value={selectedEnv} onValueChange={setSelectedEnv}>
@@ -657,6 +658,12 @@ export default function PlanDetail() {
               </div>
             )}
           </div>
+          {!hasAutomatedCases && (
+            <p className="rounded-md border bg-muted/40 p-2 text-xs text-muted-foreground">
+              本计划仅含人工用例：批量执行会按设计将人工用例标记为「跳过」。
+              请在下方用例列表中逐条点击「执行」记录结果；如需批量自动化执行，请把 API 或 UI 自动化用例加入本计划。
+            </p>
+          )}
           <DialogFooter>
             <Button variant="secondary" onClick={() => setExecScopeOpen(false)}>取消</Button>
             <Button

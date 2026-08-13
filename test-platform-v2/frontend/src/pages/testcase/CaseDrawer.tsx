@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import AssertionEditor from '@/pages/apitest/components/AssertionEditor'
 import { z } from 'zod'
 import { toast } from 'sonner'
 
@@ -539,16 +540,18 @@ function CaseForm({ register, control, errors, selType, domains, selModules, wat
             />
           </div>
 
-          {/* 断言 */}
+          {/* (batch-165) 断言改为结构化编辑器（与执行引擎 status_code/jsonpath/regex/response_time/header/type/array_length/json_schema 兼容） */}
           <div>
-            <label htmlFor="case-api-assertions" className="mb-1 block text-sm font-medium">
-              断言（JSON：状态码 + 关键字段/业务规则）
-            </label>
-            <Textarea
-              id="case-api-assertions"
-              rows={4}
-              placeholder='[{"type":"status","value":200},{"type":"field","path":"data.records","assert":"is_array"}]'
-              {...register('api_assertions')}
+            <div className="mb-1 flex items-center justify-between">
+              <label htmlFor="case-api-assertions" className="text-sm font-medium">断言规则</label>
+              <span className="text-xs text-muted-foreground">保存后执行时按规则校验响应</span>
+            </div>
+            <Controller
+              name="api_assertions"
+              control={control}
+              render={({ field }: any) => (
+                <AssertionEditor value={field.value || '[]'} onChange={field.onChange} />
+              )}
             />
           </div>
 

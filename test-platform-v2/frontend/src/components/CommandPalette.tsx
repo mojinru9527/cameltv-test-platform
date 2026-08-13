@@ -17,11 +17,9 @@ import {
   Bug,
   BarChart3,
   Settings,
-  Search,
   GitBranch,
   Share2,
   Sparkles,
-  Cpu,
   Bell,
   Globe,
   Database,
@@ -62,9 +60,11 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
   { label: '系统管理', path: '/system', icon: Settings, group: '页面' },
   { label: 'API 测试', path: '/apitest', icon: FileText, group: '页面' },
   { label: 'UI 自动化', path: '/uitest', icon: FileText, group: '页面' },
-  { label: '音视频专项', path: '/special', icon: FileText, group: '页面' },
+  // (batch-165) 专项测试已隐藏
+  //   { label: '音视频专项', path: '/special', icon: FileText, group: '页面' },
   { label: 'Agent 工作台', path: '/agent-workbench', icon: Sparkles, group: '页面' },
-  { label: '性能监控', path: '/perftest', icon: Cpu, group: '页面' },
+  // (batch-165) 性能监控已隐藏
+  //   { label: '性能监控', path: '/perftest', icon: Cpu, group: '页面' },
   { label: '运维发布记录', path: '/operations-release', icon: FileText, group: '页面', permission: 'release:view' },
 ]
 

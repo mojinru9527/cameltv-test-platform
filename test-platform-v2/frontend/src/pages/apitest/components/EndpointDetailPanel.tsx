@@ -25,6 +25,74 @@ interface Props {
   endpoint: ApiEndpoint
 }
 
+function SchemaSection({ title, raw, emptyText }: { title: string; raw?: string; emptyText: string }) {
+  const [open, setOpen] = useState(true)
+  let parsed: any = null
+  if (raw) {
+    try { parsed = JSON.parse(raw) } catch { parsed = raw }
+  }
+  const hasContent = parsed !== null && parsed !== '' && (typeof parsed !== 'object' || Object.keys(parsed).length > 0)
+
+  const paramRows = (list: any[] | undefined, kind: string) =>
+    Array.isArray(list) && list.length > 0 ? (
+      <div className="space-y-1">
+        {list.map((p, i) => (
+          <div key={i} className="flex items-center gap-2 text-xs">
+            <Badge tone="neutral" className="shrink-0">{p.in || kind}</Badge>
+            <code className="font-medium">{p.name}</code>
+            <span className="text-muted-foreground">{p.required ? '必填' : '可选'}</span>
+            {p.type && <span className="text-muted-foreground">· {p.type}</span>}
+            {p.description && <span className="truncate text-muted-foreground">· {p.description}</span>}
+          </div>
+        ))}
+      </div>
+    ) : null
+
+  const bodySchema = typeof parsed === 'object' && parsed !== null && 'body' in parsed
+    ? parsed.body
+    : typeof parsed === 'object' && parsed !== null && 'properties' in parsed ? parsed : null
+
+  return (
+    <div className="rounded-md border p-3">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between text-sm font-medium"
+        onClick={() => setOpen(v => !v)}
+        aria-expanded={open}
+      >
+        <span>{title}</span>
+        <span className="text-xs text-muted-foreground">{hasContent ? (open ? '收起' : '展开') : '空'}</span>
+      </button>
+      {open && (
+        <div className="mt-2 space-y-2">
+          {!hasContent ? (
+            <p className="text-xs text-muted-foreground">{emptyText}</p>
+          ) : (
+            <>
+              {paramRows(parsed?.query, 'query')}
+              {paramRows(parsed?.path, 'path')}
+              {paramRows(parsed?.header, 'header')}
+              {bodySchema && (
+                <div>
+                  <p className="mb-1 text-xs font-medium text-muted-foreground">请求体（body）</p>
+                  <pre className="max-h-48 overflow-auto rounded bg-muted p-2 text-xs">
+                    {JSON.stringify(bodySchema, null, 2)}
+                  </pre>
+                </div>
+              )}
+              {!bodySchema && typeof parsed === 'object' && !('query' in parsed) && !('path' in parsed) && !('header' in parsed) && (
+                <pre className="max-h-48 overflow-auto rounded bg-muted p-2 text-xs">
+                  {JSON.stringify(parsed, null, 2)}
+                </pre>
+              )}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function EndpointDetailPanel({ endpoint }: Props) {
   const [results, setResults] = useState<KnowledgeSearchResult[]>([])
   const [loading, setLoading] = useState(true)
@@ -89,6 +157,12 @@ export default function EndpointDetailPanel({ endpoint }: Props) {
             {endpoint.description}
           </p>
         )}
+      </div>
+
+      {/* (batch-165) 请求/响应参数结构展示 */}
+      <div className="space-y-2 p-4">
+        <SchemaSection title="请求参数" raw={endpoint.request_schema} emptyText="该接口未导入请求参数定义（可重新导入 OpenAPI，或在「快速调试」中手工填写后执行）。" />
+        <SchemaSection title="响应结构" raw={endpoint.response_schema} emptyText="该接口未导入响应结构定义。" />
       </div>
 
       {/* Knowledge section — scrollable */}

@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Plus, Search, FileUp, RefreshCw, FlaskConical, Zap, ChevronLeft, ChevronRight, ChevronDown, FolderOpen, ArrowRight } from '@/lib/icons'
+import { Search, FileUp, RefreshCw, FlaskConical, Zap, ChevronLeft, ChevronRight } from '@/lib/icons'
 import { Button } from '@/ui'
 import { Input } from '@/ui'
 import { Badge } from '@/ui'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { fetchApiServices, fetchApiEndpoints, generateApiCases, batchGenerateApiCases } from '@/api/apitest'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
@@ -235,103 +233,103 @@ export default function AssetTab({ onDebugEndpoint, onOpenImport, refreshKey }: 
     }
   }
 
-  /** Render a list of modules (collapsed by default) with path groups and endpoints */
-  function renderModules(modules: Record<string, Record<string, ApiEndpoint[]>>, serviceName: string = '') {
-    return Object.entries(modules).map(([moduleName, pathGroups]) => (
-      <Collapsible key={moduleName} defaultOpen={false}>
-        <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 text-sm font-medium hover:bg-muted/50 rounded-lg transition-colors group">
-          <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-          <FolderOpen className="size-4 text-muted-foreground" />
-          <span>{displaySegment(moduleName)}</span>
-          <Badge tone="neutral" className="ml-auto text-xs">
-            {Object.values(pathGroups).flat().length}
-          </Badge>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="border rounded-lg divide-y mt-1">
-          {Object.entries(pathGroups).map(([pathGroup, eps]) => (
-            <div key={pathGroup}>
-              {/* Path group header */}
-              <div className="flex items-center gap-2 px-4 py-1.5 bg-muted/30 text-xs text-muted-foreground font-mono">
-                <ArrowRight className="size-3" />
-                <span>{pathGroup}</span>
-                <span className="ml-auto">{eps.length} 个接口</span>
-              </div>
-              {/* Endpoint rows */}
-              {renderEndpointRows(eps, serviceName)}
-            </div>
-          ))}
-        </CollapsibleContent>
-      </Collapsible>
-    ))
+  /** 取端点所属服务显示名 */
+  function svcNameOf(ep: ApiEndpoint): string {
+    return services.find(s => s.id === ep.service_id)?.display_name
+      || services.find(s => s.id === ep.service_id)?.name || '未分类'
   }
 
-  /** Render the content area based on active tab */
+  /**
+   * Render the content area based on active tab.
+   * (batch-165) 修复：改为扁平 20 条/页列表（含服务名列），避免"一页只显示 3 个服务组 + 大量空白"。
+   */
   function renderTabContent() {
-    const serviceNames = Object.keys(hierarchy)
-
-    if (activeTab === '_all') {
-      // "全部服务" tab: show service groups with nested modules
+    if (endpoints.length === 0) {
       return (
-        <div className="mt-2 space-y-2">
-          {serviceNames.length === 0 ? (
-            <div className="border rounded-lg py-12 text-center text-muted-foreground">
-              <p className="text-sm">暂无接口资产</p>
-              <p className="text-xs mt-1">点击「导入接口」从 Swagger/OpenAPI 导入</p>
-            </div>
-          ) : (
-            serviceNames.map(svcName => {
-              const modules = hierarchy[svcName]
-              const epsCount = Object.values(modules).reduce((sum, pgs) => sum + Object.values(pgs).flat().length, 0)
-              return (
-                <Collapsible key={svcName} defaultOpen={false}>
-                  <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 text-sm font-semibold hover:bg-muted/50 rounded-lg transition-colors group bg-muted/20">
-                    <ChevronDown className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                    <span>{svcName}</span>
-                    <Badge tone="neutral" className="ml-auto text-xs">{epsCount} 个接口</Badge>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="ml-4 mt-1 space-y-1">
-                    {renderModules(modules, svcName)}
-                  </CollapsibleContent>
-                </Collapsible>
-              )
-            })
-          )}
+        <div className="border rounded-lg py-12 text-center text-muted-foreground">
+          <p className="text-sm">暂无接口资产</p>
+          <p className="text-xs mt-1">点击「导入接口」从 Swagger/OpenAPI 导入</p>
         </div>
       )
     }
 
-    // Single service tab: show modules directly, no service group header
-    const svcId = Number(activeTab)
-    const svcName = services.find(s => s.id === svcId)?.display_name
-      || services.find(s => s.id === svcId)?.name || ''
-    const modules = hierarchy[svcName]
+    const isAll = activeTab === '_all'
 
     return (
       <div className="mt-2 space-y-2">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">{svcName}</p>
-          <Button
-            size="sm"
-            variant="secondary"
-            disabled={generatingService}
-            onClick={() => handleGenerateService(svcId, svcName)}
-            aria-label={`为服务 ${svcName} 批量生成用例`}
-          >
-            <Zap className={`size-3.5 ${generatingService ? 'animate-pulse' : ''}`} data-icon="inline-start" />
-            {generatingService ? '生成中...' : '生成全部用例'}
-          </Button>
-        </div>
-        {!modules || Object.keys(modules).length === 0 ? (
-          <div className="border rounded-lg py-12 text-center text-muted-foreground">
-            <p className="text-sm">该服务暂无接口资产</p>
-            <p className="text-xs mt-1">点击「导入接口」从 Swagger/OpenAPI 导入</p>
+        <div className="rounded-lg border overflow-hidden">
+          <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs font-medium text-muted-foreground bg-muted/30">
+            {isAll && <span className="col-span-3">服务</span>}
+            <span className={isAll ? 'col-span-2' : 'col-span-2'}>方法</span>
+            <span className={isAll ? 'col-span-4' : 'col-span-6'}>路径</span>
+            <span className={isAll ? 'col-span-3' : 'col-span-2'}>说明 / 操作</span>
           </div>
-        ) : (
-          renderModules(modules, svcName)
+          <div className="divide-y">
+            {endpoints.map(ep => (
+              <div
+                key={ep.id}
+                className="grid grid-cols-12 gap-2 items-center px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                onClick={() => setSelectedEndpoint(ep)}
+              >
+                {isAll && (
+                  <span className="col-span-3 truncate text-xs text-muted-foreground" title={svcNameOf(ep)}>
+                    {svcNameOf(ep)}
+                  </span>
+                )}
+                <span className="col-span-2">
+                  <Badge className={METHOD_COLORS[ep.method] || ''}>{ep.method}</Badge>
+                </span>
+                <code className="col-span-4 min-w-0 truncate text-sm font-medium" title={`${ep.method} ${ep.path}`}>
+                  {ep.path}
+                </code>
+                <div className="col-span-3 flex items-center gap-1 min-w-0">
+                  <span className="truncate text-xs text-muted-foreground">{ep.summary || ep.module || '-'}</span>
+                  <div className="flex items-center gap-1 shrink-0 ml-auto">
+                    {onDebugEndpoint && (
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        aria-label={`调试接口 ${ep.summary || ep.path}`}
+                        onClick={(e) => { e.stopPropagation(); onDebugEndpoint(ep, svcNameOf(ep)) }}
+                      >
+                        <FlaskConical className="size-4" />
+                      </Button>
+                    )}
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      aria-label={`为接口 ${ep.summary || ep.path} 生成用例`}
+                      onClick={(e) => { e.stopPropagation(); handleGenerate(ep) }}
+                      disabled={generating.has(ep.id)}
+                    >
+                      <Zap className={`size-4 ${generating.has(ep.id) ? 'animate-pulse' : ''}`} />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {!isAll && endpoints.length > 0 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">{svcNameOf(endpoints[0])}</p>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={generatingService}
+              onClick={() => handleGenerateService(Number(activeTab), svcNameOf(endpoints[0]))}
+              aria-label={`为服务 ${svcNameOf(endpoints[0])} 批量生成用例`}
+            >
+              <Zap className={`size-3.5 ${generatingService ? 'animate-pulse' : ''}`} data-icon="inline-start" />
+              {generatingService ? '生成中...' : '生成全部用例'}
+            </Button>
+          </div>
         )}
       </div>
     )
   }
+
 
   return (
     <div className="space-y-4">

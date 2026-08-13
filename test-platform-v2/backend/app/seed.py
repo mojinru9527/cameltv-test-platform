@@ -31,7 +31,8 @@ _MENUS = [
     ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 9),
     ("menu:uitest", "UI 自动化", "", "/uitest", "RobotOutlined", 10),
     ("menu:playground", "Playground", "", "/playground", "PlayCircleOutlined", 10),
-    ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 11),
+    # (batch-165) 专项测试已按用户要求隐藏：注释菜单行，避免新库生成该入口。
+    #     ("menu:special", "专项测试", "", "/special", "PlayCircleOutlined", 11),
     ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 12),
     ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 13),
     ("menu:system", "系统管理", "", "/system", "SettingOutlined", 14),
@@ -44,7 +45,8 @@ _MENUS = [
     ("menu:notify", "通知配置", "", "/notify", "NotificationOutlined", 19),
     ("menu:environment", "目标环境", "", "/environment", "EnvironmentOutlined", 20),
     ("menu:agent-workbench", "Agent 工作台", "", "/agent-workbench", "SparklesOutlined", 21),
-    ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 22),
+    # (batch-165) 性能监控已按用户要求隐藏：注释菜单行，避免新库生成该入口。
+    #     ("menu:perftest", "性能监控", "", "/perftest", "CpuOutlined", 22),
     ("menu:lanhu_evidence", "蓝湖证据包", "", "/lanhu-evidence", "FileTextOutlined", 23),
 ]
 
@@ -261,9 +263,9 @@ _VIEWER_ACTIONS = {
 
 _TESTER_MENUS = {
     "menu:workbench", "menu:trace", "menu:requirement", "menu:versionmission", "menu:mindmap", "menu:testcase", "menu:testplan",
-    "menu:apitest", "menu:uitest", "menu:playground", "menu:special", "menu:schedule", "menu:report",
+    "menu:apitest", "menu:uitest", "menu:playground", "menu:schedule", "menu:report",  # (batch-165) menu:special 已隐藏
     "menu:defect", "menu:dataset", "menu:integration", "menu:knowledge", "menu:agent-workbench",
-    "menu:perftest", "menu:notify", "menu:environment",
+    "menu:notify", "menu:environment",  # (batch-165) menu:perftest 已隐藏
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
     "menu:lanhu_evidence",
     "menu:myproject",
