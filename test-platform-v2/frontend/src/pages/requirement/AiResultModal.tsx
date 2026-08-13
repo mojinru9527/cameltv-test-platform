@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
   confirmApiMatches,
+  generateApiFromEndpoints,
   confirmExtraction,
   fetchApiMatchSelection,
   generateTestCases,
@@ -360,6 +361,7 @@ export default function AiResultModal({
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null)
   const [confirmedEndpointIds, setConfirmedEndpointIds] = useState<Set<number>>(new Set())
   const [savingMatches, setSavingMatches] = useState(false)
+  const [generatingApiFromEndpoints, setGeneratingApiFromEndpoints] = useState(false)
 
   // Initialize extraction state when extractionResult changes
   useEffect(() => {
@@ -480,7 +482,7 @@ export default function AiResultModal({
       const finalEdits = indices
         .map((index) => editedCases.get(index))
         .filter((item): item is AIGeneratedCase => item != null)
-      const res = await importCases(documentId, indices, finalEdits, createPlan)
+      const res = await importCases(documentId, indices, finalEdits, createPlan, createPlan)
       let msg = `成功导入 ${res.imported} 条功能用例` + (res.skipped > 0 ? `，${res.skipped} 条跳过` : '')
       if (res.plan_id) {
         msg += ` → 已创建计划「${res.plan_name}」`
@@ -570,6 +572,20 @@ export default function AiResultModal({
       else next.add(endpointId)
       return next
     })
+  }
+
+
+  const handleGenerateApiFromEndpoints = async () => {
+    if (documentId == null) return
+    setGeneratingApiFromEndpoints(true)
+    try {
+      const result = await generateApiFromEndpoints(documentId, selectedServiceId ?? undefined)
+      toast.success(`已按已导入接口生成 ${result.generated} 条接口用例（匹配 ${result.matched} 个端点）`)
+    } catch {
+      toast.error('生成真实接口用例失败，请先在接口测试导入 OpenAPI/Swagger')
+    } finally {
+      setGeneratingApiFromEndpoints(false)
+    }
   }
 
   const handleConfirmMatches = async () => {
@@ -1103,6 +1119,16 @@ export default function AiResultModal({
                             {savingMatches && <Loader2 className="size-3.5 animate-spin" />}
                             确认并保存匹配
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="bg-card"
+                            onClick={handleGenerateApiFromEndpoints}
+                            disabled={generatingApiFromEndpoints}
+                          >
+                            {generatingApiFromEndpoints && <Loader2 className="size-3.5 animate-spin" />}
+                            按已导入接口生成用例
+                          </Button>
                         </div>
                         <div>
                           {apiMatches.slice(0, 8).map((m) => {
@@ -1478,3 +1504,6 @@ export default function AiResultModal({
     </Dialog>
   )
 }
+
+
+

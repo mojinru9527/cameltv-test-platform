@@ -3,6 +3,7 @@ import type {
   AIGenerateResult,
   ApiMatchItem,
   ApiMatchSelection,
+  ExtractionQuality,
   FeatureExtractionResult,
   ExtractionConfirmRequest,
   RequirementDocument,
@@ -139,11 +140,13 @@ export async function importCases(
   indices: number[],
   editedCases?: AIGeneratedCase[],
   createPlan: boolean = false,
+  createUiCases: boolean = false,
 ): Promise<ImportCasesResult> {
   return api.post(`/requirements/${documentId}/import`, {
     indices,
     ...(editedCases && editedCases.length > 0 ? { edited_cases: editedCases } : {}),
     create_plan: createPlan,
+    create_ui_cases: createUiCases,
   })
 }
 
@@ -275,3 +278,24 @@ export async function productionDiff(
     production_pages: productionPages,
   })
 }
+
+
+
+// ── Batch 167: 提取质量 + 按已导入接口生成接口用例 ──
+
+export async function fetchExtractionQuality(
+  documentId: number,
+  signal?: AbortSignal,
+): Promise<ExtractionQuality> {
+  return api.get(`/requirements/${documentId}/extraction-quality`, { signal })
+}
+
+export async function generateApiFromEndpoints(
+  documentId: number,
+  serviceId?: number,
+): Promise<{ matched: number; generated: number; upserted: number; endpoints: unknown[]; message: string }> {
+  return api.post(`/requirements/${documentId}/generate-api-from-endpoints`, null, {
+    params: serviceId ? { service_id: serviceId } : {},
+  })
+}
+

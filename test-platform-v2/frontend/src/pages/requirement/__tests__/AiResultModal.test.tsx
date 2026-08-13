@@ -100,6 +100,7 @@ describe('AiResultModal edited import flow', () => {
       [0],
       [expect.objectContaining({ index: 0, title: 'edited title' })],
       false,
+      false,
     ))
   })
 
@@ -172,3 +173,4 @@ describe('AiResultModal coverage report tab (C117-1)', () => {
     expect(screen.queryByRole('tab', { name: /覆盖矩阵/ })).toBeNull()
   })
 })
+

@@ -8,6 +8,7 @@ import type {
   VersionDiffConfirmResult,
   VersionDiffResult,
   KnowledgePage,
+  VersionCoverageOut,
 } from '@/types'
 
 // ── ReleaseBundle CRUD ──
@@ -32,6 +33,11 @@ export async function createReleaseBundle(body: {
   admin_version?: string
   release_date?: string | null
   parent_bundle_id?: number | null
+  requirement_url?: string
+  user_env_url?: string
+  api_spec_url?: string
+  admin_env_url?: string
+  environment_id?: number | null
 }): Promise<ReleaseBundleOut> {
   return api.post('/release-bundles', body)
 }
@@ -46,6 +52,11 @@ export async function updateReleaseBundle(
     status?: string
     release_date?: string | null
     parent_bundle_id?: number | null
+  requirement_url?: string
+  user_env_url?: string
+  api_spec_url?: string
+  admin_env_url?: string
+  environment_id?: number | null
     diff_summary?: string
   },
 ): Promise<ReleaseBundleOut> {
@@ -121,3 +132,19 @@ export async function triggerRegression(
     confirm_prod: operation.confirm_prod ?? false,
   })
 }
+
+// ── Version coverage matrix (batch-167 Phase 0) ──
+
+export async function fetchBundleCoverage(
+  bundleId: number,
+  signal?: AbortSignal,
+): Promise<VersionCoverageOut> {
+  return api.get(`/release-bundles/${bundleId}/coverage`, { signal })
+}
+
+export async function importBundleRequirement(
+  bundleId: number,
+): Promise<{ document_id: number; reused: boolean; title: string }> {
+  return api.post(`/release-bundles/${bundleId}/import-requirement`)
+}
+

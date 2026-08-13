@@ -17,6 +17,7 @@ class RequirementDocument(Base, TimestampMixin):
     title: Mapped[str] = mapped_column(default="")
     file_type: Mapped[str] = mapped_column(default="")       # md / docx / xlsx / lanhu
     source_ref: Mapped[str] = mapped_column(default="")       # original filename or URL
+    source_url: Mapped[str] = mapped_column(default="")          # batch-167: fetched requirement URL (html/pingcode/confluence)
     content: Mapped[str] = mapped_column(default="")          # parsed plain text
     ai_raw: Mapped[str] = mapped_column(default="")           # raw AI JSON response
     status: Mapped[str] = mapped_column(default="uploaded")   # uploaded / parsed / generated / imported
@@ -28,6 +29,7 @@ class RequirementDocument(Base, TimestampMixin):
     extraction_raw: Mapped[str] = mapped_column(default="")            # Stage 1 AI extraction JSON (modules + function_points)
     extraction_status: Mapped[str] = mapped_column(default="not_started")  # not_started|pending_review|confirmed
     extraction_state: Mapped[str] = mapped_column(Text, default="{}")
+    extraction_meta: Mapped[str] = mapped_column(Text, default="{}")  # batch-167: {mode, chunks, truncated, fallback, warnings}
     extraction_progress: Mapped[float] = mapped_column(default=0.0)
     # ── Platform & doc type (batch-27 M1) ──
     platform: Mapped[str] = mapped_column(
@@ -48,3 +50,4 @@ class RequirementDocument(Base, TimestampMixin):
     release_bundle_id: Mapped[int | None] = mapped_column(default=None, index=True)  # FK → ReleaseBundle
     linked_swagger_id: Mapped[int | None] = mapped_column(default=None)  # linked Swagger service (FK → ApiService)
     linked_api_endpoint_ids: Mapped[str] = mapped_column(Text, default="[]")  # confirmed ApiEndpoint IDs (JSON array)
+

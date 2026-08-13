@@ -144,11 +144,6 @@
       "count": 2
     }
   },
-  "src/pages/release-bundles/BundleDetail.tsx": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 10
-    }
-  },
   "src/pages/release-bundles/components/AdminModuleCard.tsx": {
     "@typescript-eslint/no-unused-vars": {
       "count": 1

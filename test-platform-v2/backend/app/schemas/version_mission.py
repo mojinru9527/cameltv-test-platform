@@ -13,6 +13,7 @@ class VersionMissionCreate(BaseModel):
     requirement_url: str = ""
     test_env_url: str = ""
     admin_env_url: str = ""
+    api_spec_url: str = ""  # batch-167: 接口 OpenAPI/Swagger 地址
     environment_id: int | None = None
     requirement_doc_id: int | None = None
     test_plan_id: int | None = None
@@ -26,6 +27,7 @@ class VersionMissionUpdate(BaseModel):
     requirement_url: str | None = None
     test_env_url: str | None = None
     admin_env_url: str | None = None
+    api_spec_url: str | None = None
     environment_id: int | None = None
     requirement_doc_id: int | None = None
     test_plan_id: int | None = None
@@ -84,6 +86,7 @@ class VersionMissionOut(BaseModel):
     requirement_url: str
     test_env_url: str
     admin_env_url: str
+    api_spec_url: str
     environment_id: int | None
     requirement_doc_id: int | None
     test_plan_id: int | None
