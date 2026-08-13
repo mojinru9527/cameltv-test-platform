@@ -203,6 +203,7 @@ class CaseImportRequest(BaseModel):
 
 
 class CaseImportResult(BaseModel):
+    ui_created: int = 0
     imported: int
     skipped: int
     total: int

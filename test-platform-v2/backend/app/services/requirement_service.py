@@ -679,6 +679,7 @@ def import_cases(
     commit: bool = True,
     creator_id: int = 0,
     create_plan: bool = False,
+    create_ui_cases: bool = True,
 ) -> dict:
     """Import selected generated cases into the test_case table (transactional).
 
@@ -692,6 +693,8 @@ def import_cases(
     skipped = 0
     requested_func_indices: set[int] = set()
     requested_api_indices: set[int] = set()
+    ui_case_ids: list[int] = []
+    ui_created = 0
 
     try:
         row = db.scalar(
@@ -761,6 +764,60 @@ def import_cases(
                 imported_func += 1
                 requested_func_indices.add(case_index)
 
+        # batch-167 Phase 3a: 为 P0/P1 有步骤功能用例生成 UI 自动化变体（幂等）
+        ui_case_ids: list[int] = []
+        ui_created = 0
+        if create_ui_cases:
+            for pc in db.scalars(
+                select(TestCase).where(
+                    TestCase.project_id == project_id,
+                    TestCase.source_doc_id == doc_id,
+                    TestCase.source_case_index.in_(requested_func_indices),
+                )
+            ).all():
+                if pc.priority not in ("P0", "P1"):
+                    continue
+                try:
+                    steps = json.loads(pc.steps or "[]")
+                except (json.JSONDecodeError, TypeError):
+                    steps = []
+                if not isinstance(steps, list) or not steps:
+                    continue
+                ui_title = f"[UI] {pc.title}"[:220]
+                existing_ui = db.scalar(
+                    select(TestCase).where(
+                        TestCase.project_id == project_id,
+                        TestCase.case_type == "ui",
+                        TestCase.title == ui_title,
+                        TestCase.module == (pc.module or ""),
+                    )
+                )
+                if existing_ui:
+                    ui_case_ids.append(existing_ui.id)
+                    continue
+                ui_case = TestCase(
+                    project_id=project_id,
+                    title=ui_title,
+                    domain=pc.domain or "用户端",
+                    module=pc.module or "",
+                    case_type="ui",
+                    priority=pc.priority,
+                    tags=json.dumps(["UI自动化", "auto:functional"], ensure_ascii=False),
+                    case_design_method=pc.case_design_method or "场景法",
+                    positive_negative=pc.positive_negative or "",
+                    test_data_note=pc.test_data_note or "",
+                    preconditions=pc.preconditions or "",
+                    steps=pc.steps or "[]",
+                    expected_result=pc.expected_result or "",
+                    requirement_module_id=pc.requirement_module_id,
+                    source="ai_generated",
+                    source_doc_id=doc_id,
+                )
+                db.add(ui_case)
+                db.flush()
+                ui_case_ids.append(ui_case.id)
+                ui_created += 1
+
         all_func = previous_func | requested_func_indices
         all_api = previous_api | requested_api_indices
         row.status = "imported"
@@ -774,7 +831,7 @@ def import_cases(
         # Auto-create test plan if requested
         plan_id = None
         plan_name = ""
-        if create_plan and (imported_func > 0 or imported_api > 0):
+        if create_plan and (imported_func > 0 or imported_api > 0 or ui_created > 0):
             from app.services.test_plan_service import add_cases as _add_cases, create_plan as _create_plan
             plan_data = {"name": f"{row.title} - 测试计划", "status": "draft"}
             plan = _create_plan(db, plan_data, creator_id=creator_id, project_id=project_id)
@@ -789,6 +846,7 @@ def import_cases(
                     )
                 ).all()
             ]
+            imported_case_ids += list(dict.fromkeys(ui_case_ids))
             if imported_case_ids:
                 _add_cases(db, plan_id, imported_case_ids, project_id=project_id)
     except Exception as exc:
@@ -799,7 +857,7 @@ def import_cases(
         )
         raise
 
-    return {"imported": imported_func + imported_api, "skipped": skipped, "total": len(cases), "plan_id": plan_id, "plan_name": plan_name}
+    return {"imported": imported_func + imported_api, "ui_created": ui_created, "skipped": skipped, "total": len(cases), "plan_id": plan_id, "plan_name": plan_name}
 
 
 def get_api_match_selection(
@@ -1160,5 +1218,7 @@ def generate_api_cases_from_linked_endpoints(
         "endpoints": [{"endpoint_id": m["endpoint_id"], "method": m["method"], "path": m["path"], "confidence": m["confidence"]} for m in matches],
         "message": "",
     }
+
+
 
 
