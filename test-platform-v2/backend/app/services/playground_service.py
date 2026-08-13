@@ -13,7 +13,11 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-from app.schemas.playground import CompileRequest, CompileResponse, ExecuteRequest, ExecuteResponse, SourceType
+from app.schemas.playground import (
+    CompileRequest, CompileResponse, ExecuteRequest, ExecuteResponse, SourceType,
+    PlaygroundBatchCompileResponse, PlaygroundCaseCompileItem,
+    PlaygroundBatchRunResponse, PlaygroundCaseRunResult,
+)
 
 # 中文 Gherkin 引号集合（「」 “” " 和 '）
 _OPEN_QUOTES = r'[「“"\']'
@@ -278,3 +282,159 @@ export default defineConfig({{
             screenshot_base64=screenshot_base64,
             duration_ms=round(duration_ms, 2),
         )
+
+
+# ── Batch 166：功能用例批量编译 / 批量执行 ──
+
+def _get_project_cases(db, project_id: int, case_ids: list[int]):
+    from sqlalchemy import select
+    from app.models.test_case import TestCase
+
+    rows = db.scalars(
+        select(TestCase).where(
+            TestCase.project_id == project_id,
+            TestCase.is_deleted.is_(False),
+            TestCase.id.in_(case_ids),
+        )
+    ).all()
+    by_id = {r.id: r for r in rows}
+    return [by_id[cid] for cid in case_ids if cid in by_id]
+
+
+def _spec_has_todo(spec_code: str) -> bool:
+    return "未识别步骤" in spec_code or "TODO" in spec_code
+
+
+def compile_case_batch(db, project_id: int, case_ids: list[int]) -> PlaygroundBatchCompileResponse:
+    """批量编译用例，不执行，供前端预览生成 spec。"""
+    cases = _get_project_cases(db, project_id, case_ids)
+    items: list[PlaygroundCaseCompileItem] = []
+    for case in cases:
+        source = build_gherkin_from_case(case)
+        compiled = compile_spec(CompileRequest(source=source, source_type=SourceType.gherkin))
+        items.append(PlaygroundCaseCompileItem(
+            case_id=case.id,
+            case_title=case.title or "",
+            spec_code=compiled.spec_code,
+            has_todo=_spec_has_todo(compiled.spec_code),
+        ))
+    return PlaygroundBatchCompileResponse(total=len(items), items=items)
+
+
+def run_case_batch(
+    db,
+    *,
+    project_id: int,
+    creator_id: int,
+    case_ids: list[int],
+    write_back_to_ui: bool,
+    timeout_ms: int,
+) -> PlaygroundBatchRunResponse:
+    """批量编译 + 执行用例，回填用例结果，并可选回写 UI 任务。
+
+    执行复用 execute_spec（临时目录 + headless Chromium），逐条串行执行。
+    回写 UI 任务时，把生成 spec 落到 ui_runner 的 generated 目录，并创建
+    关联用例的 UiTestJob；后续由 UI 自动化任务运行时生成 trace/report 产物。
+    """
+    from datetime import datetime, timezone
+    from app.models.test_case import TestCase
+
+    cases = _get_project_cases(db, project_id, case_ids)
+    results: list[PlaygroundCaseRunResult] = []
+    passed = 0
+    failed = 0
+
+    for case in cases:
+        source = build_gherkin_from_case(case)
+        compiled = compile_spec(CompileRequest(source=source, source_type=SourceType.gherkin))
+        executed = execute_spec(ExecuteRequest(spec_code=compiled.spec_code, timeout_ms=timeout_ms))
+        ok = executed.passed
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+
+        ui_job_id = None
+        if write_back_to_ui:
+            ui_job_id = _write_spec_as_ui_job(db, case, compiled.spec_code, creator_id, project_id)
+
+        # 回填用例执行结果（不存大图，只存可追溯摘要）
+        case.last_run_status = "pass" if ok else "fail"
+        case.last_response_json = json.dumps({
+            "source": "playground_batch",
+            "passed": ok,
+            "duration_ms": round(executed.duration_ms, 2),
+            "stdout": (executed.stdout or "")[-2000:],
+            "stderr": (executed.stderr or "")[-2000:],
+            "ui_job_id": ui_job_id,
+            "executed_at": datetime.now(timezone.utc).isoformat(),
+        }, ensure_ascii=False, default=str)
+
+        results.append(PlaygroundCaseRunResult(
+            case_id=case.id,
+            case_title=case.title or "",
+            spec_code=compiled.spec_code,
+            passed=ok,
+            stdout=executed.stdout or "",
+            stderr=executed.stderr or "",
+            screenshot_base64=executed.screenshot_base64,
+            duration_ms=executed.duration_ms,
+            ui_job_id=ui_job_id,
+        ))
+
+    db.commit()
+
+    report = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total": len(results),
+        "passed": passed,
+        "failed": failed,
+        "write_back_to_ui": write_back_to_ui,
+        "items": [
+            {
+                "case_id": r.case_id,
+                "case_title": r.case_title,
+                "passed": r.passed,
+                "duration_ms": r.duration_ms,
+                "ui_job_id": r.ui_job_id,
+            }
+            for r in results
+        ],
+    }
+    return PlaygroundBatchRunResponse(
+        total=len(results),
+        passed=passed,
+        failed=failed,
+        results=results,
+        report=report,
+    )
+
+
+def _write_spec_as_ui_job(db, case, spec_code: str, creator_id: int, project_id: int) -> int | None:
+    """把生成 spec 写入 ui_runner 的 generated 目录，并创建关联用例的 UI 任务。"""
+    try:
+        from app.services.playwright_executor import PLAYWRIGHT_DIR
+        from app.schemas.ui_test import UiTestJobCreate
+        from app.services import ui_test_service
+
+        generated_dir = PLAYWRIGHT_DIR / "generated"
+        generated_dir.mkdir(parents=True, exist_ok=True)
+        rel = f"generated/playground-case-{case.id}.spec.ts"
+        (generated_dir / f"playground-case-{case.id}.spec.ts").write_text(spec_code, encoding="utf-8")
+
+        job = ui_test_service.create_job(
+            db,
+            UiTestJobCreate(
+                name=f"[Playground] {case.title}"[:200],
+                description="由 Playground 功能用例批量编译生成",
+                test_spec=rel,
+                browser="chromium",
+                case_id=case.id,
+            ),
+            creator_id,
+            project_id,
+        )
+        return int(job["id"])
+    except Exception:
+        logger.exception("Playground 回写 UI 任务失败: case=%s", getattr(case, "id", None))
+        return None
