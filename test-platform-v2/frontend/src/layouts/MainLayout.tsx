@@ -30,6 +30,7 @@ import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge, Button } from '@/ui'
 import CommandPalette from '@/components/CommandPalette'
+import IcpFooter from '@/components/IcpFooter'
 import LoginGateDialog from '@/components/auth/LoginGateDialog'
 import GuestPlatformHome from './GuestPlatformHome'
 import GuestModulePreview from './GuestModulePreview'
@@ -607,6 +608,7 @@ export default function MainLayout() {
             />
           )}
         </main>
+        <IcpFooter />
       </SidebarInset>
       {isAuthenticated && <CommandPalette />}
       <LoginGateDialog
