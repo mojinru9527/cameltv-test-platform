@@ -56,7 +56,7 @@ export const ALL_COMMAND_ROUTES: CommandRoute[] = [
   { label: '集成配置', path: '/integration', icon: Link2, group: '页面' },
   { label: '目标环境', path: '/environment', icon: Globe, group: '页面' },
   { label: '通知配置', path: '/notify', icon: Bell, group: '页面' },
-  { label: '项目管理', path: '/project', icon: Settings, group: '页面' },
+  { label: '我的项目', path: '/my-projects', icon: Settings, group: '页面' },
   { label: '系统管理', path: '/system', icon: Settings, group: '页面' },
   { label: 'API 测试', path: '/apitest', icon: FileText, group: '页面' },
   { label: 'UI 自动化', path: '/uitest', icon: FileText, group: '页面' },

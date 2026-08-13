@@ -8,7 +8,7 @@ from app.models.rbac import Permission
 from app.schemas.system import MenuOut
 
 # (batch-165) 按用户要求隐藏的菜单 code（存量库同样生效；seed.py 已注释新库生成）
-HIDDEN_MENU_CODES = {"menu:special", "menu:perftest"}
+HIDDEN_MENU_CODES = {"menu:special", "menu:perftest", "menu:project", "menu:organization"}
 
 
 def menu_tree(db: Session, codes: list[str]) -> list[MenuOut]:

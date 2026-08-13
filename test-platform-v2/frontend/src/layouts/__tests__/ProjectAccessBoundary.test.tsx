@@ -27,7 +27,7 @@ describe('项目访问边界', () => {
     expect(screen.getByRole('heading', { name: '先创建一个项目' })).toBeTruthy()
   })
 
-  it.each(['/my-projects', '/my-projects/1', '/organizations'])('%s 无项目也可进入起步页', (pathname) => {
+  it.each(['/my-projects', '/my-projects/1'])('%s 无项目也可进入起步页', (pathname) => {
     render(
       <ProjectAccessBoundary
         projectId={null}
