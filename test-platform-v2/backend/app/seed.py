@@ -36,9 +36,11 @@ _MENUS = [
     ("menu:schedule", "定时任务", "", "/schedule", "ClockCircleOutlined", 12),
     ("menu:report", "报告中心", "", "/report", "BarChartOutlined", 13),
     ("menu:system", "系统管理", "", "/system", "SettingOutlined", 14),
-    ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 15),
+    # (batch-165 C165-2) 项目管理已收敛到 我的项目：注释菜单行，避免新库生成入口。
+    #     ("menu:project", "项目管理", "", "/project", "AppstoreOutlined", 15),
     ("menu:myproject", "我的项目", "", "/my-projects", "AppstoreOutlined", 15),
-    ("menu:organization", "组织管理", "", "/organizations", "AppstoreOutlined", 16),
+    # (batch-165 C165-2) 组织管理已折叠进 我的项目：注释菜单行，避免新库生成入口。
+    #     ("menu:organization", "组织管理", "", "/organizations", "AppstoreOutlined", 16),
     ("menu:defect", "缺陷管理", "", "/defect", "BugOutlined", 16),
     ("menu:dataset", "测试数据集", "", "/dataset", "DatabaseOutlined", 17),
     ("menu:integration", "集成配置", "", "/integration", "LinkOutlined", 18),
@@ -241,7 +243,6 @@ _VIEWER_MENUS = {
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph",
     "menu:knowledge:artifacts",
     "menu:myproject",
-    "menu:organization",
 }
 
 _VIEWER_ACTIONS = {
@@ -269,7 +270,6 @@ _TESTER_MENUS = {
     "menu:knowledge:project", "menu:knowledge:platform", "menu:knowledge:graph", "menu:knowledge:artifacts",
     "menu:lanhu_evidence",
     "menu:myproject",
-    "menu:organization",
 }
 
 

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { ProjectScopeBoundary } from './ProjectScopeBoundary'
 import ProjectRequiredState from './ProjectRequiredState'
 
-const PROJECT_SETUP_PATHS = ['/my-projects', '/organizations'] as const
+const PROJECT_SETUP_PATHS = ['/my-projects'] as const
 
 export function isProjectSetupPath(pathname: string): boolean {
   return PROJECT_SETUP_PATHS.some(
