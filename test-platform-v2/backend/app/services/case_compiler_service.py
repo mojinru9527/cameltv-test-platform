@@ -59,13 +59,20 @@ SYSTEM_PROMPT = """你是 Playwright 测试自动化专家。根据测试用例�
 | 点击 / 单击 / 按下 | `await page.getByRole('button', { name: '...' }).click()` 或 `page.getByText('...').click()` |
 | 输入 / 填写 / 键入 | `await page.getByLabel('...').fill('...')` 或 `page.getByPlaceholder('...').fill('...')` |
 | 打开 / 访问 / 进入 | `await page.goto(baseUrl + '/path')` 或 `await page.goto(baseUrl)` |
-| 等待 / 加载 | `await page.waitForLoadState('networkidle')` 或 `page.waitForSelector(...)` |
+| 等待 / 加载 | `await page.waitForSelector('...', { timeout: 15000 })` 或 `await expect(page.getByText('...')).toBeVisible({ timeout: 15000 })` |
 | 选择 / 勾选 | `await page.getByLabel('...').check()` 或 `page.getByRole('checkbox', { name: '...' }).check()` |
 | 下拉 / 选择下拉 | `await page.getByLabel('...').selectOption('...')` |
 | 验证 / 检查 / 确认 | `await expect(page.getByText('...')).toBeVisible()` |
 | 跳转 / 重定向 | `await expect(page).toHaveURL(/pattern/)` |
 | 提示 / 弹窗 / toast | `await expect(page.getByText('...')).toBeVisible()` |
 | 截图 | 使用 `screenshot: 'only-on-failure'`（test 配置中） |
+
+## 稳定性规则（真实站点必守）
+
+- **禁止** 使用 networkidle 等待（直播/动态页面会挂起）；加载用 `domcontentloaded`。
+- `test.beforeEach` 内设置 `page.setDefaultTimeout(15000)` 与 `page.setDefaultNavigationTimeout(30000)`。
+- 每个 `waitForSelector` / `toBeVisible` / `goto` 显式带 timeout，超时即断言失败，不无限等待。
+- 点击前先等待目标元素可见；用文本定位时选择最具体、唯一性最高的文本。
 
 ## 代码风格
 

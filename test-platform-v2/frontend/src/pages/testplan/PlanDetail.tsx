@@ -250,13 +250,37 @@ export default function PlanDetail() {
     if (!ensureEnvSelected()) return
     setExecAllLoading(true)
     try {
-      const result: any = await executeAllCases(planId, selectedEnvId, autoUi, uiEnvId)
-      toast.success(`批量执行完成: ${result.passed} 通过, ${result.failed} 失败, ${result.skipped} 跳过`)
-      load()
-      loadExecutions()
+      const result: any = await executeAllCases(planId, selectedEnvId, autoUi, uiEnvId, true)
+      if (result?.async) {
+        toast.success('计划已在后台执行，完成后自动刷新执行记录')
+        void pollBackgroundExecution()
+      } else {
+        toast.success(`批量执行完成: ${result.passed} 通过, ${result.failed} 失败, ${result.skipped} 跳过`)
+        load()
+        loadExecutions()
+      }
     } catch {
       // handled by interceptor
     } finally { setExecAllLoading(false) }
+  }
+
+  const pollBackgroundExecution = async () => {
+    // batch-169：轮询计划 stats.pending，归零后刷新执行记录
+    for (let i = 0; i < 30; i += 1) {
+      await new Promise((resolve) => setTimeout(resolve, 4000))
+      try {
+        const d: any = await fetchPlan(planId)
+        setPlan(d)
+        if ((d.stats?.pending ?? 1) === 0 && (d.stats?.total ?? 0) > 0) {
+          loadExecutions()
+          toast.success('后台执行完成')
+          return
+        }
+      } catch {
+        // 继续轮询
+      }
+    }
+    toast.warning('执行仍在进行中，请稍后手动刷新')
   }
 
   if (!plan) {
