@@ -1,0 +1,22 @@
+{
+  "date": "2026-08-13",
+  "method": "应用内浏览器（用户会话网络）直接执行 UI",
+  "site": "https://www.camel1.tv",
+  "T0": {
+    "login": "✅ demo/login 账户登录成功（sex 1235 / 11025728 / Silver Diamond 12,022）",
+    "anonymous_intercept": "✅ 未登录访问 /my 显示 Login 引导（截图 c167-1-t0-anonymous-my.png）",
+    "collect_like_comment_follow": "❌ Web 端联赛页/赛事详情页无收藏/点赞/评论/Follow 控件（仅 Matches/Stats/Lineup/Odds/Schedule/About/Prediction 等只读 Tab）——这些写操作是 APP 端功能",
+    "recharge_withdraw_bet": "❌ Web 端无充值/提现/下注入口——APP 端功能；Web 只有只读内容与登录"
+  },
+  "T1_limits": {
+    "recharge_usdt_per_txn": 10,
+    "withdraw_usdt_per_txn": 10,
+    "bet_silver_diamond_per_txn": 100
+  },
+  "conclusion": "生产 Web 端 T0/T1 写操作无入口（APP 专属），如实标「执行未覆盖」。T1 金融档需二选一：1) 提供真机 APP（com.camelrn）与测试账号登录态；2) 授权通过平台接口用例调用写接口（充值/提现/下注）执行，并遵守单次上限。",
+  "screenshots": [
+    "c167-1-t0-anonymous-my.png",
+    "c167-1-t0-logged-in-my.png",
+    "c167-1-t0-match-detail-no-write-cta.png"
+  ]
+}
