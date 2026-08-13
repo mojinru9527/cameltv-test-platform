@@ -34,6 +34,7 @@ def create_mission(db: Session, data: dict, project_id: int, user_id: int) -> di
         requirement_url=data.get("requirement_url", ""),
         test_env_url=data.get("test_env_url", ""),
         admin_env_url=data.get("admin_env_url", ""),
+        api_spec_url=data.get("api_spec_url", ""),
         environment_id=data.get("environment_id"),
         requirement_doc_id=data.get("requirement_doc_id"),
         test_plan_id=data.get("test_plan_id"),
@@ -464,3 +465,4 @@ def _count_by(values: list[str]) -> dict[str, int]:
     for value in values:
         result[value] = result.get(value, 0) + 1
     return result
+

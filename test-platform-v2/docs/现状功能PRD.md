@@ -376,3 +376,13 @@ Batch 60 最终结论是 `NEEDS WORK`，production 发布是 `DEFERRED`。平台
 ---
 
 *配套文档：本目录另有《代码审查与产品重构PRD.md》（技术债 + 重构优先级 + 未来路线图）。本文聚焦「现在有什么」，可据「5.3」逐条拆分为改进需求 / issue。*
+
+## 6. Batch 167 能力增补（版本级三类型覆盖主链路 Phase 0–3）
+
+> 状态：已落地（本分支），生产走查待真实版本数据（见 C167-2）。
+
+- **版本覆盖矩阵（Phase 0）**：`GET /release-bundles/{id}/coverage` 按模块 × 功能/接口/UI × 执行状态计算覆盖。口径：模块被覆盖 = 三类用例同时存在；执行覆盖 = API 与 UI 均已执行；分母 = 版本全部模块，60% 门禁，P0/P1 单独统计。
+- **需求源适配（Phase 1）**：`/requirements/upload` 新增 `source_url`（generic HTML / PingCode / Confluence），token 走环境变量、缺凭据 fail closed；`GET /requirements/{id}/extraction-quality` 透出 分块/截断/降级 状态；大文档自动分块提取合并。
+- **接口真实绑定（Phase 2）**：`POST /requirements/{id}/generate-api-from-endpoints` 对 integration 功能点匹配已导入 ApiEndpoint，确定性生成接口用例并回填 `requirement_module_id`，重复生成幂等。
+- **功能→UI 与 auto_ui（Phase 3）**：导入功能用例可选生成 UI 变体并三类关联计划；`POST /test-plans/{id}/execute-all` 支持 `auto_ui`，manual P0/P1 有步骤用例自动 LLM 优先编译执行（规则引擎兜底），无步骤仍 skip。
+- 发布包新增接入字段：需求地址、用户端地址、OpenAPI/Swagger 地址、运营后台地址、账号环境 ID；`POST /release-bundles/{id}/import-requirement` 从需求地址创建需求文档。

@@ -909,6 +909,104 @@ def _parse_ai_response(raw: str) -> dict:
     return result
 
 
+# ── batch-167: 大文档分块提取与合并 ─────────────────────────
+
+_EXTRACT_CHUNK_CHARS = 24000
+
+
+def _split_content_chunks(content: str, size: int = _EXTRACT_CHUNK_CHARS) -> list[str]:
+    """按段落聚合成不超过 size 字符的块，尽量在标题边界断开。"""
+    if len(content) <= size:
+        return [content]
+    chunks: list[str] = []
+    current: list[str] = []
+    current_len = 0
+    for para in re.split(r"\n\s*\n", content):
+        para_len = len(para) + 2
+        if current and current_len + para_len > size:
+            chunks.append("\n\n".join(current))
+            current = []
+            current_len = 0
+        current.append(para)
+        current_len += para_len
+    if current:
+        chunks.append("\n\n".join(current))
+    return chunks or [content]
+
+
+def _extract_chunk_message(chunk: str, index: int, total: int) -> str:
+    return (
+        f"以下为同一份需求文档的第 {index}/{total} 部分（局部内容）。"
+        f"只提取本部分明确出现的测试模块与功能点，输出 JSON 格式与系统提示一致，"
+        f"不要跨部分臆造功能点。\n\n{chunk}"
+    )
+
+
+async def _extract_in_chunks(content: str, system_prompt: str) -> list[dict]:
+    chunks = _split_content_chunks(content)
+    results: list[dict] = []
+    for index, chunk in enumerate(chunks, start=1):
+        resp = await _call_ai_api(
+            system_prompt,
+            _extract_chunk_message(chunk, index, len(chunks)),
+            f"extraction-chunk-{index}",
+            max_tokens=max(settings.ai_max_tokens, 16384),
+        )
+        if resp["result"] is not None:
+            results.append(resp["result"])
+    return results
+
+
+def _merge_extractions(results: list[dict]) -> dict:
+    """合并多块提取结果：模块按名去重、功能点按标题去重并重新编号。"""
+    modules: list[dict] = []
+    seen_modules: dict[str, int] = {}
+    seen_fps: set[str] = set()
+    fp_counter = 0
+    overall = ""
+    for result in results:
+        for mod in (result.get("modules") or []):
+            if not isinstance(mod, dict):
+                continue
+            name = str(mod.get("name") or "").strip()
+            key = name.lower()
+            if not key:
+                continue
+            if key in seen_modules:
+                target = modules[seen_modules[key]]
+            else:
+                seen_modules[key] = len(modules)
+                modules.append({"id": "", "name": name, "description": "", "function_points": []})
+                target = modules[-1]
+            target["description"] = target.get("description") or mod.get("description") or ""
+            for fp in (mod.get("function_points") or []):
+                if not isinstance(fp, dict):
+                    continue
+                title = str(fp.get("title") or fp.get("id") or "").strip()
+                sig = f"{key}:{title.lower()}"
+                if not title or sig in seen_fps:
+                    continue
+                seen_fps.add(sig)
+                fp_counter += 1
+                copy = dict(fp)
+                copy["id"] = f"FP-{fp_counter}"
+                target["function_points"].append(copy)
+        if not overall:
+            overall = str(result.get("overall_assessment") or "").strip()
+
+    for index, mod in enumerate(modules, start=1):
+        mod["id"] = f"MOD-{index}"
+    if not modules:
+        modules = [{
+            "id": "MOD-1",
+            "name": "待人工补充模块",
+            "description": "分块提取未能获得有效模块",
+            "function_points": [],
+        }]
+    return {
+        "modules": modules,
+        "overall_assessment": overall or "分块提取完成，请复核模块合并结果。",
+    }
 # ── Public API: Stage 1 — Feature Extraction ─────────────────
 
 def _build_local_extraction_fallback(
@@ -1040,9 +1138,43 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
 
     system_prompt = _build_extraction_system_prompt()
 
+    # batch-167: 大文档直接分块提取，避免单次调用截断丢功能点
+    if len(effective_content) >= _EXTRACT_CHUNK_CHARS:
+        merged = _merge_extractions(await _extract_in_chunks(effective_content, system_prompt))
+        merged["extraction_meta"] = {
+            "mode": "chunked",
+            "chunks": len(_split_content_chunks(effective_content)),
+            "truncated": False,
+            "fallback": False,
+            "warnings": [],
+        }
+        if extraction_summary:
+            merged["extraction_summary"] = extraction_summary
+        if changelog_info:
+            merged["changelog"] = changelog_info
+        if client_scope:
+            merged["client_scope"] = client_scope
+        return merged
+
     extraction_max_tokens = max(settings.ai_max_tokens * 2, 32768)
     resp = await _call_ai_api(system_prompt, user_message, "extraction",
                               max_tokens=extraction_max_tokens)
+    if resp["result"] is None and resp.get("truncated"):
+        merged = _merge_extractions(await _extract_in_chunks(effective_content, system_prompt))
+        merged["extraction_meta"] = {
+            "mode": "chunked",
+            "chunks": len(_split_content_chunks(effective_content)),
+            "truncated": True,
+            "fallback": False,
+            "warnings": ["单次提取被截断，已自动改为分块提取"],
+        }
+        if extraction_summary:
+            merged["extraction_summary"] = extraction_summary
+        if changelog_info:
+            merged["changelog"] = changelog_info
+        if client_scope:
+            merged["client_scope"] = client_scope
+        return merged
     if resp["result"] is None:
         error_detail = resp.get("error", "未知错误")
         raw = resp.get("raw", "")
@@ -1227,4 +1359,6 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
         result["_warnings"] = warnings
 
     return result
+
+
 

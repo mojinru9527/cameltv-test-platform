@@ -608,23 +608,82 @@ def auto_execute_api_cases(
     }
 
 
-def _execute_ui_case_sync(case) -> dict:
-    """同步编译并执行一条 UI 用例（C22-C3 统一编排：真实 Playwright 链路）。
+def _compile_ui_case(case, base_url: str) -> tuple[str, str]:
+    """LLM 优先编译 UI spec；LLM 不可用/失败时回退规则引擎。返回 (spec_code, compiler)。"""
+    try:
+        from app.services.case_compiler_service import compile_to_playwright
+        compiled = compile_to_playwright(case, base_url=base_url, validate=False)
+        spec_code = (compiled.get("spec_code") or "").strip()
+        if spec_code and "TODO" not in spec_code:
+            return spec_code, "llm"
+    except Exception:
+        logger.exception("LLM 编译失败，回退规则引擎: case=%s", getattr(case, "id", None))
+
+    from app.schemas.playground import CompileRequest, SourceType
+    from app.services.playground_service import build_gherkin_from_case, compile_spec
+    source = build_gherkin_from_case(case)
+    compiled = compile_spec(CompileRequest(source=source, source_type=SourceType.gherkin))
+    return compiled.spec_code, "rules"
+
+
+def _case_has_actionable_steps(case) -> bool:
+    """manual 用例是否具备可转 UI 的步骤。"""
+    try:
+        steps = json.loads(case.steps or "[]")
+    except (json.JSONDecodeError, TypeError):
+        steps = []
+    if not isinstance(steps, list) or not steps:
+        return False
+    return any(
+        isinstance(item, dict) and (item.get("desc") or item.get("step") or "").strip()
+        for item in steps
+    )
+
+
+def _resolve_plan_base_url(db: Session, environment_id: int | None, project_id: int) -> str:
+    """取计划执行环境的 base_url 作为 UI 自动化被测地址（无环境时回退 localhost）。"""
+    from app.models.environment import Environment
+    if environment_id:
+        row = db.scalar(
+            select(Environment).where(
+                Environment.id == environment_id,
+                Environment.project_id == project_id,
+            )
+        )
+        if row and row.base_url:
+            return row.base_url
+    return "http://localhost:5173"
+
+
+def _write_plan_ui_job(db: Session, case, spec_code: str, creator_id: int, project_id: int) -> None:
+    """把计划执行生成的可执行 spec 回写为 UI 任务资产（失败不阻断执行）。"""
+    if not spec_code:
+        return
+    try:
+        from app.services.playground_service import _write_spec_as_ui_job
+        _write_spec_as_ui_job(db, case, spec_code, creator_id, project_id)
+    except Exception:
+        logger.exception("计划 UI 任务回写失败: case=%s", getattr(case, "id", None))
+
+
+def _execute_ui_case_sync(case, *, base_url: str = "") -> dict:
+    """同步编译并执行一条 UI 用例（batch-167: LLM 优先 + 规则兜底 + 真实 Playwright 链路）。
 
     返回 pass/fail、产物与执行摘要；编译含 TODO 占位或执行失败都如实返回。
     """
     from app.schemas.playground import CompileRequest, SourceType
     from app.services.playground_service import build_gherkin_from_case, compile_spec
 
+    base_url = (base_url or "").strip() or "http://localhost:5173"
+    spec_code, compiler = _compile_ui_case(case, base_url)
+    if not spec_code:
+        return {"ok": False, "error": "编译失败，未生成可执行 spec", "compiler": compiler, "spec_code": ""}
+    if "TODO" in spec_code:
+        return {"ok": False, "error": "编译含 TODO 占位，无法执行", "spec_code": spec_code, "compiler": compiler}
+
     playwright_dir = Path(__file__).resolve().parent.parent.parent / "tests" / "playwright"
     generated_dir = playwright_dir / "specs" / "generated"
     artifact_root = Path(__file__).resolve().parent.parent.parent / "storage" / "ui-runs" / "plan-sync"
-
-    source = build_gherkin_from_case(case)
-    compiled = compile_spec(CompileRequest(source=source, source_type=SourceType.gherkin))
-    spec_code = compiled.spec_code
-    if "TODO" in spec_code:
-        return {"ok": False, "error": "编译含 TODO 占位，无法执行", "spec_code": spec_code}
 
     safe_id = re.sub(r"[^A-Za-z0-9_-]", "-", case.case_id or f"TC-{case.id}")
     generated_dir.mkdir(parents=True, exist_ok=True)
@@ -643,7 +702,7 @@ def _execute_ui_case_sync(case) -> dict:
     try:
         npx = shutil.which("npx") or shutil.which("npx.cmd")
         if not npx:
-            return {"ok": False, "error": "npx/playwright 不可用"}
+            return {"ok": False, "error": "npx/playwright 不可用", "spec_code": spec_code, "compiler": compiler}
         result = subprocess.run(
             [
                 npx, "playwright", "test", rel_spec,
@@ -658,7 +717,7 @@ def _execute_ui_case_sync(case) -> dict:
         report = _parse_playwright_report(stdout_text)
         if report is None:
             return {
-                "ok": False, "error": "Playwright 未输出有效 JSON 报告",
+                "ok": False, "error": "Playwright 未输出有效 JSON 报告", "compiler": compiler, "spec_code": spec_code,
                 "exit_code": result.returncode, "stdout_tail": stdout_text[-1500:], "stderr_tail": stderr_text,
             }
         passed, failed, skipped, total = report
@@ -678,18 +737,17 @@ def _execute_ui_case_sync(case) -> dict:
             "artifact_dir": str(artifact_dir).replace("\\", "/"),
             "exit_code": result.returncode,
             "stdout_tail": stdout_text[-1500:], "stderr_tail": stderr_text,
+            "spec_code": spec_code, "compiler": compiler,
         }
     except subprocess.TimeoutExpired:
-        return {"ok": False, "error": "UI 执行超时（180s）"}
+        return {"ok": False, "error": "UI 执行超时（180s）", "spec_code": spec_code, "compiler": compiler}
     except FileNotFoundError:
-        return {"ok": False, "error": "npx/playwright 不可用"}
+        return {"ok": False, "error": "npx/playwright 不可用", "spec_code": spec_code, "compiler": compiler}
     finally:
         try:
             spec_file.unlink(missing_ok=True)
         except OSError:
             logger.warning("spec 文件清理失败")
-
-
 def _parse_playwright_report(stdout_text: str) -> tuple[int, int, int, int] | None:
     """解析 Playwright --reporter=json 输出，返回 (passed, failed, skipped, total)。"""
     payload = None
@@ -807,6 +865,7 @@ def execute_all_cases(
     *,
     executor_id: int = 0,
     environment_id: int | None = None,
+    auto_ui: bool = True,
     project_id: int = 0,
 ) -> dict:
     """一键执行计划中全部用例：API 用例自动执行，人工/UI 用例标记 skip。"""
@@ -817,6 +876,7 @@ def execute_all_cases(
     )
     if not plan:
         raise ValueError("计划不存在")
+    base_url = _resolve_plan_base_url(db, environment_id, project_id)
 
     ensure_plan_execution_ready(
         db, plan_id, project_id=project_id, environment_id=environment_id,
@@ -875,7 +935,7 @@ def execute_all_cases(
         elif tc.case_type == "ui":
             # UI 用例：真实编译 + headless Chromium 执行（batch-74 统一编排）
             try:
-                ui_result = _execute_ui_case_sync(tc)
+                ui_result = _execute_ui_case_sync(tc, base_url=base_url)
                 status = "pass" if ui_result.get("ok") else "fail"
                 actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                 if ui_result.get("ok"):
@@ -890,10 +950,30 @@ def execute_all_cases(
                 actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
                 notes = f"UI 执行异常: {e}"
         else:
-            # 人工等其他类型：标记 skip
-            status = "skip"
-            actual_result = ""
-            notes = "需人工执行"
+            # batch-167 Phase 3b: manual P0/P1 有步骤用例自动转 UI 执行，不再一律 skip
+            if (
+                auto_ui
+                and tc.priority in ("P0", "P1")
+                and _case_has_actionable_steps(tc)
+            ):
+                try:
+                    ui_result = _execute_ui_case_sync(tc, base_url=base_url)
+                    status = "pass" if ui_result.get("ok") else "fail"
+                    actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
+                    notes = (
+                        f"手动用例自动转 UI 执行: {ui_result.get('total', 0)} 条断言"
+                        if ui_result.get("ok") else f"手动用例转 UI 执行失败: {ui_result.get('error', '未知')}"
+                    )
+                    if ui_result.get("ok") or ui_result.get("spec_code"):
+                        _write_plan_ui_job(db, tc, ui_result.get("spec_code", ""), executor_id, project_id)
+                except Exception as e:
+                    status = "fail"
+                    actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
+                    notes = f"手动用例转 UI 执行异常: {e}"
+            else:
+                status = "skip"
+                actual_result = ""
+                notes = "需人工执行（无步骤/优先级低于 P1/auto_ui 关闭）"
 
         # 创建执行记录（Batch 148: 失败根因独立字段）
         exec_status_code, exec_error_type, exec_error_message = _execution_error_fields(actual_result)

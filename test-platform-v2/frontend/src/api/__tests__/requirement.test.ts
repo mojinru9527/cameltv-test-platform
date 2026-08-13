@@ -158,6 +158,7 @@ describe('Requirement API functions', () => {
       indices: [0],
       edited_cases: edited,
       create_plan: false,
+      create_ui_cases: false,
     })
   })
 
@@ -219,3 +220,4 @@ describe('getOrCreateExtraction envelope-404 fallback (Batch 160)', () => {
     expect(mockPost).not.toHaveBeenCalled()
   })
 })
+

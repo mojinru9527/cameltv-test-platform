@@ -20,6 +20,7 @@ class VersionMission(Base, TimestampMixin):
     requirement_url: Mapped[str] = mapped_column(Text, default="")
     test_env_url: Mapped[str] = mapped_column(Text, default="")
     admin_env_url: Mapped[str] = mapped_column(Text, default="")
+    api_spec_url: Mapped[str] = mapped_column(Text, default="")  # batch-167: 接口 OpenAPI/Swagger 地址
     environment_id: Mapped[int | None] = mapped_column(default=None, index=True)
     requirement_doc_id: Mapped[int | None] = mapped_column(default=None, index=True)
     test_plan_id: Mapped[int | None] = mapped_column(default=None, index=True)
@@ -59,3 +60,4 @@ class GeneratedArtifact(Base, TimestampMixin):
     ref_id: Mapped[str] = mapped_column(default="")
     content: Mapped[str] = mapped_column(Text, default="")
     meta: Mapped[str] = mapped_column(Text, default="{}")
+
