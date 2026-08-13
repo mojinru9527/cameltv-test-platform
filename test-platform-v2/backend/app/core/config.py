@@ -128,6 +128,7 @@ class Settings(BaseSettings):
     ai_fallback_on_failure: bool = True        # 瞬时失败时降级到本地模块提取，返回可复核草稿而非硬失败
     # ── batch-167: 需求 URL 适配器 ──
     requirement_url_timeout_seconds: float = 30.0   # 需求 URL 抓取超时
+    ui_run_timeout_seconds: float = 90.0            # batch-169: 单条 UI 用例执行超时（env UI_RUN_TIMEOUT_SECONDS）
     pingcode_api_base_url: str = ""                 # PingCode 开放 API 根地址
     pingcode_api_token: str = ""                    # PingCode 访问令牌（环境变量注入）
     confluence_api_base_url: str = ""               # Confluence REST API 根地址

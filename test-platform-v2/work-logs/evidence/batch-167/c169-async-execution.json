@@ -1,0 +1,31 @@
+{
+  "batch": 169,
+  "condition": "C168-2",
+  "date": "2026-08-13",
+  "async_execute_local": {
+    "backend": "local new code + production Supabase data",
+    "plan": "C169 async 复测 (plan#13)",
+    "cases": [
+      11206,
+      11214
+    ],
+    "request_ms": 2256,
+    "response": {
+      "async": true
+    },
+    "background_result": "pending 2 -> 0；2 条 UI 均执行并留痕（fail，原因 Playwright 未输出有效 JSON 报告，如实展示）",
+    "meaning": "C168-2 异步化生效：接口 <5s 返回，网关 300s 切断问题消除"
+  },
+  "production_login_probe": {
+    "url": "https://www.camel1.tv/login",
+    "result": "404 Page Not Found",
+    "homepage": "正常（比赛列表可见）；REGISTER 文本在 headless 不可交互、无 href",
+    "conclusion": "生产 Web 端登录入口未暴露或需特定路径/APP 流程；Test5 账号（mojinru）不适用于生产站点，C167-1/C168-1 登录态复测仍阻塞"
+  },
+  "code_changes": [
+    "ExecuteAllBody.async_mode + BackgroundTasks 后台执行",
+    "settings.ui_run_timeout_seconds（env UI_RUN_TIMEOUT_SECONDS，默认 90）",
+    "LLM 编译提示词：禁 networkidle、默认导航 30s/DOM 15s、等待显式超时",
+    "前端 executeAllCases asyncMode=true + stats.pending 轮询刷新"
+  ]
+}

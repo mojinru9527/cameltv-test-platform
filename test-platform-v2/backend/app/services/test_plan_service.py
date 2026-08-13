@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.base_service import batch_user_names
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 from app.models.test_case import TestCase
@@ -722,7 +723,7 @@ def _execute_ui_case_sync(case, *, base_url: str = "") -> dict:
                 "--project", "chromium", "--reporter", "json",
                 "--output", str(artifact_dir),
             ],
-            capture_output=True, text=True, timeout=180,
+            capture_output=True, text=True, timeout=float(getattr(settings, "ui_run_timeout_seconds", 90.0) or 90.0),
             cwd=str(playwright_dir), encoding="utf-8", errors="replace",
         )
         stdout_text = result.stdout or ""
@@ -753,7 +754,8 @@ def _execute_ui_case_sync(case, *, base_url: str = "") -> dict:
             "spec_code": spec_code, "compiler": compiler,
         }
     except subprocess.TimeoutExpired:
-        return {"ok": False, "error": "UI 执行超时（180s）", "spec_code": spec_code, "compiler": compiler}
+        seconds = int(float(getattr(settings, "ui_run_timeout_seconds", 90.0) or 90.0))
+        return {"ok": False, "error": f"UI 执行超时（{seconds}s）", "spec_code": spec_code, "compiler": compiler}
     except FileNotFoundError:
         return {"ok": False, "error": "npx/playwright 不可用", "spec_code": spec_code, "compiler": compiler}
     finally:
@@ -1283,4 +1285,32 @@ def _execution_to_dict(r: TestExecution, case: TestCase | None) -> dict:
         "case_title": case.title if case else "",
         "executor_name": "",
     }
+
+def run_async_execute_all(
+    *,
+    plan_id: int,
+    executor_id: int,
+    environment_id: int | None,
+    ui_environment_id: int | None,
+    auto_ui: bool,
+    project_id: int,
+) -> None:
+    """batch-169 C168-2：后台执行计划全部用例，避免同步请求被网关 300s 切断。"""
+    from app.core.db import SessionLocal
+    db = SessionLocal()
+    try:
+        execute_all_cases(
+            db,
+            plan_id,
+            executor_id=executor_id,
+            environment_id=environment_id,
+            ui_environment_id=ui_environment_id,
+            auto_ui=auto_ui,
+            project_id=project_id,
+        )
+    except Exception:
+        logger.exception("后台计划执行失败 plan_id=%d", plan_id)
+        db.rollback()
+    finally:
+        db.close()
 

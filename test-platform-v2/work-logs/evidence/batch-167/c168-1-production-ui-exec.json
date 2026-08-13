@@ -1,0 +1,56 @@
+{
+  "batch": 168,
+  "condition": "C168-1",
+  "date": "2026-08-13",
+  "environment": {
+    "backend": "https://test-platform.up.railway.app (new code deployed, ExecuteAllBody.ui_environment_id present)",
+    "frontend": "https://cameltv-test-platform1.vercel.app (200)",
+    "sports_site": "https://www.camel1.tv (200)"
+  },
+  "production_verify": {
+    "coverage_bundle_8": {
+      "total_modules": 18,
+      "covered_modules": 14,
+      "covered_rate_percent": 77.8,
+      "p0p1_covered_modules": 14,
+      "gate_passed": true
+    },
+    "ui_env_selector_visible": true,
+    "llm_compile_on_production": true
+  },
+  "executions": [
+    {
+      "plan": "C168-1 UI 单条执行-1 (plan#12)",
+      "case_id": 11206,
+      "module": "篮球相关-赛事详情页调整",
+      "target": "https://www.camel1.tv",
+      "result": "fail",
+      "notes": "UI 执行失败: exit_code=1 stdout: ... (assertion failed)",
+      "meaning": "D6 失败详情透出生效；LLM 编译真实执行并产出截图/error-context"
+    },
+    {
+      "plan": "C168-1 生产 UI 执行复测 (plan#11)",
+      "case_ids": [
+        11025,
+        11206,
+        11214
+      ],
+      "result": "upstream error (Railway 300s gateway timeout)",
+      "meaning": "多 UI 用例同步 execute-all 超过网关 300s → 请求被切断且无执行记录（新发现 C168-2）"
+    }
+  ],
+  "root_cause_local_reproduce": {
+    "case_id": 11206,
+    "compiler": "llm",
+    "spec_target": "https://www.camel1.tv",
+    "spec_style": "启发式选择器 getByText('篮球').first() + waitForLoadState(networkidle)",
+    "result": "UI 执行超时（180s）",
+    "blockers": [
+      "无真实登录态/账号 Cookie",
+      "无稳定选择器对象库（LLM 启发式定位在真实动态站点不稳定）",
+      "networkidle 在直播/动态体育站点易挂起",
+      "Railway 网关 300s 切断多用例同步执行"
+    ]
+  },
+  "conclusion": "D7 分环境与 LLM 编译在生产可用（已验证）；真实登录态 UI 执行覆盖仍未达成 → C167-1 与 C168-1 保持 Open。新增 C168-2：计划同步执行超网关 300s 需异步化/单条超时与重试。"
+}
