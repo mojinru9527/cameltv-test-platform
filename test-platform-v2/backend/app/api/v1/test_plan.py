@@ -301,6 +301,7 @@ class AutoExecuteBody(BaseModel):
 
 class ExecuteAllBody(BaseModel):
     environment_id: int | None = None
+    auto_ui: bool = True  # batch-167: manual P0/P1 自动转 UI 执行
 
 
 @router.post("/{plan_id}/execute-all", response_model=R[dict], summary="一键批量执行计划全部用例")
@@ -319,6 +320,7 @@ def execute_all_cases(
             plan_id=plan_id,
             executor_id=current.user.id,
             environment_id=body.environment_id if body else None,
+            auto_ui=(body.auto_ui if body else True),
             project_id=current.project_id or 0,
         )
     except ValueError as e:
@@ -361,6 +363,7 @@ def auto_execute_api_cases(
             plan_id=plan_id,
             executor_id=current.user.id,
             environment_id=body.environment_id if body else None,
+            auto_ui=(body.auto_ui if body else True),
             project_id=current.project_id or 0,
         )
     except ValueError as e:
@@ -562,3 +565,4 @@ def batch_assign_cases(
     _audit(req, current, db, "plan:batch_assign", f"plan #{plan_id}",
            f"assigned {count} cases to user #{body.assignee_id}")
     return R.ok({"assigned": count})
+
