@@ -730,7 +730,7 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 优先级 | 创建日期 |
 |----|------|--------|---------|
 | ~~C165-1~~ | ~~部署 test 后走查：①菜单/命令面板/访客目录无专项测试、性能监控；②知识中心 12 tab 在 1024/1280 可切换且不裁切；③接口资产 899 条时第 1 页 20 行；④接口用例可编辑参数/断言；⑤UI 自动化"用例/脚本"页签可用；⑥测试计划环境选择入口（含 API/UI 自动化用例时显示）+ 纯人工计划执行提示；截图入 work-logs/evidence~~ → **Closed**：C165-1 test walkthrough 6/6 PASS，证据见 `test-platform-v2/work-logs/evidence/batch-165/c165-1/`，QA/Leader 见 `test-platform-v2/work-logs/batch-c165-1-test-walkthrough-*.md`；PR #236 | P2 | 2026-08-13 |
-| C165-2 | 按 docs/platform-feature-value-and-redundancy-audit.md §3.3 收敛 系统管理/项目管理/组织管理/我的项目 四入口为 2 个（单独批次） | P3 | 2026-08-13 |
+| ~~C165-2~~ | ~~按 docs/platform-feature-value-and-redundancy-audit.md §3.3 收敛 系统管理/项目管理/组织管理/我的项目 四入口为 2 个（单独批次）~~ → **Closed**：Batch c165-2-entry-consolidation（隐藏 menu:project/menu:organization + /project、/organizations 重定向 /my-projects），PR #TBD | P3 | 2026-08-13 |
 
 
 ### Batch 165 — C165-1 部署后走查关闭（2026-08-13）
@@ -738,6 +738,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 | ID | 内容 | 合入方式 | 日期 |
 |----|------|---------|------|
 | C165-1 | test 环境 6 项走查全部 PASS（菜单隐藏/知识 tab/接口资产 20 行每页/用例编辑/UI 自动化页签/计划环境选择） | PR #236（batch-c165-1-test-walkthrough） | 2026-08-13 |
+
+
+
+### Batch 165 — C165-2 四入口收敛关闭（2026-08-13）
+
+| ID | 内容 | 合入方式 | 日期 |
+|----|------|---------|------|
+| C165-2 | 系统管理/项目管理/组织管理/我的项目 → 我的项目 + 系统管理 | PR #TBD（c165-2-entry-consolidation） | 2026-08-13 |
 
 
 ## 历史引用归档（Batch 75 审计补录，不计入 Open/Closed 统计）

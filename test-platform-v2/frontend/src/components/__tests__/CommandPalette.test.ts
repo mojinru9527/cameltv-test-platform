@@ -24,7 +24,7 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
       '/integration',
       '/environment',
       '/notify',
-      '/project',
+      '/my-projects',
       '/system',
       '/apitest',
       '/uitest',
@@ -38,6 +38,9 @@ describe('CommandPalette 路由对账（B60-P1-002）', () => {
     const paths = ALL_COMMAND_ROUTES.map((route) => route.path)
     expect(paths).not.toContain('/special')
     expect(paths).not.toContain('/perftest')
+    expect(paths).not.toContain('/project')
+    expect(paths).not.toContain('/organizations')
+    expect(paths).toContain('/my-projects')
   })
 
   it('无 release:view 权限时隐藏运维发布入口', () => {

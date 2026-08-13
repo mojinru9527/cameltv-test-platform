@@ -14,7 +14,8 @@ import { Button, Input } from '@/ui'
 const LoginPage = lazy(() => import('@/pages/login'))
 const RegisterPage = lazy(() => import('@/pages/register'))
 const MyProjectsPage = lazy(() => import('@/pages/my-projects'))
-const OrganizationPage = lazy(() => import('@/pages/organization'))
+// (batch-165 C165-2) 组织管理已折叠进 我的项目：注释路由懒加载。
+// const OrganizationPage = lazy(() => import('@/pages/organization'))
 const SystemPage = lazy(() => import('@/pages/system'))
 const TestCasePage = lazy(() => import('@/pages/testcase'))
 const TestPlanPage = lazy(() => import('@/pages/testplan'))
@@ -26,7 +27,8 @@ const DefectPage = lazy(() => import('@/pages/defect'))
 // (batch-165) 专项测试已隐藏：注释路由与懒加载
 // const SpecialPage = lazy(() => import('@/pages/special'))
 const UiTestPage = lazy(() => import('@/pages/uitest'))
-const ProjectPage = lazy(() => import('@/pages/project'))
+// (batch-165 C165-2) 项目管理已收敛到 我的项目：注释路由懒加载。
+// const ProjectPage = lazy(() => import('@/pages/project'))
 const TracePage = lazy(() => import('@/pages/trace'))
 const RequirementPage = lazy(() => import('@/pages/requirement'))
 const RequirementReviewPage = lazy(() => import('@/pages/requirement/ReviewPage'))
@@ -197,7 +199,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <PlatformHomeEntry /> },
       { path: 'my-projects', element: <PageLoader><MyProjectsPage /></PageLoader> },
-      { path: 'organizations', element: <PageLoader><OrganizationPage /></PageLoader> },
+      { path: 'organizations', element: <Navigate to="/my-projects" replace /> },
       { path: 'workbench', element: <PageLoader><Workbench /></PageLoader> },
       { path: 'trace', element: <PageLoader><TracePage /></PageLoader> },
       { path: 'requirement', element: <PageLoader><RequirementPage /></PageLoader> },
@@ -215,7 +217,7 @@ export const router = createBrowserRouter([
       { path: 'defect/:id', element: <PageLoader><DefectPage /></PageLoader> },
       { path: 'report', element: <PageLoader><ReportPage /></PageLoader> },
       { path: 'system', element: <PageLoader><SystemPage /></PageLoader> },
-      { path: 'project', element: <PageLoader><ProjectPage /></PageLoader> },
+      { path: 'project', element: <Navigate to="/my-projects" replace /> },
       { path: 'notify', element: <PageLoader><NotifyPage /></PageLoader> },
       { path: 'environment', element: <PageLoader><EnvironmentPage /></PageLoader> },
       { path: 'dataset', element: <PageLoader><DatasetPage /></PageLoader> },

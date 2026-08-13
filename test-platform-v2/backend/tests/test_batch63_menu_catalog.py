@@ -35,6 +35,16 @@ def test_batch165_hidden_menus_removed_from_seed():
     assert "menu:perftest" not in _TESTER_MENUS
 
 
+def test_c1652_project_organization_menus_removed_from_seed():
+    """(C165-2) 项目管理/组织管理已收敛到 我的项目，避免新库生成冗余入口。"""
+    codes = [entry[0] for entry in _MENUS]
+    assert "menu:project" not in codes
+    assert "menu:organization" not in codes
+    assert "menu:project" not in _TESTER_MENUS
+    assert "menu:organization" not in _TESTER_MENUS
+    assert "menu:myproject" in codes
+
+
 def test_tester_role_has_all_mature_module_menus():
     for required in [
         "menu:workbench",
