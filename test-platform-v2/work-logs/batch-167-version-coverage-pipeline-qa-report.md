@@ -67,3 +67,8 @@
 | 计划 8h / 实际约 6h | 0/3/3/0 | 3 | 技术债（PowerShell 批量文本补丁静默失败 + 旧契约兼容） | 修改多文件/多行代码优先用 Python 脚本整段重写而非 PS 字符串替换，改后立即 ruff/typecheck 验证 |
 
 **技能使用**: cameltv-bug-guard → 迁移守卫、envelope 契约、StaticPool；cameltv-ui-conventions → 覆盖面板/徽标/加载空态。
+
+## 本地审计说明
+- `audit-ai-pr.ps1 -ExpectedWorkflow agent-team -ExpectedExecutor codex` 首次运行因 GitHub 443 不可达（curl 28）在 `git fetch` 处中断，属外部网络条件；待网络恢复后创建 Draft PR 时重跑（含 `-RequireSuccessfulChecks`）。
+- `scan-common-bugs.ps1`：HARD 3 条均位于本批未改动的既有文件（`app/main.py:87`、`lanhu_provider.py:287/301` 的 `except: pass` 静默吞异常），按 C76-2 记录豁免，不属本批新增。
+- `audit-cconditions.ps1`：`C120-2 / C163-1 / G1-G5` 三个孤儿条件为主干既有 hard error，本批未触碰；本批新增 C167-1/2/3 已登记，无新增孤儿。
