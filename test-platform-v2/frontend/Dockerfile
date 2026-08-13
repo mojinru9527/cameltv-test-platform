@@ -4,6 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+# ICP 备案号（可选）：构建时注入，非空时页面底部展示并链接 beian.miit.gov.cn
+ARG VITE_ICP_NUMBER
+ENV VITE_ICP_NUMBER=${VITE_ICP_NUMBER:-}
 RUN npm run build
 
 # 运行阶段：Nginx 托管静态站点 + 反代 /api
