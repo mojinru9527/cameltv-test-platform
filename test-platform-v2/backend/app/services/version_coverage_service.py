@@ -36,13 +36,28 @@ def _module_key(name: str) -> str:
     return (name or "").strip().replace(" ", "").lower()
 
 
+def _bigrams(text: str) -> set[str]:
+    return {text[i:i + 2] for i in range(len(text) - 1)}
+
+
 def _match(case_module: str, name: str) -> bool:
-    """模块匹配：兼容「用户端/首页」与「首页」两种历史写法。"""
+    """模块匹配：兼容「用户端/首页」「广告展示规则 vs 广告前端展示与规则」等历史写法。
+
+    精确相等/包含优先；否则用双字块重叠率（任一方向 >= 0.5）兜底，
+    避免 fallback 场景下把同一用例归属到错误模块或全局聚合。
+    """
     c = _module_key(case_module)
     m = _module_key(name)
     if not c or not m:
         return False
-    return c == m or c.endswith("/" + m) or m.endswith("/" + c) or c in m or m in c
+    if c == m or c.endswith("/" + m) or m.endswith("/" + c) or c in m or m in c:
+        return True
+    cb = _bigrams(c)
+    mb = _bigrams(m)
+    overlap = len(cb & mb)
+    if overlap == 0:
+        return False
+    return overlap / len(cb) >= 0.5 or overlap / len(mb) >= 0.5
 
 
 def _canonical_type(raw: str) -> str:
@@ -116,12 +131,30 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
             fallback_module_names = [row[0] for row in rows]
         module_rows = [_FallbackModule(id=None, name=name) for name in fallback_module_names]
 
-    cases = list(db.scalars(
-        select(TestCase).where(
-            TestCase.project_id == project_id,
-            TestCase.is_deleted.is_(False),
-        )
-    ).all())
+    # 版本口径：有真实模块树时只统计「挂到该树」或「该发布包绑定需求文档」的用例，
+    # 避免其它版本同名/相似模块的用例污染本版本计数。
+    linked_doc_ids = [
+        row[0] for row in db.execute(
+            select(RequirementDocument.id).where(
+                RequirementDocument.project_id == project_id,
+                RequirementDocument.release_bundle_id == bundle_id,
+            )
+        ).all()
+    ]
+    tree_ids = {getattr(m, "id", None) for m in module_rows if getattr(m, "id", None) is not None}
+    case_stmt = select(TestCase).where(
+        TestCase.project_id == project_id,
+        TestCase.is_deleted.is_(False),
+    )
+    if tree_ids or linked_doc_ids:
+        clauses = []
+        if tree_ids:
+            clauses.append(TestCase.requirement_module_id.in_(tree_ids))
+        if linked_doc_ids:
+            clauses.append(TestCase.source_doc_id.in_(linked_doc_ids))
+        from sqlalchemy import or_
+        case_stmt = case_stmt.where(or_(*clauses))
+    cases = list(db.scalars(case_stmt).all())
     executed_ids = _load_executed_case_ids(db, project_id)
 
     # 模块索引：id 精确匹配 + 规范化名称精确匹配，避免 fallback id=None 时共用聚合键

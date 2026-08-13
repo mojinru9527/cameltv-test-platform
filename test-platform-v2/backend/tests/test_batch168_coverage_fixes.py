@@ -212,3 +212,19 @@ def test_ui_error_summary_readable():
     assert "exit_code=1" in summary
     assert "timeout waiting" in summary
     assert test_plan_service._ui_error_summary({"ok": False}) == "未知"
+
+def test_real_tree_scopes_to_bundle_cases_only(db_session):
+    """有真实模块树时，其它版本同名/相似模块用例不得污染本版本计数。"""
+    bundle = ReleaseBundle(project_id=1, name="B168-S", client_version="16.0.0")
+    db_session.add(bundle)
+    db_session.flush()
+    mod = RequirementModule(project_id=1, release_bundle_id=bundle.id, name="首页", node_type="module")
+    db_session.add(mod)
+    db_session.flush()
+    in_tree = TestCase(project_id=1, title="in", module="首页", case_type="manual", priority="P0", requirement_module_id=mod.id)
+    out_tree = TestCase(project_id=1, title="out", module="首页", case_type="manual", priority="P0")
+    db_session.add_all([in_tree, out_tree])
+    db_session.commit()
+    result = compute_bundle_coverage(db_session, bundle.id, 1)
+    row = result["rows"][0]
+    assert row["functional_count"] == 1

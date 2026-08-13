@@ -671,6 +671,70 @@ def confirm_extraction(
     return _doc_to_dict(row)
 
 
+def _parent_module_map(doc) -> dict[str, str]:
+    """batch-168：由需求提取结果构建「功能点标题/id → 父模块名」映射。
+
+    老数据用例的 module 字段多为功能点级名称（如 MOD-8/FP-3 ...），
+    用该映射把用例归属到提取结果中的父模块，保证覆盖矩阵对齐。
+    """
+
+    def _norm(text: str) -> str:
+        return (text or "").strip().replace(" ", "").lower()
+
+    result: dict[str, str] = {}
+    try:
+        extraction = json.loads(doc.extraction_raw or "{}")
+    except (json.JSONDecodeError, TypeError):
+        return result
+    for mod in extraction.get("modules") or []:
+        mod_name = str(mod.get("name") or "")
+        if not mod_name:
+            continue
+        for fp in mod.get("function_points") or []:
+            for key in (fp.get("title"), fp.get("id")):
+                if key:
+                    result[str(key).strip()] = mod_name
+                    result[_norm(str(key))] = mod_name
+    return result
+
+
+def _resolve_fp_parent_module(fp_map: dict[str, str], case_module: str) -> str | None:
+    """batch-168：把功能点级 module 字符串（如「开屏广告」「MOD-8/FP-3 ...」）解析到父模块。
+
+    用例生成时的 module 字段是 FP 标题的截断/别名，与提取结果标题不完全相等；
+    因此先精确/包含匹配，再用双字块重叠兜底。
+    """
+
+    def _norm(text: str) -> str:
+        return (text or "").strip().replace(" ", "").lower()
+
+    def _bigrams(text: str) -> set[str]:
+        return {text[i:i + 2] for i in range(len(text) - 1)}
+
+    c = _norm(case_module)
+    if not c:
+        return None
+    if c in fp_map:
+        return fp_map[c]
+    best = None
+    best_ratio = 0.0
+    cb = _bigrams(c)
+    for title, parent in fp_map.items():
+        t = _norm(title)
+        if not t:
+            continue
+        if c in t or t in c:
+            return parent
+        tb = _bigrams(t)
+        overlap = len(cb & tb)
+        if overlap:
+            ratio = max(overlap / len(cb), overlap / len(tb))
+            if ratio >= 0.5 and ratio > best_ratio:
+                best = parent
+                best_ratio = ratio
+    return best
+
+
 def import_cases(
     db: Session,
     doc_id: int,
@@ -711,6 +775,16 @@ def import_cases(
 
         previous_func = _parse_indices(row.imported_func_indices)
         previous_api = _parse_indices(row.imported_api_indices)
+        fp_parent_map = _parent_module_map(row)
+        if fp_parent_map:
+            from app.models.requirement_module import RequirementModule as _RM
+            _parent_names = set(fp_parent_map.values())
+            _parent_rows = db.scalars(
+                select(_RM).where(_RM.project_id == project_id, _RM.name.in_(_parent_names))
+            ).all()
+            _parent_module_ids = {m.name: m.id for m in _parent_rows}
+        else:
+            _parent_module_ids = {}
         seen_in_request: set[tuple[str, int]] = set()
         from app.services import test_case_service  # 懒加载：避免 requirement_service ↔ test_case_service 环依赖（Batch 155 / P2-12）
 
@@ -755,6 +829,9 @@ def import_cases(
                     "source": "ai_generated",
                     "source_doc_id": doc_id,
                     "source_case_index": case_index,
+                    "requirement_module_id": _parent_module_ids.get(
+                        _resolve_fp_parent_module(fp_parent_map, case.get("module") or "") or ""
+                    ),
                 },
                 commit=False,
             )
@@ -789,6 +866,7 @@ def import_cases(
                 if not isinstance(steps, list) or not steps:
                     continue
                 ui_title = f"[UI] {pc.title}"[:220]
+                parent_module = _resolve_fp_parent_module(fp_parent_map, pc.module or "") or pc.module or ""
                 existing_ui = db.scalar(
                     select(TestCase).where(
                         TestCase.project_id == project_id,
@@ -805,7 +883,7 @@ def import_cases(
                     project_id=project_id,
                     title=ui_title,
                     domain=pc.domain or "用户端",
-                    module=pc.module or "",
+                    module=parent_module,
                     case_type="ui",
                     priority=pc.priority,
                     tags=json.dumps(["UI自动化", "auto:functional"], ensure_ascii=False),
@@ -815,7 +893,7 @@ def import_cases(
                     preconditions=pc.preconditions or "",
                     steps=pc.steps or "[]",
                     expected_result=pc.expected_result or "",
-                    requirement_module_id=pc.requirement_module_id,
+                    requirement_module_id=_parent_module_ids.get(parent_module, pc.requirement_module_id),
                     source="ai_generated",
                     source_doc_id=doc_id,
                 )
@@ -1175,7 +1253,9 @@ def generate_api_cases_from_linked_endpoints(
 
     # 模块级兜底匹配（batch-168 D8）
     covered_modules = {m["module"] for m in matches if m.get("module")}
-    used_endpoint_ids = {m["endpoint_id"] for m in matches}
+    # 模块级兜底：先为每个未覆盖模块取候选，再按置信度降序逐模块绑定，
+    # 允许同一真实端点服务多个相关模块（如广告前端/后台），用 module 维度区分用例行。
+    candidates_by_module: dict[str, dict] = {}
     for mod_name, meta in mod_meta.items():
         if not mod_name or mod_name in covered_modules:
             continue
@@ -1189,21 +1269,20 @@ def generate_api_cases_from_linked_endpoints(
         )
         best = None
         for c in candidates:
-            if c["endpoint_id"] in used_endpoint_ids:
-                continue
             if str(c.get("method") or "").upper() not in ("GET", "POST"):
                 continue
             if (c.get("confidence") or 0) < 0.4:
                 continue
             if best is None or c["confidence"] > best["confidence"]:
                 best = c
-        if best is None:
-            continue
+        if best is not None:
+            candidates_by_module[mod_name] = best
+    for mod_name in sorted(candidates_by_module, key=lambda name: candidates_by_module[name]["confidence"], reverse=True):
+        best = candidates_by_module[mod_name]
         m2 = dict(best)
         m2["module"] = mod_name
         m2["source"] = "module"
         matches.append(m2)
-        used_endpoint_ids.add(best["endpoint_id"])
         covered_modules.add(mod_name)
 
     if not matches:
@@ -1237,13 +1316,14 @@ def generate_api_cases_from_linked_endpoints(
     linked_ids = set(_parse_indices(doc.linked_api_endpoint_ids or "[]"))
     seen_identity: set[tuple[str, str, str]] = set()
 
-    def _persist(case: dict, endpoint_dict: dict, module_name: str) -> None:
+    def _persist(case: dict, endpoint_dict: dict, module_name: str, source: str = "fp") -> None:
         nonlocal generated, upserted, inserted
         method = case.get("api_method") or endpoint_dict["method"]
         path = case.get("api_endpoint") or endpoint_dict["path"]
         title = str(case.get("title") or f"{method} {path}")
         # batch-168 D3：模板变体按 title 独立成行，避免 method+path 相互覆盖
-        identity = (method, path, title)
+        module_name_for_key = module_name if source == "module" else ""
+        identity = (method, path, title, module_name_for_key)
         if identity in seen_identity:
             return
         seen_identity.add(identity)
@@ -1270,16 +1350,17 @@ def generate_api_cases_from_linked_endpoints(
             "source": "ai_generated",
             "source_doc_id": doc_id,
         }
-        existing = db.scalar(
-            select(TestCase).where(
-                TestCase.project_id == project_id,
-                TestCase.case_type == "api",
-                TestCase.api_method == method,
-                TestCase.api_endpoint == path,
-                TestCase.title == title,
-                TestCase.is_deleted.is_(False),
-            )
+        existing_stmt = select(TestCase).where(
+            TestCase.project_id == project_id,
+            TestCase.case_type == "api",
+            TestCase.api_method == method,
+            TestCase.api_endpoint == path,
+            TestCase.title == title,
+            TestCase.is_deleted.is_(False),
         )
+        if source == "module":
+            existing_stmt = existing_stmt.where(TestCase.module == module_name)
+        existing = db.scalar(existing_stmt)
         if existing:
             for key, value in payload.items():
                 if key in {"project_id", "case_type"}:
@@ -1313,7 +1394,7 @@ def generate_api_cases_from_linked_endpoints(
         templates = ["basic", "invalid", "boundary", "security", "smoke"] if match.get("source") == "fp" else ["basic", "positive", "negative"]
         cases = generate_cases_from_endpoint(endpoint_dict, templates=templates)
         for case in cases:
-            _persist(case, endpoint_dict, module_name)
+            _persist(case, endpoint_dict, module_name, source=match.get("source", "fp"))
         linked_ids.add(ep.id)
 
     doc.linked_api_endpoint_ids = json.dumps(sorted(linked_ids), ensure_ascii=False)
