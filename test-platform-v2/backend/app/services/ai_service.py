@@ -1217,10 +1217,72 @@ async def extract_features(content: str, file_type: str = "", source_ref: str = 
     return result
 
 
+# ── Batch 172: DSH harness 模式（可选，默认关闭；失败自动降级直连）──
+
+async def _run_harness_generation(system_prompt: str, user_message: str, label: str = "") -> dict:
+    """通过 DeepSeek Harness 执行一次生成任务，返回与 _call_ai_api 同构的结果。
+
+    harness 有工具/执行能力，可读取并校验输出；本处把「系统规范 + 用户任务」作为
+    单次任务文本交给 dsh runner 执行，最终回复解析为 JSON。
+    """
+    from app.services.dsh.dsh_runner import run_dsh_task
+
+    task = (
+        "你是一个测试用例生成引擎。严格按给定的系统规范与需求内容，输出指定的 JSON 结构。\n\n"
+        f"## 系统规范\n{system_prompt}\n\n"
+        f"## 用户任务\n{user_message}\n\n"
+        "只输出最终 JSON 对象，不要输出任何解释文本或 markdown 代码块。"
+    )
+    loop = asyncio.get_running_loop()
+    try:
+        result = await loop.run_in_executor(None, lambda: run_dsh_task(task))
+    except Exception as exc:  # noqa: BLE001 - runner 异常统一降级
+        logger.warning("[ai_service] harness 执行异常，降级直连: %s", exc)
+        return {"result": None, "raw": "", "finish_reason": "error", "truncated": False, "error": str(exc)}
+
+    if result.exit_code != 0:
+        logger.warning("[ai_service] harness %s 失败(exit=%s): %s", label, result.exit_code, result.error)
+        return {"result": None, "raw": "", "finish_reason": "error", "truncated": False, "error": result.error}
+
+    raw = result.final_response or ""
+    if not raw:
+        return {"result": None, "raw": "", "finish_reason": "error", "truncated": False, "error": "harness 返回空输出"}
+    try:
+        parsed = _parse_ai_response(raw)
+        if parsed is None:
+            logger.warning("[ai_service] harness %s 输出解析为空，降级直连", label)
+            return {"result": None, "raw": raw, "finish_reason": "error", "truncated": False, "error": "harness 输出解析结果为空"}
+        return {"result": parsed, "raw": raw, "finish_reason": "completed", "truncated": False, "error": None}
+    except Exception as exc:  # noqa: BLE001 - 解析失败统一降级直连（_parse_ai_response 可能抛非 ValueError）
+        logger.warning("[ai_service] harness %s 输出解析失败，降级直连: %s", label, exc)
+        return {"result": None, "raw": raw, "finish_reason": "error", "truncated": False, "error": str(exc)}
+
+
+async def _call_ai_api_with_harness(
+    system_prompt: str,
+    user_message: str,
+    label: str = "",
+    max_tokens: int | None = None,
+    use_harness: bool | None = None,
+) -> dict:
+    """AI 调用入口：harness 模式开启时先走 dsh，失败/解析失败降级直连。
+
+    use_harness=None → 跟随 settings.dsh_enabled（默认 False，行为与现状一致）。
+    """
+    harness_on = settings.dsh_enabled if use_harness is None else use_harness
+    if harness_on:
+        harness_resp = await _run_harness_generation(system_prompt, user_message, label)
+        if harness_resp["result"] is not None:
+            return harness_resp
+        logger.warning("[ai_service] %s harness 模式未产出可用结果，降级直连", label)
+    return await _call_ai_api(system_prompt, user_message, label, max_tokens)
+
+
 # ── Public API: Stage 2 — Test Case Generation ───────────────
 
 async def generate_test_cases(content: str, file_type: str = "", source_ref: str = "",
-                              extraction: dict | None = None) -> dict:
+                              extraction: dict | None = None,
+                              use_harness: bool | None = None) -> dict:
     """Generate test cases from requirement content using AI.
 
     Generates functional test cases for all requirement types. For integration-type
@@ -1293,10 +1355,10 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
                     effective_content, effective_file_type, source_ref, {"modules": chunk}
                 )
                 label = f"functional-chunk-{index}"
-                func_resp = await _call_ai_api(functional_system, chunk_user, label)
+                func_resp = await _call_ai_api_with_harness(functional_system, chunk_user, label, use_harness=use_harness)
                 if func_resp["truncated"]:
                     chunk_warnings.append(f"{label} 生成被截断，已重试")
-                    func_resp = await _call_ai_api(functional_system, chunk_user, f"{label}-retry")
+                    func_resp = await _call_ai_api_with_harness(functional_system, chunk_user, f"{label}-retry", use_harness=use_harness)
                 if func_resp["result"] is None:
                     chunk_warnings.append(
                         f"{label} 生成失败：{func_resp.get('error', '未知错误')}（该块未产出用例）"
@@ -1332,7 +1394,7 @@ async def generate_test_cases(content: str, file_type: str = "", source_ref: str
                 page_filtered=page_filtered, folder_name=folder_name,
                 changelog=changelog_info, client_scope=client_scope,
             )
-        func_resp = await _call_ai_api(functional_system, user_message, "functional")
+        func_resp = await _call_ai_api_with_harness(functional_system, user_message, "functional", use_harness=use_harness)
         if func_resp["truncated"]:
             warnings.append("功能用例生成被截断，结果可能不完整")
         if func_resp["result"] is None:
