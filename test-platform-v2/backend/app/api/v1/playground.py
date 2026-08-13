@@ -7,10 +7,44 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_db, require_permission
 from app.models.test_case import TestCase
-from app.schemas.playground import CompileRequest, CompileResponse, ExecuteRequest, ExecuteResponse
-from app.services.playground_service import build_gherkin_from_case, compile_spec, execute_spec
+from app.schemas.playground import (
+    CompileRequest, CompileResponse, ExecuteRequest, ExecuteResponse,
+    PlaygroundBatchCompileRequest, PlaygroundBatchCompileResponse,
+    PlaygroundBatchRunRequest, PlaygroundBatchRunResponse,
+)
+from app.services.playground_service import (
+    build_gherkin_from_case, compile_spec, execute_spec,
+    compile_case_batch, run_case_batch,
+)
 
 router = APIRouter(prefix="/playground", tags=["Playground"])
+
+
+@router.post("/batch-compile", response_model=PlaygroundBatchCompileResponse)
+def batch_compile_endpoint(
+    req: PlaygroundBatchCompileRequest,
+    current: CurrentUser = Depends(require_permission("uitest:list")),
+    db: Session = Depends(get_db),
+) -> PlaygroundBatchCompileResponse:
+    """从功能用例库批量编译 Playwright spec。"""
+    return compile_case_batch(db, current.project_id or 0, req.case_ids)
+
+
+@router.post("/batch-run", response_model=PlaygroundBatchRunResponse)
+def batch_run_endpoint(
+    req: PlaygroundBatchRunRequest,
+    current: CurrentUser = Depends(require_permission("uitest:trigger")),
+    db: Session = Depends(get_db),
+) -> PlaygroundBatchRunResponse:
+    """批量编译 + 执行功能用例，并把结果回填用例 / 回写 UI 任务。"""
+    return run_case_batch(
+        db,
+        project_id=current.project_id or 0,
+        creator_id=current.user.id if current.user else 0,
+        case_ids=req.case_ids,
+        write_back_to_ui=req.write_back_to_ui,
+        timeout_ms=req.timeout_ms,
+    )
 
 
 @router.post("/compile", response_model=CompileResponse)
