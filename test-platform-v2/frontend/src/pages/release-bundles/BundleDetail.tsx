@@ -13,14 +13,7 @@ import {
 } from '@/api/releaseBundles'
 import type { RegressionScopeResult, TriggerRegressionResult } from '@/api/releaseBundles'
 import { fetchModuleTree } from '@/api/requirementModules'
-import type {
-  ReleaseBundleOut,
-  ReleaseBundleVersionChain,
-  ModuleTreeResponse,
-  VersionDiffResult,
-  Environment,
-  VersionCoverageOut,
-} from '@/types'
+import type { VersionDiffResult, Environment } from '@/types'
 import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/ui'
@@ -38,9 +31,6 @@ import {
   Settings,
   RefreshCw,
   Save,
-  ExternalLink,
-  ChevronRight,
-  ChevronDown,
   Monitor,
   Smartphone,
   X,
@@ -51,7 +41,6 @@ import {
 import { cn } from '@/lib/utils'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { AsyncState } from '@/components/state'
 import ProductionOperationDialog from '@/components/ProductionOperationDialog'
 import ModuleTreeView from './components/ModuleTreeView'
 import VersionChainTimeline from './components/VersionChainTimeline'
@@ -116,10 +105,10 @@ export default function BundleDetailPage() {
     isError,
     refetch,
     setData,
-  } = useApi((signal) => fetchReleaseBundle(bundleId), [bundleId])
+  } = useApi(() => fetchReleaseBundle(bundleId), [bundleId])
 
   const { data: versionChain } = useApi(
-    (signal) => fetchVersionChain(bundleId),
+    () => fetchVersionChain(bundleId),
     [bundleId],
   )
   const { data: coverage, refetch: refetchCoverage } = useApi(
@@ -128,7 +117,7 @@ export default function BundleDetailPage() {
   )
 
   const { data: moduleTree } = useApi(
-    (signal) => fetchModuleTree(bundleId),
+    () => fetchModuleTree(bundleId),
     [bundleId],
   )
 

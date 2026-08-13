@@ -361,6 +361,7 @@ export default function AiResultModal({
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null)
   const [confirmedEndpointIds, setConfirmedEndpointIds] = useState<Set<number>>(new Set())
   const [savingMatches, setSavingMatches] = useState(false)
+  const [generatingApiFromEndpoints, setGeneratingApiFromEndpoints] = useState(false)
 
   // Initialize extraction state when extractionResult changes
   useEffect(() => {
@@ -573,7 +574,6 @@ export default function AiResultModal({
     })
   }
 
-  const [generatingApiFromEndpoints, setGeneratingApiFromEndpoints] = useState(false)
 
   const handleGenerateApiFromEndpoints = async () => {
     if (documentId == null) return
