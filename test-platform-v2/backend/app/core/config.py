@@ -122,6 +122,19 @@ class Settings(BaseSettings):
     ai_temperature: float = 0.3
     ai_split_calls: bool = True                # split generation into functional + API parallel calls to avoid truncation
 
+    # ── DeepSeek Harness (dsh) — Batch 172 ──
+    dsh_enabled: bool = False                    # 总开关：启用 dsh 执行能力（A/B/C 共用）
+    dsh_runtime: str = "node"                    # node | python-sdk；Windows 本地开发用 node，生产 Linux 用 python-sdk
+    dsh_model: str = "deepseek-v4-flash"         # harness 使用模型
+    dsh_base_url: str = ""                       # 空 = 复用 ai_api_base_url（DeepSeek 兼容端点）
+    dsh_api_key: str = ""                        # 空 = 复用 ai_api_key
+    dsh_session_root: str = ""                   # 会话 JSONL 目录；空 = backend/storage/dsh-sessions
+    dsh_harness_path: str = ""                   # node runtime 的 dsh CLI 入口（如 F:\deepseek-harness\apps\cli\lib\bin.js）
+    dsh_cordis_config: str = ""                  # python-sdk runtime 的 cordis 组合配置；空 = 内置 minimal 配置
+    dsh_timeout_seconds: float = 600.0           # 单任务超时（秒）
+    dsh_max_output_chars: int = 20000            # 输出截断上限
+    dsh_workspace: str = ""                      # agent workspace；空 = 每次任务在 session_root 下建隔离工作区
+
     # ── AI 降级 / 超时（DeepSeek 分类器不可用时的本地降级提取）──
     ai_timeout_seconds: float = 180.0          # 单次 AI 调用超时（秒）
     ai_retry_attempts: int = 2                 # 瞬时失败（超时/网络）总尝试次数，最小 1
@@ -247,6 +260,26 @@ class Settings(BaseSettings):
             return key
         return ""
 
+    @property
+    def dsh_api_key_effective(self) -> str:
+        """DSH 凭据：优先 dsh_api_key，回退 ai_api_key。"""
+        return self.dsh_api_key or self.ai_api_key
+
+    @property
+    def dsh_base_url_effective(self) -> str:
+        """DSH 端点：优先 dsh_base_url，回退 ai_api_base_url。"""
+        return self.dsh_base_url or self.ai_api_base_url
+
+    def dsh_unavailable_reason(self) -> str:
+        """返回 DSH 不可用原因；空字符串 = 可用。"""
+        if not self.dsh_enabled:
+            return "DSH 服务未启用"
+        if not self.dsh_api_key_effective:
+            return "DSH_API_KEY/AI_API_KEY 未配置"
+        # node runtime 的 CLI 入口检查在 dsh_runner.runtime_available() 中做
+        # （支持默认入口兜底），此处只做开关与凭据检查。
+        return ""
+
     def validate_security(self) -> list[str]:
         """Return a list of security misconfigurations; empty list = ok."""
         issues: list[str] = []
@@ -260,6 +293,8 @@ class Settings(BaseSettings):
                 issues.append("TESTER_PASSWORD 未设置，请为种子测试用户设置强密码")
             if self.ai_enabled and not self.ai_api_key:
                 issues.append("AI_API_KEY 未设置，AI 功能将不可用")
+            if self.dsh_enabled and not self.dsh_api_key_effective:
+                issues.append("DSH 已启用但缺少 DSH_API_KEY/AI_API_KEY，DSH 功能将不可用")
             if not self.cookie_secure:
                 issues.append("生产环境 cookie_secure 必须为 True（需要 HTTPS），否则 httpOnly cookie 以明文传输")
             if self.cookie_samesite == "none" and not self.cookie_secure:
