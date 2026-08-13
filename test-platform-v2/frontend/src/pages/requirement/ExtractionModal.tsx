@@ -163,6 +163,21 @@ export default function ExtractionModal({
           </DialogTitle>
         </DialogHeader>
 
+        {/* batch-167: 提取质量徽标（分块/降级/截断显式透出） */}
+        {(() => {
+          try {
+            const meta = result.extraction_meta ? JSON.parse(result.extraction_meta) : null
+            if (!meta) return null
+            return (
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                {meta.mode === 'chunked' && <Badge tone="info" className="text-xs">分块提取 ×{meta.chunks}</Badge>}
+                {meta.fallback && <Badge tone="warning" className="text-xs">本地降级草稿</Badge>}
+                {meta.truncated && <Badge tone="danger" className="text-xs">曾截断</Badge>}
+              </div>
+            )
+          } catch { return null }
+        })()}
+
         {/* Overall assessment */}
         {result.overall_assessment && (
           <Alert className="shrink-0">
@@ -366,3 +381,4 @@ export default function ExtractionModal({
     </Dialog>
   )
 }
+

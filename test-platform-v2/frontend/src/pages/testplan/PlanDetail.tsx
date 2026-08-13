@@ -124,6 +124,7 @@ export default function PlanDetail() {
   const [execAllLoading, setExecAllLoading] = useState(false)
   const [execScopeOpen, setExecScopeOpen] = useState(false)
   const [execScope, setExecScope] = useState<'all' | 'api'>('all')
+  const [autoUi, setAutoUi] = useState(true)
   const [autoExecuting, setAutoExecuting] = useState(false)
   const [environments, setEnvironments] = useState<any[]>([])
   const [selectedEnv, setSelectedEnv] = useState('__none__')
@@ -247,7 +248,7 @@ export default function PlanDetail() {
     if (!ensureEnvSelected()) return
     setExecAllLoading(true)
     try {
-      const result: any = await executeAllCases(planId, selectedEnvId)
+      const result: any = await executeAllCases(planId, selectedEnvId, autoUi)
       toast.success(`批量执行完成: ${result.passed} 通过, ${result.failed} 失败, ${result.skipped} 跳过`)
       load()
       loadExecutions()
@@ -282,6 +283,12 @@ export default function PlanDetail() {
         </Badge>
         <div className="flex-1" />
         <div className="flex items-center gap-2">
+            {execScope === "all" && (
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={autoUi} onChange={(e) => setAutoUi(e.target.checked)} className="size-4" />
+                <span>开启 auto_ui：人工 P0/P1 用例自动编译执行（关闭则标记跳过）</span>
+              </label>
+            )}
           {hasAutomatedCases && (
             <Select value={selectedEnv} onValueChange={setSelectedEnv}>
               <SelectTrigger id="plan-exec-env" className="w-[180px]" aria-label="执行环境">
@@ -636,11 +643,17 @@ export default function PlanDetail() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部用例（API/UI 自动，人工标记跳过）</SelectItem>
+                  <SelectItem value="all">全部用例（API/UI 自动 + 人工 P0/P1 转 UI）</SelectItem>
                   <SelectItem value="api">仅 API 用例</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {execScope === "all" && (
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={autoUi} onChange={(e) => setAutoUi(e.target.checked)} className="size-4" />
+                <span>开启 auto_ui：人工 P0/P1 用例自动编译执行（关闭则标记跳过）</span>
+              </label>
+            )}
             {hasAutomatedCases && (
               <div>
                 <label className="mb-1.5 block text-sm font-medium">执行环境</label>
@@ -724,3 +737,4 @@ export default function PlanDetail() {
     </div>
   )
 }
+

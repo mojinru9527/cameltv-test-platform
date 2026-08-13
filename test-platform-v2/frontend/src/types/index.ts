@@ -110,8 +110,10 @@ export interface RequirementDocumentBrief {
   title: string
   file_type: string
   source_ref: string
+  source_url?: string
   status: string
   extraction_status?: string  // not_started | extracting | pending_review | confirmed
+  extraction_meta?: string
   extraction_progress?: number  // V2: 0.0 - 1.0
   imported_count: number
   imported_func_count: number
@@ -299,6 +301,7 @@ export interface FeatureExtractionResult {
   versions_done?: number           // Versions fully extracted
   diff_summary?: Record<string, unknown>
   inherited_from_version?: string
+  extraction_meta?: string
 }
 
 export interface ExtractionConfirmRequest {
@@ -1388,6 +1391,11 @@ export interface ReleaseBundleOut {
   global_navigation: string
   created_at: string | null
   updated_at: string | null
+  requirement_url: string
+  user_env_url: string
+  api_spec_url: string
+  admin_env_url: string
+  environment_id: number | null
 }
 
 export interface ReleaseBundleListItem {
@@ -1622,4 +1630,55 @@ export interface ProjectSphereView {
   nodes: ProjectSphereNode[]
   edges: ProjectSphereEdge[]
   stats: Record<string, unknown>
+}
+
+// ========== Batch 167: 版本级三类型模块覆盖 ==========
+
+export interface ModuleCoverageRow {
+  module_id: number | null
+  name: string
+  platform: string
+  change_type: string
+  is_p0p1: boolean
+  functional_count: number
+  api_count: number
+  ui_count: number
+  functional_executed: number
+  api_executed: number
+  ui_executed: number
+  covered: boolean
+  executed_covered: boolean
+  gap_types: string[]
+}
+
+export interface VersionCoverageOut {
+  bundle_id: number
+  bundle_name: string
+  client_version: string
+  admin_version: string
+  total_modules: number
+  covered_modules: number
+  covered_rate: number
+  covered_rate_percent: number
+  executed_covered_modules: number
+  executed_covered_rate: number
+  executed_covered_rate_percent: number
+  p0p1_modules: number
+  p0p1_covered_modules: number
+  target_rate: number
+  target_rate_percent: number
+  gate_passed: boolean
+  rows: ModuleCoverageRow[]
+}
+
+export interface ExtractionQuality {
+  document_id: number
+  mode: string
+  chunks: number
+  truncated: boolean
+  fallback: boolean
+  module_count: number
+  function_point_count: number
+  warnings: string[]
+  extraction_meta: string
 }

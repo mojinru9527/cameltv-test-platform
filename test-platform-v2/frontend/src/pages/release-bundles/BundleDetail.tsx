@@ -8,6 +8,8 @@ import {
   triggerVersionDiff,
   fetchRegressionScope,
   triggerRegression,
+  fetchBundleCoverage,
+  importBundleRequirement,
 } from '@/api/releaseBundles'
 import type { RegressionScopeResult, TriggerRegressionResult } from '@/api/releaseBundles'
 import { fetchModuleTree } from '@/api/requirementModules'
@@ -17,6 +19,7 @@ import type {
   ModuleTreeResponse,
   VersionDiffResult,
   Environment,
+  VersionCoverageOut,
 } from '@/types'
 import { Button } from '@/ui'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -98,7 +101,13 @@ export default function BundleDetailPage() {
     client_version: '',
     admin_version: '',
     status: '',
+    requirement_url: '',
+    user_env_url: '',
+    api_spec_url: '',
+    admin_env_url: '',
+    environment_id: undefined as number | null | undefined,
   })
+  const [importingRequirement, setImportingRequirement] = useState(false)
 
   // ── Data ──
   const {
@@ -111,6 +120,10 @@ export default function BundleDetailPage() {
 
   const { data: versionChain } = useApi(
     (signal) => fetchVersionChain(bundleId),
+    [bundleId],
+  )
+  const { data: coverage, refetch: refetchCoverage } = useApi(
+    (signal) => fetchBundleCoverage(bundleId, signal),
     [bundleId],
   )
 
@@ -128,6 +141,11 @@ export default function BundleDetailPage() {
       client_version: bundle.client_version,
       admin_version: bundle.admin_version,
       status: bundle.status,
+      requirement_url: bundle.requirement_url ?? '',
+      user_env_url: bundle.user_env_url ?? '',
+      api_spec_url: bundle.api_spec_url ?? '',
+      admin_env_url: bundle.admin_env_url ?? '',
+      environment_id: bundle.environment_id ?? undefined,
     })
     setEditing(true)
   }
@@ -141,6 +159,11 @@ export default function BundleDetailPage() {
         client_version: editForm.client_version,
         admin_version: editForm.admin_version,
         status: editForm.status,
+        requirement_url: editForm.requirement_url,
+        user_env_url: editForm.user_env_url,
+        api_spec_url: editForm.api_spec_url,
+        admin_env_url: editForm.admin_env_url,
+        environment_id: editForm.environment_id ?? null
       })
       setData(updated)
       setEditing(false)
@@ -166,6 +189,19 @@ export default function BundleDetailPage() {
       toast.success('差异对比完成')
     } finally {
       setDiffing(false)
+    }
+  }
+
+  const handleImportRequirement = async () => {
+    setImportingRequirement(true)
+    try {
+      const result = await importBundleRequirement(bundleId)
+      toast.success(result.reused ? `已复用需求文档 #${result.document_id}` : `已创建需求文档 #${result.document_id}`)
+      refetchCoverage()
+    } catch {
+      toast.error('导入需求失败，请确认需求地址可访问')
+    } finally {
+      setImportingRequirement(false)
     }
   }
 
@@ -347,6 +383,12 @@ export default function BundleDetailPage() {
                 disabled={loadingScope}
               >
                 {loadingScope ? <RefreshCw className="size-3.5 mr-1 animate-spin" /> : <Layers className="size-3.5 mr-1" />}
+              {canManage && bundle.requirement_url && (
+                <Button variant="secondary" size="sm" onClick={handleImportRequirement} disabled={importingRequirement}>
+                  {importingRequirement ? <RefreshCw className="size-3.5 mr-1 animate-spin" /> : <FileText className="size-3.5 mr-1" />}
+                  导入需求
+                </Button>
+              )}
                 回归范围
               </Button>
               {canTriggerRegression && <Button
@@ -502,6 +544,35 @@ export default function BundleDetailPage() {
                   <option value="archived">已归档</option>
                 </select>
               </div>
+              <div className="space-y-1.5">
+                <Label>账号/变量环境</Label>
+                <select
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                  value={editForm.environment_id?.toString() ?? ""}
+                  onChange={(e) => setEditForm({ ...editForm, environment_id: e.target.value ? Number(e.target.value) : null })}
+                >
+                  <option value="">未绑定</option>
+                  {environments.map((environment) => (
+                    <option key={environment.id} value={environment.id.toString()}>{environment.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>需求地址</Label>
+                <Input placeholder="PingCode/Confluence/蓝湖链接" value={editForm.requirement_url} onChange={(e) => setEditForm({ ...editForm, requirement_url: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>体育用户端地址</Label>
+                <Input placeholder="https://sports.example.com" value={editForm.user_env_url} onChange={(e) => setEditForm({ ...editForm, user_env_url: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>接口 OpenAPI/Swagger 地址</Label>
+                <Input placeholder="https://api.example.com/openapi.json" value={editForm.api_spec_url} onChange={(e) => setEditForm({ ...editForm, api_spec_url: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>运营后台地址</Label>
+                <Input placeholder="https://admin.example.com" value={editForm.admin_env_url} onChange={(e) => setEditForm({ ...editForm, admin_env_url: e.target.value })} />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -519,6 +590,10 @@ export default function BundleDetailPage() {
             版本链 {versionChain ? `(${versionChain.length})` : ''}
           </TabsTrigger>
           <TabsTrigger value="diff">
+          <TabsTrigger value="coverage">
+            <Shield className="size-4 mr-1" />
+            三类型覆盖
+          </TabsTrigger>
             <FileText className="size-4 mr-1" />
             版本差异
           </TabsTrigger>
@@ -567,6 +642,90 @@ export default function BundleDetailPage() {
         </TabsContent>
 
         {/* ── Diff Tab ── */}
+        {/* ── Coverage Tab (batch-167 Phase 0) ── */}
+        <TabsContent value="coverage" className="mt-4">
+          {tab === "coverage" && (<>
+          {coverage ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+                <Card>
+                  <CardContent className="p-3 text-center">
+                    <div className={cn("text-2xl font-bold", coverage.gate_passed ? "text-status-success" : "text-status-warning")}>{coverage.covered_rate_percent}%</div>
+                    <div className="text-xs text-muted-foreground">三类型用例覆盖（目标 60%）</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-3 text-center">
+                    <div className="text-2xl font-bold">{coverage.covered_modules}/{coverage.total_modules}</div>
+                    <div className="text-xs text-muted-foreground">已覆盖模块</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-3 text-center">
+                    <div className="text-2xl font-bold">{coverage.executed_covered_rate_percent}%</div>
+                    <div className="text-xs text-muted-foreground">API+UI 执行覆盖</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-3 text-center">
+                    <div className="text-2xl font-bold">{coverage.p0p1_covered_modules}/{coverage.p0p1_modules}</div>
+                    <div className="text-xs text-muted-foreground">P0/P1 已覆盖</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-3 text-center">
+                    <div className="text-2xl font-bold">{coverage.client_version || "-"}</div>
+                    <div className="text-xs text-muted-foreground">版本</div>
+                  </CardContent>
+                </Card>
+              </div>
+              {coverage.rows.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>尚无模块树数据</p>
+                  <p className="text-xs mt-1">请先确认版本差异构建模块树，或导入需求文档</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs text-muted-foreground">
+                        <th className="py-2 pr-2">模块</th>
+                        <th className="py-2 px-2">P0/P1</th>
+                        <th className="py-2 px-2 text-right">功能</th>
+                        <th className="py-2 px-2 text-right">接口</th>
+                        <th className="py-2 px-2 text-right">UI</th>
+                        <th className="py-2 px-2 text-right">API/UI 已执行</th>
+                        <th className="py-2 pl-2">缺口</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {coverage.rows.map((row) => (
+                        <tr key={row.module_id ?? row.name} className="border-b last:border-0">
+                          <td className="py-2 pr-2 font-medium">{row.name}</td>
+                          <td className="py-2 px-2">{row.is_p0p1 ? "P0/P1" : ""}</td>
+                          <td className="py-2 px-2 text-right">{row.functional_count}</td>
+                          <td className="py-2 px-2 text-right">{row.api_count}</td>
+                          <td className="py-2 px-2 text-right">{row.ui_count}</td>
+                          <td className="py-2 px-2 text-right">{row.api_executed > 0 && row.ui_executed > 0 ? "是" : "否"}</td>
+                          <td className="py-2 pl-2">
+                            {row.gap_types.length === 0 ? (
+                              <Badge tone="success" className="text-xs">已覆盖</Badge>
+                            ) : (
+                              <span className="text-xs text-status-warning">{row.gap_types.join(", ")}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-muted-foreground">加载覆盖数据中...</div>
+          )}
+          </>)}
+        </TabsContent>
         <TabsContent value="diff" className="mt-4">
           <Card>
             <CardHeader>
@@ -627,3 +786,8 @@ export default function BundleDetailPage() {
     </div>
   )
 }
+
+
+
+
+

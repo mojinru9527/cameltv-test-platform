@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
   confirmApiMatches,
+  generateApiFromEndpoints,
   confirmExtraction,
   fetchApiMatchSelection,
   generateTestCases,
@@ -572,6 +573,21 @@ export default function AiResultModal({
     })
   }
 
+  const [generatingApiFromEndpoints, setGeneratingApiFromEndpoints] = useState(false)
+
+  const handleGenerateApiFromEndpoints = async () => {
+    if (documentId == null) return
+    setGeneratingApiFromEndpoints(true)
+    try {
+      const result = await generateApiFromEndpoints(documentId, selectedServiceId ?? undefined)
+      toast.success(`已按已导入接口生成 ${result.generated} 条接口用例（匹配 ${result.matched} 个端点）`)
+    } catch {
+      toast.error('生成真实接口用例失败，请先在接口测试导入 OpenAPI/Swagger')
+    } finally {
+      setGeneratingApiFromEndpoints(false)
+    }
+  }
+
   const handleConfirmMatches = async () => {
     if (documentId == null || selectedServiceId == null) {
       toast.warning('请先选择 API 服务')
@@ -1103,6 +1119,16 @@ export default function AiResultModal({
                             {savingMatches && <Loader2 className="size-3.5 animate-spin" />}
                             确认并保存匹配
                           </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="bg-card"
+                            onClick={handleGenerateApiFromEndpoints}
+                            disabled={generatingApiFromEndpoints}
+                          >
+                            {generatingApiFromEndpoints && <Loader2 className="size-3.5 animate-spin" />}
+                            按已导入接口生成用例
+                          </Button>
                         </div>
                         <div>
                           {apiMatches.slice(0, 8).map((m) => {
@@ -1478,3 +1504,5 @@ export default function AiResultModal({
     </Dialog>
   )
 }
+
+
