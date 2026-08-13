@@ -303,6 +303,7 @@ class ExecuteAllBody(BaseModel):
     environment_id: int | None = None
     auto_ui: bool = True  # batch-167: manual P0/P1 自动转 UI 执行
     ui_environment_id: int | None = None  # batch-168 D7: UI 自动化独立执行环境
+    async_mode: bool = False  # batch-169 C168-2: true 时后台执行并立即返回
 
 
 @router.post("/{plan_id}/execute-all", response_model=R[dict], summary="一键批量执行计划全部用例")
@@ -314,7 +315,24 @@ def execute_all_cases(
     current: CurrentUser = Depends(require_permission("testplan:execute")),
     db: Session = Depends(get_db),
 ):
-    """一键执行计划中全部用例：API 用例自动执行，人工/UI 用例标记为 skip。"""
+    """一键执行计划中全部用例：API 用例自动执行，人工/UI 用例标记为 skip。
+
+    batch-169：async_mode=true 时后台执行并立即返回，避免多 UI 用例超过网关 300s。
+    """
+    if body and body.async_mode:
+        background_tasks.add_task(
+            test_plan_service.run_async_execute_all,
+            plan_id=plan_id,
+            executor_id=current.user.id,
+            environment_id=body.environment_id,
+            ui_environment_id=body.ui_environment_id,
+            auto_ui=body.auto_ui,
+            project_id=current.project_id or 0,
+        )
+        _audit(req, current, db, "plan:execute_all:async", f"plan #{plan_id}",
+               f"environment={body.environment_id}, ui_environment={body.ui_environment_id}, auto_ui={body.auto_ui}")
+        return R.ok({"async": True, "message": "计划已在后台执行，请稍后刷新执行记录"})
+
     try:
         result = test_plan_service.execute_all_cases(
             db,
