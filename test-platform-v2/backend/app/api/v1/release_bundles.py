@@ -27,6 +27,7 @@ from app.schemas.release_bundle import (
     ReleaseBundleOut,
     ReleaseBundleUpdate,
     ReleaseBundleVersionChain,
+    VersionCoverageOut,
     VersionDiffConfirmRequest,
     VersionDiffRequest,
 )
@@ -186,6 +187,16 @@ def update_bundle(
     return R.ok(ReleaseBundleOut.model_validate(bundle))
 
 
+
+@router.get("/{bundle_id}/coverage", response_model=R[VersionCoverageOut], summary="版本三类型模块覆盖矩阵（Phase 0）")
+def get_bundle_coverage(
+    bundle_id: int,
+    current: CurrentUser = Depends(require_permission("knowledge:view")),
+    db: Session = Depends(get_db),
+):
+    """返回发布包模块 × 功能/接口/UI × 执行状态的覆盖矩阵与 60% 门禁。"""
+    from app.services.version_coverage_service import compute_bundle_coverage
+    return R.ok(VersionCoverageOut(**compute_bundle_coverage(db, bundle_id, current.project_id or 0)))
 @router.delete("/{bundle_id}", response_model=R[dict], summary="删除发布包")
 def delete_bundle(
     bundle_id: int,
@@ -524,4 +535,5 @@ def trigger_regression_for_bundle(
         "triggered": len(triggered_jobs),
         "jobs": triggered_jobs,
     })
+
 

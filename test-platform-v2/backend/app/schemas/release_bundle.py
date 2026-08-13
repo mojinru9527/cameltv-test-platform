@@ -402,3 +402,45 @@ class ProjectSphereView(BaseModel):
     stats: dict = Field(default_factory=dict)  # {versions, modules, pages, relations}
 
 
+
+# ═══════════════════════════════════════════════════════
+# Version coverage matrix (batch-167 Phase 0)
+# ═══════════════════════════════════════════════════════
+
+class ModuleCoverageRow(BaseModel):
+    """单个版本模块的三类型用例与执行覆盖统计。"""
+    module_id: int | None = None
+    name: str = ""
+    platform: str = ""
+    change_type: str = ""
+    is_p0p1: bool = False
+    functional_count: int = 0
+    api_count: int = 0
+    ui_count: int = 0
+    functional_executed: int = 0
+    api_executed: int = 0
+    ui_executed: int = 0
+    covered: bool = False
+    executed_covered: bool = False
+    gap_types: list[str] = Field(default_factory=list)
+
+
+class VersionCoverageOut(BaseModel):
+    """版本级三类型模块覆盖矩阵与 60% 门禁。"""
+    bundle_id: int
+    bundle_name: str = ""
+    client_version: str = ""
+    admin_version: str = ""
+    total_modules: int = 0
+    covered_modules: int = 0
+    covered_rate: float = 0.0
+    covered_rate_percent: float = 0.0
+    executed_covered_modules: int = 0
+    executed_covered_rate: float = 0.0
+    executed_covered_rate_percent: float = 0.0
+    p0p1_modules: int = 0
+    p0p1_covered_modules: int = 0
+    target_rate: float = 0.6
+    target_rate_percent: float = 60.0
+    gate_passed: bool = False
+    rows: list[ModuleCoverageRow] = Field(default_factory=list)
