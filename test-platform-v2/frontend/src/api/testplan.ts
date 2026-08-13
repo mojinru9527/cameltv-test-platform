@@ -98,10 +98,12 @@ export async function fetchExecutions(planId: number, pcaseId?: number, signal?:
 
 // ── Batch execution ──
 
-export async function executeAllCases(planId: number, environmentId?: number) {
-  return api.post(`/test-plans/${planId}/execute-all`, { environment_id: environmentId || null })
+export async function executeAllCases(planId: number, environmentId?: number, autoUi: boolean = true) {
+  return api.post(`/test-plans/${planId}/execute-all`, { environment_id: environmentId || null, auto_ui: autoUi })
 }
 
 export async function autoExecutePlan(planId: number, environmentId?: number) {
   return api.post(`/test-plans/${planId}/auto-execute`, { environment_id: environmentId || null })
 }
+
+
