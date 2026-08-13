@@ -1,0 +1,25 @@
+{
+  "batch": 170,
+  "condition": "C170-1",
+  "date": "2026-08-13",
+  "environment": "生产 Railway 后端（batch-170 已部署）+ 生产前端 Vercel",
+  "case": {
+    "id": 11415,
+    "title": "[UI] 登录后个人中心-显示我的收藏",
+    "module": "篮球相关-首页调整",
+    "priority": "P0"
+  },
+  "plan": {
+    "id": 15,
+    "name": "C170-1 生产登录态 UI"
+  },
+  "result": {
+    "status": "pass",
+    "notes": "UI 自动执行: 1 条断言全部通过",
+    "storage_state": "UI 环境#2 加密变量已注入"
+  },
+  "conclusion": "C170-1 通过：demo/login 登录态 storageState 在生产 UI 执行链路生效，/my 登录后页面断言通过；D7 分环境与 LLM 编译同样在生产可用 → C168-1/C170-1 可关闭；C167-1 仍待写操作数据准备与选择器稳定性全面复测。",
+  "screenshots": [
+    "screenshots/c170-1-prod-login-ui-pass.png"
+  ]
+}

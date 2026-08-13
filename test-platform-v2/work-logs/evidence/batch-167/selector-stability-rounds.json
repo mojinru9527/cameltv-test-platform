@@ -1,0 +1,24 @@
+{
+  "date": "2026-08-13",
+  "site": "https://www.camel1.tv",
+  "login_state": "storageState 已注入（userId=11025728）",
+  "spec": "specs/production-p0-modules.spec.ts",
+  "rounds": 3,
+  "results": {
+    "passed_stable": [
+      "P0-UI-002 赛事详情",
+      "P0-UI-003 直播间",
+      "P0-UI-004 资讯",
+      "P0-UI-005 搜索",
+      "P0-UI-007 联赛",
+      "P0-UI-008 回放",
+      "P0-UI-009 世界杯",
+      "P0-UI-010 性能"
+    ],
+    "failed_consistent": {
+      "P0-UI-001 首页": "断言 REGISTER 可见失败——登录态下头部显示已登录用户（userId/Silver Diamond），REGISTER 不再存在",
+      "P0-UI-006 我的": "断言 Login/登录 可见失败——登录态下 /my 显示 11025728 + Silver Diamond，Login 引导不再存在"
+    }
+  },
+  "conclusion": "3 轮结果完全一致：8/10 通过、2/10 因“旧断言假定匿名态”失败。选择器本身无抖动；需把这两条断言改为“匿名/已登录双态兼容”。"
+}

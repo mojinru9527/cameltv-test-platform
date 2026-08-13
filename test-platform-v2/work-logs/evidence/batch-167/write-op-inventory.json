@@ -1,0 +1,5454 @@
+{
+  "login_register": 260,
+  "collect_like_comment": 83,
+  "recharge_payment": 310,
+  "withdraw": 75,
+  "bet_predict": 6,
+  "other": 42,
+  "cases": {
+    "login_register": [
+      {
+        "id": 2469,
+        "module": "",
+        "title": "预测模块未登录时提示登录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2752,
+        "module": "任务内容",
+        "title": "任务内容列表展示「登录 奖励银钻」任务",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2939,
+        "module": "登录注册",
+        "title": "功能点-登录注册页面所有元素正常显示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3039,
+        "module": "视频流广告",
+        "title": "聊天-已登录用户发送聊天消息",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3119,
+        "module": "邀请好友",
+        "title": "使用Google账号注册成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3240,
+        "module": "银钻系统",
+        "title": "邀请好友成功注册后，邀请方获得银钻",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3300,
+        "module": "资讯详情",
+        "title": "资讯详情页未登录操作拦截",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3358,
+        "module": "邀请好友",
+        "title": "好友完成注册后邀请进度更新",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3442,
+        "module": "登录注册",
+        "title": "重置登录密码-输入正确手机号获取验证码并重置成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3500,
+        "module": "我的",
+        "title": "未登录状态下我的页面展示占位内容",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3713,
+        "module": "直播间提示弹窗",
+        "title": "点击「立即注册」跳转注册页",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3760,
+        "module": "邀请好友",
+        "title": "注册Camel邮箱格式错误",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3786,
+        "module": "我的装扮",
+        "title": "我的装扮-功能点-未登录访问拦截",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3816,
+        "module": "视频流广告",
+        "title": "预测-未登录用户点击预测Tab",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3873,
+        "module": "礼物面板",
+        "title": "未登录用户打开礼物面板被拦截",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3897,
+        "module": "领银钻",
+        "title": "下载APP并登录任务-未下载用户展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4021,
+        "module": "开播",
+        "title": "未登录用户点击开播入口被拦截",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4086,
+        "module": "创作者主页",
+        "title": "未登录用户点击 Follow 跳转登录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4438,
+        "module": "收藏",
+        "title": "已登录用户收藏球员成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4751,
+        "module": "登录注册",
+        "title": "去注册链接跳转",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4867,
+        "module": "UGC列表",
+        "title": "我已标签页-已登录用户展示已解锁文章",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5049,
+        "module": "主播",
+        "title": "未登录点击关注",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5165,
+        "module": "我的",
+        "title": "已登录状态下我的页面展示用户头像icon",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5186,
+        "module": "我已解锁",
+        "title": "未登录访问我已解锁页面",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5325,
+        "module": "设置/退出登录",
+        "title": "退出登录-确认后退出成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5406,
+        "module": "登录注册",
+        "title": "登录密码输入合法组合",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5675,
+        "module": "登录注册",
+        "title": "登录注册页面元素完整展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5867,
+        "module": "登录注册",
+        "title": "已有账号?去登录链接跳转",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5899,
+        "module": "创作者主页",
+        "title": "已登录用户点击 Follow 关注成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5942,
+        "module": "设置",
+        "title": "设置-退出登录成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6024,
+        "module": "登录注册",
+        "title": "首次成功登录展示完善个人资料弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6044,
+        "module": "银钻系统",
+        "title": "每日任务-首次登录（任意渠道）完成获得银钻",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6087,
+        "module": "UGC功能概述",
+        "title": "查看免费文章-登录用户可查看",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6088,
+        "module": "我的",
+        "title": "未登录用户进入我的页面展示登录引导",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6089,
+        "module": "直播间提示弹窗",
+        "title": "未登录用户进入直播间展示登录提示弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6197,
+        "module": "意见反馈",
+        "title": "已登录用户自动填充联系方式-邮箱优先",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6322,
+        "module": "直播间提示弹窗-登录提示",
+        "title": "点击“立即注册”按钮跳转注册页",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6416,
+        "module": "UGC功能概述",
+        "title": "查看免费文章-未登录用户可查看",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6584,
+        "module": "我的",
+        "title": "未登录状态下点击头像icon触发登录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6613,
+        "module": "直播间提示弹窗-登录提示",
+        "title": "点击“去登录”按钮跳转登录页",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6707,
+        "module": "收藏",
+        "title": "未登录用户点击收藏弹登录提示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6749,
+        "module": "我的",
+        "title": "未登录状态下我的页面展示默认头像icon",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6759,
+        "module": "直播间提示弹窗",
+        "title": "点击「去登录」跳转登录页",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6862,
+        "module": "视频流广告",
+        "title": "聊天-未登录用户查看聊天消息",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7080,
+        "module": "登录注册",
+        "title": "完善个人资料-首次登录弹出完善资料弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7086,
+        "module": "赛事详情页(PC)-聊天室",
+        "title": "聊天室-已登录用户发送消息成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7173,
+        "module": "视频流广告",
+        "title": "预测-已登录用户进行预测",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7190,
+        "module": "赛事详情页(PC)-点评",
+        "title": "点评下当前比赛-已登录用户发表评论成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7205,
+        "module": "直播间提示弹窗",
+        "title": "已登录用户进入直播间不展示登录提示弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7357,
+        "module": "领银钻",
+        "title": "登录Camel任务-未登录时显示去登录按钮",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7789,
+        "module": "领银钻",
+        "title": "登录Camel任务-未登录用户点击去登录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7821,
+        "module": "用户管理-屏蔽记录",
+        "title": "页面-未登录访问屏蔽记录页面",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8315,
+        "module": "邀请好友",
+        "title": "使用绑定邮箱登录Camel成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8342,
+        "module": "我的",
+        "title": "未登录状态下点击“点击登录”文字触发登录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8422,
+        "module": "直播间提示弹窗",
+        "title": "未登录用户进入直播间展示提示弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8659,
+        "module": "领银钻",
+        "title": "登录Camel任务-已登录时显示已获得",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8724,
+        "module": "热门赛事",
+        "title": "热门赛事-未登录用户可查看列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8734,
+        "module": "邀请好友",
+        "title": "未登录访问邀请好友页面",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8816,
+        "module": "任务内容",
+        "title": "注册奖励银钻任务内容展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8831,
+        "module": "骆驼币流水记录",
+        "title": "未登录访问流水记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8855,
+        "module": "登录注册",
+        "title": "去注册-点击去注册切换到注册表单",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9027,
+        "module": "登录注册",
+        "title": "忘记密码-点击忘记密码跳转至重置登录密码页面",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9233,
+        "module": "camel",
+        "title": "未登录点击“我的兑换记录”被拦截（负向）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9558,
+        "module": "关于我们/用户注册协议",
+        "title": "用户注册协议-点击可查看协议内容",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9631,
+        "module": "邀请好友",
+        "title": "注册Camel成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9661,
+        "module": "领银钻",
+        "title": "注册Camel账号任务-未注册用户点击去注册",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9763,
+        "module": "邀请好友",
+        "title": "好友登录Camel后邀请者获得银钻",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9819,
+        "module": "我的",
+        "title": "已登录用户进入我的页面展示完整信息",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9828,
+        "module": "意见反馈",
+        "title": "联系方式-已登录用户自动填入邮箱",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10136,
+        "module": "预测Pick",
+        "title": "预测中-已登录-主胜下注成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10137,
+        "module": "预测Pick",
+        "title": "预测中-未登录-点击预测按钮",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10166,
+        "module": "注册登录",
+        "title": "注册登录-主流程",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10252,
+        "module": "新用户任务",
+        "title": "新用户注册后银钻自动到账",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10256,
+        "module": "安装APP登录任务",
+        "title": "首次登录APP获得银钻",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10258,
+        "module": "每日登录任务",
+        "title": "每日首次登录完成每日任务",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10303,
+        "module": "UGC创作者管理",
+        "title": "创作者成功登录后台并发布文章",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10426,
+        "module": "首页头部",
+        "title": "首页按钮展示「注册」并点击弹出登录注册弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10486,
+        "module": "赛事详情页",
+        "title": "未登录用户进入赛事详情页弹出引导登录弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10517,
+        "module": "赛事详情页-预测比赛",
+        "title": "未登录用户点击预测时引导登录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10537,
+        "module": "赛事详情页-引导登录",
+        "title": "未登录用户进入赛事详情页弹出引导登录且无WhatsApp弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10538,
+        "module": "赛事详情页-引导登录",
+        "title": "已登录用户进入赛事详情页不弹任何引导弹窗",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10556,
+        "module": "资讯列表",
+        "title": "已登录用户在「我的收藏」中查看已收藏资讯",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10557,
+        "module": "资讯列表",
+        "title": "未登录用户点击「我的收藏」引导登录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10573,
+        "module": "资讯详情",
+        "title": "登录用户点赞资讯成功且点赞数实时更新",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10574,
+        "module": "资讯详情",
+        "title": "未登录用户点击点赞触发登录引导且不计赞",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10578,
+        "module": "资讯详情",
+        "title": "登录用户收藏资讯后可在「我的收藏」查看",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10579,
+        "module": "资讯详情",
+        "title": "未登录用户点击收藏引导登录且不写数据",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10636,
+        "module": "登录注册赠送",
+        "title": "新用户注册后收到赠送银钻提示且到账",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10645,
+        "module": "UGC列表",
+        "title": "登录用户进入UGC列表页，正常展示UGC内容列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 11089,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 新用户注册后银钻自动到账",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11093,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 首次登录APP获得银钻",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11095,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 每日首次登录完成每日任务",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11138,
+        "module": "UGC创作者管理",
+        "title": "[UI] 创作者成功登录后台并发布文章",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11415,
+        "module": "篮球相关-首页调整",
+        "title": "[UI] 登录后个人中心-显示我的收藏",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 2425,
+        "module": "我的资料",
+        "title": "未登录访问我的资料页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2459,
+        "module": "",
+        "title": "未登录点击“我的”跳转登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2479,
+        "module": "picks",
+        "title": "未登录点击聊天提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2564,
+        "module": "任务内容",
+        "title": "注册奖励银钻任务详情查看",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2653,
+        "module": "直播间提示弹窗",
+        "title": "点击登录提示弹窗的'去登录'按钮跳转登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2688,
+        "module": "成长礼物奖励",
+        "title": "编辑成长礼物奖励-未登录用户点击编辑被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2722,
+        "module": "银钻系统",
+        "title": "银钻系统页面在未登录时访问被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2786,
+        "module": "",
+        "title": "未登录点击我的入口跳转登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2787,
+        "module": "用户资料卡",
+        "title": "用户资料卡-预测入口未登录时拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2871,
+        "module": "资讯详情",
+        "title": "未登录点击收藏提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2873,
+        "module": "勋章/新增_编辑勋章",
+        "title": "新增勋章-未登录访问页面被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2877,
+        "module": "设置/退出登录",
+        "title": "退出登录-取消操作不退出",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2910,
+        "module": "登录注册",
+        "title": "登录注册页面元素缺失或错乱",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2951,
+        "module": "数字货币支付",
+        "title": "Deposit 入口在未登录时不可用",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2962,
+        "module": "热门赛事",
+        "title": "热门赛事-未登录点击我的跳转登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3036,
+        "module": "每日收益",
+        "title": "每日收益页面在未登录时跳转登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3060,
+        "module": "预测记录",
+        "title": "预测记录-我预测记录入口-未登录时点击",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3090,
+        "module": "关于我们/用户注册协议",
+        "title": "用户注册协议-协议内容加载失败提示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3187,
+        "module": "关注",
+        "title": "未登录用户访问关注页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3202,
+        "module": "预测",
+        "title": "预测页面-聊天入口在未登录时提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3280,
+        "module": "picks",
+        "title": "未登录时访问 picks 页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3310,
+        "module": "",
+        "title": "icon入口在未登录状态下点击跳转登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3322,
+        "module": "邀请好友",
+        "title": "好友重复注册不增加进度",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3336,
+        "module": "我的",
+        "title": "未登录状态下点击“免费领银钻”入口提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3338,
+        "module": "意见反馈",
+        "title": "未登录用户联系方式为空",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3395,
+        "module": "设置",
+        "title": "设置页面在未登录状态下仍可访问",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3405,
+        "module": "邀请好友",
+        "title": "邀请好友页面在未登录状态下访问",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3621,
+        "module": "领银钻",
+        "title": "登录Camel任务-已登录用户展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3638,
+        "module": "银钻系统",
+        "title": "被邀请人未成功注册，邀请方不获得银钻",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3667,
+        "module": "",
+        "title": "未登录用户进入赛事回放详情页可正常播放",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3779,
+        "module": "登录注册",
+        "title": "登录密码输入超长",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3807,
+        "module": "关于我们",
+        "title": "关于我们-点击用户注册协议跳转",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3838,
+        "module": "创作者中心",
+        "title": "创作者中心页面在未登录状态下访问",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4013,
+        "module": "我的",
+        "title": "已登录状态下不展示“点击登录”文字",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4036,
+        "module": "积分/积分页",
+        "title": "积分页列表-未登录点击收藏提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4049,
+        "module": "直播间提示弹窗",
+        "title": "点击「立即注册」后取消注册返回直播间",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4163,
+        "module": "直播间提示弹窗",
+        "title": "点击「立即注册」后注册成功返回直播间",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4177,
+        "module": "预测",
+        "title": "玩法说明-未登录用户点击玩法说明",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4208,
+        "module": "邀请好友记录",
+        "title": "验证注册方式为Google的记录展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4294,
+        "module": "预测记录",
+        "title": "预测记录页在未登录状态下访问被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4312,
+        "module": "设置",
+        "title": "设置-退出登录取消操作",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4566,
+        "module": "game",
+        "title": "验证分享功能在未登录时提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4601,
+        "module": "领银钻",
+        "title": "验证未登录用户点击banner被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4631,
+        "module": "邀请好友",
+        "title": "被邀请者活动页面无注册入口",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4636,
+        "module": "银钻预测玩法",
+        "title": "未登录访问银钻预测玩法页面被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4647,
+        "module": "登录注册",
+        "title": "完善个人资料-非首次登录不弹窗",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4677,
+        "module": "picks",
+        "title": "未登录访问Picks页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4731,
+        "module": "推荐搜索",
+        "title": "推荐搜索页面在未登录状态下可访问",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4789,
+        "module": "任务内容",
+        "title": "任务内容列表无「登录 奖励银钻」任务时显示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4800,
+        "module": "意见反馈",
+        "title": "举报入口在未登录状态下点击被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4826,
+        "module": "赛事详情-数据",
+        "title": "数据页-未登录点击聊天入口",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4874,
+        "module": "我的",
+        "title": "未登录状态下点击“我的装扮”入口提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4924,
+        "module": "主播",
+        "title": "未登录用户发送消息被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4934,
+        "module": "登录注册",
+        "title": "忘记密码-点击忘记密码后返回登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4937,
+        "module": "登录注册",
+        "title": "完善个人资料弹窗关闭后再次登录不展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5075,
+        "module": "领银钻",
+        "title": "每日福利模块-未登录用户展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5088,
+        "module": "热门赛事",
+        "title": "热门赛事-未登录点击预测入口跳转登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5383,
+        "module": "视频流广告",
+        "title": "聊天-未登录用户发送聊天消息",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5389,
+        "module": "动画直播",
+        "title": "未登录用户发送聊天被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5420,
+        "module": "邀请好友",
+        "title": "使用绑定邮箱登录密码错误",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5525,
+        "module": "领银钻",
+        "title": "未登录用户访问领银钻页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5526,
+        "module": "聊天室",
+        "title": "未登录发送消息被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5529,
+        "module": "领银钻",
+        "title": "下载APP并登录任务-已获得状态展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5534,
+        "module": "UGC详情",
+        "title": "Follow 按钮-未登录点击跳转登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5550,
+        "module": "picks",
+        "title": "未登录点击分享提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5552,
+        "module": "我的收藏",
+        "title": "未登录用户访问我的收藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5557,
+        "module": "意见反馈",
+        "title": "联系方式-未登录用户可手动输入",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5649,
+        "module": "登录注册",
+        "title": "重置登录密码-手机号未注册时提示错误",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5921,
+        "module": "意见反馈",
+        "title": "联系方式-已登录用户仅手机号时自动填入手机号",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6014,
+        "module": "UGC详情",
+        "title": "UGC详情页-未登录用户查看Under选项",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6039,
+        "module": "直播间提示弹窗",
+        "title": "点击「去登录」后取消登录返回直播间",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6138,
+        "module": "礼物面板",
+        "title": "充值入口在未登录时点击",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6148,
+        "module": "数据_1-底部导航",
+        "title": "未登录点击底部导航「我的」跳转登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6159,
+        "module": "UGC列表",
+        "title": "我已标签页-未登录用户点击跳转登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6232,
+        "module": "意见反馈",
+        "title": "未登录状态下通过“被禁言”弹窗跳转被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6292,
+        "module": "登录注册",
+        "title": "去注册-注册表单点击已有账号去登录切换回登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6435,
+        "module": "资讯详情",
+        "title": "资讯详情-功能点展示-负向（未登录）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6587,
+        "module": "",
+        "title": "未登录访问商城",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6599,
+        "module": "银钻系统",
+        "title": "邀请好友未成功注册时无奖励",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6646,
+        "module": "聊天室",
+        "title": "未登录点击“点评下当前比赛”拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6711,
+        "module": "预测",
+        "title": "预测页面-分享功能在未登录时提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6722,
+        "module": "银钻系统",
+        "title": "每日任务-非首次登录不重复获得银钻",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6748,
+        "module": "热门联赛/管理",
+        "title": "未登录访问管理页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6760,
+        "module": "广告",
+        "title": "未登录用户发送聊天消息被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6922,
+        "module": "用户资料卡",
+        "title": "用户资料卡-聊天入口未登录时跳转登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6943,
+        "module": "我的",
+        "title": "已登录状态下点击头像icon进入我的资料",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6979,
+        "module": "介绍页",
+        "title": "解锁更高等级礼物-未登录用户查看介绍页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7035,
+        "module": "直播间提示弹窗",
+        "title": "点击登录提示弹窗的'立即注册'按钮跳转注册页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7036,
+        "module": "登录注册",
+        "title": "登录密码输入长度边界",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7144,
+        "module": "兑换记录弹窗",
+        "title": "兑换记录弹窗在未登录时点击",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7170,
+        "module": "视频直播/聊天",
+        "title": "未登录用户发送聊天消息被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7183,
+        "module": "我的装扮",
+        "title": "我的装扮-处理方式-佩戴时未登录用户被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7259,
+        "module": "",
+        "title": "未登录用户点击收藏分组提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7403,
+        "module": "领银钻",
+        "title": "登录Camel任务-点击去登录跳转登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7528,
+        "module": "领银钻",
+        "title": "注册Camel账号任务-已注册用户点击去注册",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7556,
+        "module": "赛事详情页(PC)-点评",
+        "title": "点评下当前比赛-未登录用户发表评论被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7564,
+        "module": "意见反馈",
+        "title": "已登录用户自动填充联系方式-仅有手机号",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7628,
+        "module": "我的",
+        "title": "已登录状态下我的页面不展示占位内容",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7705,
+        "module": "赛事详情-阵容",
+        "title": "阵容页面在未登录状态下可访问",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7783,
+        "module": "",
+        "title": "验证বাংলা分享入口在未登录状态下点击提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7795,
+        "module": "订阅",
+        "title": "未登录用户访问订阅页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7856,
+        "module": "视频直播/分享",
+        "title": "分享功能在未登录时提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8008,
+        "module": "赛事详情页(PC)-聊天室",
+        "title": "聊天室-未登录用户发送消息被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8033,
+        "module": "直播间提示弹窗",
+        "title": "点击「去登录」后登录成功返回直播间",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8088,
+        "module": "视频流广告",
+        "title": "未登录点击分享提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8318,
+        "module": "我的",
+        "title": "我的账户列表项在未登录时点击",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8369,
+        "module": "创作者主页",
+        "title": "未登录用户访问创作者主页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8433,
+        "module": "数据_1-底部导航",
+        "title": "未登录点击底部导航「预测」跳转登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8496,
+        "module": "聊天",
+        "title": "聊天列表不显示'来到直播间'消息当用户未登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8640,
+        "module": "UGC列表",
+        "title": "未登录用户访问UGC列表",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8688,
+        "module": "资讯详情",
+        "title": "未登录点击点赞提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8751,
+        "module": "意见反馈",
+        "title": "已登录用户自动填充联系方式-仅有邮箱",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8801,
+        "module": "我的",
+        "title": "E勋章列表项在未登录状态下展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8912,
+        "module": "登录注册",
+        "title": "非首次登录不展示完善个人资料弹窗",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8958,
+        "module": "聊天室/聊天室-赛程",
+        "title": "赛程Tab-未登录用户访问",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9006,
+        "module": "我的",
+        "title": "未登录用户点击「预测」入口跳转登录页",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9026,
+        "module": "",
+        "title": "未登录用户点击播放按钮时提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9029,
+        "module": "热门球队",
+        "title": "联赛及球队管理入口-未登录访问",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9083,
+        "module": "赛事详情-赛程",
+        "title": "赛程页面聊天入口在未登录时提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9187,
+        "module": "介绍页",
+        "title": "介绍页-未登录用户访问",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9299,
+        "module": "首页-进行中的比赛_热门比赛",
+        "title": "未登录用户访问进行中的比赛页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9353,
+        "module": "赛事详情-赛程",
+        "title": "赛程页面分享功能在未登录时提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9401,
+        "module": "邀请好友",
+        "title": "好友未使用绑定邮箱登录不发放奖励",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9497,
+        "module": "视频流广告",
+        "title": "预测-未登录用户进行预测操作",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9706,
+        "module": "联赛详情页-收藏",
+        "title": "未登录用户点击收藏提示登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9774,
+        "module": "礼物面板",
+        "title": "未登录点击互动入口被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9822,
+        "module": "登录注册",
+        "title": "登录密码输入纯数字",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9857,
+        "module": "文章购买记录",
+        "title": "未登录访问文章购买记录页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9900,
+        "module": "直播间提示弹窗",
+        "title": "未登录用户点击「关注频道」后弹窗关闭",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9976,
+        "module": "重复与并发",
+        "title": "启动登录-登录并建立会话重复点击与并发提交保持幂等",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10027,
+        "module": "异常恢复",
+        "title": "启动登录-认证服务超时后可恢复且不产生脏数据",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10076,
+        "module": "联赛详情/收藏",
+        "title": "联赛详情-收藏（登录/未登录）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10081,
+        "module": "球员详情/收藏",
+        "title": "球员详情-收藏（登录/未登录）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10087,
+        "module": "兑换",
+        "title": "Camel商城-未登录拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10095,
+        "module": "弹窗",
+        "title": "引导注册弹窗（每自然日首次非登录进入）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10108,
+        "module": "赛事详情/聊天弹幕",
+        "title": "赛事详情页聊天室发送消息（登录）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10109,
+        "module": "赛事详情/聊天弹幕",
+        "title": "赛事详情页聊天室未登录发送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10135,
+        "module": "列表",
+        "title": "预测记录-未登录进入",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10149,
+        "module": "预测Pick",
+        "title": "预测记录入口-已登录/未登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10253,
+        "module": "新用户任务",
+        "title": "重复注册不发放银钻",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10257,
+        "module": "安装APP登录任务",
+        "title": "非首次APP登录不发放银钻",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10259,
+        "module": "每日登录任务",
+        "title": "当日重复登录不重复完成登录任务",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10271,
+        "module": "邀请好友绑定流程",
+        "title": "被邀请者未使用Google登录，绑定无效",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10427,
+        "module": "首页头部",
+        "title": "首页按钮不再展示旧的「登录」文案",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10460,
+        "module": "UGC入口",
+        "title": "未登录用户点击UGC入口弹出登录引导",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10487,
+        "module": "赛事详情页",
+        "title": "已登录用户进入赛事详情页不弹登录引导",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10539,
+        "module": "赛事详情页-引导登录",
+        "title": "关闭引导登录弹窗后本次会话内不再重复弹出",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10609,
+        "module": "首页回放入口",
+        "title": "未登录用户点击回放入口可浏览列表但播放需登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10615,
+        "module": "回放详情",
+        "title": "未登录用户播放回放视频时引导登录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10620,
+        "module": "银钻账户",
+        "title": "未登录访问银钻账户被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10627,
+        "module": "邀请好友",
+        "title": "未登录用户不能发起邀请",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10634,
+        "module": "我的装扮",
+        "title": "未登录用户访问我的装扮被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10637,
+        "module": "登录注册赠送",
+        "title": "老用户登录不展示赠送提示且不重复到账",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10748,
+        "module": "MOD-7/FP-7 UV浏览用户数",
+        "title": "同一用户跨设备登录访问仍计1个UV",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 11090,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 重复注册不发放银钻",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11094,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 非首次APP登录不发放银钻",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11096,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 当日重复登录不重复完成登录任务",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11108,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 被邀请者未使用Google登录，绑定无效",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11300,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 同一用户跨设备登录访问仍计1个UV",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 2889,
+        "module": "登录注册",
+        "title": "去注册-切换表单时已输入数据被清空",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 3355,
+        "module": "赛事详情-指数",
+        "title": "指数列表在未登录状态下可查看",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 3670,
+        "module": "登录注册",
+        "title": "功能点-登录注册页面在弱网环境下加载",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 8821,
+        "module": "邀请好友记录",
+        "title": "验证注册方式为未知值时的展示",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 10488,
+        "module": "赛事详情页",
+        "title": "引导登录弹窗支持关闭且不影响后续浏览",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 10540,
+        "module": "赛事详情页-引导登录",
+        "title": "从登录流程返回后弹窗自动消除",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 10669,
+        "module": "移动端首页UGC入口",
+        "title": "未登录用户点击移动端首页UGC入口时提示登录",
+        "priority": "P2",
+        "case_type": "manual"
+      }
+    ],
+    "collect_like_comment": [
+      {
+        "id": 2696,
+        "module": "我的收藏",
+        "title": "球员Tab-有收藏数据时列表展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2897,
+        "module": "联赛详情页-收藏",
+        "title": "收藏联赛成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3271,
+        "module": "我的收藏",
+        "title": "资讯收藏列表正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3497,
+        "module": "银钻系统/每日任务-点赞资讯",
+        "title": "多次点赞同一资讯详情页，仅计为1次",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3577,
+        "module": "我的收藏",
+        "title": "我的收藏-联赛Tab展示收藏联赛列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4108,
+        "module": "我的收藏",
+        "title": "球员收藏列表正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4553,
+        "module": "首页-收藏分组",
+        "title": "首页-收藏分组-切换展示收藏比赛",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4959,
+        "module": "领银钻",
+        "title": "点赞10篇资讯任务-完成时显示已获得",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5044,
+        "module": "我的收藏",
+        "title": "资讯Tab-有收藏数据时列表展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5270,
+        "module": "我的收藏",
+        "title": "联赛收藏列表正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6019,
+        "module": "我的收藏",
+        "title": "我的收藏-球队Tab展示收藏球队列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6133,
+        "module": "任务内容",
+        "title": "任务内容列表展示「点赞」任务",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6179,
+        "module": "我的收藏",
+        "title": "我的收藏-球员Tab展示收藏球员列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6509,
+        "module": "资讯详情",
+        "title": "收藏功能正常收藏",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6692,
+        "module": "资讯详情",
+        "title": "资讯详情-点赞成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6899,
+        "module": "资讯列表",
+        "title": "资讯列表已收藏状态正常显示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7362,
+        "module": "银钻任务-任务完成记录",
+        "title": "任务完成记录列表正确展示「点赞」任务类型",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7791,
+        "module": "内容管理-资讯列表",
+        "title": "资讯列表展示评论数字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7936,
+        "module": "资讯列表",
+        "title": "资讯列表未收藏状态正常显示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8017,
+        "module": "银钻系统/每日任务-点赞资讯",
+        "title": "点赞不同资讯详情页达到指定数量，任务完成并发放银钻",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8026,
+        "module": "资讯详情",
+        "title": "点赞功能正常点赞",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8054,
+        "module": "我的收藏",
+        "title": "球队Tab-有收藏数据时列表展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8479,
+        "module": "资讯详情",
+        "title": "资讯详情-收藏成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9118,
+        "module": "",
+        "title": "我的收藏列表正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9274,
+        "module": "积分/积分页",
+        "title": "积分页列表-收藏球队成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9367,
+        "module": "内容管理-资讯列表",
+        "title": "资讯列表展示点赞数字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9427,
+        "module": "领银钻",
+        "title": "点赞10篇资讯任务-未完成时显示进度",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9458,
+        "module": "领银钻",
+        "title": "点赞10篇资讯任务-进度展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9632,
+        "module": "我的收藏",
+        "title": "我的收藏-资讯Tab展示收藏资讯列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9654,
+        "module": "我的收藏",
+        "title": "球队收藏列表正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9671,
+        "module": "银钻系统",
+        "title": "每日任务-点赞指定数量资讯详情页获得银钻",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10262,
+        "module": "点赞资讯任务",
+        "title": "点赞足够数量的不同资讯完成每日任务",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10648,
+        "module": "UGC详情",
+        "title": "用户查看免费UGC详情页并参与点赞收藏",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 11099,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 点赞足够数量的不同资讯完成每日任务",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 2461,
+        "module": "我的收藏",
+        "title": "我的收藏-资讯Tab无收藏时显示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2600,
+        "module": "资讯详情",
+        "title": "资讯详情-取消点赞",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2828,
+        "module": "我的收藏",
+        "title": "我的收藏-联赛Tab无收藏时显示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2937,
+        "module": "收藏",
+        "title": "已收藏球员再次点击取消收藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3051,
+        "module": "我的收藏",
+        "title": "球队收藏列表为空时展示暂无收藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3087,
+        "module": "我的收藏",
+        "title": "球队Tab-无收藏数据时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3218,
+        "module": "资讯详情",
+        "title": "已点赞状态展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3493,
+        "module": "",
+        "title": "收藏分组入口正常展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4016,
+        "module": "内容管理-资讯列表",
+        "title": "资讯列表评论数为0时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4105,
+        "module": "首页-收藏分组",
+        "title": "首页-收藏分组-无收藏数据",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4296,
+        "module": "我的收藏",
+        "title": "我的收藏页面整体空状态展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4596,
+        "module": "我的收藏",
+        "title": "球员收藏列表为空时展示暂无收藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4932,
+        "module": "",
+        "title": "我的收藏列表空数据展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5010,
+        "module": "领银钻",
+        "title": "点赞10篇资讯任务-进度达到10篇",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5032,
+        "module": "我的收藏",
+        "title": "联赛收藏列表为空时展示暂无收藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5072,
+        "module": "我的收藏",
+        "title": "球队Tab-列表排序按收藏时间倒序",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5094,
+        "module": "我的收藏",
+        "title": "资讯Tab-无收藏数据时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5111,
+        "module": "我的收藏",
+        "title": "球员Tab-无收藏数据时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5305,
+        "module": "资讯详情",
+        "title": "取消收藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5400,
+        "module": "任务内容",
+        "title": "任务内容列表无「点赞」任务时显示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5423,
+        "module": "我的收藏",
+        "title": "资讯收藏列表为空时展示暂无收藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5628,
+        "module": "资讯详情",
+        "title": "已收藏状态展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5696,
+        "module": "内容管理-资讯列表",
+        "title": "资讯列表点赞数为0时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6690,
+        "module": "银钻任务-任务完成记录",
+        "title": "任务类型为「点赞」的记录不存在时列表不显示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6835,
+        "module": "资讯详情",
+        "title": "取消点赞",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7018,
+        "module": "",
+        "title": "首页PC端-我的收藏-正面-点击进入收藏列表",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7243,
+        "module": "银钻系统",
+        "title": "每日任务-点赞同一资讯多次仅计1次",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7280,
+        "module": "我的收藏",
+        "title": "球员Tab-列表排序按收藏时间倒序",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7662,
+        "module": "领银钻",
+        "title": "点赞10篇资讯任务-进度超过10篇",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7991,
+        "module": "我的收藏",
+        "title": "资讯Tab-列表排序按收藏时间倒序",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8217,
+        "module": "银钻系统/每日任务-点赞资讯",
+        "title": "点赞数量未达到指定数量，任务不完成",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8447,
+        "module": "资讯详情",
+        "title": "资讯详情-取消收藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9356,
+        "module": "积分/积分页",
+        "title": "积分页列表-取消收藏球队",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9405,
+        "module": "",
+        "title": "我的收藏列表接口异常处理",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9845,
+        "module": "",
+        "title": "首页PC端-我的收藏-负面-无收藏数据",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10079,
+        "module": "球队详情/收藏",
+        "title": "球队详情-收藏与赛程月份筛选",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10096,
+        "module": "弹窗",
+        "title": "引导收藏弹窗与PWA引导",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10115,
+        "module": "收藏装扮",
+        "title": "个人中心-我的收藏/我的装扮入口",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10129,
+        "module": "资讯详情",
+        "title": "资讯详情-分享/收藏/点赞",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10174,
+        "module": "UGC详情",
+        "title": "UGC详情-订阅/解锁/点赞",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10263,
+        "module": "点赞资讯任务",
+        "title": "点赞同一资讯多次不重复计数，未完成任务",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10558,
+        "module": "资讯列表",
+        "title": "我的收藏列表为空时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10575,
+        "module": "资讯详情",
+        "title": "快速连续点击点赞按钮不产生重复计数",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10576,
+        "module": "资讯详情",
+        "title": "取消点赞后点赞数减一且状态恢复",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10577,
+        "module": "资讯详情",
+        "title": "点赞接口失败时按钮状态回滚并提示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10580,
+        "module": "资讯详情",
+        "title": "快速重复点击收藏只产生一次收藏记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10581,
+        "module": "资讯详情",
+        "title": "取消收藏后详情状态同步且「我的收藏」不再展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10582,
+        "module": "资讯详情",
+        "title": "收藏接口异常时状态回滚",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 11100,
+        "module": "银钻获取与任务系统",
+        "title": "[UI] 点赞同一资讯多次不重复计数，未完成任务",
+        "priority": "P1",
+        "case_type": "ui"
+      }
+    ],
+    "recharge_payment": [
+      {
+        "id": 2593,
+        "module": "充值记录",
+        "title": "支付方式编号字段正确展示与查询",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2618,
+        "module": "充值额外赠送骆驼币活动",
+        "title": "充值额外赠送骆驼币活动-购买套餐获得额外赠送",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2621,
+        "module": "数字货币支付",
+        "title": "选择 USDT 币种后展示对应支付方式",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2694,
+        "module": "充值产品管理/数字货币",
+        "title": "停用数字货币后充值流程拦截",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2789,
+        "module": "骆驼币账户",
+        "title": "选择币种后展示支付方式",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2874,
+        "module": "充值记录",
+        "title": "充值记录列表-支付方式编号为UTP信用卡正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2907,
+        "module": "银钻余额",
+        "title": "兑换成功后余额实时刷新",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3013,
+        "module": "首单不中退币活动",
+        "title": "首单不中退币活动-首次购买且预测结果为Loss时退还骆驼币",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3035,
+        "module": "充值记录",
+        "title": "支付金额字段正确展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3121,
+        "module": "文章购买记录",
+        "title": "文章购买记录列表默认展示所有字段且数据正确",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3261,
+        "module": "充值赠币活动/充值赠币活动管理",
+        "title": "充值赠币活动管理-新增活动成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3428,
+        "module": "充值记录",
+        "title": "支付渠道下拉筛选-选择WEB",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3467,
+        "module": "文章购买记录",
+        "title": "按购买时间范围查询",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3519,
+        "module": "骆驼币流水记录",
+        "title": "验证充值获得的流水展示文案为“Deposit”",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3521,
+        "module": "充值额外赠送骆驼币",
+        "title": "充值额外赠送骆驼币-购买套餐获得额外赠送",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3553,
+        "module": "骆驼币流水",
+        "title": "充值流水可跳转充值记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3655,
+        "module": "骆驼币账户",
+        "title": "支付方式展示配置的展示图标和展示名称",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3661,
+        "module": "骆驼币账户",
+        "title": "点击法币充值按钮进入充值流程",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3666,
+        "module": "充值额外赠送骆驼币活动",
+        "title": "充值额外赠送骆驼币活动-活动内容展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3677,
+        "module": "充值赠币活动",
+        "title": "法币充值方式在列表中正确展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3708,
+        "module": "充值记录",
+        "title": "充值记录列表-支付金额为199.99 GBP正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3734,
+        "module": "数字货币支付",
+        "title": "支付会话倒计时-倒计时归零后会话失效",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3799,
+        "module": "充值记录",
+        "title": "充值订单编号字段正确展示与查询",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 3871,
+        "module": "首单不中退币活动",
+        "title": "首单不中退币活动-可参与活动对象为已购买过单篇付费文章的用户",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4072,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式1在支付方式列表中正确展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4107,
+        "module": "充值产品管理/数字货币",
+        "title": "充值比例字段1:100正常显示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4209,
+        "module": "充值额外赠送骆驼币",
+        "title": "充值额外赠送骆驼币-购买套餐后额外赠送骆驼币立即到账",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4259,
+        "module": "充值记录",
+        "title": "充值记录列表-备注字段正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4309,
+        "module": "充值记录",
+        "title": "充值记录列表-支付渠道为WEB正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4526,
+        "module": "充值记录",
+        "title": "充值记录列表-订单状态为已取消时正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4814,
+        "module": "骆驼币账户",
+        "title": "未选择币种时支付方式区域不可点击",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4919,
+        "module": "充值产品管理/数字货币",
+        "title": "启用数字货币支付方式-正向",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4928,
+        "module": "充值产品管理/套餐管理",
+        "title": "验证套餐管理列表展示支付方式内部名称字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4991,
+        "module": "充值赠币活动/充值方式",
+        "title": "充值方式-列表展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5007,
+        "module": "支付结果页",
+        "title": "充值成功时状态显示为Completed",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5019,
+        "module": "充值产品管理",
+        "title": "启用已停用的充值产品成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5089,
+        "module": "充值记录",
+        "title": "充值记录列表-支付渠道为IOS正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5093,
+        "module": "充值产品管理/数字货币",
+        "title": "充值比例正常设置",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5108,
+        "module": "充值记录",
+        "title": "充值比例字段正确展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5139,
+        "module": "camel",
+        "title": "银钻余额不足时确认兑换失败（负向）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5179,
+        "module": "充值赠币活动/活动内容(法币)",
+        "title": "赠送骆驼币-大于充值骆驼币校验",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5211,
+        "module": "充值记录",
+        "title": "充值记录列表-支付渠道为ANDROID正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5221,
+        "module": "充值产品管理/数字货币",
+        "title": "支付方式编号字段正常显示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5243,
+        "module": "支付结果页",
+        "title": "充值失败时页面展示失败状态及失败原因",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5693,
+        "module": "骆驼币流水",
+        "title": "购买文章消耗流水可跳转文章购买记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5719,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式列表展示支付方式1-4",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5735,
+        "module": "骆驼币账户",
+        "title": "验证支付类型TAB默认选中法币",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5798,
+        "module": "骆驼币流水记录",
+        "title": "收入TAB展示充值流水（Deposit）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5950,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表展示充值比例为1:100的记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6017,
+        "module": "充值赠币活动",
+        "title": "充值方式-不选择充值方式保存失败",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6176,
+        "module": "充值记录",
+        "title": "充值记录列表-创建时间正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6211,
+        "module": "首单不中退币活动",
+        "title": "首单不中退币活动-可参与活动对象为从未购买过单篇付费文章的用户",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6279,
+        "module": "支付结果页",
+        "title": "Processing列表展示充值记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6307,
+        "module": "数字货币支付",
+        "title": "支付会话倒计时-倒计时正常显示并递减",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6369,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式2在支付方式列表中正确展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6453,
+        "module": "骆驼币账户",
+        "title": "选择支付方式后展示该支付方式旗下套餐列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6455,
+        "module": "数字货币支付",
+        "title": "切换到 Crypto 支付类型",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6508,
+        "module": "充值产品管理",
+        "title": "停用已启用的充值产品成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6522,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表展示支付金额为32.99 IDR的记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6540,
+        "module": "文章购买记录",
+        "title": "文章购买记录列表默认展示全部记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6580,
+        "module": "骆驼币账户",
+        "title": "选择支付方式后展示套餐列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6633,
+        "module": "购买记录",
+        "title": "购买记录列表展示商品内容字段（头像框）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6681,
+        "module": "骆驼币账户",
+        "title": "验证支付类型选择功能正常",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6730,
+        "module": "财务管理-充值记录",
+        "title": "点击充值订单编号可查看订单详情",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6851,
+        "module": "充值赠币活动",
+        "title": "充值方式-选择法币时活动内容展示法币套餐配置",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6878,
+        "module": "充值产品管理/数字货币",
+        "title": "列表展示WEB支付方式-正向",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6952,
+        "module": "充值记录",
+        "title": "充值记录列表-订单状态为处理中正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7056,
+        "module": "支付结果页",
+        "title": "充值结果页展示处理中状态",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7272,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表展示实际到账骆驼币为3099的记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7361,
+        "module": "充值产品管理/数字货币",
+        "title": "列表展示苹果内购支付方式-正向",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7381,
+        "module": "礼物面板",
+        "title": "充值入口正常跳转",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7868,
+        "module": "数字货币支付",
+        "title": "Fiat 支付类型默认选中",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7952,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表展示支付金额为32 USDT的记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8069,
+        "module": "购买记录",
+        "title": "购买记录列表展示商品内容字段（勋章）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8166,
+        "module": "充值产品管理/数字货币",
+        "title": "列表展示Google Pay支付方式-正向",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8420,
+        "module": "骆驼币流水",
+        "title": "充值赠送活动筛选功能",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8506,
+        "module": "充值记录",
+        "title": "充值记录列表-支付金额为32.99 USD正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8602,
+        "module": "充值产品管理",
+        "title": "编辑支付方式-点击编辑按钮进入编辑状态",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8692,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式3在列表中正确展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8700,
+        "module": "充值产品管理/数字货币",
+        "title": "编辑支付方式弹窗-正向",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8711,
+        "module": "充值记录",
+        "title": "充值记录列表-订单状态为充值成功正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8842,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式4在列表中正确展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8938,
+        "module": "骆驼币账户",
+        "title": "选择币种后支付方式区域可点击并展示该币种旗下支付方式",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9011,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表展示支付金额为30.99 USDT的记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9038,
+        "module": "充值产品管理",
+        "title": "支付方式编号为空时保存被拦截",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9082,
+        "module": "充值产品管理",
+        "title": "编辑充值产品成功修改价格",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9230,
+        "module": "首单不中退币活动",
+        "title": "首单不中退币活动-首次购买但预测结果为Win时不退还",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9448,
+        "module": "充值记录",
+        "title": "充值产品编号字段正确展示与查询",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9522,
+        "module": "数字货币支付",
+        "title": "选择套餐-不选择套餐直接支付被拦截",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9584,
+        "module": "支付结果页",
+        "title": "充值成功时页面展示成功状态及完整信息",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9615,
+        "module": "骆驼币账户",
+        "title": "未选择支付方式时套餐列表不展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9644,
+        "module": "充值产品管理",
+        "title": "支付方式编号正常输入并保存",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9659,
+        "module": "充值记录",
+        "title": "充值记录列表-支付金额为32.99 EUR正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9775,
+        "module": "充值产品管理/数字货币",
+        "title": "编辑支付方式-正向",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9939,
+        "module": "充值赠币活动",
+        "title": "充值方式-选择数字货币时活动内容展示数字货币配置",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10316,
+        "module": "UGC创作者管理",
+        "title": "用户成功购买单篇付费文章（订阅者仍可额外购买）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10351,
+        "module": "付费活动",
+        "title": "首单不中退币-正向：符合资格用户首次购买且预测Loss退款",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10352,
+        "module": "付费活动",
+        "title": "首单不中退币-负向：非首次购买用户不退款",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10354,
+        "module": "付费活动",
+        "title": "充值额外赠送活动配置-正向：成功配置活动",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10356,
+        "module": "付费活动",
+        "title": "充值额外赠送领取-正向：活动期内购买套餐获得赠送",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10359,
+        "module": "骆驼币充值",
+        "title": "用户通过Apple IAP成功充值骆驼币（正向）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10365,
+        "module": "骆驼币冻结状态",
+        "title": "账户冻结状态下，用户仍可成功充值骆驼币（正向）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10369,
+        "module": "绿钻获取",
+        "title": "用户支付解锁单篇文章，创作者获得绿钻（正向-多场景）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10373,
+        "module": "支付方式配置",
+        "title": "运营后台成功新增一个支付方式（正向）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10630,
+        "module": "商城",
+        "title": "用银钻购买装扮成功且到账",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10631,
+        "module": "商城",
+        "title": "银钻余额不足时购买失败",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10639,
+        "module": "骆驼币充值",
+        "title": "使用USDT数字货币支付充值骆驼币成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10642,
+        "module": "充值赠送活动",
+        "title": "充值达到活动档位赠送骆驼币到账",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10649,
+        "module": "UGC详情",
+        "title": "未购买付费UGC的用户查看详情时只能预览部分内容",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10651,
+        "module": "首单不中退币",
+        "title": "用户首单购买付费UGC预测失败，系统自动退还骆驼币",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10652,
+        "module": "首单不中退币",
+        "title": "已购买过一次付费UGC的用户，再次购买失败不享受退币",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10750,
+        "module": "MOD-8/FP-1 首单不中退币活动对象判定",
+        "title": "仅订阅过未单篇购买的用户满足活动条件",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10751,
+        "module": "MOD-8/FP-1 首单不中退币活动对象判定",
+        "title": "已购买过单篇付费文章的用户不满足活动条件",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10758,
+        "module": "MOD-8/FP-3 充值额外赠送活动配置",
+        "title": "成功创建充值赠送活动并关联套餐",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10762,
+        "module": "MOD-8/FP-4 充值额外赠送领取",
+        "title": "购买关联套餐后立即获得额外赠送币",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10770,
+        "module": "骆驼币充值",
+        "title": "骆驼币充值-支付成功到账",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10776,
+        "module": "账户冻结管理",
+        "title": "账户冻结时可正常充值骆驼币",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 11148,
+        "module": "UGC创作者管理",
+        "title": "[UI] 用户成功购买单篇付费文章（订阅者仍可额外购买）",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11182,
+        "module": "付费活动",
+        "title": "[UI] 首单不中退币-正向：符合资格用户首次购买且预测Loss退款",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11183,
+        "module": "付费活动",
+        "title": "[UI] 首单不中退币-负向：非首次购买用户不退款",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11185,
+        "module": "付费活动",
+        "title": "[UI] 充值额外赠送活动配置-正向：成功配置活动",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11187,
+        "module": "付费活动",
+        "title": "[UI] 充值额外赠送领取-正向：活动期内购买套餐获得赠送",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11190,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 用户通过Apple IAP成功充值骆驼币（正向）",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11196,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 账户冻结状态下，用户仍可成功充值骆驼币（正向）",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11200,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 用户支付解锁单篇文章，创作者获得绿钻（正向-多场景）",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11204,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 运营后台成功新增一个支付方式（正向）",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11302,
+        "module": "篮球相关-比赛回放调整",
+        "title": "[UI] 仅订阅过未单篇购买的用户满足活动条件",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11303,
+        "module": "篮球相关-比赛回放调整",
+        "title": "[UI] 已购买过单篇付费文章的用户不满足活动条件",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11310,
+        "module": "篮球相关-广告调整",
+        "title": "[UI] 成功创建充值赠送活动并关联套餐",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11314,
+        "module": "篮球相关-联赛模块调整",
+        "title": "[UI] 购买关联套餐后立即获得额外赠送币",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11322,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 骆驼币充值-支付成功到账",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11328,
+        "module": "账户冻结管理",
+        "title": "[UI] 账户冻结时可正常充值骆驼币",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 2347,
+        "module": "银钻流水",
+        "title": "财务管理-银钻流水/充值记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2362,
+        "module": "充值产品",
+        "title": "充值产品管理",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2363,
+        "module": "充值记录",
+        "title": "充值记录/订单管理",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2364,
+        "module": "充值赠币活动",
+        "title": "充值赠币活动配置",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2373,
+        "module": "购买记录",
+        "title": "商城购买记录/兑换记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2392,
+        "module": "UGC管理/订阅购买记录",
+        "title": "订阅记录/文章购买记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2421,
+        "module": "充值赠币活动",
+        "title": "法币充值方式在列表中不显示错误",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2430,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式2未配置时不展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2522,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式4未配置时不展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2570,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表不展示实际到账骆驼币为3099的记录（无数据场景）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2584,
+        "module": "数字货币支付",
+        "title": "切换支付类型后已选币种和支付方式被重置",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2641,
+        "module": "文章购买记录",
+        "title": "文章购买记录列表为空时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2761,
+        "module": "充值产品管理",
+        "title": "列表展示支付渠道为 WEB 的产品",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2797,
+        "module": "文章购买记录",
+        "title": "购买时间范围开始时间晚于结束时间时提示错误",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2799,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表不展示支付金额为32 USDT的记录（无数据场景）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2994,
+        "module": "充值赠币活动/活动内容(法币)",
+        "title": "赠送骆驼币-等于充值骆驼币边界",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3037,
+        "module": "骆驼币流水",
+        "title": "验证示例数据流水类型充值展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3283,
+        "module": "文章购买记录",
+        "title": "分页功能：翻页查看文章购买记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3311,
+        "module": "充值额外赠送骆驼币",
+        "title": "充值额外赠送骆驼币-后台配置额外赠送数额为负数时系统拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3372,
+        "module": "数字货币支付",
+        "title": "充值金额显示 2,000 的格式化展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3426,
+        "module": "充值记录",
+        "title": "充值记录列表-支付方式编号超长时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3448,
+        "module": "支付结果页",
+        "title": "充值成功时支付时间格式校验",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3511,
+        "module": "充值记录",
+        "title": "充值订单编号查询-输入非法字符",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3642,
+        "module": "充值赠币活动/充值赠币活动管理",
+        "title": "充值赠币活动管理-新增活动时开始时间晚于结束时间",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3658,
+        "module": "骆驼币流水",
+        "title": "充值赠送活动筛选无结果时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3664,
+        "module": "骆驼币流水",
+        "title": "非充值流水点击关联编号无跳转",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3665,
+        "module": "充值记录",
+        "title": "支付金额字段-金额为0的展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3688,
+        "module": "充值记录",
+        "title": "充值记录列表-创建时间格式异常处理",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3801,
+        "module": "充值记录",
+        "title": "充值记录列表-支付金额为0时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3934,
+        "module": "充值赠币活动/充值方式",
+        "title": "充值方式-必选校验",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4034,
+        "module": "充值记录",
+        "title": "充值产品编号查询-输入负数",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4167,
+        "module": "数字货币支付",
+        "title": "充值金额显示 1,000 的格式化展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4172,
+        "module": "充值记录",
+        "title": "支付方式编号查询-输入超长数字",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4227,
+        "module": "文章购买记录",
+        "title": "文章购买记录列表无数据时显示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4427,
+        "module": "确认兑换弹窗",
+        "title": "确认兑换时余额不足",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4497,
+        "module": "支付结果页",
+        "title": "充值成功时充值数额与金额一致",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4509,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表不展示支付金额为32.99 IDR的记录（无数据场景）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4599,
+        "module": "商品管理",
+        "title": "商品状态为上架中时用户可购买",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4803,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式3未配置时不展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4839,
+        "module": "充值产品管理",
+        "title": "编辑支付方式-未选择记录直接点击编辑",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4920,
+        "module": "骆驼币流水",
+        "title": "无权限时点击购买文章消耗关联编号被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4983,
+        "module": "充值记录",
+        "title": "产品价格字段-货币单位与支付金额不一致",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4996,
+        "module": "充值产品管理",
+        "title": "列表展示支付渠道为苹果内购的产品",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5166,
+        "module": "骆驼币账户",
+        "title": "验证支付类型TAB切换后币种列表联动",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5359,
+        "module": "支付结果页",
+        "title": "充值成功时充值单号非空且唯一",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5540,
+        "module": "充值产品管理/数字货币",
+        "title": "启用已启用的支付方式-负向",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5701,
+        "module": "充值记录",
+        "title": "充值记录列表-支付金额为负数时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5754,
+        "module": "骆驼币账户",
+        "title": "选择币种后该币种无支付方式时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5762,
+        "module": "文章购买记录",
+        "title": "无权限用户访问文章购买记录页面",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6022,
+        "module": "充值产品管理",
+        "title": "列表展示支付渠道为 Google Pay 的产品",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6065,
+        "module": "充值产品管理/数字货币",
+        "title": "编辑支付方式-内部名称超长-负向",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6085,
+        "module": "充值记录",
+        "title": "支付渠道下拉筛选-选择不存在的渠道",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6112,
+        "module": "套餐管理",
+        "title": "对应货币类型与支付方式联动",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6118,
+        "module": "文章购买记录",
+        "title": "按记录编号精确筛选文章购买记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6121,
+        "module": "骆驼币流水",
+        "title": "无权限时点击充值流水关联编号被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6145,
+        "module": "首单不中退币活动",
+        "title": "首单不中退币活动-非首次购买不享受退币",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6201,
+        "module": "充值产品管理/数字货币",
+        "title": "编辑支付方式-内部名称为空-负向",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6257,
+        "module": "文章购买记录",
+        "title": "按创作者编号筛选文章购买记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6321,
+        "module": "财务管理-充值记录",
+        "title": "点击充值订单编号无响应（编号为空场景）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6348,
+        "module": "骆驼币流水",
+        "title": "非购买文章消耗流水点击关联编号无跳转",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6507,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表不展示充值比例为1:100的记录（无数据场景）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6695,
+        "module": "充值额外赠送骆驼币",
+        "title": "充值额外赠送骆驼币-购买套餐后额外赠送骆驼币延迟到账（异常场景）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6732,
+        "module": "充值记录",
+        "title": "充值记录列表-订单状态为未知状态时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6757,
+        "module": "套餐管理",
+        "title": "支付方式支持多选",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6908,
+        "module": "骆驼币账户",
+        "title": "选择币种后无支付方式配置",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6911,
+        "module": "充值产品管理/数字货币",
+        "title": "编辑支付方式弹窗-无权限打开-负向",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6957,
+        "module": "骆驼币账户",
+        "title": "验证未选择支付方式时套餐列表不展示$168.99",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7048,
+        "module": "文章购买记录",
+        "title": "按用户编号筛选文章购买记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7104,
+        "module": "支付结果页",
+        "title": "充值失败时状态不显示Completed",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7134,
+        "module": "充值记录",
+        "title": "充值比例字段-无比例时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7171,
+        "module": "充值额外赠送骆驼币",
+        "title": "充值额外赠送骆驼币-后台配置额外赠送数额为0",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7219,
+        "module": "数字货币支付",
+        "title": "充值金额显示 5,000 的格式化展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7240,
+        "module": "骆驼币账户",
+        "title": "未选择币种时支付方式不可选",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7341,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式列表为空时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7475,
+        "module": "数字货币支付",
+        "title": "100 USTD-未选择网络时支付被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7580,
+        "module": "文章购买记录",
+        "title": "按文章编号筛选文章购买记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7585,
+        "module": "充值产品管理/数字货币",
+        "title": "充值比例为0时校验提示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7642,
+        "module": "充值记录",
+        "title": "充值记录列表-备注为空时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7727,
+        "module": "财务管理-充值记录",
+        "title": "充值记录列表不展示支付金额为30.99 USDT的记录（无数据场景）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7814,
+        "module": "骆驼币账户",
+        "title": "选择支付方式后该支付方式无套餐时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7892,
+        "module": "骆驼币账户",
+        "title": "无支付方式配置时支付方式列表为空",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7905,
+        "module": "数字货币支付",
+        "title": "10,000-未选择网络时支付被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7915,
+        "module": "骆驼币账户",
+        "title": "支付方式图标加载失败时展示占位图",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8021,
+        "module": "充值额外赠送骆驼币",
+        "title": "充值额外赠送骆驼币-购买未参与活动的套餐不赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8076,
+        "module": "骆驼币账户",
+        "title": "验证支付类型选择为空时提示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8078,
+        "module": "支付结果页",
+        "title": "充值失败时页面不展示金额和单号等成功信息",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8082,
+        "module": "数字货币支付",
+        "title": "未选择币种时支付方式不可点击",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8105,
+        "module": "套餐管理",
+        "title": "支付方式字段必选校验",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8418,
+        "module": "支付结果页",
+        "title": "充值结果页处理中状态无倒计时或超时提示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8470,
+        "module": "充值产品管理",
+        "title": "列表展示支付渠道为 Apple Pay 的产品",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8507,
+        "module": "充值额外赠送骆驼币活动",
+        "title": "充值额外赠送骆驼币活动-购买未参与活动的套餐不赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8546,
+        "module": "充值产品管理/数字货币",
+        "title": "编辑支付方式-取消不保存-负向",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8685,
+        "module": "充值记录",
+        "title": "充值记录列表-支付渠道为空时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8763,
+        "module": "充值产品管理/套餐管理",
+        "title": "验证支付方式内部名称为空时的展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8847,
+        "module": "骆驼币及绿钻",
+        "title": "支付方式1未配置时不展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8850,
+        "module": "数字货币支付",
+        "title": "+0 Bonus-无奖励套餐支付后不发放奖励",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9095,
+        "module": "充值产品管理/数字货币",
+        "title": "充值比例字段格式错误时校验提示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9177,
+        "module": "骆驼币账户",
+        "title": "未选择支付方式时套餐列表不可见",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9198,
+        "module": "骆驼币账户",
+        "title": "支付方式列表默认展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9226,
+        "module": "商品管理",
+        "title": "商品状态为未上架时不可购买",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9381,
+        "module": "商品管理",
+        "title": "商品状态为下架中时用户不可购买",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9406,
+        "module": "文章购买记录",
+        "title": "购买时间范围开始时间晚于结束时间",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9481,
+        "module": "支付结果页",
+        "title": "充值失败时失败原因展示为支付超时",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9648,
+        "module": "充值产品管理/数字货币",
+        "title": "支付方式编号为空时校验提示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9667,
+        "module": "支付结果页",
+        "title": "充值成功时金额格式校验",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9881,
+        "module": "充值产品管理/数字货币",
+        "title": "编辑支付方式-内部名称重复-负向",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9904,
+        "module": "文章购买记录",
+        "title": "按购买时间范围筛选文章购买记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9948,
+        "module": "骆驼币流水记录",
+        "title": "验证非充值获得的流水不展示为“Deposit”",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9958,
+        "module": "重复与并发",
+        "title": "钱包财务-提交充值或提现重复点击与并发提交保持幂等",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9967,
+        "module": "重复与并发",
+        "title": "付费活动-购买并参与付费活动重复点击与并发提交保持幂等",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10005,
+        "module": "异常恢复",
+        "title": "钱包财务-支付账本服务超时后可恢复且不产生脏数据",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10008,
+        "module": "重复与并发",
+        "title": "装扮-购买并启用装扮重复点击与并发提交保持幂等",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10086,
+        "module": "兑换",
+        "title": "Camel商城-兑换异常（余额/下架/冻结/重复）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10317,
+        "module": "UGC创作者管理",
+        "title": "用户骆驼币不足购买单篇付费文章",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10324,
+        "module": "解锁方式选择",
+        "title": "解锁方式从单篇付费改为免费后历史购买用户仍可阅读",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10355,
+        "module": "付费活动",
+        "title": "充值额外赠送活动配置-负向：缺少必填项",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10357,
+        "module": "付费活动",
+        "title": "充值额外赠送领取-负向：活动期外购买不赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10358,
+        "module": "付费活动",
+        "title": "活动时间限制-边界：刚好在开始时间购买",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10360,
+        "module": "骆驼币充值",
+        "title": "用户支付过程中取消支付，不应增加骆驼币（负向）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10361,
+        "module": "骆驼币充值",
+        "title": "用户使用 Google Pay 成功购买套餐（边界：多支付方式）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10364,
+        "module": "骆驼币用途",
+        "title": "用户刚好有足够骆驼币购买单篇文章（边界）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10374,
+        "module": "支付方式配置",
+        "title": "新增支付方式时缺少必填字段应失败（负向）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10518,
+        "module": "赛事详情页-预测比赛",
+        "title": "银钻余额不足时预测失败并提示充值",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10632,
+        "module": "商城",
+        "title": "使用骆驼币支付时按正确汇率兑换购买",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10640,
+        "module": "骆驼币充值",
+        "title": "用户支付金额少于订单金额时充值不成功",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10641,
+        "module": "骆驼币充值",
+        "title": "支付订单超过有效期自动失效",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10643,
+        "module": "充值赠送活动",
+        "title": "充值金额未达活动档位不赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10644,
+        "module": "充值赠送活动",
+        "title": "活动结束后充值不再赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10653,
+        "module": "首单不中退币",
+        "title": "首单购买付费UGC预测正确，不触发退币",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10752,
+        "module": "MOD-8/FP-1 首单不中退币活动对象判定",
+        "title": "购买过但订单已取消未实际扣费的用户具备首单资格",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10756,
+        "module": "MOD-8/FP-2 首单不中退币触发",
+        "title": "非首次购买不享受退币活动",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10757,
+        "module": "MOD-8/FP-2 首单不中退币触发",
+        "title": "活动时间外购买不享受退币",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10763,
+        "module": "MOD-8/FP-4 充值额外赠送领取",
+        "title": "同一活动期间多次购买每次均赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10764,
+        "module": "MOD-8/FP-4 充值额外赠送领取",
+        "title": "活动未开始或已结束购买不赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10765,
+        "module": "MOD-8/FP-4 充值额外赠送领取",
+        "title": "购买未关联套餐不赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10771,
+        "module": "骆驼币充值",
+        "title": "骆驼币充值-取消支付不发放骆驼币",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10772,
+        "module": "骆驼币充值",
+        "title": "骆驼币充值-支付回调前余额不变化",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10781,
+        "module": "绿钻收益",
+        "title": "支付退款时绿钻收益应回滚",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10785,
+        "module": "支付方式管理",
+        "title": "新增启用支付方式后前端展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10786,
+        "module": "支付方式管理",
+        "title": "禁用支付方式后前端隐藏",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10788,
+        "module": "套餐管理",
+        "title": "新增启用套餐后前端充值页展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10789,
+        "module": "套餐管理",
+        "title": "禁用套餐后前端隐藏且不可购买",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 11149,
+        "module": "UGC创作者管理",
+        "title": "[UI] 用户骆驼币不足购买单篇付费文章",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11155,
+        "module": "UGC文章管理",
+        "title": "[UI] 解锁方式从单篇付费改为免费后历史购买用户仍可阅读",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11186,
+        "module": "付费活动",
+        "title": "[UI] 充值额外赠送活动配置-负向：缺少必填项",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11188,
+        "module": "付费活动",
+        "title": "[UI] 充值额外赠送领取-负向：活动期外购买不赠送",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11189,
+        "module": "付费活动",
+        "title": "[UI] 活动时间限制-边界：刚好在开始时间购买",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11191,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 用户支付过程中取消支付，不应增加骆驼币（负向）",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11192,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 用户使用 Google Pay 成功购买套餐（边界：多支付方式）",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11195,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 用户刚好有足够骆驼币购买单篇文章（边界）",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11205,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 新增支付方式时缺少必填字段应失败（负向）",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11304,
+        "module": "篮球相关-比赛回放调整",
+        "title": "[UI] 购买过但订单已取消未实际扣费的用户具备首单资格",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11308,
+        "module": "篮球相关-比赛回放调整",
+        "title": "[UI] 非首次购买不享受退币活动",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11309,
+        "module": "篮球相关-比赛回放调整",
+        "title": "[UI] 活动时间外购买不享受退币",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11315,
+        "module": "篮球相关-联赛模块调整",
+        "title": "[UI] 同一活动期间多次购买每次均赠送",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11316,
+        "module": "篮球相关-联赛模块调整",
+        "title": "[UI] 活动未开始或已结束购买不赠送",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11317,
+        "module": "篮球相关-联赛模块调整",
+        "title": "[UI] 购买未关联套餐不赠送",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11323,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 骆驼币充值-取消支付不发放骆驼币",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11324,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 骆驼币充值-支付回调前余额不变化",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11333,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 支付退款时绿钻收益应回滚",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11337,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 新增启用支付方式后前端展示",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11338,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 禁用支付方式后前端隐藏",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11339,
+        "module": "套餐管理",
+        "title": "[UI] 新增启用套餐后前端充值页展示",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11340,
+        "module": "套餐管理",
+        "title": "[UI] 禁用套餐后前端隐藏且不可购买",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 2342,
+        "module": "充值赠送",
+        "title": "付费活动-充值额外赠送骆驼币",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 2368,
+        "module": "数字货币",
+        "title": "数字货币充值配置",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 2374,
+        "module": "套餐管理",
+        "title": "套餐管理（充值/兑换套餐）",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 3027,
+        "module": "套餐管理",
+        "title": "列表展示USDT支付方式",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 3780,
+        "module": "支付结果页",
+        "title": "充值失败时icon展示为失败图标",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 4053,
+        "module": "文章购买记录",
+        "title": "列表数据按购买时间升序排列（点击表头排序）",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 5170,
+        "module": "支付结果页",
+        "title": "充值成功时icon展示为成功图标",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 5710,
+        "module": "充值产品管理",
+        "title": "列表支付渠道列显示未知渠道时给出提示",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 7032,
+        "module": "骆驼币账户",
+        "title": "验证切换支付类型为数值货币后币种列表为空时提示",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 7162,
+        "module": "套餐管理",
+        "title": "列表展示Google Pay支付方式",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 7816,
+        "module": "套餐管理",
+        "title": "列表展示苹果内购支付方式",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 8892,
+        "module": "文章购买记录",
+        "title": "列表数据按购买时间倒序排列",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 10318,
+        "module": "UGC创作者管理",
+        "title": "用户已购买单篇付费文章后再次尝试支付",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 10787,
+        "module": "支付方式管理",
+        "title": "支付方式必填字段缺失时保存失败",
+        "priority": "P2",
+        "case_type": "manual"
+      }
+    ],
+    "withdraw": [
+      {
+        "id": 2836,
+        "module": "提现管理",
+        "title": "验证提现管理列表正常展示系统字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4386,
+        "module": "提现管理",
+        "title": "查看已拒绝状态的提现记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4444,
+        "module": "提现管理",
+        "title": "按用户编号精确查询提现记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 4668,
+        "module": "绿钻流水",
+        "title": "验证提现失败退回流水记录展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5726,
+        "module": "创作者中心/设置提现账户",
+        "title": "设置提现账户弹窗正常打开",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5823,
+        "module": "提现记录",
+        "title": "提现记录列表展示正常数据（金额、时间、状态、图标）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6020,
+        "module": "提现管理",
+        "title": "验证提现管理列表正常展示创建时间字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6094,
+        "module": "提现管理",
+        "title": "验证提现管理列表正常展示作者字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6290,
+        "module": "提现管理",
+        "title": "验证提现管理列表正常展示操作人字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6615,
+        "module": "提现管理",
+        "title": "按创建时间范围筛选提现记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7026,
+        "module": "提现管理",
+        "title": "验证提现管理页面正常展示所有提现记录字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7434,
+        "module": "提现管理",
+        "title": "对待打款记录拒绝提现成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 7717,
+        "module": "提现管理",
+        "title": "查看提现记录的操作记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8039,
+        "module": "提现管理",
+        "title": "查看待打款状态的提现记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8152,
+        "module": "绿钻流水",
+        "title": "验证提现消耗流水记录展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8302,
+        "module": "创作者中心/设置提现账户",
+        "title": "设置提现账户Save按钮保存成功",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8308,
+        "module": "提现记录",
+        "title": "提现记录列表为空时显示暂无相关记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8378,
+        "module": "提现管理",
+        "title": "查看提现记录的时间字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8978,
+        "module": "提现管理",
+        "title": "验证提现管理列表正常展示备注字段",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9283,
+        "module": "提现管理/已打款_已拒绝",
+        "title": "提现绿钻数额正确展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9465,
+        "module": "提现管理",
+        "title": "查看提现记录的账户信息",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9511,
+        "module": "提现管理",
+        "title": "查看已打款状态的提现记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 9901,
+        "module": "提现管理",
+        "title": "验证提现绿钻数额展示正确",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10791,
+        "module": "绿钻结算",
+        "title": "结算周期收益在周二自动生成提现单",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10794,
+        "module": "提现管理",
+        "title": "运营确认打款后提现单状态变已打款",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 11341,
+        "module": "绿钻结算",
+        "title": "[UI] 结算周期收益在周二自动生成提现单",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 11344,
+        "module": "提现管理",
+        "title": "[UI] 运营确认打款后提现单状态变已打款",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 2367,
+        "module": "提现管理",
+        "title": "提现管理/退回记录",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3006,
+        "module": "提现管理/已打款_已拒绝",
+        "title": "提现绿钻数额为负数的展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3016,
+        "module": "创作者中心/设置提现账户",
+        "title": "设置提现账户输入非法字符时保存失败",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3144,
+        "module": "提现管理",
+        "title": "拒绝提现时未填写原因",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3419,
+        "module": "绿钻流水",
+        "title": "验证提现失败退回提示信息缺失",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4200,
+        "module": "提现管理",
+        "title": "验证提现绿钻数额为 0 时的展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4239,
+        "module": "创作者中心/提现记录",
+        "title": "提现记录无数据时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4291,
+        "module": "提现管理",
+        "title": "验证提现管理页面无数据时展示空态",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4396,
+        "module": "提现管理",
+        "title": "验证提现绿钻数额为负数时的展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4830,
+        "module": "提现记录",
+        "title": "提现记录金额显示为0或负数",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5011,
+        "module": "提现管理",
+        "title": "验证提现管理页面分页功能",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5226,
+        "module": "提现管理/已打款_已拒绝",
+        "title": "提现绿钻数额为极大值的展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5357,
+        "module": "创作者中心/提现记录",
+        "title": "提现记录列表正常展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5627,
+        "module": "提现记录",
+        "title": "提现成功状态展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6464,
+        "module": "提现管理/已打款_已拒绝",
+        "title": "提现绿钻数额为0的展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6578,
+        "module": "绿钻流水",
+        "title": "验证提现失败退回记录不存在时列表为空",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6621,
+        "module": "提现管理",
+        "title": "查看提现记录的事件信息",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6628,
+        "module": "提现记录",
+        "title": "提现记录列表按时间倒序排列",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6671,
+        "module": "提现记录",
+        "title": "提现记录状态为待打款时展示正确",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7455,
+        "module": "提现记录",
+        "title": "提现记录列表加载失败提示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 7572,
+        "module": "绿钻流水",
+        "title": "验证提现失败退回提示信息展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8224,
+        "module": "创作者中心/设置提现账户",
+        "title": "设置提现账户弹窗Cancel按钮关闭弹窗",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8344,
+        "module": "创作者中心/设置提现账户",
+        "title": "设置提现账户Save按钮输入为空时保存失败",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8593,
+        "module": "提现管理",
+        "title": "验证提现管理页面无权限访问时的拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8671,
+        "module": "绿钻流水",
+        "title": "验证提现消耗流水记录不展示其他类型",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8744,
+        "module": "提现记录",
+        "title": "提现失败状态展示及查看原因入口",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9203,
+        "module": "提现记录",
+        "title": "提现记录列表分页加载",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10372,
+        "module": "绿钻冻结状态",
+        "title": "创作者账户冻结期间强行发起提现请求应失败（负向）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10783,
+        "module": "绿钻提现",
+        "title": "冻结创作者账户提现被拒绝",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10784,
+        "module": "绿钻提现",
+        "title": "冻结账户解冻后提现恢复",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10792,
+        "module": "绿钻结算",
+        "title": "无收益周期不生成提现单",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10795,
+        "module": "提现管理",
+        "title": "运营拒绝提现后绿钻退还且状态变已拒绝",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 11203,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 创作者账户冻结期间强行发起提现请求应失败（负向）",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11335,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 冻结创作者账户提现被拒绝",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11336,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 冻结账户解冻后提现恢复",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11342,
+        "module": "绿钻结算",
+        "title": "[UI] 无收益周期不生成提现单",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11345,
+        "module": "提现管理",
+        "title": "[UI] 运营拒绝提现后绿钻退还且状态变已拒绝",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 3154,
+        "module": "提现记录",
+        "title": "提现记录列表在弱网环境下加载",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 3895,
+        "module": "提现记录",
+        "title": "提现记录时间格式异常（如非标准格式）",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 3917,
+        "module": "提现记录",
+        "title": "提现记录金额格式化（千分位）",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 4083,
+        "module": "提现记录",
+        "title": "提现记录查看原因无权限",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 4367,
+        "module": "提现记录",
+        "title": "提现记录图标加载失败",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 4794,
+        "module": "提现记录",
+        "title": "提现记录金额超长显示",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 5197,
+        "module": "提现记录",
+        "title": "提现记录查看原因弹窗关闭",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 5567,
+        "module": "提现记录",
+        "title": "提现记录图标显示",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 8135,
+        "module": "提现记录",
+        "title": "提现记录列表在断网时提示",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 8665,
+        "module": "提现记录",
+        "title": "提现记录状态为未知状态时展示",
+        "priority": "P2",
+        "case_type": "manual"
+      },
+      {
+        "id": 10796,
+        "module": "提现管理",
+        "title": "已打款提现单不可重复操作",
+        "priority": "P2",
+        "case_type": "manual"
+      }
+    ],
+    "bet_predict": [
+      {
+        "id": 10148,
+        "module": "预测Pick",
+        "title": "三个选项分别下注与全下注",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10152,
+        "module": "预测Pick",
+        "title": "闭环-下注→预测记录→开奖→银钻流水→我的资产",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10516,
+        "module": "赛事详情页-预测比赛",
+        "title": "银钻余额充足时成功预测并扣减银钻",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 2628,
+        "module": "数据统计/用户统计",
+        "title": "参与总场数统计口径验证（同一场多次下注只计1场）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3862,
+        "module": "game",
+        "title": "验证预测功能在银钻不足时提示余额不足",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9040,
+        "module": "动画直播",
+        "title": "预测时银钻余额不足被拦截",
+        "priority": "P1",
+        "case_type": "manual"
+      }
+    ],
+    "other": [
+      {
+        "id": 4318,
+        "module": "银钻账户",
+        "title": "银钻余额正确显示千分位格式",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5149,
+        "module": "我的",
+        "title": "银钻余额正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5209,
+        "module": "账户信息模块",
+        "title": "账户信息模块展示银钻余额",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5218,
+        "module": "礼物面板",
+        "title": "象币余额正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5230,
+        "module": "UGC列表",
+        "title": "解锁按钮-余额充足时成功解锁",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5367,
+        "module": "用户账户",
+        "title": "列表字段展示-余额格式",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 5831,
+        "module": "骆驼币账户",
+        "title": "余额显示格式正确",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6137,
+        "module": "预测",
+        "title": "确认参与弹窗-参与银钻超过余额",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 6278,
+        "module": "礼物面板",
+        "title": "赠送礼物失败（余额不足）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8111,
+        "module": "创作者中心",
+        "title": "余额显示为3,425",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8233,
+        "module": "银钻账户",
+        "title": "银钻账户页面正常展示余额和流水列表",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8359,
+        "module": "礼物面板",
+        "title": "象豆余额不足时赠送被拦截",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8434,
+        "module": "骆驼币账户",
+        "title": "验证余额正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8725,
+        "module": "银钻余额",
+        "title": "银钻余额正常展示",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 8853,
+        "module": "礼物面板",
+        "title": "赠送礼物成功（余额充足）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10113,
+        "module": "我的账户",
+        "title": "个人中心-我的账户与银钻余额",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10178,
+        "module": "银钻账户",
+        "title": "银钻账户-余额与流水",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10362,
+        "module": "骆驼币用途",
+        "title": "用户骆驼币余额充足，成功订阅创作者（正向）",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 10619,
+        "module": "银钻账户",
+        "title": "银钻账户页展示余额和交易记录",
+        "priority": "P0",
+        "case_type": "manual"
+      },
+      {
+        "id": 11193,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 用户骆驼币余额充足，成功订阅创作者（正向）",
+        "priority": "P0",
+        "case_type": "ui"
+      },
+      {
+        "id": 2398,
+        "module": "创作者中心",
+        "title": "余额为0时显示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 2979,
+        "module": "我的",
+        "title": "银钻余额为0时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 3116,
+        "module": "我的",
+        "title": "银钻余额接口异常时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4132,
+        "module": "订阅创作者",
+        "title": "订阅创作者时余额不足报错",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4384,
+        "module": "礼物面板",
+        "title": "象豆余额不足时礼物置灰不可赠送",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 4487,
+        "module": "礼物面板",
+        "title": "象币余额为0时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5251,
+        "module": "银钻预测玩法",
+        "title": "用户银钻余额不足参与失败",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5965,
+        "module": "银钻余额",
+        "title": "银钻余额为0时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 5999,
+        "module": "骆驼币账户",
+        "title": "余额为负数时显示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6406,
+        "module": "UGC列表",
+        "title": "解锁按钮-余额不足时提示失败",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 6868,
+        "module": "银钻账户",
+        "title": "银钻余额为0时显示0",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8534,
+        "module": "骆驼币账户",
+        "title": "验证余额为0时正常展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 8935,
+        "module": "账户信息模块",
+        "title": "银钻余额为负数时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9136,
+        "module": "骆驼币账户",
+        "title": "余额为0时显示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9733,
+        "module": "礼物面板",
+        "title": "赠送后象币余额实时刷新",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 9910,
+        "module": "骆驼币及绿钻",
+        "title": "骆驼币余额为0时展示",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10143,
+        "module": "预测Pick",
+        "title": "确认参与-银钻余额不足",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10363,
+        "module": "骆驼币用途",
+        "title": "用户骆驼币余额不足，订阅创作者失败（负向）",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 10775,
+        "module": "骆驼币消费",
+        "title": "余额不足订阅失败",
+        "priority": "P1",
+        "case_type": "manual"
+      },
+      {
+        "id": 11194,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 用户骆驼币余额不足，订阅创作者失败（负向）",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 11327,
+        "module": "骆驼币及绿钻系统",
+        "title": "[UI] 余额不足订阅失败",
+        "priority": "P1",
+        "case_type": "ui"
+      },
+      {
+        "id": 7766,
+        "module": "我的",
+        "title": "银钻余额超长数值展示",
+        "priority": "P2",
+        "case_type": "manual"
+      }
+    ]
+  }
+}
