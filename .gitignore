@@ -104,4 +104,5 @@ skills-lock.json
 # hardcodes a per-machine UWP package name and must never be committed.
 fix_chatgpt_loopback.bat
 
-test-platform-v2/config/runtime/sports-prod-storage-state.json  # batch-170: 生产登录态（含凭据 Cookie，不入库）
+# batch-170: 生产登录态（含凭据 Cookie，不入库）
+test-platform-v2/config/runtime/sports-prod-storage-state.json
