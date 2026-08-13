@@ -817,6 +817,26 @@ class ApiMatchItem(BaseModel):
     summary: str = ""
     confidence: float = 0.0
 
+
+@router.post("/{document_id}/generate-api-from-endpoints", response_model=R[dict], summary="按已导入接口生成真实接口用例（Phase 2）")
+def generate_api_from_endpoints(
+    document_id: int,
+    service_id: int | None = Query(None),
+    current: CurrentUser = Depends(require_permission("requirement:generate")),
+    db: Session = Depends(get_db),
+):
+    """对需求 integration 功能点匹配已导入 ApiEndpoint，确定性生成接口用例并回填模块关联。"""
+    try:
+        result = requirement_service.generate_api_cases_from_linked_endpoints(
+            db,
+            doc_id=document_id,
+            project_id=current.project_id or 0,
+            service_id=service_id,
+            reviewer_id=current.user.id if current.user else 0,
+        )
+    except ValueError as e:
+        return R(code=400, msg=str(e))
+    return R.ok(result)
 @router.post("/{document_id}/match-api", response_model=R[list[ApiMatchItem]], summary="匹配 API 端点")
 def match_api_endpoints_for_requirement(
     document_id: int,

@@ -743,7 +743,7 @@ def import_cases(
                     "preconditions": case.get("preconditions", ""),
                     "steps": steps_raw,
                     "expected_result": case.get("expected_result", ""),
-                    "api_headers": case.get("api_headers", "{}"),
+                    "api_headers": json.dumps(case.get("api_headers") or {}, ensure_ascii=False),
                     "api_body": case.get("api_body", ""),
                     "api_assertions": case.get("api_assertions", "[]"),
                     "api_method": case.get("api_method", ""),
@@ -950,15 +950,23 @@ def match_api_endpoints(
                             score += 3
                             break
 
-            # 2. 路径关键词匹配
+            # 2. 路径关键词匹配（含 query/查询 跨 method 的语义命中，batch-167 修正猜路径错配）
             path_segments = [s for s in ep_path.split("/") if s and len(s) > 1]
             for seg in path_segments:
                 if seg in combined:
                     score += 2
+                if ("query" in seg and ("查询" in combined or "query" in combined)) or (
+                    "odds" in seg and "赔率" in combined
+                ):
+                    score += 2
 
-            # 3. 模块关键词匹配
+            # 3. 模块关键词匹配（整名命中 + 每字块重叠兜底）
             if ep_module and ep_module in combined:
                 score += 4
+            elif ep_module:
+                overlap = sum(1 for ch in ep_module if ch in combined)
+                if overlap >= max(2, len(ep_module) // 2):
+                    score += 2
 
             # 4. summary 匹配
             summary_words = set(ep_summary.split())
@@ -985,5 +993,172 @@ def match_api_endpoints(
 
 
 
+
+
+
+
+# ── batch-167 Phase 2: integration FP → 已导入真实端点 → 确定性接口用例 ──
+
+def generate_api_cases_from_linked_endpoints(
+    db: Session,
+    *,
+    doc_id: int,
+    project_id: int,
+    service_id: int | None = None,
+    reviewer_id: int = 0,
+) -> dict:
+    """为需求的 integration 功能点匹配已导入 ApiEndpoint 并确定性生成接口用例。
+
+    - 端点匹配复用 match_api_endpoints（关键词 + method 语义）。
+    - 用例用 api_case_generation_service 的确定性生成器（真实 method/path/schema 断言）。
+    - 生成结果幂等 upsert，并回填 requirement_module_id / module / linked_api_endpoint_ids。
+    - 项目未导入任何端点时 fail closed。
+    """
+    from app.models.api_asset import ApiEndpoint, ApiService
+    from app.models.requirement_module import RequirementModule
+    from app.models.test_case import TestCase
+    from app.services.api_case_generation_service import generate_cases_from_endpoint
+
+    doc = db.scalar(
+        select(RequirementDocument).where(
+            RequirementDocument.id == doc_id,
+            RequirementDocument.project_id == project_id,
+        )
+    )
+    if not doc:
+        from app.core.exceptions import not_found
+        raise not_found("需求文档")
+
+    try:
+        extraction = json.loads(doc.extraction_raw or "{}")
+    except (json.JSONDecodeError, TypeError):
+        extraction = {}
+    modules = extraction.get("modules") or []
+
+    integration_reqs: list[dict] = []
+    fp_module_by_title: dict[str, str] = {}
+    for mod in modules:
+        mod_name = str(mod.get("name") or "")
+        for fp in mod.get("function_points") or []:
+            if fp.get("type") == "integration" or fp.get("module") or fp.get("api_endpoint"):
+                title = str(fp.get("title") or fp.get("id") or "")
+                if title:
+                    integration_reqs.append({
+                        "id": fp.get("id", title),
+                        "title": title,
+                        "description": str(fp.get("description") or mod.get("description") or ""),
+                    })
+                    fp_module_by_title[title] = mod_name
+    if not integration_reqs:
+        return {"matched": 0, "generated": 0, "endpoints": [], "message": "需求确认结果中没有 integration 类型功能点，请先完成功能拆分并确认"}
+
+    matches = match_api_endpoints(db, integration_reqs=integration_reqs, project_id=project_id, service_id=service_id)
+    if not matches:
+        return {"matched": 0, "generated": 0, "endpoints": [], "message": "没有匹配到已导入的接口端点，请先在接口测试导入 OpenAPI/Swagger"}
+
+    # 模块名 → RequirementModule id（同项目首个同名模块）
+    mod_names = {v for v in fp_module_by_title.values() if v}
+    mod_rows = db.scalars(
+        select(RequirementModule).where(
+            RequirementModule.project_id == project_id,
+            RequirementModule.name.in_(mod_names),
+        )
+    ).all() if mod_names else []
+    module_ids = {m.name: m.id for m in mod_rows}
+
+    service_names: dict[int, str] = {}
+    if matches:
+        service_ids = {m["endpoint_id"] for m in matches}
+        endpoint_rows = {e.id: e for e in db.scalars(
+            select(ApiEndpoint).where(ApiEndpoint.id.in_(service_ids))
+        ).all()}
+        svc_rows = {s.id: s for s in db.scalars(
+            select(ApiService).where(ApiService.id.in_({e.service_id for e in endpoint_rows.values() if e.service_id}))
+        ).all()} if endpoint_rows else {}
+        service_names = {
+            eid: (svc_rows.get(ep.service_id).display_name or svc_rows.get(ep.service_id).name if ep.service_id in svc_rows else "")
+            for eid, ep in endpoint_rows.items()
+        }
+
+    generated = 0
+    upserted = 0
+    linked_ids = set(_parse_indices(doc.linked_api_endpoint_ids or "[]"))
+    for match in matches:
+        ep = endpoint_rows.get(match["endpoint_id"])
+        if not ep:
+            continue
+        try:
+            request_schema = json.loads(ep.request_schema or "{}")
+        except (json.JSONDecodeError, TypeError):
+            request_schema = {}
+        if not isinstance(request_schema, dict):
+            request_schema = {}
+        endpoint_dict = {
+            "service_name": service_names.get(ep.id, ""),
+            "module": fp_module_by_title.get(match.get("title", ""), ep.module or ""),
+            "method": ep.method or "GET",
+            "path": ep.path or "",
+            "summary": ep.summary or "",
+            "request_schema": request_schema,
+        }
+        cases = generate_cases_from_endpoint(
+            endpoint_dict,
+            templates=["basic", "invalid", "boundary", "security", "smoke"],
+        )
+        for case in cases:
+            generated += 1
+            method = case.get("api_method") or endpoint_dict["method"]
+            path = case.get("api_endpoint") or endpoint_dict["path"]
+            existing = db.scalar(
+                select(TestCase).where(
+                    TestCase.project_id == project_id,
+                    TestCase.case_type == "api",
+                    TestCase.api_method == method,
+                    TestCase.api_endpoint == path,
+                )
+            )
+            module_name = str(case.get("module") or endpoint_dict["module"] or "")
+            payload = {
+                "project_id": project_id,
+                "title": case.get("title") or f"{method} {path}",
+                "domain": "接口测试",
+                "module": module_name,
+                "case_type": "api",
+                "priority": case.get("priority", "P1"),
+                "case_design_method": case.get("case_design_method", ""),
+                "positive_negative": case.get("positive_negative", ""),
+                "test_data_note": case.get("test_data_note", ""),
+                "preconditions": case.get("preconditions", ""),
+                "steps": json.dumps(case.get("steps", []), ensure_ascii=False),
+                "expected_result": case.get("expected_result", ""),
+                "api_method": method,
+                "api_endpoint": path,
+                "api_headers": json.dumps(case.get("api_headers") or {}, ensure_ascii=False),
+                "api_body": case.get("api_body", ""),
+                "api_assertions": json.dumps(case.get("api_assertions", []), ensure_ascii=False),
+                "requirement_module_id": module_ids.get(module_name),
+                "source": "ai_generated",
+                "source_doc_id": doc_id,
+            }
+            if existing:
+                for key, value in payload.items():
+                    if key in {"project_id", "case_type"}:
+                        continue
+                    setattr(existing, key, value)
+                upserted += 1
+            else:
+                db.add(TestCase(**payload))
+                upserted += 1
+        linked_ids.add(ep.id)
+
+    doc.linked_api_endpoint_ids = json.dumps(sorted(linked_ids), ensure_ascii=False)
+    db.commit()
+    return {
+        "matched": len(matches),
+        "generated": generated,
+        "upserted": upserted,
+        "endpoints": [{"endpoint_id": m["endpoint_id"], "method": m["method"], "path": m["path"], "confidence": m["confidence"]} for m in matches],
+        "message": "",
+    }
 
 
