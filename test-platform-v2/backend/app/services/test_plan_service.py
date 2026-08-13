@@ -655,6 +655,19 @@ def _resolve_plan_base_url(db: Session, environment_id: int | None, project_id: 
     return "http://localhost:5173"
 
 
+def _ui_error_summary(ui_result: dict) -> str:
+    """batch-168 D6：UI 执行失败时给出可读摘要（error/exit_code/stdout 尾部）。"""
+    if ui_result.get("error"):
+        return str(ui_result["error"])[:500]
+    parts = []
+    if ui_result.get("exit_code") not in (None, 0):
+        parts.append(f"exit_code={ui_result['exit_code']}")
+    tail = str(ui_result.get("stdout_tail") or "").strip()
+    if tail:
+        parts.append("stdout: " + tail[-300:])
+    return " ".join(parts).strip() or "未知"
+
+
 def _write_plan_ui_job(db: Session, case, spec_code: str, creator_id: int, project_id: int) -> None:
     """把计划执行生成的可执行 spec 回写为 UI 任务资产（失败不阻断执行）。"""
     if not spec_code:
@@ -866,6 +879,7 @@ def execute_all_cases(
     executor_id: int = 0,
     environment_id: int | None = None,
     auto_ui: bool = True,
+    ui_environment_id: int | None = None,
     project_id: int = 0,
 ) -> dict:
     """一键执行计划中全部用例：API 用例自动执行，人工/UI 用例标记 skip。"""
@@ -876,7 +890,8 @@ def execute_all_cases(
     )
     if not plan:
         raise ValueError("计划不存在")
-    base_url = _resolve_plan_base_url(db, environment_id, project_id)
+    # batch-168 D7：API 用执行环境、UI 用 UI 环境（缺省回退执行环境）
+    base_url = _resolve_plan_base_url(db, ui_environment_id or environment_id, project_id)
 
     ensure_plan_execution_ready(
         db, plan_id, project_id=project_id, environment_id=environment_id,
@@ -944,7 +959,7 @@ def execute_all_cases(
                         f"截图 {len(ui_result.get('screenshots', []))} 张"
                     )
                 else:
-                    notes = f"UI 执行失败: {ui_result.get('error', '未知')}"
+                    notes = f"UI 执行失败: {_ui_error_summary(ui_result)}"
             except Exception as e:
                 status = "fail"
                 actual_result = json.dumps({"error": str(e)}, ensure_ascii=False)
@@ -962,7 +977,7 @@ def execute_all_cases(
                     actual_result = json.dumps(ui_result, ensure_ascii=False, default=str)
                     notes = (
                         f"手动用例自动转 UI 执行: {ui_result.get('total', 0)} 条断言"
-                        if ui_result.get("ok") else f"手动用例转 UI 执行失败: {ui_result.get('error', '未知')}"
+                        if ui_result.get("ok") else f"手动用例转 UI 执行失败: {_ui_error_summary(ui_result)}"
                     )
                     if ui_result.get("ok") or ui_result.get("spec_code"):
                         _write_plan_ui_job(db, tc, ui_result.get("spec_code", ""), executor_id, project_id)

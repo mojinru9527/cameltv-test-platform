@@ -769,11 +769,15 @@ def import_cases(
         ui_case_ids: list[int] = []
         ui_created = 0
         if create_ui_cases:
+            # batch-168 D4：补生成 UI 变体时覆盖该文档「全部已导入」功能用例
+            # （含历史导入），不止本次新导入，保证老版本数据也能三类型关联。
+            _all_func_indices = previous_func | requested_func_indices
             for pc in db.scalars(
                 select(TestCase).where(
                     TestCase.project_id == project_id,
                     TestCase.source_doc_id == doc_id,
-                    TestCase.source_case_index.in_(requested_func_indices),
+                    TestCase.is_deleted.is_(False),
+                    TestCase.source_case_index.in_(_all_func_indices),
                 )
             ).all():
                 if pc.priority not in ("P0", "P1"):
@@ -791,6 +795,7 @@ def import_cases(
                         TestCase.case_type == "ui",
                         TestCase.title == ui_title,
                         TestCase.module == (pc.module or ""),
+                        TestCase.is_deleted.is_(False),
                     )
                 )
                 if existing_ui:
@@ -954,6 +959,39 @@ def confirm_api_match_selection(
 # B1: 需求-API 语义映射
 # ═══════════════════════════════════════════════════════
 
+_CN_EN_KEYWORDS: dict[str, list[str]] = {
+    "首页": ["home"], "热门": ["hot"], "赛事": ["match", "sports"], "比赛": ["match"],
+    "联赛": ["competition", "league"], "球队": ["team"], "球员": ["player"], "搜索": ["search"],
+    "资讯": ["news"], "回放": ["replay"], "广告": ["ads", "advertisement"], "直播": ["live"],
+    "赔率": ["odds"], "下注": ["bet"], "预测": ["forecast", "pick"], "开奖": ["done"],
+    "取消": ["cancel"], "充值": ["recharge", "deposit"], "提现": ["withdraw"],
+    "付费": ["payment"], "银钻": ["diamond", "silver"], "绿钻": ["diamond", "green"],
+    "骆驼币": ["coin"], "任务": ["task"], "配置": ["config"], "后台": ["admin"],
+    "登录": ["login"], "注册": ["register"], "账号": ["account"], "账户": ["account"],
+    "文章": ["article", "news"], "统计": ["stats", "statistics"], "篮球": ["basketball"],
+    "足球": ["football"], "积分": ["score", "points"], "礼物": ["gift"],
+    "公告": ["announcement"], "聊天室": ["chat"], "消息": ["message"], "评论": ["comment"],
+    "视频": ["video"], "详情": ["detail"], "列表": ["list"], "数据": ["data"],
+    "上传": ["upload"], "分析": ["analysis"], "排名": ["rank", "standings"], "赛程": ["schedule"],
+    "回放": ["replay"], "公告": ["announcement"],
+}
+
+
+def _expand_keywords(text: str) -> set[str]:
+    """把中文需求文本扩展为匹配关键词集合（含中英同义词），用于端点匹配。"""
+    lowered = (text or "").lower()
+    out = {w for w in lowered.replace("-", " ").replace("_", " ").split() if w}
+    for cn, ens in _CN_EN_KEYWORDS.items():
+        for en in ens:
+            if cn in lowered:
+                out.add(en)
+                out.add(cn)
+            if en in lowered:
+                out.add(en)
+                out.add(cn)
+    return out
+
+
 def match_api_endpoints(
     db: Session,
     *,
@@ -993,6 +1031,7 @@ def match_api_endpoints(
         title = (req.get("title") or "").lower()
         desc = (req.get("description") or "").lower()
         combined = f"{title} {desc}"
+        synonyms = _expand_keywords(combined)
 
         best_match = None
         best_score = 0
@@ -1016,7 +1055,7 @@ def match_api_endpoints(
             # 2. 路径关键词匹配（含 query/查询 跨 method 的语义命中，batch-167 修正猜路径错配）
             path_segments = [s for s in ep_path.split("/") if s and len(s) > 1]
             for seg in path_segments:
-                if seg in combined:
+                if seg in combined or any(syn in seg or seg in syn for syn in synonyms if len(syn) >= 2):
                     score += 2
                 if ("query" in seg and ("查询" in combined or "query" in combined)) or (
                     "odds" in seg and "赔率" in combined
@@ -1024,17 +1063,21 @@ def match_api_endpoints(
                     score += 2
 
             # 3. 模块关键词匹配（整名命中 + 每字块重叠兜底）
-            if ep_module and ep_module in combined:
-                score += 4
-            elif ep_module:
-                overlap = sum(1 for ch in ep_module if ch in combined)
-                if overlap >= max(2, len(ep_module) // 2):
-                    score += 2
+            if ep_module:
+                mod_tokens = set(ep_module.replace("-", " ").replace("_", " ").split())
+                hits = {t for t in mod_tokens for syn in synonyms if len(syn) >= 2 and (syn in t or t in syn)}
+                if hits:
+                    score += 3 + min(1, len(hits) - 1)
+                elif ep_module in combined:
+                    score += 4
+                else:
+                    overlap = sum(1 for ch in ep_module if ch in combined)
+                    if overlap >= max(2, len(ep_module) // 2):
+                        score += 2
 
             # 4. summary 匹配
             summary_words = set(ep_summary.split())
-            req_words = set(combined.split())
-            common = summary_words & req_words
+            common = summary_words & synonyms
             score += len(common) * 0.5
 
             if score > best_score:
@@ -1072,10 +1115,11 @@ def generate_api_cases_from_linked_endpoints(
 ) -> dict:
     """为需求的 integration 功能点匹配已导入 ApiEndpoint 并确定性生成接口用例。
 
-    - 端点匹配复用 match_api_endpoints（关键词 + method 语义）。
-    - 用例用 api_case_generation_service 的确定性生成器（真实 method/path/schema 断言）。
-    - 生成结果幂等 upsert，并回填 requirement_module_id / module / linked_api_endpoint_ids。
-    - 项目未导入任何端点时 fail closed。
+    batch-168 修正：
+    - upsert 不匹配软删除行；模板变体按 (method,path,title) 独立成行。
+    - FP 级匹配之外增加模块级匹配：未命中模块用模块名对齐真实端点
+      （只读 GET 优先、confidence>=0.4、每模块至多 1 端点、跨模块去重），
+      保证接口用例覆盖大多数版本模块。
     """
     from app.models.api_asset import ApiEndpoint, ApiService
     from app.models.requirement_module import RequirementModule
@@ -1100,8 +1144,13 @@ def generate_api_cases_from_linked_endpoints(
 
     integration_reqs: list[dict] = []
     fp_module_by_title: dict[str, str] = {}
+    mod_meta: dict[str, dict[str, str]] = {}
     for mod in modules:
         mod_name = str(mod.get("name") or "")
+        mod_meta[mod_name] = {
+            "description": str(mod.get("description") or ""),
+            "id": str(mod.get("id") or mod_name),
+        }
         for fp in mod.get("function_points") or []:
             if fp.get("type") == "integration" or fp.get("module") or fp.get("api_endpoint"):
                 title = str(fp.get("title") or fp.get("id") or "")
@@ -1112,15 +1161,56 @@ def generate_api_cases_from_linked_endpoints(
                         "description": str(fp.get("description") or mod.get("description") or ""),
                     })
                     fp_module_by_title[title] = mod_name
-    if not integration_reqs:
-        return {"matched": 0, "generated": 0, "endpoints": [], "message": "需求确认结果中没有 integration 类型功能点，请先完成功能拆分并确认"}
 
-    matches = match_api_endpoints(db, integration_reqs=integration_reqs, project_id=project_id, service_id=service_id)
+    fp_matches = match_api_endpoints(
+        db, integration_reqs=integration_reqs, project_id=project_id, service_id=service_id,
+    )
+    # 每条匹配带上模块名，供生成时回填 module / requirement_module_id
+    matches: list[dict] = []
+    for m in fp_matches:
+        m2 = dict(m)
+        m2["module"] = fp_module_by_title.get(m.get("title", ""), "")
+        m2["source"] = "fp"
+        matches.append(m2)
+
+    # 模块级兜底匹配（batch-168 D8）
+    covered_modules = {m["module"] for m in matches if m.get("module")}
+    used_endpoint_ids = {m["endpoint_id"] for m in matches}
+    for mod_name, meta in mod_meta.items():
+        if not mod_name or mod_name in covered_modules:
+            continue
+        module_reqs = [{
+            "id": meta.get("id", mod_name),
+            "title": mod_name,
+            "description": meta.get("description", ""),
+        }]
+        candidates = match_api_endpoints(
+            db, integration_reqs=module_reqs, project_id=project_id, service_id=service_id,
+        )
+        best = None
+        for c in candidates:
+            if c["endpoint_id"] in used_endpoint_ids:
+                continue
+            if str(c.get("method") or "").upper() not in ("GET", "POST"):
+                continue
+            if (c.get("confidence") or 0) < 0.4:
+                continue
+            if best is None or c["confidence"] > best["confidence"]:
+                best = c
+        if best is None:
+            continue
+        m2 = dict(best)
+        m2["module"] = mod_name
+        m2["source"] = "module"
+        matches.append(m2)
+        used_endpoint_ids.add(best["endpoint_id"])
+        covered_modules.add(mod_name)
+
     if not matches:
-        return {"matched": 0, "generated": 0, "endpoints": [], "message": "没有匹配到已导入的接口端点，请先在接口测试导入 OpenAPI/Swagger"}
+        return {"matched": 0, "generated": 0, "upserted": 0, "endpoints": [], "message": "没有匹配到已导入的接口端点，请先在接口测试导入 OpenAPI/Swagger"}
 
     # 模块名 → RequirementModule id（同项目首个同名模块）
-    mod_names = {v for v in fp_module_by_title.values() if v}
+    mod_names = {m.get("module") for m in matches if m.get("module")}
     mod_rows = db.scalars(
         select(RequirementModule).where(
             RequirementModule.project_id == project_id,
@@ -1129,23 +1219,78 @@ def generate_api_cases_from_linked_endpoints(
     ).all() if mod_names else []
     module_ids = {m.name: m.id for m in mod_rows}
 
-    service_names: dict[int, str] = {}
-    if matches:
-        service_ids = {m["endpoint_id"] for m in matches}
-        endpoint_rows = {e.id: e for e in db.scalars(
-            select(ApiEndpoint).where(ApiEndpoint.id.in_(service_ids))
-        ).all()}
-        svc_rows = {s.id: s for s in db.scalars(
-            select(ApiService).where(ApiService.id.in_({e.service_id for e in endpoint_rows.values() if e.service_id}))
-        ).all()} if endpoint_rows else {}
-        service_names = {
-            eid: (svc_rows.get(ep.service_id).display_name or svc_rows.get(ep.service_id).name if ep.service_id in svc_rows else "")
-            for eid, ep in endpoint_rows.items()
-        }
+    endpoint_ids = {m["endpoint_id"] for m in matches}
+    endpoint_rows = {e.id: e for e in db.scalars(
+        select(ApiEndpoint).where(ApiEndpoint.id.in_(endpoint_ids))
+    ).all()}
+    svc_rows = {s.id: s for s in db.scalars(
+        select(ApiService).where(ApiService.id.in_({e.service_id for e in endpoint_rows.values() if e.service_id}))
+    ).all()} if endpoint_rows else {}
+    service_names = {
+        eid: (svc_rows.get(ep.service_id).display_name or svc_rows.get(ep.service_id).name if ep.service_id in svc_rows else "")
+        for eid, ep in endpoint_rows.items()
+    }
 
     generated = 0
     upserted = 0
+    inserted = 0
     linked_ids = set(_parse_indices(doc.linked_api_endpoint_ids or "[]"))
+    seen_identity: set[tuple[str, str, str]] = set()
+
+    def _persist(case: dict, endpoint_dict: dict, module_name: str) -> None:
+        nonlocal generated, upserted, inserted
+        method = case.get("api_method") or endpoint_dict["method"]
+        path = case.get("api_endpoint") or endpoint_dict["path"]
+        title = str(case.get("title") or f"{method} {path}")
+        # batch-168 D3：模板变体按 title 独立成行，避免 method+path 相互覆盖
+        identity = (method, path, title)
+        if identity in seen_identity:
+            return
+        seen_identity.add(identity)
+        generated += 1
+        payload = {
+            "project_id": project_id,
+            "title": title,
+            "domain": "接口测试",
+            "module": module_name,
+            "case_type": "api",
+            "priority": case.get("priority", "P1"),
+            "case_design_method": case.get("case_design_method", ""),
+            "positive_negative": case.get("positive_negative", ""),
+            "test_data_note": case.get("test_data_note", ""),
+            "preconditions": case.get("preconditions", ""),
+            "steps": json.dumps(case.get("steps", []), ensure_ascii=False),
+            "expected_result": case.get("expected_result", ""),
+            "api_method": method,
+            "api_endpoint": path,
+            "api_headers": json.dumps(case.get("api_headers") or {}, ensure_ascii=False),
+            "api_body": case.get("api_body", ""),
+            "api_assertions": json.dumps(case.get("api_assertions", []), ensure_ascii=False),
+            "requirement_module_id": module_ids.get(module_name),
+            "source": "ai_generated",
+            "source_doc_id": doc_id,
+        }
+        existing = db.scalar(
+            select(TestCase).where(
+                TestCase.project_id == project_id,
+                TestCase.case_type == "api",
+                TestCase.api_method == method,
+                TestCase.api_endpoint == path,
+                TestCase.title == title,
+                TestCase.is_deleted.is_(False),
+            )
+        )
+        if existing:
+            for key, value in payload.items():
+                if key in {"project_id", "case_type"}:
+                    continue
+                setattr(existing, key, value)
+            upserted += 1
+        else:
+            db.add(TestCase(**payload))
+            inserted += 1
+            upserted += 1
+
     for match in matches:
         ep = endpoint_rows.get(match["endpoint_id"])
         if not ep:
@@ -1158,60 +1303,17 @@ def generate_api_cases_from_linked_endpoints(
             request_schema = {}
         endpoint_dict = {
             "service_name": service_names.get(ep.id, ""),
-            "module": fp_module_by_title.get(match.get("title", ""), ep.module or ""),
+            "module": match.get("module") or ep.module or "",
             "method": ep.method or "GET",
             "path": ep.path or "",
             "summary": ep.summary or "",
             "request_schema": request_schema,
         }
-        cases = generate_cases_from_endpoint(
-            endpoint_dict,
-            templates=["basic", "invalid", "boundary", "security", "smoke"],
-        )
+        module_name = match.get("module") or ep.module or ""
+        templates = ["basic", "invalid", "boundary", "security", "smoke"] if match.get("source") == "fp" else ["basic", "positive", "negative"]
+        cases = generate_cases_from_endpoint(endpoint_dict, templates=templates)
         for case in cases:
-            generated += 1
-            method = case.get("api_method") or endpoint_dict["method"]
-            path = case.get("api_endpoint") or endpoint_dict["path"]
-            existing = db.scalar(
-                select(TestCase).where(
-                    TestCase.project_id == project_id,
-                    TestCase.case_type == "api",
-                    TestCase.api_method == method,
-                    TestCase.api_endpoint == path,
-                )
-            )
-            module_name = str(case.get("module") or endpoint_dict["module"] or "")
-            payload = {
-                "project_id": project_id,
-                "title": case.get("title") or f"{method} {path}",
-                "domain": "接口测试",
-                "module": module_name,
-                "case_type": "api",
-                "priority": case.get("priority", "P1"),
-                "case_design_method": case.get("case_design_method", ""),
-                "positive_negative": case.get("positive_negative", ""),
-                "test_data_note": case.get("test_data_note", ""),
-                "preconditions": case.get("preconditions", ""),
-                "steps": json.dumps(case.get("steps", []), ensure_ascii=False),
-                "expected_result": case.get("expected_result", ""),
-                "api_method": method,
-                "api_endpoint": path,
-                "api_headers": json.dumps(case.get("api_headers") or {}, ensure_ascii=False),
-                "api_body": case.get("api_body", ""),
-                "api_assertions": json.dumps(case.get("api_assertions", []), ensure_ascii=False),
-                "requirement_module_id": module_ids.get(module_name),
-                "source": "ai_generated",
-                "source_doc_id": doc_id,
-            }
-            if existing:
-                for key, value in payload.items():
-                    if key in {"project_id", "case_type"}:
-                        continue
-                    setattr(existing, key, value)
-                upserted += 1
-            else:
-                db.add(TestCase(**payload))
-                upserted += 1
+            _persist(case, endpoint_dict, module_name)
         linked_ids.add(ep.id)
 
     doc.linked_api_endpoint_ids = json.dumps(sorted(linked_ids), ensure_ascii=False)
@@ -1220,12 +1322,17 @@ def generate_api_cases_from_linked_endpoints(
         "matched": len(matches),
         "generated": generated,
         "upserted": upserted,
-        "endpoints": [{"endpoint_id": m["endpoint_id"], "method": m["method"], "path": m["path"], "confidence": m["confidence"]} for m in matches],
+        "inserted": inserted,
+        "endpoints": [
+            {
+                "endpoint_id": m["endpoint_id"],
+                "method": m["method"],
+                "path": m["path"],
+                "confidence": m["confidence"],
+                "module": m.get("module", ""),
+                "source": m.get("source", "fp"),
+            }
+            for m in matches
+        ],
         "message": "",
     }
-
-
-
-
-
-

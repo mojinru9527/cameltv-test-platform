@@ -14,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.release_bundle import ReleaseBundle
+from app.models.requirement import RequirementDocument
 from app.models.requirement_module import RequirementModule
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
@@ -64,6 +65,14 @@ def _load_executed_case_ids(db: Session, project_id: int) -> set[int]:
 
 
 def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dict[str, Any]:
+    """计算版本模块的三类型用例覆盖与执行覆盖。
+
+    口径（与用户确认）：
+    - 用例覆盖 = 该模块同时存在 manual + api + ui 三类用例。
+    - 执行覆盖 = 该模块的 api 与 ui 用例均已至少执行一次。
+    - 分母 = 版本模块树全部 module 节点；无模块树时优先取该发布包绑定需求文档
+      已导入用例的 distinct module，再回退到项目用例库 distinct module。
+    """
     bundle = db.get(ReleaseBundle, bundle_id)
     if not bundle or bundle.project_id != project_id:
         from app.core.exceptions import not_found
@@ -76,16 +85,36 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
         ).order_by(RequirementModule.sort_order, RequirementModule.id)
     ).all())
 
-    # 模块树为空时回退到用例库 distinct module（必须在用例统计前完成）
+    fallback_module_names: list[str] = []
     if not module_rows:
-        module_name_rows = db.execute(
-            select(TestCase.module).where(
-                TestCase.project_id == project_id,
-                TestCase.is_deleted.is_(False),
-                TestCase.module != "",
-            ).distinct()
-        ).all()
-        module_rows = [_FallbackModule(id=None, name=row[0]) for row in module_name_rows]
+        linked_doc_ids = [
+            row[0] for row in db.execute(
+                select(RequirementDocument.id).where(
+                    RequirementDocument.project_id == project_id,
+                    RequirementDocument.release_bundle_id == bundle_id,
+                )
+            ).all()
+        ]
+        if linked_doc_ids:
+            rows = db.execute(
+                select(TestCase.module).where(
+                    TestCase.project_id == project_id,
+                    TestCase.is_deleted.is_(False),
+                    TestCase.source_doc_id.in_(linked_doc_ids),
+                    TestCase.module != "",
+                ).distinct()
+            ).all()
+            fallback_module_names = [row[0] for row in rows]
+        if not fallback_module_names:
+            rows = db.execute(
+                select(TestCase.module).where(
+                    TestCase.project_id == project_id,
+                    TestCase.is_deleted.is_(False),
+                    TestCase.module != "",
+                ).distinct()
+            ).all()
+            fallback_module_names = [row[0] for row in rows]
+        module_rows = [_FallbackModule(id=None, name=name) for name in fallback_module_names]
 
     cases = list(db.scalars(
         select(TestCase).where(
@@ -95,40 +124,70 @@ def compute_bundle_coverage(db: Session, bundle_id: int, project_id: int) -> dic
     ).all())
     executed_ids = _load_executed_case_ids(db, project_id)
 
-    # 模块 → 三类型用例统计（priority 取用例库中的最高优先级）
-    case_index: dict[tuple[int | None, str], dict[str, int]] = {}
+    # 模块索引：id 精确匹配 + 规范化名称精确匹配，避免 fallback id=None 时共用聚合键
+    id_index: dict[int, int] = {}
+    name_index: dict[str, list[int]] = {}
+    for idx, mod in enumerate(module_rows):
+        mid = getattr(mod, "id", None)
+        if mid is not None:
+            id_index[mid] = idx
+        key = _module_key(mod.name)
+        if key:
+            name_index.setdefault(key, []).append(idx)
+
+    def _row_key(idx: int, ctype: str) -> tuple[Any, str, str]:
+        mod = module_rows[idx]
+        return (getattr(mod, "id", None), _module_key(mod.name), ctype)
+
+    case_index: dict[tuple[Any, str, str], dict[str, int]] = {}
     for case in cases:
         ctype = _canonical_type(case.case_type or "")
-        for mod in module_rows:
-            mid = getattr(mod, "id", None)
-            if (mid is not None and case.requirement_module_id == mid) or _match(case.module or "", mod.name):
-                slot = case_index.setdefault((mid, ctype), {"count": 0, "executed": 0, "p0p1": 0})
-                slot["count"] += 1
-                if case.id in executed_ids:
-                    slot["executed"] += 1
-                if ctype == "manual" and case.priority in ("P0", "P1"):
-                    slot["p0p1"] += 1
-                break
+        target_idx: int | None = None
+        if case.requirement_module_id is not None and case.requirement_module_id in id_index:
+            target_idx = id_index[case.requirement_module_id]
+        else:
+            ck = _module_key(case.module or "")
+            if ck and ck in name_index:
+                target_idx = name_index[ck][0]
+            else:
+                # 兼容「用户端/首页」与「首页」等历史写法：精确键未命中才做包含式兜底
+                for idx, mod in enumerate(module_rows):
+                    if _match(case.module or "", mod.name):
+                        target_idx = idx
+                        break
+        if target_idx is None:
+            continue
+        slot = case_index.setdefault(_row_key(target_idx, ctype), {"count": 0, "executed": 0, "p0p1": 0})
+        slot["count"] += 1
+        if case.id in executed_ids:
+            slot["executed"] += 1
+        if ctype == "manual" and case.priority in ("P0", "P1"):
+            slot["p0p1"] += 1
 
     rows: list[dict[str, Any]] = []
     covered = 0
     executed_covered = 0
     p0p1_total = 0
     p0p1_covered = 0
-    for mod in module_rows:
+    for idx, mod in enumerate(module_rows):
         mid = getattr(mod, "id", None)
+        mkey = _module_key(mod.name)
+
+        def _slot(ctype: str) -> dict[str, int]:
+            return case_index.get((mid, mkey, ctype), {})
+
         entry: dict[str, Any] = {
             "module_id": mid,
             "name": mod.name,
             "platform": mod.platform or "",
             "change_type": mod.change_type or "",
-            "functional_count": case_index.get((mid, "manual"), {}).get("count", 0),
-            "api_count": case_index.get((mid, "api"), {}).get("count", 0),
-            "ui_count": case_index.get((mid, "ui"), {}).get("count", 0),
-            "functional_executed": case_index.get((mid, "manual"), {}).get("executed", 0),
-            "api_executed": case_index.get((mid, "api"), {}).get("executed", 0),
-            "ui_executed": case_index.get((mid, "ui"), {}).get("executed", 0),
-            "is_p0p1": bool(case_index.get((mid, "manual"), {}).get("p0p1", 0)),
+            "functional_count": _slot("manual").get("count", 0),
+            "api_count": _slot("api").get("count", 0),
+            "ui_count": _slot("ui").get("count", 0),
+            "functional_executed": _slot("manual").get("executed", 0),
+            "api_executed": _slot("api").get("executed", 0),
+            "ui_executed": _slot("ui").get("executed", 0),
+            "is_p0p1": bool(_slot("manual").get("p0p1", 0)),
         }
         gap_types = []
         if entry["functional_count"] == 0:
