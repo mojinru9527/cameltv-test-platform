@@ -14,7 +14,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import useAbortableEffect from '@/hooks/useAbortableEffect'
 import { useAuthStore } from '@/stores/auth'
 import Placeholder from '@/pages/Placeholder'
-import { Terminal, Play, Loader2, RefreshCw, XCircle, AlertCircle, Eye } from '@/lib/icons'
+import { Play, Loader2, RefreshCw, XCircle, AlertCircle, Eye } from '@/lib/icons'
 import {
   createDshTask,
   fetchDshTasks,
