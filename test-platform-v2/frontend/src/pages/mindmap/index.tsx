@@ -251,7 +251,7 @@ export default function MindmapPage() {
       <Card className={fullscreen ? 'fixed inset-4 z-50' : ''}>
         <CardHeader className="border-b pb-2">
           <CardTitle className="text-sm">
-            用例脑图（产品界面 → 业务域 → 子模块 → 用例）
+            思维导图（产品界面 → 业务域 → 子模块 → 用例）
             {rawData && <span className="ml-2 font-normal text-muted-foreground">({totalCount} 条)</span>}
           </CardTitle>
           {fullscreen && (
@@ -282,7 +282,7 @@ export default function MindmapPage() {
               ref={containerRef}
               tabIndex={0}
               role="region"
-              aria-label="用例脑图，支持 Ctrl+滚轮 缩放与拖拽平移"
+              aria-label="思维导图，支持 Ctrl+滚轮 缩放与拖拽平移"
               className="mindmap-canvas min-h-[55vh] overflow-auto rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
               style={{ width: '100%' }}
             />

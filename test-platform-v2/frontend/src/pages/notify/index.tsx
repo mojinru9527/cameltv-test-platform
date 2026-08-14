@@ -103,7 +103,7 @@ function emptyForm(): {
 }
 
 export default function NotifyPage() {
-  useDocumentTitle('通知管理')
+  useDocumentTitle('通知配置')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [form, setForm] = useState(emptyForm())

@@ -171,7 +171,7 @@ export default function TracePage() {
                 )
               })()}
 
-              {/* ── 追溯下钻（C63-1）── */}
+              {/* ── 追溯下钻── */}
               <TraceDrilldown />
 
               {/* ── 按用例类型分布 ── */}

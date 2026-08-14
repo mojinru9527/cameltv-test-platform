@@ -18,7 +18,7 @@ def test_public_access_exposes_safe_module_catalog_without_auth(client, db_sessi
     db_session.add(
         Permission(
             code="menu:testcase:mindmap",
-            name="用例脑图",
+            name="思维导图",
             type="menu",
             path="/mindmap",
             icon="ShareAltOutlined",
@@ -44,7 +44,7 @@ def test_public_access_exposes_safe_module_catalog_without_auth(client, db_sessi
             "children": [
                 {
                     "code": "menu:testcase:mindmap",
-                    "name": "用例脑图",
+                    "name": "思维导图",
                     "path": "/mindmap",
                     "icon": "ShareAltOutlined",
                     "sort": 1,

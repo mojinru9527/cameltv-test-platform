@@ -22,11 +22,11 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('ProductionDiffPanel (C102-4)', () => {
+describe('ProductionDiffPanel', () => {
   it('loads bundles and renders empty state', async () => {
     mockListBundles.mockResolvedValue({ items: [], total: 0 })
     render(<ProductionDiffPanel />)
-    await waitFor(() => expect(screen.getByText('生产差异标注（C102-4）')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('生产差异标注')).toBeTruthy())
     expect(screen.getByPlaceholderText(/match-replay/)).toBeTruthy()
   })
 

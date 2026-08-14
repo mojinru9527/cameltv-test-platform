@@ -54,7 +54,7 @@ const ENV_TYPE_MAP: Record<string, { label: string; tone: BadgeTone }> = {
 }
 
 export default function EnvironmentPage() {
-  useDocumentTitle('环境配置')
+  useDocumentTitle('目标环境')
   // ── Environments (useApi — P1-8) ──
   const { data: envs, isLoading, isError, error, refetch } = useApi<Environment[]>(
     () => fetchEnvironments(),
