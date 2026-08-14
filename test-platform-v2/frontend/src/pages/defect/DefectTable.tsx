@@ -155,6 +155,8 @@ export default function DefectTable({
                                 size="xs"
                                 variant="secondary"
                                 className="text-destructive border-destructive/20 hover:bg-destructive/10"
+                                aria-label={`删除缺陷：${r.title}`}
+                                title={`删除缺陷：${r.title}`}
                                 onClick={() => setDeleteTarget(r.id)}
                               >
                                 <Trash2 className="size-3" />
