@@ -109,6 +109,11 @@ def list_sources(
 ) -> tuple[list[KnowledgeSource], int]:
     stmt = select(KnowledgeSource).where(KnowledgeSource.project_id == project_id)
     cnt = select(func.count(KnowledgeSource.id)).where(KnowledgeSource.project_id == project_id)
+    # Batch 177（FIX-173-P1-04）：默认隐藏已废弃/被替代的知识源（业务删除级联产生），
+    # 显式传 status 筛选时尊重调用方意图（如管理视图查看 deprecated 源）。
+    if not status:
+        stmt = stmt.where(KnowledgeSource.status.notin_(("deprecated", "superseded")))
+        cnt = cnt.where(KnowledgeSource.status.notin_(("deprecated", "superseded")))
     if source_type:
         stmt = stmt.where(KnowledgeSource.source_type == source_type)
         cnt = cnt.where(KnowledgeSource.source_type == source_type)

@@ -411,16 +411,44 @@ def run_case_batch(
 
 
 def _write_spec_as_ui_job(db, case, spec_code: str, creator_id: int, project_id: int) -> int | None:
-    """把生成 spec 写入 ui_runner 的 generated 目录，并创建关联用例的 UI 任务。"""
+    """把生成 spec 写入 ui_runner 的 generated 目录，并创建关联用例的 UI 任务。
+
+    Batch 177（FIX-173-P1-08）：
+    - 幂等：同一用例的 Playground 回写不再重复建任务（按 case_id + spec 查重，
+      已存在则复用，修复生产 2 对完全重复任务）；
+    - 绑定执行环境：默认取项目首个环境，修复「[Playground] 任务全部未绑定环境
+      永远无法执行」的断链。
+    """
     try:
         from app.services.playwright_executor import PLAYWRIGHT_DIR
         from app.schemas.ui_test import UiTestJobCreate
         from app.services import ui_test_service
+        from app.models.environment import Environment
+        from app.models.ui_test import UiTestJob
+        from sqlalchemy import select
 
         generated_dir = PLAYWRIGHT_DIR / "generated"
         generated_dir.mkdir(parents=True, exist_ok=True)
         rel = f"generated/playground-case-{case.id}.spec.ts"
         (generated_dir / f"playground-case-{case.id}.spec.ts").write_text(spec_code, encoding="utf-8")
+
+        # 幂等：同 (case_id, spec) 已存在任务则复用，避免重复堆积
+        existing = db.scalar(
+            select(UiTestJob).where(
+                UiTestJob.project_id == project_id,
+                UiTestJob.case_id == case.id,
+                UiTestJob.test_spec == rel,
+            ).order_by(UiTestJob.id.desc())
+        )
+        if existing is not None:
+            return int(existing.id)
+
+        # 绑定执行环境：默认取项目第一个环境（修复未绑定环境无法执行）
+        default_env = db.scalar(
+            select(Environment).where(
+                Environment.project_id == project_id,
+            ).order_by(Environment.id.asc())
+        )
 
         job = ui_test_service.create_job(
             db,
@@ -429,6 +457,7 @@ def _write_spec_as_ui_job(db, case, spec_code: str, creator_id: int, project_id:
                 description="由 Playground 功能用例批量编译生成",
                 test_spec=rel,
                 browser="chromium",
+                environment_id=default_env.id if default_env else None,
                 case_id=case.id,
             ),
             creator_id,
