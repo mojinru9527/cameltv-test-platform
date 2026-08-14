@@ -54,13 +54,24 @@ function extractItems(value: unknown): string[] {
   if (jsonItems) return jsonItems.map(toDisplayText).filter(Boolean)
 
   const lineItems = text.split(/\r?\n/).map((item) => item.trim()).filter(Boolean)
-  const candidates = lineItems.length > 1
-    ? lineItems
-    : text.split(/(?=\d+\s*[、.．)）])/g).map((item) => item.trim()).filter(Boolean)
-  const items = candidates.length > 1
-    ? candidates
-    : text.split(/[；;]/).map((item) => item.trim()).filter(Boolean)
-  return items.map((item) => item.replace(NUMBER_PREFIX, '').trim()).filter(Boolean)
+  if (lineItems.length > 1) {
+    return lineItems.map((item) => item.replace(NUMBER_PREFIX, '').trim()).filter(Boolean)
+  }
+
+  // Batch 174（FIX-173-P0-04）：仅当单行文本以「数字列表前缀」开头时才按
+  // 分隔符拆分。此前用全局 lookahead `/(?=\d+\s*[、.．)）])/g` 会把正文中的
+  // 合法数字（如「假设上限10000），创作者已登录」「latestVersion=6.0.0」）
+  // 误判为列表项并拆行编号（渲染成「2、1 3、0 4、0」），大量用例内容失真。
+  // 现在要求文本本身以 `1、`/`1.`/`1）` 等列表开头，正文数字不再触发拆分。
+  const startsAsList = /^\s*\d+\s*[、.．)）]/.test(text)
+  if (startsAsList) {
+    const candidates = text.split(/(?=\d+\s*[、.．)）])/g).map((item) => item.trim()).filter(Boolean)
+    if (candidates.length > 1) {
+      return candidates.map((item) => item.replace(NUMBER_PREFIX, '').trim()).filter(Boolean)
+    }
+  }
+  return text.split(/[；;]/).map((item) => item.trim()).filter(Boolean)
+    .map((item) => item.replace(NUMBER_PREFIX, '').trim()).filter(Boolean)
 }
 
 function numberItems(items: string[]): string[] {
