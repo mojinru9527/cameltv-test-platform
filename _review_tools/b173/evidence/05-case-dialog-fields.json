@@ -1,0 +1,65 @@
+[
+  {
+    "tag": "INPUT",
+    "name": "title",
+    "id": "case-title",
+    "type": "text",
+    "ph": "用例标题"
+  },
+  {
+    "tag": "SELECT",
+    "name": null,
+    "id": "",
+    "type": "select-one",
+    "ph": null
+  },
+  {
+    "tag": "SELECT",
+    "name": null,
+    "id": "",
+    "type": "select-one",
+    "ph": null
+  },
+  {
+    "tag": "SELECT",
+    "name": null,
+    "id": "",
+    "type": "select-one",
+    "ph": null
+  },
+  {
+    "tag": "SELECT",
+    "name": null,
+    "id": "",
+    "type": "select-one",
+    "ph": null
+  },
+  {
+    "tag": "SELECT",
+    "name": null,
+    "id": "",
+    "type": "select-one",
+    "ph": null
+  },
+  {
+    "tag": "TEXTAREA",
+    "name": "preconditions",
+    "id": "case-preconditions",
+    "type": "textarea",
+    "ph": "执行用例前需要满足的条件"
+  },
+  {
+    "tag": "TEXTAREA",
+    "name": null,
+    "id": "case-steps",
+    "type": "textarea",
+    "ph": "逐行输入测试步骤"
+  },
+  {
+    "tag": "TEXTAREA",
+    "name": "expected_result",
+    "id": "case-expected-result",
+    "type": "textarea",
+    "ph": "整体预期结果描述"
+  }
+]

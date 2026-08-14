@@ -1,0 +1,405 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+Playground
+
+功能用例库批量编译 → Playwright 执行 / 截图 / 回写 UI 任务（batch-166）
+
+业务域
+全部域
+模块
+全部模块
+正负向
+全部
+关键字
+回写 UI 任务
+选择	标题	模块	正负向
+
+	
+APP启动检测到新版本时弹出更新提示并可跳转更新
+	MOD-18 版本更新	positive
+
+	
+当前已是最新版本时不再弹出更新提示
+	MOD-18 版本更新	negative
+
+	
+强制更新场景下用户不可跳过更新
+	MOD-18 版本更新	boundary
+
+	
+登录用户进入UGC列表页，正常展示UGC内容列表
+	UGC列表	positive
+
+	
+UGC列表无数据时展示空状态
+	UGC列表	negative
+
+	
+UGC列表接口异常时展示错误提示并支持重试
+	UGC列表	negative
+
+	
+成功赋予普通用户创作者身份
+	UGC创作者管理	positive
+
+	
+赋予创作者身份时输入无效用户编号
+	UGC创作者管理	negative
+
+	
+赋予已为创作者的用户再次赋予身份
+	UGC创作者管理	negative
+
+	
+创作者成功登录后台并发布文章
+	UGC创作者管理	positive
+
+	
+非创作者用户访问创作者后台
+	UGC创作者管理	negative
+
+	
+创作者设置订阅金额为有效值
+	UGC创作者管理	positive
+
+	
+设置订阅金额为0或负数
+	UGC创作者管理	negative
+
+	
+设置订阅金额为超大值
+	UGC创作者管理	boundary
+
+	
+用户订阅后恰好在30天有效期内访问订阅内容
+	UGC创作者管理	positive
+
+	
+订阅过期后用户尝试访问订阅内容
+	UGC创作者管理	negative
+
+	
+运营后台配置有效的单篇付费价格区间
+	UGC创作者管理	positive
+
+	
+配置价格区间最小值大于最大值
+	UGC创作者管理	negative
+
+	
+设置区间为负数或包含0
+	UGC创作者管理	negative
+
+	
+用户有足够骆驼币订阅创作者成功
+	UGC创作者管理	positive
+
+	
+用户骆驼币不足时尝试订阅
+	UGC创作者管理	negative
+
+	
+用户在有效期内再次订阅同一个创作者
+	UGC创作者管理	negative
+
+	
+用户成功购买单篇付费文章（订阅者仍可额外购买）
+	UGC创作者管理	positive
+
+	
+用户骆驼币不足购买单篇付费文章
+	UGC创作者管理	negative
+
+	
+用户已购买单篇付费文章后再次尝试支付
+	UGC创作者管理	negative
+
+	
+YeiId计算-正向：多篇Win文章（无Push）
+	UGC统计指标	positive
+
+	
+YeiId计算-负向：无有结果的文章
+	UGC统计指标	negative
+
+	
+Hit Rate计算-正向：混合结果
+	UGC统计指标	positive
+
+	
+Hit Rate计算-边界：全部为Push
+	UGC统计指标	boundary
+
+	
+Avg Odds计算-正向：有Pan文章排除Push
+	UGC统计指标	positive
+
+	
+Avg Odds计算-负向：全部为Push
+	UGC统计指标	negative
+
+	
+Form统计-正向：近期30场数据
+	UGC统计指标	positive
+
+	
+Form统计-边界：无任何有结果文章
+	UGC统计指标	boundary
+
+	
+Streak连胜计数-正向：连续Win和Push穿插
+	UGC统计指标	positive
+
+	
+Streak连胜计数-边界：全部Push，Streak初始0
+	UGC统计指标	boundary
+
+	
+PV统计-正向：同一用户多次查看累加
+	UGC统计指标	positive
+
+	
+PV统计-负向：无任何浏览
+	UGC统计指标	negative
+
+	
+UV统计-正向：同一用户多次仅计1次
+	UGC统计指标	positive
+
+	
+UV统计-边界：无任何用户浏览
+	UGC统计指标	boundary
+
+	
+用户查看免费UGC详情页并参与点赞收藏
+	UGC详情	positive
+
+	
+未购买付费UGC的用户查看详情时只能预览部分内容
+	UGC详情	negative
+
+	
+访问不存在的UGC ID展示错误提示
+	UGC详情	boundary
+
+	
+运营置顶的UGC内容展示在UGC列表最前面
+	人工置顶排序	positive
+
+	
+没有置顶内容时UGC列表按默认排序规则展示
+	人工置顶排序	negative
+
+	
+多条置顶内容按照后台配置的置顶序号排列
+	人工置顶排序	boundary
+
+	
+置顶过期/取消置顶后该内容不再置顶
+	人工置顶排序	boundary
+
+	
+已认证创作者在我的页面可看到「创作者中心」入口并进入管理页
+	创作者中心	positive
+
+	
+非创作者用户在「我的」页面看不到创作者中心入口
+	创作者中心	negative
+
+	
+创作者中心无内容时展示空状态并可发布第一篇内容
+	创作者中心	boundary
+
+	
+UGC列表和详情页在活动期间展示首单不中退币提示
+	活动提示	positive
+
+	
+活动结束后列表与详情页不再展示活动提示
+	活动提示	boundary
+
+	
+移动端首页展示UGC入口，点击可跳转UGC列表页
+	移动端首页UGC入口	positive
+
+	
+无UGC内容或功能关闭时首页不展示UGC入口
+	移动端首页UGC入口	negative
+
+	
+未登录用户点击移动端首页UGC入口时提示登录
+	移动端首页UGC入口	boundary
+
+	
+有相关UGC内容时赛事详情页展示UGC模块
+	赛事详情UGC模块	positive
+
+	
+赛事没有关联UGC时详情页不展示UGC模块或显示空状态
+	赛事详情UGC模块	negative
+
+	
+赛事详情页UGC模块内容超过展示数量时可查看全部
+	赛事详情UGC模块	boundary
+
+	
+赛事详情页展示UGC用户预测/分析列表
+	赛事详情页-UGC模块	positive
+
+	
+无UGC内容时模块隐藏或显示空态
+	赛事详情页-UGC模块	negative
+
+	
+UGC列表按人工置顶优先级排序
+	赛事详情页-UGC模块	boundary
+
+	
+违规UGC内容被过滤不展示
+	赛事详情页-UGC模块	negative
+
+	
+UGC模块在赛事结束后仍可查看历史内容
+	赛事详情页-UGC模块	positive
+
+	
+用户首单购买付费UGC预测失败，系统自动退还骆驼币
+	首单不中退币	positive
+
+	
+已购买过一次付费UGC的用户，再次购买失败不享受退币
+	首单不中退币	negative
+
+	
+首单购买付费UGC预测正确，不触发退币
+	首单不中退币	boundary
+
+	
+首单退款处理失败时，不重复退款且有补偿机制
+	首单不中退币	negative
+
+	
+预测项与正确项一致时判定为Win
+	UGC文章管理	positive
+
+	
+预测项与正确项不一致时判定为Loss
+	UGC文章管理	negative
+
+	
+亚盘走水场景判定为Push
+	UGC文章管理	boundary
+
+	
+关联比赛被取消时预测结果判定为Push
+	UGC文章管理	boundary
+
+	
+比赛未结束且第三方封盘时预测结果标记Pending
+	UGC文章管理	positive
+
+	
+比赛未结束且第三方未封盘时预测结果不为Pending
+	UGC文章管理	negative
+
+	
+比赛已结束时即使收到封盘回调也不标记Pending
+	UGC文章管理	boundary
+
+	
+单篇付费预测文章获得Win结果后自动解锁
+	UGC文章管理	positive
+
+	
+订阅制预测文章获得Loss结果后同样自动解锁
+	UGC文章管理	positive
+
+	
+预测结果为Pending时文章不自动解锁
+	UGC文章管理	negative
+
+	
+预测结果为Push时文章也自动解锁
+	UGC文章管理	boundary
+
+	
+配置标题和内容后未解锁用户不可见、解锁用户可见
+	UGC文章管理	positive
+
+	
+标题或内容为空时禁止发布文章
+	UGC文章管理	negative
+
+	
+未解锁用户请求文章详情时内容字段不可见
+	UGC文章管理	negative
+
+	
+审核通过且已上架的非免费普通文章为在售状态
+	UGC文章管理	positive
+
+	
+含预测玩法且无结果非Pending的文章为在售状态
+	UGC文章管理	positive
+
+	
+免费文章不满足在售状态
+	UGC文章管理	negative
+
+	
+含预测玩法且Pending状态的文章不在售
+	UGC文章管理	negative
+
+	
+含预测玩法且已有预测结果的文章不在售
+	UGC文章管理	negative
+
+	
+审核未通过或已下架时文章不在售
+	UGC文章管理	negative
+
+	
+【上下架状态控制】已上架免费文章用户端正常可见
+	文章上下架	positive
+
+	
+【上下架状态控制】

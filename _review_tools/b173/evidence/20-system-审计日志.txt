@@ -1,0 +1,15 @@
+0044	-	100.64.0.13
+2026-08-14 04:02:02	sportsadmin	case:delete	#11509	-	100.64.0.14
+2026-08-14 04:01:53	sportsadmin	plan:delete	#18	-	100.64.0.12
+2026-08-14 04:00:57	sportsadmin	plan:create	#18 B173TMP-计划复验-56313	-	100.64.0.3
+2026-08-14 04:00:27	sportsadmin	case:delete	#11510	-	100.64.0.3
+2026-08-14 03:59:15	sportsadmin	case:create	#11510 B173TMP-验证入库-952908	-	100.64.0.4
+2026-08-14 03:58:41	sportsadmin	case:create	#11509 B173TMP-完整创建-917392	-	100.64.0.5
+2026-08-13 08:58:29	sportsadmin	plan:execute_all:async	plan #15	environment=1, ui_environment=2, auto_ui=False	100.64.0.5
+2026-08-13 08:58:28	sportsadmin	plan:add_cases	plan #15	added 1 cases	100.64.0.4
+2026-08-13 08:58:27	sportsadmin	plan:create	#15 C170-1 生产登录态 UI	-	100.64.0.3
+2026-08-13 16:20:30	sportsadmin	plan:execute_all:async	plan #14	environment=1, ui_environment=2, auto_ui=True	127.0.0.1
+2026-08-13 16:20:28	sportsadmin	plan:add_cases	plan #14	added 1 cases	127.0.0.1
+2026-08-13 16:20:24	sportsadmin	plan:create	#14 C170 登录态 UI 验证	-	127.0.0.1
+2026-08-13 14:51:37	sportsadmin	plan:execute_all:async	plan #13	environment=1, ui_environment=2, auto_ui=True	127.0.0.1
+2026-08-13 14:51:35	sportsadmin	plan:add_cases	plan #13	added 2 cas

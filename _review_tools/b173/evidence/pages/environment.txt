@@ -1,0 +1,67 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+环境与变量管理
+
+项目级测试环境配置与加密变量管理，支持环境切换与变量引用。
+
+新建环境
+体育平台-生产
+生产
+体育平台-生产-站点UI
+生产
+体育平台-Test5
+测试
+体育平台-生产
+体育平台生产只读接入（Batch 101）
+变量列表
+添加变量
+变量名	值	加密	描述	操作
+PROD_ALLOWED_HOSTS	www.camel1.tv,api.cameltv.live,www.cameltv.live,livecdn.cameltv.live,img.cameltv.live,d3q5i0g1zfzd69.cloudfront.net,www.googletagmanager.com,www.google-analytics.com,stats.g.doubleclick.net,fonts.googleapis.com,fonts.gstatic.com,accounts.google.com,analytics.google.com,www.facebook.com,www.google.com.sg,sensors.cameltv.live	明文		
+
+PROD_EXPECTED_BUSINESS_TEXT	Football Today - Watch Live Streaming	明文		
+
+PROD_LOGIN_AUTHORIZED	false	明文		
+
+PROD_SMOKE_OWNER	sports-integration	明文		
+Command Palette
+
+Search for a command to run...

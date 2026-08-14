@@ -1,0 +1,48 @@
+跳到主内容
+CamelTv
+测试平台
+知识
+知识中心
+项目知识
+平台研发
+知识图谱
+AI审核台
+导航菜单
+工作台
+质量追溯
+需求文档
+版本测试任务
+用例脑图
+用例服务
+测试计划
+接口测试
+UI 自动化
+Playground
+定时任务
+报告中心
+系统管理
+我的项目
+缺陷管理
+测试数据集
+集成配置
+通知配置
+目标环境
+Agent 工作台
+DSH 任务
+蓝湖证据包
+体
+体育平台管理员
+sportsadmin@cameltv.local
+Toggle Sidebar
+当前项目
+CamelTv 体育平台
+黑曜
+体
+体育平台管理员
+主题实验室未开放
+
+全局主题切换不受影响；主题实验室需在开发模式或配置 VITE_ENABLE_THEME_LAB=true 后开放。
+
+Command Palette
+
+Search for a command to run...
