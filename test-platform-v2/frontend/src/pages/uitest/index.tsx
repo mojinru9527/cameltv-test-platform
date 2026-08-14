@@ -81,6 +81,7 @@ import {
 } from '@/components/ui/table'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { parseUiRunResult } from './uiRunResult'
+import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 
 const BROWSER_MAP: Record<string, { color: string }> = {
   chromium: { color: 'blue' },
@@ -88,19 +89,20 @@ const BROWSER_MAP: Record<string, { color: string }> = {
   webkit: { color: 'purple' },
 }
 
-const STATUS_MAP: Record<string, { color: string; label: string }> = {
-  idle: { color: 'default', label: '待执行' },
-  running: { color: 'processing', label: '运行中' },
-  done: { color: 'green', label: '已完成' },
-  fail: { color: 'red', label: '失败' },
+// Batch 182（P1-06）：job/run 状态统一按规范词表着色（ui_test_job/ui_test_run 已迁移
+// idle/done/fail → pending/passed/failed，兼容历史旧值经 normalizeExecStatus 归一）
+const STATUS_COLORS: Record<string, string> = {
+  pending: 'default',
+  running: 'processing',
+  passed: 'green',
+  failed: 'red',
+  skipped: 'yellow',
+  cancelled: 'yellow',
+  blocked: 'red',
 }
 
-const RUN_STATUS_MAP: Record<string, { color: string; label: string }> = {
-  pending: { color: 'default', label: '等待中' },
-  running: { color: 'processing', label: '运行中' },
-  done: { color: 'green', label: '完成' },
-  fail: { color: 'red', label: '失败' },
-  cancelled: { color: 'yellow', label: '已取消' },
+function execStatusBadgeClass(status?: string): string {
+  return statusBadgeClass(STATUS_COLORS[normalizeExecStatus(status)] ?? 'default')
 }
 
 function browserBadgeClass(c: string) {
@@ -370,8 +372,8 @@ export default function UiTestPage() {
       )
     }},
     { key: 'status', header: '状态', headerClassName: 'w-[100px]', render: (r) => (
-      <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
-        {STATUS_MAP[r.status]?.label || r.status}
+      <Badge tone="neutral" className={execStatusBadgeClass(r.status)}>
+        {execStatusLabel(r.status)}
       </Badge>
     )},
     { key: 'last_run_time', header: '上次执行', headerClassName: 'w-[170px]', render: (r) => r.last_run_time ? new Date(r.last_run_time).toLocaleString('zh-CN') : '-' },
@@ -579,8 +581,8 @@ export default function UiTestPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="__all__">全部</SelectItem>
-                {Object.entries(STATUS_MAP).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                {(['pending', 'running', 'passed', 'failed'] as const).map((k) => (
+                  <SelectItem key={k} value={k}>{execStatusLabel(k)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -738,7 +740,7 @@ export default function UiTestPage() {
                 {[
                   ['名称', detail.name],
                   ['浏览器', <Badge key="br" tone="neutral" className={browserBadgeClass(BROWSER_MAP[detail.browser]?.color)}><Monitor className="size-3" />{detail.browser}</Badge>],
-                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>{STATUS_MAP[detail.status]?.label}</Badge>],
+                  ['状态', <Badge key="st" tone="neutral" className={execStatusBadgeClass(detail.status)}>{execStatusLabel(detail.status)}</Badge>],
                   ['测试文件', detail.test_spec || '-'],
                   ['目标环境', getEnvironment(detail)?.name || '未绑定'],
                   ['目标地址', getEnvironment(detail)?.base_url || '-'],
@@ -793,8 +795,8 @@ export default function UiTestPage() {
                           runs.items.map((run) => (
                             <TableRow key={run.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openRunDetail(run)}>
                               <TableCell>
-                                <Badge tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[run.status]?.color)}>
-                                  {RUN_STATUS_MAP[run.status]?.label || run.status}
+                                <Badge tone="neutral" className={execStatusBadgeClass(run.status)}>
+                                  {execStatusLabel(run.status)}
                                 </Badge>
                               </TableCell>
                               <TableCell>{run.started_at ? new Date(run.started_at).toLocaleString() : '-'}</TableCell>
@@ -859,8 +861,8 @@ export default function UiTestPage() {
             <DialogTitle className="flex items-center gap-2">
               运行详情 #{selectedRun?.id}
               {selectedRun && (
-                <Badge tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>
-                  {RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}
+                <Badge tone="neutral" className={execStatusBadgeClass(selectedRun.status)}>
+                  {execStatusLabel(selectedRun.status)}
                 </Badge>
               )}
             </DialogTitle>
@@ -875,7 +877,7 @@ export default function UiTestPage() {
               {/* Info grid */}
               <dl className="grid grid-cols-2 border rounded-lg">
                 {[
-                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(RUN_STATUS_MAP[selectedRun.status]?.color)}>{RUN_STATUS_MAP[selectedRun.status]?.label || selectedRun.status}</Badge>],
+                  ['状态', <Badge key="st" tone="neutral" className={execStatusBadgeClass(selectedRun.status)}>{execStatusLabel(selectedRun.status)}</Badge>],
                   ['浏览器', selectedRun.browser ? <Badge key="br" tone="neutral" className={browserBadgeClass(BROWSER_MAP[selectedRun.browser]?.color)}><Monitor className="size-3" />{selectedRun.browser}</Badge> : '-'],
                   ['Base URL', selectedRun.base_url || '-'],
                   ['耗时', selectedRun.duration != null ? `${selectedRun.duration}s` : '-'],

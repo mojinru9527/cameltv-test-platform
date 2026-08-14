@@ -66,22 +66,27 @@ import { fetchEnvironments } from '@/api/environment'
 import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
 import AddCasesModal from './AddCasesModal'
 import PlanDrawer from './PlanDrawer'
-import { executionStatusLabel } from './executionStatus'
+import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 
+// Batch 182（P1-06）：执行状态按规范词表着色（兼容历史 pass/fail/skip/block 旧值，经 normalizeExecStatus 归一）
 const STATUS_COLORS: Record<string, { tone: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; className?: string }> = {
-  pass: { tone: 'success' },
-  fail: { tone: 'danger' },
-  skip: { tone: 'warning' },
-  block: { tone: 'neutral' },
   pending: { tone: 'neutral' },
+  running: { tone: 'info' },
+  passed: { tone: 'success' },
+  failed: { tone: 'danger' },
+  skipped: { tone: 'warning' },
+  cancelled: { tone: 'neutral' },
+  blocked: { tone: 'danger' },
 }
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
-  pass: <CheckCircle2 className="size-3 text-status-success" />,
-  fail: <XCircle className="size-3 text-destructive" />,
-  skip: <MinusCircle className="size-3 text-status-warning" />,
-  block: <StopCircle className="size-3 text-muted-foreground" />,
   pending: <Pause className="size-3 text-muted-foreground" />,
+  running: <Pause className="size-3 text-status-info" />,
+  passed: <CheckCircle2 className="size-3 text-status-success" />,
+  failed: <XCircle className="size-3 text-destructive" />,
+  skipped: <MinusCircle className="size-3 text-status-warning" />,
+  cancelled: <StopCircle className="size-3 text-muted-foreground" />,
+  blocked: <StopCircle className="size-3 text-destructive" />,
 }
 
 const PLAN_STATUS: Record<string, { tone: 'success' | 'warning' | 'danger' | 'info' | 'neutral'; label: string }> = {
@@ -421,7 +426,7 @@ export default function PlanDetail() {
               )}>
                 {val as number}
               </div>
-              <div className="text-xs text-muted-foreground">{key}</div>
+              <div className="text-xs text-muted-foreground">{execStatusLabel(key)}</div>
             </CardContent>
           </Card>
         ))}
@@ -496,7 +501,7 @@ export default function PlanDetail() {
                       </TableRow>
                     ) : (
                       (plan.cases || []).map((r: any) => {
-                        const sc = STATUS_COLORS[r.last_status] || { tone: 'neutral' as const }
+                        const sc = STATUS_COLORS[normalizeExecStatus(r.last_status)] || { tone: 'neutral' as const }
                         return (
                           <TableRow key={r.id}>
                             <TableCell className="text-muted-foreground">{r.sort_order}</TableCell>
@@ -517,8 +522,8 @@ export default function PlanDetail() {
                             <TableCell className="max-w-[100px] truncate">{r.module}</TableCell>
                             <TableCell>
                               <Badge tone={sc.tone} className={sc.className}>
-                                {STATUS_ICONS[r.last_status]}
-                                <span className="ml-0.5">{executionStatusLabel(r.last_status)}</span>
+                                {STATUS_ICONS[normalizeExecStatus(r.last_status)]}
+                                <span className="ml-0.5">{execStatusLabel(r.last_status)}</span>
                               </Badge>
                             </TableCell>
                             <TableCell>
@@ -587,16 +592,16 @@ export default function PlanDetail() {
                       </TableRow>
                     ) : (
                       (executions.items || []).map((r: any) => {
-                        const sc = STATUS_COLORS[r.status] || { tone: 'neutral' as const }
+                        const sc = STATUS_COLORS[normalizeExecStatus(r.status)] || { tone: 'neutral' as const }
                         return (
                           <TableRow key={r.id}>
                             <TableCell className="max-w-0 truncate">{r.case_title}</TableCell>
                             <TableCell>
-                              <Badge tone={sc.tone} className={sc.className}>{executionStatusLabel(r.status)}</Badge>
+                              <Badge tone={sc.tone} className={sc.className}>{execStatusLabel(r.status)}</Badge>
                             </TableCell>
                             <TableCell className="max-w-[200px] truncate">{r.notes || '-'}</TableCell>
                             <TableCell className="max-w-[220px]">
-                              {r.status === 'fail' ? (
+                              {normalizeExecStatus(r.status) === 'failed' ? (
                                 <span
                                   className="block truncate text-destructive"
                                   title={r.error_message || r.actual_result || '-'}
@@ -606,12 +611,12 @@ export default function PlanDetail() {
                               ) : '-'}
                             </TableCell>
                             <TableCell>
-                              {r.status === 'fail' && r.status_code ? (
+                              {normalizeExecStatus(r.status) === 'failed' && r.status_code ? (
                                 <span className={r.status_code >= 400 ? 'text-destructive' : ''}>{r.status_code}</span>
                               ) : '-'}
                             </TableCell>
                             <TableCell>
-                              {r.status === 'fail' && r.error_type ? (
+                              {normalizeExecStatus(r.status) === 'failed' && r.error_type ? (
                                 <Badge tone="warning">{errorTypeLabel(r.error_type)}</Badge>
                               ) : '-'}
                             </TableCell>

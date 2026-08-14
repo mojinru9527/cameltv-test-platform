@@ -30,6 +30,7 @@ import {
 import { createTestCase, updateTestCase, reviewCase, fetchReviewHistory } from '@/api/testcase'
 import { fetchDatasets } from '@/api/dataset'
 import { Code2, FileText } from '@/lib/icons'
+import { compareDomainGroups, groupDomainLabel } from '@/utils/domainNaming'
 import type { TestCaseReviewTransition } from '@/types'
 
 const formSchema = z.object({
@@ -402,19 +403,22 @@ function CaseForm({ register, control, errors, selType, domains, selModules, wat
             render={({ field }: any) => (
               // Batch 178（FIX-173-P2-03）：可搜索域下拉（100+ 项扁平列表无法定位，
               // 按 用户端/运营后台/接口测试 分组 + 关键字过滤）
+              // Batch 182（FIX-173-P3-04）：组名/标签统一走 domainNaming 规范——
+              // 裸域补前缀展示（UGC → 用户端/UGC），选中仍提交原始 value 不污染表单。
               <SearchableSelect
                 triggerId="case-domain"
                 value={field.value || undefined}
                 onValueChange={field.onChange}
                 placeholder="选择域"
-                options={(domains || []).map((d: any) => ({
-                  value: d.domain,
-                  label: d.domain,
-                  group: d.domain.startsWith('用户端') ? '用户端'
-                    : d.domain.startsWith('运营后台') ? '运营后台'
-                    : d.domain.startsWith('接口测试') ? '接口测试'
-                    : '其他',
-                }))}
+                options={[...(domains || [])]
+                  .map((d: any) => {
+                    const { group, label } = groupDomainLabel(d.domain)
+                    return { value: d.domain, label, group }
+                  })
+                  .sort(
+                    (a, b) => compareDomainGroups(a.group, b.group)
+                      || a.label.localeCompare(b.label, 'zh-CN'),
+                  )}
               />
             )}
           />

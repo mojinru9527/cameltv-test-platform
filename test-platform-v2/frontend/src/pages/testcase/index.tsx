@@ -7,7 +7,9 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -42,6 +44,7 @@ import { deleteTestCase, fetchDomains, fetchTaxonomy, fetchTestCases, fetchTestC
 import type { TaxonomyModuleNode } from '@/api/testcase'
 import { countCasesByType, formatNumberedText, formatStepActions, formatStepExpectations, sortCasesNewestFirst } from './caseListFormatters'
 import { buildCaseListParams, countDirectCases, flattenTaxonomyModules } from './caseTaxonomyFilters'
+import { groupDomainLabel, groupDomains } from '@/utils/domainNaming'
 import { useApi } from '@/hooks/useApi'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/stores/auth'
@@ -250,8 +253,19 @@ export default function TestCasePage() {
     () => taxonomy.find((surface) => surface.surface === selSurface),
     [selSurface, taxonomy],
   )
-  const taxonomyDomains = selectedSurface?.domains || []
+  const taxonomyDomains = useMemo(() => selectedSurface?.domains || [], [selectedSurface])
   const selectedTaxonomyDomain = taxonomyDomains.find((domain) => domain.domain === selDomain)
+
+  // Batch 182（FIX-173-P3-04）：域筛选下拉按 DOMAIN_GROUP_ORDER（用户端/运营后台/接口测试/其他）
+  // 分组，组内按用例数降序（数量更有区分度），标签统一走 domainNaming（裸域补前缀展示）。
+  const groupedTaxonomyDomains = useMemo(() => {
+    return groupDomains(taxonomyDomains, (d) => d.domain).map(([group, items]) => ({
+      group,
+      items: [...items].sort(
+        (a, b) => (b.count - a.count) || a.domain.localeCompare(b.domain, 'zh-CN'),
+      ),
+    }))
+  }, [taxonomyDomains])
 
   // ── Domain tree data ──
   const domainTree = useMemo(() => {
@@ -466,8 +480,15 @@ export default function TestCasePage() {
               </SelectTrigger>
               <SelectContent position="popper">
                 <SelectItem value={ALL_FILTER}>全部业务模块</SelectItem>
-                {taxonomyDomains.map((d) => (
-                  <SelectItem key={d.domain} value={d.domain}>{d.domain}</SelectItem>
+                {groupedTaxonomyDomains.map(({ group, items }) => (
+                  <SelectGroup key={group}>
+                    <SelectLabel>{group}</SelectLabel>
+                    {items.map((d) => (
+                      <SelectItem key={d.domain} value={d.domain}>
+                        {groupDomainLabel(d.domain).label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
