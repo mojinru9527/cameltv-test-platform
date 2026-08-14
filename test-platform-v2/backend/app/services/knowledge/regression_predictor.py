@@ -163,7 +163,7 @@ def _calculate_risk_for_path(db, project_id: int, api_path: str) -> dict:
         related_chunks_count = db.scalar(
             select(func.count(KnowledgeChunk.id)).where(
                 KnowledgeChunk.project_id == project_id,
-                KnowledgeChunk.status == "active",
+                KnowledgeChunk.is_deleted.is_(False),
                 KnowledgeChunk.content.contains(api_path.split(":")[-1] if ":" in api_path else api_path),
             )
         ) or 0

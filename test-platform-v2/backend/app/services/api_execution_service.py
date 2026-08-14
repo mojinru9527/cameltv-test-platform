@@ -15,6 +15,7 @@ from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 import httpx
 from sqlalchemy.orm import Session
 
+from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
 from app.models.test_case import TestCase
 from app.services.environment_service import resolve_variables
 
@@ -1462,3 +1463,102 @@ def _shell_quote(s: str) -> str:
     """简单 shell 引号（Windows cmd 兼容：优先双引号）。"""
     escaped = s.replace('"', '\\"')
     return f'"{escaped}"'
+
+
+# ═══════════════════════════════════════════════════════
+# 路由层 ORM 收敛薄函数（Batch 181 路由拆分）
+# ═══════════════════════════════════════════════════════
+
+def get_task_by_id(db: Session, task_id: int) -> ApiExecutionTask | None:
+    """按 id 获取执行任务（不带项目过滤，供路由区分 404/403）。"""
+    return db.get(ApiExecutionTask, task_id)
+
+
+def get_project_task(db: Session, task_id: int, project_id: int) -> ApiExecutionTask | None:
+    """Return an execution task only when it belongs to the active project."""
+    return db.query(ApiExecutionTask).filter(
+        ApiExecutionTask.id == task_id,
+        ApiExecutionTask.project_id == project_id,
+    ).first()
+
+
+def list_project_tasks(
+    db: Session,
+    project_id: int,
+    *,
+    service_id: int | None = None,
+    status: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[list[ApiExecutionTask], int]:
+    """分页列出执行任务（按创建时间倒序，与路由原逻辑一致）。"""
+    q = db.query(ApiExecutionTask).filter_by(project_id=project_id)
+    if service_id:
+        q = q.filter_by(service_id=service_id)
+    if status:
+        q = q.filter_by(status=status)
+    q = q.order_by(ApiExecutionTask.created_at.desc())
+
+    total = q.count()
+    rows = q.offset((page - 1) * page_size).limit(page_size).all()
+    return rows, total
+
+
+def list_task_items(db: Session, task_id: int) -> list[ApiExecutionTaskItem]:
+    """列出任务明细。"""
+    return db.query(ApiExecutionTaskItem).filter_by(task_id=task_id).all()
+
+
+def list_failed_task_items(db: Session, task_id: int) -> list[ApiExecutionTaskItem]:
+    """列出任务的失败明细。"""
+    return db.query(ApiExecutionTaskItem).filter_by(
+        task_id=task_id, status="failed",
+    ).all()
+
+
+def get_task_item(db: Session, item_id: int) -> ApiExecutionTaskItem | None:
+    """按 id 获取任务明细。"""
+    return db.get(ApiExecutionTaskItem, item_id)
+
+
+def create_execution_task(
+    db: Session,
+    *,
+    project_id: int,
+    task_id: str,
+    name: str,
+    environment_id: int | None,
+    service_id: int | None,
+    status: str,
+    total: int,
+    creator_id: int,
+    confirm_prod: bool,
+    trigger_type: str = "manual",
+) -> ApiExecutionTask:
+    """创建执行任务并 flush（沿用调用方会话，提交由路由层负责）。"""
+    task = ApiExecutionTask(
+        project_id=project_id,
+        task_id=task_id,
+        name=name,
+        environment_id=environment_id,
+        service_id=service_id,
+        status=status,
+        total=total,
+        creator_id=creator_id,
+        confirm_prod=confirm_prod,
+        trigger_type=trigger_type,
+    )
+    db.add(task)
+    db.flush()
+    return task
+
+
+def add_task_items(db: Session, task_id: int, case_ids: list[int]) -> None:
+    """为任务批量写入明细行（不提交，由路由层统一 commit）。"""
+    for case_id in case_ids:
+        db.add(ApiExecutionTaskItem(task_id=task_id, case_id=case_id))
+
+
+def delete_task_items(db: Session, task_id: int) -> None:
+    """删除任务的明细行（不提交，由路由层统一 commit）。"""
+    db.query(ApiExecutionTaskItem).filter(ApiExecutionTaskItem.task_id == task_id).delete()

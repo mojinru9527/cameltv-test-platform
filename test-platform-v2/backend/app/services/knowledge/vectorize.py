@@ -68,7 +68,7 @@ def embed_pending_chunks_in_new_session(
         while True:
             q = select(KnowledgeChunk).where(
                 KnowledgeChunk.project_id == project_id,
-                KnowledgeChunk.status == "active",
+                KnowledgeChunk.is_deleted.is_(False),
                 KnowledgeChunk.embedding_id == "",
             )
             if source_id is not None:

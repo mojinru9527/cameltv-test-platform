@@ -44,6 +44,25 @@ Router (api/v1/)  →  Service (services/)  →  Model (models/)
 - **Schema 层**：Pydantic v2 模型。请求/响应分离，使用 `model_config = ConfigDict(from_attributes=True)`
 - **Deps 层**：FastAPI `Depends()` 可复用依赖（get_db、get_current_user、权限检查）
 
+### 路由层禁 ORM（Batch 181 / FIX-173-P2-10，强制）
+
+- `app/api/v1/` 下的路由文件**禁止** `from app.models import ...`、`select(`、`db.query(`（查询一律收敛到 services）。
+- 豁免：BackgroundTasks 使用的独立 `SessionLocal()` 会话（test_plan/defect/report 既有模式，仅指开新会话，不含查询）。
+- 路由层只保留：参数校验、权限、组装响应、审计、`db.commit()`。
+- 守卫测试：`tests/test_route_layer_orm_ban.py` + `tests/test_route_inventory.py`（路径集基线，拆分不得漂移）。
+
+### 删除语义唯一约定（Batch 181 / FIX-173-P2-08，强制）
+
+- **软删除 = `is_deleted` 布尔**（True=已删）：可恢复/默认隐藏的删除一律用该列（test_case/domain/module、knowledge_source/chunk）。
+- **硬删除 = 显式审计删除**（需求/缺陷/计划/UI 任务等）：保留审计留痕，不建软删列。
+- **禁止第三套删除语义**：不得再用 `status=deprecated` 之类状态值兼作删除标志（status 列仅作展示/生命周期值，过滤一律走 `is_deleted`）。
+- 过滤写法统一 `Model.is_deleted.is_(False)`，禁止 `== False`。
+
+### 认领式任务队列统一约定（Batch 181 / FIX-173-P2-06，强制）
+
+- 认领/回收/收尾原语统一走 `app/core/task_queue.py`（`QueueSpec` + `atomic_claim`/`atomic_claim_by_id`/`reap_stale`/`finish_task` + `QueueWorkerLoop`）。
+- 新队列禁止自研 SELECT→改→commit 认领（TOCTOU）；锁列统一 `locked_by`/`locked_at`（或按 QueueSpec 配置），失联回收必须有（默认 30 分钟阈值）。
+
 ## API 设计约定
 
 - **URL 风格**：`/api/v1/{resource}`，RESTful

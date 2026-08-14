@@ -61,7 +61,7 @@ def sync_all_test_cases_to_graph(db: Session, project_id: int) -> dict:
         db.scalars(
             select(TestCase).where(
                 TestCase.project_id == project_id,
-                TestCase.is_deleted == False,  # noqa: E712
+                TestCase.is_deleted.is_(False),
             )
         ).all()
     )

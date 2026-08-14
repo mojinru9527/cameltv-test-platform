@@ -29,7 +29,7 @@ def test_single_api_case_forwards_superuser_production_permission(
     db_session.commit()
 
     with patch(
-        "app.api.v1.test_case.execute_api_case",
+        "app.api.v1.test_case_crud.execute_api_case",
         return_value={"status_code": 200, "all_pass": True},
     ) as execute:
         response = client.post(

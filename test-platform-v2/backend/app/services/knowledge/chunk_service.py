@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.knowledge import KnowledgeChunk, KnowledgeSource
@@ -14,6 +14,9 @@ from app.services.knowledge.source_service import content_hash
 
 # 粗略 token 估算：中文按字符、英文按 ~4 字符/token，取字符数/2 作近似
 _TOKEN_DIVISOR = 2
+
+_NO_ACTIVE_CHUNKS = "当前项目没有可提取的有效知识片段，请先导入并解析知识源"
+_NO_ACTIVE_SOURCE_CHUNKS = "指定知识源没有可提取的有效知识片段"
 
 
 def estimate_tokens(text: str) -> int:
@@ -99,3 +102,44 @@ def get_chunk(db: Session, chunk_pk: int, project_id: int) -> KnowledgeChunk | N
     if not row or row.project_id != project_id:
         return None
     return row
+
+
+def has_active_chunks(
+    db: Session,
+    project_id: int,
+    source_id: int | None = None,
+) -> tuple[bool, str]:
+    """检查项目/知识源是否存在可提取的有效切片（Batch 181 P2-10 收敛）。
+
+    保留原路由 _graph_extract_availability 的错误文案语义。
+    """
+    stmt = select(KnowledgeChunk.id).where(
+        KnowledgeChunk.project_id == project_id,
+        KnowledgeChunk.is_deleted.is_(False),
+    )
+    if source_id is not None:
+        stmt = stmt.where(KnowledgeChunk.source_id == source_id)
+    if db.scalar(stmt.limit(1)) is not None:
+        return True, ""
+    return False, _NO_ACTIVE_SOURCE_CHUNKS if source_id is not None else _NO_ACTIVE_CHUNKS
+
+
+def count_chunks(db: Session, project_id: int, *, embedded_only: bool = False) -> int:
+    """统计项目内未删除切片数；embedded_only=True 仅统计已嵌入（embedding_id != ""）的切片。"""
+    stmt = select(func.count(KnowledgeChunk.id)).where(
+        KnowledgeChunk.project_id == project_id,
+        KnowledgeChunk.is_deleted.is_(False),
+    )
+    if embedded_only:
+        stmt = stmt.where(KnowledgeChunk.embedding_id != "")
+    return db.scalar(stmt) or 0
+
+
+def count_pending_embedding_chunks(db: Session, project_id: int) -> int:
+    """统计项目内未嵌入（embedding_id == ""）的未删除切片数（reembed 扫描基数）。"""
+    stmt = select(func.count(KnowledgeChunk.id)).where(
+        KnowledgeChunk.project_id == project_id,
+        KnowledgeChunk.is_deleted.is_(False),
+        KnowledgeChunk.embedding_id == "",
+    )
+    return db.scalar(stmt) or 0

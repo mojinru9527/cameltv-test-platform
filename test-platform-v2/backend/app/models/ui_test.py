@@ -59,6 +59,9 @@ class UiTestRun(Base):
     cancel_requested: Mapped[bool] = mapped_column(Boolean, default=False) # 是否请求取消
     started_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
     finished_at: Mapped[Optional[datetime]] = mapped_column(default=None)
+    # Batch 181：统一认领锁（P2-06）
+    locked_at: Mapped[Optional[datetime]] = mapped_column(default=None)
+    locked_by: Mapped[str] = mapped_column(String(64), default="")
 
     job: Mapped["UiTestJob"] = relationship("UiTestJob", back_populates="runs")
 

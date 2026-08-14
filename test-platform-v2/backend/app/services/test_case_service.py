@@ -133,8 +133,8 @@ def list_cases(
     page_size: int = 20,
 ) -> tuple[list[dict], int]:
     """分页查询用例列表，支持多条件筛选。"""
-    stmt = select(TestCase).where(TestCase.is_deleted == False)
-    count_stmt = select(func.count(TestCase.id)).where(TestCase.is_deleted == False)
+    stmt = select(TestCase).where(TestCase.is_deleted.is_(False))
+    count_stmt = select(func.count(TestCase.id)).where(TestCase.is_deleted.is_(False))
 
     # 项目隔离
     stmt = stmt.where(TestCase.project_id == project_id)
@@ -226,7 +226,7 @@ def get_case(db: Session, case_id: int, project_id: int = 0) -> dict | None:
         select(TestCase).where(
             TestCase.id == case_id,
             TestCase.project_id == project_id,
-            TestCase.is_deleted == False,
+            TestCase.is_deleted.is_(False),
         )
     )
     return _row_to_dict(row) if row else None
@@ -247,7 +247,7 @@ def create_case(db: Session, data: dict, *, commit: bool = True) -> dict:
 def update_case(db: Session, case_id: int, data: dict, changed_by: int = 0) -> dict | None:
     data = _sanitize_case_data(data)
     row = db.scalar(
-        select(TestCase).where(TestCase.id == case_id, TestCase.is_deleted == False)
+        select(TestCase).where(TestCase.id == case_id, TestCase.is_deleted.is_(False))
     )
     if not row:
         return None
@@ -271,7 +271,7 @@ def delete_case(db: Session, case_id: int, project_id: int = 0) -> bool:
         select(TestCase).where(
             TestCase.id == case_id,
             TestCase.project_id == project_id,
-            TestCase.is_deleted == False,
+            TestCase.is_deleted.is_(False),
         )
     )
     if not row:
@@ -285,7 +285,7 @@ def batch_delete(db: Session, ids: list[int], project_id: int = 0) -> int:
         select(TestCase).where(
             TestCase.id.in_(ids),
             TestCase.project_id == project_id,
-            TestCase.is_deleted == False,
+            TestCase.is_deleted.is_(False),
         )
     ).all()
     for r in rows:
@@ -294,13 +294,50 @@ def batch_delete(db: Session, ids: list[int], project_id: int = 0) -> int:
     return len(rows)
 
 
+def save_execution_backfill(
+    db: Session, case_id: int, project_id: int, result: dict
+) -> bool:
+    """API 执行结果回填到用例（last_response_json / last_run_status）。
+
+    Batch 181（FIX-173-P2-10）：路由层禁 ORM，原 execute 端点内的 TestCase 查询
+    收敛至此；不负责 commit（路由层保留 db.commit()/db.rollback() 的 try/except）。
+    """
+    import json as _json
+
+    row = db.scalar(
+        select(TestCase).where(
+            TestCase.id == case_id,
+            TestCase.project_id == project_id,
+            TestCase.is_deleted.is_(False),
+        )
+    )
+    if not row:
+        return False
+    row.last_response_json = _json.dumps(
+        {
+            "status_code": result.get("status_code"),
+            "response_body": result.get("response_body"),
+            "assertions": result.get("assertions", []),
+            "assertion_summary": result.get("assertion_summary", {}),
+            "all_pass": result.get("all_pass"),
+            "executed_at": result.get("executed_at"),
+        },
+        ensure_ascii=False,
+    )
+    row.last_run_status = (
+        "success" if result.get("all_pass")
+        else ("error" if result.get("status") == "error" else "fail")
+    )
+    return True
+
+
 # ── 域树 ──────────────────────────────────────────────
 
 def get_domain_tree(db: Session, project_id: int = 0) -> list[dict]:
     """返回 domain→module 两级树结构，附带每模块用例数。过滤已删除用例。"""
     rows = db.scalars(
         select(TestCase)
-        .where(TestCase.project_id == project_id, TestCase.is_deleted == False)
+        .where(TestCase.project_id == project_id, TestCase.is_deleted.is_(False))
         .order_by(TestCase.domain, TestCase.module)
     ).all()
 
@@ -494,7 +531,7 @@ def delete_domain(db: Session, domain_id: int, project_id: int) -> bool:
         select(TestCaseDomain).where(
             TestCaseDomain.id == domain_id,
             TestCaseDomain.project_id == project_id,
-            TestCaseDomain.is_deleted == False,
+            TestCaseDomain.is_deleted.is_(False),
         )
     )
     if not domain:
@@ -506,7 +543,7 @@ def delete_domain(db: Session, domain_id: int, project_id: int) -> bool:
     modules = db.scalars(
         select(TestCaseModule).where(
             TestCaseModule.domain_id == domain_id,
-            TestCaseModule.is_deleted == False,
+            TestCaseModule.is_deleted.is_(False),
         )
     ).all()
     for m in modules:
@@ -517,7 +554,7 @@ def delete_domain(db: Session, domain_id: int, project_id: int) -> bool:
         select(TestCase).where(
             TestCase.project_id == project_id,
             TestCase.domain == domain.name,
-            TestCase.is_deleted == False,
+            TestCase.is_deleted.is_(False),
         )
     ).all()
     for c in case_rows:
@@ -533,7 +570,7 @@ def create_module(db: Session, domain_id: int, project_id: int, name: str) -> di
         select(TestCaseDomain).where(
             TestCaseDomain.id == domain_id,
             TestCaseDomain.project_id == project_id,
-            TestCaseDomain.is_deleted == False,
+            TestCaseDomain.is_deleted.is_(False),
         )
     )
     if not domain:
@@ -565,7 +602,7 @@ def delete_module(db: Session, domain_id: int, module_id: int) -> bool:
         select(TestCaseModule).where(
             TestCaseModule.id == module_id,
             TestCaseModule.domain_id == domain_id,
-            TestCaseModule.is_deleted == False,
+            TestCaseModule.is_deleted.is_(False),
         )
     )
     if not module:
@@ -585,7 +622,7 @@ def delete_module(db: Session, domain_id: int, module_id: int) -> bool:
         select(TestCase).where(
             TestCase.domain == domain_name,
             TestCase.module == module_name,
-            TestCase.is_deleted == False,
+            TestCase.is_deleted.is_(False),
         )
     ).all()
     for c in case_rows:
@@ -605,14 +642,14 @@ def get_category_tree(db: Session, project_id: int) -> list[dict]:
     category_domains = db.scalars(
         select(TestCaseDomain).where(
             TestCaseDomain.project_id == project_id,
-            TestCaseDomain.is_deleted == False,
+            TestCaseDomain.is_deleted.is_(False),
         )
     ).all()
 
     # 2. 从 TestCase 表获取实际模块用例数（排除已删除）
     case_rows = db.scalars(
         select(TestCase)
-        .where(TestCase.project_id == project_id, TestCase.is_deleted == False)
+        .where(TestCase.project_id == project_id, TestCase.is_deleted.is_(False))
         .order_by(TestCase.domain, TestCase.module)
     ).all()
 
@@ -632,7 +669,7 @@ def get_category_tree(db: Session, project_id: int) -> list[dict]:
         modules = db.scalars(
             select(TestCaseModule).where(
                 TestCaseModule.domain_id == d.id,
-                TestCaseModule.is_deleted == False,
+                TestCaseModule.is_deleted.is_(False),
             )
         ).all()
         mod_list = []

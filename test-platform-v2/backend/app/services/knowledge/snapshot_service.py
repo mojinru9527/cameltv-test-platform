@@ -207,7 +207,7 @@ def _collect_chunk_snapshot(db: Session, project_id: int) -> dict:
     total = db.scalar(
         select(func.count(KnowledgeChunk.id)).where(
             KnowledgeChunk.project_id == project_id,
-            KnowledgeChunk.status == "active",
+            KnowledgeChunk.is_deleted.is_(False),
         )
     ) or 0
 
@@ -217,7 +217,7 @@ def _collect_chunk_snapshot(db: Session, project_id: int) -> dict:
         counts[t] = db.scalar(
             select(func.count(KnowledgeChunk.id)).where(
                 KnowledgeChunk.project_id == project_id,
-                KnowledgeChunk.status == "active",
+                KnowledgeChunk.is_deleted.is_(False),
                 KnowledgeChunk.chunk_type == t,
             )
         ) or 0
@@ -230,7 +230,7 @@ def _collect_stats_snapshot(db: Session, project_id: int) -> dict:
     source_count = db.scalar(
         select(func.count(KnowledgeSource.id)).where(
             KnowledgeSource.project_id == project_id,
-            KnowledgeSource.status.notin_(("deprecated", "superseded")),
+            KnowledgeSource.is_deleted.is_(False),
         )
     ) or 0
 

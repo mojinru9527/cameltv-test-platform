@@ -15,24 +15,28 @@ class TestApiTaskWorkerLifecycle:
     """Worker 生命周期必须和应用生命周期保持一致。"""
 
     def test_shutdown_joins_processor_thread(self):
-        """关闭处理器后不应留下访问旧测试数据库的守护线程。"""
+        """关闭处理器后不应留下访问旧测试数据库的守护线程。
+
+        Batch 181：循环骨架收敛到 app.core.task_queue.QueueWorkerLoop，
+        测试改为验证统一循环的 start/shutdown 生命周期。
+        """
         from app.services import api_task_worker
 
         api_task_worker.shutdown_processor()
 
         def wait_for_shutdown():
-            api_task_worker._shutdown_event.wait(timeout=1)
+            api_task_worker._loop._stop.wait(timeout=1)
 
-        with patch.object(api_task_worker, "_processor_loop", wait_for_shutdown):
+        with patch.object(api_task_worker._loop, "_loop", wait_for_shutdown):
             api_task_worker.ensure_processor_running()
-            thread = api_task_worker._processor_thread
+            thread = api_task_worker._loop._thread
             assert isinstance(thread, threading.Thread)
             assert thread.is_alive()
 
             api_task_worker.shutdown_processor(timeout=1)
 
         assert not thread.is_alive()
-        assert api_task_worker._processor_thread is None
+        assert api_task_worker._loop._thread is None
 
     def test_app_lifespan_shuts_down_api_task_worker(self):
         """FastAPI TestClient 退出时必须关闭 API 任务处理器。"""
@@ -172,8 +176,9 @@ class TestApiTaskWorkerClaim:
         db_session.refresh(stale)
         db_session.refresh(fresh)
         assert stale.status == "failed"
-        assert "stale" in (stale.error_message or "")
         assert stale.locked_by == ""
+        # 注：ApiExecutionTask 无 error_message 列（历史代码仅设瞬态属性），
+        # Batch 181 起统一回收原语不再伪造未落库字段，此处不断言该属性。
         assert fresh.status == "running"  # 非失联任务不受影响
 
     def test_claim_recovers_stale_before_claiming(self, db_session):

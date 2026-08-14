@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.models.api_asset import ApiEndpoint, ApiImportBatch, ApiService
+from app.models.test_case import TestCase
 
 
 # ── source_type → source label mapping ──
@@ -389,3 +390,101 @@ def _resolve_schema_type(schema: dict) -> str:
         item_type = items.get("type", "string") if items else "string"
         return f"array<{item_type}>"
     return stype
+
+
+# ═══════════════════════════════════════════════════════
+# 路由层 ORM 收敛薄函数（Batch 181 路由拆分）
+# ═══════════════════════════════════════════════════════
+
+def get_project_service(db: Session, service_id: int, project_id: int) -> ApiService | None:
+    """Return a service only when it belongs to the active project."""
+    return db.query(ApiService).filter(
+        ApiService.id == service_id,
+        ApiService.project_id == project_id,
+    ).first()
+
+
+def get_project_endpoint(db: Session, endpoint_id: int, project_id: int) -> ApiEndpoint | None:
+    """Return an endpoint only when it belongs to the active project."""
+    return db.query(ApiEndpoint).filter(
+        ApiEndpoint.id == endpoint_id,
+        ApiEndpoint.project_id == project_id,
+    ).first()
+
+
+def list_project_services(db: Session, project_id: int) -> list[ApiService]:
+    """列出项目的服务（按名称排序）。"""
+    return db.query(ApiService).filter_by(project_id=project_id).order_by(ApiService.name).all()
+
+
+def list_project_endpoints(
+    db: Session,
+    project_id: int,
+    *,
+    service_id: int | None = None,
+    module: str | None = None,
+    method: str | None = None,
+    keyword: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[list[ApiEndpoint], int]:
+    """分页列出接口资产（支持服务/模块/方法/关键字过滤，与路由原逻辑一致）。"""
+    q = db.query(ApiEndpoint).filter_by(project_id=project_id)
+    if service_id:
+        q = q.filter_by(service_id=service_id)
+    if module:
+        q = q.filter_by(module=module)
+    if method:
+        q = q.filter_by(method=method.upper())
+    if keyword:
+        like = f"%{keyword}%"
+        q = q.outerjoin(ApiService, ApiEndpoint.service_id == ApiService.id).filter(
+            (ApiEndpoint.path.ilike(like))
+            | (ApiEndpoint.summary.ilike(like))
+            | (ApiEndpoint.module.ilike(like))
+            | (ApiService.name.ilike(like))
+        )
+    q = q.order_by(ApiEndpoint.module, ApiEndpoint.path)
+
+    total = q.count()
+    rows = q.offset((page - 1) * page_size).limit(page_size).all()
+    return rows, total
+
+
+def service_has_endpoints(db: Session, service_id: int) -> bool:
+    """服务是否仍被接口资产引用（删除保护）。"""
+    referenced = db.query(ApiEndpoint.id).filter(ApiEndpoint.service_id == service_id).first()
+    return referenced is not None
+
+
+def endpoint_referenced_by_case(db: Session, project_id: int, endpoint_id: int) -> bool:
+    """接口资产是否仍被项目内测试用例引用（删除保护）。"""
+    referenced = db.query(TestCase.id).filter(
+        TestCase.project_id == project_id,
+        TestCase.api_spec_ref == f"api_endpoint:{endpoint_id}",
+    ).first()
+    return referenced is not None
+
+
+def list_endpoints_by_import_batch(db: Session, batch_id: int, project_id: int) -> list[ApiEndpoint]:
+    """按导入批次列出接口资产。"""
+    return db.query(ApiEndpoint).filter_by(
+        import_batch_id=batch_id,
+        project_id=project_id,
+    ).all()
+
+
+def create_api_service(db: Session, *, project_id: int, **fields) -> ApiService:
+    """创建服务并 flush（沿用调用方会话，提交由路由层负责）。"""
+    svc = ApiService(project_id=project_id, **fields)
+    db.add(svc)
+    db.flush()
+    return svc
+
+
+def create_api_endpoint(db: Session, *, project_id: int, **fields) -> ApiEndpoint:
+    """创建接口资产并 flush（沿用调用方会话，提交由路由层负责）。"""
+    ep = ApiEndpoint(project_id=project_id, **fields)
+    db.add(ep)
+    db.flush()
+    return ep
