@@ -122,12 +122,12 @@ def _run_ui_test(run_id: int, job_id: int):
                 from app.models.ui_test import UiTestRun, UiTestJob
                 run = db.get(UiTestRun, run_id)
                 if run:
-                    run.status = "fail"
+                    run.status = "failed"
                     run.finished_at = datetime.now(timezone.utc)
                     run.error_message = "Worker 执行崩溃"
                 job = db.get(UiTestJob, job_id)
                 if job:
-                    job.status = "fail"
+                    job.status = "failed"
                 db.commit()
             except Exception:
                 logger.warning("任务状态回写失败")

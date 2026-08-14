@@ -12,6 +12,15 @@ from app.models.quality_gate import QualityGateConfig
 from app.models.report_template import ReportTemplate
 from app.models.test_case import TestCase
 from app.models.test_plan import TestExecution, TestPlan, TestPlanCase
+
+# Batch 182（P1-06）：DB 状态词表（passed/failed/…）→ 报告响应键（pass/fail/…）映射
+_REPORT_STATS_KEY = {
+    "pending": "pending",
+    "passed": "pass",
+    "failed": "fail",
+    "skipped": "skip",
+    "blocked": "block",
+}
 from app.models.test_report import TestReport
 from app.models.user import User
 from app.services.elk_service import build_kibana_link
@@ -132,7 +141,8 @@ def _build_content(db: Session, plan_id: int) -> str:
             "kibana_link": build_kibana_link(trace_id) if trace_id else "",
         })
         stats["total"] += 1
-        key = pc.last_status if pc.last_status in stats else "pending"
+        # Batch 182（P1-06）：DB 词表统一（passed/failed/…）→ 报告响应键（pass/fail/…）映射
+        key = _REPORT_STATS_KEY.get(pc.last_status, "pending")
         stats[key] = stats.get(key, 0) + 1
 
     content = {

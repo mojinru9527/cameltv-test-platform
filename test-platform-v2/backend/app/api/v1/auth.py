@@ -9,7 +9,6 @@ from app.core.db import get_db
 from app.core.deps import CurrentUser, get_current_user
 from app.core.exceptions import APIException
 from app.core.security import hash_password, verify_password
-from app.models.user import User
 from app.schemas.auth import (
     ChangePasswordIn,
     LoginIn,
@@ -21,7 +20,7 @@ from app.schemas.auth import (
     UserBrief,
 )
 from app.schemas.common import R
-from app.services import auth_service, menu_service, project_service
+from app.services import auth_service, menu_service, project_service, user_service
 
 router = APIRouter(prefix="/auth", tags=["鉴权"])
 
@@ -161,7 +160,7 @@ def forgot_password(body: ForgotPasswordRequest, request: Request, db: Session =
     """
     from app.core.security import create_access_token
 
-    user = db.query(User).filter(User.username == body.username).first()
+    user = user_service.get_user_by_username(db, body.username)
     if not user or user.status != 1:
         # 防止用户名枚举：不存在或已禁用用户也返回成功
         return R.ok()
@@ -213,7 +212,7 @@ def reset_password(body: ResetPasswordRequest, db: Session = Depends(get_db)):
     if not user_id:
         raise APIException(code=400, msg="无效的重置 token")
 
-    user = db.get(User, int(user_id))
+    user = user_service.get_user_orm(db, int(user_id))
     if not user or user.status != 1:
         raise APIException(code=400, msg="用户不存在或已禁用")
 

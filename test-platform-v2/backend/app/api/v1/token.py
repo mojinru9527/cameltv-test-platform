@@ -1,35 +1,15 @@
 """API Token management (project-level)."""
 from __future__ import annotations
 
-import ast
-import json
-
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_db, require_permission
-from app.models.api_token import ApiToken
 from app.schemas.common import R
+from app.services import token_service
 from app.services.audit_service import write_audit
 
 router = APIRouter(prefix="/tokens", tags=["API Token"])
-
-
-def _scope_list(value: object) -> list[str]:
-    """Normalize JSON and pre-Batch-127 Python-repr scope storage."""
-    parsed = value
-    if isinstance(value, str):
-        try:
-            parsed = json.loads(value)
-        except (json.JSONDecodeError, TypeError):
-            try:
-                parsed = ast.literal_eval(value)
-            except (ValueError, SyntaxError):
-                parsed = []
-    if not isinstance(parsed, (list, tuple)):
-        return []
-    return [str(scope).strip() for scope in parsed if str(scope).strip()]
 
 
 def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
@@ -51,15 +31,8 @@ def list_tokens(
     current: CurrentUser = Depends(require_permission("token:list")),
     db: Session = Depends(get_db),
 ):
-    rows = db.scalars(
-        select(ApiToken).where(ApiToken.project_id == current.project_id)
-    ).all()
-    return R.ok([{
-        "id": t.id, "name": t.name, "token_prefix": t.token_prefix,
-        "scopes": _scope_list(t.scopes), "enabled": t.enabled,
-        "last_used_at": t.last_used_at.isoformat() if t.last_used_at else None,
-        "created_at": t.created_at.isoformat() if t.created_at else None,
-    } for t in rows])
+    items = token_service.list_tokens(db, current.project_id or 0)
+    return R.ok(items)
 
 
 @router.post("", response_model=R[dict], summary="创建 API Token")
@@ -69,27 +42,17 @@ def create_token(
     current: CurrentUser = Depends(require_permission("token:manage")),
     db: Session = Depends(get_db),
 ):
-    plain, token_hash = ApiToken.generate()
-    t = ApiToken(
-        project_id=current.project_id,
+    scopes = token_service.parse_scopes(body.get("scopes", ["trigger"]))
+    t = token_service.create_token(
+        db,
+        project_id=current.project_id or 0,
         name=body.get("name", "CI Token"),
-        token_hash=token_hash,
-        token_prefix=plain[:12],
-        scopes=json.dumps(_scope_list(body.get("scopes", ["trigger"])), ensure_ascii=False),
-        enabled=True,
+        scopes=scopes,
     )
-    db.add(t)
     db.commit()
-    _audit(req, current, db, "token:create", f"#{t.id} {t.name}")
+    _audit(req, current, db, "token:create", f"#{t['id']} {t['name']}")
     # Only time the plain token is returned!
-    return R.ok({
-        "id": t.id,
-        "name": t.name,
-        "token": plain,   # ⚠️ save this now — we don't store the plain value
-        "token_prefix": t.token_prefix,
-        "scopes": _scope_list(t.scopes),
-        "created_at": t.created_at.isoformat() if t.created_at else None,
-    })
+    return R.ok(t)
 
 
 @router.put("/{token_id}", response_model=R[dict], summary="更新 API Token")
@@ -100,11 +63,7 @@ def update_token(
     current: CurrentUser = Depends(require_permission("token:manage")),
     db: Session = Depends(get_db),
 ):
-    t = db.scalar(
-        select(ApiToken).where(
-            ApiToken.id == token_id, ApiToken.project_id == current.project_id
-        )
-    )
+    t = token_service.get_token(db, token_id, current.project_id or 0)
     if not t:
         from app.core.exceptions import not_found
         raise not_found("API Token")
@@ -126,11 +85,7 @@ def delete_token(
     current: CurrentUser = Depends(require_permission("token:manage")),
     db: Session = Depends(get_db),
 ):
-    t = db.scalar(
-        select(ApiToken).where(
-            ApiToken.id == token_id, ApiToken.project_id == current.project_id
-        )
-    )
+    t = token_service.get_token(db, token_id, current.project_id or 0)
     if not t:
         from app.core.exceptions import not_found
         raise not_found("API Token")

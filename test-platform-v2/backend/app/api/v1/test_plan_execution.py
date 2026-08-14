@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import CurrentUser, require_permission
+from app.core.execution_status import canonical_exec_status
 from app.schemas.common import Page, R
 from app.schemas.test_plan import (
     ExecutionCreate,
@@ -364,7 +365,8 @@ def draft_defect_from_failure(
 
 class BatchExecuteBody(BaseModel):
     pcase_ids: list[int] = []
-    status: str = "pass"  # pass/fail/skip/block
+    # Batch 182（P1-06）：接受新旧双值（旧前端/CI 传 pass/fail/skip/block），服务内规范化
+    status: str = "passed"  # passed/failed/skipped/blocked（兼容 pass/fail/skip/block）
     actual_result: str = ""
     notes: str = ""
 
@@ -388,6 +390,7 @@ def batch_execute_cases(
     executed = 0
     failed = 0
     errors: list[str] = []
+    canonical_status = canonical_exec_status(body.status)
     for pcase_id in body.pcase_ids:
         try:
             test_plan_service.execute_case(
@@ -395,13 +398,13 @@ def batch_execute_cases(
                 plan_id=plan_id,
                 pcase_id=pcase_id,
                 executor_id=current.user.id,
-                status=body.status,
+                status=canonical_status,
                 actual_result=body.actual_result,
                 notes=body.notes,
                 project_id=current.project_id or 0,
             )
             executed += 1
-            if body.status == "fail":
+            if canonical_status == "failed":
                 failed += 1
         except Exception as e:
             errors.append(f"pcase #{pcase_id}: {e}")

@@ -294,8 +294,8 @@ def compute_summary(db: Session, mission_id: int, project_id: int) -> dict:
             ).all()
 
     executed = len(executions)
-    passed = sum(1 for e in executions if e.status == "pass")
-    failed = sum(1 for e in executions if e.status == "fail")
+    passed = sum(1 for e in executions if e.status == "passed")
+    failed = sum(1 for e in executions if e.status == "failed")
 
     return {
         "case_total": len(cases),

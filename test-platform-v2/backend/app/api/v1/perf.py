@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import CurrentUser, get_current_user, get_db, require_permission
 from app.core.exceptions import APIException
-from app.models.perf import PerfSession
 from app.schemas.common import R
 from app.schemas.perf import (
     CompareRequest,
@@ -37,9 +36,9 @@ def _get_project_session(
     db: Session,
     session_id: int,
     current: CurrentUser,
-) -> PerfSession:
+):
     """Resolve a session only inside the caller's selected project."""
-    session = db.get(PerfSession, session_id)
+    session = perf_service.get_session(db, session_id)
     if not session or session.project_id != (current.project_id or 0):
         raise APIException(code=404, msg="会话不存在")
     return session

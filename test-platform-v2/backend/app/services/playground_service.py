@@ -301,6 +301,24 @@ def _get_project_cases(db, project_id: int, case_ids: list[int]):
     return [by_id[cid] for cid in case_ids if cid in by_id]
 
 
+def get_case_by_case_id(db, case_id: int, project_id: int | None = None):
+    """按业务 case_id 精确查找未删除用例（路由层 ORM 收敛薄函数）。
+
+    与 `_get_project_cases` 不同：此处匹配 TestCase.case_id（业务编号），
+    可选按项目过滤，返回 ORM 对象供 Gherkin 组装。
+    """
+    from sqlalchemy import select
+    from app.models.test_case import TestCase
+
+    query = select(TestCase).where(
+        TestCase.case_id == case_id,
+        TestCase.is_deleted.is_(False),
+    )
+    if project_id:
+        query = query.where(TestCase.project_id == project_id)
+    return db.scalar(query.limit(1))
+
+
 def _spec_has_todo(spec_code: str) -> bool:
     return "未识别步骤" in spec_code or "TODO" in spec_code
 
@@ -359,7 +377,7 @@ def run_case_batch(
             ui_job_id = _write_spec_as_ui_job(db, case, compiled.spec_code, creator_id, project_id)
 
         # 回填用例执行结果（不存大图，只存可追溯摘要）
-        case.last_run_status = "pass" if ok else "fail"
+        case.last_run_status = "pass" if ok else "failed"
         case.last_response_json = json.dumps({
             "source": "playground_batch",
             "passed": ok,

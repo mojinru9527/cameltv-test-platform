@@ -26,6 +26,7 @@ import {
 import { useAuthStore } from '@/stores/auth'
 import useAbortableEffect, { rethrowUnlessAborted } from '@/hooks/useAbortableEffect'
 import type { AvMeasurementItem, AvMeasurementTemplate, AvTaskItem } from '@/types'
+import { execStatusLabel, normalizeExecStatus } from '@/utils/executionStatus'
 import { toast } from 'sonner'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -90,11 +91,13 @@ export const PROTOCOL_MAP: Record<string, { color: string }> = {
   DASH: { color: 'orange' },
 }
 
-const STATUS_MAP: Record<string, { color: string; label: string }> = {
-  idle: { color: 'default', label: '待检测' },
-  running: { color: 'processing', label: '检测中' },
-  done: { color: 'green', label: '已完成' },
-  fail: { color: 'red', label: '失败' },
+// av_task 状态 → 徽章色（后端词表未迁移，仍为 idle/running/done/fail；筛选 value 保持后端契约值）
+// 展示标签统一走 execStatusLabel（共享映射兼容旧值，含义：待执行/执行中/通过/失败）
+const STATUS_COLORS: Record<string, string> = {
+  idle: 'default',
+  running: 'processing',
+  done: 'green',
+  fail: 'red',
 }
 
 function protocolBadgeClass(c: string) {
@@ -233,8 +236,9 @@ export default function SpecialPage() {
     triggerPolls.current.set(id, controller)
     try {
       const triggered = await triggerAvCheck(id)
-      if (triggered.status !== 'running') {
-        triggered.status === 'done'
+      const triggeredStatus = normalizeExecStatus(triggered.status)
+      if (triggeredStatus !== 'running') {
+        triggeredStatus === 'passed'
           ? toast.success('检测已完成')
           : toast.error('检测失败，请查看任务详情')
         await load()
@@ -245,9 +249,10 @@ export default function SpecialPage() {
       await load()
       for (let attempt = 0; attempt < AV_POLL_MAX_ATTEMPTS; attempt += 1) {
         const current = await fetchAvTask(id, controller.signal)
-        if (current.status === 'done' || current.status === 'fail') {
+        const currentStatus = normalizeExecStatus(current.status)
+        if (currentStatus === 'passed' || currentStatus === 'failed') {
           setDetail((openDetail) => openDetail?.id === id ? current : openDetail)
-          current.status === 'done'
+          currentStatus === 'passed'
             ? toast.success('检测已完成')
             : toast.error('检测失败，请查看任务详情')
           await load()
@@ -394,8 +399,8 @@ export default function SpecialPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__all__">全部</SelectItem>
-            {Object.entries(STATUS_MAP).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v.label}</SelectItem>
+            {Object.keys(STATUS_COLORS).map((k) => (
+              <SelectItem key={k} value={k}>{execStatusLabel(k)}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -462,8 +467,8 @@ export default function SpecialPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge tone="neutral" className={statusBadgeClass(STATUS_MAP[r.status]?.color)}>
-                      {STATUS_MAP[r.status]?.label || r.status}
+                    <Badge tone="neutral" className={statusBadgeClass(STATUS_COLORS[r.status])}>
+                      {execStatusLabel(r.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>{r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '-'}</TableCell>
@@ -578,7 +583,7 @@ export default function SpecialPage() {
                   ['编号', detail.task_id],
                   ['名称', detail.name],
                   ['协议', <Badge key="proto" tone="neutral" className={protocolBadgeClass(PROTOCOL_MAP[detail.protocol]?.color)}>{detail.protocol}</Badge>],
-                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(STATUS_MAP[detail.status]?.color)}>{STATUS_MAP[detail.status]?.label}</Badge>],
+                  ['状态', <Badge key="st" tone="neutral" className={statusBadgeClass(STATUS_COLORS[detail.status])}>{execStatusLabel(detail.status)}</Badge>],
                   ['流地址', detail.stream_url || '-'],
                   ['创建时间', detail.created_at ? new Date(detail.created_at).toLocaleString('zh-CN') : '-'],
                   ['更新时间', detail.updated_at ? new Date(detail.updated_at).toLocaleString('zh-CN') : '-'],

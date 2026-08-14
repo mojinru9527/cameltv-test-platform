@@ -71,7 +71,7 @@ class TestExecution(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     plan_case_id: Mapped[int] = mapped_column(ForeignKey("test_plan_case.id"), index=True)
     executor_id: Mapped[int] = mapped_column(default=0)
-    status: Mapped[str] = mapped_column(default="pending")  # pass/fail/skip/block/pending
+    status: Mapped[str] = mapped_column(default="pending")  # Batch 182（P1-06）：pending/running/passed/failed/skipped/cancelled/blocked
     actual_result: Mapped[str] = mapped_column(default="")
     notes: Mapped[str] = mapped_column(default="")
     trace_id: Mapped[str] = mapped_column(default="")       # ELK traceId
