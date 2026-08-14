@@ -58,13 +58,14 @@ def test_task_worker_polls_evidence_worker_once(monkeypatch):
     from app.services.lanhu_evidence import worker
 
     calls = []
-    monkeypatch.setattr(task_worker, "_process_api_tasks", lambda: calls.append("api"))
+    # Batch 174（FIX-173-P0-01）：API 批量任务已移交 api_task_worker 唯一处理，
+    # poll_and_execute 不再调用 _process_api_tasks。
     monkeypatch.setattr(task_worker, "_process_ui_runs", lambda: calls.append("ui"))
     monkeypatch.setattr(worker, "poll_and_execute_evidence_jobs", lambda: calls.append("lanhu"))
 
     task_worker.poll_and_execute()
 
-    assert calls == ["api", "ui", "lanhu"]
+    assert calls == ["ui", "lanhu"]
 
 
 def test_create_job_kicks_evidence_worker_after_persisting(

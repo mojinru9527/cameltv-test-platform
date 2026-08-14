@@ -67,6 +67,25 @@ describe('用例列表内容格式化', () => {
     ])
   })
 
+  it('Batch 174：正文中的数字（含括号/小数点/顿号后缀）不被误拆为列表项', () => {
+    expect(formatNumberedText('系统存在最大金额限制（假设上限10000），创作者已登录。')).toEqual([
+      '1、系统存在最大金额限制（假设上限10000），创作者已登录。',
+    ])
+    expect(formatNumberedText('APP 测试环境可连接版本检查接口，版本接口返回 latestVersion=6.0.0。')).toEqual([
+      '1、APP 测试环境可连接版本检查接口，版本接口返回 latestVersion=6.0.0。',
+    ])
+    expect(formatNumberedText('输入金额 999999999 并保存')).toEqual(['1、输入金额 999999999 并保存'])
+    expect(formatNumberedText('1、打开页面 2、点击按钮 3、验证结果')).toEqual([
+      '1、打开页面',
+      '2、点击按钮',
+      '3、验证结果',
+    ])
+    expect(formatNumberedText('1）打开页面 2）点击按钮')).toEqual([
+      '1、打开页面',
+      '2、点击按钮',
+    ])
+  })
+
   it('最新创建的用例始终排在第一条', () => {
     const sorted = sortCasesNewestFirst([
       { id: 3, created_at: '2026-07-15T10:00:00' },

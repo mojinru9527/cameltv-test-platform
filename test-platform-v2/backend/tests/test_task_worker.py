@@ -31,26 +31,40 @@ class _NoCloseSession:
 # ═══════════════════════════════════════════════════════════
 
 class TestSemaphores:
-    def test_api_semaphore_exists(self):
-        from app.services.task_worker import _semaphore_api
-        assert isinstance(_semaphore_api, threading.Semaphore)
-        assert _semaphore_api._value >= 1
-
     def test_ui_semaphore_exists(self):
         from app.services.task_worker import _semaphore_ui
         assert isinstance(_semaphore_ui, threading.Semaphore)
         assert _semaphore_ui._value >= 1
 
+    def test_api_semaphore_removed_batch174(self):
+        """Batch 174（FIX-173-P0-01）：API 批量任务已移交 api_task_worker 唯一处理，
+        task_worker 不再持有 API 信号量。"""
+        from app.services import task_worker
+        assert not hasattr(task_worker, "_semaphore_api")
+
 
 # ═══════════════════════════════════════════════════════════
-# API task poll — _process_api_tasks
+# API task poll — Batch 174 移除（FIX-173-P0-01）
 # ═══════════════════════════════════════════════════════════
 
-class TestProcessApiTasks:
-    def test_picks_up_pending_task(self, db_session):
-        """A pending task should be picked up and submitted to _run_api_task."""
+class TestProcessApiTasksRemoved:
+    """Batch 174：task_worker 的 API 处理分支已整体移除。
+
+    此前 APScheduler 轮询（task_worker）与 api_task_worker 守护线程并行认领同一
+    pending 任务，且认领后 status 已置 running，导致 task_worker._run_api_task 的
+    `status not in ("pending",)` 守卫直接 return —— 任务永久卡 running 无结果。
+    API 批量任务现在由 api_task_worker._processor_loop 唯一认领执行。
+    """
+
+    def test_process_api_tasks_function_removed(self):
+        from app.services import task_worker
+        assert not hasattr(task_worker, "_process_api_tasks")
+        assert not hasattr(task_worker, "_run_api_task")
+
+    def test_poll_and_execute_does_not_touch_api_tasks(self, db_session):
+        """poll_and_execute 只处理 UI runs 与蓝湖证据包，绝不认领 API 任务。"""
         from app.models.api_asset import ApiExecutionTask
-        from app.services.task_worker import _process_api_tasks
+        from app.services import task_worker
 
         task = ApiExecutionTask(
             project_id=1, task_id="T-PENDING", name="Pending",
@@ -59,162 +73,15 @@ class TestProcessApiTasks:
         db_session.add(task)
         db_session.commit()
 
-        wrapped = _NoCloseSession(db_session)
-        with patch("app.core.db.SessionLocal", return_value=wrapped), \
-             patch("app.services.task_worker._run_api_task") as mock_run:
-            _process_api_tasks()
+        with patch("app.core.db.SessionLocal", return_value=_NoCloseSession(db_session)), \
+             patch("app.services.api_task_worker.claim_next_task") as mock_claim, \
+             patch("app.services.lanhu_evidence.worker.poll_and_execute_evidence_jobs"):
+            task_worker.poll_and_execute()
 
-        mock_run.assert_called_once()
-        call_args = mock_run.call_args[0]
-        assert call_args[0] == task.id
-
-    def test_skips_when_no_pending(self, db_session):
-        """When no pending tasks exist, nothing should happen."""
-        from app.models.api_asset import ApiExecutionTask
-        from app.services.task_worker import _process_api_tasks
-
-        task = ApiExecutionTask(
-            project_id=1, task_id="T-DONE", name="Done",
-            total=1, status="success",
-        )
-        db_session.add(task)
-        db_session.commit()
-
-        wrapped = _NoCloseSession(db_session)
-        with patch("app.core.db.SessionLocal", return_value=wrapped), \
-             patch("app.services.task_worker._run_api_task") as mock_run:
-            _process_api_tasks()
-
-        mock_run.assert_not_called()
-
-    def test_skips_running_tasks(self, db_session):
-        """Tasks in 'running' status should not be picked up."""
-        from app.models.api_asset import ApiExecutionTask
-        from app.services.task_worker import _process_api_tasks
-
-        task = ApiExecutionTask(
-            project_id=1, task_id="T-RUNNING", name="Running",
-            total=1, status="running",
-        )
-        db_session.add(task)
-        db_session.commit()
-
-        wrapped = _NoCloseSession(db_session)
-        with patch("app.core.db.SessionLocal", return_value=wrapped), \
-             patch("app.services.task_worker._run_api_task") as mock_run:
-            _process_api_tasks()
-
-        mock_run.assert_not_called()
-
-    def test_skips_failed_tasks(self, db_session):
-        from app.models.api_asset import ApiExecutionTask
-        from app.services.task_worker import _process_api_tasks
-
-        task = ApiExecutionTask(
-            project_id=1, task_id="T-FAILED", name="Failed",
-            total=1, status="failed",
-        )
-        db_session.add(task)
-        db_session.commit()
-
-        wrapped = _NoCloseSession(db_session)
-        with patch("app.core.db.SessionLocal", return_value=wrapped), \
-             patch("app.services.task_worker._run_api_task") as mock_run:
-            _process_api_tasks()
-
-        mock_run.assert_not_called()
-
-    def test_skips_cancelled_tasks(self, db_session):
-        from app.models.api_asset import ApiExecutionTask
-        from app.services.task_worker import _process_api_tasks
-
-        task = ApiExecutionTask(
-            project_id=1, task_id="T-CANCEL", name="Cancelled",
-            total=1, status="cancelled",
-        )
-        db_session.add(task)
-        db_session.commit()
-
-        wrapped = _NoCloseSession(db_session)
-        with patch("app.core.db.SessionLocal", return_value=wrapped), \
-             patch("app.services.task_worker._run_api_task") as mock_run:
-            _process_api_tasks()
-
-        mock_run.assert_not_called()
-
-    def test_empty_queue_handled(self, db_session):
-        """No tasks at all should not crash."""
-        from app.services.task_worker import _process_api_tasks
-
-        wrapped = _NoCloseSession(db_session)
-        with patch("app.core.db.SessionLocal", return_value=wrapped), \
-             patch("app.services.task_worker._run_api_task") as mock_run:
-            _process_api_tasks()
-
-        mock_run.assert_not_called()
-
-    def test_picks_oldest_first(self, db_session):
-        """Should pick the oldest pending task (by created_at ASC)."""
-        from datetime import timedelta
-        from app.models.api_asset import ApiExecutionTask
-        from app.services.task_worker import _process_api_tasks
-
-        now = datetime.now(timezone.utc)
-        older = ApiExecutionTask(
-            project_id=1, task_id="T-OLDER", name="Older",
-            total=1, status="pending",
-            created_at=now - timedelta(hours=2),
-        )
-        newer = ApiExecutionTask(
-            project_id=1, task_id="T-NEWER", name="Newer",
-            total=1, status="pending",
-            created_at=now,
-        )
-        db_session.add_all([newer, older])  # deliberate insert order swap
-        db_session.commit()
-
-        wrapped = _NoCloseSession(db_session)
-        with patch("app.core.db.SessionLocal", return_value=wrapped), \
-             patch("app.services.task_worker._run_api_task") as mock_run:
-            _process_api_tasks()
-
-        mock_run.assert_called_once()
-        call_args = mock_run.call_args[0]
-        assert call_args[0] == older.id, "Should pick the older task first"
-
-    def test_semaphore_released_after_error(self, db_session):
-        """Semaphore should be released even on error, so next polls can proceed."""
-        from app.services.task_worker import _process_api_tasks, _semaphore_api
-
-        initial = _semaphore_api._value
-
-        # Force SessionLocal to raise an exception to test semaphore release
-        with patch("app.core.db.SessionLocal", side_effect=RuntimeError("boom")):
-            try:
-                _process_api_tasks()
-            except RuntimeError:
-                pass
-
-        assert _semaphore_api._value == initial, "Semaphore should be released after error"
-
-    def test_semaphore_limits_concurrency(self, db_session):
-        """When semaphore is exhausted, poll should return early without DB access."""
-        from app.services.task_worker import _process_api_tasks, _semaphore_api
-
-        # Exhaust the semaphore
-        acquired = 0
-        while _semaphore_api.acquire(blocking=False):
-            acquired += 1
-
-        try:
-            with patch("app.core.db.SessionLocal") as mock_session_factory, \
-                 patch("app.services.task_worker._run_api_task"):
-                _process_api_tasks()
-                # Should return immediately without creating a session
-                mock_session_factory.assert_not_called()
-        finally:
-            for _ in range(acquired):
-                _semaphore_api.release()
+        # API 认领绝不被 task_worker 触发（双 Worker 竞态根因已被移除）
+        mock_claim.assert_not_called()
+        db_session.refresh(task)
+        assert task.status == "pending"  # 任务保持 pending，等待 api_task_worker
 
 
 # ═══════════════════════════════════════════════════════════
@@ -314,13 +181,11 @@ class TestProcessUiRuns:
 # ═══════════════════════════════════════════════════════════
 
 class TestPollAndExecute:
-    def test_calls_all_three_processors(self):
+    def test_calls_ui_and_evidence_processors(self):
         from app.services import task_worker
 
-        with patch.object(task_worker, "_process_api_tasks") as mock_api, \
-             patch.object(task_worker, "_process_ui_runs") as mock_ui, \
+        with patch.object(task_worker, "_process_ui_runs") as mock_ui, \
              patch("app.services.lanhu_evidence.worker.poll_and_execute_evidence_jobs") as mock_evidence:
             task_worker.poll_and_execute()
-            mock_api.assert_called_once()
             mock_ui.assert_called_once()
             mock_evidence.assert_called_once()

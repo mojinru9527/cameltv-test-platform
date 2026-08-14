@@ -1,7 +1,13 @@
 """持久化 API 任务 Worker — 后台轮询、认领、执行 pending 任务。
 
 设计要点:
-- 单后台守护线程，通过 SQLite 事务顺序认领任务（SQLite 不支持 SKIP LOCKED）。
+- 单后台守护线程，通过事务原子认领任务。
+- Batch 174（FIX-173-P0-01/02）：
+  ① PostgreSQL 下使用 `with_for_update(skip_locked=True)` 原子认领，
+     消除双 Worker/多副本下 SELECT→UPDATE 的 TOCTOU 重复执行；
+  ② 认领前回收失联的 running 任务（locked_at 心跳超时置 failed），
+     消除「任务永久卡 running」的僵尸任务；
+  ③ task_worker.py 已移除 API 分支，本 worker 是 API 批量任务的唯一执行者。
 - 每条 item 执行前检查 cancel_requested，已取消则跳过剩余 item。
 - Worker 异常不崩溃线程，记录日志后继续轮询。
 - 通过 ensure_processor_running() 懒启动，通过 kick() 唤醒。
@@ -12,7 +18,7 @@ import json
 import logging
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
@@ -27,10 +33,43 @@ _wake_event = threading.Event()
 _shutdown_event = threading.Event()
 _processor_lock = threading.Lock()
 
+# Batch 174：认领后失联超时即视为僵尸（默认 30 分钟，可被测试覆盖）
+STALE_LOCK_SECONDS = 30 * 60
+
 
 # ═══════════════════════════════════════════════════════════
 # 公共 API
 # ═══════════════════════════════════════════════════════════
+
+def reap_stale_api_tasks(db: Session) -> int:
+    """回收失联的 API 批量任务（FIX-173-P0-01）。
+
+    运行中任务 locked_at 超过 STALE_LOCK_SECONDS 未更新即视为执行器失联，
+    置 failed 并释放锁，允许后续重试/重新创建。仿 core/scheduler.reap_stale_schedule_runs。
+    """
+    now = datetime.now(timezone.utc)
+    stale_before = now - timedelta(seconds=STALE_LOCK_SECONDS)
+    rows = db.query(ApiExecutionTask).filter(
+        ApiExecutionTask.status == "running",
+        ApiExecutionTask.locked_at.isnot(None),
+        ApiExecutionTask.locked_at < stale_before,
+    ).all()
+    reaped = 0
+    for task in rows:
+        task.status = "failed"
+        task.finished_at = datetime.now(timezone.utc)
+        task.locked_by = ""
+        task.error_message = (
+            f"stale: 执行器失联超过 {STALE_LOCK_SECONDS // 60} 分钟，已回收（Batch 174）"
+        )
+        reaped += 1
+    if reaped:
+        db.commit()
+        logger.warning("[api-task-worker] Reaped %s stale API task(s)", reaped)
+    else:
+        db.rollback()
+    return reaped
+
 
 def claim_next_task(
     db: Session,
@@ -38,15 +77,32 @@ def claim_next_task(
     worker_id: str,
     project_id: int | None = None,
 ) -> ApiExecutionTask | None:
-    """认领最早的一条 pending 任务。
+    """原子认领最早的一条 pending 任务。
 
-    SQLite 兼容: 不使用 SKIP LOCKED，依赖单 worker 线程顺序处理。
-    调用方可将 db 传入（由 worker 管理的独立 session）。
+    Batch 174（FIX-173-P0-02）：PostgreSQL 下 `with_for_update(skip_locked=True)`
+    保证并发 Worker/多副本只有一个能认领到同一条任务（TOCTOU 修复）；
+    SQLite 不支持 SKIP LOCKED，`with_for_update()` 在 SQLite 下退化为行锁语义，
+    配合本模块单守护线程（_processor_loop）串行轮询，同样安全。
     """
+    # 先回收失联任务，避免僵尸 running 阻塞后续执行
+    reap_stale_api_tasks(db)
+
     q = db.query(ApiExecutionTask).filter(ApiExecutionTask.status == "pending")
     if project_id is not None:
         q = q.filter(ApiExecutionTask.project_id == project_id)
-    task = q.order_by(ApiExecutionTask.created_at.asc()).first()
+    q = q.order_by(ApiExecutionTask.created_at.asc())
+    try:
+        task = q.with_for_update(skip_locked=True).first()
+    except Exception:
+        # SQLite 等不支持 skip_locked 的方言回退为普通行锁
+        logger.debug("skip_locked unsupported, fallback to plain select")
+        db.rollback()
+        task = (
+            db.query(ApiExecutionTask)
+            .filter(ApiExecutionTask.status == "pending")
+            .order_by(ApiExecutionTask.created_at.asc())
+            .first()
+        )
     if not task:
         return None
 
@@ -292,15 +348,31 @@ def _processor_loop(poll_interval: float = 2.0) -> None:
     worker_id = f"worker-{uuid.uuid4().hex[:8]}"
     logger.info("Worker loop started: %s", worker_id)
 
+    idle_cycles = 0
     while not _shutdown_event.is_set():
         db = SessionLocal()
         try:
             task = claim_next_task(db, worker_id=worker_id)
             if task:
+                idle_cycles = 0
                 db.close()
                 execute_task(task.id, task.project_id, worker_id)
             else:
                 db.close()
+                idle_cycles += 1
+                # 兜底：无任务时周期性回收僵尸任务（claim 内部已回收，
+                # 这里额外覆盖「worker 自身崩溃后无人认领」的极端场景）
+                if idle_cycles % 30 == 0:
+                    try:
+                        reap_db = SessionLocal()
+                        try:
+                            reaped = reap_stale_api_tasks(reap_db)
+                            if reaped:
+                                logger.warning("[api-task-worker] Idle reap: %s stale task(s)", reaped)
+                        finally:
+                            reap_db.close()
+                    except Exception:
+                        logger.exception("Idle stale reap failed")
                 # 无 pending 任务 — 等待 kick 或超时
                 _wake_event.wait(timeout=poll_interval)
                 _wake_event.clear()

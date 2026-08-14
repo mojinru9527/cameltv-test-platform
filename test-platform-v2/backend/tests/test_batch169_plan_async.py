@@ -79,3 +79,70 @@ def test_compiler_prompt_forbids_networkidle():
     assert "waitForLoadState('networkidle')" not in prompt
     assert "setDefaultNavigationTimeout" in prompt
     assert "domcontentloaded" in prompt
+
+
+def test_execute_all_batch_commit_keeps_results_and_api_task(db_session, monkeypatch):
+    """Batch 174（FIX-173-P0-03）：分批短事务提交后，
+    - 全部用例都有执行记录（不再依赖末尾单次 commit）；
+    - API 用例的任务快照（trigger_type=plan）在中间 commit 后仍正确关联；
+    - 汇总数字完整。
+    """
+    from app.models.api_asset import ApiExecutionTask, ApiExecutionTaskItem
+    from app.models.environment import Environment
+    from app.models.test_plan import TestPlanCase
+
+    env = Environment(
+        project_id=1, name="B174-ENV", env_type="test",
+        base_url="https://httpbin.org",
+    )
+    db_session.add(env)
+    db_session.commit()
+
+    plan = TestPlan(project_id=1, name="B174-BATCH", status="draft")
+    db_session.add(plan)
+    db_session.commit()
+
+    cases = []
+    pcs = []
+    for i in range(12):  # > BATCH_COMMIT_SIZE=10，覆盖中途 commit
+        case = TestCase(
+            project_id=1, title=f"B174-CASE-{i}", case_type="api",
+            api_method="GET", api_endpoint="https://httpbin.org/get",
+            api_assertions='[{"type":"status_code","expected":200,"operator":"eq"}]',
+        )
+        db_session.add(case)
+        db_session.flush()
+        pc = TestPlanCase(plan_id=plan.id, case_id=case.id)
+        db_session.add(pc)
+        cases.append(case)
+        pcs.append(pc)
+    db_session.commit()
+
+    fake_result = {"all_pass": True, "status_code": 200, "assertions": []}
+    monkeypatch.setattr(
+        "app.services.api_execution_service.execute_api_case",
+        lambda *a, **k: fake_result,
+    )
+
+    result = test_plan_service.execute_all_cases(
+        db_session, plan.id,
+        executor_id=1, environment_id=env.id, auto_ui=False, project_id=1,
+    )
+
+    assert result["total"] == 12
+    assert result["passed"] == 12
+    assert result["failed"] == 0
+
+    # 全部执行记录已落库（分批 commit 后不再依赖末尾单事务）
+    from app.models.test_plan import TestExecution
+    exec_rows = db_session.query(TestExecution).filter_by(plan_case_id=pcs[0].id).all()
+    assert len(exec_rows) == 1
+    assert exec_rows[0].status == "pass"
+
+    # 计划 API 任务快照完整（中间 commit 后 api_task 重新绑定未丢失）
+    task = db_session.query(ApiExecutionTask).filter_by(trigger_type="plan").first()
+    assert task is not None
+    assert task.total == 12
+    assert task.passed == 12
+    items = db_session.query(ApiExecutionTaskItem).filter_by(task_id=task.id).all()
+    assert len(items) == 12
