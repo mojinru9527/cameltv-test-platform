@@ -136,7 +136,7 @@ export function getReportPassCount(stats: Record<string, unknown>): number {
 }
 
 export default function ReportPage() {
-  useDocumentTitle('测试报告')
+  useDocumentTitle('报告中心')
   const chartColors = useChartColors()
   const [keywordInput, setKeywordInput] = useState('')
   const [keyword, setKeyword] = useState('')
@@ -187,8 +187,8 @@ export default function ReportPage() {
   const reportColumns: DataTableColumn<any>[] = [
     { key: 'report_id', header: '编号', headerClassName: 'w-[150px]', className: 'max-w-[150px] truncate', render: (r) => <span title={r.report_id}>{r.report_id}</span> },
     { key: 'name', header: '名称', className: 'truncate', render: (r) => <span title={r.name}>{r.name}</span> },
-    { key: 'plan_name', header: '关联计划', headerClassName: 'w-[160px]', className: 'max-w-[160px] truncate', render: (r) => <span title={r.plan_name || ''}>{r.plan_name || <span className="text-muted-foreground">—</span>}</span> },
-    { key: 'template_id', header: '模板', headerClassName: 'w-[60px]', render: (r) => r.template_id ? <Badge tone="neutral" className="text-xs">#{r.template_id}</Badge> : <span className="text-muted-foreground">—</span> },
+    { key: 'plan_name', header: '关联计划', headerClassName: 'w-[160px]', className: 'max-w-[160px] truncate', render: (r) => <span title={r.plan_name || ''}>{r.plan_name || <span className="text-muted-foreground">独立报告</span>}</span> },
+    { key: 'template_id', header: '模板', headerClassName: 'w-[90px]', render: (r) => r.template_id ? <Badge tone="neutral" className="text-xs">模板 #{r.template_id}</Badge> : <span className="text-muted-foreground text-xs">默认模板</span> },
     { key: 'created_at', header: '创建时间', headerClassName: 'w-[170px]', render: (r) => r.created_at ? new Date(r.created_at).toLocaleString() : '-' },
     { key: 'actions', header: '操作', headerClassName: 'w-[120px]', render: (r) => (
       <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export default function ReportPage() {
         {canDelete && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="danger" data-icon="inline-start">
+              <Button size="sm" variant="danger" data-icon="inline-start" aria-label={`删除报告：${r.name}`}>
                 <Trash2 />
               </Button>
             </AlertDialogTrigger>
@@ -527,6 +527,11 @@ export default function ReportPage() {
                   管理
                 </Button>
               </div>
+              {templates.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  暂无报告模板，可点击「管理」创建；未选模板时生成将使用默认模板兜底
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">备注</label>

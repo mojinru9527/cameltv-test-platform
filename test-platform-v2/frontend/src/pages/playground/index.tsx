@@ -163,7 +163,7 @@ export default function PlaygroundPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Playground</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          功能用例库批量编译 → Playwright 执行 / 截图 / 回写 UI 任务（batch-166）
+          功能用例库批量编译 → Playwright 执行 / 截图 / 回写 UI 任务
         </p>
       </div>
 

@@ -17,7 +17,7 @@ _MENUS = [
     ("menu:workbench", "工作台", "", "/workbench", "DashboardOutlined", 1),
     ("menu:trace", "质量追溯", "", "/trace", "NodeIndexOutlined", 2),
     ("menu:requirement", "需求文档", "", "/requirement", "FileTextOutlined", 3),
-    ("menu:versionmission", "版本测试任务", "", "/release-bundles", "GitBranchOutlined", 4),
+    ("menu:versionmission", "版本发布包", "", "/release-bundles", "GitBranchOutlined", 4),
     # ── 知识中心（独立分组）──
     ("menu:knowledge", "知识中心", "", "/knowledge", "BrainCircuitOutlined", 5),
     ("menu:knowledge:project", "项目知识", "menu:knowledge", "/knowledge?tab=project", "FolderOpenOutlined", 1),
@@ -25,7 +25,7 @@ _MENUS = [
     ("menu:knowledge:graph", "知识图谱", "menu:knowledge", "/knowledge?tab=graph", "GitBranchOutlined", 3),
     ("menu:knowledge:artifacts", "AI审核台", "menu:knowledge", "/knowledge?tab=artifacts", "FileTextOutlined", 4),
     # ── 其余菜单 ──
-    ("menu:mindmap", "用例脑图", "", "/mindmap", "ShareAltOutlined", 6),
+    ("menu:mindmap", "思维导图", "", "/mindmap", "ShareAltOutlined", 6),
     ("menu:testcase", "用例服务", "", "/testcase", "ProfileOutlined", 7),
     ("menu:testplan", "测试计划", "", "/testplan", "ScheduleOutlined", 8),
     ("menu:apitest", "接口测试", "", "/apitest", "ApiOutlined", 9),
