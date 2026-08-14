@@ -22,6 +22,9 @@ from app.services.environment_service import resolve_variables
 # Column variable pattern for dataset parameterized execution
 _COL_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
 
+# Session credential injection pattern (C-API-AUTO-001)
+_SESSION_REF_PATTERN = re.compile(r"\$\{session\.(\w+)\}")
+
 # ── 配置 ──
 DEFAULT_TIMEOUT = 30  # seconds
 MAX_RESPONSE_BODY_SIZE = 500 * 1024  # 500 KB (max stored in raw_body)
@@ -68,7 +71,7 @@ def execute_api_case(
     assertions = _safe_json(case.api_assertions, [])
 
     # 构造 request
-    
+
     # C107-2：前置接口依赖解析（$prev.{id}.{path} 变量注入）
     dep_ids = _safe_json(getattr(case, "depends_on_ids", "") or "[]", [])
     if dep_ids:
@@ -185,24 +188,62 @@ def _do_execute(
 
     # 1. 变量替换
     if environment_id:
-        url = resolve_variables(db, environment_id, project_id, url)
-        body = resolve_variables(db, environment_id, project_id, body)
-        query_params = _resolve_mapping_variables(
-            db, environment_id, project_id, query_params,
+        # 1.0 会话凭证自动注入（C-API-AUTO-001）：请求引用 $session.* 时，
+        #     自动调用环境配置的凭证接口获取全局 token/mid 并合并进变量表。
+        #     未配置/获取失败时降级为不注入，不影响用例主流程。
+        _has_session_ref = _SESSION_REF_PATTERN.search(
+            f"{url}\n{body}\n{json.dumps(headers, ensure_ascii=False)}\n{json.dumps(query_params, ensure_ascii=False)}"
         )
-        resolved_headers = {}
-        for k, v in headers.items():
-            k2 = resolve_variables(db, environment_id, project_id, k)
-            v2 = resolve_variables(db, environment_id, project_id, str(v))
-            if k2 is None or v2 is None:
-                return _error_result(
-                    "环境不存在或不属于当前项目",
-                    error_type="TARGET_POLICY",
-                    environment_id=environment_id,
-                    execution_id=execution_id,
-                )
-            resolved_headers[k2] = v2
-        headers = resolved_headers
+        _session_vars: dict[str, str] = {}
+        if _has_session_ref:
+            # 仅在请求实际引用 $session.* 时才获取凭证（无引用时零额外开销）
+            from app.services.session_credentials_service import session_variable_map
+
+            _session_vars = session_variable_map(db, environment_id, project_id)
+        if _session_vars and _has_session_ref:
+            def _session_replacer(m: re.Match) -> str:
+                # 正则捕获组是字段名（token），变量表 key 带 session. 前缀
+                return _session_vars.get(f"session.{m.group(1)}", m.group(0))
+
+            url = _SESSION_REF_PATTERN.sub(_session_replacer, url)
+            body = _SESSION_REF_PATTERN.sub(_session_replacer, body)
+            query_params = _resolve_mapping_variables(
+                db, environment_id, project_id, query_params,
+            )
+            resolved_headers = {}
+            for k, v in headers.items():
+                k2 = resolve_variables(db, environment_id, project_id, k)
+                k2 = _SESSION_REF_PATTERN.sub(_session_replacer, k2)
+                v2 = resolve_variables(db, environment_id, project_id, str(v))
+                v2 = _SESSION_REF_PATTERN.sub(_session_replacer, v2)
+                if k2 is None or v2 is None:
+                    return _error_result(
+                        "环境不存在或不属于当前项目",
+                        error_type="TARGET_POLICY",
+                        environment_id=environment_id,
+                        execution_id=execution_id,
+                    )
+                resolved_headers[k2] = v2
+            headers = resolved_headers
+        else:
+            url = resolve_variables(db, environment_id, project_id, url)
+            body = resolve_variables(db, environment_id, project_id, body)
+            query_params = _resolve_mapping_variables(
+                db, environment_id, project_id, query_params,
+            )
+            resolved_headers = {}
+            for k, v in headers.items():
+                k2 = resolve_variables(db, environment_id, project_id, k)
+                v2 = resolve_variables(db, environment_id, project_id, str(v))
+                if k2 is None or v2 is None:
+                    return _error_result(
+                        "环境不存在或不属于当前项目",
+                        error_type="TARGET_POLICY",
+                        environment_id=environment_id,
+                        execution_id=execution_id,
+                    )
+                resolved_headers[k2] = v2
+            headers = resolved_headers
 
     # 2. 解析最终 URL
     resolved_url = _resolve_url(db, environment_id, url)
