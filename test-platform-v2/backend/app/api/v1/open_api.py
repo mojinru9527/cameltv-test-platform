@@ -297,18 +297,12 @@ def ci_trigger_ui_test(
     # 后台执行 (仅当 Playwright 可用)
     if pw_ok:
         try:
-            from app.services.ui_test_service import execute_playwright_async
-            # Use a separate thread since open_api doesn't have BackgroundTasks
-            import threading
-            t = threading.Thread(
-                target=execute_playwright_async,
-                args=(run.id, job_id, token.project_id),
-                daemon=True,
-                name=f"ci-ui-run-{run.id}",
-            )
-            t.start()
+            # Batch 179（FIX-173-P2-05）：统一走 ui_runner_queue 线程池入口，
+            # 移除 open_api 专属裸线程（此前 UI 执行存在 三套入口并存 的调度冗余）。
+            from app.services.ui_runner_queue import enqueue_run
+            enqueue_run(run.id, job_id, token.project_id)
         except Exception:
-            logger.exception("启动 Playwright 执行线程失败: run_id=%s job_id=%s", run.id, job_id)
+            logger.exception("UI run 入队失败: run_id=%s job_id=%s", run.id, job_id)
 
     return R.ok({
         "triggered": True,
