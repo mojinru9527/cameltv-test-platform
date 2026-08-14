@@ -117,3 +117,83 @@ def create_artifact_from_item(
     item.review_status = "accepted"
     db.flush()
     return art
+
+
+# ── 路由层 ORM 收敛薄函数（Batch 181 路由拆分）──
+
+def create_diff_task(
+    db: Session,
+    *,
+    project_id: int,
+    title: str,
+    compare_type: str,
+    left_ref_json: str,
+    right_ref_json: str,
+    created_by: int = 0,
+) -> WikiDiffTask:
+    """创建 pending 差异任务并 flush（沿用调用方会话，提交由路由层负责）。"""
+    task = WikiDiffTask(
+        project_id=project_id, title=title,
+        compare_type=compare_type, status="pending",
+        left_ref_json=left_ref_json,
+        right_ref_json=right_ref_json,
+        created_by=created_by,
+    )
+    db.add(task)
+    db.flush()
+    return task
+
+
+def list_diff_tasks(
+    db: Session,
+    project_id: int,
+    *,
+    status: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[list[WikiDiffTask], int]:
+    """分页列出项目差异任务（按 id 倒序）。"""
+    q = db.query(WikiDiffTask).filter(WikiDiffTask.project_id == project_id)
+    if status:
+        q = q.filter(WikiDiffTask.status == status)
+    total = q.count()
+    rows = q.order_by(WikiDiffTask.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    return rows, total
+
+
+def get_diff_task(db: Session, task_id: int, project_id: int) -> WikiDiffTask | None:
+    """项目作用域内获取差异任务。"""
+    task = db.get(WikiDiffTask, task_id)
+    if not task or task.project_id != project_id:
+        return None
+    return task
+
+
+def list_diff_items(
+    db: Session,
+    task_id: int,
+    *,
+    dimension: str | None = None,
+    diff_type: str | None = None,
+    severity: str | None = None,
+    review_status: str | None = None,
+) -> list[WikiDiffItem]:
+    """按过滤条件列出差异项（按 severity/id 排序，与路由原逻辑一致）。"""
+    q = db.query(WikiDiffItem).filter(WikiDiffItem.task_id == task_id)
+    if dimension:
+        q = q.filter(WikiDiffItem.dimension == dimension)
+    if diff_type:
+        q = q.filter(WikiDiffItem.diff_type == diff_type)
+    if severity:
+        q = q.filter(WikiDiffItem.severity == severity)
+    if review_status:
+        q = q.filter(WikiDiffItem.review_status == review_status)
+    return q.order_by(WikiDiffItem.severity, WikiDiffItem.id).all()
+
+
+def get_diff_item(db: Session, item_id: int, project_id: int) -> WikiDiffItem | None:
+    """项目作用域内获取差异项。"""
+    item = db.get(WikiDiffItem, item_id)
+    if not item or item.project_id != project_id:
+        return None
+    return item

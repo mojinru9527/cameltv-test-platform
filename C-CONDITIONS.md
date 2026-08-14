@@ -22,6 +22,14 @@ C21-P1-2/3/5、C22-C2/C3）未在本批获得新证据，保持 Open 并计入�
 
 ## Open (待处理)
 
+### batch-181 — 架构专项（2026-08-16，TaskQueue/软删/路由拆分）
+
+| ID | 内容 | 优先级 | 创建日期 |
+|----|------|--------|---------|
+| C181-1 | 路由层禁 ORM 剩余收敛：非本批 9 域的既有路由文件（defect/report/open_api/perf_ws/playground/token/integration/ui_test/auth/organization/project 等）仍含直连查询，后续批次按 `backend/CLAUDE.md` 约定逐域收敛（守卫测试允许名单可随收敛缩小） | P2 | 2026-08-16 |
+| C181-2 | P1-06 执行状态机 4 套取值统一（pending/running/passed/failed/skipped/cancelled）未开工；TaskQueue 基类已就绪，建议下一架构批次承接 | P1 | 2026-08-16 |
+| C181-3 | P3 打磨三项（追溯轴标签/域命名体系/>800 行页面）随迭代自然消化，不设专项 | P3 | 2026-08-16 |
+
 ### batch-172 — DSH Harness 集成（2026-08-14）
 
 | ID | 内容 | 优先级 | 创建日期 |

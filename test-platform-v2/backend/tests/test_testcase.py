@@ -15,7 +15,7 @@ def test_export_uses_canonical_taxonomy_filters(
         return [], 0
 
     monkeypatch.setattr(
-        "app.api.v1.test_case.test_case_service.list_cases", fake_list_cases
+        "app.api.v1.test_case_files.test_case_service.list_cases", fake_list_cases
     )
 
     response = client.get(

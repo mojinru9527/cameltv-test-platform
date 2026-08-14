@@ -5,6 +5,10 @@
 - 优先级：手动触发 (10) > 自动触发 (0)
 - 失败自动重试 1 次（间隔 30s）
 - 队列项可手动取消（仅 pending 状态）
+
+Batch 181（FIX-173-P2-06）：认领改走 app.core.task_queue 统一原子原语
+（atomic_claim_by_id，消除此前 SELECT→改→commit 的跨进程 TOCTOU）；
+补 locked_at/locked_by 列与周期 stale 回收（原实现无任何失联回收）。
 """
 from __future__ import annotations
 
@@ -19,6 +23,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal
+from app.core.task_queue import QueueSpec, atomic_claim_by_id, reap_stale, utcnow
 from app.models.knowledge import AgentQueueItem
 from app.services.knowledge.agent_orchestrator import run_agent_in_new_session
 
@@ -36,6 +41,24 @@ _PROCESS_INTERVAL = 3.0
 
 # 重试间隔（秒）
 _RETRY_DELAY = 30
+
+# 认领失联阈值：锁超时即视为执行器失联（Batch 181 新增，原实现无回收）
+_STALE_CLAIM_SECONDS = 30 * 60
+
+# Batch 181：队列契约——按 priority desc, id asc 认领
+_AGENT_QUEUE = QueueSpec(
+    model=AgentQueueItem,
+    id_col="id",
+    status_col="status",
+    pending="pending",
+    running="running",
+    failed="failed",
+    lock_by_col="locked_by",
+    lock_at_col="locked_at",
+    order_col="id",
+    order_asc=True,
+    extra_order=(("priority", True),),
+)
 
 # 全局处理器状态
 _processor_started = False
@@ -225,10 +248,14 @@ def _process_queue_once() -> int:
             )
 
             for item in pending:
-                # 标记为 running
-                item.status = "running"
-                item.started_at = datetime.now()
-                db.commit()
+                # Batch 181：原子认领（条件 UPDATE + rowcount），消除跨进程 TOCTOU；
+                # 被并发方抢走的项跳过（rowcount=0 → None）
+                claimed = atomic_claim_by_id(
+                    db, _AGENT_QUEUE, item.id,
+                    worker_id=f"agent-worker-{id(db)}",
+                )
+                if claimed is None:
+                    continue
 
                 # 在后台线程中执行 Agent（不阻塞队列扫描）
                 t = threading.Thread(
@@ -319,6 +346,15 @@ def _queue_loop() -> None:
             _process_queue_once()
         except Exception:
             logger.exception("Queue loop iteration error")
+        # Batch 181：周期回收失联 running（原实现无回收，worker 崩溃即永久卡 running）
+        try:
+            db = SessionLocal()
+            try:
+                reap_stale(db, _AGENT_QUEUE, stale_seconds=_STALE_CLAIM_SECONDS)
+            finally:
+                db.close()
+        except Exception:
+            logger.exception("Agent queue stale reap error")
         _processor_stop.wait(_PROCESS_INTERVAL)
 
 

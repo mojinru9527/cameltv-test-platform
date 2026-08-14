@@ -85,22 +85,23 @@ class TestExecute:
 
 class TestWorkerLifecycle:
     def test_shutdown_joins_worker_thread(self):
+        """Batch 181：循环骨架收敛到 QueueWorkerLoop，验证 start/shutdown 生命周期。"""
         from app.services import ai_tasks
 
         ai_tasks.shutdown_worker()
 
         def wait_for_shutdown():
-            ai_tasks._shutdown_event.wait(timeout=1)
+            ai_tasks._loop._stop.wait(timeout=1)
 
-        with patch.object(ai_tasks, "_worker_loop", wait_for_shutdown):
+        with patch.object(ai_tasks._loop, "_loop", wait_for_shutdown):
             ai_tasks.ensure_worker_running()
-            thread = ai_tasks._worker_thread
+            thread = ai_tasks._loop._thread
             assert isinstance(thread, threading.Thread)
             assert thread.is_alive()
             ai_tasks.shutdown_worker(timeout=1)
 
         assert not thread.is_alive()
-        assert ai_tasks._worker_thread is None
+        assert ai_tasks._loop._thread is None
 
 
 class TestMultiWorkerClaimRace:

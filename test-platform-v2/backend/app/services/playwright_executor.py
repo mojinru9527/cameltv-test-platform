@@ -33,22 +33,30 @@ _ENV_KEY_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def _claim_pending_run(db: Session, run_id: int) -> bool:
-    """Atomically transition exactly one pending run to running."""
+    """Atomically transition exactly one pending run to running.
+
+    Batch 181（FIX-173-P2-06）：走 app.core.task_queue 统一原子认领原语
+    （条件 UPDATE + rowcount），行为与原先一致。
+    """
+    from app.core.task_queue import QueueSpec, atomic_claim_by_id, utcnow
     from app.models.ui_test import UiTestRun
 
-    result = db.execute(
-        update(UiTestRun)
-        .where(UiTestRun.id == run_id, UiTestRun.status == "pending")
-        .values(
-            status="running",
-            started_at=datetime.now(timezone.utc),
-            cancel_requested=False,
-        )
-        .execution_options(synchronize_session=False)
+    _UI_RUN_QUEUE = QueueSpec(
+        model=UiTestRun,
+        id_col="id",
+        status_col="status",
+        pending="pending",
+        running="running",
+        failed="fail",
+        lock_by_col="locked_by",
+        lock_at_col="locked_at",
+        order_col="id",
+        order_asc=True,
     )
-    if result.rowcount != 1:
-        db.rollback()
+    claimed = atomic_claim_by_id(db, _UI_RUN_QUEUE, run_id, worker_id="ui-runner")
+    if claimed is None:
         return False
+    claimed.cancel_requested = False
     db.commit()
     return True
 

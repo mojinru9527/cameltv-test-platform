@@ -141,7 +141,7 @@ class TestBatch161AutoChainRobustness:
 
     def test_batch_execute_fail_triggers_auto_chain(self, db_session, client, auth_headers, monkeypatch):
         """手动批量标记失败也进入失败自动链路（G2：batch-execute 触发）。"""
-        from app.api.v1 import test_plan as api_module
+        from app.api.v1 import test_plan_execution as api_module
 
         case = _create_case(client, auth_headers)
         plan = _create_plan(client, auth_headers, auto=True)
@@ -169,7 +169,7 @@ class TestBatch161AutoChainRobustness:
 
     def test_batch_execute_pass_does_not_trigger_chain(self, db_session, client, auth_headers, monkeypatch):
         """批量标记通过不触发失败链路。"""
-        from app.api.v1 import test_plan as api_module
+        from app.api.v1 import test_plan_execution as api_module
 
         case = _create_case(client, auth_headers)
         plan = _create_plan(client, auth_headers, auto=True)

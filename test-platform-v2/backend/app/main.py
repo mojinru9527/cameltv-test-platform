@@ -76,7 +76,7 @@ async def lifespan(_: FastAPI):
 
     # ── 蓝湖证据存储落点（Batch 140/141）：确保目录存在并打印，便于确认持久卷挂载 ──
     try:
-        from app.api.v1.lanhu_evidence import _storage_base
+        from app.api.v1.lanhu_evidence_jobs import _storage_base
 
         storage_base = _storage_base()
         storage_base.mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,9 @@
-"""Persistent polling worker for recoverable Lanhu evidence jobs."""
+"""Persistent polling worker for recoverable Lanhu evidence jobs.
+
+Batch 181（FIX-173-P2-06）：认领改走 app.core.task_queue 统一原子原语
+（条件 UPDATE + rowcount）；活性判定仍以 heartbeat_at 为准（job_runner 心跳线程
+持续刷新），失联回收保留原 COALESCE 回落语义（heartbeat→started→updated→created）。
+"""
 from __future__ import annotations
 
 import logging
@@ -10,12 +15,28 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.db import SessionLocal
+from app.core.task_queue import QueueSpec, atomic_claim, utcnow
 from app.models.lanhu_evidence import LanhuEvidenceJob
 
 
 logger = logging.getLogger("lanhu_evidence_worker")
 _semaphore = threading.BoundedSemaphore(
     max(1, int(settings.lanhu_evidence_max_concurrent)),
+)
+
+# Batch 181：证据包队列契约——liveness 用 heartbeat_at（job_runner 心跳线程刷新）
+_EVIDENCE_QUEUE = QueueSpec(
+    model=LanhuEvidenceJob,
+    id_col="id",
+    status_col="status",
+    pending="pending",
+    running="running",
+    failed="failed",
+    lock_by_col="locked_by",
+    lock_at_col="locked_at",
+    liveness_col="heartbeat_at",
+    order_col="id",
+    order_asc=True,
 )
 
 
@@ -46,33 +67,27 @@ def recover_stale_jobs(db: Session, stale_after_seconds: int) -> int:
 
 
 def claim_next_job(db: Session) -> LanhuEvidenceJob | None:
-    """Atomically transition the oldest pending job to running."""
-    candidate = db.scalar(
-        select(LanhuEvidenceJob.id)
-        .where(LanhuEvidenceJob.status == "pending")
-        .order_by(LanhuEvidenceJob.id)
-        .limit(1)
+    """Atomically transition the oldest pending job to running (Batch 181 统一原语).
+
+    claim 同时写 heartbeat_at 与 locked_by/locked_at，锁语义与其他队列一致；
+    心跳线程（job_runner）在运行期间持续刷新 heartbeat_at。
+    """
+    job = atomic_claim(
+        db,
+        _EVIDENCE_QUEUE,
+        worker_id="lanhu-worker",
+        stale_seconds=settings.lanhu_evidence_stale_after_seconds,
     )
-    if candidate is None:
+    if job is None:
         return None
+    # 保留原语义：认领即进入 discovering 阶段并打心跳
     now = datetime.now()
-    updated = db.execute(
-        update(LanhuEvidenceJob)
-        .where(
-            LanhuEvidenceJob.id == candidate,
-            LanhuEvidenceJob.status == "pending",
-        )
-        .values(
-            status="running",
-            stage="discovering",
-            heartbeat_at=now,
-            started_at=now,
-        )
-    )
+    job.stage = "discovering"
+    job.heartbeat_at = now
+    if job.started_at is None:
+        job.started_at = now
     db.commit()
-    if updated.rowcount != 1:
-        return None
-    return db.get(LanhuEvidenceJob, candidate)
+    return db.get(LanhuEvidenceJob, job.id)
 
 
 def poll_and_execute_evidence_jobs() -> None:

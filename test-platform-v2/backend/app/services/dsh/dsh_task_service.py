@@ -2,34 +2,53 @@
 
 提交/查询/取消 + 后台 worker（DB 认领，多 worker 可消费，模式对齐 ai_tasks.py）。
 worker 执行时调用 dsh_runner.run_dsh_task，状态与输出落库。
+
+Batch 181（FIX-173-P2-06）：认领/回收/循环骨架收敛到 app.core.task_queue 统一原语；
+模型补 locked_at/locked_by 列（20260816_b181_task_queue_locks），
+started_at 不再兼作锁字段。
 """
 from __future__ import annotations
 
 import json
 import logging
-import threading
-import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
-from sqlalchemy import or_, select, update
+from sqlalchemy import select
 
 from app.core.db import SessionLocal
+from app.core.task_queue import (
+    QueueSpec,
+    QueueWorkerLoop,
+    atomic_claim,
+    utcnow,
+)
 from app.models.dsh_task import DshTask
 
 logger = logging.getLogger(__name__)
 
 _executor = ThreadPoolExecutor(max_workers=2)
-_worker_thread: threading.Thread | None = None
-_wake_event = threading.Event()
-_shutdown_event = threading.Event()
-_worker_lock = threading.Lock()
 
 _STALE_CLAIM_SECONDS = 300
 
+_DSH_QUEUE = QueueSpec(
+    model=DshTask,
+    id_col="id",
+    status_col="status",
+    pending="pending",
+    running="running",
+    failed="failed",
+    lock_by_col="locked_by",
+    lock_at_col="locked_at",
+    order_col="created_at",
+    order_asc=True,
+)
+
+_loop = QueueWorkerLoop(name="dsh-task-worker", poll_interval=1.0, on_tick=lambda: _poll_once())
+
 
 def _now() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return utcnow()
 
 
 def submit_task(
@@ -52,7 +71,7 @@ def submit_task(
     db.commit()
     db.refresh(row)
     ensure_worker_running()
-    _wake_event.set()
+    _loop.kick()
     return row
 
 
@@ -105,28 +124,8 @@ def cancel_task(db, task_id: int, project_id: int) -> DshTask | None:
 
 
 def claim_next_task(db, now: datetime | None = None) -> DshTask | None:
-    """认领最早 pending 任务（stale 锁可重认领），避免多 worker 重复执行。"""
-    now = now or _now()
-    stale = now - timedelta(seconds=_STALE_CLAIM_SECONDS)
-    row = db.scalar(
-        select(DshTask)
-        .where(DshTask.status == "pending")
-        .where(or_(DshTask.started_at.is_(None), DshTask.started_at < stale))
-        .order_by(DshTask.created_at)
-        .limit(1)
-    )
-    if row is None:
-        return None
-    result = db.execute(
-        update(DshTask)
-        .where(DshTask.id == row.id, DshTask.status == "pending")
-        .values(status="running", started_at=now)
-    )
-    db.commit()
-    if result.rowcount == 0:
-        return None
-    db.refresh(row)
-    return row
+    """认领最早 pending 任务（stale 锁可重认领），Batch 181 起走统一原语。"""
+    return atomic_claim(db, _DSH_QUEUE, worker_id="dsh-worker", stale_seconds=_STALE_CLAIM_SECONDS)
 
 
 def execute_task(db, task: DshTask, runner=None) -> None:
@@ -165,49 +164,24 @@ def _process_claimed(task_id: int) -> None:
         db.close()
 
 
-def _worker_loop() -> None:
-    while not _shutdown_event.is_set():
-        _wake_event.wait(timeout=1.0)
-        _wake_event.clear()
-        if _shutdown_event.is_set():
-            break
-        try:
-            db = SessionLocal()
-            try:
-                task = claim_next_task(db)
-                if task is not None:
-                    _executor.submit(_process_claimed, task.id)
-            finally:
-                db.close()
-        except Exception as exc:  # noqa: BLE001 - 轮询失败不退出
-            logger.warning("DSH task worker poll error: %s", exc)
+def _poll_once() -> None:
+    """单次轮询：原子认领一条任务并提交到执行池。"""
+    db = SessionLocal()
+    try:
+        task = claim_next_task(db)
+        if task is not None:
+            _executor.submit(_process_claimed, task.id)
+    except Exception as exc:  # noqa: BLE001 - 轮询失败不退出
+        logger.warning("DSH task worker poll error: %s", exc)
+    finally:
+        db.close()
 
 
 def ensure_worker_running() -> None:
     """启动后台轮询线程（幂等）。"""
-    global _worker_thread
-    with _worker_lock:
-        if _worker_thread is not None and _worker_thread.is_alive():
-            return
-        _shutdown_event.clear()
-        _worker_thread = threading.Thread(
-            target=_worker_loop,
-            daemon=True,
-            name="dsh-task-worker",
-        )
-        _worker_thread.start()
-        logger.info("DSH task worker started")
+    _loop.start()
 
 
 def shutdown_worker(timeout: float = 5.0) -> None:
     """优雅关闭 worker 线程（测试/退出用）。"""
-    global _worker_thread
-    with _worker_lock:
-        thread = _worker_thread
-        if thread is None:
-            return
-        _shutdown_event.set()
-        _wake_event.set()
-    thread.join(timeout=timeout)
-    with _worker_lock:
-        _worker_thread = None
+    _loop.shutdown(timeout=timeout)

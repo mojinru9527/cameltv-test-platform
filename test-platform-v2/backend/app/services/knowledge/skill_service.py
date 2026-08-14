@@ -193,7 +193,7 @@ def build_skill_knowledge_context(
         select(KnowledgeChunk)
         .where(
             KnowledgeChunk.project_id == project_id,
-            KnowledgeChunk.status == "active",
+            KnowledgeChunk.is_deleted.is_(False),
             KnowledgeChunk.chunk_type.in_(chunk_types),
         )
         .limit(50)

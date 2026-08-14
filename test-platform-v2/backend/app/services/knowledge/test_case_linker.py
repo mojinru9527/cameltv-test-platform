@@ -314,7 +314,7 @@ def link_all_modules(
         db.scalars(
             select(TestCase).where(
                 TestCase.project_id == project_id,
-                TestCase.is_deleted == False,  # noqa: E712
+                TestCase.is_deleted.is_(False),
                 TestCase.status == "active",
             )
         ).all()

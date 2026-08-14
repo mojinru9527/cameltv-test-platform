@@ -551,3 +551,13 @@ def diff_module_tree_vs_wiki(
         "total_tree_pages": len(tree_paths),
         "total_wiki_pages": len(wiki_paths),
     }
+
+
+# ── 路由层 ORM 收敛薄函数（Batch 181 路由拆分）──
+
+def get_project_bundle(db: Session, bundle_id: int, project_id: int) -> ReleaseBundle | None:
+    """项目作用域内获取发布包。"""
+    bundle = db.get(ReleaseBundle, bundle_id)
+    if not bundle or bundle.project_id != project_id:
+        return None
+    return bundle

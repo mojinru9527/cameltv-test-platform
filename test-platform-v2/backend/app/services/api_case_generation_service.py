@@ -4,6 +4,10 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from sqlalchemy.orm import Session
+
+from app.models.test_case import TestCase
+
 # 单接口用例生成数量上限（防止膨胀）
 _MAX_CASES_PER_ENDPOINT = 200
 
@@ -1790,3 +1794,48 @@ def _sample_value_for_prop(prop: dict) -> Any:
 def _sample_value_for_param(param: dict) -> Any:
     """为 query/path 参数生成样本值。"""
     return _sample_value_for_prop(param)
+
+
+# ═══════════════════════════════════════════════════════
+# 路由层 ORM 收敛薄函数（Batch 181 路由拆分）
+# ═══════════════════════════════════════════════════════
+
+def create_test_case_from_generated(
+    db: Session,
+    project_id: int,
+    case_data: dict,
+    endpoint_id: int | None,
+) -> TestCase:
+    """将生成的用例数据写入 TestCase 表（沿用调用方会话，提交由路由层负责）。"""
+    tc = TestCase(
+        project_id=project_id,
+        title=case_data.get("title", ""),
+        domain=case_data.get("domain", "接口测试"),
+        module=case_data.get("module", ""),
+        case_type="api",
+        priority=case_data.get("priority", "P1"),
+        preconditions=case_data.get("preconditions", ""),
+        steps=json.dumps(case_data.get("steps", []), ensure_ascii=False),
+        expected_result=case_data.get("expected_result", ""),
+        api_method=case_data.get("api_method", "GET"),
+        api_endpoint=case_data.get("api_endpoint", ""),
+        api_spec_ref=f"api_endpoint:{endpoint_id}" if endpoint_id else "",
+        api_headers=json.dumps(case_data.get("api_headers", {}), ensure_ascii=False),
+        api_body=case_data.get("api_body", ""),
+        api_assertions=json.dumps(case_data.get("api_assertions", []), ensure_ascii=False),
+        status="draft",
+        source="ai_generated",
+        tags=json.dumps(case_data.get("tags", []), ensure_ascii=False),
+    )
+    db.add(tc)
+    db.flush()
+    return tc
+
+
+def get_api_cases_by_ids(db: Session, project_id: int, case_ids: list[int]) -> list[TestCase]:
+    """按 id 列表获取项目内 API 类型用例（用于创建执行任务前的校验）。"""
+    return db.query(TestCase).filter(
+        TestCase.id.in_(case_ids),
+        TestCase.project_id == project_id,
+        TestCase.case_type == "api",
+    ).all()

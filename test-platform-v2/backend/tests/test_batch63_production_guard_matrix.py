@@ -90,7 +90,7 @@ def test_single_case_execute_prod_write_without_confirm_rejected_without_executi
     db_session.commit()
 
     with patch(
-        "app.api.v1.test_case.execute_api_case",
+        "app.api.v1.test_case_crud.execute_api_case",
         return_value={"all_pass": True},
     ) as execute:
         resp = client.post(

@@ -144,7 +144,7 @@ def test_quick_execute_rejects_unconfirmed_production_before_network(
     environment = _environment(db_session)
     audit_before = db_session.query(AuditLog).count()
 
-    with patch("app.api.v1.apitest.quick_execute") as execute:
+    with patch("app.api.v1.apitest_tasks.quick_execute") as execute:
         response = client.post(
             "/api/v1/apitest/api-execute",
             headers=auth_headers,
@@ -179,7 +179,7 @@ def test_single_case_rejects_unconfirmed_production_before_execution(
     db_session.commit()
     audit_before = db_session.query(AuditLog).count()
 
-    with patch("app.api.v1.test_case.execute_api_case") as execute:
+    with patch("app.api.v1.test_case_crud.execute_api_case") as execute:
         response = client.post(
             f"/api/v1/test-cases/{case.id}/execute",
             headers=auth_headers,
@@ -284,7 +284,7 @@ def test_quick_execute_allows_project_owned_test_environment_and_audits(
     audit_before = db_session.query(AuditLog).count()
 
     with patch(
-        "app.api.v1.apitest.quick_execute",
+        "app.api.v1.apitest_tasks.quick_execute",
         return_value={"status": "ok", "status_code": 200, "all_pass": True},
     ) as execute:
         response = client.post(

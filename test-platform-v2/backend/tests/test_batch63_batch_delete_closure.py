@@ -96,7 +96,7 @@ def test_batch_delete_failure_rolls_back_all_and_writes_no_audit(
         return real_delete_case(db, case_id, project_id=project_id)
 
     with patch(
-        "app.api.v1.test_case.test_case_service.delete_case",
+        "app.api.v1.test_case_crud.test_case_service.delete_case",
         side_effect=flaky_delete_case,
     ):
         with pytest.raises(RuntimeError, match="injected failure"):

@@ -36,8 +36,10 @@ class KnowledgeSource(Base, TimestampMixin):
     # 保鲜评分: 1.0=fresh, 0.0=stale
     freshness_score: Mapped[float] = mapped_column(default=1.0)
     last_verified_at: Mapped[datetime | None] = mapped_column(default=None)
-    # pending/parsed/indexed/failed/deprecated
+    # pending/parsed/indexed/failed/deprecated（deprecated 为历史值；Batch 181 起删除语义走 is_deleted）
     status: Mapped[str] = mapped_column(default="pending", index=True)
+    # Batch 181（FIX-173-P2-08）：软删除唯一语义——True=已删（含历史 deprecated/superseded 回填）
+    is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
     raw_content: Mapped[str] = mapped_column(Text, default="")
     metadata_json: Mapped[str] = mapped_column(Text, default="{}")
     # 知识溯源：模块名（从 source_ref 中自动提取，如 "Agent Team", "API层"）
@@ -63,7 +65,9 @@ class KnowledgeChunk(Base):
     token_count: Mapped[int] = mapped_column(default=0)
     embedding_id: Mapped[str] = mapped_column(default="")  # 外部/本地向量 ID，M2 填充
     tags: Mapped[str] = mapped_column(Text, default="[]")  # JSON 数组
-    status: Mapped[str] = mapped_column(default="active", index=True)  # active/deprecated
+    status: Mapped[str] = mapped_column(default="active", index=True)  # active/deprecated（历史值；Batch 181 起删除语义走 is_deleted）
+    # Batch 181（FIX-173-P2-08）：软删除唯一语义——True=已删
+    is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 
 
@@ -185,6 +189,9 @@ class AgentQueueItem(Base):
     operator_id: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
     started_at: Mapped[datetime | None] = mapped_column(default=None)
+    # Batch 181：统一认领锁（P2-06）
+    locked_at: Mapped[datetime | None] = mapped_column(default=None)
+    locked_by: Mapped[str] = mapped_column(default="")
     finished_at: Mapped[datetime | None] = mapped_column(default=None)
 
 

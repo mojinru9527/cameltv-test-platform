@@ -663,7 +663,7 @@ def test_admin_link_and_audit_are_atomic(
         raise RuntimeError("audit storage unavailable")
 
     monkeypatch.setattr(
-        "app.api.v1.requirement_modules.audit_service.write_audit",
+        "app.api.v1.requirement_modules_links.audit_service.write_audit",
         fail_audit,
     )
     with pytest.raises(RuntimeError, match="audit storage unavailable"):

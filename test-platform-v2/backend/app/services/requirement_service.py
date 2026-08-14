@@ -6,7 +6,7 @@ import logging
 import traceback
 from datetime import datetime
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.orm import Session
 
 from app.models.requirement import RequirementDocument
@@ -140,6 +140,36 @@ def get_requirement(db: Session, doc_id: int, project_id: int) -> dict | None:
         if user:
             creator_name = user.username
     return _doc_to_dict(row, creator_name)
+
+
+def list_requirements_page(
+    db: Session,
+    project_id: int,
+    *,
+    keyword: str | None = None,
+    page: int = 1,
+    page_size: int = 20,
+) -> tuple[int, list[tuple[RequirementDocument, str]]]:
+    """分页列出项目内需求文档（含创建人用户名），返回 (total, [(doc, creator_name), ...])。
+
+    Batch 181（FIX-173-P2-10）：从路由层收敛的分页查询，路由层据此组装 Page。
+    """
+    filters = [RequirementDocument.project_id == project_id]
+    if keyword:
+        filters.append(
+            RequirementDocument.title.contains(keyword)
+            | RequirementDocument.source_ref.contains(keyword)
+        )
+    count_stmt = select(func.count()).select_from(RequirementDocument).where(*filters)
+    total = db.scalar(count_stmt) or 0
+    rows = list(db.execute(
+        select(RequirementDocument, User.username)
+        .outerjoin(User, User.id == RequirementDocument.creator_id)
+        .where(*filters)
+        .order_by(RequirementDocument.id.desc())
+        .offset((page - 1) * page_size).limit(page_size)
+    ).all())
+    return total, rows
 
 
 def get_requirement_by_source(db: Session, source_ref: str, project_id: int) -> dict | None:

@@ -29,7 +29,7 @@ def _gather_rag_text(db: Session, project_id: int, query: str, top_k: int = 12) 
     rows = list(db.scalars(
         select(KnowledgeChunk).where(
             KnowledgeChunk.project_id == project_id,
-            KnowledgeChunk.status == "active",
+            KnowledgeChunk.is_deleted.is_(False),
             or_(KnowledgeChunk.title.like(kw), KnowledgeChunk.content.like(kw)),
         ).order_by(KnowledgeChunk.id.desc()).limit(top_k)
     ).all())

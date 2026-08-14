@@ -1,0 +1,220 @@
+"""测试计划 API 路由（计划 CRUD / 计划内用例管理） — /api/v1/test-plans/*
+
+Batch 181（FIX-173-P2-10）路由拆分：原 test_plan.py 拆分为
+test_plan_crud.py（本文件）/ test_plan_execution.py。
+端点函数体逐字移动，仅调整 import。
+"""
+from __future__ import annotations
+
+import logging
+
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.core.db import get_db
+from app.core.deps import CurrentUser, require_permission
+from app.schemas.common import Page, R
+from app.schemas.test_plan import (
+    PlanCaseAdd,
+    PlanCaseOut,
+    PlanCaseSort,
+    PlanCreate,
+    PlanDetailOut,
+    PlanOut,
+    PlanStats,
+    PlanUpdate,
+)
+from app.services import audit_service, test_plan_service
+
+logger = logging.getLogger("test_plan")
+
+router = APIRouter(prefix="/test-plans", tags=["测试计划"])
+
+
+def _audit(req: Request, cu: CurrentUser, db: Session, action: str, target: str, detail: str = ""):
+    audit_service.write_audit(
+        db,
+        user_id=cu.user.id,
+        username=cu.user.username,
+        project_id=cu.project_id or 0,
+        action=action,
+        target=target,
+        detail=detail,
+        ip=req.client.host if req.client else "",
+    )
+    # Most plan services commit their business mutation before returning.  The
+    # audit insert therefore starts a new transaction and must be committed
+    # explicitly; get_db() only closes the session and would roll it back.
+    db.commit()
+
+
+# ═══════════════════════════════════════════════════════════
+# 计划 CRUD
+# ═══════════════════════════════════════════════════════════
+
+@router.get("", response_model=R[Page[PlanOut]])
+def list_plans(
+    status: str = "",
+    keyword: str = "",
+    page: int = 1,
+    page_size: int = 20,
+    current: CurrentUser = Depends(require_permission("testplan:list")),
+    db: Session = Depends(get_db),
+):
+    items, total = test_plan_service.list_plans(
+        db,
+        project_id=current.project_id or 0,
+        status=status,
+        keyword=keyword,
+        page=page,
+        page_size=page_size,
+    )
+    return R.ok(Page(total=total, page=page, page_size=page_size, items=[PlanOut(**it) for it in items]))
+
+
+@router.post("", response_model=R[PlanOut])
+def create_plan(
+    body: PlanCreate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:create")),
+    db: Session = Depends(get_db),
+):
+    data = body.model_dump()
+    row = test_plan_service.create_plan(db, data, creator_id=current.user.id, project_id=current.project_id or 0)
+    _audit(req, current, db, "plan:create", f"#{row['id']} {row['name']}")
+    return R.ok(PlanOut(**row))
+
+
+@router.get("/{plan_id}", response_model=R[PlanDetailOut])
+def get_plan(
+    plan_id: int,
+    current: CurrentUser = Depends(require_permission("testplan:detail")),
+    db: Session = Depends(get_db),
+):
+    row = test_plan_service.get_plan(db, plan_id, project_id=current.project_id or 0)
+    if not row:
+        return R(code=404, msg="计划不存在")
+    detail = PlanDetailOut(
+        **{k: v for k, v in row.items() if k not in ("cases", "stats")},
+        cases=[PlanCaseOut(**c) for c in row.get("cases", [])],
+        stats=PlanStats(**row.get("stats", {})),
+    )
+    return R.ok(detail)
+
+
+@router.put("/{plan_id}", response_model=R[PlanOut])
+def update_plan(
+    plan_id: int,
+    body: PlanUpdate,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:update")),
+    db: Session = Depends(get_db),
+):
+    row = test_plan_service.update_plan(db, plan_id, body.model_dump(exclude_none=True), project_id=current.project_id or 0)
+    if not row:
+        return R(code=404, msg="计划不存在")
+    _audit(req, current, db, "plan:update", f"#{row['id']} {row['name']}")
+    return R.ok(PlanOut(**row))
+
+
+@router.delete("/{plan_id}", response_model=R[dict])
+def delete_plan(
+    plan_id: int,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:delete")),
+    db: Session = Depends(get_db),
+):
+    ok = test_plan_service.delete_plan(db, plan_id, project_id=current.project_id or 0)
+    if not ok:
+        return R(code=404, msg="计划不存在或无权操作")
+    _audit(req, current, db, "plan:delete", f"#{plan_id}")
+    return R.ok({"deleted": plan_id})
+
+
+# ═══════════════════════════════════════════════════════════
+# 用例关联
+# ═══════════════════════════════════════════════════════════
+
+@router.post("/{plan_id}/cases", response_model=R[dict])
+def add_cases_to_plan(
+    plan_id: int,
+    body: PlanCaseAdd,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:update")),
+    db: Session = Depends(get_db),
+):
+    added = test_plan_service.add_cases(db, plan_id, body.case_ids, project_id=current.project_id or 0)
+    _audit(req, current, db, "plan:add_cases", f"plan #{plan_id}", f"added {added} cases")
+    return R.ok({"added": added})
+
+
+@router.delete("/{plan_id}/cases", response_model=R[dict])
+def remove_cases_from_plan(
+    plan_id: int,
+    body: PlanCaseAdd,               # 复用 case_ids 字段
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:update")),
+    db: Session = Depends(get_db),
+):
+    removed = test_plan_service.remove_cases(db, plan_id, body.case_ids, project_id=current.project_id or 0)
+    _audit(req, current, db, "plan:remove_cases", f"plan #{plan_id}", f"removed {removed} cases")
+    return R.ok({"removed": removed})
+
+
+@router.put("/{plan_id}/cases/{pcase_id}/sort", response_model=R[dict])
+def update_case_sort(
+    plan_id: int,
+    pcase_id: int,
+    body: PlanCaseSort,
+    current: CurrentUser = Depends(require_permission("testplan:update")),
+    db: Session = Depends(get_db),
+):
+    ok = test_plan_service.update_case_sort(db, pcase_id, body.sort_order, project_id=current.project_id or 0)
+    if not ok:
+        return R(code=404, msg="关联不存在或无权操作")
+    return R.ok({"updated": pcase_id})
+
+
+@router.get("/{plan_id}/stats", response_model=R[PlanStats])
+def get_plan_stats(
+    plan_id: int,
+    current: CurrentUser = Depends(require_permission("testplan:detail")),
+    db: Session = Depends(get_db),
+):
+    row = test_plan_service.get_plan(db, plan_id, project_id=current.project_id or 0)
+    if not row:
+        return R(code=404, msg="计划不存在")
+    return R.ok(PlanStats(**row.get("stats", {})))
+
+
+# ═══════════════════════════════════════════════════════════
+# 批量操作
+# ═══════════════════════════════════════════════════════════
+
+class BatchAssignBody(BaseModel):
+    pcase_ids: list[int] = []
+    assignee_id: int = 0
+
+
+@router.put("/{plan_id}/cases/assign", response_model=R[dict], summary="批量指派用例")
+def batch_assign_cases(
+    plan_id: int,
+    body: BatchAssignBody,
+    req: Request,
+    current: CurrentUser = Depends(require_permission("testplan:update")),
+    db: Session = Depends(get_db),
+):
+    """批量指派计划中的用例给执行人。"""
+    if not body.pcase_ids:
+        return R(code=1, msg="pcase_ids 不能为空")
+    count = test_plan_service.batch_assign(
+        db,
+        plan_id=plan_id,
+        pcase_ids=body.pcase_ids,
+        assignee_id=body.assignee_id,
+        project_id=current.project_id or 0,
+    )
+    _audit(req, current, db, "plan:batch_assign", f"plan #{plan_id}",
+           f"assigned {count} cases to user #{body.assignee_id}")
+    return R.ok({"assigned": count})
