@@ -48,16 +48,18 @@ def upgrade() -> None:
         )
 
     # 幂等回填：历史 deprecated/superseded → is_deleted=1
+    # 注意：PG 不隐式转换 integer→boolean（SET is_deleted = 1 会 DatatypeMismatch），
+    # 必须用 TRUE/FALSE 字面量（SQLite 两者均可）
     if _has_table(bind, "knowledge_source") and _has_col(bind, "knowledge_source", "status"):
         op.execute(
             sa.text(
-                "UPDATE knowledge_source SET is_deleted = 1 "
+                "UPDATE knowledge_source SET is_deleted = TRUE "
                 "WHERE status IN ('deprecated', 'superseded')"
             )
         )
     if _has_table(bind, "knowledge_chunk") and _has_col(bind, "knowledge_chunk", "status"):
         op.execute(
-            sa.text("UPDATE knowledge_chunk SET is_deleted = 1 WHERE status = 'deprecated'")
+            sa.text("UPDATE knowledge_chunk SET is_deleted = TRUE WHERE status = 'deprecated'")
         )
 
 
