@@ -154,7 +154,7 @@ export default function Workbench() {
     { label: '用例总数', value: String(stats.total_cases ?? 0), note: `通过率 ${stats.pass_rate ?? 0}%`, tone: 'positive' as const },
     { label: 'API 用例', value: String(stats.api_cases ?? 0), note: '接口测试资产', tone: 'active' as const },
     { label: '测试计划', value: String(stats.total_plans ?? 0), note: stats.total_plans > 0 ? '已编排' : '待创建', tone: 'neutral' as const },
-    { label: '通过率', value: `${stats.pass_rate ?? 0}%`, note: '最近周期', tone: stats.pass_rate >= 80 ? 'positive' as const : 'risk' as const },
+    { label: '通过率', value: `${stats.pass_rate ?? 0}%`, note: '用例口径（与追溯一致）', tone: stats.pass_rate >= 80 ? 'positive' as const : 'risk' as const },
   ] : []
 
   // ── 项目概览内容 ──

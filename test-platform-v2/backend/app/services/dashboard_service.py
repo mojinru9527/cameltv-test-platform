@@ -78,7 +78,11 @@ def get_dashboard_stats(
     total_execs = st["execution_total"]
     pass_execs = st["execution_pass"]
     fail_execs = st["execution_fail"]
-    pass_rate = round((pass_execs / total_execs) * 100, 1) if total_execs > 0 else 0.0
+    # Batch 175（FIX-173-P1-01）：通过率统一为「用例级」口径（cases_passed / cases_executed），
+    # 与质量追溯/报告中心一致，消除工作台 9.1% vs 追溯 22.1% 的分裂。
+    # 执行记录级通过率（含重跑）作为独立字段保留，供明细/趋势展示并明确标注口径。
+    pass_rate = st["pass_rate"]
+    execution_pass_rate = round((pass_execs / total_execs) * 100, 1) if total_execs > 0 else 0.0
 
     # ── P0-P3 优先级分布（按用例类型） ──
     priority_rows = db.execute(
@@ -132,6 +136,7 @@ def get_dashboard_stats(
             "execution_fail": ct_exec_fail,
             "pass_rate": ct_pass_rate,
             "fail_rate": ct_fail_rate,
+            "execution_pass_rate": ct_pass_rate,  # 兼容：类型级仅有执行记录口径
         })
 
     # ── 时间范围信息 ──
@@ -145,6 +150,7 @@ def get_dashboard_stats(
         "total_plans": total_plans,
         "api_cases": api_cases,
         "pass_rate": pass_rate,
+        "execution_pass_rate": execution_pass_rate,
         "case_type_stats": case_type_stats,
         "priority_distribution": priority_distribution,
         "time_range": time_range,
