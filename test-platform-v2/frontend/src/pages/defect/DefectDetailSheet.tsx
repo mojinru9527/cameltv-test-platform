@@ -322,6 +322,7 @@ export default function DefectDetailSheet({
                   onClick={handleAddComment}
                   disabled={commentSubmitting || !commentText.trim()}
                   className="self-end"
+                  aria-label="添加评论"
                 >
                   {commentSubmitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
                 </Button>
@@ -372,7 +373,7 @@ export default function DefectDetailSheet({
                         download={att.filename}
                         className="shrink-0"
                       >
-                        <Button size="xs" variant="ghost" type="button">
+                        <Button size="xs" variant="ghost" type="button" aria-label="下载附件">
                           <Download className="size-4" />
                         </Button>
                       </a>
@@ -381,6 +382,7 @@ export default function DefectDetailSheet({
                         variant="ghost"
                         className="text-destructive hover:text-destructive shrink-0"
                         onClick={() => handleDeleteAttachment(att.id)}
+                        aria-label="删除附件"
                       >
                         <Trash2 className="size-4" />
                       </Button>

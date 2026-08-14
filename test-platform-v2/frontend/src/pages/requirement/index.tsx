@@ -45,7 +45,7 @@ interface RequirementData {
 export default function RequirementPage() {
   const hasPerm = useAuthStore((state) => state.hasPerm)
   const canWriteDocs = hasPerm('requirement:upload') || hasPerm('requirement:generate') || hasPerm('requirement:import')
-  useDocumentTitle('需求管理')
+  useDocumentTitle('需求文档')
   const [keyword, setKeyword] = useState('')
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)

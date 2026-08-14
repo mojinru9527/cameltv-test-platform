@@ -11,7 +11,7 @@ import ImportDialog from './components/ImportDialog'
 import type { ApiEndpoint } from '@/types'
 
 export default function ApiTestPage() {
-  useDocumentTitle('API 测试')
+  useDocumentTitle('接口测试')
   const [activeTab, setActiveTab] = useState('assets')
   const [importOpen, setImportOpen] = useState(false)
   const [debugEndpoint, setDebugEndpoint] = useState<ApiEndpoint | null>(null)

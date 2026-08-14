@@ -20,7 +20,7 @@ describe('访客平台首页', () => {
               sort: 1,
               children: [
                 { code: 'testcase', name: '用例服务', path: '/testcase', icon: '', sort: 1 },
-                { code: 'mindmap', name: '用例脑图', path: '/mindmap', icon: '', sort: 2 },
+                { code: 'mindmap', name: '思维导图', path: '/mindmap', icon: '', sort: 2 },
               ],
             },
           ]}
@@ -33,10 +33,10 @@ describe('访客平台首页', () => {
 
     expect(screen.getByRole('heading', { name: '先浏览平台，再登录开始工作' })).toBeTruthy()
     expect(screen.getByText('用例服务')).toBeTruthy()
-    expect(screen.getByText('用例脑图')).toBeTruthy()
+    expect(screen.getByText('思维导图')).toBeTruthy()
     expect(screen.getByRole('link', { name: '免费注册' }).getAttribute('href')).toBe('/register')
 
-    fireEvent.click(screen.getByRole('button', { name: /查看用例脑图功能/ }))
+    fireEvent.click(screen.getByRole('button', { name: /查看思维导图功能/ }))
     expect(navigate).toHaveBeenCalledWith('/mindmap')
     expect(requireLogin).not.toHaveBeenCalled()
 

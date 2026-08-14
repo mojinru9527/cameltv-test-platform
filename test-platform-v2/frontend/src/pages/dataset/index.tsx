@@ -32,7 +32,7 @@ import {
 import type { DatasetListItem } from '@/types'
 
 export default function DatasetPage() {
-  useDocumentTitle('数据集')
+  useDocumentTitle('测试数据集')
   const [page, setPage] = useState(1)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)

@@ -1,3 +1,4 @@
+import { Fragment, useState } from 'react'
 import { Badge, Button } from '@/ui'
 import type { BadgeTone } from '@/ui'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -21,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { AsyncState } from '@/components/state'
-import { CheckCircle2, Edit, History, Send, Trash2, XCircle } from '@/lib/icons'
+import { CheckCircle2, ChevronDown, ChevronRight, Edit, History, Send, Trash2, XCircle } from '@/lib/icons'
 import { formatNumberedText, formatStepActions, formatStepExpectations } from '../caseListFormatters'
 
 const PRIORITY_TONES: Record<string, BadgeTone> = { P0: 'danger', P1: 'warning', P2: 'info', P3: 'neutral' }
@@ -90,6 +91,17 @@ export default function CaseTable({
 }: CaseTableProps) {
   const { keyword, selSurface, selDomain, selModule, caseNature, priority } = activeFilters
 
+  // Batch 183（FIX-173-P3-10）：行内展开查看步骤/预期配对（折叠三列高密度全文）
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set())
+  const toggleExpanded = (id: number) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
     <div
       className="flex-1 min-h-0 overflow-auto rounded-md border"
@@ -133,9 +145,6 @@ export default function CaseTable({
                   <TableHead className="w-[160px]">用例标题</TableHead>
                   <TableHead className="w-[70px]">用例等级</TableHead>
                   <TableHead className="w-[64px]">场景</TableHead>
-                  <TableHead className="w-[180px]">前置条件</TableHead>
-                  <TableHead className="w-[200px]">操作步骤</TableHead>
-                  <TableHead className="w-[200px]">预期结果</TableHead>
                   <TableHead className="w-[60px]">评审</TableHead>
                   <TableHead className="sticky right-0 z-20 w-[132px] bg-card shadow-[-10px_0_18px_-16px_hsl(var(--foreground))]">
                     操作
@@ -144,8 +153,8 @@ export default function CaseTable({
               </TableHeader>
               <TableBody>
                 {sortedItems.map((r: any) => (
+                  <Fragment key={r.id}>
                   <TableRow
-                    key={r.id}
                     className={sortedItems.length >= 50 ? '[content-visibility:auto] [contain-intrinsic-size:auto_44px]' : undefined}
                   >
                     <TableCell>
@@ -164,14 +173,26 @@ export default function CaseTable({
                       </span>
                     </TableCell>
                     <TableCell className="max-w-[160px] truncate">
-                      <button
-                        type="button"
-                        onClick={() => onEdit(r)}
-                        className="line-clamp-1 text-left hover:text-primary hover:underline"
-                        title={`查看/编辑用例：${r.title || r.id}`}
-                      >
-                        {r.title || '......'}
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          onClick={() => toggleExpanded(r.id)}
+                          aria-label={`${expandedIds.has(r.id) ? '收起' : '展开'}用例内容：${r.title || r.id}`}
+                        >
+                          {expandedIds.has(r.id)
+                            ? <ChevronDown className="size-3" aria-hidden="true" />
+                            : <ChevronRight className="size-3" aria-hidden="true" />}
+                        </Button>
+                        <button
+                          type="button"
+                          onClick={() => onEdit(r)}
+                          className="line-clamp-1 text-left hover:text-primary hover:underline"
+                          title={`查看/编辑用例：${r.title || r.id}`}
+                        >
+                          {r.title || '......'}
+                        </button>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge tone={PRIORITY_TONES[r.priority] || 'neutral'}>
@@ -182,15 +203,6 @@ export default function CaseTable({
                       <Badge tone={CASE_NATURE_TONES[r.positive_negative] || 'neutral'}>
                         {CASE_NATURE_LABELS[r.positive_negative] || '未标注'}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="max-w-[180px] truncate text-xs">
-                      <span className="line-clamp-1">{formatNumberedText(r.preconditions).join(' ') || '......'}</span>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-xs">
-                      <span className="line-clamp-1">{formatStepActions(r.steps).join(' ') || '......'}</span>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate text-xs">
-                      <span className="line-clamp-1">{formatStepExpectations(r.steps, r.expected_result).join(' ') || '......'}</span>
                     </TableCell>
                     <TableCell>
                       <Badge tone={REVIEW_TONES[r.review_status] || 'neutral'} className="text-xs">
@@ -272,6 +284,50 @@ export default function CaseTable({
                       </div>
                     </TableCell>
                   </TableRow>
+                  {expandedIds.has(r.id) && (
+                    <TableRow className="bg-muted/30">
+                      <TableCell colSpan={7} className="px-6 py-3 text-sm">
+                        <div className="space-y-2">
+                          {formatNumberedText(r.preconditions).length > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              <span className="font-medium">前置条件：</span>
+                              {formatNumberedText(r.preconditions).join(' ')}
+                            </div>
+                          )}
+                          <div className="grid gap-1.5">
+                            {(() => {
+                              const actions = formatStepActions(r.steps)
+                              const expectations = formatStepExpectations(r.steps, r.expected_result)
+                              if (!actions.length) return null
+                              const rows = actions.map((action, index) => ({
+                                action,
+                                expected: expectations[index] || '—',
+                              }))
+                              return rows.map((row, index) => (
+                                <div key={index} className="grid grid-cols-1 gap-0.5 md:grid-cols-2 md:gap-4">
+                                  <div className="text-xs">
+                                    <span className="text-muted-foreground">步骤 {index + 1}：</span>
+                                    <span className="whitespace-pre-wrap break-words">{row.action.replace(/^\d+、/, '')}</span>
+                                  </div>
+                                  <div className="text-xs">
+                                    <span className="text-muted-foreground">预期 {index + 1}：</span>
+                                    <span className="whitespace-pre-wrap break-words text-status-success">{row.expected.replace(/^\d+、/, '')}</span>
+                                  </div>
+                                </div>
+                              ))
+                            })()}
+                          </div>
+                          {!formatStepActions(r.steps).length && formatNumberedText(r.expected_result).length > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              <span className="font-medium">预期结果：</span>
+                              {formatNumberedText(r.expected_result).join(' ')}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </Fragment>
                 ))}
               </TableBody>
             </Table>

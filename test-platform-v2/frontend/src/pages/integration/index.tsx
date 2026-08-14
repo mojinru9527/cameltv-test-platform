@@ -88,7 +88,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 // ── Component ──
 
 export default function IntegrationPage() {
-  useDocumentTitle('集成管理')
+  useDocumentTitle('集成配置')
   const hasPerm = useAuthStore((s) => s.hasPerm)
   const projects = useAuthStore((s) => s.projects)
   const [drawer, setDrawer] = useState(false)

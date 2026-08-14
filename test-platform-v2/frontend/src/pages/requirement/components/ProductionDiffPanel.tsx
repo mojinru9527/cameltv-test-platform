@@ -127,7 +127,7 @@ export default function ProductionDiffPanel() {
       <CardHeader className="border-b pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
           <GitCompare className="size-4" />
-          生产差异标注（C102-4）
+          生产差异标注
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4 space-y-3">

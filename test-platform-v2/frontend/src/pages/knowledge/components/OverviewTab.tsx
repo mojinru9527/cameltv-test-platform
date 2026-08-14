@@ -40,7 +40,7 @@ export default function OverviewTab() {
     { label: '待审 AI 产物', value: data.pending_artifact_count },
   ]
   const health = [
-    { label: '未审核 AI 产物', value: data.health.unreviewed_artifacts },
+    // Batch 183（FIX-173-P3-12）：删除与「待审 AI 产物」同值的重复卡（unreviewed_artifacts == pending_artifact_count）
     { label: '已废弃知识源', value: data.health.deprecated_sources },
     { label: '孤儿切片', value: data.health.sourceless_chunks },
     { label: '低置信度关系', value: data.health.low_confidence_relations },

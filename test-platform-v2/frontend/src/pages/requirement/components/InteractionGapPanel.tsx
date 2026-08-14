@@ -105,7 +105,7 @@ export default function InteractionGapPanel() {
       <CardHeader className="border-b pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
           <GitCompare className="size-4" />
-          交互覆盖缺口（C119-2）
+          交互覆盖缺口
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4 space-y-3">
