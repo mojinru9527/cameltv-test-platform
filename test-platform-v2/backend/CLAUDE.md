@@ -121,6 +121,10 @@ pytest tests/ -v --tb=short
 - **不要在 Router 中写业务逻辑**——Router 只做参数校验和调用 Service
 - **大文件上传**：需求文档解析（Word/Excel）走 `file_parser_service.py`，注意内存控制
 - **AI 调用**：`ai_service.py` 调用 DeepSeek LLM，注意超时和重试
+- **DSH 执行（Batch 172）**：`services/dsh/` 提供 DeepSeek Harness 执行抽象（`dsh_runner.run_dsh_task`）；
+  A 用例生成 harness 模式经 `ai_service._call_ai_api_with_harness`（默认关、失败降级直连）；
+  B Agent 工作台 `dsh_execution` 类型走 orchestrator 分发；C DSH 任务模块 `api/v1/dsh_tasks.py` + `models/dsh_task.py`。
+  配置走 `DSH_*`（见 `.env.example`），运行时 node/python-sdk 由 `DSH_RUNTIME` 切换
 - **APScheduler**：定时任务在 `main.py` 生命周期中启动，开发时 `--reload` 会导致 scheduler 重复启动
 - **CORS**：生产环境 CORS 配置在 Nginx，本地开发在 `main.py` 中配置 `allow_origins`
 

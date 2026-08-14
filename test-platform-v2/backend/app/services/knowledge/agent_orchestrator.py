@@ -109,6 +109,85 @@ def _rag_retrieve(project_id: int, query: str, top_k: int = 8) -> str:
     return "\n".join(lines)
 
 
+# ── Batch 172: dsh_execution 执行型 Agent 分支 ──
+
+def _run_dsh_agent(
+    db,
+    run,
+    *,
+    project_id: int,
+    agent_type: str,
+    user_input: str,
+    params: dict,
+    start: float,
+) -> dict[str, any]:
+    """dsh_execution：通过 DeepSeek Harness 真实执行任务并持久化 AiArtifact。
+
+    不走 RAG+LLM 推理链路；user_input（或 params.task）即任务文本。执行输出、
+    退出码与会话目录写入 AiArtifact。
+    """
+    from app.services.dsh.dsh_runner import run_dsh_task, runtime_available
+
+    def _finish_failed(message: str, status: str = "failed") -> dict[str, any]:
+        duration_ms = int((time.perf_counter() - start) * 1000)
+        agent_run_service.finish_run(
+            db, run, status=status, error_message=message, duration_ms=duration_ms,
+        )
+        db.commit()
+        return {"run_id": run.id, "artifact_id": None, "status": status, "error": message}
+
+    available, reason = runtime_available()
+    if not available:
+        return _finish_failed(f"DSH 不可用: {reason}")
+
+    task_text = (user_input or "").strip() or str((params or {}).get("task") or "").strip()
+    if not task_text:
+        return _finish_failed("DSH 执行任务文本为空")
+
+    try:
+        result = run_dsh_task(task_text)
+    except Exception as exc:  # noqa: BLE001 - runner 异常统一失败留痕
+        logger.exception("dsh_execution run failed")
+        return _finish_failed(f"dsh 执行异常: {exc}")
+
+    duration_ms = int((time.perf_counter() - start) * 1000)
+    if result.exit_code != 0:
+        return _finish_failed(result.error or f"dsh 退出码 {result.exit_code}")
+
+    output_data = {
+        "final_response": result.final_response,
+        "exit_code": result.exit_code,
+        "session_dir": result.session_dir,
+    }
+    meta = AGENT_META[agent_type]
+    title = (result.final_response or "").strip().replace("\n", " ")[:80] or f"{meta['label']} #{run.id}"
+    artifact = AiArtifact(
+        project_id=project_id,
+        artifact_type=meta["artifact_type"],
+        title=str(title)[:200],
+        content_json=json.dumps(output_data, ensure_ascii=False),
+        agent_run_id=run.id,
+        review_status="pending",
+        confidence=artifact_confidence_from_output(output_data),
+    )
+    db.add(artifact)
+    db.flush()
+    agent_run_service.finish_run(
+        db, run,
+        status="success",
+        output_data={
+            "artifact_id": artifact.id,
+            "summary": str(title)[:200],
+            "final_response": result.final_response[:2000],
+            "session_dir": result.session_dir,
+        },
+        duration_ms=duration_ms,
+    )
+    db.commit()
+    logger.info("dsh_execution run completed: run_id=%s artifact_id=%s duration=%sms", run.id, artifact.id, duration_ms)
+    return {"run_id": run.id, "artifact_id": artifact.id, "status": "success"}
+
+
 # ── 主入口：在独立 Session 中运行 Agent ──
 
 def run_agent_in_new_session(
@@ -140,6 +219,17 @@ def run_agent_in_new_session(
             input_data={"user_input": user_input, "params": params or {}},
             operator_id=operator_id,
         )
+
+        # Batch 172: dsh_execution 走真实执行，不走 RAG+LLM
+        if agent_type == "dsh_execution":
+            return _run_dsh_agent(
+                db, run,
+                project_id=project_id,
+                agent_type=agent_type,
+                user_input=user_input,
+                params=params or {},
+                start=start,
+            )
 
         # 2. RAG 检索上下文
         query = user_input or (params or {}).get("query", "")

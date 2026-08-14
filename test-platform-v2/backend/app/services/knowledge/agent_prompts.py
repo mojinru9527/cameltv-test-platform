@@ -46,6 +46,13 @@ AGENT_META: dict[str, dict] = {
         "icon": "BrainCircuit",
         "artifact_type": "platform_knowledge",
     },
+    # Batch 172: DeepSeek Harness 执行型智能体
+    "dsh_execution": {
+        "label": "DSH 执行",
+        "description": "通过 DeepSeek Harness 真实执行任务（bash/文件/子代理），返回执行输出与日志",
+        "icon": "Terminal",
+        "artifact_type": "dsh_execution",
+    },
 }
 
 
